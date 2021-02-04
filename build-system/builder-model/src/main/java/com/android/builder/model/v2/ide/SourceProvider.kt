@@ -48,6 +48,13 @@ interface SourceProvider: AndroidModel {
     val javaDirectories: Collection<File>
 
     /**
+     * Returns the kotlin source folders.
+     *
+     * @return a list of folders. They may not all exist.
+     */
+    val kotlinDirectories: Collection<File>
+
+    /**
      * Returns the java resources folders.
      *
      * @return a list of folders. They may not all exist.

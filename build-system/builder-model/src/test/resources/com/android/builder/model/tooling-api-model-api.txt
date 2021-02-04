@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-24fe9246ed0cba747d5aa01b19683e3410e89ef967828fe1f5169e2e16fa2269
+3cc48254e88ec463db0ec71cf15c6aa87c00d58c312b0bff6bd7d2b45b0c7756
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -381,6 +381,7 @@ com.android.builder.model.SourceProvider.getCDirectories: java.util.Collection<j
 com.android.builder.model.SourceProvider.getCppDirectories: java.util.Collection<java.io.File> ()
 com.android.builder.model.SourceProvider.getJavaDirectories: java.util.Collection<java.io.File> ()
 com.android.builder.model.SourceProvider.getJniLibsDirectories: java.util.Collection<java.io.File> ()
+com.android.builder.model.SourceProvider.getKotlinDirectories: java.util.Collection<java.io.File> ()
 com.android.builder.model.SourceProvider.getManifestFile: java.io.File ()
 com.android.builder.model.SourceProvider.getMlModelsDirectories: java.util.Collection<java.io.File> ()
 com.android.builder.model.SourceProvider.getName: java.lang.String ()
@@ -674,6 +675,7 @@ com.android.builder.model.v2.ide.SourceProvider.getAidlDirectories: java.util.Co
 com.android.builder.model.v2.ide.SourceProvider.getAssetsDirectories: java.util.Collection<java.io.File> ()
 com.android.builder.model.v2.ide.SourceProvider.getJavaDirectories: java.util.Collection<java.io.File> ()
 com.android.builder.model.v2.ide.SourceProvider.getJniLibsDirectories: java.util.Collection<java.io.File> ()
+com.android.builder.model.v2.ide.SourceProvider.getKotlinDirectories: java.util.Collection<java.io.File> ()
 com.android.builder.model.v2.ide.SourceProvider.getManifestFile: java.io.File ()
 com.android.builder.model.v2.ide.SourceProvider.getMlModelsDirectories: java.util.Collection<java.io.File> ()
 com.android.builder.model.v2.ide.SourceProvider.getName: java.lang.String ()

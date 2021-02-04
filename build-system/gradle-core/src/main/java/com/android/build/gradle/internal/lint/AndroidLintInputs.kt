@@ -706,14 +706,7 @@ abstract class SourceProviderInput {
 
     internal fun initialize(sourceProvider: SourceProvider): SourceProviderInput {
         this.manifestFile.set(sourceProvider.manifestFile)
-        var javaDirectories = sourceProvider.javaDirectories
-        (sourceProvider as HasConvention).convention.plugins["kotlin"]?.let { kotlinSourceSet ->
-            val sourceDirectorySet =
-                kotlinSourceSet.javaClass.getDeclaredMethod("getKotlin")
-                    .invoke(kotlinSourceSet) as SourceDirectorySet
-            // Kotlin and java source directories may overlap, so de-duplicate
-            javaDirectories = sourceDirectorySet.srcDirs.plus(javaDirectories)
-        }
+        val javaDirectories = sourceProvider.javaDirectories + sourceProvider.kotlinDirectories
         this.javaDirectories.fromDisallowChanges(javaDirectories)
         this.resDirectories.fromDisallowChanges(sourceProvider.resDirectories)
         this.assetsDirectories.fromDisallowChanges(sourceProvider.assetsDirectories)

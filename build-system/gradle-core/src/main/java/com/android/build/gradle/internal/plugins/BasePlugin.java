@@ -92,6 +92,7 @@ import com.android.build.gradle.internal.services.StringCachingBuildService;
 import com.android.build.gradle.internal.services.SymbolTableBuildService;
 import com.android.build.gradle.internal.utils.AgpVersionChecker;
 import com.android.build.gradle.internal.utils.GradlePluginUtils;
+import com.android.build.gradle.internal.utils.KgpUtils;
 import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.internal.variant.LegacyVariantInputManager;
 import com.android.build.gradle.internal.variant.VariantFactory;
@@ -744,6 +745,7 @@ public abstract class BasePlugin<
 
         // Make sure no SourceSets were added through the DSL without being properly configured
         variantInputModel.getSourceSetManager().checkForUnconfiguredSourceSets();
+        KgpUtils.syncAgpAndKgpSources(project, extension.getSourceSets());
 
         // configure compose related tasks.
         taskManager.createPostApiTasks();

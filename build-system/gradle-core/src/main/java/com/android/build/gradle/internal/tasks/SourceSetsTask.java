@@ -51,6 +51,8 @@ public class SourceSetsTask extends ProjectBasedReportTask {
             renderKeyValue("build.gradle name: ", "android.sourceSets." + sourceSet.getName());
 
             renderDirectorySet("Java sources", sourceSet.getJava(), project);
+            renderDirectorySet(
+                    "Kotlin sources", (AndroidSourceDirectorySet) sourceSet.getKotlin(), project);
 
             if (!sourceSet.getName().startsWith(VariantType.UNIT_TEST_PREFIX)) {
                 renderKeyValue(

@@ -21,6 +21,7 @@ interface IdeSourceProvider {
   val name: String
   val manifestFile: File
   val javaDirectories: Collection<File>
+  val kotlinDirectories: Collection<File>
   val resourcesDirectories: Collection<File>
   val aidlDirectories: Collection<File>
   val renderscriptDirectories: Collection<File>

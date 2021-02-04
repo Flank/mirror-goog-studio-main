@@ -172,6 +172,7 @@ internal fun DefaultAndroidSourceSet.convert(features: BuildFeatureValues) = Sou
     name = name,
     manifestFile = manifestFile,
     javaDirectories = javaDirectories,
+    kotlinDirectories = kotlinDirectories,
     resourcesDirectories = resourcesDirectories,
     aidlDirectories = if (features.aidl) aidlDirectories else null,
     renderscriptDirectories = if (features.renderScript) renderscriptDirectories else null,

@@ -34,6 +34,7 @@ import com.android.build.gradle.internal.dependency.VariantDependencies.Companio
 import com.android.builder.model.SourceProvider
 import com.android.utils.appendCapitalized
 import groovy.lang.Closure
+import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.tasks.SourceSet
 import org.gradle.util.ConfigureUtil
@@ -48,6 +49,7 @@ open class DefaultAndroidSourceSet @Inject constructor(
 ) : AndroidSourceSet, SourceProvider {
 
     final override val java: AndroidSourceDirectorySet
+    final override val kotlin: com.android.build.api.dsl.AndroidSourceDirectorySet
     final override val resources: AndroidSourceDirectorySet
     final override val manifest: AndroidSourceFile
     final override val assets: AndroidSourceDirectorySet
@@ -66,6 +68,11 @@ open class DefaultAndroidSourceSet @Inject constructor(
             "$displayName Java source", project, SourceArtifactType.JAVA_SOURCES
         )
         java.filter.include("**/*.java")
+
+        kotlin = DefaultAndroidSourceDirectorySet(
+                "$displayName Kotlin source", project, SourceArtifactType.KOTLIN_SOURCES
+        )
+        kotlin.filter.include("**/*.kt", "**/*.kts")
 
         resources = DefaultAndroidSourceDirectorySet(
             "$displayName Java resources",
@@ -256,6 +263,10 @@ open class DefaultAndroidSourceSet @Inject constructor(
         return this
     }
 
+    override fun kotlin(action: Action<com.android.build.api.dsl.AndroidSourceDirectorySet>) {
+        action.execute(kotlin)
+    }
+
     override fun resources(action: com.android.build.api.dsl.AndroidSourceDirectorySet.() -> Unit) {
         action.invoke(resources)
     }
@@ -271,6 +282,7 @@ open class DefaultAndroidSourceSet @Inject constructor(
 
     private fun initRoot(path: String): AndroidSourceSet {
         java.setSrcDirs(listOf("$path/java"))
+        kotlin.setSrcDirs(listOf("$path/java", "$path/kotlin"))
         resources.setSrcDirs(listOf("$path/resources"))
         res.setSrcDirs(listOf("$path/${SdkConstants.FD_RES}"))
         assets.setSrcDirs(listOf("$path/${SdkConstants.FD_ASSETS}"))
@@ -288,6 +300,10 @@ open class DefaultAndroidSourceSet @Inject constructor(
 
     override fun getJavaDirectories(): Set<File> {
         return java.srcDirs
+    }
+
+    override fun getKotlinDirectories(): Set<File> {
+        return (kotlin as DefaultAndroidSourceDirectorySet).srcDirs
     }
 
     override fun getResourcesDirectories(): Set<File> {

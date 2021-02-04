@@ -11,12 +11,12 @@
   <sourceProviders>
     <sourceProvider
         manifest="src/main/AndroidManifest.xml"
-        javaDirectories="src/main/kotlin:src/main/java"
+        javaDirectories="src/main/java:src/main/kotlin"
         resDirectories="src/main/res"
         assetsDirectories="src/main/assets"/>
     <sourceProvider
         manifest="src/debug/AndroidManifest.xml"
-        javaDirectories="src/debug/kotlin:src/debug/java"
+        javaDirectories="src/debug/java:src/debug/kotlin"
         resDirectories="src/debug/res"
         assetsDirectories="src/debug/assets"/>
   </sourceProviders>

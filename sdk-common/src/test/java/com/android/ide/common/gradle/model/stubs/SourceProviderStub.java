@@ -22,11 +22,13 @@ import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Objects;
+import org.jetbrains.annotations.NotNull;
 
 public class SourceProviderStub extends BaseStub implements SourceProvider {
     @NonNull private final String myName;
     @NonNull private final File myManifestFile;
     @NonNull private final Collection<File> myJavaDirectories;
+    @NonNull private final Collection<File> myKotlinDirectories;
     @NonNull private final Collection<File> myResourcesDirectories;
     @NonNull private final Collection<File> myAidlDirectories;
     @NonNull private final Collection<File> myRenderscriptDirectories;
@@ -46,6 +48,7 @@ public class SourceProviderStub extends BaseStub implements SourceProvider {
                 name,
                 new File(rootDirectory, manifestFileName),
                 new File(rootDirectory, "java"),
+                new File(rootDirectory, "kotlin"),
                 new File(rootDirectory, "resources"),
                 new File(rootDirectory, "aidl"),
                 new File(rootDirectory, "renderscript"),
@@ -60,6 +63,7 @@ public class SourceProviderStub extends BaseStub implements SourceProvider {
             @NonNull String name,
             @NonNull File manifestFile,
             @NonNull File javaDirectory,
+            @NonNull File kotlinDirectory,
             @NonNull File resourcesDirectory,
             @NonNull File aidlDirectory,
             @NonNull File renderscriptDirectory,
@@ -71,6 +75,7 @@ public class SourceProviderStub extends BaseStub implements SourceProvider {
         myName = name;
         myManifestFile = manifestFile;
         myJavaDirectories = Lists.newArrayList(javaDirectory);
+        myKotlinDirectories = Lists.newArrayList(kotlinDirectory);
         myResourcesDirectories = Lists.newArrayList(resourcesDirectory);
         myAidlDirectories = Lists.newArrayList(aidlDirectory);
         myRenderscriptDirectories = Lists.newArrayList(renderscriptDirectory);
@@ -85,6 +90,7 @@ public class SourceProviderStub extends BaseStub implements SourceProvider {
             @NonNull String name,
             @NonNull File manifestFile,
             @NonNull Collection<File> javaDirectories,
+            @NonNull Collection<File> kotlinDirectories,
             @NonNull Collection<File> resourcesDirectories,
             @NonNull Collection<File> aidlDirectories,
             @NonNull Collection<File> renderscriptDirectories,
@@ -96,6 +102,7 @@ public class SourceProviderStub extends BaseStub implements SourceProvider {
         myName = name;
         myManifestFile = manifestFile;
         myJavaDirectories = Lists.newArrayList(javaDirectories);
+        myKotlinDirectories = Lists.newArrayList(kotlinDirectories);
         myResourcesDirectories = Lists.newArrayList(resourcesDirectories);
         myAidlDirectories = Lists.newArrayList(aidlDirectories);
         myRenderscriptDirectories = Lists.newArrayList(renderscriptDirectories);
@@ -122,6 +129,12 @@ public class SourceProviderStub extends BaseStub implements SourceProvider {
     @NonNull
     public Collection<File> getJavaDirectories() {
         return myJavaDirectories;
+    }
+
+    @NotNull
+    @Override
+    public Collection<File> getKotlinDirectories() {
+        return myKotlinDirectories;
     }
 
     @Override
@@ -196,6 +209,7 @@ public class SourceProviderStub extends BaseStub implements SourceProvider {
         return Objects.equals(getName(), stub.getName())
                 && Objects.equals(getManifestFile(), stub.getManifestFile())
                 && Objects.equals(getJavaDirectories(), stub.getJavaDirectories())
+                && Objects.equals(getKotlinDirectories(), stub.getKotlinDirectories())
                 && Objects.equals(getResourcesDirectories(), stub.getResourcesDirectories())
                 && Objects.equals(getAidlDirectories(), stub.getAidlDirectories())
                 && Objects.equals(getRenderscriptDirectories(), stub.getRenderscriptDirectories())
@@ -212,6 +226,7 @@ public class SourceProviderStub extends BaseStub implements SourceProvider {
                 getName(),
                 getManifestFile(),
                 getJavaDirectories(),
+                getKotlinDirectories(),
                 getResourcesDirectories(),
                 getAidlDirectories(),
                 getRenderscriptDirectories(),
@@ -232,6 +247,8 @@ public class SourceProviderStub extends BaseStub implements SourceProvider {
                 + myManifestFile
                 + ", myJavaDirectories="
                 + myJavaDirectories
+                + ", myKotlinDirectories="
+                + myKotlinDirectories
                 + ", myResourcesDirectories="
                 + myResourcesDirectories
                 + ", myAidlDirectories="

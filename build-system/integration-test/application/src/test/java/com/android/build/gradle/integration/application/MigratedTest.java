@@ -55,6 +55,7 @@ public class MigratedTest {
         new SourceProviderHelper(
                         model.getName(), projectDir, "main", defaultConfig.getSourceProvider())
                 .setJavaDir("src")
+                .setKotlinDirs()
                 .setResourcesDir("src")
                 .setAidlDir("src")
                 .setRenderscriptDir("src")
@@ -73,6 +74,7 @@ public class MigratedTest {
                         VariantType.ANDROID_TEST_PREFIX,
                         testSourceProviderContainer.getSourceProvider())
                 .setJavaDir("tests/java")
+                .setKotlinDirs("tests/kotlin", "tests/java")
                 .setResourcesDir("tests/resources")
                 .setAidlDir("tests/aidl")
                 .setJniDir("tests/jni")
