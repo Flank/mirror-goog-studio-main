@@ -302,7 +302,7 @@ filegroup(
 filegroup(
     name = "ndk",
     srcs = sdk_glob(
-        include = ["ndk/21.3.6528147/**"],
+        include = ["ndk/21.4.7075529/**"],
     ),
     visibility = ["//visibility:public"],
 )
