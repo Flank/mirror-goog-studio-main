@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-4286c0d797e5dfa6fec589cec10bb17d93a5be586e5d1bc3c88698315f0031c7
+8df269c1783e35b159abfcbcb267df4687ae1786345bbcbe3b60409ace4ce4ca
 -------------------------------------------------------------------------
 com.android.build.api.artifact.FileNames extends java.lang.Enum
 com.android.build.api.artifact.FileNames.getFileName: java.lang.String ()
@@ -29,11 +29,16 @@ com.android.build.api.dsl.CommonExtension.getCompileSdk: java.lang.Integer ()
 com.android.build.api.dsl.CommonExtension.getCompileSdkPreview: java.lang.String ()
 com.android.build.api.dsl.CommonExtension.getDataBinding: com.android.build.api.dsl.DataBinding ()
 com.android.build.api.dsl.CommonExtension.getNamespace: java.lang.String ()
+com.android.build.api.dsl.CommonExtension.getTestCoverage: com.android.build.api.dsl.TestCoverage ()
 com.android.build.api.dsl.CommonExtension.setCompileSdk: void (java.lang.Integer)
 com.android.build.api.dsl.CommonExtension.setCompileSdkPreview: void (java.lang.String)
 com.android.build.api.dsl.CommonExtension.setNamespace: void (java.lang.String)
+com.android.build.api.dsl.CommonExtension.testCoverage: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.TestCoverage, kotlin.Unit>)
 com.android.build.api.dsl.CompileOptions
 com.android.build.api.dsl.DataBinding
+com.android.build.api.dsl.TestCoverage
+com.android.build.api.dsl.TestCoverage.getJacocoVersion: java.lang.String ()
+com.android.build.api.dsl.TestCoverage.setJacocoVersion: void (java.lang.String)
 com.android.build.api.transform.Context
 com.android.build.api.transform.Context.getLogging: org.gradle.api.logging.LoggingManager ()
 com.android.build.api.transform.Context.getPath: java.lang.String ()

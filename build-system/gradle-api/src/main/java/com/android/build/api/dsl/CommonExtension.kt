@@ -229,7 +229,6 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [TestCoverage].
      */
-    @get:Incubating
     val testCoverage: TestCoverage
 
     /**
@@ -248,7 +247,6 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [TestCoverage].
      */
-    @Incubating
     fun testCoverage(action: TestCoverage.() -> Unit)
 
     /**

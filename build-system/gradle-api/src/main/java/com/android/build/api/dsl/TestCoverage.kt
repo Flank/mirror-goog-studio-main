@@ -19,12 +19,9 @@ package com.android.build.api.dsl
 import org.gradle.api.Incubating
 
 /** Settings related to the gathering of code-coverage data from tests */
-@Incubating
 interface TestCoverage {
     /**
      * The version of JaCoCo to use.
      */
-    @get:Incubating
-    @set:Incubating
     var jacocoVersion: String
 }

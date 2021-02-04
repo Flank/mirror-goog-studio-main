@@ -334,7 +334,6 @@ com.android.build.api.dsl.CommonExtension.getSdkComponents: com.android.build.ap
 com.android.build.api.dsl.CommonExtension.getSigningConfigs: org.gradle.api.NamedDomainObjectContainer<SigningConfigT> ()
 com.android.build.api.dsl.CommonExtension.getSourceSets: org.gradle.api.NamedDomainObjectContainer<AndroidSourceSetT> ()
 com.android.build.api.dsl.CommonExtension.getSplits: com.android.build.api.dsl.Splits ()
-com.android.build.api.dsl.CommonExtension.getTestCoverage: com.android.build.api.dsl.TestCoverage ()
 com.android.build.api.dsl.CommonExtension.getTestOptions: com.android.build.api.dsl.TestOptions ()
 com.android.build.api.dsl.CommonExtension.jacoco: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.JacocoOptions, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.lintOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.LintOptions, kotlin.Unit>)
@@ -348,7 +347,6 @@ com.android.build.api.dsl.CommonExtension.setResourcePrefix: void (java.lang.Str
 com.android.build.api.dsl.CommonExtension.signingConfigs: void (org.gradle.api.Action<org.gradle.api.NamedDomainObjectContainer<SigningConfigT>>)
 com.android.build.api.dsl.CommonExtension.sourceSets: void (kotlin.jvm.functions.Function1<? super org.gradle.api.NamedDomainObjectContainer<AndroidSourceSetT>, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.splits: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.Splits, kotlin.Unit>)
-com.android.build.api.dsl.CommonExtension.testCoverage: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.TestCoverage, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.testOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.TestOptions, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.useLibrary: void (java.lang.String)
 com.android.build.api.dsl.CommonExtension.useLibrary: void (java.lang.String, boolean)
@@ -689,9 +687,6 @@ com.android.build.api.dsl.TestBuildType.isCrunchPngs: java.lang.Boolean ()
 com.android.build.api.dsl.TestBuildType.isDebuggable: boolean ()
 com.android.build.api.dsl.TestBuildType.setCrunchPngs: void (java.lang.Boolean)
 com.android.build.api.dsl.TestBuildType.setDebuggable: void (boolean)
-com.android.build.api.dsl.TestCoverage
-com.android.build.api.dsl.TestCoverage.getJacocoVersion: java.lang.String ()
-com.android.build.api.dsl.TestCoverage.setJacocoVersion: void (java.lang.String)
 com.android.build.api.dsl.TestDefaultConfig implements com.android.build.api.dsl.TestBaseFlavor, com.android.build.api.dsl.DefaultConfig
 com.android.build.api.dsl.TestExtension implements com.android.build.api.dsl.CommonExtension
 com.android.build.api.dsl.TestExtension.getTargetProjectPath: java.lang.String ()
