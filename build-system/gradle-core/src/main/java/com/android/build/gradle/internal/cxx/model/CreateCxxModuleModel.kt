@@ -21,7 +21,13 @@ import com.android.SdkConstants.CURRENT_PLATFORM
 import com.android.SdkConstants.NDK_SYMLINK_DIR
 import com.android.SdkConstants.PLATFORM_WINDOWS
 import com.android.build.gradle.internal.SdkComponentsBuildService
-import com.android.build.gradle.internal.cxx.configure.*
+import com.android.build.gradle.internal.cxx.configure.CmakeLocator
+import com.android.build.gradle.internal.cxx.configure.CmakeVersionRequirements
+import com.android.build.gradle.internal.cxx.configure.NdkAbiFile
+import com.android.build.gradle.internal.cxx.configure.NdkMetaPlatforms
+import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
+import com.android.build.gradle.internal.cxx.configure.ndkMetaAbisFile
+import com.android.build.gradle.internal.cxx.configure.trySymlinkNdk
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationParameters
 import com.android.build.gradle.tasks.NativeBuildSystem.CMAKE
 import com.android.utils.FileUtils.join
@@ -44,7 +50,11 @@ fun createCxxModuleModel(
             .getProperty(property) ?: return null
         return File(path)
     }
-    val ndk= sdkComponents.ndkHandler.ndkPlatform.getOrThrow()
+    val ndk= sdkComponents.versionedNdkHandler(
+        compileSdkVersion = configurationParameters.compileSdkVersion,
+        ndkVersion = configurationParameters.ndkVersion,
+        ndkPath = configurationParameters.ndkPath
+    ).ndkPlatform.getOrThrow()
     val ndkFolder = trySymlinkNdk(
             ndk.ndkDirectory,
             cxxFolder,

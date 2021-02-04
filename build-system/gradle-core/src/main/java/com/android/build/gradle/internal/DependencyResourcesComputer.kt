@@ -20,6 +20,7 @@ import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ANDROID_RES
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.tasks.ProcessApplicationManifest
 import com.android.builder.core.BuilderConstants
@@ -175,8 +176,9 @@ class DependencyResourcesComputer {
 
         generatedResOutputDir = project.files(paths.generatedResOutputDir)
 
-        if (creationConfig.variantDslInfo.isEmbedMicroApp) {
-            microApkResDirectory = project.files(paths.microApkResDirectory)
+        if (creationConfig.taskContainer.generateApkDataTask != null) {
+            microApkResDirectory =
+                    project.files(creationConfig.artifacts.get(InternalArtifactType.MICRO_APK_RES))
         }
     }
 }

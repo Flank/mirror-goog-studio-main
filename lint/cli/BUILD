@@ -39,9 +39,9 @@ kotlin_library(
         "//tools/base/sdk-common:tools.sdk-common",
         "//tools/base/sdklib:tools.sdklib",
         "//tools/base/third_party:com.google.guava_guava",
+        "//tools/base/third_party:org.jetbrains.intellij.deps_trove4j",
         "//tools/base/third_party:org.jetbrains.kotlin_kotlin-reflect",
         "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
-        "//tools/base/third_party:org.jetbrains.trove4j_trove4j",
     ],
 )
 

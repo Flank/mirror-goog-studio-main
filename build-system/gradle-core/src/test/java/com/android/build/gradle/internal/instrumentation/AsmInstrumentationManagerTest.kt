@@ -94,7 +94,7 @@ class AsmInstrumentationManagerTest(private val testMode: TestMode) {
             ClassExtendsAClassThatExtendsAnotherClassAndImplementsTwoInterfaces::class.java
         )
 
-        val builder = ClassesHierarchyResolver.Builder(ClassesDataCache()).addSources(androidJar)
+        val builder = ClassesHierarchyResolver.Builder(ClassesDataCache()).addDependenciesSources(androidJar)
 
         if (testMode == TestMode.DIR) {
             TestInputsGenerator.pathWithClasses(inputDir.toPath(), srcClasses)
@@ -102,12 +102,12 @@ class AsmInstrumentationManagerTest(private val testMode: TestMode) {
             classes = classesFiles.mapValues {
                 ByteStreams.toByteArray(FileInputStream(it.value))
             }
-            builder.addSources(inputDir)
+            builder.addProjectSources(inputDir)
         } else {
             inputJar = File(inputDir, "classes.jar")
             TestInputsGenerator.pathWithClasses(inputJar.toPath(), srcClasses)
             classes = getClassesByteArrayMapFromJar(inputJar)
-            builder.addSources(inputJar)
+            builder.addProjectSources(inputJar)
         }
 
         classesHierarchyResolver = builder.build()

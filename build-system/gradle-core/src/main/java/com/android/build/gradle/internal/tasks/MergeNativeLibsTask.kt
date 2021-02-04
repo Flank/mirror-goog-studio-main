@@ -16,9 +16,11 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
+import com.android.build.gradle.internal.BuildToolsExecutableInput
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.gradle.internal.initialize
 import com.android.build.gradle.internal.pipeline.ExtendedContentType.NATIVE_LIBS
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -39,6 +41,7 @@ import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
@@ -49,6 +52,7 @@ import org.gradle.api.tasks.util.PatternSet
 import java.io.File
 import java.util.function.Predicate
 import javax.inject.Inject
+import javax.inject.Provider
 
 /**
  * Task to merge native libs from multiple modules
@@ -90,6 +94,10 @@ abstract class MergeNativeLibsTask
 
     @get:OutputDirectory
     val outputDir: DirectoryProperty = objects.directoryProperty()
+
+    @get:Nested
+    abstract val buildTools: BuildToolsExecutableInput
+
 
     override val incremental: Boolean
         get() = true
@@ -172,8 +180,13 @@ abstract class MergeNativeLibsTask
                 .disallowChanges()
             task.incrementalStateFile = File(task.intermediateDir, "merge-state")
 
+            task.buildTools.initialize(creationConfig)
+
             task.projectNativeLibs
-                .from(getProjectNativeLibs(creationConfig).asFileTree.matching(patternSet))
+                .from(getProjectNativeLibs(
+                    creationConfig,
+                    task.buildTools
+                ).asFileTree.matching(patternSet))
                 .disallowChanges()
 
             if (creationConfig is ApkCreationConfig) {
@@ -189,7 +202,10 @@ abstract class MergeNativeLibsTask
             }
 
             task.unfilteredProjectNativeLibs
-                .from(getProjectNativeLibs(creationConfig)).disallowChanges()
+                .from(getProjectNativeLibs(
+                    creationConfig,
+                    task.buildTools)
+                ).disallowChanges()
         }
     }
 
@@ -213,7 +229,10 @@ abstract class MergeNativeLibsTask
     }
 }
 
-fun getProjectNativeLibs(creationConfig: VariantCreationConfig): FileCollection {
+fun getProjectNativeLibs(
+    creationConfig: VariantCreationConfig,
+    buildTools: BuildToolsExecutableInput
+): FileCollection {
     val artifacts = creationConfig.artifacts
     val taskContainer = creationConfig.taskContainer
     val nativeLibs = creationConfig.services.fileCollection()
@@ -238,19 +257,16 @@ fun getProjectNativeLibs(creationConfig: VariantCreationConfig): FileCollection 
     if (creationConfig.variantDslInfo.renderscriptSupportModeEnabled) {
         val rsFileCollection: ConfigurableFileCollection =
                 creationConfig.services.fileCollection(artifacts.get(RENDERSCRIPT_LIB))
-        val rsLibs = sdkComponents.supportNativeLibFolderProvider.orNull
-        if (rsLibs?.isDirectory != null) {
-            rsFileCollection.from(rsLibs)
-        }
+        rsFileCollection.from(buildTools::supportNativeLibFolderProvider)
         if (creationConfig.variantDslInfo.renderscriptSupportModeBlasEnabled) {
-            val rsBlasLib = sdkComponents.supportBlasLibFolderProvider.orNull
-            if (rsBlasLib == null || !rsBlasLib.isDirectory) {
-                throw GradleException(
-                    "Renderscript BLAS support mode is not supported in BuildTools $rsBlasLib"
-                )
-            } else {
-                rsFileCollection.from(rsBlasLib)
-            }
+            rsFileCollection.from(buildTools.supportBlasLibFolderProvider().map { rsBlasLib ->
+                    if (!rsBlasLib.isDirectory) {
+                        throw GradleException(
+                            "Renderscript BLAS support mode is not supported in BuildTools $rsBlasLib"
+                        )
+                    }
+                    rsBlasLib
+            })
         }
         nativeLibs.from(rsFileCollection)
     }

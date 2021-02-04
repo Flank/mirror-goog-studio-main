@@ -78,7 +78,7 @@ configure([test, testPrebuilts]) {
 
     outputs.upToDateWhen { false }
 
-    maxParallelForks = Runtime.runtime.availableProcessors() / 1.5
+    maxParallelForks = Runtime.runtime.availableProcessors() / 5
 
     useJUnit {
         if (System.properties['test.includeCategories'] != null) {

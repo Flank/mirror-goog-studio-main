@@ -250,26 +250,6 @@ interface VariantDslInfo {
     val vectorDrawables: VectorDrawablesOptions
 
     /**
-     * Adds a variant-specific BuildConfig field.
-     *
-     * @param type the type of the field
-     * @param name the name of the field
-     * @param value the value of the field
-     */
-    fun addBuildConfigField(
-        type: String, name: String, value: String
-    )
-
-    /**
-     * Adds a variant-specific res value.
-     *
-     * @param type the type of the field
-     * @param name the name of the field
-     * @param value the value of the field
-     */
-    fun addResValue(type: String, name: String, value: String)
-
-    /**
      * Returns a list of items for the BuildConfig class.
      *
      *

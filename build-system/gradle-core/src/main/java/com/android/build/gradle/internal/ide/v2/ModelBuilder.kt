@@ -168,8 +168,7 @@ class ModelBuilder<
 
         verifyIDEIsNotOld(projectOptions)
 
-        val sdkComponents = globalScope.sdkComponents.get()
-        val sdkSetupCorrectly = sdkComponents.sdkSetupCorrectly.get()
+        val sdkSetupCorrectly = globalScope.versionedSdkLoader.get().sdkSetupCorrectly.get()
 
         // Get the boot classpath. This will ensure the target is configured.
         val bootClasspath = if (sdkSetupCorrectly) {

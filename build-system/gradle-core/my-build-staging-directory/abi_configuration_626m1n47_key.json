@@ -1,0 +1,12 @@
+{
+  "ndkHandlerSupportedAbis": [
+    "X86"
+  ],
+  "ndkHandlerDefaultAbis": [
+    "X86"
+  ],
+  "externalNativeBuildAbiFilters": [],
+  "ndkConfigAbiFilters": [],
+  "splitsFilterAbis": [],
+  "ideBuildOnlyTargetAbi": true
+}

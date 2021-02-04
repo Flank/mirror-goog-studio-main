@@ -63,6 +63,7 @@ import com.android.utils.FileUtils
 import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.file.FileCollection
 import java.io.File
+import java.lang.IllegalStateException
 import java.util.*
 
 /**
@@ -105,6 +106,9 @@ data class CxxConfigurationParameters(
     val buildFile: File,
     val isDebuggable: Boolean,
     val minSdkVersion: AndroidVersion,
+    val compileSdkVersion: String,
+    val ndkVersion: String?,
+    val ndkPath: String?,
     val cmakeVersion: String?,
     val splitsAbiFilterSet: Set<String>,
     val intermediatesFolder: File,
@@ -220,7 +224,12 @@ fun tryCreateConfigurationParameters(variant: VariantImpl) : CxxConfigurationPar
      * allow valid [errorln]s to pass or throw exception that will trigger download hyperlinks
      * in Android Studio
      */
-    val ndkHandler = global.sdkComponents.get().ndkHandler
+    val ndkHandler = global.sdkComponents.get().versionedNdkHandler(
+        compileSdkVersion = global.extension.compileSdkVersion ?:
+            throw IllegalStateException("compileSdkVersion not set in android configuration"),
+        ndkVersion = global.extension.ndkVersion,
+        ndkPath = global.extension.ndkPath
+    )
     val ndkInstall = CachingEnvironment(cxxFolder).use {
         ndkHandler.getNdkPlatform(downloadOkay = true)
     }
@@ -280,6 +289,10 @@ fun tryCreateConfigurationParameters(variant: VariantImpl) : CxxConfigurationPar
         buildFile = global.project.buildFile,
         isDebuggable = variant.debuggable,
         minSdkVersion = variant.variantBuilder.minSdkVersion.toSharedAndroidVersion(),
+        compileSdkVersion = global.extension.compileSdkVersion ?:
+            throw IllegalStateException("compileSdkVersion not set in android configuration"),
+        ndkVersion = global.extension.ndkVersion,
+        ndkPath = global.extension.ndkPath,
         cmakeVersion = global.extension.externalNativeBuild.cmake.version,
         splitsAbiFilterSet = global.extension.splits.abiFilters,
         intermediatesFolder = global.intermediatesDir,

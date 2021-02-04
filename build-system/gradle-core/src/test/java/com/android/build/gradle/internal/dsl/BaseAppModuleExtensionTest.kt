@@ -46,10 +46,6 @@ class BaseAppModuleExtensionTest {
     @Before
     fun setUp() {
         val sdkComponents = Mockito.mock(SdkComponentsBuildService::class.java)
-        `when`(sdkComponents.adbExecutableProvider).thenReturn(FakeGradleProvider(null))
-        `when`(sdkComponents.ndkDirectoryProvider).thenReturn(FakeGradleProvider(null))
-        `when`(sdkComponents.sdkDirectoryProvider).thenReturn(FakeGradleProvider(null))
-
         val dslServices = createDslServices(sdkComponents = FakeGradleProvider(sdkComponents))
 
         val variantInputModel = LegacyVariantInputManager(

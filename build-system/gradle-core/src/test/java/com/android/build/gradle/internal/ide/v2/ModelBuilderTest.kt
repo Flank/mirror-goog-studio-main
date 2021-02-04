@@ -188,10 +188,6 @@ class ModelBuilderTest {
 
         // for now create an app extension
         val sdkComponents = Mockito.mock(SdkComponentsBuildService::class.java)
-        Mockito.`when`(sdkComponents.adbExecutableProvider).thenReturn(FakeGradleProvider(null))
-        Mockito.`when`(sdkComponents.ndkDirectoryProvider).thenReturn(FakeGradleProvider(null))
-        Mockito.`when`(sdkComponents.sdkDirectoryProvider).thenReturn(FakeGradleProvider(null))
-
         val sdkComponentProvider = FakeGradleProvider(sdkComponents)
         val dslServices = createDslServices(
             projectServices = projectServices,

@@ -233,6 +233,10 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
             task.androidJarInput.sdkBuildService.setDisallowChanges(
                 getBuildService(creationConfig.services.buildServiceRegistry)
             )
+            task.androidJarInput.compileSdkVersion.setDisallowChanges(
+                creationConfig.globalScope.extension.compileSdkVersion)
+            task.androidJarInput.buildToolsRevision.setDisallowChanges(
+                creationConfig.globalScope.extension.buildToolsRevision)
         }
     }
 

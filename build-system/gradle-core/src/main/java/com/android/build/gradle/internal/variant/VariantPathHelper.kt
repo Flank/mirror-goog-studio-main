@@ -58,18 +58,6 @@ class VariantPathHelper(
     val renderscriptResOutputDir: File
         get() = getGeneratedResourcesDir("rs")
 
-    val microApkResDirectory: File
-        get() = FileUtils.join(generatedDir, "res", "microapk", variantDslInfo.dirName)
-
-    val microApkManifestFile: File
-        get() = FileUtils.join(
-            generatedDir,
-            "manifests",
-            "microapk",
-            variantDslInfo.dirName,
-            SdkConstants.FN_ANDROID_MANIFEST_XML
-        )
-
     val defaultMergeResourcesOutputDir: File
         get() = FileUtils.join(
             intermediatesDir,

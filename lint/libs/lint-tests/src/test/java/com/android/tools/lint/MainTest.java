@@ -39,6 +39,8 @@ import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
 import java.util.stream.Collectors;
+import kotlin.io.FilesKt;
+import kotlin.text.Charsets;
 import kotlin.text.StringsKt;
 import org.intellij.lang.annotations.Language;
 
@@ -730,6 +732,53 @@ public class MainTest extends AbstractCheckTest {
                 // Args
                 new String[] {
                     "-w", "--disable", "LintError,UsesMinSdkAttributes", project.getPath()
+                });
+    }
+
+    public void testWarningsAsErrors() throws Exception {
+        // Regression test for 177439519
+        // The scenario is that we have warningsAsErrors turned on in an override
+        // configuration, and then lintConfig pointing to a lint.xml file which
+        // ignores some lint checks. We want the ignored lint checks to NOT be
+        // turned on on as errors. We also want any warning-severity issue not
+        // otherwise mentioned to turn into errors.
+        File project =
+                getProjectDir(
+                        null,
+                        java("class Test {\n    String s = \"/sdcard/path\";\n}"),
+                        xml(
+                                "res/layout/foo.xml",
+                                ""
+                                        + "<merge xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
+                                        + "    <Button android:text=\"Button\" android:id=\"@+id/button1\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\"></Button>\n"
+                                        + "</merge>\n"));
+        File lintXml = new File(project, "res" + File.separator + "lint.xml");
+        FilesKt.writeText(
+                lintXml,
+                ""
+                        + "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
+                        + "<lint>\n"
+                        + "    <issue id=\"HardcodedText\" severity=\"ignore\"/>\n"
+                        + "</lint>",
+                Charsets.UTF_8);
+        checkDriver(
+                ""
+                        + "src/Test.java:2: Error: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]\n"
+                        + "    String s = \"/sdcard/path\";\n"
+                        + "               ~~~~~~~~~~~~~~\n"
+                        + "1 errors, 0 warnings",
+                "",
+
+                // Expected exit code
+                ERRNO_SUCCESS,
+
+                // Args
+                new String[] {
+                    "-Werror",
+                    "--quiet",
+                    "--disable",
+                    "LintError,UsesMinSdkAttributes,UnusedResources",
+                    project.getPath()
                 });
     }
 

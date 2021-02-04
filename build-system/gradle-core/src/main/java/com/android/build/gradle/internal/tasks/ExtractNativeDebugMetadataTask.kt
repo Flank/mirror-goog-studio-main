@@ -20,10 +20,12 @@ import com.android.SdkConstants
 import com.android.SdkConstants.DOT_DBG
 import com.android.SdkConstants.DOT_SYM
 import com.android.build.gradle.internal.LoggerWrapper
+import com.android.build.gradle.internal.NdkHandlerInput
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.dsl.NdkOptions.DebugSymbolLevel
+import com.android.build.gradle.internal.initialize
 import com.android.build.gradle.internal.process.GradleProcessExecutor
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -49,6 +51,7 @@ import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
@@ -84,9 +87,8 @@ abstract class ExtractNativeDebugMetadataTask : NonIncrementalTask() {
     @get:Inject
     abstract val execOperations: ExecOperations
 
-    @Input
-    @Optional
-    fun getNdkRevision(): Provider<Revision> = sdkBuildService.flatMap { it.ndkRevisionProvider }
+    @get:Nested
+    abstract val ndkHandlerInput: NdkHandlerInput
 
     @get:Input
     lateinit var debugSymbolLevel: DebugSymbolLevel
@@ -111,7 +113,9 @@ abstract class ExtractNativeDebugMetadataTask : NonIncrementalTask() {
             it.inputDir.set(inputDir)
             it.strippedNativeLibs.set(strippedNativeLibs)
             it.outputDir.set(outputDir)
-            it.objcopyExecutableMap.set(sdkBuildService.flatMap { it.objcopyExecutableMapProvider })
+            it.objcopyExecutableMap.set(sdkBuildService.flatMap { buildService ->
+                buildService.versionedNdkHandler(ndkHandlerInput).objcopyExecutableMapProvider
+            })
             it.debugSymbolLevel.set(debugSymbolLevel)
             it.maxWorkerCount.set(maxWorkerCount)
         }
@@ -137,6 +141,7 @@ abstract class ExtractNativeDebugMetadataTask : NonIncrementalTask() {
             task.sdkBuildService.setDisallowChanges(
                 getBuildService(creationConfig.services.buildServiceRegistry)
             )
+            task.ndkHandlerInput.initialize(creationConfig)
         }
     }
 

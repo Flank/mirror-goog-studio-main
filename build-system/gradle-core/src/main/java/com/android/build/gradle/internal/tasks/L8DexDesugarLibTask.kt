@@ -20,6 +20,7 @@ import com.android.build.api.variant.impl.getFeatureLevel
 import com.android.build.gradle.internal.AndroidJarInput
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.dependency.getDexingArtifactConfiguration
+import com.android.build.gradle.internal.initialize
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -28,6 +29,7 @@ import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.getDesugarLibConfig
 import com.android.build.gradle.internal.utils.getDesugarLibJarFromMaven
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.builder.dexing.KeepRulesConfig
 import com.android.builder.dexing.runL8
 import com.android.builder.model.CodeShrinker
@@ -122,9 +124,7 @@ abstract class L8DexDesugarLibTask : NonIncrementalTask() {
             super.configure(task)
             task.libConfiguration.set(getDesugarLibConfig(creationConfig.globalScope.project))
             task.desugarLibJar.from(getDesugarLibJarFromMaven(creationConfig.globalScope.project))
-            task.androidJarInput.sdkBuildService.set(
-                getBuildService(creationConfig.services.buildServiceRegistry)
-            )
+            task.androidJarInput.initialize(creationConfig)
             task.minSdkVersion.set(creationConfig.minSdkVersionWithTargetDeviceApi.getFeatureLevel())
 
             if (creationConfig.needsShrinkDesugarLibrary) {

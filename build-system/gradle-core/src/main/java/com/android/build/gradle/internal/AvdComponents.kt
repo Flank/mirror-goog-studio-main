@@ -53,11 +53,12 @@ abstract class AvdComponentsBuildService @Inject constructor(
 
     interface Parameters : BuildServiceParameters {
         val sdkService: Property<SdkComponentsBuildService>
+        val versionedSdkLoader: Property<SdkComponentsBuildService.VersionedSdkLoader>
         val avdLocation: DirectoryProperty
     }
 
     private val sdkDirectory: File
-    get() = parameters.sdkService.get().sdkDirectoryProvider.get().asFile
+    get() = parameters.versionedSdkLoader.get().sdkDirectoryProvider.get().asFile
 
     private val sdkHandler: AndroidSdkHandler by lazy {
         AndroidSdkHandler.getInstance(sdkDirectory)
@@ -93,7 +94,7 @@ abstract class AvdComponentsBuildService @Inject constructor(
             avdManager.reloadAvds(logger)
         }
 
-        val imageProvider = parameters.sdkService.get().sdkImageDirectoryProvider(imageHash)
+        val imageProvider = parameters.versionedSdkLoader.get().sdkImageDirectoryProvider(imageHash)
         if (!imageProvider.isPresent) {
             throw RuntimeException("Failed to find system image for hash: $imageHash")
         }
@@ -163,7 +164,7 @@ abstract class AvdComponentsBuildService @Inject constructor(
 
     private fun defaultHardwareConfig(): MutableMap<String, String> {
         // Get the defaults of all the user-modifiable properties.
-        val emulatorProvider = parameters.sdkService.get().emulatorDirectoryProvider
+        val emulatorProvider = parameters.versionedSdkLoader.get().emulatorDirectoryProvider
 
         val emulatorLib = if (emulatorProvider.isPresent) {
             emulatorProvider.get().asFile
@@ -233,7 +234,8 @@ abstract class AvdComponentsBuildService @Inject constructor(
     class RegistrationAction(
         project: Project,
         private val avdFolderLocation: Provider<Directory>,
-        private val sdkService: Provider<SdkComponentsBuildService>
+        private val sdkService: Provider<SdkComponentsBuildService>,
+        private val versionedSdkLoader: Provider<SdkComponentsBuildService.VersionedSdkLoader>
     ) : ServiceRegistrationAction<AvdComponentsBuildService, Parameters>(
         project,
         AvdComponentsBuildService::class.java
@@ -242,6 +244,7 @@ abstract class AvdComponentsBuildService @Inject constructor(
         override fun configure(parameters: Parameters) {
             parameters.avdLocation.set(avdFolderLocation)
             parameters.sdkService.set(sdkService)
+            parameters.versionedSdkLoader.set(versionedSdkLoader)
         }
     }
 

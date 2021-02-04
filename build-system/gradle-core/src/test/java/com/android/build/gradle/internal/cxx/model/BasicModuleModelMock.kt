@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.model
 
+import com.android.build.api.dsl.SdkComponents
 import com.android.build.api.variant.impl.AndroidVersionImpl
 import com.android.build.api.variant.impl.VariantBuilderImpl
 import com.android.build.api.variant.impl.VariantImpl
@@ -196,7 +197,7 @@ open class BasicModuleModelMock {
     val sdkDir = join(home, "Library", "Android", "sdk")
     val cmakeDir = join(sdkDir, "cmake", DEFAULT_CMAKE_VERSION, "bin")
     val ndkHandler = mock(
-        NdkHandler::class.java,
+        SdkComponentsBuildService.VersionedNdkHandler::class.java,
         throwUnmocked
     )
 
@@ -270,6 +271,9 @@ open class BasicModuleModelMock {
         doReturn(extension).`when`(global).extension
         doReturn(externalNativeBuild).`when`(extension).externalNativeBuild
         doReturn(false).`when`(extension).generatePureSplits
+        doReturn("12.3.4").`when`(extension).compileSdkVersion
+        doReturn("29.3.4").`when`(extension).ndkVersion
+        doReturn("/path/to/nowhere").`when`(extension).ndkPath
 
         doReturn(splits).`when`(extension).splits
 
@@ -393,7 +397,9 @@ open class BasicModuleModelMock {
             doReturn(listOf(Abi.X86)).`when`(ndkInstallStatus.getOrThrow()).supportedAbis
             doReturn(listOf(Abi.X86)).`when`(ndkInstallStatus.getOrThrow()).defaultAbis
 
-            doReturn(ndkHandler).`when`(sdkComponents).ndkHandler
+            doReturn(ndkHandler).`when`(sdkComponents).versionedNdkHandler(
+                Mockito.anyString(), Mockito.anyString(), Mockito.anyString()
+            )
             doReturn(ndkInstallStatus).`when`(ndkHandler).ndkPlatform
             doReturn(ndkInstallStatus).`when`(ndkHandler).getNdkPlatform(true)
             doReturn(variantDslInfo).`when`(variantImpl).variantDslInfo

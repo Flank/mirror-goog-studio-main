@@ -74,17 +74,37 @@ struct LineNumberInfo {
   jvmtiLineNumberEntry* table_ptr;
 };
 
+// An opaque helper to hold abritrary class-refs live permanently.
+class ClassGlobalRefs {
+ public:
+  // use buckets of 8192 classes. This should avoid too many allocations
+  static constexpr size_t kBucketSize = 1u << 13u;
+
+  ClassGlobalRefs() : list_head_(nullptr), tail_pos_(kBucketSize - 1) {}
+
+  // Ensure that the given obj stays live indefinitely. Caller must ensure this
+  // function is not called concurrently
+  void Preserve(JNIEnv* env, jclass obj);
+
+ private:
+  // A segment of a linked list of global refs.
+  // First element is the previous (filled) segment (or null if there are no
+  // more segments) followed by kBucketSize - 1 class objects
+  jobjectArray list_head_;
+
+  // Where the last element in the current segment was placed.
+  size_t tail_pos_;
+};
+
 #ifndef NDEBUG
 using ClassTagMap =
     tracking::unordered_map<ClassInfo, int32_t, kClassTagMap, ClassInfoHash>;
-using ClassGlobalRefs = tracking::vector<jobject, kClassGlobalRefs>;
 using ClassData = tracking::vector<AllocatedClass, kClassData>;
 using MethodIdMap =
     tracking::unordered_map<int64_t, LineNumberInfo, kMethodIds>;
 using ThreadIdMap = tracking::unordered_map<std::string, int32_t, kThreadIdMap>;
 #else
 using ClassTagMap = std::unordered_map<ClassInfo, int32_t, ClassInfoHash>;
-using ClassGlobalRefs = std::vector<jobject>;
 using ClassData = std::vector<AllocatedClass>;
 using MethodIdMap = std::unordered_map<int64_t, LineNumberInfo>;
 using ThreadIdMap = std::unordered_map<std::string, int32_t>;

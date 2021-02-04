@@ -31,6 +31,7 @@ import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
+import com.android.build.gradle.internal.initialize
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
@@ -559,9 +560,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             )
             creationConfig.services.initializeAapt2Input(task.aapt2)
             task.symbolTableBuildService.set(getBuildService(creationConfig.services.buildServiceRegistry))
-            task.androidJarInput.sdkBuildService.setDisallowChanges(
-                getBuildService(creationConfig.services.buildServiceRegistry)
-            )
+            task.androidJarInput.initialize(creationConfig)
 
             task.useStableIds = projectOptions[BooleanOption.ENABLE_STABLE_IDS]
 

@@ -54,6 +54,8 @@ interface DslServices: BaseServices {
     @Deprecated("do not use. DSL elements should not use Property<T> objects")
     fun <T> property(type: Class<T>): Property<T>
 
+    fun <T> provider(type: Class<T>, value: T?): Provider<T>
+
     fun <T> newVar(initialValue: T): ReadWriteProperty<Any?, T>
 
     fun file(file: Any): File
