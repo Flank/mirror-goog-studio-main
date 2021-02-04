@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.dsl
 
+import com.android.build.api.dsl.AndroidResources
 import com.android.build.api.dsl.BuildFeatures
 import com.android.build.api.dsl.ComposeOptions
 import com.android.build.api.dsl.DefaultConfig
@@ -83,11 +84,16 @@ abstract class CommonExtensionImpl<
     override val signingConfigs: NamedDomainObjectContainer<SigningConfig> =
         dslContainers.signingConfigContainer
 
-    override val aaptOptions: AaptOptions =
-        dslServices.newInstance(
-            AaptOptions::class.java,
-            dslServices.projectOptions[BooleanOption.ENABLE_RESOURCE_NAMESPACING_DEFAULT]
-        )
+    override val androidResources: AndroidResources = dslServices.newInstance(
+        AaptOptions::class.java,
+        dslServices.projectOptions[BooleanOption.ENABLE_RESOURCE_NAMESPACING_DEFAULT]
+    )
+
+    override fun androidResources(action: AndroidResources.() -> Unit) {
+        action.invoke(androidResources)
+    }
+
+    override val aaptOptions: AaptOptions get() = androidResources as AaptOptions
 
     override fun aaptOptions(action: com.android.build.api.dsl.AaptOptions.() -> Unit) {
         action.invoke(aaptOptions)

@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.ide.v2
 
-import com.android.build.api.dsl.AaptOptions
+import com.android.build.api.dsl.AndroidResources
 import com.android.build.api.dsl.CompileOptions
 import com.android.build.api.dsl.LintOptions
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
@@ -182,7 +182,7 @@ internal fun DefaultAndroidSourceSet.convert(features: BuildFeatureValues) = Sou
     mlModelsDirectories = if (features.mlModelBinding) mlModelsDirectories else null
 )
 
-internal fun AaptOptions.convert() = AaptOptionsImpl(
+internal fun AndroidResources.convert() = AaptOptionsImpl(
     namespacing = if (namespaced) REQUIRED else DISABLED
 )
 

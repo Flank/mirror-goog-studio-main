@@ -37,7 +37,6 @@ interface CommonExtension<
         SigningConfigT : SigningConfig,
         VariantBuilderT : VariantBuilder,
         VariantT : Variant> {
-    // TODO(b/140406102)
 
     /**
      * Specifies options for the Android Asset Packaging Tool (AAPT).
@@ -45,6 +44,7 @@ interface CommonExtension<
      * For more information about the properties you can configure in this block, see [AaptOptions].
      */
     @get:Incubating
+    @Deprecated("Replaced by ", replaceWith = ReplaceWith("androidResources"))
     val aaptOptions: AaptOptions
 
     /**
@@ -53,7 +53,24 @@ interface CommonExtension<
      * For more information about the properties you can configure in this block, see [AaptOptions].
      */
     @Incubating
+    @Deprecated("Replaced by ", replaceWith = ReplaceWith("androidResources"))
     fun aaptOptions(action: AaptOptions.() -> Unit)
+
+    /**
+     * Specifies options related to the processing of Android Resources.
+     *
+     * For more information about the properties you can configure in this block, see [AndroidResources].
+     */
+    @get:Incubating
+    val androidResources: AndroidResources
+
+    /**
+     * Specifies options related to the processing of Android Resources.
+     *
+     * For more information about the properties you can configure in this block, see [AndroidResources].
+     */
+    @Incubating
+    fun androidResources(action: AndroidResources.() -> Unit)
 
     /**
      * Specifies options for the
