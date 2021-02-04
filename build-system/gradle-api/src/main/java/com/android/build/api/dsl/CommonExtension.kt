@@ -254,7 +254,6 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [Lint].
      */
-    @get:Incubating
     val lint: Lint
 
     /**
@@ -262,7 +261,6 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [Lint].
      */
-    @Incubating
     fun lint(action: Lint.() -> Unit)
 
     /**
