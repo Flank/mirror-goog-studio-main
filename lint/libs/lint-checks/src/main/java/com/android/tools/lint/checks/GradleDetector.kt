@@ -765,6 +765,14 @@ open class GradleDetector : Detector(), GradleScanner {
             mDeclaredGoogleMavenRepository = true
             maybeReportAgpVersionIssue(context)
         }
+        if (statement == "jcenter" && parent == "repositories") {
+            val message = "JCenter is at end of life"
+            val replaceFix = fix().name("Replace with mavenCentral")
+                .replace().text("jcenter").with("mavenCentral").build()
+            val deleteFix = fix().name("Delete this repository declaration")
+                .replace().all().with("").build()
+            report(context, cookie, JCENTER_REPOSITORY_OBSOLETE, message, fix().alternatives(replaceFix, deleteFix))
+        }
     }
 
     private fun checkTargetCompatibility(context: GradleContext) {
@@ -2755,6 +2763,27 @@ open class GradleDetector : Detector(), GradleScanner {
             priority = 6,
             severity = Severity.WARNING,
             implementation = IMPLEMENTATION
+        )
+
+        @JvmField
+        val JCENTER_REPOSITORY_OBSOLETE = Issue.create(
+            id = "JcenterRepositoryObsolete",
+            briefDescription = "The JCenter Maven repository is obsolete from 1st May 2021",
+            explanation =
+                """
+                JFrog announced that the JCenter Maven repository would reach end of service \
+                and would no longer be available from 1st May 2021; no new submissions would be \
+                accepted from 28th February 2021, and there might be accessibility problems due \
+                to maintenance windows before the end of service date.
+
+                We recommend configuring Gradle to retrieve Java artifacts using `mavenCentral` \
+                instead.
+                """,
+            category = Category.CORRECTNESS,
+            priority = 8,
+            severity = Severity.WARNING,
+            implementation = IMPLEMENTATION,
+            moreInfo = "https://developer.android.com/r/tools/jcenter-end-of-service"
         )
 
         /** Gradle plugin IDs based on the Java plugin */
