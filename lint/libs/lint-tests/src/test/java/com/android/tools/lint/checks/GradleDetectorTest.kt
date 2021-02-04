@@ -42,6 +42,7 @@ import com.android.tools.lint.checks.GradleDetector.Companion.GRADLE_GETTER
 import com.android.tools.lint.checks.GradleDetector.Companion.GRADLE_PLUGIN_COMPATIBILITY
 import com.android.tools.lint.checks.GradleDetector.Companion.HIGH_APP_VERSION_CODE
 import com.android.tools.lint.checks.GradleDetector.Companion.JAVA_PLUGIN_LANGUAGE_LEVEL
+import com.android.tools.lint.checks.GradleDetector.Companion.JCENTER_REPOSITORY_OBSOLETE
 import com.android.tools.lint.checks.GradleDetector.Companion.KTX_EXTENSION_AVAILABLE
 import com.android.tools.lint.checks.GradleDetector.Companion.LIFECYCLE_ANNOTATION_PROCESSOR_WITH_JAVA8
 import com.android.tools.lint.checks.GradleDetector.Companion.MIN_SDK_TOO_LOW
@@ -3788,6 +3789,108 @@ class GradleDetectorTest : AbstractCheckTest() {
                     """.trimIndent()
                 )
         }
+    }
+
+    fun testJCenterObsolete() {
+        lint().files(
+            gradle(
+                """
+                    buildscript {
+                        ext {
+                            versions = [kotlin: '1.4.20']
+                        }
+                        repositories {
+                            google()
+                            jcenter()
+                        }
+                    }
+
+                    allprojects {
+                        repositories {
+                            google()
+                            jcenter()
+                        }
+                    }
+                """
+            ).indented()
+        )
+            .issues(JCENTER_REPOSITORY_OBSOLETE)
+            .run()
+            .expect("""
+                build.gradle:7: Warning: JCenter is at end of life [JcenterRepositoryObsolete]
+                        jcenter()
+                        ~~~~~~~~~
+                build.gradle:14: Warning: JCenter is at end of life [JcenterRepositoryObsolete]
+                        jcenter()
+                        ~~~~~~~~~
+                0 errors, 2 warnings
+            """)
+            .expectFixDiffs("""
+                Fix for build.gradle line 7: Replace with mavenCentral:
+                @@ -7 +7
+                -         jcenter()
+                +         mavenCentral()
+                Fix for build.gradle line 7: Delete this repository declaration:
+                @@ -7 +7
+                -         jcenter()
+                Fix for build.gradle line 14: Replace with mavenCentral:
+                @@ -14 +14
+                -         jcenter()
+                +         mavenCentral()
+                Fix for build.gradle line 14: Delete this repository declaration:
+                @@ -14 +14
+                -         jcenter()
+            """)
+    }
+
+    fun testJCenterObsoleteKts() {
+        lint().files(
+            kts(
+                """
+                    buildscript {
+                        val versions by extra("1.4.20")
+                        repositories {
+                            google()
+                            jcenter()
+                        }
+                    }
+
+                    allprojects {
+                        repositories {
+                            google()
+                            jcenter()
+                        }
+                    }
+                """
+            ).indented()
+        )
+            .issues(JCENTER_REPOSITORY_OBSOLETE)
+            .run()
+            .expect("""
+                build.gradle.kts:5: Warning: JCenter is at end of life [JcenterRepositoryObsolete]
+                        jcenter()
+                        ~~~~~~~~~
+                build.gradle.kts:12: Warning: JCenter is at end of life [JcenterRepositoryObsolete]
+                        jcenter()
+                        ~~~~~~~~~
+                0 errors, 2 warnings
+            """)
+            .expectFixDiffs("""
+                Fix for build.gradle.kts line 5: Replace with mavenCentral:
+                @@ -5 +5
+                -         jcenter()
+                +         mavenCentral()
+                Fix for build.gradle.kts line 5: Delete this repository declaration:
+                @@ -5 +5
+                -         jcenter()
+                Fix for build.gradle.kts line 12: Replace with mavenCentral:
+                @@ -12 +12
+                -         jcenter()
+                +         mavenCentral()
+                Fix for build.gradle.kts line 12: Delete this repository declaration:
+                @@ -12 +12
+                -         jcenter()
+            """)
     }
 
     // -------------------------------------------------------------------------------------------

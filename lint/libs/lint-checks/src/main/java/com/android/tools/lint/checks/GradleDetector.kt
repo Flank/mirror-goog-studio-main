@@ -759,6 +759,14 @@ open class GradleDetector : Detector(), GradleScanner {
             mDeclaredGoogleMavenRepository = true
             maybeReportAgpVersionIssue(context)
         }
+        if (statement == "jcenter" && parent == "repositories") {
+            val message = "JCenter is at end of life"
+            val replaceFix = fix().name("Replace with mavenCentral")
+                .replace().text("jcenter").with("mavenCentral").build()
+            val deleteFix = fix().name("Delete this repository declaration")
+                .replace().all().with("").build()
+            report(context, cookie, JCENTER_REPOSITORY_OBSOLETE, message, fix().alternatives(replaceFix, deleteFix))
+        }
     }
 
     private fun checkTargetCompatibility(context: GradleContext) {
