@@ -2727,6 +2727,27 @@ open class GradleDetector : Detector(), GradleScanner {
             implementation = IMPLEMENTATION
         )
 
+        @JvmField
+        val JCENTER_REPOSITORY_OBSOLETE = Issue.create(
+            id = "JcenterRepositoryObsolete",
+            briefDescription = "The JCenter Maven repository is obsolete from 1st May 2021",
+            explanation =
+                """
+                JFrog announced that the JCenter Maven repository would reach end of service \
+                and would no longer be available from 1st May 2021; no new submissions would be \
+                accepted from 28th February 2021, and there might be accessibility problems due \
+                to maintenance windows before the end of service date.
+
+                We recommend configuring Gradle to retrieve Java artifacts using `mavenCentral` \
+                instead.
+                """,
+            category = Category.CORRECTNESS,
+            priority = 8,
+            severity = Severity.WARNING,
+            implementation = IMPLEMENTATION,
+            moreInfo = "https://developer.android.com/r/tools/jcenter-end-of-service"
+        )
+
         /** Gradle plugin IDs based on the Java plugin */
         val JAVA_PLUGIN_IDS = listOf("java", "java-library", "application")
             .flatMap { listOf(it, "org.gradle.$it") }
