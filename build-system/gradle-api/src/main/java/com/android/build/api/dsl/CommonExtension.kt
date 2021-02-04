@@ -61,7 +61,6 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [AndroidResources].
      */
-    @get:Incubating
     val androidResources: AndroidResources
 
     /**
@@ -69,7 +68,6 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [AndroidResources].
      */
-    @Incubating
     fun androidResources(action: AndroidResources.() -> Unit)
 
     /**
