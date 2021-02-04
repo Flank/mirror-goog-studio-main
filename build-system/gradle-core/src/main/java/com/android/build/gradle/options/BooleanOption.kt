@@ -159,6 +159,9 @@ enum class BooleanOption(
     /** Whether lint should be run in process; the default is a separate process. Primarily useful for debugging lint issues related to AGP. */
     RUN_LINT_IN_PROCESS("android.experimental.runLintInProcess", false, FeatureStage.Experimental),
 
+    /** Whether to use lint's partial analysis functionality. */
+    USE_LINT_PARTIAL_ANALYSIS("android.experimental.useLintPartialAnalysis", false, FeatureStage.Experimental),
+
     // Options related to new Variant API
     USE_SAFE_PROPERTIES("android.variant.safe.properties", false, FeatureStage.Experimental),
 

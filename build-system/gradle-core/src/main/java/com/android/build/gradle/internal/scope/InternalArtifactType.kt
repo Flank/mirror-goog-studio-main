@@ -327,6 +327,10 @@ InternalArtifactType<T : FileSystemLocation>(
     object LINT_HTML_REPORT: InternalArtifactType<RegularFile>(FILE, Category.REPORTS)
     object LINT_XML_REPORT: InternalArtifactType<RegularFile>(FILE, Category.REPORTS)
     object LINT_SARIF_REPORT: InternalArtifactType<RegularFile>(FILE, Category.REPORTS)
+    // Partial lint results, which are the module-specific lint results generated when running lint
+    // with the --analyze-only flag. These partial results are merged into a final report
+    // downstream.
+    object LINT_PARTIAL_RESULTS: InternalArtifactType<Directory>(DIRECTORY)
 
     // the zip file output of the extract annotation class.
     object ANNOTATIONS_ZIP: InternalArtifactType<RegularFile>(FILE), Replaceable
