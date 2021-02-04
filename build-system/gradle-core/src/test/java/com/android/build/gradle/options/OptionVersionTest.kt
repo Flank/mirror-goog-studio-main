@@ -31,9 +31,18 @@ class OptionVersionTest {
          */
         private val AGP_STABLE_VERSION: GradleVersion = getStableVersionIgnoringDotReleases(ANDROID_GRADLE_PLUGIN_VERSION)
 
-        /** Deprecated [Option]s that have invalid deprecation versions and need to be fixed. */
+        /**
+         * Deprecated [Option]s that have invalid deprecation versions and need to be fixed as soon
+         * as possible.
+         *
+         * IMPORTANT: Add a tracking bug to ensure all pending issues are fixed before beta
+         * releases of each version.
+         *  - [Add more here]
+         *  - Tracking bug for AGP 7.1: TBD
+         *  - Tracking bug for AGP 7.0: 171996591
+         */
         @Suppress("DEPRECATION")
-        private val KNOWN_VIOLATING_DEPRECATION_OPTIONS: Set<Option<*>> = setOf(
+        private val KNOWN_VIOLATING_DEPRECATED_OPTIONS: List<Option<*>> = listOf(
                 BooleanOption.ENABLE_INCREMENTAL_DEXING_TASK_V2,
                 BooleanOption.ENABLE_INCREMENTAL_DEXING_TRANSFORM,
                 BooleanOption.ENABLE_JVM_RESOURCE_COMPILER,
@@ -59,7 +68,7 @@ class OptionVersionTest {
 
     @Test
     fun `check deprecated options have deprecation versions in the future`() {
-        val violatingDeprecatedOptions = getAllOptions()
+        val violatingOptions = getAllOptions()
                 .filter { it.status is Option.Status.Deprecated }
                 .filter {
                     val deprecationVersion = getStableVersionIgnoringDotReleases(
@@ -67,30 +76,19 @@ class OptionVersionTest {
                     deprecationVersion <= AGP_STABLE_VERSION
                 }
 
-        val notYetKnownViolations = violatingDeprecatedOptions - KNOWN_VIOLATING_DEPRECATION_OPTIONS
-        assert(notYetKnownViolations.isEmpty()) {
-            "Deprecated options must have deprecation versions in the future." +
-                    " The following options do not meet that requirement:\n" +
-                    "```\n" +
-                    violatingDeprecatedOptions.joinToString("") { "${it.javaClass.simpleName}.${it},\n" } +
-                    "```\n" +
-                    "Please either fix them now or copy the above code snippet to" +
-                    " `OptionVersionTest.KNOWN_VIOLATING_DEPRECATION_OPTIONS` to fix them later."
-        }
-
-        val fixedViolations = KNOWN_VIOLATING_DEPRECATION_OPTIONS - violatingDeprecatedOptions
-        assert(fixedViolations.isEmpty()) {
-            "The following options no longer violate the requirement checked by this test:\n" +
-                    "```\n" +
-                    fixedViolations.joinToString("") { "${it.javaClass.simpleName}.${it},\n" } +
-                    "```\n" +
-                    "Please remove them from `OptionVersionTest.KNOWN_VIOLATING_DEPRECATION_OPTIONS`."
-        }
+        checkViolatingProjectOptions(
+                violatingOptions = violatingOptions,
+                ignoreList = KNOWN_VIOLATING_DEPRECATED_OPTIONS,
+                requirement = "Deprecated options must have deprecation versions in the future.",
+                suggestion = "If you want to fix them later, copy the above code snippet to" +
+                        " `OptionVersionTest.KNOWN_VIOLATING_DEPRECATED_OPTIONS`" +
+                        " and be sure to file a bug to keep track."
+        )
     }
 
     @Test
     fun `check removed options do not have removed versions in the future`() {
-        val violatingRemovedOptions = getAllOptions()
+        val violatingOptions = getAllOptions()
                 .filter { it.status is Option.Status.Removed }
                 .filter { option ->
                     val removedVersion = (option.status as Option.Status.Removed).removedVersion.versionString?.let {
@@ -99,12 +97,10 @@ class OptionVersionTest {
                     removedVersion?.let { removedVersion > AGP_STABLE_VERSION } ?: false
                 }
 
-        assert(violatingRemovedOptions.isEmpty()) {
-            "Removed options must not have removed versions in the future:\n" +
-                    "```\n" +
-                    violatingRemovedOptions.joinToString("") { "${it.javaClass.simpleName}.${it},\n" } +
-                    "```\n"
-        }
+        checkViolatingProjectOptions(
+                violatingOptions = violatingOptions,
+                requirement = "Removed options must not have removed versions in the future."
+        )
     }
 
     private fun getAllOptions(): List<Option<Any>> =
@@ -114,3 +110,29 @@ class OptionVersionTest {
                     IntegerOption.values()
 }
 
+fun checkViolatingProjectOptions(
+        violatingOptions: List<Option<*>>,
+        ignoreList: List<Option<*>> = emptyList(),
+        requirement: String,
+        suggestion: String? = null) {
+    val newViolations = violatingOptions - ignoreList
+    assert(newViolations.isEmpty()) {
+        "$requirement\n" +
+                "The following options do not meet that requirement:\n" +
+                "```\n" +
+                newViolations.joinToString(",\n") { "${it.javaClass.simpleName}.$it" } + "\n" +
+                "```\n" +
+                (suggestion
+                        ?: "If this is intended, copy the above code snippet to the ignore list of this test.")
+    }
+
+    val fixedViolations = ignoreList - violatingOptions
+    assert(fixedViolations.isEmpty()) {
+        "$requirement\n" +
+                "The following options have met that requirement:\n" +
+                "```\n" +
+                fixedViolations.joinToString(",\n") { "${it.javaClass.simpleName}.$it" } + "\n" +
+                "```\n" +
+                "Remove them from the ignore list of this test."
+    }
+}
