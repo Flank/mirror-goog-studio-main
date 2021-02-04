@@ -914,6 +914,8 @@ class VersionChecks(
                 val left = element.leftOperand
                 if (before !== left) {
                     getVersionCheckConditional(element = left, and = true)?.let { return it }
+                    val right = element.rightOperand
+                    getVersionCheckConditional(element = right, and = true)?.let { return it }
                 }
             }
             getVersionCheckConditional(fromThen = true, binary = element)?.let { return it }
