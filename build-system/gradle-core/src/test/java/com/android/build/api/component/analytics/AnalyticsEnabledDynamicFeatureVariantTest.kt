@@ -16,32 +16,38 @@
 
 package com.android.build.api.component.analytics
 
+import com.android.build.api.component.AndroidTest
 import com.android.build.api.variant.Aapt
 import com.android.build.api.variant.ApkPackaging
+import com.android.build.api.variant.Dexing
 import com.android.build.api.variant.DynamicFeatureVariant
 import com.android.build.api.variant.JniLibsApkPackaging
 import com.android.build.api.variant.ResourcesPackaging
+import com.android.build.gradle.internal.fixtures.FakeGradleProperty
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.common.truth.Truth
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
-import org.junit.Before
+import org.gradle.api.file.RegularFileProperty
+import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mock
 import org.mockito.Mockito
-import org.mockito.MockitoAnnotations
+import org.mockito.junit.MockitoJUnit
+import org.mockito.junit.MockitoRule
+import org.mockito.quality.Strictness
 
 class AnalyticsEnabledDynamicFeatureVariantTest {
+
+    @get:Rule
+    val rule: MockitoRule = MockitoJUnit.rule().strictness(Strictness.STRICT_STUBS)
+    
     @Mock
     lateinit var delegate: DynamicFeatureVariant
 
     private val stats = GradleBuildVariant.newBuilder()
-    private lateinit var proxy: AnalyticsEnabledDynamicFeatureVariant
-
-    @Before
-    fun setup() {
-        MockitoAnnotations.initMocks(this)
-        proxy = AnalyticsEnabledDynamicFeatureVariant(delegate, stats, FakeObjectFactory.factory)
+    private val proxy: AnalyticsEnabledDynamicFeatureVariant by lazy {
+        AnalyticsEnabledDynamicFeatureVariant(delegate, stats, FakeObjectFactory.factory)
     }
 
     @Test
@@ -100,10 +106,6 @@ class AnalyticsEnabledDynamicFeatureVariantTest {
     @Test
     fun packagingOptionsActions() {
         val packagingOptions = Mockito.mock(ApkPackaging::class.java)
-        val jniLibsApkPackagingOptions = Mockito.mock(JniLibsApkPackaging::class.java)
-        val resourcesPackagingOptions = Mockito.mock(ResourcesPackaging::class.java)
-        Mockito.`when`(packagingOptions.jniLibs).thenReturn(jniLibsApkPackagingOptions)
-        Mockito.`when`(packagingOptions.resources).thenReturn(resourcesPackagingOptions)
         Mockito.`when`(delegate.packaging).thenReturn(packagingOptions)
         val action: ApkPackaging.() -> Unit = {
             this.jniLibs {}
@@ -122,5 +124,68 @@ class AnalyticsEnabledDynamicFeatureVariantTest {
             )
         )
         Mockito.verify(delegate, Mockito.times(1)).packaging
+    }
+
+    @Test
+    fun androidTest() {
+        val androidTest = Mockito.mock(AndroidTest::class.java)
+        Mockito.`when`(androidTest.applicationId).thenReturn(FakeGradleProperty("appId"))
+        Mockito.`when`(delegate.androidTest).thenReturn(androidTest)
+
+        proxy.androidTest.let {
+            Truth.assertThat(it?.applicationId?.get()).isEqualTo("appId")
+        }
+
+        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(2)
+        Truth.assertThat(
+            stats.variantApiAccess.variantPropertiesAccessList.map { it.type }
+        ).containsExactlyElementsIn(
+            listOf(
+                VariantPropertiesMethodType.ANDROID_TEST_VALUE,
+                VariantPropertiesMethodType.APPLICATION_ID_VALUE,
+            )
+        )
+        Mockito.verify(delegate, Mockito.times(1)).androidTest
+    }
+
+    @Test
+    fun getDexingConfig() {
+        val dexing = Mockito.mock(Dexing::class.java)
+        val multiDexKeepFile = Mockito.mock(RegularFileProperty::class.java)
+        Mockito.`when`(dexing.multiDexKeepFile).thenReturn(multiDexKeepFile)
+        val multiDexKeepProguard = Mockito.mock(RegularFileProperty::class.java)
+        Mockito.`when`(dexing.multiDexKeepProguard).thenReturn(multiDexKeepProguard)
+        Mockito.`when`(delegate.dexing).thenReturn(dexing)
+
+        proxy.dexing.let {
+            Truth.assertThat(it.multiDexKeepFile).isEqualTo(multiDexKeepFile)
+            Truth.assertThat(it.multiDexKeepProguard).isEqualTo(multiDexKeepProguard)
+        }
+
+        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(3)
+        Truth.assertThat(
+            stats.variantApiAccess.variantPropertiesAccessList.map { it.type }
+        ).containsExactlyElementsIn(
+            listOf(
+                VariantPropertiesMethodType.DEXING_VALUE,
+                VariantPropertiesMethodType.MULTI_DEX_KEEP_FILE_VALUE,
+                VariantPropertiesMethodType.MULTI_DEX_KEEP_PROGUARD_VALUE,
+            )
+        )
+        Mockito.verify(delegate, Mockito.times(1)).dexing
+    }
+
+    @Test
+    fun dexingAction() {
+        val function = { param : Dexing -> println(param) }
+        val dexing = Mockito.mock(Dexing::class.java)
+        Mockito.`when`(delegate.dexing).thenReturn(dexing)
+        proxy.dexing(function)
+
+        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
+        Truth.assertThat(
+            stats.variantApiAccess.variantPropertiesAccessList.first().type
+        ).isEqualTo(VariantPropertiesMethodType.DEXING_ACTION_VALUE)
+        Mockito.verify(delegate, Mockito.times(1)).dexing
     }
 }

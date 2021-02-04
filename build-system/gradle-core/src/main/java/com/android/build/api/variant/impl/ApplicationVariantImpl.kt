@@ -128,6 +128,17 @@ open class ApplicationVariantImpl @Inject constructor(
     override val minifiedEnabled: Boolean
         get() = variantDslInfo.isMinifyEnabled
 
+    override val dexing: Dexing by lazy {
+        internalServices.newInstance(Dexing::class.java).also {
+            it.multiDexKeepFile.set(variantDslInfo.multiDexKeepFile)
+            it.multiDexKeepProguard.set(variantDslInfo.multiDexKeepProguard)
+        }
+    }
+
+    override fun dexing(action: Dexing.() -> Unit) {
+        action.invoke(dexing)
+    }
+
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------

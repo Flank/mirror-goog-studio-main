@@ -184,22 +184,8 @@ abstract class D8BundleMainDexListTask : NonIncrementalTask() {
                 task.aaptGeneratedRules
             )
 
-            val variantDslInfo = creationConfig.variantDslInfo
-            val project = creationConfig.globalScope.project
-
-            if (variantDslInfo.multiDexKeepProguard != null) {
-                task.userMultidexProguardRules.fileProvider(
-                    project.provider { variantDslInfo.multiDexKeepProguard }
-                )
-            }
-            task.userMultidexProguardRules.disallowChanges()
-
-            if (variantDslInfo.multiDexKeepFile != null) {
-                task.userMultidexKeepFile.fileProvider(
-                    project.provider { variantDslInfo.multiDexKeepFile }
-                )
-            }
-            task.userMultidexKeepFile.disallowChanges()
+            task.userMultidexProguardRules.setDisallowChanges(creationConfig.dexing.multiDexKeepProguard)
+            task.userMultidexKeepFile.setDisallowChanges(creationConfig.dexing.multiDexKeepFile)
             task.bootClasspath.from(creationConfig.variantScope.bootClasspath).disallowChanges()
             task.errorFormat
                 .setDisallowChanges(

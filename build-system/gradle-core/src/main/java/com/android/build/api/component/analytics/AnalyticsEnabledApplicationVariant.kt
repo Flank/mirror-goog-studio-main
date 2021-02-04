@@ -22,6 +22,7 @@ import com.android.build.api.variant.Aapt
 import com.android.build.api.variant.ApkPackaging
 import com.android.build.api.variant.ApplicationVariant
 import com.android.build.api.variant.DependenciesInfo
+import com.android.build.api.variant.Dexing
 import com.android.build.api.variant.SigningConfig
 import com.android.build.api.variant.VariantOutput
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
@@ -105,6 +106,41 @@ open class AnalyticsEnabledApplicationVariant @Inject constructor(
         action.invoke(userVisiblePackagingOptions)
     }
 
+    private val userVisibleDexing: Dexing by lazy {
+        objectFactory.newInstance(
+            AnalyticsEnabledDexing::class.java,
+            delegate.dexing,
+            stats
+        )
+    }
+
+    private val userVisibleAndroidTest: AndroidTest? by lazy {
+        delegate.androidTest?.let {
+            objectFactory.newInstance(
+                AnalyticsEnabledAndroidTest::class.java,
+                it,
+                stats
+            )
+        }
+    }
+
     override val androidTest: AndroidTest?
-        get() = delegate.androidTest
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.ANDROID_TEST_VALUE
+            return userVisibleAndroidTest
+        }
+
+    override val dexing: Dexing
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.DEXING_VALUE
+            return userVisibleDexing
+        }
+
+    override fun dexing(action: Dexing.() -> Unit) {
+        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+            VariantPropertiesMethodType.DEXING_ACTION_VALUE
+        action.invoke(userVisibleDexing)
+    }
 }

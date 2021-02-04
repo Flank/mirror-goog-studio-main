@@ -17,9 +17,9 @@
 package com.android.build.api.component.analytics
 
 import com.android.build.api.component.AndroidTest
-import com.android.build.api.component.UnitTest
 import com.android.build.api.variant.Aapt
 import com.android.build.api.variant.ApkPackaging
+import com.android.build.api.variant.Dexing
 import com.android.build.api.variant.DynamicFeatureVariant
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
@@ -65,6 +65,41 @@ open class AnalyticsEnabledDynamicFeatureVariant @Inject constructor(
         action.invoke(userVisiblePackagingOptions)
     }
 
+    private val userVisibleAndroidTest: AndroidTest? by lazy {
+        delegate.androidTest?.let {
+            objectFactory.newInstance(
+                AnalyticsEnabledAndroidTest::class.java,
+                it,
+                stats
+            )
+        }
+    }
+
     override val androidTest: AndroidTest?
-        get() = delegate.androidTest
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.ANDROID_TEST_VALUE
+            return userVisibleAndroidTest
+        }
+
+    private val userVisibleDexing: Dexing by lazy {
+        objectFactory.newInstance(
+            AnalyticsEnabledDexing::class.java,
+            delegate.dexing,
+            stats
+        )
+    }
+
+    override val dexing: Dexing
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.DEXING_VALUE
+            return userVisibleDexing
+        }
+
+    override fun dexing(action: Dexing.() -> Unit) {
+        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+            VariantPropertiesMethodType.DEXING_ACTION_VALUE
+        action.invoke(userVisibleDexing)
+    }
 }

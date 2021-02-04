@@ -23,7 +23,7 @@ import org.gradle.api.provider.Provider
  * [Variant] for test-only modules.
  */
 @Incubating
-interface TestVariant: Variant {
+interface TestVariant: Variant, ProducesDex<Dexing> {
     /**
      * Variant's application ID as present in the final manifest file of the APK.
      */

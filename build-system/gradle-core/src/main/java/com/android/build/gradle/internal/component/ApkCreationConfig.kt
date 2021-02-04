@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.component
 
 import com.android.build.api.variant.Aapt
 import com.android.build.api.variant.ApkPackaging
+import com.android.build.api.variant.Dexing
 import com.android.build.api.variant.SigningConfig
 import org.gradle.api.provider.MapProperty
 
@@ -52,4 +53,6 @@ interface ApkCreationConfig: ConsumableCreationConfig {
     override val packaging: ApkPackaging
 
     val signingConfig: SigningConfig?
+
+    val dexing: Dexing
 }

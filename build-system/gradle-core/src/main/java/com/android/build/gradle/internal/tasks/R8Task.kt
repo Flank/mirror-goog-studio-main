@@ -49,6 +49,7 @@ import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
@@ -76,9 +77,15 @@ abstract class R8Task: ProguardConfigurableTask() {
     @get:Input
     abstract val enableDesugaring: Property<Boolean>
 
-    @get:InputFiles
+    @get:InputFile
     @get:PathSensitive(PathSensitivity.NONE)
-    abstract val mainDexListFiles: ConfigurableFileCollection
+    @get:Optional
+    abstract val multiDexKeepFile: RegularFileProperty
+
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.NONE)
+    @get:Optional
+    abstract val multiDexKeepProguard: RegularFileProperty
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE)
@@ -281,9 +288,9 @@ abstract class R8Task: ProguardConfigurableTask() {
                 // options applicable only when building APKs, do not apply with AARs
                 task.duplicateClassesCheck.from(artifacts.get(DUPLICATE_CLASSES_CHECK))
 
-                creationConfig.variantDslInfo.multiDexKeepProguard?.let { multiDexKeepProguard ->
-                    task.mainDexRulesFiles.from(multiDexKeepProguard)
-                }
+                task.multiDexKeepProguard.setDisallowChanges(
+                    (creationConfig as ApkCreationConfig).dexing.multiDexKeepProguard
+                )
 
                 if (creationConfig.dexingType.needsMainDexList
                     && !creationConfig.globalScope.extension.aaptOptions.namespaced
@@ -295,9 +302,7 @@ abstract class R8Task: ProguardConfigurableTask() {
                     )
                 }
 
-                creationConfig.variantDslInfo.multiDexKeepFile?.let { multiDexKeepFile ->
-                    task.mainDexListFiles.from(multiDexKeepFile)
-                }
+                task.multiDexKeepFile.setDisallowChanges(creationConfig.dexing.multiDexKeepFile)
 
                 if (creationConfig.variantScope.consumesFeatureJars()) {
                     creationConfig.artifacts.setTaskInputToFinalProduct(
@@ -389,8 +394,17 @@ abstract class R8Task: ProguardConfigurableTask() {
             enableDesugaring = enableDesugaring.get(),
             disableTreeShaking = disableTreeShaking.get(),
             disableMinification = disableMinification.get(),
-            mainDexListFiles = mainDexListFiles.toList(),
-            mainDexRulesFiles = mainDexRulesFiles.toList(),
+            mainDexListFiles = mutableListOf<File>().also {
+                if (multiDexKeepFile.isPresent) {
+                    it.add(multiDexKeepFile.get().asFile)
+                }
+            },
+            mainDexRulesFiles = mutableListOf<File>().also {
+                it.addAll(mainDexRulesFiles.toList())
+                if (multiDexKeepProguard.isPresent) {
+                    it.add(multiDexKeepProguard.get().asFile)
+                }
+            },
             inputProguardMapping =
                 if (testedMappingFile.isEmpty) {
                     null

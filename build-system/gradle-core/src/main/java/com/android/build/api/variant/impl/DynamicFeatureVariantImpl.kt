@@ -25,6 +25,7 @@ import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.Aapt
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.ApkPackaging
+import com.android.build.api.variant.Dexing
 import com.android.build.api.variant.DynamicFeatureVariant
 import com.android.build.api.variant.SigningConfig
 import com.android.build.api.variant.Variant
@@ -126,7 +127,18 @@ open class DynamicFeatureVariantImpl @Inject constructor(
         action.invoke(packaging)
     }
 
-    // ---------------------------------------------------------------------------------------------
+    override val dexing: Dexing by lazy {
+        internalServices.newInstance(Dexing::class.java).also {
+            it.multiDexKeepFile.set(variantDslInfo.multiDexKeepFile)
+            it.multiDexKeepProguard.set(variantDslInfo.multiDexKeepProguard)
+        }
+    }
+
+    override fun dexing(action: Dexing.() -> Unit) {
+        action.invoke(dexing)
+    }
+
+// ---------------------------------------------------------------------------------------------
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------
 

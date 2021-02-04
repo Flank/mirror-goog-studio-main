@@ -127,6 +127,13 @@ open class AndroidTestImpl @Inject constructor(
         action.invoke(packaging)
     }
 
+    override val dexing: Dexing by lazy {
+        internalServices.newInstance(Dexing::class.java).also {
+            it.multiDexKeepFile.set(variantDslInfo.multiDexKeepFile)
+            it.multiDexKeepProguard.set(variantDslInfo.multiDexKeepProguard)
+        }
+    }
+
     override val minifiedEnabled: Boolean
         get() = variantDslInfo.isMinifyEnabled
 
