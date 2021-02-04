@@ -6,4 +6,6 @@ apply from: "../../commonLocalRepo.gradle"
 
 dependencies {
     api "com.android.tools.build:builder-test-api:$project.ext.buildVersion"
+    implementation "com.android.tools.ddms:ddmlib:$project.ext.baseVersion"
+    implementation "com.android.tools:common:$project.ext.baseVersion"
 }

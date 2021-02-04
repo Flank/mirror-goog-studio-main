@@ -18,7 +18,6 @@ package com.android.build.gradle.integration.application
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
-import com.android.testutils.TestUtils
 import org.junit.Rule
 import org.junit.Test
 
@@ -27,9 +26,8 @@ class BasicKotlinDslTest {
 
     @JvmField
     @Rule
-    val project = GradleTestProject.builder().fromTestApp(
-            MinimalSubProject.app("com.example.app"))
-            .withPluginManagementBlock(TestUtils.runningFromBazel())
+    val project = GradleTestProject.builder().fromTestApp(MinimalSubProject.app("com.example.app"))
+            .withPluginManagementBlock(true)
             .create()
 
     @Test
