@@ -16,10 +16,15 @@
 
 package android.os
 
+// We don't want the compiler to optimize constants when we build our inspector; instead, we want
+// the code to fetch the actual values from the framework at runtime.
+@Suppress("MayBeConstant")
 object Build {
     object VERSION {
 
-        const val SDK_INT = 29
-        const val CODENAME = "F(ake)"
+        @JvmField
+        val SDK_INT = 29
+        @JvmField
+        val CODENAME = "F(ake)"
     }
 }
