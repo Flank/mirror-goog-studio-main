@@ -3893,6 +3893,92 @@ class GradleDetectorTest : AbstractCheckTest() {
             """)
     }
 
+    fun testJCenterObsoleteContent() {
+        lint().files(
+            gradle(
+                """
+                    repositories {
+                        jcenter {
+                            content {
+                                // exclude artifacts starting with "my.company"
+                                excludeGroupByRegex "^my\\.company.*"
+                            }
+                        }
+                    }
+                """
+            ).indented()
+        )
+            .issues(JCENTER_REPOSITORY_OBSOLETE)
+            .run()
+            .expect(
+                """
+                build.gradle:2: Warning: JCenter is at end of life [JcenterRepositoryObsolete]
+                    jcenter {
+                    ^
+                0 errors, 1 warnings
+                """
+            )
+            .expectFixDiffs(
+                """
+                Fix for build.gradle line 2: Replace with mavenCentral:
+                @@ -2 +2
+                -     jcenter {
+                +     mavenCentral {
+                Fix for build.gradle line 2: Delete this repository declaration:
+                @@ -2 +2
+                -     jcenter {
+                -         content {
+                -             // exclude artifacts starting with "my.company"
+                -             excludeGroupByRegex "^my\\.company.*"
+                -         }
+                -     }
+                """
+            )
+    }
+
+    fun testJCenterObsoleteContentKts() {
+        lint().files(
+            kts(
+                """
+                    repositories {
+                        jcenter {
+                            content {
+                                // exclude artifacts starting with "my.company"
+                                excludeGroupByRegex("^my\\.company.*")
+                            }
+                        }
+                    }
+                """
+            ).indented()
+        )
+            .issues(JCENTER_REPOSITORY_OBSOLETE)
+            .run()
+            .expect(
+                """
+                build.gradle.kts:2: Warning: JCenter is at end of life [JcenterRepositoryObsolete]
+                    jcenter {
+                    ^
+                0 errors, 1 warnings
+                """
+            )
+            .expectFixDiffs(
+                """
+                Fix for build.gradle.kts line 2: Replace with mavenCentral:
+                @@ -2 +2
+                -     jcenter {
+                +     mavenCentral {
+                Fix for build.gradle.kts line 2: Delete this repository declaration:
+                @@ -2 +2
+                -     jcenter {
+                -         content {
+                -             // exclude artifacts starting with "my.company"
+                -             excludeGroupByRegex("^my\\.company.*")
+                -         }
+                -     }
+                """
+            )
+    }
+
     // -------------------------------------------------------------------------------------------
     // Test infrastructure below here
     // -------------------------------------------------------------------------------------------
