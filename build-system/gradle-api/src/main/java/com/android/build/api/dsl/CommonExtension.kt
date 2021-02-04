@@ -170,7 +170,6 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [DataBinding]
      */
-    @get:Incubating
     val dataBinding: DataBinding
 
     /**
@@ -179,7 +178,6 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [DataBinding]
      */
-    @Incubating
     fun dataBinding(action: DataBinding.() -> Unit)
 
     /**

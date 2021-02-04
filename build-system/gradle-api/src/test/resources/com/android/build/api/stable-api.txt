@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-45c4900a7f98fdfeed31b8b89900a899d8026eed7e802055aa47a4a63bedb6c6
+9a78d653fcd2d65ffc9946fde3cf12e5a4f632938d03039997192b5ce59cdbaf
 -------------------------------------------------------------------------
 com.android.build.api.artifact.FileNames extends java.lang.Enum
 com.android.build.api.artifact.FileNames.getFileName: java.lang.String ()
@@ -20,14 +20,17 @@ com.android.build.api.attributes.VariantAttr$Companion.<init>: com.android.build
 com.android.build.api.dsl.CommonExtension
 com.android.build.api.dsl.CommonExtension.compileOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.CompileOptions, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.compileSdkAddon: void (java.lang.String, java.lang.String, int)
+com.android.build.api.dsl.CommonExtension.dataBinding: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.DataBinding, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.getCompileOptions: com.android.build.api.dsl.CompileOptions ()
 com.android.build.api.dsl.CommonExtension.getCompileSdk: java.lang.Integer ()
 com.android.build.api.dsl.CommonExtension.getCompileSdkPreview: java.lang.String ()
+com.android.build.api.dsl.CommonExtension.getDataBinding: com.android.build.api.dsl.DataBinding ()
 com.android.build.api.dsl.CommonExtension.getNamespace: java.lang.String ()
 com.android.build.api.dsl.CommonExtension.setCompileSdk: void (java.lang.Integer)
 com.android.build.api.dsl.CommonExtension.setCompileSdkPreview: void (java.lang.String)
 com.android.build.api.dsl.CommonExtension.setNamespace: void (java.lang.String)
 com.android.build.api.dsl.CompileOptions
+com.android.build.api.dsl.DataBinding
 com.android.build.api.transform.Context
 com.android.build.api.transform.Context.getLogging: org.gradle.api.logging.LoggingManager ()
 com.android.build.api.transform.Context.getPath: java.lang.String ()
