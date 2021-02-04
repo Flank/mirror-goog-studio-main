@@ -1498,6 +1498,12 @@ class VersionChecksTest : AbstractCheckTest() {
                         if (isAtLeastZ()) { methodZ(); } // OK
                     }
 
+                    public void testAndConditionals(int x) {
+                        if (methodN() && SDK_INT >= N) { } // ERROR
+                        if (true && methodN() && SDK_INT >= N) { } // ERROR
+                        if (true && SDK_INT >= N && methodN()) { } // OK
+                    }
+
                     // Data-binding adds this method
                     public static int getBuildSdkInt() {
                         return SDK_INT;
@@ -1589,7 +1595,13 @@ class VersionChecksTest : AbstractCheckTest() {
                 src/test/pkg/VersionConditionals4.java:30: Error: Call requires API level 25 (current min is 4): methodN_MR1 [NewApi]
                         if (BuildCompat.isAtLeastN()) { methodN_MR1(); } // ERROR
                                                         ~~~~~~~~~~~
-                4 errors, 0 warnings
+                src/test/pkg/VersionConditionals4.java:40: Error: Call requires API level 24 (current min is 4): methodN [NewApi]
+                        if (methodN() && SDK_INT >= N) { } // ERROR
+                            ~~~~~~~
+                src/test/pkg/VersionConditionals4.java:41: Error: Call requires API level 24 (current min is 4): methodN [NewApi]
+                        if (true && methodN() && SDK_INT >= N) { } // ERROR
+                                    ~~~~~~~
+                6 errors, 0 warnings
                 """
             )
     }
@@ -2928,6 +2940,61 @@ class VersionChecksTest : AbstractCheckTest() {
                 src/main/java/test/pkg/test.kt:23: Error: Call requires API level 10 (current min is 1): bar [NewApi]
                     bar() // ERROR
                     ~~~
+                1 errors, 0 warnings
+                """
+            )
+    }
+
+    fun testPolyadic() {
+        lint().files(
+            classpath(),
+            manifest().minSdk(14),
+            java(
+                """
+                package test.pkg;
+
+                import android.support.annotation.RequiresApi;
+                import android.os.Build;
+                import android.os.Build.VERSION_CODES;
+                import static android.os.Build.VERSION.SDK_INT;
+
+                @SuppressWarnings("unused")
+                public class PolyadicTest {
+                    @RequiresApi(Build.VERSION_CODES.M)
+                    public boolean methodM() {
+                        return true;
+                    }
+
+                    private void test() {
+                        boolean field1 = false;
+                        boolean field2 = false;
+                        boolean field3 = false;
+
+                        if (field1 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        } else {
+                            methodM(); // ERROR 1
+                        }
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                            methodM(); // OK 1
+                        }
+                        if (field1 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                            methodM(); // OK 2
+                        }
+                        if (field1 && field2 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && field3) {
+                            methodM(); // OK 3
+                        }
+                    }
+                }
+                """
+            ).indented(),
+            mSupportJar
+        )
+            .run()
+            .expect(
+                """
+                src/test/pkg/PolyadicTest.java:22: Error: Call requires API level 23 (current min is 14): methodM [NewApi]
+                            methodM(); // ERROR 1
+                            ~~~~~~~
                 1 errors, 0 warnings
                 """
             )
