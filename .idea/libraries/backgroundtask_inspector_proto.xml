@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="backgroundtask-inspector-proto">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../../bazel-bin/tools/base/app-inspection/inspectors/backgroundtask/backgroundtask_inspector_java_proto.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
