@@ -118,7 +118,7 @@ class WebViewApiAvailabilityDetector : Detector(), SourceCodeScanner {
             if (api == INVALID || api <= 21 || api > 28) {
                 return
             }
-            if (!VersionChecks.isWithinVersionCheckConditional(evaluator, node, api, true)) {
+            if (!VersionChecks.isWithinVersionCheckConditional(context, node, api)) {
                 return
             }
 

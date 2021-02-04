@@ -1498,6 +1498,12 @@ class VersionChecksTest : AbstractCheckTest() {
                         if (isAtLeastZ()) { methodZ(); } // OK
                     }
 
+                    public void testAndConditionals(int x) {
+                        if (methodN() && SDK_INT >= N) { } // ERROR
+                        if (true && methodN() && SDK_INT >= N) { } // ERROR
+                        if (true && SDK_INT >= N && methodN()) { } // OK
+                    }
+
                     // Data-binding adds this method
                     public static int getBuildSdkInt() {
                         return SDK_INT;
@@ -1589,7 +1595,13 @@ class VersionChecksTest : AbstractCheckTest() {
                 src/test/pkg/VersionConditionals4.java:30: Error: Call requires API level 25 (current min is 4): methodN_MR1 [NewApi]
                         if (BuildCompat.isAtLeastN()) { methodN_MR1(); } // ERROR
                                                         ~~~~~~~~~~~
-                4 errors, 0 warnings
+                src/test/pkg/VersionConditionals4.java:40: Error: Call requires API level 24 (current min is 4): methodN [NewApi]
+                        if (methodN() && SDK_INT >= N) { } // ERROR
+                            ~~~~~~~
+                src/test/pkg/VersionConditionals4.java:41: Error: Call requires API level 24 (current min is 4): methodN [NewApi]
+                        if (true && methodN() && SDK_INT >= N) { } // ERROR
+                                    ~~~~~~~
+                6 errors, 0 warnings
                 """
             )
     }
@@ -2361,14 +2373,14 @@ class VersionChecksTest : AbstractCheckTest() {
                     private void requires20() {
                     }
 
-                    @RequiresApi(23)
-                    private void requires23() {
-                    }
+//                    @RequiresApi(23)
+//                    private void requires23() {
+//                    }
 
                     void test() {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH) {
                             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-                                requires23();
+//                                requires23();
                             } else {
                                 requires20();
                             }
@@ -2695,6 +2707,9 @@ class VersionChecksTest : AbstractCheckTest() {
                     "test".applyForOreoOrAbove { bar() } // OK 6
                     fromApi(10) { bar() } // OK 7
                     bar() // ERROR
+                    sdk(28, { bar() }) ?: fallback() // OK 8
+                    sdk(level = 28, func = { bar() }) ?: fallback() // OK 9
+                    sdk( func = { bar() }, level = 28) ?: fallback() // OK 10
                 }
 
                 @RequiresApi(10)
@@ -2728,7 +2743,6 @@ class VersionChecksTest : AbstractCheckTest() {
                     return null
                 }
 
-
                 @get:ChecksSdkIntAtLeast(api = Build.VERSION_CODES.HONEYCOMB)
                 val versionCheck1: Boolean
                     get() = false
@@ -2758,7 +2772,7 @@ class VersionChecksTest : AbstractCheckTest() {
                 }
                 """
             ),
-            mChecksSdkIntAtLeast,
+            checkSdkIntAnnotation,
             mSupportJar
         )
             .run()
@@ -2917,7 +2931,7 @@ class VersionChecksTest : AbstractCheckTest() {
                     "bHzA4j9C611h4T9hycVHYi5NzZWfiXYx8QDrJ5KvDS5S/BRNxvITd5pGLLEC" +
                     "AAA="
             ),
-            mChecksSdkIntAtLeast,
+            checkSdkIntAnnotation,
             mSupportJar
         )
             .run()
@@ -2931,26 +2945,84 @@ class VersionChecksTest : AbstractCheckTest() {
             )
     }
 
-    private val mChecksSdkIntAtLeast = java(
-        """
-        package androidx.annotation;
-        import static java.lang.annotation.ElementType.FIELD;
-        import static java.lang.annotation.ElementType.METHOD;
-        import static java.lang.annotation.RetentionPolicy.CLASS;
-        import java.lang.annotation.Documented;
-        import java.lang.annotation.Retention;
-        import java.lang.annotation.Target;
-        @Documented
-        @Retention(CLASS)
-        @Target({METHOD, FIELD})
-        public @interface ChecksSdkIntAtLeast {
-            int api() default -1;
-            String codename() default "";
-            int parameter() default -1;
-            int lambda() default -1;
-        }
-        """
-    ).indented()
+    fun testPolyadic() {
+        lint().files(
+            classpath(),
+            manifest().minSdk(14),
+            java(
+                """
+                package test.pkg;
+
+                import android.support.annotation.RequiresApi;
+                import android.os.Build;
+                import android.os.Build.VERSION_CODES;
+                import static android.os.Build.VERSION.SDK_INT;
+
+                @SuppressWarnings("unused")
+                public class PolyadicTest {
+                    @RequiresApi(Build.VERSION_CODES.M)
+                    public boolean methodM() {
+                        return true;
+                    }
+
+                    private void test() {
+                        boolean field1 = false;
+                        boolean field2 = false;
+                        boolean field3 = false;
+
+                        if (field1 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        } else {
+                            methodM(); // ERROR 1
+                        }
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                            methodM(); // OK 1
+                        }
+                        if (field1 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                            methodM(); // OK 2
+                        }
+                        if (field1 && field2 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && field3) {
+                            methodM(); // OK 3
+                        }
+                    }
+                }
+                """
+            ).indented(),
+            mSupportJar
+        )
+            .run()
+            .expect(
+                """
+                src/test/pkg/PolyadicTest.java:22: Error: Call requires API level 23 (current min is 14): methodM [NewApi]
+                            methodM(); // ERROR 1
+                            ~~~~~~~
+                1 errors, 0 warnings
+                """
+            )
+    }
+
+    companion object {
+        @JvmField
+        val checkSdkIntAnnotation = java(
+            """
+            package androidx.annotation;
+            import static java.lang.annotation.ElementType.FIELD;
+            import static java.lang.annotation.ElementType.METHOD;
+            import static java.lang.annotation.RetentionPolicy.CLASS;
+            import java.lang.annotation.Documented;
+            import java.lang.annotation.Retention;
+            import java.lang.annotation.Target;
+            @Documented
+            @Retention(CLASS)
+            @Target({METHOD, FIELD})
+            public @interface ChecksSdkIntAtLeast {
+                int api() default -1;
+                String codename() default "";
+                int parameter() default -1;
+                int lambda() default -1;
+            }
+            """
+        ).indented()
+    }
 
     override fun getDetector(): Detector {
         return ApiDetector()
