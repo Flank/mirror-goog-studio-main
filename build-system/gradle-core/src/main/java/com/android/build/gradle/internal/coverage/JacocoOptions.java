@@ -17,9 +17,12 @@
 package com.android.build.gradle.internal.coverage;
 
 import com.android.annotations.NonNull;
+import com.android.build.api.dsl.TestCoverage;
+import org.jetbrains.annotations.NotNull;
+
 import javax.inject.Inject;
 
-public class JacocoOptions implements com.android.build.api.dsl.JacocoOptions {
+public class JacocoOptions implements com.android.build.api.dsl.JacocoOptions, TestCoverage {
 
     /** Default JaCoCo version. */
     public static final String DEFAULT_VERSION = "0.8.3";
@@ -27,16 +30,27 @@ public class JacocoOptions implements com.android.build.api.dsl.JacocoOptions {
     @Inject
     public JacocoOptions() {}
 
-    @NonNull private String version = DEFAULT_VERSION;
+    @NonNull private String jacocoVersion = DEFAULT_VERSION;
 
     @Override
     @NonNull
     public String getVersion() {
-        return version;
+        return jacocoVersion;
     }
 
     @Override
     public void setVersion(@NonNull String version) {
-        this.version = version;
+        this.jacocoVersion = version;
+    }
+
+    @NotNull
+    @Override
+    public String getJacocoVersion() {
+        return jacocoVersion;
+    }
+
+    @Override
+    public void setJacocoVersion(@NotNull String jacocoVersion) {
+        this.jacocoVersion = jacocoVersion;
     }
 }

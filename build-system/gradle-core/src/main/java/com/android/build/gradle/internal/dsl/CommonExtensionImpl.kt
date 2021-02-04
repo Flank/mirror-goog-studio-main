@@ -21,6 +21,7 @@ import com.android.build.api.dsl.BuildFeatures
 import com.android.build.api.dsl.ComposeOptions
 import com.android.build.api.dsl.DefaultConfig
 import com.android.build.api.dsl.SdkComponents
+import com.android.build.api.dsl.TestCoverage
 import com.android.build.api.variant.VariantBuilder
 import com.android.build.api.variant.Variant
 import com.android.build.gradle.api.AndroidSourceSet
@@ -191,7 +192,14 @@ abstract class CommonExtensionImpl<
         action.invoke(externalNativeBuild)
     }
 
-    override val jacoco: JacocoOptions = dslServices.newInstance(JacocoOptions::class.java)
+    override val testCoverage: TestCoverage  = dslServices.newInstance(JacocoOptions::class.java)
+
+    override fun testCoverage(action: TestCoverage.() -> Unit) {
+        action.invoke(testCoverage)
+    }
+
+    override val jacoco: JacocoOptions
+        get() = testCoverage as JacocoOptions
 
     override fun jacoco(action: com.android.build.api.dsl.JacocoOptions.() -> Unit) {
         action.invoke(jacoco)

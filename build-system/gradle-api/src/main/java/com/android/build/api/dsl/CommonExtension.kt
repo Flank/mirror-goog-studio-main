@@ -196,37 +196,60 @@ interface CommonExtension<
     fun dataBinding(action: DataBinding.() -> Unit)
 
     /**
-     * Configure JaCoCo version that is used for offline instrumentation and coverage report.
+     * Configure the gathering of code-coverage from tests.
      *
-     * To specify the version of JaCoCo you want to use, add the following to `build.gradle
-     * ` file:
-     *
-     * ```
-     * android {
-     *     jacoco {
-     *         version "<jacoco-version>"
-     *     }
-     * }
-     * ```
+     * This is replaced by [testCoverage].
      */
     @get:Incubating
+    @Deprecated("Renamed to testCoverage", replaceWith = ReplaceWith("testCoverage"))
     val jacoco: JacocoOptions
+
     /**
-     * Configure JaCoCo version that is used for offline instrumentation and coverage report.
+     * Configure the gathering of code-coverage from tests.
      *
-     * To specify the version of JaCoCo you want to use, add the following to `build.gradle
-     * ` file:
+     * This is replaced by [testCoverage].
+     */
+    @Incubating
+    @Deprecated("Renamed to testCoverage", replaceWith = ReplaceWith("testCoverage"))
+    fun jacoco(action: JacocoOptions.() -> Unit)
+
+    /**
+     * Configure the gathering of code-coverage from tests.
+     *
+     * To override the JaCoCo version that is used for offline instrumentation and coverage report,
+     * add the following to `build.gradle` file:
      *
      * ```
      * android {
-     *     jacoco {
-     *         version "<jacoco-version>"
+     *     testCoverage {
+     *         jacocoVersion "<jacoco-version>"
      *     }
      * }
      * ```
+     *
+     * For more information about the properties you can configure in this block, see [TestCoverage].
+     */
+    @get:Incubating
+    val testCoverage: TestCoverage
+
+    /**
+     * Configure the gathering of code-coverage from tests.
+     *
+     * To override the JaCoCo version that is used for offline instrumentation and coverage report,
+     * add the following to `build.gradle` file:
+     *
+     * ```
+     * android {
+     *     testCoverage {
+     *         jacocoVersion "<jacoco-version>"
+     *     }
+     * }
+     * ```
+     *
+     * For more information about the properties you can configure in this block, see [TestCoverage].
      */
     @Incubating
-    fun jacoco(action: JacocoOptions.() -> Unit)
+    fun testCoverage(action: TestCoverage.() -> Unit)
 
     /**
      * Specifies options for the lint tool.

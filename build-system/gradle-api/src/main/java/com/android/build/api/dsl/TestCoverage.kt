@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 The Android Open Source Project
+ * Copyright (C) 2021 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,11 +18,13 @@ package com.android.build.api.dsl
 
 import org.gradle.api.Incubating
 
-/** DSL object for configuring JaCoCo settings. */
+/** Settings related to the gathering of code-coverage data from tests */
 @Incubating
-@Deprecated("Renamed to TestCoverage", replaceWith = ReplaceWith("TestCoverage"))
-interface JacocoOptions : TestCoverage {
-    /** The version of JaCoCo to use. */
-    @Deprecated("Renamed to testCoverage.jacocoVersion", replaceWith = ReplaceWith("jacocoVersion"))
-    var version: String
+interface TestCoverage {
+    /**
+     * The version of JaCoCo to use.
+     */
+    @get:Incubating
+    @set:Incubating
+    var jacocoVersion: String
 }
