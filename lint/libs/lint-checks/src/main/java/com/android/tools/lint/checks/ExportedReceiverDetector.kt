@@ -2,12 +2,17 @@ package com.android.tools.lint.checks
 
 import com.android.SdkConstants.ANDROID_URI
 import com.android.SdkConstants.ATTR_EXPORTED
+import com.android.SdkConstants.TAG_ACTIVITY
+import com.android.SdkConstants.TAG_ACTIVITY_ALIAS
 import com.android.SdkConstants.TAG_INTENT_FILTER
+import com.android.SdkConstants.TAG_PROVIDER
 import com.android.SdkConstants.TAG_RECEIVER
+import com.android.SdkConstants.TAG_SERVICE
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
+import com.android.tools.lint.detector.api.LintFix
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.XmlContext
@@ -16,17 +21,20 @@ import com.android.utils.subtag
 import org.w3c.dom.Element
 
 class ExportedReceiverDetector : Detector(), XmlScanner {
-    override fun getApplicableElements() = listOf(TAG_RECEIVER)
+    override fun getApplicableElements() =
+        listOf(TAG_ACTIVITY, TAG_ACTIVITY_ALIAS, TAG_SERVICE, TAG_RECEIVER, TAG_PROVIDER)
 
     override fun visitElement(context: XmlContext, element: Element) {
-        val tag = element.tagName
-        if (tag != TAG_RECEIVER) return
         val intentFilter = element.subtag(TAG_INTENT_FILTER)
         val exported = element.getAttributeNodeNS(ANDROID_URI, ATTR_EXPORTED)
         if (intentFilter != null && exported == null) {
+            val fix = LintFix.create().set().todo(ANDROID_URI, ATTR_EXPORTED).build()
             context.report(
-                ISSUE, element, context.getNameLocation(intentFilter),
-                "When using intent filters, please specify `android:exported` as well"
+                ISSUE,
+                element,
+                context.getNameLocation(element),
+                "When using intent filters, please specify `android:exported` as well",
+                fix
             )
         }
     }
@@ -38,8 +46,9 @@ class ExportedReceiverDetector : Detector(), XmlScanner {
             briefDescription = "Unspecified `android:exported` in manifest",
             explanation =
                 """
-                Apps targeting Android 12 and higher will be required to specify an explicit value \
-                for `android:exported` when the corresponding component has an intent filter defined.
+                Apps targeting Android 12 and higher are required to specify an explicit value \
+                for `android:exported` when the corresponding component has an intent filter defined. \
+                Otherwise, installation will fail.
 
                 Previously, `android:exported` for components without any intent filters present \
                 used to default to `false`, and when intent filters were present, the default was \

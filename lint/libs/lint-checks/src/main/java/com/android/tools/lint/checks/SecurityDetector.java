@@ -44,6 +44,7 @@ import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.UElementHandler;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.ConstantEvaluator;
+import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
@@ -231,12 +232,14 @@ public class SecurityDetector extends Detector implements XmlScanner, SourceCode
         }
     }
 
-    public static boolean getExported(Element element) {
+    public static boolean getExported(Context context, Element element) {
         // Used to check whether an activity, service or broadcast receiver is exported.
         String exportValue = element.getAttributeNS(ANDROID_URI, ATTR_EXPORTED);
         if (exportValue != null && !exportValue.isEmpty()) {
-            return Boolean.valueOf(exportValue);
-        } else {
+            return Boolean.parseBoolean(exportValue);
+        } else if (context.getMainProject().getTargetSdk() < 31) {
+            // Starting in Android S, the exported flag will always be specified,
+            // so no need for this inference.
             for (Element child : XmlUtils.getSubTags(element)) {
                 if (child.getTagName().equals(TAG_INTENT_FILTER)) {
                     return true;
@@ -326,7 +329,7 @@ public class SecurityDetector extends Detector implements XmlScanner, SourceCode
     }
 
     private static void checkReceiver(XmlContext context, Element element) {
-        if (getExported(element)
+        if (getExported(context, element)
                 && isUnprotectedByPermission(element)
                 && !isStandardReceiver(element)) {
             // No declared permission for this exported receiver: complain
@@ -341,7 +344,7 @@ public class SecurityDetector extends Detector implements XmlScanner, SourceCode
     }
 
     private static void checkService(XmlContext context, Element element) {
-        if (getExported(element)
+        if (getExported(context, element)
                 && isUnprotectedByPermission(element)
                 && !isWearableListenerServiceAction(element)) {
             // No declared permission for this exported service: complain

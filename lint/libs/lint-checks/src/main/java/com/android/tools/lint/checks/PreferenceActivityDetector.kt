@@ -53,7 +53,7 @@ class PreferenceActivityDetector : Detector(), XmlScanner, SourceCodeScanner {
     }
 
     override fun visitElement(context: XmlContext, element: Element) {
-        if (SecurityDetector.getExported(element)) {
+        if (SecurityDetector.getExported(context, element)) {
             val fqcn = resolveManifestName(element)
             if (fqcn == PREFERENCE_ACTIVITY && !context.driver.isSuppressed(
                 context,
@@ -136,7 +136,7 @@ class PreferenceActivityDetector : Detector(), XmlScanner, SourceCodeScanner {
                     if (className.endsWith(name)) {
                         val fqn = resolveManifestName(element)
                         if (fqn == className) {
-                            return SecurityDetector.getExported(element)
+                            return SecurityDetector.getExported(context, element)
                         }
                     }
                 }
