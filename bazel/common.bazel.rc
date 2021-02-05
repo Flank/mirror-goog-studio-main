@@ -37,7 +37,6 @@ test --aspects=tools/base/bazel/validations/flaky.bzl%limit_flaky_tests
 build --incompatible_strict_action_env # Ensures actions don't pick up env changes
 build --sandbox_tmpfs_path=/tmp
 build --javacopt="-g:source,lines,vars"  # Keep debug info
-build --javacopt=-Xep:DoNotCall:OFF  # github.com/google/error-prone/issues/1131
 # TODO (b/141269926): this generates a warning on windows when building for host,
 # but is required when building for android.
 build --copt=-fvisibility=hidden
@@ -56,6 +55,10 @@ build --java_toolchain=@bazel_tools//tools/jdk:legacy_toolchain
 
 # Use prebuilt native toolchain
 build --crosstool_top=@native_toolchain//:toolchain
+
+# Report errorprone errors as warnings to avoid failing the build.
+# Temporary until http://b/180537631 is resolved.
+build --javacopt="-XepAllErrorsAsWarnings"
 
 # cpp sandbox is very slow on mac and linux
 build --strategy=CppCompile=standalone

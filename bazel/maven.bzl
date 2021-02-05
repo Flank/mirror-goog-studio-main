@@ -252,7 +252,7 @@ def _import_with_license_impl(ctx):
         names.append(name)
     return struct(
         providers = [ctx.attr.dep[JavaInfo], ctx.attr.dep[DefaultInfo]],
-        java = ctx.attr.dep.java,
+        java = ctx.attr.dep[JavaInfo],
         notice = struct(
             file = ctx.attr.notice,
             name = ",".join(names),
