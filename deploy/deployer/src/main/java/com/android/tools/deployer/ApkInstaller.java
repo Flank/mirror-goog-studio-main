@@ -93,7 +93,7 @@ public class ApkInstaller {
             logger.info("Unable to delta install: '%s'", e.getDetails());
         }
 
-        AdbClient.InstallResult result = new AdbClient.InstallResult(OK);
+        AdbClient.InstallResult result = new AdbClient.InstallResult(OK, "");
         switch (deltaInstallResult.status) {
             case SUCCESS:
                 {
@@ -108,7 +108,7 @@ public class ApkInstaller {
                     if (installReceiver.isSuccessfullyCompleted()) {
                         metric.finish(DeltaInstallStatus.SUCCESS.name(), metrics);
                     } else {
-                        result = parseInstallerResultErrorCode(installReceiver.getErrorCode());
+                        result = toInstallerResult(installReceiver);
                         metric.finish(
                                 DeltaInstallStatus.ERROR.name() + "." + result.status.name(),
                                 metrics);
@@ -157,7 +157,9 @@ public class ApkInstaller {
                 }
             case NO_CHANGES:
                 {
-                    result = new AdbClient.InstallResult(SKIPPED_INSTALL);
+                    result =
+                            new AdbClient.InstallResult(
+                                    SKIPPED_INSTALL, "APKs have not been modified");
                     DeployMetric installMetric = new DeployMetric("INSTALL");
                     installMetric.finish(result.status.name(), metrics);
                     try {
@@ -354,19 +356,23 @@ public class ApkInstaller {
         return inherit;
     }
 
-    public static AdbClient.InstallResult parseInstallerResultErrorCode(String errorCode) {
+    public static AdbClient.InstallResult toInstallerResult(InstallReceiver r) {
+        return toInstallerResult(r.getErrorCode(), r.getErrorMessage());
+    }
+
+    public static AdbClient.InstallResult toInstallerResult(String errorCode, String reason) {
         try {
-            return new AdbClient.InstallResult(InstallStatus.valueOf(errorCode));
+            return new AdbClient.InstallResult(InstallStatus.valueOf(errorCode), reason);
         } catch (IllegalArgumentException i) {
             try {
                 int numericValue = Integer.parseInt(errorCode);
                 return new AdbClient.InstallResult(
-                        InstallStatus.numericErrorCodeToStatus(numericValue), errorCode, null);
+                        InstallStatus.numericErrorCodeToStatus(numericValue), reason);
             } catch (NumberFormatException n) {
-                return new AdbClient.InstallResult(InstallStatus.UNKNOWN_ERROR, errorCode, null);
+                return new AdbClient.InstallResult(InstallStatus.UNKNOWN_ERROR, reason);
             }
         } catch (Exception e) {
-            return new AdbClient.InstallResult(InstallStatus.UNKNOWN_ERROR, errorCode, null);
+            return new AdbClient.InstallResult(InstallStatus.UNKNOWN_ERROR, reason);
         }
     }
 
