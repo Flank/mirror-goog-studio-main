@@ -87,7 +87,10 @@ message Screenshot {
     enum Type {
         UNKNOWN = 0;
         NONE = 1;
+        // SKP = Skia picture, a format embedded with layout details.
         SKP = 2;
+        // A raw image, useful as a fallback if SKIA parsing fails.
+        BITMAP = 3;
     }
     Type type = 1;
     bytes bytes = 2;
@@ -227,6 +230,16 @@ message GetPropertiesResponse {
     PropertyGroup property_group = 2;
 }
 
+// Sets the active screenshot type used when collecting screenshot information during a
+// layout capture.
+message UpdateScreenshotTypeCommand {
+    Screenshot.Type type = 1;
+    // Scale to apply to the screenshot size (only applies to the BITMAP type)
+    float scale = 2;
+}
+message UpdateScreenshotTypeResponse {
+}
+
 // An event containing complete layout information about a single node tree
 message LayoutEvent {
     // A collection of all text referenced by other fields in this message
@@ -268,6 +281,7 @@ message Command {
         StartFetchCommand start_fetch_command = 1;
         StopFetchCommand stop_fetch_command = 2;
         GetPropertiesCommand get_properties_command = 3;
+        UpdateScreenshotTypeCommand update_screenshot_type_command = 4;
     }
 }
 message Response {
@@ -275,6 +289,7 @@ message Response {
         StartFetchResponse start_fetch_response = 1;
         StopFetchResponse stop_fetch_response = 2;
         GetPropertiesResponse get_properties_response = 3;
+        UpdateScreenshotTypeResponse update_screenshot_type_response = 4;
     }
 }
 message Event {

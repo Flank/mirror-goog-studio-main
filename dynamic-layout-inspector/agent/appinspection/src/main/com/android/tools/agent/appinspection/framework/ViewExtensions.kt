@@ -17,11 +17,15 @@
 package com.android.tools.agent.appinspection.framework
 
 import android.content.res.Resources
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import com.android.tools.agent.appinspection.util.ThreadUtils
 import java.util.Stack
+import kotlin.math.roundToInt
 
 fun ViewGroup.getChildren(): List<View> {
     ThreadUtils.assertOnMainThread()
@@ -77,3 +81,24 @@ fun View.isSystemView(): Boolean {
     }
 }
 
+/**
+ * Convert this view into a bitmap.
+ *
+ * This method may return null if the app runs out of memory trying to create it.
+ */
+fun View.takeScreenshot(scale: Float): Bitmap? {
+    val bitmap = Bitmap.createBitmap(
+        (width * scale).roundToInt(),
+        (height * scale).roundToInt(),
+        Bitmap.Config.RGB_565
+    )
+    return try {
+        val canvas = Canvas(bitmap)
+        canvas.scale(scale, scale)
+        ThreadUtils.runOnMainThread { draw(canvas) }.get()
+        bitmap
+    } catch (e: OutOfMemoryError) {
+        Log.w("ViewLayoutInspector", "Out of memory for bitmap")
+        null
+    }
+}

@@ -28,10 +28,12 @@ import com.android.tools.agent.appinspection.testutils.FrameworkStateRule
 import com.android.tools.agent.appinspection.testutils.MainLooperRule
 import com.android.tools.agent.appinspection.testutils.inspection.InspectorRule
 import com.android.tools.agent.appinspection.util.ThreadUtils
+import com.android.tools.agent.appinspection.util.decompress
 import com.google.common.truth.Truth.assertThat
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Command
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Event
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Response
+import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Screenshot
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.StopFetchCommand
 import org.junit.Rule
 import org.junit.Test
@@ -134,6 +136,7 @@ class ViewLayoutInspectorTest {
             assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.LAYOUT_EVENT)
             event.layoutEvent.let { layoutEvent ->
                 assertThat(layoutEvent.rootView.id).isEqualTo(tree1.uniqueDrawingId)
+                assertThat(layoutEvent.screenshot.type).isEqualTo(Screenshot.Type.SKP)
                 assertThat(layoutEvent.screenshot.bytes.toByteArray()).isEqualTo(tree1FakePicture1.bytes)
             }
         }
@@ -477,7 +480,120 @@ class ViewLayoutInspectorTest {
         }
     }
 
+    @Test
+    fun settingScreenshotTypeAffectsCaptureOutput() = createViewInspector { viewInspector ->
+        val responseQueue = ArrayBlockingQueue<ByteArray>(1)
+        inspectorRule.commandCallback.replyListeners.add { bytes ->
+            responseQueue.add(bytes)
+        }
 
+        val eventQueue = ArrayBlockingQueue<ByteArray>(2)
+        inspectorRule.connection.eventListeners.add { bytes ->
+            eventQueue.add(bytes)
+        }
+
+        val fakeBitmapHeader = byteArrayOf(1, 2, 3) // trailed by 0s
+        val fakePicture1 = Picture(byteArrayOf(2, 1)) // Will be ignored because of BITMAP mode
+        val fakePicture2 = Picture(byteArrayOf(2, 2))
+
+        val resourceNames = mutableMapOf<Int, String>()
+        val resources = Resources(resourceNames)
+        val context = Context("view.inspector.test", resources)
+        val scale = 2
+        val root = ViewGroup(context).apply {
+            width = 100
+            height = 200
+            drawHandler = { canvas ->
+                assertThat(canvas.bitmap.width).isEqualTo(width * scale)
+                assertThat(canvas.bitmap.height).isEqualTo(height * scale)
+                fakeBitmapHeader.copyInto(canvas.bitmap.bytes)
+            }
+            setAttachInfo(View.AttachInfo())
+        }
+        WindowManagerGlobal.instance.rootViews.addAll(listOf(root))
+
+        val startFetchCommand = Command.newBuilder().apply {
+            startFetchCommandBuilder.apply {
+                continuous = true
+            }
+        }.build()
+        viewInspector.onReceiveCommand(
+            startFetchCommand.toByteArray(),
+            inspectorRule.commandCallback
+        )
+        responseQueue.take().let { bytes ->
+            val response = Response.parseFrom(bytes)
+            assertThat(response.specializedCase).isEqualTo(Response.SpecializedCase.START_FETCH_RESPONSE)
+        }
+        ThreadUtils.runOnMainThread { }.get() // Wait for startCommand to finish initializing
+        assertThat(eventQueue).isEmpty()
+
+        run { // Start first by setting type to BITMAP
+            val updateScreenshotTypeCommand = Command.newBuilder().apply {
+                updateScreenshotTypeCommandBuilder.apply {
+                    type = Screenshot.Type.BITMAP
+                    this.scale = scale.toFloat()
+                }
+            }.build()
+            viewInspector.onReceiveCommand(
+                updateScreenshotTypeCommand.toByteArray(),
+                inspectorRule.commandCallback
+            )
+            responseQueue.take().let { bytes ->
+                val response = Response.parseFrom(bytes)
+                assertThat(response.specializedCase).isEqualTo(Response.SpecializedCase.UPDATE_SCREENSHOT_TYPE_RESPONSE)
+            }
+
+            root.forcePictureCapture(fakePicture1)
+            eventQueue.take().let { bytes ->
+                val event = Event.parseFrom(bytes)
+                assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.ROOTS_EVENT)
+            }
+            eventQueue.take().let { bytes ->
+                val event = Event.parseFrom(bytes)
+                assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.LAYOUT_EVENT)
+
+                event.layoutEvent.screenshot.let { screenshot ->
+                    assertThat(screenshot.type).isEqualTo(Screenshot.Type.BITMAP)
+                    val decompressedBytes = screenshot.bytes.toByteArray().decompress()
+
+                    // The full screenshot byte array is width * height, normally all zeroed out,
+                    // so if we just check the first few bytes to make sure they match our header,
+                    // that's enough to know that all the data went through correctly.
+                    assertThat(decompressedBytes.take(fakeBitmapHeader.size)).isEqualTo(
+                        fakeBitmapHeader.asList()
+                    )
+                }
+            }
+        }
+
+        run { // Now set type back to SKP
+            val updateScreenshotTypeCommand = Command.newBuilder().apply {
+                updateScreenshotTypeCommandBuilder.apply {
+                    type = Screenshot.Type.SKP
+                }
+            }.build()
+            viewInspector.onReceiveCommand(
+                updateScreenshotTypeCommand.toByteArray(),
+                inspectorRule.commandCallback
+            )
+            responseQueue.take().let { bytes ->
+                val response = Response.parseFrom(bytes)
+                assertThat(response.specializedCase).isEqualTo(Response.SpecializedCase.UPDATE_SCREENSHOT_TYPE_RESPONSE)
+            }
+
+            root.forcePictureCapture(fakePicture2)
+            eventQueue.take().let { bytes ->
+                val event = Event.parseFrom(bytes)
+                assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.LAYOUT_EVENT)
+
+                event.layoutEvent.screenshot.let { screenshot ->
+                    assertThat(screenshot.type).isEqualTo(Screenshot.Type.SKP)
+                    assertThat(screenshot.bytes.toByteArray()).isEqualTo(fakePicture2.bytes)
+                }
+            }
+        }
+    }
 
     // TODO: Add test for filtering system views and properties
 
