@@ -29,7 +29,6 @@ iml_module(
         "//tools/adt/idea/.idea/libraries:mockito[test]",
         "//tools/adt/idea/.idea/libraries:truth[test]",
         "//tools/base/fakeadbserver:studio.android.sdktools.fakeadbserver[module, test]",
-        "//tools/adt/idea/.idea/libraries:kotlin-stdlib-jdk8",
         "//tools/adt/idea/.idea/libraries:libam-instrumentation-data-proto",
     ],
 )
@@ -116,7 +115,6 @@ iml_module(
     # do not sort: must match IML order
     deps = [
         "//tools/base/common:studio.android.sdktools.common[module, test]",
-        "//tools/adt/idea/.idea/libraries:kotlin-stdlib-jdk8[test]",
         "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
         "//tools/base/bazel/avd:studio.android.sdktools.base.bazel.avd[module, test]",
         "//tools/adt/idea/.idea/libraries:truth[test]",

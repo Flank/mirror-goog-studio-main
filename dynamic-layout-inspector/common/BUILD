@@ -9,7 +9,7 @@ iml_module(
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     deps = [
-        "//tools/adt/idea/.idea/libraries:kotlin-stdlib-jdk8",
+        "//prebuilts/studio/intellij-sdk:studio-sdk",
         "//tools/adt/idea/.idea/libraries:studio-proto",
         "//tools/adt/idea/.idea/libraries:layoutinspector-skia-proto",
         "//prebuilts/tools/common/m2/repository/junit/junit/4.12:junit-4.12[test]",

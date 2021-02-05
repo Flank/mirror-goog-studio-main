@@ -34,7 +34,6 @@ iml_module(
         "//tools/base/build-system/builder-test-api:studio.android.sdktools.builder-test-api[module]",
         "//tools/adt/idea/.idea/libraries:easymock[test]",
         "//tools/adt/idea/.idea/libraries:truth[test]",
-        "//tools/adt/idea/.idea/libraries:kotlin-stdlib-jdk8",
         "//tools/adt/idea/.idea/libraries:jimfs[test]",
         "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
         "//tools/base/ddmlib:studio.android.sdktools.ddmlib[module]",
