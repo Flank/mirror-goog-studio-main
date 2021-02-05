@@ -79,6 +79,21 @@ class KotlinDslTest {
     }
 
     @Test
+    fun testDslLockingLists() {
+        plugin.createAndroidTasks()
+        val exception = assertFailsWith(AgpDslLockedException::class) {
+            android.flavorDimensions += "test"
+        }
+        assertThat(exception).hasMessageThat().isEqualTo(
+            """
+                It is too late to modify flavorDimensions
+                It has already been read to configure this project.
+                Consider either moving this call to be during evaluation,
+                or using the variant API.""".trimIndent()
+        )
+    }
+
+    @Test
     fun `compileAgainst externalNativeBuild ndkBuild ImplClass`() {
 
         val externalNativeBuild: com.android.build.gradle.internal.dsl.ExternalNativeBuild =

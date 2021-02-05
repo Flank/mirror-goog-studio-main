@@ -255,8 +255,6 @@ abstract class CommonExtensionImpl<
         action.invoke(testOptions)
     }
 
-    override val flavorDimensions: MutableList<String> = mutableListOf()
-
     override var resourcePrefix: String? = null
 
     override var ndkVersion: String? = null

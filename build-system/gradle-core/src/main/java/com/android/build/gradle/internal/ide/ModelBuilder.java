@@ -341,7 +341,7 @@ public class ModelBuilder<Extension extends BaseExtension>
 
         List<String> flavorDimensionList =
                 extension.getFlavorDimensionList() != null
-                        ? extension.getFlavorDimensionList()
+                        ? ImmutableList.copyOf(extension.getFlavorDimensionList())
                         : Lists.newArrayList();
 
         final VariantInputModel<
