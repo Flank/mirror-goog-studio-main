@@ -305,7 +305,7 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType> = AGP_SUP
                     // this.__managedField.lock();
                     loadThis()
                     getField(generatedClass, abstractProperty.backingFieldName, type.implementationType)
-                    invokeVirtual(type.type, LOCK_METHOD)
+                    invokeVirtual(type.implementationType, LOCK_METHOD)
                 }
             }
             returnValue()

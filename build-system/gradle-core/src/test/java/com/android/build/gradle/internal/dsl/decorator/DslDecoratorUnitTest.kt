@@ -223,6 +223,31 @@ class DslDecoratorUnitTest {
         assertThat(Modifier.toString(method.modifiers)).isEqualTo("public")
     }
 
+    interface LockableWithList : Lockable {
+        val foo: MutableList<String>
+    }
+
+    @Test
+    fun `check locking propagation`() {
+        val decorated = DslDecorator(listOf(SupportedPropertyType.Val.List))
+            .decorate(LockableWithList::class)
+        val o = decorated.getDeclaredConstructor().newInstance()
+        o.foo += "one"
+        o.lock()
+        assertThat(o.foo).containsExactly("one")
+        val exception = assertFailsWith(AgpDslLockedException::class) {
+            o.foo += "two"
+        }
+        assertThat(exception).hasMessageThat().isEqualTo(
+            """
+                It is too late to modify foo
+                It has already been read to configure this project.
+                Consider either moving this call to be during evaluation,
+                or using the variant API.""".trimIndent()
+        )
+        assertThat(o.foo).containsExactly("one")
+    }
+
     interface A {
         val foo: MutableList<String>
     }
