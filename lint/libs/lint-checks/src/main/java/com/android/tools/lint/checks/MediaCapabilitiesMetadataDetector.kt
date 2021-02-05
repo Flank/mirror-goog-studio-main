@@ -117,7 +117,7 @@ class MediaCapabilitiesMetadataDetector : Detector(), SourceCodeScanner, ClassSc
                 context.client.findManifestSourceLocation(application)
                     ?: Location.create(context.project.manifestFiles[0] ?: context.project.dir),
                 "The app accesses `MediaStore.Video`, but is missing a `<meta-data>` tag " +
-                        "with a `$VALUE_MEDIA_CAPABILITIES` declaration"
+                    "with a `$VALUE_MEDIA_CAPABILITIES` declaration"
             )
         } else if (!metadataElement.hasAttributeNS(ANDROID_URI, ATTR_RESOURCE)) {
             context.report(
@@ -125,7 +125,7 @@ class MediaCapabilitiesMetadataDetector : Detector(), SourceCodeScanner, ClassSc
                 context.client.findManifestSourceLocation(metadataElement)
                     ?: Location.create(context.project.manifestFiles[0] ?: context.project.dir),
                 "The `$VALUE_MEDIA_CAPABILITIES` `<meta-data>` tag is missing the" +
-                        " `android:resource` attribute pointing to a valid XML file"
+                    " `android:resource` attribute pointing to a valid XML file"
             )
         }
     }
@@ -136,7 +136,7 @@ class MediaCapabilitiesMetadataDetector : Detector(), SourceCodeScanner, ClassSc
             id = "MediaCapabilities",
             briefDescription = "Media Capabilities meta-data not specified",
             explanation =
-            """
+                """
                 In Android 12 and higher, an app that opens media files should explicitly specify \
                 media formats that it doesn't support, so the OS can provide a transcoded file \
                 instead.
