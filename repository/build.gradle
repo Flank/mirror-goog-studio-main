@@ -10,6 +10,7 @@ version = rootProject.ext.baseVersion
 
 dependencies {
     implementation project(':base:common')
+    implementation project(':analytics-library:shared')
     implementation libs.activation
     implementation libs.apache_compress
     implementation libs.jaxb_runtime
