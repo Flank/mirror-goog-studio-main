@@ -10,6 +10,5 @@ java_library(
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:com.sun.activation_javax.activation",
         "//tools/base/third_party:org.glassfish.jaxb_jaxb-xjc",
-        #	  ":xjc-2.2.11",
     ],
 )
