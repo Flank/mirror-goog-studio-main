@@ -23,5 +23,6 @@
     <orderEntry type="library" name="uast" level="project" />
     <orderEntry type="library" name="lint-psi-kotlin-compiler" level="project" />
     <orderEntry type="library" name="kotlin-stdlib-jdk8" level="project" />
+    <orderEntry type="library" name="Guava" level="project" />
   </component>
 </module>

@@ -14,5 +14,6 @@
     <orderEntry type="module" module-name="android.sdktools.builder-model" />
     <orderEntry type="library" name="kotlin-stdlib-jdk8" level="project" />
     <orderEntry type="library" name="kxml2" level="project" />
+    <orderEntry type="library" name="Guava" level="project" />
   </component>
 </module>

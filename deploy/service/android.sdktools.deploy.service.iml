@@ -27,5 +27,6 @@
     <orderEntry type="library" scope="TEST" name="Objenesis" level="project" />
     <orderEntry type="library" scope="TEST" name="mockito" level="project" />
     <orderEntry type="module" module-name="android.sdktools.deployer" />
+    <orderEntry type="library" name="Guava" level="project" />
   </component>
 </module>

@@ -33,5 +33,6 @@
     <orderEntry type="module" module-name="android.sdktools.testutils" scope="TEST" />
     <orderEntry type="module" module-name="android.sdktools.base.lint.tests" scope="TEST" />
     <orderEntry type="module" module-name="android.sdktools.zipflinger" />
+    <orderEntry type="library" scope="TEST" name="truth" level="project" />
   </component>
 </module>
