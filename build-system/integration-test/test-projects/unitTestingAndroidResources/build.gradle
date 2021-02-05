@@ -23,7 +23,6 @@ apply from: "../commonLocalRepo.gradle"
 
 repositories {
     mavenLocal()
-    jcenter()
 }
 
 android {
