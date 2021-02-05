@@ -229,6 +229,7 @@ public class JarContentsTest {
                 "com/android/builder/internal/aapt/",
                 "com/android/builder/internal/aapt/v2/",
                 "com/android/builder/internal/AndroidManifest.template",
+                "com/android/builder/internal/AndroidManifest.UnitTestTemplate",
                 "com/android/builder/internal/compiler/",
                 "com/android/builder/internal/incremental/",
                 "com/android/builder/internal/packaging/",

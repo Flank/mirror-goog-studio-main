@@ -42,6 +42,7 @@ import com.google.common.collect.ImmutableList
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.provider.MapProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import javax.inject.Inject
 
@@ -95,16 +96,6 @@ open class UnitTestImpl @Inject constructor(
 
     // these would normally be public but not for unit-test. They are there to feed the
     // manifest but aren't actually used.
-    override val instrumentationRunner: Provider<String>
-        get() = variantDslInfo.getInstrumentationRunner(testedVariant.dexingType)
-    override val handleProfiling: Provider<Boolean>
-        get() = variantDslInfo.handleProfiling
-    override val functionalTest: Provider<Boolean>
-        get() = variantDslInfo.functionalTest
-    override val testLabel: Provider<String?>
-        get() = variantDslInfo.testLabel
-    override val instrumentationRunnerArguments: Map<String, String>
-        get() = variantDslInfo.instrumentationRunnerArguments
     override val isTestCoverageEnabled: Boolean
         get() = variantDslInfo.isTestCoverageEnabled
 

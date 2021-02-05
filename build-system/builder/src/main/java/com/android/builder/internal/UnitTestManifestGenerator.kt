@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 The Android Open Source Project
+ * Copyright (C) 2021 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,15 +14,22 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.component
+package com.android.builder.internal
 
-import com.android.build.api.variant.BuildConfigField
-import org.gradle.api.provider.MapProperty
+import java.io.File
 
-/**
- * Internal interface for Android Test component
- */
-interface AndroidTestCreationConfig:
-    TestComponentCreationConfig,
-    ApkCreationConfig,
-    InstrumentedTestCreationConfig
+class UnitTestManifestGenerator(
+    outputFile: File,
+    packageName: String,
+    minSdkVersion: String?,
+    targetSdkVersion: String?,
+): TestManifestGenerator(
+    outputFile,
+    packageName,
+    minSdkVersion,
+    targetSdkVersion
+) {
+
+    override val templateResourceName: String =
+        "AndroidManifest.UnitTestTemplate"
+}

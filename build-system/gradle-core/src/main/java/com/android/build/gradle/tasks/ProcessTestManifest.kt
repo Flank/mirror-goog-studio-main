@@ -24,6 +24,7 @@ import com.android.build.api.variant.impl.getApiString
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.component.AndroidTestCreationConfig
 import com.android.build.gradle.internal.component.ComponentCreationConfig
+import com.android.build.gradle.internal.component.InstrumentedTestCreationConfig
 import com.android.build.gradle.internal.component.TestCreationConfig
 import com.android.build.gradle.internal.component.TestVariantCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
@@ -35,7 +36,8 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.tasks.ProcessApplicationManifest.Companion.getArtifactName
 import com.android.build.gradle.tasks.ProcessApplicationManifest.CreationAction.ManifestProviderImpl
-import com.android.builder.internal.TestManifestGenerator
+import com.android.builder.internal.InstrumentedTestManifestGenerator
+import com.android.builder.internal.UnitTestManifestGenerator
 import com.android.manifmerger.ManifestMerger2
 import com.android.manifmerger.ManifestMerger2.MergeFailureException
 import com.android.manifmerger.ManifestProvider
@@ -111,9 +113,9 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
             minSdkVersion.get(),
             targetSdkVersion.get(),
             testedApplicationId.get(),
-            instrumentationRunner.get(),
-            handleProfiling.get(),
-            functionalTest.get(),
+            instrumentationRunner.orNull,
+            handleProfiling.orNull,
+            functionalTest.orNull,
             testLabel.orNull,
             testManifestFile.orNull,
             computeProviders(),
@@ -166,9 +168,9 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
         minSdkVersion: String,
         targetSdkVersion: String,
         testedApplicationId: String,
-        instrumentationRunner: String,
-        handleProfiling: Boolean,
-        functionalTest: Boolean,
+        instrumentationRunner: String?,
+        handleProfiling: Boolean?,
+        functionalTest: Boolean?,
         testLabel: String?,
         testManifestFile: File?,
         manifestProviders: List<ManifestProvider?>,
@@ -185,18 +187,6 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
         Preconditions.checkNotNull(
             testedApplicationId,
             "testedApplicationId cannot be null."
-        )
-        Preconditions.checkNotNull(
-            instrumentationRunner,
-            "instrumentationRunner cannot be null."
-        )
-        Preconditions.checkNotNull(
-            handleProfiling,
-            "handleProfiling cannot be null."
-        )
-        Preconditions.checkNotNull(
-            functionalTest,
-            "functionalTest cannot be null."
         )
         Preconditions.checkNotNull(
             manifestProviders,
@@ -216,25 +206,41 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
         var tempFile2: File? = null
         try {
             FileUtils.mkdirs(tmpDir)
-            var generatedTestManifest =
-                if (manifestProviders.isEmpty() && testManifestFile == null) outManifest else File.createTempFile(
-                    "manifestMerger",
-                    ".xml",
-                    tmpDir
-                ).also { tempFile1 = it }
-            // we are generating the manifest and if there is an existing one,
-            // it will be overlaid with the generated one
-            logger.verbose("Generating in %1\$s", generatedTestManifest!!.absolutePath)
-            generateTestManifest(
-                testApplicationId,
-                minSdkVersion,
-                if (targetSdkVersion == "-1") null else targetSdkVersion,
-                testedApplicationId,
-                instrumentationRunner,
-                handleProfiling,
-                functionalTest,
-                generatedTestManifest
-            )
+                var generatedTestManifest =
+                    if (manifestProviders.isEmpty() && testManifestFile == null) outManifest else File.createTempFile(
+                        "manifestMerger",
+                        ".xml",
+                        tmpDir
+                    ).also { tempFile1 = it }
+                // we are generating the manifest and if there is an existing one,
+                // it will be overlaid with the generated one
+                logger.verbose("Generating in %1\$s", generatedTestManifest!!.absolutePath)
+                if (instrumentationRunner != null) {
+                    Preconditions.checkNotNull(
+                        handleProfiling,
+                        "handleProfiling cannot be null."
+                    )
+                    Preconditions.checkNotNull(
+                        functionalTest,
+                        "functionalTest cannot be null."
+                    )
+                    generateInstrumentedTestManifest(
+                        testApplicationId,
+                        minSdkVersion,
+                        if (targetSdkVersion == "-1") null else targetSdkVersion,
+                        testedApplicationId,
+                        instrumentationRunner,
+                        handleProfiling!!,
+                        functionalTest!!,
+                        generatedTestManifest
+                    )
+                } else {
+                    generateUnitTestManifest(
+                        testApplicationId,
+                        minSdkVersion,
+                        if (targetSdkVersion == "-1") null else targetSdkVersion,
+                        generatedTestManifest)
+                }
             if (testManifestFile != null && testManifestFile.exists()) {
                 val invoker = ManifestMerger2.newMerger(
                     testManifestFile,
@@ -242,24 +248,32 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
                     ManifestMerger2.MergeType.APPLICATION
                 )
                     .setPlaceHolderValues(manifestPlaceholders)
-                    .setPlaceHolderValue(
-                        PlaceholderHandler.INSTRUMENTATION_RUNNER,
-                        instrumentationRunner
-                    )
-                    .addLibraryManifest(generatedTestManifest)
+
                     .addNavigationJsons(navigationJsons)
                     .addFlavorAndBuildTypeManifests(*manifestOverlays.get().toTypedArray())
+                if (generatedTestManifest != null) {
+                    invoker.addLibraryManifest(generatedTestManifest)
+                }
+                instrumentationRunner?.let {
+                    invoker.setPlaceHolderValue(
+                        PlaceholderHandler.INSTRUMENTATION_RUNNER,
+                        it)
+                    invoker.setOverride(ManifestSystemProperty.NAME, it)
+                }
                 // we override these properties
                 invoker.setOverride(ManifestSystemProperty.PACKAGE, testApplicationId)
                 invoker.setOverride(ManifestSystemProperty.MIN_SDK_VERSION, minSdkVersion)
-                invoker.setOverride(ManifestSystemProperty.NAME, instrumentationRunner)
                 invoker.setOverride(ManifestSystemProperty.TARGET_PACKAGE, testedApplicationId)
-                invoker.setOverride(
-                    ManifestSystemProperty.FUNCTIONAL_TEST, functionalTest.toString()
-                )
-                invoker.setOverride(
-                    ManifestSystemProperty.HANDLE_PROFILING, handleProfiling.toString()
-                )
+                functionalTest?.let {
+                    invoker.setOverride(
+                        ManifestSystemProperty.FUNCTIONAL_TEST, it.toString()
+                    )
+                }
+                handleProfiling?.let {
+                    invoker.setOverride(
+                        ManifestSystemProperty.HANDLE_PROFILING, it.toString()
+                    )
+                }
                 if (testLabel != null) {
                     invoker.setOverride(ManifestSystemProperty.LABEL, testLabel)
                 }
@@ -280,7 +294,7 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
                     generatedTestManifest = tempFile2
                 }
             }
-            if (manifestProviders.isNotEmpty()) {
+            if (generatedTestManifest!= null && manifestProviders.isNotEmpty()) {
                 val mergingReport = ManifestMerger2.newMerger(
                     generatedTestManifest,
                     logger,
@@ -369,12 +383,15 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
     abstract val targetSdkVersion: Property<String>
 
     @get:Input
+    @get:Optional
     abstract val instrumentationRunner: Property<String>
 
     @get:Input
+    @get:Optional
     abstract val handleProfiling: Property<Boolean>
 
     @get:Input
+    @get:Optional
     abstract val functionalTest: Property<Boolean>
 
     @get:Input
@@ -446,7 +463,6 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
         ) {
             super.configure(task)
             val project = task.project
-            val variantDslInfo = creationConfig.variantDslInfo
             val variantSources = creationConfig.variantSources
             // Use getMainManifestIfExists() instead of getMainManifestFilePath() because this task
             // accepts either a non-null file that exists or a null file, it does not accept a
@@ -471,10 +487,12 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
             task.testApplicationId.setDisallowChanges(creationConfig.applicationId)
             task.testedApplicationId.setDisallowChanges(creationConfig.testedApplicationId)
 
-            task.instrumentationRunner.setDisallowChanges(creationConfig.instrumentationRunner)
-            task.handleProfiling.setDisallowChanges(variantDslInfo.handleProfiling)
-            task.functionalTest.setDisallowChanges(variantDslInfo.functionalTest)
-            task.testLabel.setDisallowChanges(variantDslInfo.testLabel)
+            if (creationConfig is InstrumentedTestCreationConfig) {
+                task.instrumentationRunner.setDisallowChanges(creationConfig.instrumentationRunner)
+                task.handleProfiling.setDisallowChanges(creationConfig.handleProfiling)
+                task.functionalTest.setDisallowChanges(creationConfig.functionalTest)
+                task.testLabel.setDisallowChanges(creationConfig.testLabel)
+            }
             task.manifests = creationConfig
                 .variantDependencies
                 .getArtifactCollection(
@@ -513,7 +531,7 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
     }
 
     companion object {
-        private fun generateTestManifest(
+        private fun generateInstrumentedTestManifest(
             testApplicationId: String,
             minSdkVersion: String?,
             targetSdkVersion: String?,
@@ -523,16 +541,37 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
             functionalTest: Boolean,
             outManifestLocation: File
         ) {
-            val generator = TestManifestGenerator(
-                outManifestLocation,
-                testApplicationId,
-                minSdkVersion,
-                targetSdkVersion,
-                testedApplicationId,
-                instrumentationRunner,
-                handleProfiling,
-                functionalTest
-            )
+            val generator =
+                InstrumentedTestManifestGenerator(
+                    outManifestLocation,
+                    testApplicationId,
+                    minSdkVersion,
+                    targetSdkVersion,
+                    testedApplicationId,
+                    instrumentationRunner,
+                    handleProfiling,
+                    functionalTest
+                )
+            try {
+                generator.generate()
+            } catch (e: IOException) {
+                throw RuntimeException(e)
+            }
+        }
+
+        private fun generateUnitTestManifest(
+            testApplicationId: String,
+            minSdkVersion: String?,
+            targetSdkVersion: String?,
+            outManifestLocation: File
+        ) {
+            val generator =
+                UnitTestManifestGenerator(
+                    outManifestLocation,
+                    testApplicationId,
+                    minSdkVersion,
+                    targetSdkVersion
+                )
             try {
                 generator.generate()
             } catch (e: IOException) {

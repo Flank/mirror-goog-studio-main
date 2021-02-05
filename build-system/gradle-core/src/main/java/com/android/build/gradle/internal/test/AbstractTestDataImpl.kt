@@ -17,6 +17,7 @@ package com.android.build.gradle.internal.test
 
 import com.android.SdkConstants
 import com.android.build.api.component.impl.ComponentImpl
+import com.android.build.gradle.internal.component.InstrumentedTestCreationConfig
 import com.android.build.gradle.internal.component.TestCreationConfig
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
@@ -32,6 +33,7 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Provider
 import org.gradle.api.provider.ProviderFactory
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
@@ -47,6 +49,7 @@ abstract class AbstractTestDataImpl(
         providerFactory: ProviderFactory,
         componentImpl: ComponentImpl,
         creationConfig: TestCreationConfig,
+        instrumentedTestCreationConfig: InstrumentedTestCreationConfig,
         variantSources: VariantSources,
         override val testApkDir: Provider<Directory>,
         @get:InputFiles
@@ -54,17 +57,18 @@ abstract class AbstractTestDataImpl(
         @get:Optional
         val testedApksDir: FileCollection?
 ) : TestData {
+
     private var extraInstrumentationTestRunnerArgs: Map<String, String> = mutableMapOf()
 
     override val applicationId = creationConfig.applicationId
 
     override val testedApplicationId = creationConfig.testedApplicationId
 
-    override val instrumentationRunner = creationConfig.instrumentationRunner
+    override val instrumentationRunner = instrumentedTestCreationConfig.instrumentationRunner
 
     override val instrumentationRunnerArguments: Map<String, String> by lazy {
         ImmutableMap.builder<String, String>()
-            .putAll(creationConfig.instrumentationRunnerArguments)
+            .putAll(instrumentedTestCreationConfig.instrumentationRunnerArguments)
             .putAll(extraInstrumentationTestRunnerArgs)
             .build()
     }
