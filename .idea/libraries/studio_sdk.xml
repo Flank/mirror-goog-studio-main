@@ -21,6 +21,8 @@
       <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/javax/activation/activation/1.1/activation-1.1.jar!/" />
       <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/com/google/guava/failureaccess/1.0.1/failureaccess-1.0.1.jar!/" />
       <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/com/google/guava/guava/27.0.1-jre/guava-27.0.1-jre.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/3.10.0/protobuf-java-3.10.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java-util/3.10.0/protobuf-java-util-3.10.0.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>

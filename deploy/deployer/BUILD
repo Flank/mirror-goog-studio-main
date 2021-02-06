@@ -27,10 +27,7 @@ iml_module(
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
-    exports = [
-        "//tools/base/deploy/deployer:deploy_java_proto",
-        "//tools/adt/idea/.idea/libraries:protobuf",
-    ],
+    exports = ["//tools/base/deploy/deployer:deploy_java_proto"],
     # do not sort: must match IML order
     deps = [
         "//prebuilts/studio/intellij-sdk:studio-sdk",
@@ -39,7 +36,6 @@ iml_module(
         "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
         "//tools/base/apkparser:studio.android.sdktools.binary-resources[module]",
         "//tools/base/deploy/deployer:deploy_java_proto",
-        "//tools/adt/idea/.idea/libraries:protobuf",
         "//prebuilts/r8",
         "//tools/base/deploy/deployer:libjava_version",
         "//tools/adt/idea/.idea/libraries:sqlite",

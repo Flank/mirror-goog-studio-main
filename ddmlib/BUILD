@@ -30,7 +30,6 @@ iml_module(
         "//tools/adt/idea/.idea/libraries:truth[test]",
         "//tools/base/fakeadbserver:studio.android.sdktools.fakeadbserver[module, test]",
         "//tools/adt/idea/.idea/libraries:kotlin-stdlib-jdk8",
-        "//tools/adt/idea/.idea/libraries:protobuf",
         "//tools/adt/idea/.idea/libraries:libam-instrumentation-data-proto",
     ],
 )
