@@ -24,7 +24,6 @@ import static org.junit.Assert.assertTrue;
 import com.android.build.api.variant.BuiltArtifact;
 import com.android.build.api.variant.FilterConfiguration;
 import com.android.build.api.variant.impl.BuiltArtifactsImpl;
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
 import com.android.builder.model.AndroidProject;
@@ -44,7 +43,6 @@ public class NdkSanAngelesTest {
     @ClassRule
     public static GradleTestProject project =
             GradleTestProject.builder()
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
                     .fromTestProject("ndkSanAngeles")
                     .create();

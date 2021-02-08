@@ -18,7 +18,6 @@ package com.android.build.gradle.integration.ndk;
 
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION;
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
@@ -35,7 +34,6 @@ public class NdkJniLibTest {
     @ClassRule
     public static GradleTestProject project =
             GradleTestProject.builder()
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
                     .fromTestProject("ndkJniLib")
                     .create();

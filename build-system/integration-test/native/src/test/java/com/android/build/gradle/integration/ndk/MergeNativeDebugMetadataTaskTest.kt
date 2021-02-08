@@ -19,7 +19,6 @@ package com.android.build.gradle.integration.ndk
 import com.android.SdkConstants.ABI_ARMEABI_V7A
 import com.android.SdkConstants.ABI_INTEL_ATOM
 import com.android.SdkConstants.ABI_INTEL_ATOM64
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_NDK_SIDE_BY_SIDE_VERSION
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
@@ -56,7 +55,6 @@ class MergeNativeDebugMetadataTaskTest(private val debugSymbolLevel: DebugSymbol
     val project: GradleTestProject =
         GradleTestProject.builder()
             .fromTestProject("dynamicApp")
-            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
             .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
             .create()
 
