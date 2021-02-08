@@ -26,9 +26,7 @@
     <orderEntry type="module" module-name="android.sdktools.base.lint.checks-base" />
     <orderEntry type="module" module-name="android.sdktools.base.lint.cli" />
     <orderEntry type="library" name="gradle-api" level="project" />
-    <orderEntry type="module" module-name="android.sdktools.base.lint.gradle-api" />
     <orderEntry type="library" name="groovy" level="project" />
-    <orderEntry type="module" module-name="android.sdktools.base.build-system.builder" />
     <orderEntry type="library" scope="TEST" name="JUnit4" level="project" />
     <orderEntry type="module" module-name="android.sdktools.testutils" scope="TEST" />
     <orderEntry type="module" module-name="android.sdktools.base.lint.tests" scope="TEST" />
