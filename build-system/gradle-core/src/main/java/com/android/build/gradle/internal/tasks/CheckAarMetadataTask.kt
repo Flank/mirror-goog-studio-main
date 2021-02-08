@@ -142,12 +142,21 @@ abstract class CheckAarMetadataWorkAction @Inject constructor(
 ): WorkAction<CheckAarMetadataWorkParameters> {
 
     override fun execute() {
+        val errorMessages: MutableList<String> =
+            mutableListOf("One or more issues found when checking AAR metadata values:")
         checkAarMetadataWorkParameters.aarMetadataArtifacts.get().forEach {
-            checkAarMetadataArtifact(it)
+            checkAarMetadataArtifact(it, errorMessages)
+        }
+        if (errorMessages.size > 1) {
+            throw RuntimeException(errorMessages.joinToString(separator = "\n\n"))
         }
     }
 
-    private fun checkAarMetadataArtifact(aarMetadataArtifact: AarMetadataArtifact) {
+    /** Checks the aarMetadataArtifact and add any errors to be reported to errorMessages */
+    private fun checkAarMetadataArtifact(
+        aarMetadataArtifact: AarMetadataArtifact,
+        errorMessages: MutableList<String>
+    ) {
         val aarMetadataFile = aarMetadataArtifact.file
         val displayName = aarMetadataArtifact.displayName
         val aarMetadataReader = AarMetadataReader(aarMetadataFile)
@@ -155,7 +164,7 @@ abstract class CheckAarMetadataWorkAction @Inject constructor(
         // check aarFormatVersion
         val aarFormatVersion = aarMetadataReader.aarFormatVersion
         if (aarFormatVersion == null) {
-            throw RuntimeException(
+            errorMessages.add(
                 """
                     A dependency's AAR metadata (${AarMetadataTask.AAR_METADATA_ENTRY_PATH}) does
                     not specify an $AAR_FORMAT_VERSION_PROPERTY value, which is a required value.
@@ -170,7 +179,7 @@ abstract class CheckAarMetadataWorkAction @Inject constructor(
                     Revision.parseRevision(checkAarMetadataWorkParameters.aarFormatVersion.get())
                         .major
                 if (majorAarVersion > maxMajorAarVersion) {
-                    throw RuntimeException(
+                    errorMessages.add(
                         """
                             The $AAR_FORMAT_VERSION_PROPERTY ($aarFormatVersion) specified in a
                             dependency's AAR metadata (${AarMetadataTask.AAR_METADATA_ENTRY_PATH})
@@ -182,7 +191,7 @@ abstract class CheckAarMetadataWorkAction @Inject constructor(
                     )
                 }
             } catch (e: NumberFormatException) {
-                throw RuntimeException(
+                errorMessages.add(
                     """
                         A dependency's AAR metadata (${AarMetadataTask.AAR_METADATA_ENTRY_PATH})
                         has an invalid $AAR_FORMAT_VERSION_PROPERTY value.
@@ -197,7 +206,7 @@ abstract class CheckAarMetadataWorkAction @Inject constructor(
         // check aarMetadataVersion
         val aarMetadataVersion = aarMetadataReader.aarMetadataVersion
         if (aarMetadataVersion == null) {
-            throw RuntimeException(
+            errorMessages.add(
                 """
                     A dependency's AAR metadata (${AarMetadataTask.AAR_METADATA_ENTRY_PATH}) does
                     not specify an $AAR_METADATA_VERSION_PROPERTY value, which is a required value.
@@ -212,7 +221,7 @@ abstract class CheckAarMetadataWorkAction @Inject constructor(
                     Revision.parseRevision(checkAarMetadataWorkParameters.aarMetadataVersion.get())
                         .major
                 if (majorAarMetadataVersion > maxMajorAarMetadataVersion) {
-                    throw RuntimeException(
+                    errorMessages.add(
                         """
                             The $AAR_METADATA_VERSION_PROPERTY ($aarMetadataVersion) specified in a
                             dependency's AAR metadata (${AarMetadataTask.AAR_METADATA_ENTRY_PATH})
@@ -224,7 +233,7 @@ abstract class CheckAarMetadataWorkAction @Inject constructor(
                     )
                 }
             } catch (e: NumberFormatException) {
-                throw RuntimeException(
+                errorMessages.add(
                     """
                         A dependency's AAR metadata (${AarMetadataTask.AAR_METADATA_ENTRY_PATH})
                         has an invalid $AAR_METADATA_VERSION_PROPERTY value.
@@ -241,7 +250,7 @@ abstract class CheckAarMetadataWorkAction @Inject constructor(
         if (minCompileSdk != null) {
             val minCompileSdkInt = minCompileSdk.toIntOrNull()
             if (minCompileSdkInt == null) {
-                throw RuntimeException(
+                errorMessages.add(
                     """
                         A dependency's AAR metadata (${AarMetadataTask.AAR_METADATA_ENTRY_PATH})
                         has an invalid $MIN_COMPILE_SDK_PROPERTY value. $MIN_COMPILE_SDK_PROPERTY
@@ -255,7 +264,7 @@ abstract class CheckAarMetadataWorkAction @Inject constructor(
                 val compileSdkVersion = checkAarMetadataWorkParameters.compileSdkVersion.get()
                 val compileSdkVersionInt = getApiIntFromString(compileSdkVersion)
                 if (minCompileSdkInt > compileSdkVersionInt) {
-                    throw RuntimeException(
+                    errorMessages.add(
                         """
                             The $MIN_COMPILE_SDK_PROPERTY ($minCompileSdk) specified in a
                             dependency's AAR metadata (${AarMetadataTask.AAR_METADATA_ENTRY_PATH})

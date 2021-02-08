@@ -277,6 +277,27 @@ class CheckAarMetadataTaskTest {
         }
     }
 
+    @Test
+    fun testMultipleInvalidValues() {
+        addAarWithPossiblyInvalidAarMetadataToAppProject(
+            aarFormatVersion = "invalid",
+            aarMetadataVersion = "invalid",
+            minCompileSdk = "invalid"
+        )
+        // Test that build fails with desired error message.
+        try {
+            project.executor().run(":app:assembleDebug")
+            Assert.fail("Expected build failure")
+        } catch (e: Exception) {
+            assertThat(Throwables.getRootCause(e).message)
+                .contains("has an invalid $AAR_FORMAT_VERSION_PROPERTY value.")
+            assertThat(Throwables.getRootCause(e).message)
+                .contains("has an invalid $AAR_METADATA_VERSION_PROPERTY value.")
+            assertThat(Throwables.getRootCause(e).message)
+                .contains("has an invalid $MIN_COMPILE_SDK_PROPERTY value.")
+        }
+    }
+
     private fun addAarWithPossiblyInvalidAarMetadataToAppProject(
         aarFormatVersion: String?,
         aarMetadataVersion: String?,

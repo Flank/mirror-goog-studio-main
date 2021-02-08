@@ -171,4 +171,37 @@ class CheckAarMetadataTaskTest {
             )
         }
     }
+
+    @Test
+    fun tesMultipleFailures() {
+        task.aarMetadataArtifacts =
+            FakeArtifactCollection(
+                mutableSetOf(
+                    FakeResolvedArtifactResult(
+                        file = temporaryFolder.newFile().also {
+                            writeAarMetadataFile(
+                                file = it,
+                                aarFormatVersion = "2.0",
+                                aarMetadataVersion = "2.0",
+                                minCompileSdk = 28
+                            )
+                        },
+                        identifier = FakeComponentIdentifier("displayName")
+                    )
+                )
+            )
+        task.aarFormatVersion.set(AarMetadataTask.AAR_FORMAT_VERSION)
+        task.aarMetadataVersion.set(AarMetadataTask.AAR_METADATA_VERSION)
+        task.compileSdkVersion.set("android-27")
+        try {
+            task.taskAction()
+            fail("Expected RuntimeException")
+        } catch (e: RuntimeException) {
+            assertThat(e.message).contains("The $AAR_FORMAT_VERSION_PROPERTY (2.0) specified")
+            assertThat(e.message).contains("The $AAR_METADATA_VERSION_PROPERTY (2.0) specified")
+            assertThat(e.message).contains(
+                "greater than this module's compileSdkVersion (android-27)"
+            )
+        }
+    }
 }
