@@ -39,7 +39,6 @@ import com.intellij.psi.PsiNameIdentifierOwner
 import com.intellij.psi.PsiPlainTextFile
 import com.intellij.psi.impl.light.LightElement
 import org.jetbrains.kotlin.config.LanguageVersionSettings
-import org.jetbrains.kotlin.psi.KtPropertyAccessor
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UFile
@@ -235,7 +234,7 @@ open class DefaultUastParser(
         if (element is UElementWithLocation) {
             val file = element.getContainingUFile() ?: return Location.NONE
             val ioFile = file.getIoFile() ?: return Location.NONE
-            val text = file.sourcePsi.text ?: file.javaPsi?.text ?: ""
+            val text = file.sourcePsi?.text ?: file.javaPsi?.text ?: ""
             val location = Location.create(ioFile, text, element.startOffset, element.endOffset)
             location.setSource(element)
             return location
@@ -503,13 +502,6 @@ open class DefaultUastParser(
     }
 
     override fun getNameLocation(context: JavaContext, element: UElement): Location {
-        val sourcePsi = element.sourcePsi
-        if (sourcePsi is KtPropertyAccessor) {
-            // For properties make sure we use the property
-            // declaration instead of the accessor
-            return context.getNameLocation(sourcePsi.property)
-        }
-
         var namedElement = element
         val nameNode = JavaContext.findNameElement(namedElement)
         if (nameNode != null) {

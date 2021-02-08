@@ -30,11 +30,9 @@ import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.PsiLabeledStatement
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiMethodCallExpression
-import com.intellij.psi.PsiNameIdentifierOwner
 import com.intellij.psi.PsiNewExpression
 import com.intellij.psi.PsiReferenceExpression
 import com.intellij.psi.PsiSwitchStatement
-import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.uast.UAnnotated
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UClass
@@ -529,7 +527,6 @@ open class JavaContext(
         @JvmStatic
         fun findNameElement(element: PsiElement): PsiElement? {
             when (element) {
-                is PsiNameIdentifierOwner -> return element.nameIdentifier
                 is PsiClass -> {
                     if (element is PsiAnonymousClass) {
                         return element.baseClassReference
@@ -543,7 +540,6 @@ open class JavaContext(
                 is PsiAnnotation -> return element.nameReferenceElement
                 is PsiReferenceExpression -> return element.referenceNameElement
                 is PsiLabeledStatement -> return element.labelIdentifier
-                is KtProperty -> return element.nameIdentifier
                 else -> return null
             }
         }

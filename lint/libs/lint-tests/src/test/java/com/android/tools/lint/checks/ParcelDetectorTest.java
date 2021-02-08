@@ -378,9 +378,10 @@ public class ParcelDetectorTest extends AbstractCheckTest {
                                 + "1 errors, 0 warnings")
                 .expectFixDiffs(
                         ""
-                                + "Fix for src/test/pkg/MyClass.kt line 19: Annotate with @JvmField:\n"
+                                + "Fix for src/test/pkg/MyClass.kt line 18: Add @JvmField:\n"
                                 + "@@ -19 +19\n"
-                                + "+         @JvmField");
+                                + "-         val CREATOR = object : Parcelable.Creator<MyClass> { // ERROR\n"
+                                + "+         @JvmField val CREATOR = object : Parcelable.Creator<MyClass> { // ERROR");
     }
 
     public void testParcelizeSuggestions() {

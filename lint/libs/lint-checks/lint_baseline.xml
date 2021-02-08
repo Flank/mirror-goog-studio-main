@@ -210,6 +210,14 @@
     </issue>
 
     <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope">
+        <location
+            file="libs/lint-checks/src/main/java/com/android/tools/lint/checks/ApiDetector.kt"
+            line="400"/>
+    </issue>
+
+    <issue
         id="FileComparisons"
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location

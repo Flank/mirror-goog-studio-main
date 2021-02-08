@@ -41,6 +41,8 @@ import com.android.SdkConstants.ATTR_THEME
 import com.android.SdkConstants.ATTR_VALUE
 import com.android.SdkConstants.ATTR_WIDTH
 import com.android.SdkConstants.AUTO_URI
+import com.android.SdkConstants.BUTTON
+import com.android.SdkConstants.CHECK_BOX
 import com.android.SdkConstants.CONSTRUCTOR_NAME
 import com.android.SdkConstants.DOT_JAVA
 import com.android.SdkConstants.FQCN_FRAME_LAYOUT
@@ -48,6 +50,7 @@ import com.android.SdkConstants.FQCN_TARGET_API
 import com.android.SdkConstants.FRAME_LAYOUT
 import com.android.SdkConstants.PREFIX_ANDROID
 import com.android.SdkConstants.SUPPORT_ANNOTATIONS_PREFIX
+import com.android.SdkConstants.SWITCH
 import com.android.SdkConstants.TAG
 import com.android.SdkConstants.TAG_ANIMATED_VECTOR
 import com.android.SdkConstants.TAG_ITEM
@@ -70,9 +73,10 @@ import com.android.tools.lint.checks.ApiLookup.startsWithEquivalentPrefix
 import com.android.tools.lint.checks.RtlDetector.ATTR_SUPPORTS_RTL
 import com.android.tools.lint.checks.VersionChecks.Companion.SDK_INT
 import com.android.tools.lint.checks.VersionChecks.Companion.codeNameToApi
-import com.android.tools.lint.checks.VersionChecks.Companion.getVersionCheckConditional
 import com.android.tools.lint.checks.VersionChecks.Companion.isPrecededByVersionCheckExit
+import com.android.tools.lint.checks.VersionChecks.Companion.isVersionCheckConditional
 import com.android.tools.lint.checks.VersionChecks.Companion.isWithinVersionCheckConditional
+import com.android.tools.lint.client.api.JavaEvaluator
 import com.android.tools.lint.client.api.ResourceReference
 import com.android.tools.lint.client.api.ResourceRepositoryScope.LOCAL_DEPENDENCIES
 import com.android.tools.lint.client.api.UElementHandler
@@ -93,6 +97,7 @@ import com.android.tools.lint.detector.api.ResourceXmlDetector
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
+import com.android.tools.lint.detector.api.UastLintUtils
 import com.android.tools.lint.detector.api.UastLintUtils.Companion.getLongAttribute
 import com.android.tools.lint.detector.api.XmlContext
 import com.android.tools.lint.detector.api.XmlScannerConstants
@@ -104,7 +109,9 @@ import com.android.tools.lint.detector.api.skipParentheses
 import com.android.utils.XmlUtils
 import com.android.utils.usLocaleCapitalize
 import com.intellij.psi.CommonClassNames
+import com.intellij.psi.PsiAnnotationMemberValue
 import com.intellij.psi.PsiAnonymousClass
+import com.intellij.psi.PsiArrayInitializerMemberValue
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiCompiledElement
@@ -167,8 +174,6 @@ import java.io.IOException
 import java.lang.Boolean.TRUE
 import java.util.ArrayList
 import java.util.EnumSet
-import kotlin.math.max
-import kotlin.math.min
 
 /**
  * Looks for usages of APIs that are not supported in all the versions targeted by this application
@@ -194,11 +199,11 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
         return true
     }
 
-    override fun getApplicableElements(): Collection<String> {
+    override fun getApplicableElements(): Collection<String>? {
         return XmlScannerConstants.ALL
     }
 
-    override fun getApplicableAttributes(): Collection<String> {
+    override fun getApplicableAttributes(): Collection<String>? {
         return XmlScannerConstants.ALL
     }
 
@@ -277,7 +282,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             if (name == ATTR_THEME && VIEW_INCLUDE == attribute.ownerElement.tagName) {
                 // Requires API 23
                 val minSdk = getMinSdk(context)
-                if (max(minSdk, context.folderVersion) < 23) {
+                if (Math.max(minSdk, context.folderVersion) < 23) {
                     val location = context.getLocation(attribute)
                     val message =
                         "Attribute `android:theme` is only used by `<include>` tags in API level 23 and higher (current min is $minSdk)"
@@ -291,7 +296,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             ) {
                 // Requires API 23, unless it's a FrameLayout
                 val minSdk = getMinSdk(context)
-                if (max(minSdk, context.folderVersion) < 23) {
+                if (Math.max(minSdk, context.folderVersion) < 23) {
                     val location = context.getLocation(attribute)
                     val message =
                         "Attribute `android:foreground` has no effect on API levels lower than 23 (current min is $minSdk)"
@@ -638,7 +643,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
         } else ApiVisitor(context)
     }
 
-    override fun getApplicableUastTypes(): List<Class<out UElement>> {
+    override fun getApplicableUastTypes(): List<Class<out UElement>>? {
         return listOf(
             USimpleNameReferenceExpression::class.java,
             ULocalVariable::class.java,
@@ -869,7 +874,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             val message: String
             val to = interfaceType.className
             val from = classType.className
-            val min = max(minSdk, getTargetApi(node))
+            val min = Math.max(minSdk, getTargetApi(node))
             message = if (interfaceTypeInternal == classTypeInternal) {
                 "Cast to `$to` requires API level $api (current min is $min)"
             } else {
@@ -992,7 +997,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                         val minSdk = getMinSdk(context)
                         if (!isSuppressed(context, api, node, minSdk)) {
                             val location = context.getLocation(annotation)
-                            val min = max(minSdk, getTargetApi(node))
+                            val min = Math.max(minSdk, getTargetApi(node))
                             val message =
                                 "Repeatable annotation requires API level $api (current min is $min)"
                             context.report(
@@ -1002,6 +1007,18 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                                 message,
                                 apiLevelFix(api)
                             )
+                        }
+                    } else if ("java.lang.annotation.Target" == name) {
+                        val attributes = annotation.parameterList.attributes
+                        for (pair in attributes) {
+                            val value = pair.value
+                            if (value is PsiArrayInitializerMemberValue) {
+                                for (t in value.initializers) {
+                                    checkAnnotationTarget(t, node, evaluator)
+                                }
+                            } else if (value != null) {
+                                checkAnnotationTarget(value, node, evaluator)
+                            }
                         }
                     }
                 }
@@ -1074,6 +1091,28 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             report(UNSUPPORTED, element, location, desc, fqcn, api, minSdk, apiLevelFix(api), owner)
         }
 
+        private fun checkAnnotationTarget(
+            element: PsiAnnotationMemberValue,
+            modifierListOwner: PsiModifierListOwner,
+            evaluator: JavaEvaluator
+        ) {
+            if (element is UReferenceExpression) {
+                val referenceName = UastLintUtils.getReferenceName(element)
+                if ("TYPE_PARAMETER" == referenceName || "TYPE_USE" == referenceName) {
+                    val retention = evaluator.findAnnotation(
+                        modifierListOwner,
+                        "java.lang.annotation.Retention"
+                    )
+                    if (retention == null || retention.text.contains("RUNTIME")) {
+                        val location = context.getLocation(element as UElement)
+                        val message =
+                            "Type annotations are not supported in Android: `$referenceName`"
+                        report(UNSUPPORTED, element as UElement, location, message)
+                    }
+                }
+            }
+        }
+
         override fun visitForEachExpression(node: UForEachExpression) {
             // The for each method will implicitly call iterator() on the
             // Iterable that is used in the for each loop; make sure that
@@ -1096,7 +1135,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 }
 
                 val location = context.getLocation(value)
-                val min = max(minSdk, getTargetApi(node))
+                val min = Math.max(minSdk, getTargetApi(node))
                 var message =
                     "The type of the for loop iterated value is " +
                         "${type.canonicalText}, which requires API level $api" +
@@ -1295,7 +1334,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                                             api = specificApi
                                             fqcn = type.canonicalText
                                         }
-                                        api = min(specificApi, api)
+                                        api = Math.min(specificApi, api)
                                     }
                                 }
                             }
@@ -1382,7 +1421,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                                 api = specificApi
                                 fqcn = cls.qualifiedName
                             }
-                            api = min(specificApi, api)
+                            api = Math.min(specificApi, api)
                             break
                         }
                         cls = cls.superClass
@@ -1414,7 +1453,6 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                     val methods = target.findMethodsBySignature(method, true)
                     if (methods.size > 1) {
                         for (m in methods) {
-                            //noinspection LintImplPsiEquals
                             if (method != m) {
                                 val provider = m.containingClass
                                 if (provider != null) {
@@ -1549,8 +1587,8 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             if (getMinSdk(context) >= api) {
                 return
             }
-            if (isWithinVersionCheckConditional(context, call, api) ||
-                isPrecededByVersionCheckExit(context, call, api)
+            if (isWithinVersionCheckConditional(context.evaluator, call, api, true) ||
+                isPrecededByVersionCheckExit(context.evaluator, call, api, true)
             ) {
                 return
             }
@@ -1636,7 +1674,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                             if (index != -1) {
                                 name = name.substring(index + 1)
                             }
-                            if (name.isNotEmpty()) {
+                            if (!name.isEmpty()) {
                                 if (name[0].isDigit()) {
                                     val api = Integer.parseInt(name)
                                     if (api > 0) {
@@ -1668,10 +1706,11 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 if (api > minSdk) {
                     val target = getTargetApi(expression)
                     if (target == -1 || api > target) {
-                        if (isWithinVersionCheckConditional(context, expression, api)) {
+                        val evaluator = context.evaluator
+                        if (isWithinVersionCheckConditional(evaluator, expression, api, true)) {
                             return true
                         }
-                        if (isPrecededByVersionCheckExit(context, expression, api)) {
+                        if (isPrecededByVersionCheckExit(evaluator, expression, api, true)) {
                             return true
                         }
 
@@ -1771,7 +1810,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                     val last = resourceList[resourceList.size - 1]
                     val location = context.getRangeLocation(first, 0, last, 0)
 
-                    val min = max(minSdk, getTargetApi(node))
+                    val min = Math.max(minSdk, getTargetApi(node))
                     val message =
                         "Try-with-resources requires API level $api (current min is $min)"
                     report(UNSUPPORTED, node, location, message, apiLevelFix(api))
@@ -1924,13 +1963,13 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             val type = field.type
             val name = field.name
 
+            if (SDK_INT == name) { // TODO && "android/os/Build$VERSION".equals(owner) ?
+                checkObsoleteSdkVersion(context, node)
+            }
+
             val containingClass = field.containingClass ?: return
             val evaluator = context.evaluator
             var owner = evaluator.getQualifiedName(containingClass) ?: return
-
-            if (SDK_INT == name && "android.os.Build.VERSION" == owner) {
-                checkObsoleteSdkVersion(context, node)
-            }
 
             // Enforce @RequiresApi
             if (!checkRequiresApi(node, field, field)) {
@@ -1939,7 +1978,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
 
             var api = apiDatabase.getFieldVersion(owner, name)
             if (api != -1) {
-                val minSdk = getMinSdk(context)
+                var minSdk = getMinSdk(context)
                 if (api > minSdk && api > getTargetApi(node)) {
                     // Only look for compile time constants. See JLS 15.28 and JLS 13.4.9.
                     var issue = if (evaluator.isStatic(field) && evaluator.isFinal(field))
@@ -2067,7 +2106,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
         type: String,
         sig: String
     ): String {
-        val min = max(minSdk, getTargetApi(node))
+        val min = Math.max(minSdk, getTargetApi(node))
 
         // For preview releases, don't show the API level as a number; show it using
         // a version code
@@ -2083,25 +2122,23 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
     }
 
     private fun checkObsoleteSdkVersion(context: JavaContext, node: UElement) {
-        val binary = node.getParentOfType(UBinaryExpression::class.java, true)
+        val binary = node.getParentOfType<UBinaryExpression>(UBinaryExpression::class.java, true)
         if (binary != null) {
             val minSdk = getMinSdk(context)
-            val constraint = getVersionCheckConditional(binary)
-            if (constraint != null) {
-                val always = constraint.alwaysAtLeast(minSdk)
-                val never = constraint.neverAtMost(minSdk)
-                val message =
-                    when {
-                        always -> "Unnecessary; SDK_INT is always >= $minSdk"
-                        never -> "Unnecessary; SDK_INT is never < $minSdk"
-                        else -> return
-                    }
+            val isConditional = isVersionCheckConditional(minSdk, binary)
+            if (isConditional != null) {
+                val message = (
+                    if (isConditional)
+                        "Unnecessary; SDK_INT is always >= "
+                    else
+                        "Unnecessary; SDK_INT is never < "
+                    ) + minSdk
                 context.report(
                     OBSOLETE_SDK,
                     binary,
                     context.getLocation(binary),
                     message,
-                    fix().data(KEY_CONDITIONAL, always)
+                    fix().data(KEY_CONDITIONAL, isConditional)
                 )
             }
         }
@@ -2145,8 +2182,6 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
         private const val SDK_SUPPRESS_ANNOTATION = "android.support.test.filters.SdkSuppress"
         private const val ANDROIDX_SDK_SUPPRESS_ANNOTATION = "androidx.test.filters.SdkSuppress"
         private const val ATTR_PROPERTY_VALUES_HOLDER = "propertyValuesHolder"
-
-        private val JAVA_IMPLEMENTATION = Implementation(ApiDetector::class.java, Scope.JAVA_FILE_SCOPE)
 
         /** Accessing an unsupported API */
         @JvmField
@@ -2225,7 +2260,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             priority = 6,
             severity = Severity.WARNING,
             androidSpecific = true,
-            implementation = JAVA_IMPLEMENTATION
+            implementation = Implementation(ApiDetector::class.java, Scope.JAVA_FILE_SCOPE)
         )
 
         /** Method conflicts with new inherited method */
@@ -2256,7 +2291,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             priority = 6,
             severity = Severity.ERROR,
             androidSpecific = true,
-            implementation = JAVA_IMPLEMENTATION
+            implementation = Implementation(ApiDetector::class.java, Scope.JAVA_FILE_SCOPE)
         )
 
         /** Attribute unused on older versions */
@@ -2311,7 +2346,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             priority = 6,
             severity = Severity.WARNING,
             androidSpecific = true,
-            implementation = JAVA_IMPLEMENTATION
+            implementation = Implementation(ApiDetector::class.java, Scope.JAVA_FILE_SCOPE)
         )
 
         private const val TAG_RIPPLE = "ripple"
@@ -2354,6 +2389,30 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
         private fun isRequiresApiAnnotation(fqcn: String): Boolean {
             return REQUIRES_API_ANNOTATION.isEquals(fqcn) ||
                 fqcn == "RequiresApi" // With missing imports
+        }
+
+        /**
+         * Returns true if the view tag is possibly a text view. It may not be certain, but will err on
+         * the side of caution (for example, any custom view is considered to be a potential text view.)
+         */
+        private fun viewMayExtendTextView(element: Element): Boolean {
+            var tag: String = element.tagName
+            if (tag == VIEW_TAG) {
+                tag = element.getAttribute(ATTR_CLASS) ?: return false
+                if (tag.isEmpty()) {
+                    return false
+                }
+            }
+
+            return if (tag.indexOf('.') != -1) {
+                // Custom views: not sure. Err on the side of caution.
+                true
+            } else tag.contains("Text") || // TextView, EditText, etc
+                tag.contains(BUTTON) || // Button, ToggleButton, etc
+                tag == "DigitalClock" ||
+                tag == "Chronometer" ||
+                tag == CHECK_BOX ||
+                tag == SWITCH
         }
 
         /**
@@ -2462,8 +2521,8 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                                 val api = if (c == 'L' || c == 'c') 9 else 24
                                 if (minSdk >= api) {
                                     checked = c
-                                } else if (isWithinVersionCheckConditional(context, argument, api) ||
-                                    isPrecededByVersionCheckExit(context, argument, api)
+                                } else if (isWithinVersionCheckConditional(context.evaluator, argument, api, true) ||
+                                    isPrecededByVersionCheckExit(context.evaluator, argument, api, true)
                                 ) {
                                     checked = c
                                 } else {
@@ -2515,7 +2574,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
 
             while (true) {
                 val targetApi = current.getAttributeNS(TOOLS_URI, ATTR_TARGET_API)
-                if (targetApi != null && targetApi.isNotEmpty()) {
+                if (targetApi != null && !targetApi.isEmpty()) {
                     return if (targetApi[0].isDigit()) {
                         try {
                             Integer.parseInt(targetApi)
@@ -2707,10 +2766,13 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             }
 
             val driver = context.driver
-            return driver.isSuppressed(context, UNSUPPORTED, element) ||
-                driver.isSuppressed(context, INLINED, element) ||
-                isWithinVersionCheckConditional(context, element, api) ||
-                isPrecededByVersionCheckExit(context, element, api)
+            val evaluator = context.evaluator
+            return (
+                driver.isSuppressed(context, UNSUPPORTED, element) ||
+                    driver.isSuppressed(context, INLINED, element) ||
+                    isWithinVersionCheckConditional(evaluator, element, api, true) ||
+                    isPrecededByVersionCheckExit(evaluator, element, api, true)
+                )
         }
 
         @JvmOverloads
@@ -2737,12 +2799,16 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
         }
 
         /**
-         * Returns the API level for the given AST node if specified
-         * with an `@TargetApi` annotation.
+         * Returns the API level for the given AST node if specified with an `@TargetApi`
+         * annotation.
          *
          * @param annotated the annotated element to check
          * @return the target API level, or -1 if not specified
          */
+        private fun getTargetApiForAnnotated(annotated: UAnnotated?): Int {
+            return getTargetApiForAnnotated(annotated, ::isTargetAnnotation)
+        }
+
         private fun getTargetApiForAnnotated(
             annotated: UAnnotated?,
             isApiLevelAnnotation: (String) -> Boolean
@@ -2764,6 +2830,17 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                                 return value
                             } else if (value is String) {
                                 return codeNameToApi(value)
+                            }
+                        } else if (expression is UCallExpression) {
+                            for (argument in expression.valueArguments) {
+                                if (argument is ULiteralExpression) {
+                                    val value = argument.value
+                                    if (value is Int) {
+                                        return value
+                                    } else if (value is String) {
+                                        return codeNameToApi(value)
+                                    }
+                                }
                             }
                         } else {
                             val apiLevel = ConstantEvaluator.evaluate(null, expression) as? Int
@@ -2808,7 +2885,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                             if (index != -1) {
                                 name = name.substring(index + 1)
                             }
-                            if (name.isNotEmpty()) {
+                            if (!name.isEmpty()) {
                                 if (name[0].isDigit()) {
                                     val api = Integer.parseInt(name)
                                     if (api > 0) {

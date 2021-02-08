@@ -30,7 +30,6 @@ import com.android.SdkConstants.TOOLS_URI
 import com.android.SdkConstants.XMLNS_PREFIX
 import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.LintFix
-import com.android.tools.lint.detector.api.LintFix.AnnotateFix
 import com.android.tools.lint.detector.api.LintFix.GroupType
 import com.android.tools.lint.detector.api.LintFix.LintFixGroup
 import com.android.tools.lint.detector.api.LintFix.ReplaceString
@@ -231,8 +230,6 @@ open class LintFixPerformer constructor(
             addReplaceString(file, lintFix, location)
         } else if (lintFix is SetAttribute) {
             addSetAttribute(file, lintFix, location)
-        } else if (lintFix is AnnotateFix) {
-            addAnnotation(file, lintFix, location)
         } else if (lintFix is LintFixGroup && lintFix.type == GroupType.COMPOSITE) {
             var all = true
             for (nested in lintFix.fixes) {
@@ -244,17 +241,6 @@ open class LintFixPerformer constructor(
         } else {
             false
         }
-    }
-
-    private fun addAnnotation(
-        file: PendingEditFile,
-        annotateFix: AnnotateFix,
-        fixLocation: Location?
-    ): Boolean {
-        val replaceFix = createAnnotationFix(
-            annotateFix, annotateFix.range ?: fixLocation, file.initialText
-        )
-        return addReplaceString(file, replaceFix, fixLocation)
     }
 
     private fun addSetAttribute(
@@ -616,68 +602,6 @@ open class LintFixPerformer constructor(
                 name.startsWith(ATTR_LAYOUT_RESOURCE_PREFIX) -> 50
                 else -> 60
             }
-        }
-
-        private fun implicitlyImported(pkg: String): Boolean {
-            // See Kotlin spec https://kotlinlang.org/spec/packages-and-imports.html
-            return when (pkg) {
-                "kotlin",
-                "kotlin.jvm",
-                "kotlin.annotation",
-                "kotlin.collections",
-                "kotlin.comparisons",
-                "kotlin.io",
-                "kotlin.ranges",
-                "kotlin.sequences",
-                "kotlin.text",
-                "kotlin.math",
-                "java.lang" -> true
-                else -> false
-            }
-        }
-
-        fun createAnnotationFix(fix: AnnotateFix, location: Location?, contents: String?): ReplaceString {
-            // Don't use fully qualified names for implicitly imported packages
-            val annotation = fix.annotation.let {
-                val argStart = it.indexOf('(', 1)
-                    .let { index -> if (index == -1) it.length else index }
-                val packageEnd = it.lastIndexOf('.', argStart)
-                if (packageEnd != -1 && implicitlyImported(it.substring(1, packageEnd))) {
-                    "@" + it.substring(packageEnd + 1)
-                } else {
-                    it
-                }
-            }
-
-            // Add indent?
-            var replacement: String = annotation + "\n"
-            if (location != null && contents != null) {
-                val start = location.start!!
-                val startOffset = start.offset
-                var lineBegin = startOffset
-                while (lineBegin > 0) {
-                    val c = contents[lineBegin - 1]
-                    if (!Character.isWhitespace(c)) {
-                        break
-                    } else if (c == '\n' || lineBegin == 1) {
-                        val indent = contents.substring(lineBegin, startOffset)
-                        replacement = annotation + "\n" + indent
-                        break
-                    } else lineBegin--
-                }
-            }
-
-            val replaceFixBuilder = LintFix.create()
-                .replace()
-                .beginning()
-                .with(replacement)
-                .shortenNames()
-                .reformat(true)
-            val range = fix.range
-            if (range != null) {
-                replaceFixBuilder.range(range)
-            }
-            return replaceFixBuilder.build() as ReplaceString
         }
     }
 

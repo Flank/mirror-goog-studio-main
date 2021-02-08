@@ -343,7 +343,6 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 ScopedStorageDetector.ISSUE,
                 ScrollViewChildDetector.ISSUE,
                 SdCardDetector.ISSUE,
-                SdkIntDetector.ISSUE,
                 SecureRandomDetector.ISSUE,
                 SecureRandomGeneratorDetector.ISSUE,
                 SecurityDetector.EXPORTED_PROVIDER,

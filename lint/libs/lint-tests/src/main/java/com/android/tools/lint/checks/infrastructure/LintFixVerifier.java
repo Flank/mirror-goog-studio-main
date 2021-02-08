@@ -35,7 +35,6 @@ import com.android.ide.common.xml.XmlPrettyPrinter;
 import com.android.tools.lint.LintFixPerformer;
 import com.android.tools.lint.detector.api.Incident;
 import com.android.tools.lint.detector.api.LintFix;
-import com.android.tools.lint.detector.api.LintFix.AnnotateFix;
 import com.android.tools.lint.detector.api.LintFix.DataMap;
 import com.android.tools.lint.detector.api.LintFix.GroupType;
 import com.android.tools.lint.detector.api.LintFix.LintFixGroup;
@@ -64,14 +63,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
 
-/**
- * Verifier which can simulate IDE quickfixes and check fix data.
- *
- * <p>TODO: Merge with {@link LintFixPerformer} (though they work slightly differently; the fix
- * verifier shows each individual fix applied to the doc in sequence, whereas the fix performer
- * accumulates all the fixes into a single edit. But we should be able to share a bunch of the
- * logic.)
- */
+/** Verifier which can simulate IDE quickfixes and check fix data */
 public class LintFixVerifier {
     private final TestLintTask task;
     private final List<Incident> incidents;
@@ -315,9 +307,6 @@ public class LintFixVerifier {
         } else if (lintFix instanceof SetAttribute) {
             SetAttribute setFix = (SetAttribute) lintFix;
             return checkSetAttribute(setFix, before, incident);
-        } else if (lintFix instanceof AnnotateFix) {
-            AnnotateFix annotateFix = (AnnotateFix) lintFix;
-            return checkAnnotationFix(annotateFix, before, incident);
         } else if (lintFix instanceof LintFixGroup
                 && ((LintFixGroup) lintFix).type == GroupType.COMPOSITE) {
             for (LintFix nested : ((LintFixGroup) lintFix).fixes) {
@@ -344,14 +333,6 @@ public class LintFixVerifier {
             }
         }
         return false;
-    }
-
-    private String checkAnnotationFix(
-            @NonNull AnnotateFix fix, @NonNull String contents, @NonNull Incident incident) {
-        ReplaceString replaceFix =
-                LintFixPerformer.Companion.createAnnotationFix(
-                        fix, fix.range != null ? fix.range : incident.getLocation(), contents);
-        return checkReplaceString(replaceFix, incident, contents);
     }
 
     private String checkSetAttribute(

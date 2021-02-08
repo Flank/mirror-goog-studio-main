@@ -112,22 +112,9 @@ class LintFixTest : TestCase() {
             )
     }
 
-    fun testAnnotate() {
-        // The actual adding of annotations is tested in (for example) SdkIntDetectorTest.
-        // This is just testing some other minor methods for code coverage purposes
-        val fix = LintFix.create().annotate("SuppressWarnings", true)
-            .autoFix()
-            .build()
-        assertTrue(fix.independent)
-        assertTrue(fix.robot)
-        // The rest of the annotation fix functionality is tested in various lint checks
-        // and their quickfixes
-    }
-
     /**
-     * Detector which makes use of a couple of lint fix string
-     * replacement features: (1) ranges (larger than error range, and
-     * (2) back references
+     * Detector which makes use of a couple of lint fix string replacement features:
+     * (1) ranges (larger than error range, and (2) back references
      */
     class SampleTestDetector : Detector(), SourceCodeScanner {
         override fun getApplicableMethodNames(): List<String> {

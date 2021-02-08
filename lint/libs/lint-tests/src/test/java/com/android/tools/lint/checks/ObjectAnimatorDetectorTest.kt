@@ -178,16 +178,7 @@ class ObjectAnimatorDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented()
-        ).run().expect(expected).expectFixDiffs(
-            """
-            Fix for src/main/java/test/pkg/AnimatorTest.java line 55: Annotate with @Keep:
-            @@ -55 +55
-            +         @androidx.annotation.Keep
-            Fix for src/main/java/test/pkg/AnimatorTest.java line 58: Annotate with @Keep:
-            @@ -58 +58
-            +         @androidx.annotation.Keep
-            """
-        )
+        ).run().expect(expected)
     }
 
     fun testNotMinifying() {

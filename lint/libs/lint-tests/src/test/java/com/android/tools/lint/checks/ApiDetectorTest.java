@@ -4955,13 +4955,10 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         + "src/test/pkg/TestVersionCheck.java:17: Warning: Unnecessary; SDK_INT is never < 23 [ObsoleteSdkInt]\n"
                         + "        if (Build.VERSION.SDK_INT == 22) { }\n"
                         + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "src/test/pkg/TestVersionCheck.java:19: Warning: Unnecessary; SDK_INT is always >= 23 [ObsoleteSdkInt]\n"
-                        + "        if (Build.VERSION.SDK_INT >= 23) { }\n"
-                        + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "src/test/pkg/TestVersionCheck.java:21: Warning: Unnecessary; SDK_INT is never < 23 [ObsoleteSdkInt]\n"
                         + "        if (Build.VERSION.SDK_INT < 23) { }\n"
                         + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 12 warnings";
+                        + "0 errors, 11 warnings";
         //noinspection all // Sample code
         lint().files(
                         manifest().minSdk(23),
