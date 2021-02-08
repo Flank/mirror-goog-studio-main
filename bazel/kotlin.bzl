@@ -61,7 +61,7 @@ def kotlin_compile(ctx, name, srcs, deps, friends, out, jre):
     args.add("-Xjvm-default=enable")
 
     # Dependency jars may be compiled with a new kotlinc IR backend.
-    args.add("-Xallow-jvm-ir-dependencies")
+    args.add("-Xallow-unstable-dependencies")
 
     # Add "use-ir" to enable the new IR backend for kotlinc tasks when the
     # attribute "kotlin_use_ir" is set
