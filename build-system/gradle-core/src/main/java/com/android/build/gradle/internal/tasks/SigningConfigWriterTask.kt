@@ -16,12 +16,14 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.signing.SigningConfigData
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
@@ -49,23 +51,21 @@ abstract class SigningConfigWriterTask : NonIncrementalTask() {
 
     @get:Nested
     @get:Optional
-    var signingConfigData: SigningConfigData? = null
-        internal set
+    abstract val signingConfigData: Property<SigningConfigData?>
 
     // Add the store file path as an input as SigningConfigData ignores it (see its javadoc). This
     // will break cache relocatability, but we have to accept it for correctness (see bug
     // 135509623#comment6).
     @get:Input
     @get:Optional
-    var storeFilePath: String? = null
-        internal set
+    abstract val storeFilePath: Property<String?>
 
     public override fun doTaskAction() {
-        SigningConfigUtils.saveSigningConfigData(outputFile.get().asFile, signingConfigData)
+        SigningConfigUtils.saveSigningConfigData(outputFile.get().asFile, signingConfigData.orNull)
     }
 
-    class CreationAction(creationConfig: VariantCreationConfig) :
-        VariantTaskCreationAction<SigningConfigWriterTask, VariantCreationConfig>(
+    class CreationAction(creationConfig: ApkCreationConfig) :
+        VariantTaskCreationAction<SigningConfigWriterTask, ApkCreationConfig>(
             creationConfig
         ) {
 
@@ -97,10 +97,24 @@ abstract class SigningConfigWriterTask : NonIncrementalTask() {
                 task.validatedSigningOutput
             )
 
-            task.signingConfigData = creationConfig.variantDslInfo.signingConfig?.let {
-                task.storeFilePath = it.storeFile?.path
-                SigningConfigData.fromSigningConfig(it)
-            }
+            // wrap the next two task input in provider as SigningConfigData constructor resolves
+            // providers during construction.
+            task.signingConfigData.setDisallowChanges(
+                creationConfig.services.provider {
+                    val signingConfig = creationConfig.signingConfig
+                    if (signingConfig != null && !signingConfig.name.isNullOrEmpty()) {
+                        SigningConfigData.fromSigningConfig(signingConfig)
+                    } else null
+                }
+            )
+            task.storeFilePath.setDisallowChanges(
+                creationConfig.services.provider<String?> {
+                    val signingConfig = creationConfig.signingConfig
+                    if (signingConfig != null && signingConfig.storeFile.isPresent) {
+                        signingConfig.storeFile.get()?.path
+                    } else null
+                }
+            )
         }
     }
 }

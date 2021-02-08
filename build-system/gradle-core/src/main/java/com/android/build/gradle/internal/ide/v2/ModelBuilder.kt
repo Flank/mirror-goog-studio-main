@@ -34,6 +34,7 @@ import com.android.build.api.variant.VariantBuilder
 import com.android.build.api.variant.impl.TestVariantImpl
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.TaskManager
+import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.errors.SyncIssueReporter
@@ -430,14 +431,17 @@ class ModelBuilder<
             else -> null
         }
 
+        val signingConfig = if (component is ApkCreationConfig)
+            component.signingConfig else null
+
         return AndroidArtifactImpl(
             variantSourceProvider = sourceProviders.variantSourceProvider?.convert(features),
             multiFlavorSourceProvider = sourceProviders.multiFlavorSourceProvider?.convert(
                 features
             ),
 
-            signingConfigName = component.variantDslInfo.signingConfig?.name,
-            isSigned = component.variantDslInfo.signingConfig != null,
+            signingConfigName = signingConfig?.name,
+            isSigned = signingConfig != null,
 
             abiFilters = variantDslInfo.supportedAbis,
             testInfo = testInfo,

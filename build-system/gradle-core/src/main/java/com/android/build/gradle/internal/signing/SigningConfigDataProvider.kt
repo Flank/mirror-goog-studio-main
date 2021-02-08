@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.signing
 
 import com.android.build.api.component.impl.TestComponentImpl
-import com.android.build.gradle.internal.component.ComponentCreationConfig
+import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.SigningConfigUtils
@@ -47,7 +47,7 @@ class SigningConfigDataProvider(
     /** When not `null`, the signing config information can be obtained directly in memory. */
     @get:Nested
     @get:Optional
-    val signingConfigData: SigningConfigData?,
+    val signingConfigData: Provider<SigningConfigData?>,
 
     /** When not `null`, the signing config information can be obtained from a file. */
     @get:InputFiles
@@ -73,7 +73,7 @@ class SigningConfigDataProvider(
     /** Converts this provider to [SigningConfigProviderParams] to be used by Gradle workers. */
     fun convertToParams(): SigningConfigProviderParams {
         return SigningConfigProviderParams(
-            signingConfigData,
+            signingConfigData.orNull,
             signingConfigFileCollection?.let { it.singleFile }
         )
     }
@@ -81,7 +81,7 @@ class SigningConfigDataProvider(
     companion object {
 
         @JvmStatic
-        fun create(creationConfig: ComponentCreationConfig): SigningConfigDataProvider {
+        fun create(creationConfig: ApkCreationConfig): SigningConfigDataProvider {
             val isInDynamicFeature =
                 creationConfig.variantType.isDynamicFeature
                         || (creationConfig is TestComponentImpl
@@ -93,8 +93,14 @@ class SigningConfigDataProvider(
             return if (!isInDynamicFeature) {
                 // Get it from the variant scope
                 SigningConfigDataProvider(
-                    signingConfigData = creationConfig.variantDslInfo.signingConfig?.let {
-                        SigningConfigData.fromSigningConfig(it)
+                    signingConfigData =
+                    // this will resolve all providers of SigningConfig, so we need to
+                    // encapsulate in a Provider to avoid these resolutions at configuration
+                    // time
+                    creationConfig.services.provider {
+                        creationConfig.signingConfig?.let {
+                            SigningConfigData.fromSigningConfig(it)
+                        }
                     },
                     signingConfigFileCollection = null,
                     signingConfigValidationResultDir = creationConfig.artifacts.get(
@@ -105,9 +111,10 @@ class SigningConfigDataProvider(
                 // Get it from the injected properties passed from the IDE
                 val signingConfigData =
                     SigningConfigData.fromProjectOptions(creationConfig.services.projectOptions)
+
                 return if (signingConfigData != null) {
                     SigningConfigDataProvider(
-                        signingConfigData = signingConfigData,
+                        signingConfigData = creationConfig.services.provider { signingConfigData },
                         signingConfigFileCollection = null,
                         // Validation for this case is currently missing because the base module
                         // doesn't publish its validation result so that we can use it here.
@@ -120,7 +127,7 @@ class SigningConfigDataProvider(
                 } else {
                     // Otherwise, get it from the published artifact
                     SigningConfigDataProvider(
-                        signingConfigData = null,
+                        signingConfigData = creationConfig.services.provider { null },
                         signingConfigFileCollection =
                             creationConfig.variantDependencies.getArtifactFileCollection(
                                 AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,

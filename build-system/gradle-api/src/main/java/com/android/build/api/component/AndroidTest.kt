@@ -106,8 +106,9 @@ interface AndroidTest : TestComponent {
 
     /**
      * Variant's signingConfig, initialized by the corresponding DSL element.
+     * @return Variant's config or null if the variant is not configured for signing.
      */
-    val signingConfig: SigningConfig
+    val signingConfig: SigningConfig?
 
     /**
      * Variant's packagingOptions, initialized by the corresponding global DSL element.

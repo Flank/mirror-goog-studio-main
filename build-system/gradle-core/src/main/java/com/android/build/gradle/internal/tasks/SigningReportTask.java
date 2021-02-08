@@ -22,8 +22,9 @@ import static org.gradle.internal.logging.text.StyledTextOutput.Style.Identifier
 import static org.gradle.internal.logging.text.StyledTextOutput.Style.Normal;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.component.ComponentCreationConfig;
-import com.android.build.gradle.internal.dsl.SigningConfig;
+import com.android.build.api.variant.SigningConfig;
+import com.android.build.api.variant.impl.SigningConfigImpl;
+import com.android.build.gradle.internal.component.ApkCreationConfig;
 import com.android.ide.common.signing.CertificateInfo;
 import com.android.ide.common.signing.KeystoreHelper;
 import com.android.ide.common.signing.KeytoolException;
@@ -50,7 +51,7 @@ import org.gradle.internal.logging.text.StyledTextOutputFactory;
  */
 public class SigningReportTask extends DefaultTask {
 
-    private List<ComponentCreationConfig> components;
+    private List<ApkCreationConfig> components;
 
     @TaskAction
     public void generate() {
@@ -60,13 +61,13 @@ public class SigningReportTask extends DefaultTask {
 
         Map<SigningConfig, SigningInfo> cache = Maps.newHashMap();
 
-        for (ComponentCreationConfig component : components) {
+        for (ApkCreationConfig component : components) {
             textOutput.withStyle(Identifier).text("Variant: ");
             textOutput.withStyle(Description).text(component.getName());
             textOutput.println();
 
             // get the data
-            SigningConfig signingConfig = component.getVariantDslInfo().getSigningConfig();
+            SigningConfigImpl signingConfig = component.getSigningConfig();
             if (signingConfig == null) {
                 textOutput.withStyle(Identifier).text("Config: ");
                 textOutput.withStyle(Normal).text("none");
@@ -80,18 +81,17 @@ public class SigningReportTask extends DefaultTask {
                 textOutput.println();
 
                 textOutput.withStyle(Identifier).text("Store: ");
-                textOutput.withStyle(Description).text(signingConfig.getStoreFile());
+                textOutput.withStyle(Description).text(signingConfig.getStoreFile().getOrNull());
                 textOutput.println();
 
                 textOutput.withStyle(Identifier).text("Alias: ");
-                textOutput.withStyle(Description).text(signingConfig.getKeyAlias());
+                textOutput.withStyle(Description).text(signingConfig.getKeyAlias().getOrNull());
                 textOutput.println();
 
                 if (signingInfo.isValid()) {
                     if (signingInfo.error != null) {
                         textOutput.withStyle(Identifier).text("Error: ");
                         textOutput.withStyle(Failure).text(signingInfo.error);
-                        textOutput.println();
                     } else {
                         textOutput.withStyle(Identifier).text("MD5: ");
                         textOutput.withStyle(Description).text(signingInfo.md5);
@@ -108,8 +108,8 @@ public class SigningReportTask extends DefaultTask {
                         textOutput.withStyle(Identifier).text("Valid until: ");
                         DateFormat df = DateFormat.getDateInstance(DateFormat.FULL);
                         textOutput.withStyle(Description).text(df.format(signingInfo.notAfter));
-                        textOutput.println();
                     }
+                    textOutput.println();
                 }
             }
 
@@ -119,12 +119,12 @@ public class SigningReportTask extends DefaultTask {
     }
 
     /** Sets the configurations to generate the report for. */
-    public void setComponents(@NonNull Collection<ComponentCreationConfig> components) {
+    public void setComponents(@NonNull Collection<ApkCreationConfig> components) {
         this.components = ImmutableList.copyOf(components);
     }
 
     private static SigningInfo getSigningInfo(
-            @NonNull SigningConfig signingConfig,
+            @NonNull SigningConfigImpl signingConfig,
             @NonNull Map<SigningConfig, SigningInfo> cache) {
         SigningInfo signingInfo = cache.get(signingConfig);
 
@@ -133,15 +133,13 @@ public class SigningReportTask extends DefaultTask {
 
             if (signingConfig.isSigningReady()) {
                 try {
-                    @SuppressWarnings(
-                            "ConstantConditions") // Called isSigningReady() above, so these will not be null.
                     CertificateInfo certificateInfo =
                             KeystoreHelper.getCertificateInfo(
-                                    signingConfig.getStoreType(),
-                                    signingConfig.getStoreFile(),
-                                    signingConfig.getStorePassword(),
-                                    signingConfig.getKeyPassword(),
-                                    signingConfig.getKeyAlias());
+                                    signingConfig.getStoreType().getOrNull(),
+                                    signingConfig.getStoreFile().get(),
+                                    signingConfig.getStorePassword().get(),
+                                    signingConfig.getKeyPassword().get(),
+                                    signingConfig.getKeyAlias().get());
                     signingInfo.md5 = getFingerprint(certificateInfo.getCertificate(), "MD5");
                     signingInfo.sha1 = getFingerprint(certificateInfo.getCertificate(), "SHA1");
                     signingInfo.sha256 =

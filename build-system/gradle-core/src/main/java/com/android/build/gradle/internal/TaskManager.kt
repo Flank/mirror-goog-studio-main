@@ -1965,7 +1965,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
     fun createPackagingTask(creationConfig: ApkCreationConfig) {
         // ApkVariantData variantData = (ApkVariantData) variantScope.getVariantData();
         val taskContainer = creationConfig.taskContainer
-        val signedApk = creationConfig.variantDslInfo.isSigningReady
+        val signedApk = creationConfig.signingConfig?.isSigningReady() ?: false
 
         /*
          * PrePackaging step class that will look if the packaging of the main FULL_APK split is
@@ -2033,8 +2033,8 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         taskFactory.register(InstallVariantTask.CreationAction(creationConfig))
     }
 
-    protected fun createValidateSigningTask(creationConfig: VariantCreationConfig) {
-        if (creationConfig.variantDslInfo.signingConfig == null) {
+    protected fun createValidateSigningTask(creationConfig: ApkCreationConfig) {
+        if (creationConfig.signingConfig?.isSigningReady() != true) {
             return
         }
 
@@ -2402,8 +2402,9 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         }
         val signingReportComponents = allPropertiesList.stream()
                 .filter { component: ComponentCreationConfig ->
-                    (component.variantType.isForTesting || component.variantType.isBaseModule)
+                    component is ApkCreationConfig
                 }
+                .map { component -> component as ApkCreationConfig }
                 .collect(Collectors.toList())
         if (signingReportComponents.isNotEmpty()) {
             taskFactory.register(

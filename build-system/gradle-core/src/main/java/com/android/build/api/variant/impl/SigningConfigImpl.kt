@@ -19,6 +19,8 @@ package com.android.build.api.variant.impl
 import com.android.build.api.variant.SigningConfig
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.signing.SigningConfigVersions
+import org.gradle.api.provider.Provider
+import java.io.File
 import java.util.concurrent.Callable
 
 class SigningConfigImpl(
@@ -27,6 +29,8 @@ class SigningConfigImpl(
     minSdk: Int,
     targetApi: Int?
 ) : SigningConfig {
+
+    val name: String? = dslSigningConfig?.name
 
     override val enableV4Signing =
         variantPropertiesApiServices.propertyOf(
@@ -94,4 +98,29 @@ class SigningConfigImpl(
             },
             "enableV1Signing"
         )
+
+    //-----------------------------------------------------
+    // Internal APIs
+    //------------------------------------------------------
+    val storeFile: Provider<File?> =
+        variantPropertiesApiServices.provider { dslSigningConfig?.storeFile }
+
+    val storePassword: Provider<String?> =
+        variantPropertiesApiServices.provider { dslSigningConfig?.storePassword }
+
+    val keyAlias: Provider<String?> =
+        variantPropertiesApiServices.provider { dslSigningConfig?.keyAlias }
+
+    val keyPassword: Provider<String?> =
+        variantPropertiesApiServices.provider { dslSigningConfig?.keyPassword }
+
+    val storeType: Provider<String?> =
+        variantPropertiesApiServices.provider { dslSigningConfig?.storeType }
+
+    fun isSigningReady(): Boolean {
+        return storeFile.isPresent &&
+            storePassword.isPresent &&
+            keyAlias.isPresent &&
+            keyPassword.isPresent
+    }
 }

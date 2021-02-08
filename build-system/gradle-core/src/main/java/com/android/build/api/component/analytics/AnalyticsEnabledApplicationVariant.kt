@@ -66,7 +66,7 @@ open class AnalyticsEnabledApplicationVariant @Inject constructor(
             return delegate.aapt
         }
 
-    override val signingConfig: SigningConfig
+    override val signingConfig: SigningConfig?
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
                 VariantPropertiesMethodType.SIGNING_CONFIG_VALUE

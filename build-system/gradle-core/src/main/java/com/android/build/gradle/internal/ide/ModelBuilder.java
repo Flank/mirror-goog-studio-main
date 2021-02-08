@@ -37,6 +37,7 @@ import com.android.build.gradle.internal.DefaultConfigData;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.ProductFlavorData;
 import com.android.build.gradle.internal.TaskManager;
+import com.android.build.gradle.internal.component.ApkCreationConfig;
 import com.android.build.gradle.internal.component.ConsumableCreationConfig;
 import com.android.build.gradle.internal.component.VariantCreationConfig;
 import com.android.build.gradle.internal.core.VariantDslInfo;
@@ -881,7 +882,14 @@ public class ModelBuilder<Extension extends BaseExtension>
         VariantScope variantScope = component.getVariantScope();
         VariantDslInfo variantDslInfo = component.getVariantDslInfo();
 
-        SigningConfig signingConfig = variantDslInfo.getSigningConfig();
+        com.android.build.api.variant.impl.SigningConfigImpl signingConfig = null;
+        boolean isSigningReady = false;
+        if (component instanceof ApkCreationConfig) {
+            signingConfig = ((ApkCreationConfig) component).getSigningConfig();
+            if (signingConfig != null) {
+                isSigningReady = signingConfig.isSigningReady();
+            }
+        }
         String signingConfigName = null;
         if (signingConfig != null) {
             signingConfigName = signingConfig.getName();
@@ -941,7 +949,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                 globalScope.getProjectBaseName() + "-" + component.getBaseName(),
                 taskContainer.getAssembleTask().getName(),
                 artifacts.get(InternalArtifactType.APK_IDE_MODEL.INSTANCE).getOrNull(),
-                variantDslInfo.isSigningReady() || component.getVariantData().outputsAreSigned,
+                isSigningReady || component.getVariantData().outputsAreSigned,
                 signingConfigName,
                 taskContainer.getSourceGenTask().getName(),
                 taskContainer.getCompileTask().getName(),

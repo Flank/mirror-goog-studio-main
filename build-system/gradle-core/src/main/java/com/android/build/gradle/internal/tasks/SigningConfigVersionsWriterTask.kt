@@ -99,14 +99,18 @@ abstract class SigningConfigVersionsWriterTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            creationConfig.signingConfig?.enableV1Signing?.let { task.enableV1Signing.set(it) }
-            task.enableV1Signing.disallowChanges()
-            creationConfig.signingConfig?.enableV2Signing?.let { task.enableV2Signing.set(it) }
-            task.enableV2Signing.disallowChanges()
-            creationConfig.signingConfig?.enableV3Signing?.let { task.enableV3Signing.set(it) }
-            task.enableV3Signing.disallowChanges()
-            creationConfig.signingConfig?.enableV4Signing?.let { task.enableV4Signing.set(it) }
-            task.enableV4Signing.disallowChanges()
+            val signingConfig = creationConfig.signingConfig
+            if (signingConfig == null) {
+                task.enableV1Signing.setDisallowChanges(false)
+                task.enableV2Signing.setDisallowChanges(false)
+                task.enableV3Signing.setDisallowChanges(false)
+                task.enableV4Signing.setDisallowChanges(false)
+            } else {
+                task.enableV1Signing.setDisallowChanges(signingConfig.enableV1Signing)
+                task.enableV2Signing.setDisallowChanges(signingConfig.enableV2Signing)
+                task.enableV3Signing.setDisallowChanges(signingConfig.enableV3Signing)
+                task.enableV4Signing.setDisallowChanges(signingConfig.enableV4Signing)
+            }
 
             task.overrideEnableV1Signing.setDisallowChanges(
                 creationConfig.services.projectOptions.get(OptionalBooleanOption.SIGNING_V1_ENABLED)

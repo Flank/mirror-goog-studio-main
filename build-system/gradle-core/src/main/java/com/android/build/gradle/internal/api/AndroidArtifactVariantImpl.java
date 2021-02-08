@@ -21,6 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.build.api.component.impl.ComponentImpl;
 import com.android.build.gradle.api.AndroidArtifactVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
+import com.android.build.gradle.internal.component.ApkCreationConfig;
 import com.android.build.gradle.internal.services.BaseServices;
 import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.build.gradle.options.BooleanOption;
@@ -50,13 +51,18 @@ public abstract class AndroidArtifactVariantImpl extends BaseVariantImpl
 
     @Override
     public SigningConfig getSigningConfig() {
-        return readOnlyObjectProvider.getSigningConfig(
-                component.getVariantDslInfo().getSigningConfig());
+        if (component instanceof ApkCreationConfig) {
+            return readOnlyObjectProvider.getSigningConfig(
+                    ((ApkCreationConfig) component).getDslSigningConfig());
+        } else return null;
     }
 
     @Override
     public boolean isSigningReady() {
-        return component.getVariantDslInfo().isSigningReady();
+        SigningConfig signingConfig = getSigningConfig();
+        if (signingConfig != null) {
+            return signingConfig.isSigningReady();
+        } else return false;
     }
 
     @Nullable

@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -116,8 +117,8 @@ abstract class BundleToApkTask : NonIncrementalTask() {
         }
     }
 
-    class CreationAction(creationConfig: VariantCreationConfig) :
-        VariantTaskCreationAction<BundleToApkTask, VariantCreationConfig>(
+    class CreationAction(creationConfig: ApkCreationConfig) :
+        VariantTaskCreationAction<BundleToApkTask, ApkCreationConfig>(
             creationConfig
         ) {
 

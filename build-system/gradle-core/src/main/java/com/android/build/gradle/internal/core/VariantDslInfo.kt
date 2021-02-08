@@ -244,11 +244,6 @@ interface VariantDslInfo {
      */
     fun getResValues(): Map<ResValue.Key, ResValue>
 
-    /** Holds all SigningConfig information from the DSL and/or [ProjectOptions].  */
-    val signingConfig: SigningConfig?
-
-    val isSigningReady: Boolean
-
     val isTestCoverageEnabled: Boolean
 
     /**
@@ -375,4 +370,11 @@ interface VariantDslInfo {
      */
     // DO NOT USE, Use CreationConfig and subtypes methods.
     val instrumentationRunnerArguments: Map<String, String>
+
+    /** Holds all SigningConfig information from the DSL and/or [ProjectOptions].  */
+    // DO NOT USE, Use CreationConfig and subtypes methods.
+    val signingConfig: SigningConfig?
+
+    // DO NOT USE, Use CreationConfig and subtypes methods.
+    val isSigningReady: Boolean
 }

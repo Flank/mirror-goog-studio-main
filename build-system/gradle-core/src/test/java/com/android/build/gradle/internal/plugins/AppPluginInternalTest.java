@@ -24,6 +24,7 @@ import com.android.build.api.component.impl.ComponentImpl;
 import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.variant.impl.ApplicationVariantBuilderImpl;
 import com.android.build.api.variant.impl.ApplicationVariantImpl;
+import com.android.build.api.variant.impl.SigningConfigImpl;
 import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.gradle.AppExtension;
 import com.android.build.gradle.internal.BadPluginException;
@@ -363,12 +364,12 @@ public class AppPluginInternalTest {
         TestCase.assertEquals(VariantCheckers.countVariants(map), components.size());
 
         ComponentImpl variant;
-        SigningConfig signingConfig;
+        SigningConfigImpl signingConfig;
 
         variant = VariantCheckers.findComponent(components, "flavor1Debug");
-        signingConfig = variant.getVariantDslInfo().getSigningConfig();
+        signingConfig = ((ApplicationVariantImpl) variant).getSigningConfig();
         TestCase.assertNotNull(signingConfig);
-        final File file = signingConfig.getStoreFile();
+        final File file = signingConfig.getStoreFile().get();
         assertNotNull(file);
         assertThat(file)
                 .isEqualTo(
@@ -379,19 +380,19 @@ public class AppPluginInternalTest {
                                         true) {}));
 
         variant = VariantCheckers.findComponent(components, "flavor1Staging");
-        signingConfig = variant.getVariantDslInfo().getSigningConfig();
+        signingConfig = ((ApplicationVariantImpl) variant).getSigningConfig();
         TestCase.assertNull(signingConfig);
 
         variant = VariantCheckers.findComponent(components, "flavor1Release");
-        signingConfig = variant.getVariantDslInfo().getSigningConfig();
+        signingConfig = ((ApplicationVariantImpl) variant).getSigningConfig();
         TestCase.assertNotNull(signingConfig);
         TestCase.assertEquals(
-                new File(project.getProjectDir(), "a3"), signingConfig.getStoreFile());
+                new File(project.getProjectDir(), "a3"), signingConfig.getStoreFile().get());
 
         variant = VariantCheckers.findComponent(components, "flavor2Debug");
-        signingConfig = variant.getVariantDslInfo().getSigningConfig();
+        signingConfig = ((ApplicationVariantImpl) variant).getSigningConfig();
         TestCase.assertNotNull(signingConfig);
-        final File file1 = signingConfig.getStoreFile();
+        final File file1 = signingConfig.getStoreFile().get();
         assertNotNull(file1);
         assertThat(file1)
                 .isEqualTo(
@@ -402,16 +403,16 @@ public class AppPluginInternalTest {
                                         true) {}));
 
         variant = VariantCheckers.findComponent(components, "flavor2Staging");
-        signingConfig = variant.getVariantDslInfo().getSigningConfig();
+        signingConfig = ((ApplicationVariantImpl) variant).getSigningConfig();
         TestCase.assertNotNull(signingConfig);
         TestCase.assertEquals(
-                new File(project.getProjectDir(), "a1"), signingConfig.getStoreFile());
+                new File(project.getProjectDir(), "a1"), signingConfig.getStoreFile().get());
 
         variant = VariantCheckers.findComponent(components, "flavor2Release");
-        signingConfig = variant.getVariantDslInfo().getSigningConfig();
+        signingConfig = ((ApplicationVariantImpl) variant).getSigningConfig();
         TestCase.assertNotNull(signingConfig);
         TestCase.assertEquals(
-                new File(project.getProjectDir(), "a3"), signingConfig.getStoreFile());
+                new File(project.getProjectDir(), "a3"), signingConfig.getStoreFile().get());
     }
 
     /**

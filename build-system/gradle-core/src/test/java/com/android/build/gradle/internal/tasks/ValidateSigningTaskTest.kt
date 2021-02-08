@@ -16,10 +16,12 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.gradle.internal.dsl.SigningConfig
+import com.android.build.api.variant.impl.SigningConfigImpl
 import com.android.build.gradle.internal.dsl.SigningConfigFactory
+import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.build.gradle.internal.services.createDslServices
+import com.android.builder.signing.DefaultSigningConfig
 import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.hash.Hashing
 import com.google.common.truth.Truth.assertThat
@@ -33,8 +35,10 @@ import org.junit.BeforeClass
 import org.junit.ClassRule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import org.mockito.Mockito
 import java.io.File
 import java.nio.file.Files
+import java.security.KeyStore
 
 const val PRE_BUILD_TASKNAME = "preBuildTask"
 
@@ -76,7 +80,10 @@ class ValidateSigningTaskTest {
         val task= project!!.tasks.create("validateSigning", ValidateSigningTask::class.java)
         task.dummyOutputDirectory.set(outputDirectory)
         task.analyticsService.set(FakeNoOpAnalyticsService())
-        task.signingConfig= SigningConfig("release")
+        val signingConfig = Mockito.mock(SigningConfigImpl::class.java)
+        Mockito.`when`(signingConfig.name).thenReturn("release")
+        Mockito.`when`(signingConfig.storeFile).thenReturn(FakeGradleProvider(null))
+        task.signingConfig= signingConfig
         assertThat(task.forceRerun()).named("forceRerun").isTrue()
         // If no config file set, throws InvalidUserDataException
         try {
@@ -90,18 +97,22 @@ class ValidateSigningTaskTest {
 
     @Test
     fun testErrorIfCustomKeystoreFileDoesNotExist() {
-        val dslServices = createDslServices()
-
-        val dslSigningConfig = SigningConfigFactory(dslServices,
-                temporaryFolder.newFile()).create("release")
-        dslSigningConfig.storeFile = File(temporaryFolder.newFolder(), "does_not_exist")
-        dslSigningConfig.storePassword = "store password"
-        dslSigningConfig.keyAlias = "key alias"
-        dslSigningConfig.keyPassword = "key password"
-        assertThat(dslSigningConfig.isSigningReady).named("signing is ready").isTrue()
-
         val task = project!!.tasks.create("validateGreenSigning", ValidateSigningTask::class.java)
-        task.signingConfig = dslSigningConfig
+        val signingConfig = Mockito.mock(SigningConfigImpl::class.java)
+        Mockito.`when`(signingConfig.name).thenReturn("release")
+        Mockito.`when`(signingConfig.storeFile).thenReturn(FakeGradleProvider(
+            File(temporaryFolder.newFolder(), "does_not_exist")))
+        Mockito.`when`(signingConfig.storePassword).thenReturn(
+            FakeGradleProvider("store password")
+        )
+        Mockito.`when`(signingConfig.keyAlias).thenReturn(
+            FakeGradleProvider("key alias")
+        )
+        Mockito.`when`(signingConfig.keyPassword).thenReturn(
+            FakeGradleProvider("key password")
+        )
+        Mockito.`when`(signingConfig.isSigningReady()).thenReturn(true)
+        task.signingConfig= signingConfig
         task.dummyOutputDirectory.set(outputDirectory)
         task.analyticsService.set(FakeNoOpAnalyticsService())
 
@@ -123,7 +134,24 @@ class ValidateSigningTaskTest {
         val dslSigningConfig =
                 SigningConfigFactory(dslServices, defaultDebugKeystore).create("debug")
         val task = project!!.tasks.create("validateRedSigning", ValidateSigningTask::class.java)
-        task.signingConfig = dslSigningConfig
+        val signingConfig = Mockito.mock(SigningConfigImpl::class.java)
+        Mockito.`when`(signingConfig.name).thenReturn("debug")
+        Mockito.`when`(signingConfig.storeFile).thenReturn(FakeGradleProvider(defaultDebugKeystore))
+        Mockito.`when`(signingConfig.storePassword).thenReturn(
+            FakeGradleProvider(DefaultSigningConfig.DEFAULT_PASSWORD)
+        )
+        Mockito.`when`(signingConfig.keyAlias).thenReturn(
+            FakeGradleProvider(DefaultSigningConfig.DEFAULT_ALIAS)
+        )
+        Mockito.`when`(signingConfig.keyPassword).thenReturn(
+            FakeGradleProvider(DefaultSigningConfig.DEFAULT_PASSWORD)
+        )
+        Mockito.`when`(signingConfig.storeType).thenReturn(
+            FakeGradleProvider(KeyStore.getDefaultType())
+        )
+        Mockito.`when`(signingConfig.isSigningReady()).thenReturn(true)
+
+        task.signingConfig= signingConfig
         task.dummyOutputDirectory.set(outputDirectory)
         task.analyticsService.set(FakeNoOpAnalyticsService())
         task.defaultDebugKeystoreLocation = defaultDebugKeystore

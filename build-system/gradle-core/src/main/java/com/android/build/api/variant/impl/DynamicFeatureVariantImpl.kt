@@ -27,7 +27,6 @@ import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.ApkPackaging
 import com.android.build.api.variant.Dexing
 import com.android.build.api.variant.DynamicFeatureVariant
-import com.android.build.api.variant.SigningConfig
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
 import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
@@ -179,7 +178,12 @@ open class DynamicFeatureVariantImpl @Inject constructor(
             ) ?: emptyList()
         }
 
-    override val signingConfig: SigningConfig? = null
+    override val signingConfig: SigningConfigImpl? = null
+    /**
+     * DO NOT USE, only present for old variant API.
+     */
+    override val dslSigningConfig: com.android.build.gradle.internal.dsl.SigningConfig? =
+        variantDslInfo.signingConfig
 
     // ---------------------------------------------------------------------------------------------
     // Private stuff

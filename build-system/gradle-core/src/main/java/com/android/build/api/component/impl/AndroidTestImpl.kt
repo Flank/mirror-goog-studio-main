@@ -183,13 +183,15 @@ open class AndroidTestImpl @Inject constructor(
         resValues.put(ResValue.Key(type, name), value.map { ResValue(it, comment) })
     }
 
-    override val signingConfig: SigningConfig by lazy {
-        SigningConfigImpl(
-            variantDslInfo.signingConfig,
-            variantPropertiesApiServices,
-            minSdkVersion.apiLevel,
-            services.projectOptions.get(IntegerOption.IDE_TARGET_DEVICE_API)
-        )
+    override val signingConfig: SigningConfigImpl? by lazy {
+        variantDslInfo.signingConfig?.let {
+            SigningConfigImpl(
+                it,
+                variantPropertiesApiServices,
+                minSdkVersion.apiLevel,
+                services.projectOptions.get(IntegerOption.IDE_TARGET_DEVICE_API)
+            )
+        }
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -293,5 +295,8 @@ open class AndroidTestImpl @Inject constructor(
         delegate.getNeedsMergedJavaResStream()
 
     override fun getJava8LangSupportType(): VariantScope.Java8LangSupport = delegate.getJava8LangSupportType()
+
+    override val dslSigningConfig: com.android.build.gradle.internal.dsl.SigningConfig? =
+        variantDslInfo.signingConfig
 }
 

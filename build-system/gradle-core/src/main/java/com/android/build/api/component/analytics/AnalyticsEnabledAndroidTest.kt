@@ -115,7 +115,7 @@ open class AnalyticsEnabledAndroidTest @Inject constructor(
             return delegate.manifestPlaceholders
         }
 
-    override val signingConfig: SigningConfig
+    override val signingConfig: SigningConfig?
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
                 VariantPropertiesMethodType.SIGNING_CONFIG_VALUE

@@ -42,8 +42,8 @@ import com.android.builder.dexing.DexingType
 import com.android.builder.model.CodeShrinker
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import com.android.build.gradle.options.StringOption
-import org.gradle.api.provider.Property
 import javax.inject.Inject
+import org.gradle.api.provider.Property
 
 open class ApplicationVariantImpl @Inject constructor(
         override val variantBuilder: ApplicationVariantBuilderImpl,
@@ -100,13 +100,15 @@ open class ApplicationVariantImpl @Inject constructor(
         )
     }
 
-    override val signingConfig: SigningConfig by lazy {
-        SigningConfigImpl(
-            variantDslInfo.signingConfig,
-            internalServices,
-            minSdkVersion.apiLevel,
-            internalServices.projectOptions.get(IntegerOption.IDE_TARGET_DEVICE_API)
-        )
+    override val signingConfig: SigningConfigImpl? by lazy {
+        variantDslInfo.signingConfig?.let {
+            SigningConfigImpl(
+                it,
+                internalServices,
+                minSdkVersion.apiLevel,
+                internalServices.projectOptions.get(IntegerOption.IDE_TARGET_DEVICE_API)
+            )
+        }
     }
 
     override val packaging: ApkPackaging by lazy {
@@ -162,6 +164,12 @@ open class ApplicationVariantImpl @Inject constructor(
                 )
             return debugSymbolLevelOrNull ?: if (debuggable) DebugSymbolLevel.NONE else DebugSymbolLevel.SYMBOL_TABLE
         }
+
+    /**
+     * DO NOT USE, only present for old variant API.
+     */
+    override val dslSigningConfig: com.android.build.gradle.internal.dsl.SigningConfig? =
+        variantDslInfo.signingConfig
 
     // ---------------------------------------------------------------------------------------------
     // Private stuff
