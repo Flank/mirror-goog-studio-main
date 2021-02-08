@@ -29,7 +29,7 @@ class ComposeHelloWorldTest {
     @Rule
     val project = GradleTestProject.builder().fromTestProject("composeHelloWorld")
             .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
-            .withKotlinVersion("1.4.21")
+            .withKotlinVersion("1.4.30")
             .create()
 
     @Test

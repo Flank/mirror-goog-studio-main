@@ -23,7 +23,6 @@ import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TestProjectPaths;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
-import com.android.build.gradle.options.BooleanOption;
 import com.android.testutils.AssumeUtil;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -83,8 +82,8 @@ public class CheckAll {
                 GradleTestProject.builder()
                         .fromTestProject(projectName)
                         .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-                        .withKotlinVersion( // Compose alpha08 required 1.4.20
-                                "composeHelloWorld".equals(projectName) ? "1.4.21" : null)
+                        .withKotlinVersion( // Compose alpha12 required 1.4.30
+                                "composeHelloWorld".equals(projectName) ? "1.4.30" : null)
                         .create();
     }
 
