@@ -358,7 +358,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             project.dependencies
                     .add(variantDependencies.runtimeClasspath.name, multiDexDependency)
         }
-        if (variantProperties.variantDslInfo.renderscriptSupportModeEnabled) {
+        if (variantProperties.renderscript?.renderscriptSupportModeEnabled?.get() == true) {
             val fileCollection = project.files(
                     globalScope.versionedSdkLoader.flatMap {
                         it.renderScriptSupportJarProvider
@@ -393,7 +393,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         createAssembleTask(testVariant)
         val testedVariant = testVariant.testedVariant
         val variantDependencies = testVariant.variantDependencies
-        if (testedVariant.variantDslInfo.renderscriptSupportModeEnabled) {
+        if (testedVariant.renderscript?.renderscriptSupportModeEnabled?.get() == true) {
             project.dependencies
                     .add(
                             variantDependencies.compileClasspath.name,
@@ -678,14 +678,15 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
 
     fun createRenderscriptTask(creationConfig: ConsumableCreationConfig) {
         if (creationConfig.buildFeatures.renderScript) {
+            val renderscript = creationConfig.renderscript
+                ?: throw RuntimeException(
+                        "Renderscript is enabled but no configuration available, please file a bug.")
             val taskContainer = creationConfig.taskContainer
-            val rsTask = taskFactory.register(RenderscriptCompile.CreationAction(creationConfig))
-            val variantDslInfo = creationConfig.variantDslInfo
+            val rsTask = taskFactory.register(
+                RenderscriptCompile.CreationAction(creationConfig, renderscript))
             taskContainer.resourceGenTask.dependsOn(rsTask)
-            // only put this dependency if rs will generate Java code
-            if (!variantDslInfo.renderscriptNdkModeEnabled) {
-                taskContainer.sourceGenTask.dependsOn(rsTask)
-            }
+            // since rs may generate Java code, always set the dependency.
+            taskContainer.sourceGenTask.dependsOn(rsTask)
         }
     }
 
@@ -796,7 +797,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         taskFactory.register(MergeSourceSetFolders.MergeAppAssetCreationAction(creationConfig))
     }
 
-    fun createMergeJniLibFoldersTasks(creationConfig: VariantCreationConfig) {
+    fun createMergeJniLibFoldersTasks(creationConfig: ConsumableCreationConfig) {
         // merge the source folders together using the proper priority.
         taskFactory.register(
                 MergeSourceSetFolders.MergeJniLibFoldersCreationAction(creationConfig))

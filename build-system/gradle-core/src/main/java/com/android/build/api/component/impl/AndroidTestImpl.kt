@@ -194,6 +194,10 @@ open class AndroidTestImpl @Inject constructor(
         }
     }
 
+    override val renderscript: Renderscript? by lazy {
+        delegate.renderscript(internalServices)
+    }
+
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------

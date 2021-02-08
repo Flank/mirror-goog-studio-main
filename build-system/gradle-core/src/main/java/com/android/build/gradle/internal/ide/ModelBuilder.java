@@ -1079,6 +1079,8 @@ public class ModelBuilder<Extension extends BaseExtension>
                 folders.add(maybeBuildConfig.getAsFile());
             }
         }
+        // this is incorrect as it cannot get the final value, we should always add the folder
+        // as a potential source origin and let the IDE deal with it.
         boolean ndkMode = component.getVariantDslInfo().getRenderscriptNdkModeEnabled();
         if (!ndkMode) {
             Directory renderscriptSources =

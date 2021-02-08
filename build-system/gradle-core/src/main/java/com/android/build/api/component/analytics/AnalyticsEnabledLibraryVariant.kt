@@ -20,6 +20,7 @@ import com.android.build.api.component.AndroidTest
 import com.android.build.api.component.UnitTest
 import com.android.build.api.variant.LibraryPackaging
 import com.android.build.api.variant.LibraryVariant
+import com.android.build.api.variant.Renderscript
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.model.ObjectFactory
@@ -57,4 +58,21 @@ open class AnalyticsEnabledLibraryVariant @Inject constructor(
 
     override val androidTest: AndroidTest?
         get() = delegate.androidTest
+
+    private val userVisibleRenderscript: Renderscript by lazy {
+        objectFactory.newInstance(
+            AnalyticsEnabledRenderscript::class.java,
+            delegate.renderscript,
+            stats
+        )
+    }
+
+    override val renderscript: Renderscript?
+        get() {
+            return if (delegate.renderscript != null) {
+                stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                    VariantPropertiesMethodType.RENDERSCRIPT_VALUE
+                userVisibleRenderscript
+            } else null
+        }
 }

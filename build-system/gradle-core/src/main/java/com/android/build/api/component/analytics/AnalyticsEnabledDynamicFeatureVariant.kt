@@ -21,6 +21,7 @@ import com.android.build.api.variant.Aapt
 import com.android.build.api.variant.ApkPackaging
 import com.android.build.api.variant.Dexing
 import com.android.build.api.variant.DynamicFeatureVariant
+import com.android.build.api.variant.Renderscript
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.model.ObjectFactory
@@ -83,5 +84,23 @@ open class AnalyticsEnabledDynamicFeatureVariant @Inject constructor(
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
                 VariantPropertiesMethodType.DEXING_VALUE
             return userVisibleDexing
+        }
+
+
+    private val userVisibleRenderscript: Renderscript by lazy {
+        objectFactory.newInstance(
+            AnalyticsEnabledRenderscript::class.java,
+            delegate.renderscript,
+            stats
+        )
+    }
+
+    override val renderscript: Renderscript?
+        get() {
+            return if (delegate.renderscript != null) {
+                stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                    VariantPropertiesMethodType.RENDERSCRIPT_VALUE
+                userVisibleRenderscript
+            } else null
         }
 }

@@ -17,12 +17,12 @@
 package com.android.build.api.component.analytics
 
 import com.android.build.api.component.AndroidTest
-import com.android.build.api.component.UnitTest
 import com.android.build.api.variant.Aapt
 import com.android.build.api.variant.ApkPackaging
 import com.android.build.api.variant.ApplicationVariant
 import com.android.build.api.variant.DependenciesInfo
 import com.android.build.api.variant.Dexing
+import com.android.build.api.variant.Renderscript
 import com.android.build.api.variant.SigningConfig
 import com.android.build.api.variant.VariantOutput
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
@@ -118,5 +118,22 @@ open class AnalyticsEnabledApplicationVariant @Inject constructor(
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
                 VariantPropertiesMethodType.DEXING_VALUE
             return userVisibleDexing
+        }
+
+    private val userVisibleRenderscript: Renderscript by lazy {
+        objectFactory.newInstance(
+            AnalyticsEnabledRenderscript::class.java,
+            delegate.renderscript,
+            stats
+        )
+    }
+
+    override val renderscript: Renderscript?
+        get() {
+            return if (delegate.renderscript != null) {
+                stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                    VariantPropertiesMethodType.RENDERSCRIPT_VALUE
+                userVisibleRenderscript
+            } else null
         }
 }

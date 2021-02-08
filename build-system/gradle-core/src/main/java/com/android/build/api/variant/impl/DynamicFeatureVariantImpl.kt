@@ -27,6 +27,7 @@ import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.ApkPackaging
 import com.android.build.api.variant.Dexing
 import com.android.build.api.variant.DynamicFeatureVariant
+import com.android.build.api.variant.Renderscript
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
 import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
@@ -131,7 +132,11 @@ open class DynamicFeatureVariantImpl @Inject constructor(
 
     override var androidTest: AndroidTest? = null
 
-    // ---------------------------------------------------------------------------------------------
+    override val renderscript: Renderscript? by lazy {
+        delegate.renderscript(internalServices)
+    }
+
+// ---------------------------------------------------------------------------------------------
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------
 

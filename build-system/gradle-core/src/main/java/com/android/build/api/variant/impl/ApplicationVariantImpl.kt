@@ -131,6 +131,10 @@ open class ApplicationVariantImpl @Inject constructor(
 
     override var androidTest: AndroidTest? = null
 
+    override val renderscript: Renderscript? by lazy {
+        delegate.renderscript(internalServices)
+    }
+
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------

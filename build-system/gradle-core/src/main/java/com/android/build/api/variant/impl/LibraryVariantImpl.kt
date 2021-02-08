@@ -27,6 +27,7 @@ import com.android.build.api.instrumentation.InstrumentationScope
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.LibraryPackaging
 import com.android.build.api.variant.LibraryVariant
+import com.android.build.api.variant.Renderscript
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
 import com.android.build.gradle.internal.component.LibraryCreationConfig
@@ -108,6 +109,10 @@ open class  LibraryVariantImpl @Inject constructor(
 
     override var androidTest: AndroidTest? = null
 
+    override val renderscript: Renderscript? by lazy {
+        delegate.renderscript(internalServices)
+    }
+
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------
@@ -125,9 +130,9 @@ open class  LibraryVariantImpl @Inject constructor(
         get() = variantDslInfo.isDebuggable
 
     override fun <T : Component> createUserVisibleVariantObject(
-            projectServices: ProjectServices,
-            operationsRegistrar: VariantApiOperationsRegistrar<out VariantBuilder, out Variant>,
-            stats: GradleBuildVariant.Builder?
+        projectServices: ProjectServices,
+        operationsRegistrar: VariantApiOperationsRegistrar<out VariantBuilder, out Variant>,
+        stats: GradleBuildVariant.Builder?
     ): T =
         if (stats == null) {
             this as T
@@ -144,7 +149,8 @@ open class  LibraryVariantImpl @Inject constructor(
 
     override fun getNeedsMergedJavaResStream(): Boolean = delegate.getNeedsMergedJavaResStream()
 
-    override fun getJava8LangSupportType(): VariantScope.Java8LangSupport = delegate.getJava8LangSupportType()
+    override fun getJava8LangSupportType(): VariantScope.Java8LangSupport =
+        delegate.getJava8LangSupportType()
 
     override val needsShrinkDesugarLibrary: Boolean
         get() = delegate.needsShrinkDesugarLibrary

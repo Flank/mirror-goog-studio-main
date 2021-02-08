@@ -25,6 +25,7 @@ import com.android.build.api.variant.Aapt
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.ApkPackaging
 import com.android.build.api.variant.Dexing
+import com.android.build.api.variant.Renderscript
 import com.android.build.api.variant.TestVariant
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
@@ -138,6 +139,10 @@ open class TestVariantImpl @Inject constructor(
             it.multiDexKeepFile.set(variantDslInfo.multiDexKeepFile)
             it.multiDexKeepProguard.set(variantDslInfo.multiDexKeepProguard)
         }
+    }
+
+    override val renderscript: Renderscript? by lazy {
+        delegate.renderscript(internalServices)
     }
 
     // ---------------------------------------------------------------------------------------------

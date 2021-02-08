@@ -148,10 +148,7 @@ class TaskMethodModifiersAndAnnotationsTest {
                 "com.android.build.gradle.tasks.InvokeManifestMerger::setSecondaryManifestFiles",
                 "com.android.build.gradle.tasks.PackageAndroidArtifact::setJniDebugBuild",
                 "com.android.build.gradle.tasks.RenderscriptCompile::setImportDirs",
-                "com.android.build.gradle.tasks.RenderscriptCompile::setNdkMode",
                 "com.android.build.gradle.tasks.RenderscriptCompile::setObjOutputDir",
-                "com.android.build.gradle.tasks.RenderscriptCompile::setOptimLevel",
-                "com.android.build.gradle.tasks.RenderscriptCompile::setSupportMode",
                 "com.android.build.gradle.tasks.ShaderCompile::setDefaultArgs",
                 "com.android.build.gradle.tasks.ShaderCompile::setScopedArgs"
             )

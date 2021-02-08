@@ -16,12 +16,15 @@
 package com.android.build.api.component.impl
 
 import com.android.build.api.variant.AndroidVersion
+import com.android.build.api.variant.Renderscript
+import com.android.build.api.variant.impl.VariantBuilderImpl
 import com.android.build.api.variant.impl.getFeatureLevel
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.OptionalBooleanOption
 import com.android.build.gradle.options.ProjectOptions
@@ -146,4 +149,15 @@ open class ConsumableCreationConfigImpl(
 
      open val minSdkVersionWithTargetDeviceApi: AndroidVersion
         get() = config.minSdkVersion
+
+    fun renderscript(internalServices: VariantPropertiesApiServices): Renderscript? {
+        return if (config.buildFeatures.renderScript) {
+            internalServices.newInstance(Renderscript::class.java).also {
+                it.renderscriptSupportModeEnabled.set(variantDslInfo.renderscriptSupportModeEnabled)
+                it.renderscriptSupportModeBlasEnabled.set(variantDslInfo.renderscriptSupportModeBlasEnabled)
+                it.renderscriptNdkModeEnabled.set(variantDslInfo.renderscriptNdkModeEnabled)
+                it.renderscriptOptimLevel.set(variantDslInfo.renderscriptOptimLevel)
+            }
+        } else null
+    }
 }

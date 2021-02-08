@@ -854,6 +854,7 @@ com.android.build.api.variant.ApplicationVariant.getDependenciesInfo: com.androi
 com.android.build.api.variant.ApplicationVariant.getDexing: com.android.build.api.variant.Dexing ()
 com.android.build.api.variant.ApplicationVariant.getOutputs: java.util.List<com.android.build.api.variant.VariantOutput> ()
 com.android.build.api.variant.ApplicationVariant.getPackaging: com.android.build.api.variant.ApkPackaging ()
+com.android.build.api.variant.ApplicationVariant.getRenderscript: com.android.build.api.variant.Renderscript ()
 com.android.build.api.variant.ApplicationVariant.getSigningConfig: com.android.build.api.variant.SigningConfig ()
 com.android.build.api.variant.ApplicationVariantBuilder implements com.android.build.api.variant.VariantBuilder, com.android.build.api.variant.HasAndroidTestBuilder
 com.android.build.api.variant.ApplicationVariantBuilder.dependenciesInfo: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.DependenciesInfo, kotlin.Unit>)
@@ -902,6 +903,7 @@ com.android.build.api.variant.DynamicFeatureVariant.getAndroidTest: com.android.
 com.android.build.api.variant.DynamicFeatureVariant.getApplicationId: org.gradle.api.provider.Provider<java.lang.String> ()
 com.android.build.api.variant.DynamicFeatureVariant.getDexing: com.android.build.api.variant.Dexing ()
 com.android.build.api.variant.DynamicFeatureVariant.getPackaging: com.android.build.api.variant.ApkPackaging ()
+com.android.build.api.variant.DynamicFeatureVariant.getRenderscript: com.android.build.api.variant.Renderscript ()
 com.android.build.api.variant.DynamicFeatureVariantBuilder implements com.android.build.api.variant.VariantBuilder, com.android.build.api.variant.HasAndroidTestBuilder
 com.android.build.api.variant.ExternalCmake implements com.android.build.api.variant.ExternalNativeGenericOptions
 com.android.build.api.variant.ExternalNativeGenericOptions
@@ -940,11 +942,17 @@ com.android.build.api.variant.LibraryVariant implements com.android.build.api.va
 com.android.build.api.variant.LibraryVariant.getAndroidTest: com.android.build.api.component.AndroidTest ()
 com.android.build.api.variant.LibraryVariant.getApplicationId: org.gradle.api.provider.Provider<java.lang.String> ()
 com.android.build.api.variant.LibraryVariant.getPackaging: com.android.build.api.variant.LibraryPackaging ()
+com.android.build.api.variant.LibraryVariant.getRenderscript: com.android.build.api.variant.Renderscript ()
 com.android.build.api.variant.LibraryVariantBuilder implements com.android.build.api.variant.VariantBuilder, com.android.build.api.variant.HasAndroidTestBuilder
 com.android.build.api.variant.Packaging
 com.android.build.api.variant.Packaging.getJniLibs: com.android.build.api.variant.JniLibsPackaging ()
 com.android.build.api.variant.Packaging.getResources: com.android.build.api.variant.ResourcesPackaging ()
 com.android.build.api.variant.Packaging.resources: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.ResourcesPackaging, kotlin.Unit>)
+com.android.build.api.variant.Renderscript
+com.android.build.api.variant.Renderscript.getRenderscriptNdkModeEnabled: org.gradle.api.provider.Property<java.lang.Boolean> ()
+com.android.build.api.variant.Renderscript.getRenderscriptOptimLevel: org.gradle.api.provider.Property<java.lang.Integer> ()
+com.android.build.api.variant.Renderscript.getRenderscriptSupportModeBlasEnabled: org.gradle.api.provider.Property<java.lang.Boolean> ()
+com.android.build.api.variant.Renderscript.getRenderscriptSupportModeEnabled: org.gradle.api.provider.Property<java.lang.Boolean> ()
 com.android.build.api.variant.ResourcesPackaging
 com.android.build.api.variant.ResourcesPackaging.getExcludes: org.gradle.api.provider.SetProperty<java.lang.String> ()
 com.android.build.api.variant.ResourcesPackaging.getMerges: org.gradle.api.provider.SetProperty<java.lang.String> ()

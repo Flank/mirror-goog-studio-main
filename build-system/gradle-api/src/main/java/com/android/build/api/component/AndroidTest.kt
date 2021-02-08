@@ -19,6 +19,7 @@ package com.android.build.api.component
 import com.android.build.api.variant.Aapt
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.ApkPackaging
+import com.android.build.api.variant.Renderscript
 import com.android.build.api.variant.SigningConfig
 import org.gradle.api.Incubating
 import org.gradle.api.provider.MapProperty
@@ -114,4 +115,10 @@ interface AndroidTest : TestComponent {
      * Variant's packagingOptions, initialized by the corresponding global DSL element.
      */
     val packaging: ApkPackaging
+
+    /**
+     * Variant specific settings for the renderscript compiler. This will return null when
+     * [com.android.build.api.dsl.BuildFeatures.renderScript] is false.
+     */
+    val renderscript: Renderscript?
 }

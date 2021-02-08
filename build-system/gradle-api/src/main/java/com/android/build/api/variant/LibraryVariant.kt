@@ -40,4 +40,10 @@ interface LibraryVariant : Variant {
      * variant.
      */
     val androidTest: AndroidTest?
+
+    /**
+     * Variant specific settings for the renderscript compiler. This will return null when
+     * [com.android.build.api.dsl.BuildFeatures.renderScript] is false.
+     */
+    val renderscript: Renderscript?
 }

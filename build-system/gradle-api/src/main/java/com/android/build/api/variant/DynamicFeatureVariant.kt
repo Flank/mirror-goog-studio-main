@@ -50,4 +50,10 @@ interface DynamicFeatureVariant : Variant {
      * the corresponding fields in the DSL.
      */
     val dexing: Dexing
+
+    /**
+     * Variant specific settings for the renderscript compiler. This will return null when
+     * [com.android.build.api.dsl.BuildFeatures.renderScript] is false.
+     */
+    val renderscript: Renderscript?
 }

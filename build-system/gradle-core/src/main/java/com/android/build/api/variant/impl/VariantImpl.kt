@@ -35,6 +35,7 @@ import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
@@ -42,7 +43,9 @@ import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.builder.core.VariantType
+import com.google.common.collect.ImmutableList
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
+import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Provider
 import org.objectweb.asm.Type
@@ -211,4 +214,19 @@ abstract class VariantImpl(
 
     override var unitTest: UnitTest? = null
 
+    /**
+     * adds renderscript sources if present.
+     */
+    override fun addRenderscriptSources(
+        sourceSets: ImmutableList.Builder<ConfigurableFileTree>
+    ) {
+        renderscript?.let {
+            if (!it.renderscriptNdkModeEnabled.get()
+                && taskContainer.renderscriptCompileTask != null
+            ) {
+                val rsFC = artifacts.get(InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR)
+                sourceSets.add(internalServices.fileTree(rsFC).builtBy(rsFC))
+            }
+        }
+    }
 }
