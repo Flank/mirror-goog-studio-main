@@ -381,7 +381,7 @@ public class XmlDocument {
      * build.gradle or can be expressed in the uses_sdk element.
      */
     @NonNull
-    private String getTargetSdkVersion() {
+    public String getTargetSdkVersion() {
 
         // check for system properties.
         String injectedTargetVersion = mSystemPropertyResolver
