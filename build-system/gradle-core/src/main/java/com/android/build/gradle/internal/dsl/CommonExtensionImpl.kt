@@ -20,6 +20,7 @@ import com.android.build.api.dsl.AndroidResources
 import com.android.build.api.dsl.BuildFeatures
 import com.android.build.api.dsl.ComposeOptions
 import com.android.build.api.dsl.DefaultConfig
+import com.android.build.api.dsl.Installation
 import com.android.build.api.dsl.Lint
 import com.android.build.api.dsl.SdkComponents
 import com.android.build.api.dsl.TestCoverage
@@ -101,7 +102,13 @@ abstract class CommonExtensionImpl<
         action.invoke(aaptOptions)
     }
 
-    override val adbOptions: AdbOptions = dslServices.newInstance(AdbOptions::class.java)
+    override val installation: Installation = dslServices.newInstance(AdbOptions::class.java)
+
+    override fun installation(action: Installation.() -> Unit) {
+        action.invoke(installation)
+    }
+
+    override val adbOptions: AdbOptions get() = installation as AdbOptions
 
     override fun adbOptions(action: com.android.build.api.dsl.AdbOptions.() -> Unit) {
         action.invoke(adbOptions)

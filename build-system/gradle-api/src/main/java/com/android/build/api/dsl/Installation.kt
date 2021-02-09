@@ -22,5 +22,16 @@ import org.gradle.api.Incubating
  * Options for the adb tool.
  */
 @Incubating
-@Deprecated("Renamed to Installation", replaceWith = ReplaceWith("Installation"))
-interface AdbOptions : Installation
+interface Installation {
+    /** The time out used for all adb operations. */
+    var timeOutInMs: Int
+
+    /** The list of FULL_APK installation options. */
+    var installOptions: Collection<String>?
+
+    /** Sets the list of FULL_APK installation options */
+    fun installOptions(option: String)
+
+    /** Sets the list of FULL_APK installation options */
+    fun installOptions(vararg options: String)
+}

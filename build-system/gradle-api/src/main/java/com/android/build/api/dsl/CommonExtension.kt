@@ -78,6 +78,7 @@ interface CommonExtension<
      * For more information about the properties you can configure in this block, see [AdbOptions].
      */
     @get:Incubating
+    @Deprecated("Replaced by installation", replaceWith = ReplaceWith("installation"))
     val adbOptions: AdbOptions
 
     /**
@@ -88,7 +89,28 @@ interface CommonExtension<
      * For more information about the properties you can configure in this block, see [AdbOptions].
      */
     @Incubating
+    @Deprecated("Replaced by installation", replaceWith = ReplaceWith("installation"))
     fun adbOptions(action: AdbOptions.() -> Unit)
+
+    /**
+     * Specifies options for the
+     * [Android Debug Bridge (ADB)](https://developer.android.com/studio/command-line/adb.html),
+     * such as APK installation options.
+     *
+     * For more information about the properties you can configure in this block, see [AdbOptions].
+     */
+    @get:Incubating
+    val installation: Installation
+
+    /**
+     * Specifies options for the
+     * [Android Debug Bridge (ADB)](https://developer.android.com/studio/command-line/adb.html),
+     * such as APK installation options.
+     *
+     * For more information about the properties you can configure in this block, see [AdbOptions].
+     */
+    @Incubating
+    fun installation(action: Installation.() -> Unit)
 
     /**
      * Specifies Java compiler options, such as the language level of the Java source code and
