@@ -40,6 +40,12 @@ interface AndroidLocationsProvider {
     val avdLocation: Path
 
     /**
+     * The location of the managed devices avd folder.
+     */
+    @get:Throws(AndroidLocationsException::class)
+    val gradleAvdLocation: Path
+
+    /**
      * The root folder where the android folder will be located
      *
      * This is NOT the .android folder. Use [prefsLocation]
