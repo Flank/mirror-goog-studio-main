@@ -6,8 +6,8 @@ load(":lint.bzl", "lint_test")
 
 def test_kotlin_use_ir():
     return select({
-        "//tools/base/bazel:kotlin_use_ir": True,
-        "//conditions:default": False,
+        "//tools/base/bazel:kotlin_no_use_ir": False,
+        "//conditions:default": True,
     })
 
 def kotlin_compile(ctx, name, srcs, deps, friends, out, jre):

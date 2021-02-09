@@ -284,8 +284,6 @@ com.android.build.gradle.LintPlugin.<init>: com.android.build.gradle.LintPlugin 
 com.android.build.gradle.LintPlugin.access$getLintOptions$p: com.android.build.gradle.internal.dsl.LintOptions (com.android.build.gradle.LintPlugin)
 com.android.build.gradle.LintPlugin.access$getProjectServices$p: com.android.build.gradle.internal.services.ProjectServices (com.android.build.gradle.LintPlugin)
 com.android.build.gradle.LintPlugin.access$registerTasks: void (com.android.build.gradle.LintPlugin, org.gradle.api.Project)
-com.android.build.gradle.LintPlugin.access$setLintOptions$p: void (com.android.build.gradle.LintPlugin, com.android.build.gradle.internal.dsl.LintOptions)
-com.android.build.gradle.LintPlugin.access$setProjectServices$p: void (com.android.build.gradle.LintPlugin, com.android.build.gradle.internal.services.ProjectServices)
 com.android.build.gradle.LintPlugin.apply: void (java.lang.Object)
 com.android.build.gradle.LintPlugin.apply: void (org.gradle.api.Project)
 com.android.build.gradle.LintPlugin.getListenerRegistry: org.gradle.build.event.BuildEventsListenerRegistry ()
@@ -882,6 +880,7 @@ com.android.build.gradle.internal.dsl.BuildType$Companion.<init>: com.android.bu
 com.android.build.gradle.internal.dsl.BuildType$PostProcessingConfiguration extends java.lang.Enum
 com.android.build.gradle.internal.dsl.BuildType$PostProcessingConfiguration.valueOf: com.android.build.gradle.internal.dsl.BuildType$PostProcessingConfiguration (java.lang.String)
 com.android.build.gradle.internal.dsl.BuildType$PostProcessingConfiguration.values: com.android.build.gradle.internal.dsl.BuildType$PostProcessingConfiguration[] ()
+com.android.build.gradle.internal.dsl.BuildType$WhenMappings
 com.android.build.gradle.internal.dsl.BuildType.<init>: com.android.build.gradle.internal.dsl.BuildType (java.lang.String, com.android.build.gradle.internal.services.DslServices)
 com.android.build.gradle.internal.dsl.BuildType._initWith: void (com.android.builder.model.BaseConfig)
 com.android.build.gradle.internal.dsl.BuildType.aarMetadata: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.AarMetadata, kotlin.Unit>)
