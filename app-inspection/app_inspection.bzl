@@ -91,6 +91,7 @@ def app_inspection_jar(
         proto,
         inspection_resources,
         inspection_resource_strip_prefix,
+        jarjar_srcs = [],
         out = "",
         d8_flags = [],
         **kwargs):
@@ -99,13 +100,17 @@ def app_inspection_jar(
         **kwargs
     )
 
+    jarjar_srcs_dedup = [
+        ":" + name + "-sources_undexed",
+        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib/1.4.21:jar",
+        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlinx/kotlinx-coroutines-core/1.4.1:jar",
+    ]
+    for src in jarjar_srcs:
+        if src not in jarjar_srcs_dedup:
+            jarjar_srcs_dedup.append(src)
     java_jarjar(
         name = name + "-sources_jarjared",
-        srcs = [
-            ":" + name + "-sources_undexed",
-            "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib/1.4.21:jar",
-            "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlinx/kotlinx-coroutines-core/1.4.1:jar",
-        ],
+        srcs = jarjar_srcs_dedup,
         rules = "//tools/base/bazel:jarjar_rules.txt",
     )
 
