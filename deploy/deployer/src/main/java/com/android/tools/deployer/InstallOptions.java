@@ -16,6 +16,7 @@
 package com.android.tools.deployer;
 
 import com.android.ddmlib.IDevice;
+import com.android.tools.deployer.tasks.Canceller;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -24,12 +25,19 @@ public final class InstallOptions {
 
     private final List<String> flags;
 
-    private InstallOptions(List<String> flags) {
+    private final Canceller canceller;
+
+    private InstallOptions(List<String> flags, Canceller canceller) {
         this.flags = flags;
+        this.canceller = canceller;
     }
 
     public List<String> getFlags() {
         return flags;
+    }
+
+    public Canceller getCancelChecker() {
+        return canceller;
     }
 
     public static Builder builder() {
@@ -38,6 +46,8 @@ public final class InstallOptions {
 
     public static final class Builder {
         private final List<String> flags;
+
+        private Canceller canceller = Canceller.NO_OP;
 
         private Builder() {
             this.flags = new ArrayList<>();
@@ -106,8 +116,13 @@ public final class InstallOptions {
             return this;
         }
 
+        public Builder setCancelChecker(Canceller canceller) {
+            this.canceller = canceller;
+            return this;
+        }
+
         public InstallOptions build() {
-            return new InstallOptions(flags);
+            return new InstallOptions(flags, canceller);
         }
     }
 

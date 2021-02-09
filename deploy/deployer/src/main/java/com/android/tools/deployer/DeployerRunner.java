@@ -19,6 +19,7 @@ package com.android.tools.deployer;
 import com.android.ddmlib.AdbInitOptions;
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.IDevice;
+import com.android.tools.deployer.tasks.Canceller;
 import com.android.tools.deployer.tasks.TaskRunner;
 import com.android.tools.tracer.Trace;
 import com.android.utils.ILogger;
@@ -159,13 +160,13 @@ public class DeployerRunner {
                 }
                 deployer.install(packageName, apks, options.build(), installMode);
             } else if (parameters.getCommand() == DeployRunnerParameters.Command.FULLSWAP) {
-                deployer.fullSwap(apks);
+                deployer.fullSwap(apks, Canceller.NO_OP);
             } else if (parameters.getCommand() == DeployRunnerParameters.Command.CODESWAP) {
-                deployer.codeSwap(apks, ImmutableMap.of());
+                deployer.codeSwap(apks, ImmutableMap.of(), Canceller.NO_OP);
             } else {
                 throw new RuntimeException("UNKNOWN command");
             }
-            runner.run();
+            runner.run(Canceller.NO_OP);
         } catch (DeployerException e) {
             logger.error(
                     e, "Not possible to execute " + parameters.getCommand().name().toLowerCase());
