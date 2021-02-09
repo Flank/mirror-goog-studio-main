@@ -58,7 +58,7 @@ class PropertiesTest {
 
     private val fontId = 17
 
-    private val lambdaValue = arrayOf({})
+    private val lambdaValue = arrayOf({ y: Int -> fct1(y) { it + 1 } })
     private val lambdaLine = Thread.currentThread().stackTrace[1].lineNumber - 1
 
     private val functionRefValue1 = arrayOf(::before, "before")
@@ -363,6 +363,11 @@ class PropertiesTest {
             check(index++, "ref2", Type.FUNCTION_REFERENCE, functionRefValue2Holder)
             assertThat(size).isEqualTo(index)
         }
+    }
+
+    private inline fun fct1(x: Int, fct: (Int) -> Int): Int {
+        val y = fct(x)
+        return y - 2 * x
     }
 
     private fun parameter(
