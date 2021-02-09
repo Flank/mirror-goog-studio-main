@@ -87,6 +87,9 @@ public class XmlUtils {
     public static final String XML_PROLOG =
             "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";  //$NON-NLS-1$
 
+    public static final String SAX_PARSER_FACTORY =
+            "com.sun.org.apache.xerces.internal.jaxp.SAXParserFactoryImpl";
+
     /**
      * Separator for xml namespace and localname
      */
@@ -616,6 +619,12 @@ public class XmlUtils {
         }
 
         return factory;
+    }
+
+    public static SAXParserFactory getConfiguredSaxFactory(
+            boolean namespaceAware, boolean checkDtd) {
+        SAXParserFactory factory = SAXParserFactory.newInstance(SAX_PARSER_FACTORY, null);
+        return configureSaxFactory(factory, namespaceAware, checkDtd);
     }
 
     @NonNull
