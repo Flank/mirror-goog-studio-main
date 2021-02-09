@@ -20,8 +20,8 @@ platform(
         docker_network = "off",
         docker_privileged = True,  # This is required to support emulators/nested KVM.
         docker_use_urandom = True,
+        labels = {"machine-size": "default"},
         os_family = "Linux",
-        pool = "default",
     ),
 )
 
@@ -33,8 +33,8 @@ platform(
     ],
     exec_properties = create_rbe_exec_properties_dict(
         container_image = "docker://gcr.io/google.com/android-studio-alphasource/rbe-windows2019-as@sha256:64a7c97ac08d75b9efde179993adb55986869369af320d8fbe1b4dc16e678805",
+        labels = {"machine-size": "default"},
         os_family = "Windows",
-        pool = "windows-2019",
     ),
 )
 
