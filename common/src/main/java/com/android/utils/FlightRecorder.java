@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableList;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
+import java.util.function.Supplier;
 
 /**
  * Fast in-memory log utilizing a cyclic buffer of a limited size. Intended to be used when
@@ -35,19 +36,19 @@ import java.util.List;
  * <p>You may try to replace the regular logging with:
  *
  * <pre>
- *     AutopsyLog.initialize(100);
+ *     FlightRecorder.initialize(100);
  *     ...
- *     AutopsyLog.log(something);
+ *     FlightRecorder.log(something);
  *     ...
- *     AutopsyLog.log(somethingElse);
+ *     FlightRecorder.log(somethingElse);
  *     ...
  *     if (unexpectedBehaviorDetected) {
- *         AutopsyLog.print();
+ *         FlightRecorder.print();
  *     }
  * </pre>
  */
-public class AutopsyLog {
-    private static final AutopsyLog INSTANCE = new AutopsyLog();
+public class FlightRecorder {
+    private static final FlightRecorder INSTANCE = new FlightRecorder();
 
     @GuardedBy("this")
     private Deque<Object> records;
@@ -73,6 +74,16 @@ public class AutopsyLog {
         INSTANCE.doLog(record);
     }
 
+    /**
+     * Writes a record to the log if it was initialized. The object being logged is evaluated only
+     * if the log was initialized with a non-zero size.
+     *
+     * @param lazyRecord the supplier of the object to log
+     */
+    public static void log(@NonNull Supplier<?> lazyRecord) {
+        INSTANCE.doLog(lazyRecord);
+    }
+
     /** Returns the contents of the log and clears the log. */
     @NonNull
     public static List<Object> getAndClear() {
@@ -86,7 +97,7 @@ public class AutopsyLog {
         }
     }
 
-    private AutopsyLog() {}
+    private FlightRecorder() {}
 
     private synchronized void setSizeLimit(int sizeLimit) {
         if (sizeLimit > 0) {
@@ -112,6 +123,15 @@ public class AutopsyLog {
                 records.removeFirst();
             }
             records.add(record);
+        }
+    }
+
+    private synchronized void doLog(@NonNull Supplier<?> lazyRecord) {
+        if (records != null) {
+            if (records.size() >= sizeLimit) {
+                records.removeFirst();
+            }
+            records.add(lazyRecord.get());
         }
     }
 
