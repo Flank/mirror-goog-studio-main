@@ -239,6 +239,166 @@ class ViewLayoutInspectorTest {
         }
     }
 
+    @Test
+    fun nodeBoundsCapturedAsExpected() = createViewInspector { viewInspector ->
+        val eventQueue = ArrayBlockingQueue<ByteArray>(2)
+        inspectorRule.connection.eventListeners.add { bytes ->
+            eventQueue.add(bytes)
+        }
+
+        val resourceNames = mutableMapOf<Int, String>()
+        val resources = Resources(resourceNames)
+        val context = Context("view.inspector.test", resources)
+        val mainScreen = ViewGroup(context).apply {
+            setAttachInfo(View.AttachInfo())
+            width = 400
+            height = 800
+        }
+        val floatingDialog = ViewGroup(context).apply {
+            setAttachInfo(View.AttachInfo())
+            width = 300
+            height = 200
+        }
+        val stubPicture = Picture(byteArrayOf(0))
+
+        // Used for root offset
+        floatingDialog.locationInSurface.apply {
+            x = 10
+            y = 20
+        }
+        // Used for absolution position of dialog root
+        floatingDialog.locationOnScreen.apply {
+            x = 80
+            y = 200
+        }
+
+        mainScreen.addView(ViewGroup(context).apply {
+            scrollX = 5
+            scrollY = 100
+            left = 20
+            top = 30
+            width = 40
+            height = 50
+
+            addView(View(context).apply {
+                left = 40
+                top = 10
+                width = 20
+                height = 30
+            })
+        })
+
+        floatingDialog.addView(ViewGroup(context).apply {
+            scrollX = 5
+            scrollY = 100
+            left = 20
+            top = 30
+            width = 40
+            height = 50
+
+            addView(View(context).apply {
+                left = 40
+                top = 10
+                width = 20
+                height = 30
+            })
+        })
+
+        WindowManagerGlobal.instance.rootViews.addAll(listOf(mainScreen, floatingDialog))
+
+        val startFetchCommand = Command.newBuilder().apply {
+            startFetchCommandBuilder.apply {
+                continuous = true
+            }
+        }.build()
+        viewInspector.onReceiveCommand(
+            startFetchCommand.toByteArray(),
+            inspectorRule.commandCallback
+        )
+
+        ThreadUtils.runOnMainThread { }.get() // Wait for startCommand to finish initializing
+        assertThat(eventQueue).isEmpty()
+
+        mainScreen.forcePictureCapture(stubPicture)
+        eventQueue.take().let { bytes ->
+            // In this test, we don't care that much about this event, but we consume io get to the
+            // layout event
+            val event = Event.parseFrom(bytes)
+            assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.ROOTS_EVENT)
+        }
+
+        eventQueue.take().let { bytes ->
+            val event = Event.parseFrom(bytes)
+            assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.LAYOUT_EVENT)
+            event.layoutEvent.let { layoutEvent ->
+                layoutEvent.rootOffset.let { rootOffset ->
+                    assertThat(rootOffset.x).isEqualTo(0)
+                    assertThat(rootOffset.y).isEqualTo(0)
+                }
+
+                val root = layoutEvent.rootView
+                val parent = root.getChildren(0)
+                val child = parent.getChildren(0)
+
+                assertThat(root.id).isEqualTo(mainScreen.uniqueDrawingId)
+                root.bounds.layout.let { rect ->
+                    assertThat(rect.x).isEqualTo(0)
+                    assertThat(rect.y).isEqualTo(0)
+                    assertThat(rect.w).isEqualTo(400)
+                    assertThat(rect.h).isEqualTo(800)
+                }
+                parent.bounds.layout.let { rect ->
+                    assertThat(rect.x).isEqualTo(20)
+                    assertThat(rect.y).isEqualTo(30)
+                    assertThat(rect.w).isEqualTo(40)
+                    assertThat(rect.h).isEqualTo(50)
+                }
+                child.bounds.layout.let { rect ->
+                    assertThat(rect.x).isEqualTo(55)
+                    assertThat(rect.y).isEqualTo(-60)
+                    assertThat(rect.w).isEqualTo(20)
+                    assertThat(rect.h).isEqualTo(30)
+                }
+            }
+        }
+
+        floatingDialog.forcePictureCapture(stubPicture)
+        eventQueue.take().let { bytes ->
+            val event = Event.parseFrom(bytes)
+            assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.LAYOUT_EVENT)
+            event.layoutEvent.let { layoutEvent ->
+                layoutEvent.rootOffset.let { rootOffset ->
+                    assertThat(rootOffset.x).isEqualTo(10)
+                    assertThat(rootOffset.y).isEqualTo(20)
+                }
+
+                val root = layoutEvent.rootView
+                val parent = root.getChildren(0)
+                val child = parent.getChildren(0)
+                assertThat(root.id).isEqualTo(floatingDialog.uniqueDrawingId)
+
+                root.bounds.layout.let { rect ->
+                    assertThat(rect.x).isEqualTo(80)
+                    assertThat(rect.y).isEqualTo(200)
+                    assertThat(rect.w).isEqualTo(300)
+                    assertThat(rect.h).isEqualTo(200)
+                }
+                parent.bounds.layout.let { rect ->
+                    assertThat(rect.x).isEqualTo(100)
+                    assertThat(rect.y).isEqualTo(230)
+                    assertThat(rect.w).isEqualTo(40)
+                    assertThat(rect.h).isEqualTo(50)
+                }
+                child.bounds.layout.let { rect ->
+                    assertThat(rect.x).isEqualTo(135)
+                    assertThat(rect.y).isEqualTo(140)
+                    assertThat(rect.w).isEqualTo(20)
+                    assertThat(rect.h).isEqualTo(30)
+                }
+            }
+        }
+    }
+
     // TODO: Add test for testing snapshot mode (which will require adding more support for fetching
     //  view properties in fake-android.
 

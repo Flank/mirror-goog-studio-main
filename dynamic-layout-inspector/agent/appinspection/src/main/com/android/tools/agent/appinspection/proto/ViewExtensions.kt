@@ -44,7 +44,12 @@ import layoutinspector.view.inspection.LayoutInspectorViewProtocol.ViewNode
  */
 fun View.toNode(stringTable: StringTable, skipSystemViews: Boolean): ViewNode {
     ThreadUtils.assertOnMainThread()
-    val absPos = Point(left, top)
+
+    // Screen location is (0, 0) for main window but useful inside floating dialogs
+    val screenLocation = IntArray(2)
+    getLocationOnScreen(screenLocation)
+
+    val absPos = Point(screenLocation[0], screenLocation[1])
     val rootNode = this.toNodeImpl(stringTable, absPos)
     populateNodesRecursively(stringTable, skipSystemViews, rootNode, absPos)
 
@@ -68,7 +73,8 @@ private fun View.populateNodesRecursively(
 ) {
     if (this is ViewGroup) {
         for (child in getChildren()) {
-            val childPos = Point(parentPos.x + child.left, parentPos.y + child.top)
+            val childPos =
+                Point(parentPos.x + child.left - scrollX, parentPos.y + child.top - scrollY)
             val childNode =
                 if (!(skipSystemViews && child.isSystemView())) {
                     child.toNodeImpl(stringTable, childPos)

@@ -69,10 +69,15 @@ open class View @VisibleForTesting constructor(val context: Context) {
     var top: Int = 0
     var width: Int = 0
     var height: Int = 0
+    var scrollX: Int = 0
+    var scrollY: Int = 0
     var layoutParams: ViewGroup.LayoutParams = ViewGroup.LayoutParams()
 
     @VisibleForTesting
     val locationInSurface = Point(0, 0)
+
+    @VisibleForTesting
+    val locationOnScreen = Point(0, 0)
 
     // Name is important: Accessed via reflection
     private var mAttachInfo: AttachInfo? = null
@@ -85,6 +90,11 @@ open class View @VisibleForTesting constructor(val context: Context) {
     fun getLocationInSurface(location: IntArray) {
         location[0] = locationInSurface.x
         location[1] = locationInSurface.y
+    }
+
+    fun getLocationOnScreen(location: IntArray) {
+        location[0] = locationOnScreen.x
+        location[1] = locationOnScreen.y
     }
 
     fun getAttributeResolutionStack(attributeId: Int) = intArrayOf()
