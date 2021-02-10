@@ -25,4 +25,10 @@ public class Build {
     public static class VERSION_CODES {
         public static final int M = 23;
     }
+
+    // it returns unexistend "host" ABI on purpose, because
+    // .so libraries of correct architecture still won't work on host
+    // thus we use unexistent "host" abi and place use corresponding
+    // .so libraries
+    public static String[] SUPPORTED_ABIS = new String[] {"host"};
 }

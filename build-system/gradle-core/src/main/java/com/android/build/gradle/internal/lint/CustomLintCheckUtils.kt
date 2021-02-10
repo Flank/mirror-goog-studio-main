@@ -58,7 +58,7 @@ fun getLocalCustomLintChecks(lintChecks: Configuration): FileCollection {
 private fun getLocalCustomLintChecks(lintChecks: Configuration, lenientMode: Boolean): ArtifactCollection {
     return lintChecks.incoming.artifactView { config: ViewConfiguration ->
         config.attributes { attributes: AttributeContainer ->
-            // Query for JAR instead of PROCESSED_JAR as we want to get the original lint.jar
+            // Query for JAR instead of PROCESSED_JAR as lint.jar doesn't need processing
             attributes.attribute(
                 AndroidArtifacts.ARTIFACT_TYPE,
                 AndroidArtifacts.ArtifactType.JAR.type

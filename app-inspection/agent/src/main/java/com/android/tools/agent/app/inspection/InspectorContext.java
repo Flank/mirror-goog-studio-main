@@ -16,6 +16,7 @@
 
 package com.android.tools.agent.app.inspection;
 
+import android.os.Build;
 import android.util.Pair;
 import androidx.annotation.NonNull;
 import androidx.inspection.Inspector;
@@ -23,14 +24,24 @@ import androidx.inspection.InspectorEnvironment;
 import androidx.inspection.InspectorExecutors;
 import androidx.inspection.InspectorFactory;
 import dalvik.system.DexClassLoader;
+import java.io.File;
+import java.io.IOException;
 import java.lang.ref.WeakReference;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ServiceLoader;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.function.Consumer;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
+import java.util.zip.ZipEntry;
 
 final class InspectorContext {
     /**
@@ -77,10 +88,10 @@ final class InspectorContext {
             return "Failed to find a main thread";
         }
         String optimizedDir = ClassLoaderUtils.optimizedDirectory;
-
         try {
+            String nativePath = prepareNativeLibraries(dexPath, Build.SUPPORTED_ABIS[0]);
             ClassLoader classLoader =
-                    new DexClassLoader(dexPath, optimizedDir, null, mainClassLoader);
+                    new DexClassLoader(dexPath, optimizedDir, nativePath, mainClassLoader);
             ServiceLoader<InspectorFactory> loader =
                     ServiceLoader.load(InspectorFactory.class, classLoader);
             Iterator<InspectorFactory> iterator = loader.iterator();
@@ -104,6 +115,39 @@ final class InspectorContext {
             e.printStackTrace();
             return "Failed during instantiating inspector with id " + mInspectorId;
         }
+    }
+
+    // Theoretically there is no need in this, because classloader should find libraries right in
+    // our jar with "path_to_apk!/lib/<host>", but unfortunately it doesn't seem to work
+    private static String prepareNativeLibraries(String dexPath, String abi) throws IOException {
+        JarFile jarFile = new JarFile(dexPath);
+        ZipEntry lib = jarFile.getEntry("lib/");
+        if (lib == null || !lib.isDirectory()) {
+            return null;
+        }
+        File dexFile = new File(dexPath);
+        String tmpDir = System.getProperty("java.io.tmpdir");
+        Path tmpPath = Paths.get(tmpDir);
+        File workingDir = new File(tmpPath.toFile(), dexFile.getName() + "_unpacked_lib");
+        if (!workingDir.exists() && !workingDir.mkdir()) {
+            throw new IOException("Failed to create working dir: " + workingDir);
+        }
+        Enumeration<JarEntry> entries = jarFile.entries();
+        String targetFolder = "lib/" + abi + "/";
+        while (entries.hasMoreElements()) {
+            JarEntry entry = entries.nextElement();
+            if (entry.getName().startsWith(targetFolder)
+                    && !entry.isDirectory()
+                    && entry.getName().endsWith(".so")) {
+                String name = entry.getName().substring(entry.getName().lastIndexOf('/') + 1);
+                File file = new File(workingDir, name);
+                Files.copy(
+                        jarFile.getInputStream(entry),
+                        file.toPath(),
+                        StandardCopyOption.REPLACE_EXISTING);
+            }
+        }
+        return workingDir.getAbsolutePath();
     }
 
     public void sendCommand(int commandId, byte[] rawCommand) {

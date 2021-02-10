@@ -51,7 +51,7 @@ public class MinifyLibProvidedDepTest {
 
     @Test
     public void checkLibraryHasItsFieldsObfuscated() throws IOException {
-        // test whether a library project has its fields obfuscated
+        // Test whether a library project has its fields obfuscated.
         TestFileUtils.checkContent(
                 project.getOutputFile("mapping", "release", "mapping.txt"),
                 "int obfuscatedInt -> a");

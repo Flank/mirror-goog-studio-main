@@ -115,9 +115,6 @@ class DependencyConfigurator(
         // The aars/jars may need to be processed (e.g., jetified to AndroidX) before they can be
         // used
         // Arguments passed to an ArtifactTransform must not be null
-        val jetifierSkipIfPossible =
-            globalScope.projectOptions[BooleanOption.JETIFIER_SKIP_IF_POSSIBLE]
-
         @Suppress("DEPRECATION")
         val jetifierIgnoreList =
             globalScope.projectOptions[StringOption.JETIFIER_IGNORE_LIST]
@@ -138,7 +135,6 @@ class DependencyConfigurator(
                 AndroidArtifacts.ArtifactType.AAR,
                 jetifiedAarOutputType
             ) { params ->
-                params.skipIfPossible.setDisallowChanges(jetifierSkipIfPossible)
                 params.ignoreListOption.setDisallowChanges(jetifierIgnoreList)
             }
             registerTransform(
@@ -146,7 +142,6 @@ class DependencyConfigurator(
                 AndroidArtifacts.ArtifactType.JAR,
                 AndroidArtifacts.ArtifactType.PROCESSED_JAR
             ) { params ->
-                params.skipIfPossible.setDisallowChanges(jetifierSkipIfPossible)
                 params.ignoreListOption.setDisallowChanges(jetifierIgnoreList)
             }
         } else {
@@ -228,6 +223,7 @@ class DependencyConfigurator(
         // transform to create the JDK image from core-for-system-modules.jar
         registerTransform(
             JdkImageTransform::class.java,
+            // Query for JAR instead of PROCESSED_JAR as core-for-system-modules.jar doesn't need processing
             AndroidArtifacts.ArtifactType.JAR.type,
             ANDROID_JDK_IMAGE
         ) { params ->

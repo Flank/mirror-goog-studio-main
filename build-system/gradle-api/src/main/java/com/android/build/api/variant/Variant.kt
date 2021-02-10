@@ -16,6 +16,7 @@
 package com.android.build.api.variant
 
 import com.android.build.api.component.Component
+import com.android.build.api.component.UnitTest
 import org.gradle.api.Incubating
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Provider
@@ -103,4 +104,9 @@ interface Variant : Component {
      * or null if no ndk-build external build is configured for this variant.
      */
     val externalNdkBuild: ExternalNdkBuild?
+
+    /**
+     * Variant's [UnitTest], or null if the unit tests for this variant are disabled.
+     */
+    val unitTest: UnitTest?
 }

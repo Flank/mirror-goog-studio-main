@@ -67,7 +67,6 @@ iml_module(
     exports = [
         "//tools/adt/idea/.idea/libraries:asm-tools",
         "//tools/base/annotations:studio.android.sdktools.android-annotations",
-        "//tools/adt/idea/.idea/libraries:Guava",
         "//tools/base/lint:studio.android.sdktools.lint-model",
         "//tools/base/sdk-common:studio.android.sdktools.sdk-common",
         "//tools/base/layoutlib-api:studio.android.sdktools.layoutlib-api",
@@ -79,7 +78,6 @@ iml_module(
         "//prebuilts/studio/intellij-sdk:studio-sdk-plugin-Kotlin",
         "//tools/adt/idea/.idea/libraries:asm-tools",
         "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
-        "//tools/adt/idea/.idea/libraries:Guava",
         "//tools/base/lint:studio.android.sdktools.lint-model[module]",
         "//tools/base/common:studio.android.sdktools.common[module]",
         "//tools/base/sdklib:studio.android.sdktools.sdklib[module]",

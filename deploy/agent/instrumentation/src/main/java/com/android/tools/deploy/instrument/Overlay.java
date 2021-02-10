@@ -62,31 +62,30 @@ class Overlay {
 
     public List<File> getDexFiles() throws IOException {
         ArrayList<File> dexFiles = new ArrayList<>();
+        if (Files.notExists(liveLiteralOverlayPath)) {
+            return dexFiles;
+        }
 
         // Ensure that ll instrumented swapped dex take precedence over swapped dex.
-        if (Files.exists(liveLiteralOverlayPath)) {
-            try (DirectoryStream<Path> dir =
-                    Files.newDirectoryStream(liveLiteralOverlayPath, "*.dex")) {
-                for (Path dex : dir) {
-                    dexFiles.add(dex.toFile());
-                }
+        try (DirectoryStream<Path> dir =
+                Files.newDirectoryStream(liveLiteralOverlayPath, "*.dex")) {
+            for (Path dex : dir) {
+                dexFiles.add(dex.toFile());
             }
         }
 
         // Ensure that swapped dex take precedence over installed dex by adding them to the class
         // path first. Swapped dex are currently stored in the top-level overlay directory.
-        if (Files.exists(overlayPath)) {
-            try (DirectoryStream<Path> dir = Files.newDirectoryStream(overlayPath, "*.dex")) {
+        try (DirectoryStream<Path> dir = Files.newDirectoryStream(overlayPath, "*.dex")) {
+            for (Path dex : dir) {
+                dexFiles.add(dex.toFile());
+            }
+        }
+
+        for (File apk : getApkDirs()) {
+            try (DirectoryStream<Path> dir = Files.newDirectoryStream(apk.toPath(), "*.dex")) {
                 for (Path dex : dir) {
                     dexFiles.add(dex.toFile());
-                }
-            }
-
-            for (File apk : getApkDirs()) {
-                try (DirectoryStream<Path> dir = Files.newDirectoryStream(apk.toPath(), "*.dex")) {
-                    for (Path dex : dir) {
-                        dexFiles.add(dex.toFile());
-                    }
                 }
             }
         }

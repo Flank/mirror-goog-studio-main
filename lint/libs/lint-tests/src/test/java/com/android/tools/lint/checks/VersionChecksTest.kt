@@ -2361,14 +2361,14 @@ class VersionChecksTest : AbstractCheckTest() {
                     private void requires20() {
                     }
 
-                    @RequiresApi(23)
-                    private void requires23() {
-                    }
+//                    @RequiresApi(23)
+//                    private void requires23() {
+//                    }
 
                     void test() {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH) {
                             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-                                requires23();
+//                                requires23();
                             } else {
                                 requires20();
                             }
@@ -2695,6 +2695,9 @@ class VersionChecksTest : AbstractCheckTest() {
                     "test".applyForOreoOrAbove { bar() } // OK 6
                     fromApi(10) { bar() } // OK 7
                     bar() // ERROR
+                    sdk(28, { bar() }) ?: fallback() // OK 8
+                    sdk(level = 28, func = { bar() }) ?: fallback() // OK 9
+                    sdk( func = { bar() }, level = 28) ?: fallback() // OK 10
                 }
 
                 @RequiresApi(10)
@@ -2728,7 +2731,6 @@ class VersionChecksTest : AbstractCheckTest() {
                     return null
                 }
 
-
                 @get:ChecksSdkIntAtLeast(api = Build.VERSION_CODES.HONEYCOMB)
                 val versionCheck1: Boolean
                     get() = false
@@ -2758,7 +2760,7 @@ class VersionChecksTest : AbstractCheckTest() {
                 }
                 """
             ),
-            mChecksSdkIntAtLeast,
+            checkSdkIntAnnotation,
             mSupportJar
         )
             .run()
@@ -2917,7 +2919,7 @@ class VersionChecksTest : AbstractCheckTest() {
                     "bHzA4j9C611h4T9hycVHYi5NzZWfiXYx8QDrJ5KvDS5S/BRNxvITd5pGLLEC" +
                     "AAA="
             ),
-            mChecksSdkIntAtLeast,
+            checkSdkIntAnnotation,
             mSupportJar
         )
             .run()
@@ -2931,26 +2933,29 @@ class VersionChecksTest : AbstractCheckTest() {
             )
     }
 
-    private val mChecksSdkIntAtLeast = java(
-        """
-        package androidx.annotation;
-        import static java.lang.annotation.ElementType.FIELD;
-        import static java.lang.annotation.ElementType.METHOD;
-        import static java.lang.annotation.RetentionPolicy.CLASS;
-        import java.lang.annotation.Documented;
-        import java.lang.annotation.Retention;
-        import java.lang.annotation.Target;
-        @Documented
-        @Retention(CLASS)
-        @Target({METHOD, FIELD})
-        public @interface ChecksSdkIntAtLeast {
-            int api() default -1;
-            String codename() default "";
-            int parameter() default -1;
-            int lambda() default -1;
-        }
-        """
-    ).indented()
+    companion object {
+        @JvmField
+        val checkSdkIntAnnotation = java(
+            """
+            package androidx.annotation;
+            import static java.lang.annotation.ElementType.FIELD;
+            import static java.lang.annotation.ElementType.METHOD;
+            import static java.lang.annotation.RetentionPolicy.CLASS;
+            import java.lang.annotation.Documented;
+            import java.lang.annotation.Retention;
+            import java.lang.annotation.Target;
+            @Documented
+            @Retention(CLASS)
+            @Target({METHOD, FIELD})
+            public @interface ChecksSdkIntAtLeast {
+                int api() default -1;
+                String codename() default "";
+                int parameter() default -1;
+                int lambda() default -1;
+            }
+            """
+        ).indented()
+    }
 
     override fun getDetector(): Detector {
         return ApiDetector()

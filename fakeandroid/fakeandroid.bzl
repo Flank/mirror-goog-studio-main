@@ -6,9 +6,10 @@ def fake_android_test(name, srcs = [], deps = [], data = [], runtime_deps = [], 
             "//tools/base/testutils:tools.testutils",
         ],
         deps = deps + [
-            "//tools/base/common:studio.android.sdktools.common",
+            "//tools/base/common:tools.common",
             "//tools/base/fakeandroid:app-launcher-dex",
             "//tools/base/fakeandroid:android-mock-dex",
+            "//tools/base/third_party:com.google.guava_guava",
             "//tools/base/third_party:junit_junit",
         ],
         jvm_flags = jvm_flags + [

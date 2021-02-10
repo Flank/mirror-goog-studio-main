@@ -65,6 +65,7 @@ import com.android.ide.common.gradle.model.IdeAndroidArtifactOutput
 import com.android.ide.common.gradle.model.IdeAndroidGradlePluginProjectFlags
 import com.android.ide.common.gradle.model.IdeAndroidLibrary
 import com.android.ide.common.gradle.model.IdeAndroidProject
+import com.android.ide.common.gradle.model.IdeBuildType
 import com.android.ide.common.gradle.model.IdeBuildTypeContainer
 import com.android.ide.common.gradle.model.IdeDependencies
 import com.android.ide.common.gradle.model.IdeDependenciesInfo
@@ -73,6 +74,7 @@ import com.android.ide.common.gradle.model.IdeLibrary
 import com.android.ide.common.gradle.model.IdeLintOptions
 import com.android.ide.common.gradle.model.IdeMavenCoordinates
 import com.android.ide.common.gradle.model.IdeModuleLibrary
+import com.android.ide.common.gradle.model.IdeProductFlavor
 import com.android.ide.common.gradle.model.IdeProductFlavorContainer
 import com.android.ide.common.gradle.model.IdeSigningConfig
 import com.android.ide.common.gradle.model.IdeTestOptions
@@ -98,11 +100,10 @@ import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
 import com.google.common.collect.ImmutableSortedSet
 import java.io.File
-import java.util.concurrent.ConcurrentHashMap
 import java.util.HashMap
 
 interface ModelCache {
-  fun variantFrom(variant: Variant, modelVersion: GradleVersion?): IdeVariantImpl
+  fun variantFrom(androidProject: IdeAndroidProject, variant: Variant, modelVersion: GradleVersion?): IdeVariantImpl
   fun androidProjectFrom(project: AndroidProject): IdeAndroidProjectImpl
   fun androidArtifactOutputFrom(output: OutputFile): IdeAndroidArtifactOutputImpl
 
@@ -754,11 +755,24 @@ private fun modelCacheImpl(buildFolderPaths: BuildFolderPaths): ModelCacheTestin
   }
 
   fun variantFrom(
+    androidProject: IdeAndroidProject,
     variant: Variant,
     modelVersion: GradleVersion?
   ): IdeVariantImpl {
       val mergedFlavor = copyModel(variant.mergedFlavor, ::productFlavorFrom)
-      return IdeVariantImpl(
+      val buildType = androidProject.buildTypes.find { it.buildType.name == variant.buildType }?.buildType
+
+      fun <T> merge(f: IdeProductFlavor.() -> T, b:IdeBuildType.() -> T, combine: (T?, T?) -> T): T {
+        return combine(mergedFlavor.f(), buildType?.b())
+      }
+
+    fun <T> combineMaps(u: Map<String, T>?, v: Map<String, T>?): Map<String, T> = u.orEmpty() + v.orEmpty()
+    fun <T> combineSets(u: Collection<T>?, v: Collection<T>?): Collection<T> = (u?.toSet().orEmpty() + v.orEmpty()).toList()
+
+    val versionNameSuffix =
+        if (mergedFlavor.versionNameSuffix == null && buildType?.versionNameSuffix == null) null
+        else mergedFlavor.versionNameSuffix.orEmpty() + buildType?.versionNameSuffix.orEmpty()
+    return IdeVariantImpl(
           name = variant.name,
           displayName = variant.displayName,
           mainArtifact = copyModel(variant.mainArtifact) { androidArtifactFrom(it, modelVersion) },
@@ -767,14 +781,26 @@ private fun modelCacheImpl(buildFolderPaths: BuildFolderPaths): ModelCacheTestin
           unitTestArtifact = copy(variant::getExtraJavaArtifacts) { javaArtifactFrom(it) }.firstOrNull { it.isTestArtifact },
           buildType = variant.buildType,
           productFlavors = ImmutableList.copyOf(variant.productFlavors),
-          mergedFlavor = mergedFlavor,
           minSdkVersion = mergedFlavor.minSdkVersion,
           targetSdkVersion = mergedFlavor.targetSdkVersion,
           maxSdkVersion = mergedFlavor.maxSdkVersion,
-          testedTargetVariants = getTestedTargetVariants(variant),
+          versionCode = mergedFlavor.versionCode,
+          versionNameWithSuffix = mergedFlavor.versionName?.let { it + versionNameSuffix },
+          versionNameSuffix = versionNameSuffix,
           instantAppCompatible = (modelVersion != null &&
                   modelVersion.isAtLeast(3, 3, 0, "alpha", 10, true) &&
-                  variant.isInstantAppCompatible)
+                  variant.isInstantAppCompatible),
+          vectorDrawablesUseSupportLibrary = mergedFlavor.vectorDrawables?.useSupportLibrary ?: false,
+          resourceConfigurations = mergedFlavor.resourceConfigurations,
+          testApplicationId = mergedFlavor.testApplicationId,
+          testInstrumentationRunner = mergedFlavor.testInstrumentationRunner,
+          testInstrumentationRunnerArguments = mergedFlavor.testInstrumentationRunnerArguments,
+          testedTargetVariants = getTestedTargetVariants(variant),
+          resValues = merge({ resValues }, { resValues }, ::combineMaps),
+          proguardFiles = merge({ proguardFiles }, { proguardFiles }, ::combineSets),
+          consumerProguardFiles = merge({ consumerProguardFiles }, { consumerProguardFiles }, ::combineSets),
+          manifestPlaceholders = merge({ manifestPlaceholders }, { manifestPlaceholders }, ::combineMaps),
+          deprecatedPreMergedApplicationId = mergedFlavor.applicationId
       )
   }
 
@@ -1069,7 +1095,8 @@ private fun modelCacheImpl(buildFolderPaths: BuildFolderPaths): ModelCacheTestin
     override fun isLocalAarModule(androidLibrary: AndroidLibrary): Boolean = isLocalAarModule(androidLibrary)
     override fun mavenCoordinatesFrom(coordinates: MavenCoordinates): IdeMavenCoordinatesImpl = mavenCoordinatesFrom(coordinates)
 
-    override fun variantFrom(variant: Variant, modelVersion: GradleVersion?): IdeVariantImpl = variantFrom(variant, modelVersion)
+    override fun variantFrom(androidProject: IdeAndroidProject, variant: Variant, modelVersion: GradleVersion?): IdeVariantImpl =
+        variantFrom(androidProject, variant, modelVersion)
     override fun androidProjectFrom(project: AndroidProject): IdeAndroidProjectImpl = androidProjectFrom(project)
     override fun androidArtifactOutputFrom(output: OutputFile): IdeAndroidArtifactOutputImpl = androidArtifactOutputFrom(output)
     override fun nativeModuleFrom(nativeModule: NativeModule): IdeNativeModuleImpl = nativeModuleFrom(nativeModule)

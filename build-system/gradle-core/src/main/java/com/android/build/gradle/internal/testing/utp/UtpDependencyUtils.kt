@@ -79,6 +79,12 @@ enum class UtpDependency(
             UtpDependencies::testPluginHostRetention,
             ANDROID_TOOLS_UTP_PLUGIN_MAVEN_GROUP_ID,
             ANDROID_TOOLS_UTP_PLUGIN_VERSION),
+    ANDROID_TEST_PLUGIN_RESULT_LISTENER_GRADLE(
+            "android-test-plugin-result-listener-gradle",
+            "com.android.tools.utp.plugins.result.listener.gradle.GradleAndroidTestResultListener",
+            UtpDependencies::testPluginResultListenerGradle,
+            ANDROID_TOOLS_UTP_PLUGIN_MAVEN_GROUP_ID,
+            ANDROID_TOOLS_UTP_PLUGIN_VERSION)
     ;
 
     val configurationName: String = "_internal-unified-test-platform-${artifactId}"
@@ -126,6 +132,10 @@ abstract class UtpDependencies {
     @get:Optional
     @get:Classpath
     abstract val testPluginHostRetention: ConfigurableFileCollection
+
+    @get:Optional
+    @get:Classpath
+    abstract val testPluginResultListenerGradle: ConfigurableFileCollection
 }
 
 /**

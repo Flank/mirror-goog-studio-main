@@ -642,6 +642,15 @@ gradle_connected_test(
     deps = TEST_DEPS,
 )
 
+gradle_connected_test(
+    name = "FailureRetentionConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
+    data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/failureRetention"],
+    flaky = True,  # b/148626301 flaky emulator connectivity
+    maven_repos = TEST_MAVEN_REPOS,
+    deps = TEST_DEPS,
+)
+
 # Maven repo with all the dependencies required by test projects.
 #
 # Quick way of updating this list:
@@ -777,13 +786,13 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/org/hamcrest/hamcrest-integration/1.3:jar",
         "//prebuilts/tools/common/m2/repository/org/hamcrest/hamcrest-library/1.3:jar",
         "//prebuilts/tools/common/m2/repository/org/jacoco/org.jacoco.agent/0.7.4.201502262128:jar",
-        "//prebuilts/tools/common/m2/repository/org/jacoco/org.jacoco.agent/0.8.6:jar",
+        "//prebuilts/tools/common/m2/repository/org/jacoco/org.jacoco.agent/0.8.3:jar",
         "//prebuilts/tools/common/m2/repository/org/jacoco/org.jacoco.ant/0.7.4.201502262128:jar",
-        "//prebuilts/tools/common/m2/repository/org/jacoco/org.jacoco.ant/0.8.6:jar",
+        "//prebuilts/tools/common/m2/repository/org/jacoco/org.jacoco.ant/0.8.3:jar",
         "//prebuilts/tools/common/m2/repository/org/jacoco/org.jacoco.core/0.7.4.201502262128:jar",
-        "//prebuilts/tools/common/m2/repository/org/jacoco/org.jacoco.core/0.8.6:jar",
+        "//prebuilts/tools/common/m2/repository/org/jacoco/org.jacoco.core/0.8.3:jar",
         "//prebuilts/tools/common/m2/repository/org/jacoco/org.jacoco.report/0.7.4.201502262128:jar",
-        "//prebuilts/tools/common/m2/repository/org/jacoco/org.jacoco.report/0.8.6:jar",
+        "//prebuilts/tools/common/m2/repository/org/jacoco/org.jacoco.report/0.8.3:jar",
         "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-android-extensions-runtime/1.3.70:jar",
         "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-android-extensions/1.3.70:jar",
         "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-build-common/1.3.70:jar",
@@ -815,9 +824,9 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-debug-all/5.2:jar",
         "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-tree/5.0.1:jar",
         "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm/5.0.1:jar",
-        "//prebuilts/tools/common/m2/repository/org/tensorflow/tensorflow-lite-metadata/0.1.0-rc1:jar",
-        "//prebuilts/tools/common/m2/repository/org/tensorflow/tensorflow-lite-support/0.1.0-rc1:aar",
-        "//prebuilts/tools/common/m2/repository/org/tensorflow/tensorflow-lite/2.2.0:aar",
+        "//prebuilts/tools/common/m2/repository/org/tensorflow/tensorflow-lite-metadata/0.1.0:jar",
+        "//prebuilts/tools/common/m2/repository/org/tensorflow/tensorflow-lite-support/0.1.0:aar",
+        "//prebuilts/tools/common/m2/repository/org/tensorflow/tensorflow-lite/2.4.0:aar",
     ],
     visibility = ["__subpackages__"],
 )
@@ -890,6 +899,8 @@ maven_repo(
         "//tools/base/utp/android-test-plugin-host-device-info-proto",
         "//tools/base/utp/android-test-plugin-host-retention",
         "//tools/base/utp/android-test-plugin-host-retention-proto",
+        "//tools/base/utp/android-test-plugin-result-listener-gradle",
+        "//tools/base/utp/android-test-plugin-result-listener-gradle-proto",
     ],
     visibility = ["__subpackages__"],
 )

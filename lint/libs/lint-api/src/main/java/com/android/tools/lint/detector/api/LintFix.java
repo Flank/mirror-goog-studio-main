@@ -484,6 +484,114 @@ public class LintFix {
         public UrlBuilder url(@NonNull String url) {
             return new UrlBuilder(displayName, familyName, url);
         }
+
+        /**
+         * Creates a fix which annotates the given element with the given annotation. The annotation
+         * is provided as fully qualified source code, e.g. <code>
+         * android.support.annotation.SuppressLint("id")</code>.
+         *
+         * @return a fix builder
+         */
+        public AnnotateBuilder annotate(@NonNull String source) {
+            return annotate(source, true);
+        }
+
+        /**
+         * Creates a fix which annotates the given element with the given annotation. The annotation
+         * is provided as fully qualified source code, e.g. <code>
+         * android.support.annotation.SuppressLint("id")</code>. If the replace parameter is true,
+         * the annotation will replace an existing annotation with the same class name (should be
+         * set to true unless you're dealing with a repeatable annotation).
+         *
+         * @return a fix builder
+         */
+        public AnnotateBuilder annotate(@NonNull String source, boolean replace) {
+            return new AnnotateBuilder(displayName, familyName, source, replace);
+        }
+    }
+
+    public static class AnnotateBuilder {
+        private final boolean replace;
+        @Nls private String displayName;
+        @Nls @Nullable protected String familyName;
+        private final String annotation;
+        private Location range;
+        private boolean robot;
+        private boolean independent;
+
+        private AnnotateBuilder(
+                String displayName,
+                @Nullable String familyName,
+                @NonNull String annotation,
+                boolean replace) {
+            this.displayName = displayName;
+            this.familyName = familyName;
+            this.annotation = annotation.startsWith("@") ? annotation : "@" + annotation;
+            this.replace = replace;
+        }
+
+        /**
+         * Sets a location range to use for searching for the text or pattern. Useful if you want to
+         * make a replacement that is larger than the error range highlighted as the problem range.
+         */
+        public AnnotateBuilder range(@NonNull Location range) {
+            this.range = extractOffsets(range);
+            return this;
+        }
+
+        /**
+         * Convenience method for {@link #autoFix(boolean, boolean)}: indicates that this fix can
+         * safely be applied in auto-fix mode, in parallel with other fixes.
+         *
+         * @return this
+         */
+        public AnnotateBuilder autoFix() {
+            autoFix(true, true);
+            return this;
+        }
+
+        /**
+         * Sets options related to auto-applying this fix.
+         *
+         * @param robot whether this fix can be applied by a robot, e.g. does not require human
+         *     intervention
+         * @param independent whether it is <b>not</b> the case that applying other fixes
+         *     simultaneously can invalidate this fix
+         * @return this
+         */
+        public AnnotateBuilder autoFix(boolean robot, boolean independent) {
+            this.robot = robot;
+            this.independent = independent;
+            return this;
+        }
+
+        /** Creates a fix from this builder */
+        public LintFix build() {
+            String desc;
+            if (displayName != null) {
+                desc = displayName;
+            } else {
+                int index = annotation.indexOf('(');
+                int last =
+                        (index != -1)
+                                ? annotation.lastIndexOf('.', index)
+                                : annotation.lastIndexOf('.');
+                String simpleName;
+                if (last != -1) {
+                    if (index != -1) {
+                        simpleName = "@" + annotation.substring(last + 1, index);
+                    } else {
+                        simpleName = "@" + annotation.substring(last + 1);
+                    }
+                } else {
+                    simpleName = annotation;
+                }
+                desc = "Annotate with " + simpleName;
+            }
+
+            return new AnnotateFix(
+                    desc, familyName, annotation, replace, range, robot, independent);
+        }
     }
 
     /** Builder for constructing a group of fixes */
@@ -1337,6 +1445,39 @@ public class LintFix {
                 @Nullable String displayName, @Nullable String familyName, @NonNull String url) {
             super(displayName, familyName);
             this.url = url;
+        }
+    }
+
+    /** An annotation to add to the element */
+    public static class AnnotateFix extends LintFix {
+        /** The annotation source code */
+        @NonNull public final String annotation;
+        /**
+         * If true replace the previous occurrence of the same annotation. Should be used unless
+         * you're dealing with a repeatable annotation.
+         */
+        public final boolean replace;
+
+        /**
+         * A location range for the source region where the fix will operate. Useful when the fix is
+         * applying in a wider range than the highlighted problem range.
+         */
+        @Nullable public final Location range;
+
+        private AnnotateFix(
+                @Nullable String displayName,
+                @Nullable String familyName,
+                @NonNull String annotation,
+                boolean replace,
+                @Nullable Location range,
+                boolean robot,
+                boolean independent) {
+            super(displayName, familyName);
+            this.annotation = annotation;
+            this.replace = replace;
+            this.range = range;
+            this.robot = robot;
+            this.independent = independent;
         }
     }
 

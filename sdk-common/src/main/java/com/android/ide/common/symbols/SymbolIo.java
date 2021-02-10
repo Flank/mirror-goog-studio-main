@@ -127,7 +127,7 @@ public final class SymbolIo {
      */
     @NonNull
     public static SymbolTable readFromAapt(@NonNull File file, @Nullable String tablePackage)
-            throws IOException {
+            throws Exception {
         return new SymbolIo().read(file, tablePackage, ReadConfiguration.AAPT);
     }
 
@@ -142,7 +142,7 @@ public final class SymbolIo {
      */
     @NonNull
     public static SymbolTable readFromAaptNoValues(
-            @NonNull File file, @Nullable String tablePackage) throws IOException {
+            @NonNull File file, @Nullable String tablePackage) throws Exception {
         return new SymbolIo().read(file, tablePackage, ReadConfiguration.AAPT_NO_VALUES);
     }
 
@@ -159,7 +159,7 @@ public final class SymbolIo {
     @NonNull
     public static SymbolTable readFromAaptNoValues(
             @NonNull BufferedReader reader, @NonNull String filename, @Nullable String tablePackage)
-            throws IOException {
+            throws Exception {
         return new SymbolIo()
                 .read(reader.lines(), filename, tablePackage, ReadConfiguration.AAPT_NO_VALUES);
     }
@@ -174,7 +174,7 @@ public final class SymbolIo {
      */
     @NonNull
     public SymbolTable readFromPartialRFile(@NonNull File file, @Nullable String tablePackage)
-            throws IOException {
+            throws Exception {
         return read(file, tablePackage, ReadConfiguration.PARTIAL_FILE);
     }
 
@@ -183,7 +183,7 @@ public final class SymbolIo {
             @NonNull InputStream inputStream,
             @NonNull String fileName,
             @Nullable String tablePackage)
-            throws IOException {
+            throws Exception {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
             return new SymbolIo()
                     .read(reader.lines(), fileName, tablePackage, ReadConfiguration.PUBLIC_FILE);
@@ -195,7 +195,7 @@ public final class SymbolIo {
             @NonNull File file,
             @Nullable String tablePackage,
             @NonNull ReadConfiguration readConfiguration)
-            throws IOException {
+            throws Exception {
         String filename = file.getAbsolutePath();
         try (Stream<String> lines = Files.lines(file.toPath())) {
             return read(lines, filename, tablePackage, readConfiguration);
@@ -208,7 +208,7 @@ public final class SymbolIo {
             @NonNull String filename,
             @Nullable String tablePackage,
             @NonNull ReadConfiguration readConfiguration)
-            throws IOException {
+            throws Exception {
         Iterator<String> linesIterator = lines.iterator();
         int startLine = checkFileTypeHeader(linesIterator, readConfiguration, filename);
         SymbolTable.FastBuilder table =
@@ -222,7 +222,14 @@ public final class SymbolIo {
         if (tablePackage != null) {
             table.tablePackage(tablePackage);
         }
-        return table.build();
+        try {
+            return table.build();
+        } catch (IllegalArgumentException e) {
+            throw new IllegalStateException(
+                    "Issue parsing symbol table from package '"
+                            + tablePackage + "' at " + filename + ".\n"
+                            + e.getMessage(), e);
+        }
     }
 
     /**

@@ -109,8 +109,6 @@ import com.android.builder.errors.IssueReporter.Type;
 import com.android.builder.model.v2.ide.ProjectType;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.SdkVersionInfo;
-import com.android.tools.lint.model.LintModelModuleLoader;
-import com.android.tools.lint.model.LintModelModuleLoaderProvider;
 import com.android.utils.ILogger;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
@@ -151,7 +149,7 @@ public abstract class BasePlugin<
                         AndroidComponentsExtension<? extends ComponentBuilder, ? extends Variant>,
                 VariantBuilderT extends VariantBuilderImpl,
                 VariantT extends VariantImpl>
-        implements Plugin<Project>, LintModelModuleLoaderProvider {
+        implements Plugin<Project> {
 
     private BaseExtension extension;
     private AndroidComponentsExtension<? extends ComponentBuilder, ? extends Variant>
@@ -170,7 +168,6 @@ public abstract class BasePlugin<
     private VariantFactory<VariantBuilderT, VariantT> variantFactory;
 
     @NonNull private final ToolingModelBuilderRegistry registry;
-    @NonNull private final LintModelModuleLoader lintModuleLoader;
     @NonNull private final SoftwareComponentFactory componentFactory;
 
     private LoggerWrapper loggerWrapper;
@@ -193,7 +190,6 @@ public abstract class BasePlugin<
             @NonNull BuildEventsListenerRegistry listenerRegistry) {
         ClasspathVerifier.checkClasspathSanity();
         this.registry = registry;
-        this.lintModuleLoader = new LintModuleLoader(this, registry);
         this.componentFactory = componentFactory;
         creator = "Android Gradle " + Version.ANDROID_GRADLE_PLUGIN_VERSION;
         NonFinalPluginExpiry.verifyRetirementAge();
@@ -880,13 +876,6 @@ public abstract class BasePlugin<
                         + "=true' to gradle.properties file in the project directory.";
 
         throw new StopExecutionException(message);
-    }
-
-    /** Returns a module loader for lint (this method implements {@link LintModelModuleLoader}) */
-    @NonNull
-    @Override
-    public LintModelModuleLoader getModuleLoader() {
-        return lintModuleLoader;
     }
 
     /**

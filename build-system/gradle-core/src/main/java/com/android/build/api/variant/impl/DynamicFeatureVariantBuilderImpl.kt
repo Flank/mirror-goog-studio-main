@@ -36,6 +36,8 @@ open class DynamicFeatureVariantBuilderImpl @Inject constructor(
     variantApiServices
 ), DynamicFeatureVariantBuilder {
 
+    override var androidTestEnabled: Boolean = true
+
     override fun <T : VariantBuilder> createUserVisibleVariantObject(
             projectServices: ProjectServices,
             stats: GradleBuildVariant.Builder?): T =

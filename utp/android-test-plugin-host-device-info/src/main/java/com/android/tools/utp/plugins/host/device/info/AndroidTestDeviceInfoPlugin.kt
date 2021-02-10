@@ -32,6 +32,8 @@ import com.google.testing.platform.runtime.android.device.AndroidDevicePropertie
 import java.io.File
 import java.io.FileOutputStream
 
+const val MANAGED_DEVICE_NAME_KEY = "gradleManagedDeviceDslName"
+
 /**
  * A plugin to write device info in test results.
  */
@@ -86,6 +88,7 @@ class AndroidTestDeviceInfoPlugin : HostPlugin {
         } else {
             deviceSerial
         }
+        val dslName = deviceProperties.map.getOrDefault(MANAGED_DEVICE_NAME_KEY, "")
         val deviceApiLevel = deviceProperties.deviceApiLevel
         val deviceRam = deviceMemInfo.getDeviceMemory()
         val deviceProcessors = deviceCpuInfo.getDeviceProcessors()
@@ -101,6 +104,8 @@ class AndroidTestDeviceInfoPlugin : HostPlugin {
                 .setManufacturer(deviceManufacturer)
                 .setSerial(deviceSerial)
                 .setAvdName(deviceAvdName)
+                .setGradleDslDeviceName(dslName)
+
                 .build()
         FileOutputStream(deviceInfoFile).use {
             androidTestDeviceInfo.writeTo(it)

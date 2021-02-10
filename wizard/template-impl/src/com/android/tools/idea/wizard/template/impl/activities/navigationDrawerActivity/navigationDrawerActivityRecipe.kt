@@ -45,7 +45,6 @@ fun RecipeExecutor.generateNavigationDrawer(
   data: ModuleTemplateData,
   activityClass: String,
   layoutName: String,
-  activityTitle: String,
   isLauncher: Boolean,
   packageName: PackageName,
   appBarLayoutName: String,
@@ -72,7 +71,6 @@ fun RecipeExecutor.generateNavigationDrawer(
   generateManifest(
     data,
     activityClass,
-    activityTitle,
     packageName,
     isLauncher,
     hasNoActionBar = true,

@@ -52,7 +52,6 @@ class ManagedDeviceTestRunner(
         val testedApks = getTestedApks(testData, managedDevice, logger)
         val utpOutputDir = outputDirectory
         val utpTmpDir = Files.createTempDir()
-        val utpTestLogDir = Files.createTempDir()
         val utpTestRunLogDir = Files.createTempDir()
         val runnerConfigProtoFile = File.createTempFile("runnerConfig", ".pb").also { file ->
             FileOutputStream(file).use { writer ->
@@ -64,7 +63,6 @@ class ManagedDeviceTestRunner(
                     versionedSdkLoader,
                     utpOutputDir,
                     utpTmpDir,
-                    utpTestLogDir,
                     retentionConfig,
                     useOrchestrator).writeTo(writer)
             }
@@ -79,7 +77,7 @@ class ManagedDeviceTestRunner(
         resultsProto.writeTo(File(utpOutputDir, "test-result.pb").outputStream())
 
         try {
-            FileUtils.deleteRecursivelyIfExists(utpTestLogDir)
+            FileUtils.deleteRecursivelyIfExists(utpOutputDir.resolve(TEST_LOG_DIR))
             FileUtils.deleteRecursivelyIfExists(utpTestRunLogDir)
             FileUtils.deleteRecursivelyIfExists(utpTmpDir)
         } catch (e: IOException) {

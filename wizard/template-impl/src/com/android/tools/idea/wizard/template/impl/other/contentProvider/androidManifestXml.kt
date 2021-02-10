@@ -14,15 +14,14 @@
  * limitations under the License.
  */
 
-package com.android.tools.idea.wizard.template.impl.other.contentProvider.root
-
+package com.android.tools.idea.wizard.template.impl.other.contentProvider
 
 fun androidManifestXml(
   authorities: String,
   className: String,
   isEnabled: Boolean,
-isExported: Boolean,
-packageName: String
+  isExported: Boolean,
+  packageName: String
 ) = """
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 

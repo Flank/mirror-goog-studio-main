@@ -131,6 +131,7 @@ dependencies {
     implementation project(':base:layoutlib-api')
     implementation project(':base:utp:android-device-provider-gradle-proto')
     implementation project(':base:utp:android-test-plugin-host-retention-proto')
+    implementation project(':base:utp:android-test-plugin-result-listener-gradle-proto')
 
     implementation libs.kotlin_stdlib
     implementation libs.transform_api_deprecated
@@ -149,6 +150,7 @@ dependencies {
     implementation libs.javapoet
     implementation libs.protobuf
     implementation libs.protobuf_util
+    implementation libs.grpc
     implementation libs.tink
     implementation libs.unified_test_platform
 

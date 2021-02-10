@@ -15,7 +15,6 @@
     <orderEntry type="module" module-name="android.sdktools.ddmlib" />
     <orderEntry type="module" module-name="android.sdktools.testutils" scope="TEST" />
     <orderEntry type="module" module-name="android.sdktools.binary-resources" />
-    <orderEntry type="library" name="Guava" level="project" />
     <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
@@ -70,5 +69,6 @@
         <SOURCES />
       </library>
     </orderEntry>
+    <orderEntry type="library" scope="TEST" name="truth" level="project" />
   </component>
 </module>

@@ -32,7 +32,8 @@ fun androidManifestXml(
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application>
         <activity android:name=".ui.login.${activityClass}"
-            ${activityLabel} 
+            android:exported="true"
+            ${activityLabel}
             ${activityBody}
         </activity>
     </application>

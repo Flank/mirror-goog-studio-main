@@ -36,7 +36,6 @@ iml_module(
         "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
         "//tools/base/annotations:studio.android.sdktools.android-annotations[module, test]",
         "//tools/base/common:studio.android.sdktools.common[module, test]",
-        "//tools/adt/idea/.idea/libraries:Guava[test]",
         "//tools/adt/idea/.idea/libraries:truth[test]",
         "//tools/adt/idea/.idea/libraries:dexlib2[test]",
         "//tools/adt/idea/.idea/libraries:jimfs[test]",

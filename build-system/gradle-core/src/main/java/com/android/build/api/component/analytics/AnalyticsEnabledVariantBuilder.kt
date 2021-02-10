@@ -67,4 +67,11 @@ abstract class AnalyticsEnabledVariantBuilder(
                 .type = VariantMethodType.RENDERSCRIPT_TARGET_API_VALUE
             delegate.renderscriptTargetApi = value
         }
+
+    override var unitTestEnabled: Boolean
+        get() = delegate.unitTestEnabled
+        set(value) {
+            stats.variantApiAccessBuilder.addVariantAccessBuilder().type = VariantMethodType.UNIT_TEST_ENABLED_VALUE
+            delegate.unitTestEnabled = value
+        }
 }

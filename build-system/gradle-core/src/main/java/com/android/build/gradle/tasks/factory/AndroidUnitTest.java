@@ -29,6 +29,7 @@ import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.SdkComponentsBuildService;
 import com.android.build.gradle.internal.component.ComponentCreationConfig;
 import com.android.build.gradle.internal.component.UnitTestCreationConfig;
+import com.android.build.gradle.internal.coverage.JacocoOptions;
 import com.android.build.gradle.internal.scope.BootClasspathBuilder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
@@ -42,10 +43,17 @@ import java.io.File;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.concurrent.Callable;
+
+import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.internal.file.FileOperations;
+import org.gradle.api.internal.project.ProjectInternal;
 import org.gradle.api.plugins.JavaBasePlugin;
+import org.gradle.api.plugins.JavaPlugin;
+import org.gradle.api.plugins.ReportingBasePlugin;
 import org.gradle.api.reporting.ConfigurableReport;
+import org.gradle.api.reporting.ReportingExtension;
 import org.gradle.api.specs.Spec;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Internal;
@@ -53,7 +61,10 @@ import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.testing.Test;
 import org.gradle.api.tasks.testing.TestTaskReports;
+import org.gradle.internal.jacoco.JacocoAgentJar;
+import org.gradle.internal.reflect.Instantiator;
 import org.gradle.testing.jacoco.plugins.JacocoPlugin;
+import org.gradle.testing.jacoco.plugins.JacocoPluginExtension;
 import org.gradle.testing.jacoco.plugins.JacocoTaskExtension;
 
 /** Patched version of {@link Test} that we need to use for local unit tests support. */

@@ -54,7 +54,7 @@ py_library(
 )
 
 # This is just an example report for testing during development
-# run tests: bazel test --define agent_coverage=true --config=remote -- @cov//:example:suite
+# run tests: bazel test --define agent_coverage=true --config=remote -- @cov//:example.suite
 # make lcov: bazel build --config=remote -- @cov//:example.lcov
 coverage_report(
     name = "example",
@@ -240,10 +240,12 @@ coverage_report(
     name = "dynamic-layout-inspector",
     srcpath_include = [
         "tools/adt/idea/layout-inspector/src",
+        "tools/base/dynamic-layout-inspector/agent/appinspection/src/main",
         "tools/base/dynamic-layout-inspector/agent/transport/src/main",
     ],
     tests = [
         "//tools/adt/idea/layout-inspector:intellij.android.layout-inspector.tests_tests",
+        "//tools/base/dynamic-layout-inspector/agent/appinspection:agent_tests.test",
         "//tools/base/dynamic-layout-inspector/agent/transport:agent_tests.test",
     ],
 )
@@ -526,6 +528,24 @@ coverage_report(
     ],
 )
 
+# Coverage report for UTP test execution.
+coverage_report(
+    name = "utp",
+    srcpath_include = [
+        "tools/base/build-system/gradle-core/src/main/java/com/android/build/gradle/internal/testing/utp",
+        "tools/base/utp",
+    ],
+    tests = [
+        "//tools/base/build-system/gradle-core:tests.test",
+        "//tools/base/build-system/integration-test/connected:UtpConnectedTest",
+        "//tools/base/utp/android-device-provider-ddmlib:tests.test",
+        "//tools/base/utp/android-device-provider-gradle:tests.test",
+        "//tools/base/utp/android-test-plugin-host-device-info:tests.test",
+        "//tools/base/utp/android-test-plugin-host-retention:tests.test",
+        "//tools/base/utp/android-test-plugin-result-listener-gradle:tests.test",
+    ],
+)
+
 # Coverage report for Embedded Emulator.
 coverage_report(
     name = "emulator",
@@ -583,6 +603,7 @@ combine_report_definitions(
         "systracev2",
         "templates",
         "upgrade-assistant",
+        "utp",
         "validation",
         "workmanager-inspector",
     ],
@@ -689,6 +710,7 @@ coverage_report(
         "//tools/base/build-system/integration-test/application/src/test/java/com/android/build/gradle/integration/sanity:tests",
         "//tools/base/build-system/integration-test/application/src/test/java/com/android/build/gradle/integration/sdk:sdk_tests",
         "//tools/base/build-system/integration-test/application/src/test/java/com/android/build/gradle/integration/testing/unit:tests",
+        "//tools/base/build-system/integration-test/connected:UtpConnectedTest",
         "//tools/base/build-system/integration-test/databinding:tests",
         "//tools/base/build-system/integration-test/framework:framework_tests.test",
         "//tools/base/build-system/integration-test/lint:tests",
@@ -726,6 +748,7 @@ coverage_report(
         "//tools/base/deploy/deployer:deployer.tests",
         "//tools/base/deploy/deployer:studio.android.sdktools.deployer_tests",
         "//tools/base/draw9patch:studio.android.sdktools.draw9patch_tests",
+        "//tools/base/dynamic-layout-inspector/agent/appinspection:agent_tests.test",
         "//tools/base/dynamic-layout-inspector/agent/transport:agent_tests.test",
         "//tools/base/fakeadbserver:studio.android.sdktools.fakeadbserver_tests",
         "//tools/base/fakeadbserver:tools.tests",
@@ -749,6 +772,11 @@ coverage_report(
         "//tools/base/testutils:studio.testutils-tests_tests",
         "//tools/base/testutils:tools.tests.test",
         "//tools/base/usb-devices:studio.usb-devices_tests",
+        "//tools/base/utp/android-device-provider-ddmlib:tests.test",
+        "//tools/base/utp/android-device-provider-gradle:tests.test",
+        "//tools/base/utp/android-test-plugin-host-device-info:tests.test",
+        "//tools/base/utp/android-test-plugin-host-retention:tests.test",
+        "//tools/base/utp/android-test-plugin-result-listener-gradle:tests.test",
         "//tools/data-binding:studio.compilerCommon_tests",
         "//tools/data-binding:studio.compiler_tests",
         "//tools/data-binding:tools.compilerCommon_tests.test",

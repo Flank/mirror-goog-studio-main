@@ -18,18 +18,18 @@ package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
-import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.truth.TaskStateList;
 import com.android.build.gradle.integration.common.utils.AssumeBuildToolsUtil;
+import com.android.build.gradle.internal.scope.ArtifactTypeUtil;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.Dex;
 import com.google.common.collect.ImmutableSet;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -52,33 +52,44 @@ public class DeploymentApiOverrideTest {
 
     @Test
     public void testMultiDexOnPre21Build() throws Exception {
-        GradleBuildResult lastBuild = project.executor().run("clean", "assembleIcsDebug");
-        TaskStateList.TaskInfo multidexTask =
-                Objects.requireNonNull(lastBuild.findTask(":multiDexListIcsDebug"));
-        assertThat(multidexTask).didWork();
+        project.executor().run("clean", "assembleIcsDebug");
+        File mainDexList =
+                new File(
+                        ArtifactTypeUtil.getOutputDir(
+                                InternalArtifactType.LEGACY_MULTIDEX_MAIN_DEX_LIST.INSTANCE,
+                                project.getBuildDir()),
+                        "icsDebug/mainDexList.txt");
+        assertThat(mainDexList.exists()).isTrue();
     }
 
     @Test
     public void testMultiDexOnPost21Build() throws Exception {
-        GradleBuildResult lastBuild =
-                project.executor()
-                        .with(IntegerOption.IDE_TARGET_DEVICE_API, 21)
-                        .run("clean", "assembleIcsDebug");
-        TaskStateList.TaskInfo multidexTask = lastBuild.findTask(":multiDexListIcsDebug");
-        assertThat(multidexTask).isNull();
+        project.executor()
+                .with(IntegerOption.IDE_TARGET_DEVICE_API, 21)
+                .run("clean", "assembleIcsDebug");
+        File mainDexList =
+                new File(
+                        ArtifactTypeUtil.getOutputDir(
+                                InternalArtifactType.LEGACY_MULTIDEX_MAIN_DEX_LIST.INSTANCE,
+                                project.getBuildDir()),
+                        "icsDebug/mainDexList.txt");
+        assertThat(mainDexList.exists()).isFalse();
     }
 
     @Test
     public void testMultiDexOnReleaseBuild() throws Exception {
-        GradleBuildResult lastBuild =
-                project.executor()
-                        .with(IntegerOption.IDE_TARGET_DEVICE_API, 21)
-                        // http://b/162074215
-                        .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
-                        .run("clean", "assembleIcsRelease");
-        TaskStateList.TaskInfo multidexTask =
-                Objects.requireNonNull(lastBuild.findTask(":multiDexListIcsRelease"));
-        assertThat(multidexTask).didWork();
+        project.executor()
+                .with(IntegerOption.IDE_TARGET_DEVICE_API, 21)
+                // http://b/162074215
+                .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
+                .run("clean", "assembleIcsRelease");
+        File mainDexList =
+                new File(
+                        ArtifactTypeUtil.getOutputDir(
+                                InternalArtifactType.LEGACY_MULTIDEX_MAIN_DEX_LIST.INSTANCE,
+                                project.getBuildDir()),
+                        "icsRelease/mainDexList.txt");
+        assertThat(mainDexList.exists()).isTrue();
     }
 
     /** Regression test for https://issuetracker.google.com/72085541. */

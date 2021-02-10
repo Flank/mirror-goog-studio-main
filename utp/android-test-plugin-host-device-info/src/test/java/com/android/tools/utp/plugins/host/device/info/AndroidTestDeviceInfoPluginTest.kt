@@ -115,6 +115,48 @@ class AndroidTestDeviceInfoPluginTest {
                     assertThat(deviceInfo.processorsList).isEqualTo(listOf(deviceProcessor))
                     assertThat(deviceInfo.abisList).isEqualTo(deviceAbis)
                     assertThat(deviceInfo.manufacturer).isEqualTo(deviceManufacturer)
+                    assertThat(deviceInfo.gradleDslDeviceName).isEqualTo("")
+                }
+            }
+        }
+        assertThat(numDeviceInfoProtos).isEqualTo(1)
+    }
+
+    @Test
+    fun afterEach_AddsDeviceInfoWithManagedDevice() {
+        val managedDeviceProperties = AndroidDeviceProperties(
+            map = mapOf(
+                    "gradleManagedDeviceDslName" to "device1",
+                    "ro.product.manufacturer" to deviceManufacturer,
+                    "ro.product.cpu.abilist" to deviceAbis.joinToString(",")
+            ),
+            deviceApiLevel = "28"
+        )
+        `when`(mockDevice.properties).thenReturn(managedDeviceProperties)
+
+        androidTestDeviceInfoPlugin.configure(mockConfig)
+        androidTestDeviceInfoPlugin.beforeAll(mockDeviceController)
+        androidTestDeviceInfoPlugin.beforeEach(TestCaseProto.TestCase.getDefaultInstance(), mockDeviceController)
+        val testResult = androidTestDeviceInfoPlugin.afterEach(emptyTestResult, mockDeviceController)
+        // Check artifact labels.
+        assertThat(testResult.outputArtifactList).isNotEmpty()
+        var numDeviceInfoProtos = 0
+        testResult.outputArtifactList.forEach { artifact ->
+            assertThat(artifact.label.namespace).isEqualTo("android")
+            val file = File(artifact.sourcePath.path)
+            assertThat(file.exists()).isTrue()
+            if (artifact.label.label == "device-info") {
+                numDeviceInfoProtos += 1
+                // Validate protobuf content
+                FileInputStream(file).use {
+                    val deviceInfo = AndroidTestDeviceInfo.parseFrom(it)
+                    assertThat(deviceInfo.name).isEqualTo(deviceName)
+                    assertThat(deviceInfo.apiLevel).isEqualTo(androidDeviceProperty.deviceApiLevel)
+                    assertThat(deviceInfo.ramInBytes).isEqualTo(deviceRamInKilobytes * 1000L)
+                    assertThat(deviceInfo.processorsList).isEqualTo(listOf(deviceProcessor))
+                    assertThat(deviceInfo.abisList).isEqualTo(deviceAbis)
+                    assertThat(deviceInfo.manufacturer).isEqualTo(deviceManufacturer)
+                    assertThat(deviceInfo.gradleDslDeviceName).isEqualTo("device1")
                 }
             }
         }

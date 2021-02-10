@@ -99,6 +99,7 @@ class UtpConfigFactoryTest {
         override val testPlugin = FakeConfigurableFileCollection(mockFile("pathToANDROID_TEST_PLUGIN.jar"))
         override val testDeviceInfoPlugin = FakeConfigurableFileCollection(mockFile("pathToANDROID_TEST_DEVICE_INFO_PLUGIN.jar"))
         override val testPluginHostRetention = FakeConfigurableFileCollection(mockFile("pathToANDROID_TEST_PLUGIN_HOST_RETENTION.jar"))
+        override val testPluginResultListenerGradle = FakeConfigurableFileCollection(mockFile("pathToANDROID_TEST_PLUGIN_RESULT_LISTENER_GRADLE.jar"))
     }
 
     @Before
@@ -141,9 +142,9 @@ class UtpConfigFactoryTest {
             versionedSdkLoader,
             mockOutputDir,
             mockTmpDir,
-            File(TEST_LOG_DIR),
             mockRetentionConfig,
-            useOrchestrator = false)
+            useOrchestrator = false,
+            testResultListenerServerPort = 1234)
 
         assertThat(runnerConfigProto.toString()).isEqualTo("""
             device {
@@ -250,6 +251,19 @@ class UtpConfigFactoryTest {
                 }
               }
             }
+            test_result_listener {
+              label {
+                label: "ANDROID_TEST_PLUGIN_RESULT_LISTENER_GRADLE"
+              }
+              class_name: "com.android.tools.utp.plugins.result.listener.gradle.GradleAndroidTestResultListener"
+              jar {
+                path: "pathToANDROID_TEST_PLUGIN_RESULT_LISTENER_GRADLE.jar"
+              }
+              config {
+                type_url: "type.googleapis.com/com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidTestResultListenerConfig"
+                value: "\b\322\t"
+              }
+            }
             single_device_executor {
               device_execution {
                 device_id {
@@ -275,9 +289,9 @@ class UtpConfigFactoryTest {
                 versionedSdkLoader,
                 mockOutputDir,
                 mockTmpDir,
-                File(TEST_LOG_DIR),
                 mockRetentionConfig,
-                useOrchestrator = true)
+                useOrchestrator = true,
+                testResultListenerServerPort = 1234)
 
         assertThat(runnerConfigProto.toString()).isEqualTo("""
             device {
@@ -384,6 +398,19 @@ class UtpConfigFactoryTest {
                 }
               }
             }
+            test_result_listener {
+              label {
+                label: "ANDROID_TEST_PLUGIN_RESULT_LISTENER_GRADLE"
+              }
+              class_name: "com.android.tools.utp.plugins.result.listener.gradle.GradleAndroidTestResultListener"
+              jar {
+                path: "pathToANDROID_TEST_PLUGIN_RESULT_LISTENER_GRADLE.jar"
+              }
+              config {
+                type_url: "type.googleapis.com/com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidTestResultListenerConfig"
+                value: "\b\322\t"
+              }
+            }
             single_device_executor {
               device_execution {
                 device_id {
@@ -412,9 +439,9 @@ class UtpConfigFactoryTest {
             versionedSdkLoader,
             mockOutputDir,
             mockTmpDir,
-            File(TEST_LOG_DIR),
             mockRetentionConfig,
-            useOrchestrator = false)
+            useOrchestrator = false,
+            testResultListenerServerPort = 1234)
 
         assertThat(runnerConfigProto.toString()).isEqualTo("""
             device {
@@ -534,6 +561,19 @@ class UtpConfigFactoryTest {
                 }
               }
             }
+            test_result_listener {
+              label {
+                label: "ANDROID_TEST_PLUGIN_RESULT_LISTENER_GRADLE"
+              }
+              class_name: "com.android.tools.utp.plugins.result.listener.gradle.GradleAndroidTestResultListener"
+              jar {
+                path: "pathToANDROID_TEST_PLUGIN_RESULT_LISTENER_GRADLE.jar"
+              }
+              config {
+                type_url: "type.googleapis.com/com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidTestResultListenerConfig"
+                value: "\b\322\t"
+              }
+            }
             single_device_executor {
               device_execution {
                 device_id {
@@ -564,9 +604,9 @@ class UtpConfigFactoryTest {
             versionedSdkLoader,
             mockOutputDir,
             mockTmpDir,
-            File(TEST_LOG_DIR),
             mockRetentionConfig,
-            useOrchestrator = false)
+            useOrchestrator = false,
+            testResultListenerServerPort = 1234)
 
         assertThat(runnerConfigProto.toString()).isEqualTo("""
             device {
@@ -686,6 +726,19 @@ class UtpConfigFactoryTest {
                 }
               }
             }
+            test_result_listener {
+              label {
+                label: "ANDROID_TEST_PLUGIN_RESULT_LISTENER_GRADLE"
+              }
+              class_name: "com.android.tools.utp.plugins.result.listener.gradle.GradleAndroidTestResultListener"
+              jar {
+                path: "pathToANDROID_TEST_PLUGIN_RESULT_LISTENER_GRADLE.jar"
+              }
+              config {
+                type_url: "type.googleapis.com/com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidTestResultListenerConfig"
+                value: "\b\322\t"
+              }
+            }
             single_device_executor {
               device_execution {
                 device_id {
@@ -714,9 +767,9 @@ class UtpConfigFactoryTest {
             versionedSdkLoader,
             mockOutputDir,
             mockTmpDir,
-            File(TEST_LOG_DIR),
             mockRetentionConfig,
-            useOrchestrator = true)
+            useOrchestrator = true,
+            testResultListenerServerPort = 1234)
 
         assertThat(runnerConfigProto.toString()).isEqualTo("""
             device {
@@ -823,6 +876,19 @@ class UtpConfigFactoryTest {
                 }
               }
             }
+            test_result_listener {
+              label {
+                label: "ANDROID_TEST_PLUGIN_RESULT_LISTENER_GRADLE"
+              }
+              class_name: "com.android.tools.utp.plugins.result.listener.gradle.GradleAndroidTestResultListener"
+              jar {
+                path: "pathToANDROID_TEST_PLUGIN_RESULT_LISTENER_GRADLE.jar"
+              }
+              config {
+                type_url: "type.googleapis.com/com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidTestResultListenerConfig"
+                value: "\b\322\t"
+              }
+            }
             single_device_executor {
               device_execution {
                 device_id {
@@ -857,7 +923,6 @@ class UtpConfigFactoryTest {
             versionedSdkLoader,
             mockOutputDir,
             mockTmpDir,
-            File(TEST_LOG_DIR),
             mockRetentionConfig,
             useOrchestrator = false
         )
@@ -876,7 +941,7 @@ class UtpConfigFactoryTest {
                 }
                 config {
                   type_url: "type.googleapis.com/com.android.tools.utp.plugins.deviceprovider.gradle.proto.GradleManagedAndroidDeviceProviderConfig"
-                  value: "\n\332\001\nW\n?type.googleapis.com/google.testing.platform.proto.api.core.Path\022\024\n\022path/to/gradle/avd\022\aavdName\032\037:app:deviceNameDebugAndroidTest*U\n?type.googleapis.com/google.testing.platform.proto.api.core.Path\022\022\n\020path/to/emulator\020\255\'"
+                  value: "\n\346\001\nW\n?type.googleapis.com/google.testing.platform.proto.api.core.Path\022\024\n\022path/to/gradle/avd\022\aavdName\032\037:app:deviceNameDebugAndroidTest*U\n?type.googleapis.com/google.testing.platform.proto.api.core.Path\022\022\n\020path/to/emulator2\ndeviceName\020\255\'"
                 }
               }
             }
@@ -1000,7 +1065,6 @@ class UtpConfigFactoryTest {
                 versionedSdkLoader,
                 mockOutputDir,
                 mockTmpDir,
-                File(TEST_LOG_DIR),
                 mockRetentionConfig,
                 useOrchestrator = true
         )
@@ -1019,7 +1083,7 @@ class UtpConfigFactoryTest {
                 }
                 config {
                   type_url: "type.googleapis.com/com.android.tools.utp.plugins.deviceprovider.gradle.proto.GradleManagedAndroidDeviceProviderConfig"
-                  value: "\n\332\001\nW\n?type.googleapis.com/google.testing.platform.proto.api.core.Path\022\024\n\022path/to/gradle/avd\022\aavdName\032\037:app:deviceNameDebugAndroidTest*U\n?type.googleapis.com/google.testing.platform.proto.api.core.Path\022\022\n\020path/to/emulator\020\255\'"
+                  value: "\n\346\001\nW\n?type.googleapis.com/google.testing.platform.proto.api.core.Path\022\024\n\022path/to/gradle/avd\022\aavdName\032\037:app:deviceNameDebugAndroidTest*U\n?type.googleapis.com/google.testing.platform.proto.api.core.Path\022\022\n\020path/to/emulator2\ndeviceName\020\255\'"
                 }
               }
             }

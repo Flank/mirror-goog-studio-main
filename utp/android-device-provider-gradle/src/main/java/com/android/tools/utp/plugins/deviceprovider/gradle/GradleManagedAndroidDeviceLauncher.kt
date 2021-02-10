@@ -41,6 +41,7 @@ import kotlin.math.pow
 private const val MAX_ADB_ATTEMPTS = 4
 private const val MS_PER_SECOND = 1000
 private const val ADB_RETRY_DELAY_SECONDS = 2.0
+const val MANAGED_DEVICE_NAME_KEY = "gradleManagedDeviceDslName"
 
 /**
  * Creates an emulator using the [GradleManagedAndroidDeviceProvider] configuration proto and the
@@ -65,6 +66,7 @@ class GradleManagedAndroidDeviceLauncher @VisibleForTesting constructor(
     private lateinit var customConfig: GradleManagedAndroidDeviceProviderConfig
     private lateinit var avdFolder: String
     private lateinit var avdName: String
+    private lateinit var dslName: String
     private lateinit var avdId: String
     private var enableDisplay: Boolean = false /*lateinit*/
     private var adbServerPort: Int = 0 /*lateinit*/
@@ -102,6 +104,7 @@ class GradleManagedAndroidDeviceLauncher @VisibleForTesting constructor(
         customConfig = config.gradleManagedDeviceProviderConfig
         avdFolder = PathProto.Path.parseFrom(customConfig.managedDevice.avdFolder.value).path
         avdName = customConfig.managedDevice.avdName
+        dslName = customConfig.managedDevice.gradleDslDeviceName
         avdId = customConfig.managedDevice.avdId
         enableDisplay = customConfig.managedDevice.enableDisplay
         adbServerPort = customConfig.adbServerPort
@@ -120,6 +123,7 @@ class GradleManagedAndroidDeviceLauncher @VisibleForTesting constructor(
         val targetSerial = findSerial()
 
         val emulatorPort = targetSerial.substring("emulator-".length).toInt()
+        val properties = AndroidDeviceProperties(map = mapOf(MANAGED_DEVICE_NAME_KEY to dslName))
         device = AndroidDevice(
                 host = "localhost",
                 serial = targetSerial,
@@ -127,7 +131,7 @@ class GradleManagedAndroidDeviceLauncher @VisibleForTesting constructor(
                 port = emulatorPort + 1,
                 emulatorPort = emulatorPort,
                 serverPort = adbServerPort,
-                properties = AndroidDeviceProperties()
+                properties = properties
         )
         return device
     }

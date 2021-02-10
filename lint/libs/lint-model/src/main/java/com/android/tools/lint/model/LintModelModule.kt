@@ -126,11 +126,6 @@ interface LintModelModule {
     }
 }
 
-/** Provider which can provide a module loader */
-interface LintModelModuleLoaderProvider {
-    fun getModuleLoader(): LintModelModuleLoader
-}
-
 /**
  * A provider which loads modules given various keys
  */

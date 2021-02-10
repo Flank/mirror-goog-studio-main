@@ -131,6 +131,12 @@ abstract class BaseExtension protected constructor(
     abstract val viewBinding: ViewBindingOptions
 
     override var defaultPublishConfig: String = "release"
+        set(_) {
+            dslServices.deprecationReporter.reportObsoleteUsage(
+                    "defaultPublishConfig",
+                    DeprecationReporter.DeprecationTarget.VERSION_8_0
+            )
+        }
 
     override var variantFilter: Action<VariantFilter>? = null
 

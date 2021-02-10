@@ -4,7 +4,9 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.blame.MessageReceiver;
 import com.android.tools.r8.CompilationMode;
+import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ForkJoinPool;
 
@@ -44,12 +46,21 @@ public interface DexArchiveMerger {
      *
      * @param dexArchiveEntries the dex archive entries to merge
      * @param outputDir directory where merged dex file(s) will be written, must exist
-     * @param mainDexClasses file containing list of classes to be merged in the main dex file. It
-     *     is {@code null} for native and mono dex, and must be non-null for legacy dex.
+     * @param mainDexRulesFiles files containing the Proguard rules
+     * @param mainDexRules Proguard rules written as strings
+     * @param userMultidexKeepFile a user specified file containing classes to be kept in the main
+     *     dex list
+     * @param libraryFiles classes that are used only to resolve types in the program classes, but
+     *     are not packaged in the final binary e.g. android.jar, provided classes etc.
+     * @param mainDexListOutput the output location of classes to be kept in the main dex file
      */
     void mergeDexArchives(
             @NonNull List<DexArchiveEntry> dexArchiveEntries,
             @NonNull Path outputDir,
-            @Nullable Path mainDexClasses)
-            throws DexArchiveMergerException;
+            @Nullable List<Path> mainDexRulesFiles,
+            @Nullable List<String> mainDexRules,
+            @Nullable Path userMultidexKeepFile,
+            @Nullable Collection<Path> libraryFiles,
+            @Nullable Path mainDexListOutput)
+            throws DexArchiveMergerException, IOException;
 }

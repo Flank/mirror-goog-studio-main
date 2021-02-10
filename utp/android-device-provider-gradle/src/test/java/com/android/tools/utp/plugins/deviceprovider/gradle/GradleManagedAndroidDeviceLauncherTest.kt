@@ -85,6 +85,7 @@ class GradleManagedAndroidDeviceLauncherTest {
             emulatorPath = Any.pack(PathProto.Path.newBuilder().apply {
                 path = "path/to/emulator"
             }.build())
+            gradleDslDeviceName = "device1"
         }
         adbServerPort = ADB_SERVER_PORT
         build()
@@ -139,6 +140,7 @@ class GradleManagedAndroidDeviceLauncherTest {
         assertThat(device.type).isEqualTo(Device.DeviceType.VIRTUAL)
         assertThat(device.emulatorPort).isEqualTo(5554)
         assertThat(device.serverPort).isEqualTo(5037)
+        assertThat(device.properties.map[MANAGED_DEVICE_NAME_KEY]).isEqualTo("device1")
 
         verifyCallToEmulator()
     }
@@ -170,6 +172,7 @@ class GradleManagedAndroidDeviceLauncherTest {
         assertThat(device.type).isEqualTo(Device.DeviceType.VIRTUAL)
         assertThat(device.emulatorPort).isEqualTo(5554)
         assertThat(device.serverPort).isEqualTo(5037)
+        assertThat(device.properties.map[MANAGED_DEVICE_NAME_KEY]).isEqualTo("device1")
 
         verifyCallToEmulator(enableDisplay = true)
     }
@@ -196,6 +199,7 @@ class GradleManagedAndroidDeviceLauncherTest {
         assertThat(device.type).isEqualTo(Device.DeviceType.VIRTUAL)
         assertThat(device.emulatorPort).isEqualTo(5556)
         assertThat(device.serverPort).isEqualTo(5037)
+        assertThat(device.properties.map[MANAGED_DEVICE_NAME_KEY]).isEqualTo("device1")
         verifyCallToEmulator()
     }
 
@@ -222,6 +226,7 @@ class GradleManagedAndroidDeviceLauncherTest {
         assertThat(device.type).isEqualTo(Device.DeviceType.VIRTUAL)
         assertThat(device.emulatorPort).isEqualTo(5556)
         assertThat(device.serverPort).isEqualTo(5037)
+        assertThat(device.properties.map[MANAGED_DEVICE_NAME_KEY]).isEqualTo("device1")
         verifyCallToEmulator()
         verify(adbManager).configure(any())
         verify(adbManager).getAllSerials()

@@ -38,7 +38,6 @@ abstract class AnalyticsEnabledComponentBuilder(
     override fun getName(): String =
         delegate.name
 
-
     override val buildType: String?
         get() = delegate.buildType
     override val productFlavors: List<Pair<String, String>>

@@ -16,15 +16,12 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.transform.QualifiedContent
-import com.android.build.api.transform.QualifiedContent.ContentType
 import com.android.build.api.transform.QualifiedContent.Scope
+import com.android.build.api.transform.QualifiedContent.ScopeType
 import com.android.build.gradle.internal.InternalScope
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.packaging.PackagingFileAction
 import com.android.build.gradle.internal.packaging.ParsedPackagingOptions
-import com.android.build.gradle.internal.pipeline.ExtendedContentType
-import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.builder.merge.DelegateIncrementalFileMergerOutput
 import com.android.builder.merge.FilterIncrementalFileMergerInput
 import com.android.builder.merge.IncrementalFileMerger
@@ -32,7 +29,6 @@ import com.android.builder.merge.IncrementalFileMergerInput
 import com.android.builder.merge.IncrementalFileMergerOutputs
 import com.android.builder.merge.IncrementalFileMergerState
 import com.android.builder.merge.MergeOutputWriters
-import com.android.builder.merge.RenameIncrementalFileMergerInput
 import com.android.builder.merge.StreamMergeAlgorithms
 import com.android.builder.packaging.PackagingUtils
 import com.android.tools.build.apkzlib.zip.ZFileOptions
@@ -46,13 +42,9 @@ import java.io.IOException
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 import java.util.function.Predicate
-import java.util.regex.Pattern
 
-private val JAR_ABI_PATTERN = Pattern.compile("lib/([^/]+)/[^/]+")
-
-private fun containsHighPriorityScope(scopes: MutableSet<in Scope>): Boolean {
-    return scopes.stream()
-        .anyMatch { scope -> scope == Scope.PROJECT || scope == InternalScope.FEATURES }
+private fun isHighPriorityScope(scope: ScopeType?): Boolean {
+    return scope == Scope.PROJECT || scope == InternalScope.FEATURES
 }
 
 /**
@@ -61,39 +53,19 @@ private fun containsHighPriorityScope(scopes: MutableSet<in Scope>): Boolean {
  */
 class MergeJavaResourcesDelegate(
     inputs: List<IncrementalFileMergerInput>,
-    private val outputLocation: File,
-    private val contentMap: MutableMap<IncrementalFileMergerInput, QualifiedContent>,
+    private val outputFile: File,
+    private val scopeMap: MutableMap<IncrementalFileMergerInput, ScopeType>,
     private val packagingOptions: ParsedPackagingOptions,
-    private val mergedType: ContentType,
     private val incrementalStateFile: File,
     private val isIncremental: Boolean,
     private val noCompress: Collection<String>
 ) {
 
     private var inputs: MutableList<IncrementalFileMergerInput>
-    private val acceptedPathsPredicate: Predicate<String>
+    private val acceptedPathsPredicate: Predicate<String> = MergeJavaResourceTask.predicate
 
     init {
         this.inputs = inputs.toMutableList()
-        this.acceptedPathsPredicate = when(mergedType) {
-            QualifiedContent.DefaultContentType.RESOURCES -> MergeJavaResourceTask.predicate
-            ExtendedContentType.NATIVE_LIBS ->
-                Predicate { path ->
-                    val m = JAR_ABI_PATTERN.matcher(path)
-                    // if the ABI is accepted, check the 3rd segment
-                    if (m.matches()) {
-                        // remove the beginning of the path (lib/<abi>/)
-                        val filename = path.substring(5 + m.group(1).length)
-                        // and check the filename
-                        return@Predicate MergeNativeLibsTask.predicate.test(filename)
-                    }
-                    return@Predicate false
-                }
-            else ->
-                throw UnsupportedOperationException(
-                    "mergedType param must be RESOURCES or NATIVE_LIBS"
-                )
-        }
     }
 
     /**
@@ -134,31 +106,12 @@ class MergeJavaResourcesDelegate(
          * We need to:
          *
          * 1. Bring inputs that refer to the project scope before the other inputs.
-         * 2. Prefix libraries that come from directories with "lib/".
-         * 3. Filter all inputs to remove anything not accepted by acceptedPathsPredicate or
+         * 2. Filter all inputs to remove anything not accepted by acceptedPathsPredicate or
          * by packagingOptions.
          */
 
         // Sort inputs to move project scopes to the start.
-        inputs.sortBy { if (contentMap[it]?.scopes?.contains(Scope.PROJECT) == true) 0 else 1 }
-
-        // Prefix libraries with "lib/" if we're doing native libraries.
-        if (mergedType == ExtendedContentType.NATIVE_LIBS) {
-            inputs =
-                    inputs.map {
-                        val qc = contentMap[it]
-                        if (qc?.file?.isDirectory == true) {
-                            val renamedInput = RenameIncrementalFileMergerInput(
-                                it,
-                                { s -> "lib/$s" },
-                                { s -> s.substring("lib/".length) })
-                            contentMap[renamedInput] = qc
-                            return@map renamedInput
-                        } else {
-                            return@map it
-                        }
-                    }.toMutableList()
-        }
+        inputs.sortBy { if (scopeMap[it] == Scope.PROJECT) 0 else 1 }
 
         // Filter inputs.
         val inputFilter =
@@ -166,7 +119,7 @@ class MergeJavaResourcesDelegate(
         inputs =
                 inputs.map {
                     val filteredInput = FilterIncrementalFileMergerInput(it, inputFilter)
-                    contentMap[filteredInput] = contentMap[it]!!
+                    scopeMap[filteredInput] = scopeMap[it]!!
                     filteredInput
                 }.toMutableList()
 
@@ -198,20 +151,15 @@ class MergeJavaResourcesDelegate(
          * uppercase/lowercase conflict. To work around this issue, we copy these resources to a
          * jar file.
          */
-        val baseOutput = if (mergedType == QualifiedContent.DefaultContentType.RESOURCES) {
+        val baseOutput =
             IncrementalFileMergerOutputs.fromAlgorithmAndWriter(
                 mergeTransformAlgorithm,
                 MergeOutputWriters.toZip(
-                    outputLocation,
+                    outputFile,
                     // Erase timestamps of zip entries for better cacheability (see bug 142890134)
                     ZFileOptions().also { it.noTimestamps = true }
                 )
             )
-        } else {
-            IncrementalFileMergerOutputs.fromAlgorithmAndWriter(
-                mergeTransformAlgorithm, MergeOutputWriters.toDirectory(outputLocation)
-            )
-        }
 
         /*
          * We need a custom output to handle the case in which the same path appears in multiple
@@ -219,13 +167,7 @@ class MergeJavaResourcesDelegate(
          * this specific case we will ignore all other inputs.
          */
         val highPriorityInputs =
-            contentMap
-                .keys
-                .filter { input ->
-                    containsHighPriorityScope(
-                        (contentMap[input]?.scopes ?: TransformManager.EMPTY_SCOPES) as MutableSet<in QualifiedContent.Scope>
-                    )
-                }
+            scopeMap.keys.filter { isHighPriorityScope(scopeMap[it]) }.toSet()
 
         val output = object : DelegateIncrementalFileMergerOutput(baseOutput) {
             override fun create(

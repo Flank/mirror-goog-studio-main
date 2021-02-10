@@ -27,6 +27,7 @@ import com.android.tools.idea.wizard.template.TextFieldWidget
 import com.android.tools.idea.wizard.template.WizardUiContext
 import com.android.tools.idea.wizard.template.booleanParameter
 import com.android.tools.idea.wizard.template.impl.activities.common.MIN_API
+import com.android.tools.idea.wizard.template.impl.invisibleSourceProviderNameParameter
 import com.android.tools.idea.wizard.template.stringParameter
 import com.android.tools.idea.wizard.template.template
 import java.io.File
@@ -57,19 +58,11 @@ val androidManifestTemplate
     }
 
     // This is an invisible parameter to pass data from [WizardTemplateData] to the recipe.
-    val sourceProviderName: StringParameter = stringParameter {
-      name = "Source Provider Name"
-      constraints = listOf()
-      default = ""
-      visible = { false }
-      suggest = { sourceProviderName }
-    }
+    val sourceProviderName = invisibleSourceProviderNameParameter
 
     widgets(
       CheckBoxWidget(remapFolder),
       TextFieldWidget(newLocation),
-      // TODO: provide a better way to pass data than creating a widget with invisible parameter
-      //       Tests can't be added at this moment
       TextFieldWidget(sourceProviderName)
     )
 

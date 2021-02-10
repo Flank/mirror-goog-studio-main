@@ -117,7 +117,7 @@ abstract class D8BundleMainDexListTask : NonIncrementalTask() {
 
         override fun run() {
             val libraryFiles = parameters.libraryClasses.files + parameters.bootClasspath.files
-            val logger = Logging.getLogger(D8MainDexListTask::class.java)
+            val logger = Logging.getLogger(D8BundleMainDexListTask::class.java)
 
             logger.debug("Generating the main dex list using D8.")
             logger.debug("Program files: %s", parameters.programDexFiles.joinToString())
@@ -222,3 +222,19 @@ abstract class D8BundleMainDexListTask : NonIncrementalTask() {
         }
     }
 }
+
+internal fun getPlatformRules(): List<String> = listOf(
+    "-keep public class * extends android.app.Instrumentation {\n"
+            + "  <init>(); \n"
+            + "  void onCreate(...);\n"
+            + "  android.app.Application newApplication(...);\n"
+            + "  void callApplicationOnCreate(android.app.Application);\n"
+            + "}",
+    "-keep public class * extends android.app.Application { "
+            + "  <init>();\n"
+            + "  void attachBaseContext(android.content.Context);\n"
+            + "}",
+    "-keep public class * extends android.app.backup.BackupAgent { <init>(); }",
+    "-keep public class * implements java.lang.annotation.Annotation { *;}",
+    "-keep public class * extends android.test.InstrumentationTestCase { <init>(); }"
+)

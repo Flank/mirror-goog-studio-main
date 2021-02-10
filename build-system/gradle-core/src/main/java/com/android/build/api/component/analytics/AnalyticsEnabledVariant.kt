@@ -16,6 +16,7 @@
 
 package com.android.build.api.component.analytics
 
+import com.android.build.api.component.UnitTest
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.ExternalCmake
 import com.android.build.api.variant.ExternalNdkBuild
@@ -133,4 +134,7 @@ abstract class AnalyticsEnabledVariant (
                     VariantPropertiesMethodType.NDK_BUILD_NATIVE_OPTIONS_VALUE
             return userVisibleNdkBuildOptions
         }
+
+    override val unitTest: UnitTest?
+        get() = delegate.unitTest
 }

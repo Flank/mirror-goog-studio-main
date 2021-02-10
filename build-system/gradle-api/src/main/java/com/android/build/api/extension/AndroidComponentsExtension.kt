@@ -139,6 +139,7 @@ interface AndroidComponentsExtension<
      * are of interest. By default, all instances are of interest.
      * @param callback lambda to be called with each instance [UnitTestBuilder] of interest.
      */
+    @Deprecated("Will be removed in 4.2-beta6")
     fun beforeUnitTests(
             selector: VariantSelector = selector().all(),
             callback: (UnitTestBuilder) -> Unit)
@@ -146,6 +147,7 @@ interface AndroidComponentsExtension<
     /**
      * [Action] based version of [beforeUnitTests] above.
      */
+    @Deprecated("Will be removed in 4.2-beta6")
     fun beforeUnitTests(
             selector: VariantSelector = selector().all(),
             callback: Action<UnitTestBuilder>)
@@ -161,6 +163,7 @@ interface AndroidComponentsExtension<
      * are of interest. By default, all instances are of interest.
      * @param callback lambda to be called with each instance [AndroidTestBuilder] of interest.
      */
+    @Deprecated("Will be removed in 4.2-beta6")
     fun beforeAndroidTests(
             selector: VariantSelector = selector().all(),
             callback: (AndroidTestBuilder) -> Unit)
@@ -168,6 +171,8 @@ interface AndroidComponentsExtension<
     /**
      * [Action] based version of the [beforeAndroidTests] above.
      */
+
+    @Deprecated("Will be removed in 4.2-beta6")
     fun beforeAndroidTests(
             selector: VariantSelector = selector().all(),
             callback: Action<AndroidTestBuilder>)
@@ -189,6 +194,7 @@ interface AndroidComponentsExtension<
      * [org.gradle.api.provider.Property] can still be modified ensuring that all
      * [org.gradle.api.Task]s created by the Android Gradle Plugin use the updated value.
      */
+    @Deprecated("Will be removed in 4.2-beta6")
     fun unitTests(
             selector: VariantSelector = selector().all(),
             callback: Action<UnitTest>)
@@ -196,6 +202,7 @@ interface AndroidComponentsExtension<
     /**
      * [Action] based version of the [unitTests] above.
      */
+    @Deprecated("Will be removed in 4.2-beta6")
     fun unitTests(
             selector: VariantSelector = selector().all(),
             callback: (UnitTest) -> Unit)
@@ -217,6 +224,7 @@ interface AndroidComponentsExtension<
      * [org.gradle.api.provider.Property] can still be modified ensuring that all
      * [org.gradle.api.Task]s created by the Android Gradle Plugin use the updated value.
      */
+    @Deprecated("Will be removed in 4.2-beta6")
     fun androidTests(
             selector: VariantSelector = selector().all(),
             callback: Action<AndroidTest>)
@@ -224,6 +232,7 @@ interface AndroidComponentsExtension<
     /**
      * [Action] based version of the [AndroidTest] above.
      */
+    @Deprecated("Will be removed in 4.2-beta6")
     fun androidTests(
             selector: VariantSelector = selector().all(),
             callback: (AndroidTest) -> Unit)

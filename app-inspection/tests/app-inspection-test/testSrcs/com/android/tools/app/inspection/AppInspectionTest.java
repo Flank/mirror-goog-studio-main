@@ -76,6 +76,22 @@ public final class AppInspectionTest {
     }
 
     @Test
+    public void createNativeThenDispose() throws Exception {
+        String onDevicePath = injectInspectorDex();
+        assertCreateInspectorResponseStatus(
+                appInspectionRule.sendCommandAndGetResponse(
+                        createInspector("test.native.inspector", onDevicePath)),
+                SUCCESS);
+        appInspectionRule.assertInput(EXPECTED_INSPECTOR_CREATED);
+        appInspectionRule.assertInput("Native method result 541");
+        assertDisposeInspectorResponseStatus(
+                appInspectionRule.sendCommandAndGetResponse(
+                        disposeInspector("test.native.inspector")),
+                Status.SUCCESS);
+        appInspectionRule.assertInput(EXPECTED_INSPECTOR_DISPOSED);
+    }
+
+    @Test
     public void doubleInspectorCreation() throws Exception {
         String onDevicePath = injectInspectorDex();
         assertCreateInspectorResponseStatus(

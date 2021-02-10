@@ -306,13 +306,11 @@ com.android.build.api.dsl.Cmake.path: void (java.lang.Object)
 com.android.build.api.dsl.Cmake.setBuildStagingDirectory: void (java.io.File)
 com.android.build.api.dsl.Cmake.setPath: void (java.io.File)
 com.android.build.api.dsl.Cmake.setVersion: void (java.lang.String)
-com.android.build.api.dsl.CommonExtension
 com.android.build.api.dsl.CommonExtension.aaptOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.AaptOptions, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.adbOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.AdbOptions, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.buildFeatures: void (kotlin.jvm.functions.Function1<? super BuildFeaturesT, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.buildTypes: void (org.gradle.api.Action<? super org.gradle.api.NamedDomainObjectContainer<BuildTypeT>>)
 com.android.build.api.dsl.CommonExtension.compileOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.CompileOptions, kotlin.Unit>)
-com.android.build.api.dsl.CommonExtension.compileSdkAddon: void (java.lang.String, java.lang.String, int)
 com.android.build.api.dsl.CommonExtension.composeOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.ComposeOptions, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.dataBinding: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.DataBinding, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.debug: void (org.gradle.api.NamedDomainObjectContainer<BuildTypeT>, kotlin.jvm.functions.Function1<? super BuildTypeT, kotlin.Unit>)
@@ -324,8 +322,6 @@ com.android.build.api.dsl.CommonExtension.getBuildFeatures: BuildFeaturesT ()
 com.android.build.api.dsl.CommonExtension.getBuildToolsVersion: java.lang.String ()
 com.android.build.api.dsl.CommonExtension.getBuildTypes: org.gradle.api.NamedDomainObjectContainer<BuildTypeT> ()
 com.android.build.api.dsl.CommonExtension.getCompileOptions: com.android.build.api.dsl.CompileOptions ()
-com.android.build.api.dsl.CommonExtension.getCompileSdk: java.lang.Integer ()
-com.android.build.api.dsl.CommonExtension.getCompileSdkPreview: java.lang.String ()
 com.android.build.api.dsl.CommonExtension.getComposeOptions: com.android.build.api.dsl.ComposeOptions ()
 com.android.build.api.dsl.CommonExtension.getDataBinding: com.android.build.api.dsl.DataBinding ()
 com.android.build.api.dsl.CommonExtension.getDefaultConfig: DefaultConfigT ()
@@ -333,7 +329,6 @@ com.android.build.api.dsl.CommonExtension.getExternalNativeBuild: com.android.bu
 com.android.build.api.dsl.CommonExtension.getFlavorDimensions: java.util.List<java.lang.String> ()
 com.android.build.api.dsl.CommonExtension.getJacoco: com.android.build.api.dsl.JacocoOptions ()
 com.android.build.api.dsl.CommonExtension.getLintOptions: com.android.build.api.dsl.LintOptions ()
-com.android.build.api.dsl.CommonExtension.getNamespace: java.lang.String ()
 com.android.build.api.dsl.CommonExtension.getNdkPath: java.lang.String ()
 com.android.build.api.dsl.CommonExtension.getNdkVersion: java.lang.String ()
 com.android.build.api.dsl.CommonExtension.getPackagingOptions: com.android.build.api.dsl.PackagingOptions ()
@@ -350,9 +345,6 @@ com.android.build.api.dsl.CommonExtension.packagingOptions: void (kotlin.jvm.fun
 com.android.build.api.dsl.CommonExtension.productFlavors: void (org.gradle.api.Action<org.gradle.api.NamedDomainObjectContainer<ProductFlavorT>>)
 com.android.build.api.dsl.CommonExtension.release: void (org.gradle.api.NamedDomainObjectContainer<BuildTypeT>, kotlin.jvm.functions.Function1<? super BuildTypeT, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.setBuildToolsVersion: void (java.lang.String)
-com.android.build.api.dsl.CommonExtension.setCompileSdk: void (java.lang.Integer)
-com.android.build.api.dsl.CommonExtension.setCompileSdkPreview: void (java.lang.String)
-com.android.build.api.dsl.CommonExtension.setNamespace: void (java.lang.String)
 com.android.build.api.dsl.CommonExtension.setNdkPath: void (java.lang.String)
 com.android.build.api.dsl.CommonExtension.setNdkVersion: void (java.lang.String)
 com.android.build.api.dsl.CommonExtension.setResourcePrefix: void (java.lang.String)
@@ -836,7 +828,7 @@ com.android.build.api.variant.ApkPackaging.dex: void (kotlin.jvm.functions.Funct
 com.android.build.api.variant.ApkPackaging.getDex: com.android.build.api.variant.DexPackagingOptions ()
 com.android.build.api.variant.ApkPackaging.getJniLibs: com.android.build.api.variant.JniLibsApkPackaging ()
 com.android.build.api.variant.ApkPackaging.jniLibs: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.JniLibsApkPackaging, kotlin.Unit>)
-com.android.build.api.variant.ApplicationVariant implements com.android.build.api.variant.Variant
+com.android.build.api.variant.ApplicationVariant implements com.android.build.api.variant.Variant, com.android.build.api.variant.HasAndroidTest
 com.android.build.api.variant.ApplicationVariant.aaptOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.Aapt, kotlin.Unit>)
 com.android.build.api.variant.ApplicationVariant.getAapt: com.android.build.api.variant.Aapt ()
 com.android.build.api.variant.ApplicationVariant.getApplicationId: org.gradle.api.provider.Property<java.lang.String> ()
@@ -846,7 +838,7 @@ com.android.build.api.variant.ApplicationVariant.getPackaging: com.android.build
 com.android.build.api.variant.ApplicationVariant.getSigningConfig: com.android.build.api.variant.SigningConfig ()
 com.android.build.api.variant.ApplicationVariant.packaging: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.ApkPackaging, kotlin.Unit>)
 com.android.build.api.variant.ApplicationVariant.signingConfig: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.SigningConfig, kotlin.Unit>)
-com.android.build.api.variant.ApplicationVariantBuilder implements com.android.build.api.variant.VariantBuilder
+com.android.build.api.variant.ApplicationVariantBuilder implements com.android.build.api.variant.VariantBuilder, com.android.build.api.variant.HasAndroidTestBuilder
 com.android.build.api.variant.ApplicationVariantBuilder.dependenciesInfo: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.DependenciesInfo, kotlin.Unit>)
 com.android.build.api.variant.ApplicationVariantBuilder.getDebuggable: boolean ()
 com.android.build.api.variant.ApplicationVariantBuilder.getDependenciesInfo: com.android.build.api.dsl.DependenciesInfo ()
@@ -884,13 +876,13 @@ com.android.build.api.variant.DependenciesInfo.getIncludeInApk: boolean ()
 com.android.build.api.variant.DependenciesInfo.getIncludeInBundle: boolean ()
 com.android.build.api.variant.DexPackagingOptions
 com.android.build.api.variant.DexPackagingOptions.getUseLegacyPackaging: org.gradle.api.provider.Property<java.lang.Boolean> ()
-com.android.build.api.variant.DynamicFeatureVariant implements com.android.build.api.variant.Variant
+com.android.build.api.variant.DynamicFeatureVariant implements com.android.build.api.variant.Variant, com.android.build.api.variant.HasAndroidTest
 com.android.build.api.variant.DynamicFeatureVariant.aaptOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.Aapt, kotlin.Unit>)
 com.android.build.api.variant.DynamicFeatureVariant.getAapt: com.android.build.api.variant.Aapt ()
 com.android.build.api.variant.DynamicFeatureVariant.getApplicationId: org.gradle.api.provider.Provider<java.lang.String> ()
 com.android.build.api.variant.DynamicFeatureVariant.getPackaging: com.android.build.api.variant.ApkPackaging ()
 com.android.build.api.variant.DynamicFeatureVariant.packaging: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.ApkPackaging, kotlin.Unit>)
-com.android.build.api.variant.DynamicFeatureVariantBuilder implements com.android.build.api.variant.VariantBuilder
+com.android.build.api.variant.DynamicFeatureVariantBuilder implements com.android.build.api.variant.VariantBuilder, com.android.build.api.variant.HasAndroidTestBuilder
 com.android.build.api.variant.ExternalCmake implements com.android.build.api.variant.ExternalNativeGenericOptions
 com.android.build.api.variant.ExternalNativeGenericOptions
 com.android.build.api.variant.ExternalNativeGenericOptions.getAbiFilters: org.gradle.api.provider.SetProperty<java.lang.String> ()
@@ -913,6 +905,9 @@ com.android.build.api.variant.FilterConfiguration.getFilterType: com.android.bui
 com.android.build.api.variant.FilterConfiguration.getIdentifier: java.lang.String ()
 com.android.build.api.variant.FilterConfiguration.hashCode: int ()
 com.android.build.api.variant.FilterConfiguration.toString: java.lang.String ()
+com.android.build.api.variant.HasAndroidTestBuilder
+com.android.build.api.variant.HasAndroidTestBuilder.getAndroidTestEnabled: boolean ()
+com.android.build.api.variant.HasAndroidTestBuilder.setAndroidTestEnabled: void (boolean)
 com.android.build.api.variant.JniLibsApkPackaging implements com.android.build.api.variant.JniLibsPackaging
 com.android.build.api.variant.JniLibsApkPackaging.getUseLegacyPackaging: org.gradle.api.provider.Property<java.lang.Boolean> ()
 com.android.build.api.variant.JniLibsPackaging
@@ -921,11 +916,11 @@ com.android.build.api.variant.JniLibsPackaging.getKeepDebugSymbols: org.gradle.a
 com.android.build.api.variant.JniLibsPackaging.getPickFirsts: org.gradle.api.provider.SetProperty<java.lang.String> ()
 com.android.build.api.variant.LibraryPackaging implements com.android.build.api.variant.Packaging
 com.android.build.api.variant.LibraryPackaging.jniLibs: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.JniLibsPackaging, kotlin.Unit>)
-com.android.build.api.variant.LibraryVariant implements com.android.build.api.variant.Variant
+com.android.build.api.variant.LibraryVariant implements com.android.build.api.variant.Variant, com.android.build.api.variant.HasAndroidTest
 com.android.build.api.variant.LibraryVariant.getApplicationId: org.gradle.api.provider.Provider<java.lang.String> ()
 com.android.build.api.variant.LibraryVariant.getPackaging: com.android.build.api.variant.LibraryPackaging ()
 com.android.build.api.variant.LibraryVariant.packaging: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.LibraryPackaging, kotlin.Unit>)
-com.android.build.api.variant.LibraryVariantBuilder implements com.android.build.api.variant.VariantBuilder
+com.android.build.api.variant.LibraryVariantBuilder implements com.android.build.api.variant.VariantBuilder, com.android.build.api.variant.HasAndroidTestBuilder
 com.android.build.api.variant.Packaging
 com.android.build.api.variant.Packaging.getJniLibs: com.android.build.api.variant.JniLibsPackaging ()
 com.android.build.api.variant.Packaging.getResources: com.android.build.api.variant.ResourcesPackaging ()
@@ -962,15 +957,18 @@ com.android.build.api.variant.Variant.getExternalNdkBuild: com.android.build.api
 com.android.build.api.variant.Variant.getManifestPlaceholders: org.gradle.api.provider.MapProperty<java.lang.String, java.lang.String> ()
 com.android.build.api.variant.Variant.getNamespace: org.gradle.api.provider.Provider<java.lang.String> ()
 com.android.build.api.variant.Variant.getPackaging: com.android.build.api.variant.Packaging ()
+com.android.build.api.variant.Variant.getUnitTest: com.android.build.api.component.UnitTest ()
 com.android.build.api.variant.VariantBuilder implements com.android.build.api.component.ComponentBuilder, com.android.build.api.component.ActionableComponentObject
 com.android.build.api.variant.VariantBuilder.getMaxSdkVersion: java.lang.Integer ()
 com.android.build.api.variant.VariantBuilder.getMinSdkVersion: com.android.build.api.variant.AndroidVersion ()
 com.android.build.api.variant.VariantBuilder.getRenderscriptTargetApi: int ()
 com.android.build.api.variant.VariantBuilder.getTargetSdkVersion: com.android.build.api.variant.AndroidVersion ()
+com.android.build.api.variant.VariantBuilder.getUnitTestEnabled: boolean ()
 com.android.build.api.variant.VariantBuilder.setMaxSdkVersion: void (java.lang.Integer)
 com.android.build.api.variant.VariantBuilder.setMinSdkVersion: void (com.android.build.api.variant.AndroidVersion)
 com.android.build.api.variant.VariantBuilder.setRenderscriptTargetApi: void (int)
 com.android.build.api.variant.VariantBuilder.setTargetSdkVersion: void (com.android.build.api.variant.AndroidVersion)
+com.android.build.api.variant.VariantBuilder.setUnitTestEnabled: void (boolean)
 com.android.build.api.variant.VariantInfo
 com.android.build.api.variant.VariantInfo.getBuildTypeName: java.lang.String ()
 com.android.build.api.variant.VariantInfo.getFlavorNames: com.google.common.collect.ImmutableList<java.lang.String> ()

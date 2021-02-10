@@ -17,24 +17,38 @@ package com.android.ide.common.gradle.model.impl
 
 import com.android.ide.common.gradle.model.IdeAndroidArtifact
 import com.android.ide.common.gradle.model.IdeApiVersion
+import com.android.ide.common.gradle.model.IdeClassField
 import com.android.ide.common.gradle.model.IdeJavaArtifact
-import com.android.ide.common.gradle.model.IdeProductFlavor
 import com.android.ide.common.gradle.model.IdeTestedTargetVariant
 import com.android.ide.common.gradle.model.IdeVariant
+import java.io.File
 import java.io.Serializable
 
 data class IdeVariantImpl(
-  override val name: String,
-  override val displayName: String,
-  override val mainArtifact: IdeAndroidArtifact,
-  override val unitTestArtifact: IdeJavaArtifact?,
-  override val androidTestArtifact: IdeAndroidArtifact?,
-  override val buildType: String,
-  override val productFlavors: List<String>,
-  override val mergedFlavor: IdeProductFlavor,
-  override val minSdkVersion: IdeApiVersion?,
-  override val targetSdkVersion: IdeApiVersion?,
-  override val maxSdkVersion: Int?,
-  override val testedTargetVariants: List<IdeTestedTargetVariant>,
-  override val instantAppCompatible: Boolean
+    override val name: String,
+    override val displayName: String,
+    override val mainArtifact: IdeAndroidArtifact,
+    override val unitTestArtifact: IdeJavaArtifact?,
+    override val androidTestArtifact: IdeAndroidArtifact?,
+    override val buildType: String,
+    override val productFlavors: List<String>,
+    override val minSdkVersion: IdeApiVersion?,
+    override val targetSdkVersion: IdeApiVersion?,
+    override val maxSdkVersion: Int?,
+    override val versionCode: Int?,
+    override val versionNameWithSuffix: String?,
+    override val versionNameSuffix: String?,
+    override val instantAppCompatible: Boolean,
+    override val vectorDrawablesUseSupportLibrary: Boolean,
+    override val resourceConfigurations: Collection<String>,
+    override val resValues: Map<String, IdeClassField>,
+    override val proguardFiles: Collection<File>,
+    override val consumerProguardFiles: Collection<File>,
+    override val manifestPlaceholders: Map<String, String>,
+    override val testApplicationId: String?,
+    override val testInstrumentationRunner: String?,
+    override val testInstrumentationRunnerArguments: Map<String, String>,
+    override val testedTargetVariants: List<IdeTestedTargetVariant>,
+    // TODO(b/178961768); Review usages and replace with the correct alternatives or rename.
+    override val deprecatedPreMergedApplicationId: String?,
 ) : IdeVariant, Serializable

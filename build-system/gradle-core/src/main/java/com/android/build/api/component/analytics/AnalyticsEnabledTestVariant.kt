@@ -16,6 +16,7 @@
 
 package com.android.build.api.component.analytics
 
+import com.android.build.api.component.UnitTest
 import com.android.build.api.variant.Aapt
 import com.android.build.api.variant.ApkPackaging
 import com.android.build.api.variant.TestVariant
@@ -106,4 +107,6 @@ open class AnalyticsEnabledTestVariant @Inject constructor(
             VariantPropertiesMethodType.PACKAGING_OPTIONS_ACTION_VALUE
         action.invoke(userVisiblePackagingOptions)
     }
+
+    override val unitTest: UnitTest? = null
 }

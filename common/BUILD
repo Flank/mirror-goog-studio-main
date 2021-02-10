@@ -16,14 +16,10 @@ iml_module(
     ],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
-    exports = [
-        "//tools/adt/idea/.idea/libraries:Guava",
-        "//tools/base/annotations:studio.android.sdktools.android-annotations",
-    ],
+    exports = ["//tools/base/annotations:studio.android.sdktools.android-annotations"],
     # do not sort: must match IML order
     deps = [
         "//prebuilts/studio/intellij-sdk:studio-sdk",
-        "//tools/adt/idea/.idea/libraries:Guava",
         "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
         "//tools/adt/idea/.idea/libraries:kotlin-stdlib-jdk8",
     ],
@@ -102,14 +98,10 @@ iml_module(
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
-    exports = [
-        "//tools/adt/idea/.idea/libraries:Guava",
-        "//tools/base/annotations:studio.android.sdktools.android-annotations",
-    ],
+    exports = ["//tools/base/annotations:studio.android.sdktools.android-annotations"],
     # do not sort: must match IML order
     deps = [
         "//prebuilts/studio/intellij-sdk:studio-sdk",
-        "//tools/adt/idea/.idea/libraries:Guava",
         "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
         "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
         "//tools/adt/idea/.idea/libraries:truth[test]",
@@ -121,8 +113,8 @@ iml_module(
 kotlin_library(
     name = "tools.fixtures",
     srcs = glob([
-        "src/testfixtures/java/**/*.kt",
-        "src/testfixtures/java/**/*.java",
+        "src/testFixtures/java/**/*.kt",
+        "src/testFixtures/java/**/*.java",
     ]),
     resources = glob(["src/testFixtures/resources/**"]),
     visibility = ["//visibility:public"],  # contains com.android.repository.testframework
@@ -130,5 +122,22 @@ kotlin_library(
         ":tools.common",
         "//tools/base/annotations",
         "//tools/base/third_party:com.google.guava_guava",
+    ],
+)
+
+# managed by go/iml_to_build
+iml_module(
+    name = "studio.android.sdktools.common.testfixtures",
+    srcs = ["src/testFixtures/java"],
+    iml_files = ["android.sdktools.common.testfixtures.iml"],
+    visibility = ["//visibility:public"],
+    # do not sort: must match IML order
+    exports = ["//tools/base/annotations:studio.android.sdktools.android-annotations"],
+    # do not sort: must match IML order
+    deps = [
+        "//prebuilts/studio/intellij-sdk:studio-sdk",
+        "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
+        "//tools/base/common:studio.android.sdktools.common[module]",
+        "//tools/adt/idea/.idea/libraries:kotlin-stdlib-jdk8",
     ],
 )

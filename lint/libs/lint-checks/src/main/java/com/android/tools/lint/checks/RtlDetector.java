@@ -330,7 +330,6 @@ public class RtlDetector extends LayoutDetector implements SourceCodeScanner {
         }
     }
 
-    @VisibleForTesting
     static String convertNewToOld(String attribute) {
         if (attribute.contains(START)) {
             return attribute.replace(START, LEFT);

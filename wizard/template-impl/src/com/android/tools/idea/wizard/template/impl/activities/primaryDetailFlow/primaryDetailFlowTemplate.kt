@@ -60,15 +60,6 @@ val primaryDetailFlowTemplate
       constraints = listOf(NONEMPTY)
     }
 
-
-    val activityTitle = stringParameter {
-      name = "Title"
-      default = "Items"
-      visible = { false }
-      constraints = listOf(NONEMPTY)
-      suggest = { objectKindPlural.value }
-    }
-
     val isLauncher = booleanParameter {
       name = "Launcher Activity"
       default = false
@@ -109,7 +100,6 @@ val primaryDetailFlowTemplate
       CheckBoxWidget(isLauncher),
       PackageNameWidget(packageName),
       LanguageWidget(),
-      TextFieldWidget(activityTitle),
       TextFieldWidget(mainNavGraphFile),
       TextFieldWidget(childNavGraphFile),
       TextFieldWidget(detailNameFragmentLayout)

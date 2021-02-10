@@ -360,7 +360,7 @@ class GradleModelMocker @JvmOverloads constructor(
             val variantName = buildVariantName(productFlavors, buildType)
 
             val generated = File(projectDir, "generated")
-            val mergedFlavor = merge(defaultConfig, productFlavors, buildType)
+            val mergedFlavorsAndBuildType = merge(defaultConfig, productFlavors, buildType)
             variants.add(
                 IdeVariantImpl(
                     name = variantName,
@@ -368,7 +368,7 @@ class GradleModelMocker @JvmOverloads constructor(
                     mainArtifact = createAndroidArtifact(ARTIFACT_NAME_MAIN)
                         .copy(
                             name = variantName,
-                            applicationId = mergedFlavor.applicationId!!,
+                            applicationId = mergedFlavorsAndBuildType.applicationId!!,
                             outputs = outputs,
                             level2Dependencies = dependencies,
                             classesFolder = File(projectDir, "build/intermediates/javac/$variantName/classes"),
@@ -395,18 +395,31 @@ class GradleModelMocker @JvmOverloads constructor(
                         ),
                     androidTestArtifact = createAndroidArtifact(ARTIFACT_NAME_ANDROID_TEST)
                         .copy(
-                            applicationId = mergedFlavor.applicationId!!,
+                            applicationId = mergedFlavorsAndBuildType.applicationId!!,
                             level2Dependencies = androidTestDependencies,
                             classesFolder = File(projectDir, "instrumentation-classes"),
                         ),
                     buildType = buildType.name,
                     productFlavors = productFlavors.map { it.name },
-                    mergedFlavor = mergedFlavor,
-                    minSdkVersion = mergedFlavor.minSdkVersion,
-                    targetSdkVersion = mergedFlavor.targetSdkVersion,
-                    maxSdkVersion = mergedFlavor.maxSdkVersion,
-                    testedTargetVariants = emptyList(),
+                    minSdkVersion = mergedFlavorsAndBuildType.minSdkVersion,
+                    targetSdkVersion = mergedFlavorsAndBuildType.targetSdkVersion,
+                    maxSdkVersion = mergedFlavorsAndBuildType.maxSdkVersion,
                     instantAppCompatible = false,
+                    vectorDrawablesUseSupportLibrary = mergedFlavorsAndBuildType.vectorDrawables?.useSupportLibrary ?: false,
+                    resourceConfigurations = mergedFlavorsAndBuildType.resourceConfigurations,
+                    resValues = mergedFlavorsAndBuildType.resValues,
+                    proguardFiles = mergedFlavorsAndBuildType.proguardFiles,
+                    consumerProguardFiles = mergedFlavorsAndBuildType.consumerProguardFiles,
+                    manifestPlaceholders = mergedFlavorsAndBuildType.manifestPlaceholders,
+                    testApplicationId = mergedFlavorsAndBuildType.testApplicationId,
+                    testInstrumentationRunner = mergedFlavorsAndBuildType.testInstrumentationRunner,
+                    testInstrumentationRunnerArguments = mergedFlavorsAndBuildType.testInstrumentationRunnerArguments,
+                    testedTargetVariants = emptyList(),
+                    versionCode = mergedFlavorsAndBuildType.versionCode,
+                    versionNameWithSuffix =
+                        mergedFlavorsAndBuildType.versionName?.let { it + mergedFlavorsAndBuildType.versionNameSuffix.orEmpty() },
+                    versionNameSuffix = mergedFlavorsAndBuildType.versionNameSuffix,
+                    deprecatedPreMergedApplicationId = mergedFlavorsAndBuildType.applicationId
                 )
             )
         }
@@ -448,10 +461,18 @@ class GradleModelMocker @JvmOverloads constructor(
         fun <T> combineValues(
             combine: (T?, T) -> T,
             f: IdeProductFlavorImpl.() -> T,
-            b: (IdeBuildTypeImpl.() -> T)? = null
+            b: (IdeBuildTypeImpl.() -> T)? = null,
+            reverseFlavors: Boolean = true
         ): T {
             return combine(
-                productFlavors.map { it.f() } // second
+                productFlavors
+                    .let {
+                        when (reverseFlavors) {
+                            true -> it // combineFunctions are designed to handle this by default.
+                            false -> it.reversed() // special case for suffix like properties.
+                        }
+                    }
+                    .map { it.f() } // second
                     .fold(
                         if (b != null) buildType.b() else null, // first
                         combine
@@ -460,32 +481,34 @@ class GradleModelMocker @JvmOverloads constructor(
             )
         }
 
-        fun <T> combineNullable(u: T?, v: T) = u ?: v
+        fun <T> combineNullables(u: T?, v: T) = u ?: v
+        fun combineSuffixes(u: String?, v: String?) = if (u != null || v != null) u.orEmpty() + v.orEmpty() else null
         fun <T> combineSets(u: Collection<T>?, v: Collection<T>) = u.orEmpty().toSet() + v
         fun <T> combineMaps(u: Map<String, T>?, v: Map<String, T>) = v + (u ?: emptyMap())
 
-        return defaultConfig.copy(
+        return IdeProductFlavorImpl(
+            dimension = null,
             name = buildVariantName(productFlavors, buildType),
-            applicationIdSuffix = combineValues(::combineNullable, { applicationIdSuffix }, { applicationIdSuffix }),
-            versionNameSuffix = combineValues(::combineNullable, { versionNameSuffix }, { versionNameSuffix }),
+            applicationIdSuffix = combineValues(::combineSuffixes, { applicationIdSuffix }, { applicationIdSuffix }, reverseFlavors = false),
+            versionNameSuffix = combineValues(::combineSuffixes, { versionNameSuffix }, { versionNameSuffix }, reverseFlavors = false),
             resValues = combineValues(::combineMaps, { resValues }, { resValues }),
             proguardFiles = combineValues(::combineSets, { proguardFiles }, { proguardFiles }),
             consumerProguardFiles = combineValues(::combineSets, { consumerProguardFiles }, { consumerProguardFiles }),
             manifestPlaceholders = combineValues(::combineMaps, { manifestPlaceholders }, { manifestPlaceholders }),
-            multiDexEnabled = combineValues(::combineNullable, { multiDexEnabled }, { multiDexEnabled }),
-            applicationId = combineValues(::combineNullable, { applicationId }, { null }),
-            versionCode = combineValues(::combineNullable, { versionCode }),
-            versionName = combineValues(::combineNullable, { versionName }),
-            minSdkVersion = combineValues(::combineNullable, { minSdkVersion }),
-            targetSdkVersion = combineValues(::combineNullable, { targetSdkVersion }),
-            maxSdkVersion = combineValues(::combineNullable, { maxSdkVersion }),
-            testApplicationId = combineValues(::combineNullable, { testApplicationId }),
-            testInstrumentationRunner = combineValues(::combineNullable, { testInstrumentationRunner }),
+            multiDexEnabled = combineValues(::combineNullables, { multiDexEnabled }, { multiDexEnabled }),
+            applicationId = combineValues(::combineNullables, { applicationId }, { null }),
+            versionCode = combineValues(::combineNullables, { versionCode }),
+            versionName = combineValues(::combineNullables, { versionName }),
+            minSdkVersion = combineValues(::combineNullables, { minSdkVersion }),
+            targetSdkVersion = combineValues(::combineNullables, { targetSdkVersion }),
+            maxSdkVersion = combineValues(::combineNullables, { maxSdkVersion }),
+            testApplicationId = combineValues(::combineNullables, { testApplicationId }),
+            testInstrumentationRunner = combineValues(::combineNullables, { testInstrumentationRunner }),
             testInstrumentationRunnerArguments = combineValues(::combineMaps, { testInstrumentationRunnerArguments }),
-            testHandleProfiling = combineValues(::combineNullable, { testHandleProfiling }),
-            testFunctionalTest = combineValues(::combineNullable, { testFunctionalTest }),
+            testHandleProfiling = combineValues(::combineNullables, { testHandleProfiling }),
+            testFunctionalTest = combineValues(::combineNullables, { testFunctionalTest }),
             resourceConfigurations = combineValues(::combineSets, { resourceConfigurations }),
-            vectorDrawables = combineValues(::combineNullable, { vectorDrawables }),
+            vectorDrawables = combineValues(::combineNullables, { vectorDrawables }),
         )
     }
 

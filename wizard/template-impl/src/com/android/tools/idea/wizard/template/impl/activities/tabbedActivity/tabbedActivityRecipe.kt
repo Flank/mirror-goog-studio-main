@@ -60,7 +60,7 @@ fun RecipeExecutor.tabbedActivityRecipe(
   addViewBindingSupport(moduleData.viewBindingSupport, true)
 
   generateManifest(
-    moduleData, activityClass, activityClass, packageName, isLauncher, true,
+    moduleData, activityClass, packageName, isLauncher, true,
     generateActivityTitle = true
   )
   generateNoActionBarStyles(moduleData.baseFeature?.resDir, resOut, moduleData.themesData)

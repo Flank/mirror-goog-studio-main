@@ -24,11 +24,13 @@ import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_DRIVE
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_TEST_PLUGIN
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_TEST_DEVICE_INFO_PLUGIN
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_TEST_PLUGIN_HOST_RETENTION
+import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_TEST_PLUGIN_RESULT_LISTENER_GRADLE
 import com.android.builder.testing.api.DeviceConnector
 import com.android.sdklib.BuildToolInfo
 import com.android.tools.utp.plugins.deviceprovider.gradle.proto.GradleManagedAndroidDeviceProviderProto
 import com.android.tools.utp.plugins.host.icebox.proto.IceboxPluginProto
 import com.android.tools.utp.plugins.host.icebox.proto.IceboxPluginProto.IceboxPlugin
+import com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidTestResultListenerConfigProto.GradleAndroidTestResultListenerConfig
 import com.google.protobuf.Any
 import com.google.testing.platform.proto.api.config.AndroidInstrumentationDriverProto
 import com.google.testing.platform.proto.api.config.DeviceProto
@@ -62,6 +64,9 @@ private const val DEFAULT_ADB_SERVER_PORT = 5037
 
 private const val TEST_RUNNER_LOG_FILE_NAME = "test-results.log"
 
+// Relative path to the UTP outputDir for test log directory.
+const val TEST_LOG_DIR = "testlog"
+
 /**
  * A factory class to construct UTP runner and server configuration protos.
  */
@@ -80,9 +85,9 @@ class UtpConfigFactory {
         versionedSdkLoader: SdkComponentsBuildService.VersionedSdkLoader,
         outputDir: File,
         tmpDir: File,
-        testLogDir: File,
         retentionConfig: RetentionConfig,
-        useOrchestrator: Boolean
+        useOrchestrator: Boolean,
+        testResultListenerServerPort: Int
     ): RunnerConfigProto.RunnerConfig {
         return RunnerConfigProto.RunnerConfig.newBuilder().apply {
             val grpcInfo = findGrpcInfo(device.serialNumber)
@@ -97,13 +102,23 @@ class UtpConfigFactory {
                     versionedSdkLoader,
                     outputDir,
                     tmpDir,
-                    testLogDir,
                     retentionConfig,
                     useOrchestrator
                 )
             )
             singleDeviceExecutor = createSingleDeviceExecutor(device.serialNumber)
+            addTestResultListener(
+                    createTestResultListener(utpDependencies, testResultListenerServerPort))
         }.build()
+    }
+
+    fun createTestResultListener(
+            utpDependencies: UtpDependencies,
+            testResultListenerServerPort: Int): ExtensionProto.Extension {
+        val config = Any.pack(GradleAndroidTestResultListenerConfig.newBuilder().apply {
+            resultListenerServerPort = testResultListenerServerPort
+        }.build())
+        return ANDROID_TEST_PLUGIN_RESULT_LISTENER_GRADLE.toExtensionProto(utpDependencies, config)
     }
 
     /**
@@ -120,7 +135,6 @@ class UtpConfigFactory {
         versionedSdkLoader: SdkComponentsBuildService.VersionedSdkLoader,
         outputDir: File,
         tmpDir: File,
-        testLogDir: File,
         retentionConfig: RetentionConfig,
         useOrchestrator: Boolean
     ): RunnerConfigProto.RunnerConfig {
@@ -129,7 +143,7 @@ class UtpConfigFactory {
             addTestFixture(
                 createTestFixture(
                     null, null, apks, testData, utpDependencies, versionedSdkLoader,
-                    outputDir, tmpDir, testLogDir, retentionConfig, useOrchestrator
+                    outputDir, tmpDir, retentionConfig, useOrchestrator
                 )
             )
             singleDeviceExecutor = createSingleDeviceExecutor(device.id)
@@ -201,6 +215,7 @@ class UtpConfigFactory {
                                         emulatorPath = Any.pack(PathProto.Path.newBuilder().apply {
                                             path = deviceInfo.emulatorPath
                                         }.build())
+                                        gradleDslDeviceName = deviceInfo.deviceName
                                     }
                                     adbServerPort = DEFAULT_ADB_SERVER_PORT
                                 }.build())
@@ -216,7 +231,6 @@ class UtpConfigFactory {
         versionedSdkLoader: SdkComponentsBuildService.VersionedSdkLoader,
         outputDir: File,
         tmpDir: File,
-        testLogDir: File,
         retentionConfig: RetentionConfig,
         useOrchestrator: Boolean
     ): FixtureProto.TestFixture {
@@ -237,7 +251,6 @@ class UtpConfigFactory {
             environment = createEnvironment(
                 outputDir,
                 tmpDir,
-                testLogDir,
                 versionedSdkLoader
             )
 
@@ -301,7 +314,6 @@ class UtpConfigFactory {
     private fun createEnvironment(
         outputDir: File,
         tmpDir: File,
-        testLogDir: File,
         versionedSdkLoader: SdkComponentsBuildService.VersionedSdkLoader
     ): EnvironmentProto.Environment {
         return EnvironmentProto.Environment.newBuilder().apply {
@@ -328,7 +340,7 @@ class UtpConfigFactory {
                             .getPath(BuildToolInfo.PathId.DEXDUMP)
                     }
                     testLogDirBuilder.apply {
-                        path = testLogDir.path // Must be relative path to outputDir
+                        path = TEST_LOG_DIR // Must be relative path to outputDir
                     }
                     testRunLogBuilder.apply {
                         path = TEST_RUNNER_LOG_FILE_NAME

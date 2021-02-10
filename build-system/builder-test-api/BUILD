@@ -15,7 +15,6 @@ iml_module(
     deps = [
         "//prebuilts/studio/intellij-sdk:studio-sdk",
         "//tools/base/ddmlib:studio.android.sdktools.ddmlib[module]",
-        "//tools/adt/idea/.idea/libraries:Guava",
         "//tools/adt/idea/.idea/libraries:kotlin-stdlib-jdk8",
     ],
 )

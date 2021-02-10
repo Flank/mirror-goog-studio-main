@@ -79,6 +79,14 @@ extern "C" void JNICALL Agent_LiveLiteralHelperClassFileLoadHook(
   std::replace(filename.begin(), filename.end(), '/', '.');
   std::string ll_helper_file = ll_dir + filename + ".dex";
 
+  // We don't to write the patched file if it already exists.
+  if (!IO::access(ll_helper_file, F_OK)) {
+    return;
+  }
+
+  // TODO: For better performance, we should move this write to the
+  // the Java worker thread. It knows what needs to be patched
+  // and it does it in a worker thread in the background.
   int fd = IO::creat(ll_helper_file.c_str(), S_IRUSR | S_IWUSR);
   if (fd == -1) {
     Log::E("Could not create %s", ll_dir.c_str());

@@ -18,6 +18,4 @@ package com.android.build.api.variant
 import org.gradle.api.Incubating
 
 @Incubating
-interface DynamicFeatureVariantBuilder : VariantBuilder {
-
-}
+interface DynamicFeatureVariantBuilder : VariantBuilder, HasAndroidTestBuilder

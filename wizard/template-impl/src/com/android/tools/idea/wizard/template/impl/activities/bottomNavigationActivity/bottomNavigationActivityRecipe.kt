@@ -37,7 +37,6 @@ import java.io.File
 fun RecipeExecutor.bottomNavigationActivityRecipe(
   moduleData: ModuleTemplateData,
   activityClass: String,
-  activityTitle: String,
   layoutName: String,
   packageName: String,
   navGraphName: String
@@ -62,7 +61,6 @@ fun RecipeExecutor.bottomNavigationActivityRecipe(
   generateManifest(
     moduleData,
     activityClass,
-    activityTitle,
     packageName,
     isLauncher,
     hasNoActionBar = false,

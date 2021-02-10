@@ -52,6 +52,7 @@ fun androidManifestXml(
         <meta-data android:name="com.google.android.wearable.standalone" android:value="true"/>
 
         <activity android:name="${packageName}.${activityClass}"
+            android:exported="true"
             $labelBlock
             >
             $intentFilterBlock

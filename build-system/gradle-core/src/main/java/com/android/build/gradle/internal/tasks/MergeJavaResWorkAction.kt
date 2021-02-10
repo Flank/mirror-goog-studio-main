@@ -15,8 +15,6 @@
  */
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.transform.QualifiedContent
-import com.android.build.api.transform.QualifiedContent.ContentType
 import com.android.build.api.transform.QualifiedContent.Scope.EXTERNAL_LIBRARIES
 import com.android.build.api.transform.QualifiedContent.Scope.PROJECT
 import com.android.build.api.transform.QualifiedContent.Scope.SUB_PROJECTS
@@ -38,28 +36,22 @@ import org.gradle.api.provider.SetProperty
 import java.io.File
 
 /**
- * [ProfileAwareWorkAction] to merge java resources, whether regular java resources or native libs
+ * [ProfileAwareWorkAction] to merge java resources
  */
 abstract class MergeJavaResWorkAction : ProfileAwareWorkAction<MergeJavaResWorkAction.Params>() {
     override fun run() {
         val isIncremental = parameters.incremental.get()
-        val outputFile = parameters.outputFile.asFile.orNull
-        val outputDirectory = parameters.outputDirectory.asFile.orNull
+        val outputFile = parameters.outputFile.get().asFile
         val incrementalStateFile = parameters.incrementalStateFile.asFile.get()
-        val output: File =
-            outputFile
-                ?: outputDirectory
-                ?: throw RuntimeException("outputFile and outputDir cannot both be null")
         if (!isIncremental) {
-            outputFile?.also { FileUtils.deleteIfExists(it) }
-            outputDirectory?.also { FileUtils.cleanOutputDir(it) }
+            FileUtils.deleteIfExists(outputFile)
             FileUtils.deleteIfExists(incrementalStateFile)
         }
         val cacheDir = parameters.cacheDir.asFile.get().also { FileUtils.mkdirs(it) }
 
         val zipCache = KeyedFileCache(cacheDir, KeyedFileCache::fileNameKey)
         val cacheUpdates = mutableListOf<Runnable>()
-        val contentMap = mutableMapOf<IncrementalFileMergerInput, QualifiedContent>()
+        val scopeMap = mutableMapOf<IncrementalFileMergerInput, ScopeType>()
 
         val inputMap = mutableMapOf<File, ScopeType>()
         parameters.projectJavaRes.forEach { inputMap[it] = PROJECT}
@@ -67,7 +59,6 @@ abstract class MergeJavaResWorkAction : ProfileAwareWorkAction<MergeJavaResWorkA
         parameters.externalLibJavaRes.forEach { inputMap[it] = EXTERNAL_LIBRARIES}
         parameters.featureJavaRes.forEach { inputMap[it] = InternalScope.FEATURES}
 
-        val contentType = parameters.contentType.get()
         val inputs =
             toInputs(
                 inputMap,
@@ -75,21 +66,19 @@ abstract class MergeJavaResWorkAction : ProfileAwareWorkAction<MergeJavaResWorkA
                 zipCache,
                 cacheUpdates,
                 !isIncremental,
-                contentType,
-                contentMap
+                scopeMap
             )
 
         val mergeJavaResDelegate =
             MergeJavaResourcesDelegate(
                 inputs,
-                output,
-                contentMap,
+                outputFile,
+                scopeMap,
                 ParsedPackagingOptions(
                     parameters.excludes.get(),
                     parameters.pickFirsts.get(),
                     parameters.merges.get()
                 ),
-                contentType,
                 incrementalStateFile,
                 isIncremental,
                 parameters.noCompress.get()
@@ -104,12 +93,10 @@ abstract class MergeJavaResWorkAction : ProfileAwareWorkAction<MergeJavaResWorkA
         abstract val externalLibJavaRes: ConfigurableFileCollection
         abstract val featureJavaRes: ConfigurableFileCollection
         abstract val outputFile: RegularFileProperty
-        abstract val outputDirectory: DirectoryProperty
         abstract val incrementalStateFile: RegularFileProperty
         abstract val incremental: Property<Boolean>
         abstract val cacheDir: DirectoryProperty
         abstract val changedInputs: MapProperty<File, FileStatus>
-        abstract val contentType: Property<ContentType>
         abstract val noCompress: ListProperty<String>
         abstract val excludes: SetProperty<String>
         abstract val pickFirsts: SetProperty<String>

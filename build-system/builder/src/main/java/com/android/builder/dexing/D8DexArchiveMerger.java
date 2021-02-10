@@ -29,8 +29,10 @@ import com.android.tools.r8.D8Command;
 import com.android.tools.r8.Diagnostic;
 import com.android.tools.r8.OutputMode;
 import com.android.tools.r8.errors.DuplicateTypesDiagnostic;
+import com.android.tools.r8.origin.Origin;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ForkJoinPool;
@@ -68,7 +70,11 @@ final class D8DexArchiveMerger implements DexArchiveMerger {
     public void mergeDexArchives(
             @NonNull List<DexArchiveEntry> dexArchiveEntries,
             @NonNull Path outputDir,
-            @Nullable Path mainDexClasses)
+            @Nullable List<Path> mainDexRulesFiles,
+            @Nullable List<String> mainDexRules,
+            @Nullable Path userMultidexKeepFile,
+            @Nullable Collection<Path> libraryFiles,
+            @Nullable Path mainDexListOutput)
             throws DexArchiveMergerException {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.log(
@@ -100,9 +106,26 @@ final class D8DexArchiveMerger implements DexArchiveMerger {
                     D8DiagnosticsHandler.getOrigin(dexArchiveEntry));
         }
         try {
-            if (mainDexClasses != null) {
-                builder.addMainDexListFiles(mainDexClasses);
+            // Tracing for legacy multi dex is enabled by setting mainDexRules or mainDexRulesFiles
+            if (mainDexRules != null) {
+                builder.addMainDexRules(mainDexRules, Origin.unknown());
             }
+            if (mainDexRulesFiles != null) {
+                builder.addMainDexRulesFiles(mainDexRulesFiles);
+            }
+            // D8 combines the main dex list specified by the user with the main dex list generated
+            // from tracing, uses the result to merge dex files and writes it to
+            // mainDexListOutputPath.
+            if (userMultidexKeepFile != null) {
+                builder.addMainDexListFiles(userMultidexKeepFile);
+            }
+            if (libraryFiles != null) {
+                builder.addLibraryFiles(libraryFiles);
+            }
+            if (mainDexListOutput != null) {
+                builder.setMainDexListOutputPath(mainDexListOutput);
+            }
+
             builder.setMinApiLevel(minSdkVersion)
                     .setMode(compilationMode)
                     .setOutput(outputDir, OutputMode.DexIndexed)

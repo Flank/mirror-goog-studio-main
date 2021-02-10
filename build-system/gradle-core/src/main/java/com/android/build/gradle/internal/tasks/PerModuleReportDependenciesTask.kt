@@ -238,8 +238,7 @@ abstract class PerModuleReportDependenciesTask @Inject constructor(objectFactory
             task.runtimeClasspathArtifacts = creationConfig.variantDependencies.getArtifactCollection(
                 AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                 AndroidArtifacts.ArtifactScope.EXTERNAL,
-                // Normally we would query for PROCESSED_JAR, but JAR is probably sufficient here
-                // since this task is interested in only the meta data of the jar files.
+                // Query for JAR instead of PROCESSED_JAR as this task works with unprocessed jars
                 AndroidArtifacts.ArtifactType.JAR
             ).artifactFiles
 

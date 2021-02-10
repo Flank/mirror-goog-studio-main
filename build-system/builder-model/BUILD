@@ -28,7 +28,6 @@ iml_module(
         "//prebuilts/studio/intellij-sdk:studio-sdk",
         "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
         "//tools/adt/idea/.idea/libraries:kotlin-stdlib-jdk8",
-        "//tools/adt/idea/.idea/libraries:Guava[test]",
         "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
     ],
 )

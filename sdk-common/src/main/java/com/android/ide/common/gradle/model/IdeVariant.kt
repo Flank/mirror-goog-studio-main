@@ -15,6 +15,8 @@
  */
 package com.android.ide.common.gradle.model
 
+import java.io.File
+
 interface IdeVariantHeader {
   val name: String
   val buildType: String
@@ -27,21 +29,62 @@ interface IdeVariant: IdeVariantHeader {
   val androidTestArtifact: IdeAndroidArtifact?
   val unitTestArtifact: IdeJavaArtifact?
 
-  /**
-   * The result of the merge of all the flavors and of the main default config. If no flavors
-   * are defined then this is the same as the default config.
-   */
-  val mergedFlavor: IdeProductFlavor
-
-  /** The minSdkVersion, or null if not specified. This is only the value set on this product flavor. */
   val minSdkVersion: IdeApiVersion?
 
-  /** The targetSdkVersion, or null if not specified. This is only the value set on this product flavor. */
   val targetSdkVersion: IdeApiVersion?
 
-  /** The maxSdkVersion, or null if not specified. This is only the value set on this produce flavor. */
   val maxSdkVersion: Int?
 
-  val testedTargetVariants: List<IdeTestedTargetVariant>
+  val versionCode: Int?
+
+  val versionNameSuffix: String?
+
+  val versionNameWithSuffix: String?
+
   val instantAppCompatible: Boolean
+
+  val vectorDrawablesUseSupportLibrary: Boolean
+
+  /**
+   * The resource configuration for this variant.
+   *
+   * This is the list of -c parameters for aapt.
+   */
+  val resourceConfigurations: Collection<String>
+
+  /**
+   * Map of generated res values where the key is the res name.
+   */
+  val resValues: Map<String, IdeClassField>
+
+  /**
+   * Specifies the ProGuard configuration files that the plugin should use.
+   */
+  val proguardFiles: Collection<File>
+
+  /** The collection of proguard rule files for consumers of the library to use. */
+  val consumerProguardFiles: Collection<File>
+
+  /**
+   * The map of key value pairs for placeholder substitution in the android manifest file.
+   *
+   * This map will be used by the manifest merger.
+   */
+  val manifestPlaceholders: Map<String, String>
+
+  val testApplicationId: String?
+
+  /**
+   * The test instrumentation runner. This is only the value set on this product flavor.
+   * TODO: make test instrumentation runner available through the model.
+   */
+  val testInstrumentationRunner: String?
+
+  /** The arguments for the test instrumentation runner.*/
+  val testInstrumentationRunnerArguments: Map<String, String>
+
+  val testedTargetVariants: List<IdeTestedTargetVariant>
+
+  // TODO(b/178961768); Review usages and replace with the correct alternatives or rename.
+  val deprecatedPreMergedApplicationId: String?
 }

@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.application
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.fixture.TemporaryProjectModification
 import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.options.BooleanOption
@@ -26,6 +27,7 @@ import org.junit.Assume
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import java.lang.Exception
 
 /**
  * Tests on building a project with Java 9+ source code, annotation processing and unit tests
@@ -133,6 +135,28 @@ class Java11CompileTest {
         result.stderr.use {
             ScannerSubject.assertThat(it).contains(
                 "In order to compile Java 9+ source, please set compileSdkVersion to 30 or above")
+        }
+    }
+
+    @Test
+    fun testCompatibilityWithJacocoPlugin() {
+        TemporaryProjectModification.doTest(project) { it: TemporaryProjectModification ->
+            it.appendToFile(
+                project.buildFile.path,
+                """
+                        android {
+                          buildTypes {
+                            debug {
+                                testCoverageEnabled true
+                            }
+                          }
+                          compileOptions {
+                            sourceCompatibility JavaVersion.VERSION_11
+                            targetCompatibility JavaVersion.VERSION_11
+                          }
+                        }"""
+            )
+            executor().run("assembleDebug")
         }
     }
 

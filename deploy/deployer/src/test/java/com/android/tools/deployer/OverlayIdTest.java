@@ -15,10 +15,12 @@
  */
 package com.android.tools.deployer;
 
+import static com.google.common.truth.Truth.*;
+import static com.google.common.truth.Truth.assertThat;
+
 import com.android.tools.deployer.model.Apk;
 import java.util.ArrayList;
 import java.util.List;
-import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -194,9 +196,8 @@ public class OverlayIdTest {
                         .addOverlayFile("Class2.dex", 22L)
                         .build();
 
-        Assert.assertThat(
-                nextOverlayId.getOverlayContents().allFiles(),
-                Matchers.containsInAnyOrder("apk/res/1", "apk/res/2", "Class1.dex", "Class2.dex"));
+        assertThat(nextOverlayId.getOverlayContents().allFiles())
+                .containsExactly("apk/res/1", "apk/res/2", "Class1.dex", "Class2.dex");
 
         nextOverlayId =
                 OverlayId.builder(nextOverlayId)
@@ -204,9 +205,8 @@ public class OverlayIdTest {
                         .removeOverlayFile("Class1.dex")
                         .build();
 
-        Assert.assertThat(
-                nextOverlayId.getOverlayContents().allFiles(),
-                Matchers.containsInAnyOrder("apk/res/1", "Class2.dex"));
+        assertThat(nextOverlayId.getOverlayContents().allFiles())
+                .containsExactly("apk/res/1", "Class2.dex");
     }
 
     private List<Apk> makeApks(int size) {

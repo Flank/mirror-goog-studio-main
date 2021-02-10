@@ -53,7 +53,6 @@ import java.io.File
 fun RecipeExecutor.androidTVActivityRecipe(
   moduleData: ModuleTemplateData,
   activityClass: String,
-  activityTitle: String,
   layoutName: String,
   mainFragmentClass: String,
   detailsActivityClass: String,
@@ -72,7 +71,7 @@ fun RecipeExecutor.androidTVActivityRecipe(
 
   mergeXml(androidManifestXml(activityClass, detailsActivityClass, moduleData.isLibrary, moduleData.isNewModule, packageName),
            manifestOut.resolve("AndroidManifest.xml"))
-  mergeXml(stringsXml(activityClass, activityTitle, moduleData.isNewModule), resOut.resolve("values/strings.xml"))
+  mergeXml(stringsXml(activityClass, moduleData.isNewModule), resOut.resolve("values/strings.xml"))
   mergeXml(colorsXml(), resOut.resolve("values/colors.xml"))
   copy(File("app_icon_your_company.png"), resOut.resolve("drawable/app_icon_your_company.png"))
   copy(File("default_background.xml"), resOut.resolve("drawable/default_background.xml"))

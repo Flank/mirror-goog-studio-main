@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.tools.idea.wizard.template.impl.other.intentService.root
-
+package com.android.tools.idea.wizard.template.impl.other.intentService
 
 fun androidManifestXml(
   className: String,

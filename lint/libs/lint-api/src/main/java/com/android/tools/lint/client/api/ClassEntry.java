@@ -83,14 +83,13 @@ class ClassEntry implements Comparable<ClassEntry> {
             char c1 = p1.charAt(i);
             char c2 = p2.charAt(i);
             if (c1 != c2) {
-                // Sort Foo$Bar.class *after* Foo.class, even though $ < .
-                if (c1 == '.' && c2 == '$') {
+                if (c1 == '.') {
                     return -1;
-                }
-                if (c1 == '$' && c2 == '.') {
+                } else if (c2 == '.') {
                     return 1;
+                } else {
+                    return c1 - c2;
                 }
-                return c1 - c2;
             }
         }
 

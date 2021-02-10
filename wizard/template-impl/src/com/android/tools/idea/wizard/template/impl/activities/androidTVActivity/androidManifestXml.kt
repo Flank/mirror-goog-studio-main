@@ -52,6 +52,7 @@ fun androidManifestXml(
     <application>
 
         <activity android:name="${packageName}.${activityClass}"
+            android:exported="true"
             android:icon="@drawable/app_icon_your_company"
             android:logo="@drawable/app_icon_your_company"
             android:banner="@drawable/app_icon_your_company"
@@ -60,9 +61,9 @@ fun androidManifestXml(
             $intentFilterBlock
         </activity>
 
-        <activity android:name="${packageName}.${detailsActivity}" />
-        <activity android:name="PlaybackActivity" />
-        <activity android:name="BrowseErrorActivity" />
+        <activity android:name="${packageName}.${detailsActivity}" android:exported="false" />
+        <activity android:name="PlaybackActivity" android:exported="false" />
+        <activity android:name="BrowseErrorActivity" android:exported="false" />
 
     </application>
 

@@ -41,7 +41,7 @@ import java.util.concurrent.Executors
 private const val LAYOUT_INSPECTION_ID = "layoutinspector.view.inspection"
 
 // created by java.util.ServiceLoader
-class LayoutInspectorFactory : InspectorFactory<ViewLayoutInspector>(LAYOUT_INSPECTION_ID) {
+class ViewLayoutInspectorFactory : InspectorFactory<ViewLayoutInspector>(LAYOUT_INSPECTION_ID) {
     override fun createInspector(
         connection: Connection,
         environment: InspectorEnvironment
@@ -54,7 +54,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
     /**
      * Context data associated with a capture of a single layout tree.
      */
-    private class CaptureContext(
+    private data class CaptureContext(
         /**
          * A handle returned by a system that does continuous capturing, which, when closed, tells
          * the system to stop as soon as possible.
@@ -144,10 +144,17 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
                 for (toRemove in removed) {
                     state.contextMap.remove(toRemove)?.handle?.close()
                 }
-                if (captureNewRoots) {
-                    ThreadUtils.runOnMainThread {
-                        for (toAdd in added) {
-                            startCapturing(currRoots.getValue(toAdd), continuous = true)
+                if (captureNewRoots && added.isNotEmpty()) {
+                    // The first time we call this method, `lastRootIds` gets initialized with views
+                    // already being captured, so we don't need to start capturing them again.
+                    val actuallyAdded = added.toMutableList().apply {
+                        removeAll { id -> state.contextMap.containsKey(id) }
+                    }
+                    if (actuallyAdded.isNotEmpty()) {
+                        ThreadUtils.runOnMainThread {
+                            for (toAdd in added) {
+                                startCapturing(currRoots.getValue(toAdd), continuous = true)
+                            }
                         }
                     }
                 }
@@ -183,7 +190,10 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
                     // We might get some lingering captures even though we already finished
                     // listening earlier (this would be indicated by no context). Just abort
                     // early in that case.
-                    context = state.contextMap[root.uniqueDrawingId] ?: return@execute
+                    // Note: We copy the context instead of returning it directly, to avoid rare
+                    // but potential threading issues as other threads can modify the context, e.g.
+                    // handling the stop fetch command.
+                    context = state.contextMap[root.uniqueDrawingId]?.copy() ?: return@execute
                     if (context.isLastCapture) {
                         state.contextMap.remove(root.uniqueDrawingId)
                     }
@@ -297,8 +307,14 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
         }
 
         synchronized(stateLock) {
-            for (context in state.contextMap.values) {
+            val contextMap = state.contextMap
+            for (context in contextMap.values) {
                 context.isLastCapture = true
+            }
+            ThreadUtils.runOnMainThread {
+                getRootViews()
+                    .filter { view -> contextMap.containsKey(view.uniqueDrawingId) }
+                    .forEach { view -> view.invalidate() }
             }
         }
     }

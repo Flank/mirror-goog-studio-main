@@ -294,7 +294,7 @@ public class GlobalScope {
      */
     @NonNull
     public FileCollection getPublishedCustomLintChecks() {
-        // Query for JAR instead of PROCESSED_JAR as we want to get the original lint.jar
+        // Query for JAR instead of PROCESSED_JAR as lint.jar doesn't need processing
         Action<AttributeContainer> attributes =
                 container ->
                         container.attribute(

@@ -457,7 +457,7 @@ class VariantFilteringTest: AbstractReturnGivenBuildResultTest<String, VariantFi
     }
 
     @Test
-    fun `unit-test filtering via new api using buildtype callback`() {
+    fun `unit-test filtering via deprecated api using buildtype callback`() {
         withAndroidComponents {
             """
                 |    beforeUnitTests(selector()
@@ -480,12 +480,58 @@ class VariantFilteringTest: AbstractReturnGivenBuildResultTest<String, VariantFi
     }
 
     @Test
-    fun `android-test filtering via new api using buildtype callback`() {
+    fun `unit-test filtering via new api using buildtype callback`() {
+        withAndroidComponents {
+            """
+                |    beforeVariants(selector()
+                |          .withBuildType("debug"), {
+                |        unitTestEnabled = false
+                |    })
+            """
+        }
+
+        expect {
+            variant {
+                name = "release"
+                androidTest = false
+            }
+            variant {
+                name = "debug"
+                unitTest = false
+            }
+        }
+    }
+
+    @Test
+    fun `android-test filtering via deprecated api using buildtype callback`() {
         withAndroidComponents {
             """
                 |    beforeAndroidTests(selector()
                 |          .withBuildType("debug"), {
                 |        enabled = false
+                |    })
+            """
+        }
+
+        expect {
+            variant {
+                name = "release"
+                androidTest = false
+            }
+            variant {
+                name = "debug"
+                androidTest = false
+            }
+        }
+    }
+
+    @Test
+    fun `android-test filtering via new api using buildtype callback`() {
+        withAndroidComponents {
+            """
+                |    beforeVariants(selector()
+                |          .withBuildType("debug"), {
+                |        androidTestEnabled = false
                 |    })
             """
         }

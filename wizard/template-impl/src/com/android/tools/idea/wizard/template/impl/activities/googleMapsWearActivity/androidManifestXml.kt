@@ -56,6 +56,7 @@ fun androidManifestXml(
         <meta-data android:name="com.google.android.geo.API_KEY" android:value="@string/google_maps_key"/>
 
         <activity android:name="${packageName}.${activityClass}"
+            android:exported="true"
             $labelBlock>
             $intentFilterBlock
         </activity>

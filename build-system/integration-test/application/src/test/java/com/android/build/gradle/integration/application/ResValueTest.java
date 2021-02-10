@@ -118,7 +118,7 @@ public class ResValueTest {
     }
 
     @Test
-    public void builFlavor1Debug() throws IOException {
+    public void buildFlavor1Debug() throws IOException {
         String expected =
                 ""
                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
@@ -126,10 +126,10 @@ public class ResValueTest {
                         + "\n"
                         + "    <!-- Automatically generated file. DO NOT MODIFY -->\n"
                         + "\n"
-                        + "    <!-- Value from the variant -->\n"
-                        + "    <string name=\"VALUE_VARIANT\" translatable=\"false\">1000</string>\n"
                         + "    <!-- Value from build type: debug -->\n"
                         + "    <string name=\"VALUE_DEBUG\" translatable=\"false\">100</string>\n"
+                        + "    <!-- Value from the variant -->\n"
+                        + "    <string name=\"VALUE_VARIANT\" translatable=\"false\">1000</string>\n"
                         + "    <!-- Value from product flavor: flavor1 -->\n"
                         + "    <string name=\"VALUE_FLAVOR\" translatable=\"false\">10</string>\n"
                         + "    <!-- Value from default config. -->\n"
@@ -157,10 +157,10 @@ public class ResValueTest {
                         + "\n"
                         + "    <!-- Automatically generated file. DO NOT MODIFY -->\n"
                         + "\n"
-                        + "    <!-- Value from the variant -->\n"
-                        + "    <string name=\"VALUE_VARIANT\" translatable=\"false\">1000</string>\n"
                         + "    <!-- Value from build type: debug -->\n"
                         + "    <string name=\"VALUE_DEBUG\" translatable=\"false\">100</string>\n"
+                        + "    <!-- Value from the variant -->\n"
+                        + "    <string name=\"VALUE_VARIANT\" translatable=\"false\">1000</string>\n"
                         + "    <!-- Value from product flavor: flavor2 -->\n"
                         + "    <string name=\"VALUE_FLAVOR\" translatable=\"false\">20</string>\n"
                         + "    <!-- Value from default config. -->\n"

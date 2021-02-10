@@ -43,4 +43,8 @@ message AndroidTestDeviceInfo {
     string serial = 7;
     /** AVD name for virtual devices */
     string avd_name = 8;
+    /** Name from the Gradle DSL, in the case of managed devices. Empty
+     *  otherwise.
+     */
+    string gradle_dsl_device_name = 9;
 }

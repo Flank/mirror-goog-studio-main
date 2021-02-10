@@ -90,9 +90,9 @@ class DesugarLibraryAndroidTestTest {
         project.getApk(GradleTestProject.ApkType.ANDROIDTEST_DEBUG).use { apk ->
             val classes = apk.mainDexFile.get().classes.keys
             assertThat(classes.filter { it.startsWith("Lcom/example/lib/Java8Use") })
-                .hasSize(2)
+                .hasSize(3)
             assertThat(classes.filter { it.startsWith("Lcom/example/lib/test/Java8UseTest") })
-                .hasSize(2)
+                .hasSize(3)
             assertThat(classes.filter { it.startsWith("Lcom/android/build/gradle/integration/desugar/resources/InterfaceWithDefaultMethod") })
                 .hasSize(2)
         }

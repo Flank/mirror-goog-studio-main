@@ -38,7 +38,6 @@ iml_module(
         "//tools/base/ddmlib:studio.android.sdktools.ddmlib[module]",
         "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
         "//tools/base/apkparser:studio.android.sdktools.binary-resources[module]",
-        "//tools/adt/idea/.idea/libraries:Guava",
         "//tools/base/deploy/deployer:deploy_java_proto",
         "//tools/adt/idea/.idea/libraries:protobuf",
         "//prebuilts/r8",
@@ -53,6 +52,7 @@ iml_module(
         "//tools/adt/idea/.idea/libraries:studio-grpc[test]",
         "//tools/base/zipflinger:studio.android.sdktools.zipflinger[module]",
         "//tools/base/deploy/deployer:libjava_sites",
+        "//tools/adt/idea/.idea/libraries:truth[test]",
     ],
 )
 
@@ -135,7 +135,7 @@ coverage_java_test(
         "//prebuilts/r8",
         "//prebuilts/tools/common/m2/repository/com/google/guava/guava/23.0:jar",
         "//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/3.4.0:jar",
-        "//prebuilts/tools/common/m2/repository/org/hamcrest/hamcrest-library/1.3:jar",
+        "//prebuilts/tools/common/m2/repository/com/google/truth/truth/0.44:jar",
         "//tools/base/annotations",
         "//tools/base/bazel:studio-grpc",
         "//tools/base/bazel:studio-proto",

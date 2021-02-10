@@ -1,5 +1,8 @@
 <component name="libraryTable">
   <library name="studio-sdk">
+    <ANNOTATIONS>
+      <root url="file://$PROJECT_DIR$/external-annotations" />
+    </ANNOTATIONS>
     <CLASSES>
       <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/com/google/code/gson/gson/2.8.0/gson-2.8.0.jar!/" />
       <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/commons-io/commons-io/2.4/commons-io-2.4.jar!/" />
@@ -16,6 +19,8 @@
       <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/com/sun/xml/fastinfoset/FastInfoset/1.2.16/FastInfoset-1.2.16.jar!/" />
       <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/jakarta/activation/jakarta.activation-api/1.2.1/jakarta.activation-api-1.2.1.jar!/" />
       <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/javax/activation/activation/1.1/activation-1.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/com/google/guava/failureaccess/1.0.1/failureaccess-1.0.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/com/google/guava/guava/27.0.1-jre/guava-27.0.1-jre.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>

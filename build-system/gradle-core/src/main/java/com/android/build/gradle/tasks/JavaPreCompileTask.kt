@@ -39,11 +39,13 @@ import org.gradle.api.tasks.TaskProvider
 @CacheableTask
 abstract class JavaPreCompileTask : NonIncrementalTask() {
 
-    private lateinit var annotationProcessorArtifactCollection: ArtifactCollection
+    private lateinit var projectAnnotationProcessorArtifacts: ArtifactCollection
+    private lateinit var externalAnnotationProcessorArtifacts: ArtifactCollection
 
     @get:Classpath
     val annotationProcessorArtifactFiles: FileCollection
-        get() = annotationProcessorArtifactCollection.artifactFiles
+        get() = projectAnnotationProcessorArtifacts.artifactFiles +
+                        externalAnnotationProcessorArtifacts.artifactFiles
 
     @get:Input
     abstract val annotationProcessorClassNames: ListProperty<String>
@@ -53,7 +55,9 @@ abstract class JavaPreCompileTask : NonIncrementalTask() {
 
     public override fun doTaskAction() {
         val annotationProcessorArtifacts =
-            annotationProcessorArtifactCollection.artifacts.map { SerializableArtifact(it) }
+                (projectAnnotationProcessorArtifacts.artifacts
+                        + projectAnnotationProcessorArtifacts.artifacts)
+                        .map { SerializableArtifact(it) }
 
         workerExecutor.noIsolation().submit(JavaPreCompileWorkAction::class.java) {
             it.initializeFromAndroidVariantTask(this)
@@ -85,13 +89,19 @@ abstract class JavaPreCompileTask : NonIncrementalTask() {
         override fun configure(task: JavaPreCompileTask) {
             super.configure(task)
 
-            task.annotationProcessorArtifactCollection =
-                creationConfig
-                    .variantDependencies
+            // Optimization: For project jars, query for JAR instead of PROCESSED_JAR as project
+            // jars are currently considered already processed (unlike external jars).
+            task.projectAnnotationProcessorArtifacts = creationConfig.variantDependencies
                     .getArtifactCollection(
-                        ConsumedConfigType.ANNOTATION_PROCESSOR,
-                        ArtifactScope.ALL,
-                        AndroidArtifacts.ArtifactType.PROCESSED_JAR
+                            ConsumedConfigType.ANNOTATION_PROCESSOR,
+                            ArtifactScope.PROJECT,
+                            AndroidArtifacts.ArtifactType.JAR
+                    )
+            task.externalAnnotationProcessorArtifacts = creationConfig.variantDependencies
+                    .getArtifactCollection(
+                            ConsumedConfigType.ANNOTATION_PROCESSOR,
+                            ArtifactScope.EXTERNAL,
+                            AndroidArtifacts.ArtifactType.PROCESSED_JAR
                     )
             task.annotationProcessorClassNames.setDisallowChanges(
                 creationConfig

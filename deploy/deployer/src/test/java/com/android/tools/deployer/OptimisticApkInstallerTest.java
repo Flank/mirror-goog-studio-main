@@ -15,8 +15,7 @@
  */
 package com.android.tools.deployer;
 
-import static org.hamcrest.Matchers.everyItem;
-import static org.hamcrest.Matchers.isIn;
+import static com.google.common.truth.Truth.*;
 import static org.mockito.Mockito.when;
 
 import com.android.ddmlib.IDevice;
@@ -37,7 +36,6 @@ import java.nio.file.Path;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -221,9 +219,7 @@ public class OptimisticApkInstallerTest {
     }
 
     private static void assertOverlay(OverlayId id, String... files) {
-        Assert.assertThat(id.getOverlayContents().allFiles(), everyItem(isIn(files)));
-        Assert.assertThat(
-                ImmutableList.copyOf(files), everyItem(isIn(id.getOverlayContents().allFiles())));
+        assertThat(id.getOverlayContents().allFiles()).containsExactlyElementsIn(files);
     }
 
     private Apk buildApk(String name, String checksum, Map<String, String> files)

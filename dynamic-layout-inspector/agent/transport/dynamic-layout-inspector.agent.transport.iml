@@ -9,7 +9,7 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="dynamic-layout-inspector.agent.fake-android" scope="PROVIDED" />
+    <orderEntry type="module" module-name="dynamic-layout-inspector.agent.transport.fake-android" scope="PROVIDED" />
     <orderEntry type="module-library" scope="PROVIDED">
       <library>
         <CLASSES>

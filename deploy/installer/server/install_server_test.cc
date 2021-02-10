@@ -381,7 +381,8 @@ TEST_F(InstallServerTest, TestAllStartsFail) {
   EXPECT_TRUE(success.empty());
 };
 
-TEST_F(InstallServerTest, FlushLiveLiteralDex) {
+// b/179035177
+TEST_F(InstallServerTest, DISABLED_FlushLiveLiteralDex) {
   std::thread server_thread;
   std::deque<bool> success = {true, true};
   FakeExecutor fake_exec(server_thread, success);

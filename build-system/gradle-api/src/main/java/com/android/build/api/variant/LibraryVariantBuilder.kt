@@ -21,4 +21,4 @@ import org.gradle.api.Incubating
  * [VariantBuilder] type for library projects
  */
 @Incubating
-interface LibraryVariantBuilder : VariantBuilder
+interface LibraryVariantBuilder : VariantBuilder, HasAndroidTestBuilder

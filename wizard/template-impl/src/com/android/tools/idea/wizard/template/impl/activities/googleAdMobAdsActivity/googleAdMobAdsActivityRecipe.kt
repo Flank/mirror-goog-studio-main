@@ -35,7 +35,6 @@ import com.android.tools.idea.wizard.template.impl.fragments.googleAdMobAdsFragm
 fun RecipeExecutor.googleAdMobAdsActivityRecipe(
   moduleData: ModuleTemplateData,
   activityClass: String,
-  activityTitle: String,
   layoutName: String,
   menuName: String,
   adFormat: AdFormat,
@@ -48,7 +47,7 @@ fun RecipeExecutor.googleAdMobAdsActivityRecipe(
   addAllKotlinDependencies(moduleData)
   addViewBindingSupport(moduleData.viewBindingSupport, true)
 
-  generateManifestStrings(activityClass, activityTitle, moduleData.baseFeature?.resDir ?: resOut, moduleData.isNewModule, true)
+  generateManifestStrings(activityClass, moduleData.baseFeature?.resDir ?: resOut, moduleData.isNewModule, true)
   addDependency("com.android.support:appcompat-v7:${moduleData.apis.appCompatVersion}.+")
   addDependency("com.google.android.gms:play-services-ads:+", toBase = moduleData.isDynamic)
 

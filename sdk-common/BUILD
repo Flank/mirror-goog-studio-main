@@ -38,7 +38,6 @@ iml_module(
         "//tools/adt/idea/.idea/libraries:jimfs[test]",
         "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
         "//tools/base/ddmlib:studio.android.sdktools.ddmlib[module]",
-        "//tools/adt/idea/.idea/libraries:Guava",
         "//tools/adt/idea/.idea/libraries:equalsverifier[test]",
         "//tools/adt/idea/.idea/libraries:javax-inject",
         "//tools/adt/idea/.idea/libraries:aapt-proto",

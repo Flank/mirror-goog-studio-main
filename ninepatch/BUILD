@@ -15,6 +15,5 @@ iml_module(
     deps = [
         "//prebuilts/studio/intellij-sdk:studio-sdk",
         "//tools/adt/idea/.idea/libraries:kotlin-stdlib-jdk8",
-        "//tools/adt/idea/.idea/libraries:Guava",
     ],
 )

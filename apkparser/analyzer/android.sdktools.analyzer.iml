@@ -12,7 +12,6 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="android.sdktools.android-annotations" />
     <orderEntry type="module" module-name="android.sdktools.common" />
-    <orderEntry type="library" name="Guava" level="project" />
     <orderEntry type="module-library">
       <library>
         <CLASSES>

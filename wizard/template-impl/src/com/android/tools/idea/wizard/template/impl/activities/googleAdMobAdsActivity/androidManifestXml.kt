@@ -47,11 +47,13 @@ fun androidManifestXml(
             android:value="true"/>
 
         <activity android:name="${packageName}.${activityClass}"
+            android:exported="true"
             $labelBlock>
             $activityBody
         </activity>
         <!--Include the AdActivity configChanges and theme. -->
         <activity android:name="com.google.android.gms.ads.AdActivity"
+            android:exported="false"
             android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|uiMode|screenSize|smallestScreenSize"
             android:theme="@android:style/Theme.Translucent" />
     </application>

@@ -88,7 +88,6 @@ class DynamicFeaturesCacheabilityTest {
                     ":app:mergeDebugJniLibFolders",
                     ":app:mergeDebugShaders",
                     ":app:mergeDexDebug",
-                    ":app:multiDexListDebug",
                     ":app:preDebugBuild",
                     ":app:processDebugMainManifest",
                     ":app:processDebugManifest",

@@ -136,7 +136,6 @@ private fun View.toNodeImpl(
  */
 fun View.createResource(stringTable: StringTable, resourceId: Int): Resource? {
     if (resourceId <= 0) return null
-    val resources: Resources = resources ?: return null
 
     return try {
         return Resource.newBuilder().apply {
@@ -155,8 +154,8 @@ fun View.createAppContext(stringTable: StringTable): AppContext {
         apiCodeName = stringTable.put(Build.VERSION.CODENAME)
         appPackageName = stringTable.put(context.packageName)
 
-        // getThemeResId is @hide; stubbed in fake-android but IDE doesn't find it due to setup
-        createResource(stringTable, context.getThemeResId())?.let { themeResource ->
+        // getThemeResId is @hide; stubbed in fake-android but IDE doesn't find it
+        createResource(stringTable, context.themeResId)?.let { themeResource ->
             theme = themeResource
         }
         configuration = context.resources.configuration.convert(stringTable)

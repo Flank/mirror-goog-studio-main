@@ -81,14 +81,13 @@ fun RecipeExecutor.primaryDetailFlowRecipe(
   generateManifest(
     moduleData,
     "${collection}DetailHostActivity",
-    "${collection} Detail Host Activity",
     packageName,
     isLauncher,
     hasNoActionBar = false,
     generateActivityTitle = true
   )
 
-  navigationDependencies(generateKotlin, useAndroidX, moduleData.apis.appCompatVersion ?: 28)
+  navigationDependencies(generateKotlin, useAndroidX, moduleData.apis.appCompatVersion)
   if (generateKotlin) {
    requireJavaVersion("1.8", true)
   }

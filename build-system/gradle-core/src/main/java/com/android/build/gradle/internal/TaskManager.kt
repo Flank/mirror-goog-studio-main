@@ -96,7 +96,6 @@ import com.android.build.gradle.internal.tasks.CheckDuplicateClassesTask
 import com.android.build.gradle.internal.tasks.CheckProguardFiles
 import com.android.build.gradle.internal.tasks.CompressAssetsTask
 import com.android.build.gradle.internal.tasks.D8BundleMainDexListTask
-import com.android.build.gradle.internal.tasks.D8MainDexListTask
 import com.android.build.gradle.internal.tasks.DependencyReportTask
 import com.android.build.gradle.internal.tasks.DesugarLibKeepRulesMergeTask
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask
@@ -390,7 +389,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         val testVariant = testComponentInfo.variant
         createAssembleTask(testVariant)
         val testedVariant = testVariant.testedVariant
-        val variantDslInfo = testVariant.variantDslInfo
         val variantDependencies = testVariant.variantDependencies
         if (testedVariant.variantDslInfo.renderscriptSupportModeEnabled) {
             project.dependencies
@@ -1740,9 +1738,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                     >= 21) {
                 dexingType = DexingType.NATIVE_MULTIDEX
             }
-        }
-        if (creationConfig.dexingType.needsMainDexList) {
-            taskFactory.register(D8MainDexListTask.CreationAction(creationConfig))
         }
         if (creationConfig.needsMainDexListForBundle) {
             taskFactory.register(D8BundleMainDexListTask.CreationAction(creationConfig))

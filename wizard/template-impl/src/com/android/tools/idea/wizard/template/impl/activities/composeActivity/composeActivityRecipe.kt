@@ -31,7 +31,6 @@ import com.android.tools.idea.wizard.template.impl.activities.composeActivity.sr
 fun RecipeExecutor.composeActivityRecipe(
   moduleData: ModuleTemplateData,
   activityClass: String,
-  activityTitle: String,
   packageName: String,
   isLauncher: Boolean,
   greeting: String,
@@ -50,7 +49,7 @@ fun RecipeExecutor.composeActivityRecipe(
   addDependency(mavenCoordinate = "androidx.compose.ui:ui-tooling:\${$composeVersionVarName}")
   addDependency(mavenCoordinate = "androidx.lifecycle:lifecycle-runtime-ktx:+", minRev = "2.3.0-alpha06")
   generateManifest(
-    moduleData, activityClass, activityTitle, packageName, isLauncher, true,
+    moduleData, activityClass, packageName, isLauncher, true,
     generateActivityTitle = true
   )
   generateNoActionBarStyles(moduleData.baseFeature?.resDir, resOut, moduleData.themesData)

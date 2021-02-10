@@ -18,9 +18,9 @@ package com.android.tools.idea.wizard.template.impl.activities.basicActivity
 import com.android.tools.idea.wizard.template.BooleanParameter
 import com.android.tools.idea.wizard.template.Category
 import com.android.tools.idea.wizard.template.CheckBoxWidget
-import com.android.tools.idea.wizard.template.Constraint
 import com.android.tools.idea.wizard.template.Constraint.CLASS
 import com.android.tools.idea.wizard.template.Constraint.LAYOUT
+import com.android.tools.idea.wizard.template.Constraint.NAVIGATION
 import com.android.tools.idea.wizard.template.Constraint.NONEMPTY
 import com.android.tools.idea.wizard.template.Constraint.UNIQUE
 import com.android.tools.idea.wizard.template.FormFactor
@@ -68,14 +68,6 @@ val basicActivityTemplate get() = template {
     help = "The name of the activity class to create"
   }
 
-  val activityTitle: StringParameter = stringParameter {
-    name = "Title"
-    constraints = listOf(NONEMPTY)
-    suggest = { activityClass.value }
-    default = "MainActivity"
-    help = "The name of the activity. For launcher activities, the application title"
-  }
-
   val menuName: StringParameter = stringParameter {
     name = "Menu Resource File"
     constraints = listOf(LAYOUT, UNIQUE, NONEMPTY)
@@ -121,7 +113,7 @@ val basicActivityTemplate get() = template {
     default = "nav_graph"
     help = "The name of the navigation graph"
     visible = { false }
-    constraints = listOf(Constraint.NAVIGATION, Constraint.UNIQUE)
+    constraints = listOf(NAVIGATION, UNIQUE)
     suggest = { "nav_graph" }
   }
 
@@ -130,7 +122,6 @@ val basicActivityTemplate get() = template {
   widgets(
     TextFieldWidget(activityClass),
     TextFieldWidget(layoutName),
-    TextFieldWidget(activityTitle),
     TextFieldWidget(menuName),
     CheckBoxWidget(isLauncher),
     Separator, // for example
@@ -156,7 +147,6 @@ val basicActivityTemplate get() = template {
       contentLayoutName = contentLayoutName.value,
       packageName = packageName.value,
       menuName = menuName.value,
-      activityTitle = activityTitle.value,
       isLauncher = isLauncher.value,
       firstFragmentLayoutName = firstFragmentLayoutName.value,
       secondFragmentLayoutName = secondFragmentLayoutName.value,

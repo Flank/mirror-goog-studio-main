@@ -22,7 +22,7 @@ import javax.inject.Inject;
 public class JacocoOptions implements com.android.build.api.dsl.JacocoOptions {
 
     /** Default JaCoCo version. */
-    public static final String DEFAULT_VERSION = "0.8.6";
+    public static final String DEFAULT_VERSION = "0.8.3";
 
     @Inject
     public JacocoOptions() {}

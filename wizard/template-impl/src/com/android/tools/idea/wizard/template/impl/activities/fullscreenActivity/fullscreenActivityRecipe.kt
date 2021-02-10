@@ -38,7 +38,6 @@ import com.android.tools.idea.wizard.template.impl.activities.fullscreenActivity
 fun RecipeExecutor.fullscreenActivityRecipe(
   moduleData: ModuleTemplateData,
   activityClass: String,
-  activityTitle: String,
   isLauncher: Boolean,
   layoutName: String,
   packageName: String
@@ -70,7 +69,7 @@ fun RecipeExecutor.fullscreenActivityRecipe(
   mergeXml(fullscreenThemesNight(moduleData.themesData), finalResOut.resolve("values-night/themes.xml"))
 
   save(activityFullscreenXml(activityClass, packageName, moduleData.themesData), resOut.resolve("layout/${layoutName}.xml"))
-  mergeXml(stringsXml(activityTitle, moduleData.isNewModule, simpleName), finalResOut.resolve("values/strings.xml"))
+  mergeXml(stringsXml(activityClass, moduleData.isNewModule, simpleName), finalResOut.resolve("values/strings.xml"))
 
   val actionBarClassFqcn = getMaterialComponentName("android.support.v7.app.ActionBar", useAndroidX)
   val isViewBindingSupported = moduleData.viewBindingSupport.isViewBindingSupported()

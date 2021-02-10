@@ -23,8 +23,10 @@ import com.android.build.gradle.internal.dependency.CONFIG_NAME_ANDROID_JDK_IMAG
 import com.android.build.gradle.internal.dependency.JDK_IMAGE_OUTPUT_DIR
 import com.android.build.gradle.internal.dependency.getJdkImageFromTransform
 import com.android.build.gradle.internal.profile.AnalyticsService
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.EXTERNAL
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES_JAR
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JAR
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.PROCESSED_JAR
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.ANNOTATION_PROCESSOR
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
@@ -127,11 +129,13 @@ fun JavaCompile.configurePropertiesForAnnotationProcessing(
  * @see [JavaCompile.configurePropertiesForAnnotationProcessing]
  */
 fun JavaCompile.configureAnnotationProcessorPath(creationConfig: ComponentCreationConfig) {
-    options.annotationProcessorPath = creationConfig.variantDependencies.getArtifactFileCollection(
-        ANNOTATION_PROCESSOR,
-        ALL,
-        PROCESSED_JAR
-    )
+    // Optimization: For project jars, query for JAR instead of PROCESSED_JAR as project jars are
+    // currently considered already processed (unlike external jars).
+    val projectJars = creationConfig.variantDependencies
+            .getArtifactFileCollection(ANNOTATION_PROCESSOR, PROJECT, JAR)
+    val externalJars = creationConfig.variantDependencies
+            .getArtifactFileCollection(ANNOTATION_PROCESSOR, EXTERNAL, PROCESSED_JAR)
+    options.annotationProcessorPath = projectJars.plus(externalJars)
 }
 
 data class SerializableArtifact(

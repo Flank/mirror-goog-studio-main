@@ -13,6 +13,11 @@ source_properties_path="%source_properties_path%"
 # with API level 30 (rvc).
 emulator_boot_timeout=70
 
+# Emulator gRPC port. This is used when setting up emulator gRPC connection.
+# Emulator gRPC connection is required by embedded emulator and Android Test
+# Retention.
+emulator_grpc_port=8554
+
 # Set environment variables.
 export HOME=$(pwd)
 export ANDROID_PREFS_ROOT=$HOME
@@ -102,7 +107,7 @@ for i in 1 2 3
 do
   start_time=$SECONDS
 
-  $emulator @emu -no-window -port $1 -delay-adb -no-snapshot -read-only 2>&1 &
+  $emulator @emu -no-window -port $1 -grpc $emulator_grpc_port -delay-adb -no-snapshot -read-only 2>&1 &
   emu_pid=$!
 
   # Wait for the emulator to boot.

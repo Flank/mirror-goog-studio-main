@@ -20,7 +20,6 @@ import static com.android.SdkConstants.DOT_DEX;
 import static com.android.builder.dexing.D8ErrorMessagesKt.ERROR_DUPLICATE_HELP_PAGE;
 
 import com.android.annotations.NonNull;
-import com.android.builder.dexing.ClassFileInput;
 import com.android.builder.dexing.D8DiagnosticsHandler;
 import com.android.ide.common.blame.Message;
 import com.android.ide.common.blame.MessageReceiver;
@@ -55,7 +54,7 @@ public final class D8MainDexList {
      *
      * @param mainDexRules Proguard rules written as strings
      * @param mainDexRulesFiles files containing the Proguard rules
-     * @param programFiles classes or dex files that will end up in the final binary
+     * @param programFiles dex files that will end up in the final binary
      * @param libraryFiles classes that are used only to resolve types in the program classes, but
      *     are not packaged in the final binary e.g. android.jar, provided classes etc.
      * @return a list of classes to be kept in the main dex file
@@ -85,21 +84,15 @@ public final class D8MainDexList {
                     Preconditions.checkState(
                             Files.isDirectory(program), "Expected directory: " + program);
                     try (Stream<Path> classFiles = Files.walk(program)) {
-                        List<Path> allClasses =
+                        List<Path> allDexFiles =
                                 classFiles
                                         .filter(
                                                 file -> {
                                                     Path relative = program.relativize(file);
-                                                    Boolean isClass =
-                                                            ClassFileInput.CLASS_MATCHER.test(
-                                                                    relative.toString());
-
-                                                    Boolean isDex =
-                                                            relative.toString().endsWith(DOT_DEX);
-                                                    return isClass || isDex;
+                                                    return relative.toString().endsWith(DOT_DEX);
                                                 })
                                         .collect(Collectors.toList());
-                        command.addProgramFiles(allClasses);
+                        command.addProgramFiles(allDexFiles);
                     }
                 }
             }

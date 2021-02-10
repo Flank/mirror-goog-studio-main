@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.connected.application
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.builder
 import com.android.build.gradle.integration.connected.utils.getEmulator
 import org.junit.Before
@@ -39,15 +38,13 @@ class UtpConnectedTest {
     @get:Rule
     var project = builder()
             .fromTestProject("utp")
-            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN) // b/158092419
-            .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=45")
             .create()
 
     @Before
     @Throws(IOException::class)
     fun setUp() {
         // fail fast if no response
-        project.addAdbTimeoutToSubProjects();
+        project.addAdbTimeout();
         // run the uninstall tasks in order to (1) make sure nothing is installed at the beginning
         // of each test and (2) check the adb connection before taking the time to build anything.
         project.execute("uninstallAll")
@@ -57,5 +54,10 @@ class UtpConnectedTest {
     @Throws(Exception::class)
     fun connectedAndroidTest() {
         project.executor().run("connectedAndroidTest")
+
+        // Run the task again after clean. This time the task configuration is
+        // restored from the configuration cache. We expect no crashes.
+         project.executor().run("clean")
+         project.executor().run("connectedAndroidTest")
     }
 }

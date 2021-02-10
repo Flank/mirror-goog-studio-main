@@ -47,7 +47,6 @@ internal fun runUtpTestSuite(
     javaProcessExecutor: JavaProcessExecutor,
     logger: ILogger
 ): TestSuiteResultProto.TestSuiteResult {
-
     val serverConfigProtoFile = File.createTempFile("serverConfig", ".pb").also { file ->
         FileOutputStream(file).use { writer ->
             configFactory.createServerConfigProto().writeTo(writer)
@@ -55,10 +54,10 @@ internal fun runUtpTestSuite(
     }
     val loggingPropertiesFile = File.createTempFile("logging", "properties").also { file ->
         Files.asCharSink(file, Charsets.UTF_8).write("""
-                    .level=WARNING
-                    .handlers=java.util.logging.ConsoleHandler
-                    java.util.logging.ConsoleHandler.level=WARNING
-                """.trimIndent())
+                .level=WARNING
+                .handlers=java.util.logging.ConsoleHandler
+                java.util.logging.ConsoleHandler.level=WARNING
+            """.trimIndent())
     }
     val javaProcessInfo = ProcessInfoBuilder().apply {
         setClasspath(utpDependencies.launcher.singleFile.absolutePath)
@@ -69,7 +68,11 @@ internal fun runUtpTestSuite(
         addJvmArg("-Djava.util.logging.config.file=${loggingPropertiesFile.absolutePath}")
     }.createJavaProcess()
 
-    javaProcessExecutor.execute(javaProcessInfo, LoggedProcessOutputHandler(logger))
+    javaProcessExecutor.execute(javaProcessInfo, LoggedProcessOutputHandler(logger)).apply {
+        rethrowFailure()
+        assertNormalExitValue()
+    }
+
     return getResultsProto(utpOutputDir)
 }
 

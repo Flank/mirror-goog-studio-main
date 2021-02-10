@@ -53,7 +53,6 @@ import com.android.tools.idea.wizard.template.impl.activities.loginActivity.src.
 fun RecipeExecutor.loginActivityRecipe(
   moduleData: ModuleTemplateData,
   activityClass: String,
-  activityTitle: String,
   layoutName: String,
   packageName: String
 ) {
@@ -75,12 +74,12 @@ fun RecipeExecutor.loginActivityRecipe(
   val baseFeatureResOut = moduleData.baseFeature?.resDir
   val simpleName = activityToLayout(activityClass)
   generateThemeStyles(moduleData.themesData.main, useAndroidX, baseFeatureResOut ?: resOut)
-  generateManifestStrings(activityClass, activityClass, baseFeatureResOut ?: resOut, moduleData.isNewModule, generateActivityTitle = true)
+  generateManifestStrings(activityClass, baseFeatureResOut ?: resOut, moduleData.isNewModule, generateActivityTitle = true)
   mergeXml(androidManifestXml(activityClass, simpleName,
                               isLauncher = moduleData.isNewModule, isLibrary = moduleData.isLibrary, isNewModule = moduleData.isNewModule),
            manifestOut.resolve("AndroidManifest.xml"))
   mergeXml(dimensXml(), resOut.resolve("values/dimens.xml"))
-  mergeXml(stringsXml(simpleName, activityTitle, moduleData.isNewModule), resOut.resolve("values/strings.xml"))
+  mergeXml(stringsXml(simpleName, activityClass, moduleData.isNewModule), resOut.resolve("values/strings.xml"))
   save(activityLoginXml(activityClass, packageName, useAndroidX, apis.minApi.api), resOut.resolve("layout/${layoutName}.xml"))
 
   val isViewBindingSupported = moduleData.viewBindingSupport.isViewBindingSupported()

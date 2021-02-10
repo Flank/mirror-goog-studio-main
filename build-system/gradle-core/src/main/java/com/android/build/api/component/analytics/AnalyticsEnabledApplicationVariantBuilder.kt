@@ -44,4 +44,11 @@ open class AnalyticsEnabledApplicationVariantBuilder @Inject constructor(
                 VariantMethodType.DEPENDENCIES_ACTION_VALUE
         delegate.dependenciesInfo(action)
     }
+
+    override var androidTestEnabled: Boolean
+        get() = delegate.androidTestEnabled
+        set(value) {
+            stats.variantApiAccessBuilder.addVariantAccessBuilder().type = VariantMethodType.ANDROID_TEST_ENABLED_VALUE
+            delegate.androidTestEnabled = value
+        }
 }

@@ -33,13 +33,13 @@ TEST(ParseMemoryLevels, MemoryDataVersion3Valid) {
 
   // The following values are obtained from the same dumpsys that generated the
   // test data file.
-  EXPECT_EQ(9336, sample.total_mem());
+  EXPECT_EQ(11850, sample.total_mem());
   EXPECT_EQ(2092, sample.java_mem());
   EXPECT_EQ(3496, sample.native_mem());
   EXPECT_EQ(128, sample.stack_mem());
   EXPECT_EQ(0, sample.graphics_mem());
   EXPECT_EQ(3284, sample.code_mem());
-  EXPECT_EQ(336, sample.others_mem());
+  EXPECT_EQ(2850, sample.others_mem());
 }
 
 TEST(ParseMemoryLevels, MemoryDataVersion4Valid) {
@@ -53,11 +53,11 @@ TEST(ParseMemoryLevels, MemoryDataVersion4Valid) {
 
   // The following values are obtained from the same dumpsys that generated the
   // test data file.
-  EXPECT_EQ(9684, sample.total_mem());
+  EXPECT_EQ(13568, sample.total_mem());
   EXPECT_EQ(2588, sample.java_mem());
   EXPECT_EQ(3844, sample.native_mem());
   EXPECT_EQ(188, sample.stack_mem());
   EXPECT_EQ(0, sample.graphics_mem());
   EXPECT_EQ(2664, sample.code_mem());
-  EXPECT_EQ(400, sample.others_mem());
+  EXPECT_EQ(4284, sample.others_mem());
 }

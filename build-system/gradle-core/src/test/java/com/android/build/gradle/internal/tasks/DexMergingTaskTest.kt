@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.gradle.internal.fixtures.FakeConfigurableFileCollection
 import com.android.build.gradle.internal.fixtures.FakeFileChange
 import com.android.build.gradle.internal.fixtures.FakeFileCollection
 import com.android.build.gradle.internal.fixtures.FakeGradleProperty
@@ -66,22 +67,27 @@ class DexMergingTaskTest {
     @Test
     fun testLegacyMultiDex() {
         val inputDirs = listOf(generateDexArchive(listOf("test/A", "test/B", "test/C")))
-        val mainDexListFile = tmp.newFile().apply { writeText("test/A.class") }
+        val multidexProguardRulesFile = tmp.newFile().apply {
+            writeText(" -keep class test.A")
+        }
+        val userMultidexKeepFile = tmp.newFile().apply {
+            writeText("test/B.class")
+        }
         val outputDir = tmp.newFolder()
-
         runDexMerging(
-                inputDirs,
-                outputDir,
-                dexingType = DexingType.LEGACY_MULTIDEX,
-                minSdkVersion = 19,
-                mainDexListFile = mainDexListFile
+            inputDirs,
+            outputDir,
+            dexingType = DexingType.LEGACY_MULTIDEX,
+            minSdkVersion = 19,
+            multidexProguardRulesFile = multidexProguardRulesFile,
+            libraryClasses = listOf(TestUtils.resolvePlatformPath("android.jar").toFile()),
+            userMultidexKeepFile = userMultidexKeepFile
         )
-
         assertThatDex(outputDir.resolve("classes.dex")).containsExactlyClassesIn(
-                listOf("Ltest/A;")
+            listOf("Ltest/A;", "Ltest/B;")
         )
         assertThatDex(outputDir.resolve("classes2.dex")).containsExactlyClassesIn(
-                listOf("Ltest/B;", "Ltest/C;")
+            listOf("Ltest/C;")
         )
     }
 
@@ -325,9 +331,12 @@ class DexMergingTaskTest {
             outputDir: File,
             dexingType: DexingType = DexingType.NATIVE_MULTIDEX,
             minSdkVersion: Int = 21,
-            mainDexListFile: File? = null,
+            userMultidexKeepFile: File? = null,
             numberOfBuckets: Int = 1,
-            inputChanges: InputChanges = FakeInputChanges()
+            inputChanges: InputChanges = FakeInputChanges(),
+            libraryClasses: List<File> = listOf(),
+            multidexProguardRulesFile: File? = null,
+            mainDexListOutput: File? = null
     ) {
         val project = ProjectBuilder.builder().withProjectDir(tmp.newFolder()).build()
         object : DexMergingTaskDelegate() {
@@ -341,9 +350,21 @@ class DexMergingTaskTest {
                                     override val debuggable = FakeGradleProperty(true)
                                     override val errorFormatMode =
                                             FakeGradleProperty(SyncOptions.ErrorFormatMode.HUMAN_READABLE)
-                                    override val mainDexListFile =
-                                            FakeObjectFactory.factory.fileProperty()
-                                                    .fileValue(mainDexListFile)
+                                    override val mainDexListConfig: MainDexListConfig
+                                        get() = object : MainDexListConfig() {
+                                            override val userMultidexKeepFile =
+                                                    FakeObjectFactory.factory.fileProperty()
+                                                        .fileValue(userMultidexKeepFile)
+                                            override val aaptGeneratedRules =
+                                                    FakeObjectFactory.factory.fileProperty()
+                                            override val userMultidexProguardRules =
+                                                    FakeObjectFactory.factory.fileProperty()
+                                                        .fileValue(multidexProguardRulesFile)
+                                            override val libraryClasses =
+                                                    FakeConfigurableFileCollection(libraryClasses)
+                                            override val platformMultidexProguardRules =
+                                                FakeObjectFactory.factory.listProperty(String::class.java)
+                                        }
                                 })
                             }
                     override val numberOfBuckets = FakeGradleProperty(numberOfBuckets)
@@ -352,6 +373,8 @@ class DexMergingTaskTest {
                                     .value(inputDirsOrJars)
                     override val outputDir =
                             FakeObjectFactory.factory.directoryProperty().fileValue(outputDir)
+                    override val mainDexListOutput =
+                        FakeObjectFactory.factory.fileProperty().fileValue(mainDexListOutput)
                     override val incremental = FakeGradleProperty(inputChanges.isIncremental)
                     override val fileChanges = FakeGradleProperty(
                             inputChanges.getFileChanges(

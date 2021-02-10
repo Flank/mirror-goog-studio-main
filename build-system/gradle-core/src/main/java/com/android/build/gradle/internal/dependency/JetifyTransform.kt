@@ -43,8 +43,6 @@ import org.gradle.api.tasks.PathSensitivity
 abstract class JetifyTransform : TransformAction<JetifyTransform.Parameters> {
 
     interface Parameters : GenericTransformParameters {
-        @get:Input
-        val skipIfPossible: Property<Boolean>
 
         @get:Input
         val ignoreListOption: Property<String>
@@ -141,7 +139,7 @@ abstract class JetifyTransform : TransformAction<JetifyTransform.Parameters> {
             jetifierProcessor.transform2(
                 input = setOf(FileMapping(inputFile, outputFile)),
                 copyUnmodifiedLibsAlso = true,
-                skipLibsWithAndroidXReferences = parameters.skipIfPossible.get()
+                skipLibsWithAndroidXReferences = true
             )
         } catch (exception: Exception) {
             var message =

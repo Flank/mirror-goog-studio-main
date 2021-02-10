@@ -16,7 +16,6 @@
 package com.android.ide.common.gradle.model
 
 import com.android.builder.model.AndroidArtifact
-import com.android.builder.model.ClassField
 import java.io.File
 
 interface IdeBaseConfig {

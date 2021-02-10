@@ -39,6 +39,21 @@ enum MemoryType {
   CODE,
   OTHERS
 };
+
+bool IsOneOf(const char* subject,
+             std::initializer_list<const char*> toCompare) {
+  return std::any_of(toCompare.begin(), toCompare.end(),
+                     [=](const char* s) { return strcmp(subject, s) == 0; });
+}
+
+int ParseInt(char** delimited_string, const char* delimiter) {
+  char* result = strsep(delimited_string, delimiter);
+  if (result == nullptr) {
+    return 0;
+  } else {
+    return strtol(result, nullptr, 10);
+  }
+}
 }  // namespace
 
 namespace profiler {
@@ -93,14 +108,15 @@ void MemoryUsageReaderImpl::ParseMemoryLevels(
   char* result;
 
   int32_t java_private = 0, native_private = 0, stack = 0, graphics = 0,
-          code = 0, other_private = 0;
+          code = 0, total = 0;
 
   // Version check.
   int version = ParseInt(&temp_memory_info_ptr, ",");
   int regularStatsFieldCount = 4;
-  int privateDirtyStartIndex =
+  constexpr int kTotalIndex = 18;  // index for total memory consumption.
+  constexpr int kPrivateDirtyStartIndex =
       30;  // index before the private dirty category begins.
-  int privateCleanStartIndex =
+  constexpr int kPrivateCleanStartIndex =
       34;  // index before the private clean category begins.
   int otherStatsFieldCount;
   int otherStatsStartIndex;
@@ -138,6 +154,10 @@ void MemoryUsageReaderImpl::ParseMemoryLevels(
   // memory where the
   // "--checkin" version does not.
   int currentIndex = 0;
+  auto accumulate = [&temp_memory_info_ptr](int& target) {
+    target += ParseInt(&temp_memory_info_ptr, ",");
+  };
+  auto skip = [&temp_memory_info_ptr]() { strsep(&temp_memory_info_ptr, ","); };
   while (true) {
     result = strsep(&temp_memory_info_ptr, ",");
     currentIndex++;
@@ -148,82 +168,68 @@ void MemoryUsageReaderImpl::ParseMemoryLevels(
 
     int memory_type = UNKNOWN;
     if (currentIndex >= otherStatsStartIndex) {
-      if (strcmp(result, "Dalvik Other") == 0 ||
-          strcmp(result, "Ashmem") == 0 || strcmp(result, "Cursor") == 0 ||
-          strcmp(result, "Other dev") == 0 ||
-          strcmp(result, "Other mmap") == 0 ||
-          strcmp(result, "Other mtrack") == 0 ||
-          strcmp(result, "Unknown") == 0) {
+      if (IsOneOf(result, {"Dalvik Other", "Ashmem", "Cursor", "Other dev",
+                           "Other mmap", "Other mtrack", "Unknown"})) {
         memory_type = OTHERS;
-      } else if (strcmp(result, "Stack") == 0) {
+      } else if (IsOneOf(result, {"Stack"})) {
         memory_type = STACK;
-      } else if (strcmp(result, ".art mmap") == 0) {
+      } else if (IsOneOf(result, {".art mmap"})) {
         memory_type = ART;
-      } else if (strcmp(result, "Gfx dev") == 0 ||
-                 strcmp(result, "EGL mtrack") == 0 ||
-                 strcmp(result, "GL mtrack") == 0) {
+      } else if (IsOneOf(result, {"Gfx dev", "EGL mtrack", "GL mtrack"})) {
         memory_type = GRAPHICS;
-      } else if (strcmp(result, ".so mmap") == 0 ||
-                 strcmp(result, ".jar mmap") == 0 ||
-                 strcmp(result, ".apk mmap") == 0 ||
-                 strcmp(result, ".ttf mmap") == 0 ||
-                 strcmp(result, ".dex mmap") == 0 ||
-                 strcmp(result, ".oat mmap") == 0) {
+      } else if (IsOneOf(result, {".so mmap", ".jar mmap", ".apk mmap",
+                                  ".ttf mmap", ".dex mmap", ".oat mmap"})) {
         memory_type = CODE;
       }
-    } else if (currentIndex == privateCleanStartIndex) {
+    } else if (currentIndex == kPrivateCleanStartIndex) {
       memory_type = PRIVATE_CLEAN;
-    } else if (currentIndex == privateDirtyStartIndex) {
+    } else if (currentIndex == kPrivateDirtyStartIndex) {
       memory_type = PRIVATE_DIRTY;
+    } else if (currentIndex == kTotalIndex) {
+      total = strtol(result, nullptr, 10);
     }
 
     if (memory_type == PRIVATE_CLEAN) {
-      other_private +=
-          ParseInt(&temp_memory_info_ptr, ",");  // native private clean.
-      other_private +=
-          ParseInt(&temp_memory_info_ptr, ",");  // dalvik private clean.
-      strsep(&temp_memory_info_ptr,
-             ",");  // UNUSED - other private clean total.
-      strsep(&temp_memory_info_ptr, ",");  // UNUSED - total private clean.
+      skip();                     // native private clean.
+      skip();                     // dalvik private clean.
+      skip();                     // UNUSED - other private clean total.
+      skip();                     // UNUSED - total private clean.
       currentIndex += regularStatsFieldCount;
     } else if (memory_type == PRIVATE_DIRTY) {
-      native_private +=
-          ParseInt(&temp_memory_info_ptr, ",");  // native private dirty.
-      java_private +=
-          ParseInt(&temp_memory_info_ptr, ",");  // dalvik private dirty.
-      strsep(&temp_memory_info_ptr,
-             ",");  // UNUSED - other private dirty are tracked separately.
-      strsep(&temp_memory_info_ptr, ",");  // UNUSED - total private dirty.
+      accumulate(native_private);  // native private dirty.
+      accumulate(java_private);    // dalvik private dirty.
+      skip();  // UNUSED - other private dirty are tracked separately.
+      skip();  // UNUSED - total private dirty.
       currentIndex += regularStatsFieldCount;
     } else if (memory_type != UNKNOWN) {
-      strsep(&temp_memory_info_ptr, ",");  // UNUSED - total pss.
-      strsep(&temp_memory_info_ptr, ",");  // UNUSED - pss clean.
-      strsep(&temp_memory_info_ptr, ",");  // UNUSED - shared dirty.
-      strsep(&temp_memory_info_ptr, ",");  // UNUSED - shared clean.
+      skip();  // UNUSED - total pss.
+      skip();  // UNUSED - pss clean.
+      skip();  // UNUSED - shared dirty.
+      skip();  // UNUSED - shared clean.
 
       // Parse out private dirty and private clean.
       switch (memory_type) {
         case OTHERS:
-          other_private += ParseInt(&temp_memory_info_ptr, ",");
-          other_private += ParseInt(&temp_memory_info_ptr, ",");
+          skip();
+          skip();
           break;
         case STACK:
-          stack += ParseInt(&temp_memory_info_ptr, ",");
+          accumulate(stack);
           // Note that stack's private clean is treated as private others in
           // dumpsys.
-          other_private += ParseInt(&temp_memory_info_ptr, ",");
+          skip();
           break;
         case ART:
-          java_private += ParseInt(&temp_memory_info_ptr, ",");
-          java_private += ParseInt(&temp_memory_info_ptr, ",");
+          accumulate(java_private);
+          accumulate(java_private);
           break;
         case GRAPHICS:
-          graphics += ParseInt(&temp_memory_info_ptr, ",");
-          graphics += ParseInt(&temp_memory_info_ptr, ",");
+          accumulate(graphics);
+          accumulate(graphics);
           break;
         case CODE:
-          code += ParseInt(&temp_memory_info_ptr, ",");
-          code += ParseInt(&temp_memory_info_ptr, ",");
+          accumulate(code);
+          accumulate(code);
           break;
       }
 
@@ -236,20 +242,10 @@ void MemoryUsageReaderImpl::ParseMemoryLevels(
   data->set_stack_mem(stack);
   data->set_graphics_mem(graphics);
   data->set_code_mem(code);
-  data->set_others_mem(other_private);
-  data->set_total_mem(java_private + native_private + stack + graphics + code +
-                      other_private);
+  data->set_others_mem(total - java_private - native_private - stack -
+                       graphics - code);
+  data->set_total_mem(total);
   return;
-}
-
-int MemoryUsageReaderImpl::ParseInt(char** delimited_string,
-                                    const char* delimiter) {
-  char* result = strsep(delimited_string, delimiter);
-  if (result == nullptr) {
-    return 0;
-  } else {
-    return strtol(result, nullptr, 10);
-  }
 }
 
 }  // namespace profiler
