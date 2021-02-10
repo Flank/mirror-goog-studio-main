@@ -593,7 +593,7 @@ abstract class VariantInputs {
         mavenCoordinatesCache.setDisallowChanges(getBuildService(project.gradle.sharedServices))
     }
 
-    fun toLintModel(module: LintModelModule): LintModelVariant {
+    fun toLintModel(module: LintModelModule, partialResultsDir: File? = null): LintModelVariant {
         val dependencyCaches = DependencyCaches(
             libraryDependencyCacheBuildService.get().localJarCache,
             mavenCoordinatesCache.get().cache)
@@ -625,7 +625,8 @@ abstract class VariantInputs {
             debuggable = debuggable.get(),
             shrinkable = false, //FIXME
             buildFeatures = buildFeatures.toLintModel(),
-            libraryResolver = DefaultLintModelLibraryResolver(dependencyCaches.libraryMap)
+            libraryResolver = DefaultLintModelLibraryResolver(dependencyCaches.libraryMap),
+            partialResultsDir = partialResultsDir
         )
     }
 

@@ -56,6 +56,9 @@ interface LintModelVariant {
      * pointing to the libraries by address are per artifact.
      */
     val libraryResolver: LintModelLibraryResolver
+
+    /** The location of lint's partial results directory, if doing partial analysis */
+    val partialResultsDir: File?
 }
 
 class DefaultLintModelVariant(
@@ -96,6 +99,8 @@ class DefaultLintModelVariant(
     override val shrinkable: Boolean,
     override val buildFeatures: LintModelBuildFeatures,
     override val libraryResolver: LintModelLibraryResolver,
+
+    override val partialResultsDir: File?,
 ) : LintModelVariant {
     override fun toString(): String = name
 }
