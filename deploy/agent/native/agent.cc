@@ -51,6 +51,10 @@ void SendResponse(const deploy::Socket& socket,
   if (response.has_swap_response() &&
       response.swap_response().status() != proto::AgentSwapResponse::OK) {
     response.set_status(proto::AgentResponse::SWAP_FAILURE);
+  } else if (response.has_live_literal_response() &&
+             response.live_literal_response().status() !=
+                 proto::AgentLiveLiteralUpdateResponse::OK) {
+    response.set_status(proto::AgentResponse::LITERAL_FAILURE);
   } else {
     response.set_status(proto::AgentResponse::OK);
   }
