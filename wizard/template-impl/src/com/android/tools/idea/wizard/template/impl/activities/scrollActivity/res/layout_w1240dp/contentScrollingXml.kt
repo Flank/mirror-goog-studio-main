@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 The Android Open Source Project
+ * Copyright (C) 2021 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package com.android.tools.idea.wizard.template.impl.activities.scrollActivity.res.layout
+package com.android.tools.idea.wizard.template.impl.activities.scrollActivity.res.layout_w1240dp
 
 import com.android.tools.idea.wizard.template.getMaterialComponentName
 
-fun simpleXml(
+fun contentScrollingXml(
   activityClass: String,
   layoutName: String,
   packageName: String,
@@ -38,8 +38,9 @@ fun simpleXml(
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_margin="@dimen/text_margin"
+        android:layout_marginTop="48dp"
+        android:layout_marginEnd="200dp"
+        android:layout_marginStart="200dp"
         android:text="@string/large_text" />
-
 </${getMaterialComponentName("android.support.v4.widget.NestedScrollView", useAndroidX)}>
 """
