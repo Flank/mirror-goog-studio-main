@@ -66,7 +66,7 @@ dokka {
     skipEmptyPackages = false
     noJdkLink = true
 
-    dacRoot = "/reference/tools"
+    dacRoot = "/reference/tools/gradle-api/" + version.substring(0, version.lastIndexOf("."))
     classpath = configurations.additionalDokkaClasspath.files
 
     // Root URL of the generated documentation to link with. The trailing slash is required!
