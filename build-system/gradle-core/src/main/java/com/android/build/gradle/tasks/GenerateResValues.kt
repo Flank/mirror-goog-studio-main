@@ -79,7 +79,8 @@ abstract class GenerateResValues : NonIncrementalTask() {
             } else {
                 task.items.empty()
             }
-            task.resOutputDir = creationConfig.paths.generatedResOutputDir
+            task.resOutputDir =
+                creationConfig.paths.generatedResOutputDir.forUseAtConfigurationTime().get().asFile
         }
     }
 }

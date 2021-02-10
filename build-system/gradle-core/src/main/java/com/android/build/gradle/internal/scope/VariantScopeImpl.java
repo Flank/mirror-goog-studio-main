@@ -132,9 +132,11 @@ public class VariantScopeImpl implements VariantScope {
 
     private void configureNdk() {
         File objFolder =
-                new File(
-                        pathHelper.getIntermediatesDir(),
-                        "ndk/" + variantDslInfo.getDirName() + "/obj");
+                pathHelper
+                        .intermediatesDir("ndk", variantDslInfo.getDirName(), "obj")
+                        .get()
+                        .getAsFile();
+
         for (Abi abi : Abi.values()) {
             addNdkDebuggableLibraryFolders(abi, new File(objFolder, "local/" + abi.getTag()));
         }

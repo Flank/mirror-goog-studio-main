@@ -347,7 +347,7 @@ abstract class ComponentImpl(
 
     private fun getGeneratedResourcesDir(name: String): File {
         return FileUtils.join(
-            paths.generatedDir,
+            paths.generatedDir().get().asFile,
             listOf("res", name) + variantDslInfo.directorySegments)
     }
 

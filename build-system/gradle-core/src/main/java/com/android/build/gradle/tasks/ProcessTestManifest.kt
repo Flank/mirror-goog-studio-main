@@ -84,7 +84,7 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
     abstract val packagedManifestOutputDirectory: DirectoryProperty
 
     @get:Internal
-    var tmpDir: File? = null
+    abstract val tmpDir: DirectoryProperty
 
     private var manifests: ArtifactCollection? = null
 
@@ -121,7 +121,7 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
             navJsons,
             jniLibsUseLegacyPackaging.orNull,
             manifestOutputFile,
-            tmpDir!!
+            tmpDir.get().asFile
         )
         BuiltArtifactsImpl(
             BuiltArtifacts.METADATA_FILE_VERSION,
@@ -458,11 +458,12 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
             task.manifestOverlays.disallowChanges()
             task.apkData.set(creationConfig.outputs.getMainSplit())
             task.variantType.setDisallowChanges(creationConfig.variantType.toString())
-            task.tmpDir = FileUtils.join(
-                creationConfig.paths.intermediatesDir,
-                "tmp",
-                "manifest",
-                creationConfig.dirName
+            task.tmpDir.setDisallowChanges(
+                creationConfig.paths.intermediatesDir(
+                    "tmp",
+                    "manifest",
+                    creationConfig.dirName
+                )
             )
             task.minSdkVersion.setDisallowChanges(creationConfig.minSdkVersion.getApiString())
             task.targetSdkVersion.setDisallowChanges(creationConfig.targetSdkVersion.getApiString())

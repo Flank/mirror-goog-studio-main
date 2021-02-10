@@ -313,7 +313,8 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
         val variantDependencies = builder.build()
 
         // Done. Create the (too) many variant objects
-        val pathHelper = VariantPathHelper(project, variantDslInfo, dslServices)
+        val pathHelper =
+            VariantPathHelper(project.layout.buildDirectory, variantDslInfo, dslServices)
         val artifacts = ArtifactsImpl(project, componentIdentity.name)
         val taskContainer = MutableTaskContainer()
         val transformManager = TransformManager(project, dslServices.issueReporter)
@@ -521,7 +522,8 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                 .setFlavorSelection(getFlavorSelection(variantDslInfo))
                 .setTestedVariant(testedComponentInfo.variant)
         val variantDependencies = builder.build()
-        val pathHelper = VariantPathHelper(project, variantDslInfo, dslServices)
+        val pathHelper =
+            VariantPathHelper(project.layout.buildDirectory, variantDslInfo, dslServices)
         val componentIdentity = variantDslInfo.componentIdentity
         val artifacts = ArtifactsImpl(project, componentIdentity.name)
         val taskContainer = MutableTaskContainer()
