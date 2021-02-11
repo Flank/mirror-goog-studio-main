@@ -160,7 +160,6 @@ fun View.createAppContext(stringTable: StringTable): AppContext {
         apiCodeName = stringTable.put(Build.VERSION.CODENAME)
         appPackageName = stringTable.put(context.packageName)
 
-        // getThemeResId is @hide; stubbed in fake-android but IDE doesn't find it
         createResource(stringTable, context.themeResId)?.let { themeResource ->
             theme = themeResource
         }
