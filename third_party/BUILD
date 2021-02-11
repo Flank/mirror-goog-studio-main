@@ -250,6 +250,21 @@ maven_java_library(
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
+    name = "com.google.guava_guava-testlib",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/guava/guava-testlib/25.1-jre:jar",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":com.google.code.findbugs_jsr305",
+        ":com.google.errorprone_error_prone_annotations",
+        ":com.google.guava_guava",
+        ":com.google.j2objc_j2objc-annotations",
+        ":junit_junit",
+        ":org.checkerframework_checker-qual",
+    ],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
     name = "com.google.guava_listenablefuture",
     export_artifact = "//prebuilts/tools/common/m2/repository/com/google/guava/listenablefuture/9999.0-empty-to-avoid-conflict-with-guava:jar",
     visibility = ["//visibility:public"],
@@ -894,7 +909,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "net.bytebuddy_byte-buddy",
-    export_artifact = "//prebuilts/tools/common/m2/repository/net/bytebuddy/byte-buddy/1.9.10:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/net/bytebuddy/byte-buddy/1.10.13:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
@@ -902,7 +917,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "net.bytebuddy_byte-buddy-agent",
-    export_artifact = "//prebuilts/tools/common/m2/repository/net/bytebuddy/byte-buddy-agent/1.9.10:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/net/bytebuddy/byte-buddy-agent/1.10.13:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )

@@ -15,6 +15,8 @@
     <orderEntry type="module" module-name="android.sdktools.dvlib" exported="" />
     <orderEntry type="module" module-name="android.sdktools.layoutlib-api" exported="" />
     <orderEntry type="library" scope="TEST" name="truth" level="project" />
+    <orderEntry type="library" scope="TEST" name="guava-testlib" level="project" />
+    <orderEntry type="library" scope="TEST" name="jimfs" level="project" />
     <orderEntry type="module" module-name="android.sdktools.repository" exported="" />
     <orderEntry type="module" module-name="android.sdktools.testutils" scope="TEST" />
   </component>

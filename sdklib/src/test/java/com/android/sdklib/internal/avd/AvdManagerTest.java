@@ -382,7 +382,7 @@ public class AvdManagerTest extends TestCase {
                         + mAvdFolder.toAbsolutePath()
                         + "/sdcard.img");
 
-        // Copy this AVD to an AVD with a different name and a slightly different configuration
+        // Copy this AVDa to an AVD with a different name and a slightly different configuration
         HashMap<String, String> newAvdConfig = new HashMap<>();
         newAvdConfig.put("testKey2", "newValue2");
 

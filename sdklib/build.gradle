@@ -20,6 +20,8 @@ dependencies {
     implementation libs.apache_httpmime
     implementation libs.apache_httpcore
 
+    testImplementation libs.guava_testlib
+    testImplementation libs.jimfs
     testImplementation libs.junit
     testImplementation libs.truth
     testImplementation project(':base:testutils')
