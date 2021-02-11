@@ -57,6 +57,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
+import java.io.File;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -819,5 +820,25 @@ public final class AndroidSdkHandler {
     @NonNull
     public FileOp getFileOp() {
         return mFop;
+    }
+
+    /** Converts a {@code File} into a {@code Path} on the {@code FileSystem} used by this SDK. */
+    @NonNull
+    public Path toCompatiblePath(@NonNull File file) {
+        Path localPath = mRepoManager.getLocalPath();
+        if (localPath != null) {
+            return localPath.getFileSystem().getPath(file.getPath());
+        }
+        return file.toPath();
+    }
+
+    /** Converts a {@code String} into a {@code Path} on the {@code FileSystem} used by this SDK. */
+    @NonNull
+    public Path toCompatiblePath(@NonNull String file) {
+        Path localPath = mRepoManager.getLocalPath();
+        if (localPath != null) {
+            return localPath.getFileSystem().getPath(file);
+        }
+        return Paths.get(file);
     }
 }

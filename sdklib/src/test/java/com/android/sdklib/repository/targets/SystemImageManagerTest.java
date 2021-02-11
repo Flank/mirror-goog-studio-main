@@ -18,11 +18,11 @@ package com.android.sdklib.repository.targets;
 import static org.junit.Assert.assertArrayEquals;
 
 import com.android.annotations.NonNull;
-import com.android.repository.io.FileOp;
 import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.repository.testframework.MockFileOp;
 import com.android.sdklib.ISystemImage;
 import com.android.sdklib.repository.AndroidSdkHandler;
+import com.android.testutils.file.InMemoryFileSystems;
 import com.google.common.collect.Sets;
 import java.nio.file.Path;
 import java.util.Iterator;
@@ -57,21 +57,25 @@ public class SystemImageManagerTest extends TestCase {
         Iterator<SystemImage> resultIter = images.iterator();
 
         ISystemImage platform13 = resultIter.next();
-        verifyPlatform13(platform13, fop);
+        verifyPlatform13(platform13, handler);
         assertEquals(2, platform13.getSkins().length);
 
-        verifySysImg23(resultIter.next(), fop);
+        verifySysImg23(resultIter.next(), handler);
 
         ISystemImage google13 = resultIter.next();
         verifyGoogleAddon13(google13);
         assertEquals(2, google13.getSkins().length);
 
         ISystemImage google23 = resultIter.next();
-        verifyGoogleApisSysImg23(google23, fop);
+        verifyGoogleApisSysImg23(google23, handler);
 
         ISystemImage addon13 = resultIter.next();
-        verifyTvAddon13(addon13, fop);
+        verifyTvAddon13(addon13, handler);
         assertEquals("google_tv_addon", addon13.getTag().getId());
+    }
+
+    private @NonNull Path toPath(@NonNull String path, @NonNull AndroidSdkHandler sdkHandler) {
+        return sdkHandler.toCompatiblePath(InMemoryFileSystems.getPlatformSpecificPath(path));
     }
 
     private void verifyGoogleAddon13(ISystemImage img) {
@@ -79,38 +83,42 @@ public class SystemImageManagerTest extends TestCase {
         // the platform.
     }
 
-    private void verifyPlatform13(@NonNull ISystemImage img, @NonNull FileOp fop) {
+    private void verifyPlatform13(@NonNull ISystemImage img, @NonNull AndroidSdkHandler sdk) {
         assertEquals("armeabi", img.getAbiType());
         assertNull(img.getAddonVendor());
-        assertEquals(fop.toPath("/sdk/platforms/android-13/images/"), img.getLocation());
+        assertEquals(toPath("/sdk/platforms/android-13/images/", sdk), img.getLocation());
         assertEquals("default", img.getTag().getId());
     }
 
-    private void verifyTvAddon13(@NonNull ISystemImage img, @NonNull FileOp fop) {
+    private void verifyTvAddon13(@NonNull ISystemImage img, @NonNull AndroidSdkHandler sdk) {
         assertEquals("x86", img.getAbiType());
         assertEquals("google", img.getAddonVendor().getId());
         assertEquals(
-                fop.toPath("/sdk/add-ons/addon-google_tv_addon-google-13/images/x86/"),
+                toPath("/sdk/add-ons/addon-google_tv_addon-google-13/images/x86/", sdk),
                 img.getLocation());
     }
 
-    private void verifyGoogleApisSysImg23(@NonNull ISystemImage img, @NonNull FileOp fop) {
+    private void verifyGoogleApisSysImg23(
+            @NonNull ISystemImage img, @NonNull AndroidSdkHandler sdk) {
         assertEquals("x86_64", img.getAbiType());
         assertEquals("google", img.getAddonVendor().getId());
         assertEquals(
-                fop.toPath("/sdk/system-images/android-23/google_apis/x86_64/"), img.getLocation());
+                toPath("/sdk/system-images/android-23/google_apis/x86_64/", sdk),
+                img.getLocation());
         assertEquals("google_apis", img.getTag().getId());
     }
 
-    private void verifySysImg23(@NonNull ISystemImage img, @NonNull FileOp fop) {
+    private void verifySysImg23(@NonNull ISystemImage img, @NonNull AndroidSdkHandler sdk) {
         assertEquals("x86", img.getAbiType());
         assertNull(img.getAddonVendor());
-        assertEquals(fop.toPath("/sdk/system-images/android-23/default/x86/"), img.getLocation());
+        assertEquals(
+                toPath("/sdk/system-images/android-23/default/x86/", sdk),
+                img.getLocation());
         assertEquals(2, img.getSkins().length);
         assertArrayEquals(
                 new Path[] {
-                    fop.toPath("/sdk/system-images/android-23/default/x86/skins/res1/"),
-                    fop.toPath("/sdk/system-images/android-23/default/x86/skins/res2/")
+                    toPath("/sdk/system-images/android-23/default/x86/skins/res1/", sdk),
+                    toPath("/sdk/system-images/android-23/default/x86/skins/res2/", sdk)
                 },
                 img.getSkins());
         assertEquals("default", img.getTag().getId());
