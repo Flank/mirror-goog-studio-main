@@ -27,7 +27,6 @@ import com.android.repository.api.ConsoleProgressIndicator;
 import com.android.repository.api.LocalPackage;
 import com.android.repository.api.ProgressIndicator;
 import com.android.repository.api.ProgressIndicatorAdapter;
-import com.android.repository.io.FileOp;
 import com.android.repository.io.FileOpUtils;
 import com.android.resources.Density;
 import com.android.resources.ScreenSize;
@@ -1031,7 +1030,6 @@ class AvdManagerCli extends CommandLineParser {
         if (emulatorPackage == null) {
             errorAndExit("\"emulator\" package must be installed!");
         }
-        FileOp fop = mSdkHandler.getFileOp();
         Path libDir = emulatorPackage.getLocation().resolve(SdkConstants.FD_LIB);
         Path hardwareDefs = libDir.resolve(SdkConstants.FN_HARDWARE_INI);
         Map<String, HardwareProperties.HardwareProperty> hwMap =

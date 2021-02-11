@@ -20,7 +20,6 @@ import com.android.annotations.concurrency.Slow;
 import com.android.repository.api.License;
 import com.android.repository.api.ProgressIndicator;
 import com.android.repository.api.RemotePackage;
-import com.android.repository.io.FileOp;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.Map;
