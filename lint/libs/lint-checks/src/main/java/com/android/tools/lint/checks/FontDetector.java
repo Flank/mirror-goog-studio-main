@@ -79,26 +79,15 @@ public class FontDetector extends ResourceXmlDetector {
             Integer.MAX_VALUE - 1;
 
     public static final String KEY_ARTIFACT_ID = "artifact";
+    public static final String KEY_UNEXPECTED_NAMESPACE = "unexpected-ns";
     public static final String KEY_APP_NAMESPACE = "app-namespace";
 
     private static final Implementation IMPLEMENTATION =
             new Implementation(FontDetector.class, Scope.RESOURCE_FILE_SCOPE);
 
-    public static final Issue FONT_VALIDATION_WARNING =
+    public static final Issue FONT_VALIDATION =
             Issue.create(
-                            "FontValidationWarning",
-                            "Validation of font files",
-                            "Look for problems in various font files.",
-                            Category.CORRECTNESS,
-                            9,
-                            Severity.WARNING,
-                            IMPLEMENTATION)
-                    .addMoreInfo(
-                            "https://developer.android.com/guide/topics/text/downloadable-fonts.html");
-
-    public static final Issue FONT_VALIDATION_ERROR =
-            Issue.create(
-                            "FontValidationError",
+                            "FontValidation",
                             "Validation of font files",
                             "Look for problems in various font files.",
                             Category.CORRECTNESS,
@@ -106,7 +95,8 @@ public class FontDetector extends ResourceXmlDetector {
                             Severity.ERROR,
                             IMPLEMENTATION)
                     .addMoreInfo(
-                            "https://developer.android.com/guide/topics/text/downloadable-fonts.html");
+                            "https://developer.android.com/guide/topics/text/downloadable-fonts.html")
+                    .setAliases(Arrays.asList("FontValidationWarning", "FontValidationError"));
 
     public static final GradleCoordinate MIN_APPSUPPORT_VERSION =
             new GradleCoordinate(SUPPORT_LIB_GROUP_ID, APPCOMPAT_LIB_ARTIFACT_ID, "26.0.0");
@@ -271,9 +261,9 @@ public class FontDetector extends ResourceXmlDetector {
         String message = createUnexpectedAttributeMessage(appNamespace, minSdk);
         LintFix fix = LintFix.create().unset(first.getNamespaceURI(), first.getLocalName()).build();
         Incident incident =
-                new Incident(
-                        FONT_VALIDATION_WARNING, message, context.getLocation(first), first, fix);
-        context.report(incident, map().put(KEY_APP_NAMESPACE, appNamespace));
+                new Incident(FONT_VALIDATION, message, context.getLocation(first), first, fix)
+                        .overrideSeverity(Severity.WARNING);
+        context.report(incident, map().put(KEY_UNEXPECTED_NAMESPACE, appNamespace));
     }
 
     @NonNull
@@ -287,11 +277,9 @@ public class FontDetector extends ResourceXmlDetector {
     @Override
     public boolean filterIncident(
             @NonNull Context context, @NonNull Incident incident, @NonNull LintMap map) {
-        // no attribute namespace depends on api level
-        Issue issue = incident.getIssue();
-        if (issue == FONT_VALIDATION_WARNING) {
+        if (map.containsKey(KEY_UNEXPECTED_NAMESPACE)) {
             // From reportUnexpectedNamespace
-            boolean app = map.getBoolean(KEY_APP_NAMESPACE, false);
+            boolean app = map.getBoolean(KEY_UNEXPECTED_NAMESPACE, false);
             AndroidVersion minSdk = context.getMainProject().getMinSdkVersion();
             if (minSdk.getApiLevel()
                     >= FUTURE_API_VERSION_WHERE_DOWNLOADABLE_FONTS_WORK_IN_FRAMEWORK) {
@@ -306,8 +294,8 @@ public class FontDetector extends ResourceXmlDetector {
             return true;
         }
 
-        if (issue == FONT_VALIDATION_ERROR) {
-            // From reportMissingAppAttribute
+        // From reportMissingAppAttribute
+        if (map.containsKey(KEY_APP_NAMESPACE)) {
             boolean app = map.getBoolean(KEY_APP_NAMESPACE, false);
             AndroidVersion minSdk = context.getMainProject().getMinSdkVersion();
             if (minSdk.getFeatureLevel() <= AndroidVersion.VersionCodes.O_MR1) {
@@ -360,7 +348,7 @@ public class FontDetector extends ResourceXmlDetector {
         Element element = firstFontAttribute.getOwnerElement();
         Incident incident =
                 new Incident(
-                        FONT_VALIDATION_ERROR,
+                        FONT_VALIDATION,
                         element,
                         context.getElementLocation(element),
                         message,
@@ -577,10 +565,10 @@ public class FontDetector extends ResourceXmlDetector {
             @NonNull String message,
             @NonNull Location location,
             @Nullable LintFix fix) {
-        if (!context.isEnabled(FONT_VALIDATION_ERROR)) {
-            return;
-        }
-        context.report(FONT_VALIDATION_ERROR, node, location, message, fix);
+        Incident incident =
+                new Incident(FONT_VALIDATION, node, location, message, fix)
+                        .overrideSeverity(Severity.ERROR);
+        context.report(incident);
     }
 
     private static void reportWarning(
@@ -589,9 +577,9 @@ public class FontDetector extends ResourceXmlDetector {
             @NonNull String message,
             @NonNull Location location,
             @Nullable LintFix fix) {
-        if (!context.isEnabled(FONT_VALIDATION_WARNING)) {
-            return;
-        }
-        context.report(FONT_VALIDATION_WARNING, node, location, message, fix);
+        Incident incident =
+                new Incident(FONT_VALIDATION, node, location, message, fix)
+                        .overrideSeverity(Severity.WARNING);
+        context.report(incident);
     }
 }

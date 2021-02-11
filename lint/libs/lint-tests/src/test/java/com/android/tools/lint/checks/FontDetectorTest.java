@@ -23,12 +23,14 @@ import static com.android.ide.common.fonts.FontProviderKt.GOOGLE_FONT_DEVELOPMEN
 import static com.android.ide.common.fonts.FontProviderKt.GOOGLE_FONT_NAME;
 import static com.android.ide.common.fonts.FontProviderKt.GOOGLE_FONT_PACKAGE_NAME;
 import static com.android.ide.common.fonts.FontProviderKt.GOOGLE_FONT_URL;
+import static com.android.tools.lint.LintCliFlags.ERRNO_SUCCESS;
 import static com.android.tools.lint.checks.FontDetector.FUTURE_API_VERSION_WHERE_DOWNLOADABLE_FONTS_WORK_IN_FRAMEWORK;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.fonts.FontLoader;
 import com.android.testutils.TestUtils;
+import com.android.tools.lint.MainTest;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
@@ -56,7 +58,7 @@ public class FontDetectorTest extends AbstractCheckTest {
     public void testBothDownloadableAndFontFamilyPresent() {
         String expected =
                 ""
-                        + "res/font/font1.xml:4: Error: A downloadable font cannot have a <font> sub tag [FontValidationError]\n"
+                        + "res/font/font1.xml:4: Error: A downloadable font cannot have a <font> sub tag [FontValidation]\n"
                         + "    <font\n"
                         + "     ~~~~\n"
                         + "1 errors, 0 warnings";
@@ -91,7 +93,7 @@ public class FontDetectorTest extends AbstractCheckTest {
     public void testAppCompatVersion() {
         String expected =
                 ""
-                        + "src/main/res/font/font1.xml:2: Error: Using version 26.0.0-alpha7 of the appcompat-v7 library. Required version for using downloadable fonts: 26.0.0 or higher. [FontValidationError]\n"
+                        + "src/main/res/font/font1.xml:2: Error: Using version 26.0.0-alpha7 of the appcompat-v7 library. Required version for using downloadable fonts: 26.0.0 or higher. [FontValidation]\n"
                         + "<font-family xmlns:app=\"http://schemas.android.com/apk/res-auto\"\n"
                         + " ~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings";
@@ -143,7 +145,7 @@ public class FontDetectorTest extends AbstractCheckTest {
                 ""
                         + "res/font/font1.xml:8: Warning: For minSdkVersion="
                         + FUTURE_API_VERSION_WHERE_DOWNLOADABLE_FONTS_WORK_IN_FRAMEWORK
-                        + " only android: attributes should be used [FontValidationWarning]\n"
+                        + " only android: attributes should be used [FontValidation]\n"
                         + "    app:fontProviderCerts=\"@array/certs\">\n"
                         + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "0 errors, 1 warnings\n";
@@ -181,7 +183,7 @@ public class FontDetectorTest extends AbstractCheckTest {
         //noinspection all // Sample code
         String expected =
                 ""
-                        + "res/font/font1.xml:8: Warning: For minSdkVersion=27 only app: attributes should be used [FontValidationWarning]\n"
+                        + "res/font/font1.xml:8: Warning: For minSdkVersion=27 only app: attributes should be used [FontValidation]\n"
                         + "    android:fontProviderAuthority=\"com.google.android.gms.fonts\">\n"
                         + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "0 errors, 1 warnings\n";
@@ -214,7 +216,7 @@ public class FontDetectorTest extends AbstractCheckTest {
         //noinspection all // Sample code
         String expected =
                 ""
-                        + "res/font/font1.xml:2: Error: Missing required attributes: android:fontProviderAuthority, android:fontProviderPackage, android:fontProviderCerts [FontValidationError]\n"
+                        + "res/font/font1.xml:2: Error: Missing required attributes: android:fontProviderAuthority, android:fontProviderPackage, android:fontProviderCerts [FontValidation]\n"
                         + "<font-family xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
                         + " ~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings";
@@ -246,7 +248,7 @@ public class FontDetectorTest extends AbstractCheckTest {
         //noinspection all // Sample code
         String expected =
                 ""
-                        + "res/font/font1.xml:2: Error: Missing required attributes: android:fontProviderAuthority, android:fontProviderPackage, android:fontProviderCerts [FontValidationError]\n"
+                        + "res/font/font1.xml:2: Error: Missing required attributes: android:fontProviderAuthority, android:fontProviderPackage, android:fontProviderCerts [FontValidation]\n"
                         + "<font-family xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
                         + " ~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings";
@@ -279,7 +281,7 @@ public class FontDetectorTest extends AbstractCheckTest {
         //noinspection all // Sample code
         String expected =
                 ""
-                        + "res/font/font1.xml:2: Error: Missing required attributes: app:fontProviderAuthority, app:fontProviderPackage, app:fontProviderCerts [FontValidationError]\n"
+                        + "res/font/font1.xml:2: Error: Missing required attributes: app:fontProviderAuthority, app:fontProviderPackage, app:fontProviderCerts [FontValidation]\n"
                         + "<font-family xmlns:app=\"http://schemas.android.com/apk/res-auto\"\n"
                         + " ~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings";
@@ -309,7 +311,7 @@ public class FontDetectorTest extends AbstractCheckTest {
         //noinspection all // Sample code
         String expected =
                 ""
-                        + "res/font/font1.xml:3: Error: Unknown font provider authority [FontValidationError]\n"
+                        + "res/font/font1.xml:3: Error: Unknown font provider authority [FontValidation]\n"
                         + "    app:fontProviderAuthority=\"com.google.android.gms.helpme\"\n"
                         + "                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings";
@@ -341,7 +343,7 @@ public class FontDetectorTest extends AbstractCheckTest {
         //noinspection all // Sample code
         String expected =
                 ""
-                        + "res/font/font1.xml:3: Error: Unknown font provider authority [FontValidationError]\n"
+                        + "res/font/font1.xml:3: Error: Unknown font provider authority [FontValidation]\n"
                         + "    android:fontProviderAuthority=\"com.google.android.gms.helpme\"\n"
                         + "                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings";
@@ -374,7 +376,7 @@ public class FontDetectorTest extends AbstractCheckTest {
     public void testPackageMismatchOnApi25() {
         String expected =
                 ""
-                        + "res/font/font1.xml:4: Error: Unexpected font provider package [FontValidationError]\n"
+                        + "res/font/font1.xml:4: Error: Unexpected font provider package [FontValidation]\n"
                         + "    app:fontProviderPackage=\"com.google.android.gms.fonts\"\n"
                         + "                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings";
@@ -407,7 +409,7 @@ public class FontDetectorTest extends AbstractCheckTest {
         //noinspection all // Sample code
         String expected =
                 ""
-                        + "res/font/font1.xml:4: Error: Unexpected font provider package [FontValidationError]\n"
+                        + "res/font/font1.xml:4: Error: Unexpected font provider package [FontValidation]\n"
                         + "    android:fontProviderPackage=\"com.google.android.gms.fonts\"\n"
                         + "                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings";
@@ -441,7 +443,7 @@ public class FontDetectorTest extends AbstractCheckTest {
         //noinspection all // Sample code
         String expected =
                 ""
-                        + "res/font/font1.xml:6: Error: Missing provider query [FontValidationError]\n"
+                        + "res/font/font1.xml:6: Error: Missing provider query [FontValidation]\n"
                         + "    app:fontProviderQuery=\"\">\n"
                         + "    ~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings\n";
@@ -473,7 +475,7 @@ public class FontDetectorTest extends AbstractCheckTest {
         //noinspection all // Sample code
         String expected =
                 ""
-                        + "res/font/font1.xml:6: Error: Unexpected keyword: size expected one of: width, weight, italic, besteffort [FontValidationError]\n"
+                        + "res/font/font1.xml:6: Error: Unexpected keyword: size expected one of: width, weight, italic, besteffort [FontValidation]\n"
                         + "    app:fontProviderQuery=\"name=Monserrat&amp;size=15\">\n"
                         + "                               ~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings";
@@ -498,7 +500,7 @@ public class FontDetectorTest extends AbstractCheckTest {
         //noinspection all // Sample code
         String expected =
                 ""
-                        + "res/font/font1.xml:6: Error: Unexpected keyword: Aladin expected one of: wght, wdth, ital, bold, exact, nearest [FontValidationError]\n"
+                        + "res/font/font1.xml:6: Error: Unexpected keyword: Aladin expected one of: wght, wdth, ital, bold, exact, nearest [FontValidation]\n"
                         + "    app:fontProviderQuery=\"Monserrat:300i,Aladin:200\">\n"
                         + "                           ~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings";
@@ -523,7 +525,7 @@ public class FontDetectorTest extends AbstractCheckTest {
         //noinspection all // Sample code
         String expected =
                 ""
-                        + "res/font/font1.xml:6: Error: Unknown font: NewUnknownFontName [FontValidationError]\n"
+                        + "res/font/font1.xml:6: Error: Unknown font: NewUnknownFontName [FontValidation]\n"
                         + "    app:fontProviderQuery=\"NewUnknownFontName\">\n"
                         + "                           ~~~~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings";
@@ -549,7 +551,7 @@ public class FontDetectorTest extends AbstractCheckTest {
         //noinspection all // Sample code
         String expected =
                 ""
-                        + "res/font/font1.xml:6: Warning: No exact match found for: Montserrat [FontValidationWarning]\n"
+                        + "res/font/font1.xml:6: Warning: No exact match found for: Montserrat [FontValidation]\n"
                         + "    app:fontProviderQuery=\"name=Montserrat&amp;weight=600\">\n"
                         + "                               ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "0 errors, 1 warnings";
@@ -582,7 +584,7 @@ public class FontDetectorTest extends AbstractCheckTest {
         //noinspection all // Sample code
         String expected =
                 ""
-                        + "res/font/font1.xml:6: Error: No exact match found for: Montserrat [FontValidationError]\n"
+                        + "res/font/font1.xml:6: Error: No exact match found for: Montserrat [FontValidation]\n"
                         + "    app:fontProviderQuery=\"name=Montserrat&amp;weight=600&amp;besteffort=false\">\n"
                         + "                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings";
@@ -708,5 +710,132 @@ public class FontDetectorTest extends AbstractCheckTest {
                         + "</font_directory>\n");
 
         return sdkRootDir;
+    }
+
+    public void testRename() throws Exception {
+        File project =
+                getProjectDir(
+                        null,
+                        manifest().minSdk(28),
+                        xml(
+                                // @font/font1 and @font/font2 are filtered by a baseline, and
+                                // @font/font3 is not so *should* show up as an error.
+                                // @font/suppressed1 and @font/suppressed2 are suppressed with
+                                // ignore annotations.
+                                "res/font/font1.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<font-family xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    android:fontProviderQuery=\"Monserrat\">\n"
+                                        + "    <font\n"
+                                        + "        android:fontStyle=\"normal\"\n"
+                                        + "        android:fontWeight=\"400\"\n"
+                                        + "        android:font=\"@font/monserrat\" />\n"
+                                        + "</font-family>"
+                                        + "\n"),
+                        xml(
+                                "res/font/font2.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<font-family xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    xmlns:app=\"http://schemas.android.com/apk/res-auto\"\n"
+                                        + "    android:fontProviderAuthority=\"com.google.android.gms.fonts\"\n"
+                                        + "    android:fontProviderQuery=\"Monserrat\"\n"
+                                        + "    android:fontProviderPackage=\"com.google.android.gms\"\n"
+                                        + "    android:fontProviderCerts=\"@array/certs\"\n"
+                                        + "    app:fontProviderCerts=\"@array/certs\">\n"
+                                        + "</font-family>"
+                                        + "\n"),
+                        xml(
+                                "res/font/font3.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<font-family xmlns:app=\"http://schemas.android.com/apk/res-auto\"\n"
+                                        + "    app:fontProviderAuthority=\"com.google.android.gms.fonts\"\n"
+                                        + "    app:fontProviderPackage=\"com.google.android.gms\"\n"
+                                        + "    app:fontProviderCerts=\"@array/certs\"\n"
+                                        + "    app:fontProviderQuery=\"name=Monserrat&amp;size=15\">\n"
+                                        + "</font-family>"
+                                        + "\n"),
+                        xml(
+                                "res/font/suppressed1.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<font-family xmlns:app=\"http://schemas.android.com/apk/res-auto\"\n"
+                                        + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                                        + "    app:fontProviderAuthority=\"com.google.android.gms.fonts\"\n"
+                                        + "    app:fontProviderPackage=\"com.google.android.gms\"\n"
+                                        + "    app:fontProviderCerts=\"@array/certs\"\n"
+                                        + "    app:fontProviderQuery=\"name=Monserrat&amp;size=15\"\n"
+                                        + "    tools:ignore=\"FontValidation\">\n"
+                                        + "</font-family>"
+                                        + "\n"),
+                        xml(
+                                "res/font/suppressed2.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<font-family xmlns:app=\"http://schemas.android.com/apk/res-auto\"\n"
+                                        + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                                        + "    app:fontProviderAuthority=\"com.google.android.gms.fonts\"\n"
+                                        + "    app:fontProviderPackage=\"com.google.android.gms\"\n"
+                                        + "    app:fontProviderCerts=\"@array/certs\"\n"
+                                        + "    app:fontProviderQuery=\"name=Monserrat&amp;size=15\"\n"
+                                        + "    tools:ignore=\"FontValidationError\">\n"
+                                        + "</font-family>"
+                                        + "\n"),
+                        xml(
+                                "baseline.xml",
+                                ""
+                                        + "<issues format=\"6\" by=\"lint 7.0.0-dev\" type=\"baseline\" client=\"cli\" name=\"cli\" variant=\"all\" version=\"7.0.0-dev\">\n"
+                                        + "\n"
+                                        + "    <issue\n"
+                                        + "        id=\"FontValidationWarning\"\n"
+                                        + "        message=\"For `minSdkVersion`=28 only `app:` attributes should be used\"\n"
+                                        + "        errorLine1=\"    android:fontProviderAuthority=&quot;com.google.android.gms.fonts&quot;\"\n"
+                                        + "        errorLine2=\"    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\">\n"
+                                        + "        <location\n"
+                                        + "            file=\"res/font/font2.xml\"\n"
+                                        + "            line=\"4\"\n"
+                                        + "            column=\"5\"/>\n"
+                                        + "    </issue>\n"
+                                        + "\n"
+                                        + "    <issue\n"
+                                        + "        id=\"FontValidationError\"\n"
+                                        + "        message=\"A downloadable font cannot have a `&lt;font>` sub tag\"\n"
+                                        + "        errorLine1=\"    &lt;font\"\n"
+                                        + "        errorLine2=\"     ~~~~\">\n"
+                                        + "        <location\n"
+                                        + "            file=\"res/font/font1.xml\"\n"
+                                        + "            line=\"4\"\n"
+                                        + "            column=\"6\"/>\n"
+                                        + "    </issue>\n"
+                                        + "\n"
+                                        + "</issues>"));
+        MainTest.checkDriver(
+                ""
+                        + "baseline.xml: Information: 1 error and 1 warning were filtered out because they are listed in the baseline file, baseline.xml\n"
+                        + " [LintBaseline]\n"
+                        + "res/font/font3.xml:6: Error: Unexpected keyword: size expected one of: width, weight, italic, besteffort [FontValidation]\n"
+                        + "    app:fontProviderQuery=\"name=Monserrat&amp;size=15\">\n"
+                        + "                               ~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "1 errors, 0 warnings (1 error, 1 warning filtered by baseline baseline.xml)",
+                "",
+
+                // Expected exit code
+                ERRNO_SUCCESS,
+
+                // Args
+                new String[] {
+                    "-q",
+                    "--check",
+                    "FontValidation",
+                    "--baseline",
+                    new File(project, "baseline.xml").getPath(),
+                    "--disable",
+                    "LintError",
+                    project.getPath()
+                },
+                null,
+                null);
     }
 }

@@ -413,14 +413,18 @@ open class ConfigurationHierarchy(
      * [Severity.IGNORE] but we want the severity to be what was configured in
      * the original severity context (lint.xml etc), not just the default severity.
      */
-    fun getDefinedSeverityWithoutOverride(source: Configuration, issue: Issue): Severity? {
+    fun getDefinedSeverityWithoutOverride(
+        source: Configuration,
+        issue: Issue,
+        visibleDefault: Severity = issue.defaultSeverity
+    ): Severity? {
         if (source == overrides || overrides == null) {
             return null
         }
         val prev = overrides
         try {
             overrides = null
-            return source.getDefinedSeverity(issue, source)
+            return source.getDefinedSeverity(issue, source, visibleDefault)
         } finally {
             overrides = prev
         }
@@ -547,9 +551,9 @@ open class ConfigurationHierarchy(
             return parent?.isEnabled(issue) ?: super.isEnabled(issue)
         }
 
-        override fun getDefinedSeverity(issue: Issue, source: Configuration): Severity? {
-            return parent?.getDefinedSeverity(issue, source)
-                ?: super.getDefinedSeverity(issue, source)
+        override fun getDefinedSeverity(issue: Issue, source: Configuration, visibleDefault: Severity): Severity? {
+            return parent?.getDefinedSeverity(issue, source, visibleDefault)
+                ?: super.getDefinedSeverity(issue, source, visibleDefault)
         }
 
         override fun startBulkEditing() {

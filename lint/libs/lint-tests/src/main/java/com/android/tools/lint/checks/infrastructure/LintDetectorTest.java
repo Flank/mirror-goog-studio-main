@@ -84,6 +84,7 @@ import java.util.Map;
 import java.util.Set;
 import javax.imageio.ImageIO;
 import org.intellij.lang.annotations.Language;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.kotlin.config.LanguageVersionSettings;
 import org.jetbrains.uast.UFile;
 import org.w3c.dom.Attr;
@@ -1163,7 +1164,10 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
 
         @Nullable
         @Override
-        public Severity getDefinedSeverity(@NonNull Issue issue, @NonNull Configuration source) {
+        public Severity getDefinedSeverity(
+                @NotNull Issue issue,
+                @NotNull Configuration source,
+                @NotNull Severity visibleDefault) {
             // In unit tests, include issues that are ignored by default
             Severity severity = issue.getDefaultSeverity();
             if (severity == Severity.IGNORE) {

@@ -189,6 +189,9 @@ class Incident(
 
     /** Sets the [issue] property */
     fun issue(issue: Issue): Incident {
+        if (this.issue == IssueRegistry.LINT_ERROR) {
+            this.severity = issue.defaultSeverity
+        }
         this.issue = issue
         return this
     }
@@ -202,6 +205,19 @@ class Incident(
     /** Sets the [location] property */
     fun location(location: Location): Incident {
         this.location = location
+        return this
+    }
+
+    /**
+     * Sets the [severity] property to a specific severity. This
+     * overrides the default severity for this issue for this specific
+     * instance only, but note that this will only be respected if the
+     * issue severity is not configured specifically (for example by
+     * Gradle DSL flags like `error 'MyIssue'` or `warningsAsErrors
+     * true`.)
+     */
+    fun overrideSeverity(severity: Severity): Incident {
+        this.severity = severity
         return this
     }
 
@@ -318,6 +334,7 @@ class Incident(
                 Comparator.reverseOrder()
             )
             .compare(issue.id, other.issue.id)
+            .compare(severity, other.severity)
             .compare(
                 fileName1,
                 fileName2,

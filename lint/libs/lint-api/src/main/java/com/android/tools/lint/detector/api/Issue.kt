@@ -172,9 +172,24 @@ class Issue private constructor(
         return _platforms.contains(Platform.ANDROID)
     }
 
+    private var aliases: List<String>? = null
+
     /**
-     * A link (a URL string) to more information, or null
+     * Sets previous names for this issue; this is useful when you
+     * for various reasons have to rename or combine multiple issues
+     * into one; by declaring it here, lint can more gracefully handle
+     * existing incidents listed in baselines etc
      */
+    fun setAliases(aliases: List<String>?): Issue {
+        assert(this.aliases == null) // calling more than once is probably not intentional
+        this.aliases = aliases
+        return this
+    }
+
+    /** Returns any names for this issue; see [setAliases]. */
+    fun getAliases(): List<String>? = aliases
+
+    /** A link (a URL string) to more information, or null */
     val moreInfo: List<String>
         get() {
             when (moreInfoUrls) {
@@ -189,8 +204,8 @@ class Issue private constructor(
         }
 
     init {
-        assert(!briefDescription.isEmpty())
-        assert(!explanation.isEmpty())
+        assert(briefDescription.isNotEmpty())
+        assert(explanation.isNotEmpty())
     }
 
     /**

@@ -549,7 +549,7 @@ open class LintXmlConfiguration protected constructor(
         return parent?.getLocalIssueConfigLocation(issue, specificOnly, severityOnly, source)
     }
 
-    override fun getDefinedSeverity(issue: Issue, source: Configuration): Severity? {
+    override fun getDefinedSeverity(issue: Issue, source: Configuration, visibleDefault: Severity): Severity? {
         if (issue.suppressNames != null) {
             // Not allowed to suppress this issue via lint.xml.
             // Consider reporting this as well (not easy here since we don't have
@@ -563,7 +563,7 @@ open class LintXmlConfiguration protected constructor(
             //                "Issue `" + issue.getId() + "` is not allowed to be suppressed",
             //                configFile, project);
             //    }
-            return getDefaultSeverity(issue)
+            return getDefaultSeverity(issue, visibleDefault)
         }
 
         val issueMaps = getIssueMaps()
@@ -597,7 +597,7 @@ open class LintXmlConfiguration protected constructor(
         }
 
         // or inherited?
-        return parent?.getDefinedSeverity(issue, source)
+        return parent?.getDefinedSeverity(issue, source, visibleDefault)
     }
 
     private fun ensureInitialized() {

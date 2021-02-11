@@ -266,7 +266,11 @@ class LintBaseline(
         val path = file.path
         val issueId = issue.id
         for (entry in entries) {
-            if (entry!!.issueId == issueId) {
+            entry ?: continue
+            if (entry.issueId == issueId ||
+                IssueRegistry.isDeletedIssueId(entry.issueId) &&
+                IssueRegistry.getNewId(entry.issueId) == issueId
+            ) {
                 if (isSamePathSuffix(path, entry.path)) {
                     // Remove all linked entries. We don't loop through all the locations;
                     // they're allowed to vary over time, we just assume that all entries

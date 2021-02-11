@@ -49,6 +49,15 @@ open class CompositeIssueRegistry(
             return list
         }
 
+    override val deletedIssues: List<String>
+        get() {
+            // Usually nothing
+            if (registries.all { it.deletedIssues.isEmpty() }) {
+                return emptyList()
+            }
+            return registries.map { it.deletedIssues }.flatten()
+        }
+
     override val api: Int = CURRENT_API
 
     override val isUpToDate: Boolean

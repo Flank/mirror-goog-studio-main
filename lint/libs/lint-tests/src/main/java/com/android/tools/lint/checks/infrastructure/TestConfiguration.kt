@@ -31,12 +31,12 @@ class TestConfiguration(
     configurations: ConfigurationHierarchy
 ) : Configuration(configurations) {
 
-    override fun getDefinedSeverity(issue: Issue, source: Configuration): Severity {
-        val override = overrideSeverity(task, issue)
+    override fun getDefinedSeverity(issue: Issue, source: Configuration, visibleDefault: Severity): Severity {
+        val override = overrideSeverity(task, issue, visibleDefault)
         if (override != null) {
             return override
         }
-        val severity = super.getDefinedSeverity(issue, source)
+        val severity = super.getDefinedSeverity(issue, source, visibleDefault)
         if (severity != null) {
             return severity
         }
@@ -44,12 +44,12 @@ class TestConfiguration(
         // In unit tests, include issues that are ignored by default
         for (id in task.issueIds ?: emptyArray()) {
             if (issue.id == id) {
-                return getNonIgnoredSeverity(issue.defaultSeverity, issue)
+                return getNonIgnoredSeverity(visibleDefault, issue)
             }
         }
 
         return if (task.checkedIssues.contains(issue))
-            getNonIgnoredSeverity(issue.defaultSeverity, issue)
+            getNonIgnoredSeverity(visibleDefault, issue)
         else
             Severity.IGNORE
     }
@@ -62,7 +62,7 @@ class TestConfiguration(
         parent?.addConfiguredIssues(targetMap, registry, specificOnly)
 
         for (issue in registry.issues) {
-            val override = overrideSeverity(task, issue)
+            val override = overrideSeverity(task, issue, issue.defaultSeverity)
             if (override != null) {
                 targetMap[issue.id] = override
                 continue
@@ -109,8 +109,7 @@ class TestConfiguration(
         fail("Not supported in tests.")
     }
 }
-
-fun overrideSeverity(task: TestLintTask, issue: Issue): Severity? {
+fun overrideSeverity(task: TestLintTask, issue: Issue, default: Severity): Severity? {
     val enabled = when (issue) {
         IssueRegistry.LINT_ERROR, IssueRegistry.LINT_WARNING ->
             task.allowSystemErrors || !task.allowCompilationErrors
@@ -120,7 +119,7 @@ fun overrideSeverity(task: TestLintTask, issue: Issue): Severity? {
         else -> null
     }
     return if (enabled != null) {
-        if (enabled) issue.defaultSeverity else Severity.IGNORE
+        if (enabled) default else Severity.IGNORE
     } else {
         null
     }

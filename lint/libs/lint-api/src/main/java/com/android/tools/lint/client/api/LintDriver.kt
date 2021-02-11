@@ -2471,7 +2471,8 @@ class LintDriver(
                 return true
             }
 
-            val severity = configuration.getSeverity(incident.issue)
+            val severity = configuration.getDefinedSeverity(incident.issue, configuration, incident.severity)
+                ?: incident.severity
             if (severity === Severity.IGNORE) {
                 return true
             }
@@ -3664,6 +3665,9 @@ class LintDriver(
             if (issue != null) {
                 val issueId = issue.id
                 if (id.equals(issueId, ignoreCase = true)) {
+                    return true
+                }
+                if (issueId.equals(IssueRegistry.getNewId(id), ignoreCase = true)) {
                     return true
                 }
                 if (id.startsWith(STUDIO_ID_PREFIX) &&

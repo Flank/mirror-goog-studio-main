@@ -486,7 +486,7 @@ class MissingClassDetector : LayoutDetector(), ClassScanner {
                 moreInfo = "https://developer.android.com/guide/topics/manifest/manifest-intro.html",
                 androidSpecific = true,
                 implementation = IMPLEMENTATION
-            )
+            ).setAliases(listOf("MissingRegistered"))
 
         /** Are activity, service, receiver etc subclasses instantiatable? */
         @JvmField

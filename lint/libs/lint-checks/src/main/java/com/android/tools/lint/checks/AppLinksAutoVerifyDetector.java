@@ -34,7 +34,9 @@ import com.android.annotations.Nullable;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
+import com.android.tools.lint.detector.api.Incident;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
@@ -57,6 +59,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -74,9 +77,9 @@ public class AppLinksAutoVerifyDetector extends Detector implements XmlScanner {
     private static final Implementation IMPLEMENTATION =
             new Implementation(AppLinksAutoVerifyDetector.class, Scope.MANIFEST_SCOPE);
 
-    public static final Issue ISSUE_ERROR =
+    public static final Issue ISSUE =
             Issue.create(
-                            "AppLinksAutoVerifyError",
+                            "AppLinksAutoVerify",
                             "App Links Auto Verification Failure",
                             "Ensures that app links are correctly set and associated with website.",
                             Category.CORRECTNESS,
@@ -84,18 +87,8 @@ public class AppLinksAutoVerifyDetector extends Detector implements XmlScanner {
                             Severity.ERROR,
                             IMPLEMENTATION)
                     .addMoreInfo("https://g.co/appindexing/applinks")
-                    .setEnabledByDefault(false);
-
-    public static final Issue ISSUE_WARNING =
-            Issue.create(
-                            "AppLinksAutoVerifyWarning",
-                            "Potential App Links Auto Verification Failure",
-                            "Ensures that app links are correctly set and associated with website.",
-                            Category.CORRECTNESS,
-                            5,
-                            Severity.WARNING,
-                            IMPLEMENTATION)
-                    .addMoreInfo("https://g.co/appindexing/applinks")
+                    .setAliases(
+                            Arrays.asList("AppLinksAutoVerifyError", "AppLinksAutoVerifyWarning"))
                     .setEnabledByDefault(false);
 
     private static final String ATTRIBUTE_AUTO_VERIFY = "autoVerify";
@@ -158,8 +151,8 @@ public class AppLinksAutoVerifyDetector extends Detector implements XmlScanner {
                 case STATUS_HTTP_OK:
                     List<String> packageNames = getPackageNameFromJson(result.getValue().mJsonFile);
                     if (!packageNames.contains(packageName)) {
-                        context.report(
-                                ISSUE_ERROR,
+                        reportError(
+                                context,
                                 host,
                                 context.getLocation(host),
                                 String.format(
@@ -168,8 +161,8 @@ public class AppLinksAutoVerifyDetector extends Detector implements XmlScanner {
                     }
                     break;
                 case STATUS_HTTP_CONNECT_FAIL:
-                    context.report(
-                            ISSUE_WARNING,
+                    reportWarning(
+                            context,
                             host,
                             context.getLocation(host),
                             String.format(
@@ -177,8 +170,8 @@ public class AppLinksAutoVerifyDetector extends Detector implements XmlScanner {
                                     jsonPath));
                     break;
                 case STATUS_MALFORMED_URL:
-                    context.report(
-                            ISSUE_ERROR,
+                    reportError(
+                            context,
                             host,
                             context.getLocation(host),
                             String.format(
@@ -186,8 +179,8 @@ public class AppLinksAutoVerifyDetector extends Detector implements XmlScanner {
                                     jsonPath));
                     break;
                 case STATUS_UNKNOWN_HOST:
-                    context.report(
-                            ISSUE_WARNING,
+                    reportWarning(
+                            context,
                             host,
                             context.getLocation(host),
                             String.format(
@@ -195,8 +188,8 @@ public class AppLinksAutoVerifyDetector extends Detector implements XmlScanner {
                                     result.getKey()));
                     break;
                 case STATUS_NOT_FOUND:
-                    context.report(
-                            ISSUE_ERROR,
+                    reportError(
+                            context,
                             host,
                             context.getLocation(host),
                             String.format(
@@ -204,22 +197,22 @@ public class AppLinksAutoVerifyDetector extends Detector implements XmlScanner {
                                     jsonPath));
                     break;
                 case STATUS_WRONG_JSON_SYNTAX:
-                    context.report(
-                            ISSUE_ERROR,
+                    reportError(
+                            context,
                             host,
                             context.getLocation(host),
                             String.format("%s has incorrect JSON syntax", jsonPath));
                     break;
                 case STATUS_JSON_PARSE_FAIL:
-                    context.report(
-                            ISSUE_ERROR,
+                    reportError(
+                            context,
                             host,
                             context.getLocation(host),
                             String.format("Parsing JSON file %s fails", jsonPath));
                     break;
                 default:
-                    context.report(
-                            ISSUE_WARNING,
+                    reportWarning(
+                            context,
                             host,
                             context.getLocation(host),
                             String.format(
@@ -227,6 +220,18 @@ public class AppLinksAutoVerifyDetector extends Detector implements XmlScanner {
                                     jsonPath, result.getValue().mStatus));
             }
         }
+    }
+
+    private void reportWarning(XmlContext context, Node node, Location location, String message) {
+        Incident incident = new Incident(ISSUE, node, location, message);
+        incident.overrideSeverity(Severity.WARNING);
+        context.report(incident);
+    }
+
+    private void reportError(XmlContext context, Node node, Location location, String message) {
+        Incident incident = new Incident(ISSUE, node, location, message);
+        incident.overrideSeverity(Severity.ERROR);
+        context.report(incident);
     }
 
     /**

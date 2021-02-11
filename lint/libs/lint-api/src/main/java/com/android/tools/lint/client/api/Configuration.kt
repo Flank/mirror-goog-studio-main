@@ -135,21 +135,38 @@ abstract class Configuration(
     }
 
     /**
-     * Return the severity configured for this [issue] by this configuration
-     * or any configurations it inherits from, or null if the given issue
-     * has not been configured. The [source] is the original configuration
-     * this is requested for.
+     * Return the severity configured for this [issue] by this
+     * configuration or any configurations it inherits from, or null
+     * if the given issue has not been configured. The [source]
+     * is the original configuration this is requested for. The
+     * [visibleDefault] severity is a severity to use if the
+     * configuration forces an issue to be visible (for example via
+     * `--check IssueId` or in a unit test where the test infrastructure
+     * forces the tested issues to not be hidden) without specifying
+     * what the severity should be (normally [Issue.defaultSeverity]).
      */
-    open fun getDefinedSeverity(issue: Issue, source: Configuration = this): Severity? {
+    open fun getDefinedSeverity(
+        issue: Issue,
+        source: Configuration = this,
+        visibleDefault: Severity = issue.defaultSeverity
+    ): Severity? {
+        if (!isOverriding && source === this) {
+            overrides?.let {
+                it.getDefinedSeverity(issue, source, visibleDefault)?.let { severity ->
+                    return severity
+                }
+            }
+        }
+
         return null
     }
 
     /**
-     * The default severity of an issue; should be ignore for disabled issues, not
-     * its severity when it's enabled
+     * The default severity of an issue; should be ignore for disabled
+     * issues, not its severity when it's enabled
      */
-    protected open fun getDefaultSeverity(issue: Issue): Severity {
-        return if (!issue.isEnabledByDefault()) Severity.IGNORE else issue.defaultSeverity
+    protected open fun getDefaultSeverity(issue: Issue, visibleDefault: Severity = issue.defaultSeverity): Severity {
+        return if (!issue.isEnabledByDefault()) Severity.IGNORE else visibleDefault
     }
 
     /**
@@ -169,7 +186,7 @@ abstract class Configuration(
             return it
         }
 
-        return getDefinedSeverity(issue, this) ?: getDefaultSeverity(issue)
+        return getDefinedSeverity(issue) ?: getDefaultSeverity(issue)
     }
 
     /**
@@ -399,11 +416,17 @@ abstract class Configuration(
         project: Project?,
         id: String
     ) {
-        if (IssueRegistry.isDeletedIssueId(id)) {
-            // Recently deleted, but avoid complaining about leftover configuration
-            return
-        }
-        val message = getUnknownIssueIdErrorMessage(id, issueRegistry)
+        val newId = IssueRegistry.getNewId(id)
+        val message =
+            if (newId != null) {
+                return
+            } else if (IssueRegistry.isDeletedIssueId(id)) {
+                // Recently deleted, but avoid complaining about leftover configuration
+                null
+            } else {
+                getUnknownIssueIdErrorMessage(id, issueRegistry)
+            }
+                ?: return
         if (driver != null) {
             val severity = getSeverity(IssueRegistry.UNKNOWN_ISSUE_ID)
             if (severity !== Severity.IGNORE) {

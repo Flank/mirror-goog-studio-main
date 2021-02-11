@@ -74,8 +74,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 AppCompatCallDetector.ISSUE,
                 AppCompatCustomViewDetector.ISSUE,
                 AppCompatResourceDetector.ISSUE,
-                AppLinksAutoVerifyDetector.ISSUE_ERROR,
-                AppLinksAutoVerifyDetector.ISSUE_WARNING,
+                AppLinksAutoVerifyDetector.ISSUE,
                 AppLinksValidDetector.TEST_URL,
                 AppLinksValidDetector.VALIDATION,
                 ArraySizeDetector.INCONSISTENT,
@@ -133,8 +132,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 ExtraTextDetector.ISSUE,
                 FirebaseAnalyticsDetector.INVALID_NAME,
                 FirebaseMessagingDetector.MISSING_TOKEN_REFRESH,
-                FontDetector.FONT_VALIDATION_ERROR,
-                FontDetector.FONT_VALIDATION_WARNING,
+                FontDetector.FONT_VALIDATION,
                 FragmentDetector.ISSUE,
                 FullBackupContentDetector.ISSUE,
                 GetContentDescriptionOverrideDetector.ISSUE,
@@ -454,6 +452,39 @@ open class BuiltinIssueRegistry : IssueRegistry() {
 
     override val issues: List<Issue>
         get() = builtinIssues
+
+    override val deletedIssues: List<String> = listOf(
+        // Off by default for a while; unlikely to be turned on (and this is
+        // just an awareness check which is unlikely to be enabled by those
+        // who could benefit from it)
+        "GoogleAppIndexingWarning",
+
+        // Implementation not correct and would require rewrite to fix, not worth it
+        "GoogleAppIndexingApiWarning",
+
+        // Deleted a while back when restrictions were removed on launcher icons
+        "IconLauncherFormat",
+
+        // No longer relevant, only applied to minSdk < 14
+        "ViewTag",
+
+        // No longer relevant, only applied to minSdk < 9
+        "FieldGetter",
+
+        // Renamed to MissingClass
+        "MissingRegistered",
+
+        // Combined into FontValidation
+        "FontValidationWarning",
+        "FontValidationError",
+
+        // Combined into AppLinksAutoVerify
+        "AppLinksAutoVerifyError",
+        "AppLinksAutoVerifyWarning",
+
+        // Deleted; no longer needed thanks to d8
+        "Assert"
+    )
 
     override fun getIssueCapacity(scope: EnumSet<Scope>): Int {
         return if (scope == Scope.ALL) {

@@ -351,7 +351,9 @@ public class Main {
                     @NonNull
                     @Override
                     public Severity getDefinedSeverity(
-                            @NonNull Issue issue, @NonNull Configuration source) {
+                            @NonNull Issue issue,
+                            @NonNull Configuration source,
+                            @NonNull Severity visibleDefault) {
                         return issue == IssueRegistry.LINT_ERROR ? Severity.FATAL : Severity.IGNORE;
                     }
 

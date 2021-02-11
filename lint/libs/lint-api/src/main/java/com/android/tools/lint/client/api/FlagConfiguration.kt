@@ -47,15 +47,15 @@ open class FlagConfiguration(configurations: ConfigurationHierarchy) : Configura
     open fun severityOverride(issue: Issue): Severity? = null
     open fun severityOverrides(): Set<String> = emptySet()
 
-    override fun getDefinedSeverity(issue: Issue, source: Configuration): Severity? {
+    override fun getDefinedSeverity(issue: Issue, source: Configuration, visibleDefault: Severity): Severity? {
         if (issue.suppressNames != null) {
-            return getDefaultSeverity(issue)
+            return getDefaultSeverity(issue, visibleDefault)
         }
-        var severity = computeSeverity(issue, source)
+        var severity = computeSeverity(issue, source, visibleDefault)
         if (fatalOnly()) {
             if (severity == null) {
                 val configuredSeverity =
-                    client.configurations.getDefinedSeverityWithoutOverride(source, issue)
+                    client.configurations.getDefinedSeverityWithoutOverride(source, issue, visibleDefault)
                 if (configuredSeverity != null && configuredSeverity == Severity.FATAL) {
                     return configuredSeverity
                 } else if (configuredSeverity != null) {
@@ -84,8 +84,8 @@ open class FlagConfiguration(configurations: ConfigurationHierarchy) : Configura
             // file back on, and similarly it ensures that issues not mentioned
             // in lint.xml will use the default.
             val impliedSeverity = severity
-                ?: configurations.getDefinedSeverityWithoutOverride(source, issue)
-                ?: getDefaultSeverity(issue)
+                ?: configurations.getDefinedSeverityWithoutOverride(source, issue, visibleDefault)
+                ?: getDefaultSeverity(issue, visibleDefault)
             if (isWarningsAsErrors() && impliedSeverity === Severity.WARNING) {
                 if (issue === IssueRegistry.BASELINE) {
                     // Don't promote the baseline informational issue
@@ -123,12 +123,12 @@ open class FlagConfiguration(configurations: ConfigurationHierarchy) : Configura
 
     override var baselineFile: File? = parent?.baselineFile
 
-    override fun getDefaultSeverity(issue: Issue): Severity {
+    override fun getDefaultSeverity(issue: Issue, visibleDefault: Severity): Severity {
         return if (isCheckAllWarnings()) {
             if (neverEnabledImplicitly(issue)) {
-                super.getDefaultSeverity(issue)
-            } else issue.defaultSeverity
-        } else super.getDefaultSeverity(issue)
+                super.getDefaultSeverity(issue, visibleDefault)
+            } else visibleDefault
+        } else super.getDefaultSeverity(issue, visibleDefault)
     }
 
     private fun neverEnabledImplicitly(issue: Issue): Boolean {
@@ -139,12 +139,12 @@ open class FlagConfiguration(configurations: ConfigurationHierarchy) : Configura
         return issue.id == "WrongThreadInterprocedural"
     }
 
-    private fun computeSeverity(issue: Issue, source: Configuration): Severity? {
+    private fun computeSeverity(issue: Issue, source: Configuration, visibleDefault: Severity): Severity? {
         if (issue.suppressNames != null && !allowSuppress()) {
-            return getDefaultSeverity(issue)
+            return getDefaultSeverity(issue, visibleDefault)
         }
 
-        val severity = parent?.getDefinedSeverity(issue, source)
+        val severity = parent?.getDefinedSeverity(issue, source, visibleDefault)
 
         // Issue not allowed to be suppressed?
         val id = issue.id
@@ -175,7 +175,7 @@ open class FlagConfiguration(configurations: ConfigurationHierarchy) : Configura
         val category = issue.category
         if (exact != null) {
             if (exact.contains(id)) {
-                return getVisibleSeverity(issue, severity, source)
+                return getVisibleSeverity(issue, severity, source, visibleDefault)
             } else if (category !== Category.LINT) {
                 return Severity.IGNORE
             }
@@ -184,7 +184,7 @@ open class FlagConfiguration(configurations: ConfigurationHierarchy) : Configura
             if (exactCategories.contains(category) ||
                 category.parent != null && exactCategories.contains(category.parent)
             ) {
-                return getVisibleSeverity(issue, severity, source)
+                return getVisibleSeverity(issue, severity, source, visibleDefault)
             } else if (category !== Category.LINT ||
                 disabledCategories()?.contains(Category.LINT) == true
             ) {
@@ -198,7 +198,7 @@ open class FlagConfiguration(configurations: ConfigurationHierarchy) : Configura
                 ) ||
             isCheckAllWarnings() && !neverEnabledImplicitly(issue)
         ) {
-            return getVisibleSeverity(issue, severity, source)
+            return getVisibleSeverity(issue, severity, source, visibleDefault)
         }
 
         return severity
@@ -213,9 +213,10 @@ open class FlagConfiguration(configurations: ConfigurationHierarchy) : Configura
     private fun getVisibleSeverity(
         issue: Issue,
         severity: Severity?,
-        source: Configuration
+        source: Configuration,
+        visibleDefault: Severity
     ): Severity {
-        val configuredSeverity = client.configurations.getDefinedSeverityWithoutOverride(source, issue)
+        val configuredSeverity = client.configurations.getDefinedSeverityWithoutOverride(source, issue, visibleDefault)
         if (configuredSeverity != null && configuredSeverity != Severity.IGNORE) {
             if (configuredSeverity == Severity.WARNING && isWarningsAsErrors()) {
                 return Severity.ERROR
@@ -229,7 +230,7 @@ open class FlagConfiguration(configurations: ConfigurationHierarchy) : Configura
         // it's run
         var visibleSeverity = severity
         if (visibleSeverity == null || visibleSeverity === Severity.IGNORE) {
-            visibleSeverity = issue.defaultSeverity
+            visibleSeverity = visibleDefault
             if (visibleSeverity === Severity.IGNORE) {
                 visibleSeverity = if (isWarningsAsErrors()) {
                     Severity.ERROR
