@@ -48,7 +48,7 @@ fun RecipeExecutor.composeActivityRecipe(
   addDependency(mavenCoordinate = "androidx.compose.material:material:\${$composeVersionVarName}")
   addDependency(mavenCoordinate = "androidx.compose.ui:ui-tooling:\${$composeVersionVarName}")
   addDependency(mavenCoordinate = "androidx.lifecycle:lifecycle-runtime-ktx:+", minRev = "2.3.0-alpha06")
-  addDependency(mavenCoordinate = "androidx.activity:activity-compose:+", minRev = "1.3.0-alpha01")
+  addDependency(mavenCoordinate = "androidx.activity:activity-compose:+", minRev = "1.3.0-alpha02")
   generateManifest(
     moduleData, activityClass, packageName, isLauncher, true,
     generateActivityTitle = true
