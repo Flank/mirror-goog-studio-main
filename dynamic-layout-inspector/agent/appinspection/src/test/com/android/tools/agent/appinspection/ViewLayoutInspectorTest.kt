@@ -289,6 +289,14 @@ class ViewLayoutInspectorTest {
                 width = 20
                 height = 30
             })
+
+            addView(View(context).apply {
+                left = 40
+                top = 10
+                width = 20
+                height = 30
+                transformedPoints = floatArrayOf(10f, 20f, 30f, 40f, 50f, 60f, 70f, 80f)
+            })
         })
 
         floatingDialog.addView(ViewGroup(context).apply {
@@ -304,6 +312,14 @@ class ViewLayoutInspectorTest {
                 top = 10
                 width = 20
                 height = 30
+            })
+
+            addView(View(context).apply {
+                left = 40
+                top = 10
+                width = 20
+                height = 30
+                transformedPoints = floatArrayOf(10f, 20f, 30f, 40f, 50f, 60f, 70f, 80f)
             })
         })
 
@@ -341,7 +357,8 @@ class ViewLayoutInspectorTest {
 
                 val root = layoutEvent.rootView
                 val parent = root.getChildren(0)
-                val child = parent.getChildren(0)
+                val child0 = parent.getChildren(0)
+                val child1 = parent.getChildren(1)
 
                 assertThat(root.id).isEqualTo(mainScreen.uniqueDrawingId)
                 root.bounds.layout.let { rect ->
@@ -356,11 +373,21 @@ class ViewLayoutInspectorTest {
                     assertThat(rect.w).isEqualTo(40)
                     assertThat(rect.h).isEqualTo(50)
                 }
-                child.bounds.layout.let { rect ->
+                child0.bounds.layout.let { rect ->
                     assertThat(rect.x).isEqualTo(55)
                     assertThat(rect.y).isEqualTo(-60)
                     assertThat(rect.w).isEqualTo(20)
                     assertThat(rect.h).isEqualTo(30)
+                }
+                child1.bounds.render.let { quad ->
+                    assertThat(quad.x0).isEqualTo(10)
+                    assertThat(quad.y0).isEqualTo(20)
+                    assertThat(quad.x1).isEqualTo(30)
+                    assertThat(quad.y1).isEqualTo(40)
+                    assertThat(quad.x2).isEqualTo(50)
+                    assertThat(quad.y2).isEqualTo(60)
+                    assertThat(quad.x3).isEqualTo(70)
+                    assertThat(quad.y3).isEqualTo(80)
                 }
             }
         }
@@ -377,7 +404,8 @@ class ViewLayoutInspectorTest {
 
                 val root = layoutEvent.rootView
                 val parent = root.getChildren(0)
-                val child = parent.getChildren(0)
+                val child0 = parent.getChildren(0)
+                val child1 = parent.getChildren(1)
                 assertThat(root.id).isEqualTo(floatingDialog.uniqueDrawingId)
 
                 root.bounds.layout.let { rect ->
@@ -392,11 +420,21 @@ class ViewLayoutInspectorTest {
                     assertThat(rect.w).isEqualTo(40)
                     assertThat(rect.h).isEqualTo(50)
                 }
-                child.bounds.layout.let { rect ->
+                child0.bounds.layout.let { rect ->
                     assertThat(rect.x).isEqualTo(135)
                     assertThat(rect.y).isEqualTo(140)
                     assertThat(rect.w).isEqualTo(20)
                     assertThat(rect.h).isEqualTo(30)
+                }
+                child1.bounds.render.let { quad ->
+                    assertThat(quad.x0).isEqualTo(10)
+                    assertThat(quad.y0).isEqualTo(20)
+                    assertThat(quad.x1).isEqualTo(30)
+                    assertThat(quad.y1).isEqualTo(40)
+                    assertThat(quad.x2).isEqualTo(50)
+                    assertThat(quad.y2).isEqualTo(60)
+                    assertThat(quad.x3).isEqualTo(70)
+                    assertThat(quad.y3).isEqualTo(80)
                 }
             }
         }

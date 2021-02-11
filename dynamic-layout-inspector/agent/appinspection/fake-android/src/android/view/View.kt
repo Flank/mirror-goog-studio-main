@@ -19,6 +19,7 @@ package android.view
 import android.content.Context
 import android.content.res.Resources
 import android.graphics.Canvas
+import android.graphics.Matrix
 import android.graphics.Picture
 import android.graphics.Point
 import android.os.Handler
@@ -82,6 +83,16 @@ open class View @VisibleForTesting constructor(val context: Context) {
 
     var drawHandler: (Canvas) -> Unit = {}
 
+    /**
+     * If set, used to fake what is normally more complex Matrix math
+     */
+    @VisibleForTesting
+    var transformedPoints: FloatArray? = null
+        set(value) {
+            check(value == null || value.size == 8)
+            field = value
+        }
+
     // Name is important: Accessed via reflection
     private var mAttachInfo: AttachInfo? = null
 
@@ -105,6 +116,10 @@ open class View @VisibleForTesting constructor(val context: Context) {
     fun invalidate() {}
 
     fun draw(canvas: Canvas) = drawHandler(canvas)
+
+    fun transformMatrixToGlobal(matrix: Matrix) {
+        matrix.transformedPoints = transformedPoints
+    }
 
     // Only works with views that were constructed with an AttachInfo
     @VisibleForTesting // Normally, the rendering system triggers this
