@@ -702,13 +702,14 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         // Data binding expressions
                                         + "       android:padding=\"@{large? R.dimen.largePadding : R.dimen.smallPadding}\"\n"
                                         + "       android:text=\"@{R.string.name}\" />\n"
+                                        + "    <Button android:text=\"@{SomeEnum.NOMER.isEditable(viewmodel.fieldIsEditable)}\"\n />"
                                         + "</layout>"))
                 .issues(UnusedResourceDetector.ISSUE)
                 .run()
                 .expectClean();
     }
 
-    public void testDataBInding_idsAddedInDataBindingLayoutsAreConsideredUsed() {
+    public void testDataBinding_idsAddedInDataBindingLayoutsAreConsideredUsed() {
         // Make sure id's in data binding layouts aren't considered unused
         // (since the compiler will generate accessors for these that
         // may not be visible when running lint on edited sources)
