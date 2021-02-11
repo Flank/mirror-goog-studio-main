@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.tools.idea.wizard.template.impl.activities.masterDetailFlow.res.layout
+package com.android.tools.idea.wizard.template.impl.activities.primaryDetailFlow.res.layout
 
 import com.android.tools.idea.wizard.template.getMaterialComponentName
 
 fun activityMainXml(
   navHostFragmentId: String,
-  detailNameLayout: String,
+  detailNameFragmentLayout: String,
   mainNavigationGraphId: String,
   useAndroidX: Boolean
 ) = """
@@ -27,11 +27,12 @@ fun activityMainXml(
 <${getMaterialComponentName("android.support.constraint.ConstraintLayout", useAndroidX)}
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/container"
     android:layout_width="match_parent"
     android:layout_height="match_parent" >
 
-    <fragment
+    <androidx.fragment.app.FragmentContainerView
         android:id="@+id/${navHostFragmentId}"
         android:name="androidx.navigation.fragment.NavHostFragment"
         android:layout_width="match_parent"
@@ -41,15 +42,7 @@ fun activityMainXml(
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:navGraph="@navigation/${mainNavigationGraphId}" />
-        
-    <${getMaterialComponentName("android.support.design.widget.FloatingActionButton", useAndroidX)}
-        android:id="@+id/fab"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="@dimen/fab_margin"
-        app:srcCompat="@android:drawable/ic_dialog_email"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>      
+        app:navGraph="@navigation/${mainNavigationGraphId}"
+        tools:layout="@layout/${detailNameFragmentLayout}" />
 
 </${getMaterialComponentName("android.support.constraint.ConstraintLayout", useAndroidX)}>"""

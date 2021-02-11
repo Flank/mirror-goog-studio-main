@@ -39,7 +39,7 @@ import java.io.File
 /**
  * The hard-coded NDK version for this Android Gradle Plugin.
  */
-const val ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION = "21.3.6528147"
+const val ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION = "21.4.7075529"
 
 /**
  * Logic to find the NDK and optionally download it if not found.

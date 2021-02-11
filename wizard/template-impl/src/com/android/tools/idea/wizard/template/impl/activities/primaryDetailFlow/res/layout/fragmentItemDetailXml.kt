@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.tools.idea.wizard.template.impl.activities.masterDetailFlow.res.layout
+package com.android.tools.idea.wizard.template.impl.activities.primaryDetailFlow.res.layout
 
 import com.android.tools.idea.wizard.template.getMaterialComponentName
 
@@ -65,7 +65,7 @@ fun fragmentItemDetailXml(
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
-        
+
         <TextView
             android:id="@+id/${detailNameLayout}"
             style="?android:attr/textAppearanceLarge"
@@ -74,7 +74,7 @@ fun fragmentItemDetailXml(
             android:padding="16dp"
             android:textIsSelectable="true"
             tools:context="${packageName}.${detailName}Fragment" />
-            
+
     </${getMaterialComponentName("android.support.v4.widget.NestedScrollView", useAndroidX)}>
 
     <${getMaterialComponentName("android.support.design.widget.FloatingActionButton", useAndroidX)}
@@ -84,7 +84,7 @@ fun fragmentItemDetailXml(
         android:layout_gravity="center_vertical|start"
         android:layout_margin="@dimen/fab_margin"
         app:srcCompat="@android:drawable/stat_notify_chat"
-        app:layout_anchor="@+id/${detailNameLayout}_container"
+        app:layout_anchor="@+id/${detailNameLayout}_scroll_view"
         app:layout_anchorGravity="top|end" />
 
 </${getMaterialComponentName("android.support.design.widget.CoordinatorLayout", useAndroidX)}>

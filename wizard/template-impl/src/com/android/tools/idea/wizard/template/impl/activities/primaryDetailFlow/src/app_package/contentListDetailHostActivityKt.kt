@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.tools.idea.wizard.template.impl.activities.masterDetailFlow.src.app_package
+package com.android.tools.idea.wizard.template.impl.activities.primaryDetailFlow.src.app_package
 
 import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.getMaterialComponentName
@@ -42,6 +42,7 @@ package ${escapeKotlinIdentifier(packageName)}
 import android.os.Bundle
 import ${getMaterialComponentName("android.support.v7.app.AppCompatActivity", useAndroidX)}
 import androidx.navigation.findNavController
+import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
@@ -55,7 +56,8 @@ class ${collection}DetailHostActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         $contentViewBlock
 
-        val navController = findNavController(R.id.${navHostFragmentId})
+        val navHostFragment = supportFragmentManager.findFragmentById(R.id.${navHostFragmentId}) as NavHostFragment
+        val navController = navHostFragment.navController
         appBarConfiguration = AppBarConfiguration(navController.graph)
         setupActionBarWithNavController(navController, appBarConfiguration)
     }

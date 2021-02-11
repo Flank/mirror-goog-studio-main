@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.tools.idea.wizard.template.impl.activities.masterDetailFlow
+package com.android.tools.idea.wizard.template.impl.activities.primaryDetailFlow
 
 import com.android.tools.idea.wizard.template.Category
 import com.android.tools.idea.wizard.template.CheckBoxWidget
@@ -117,7 +117,7 @@ val primaryDetailFlowTemplate
       TextFieldWidget(detailNameFragmentLayout)
     )
 
-    thumb { File("template_master_detail.png") }
+    thumb { File("template_primary_detail.png") }
 
     recipe = { data: TemplateData ->
       primaryDetailFlowRecipe(data as ModuleTemplateData,
