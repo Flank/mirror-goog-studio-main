@@ -104,7 +104,7 @@ task removeSdkComponents(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
     main = "com.android.sdklib.tool.sdkmanager.SdkManagerCli"
     args = [
-      '--sdk_root=' + System.getenv("ANDROID_SDK_ROOT"),
+      '--sdk_root=' + project.providers.environmentVariable("ANDROID_SDK_ROOT").forUseAtConfigurationTime().orNull,
       '--verbose',
       '--uninstall',
       // Entries below are temporary and should always include dates. For example:
@@ -124,7 +124,7 @@ task initSdkForTests(type: JavaExec, dependsOn: removeSdkComponents) {
         if (project.hasProperty('downloaderArgs')) {
             args(downloaderArgs.split(','))
         } else {
-            def sdk_home = System.getenv("ANDROID_SDK_ROOT")
+            def sdk_home = project.providers.environmentVariable("ANDROID_SDK_ROOT").forUseAtConfigurationTime().orNull
             if (sdk_home == null) {
                 throw new GradleException('Required ANDROID_SDK_ROOT environment variable not set.')
             }
@@ -179,7 +179,7 @@ task initSdkForConnectedTestsStableChannel(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
     main = "com.android.sdklib.tool.sdkmanager.SdkManagerCli"
 
-    args = ['--sdk_root=' + System.getenv("ANDROID_SDK_ROOT"),
+    args = ['--sdk_root=' + project.providers.environmentVariable("ANDROID_SDK_ROOT").forUseAtConfigurationTime().orNull,
             '--channel=0',
             '--verbose',
             'system-images;android-26;google_apis;x86',
@@ -216,7 +216,7 @@ task initSdkForConnectedTestsUnstableChannel(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
     main = "com.android.sdklib.tool.sdkmanager.SdkManagerCli"
 
-    args = ['--sdk_root=' + System.getenv("ANDROID_SDK_ROOT"),
+    args = ['--sdk_root=' + project.providers.environmentVariable("ANDROID_SDK_ROOT").forUseAtConfigurationTime().orNull,
             '--channel=2',
             '--verbose',
             'platforms;android-30',
