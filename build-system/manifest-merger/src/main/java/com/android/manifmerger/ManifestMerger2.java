@@ -394,34 +394,32 @@ public class ManifestMerger2 {
                 return mergingReportBuilder.build();
             }
         }
-        // android:exported should be true for S and above with <intent-filter>, output an
+        // android:exported should have an explicit value for S and above with <intent-filter>,
+        // output an
         // error message to the user if android:exported is not explicitly specified
-        String minSdkVersion = finalMergedDocument.getMinSdkVersion();
-        int minSdkApi =
-                Character.isDigit(minSdkVersion.charAt(0))
-                        ? Integer.parseInt(minSdkVersion)
-                        : SdkVersionInfo.getApiByPreviewName(minSdkVersion, true);
-        if (minSdkApi > 30) {
-            NodeList list =
+        String targetSdkVersion = finalMergedDocument.getTargetSdkVersion();
+        int targetSdkApi =
+                Character.isDigit(targetSdkVersion.charAt(0))
+                        ? Integer.parseInt(targetSdkVersion)
+                        : SdkVersionInfo.getApiByPreviewName(targetSdkVersion, true);
+        if (targetSdkApi > 30) {
+            NodeList activityList =
                     finalMergedDocument.getXml().getElementsByTagName(SdkConstants.TAG_ACTIVITY);
-            for (int i = 0; i < list.getLength(); i++) {
-                Element element = (Element) list.item(i);
-
-                if (element.getElementsByTagName(SdkConstants.TAG_INTENT_FILTER).getLength() > 0
-                        && element.getAttributes()
-                                        .getNamedItemNS(
-                                                SdkConstants.ANDROID_URI,
-                                                SdkConstants.ATTR_EXPORTED)
-                                == null) {
-                    mergingReportBuilder.addMessage(
-                            loadedMainManifestInfo.getXmlDocument().getSourceFile(),
-                            MergingReport.Record.Severity.ERROR,
-                            String.format(
-                                    "Apps targeting Android 12 and higher are required to specify an explicit value "
-                                            + "for `android:exported` when the corresponding component has an intent filter defined. "
-                                            + "See https://developer.android.com/guide/topics/manifest/activity-element#exported for details."));
-                    return mergingReportBuilder.build();
-                }
+            checkIfExportedIsNeeded(activityList, mergingReportBuilder, loadedMainManifestInfo);
+            if (mergingReportBuilder.hasErrors()) {
+                return mergingReportBuilder.build();
+            }
+            NodeList serviceList =
+                    finalMergedDocument.getXml().getElementsByTagName(SdkConstants.TAG_SERVICE);
+            checkIfExportedIsNeeded(serviceList, mergingReportBuilder, loadedMainManifestInfo);
+            if (mergingReportBuilder.hasErrors()) {
+                return mergingReportBuilder.build();
+            }
+            NodeList receiverList =
+                    finalMergedDocument.getXml().getElementsByTagName(SdkConstants.TAG_RECEIVER);
+            checkIfExportedIsNeeded(receiverList, mergingReportBuilder, loadedMainManifestInfo);
+            if (mergingReportBuilder.hasErrors()) {
+                return mergingReportBuilder.build();
             }
         }
 
@@ -1388,6 +1386,29 @@ public class ManifestMerger2 {
          */
         protected InputStream getInputStream(@NonNull File file) throws IOException {
             return new BufferedInputStream(new FileInputStream(file));
+        }
+    }
+
+    private void checkIfExportedIsNeeded(
+            NodeList list,
+            MergingReport.Builder mergingReportBuilder,
+            LoadedManifestInfo loadedMainManifestInfo) {
+        for (int i = 0; i < list.getLength(); i++) {
+            Element element = (Element) list.item(i);
+
+            if (element.getElementsByTagName(SdkConstants.TAG_INTENT_FILTER).getLength() > 0
+                    && element.getAttributes()
+                                    .getNamedItemNS(
+                                            SdkConstants.ANDROID_URI, SdkConstants.ATTR_EXPORTED)
+                            == null) {
+                mergingReportBuilder.addMessage(
+                        loadedMainManifestInfo.getXmlDocument().getSourceFile(),
+                        MergingReport.Record.Severity.ERROR,
+                        String.format(
+                                "Apps targeting Android 12 and higher are required to specify an explicit value "
+                                        + "for `android:exported` when the corresponding component has an intent filter defined. "
+                                        + "See https://developer.android.com/guide/topics/manifest/activity-element#exported for details."));
+            }
         }
     }
 
