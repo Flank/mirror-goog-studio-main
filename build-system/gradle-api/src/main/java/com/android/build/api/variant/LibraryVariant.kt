@@ -46,4 +46,10 @@ interface LibraryVariant : Variant {
      * [com.android.build.api.dsl.BuildFeatures.renderScript] is false.
      */
     val renderscript: Renderscript?
+
+    /**
+     * Variant's aar metadata, initialized by merging the corresponding
+     * [com.android.build.api.dsl.AarMetadata] DSL elements.
+     */
+    val aarMetadata: AarMetadata
 }

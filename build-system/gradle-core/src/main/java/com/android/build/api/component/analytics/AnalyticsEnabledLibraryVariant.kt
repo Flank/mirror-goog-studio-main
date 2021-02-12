@@ -17,7 +17,7 @@
 package com.android.build.api.component.analytics
 
 import com.android.build.api.component.AndroidTest
-import com.android.build.api.component.UnitTest
+import com.android.build.api.variant.AarMetadata
 import com.android.build.api.variant.LibraryPackaging
 import com.android.build.api.variant.LibraryVariant
 import com.android.build.api.variant.Renderscript
@@ -74,5 +74,19 @@ open class AnalyticsEnabledLibraryVariant @Inject constructor(
                     VariantPropertiesMethodType.RENDERSCRIPT_VALUE
                 userVisibleRenderscript
             } else null
+        }
+
+    private val userVisibleAarMetadata: AarMetadata by lazy {
+        objectFactory.newInstance(
+            AnalyticsEnabledAarMetadata::class.java,
+            delegate.aarMetadata,
+            stats
+        )
+    }
+    override val aarMetadata: AarMetadata
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.VARIANT_AAR_METADATA_VALUE
+            return userVisibleAarMetadata
         }
 }

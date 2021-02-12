@@ -24,6 +24,7 @@ import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.InstrumentationParameters
 import com.android.build.api.instrumentation.InstrumentationScope
+import com.android.build.api.variant.AarMetadata
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.LibraryPackaging
 import com.android.build.api.variant.LibraryVariant
@@ -112,6 +113,11 @@ open class  LibraryVariantImpl @Inject constructor(
     override val renderscript: Renderscript? by lazy {
         delegate.renderscript(internalServices)
     }
+
+    override val aarMetadata: AarMetadata =
+        internalServices.newInstance(AarMetadata::class.java).also {
+            it.minCompileSdk.set(variantDslInfo.aarMetadata.minCompileSdk ?: 1)
+        }
 
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API

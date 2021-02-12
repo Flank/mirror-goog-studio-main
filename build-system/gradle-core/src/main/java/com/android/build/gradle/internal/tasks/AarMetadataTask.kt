@@ -49,7 +49,7 @@ abstract class AarMetadataTask : NonIncrementalTask() {
 
     @get:Input
     @get:Optional
-    abstract val minCompileSdk: Property<Int?>
+    abstract val minCompileSdk: Property<Int>
 
     override fun doTaskAction() {
         workerExecutor.noIsolation().submit(AarMetadataWorkAction::class.java) {
@@ -87,9 +87,7 @@ abstract class AarMetadataTask : NonIncrementalTask() {
 
             task.aarFormatVersion.setDisallowChanges(AAR_FORMAT_VERSION)
             task.aarMetadataVersion.setDisallowChanges(AAR_METADATA_VERSION)
-            task.minCompileSdk.setDisallowChanges(
-                creationConfig.variantDslInfo.aarMetadata.minCompileSdk
-            )
+            task.minCompileSdk.setDisallowChanges(creationConfig.aarMetadata.minCompileSdk)
         }
     }
 
@@ -110,7 +108,7 @@ abstract class AarMetadataWorkAction: ProfileAwareWorkAction<AarMetadataWorkPara
             parameters.output.get().asFile,
             parameters.aarFormatVersion.get(),
             parameters.aarMetadataVersion.get(),
-            parameters.minCompileSdk.orNull
+            parameters.minCompileSdk.get()
         )
     }
 }
@@ -120,7 +118,7 @@ abstract class AarMetadataWorkParameters: ProfileAwareWorkAction.Parameters() {
     abstract val output: RegularFileProperty
     abstract val aarFormatVersion: Property<String>
     abstract val aarMetadataVersion: Property<String>
-    abstract val minCompileSdk: Property<Int?>
+    abstract val minCompileSdk: Property<Int>
 }
 
 /** Writes an AAR metadata file with the given parameters */
@@ -128,7 +126,7 @@ fun writeAarMetadataFile(
     file: File,
     aarFormatVersion: String,
     aarMetadataVersion: String,
-    minCompileSdk: Int?
+    minCompileSdk: Int
 ) {
     // We write the file manually instead of using the java.util.Properties API because (1) that API
     // doesn't guarantee the order of properties in the file and (2) that API writes an unnecessary
@@ -136,6 +134,6 @@ fun writeAarMetadataFile(
     val stringBuilder = StringBuilder()
     stringBuilder.appendln("$AAR_FORMAT_VERSION_PROPERTY=$aarFormatVersion")
     stringBuilder.appendln("$AAR_METADATA_VERSION_PROPERTY=$aarMetadataVersion")
-    minCompileSdk?.let { stringBuilder.appendln("$MIN_COMPILE_SDK_PROPERTY=$it") }
+    stringBuilder.appendln("$MIN_COMPILE_SDK_PROPERTY=$minCompileSdk")
     file.writeText(stringBuilder.toString())
 }

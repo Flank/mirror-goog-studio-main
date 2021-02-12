@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 The Android Open Source Project
+ * Copyright (C) 2021 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,13 +14,20 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.component
+package com.android.build.api.variant
 
-import com.android.build.api.variant.AarMetadata
-import org.gradle.api.provider.MapProperty
+import org.gradle.api.Incubating
+import org.gradle.api.provider.Property
 
-interface LibraryCreationConfig: VariantCreationConfig {
-    val manifestPlaceholders: MapProperty<String, String>
+/**
+ * Variant object for configuring AAR metadata.
+ */
+@Incubating
+interface AarMetadata {
 
-    val aarMetadata: AarMetadata
+    /**
+     * Minimum compileSdkVersion needed to consume this library. This is the minimum sdk version a
+     * module must use in order to import this library.
+     */
+    val minCompileSdk: Property<Int>
 }

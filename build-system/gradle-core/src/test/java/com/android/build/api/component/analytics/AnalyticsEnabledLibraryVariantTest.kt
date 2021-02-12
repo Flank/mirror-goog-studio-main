@@ -16,32 +16,36 @@
 
 package com.android.build.api.component.analytics
 
+import com.android.build.api.variant.AarMetadata
 import com.android.build.api.variant.JniLibsPackaging
 import com.android.build.api.variant.LibraryPackaging
 import com.android.build.api.variant.LibraryVariant
 import com.android.build.api.variant.ResourcesPackaging
+import com.android.build.gradle.internal.fixtures.FakeGradleProperty
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.common.truth.Truth
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
-import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mock
 import org.mockito.Mockito
-import org.mockito.MockitoAnnotations
+import org.mockito.junit.MockitoJUnit
+import org.mockito.junit.MockitoRule
+import org.mockito.quality.Strictness
 
 class AnalyticsEnabledLibraryVariantTest {
+
+    @get:Rule
+    val rule: MockitoRule = MockitoJUnit.rule().strictness(Strictness.STRICT_STUBS)
+
     @Mock
     lateinit var delegate: LibraryVariant
 
     private val stats = GradleBuildVariant.newBuilder()
-    private lateinit var proxy: AnalyticsEnabledLibraryVariant
-
-    @Before
-    fun setup() {
-        MockitoAnnotations.initMocks(this)
-        proxy = AnalyticsEnabledLibraryVariant(delegate, stats, FakeObjectFactory.factory)
+    private val proxy: AnalyticsEnabledLibraryVariant by lazy {
+        AnalyticsEnabledLibraryVariant(delegate, stats, FakeObjectFactory.factory)
     }
 
     @Test
@@ -81,5 +85,25 @@ class AnalyticsEnabledLibraryVariantTest {
             )
         )
         Mockito.verify(delegate, Mockito.times(1)).packaging
+    }
+
+
+    @Test
+    fun aarMetadata() {
+        val aarMetadata = Mockito.mock(AarMetadata::class.java)
+        Mockito.`when`(aarMetadata.minCompileSdk).thenReturn(FakeGradleProperty(5))
+        Mockito.`when`(delegate.aarMetadata).thenReturn(aarMetadata)
+        Truth.assertThat(proxy.aarMetadata.minCompileSdk.get()).isEqualTo(5)
+
+        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(2)
+        Truth.assertThat(
+            stats.variantApiAccess.variantPropertiesAccessList.map { it.type }
+        ).containsExactlyElementsIn(
+            listOf(
+                VariantPropertiesMethodType.VARIANT_AAR_METADATA_VALUE,
+                VariantPropertiesMethodType.VARIANT_AAR_METADATA_MIN_COMPILE_SDK_VALUE,
+            )
+        )
+        Mockito.verify(delegate, Mockito.times(1)).aarMetadata
     }
 }

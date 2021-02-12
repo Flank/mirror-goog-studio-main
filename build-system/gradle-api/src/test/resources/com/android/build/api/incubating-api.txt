@@ -836,6 +836,8 @@ com.android.build.api.transform.Transform.applyToVariant: boolean (com.android.b
 com.android.build.api.variant.Aapt
 com.android.build.api.variant.Aapt.getAdditionalParameters: org.gradle.api.provider.ListProperty<java.lang.String> ()
 com.android.build.api.variant.Aapt.getIgnoreAssetsPatterns: org.gradle.api.provider.ListProperty<java.lang.String> ()
+com.android.build.api.variant.AarMetadata
+com.android.build.api.variant.AarMetadata.getMinCompileSdk: org.gradle.api.provider.Property<java.lang.Integer> ()
 com.android.build.api.variant.AndroidVersion
 com.android.build.api.variant.AndroidVersion.<init>: com.android.build.api.variant.AndroidVersion (int, java.lang.String)
 com.android.build.api.variant.AndroidVersion.<init>: com.android.build.api.variant.AndroidVersion (int, java.lang.String, int, kotlin.jvm.internal.DefaultConstructorMarker)
@@ -939,6 +941,7 @@ com.android.build.api.variant.JniLibsPackaging.getPickFirsts: org.gradle.api.pro
 com.android.build.api.variant.LibraryPackaging implements com.android.build.api.variant.Packaging
 com.android.build.api.variant.LibraryPackaging.jniLibs: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.JniLibsPackaging, kotlin.Unit>)
 com.android.build.api.variant.LibraryVariant implements com.android.build.api.variant.Variant
+com.android.build.api.variant.LibraryVariant.getAarMetadata: com.android.build.api.variant.AarMetadata ()
 com.android.build.api.variant.LibraryVariant.getAndroidTest: com.android.build.api.component.AndroidTest ()
 com.android.build.api.variant.LibraryVariant.getApplicationId: org.gradle.api.provider.Provider<java.lang.String> ()
 com.android.build.api.variant.LibraryVariant.getPackaging: com.android.build.api.variant.LibraryPackaging ()

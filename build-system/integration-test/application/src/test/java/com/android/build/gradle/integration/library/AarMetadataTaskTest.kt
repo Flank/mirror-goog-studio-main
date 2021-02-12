@@ -39,6 +39,7 @@ class AarMetadataTaskTest {
             """
                 |$AAR_FORMAT_VERSION_PROPERTY=1.0
                 |$AAR_METADATA_VERSION_PROPERTY=1.0
+                |$MIN_COMPILE_SDK_PROPERTY=1
                 |"""
                 .trimMargin()
                 .replace("\n", System.lineSeparator())

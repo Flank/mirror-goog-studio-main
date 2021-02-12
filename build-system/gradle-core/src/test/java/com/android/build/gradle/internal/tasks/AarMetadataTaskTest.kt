@@ -66,6 +66,7 @@ class AarMetadataTaskTest {
         task.output.set(outputFile)
         task.aarFormatVersion.set(AarMetadataTask.AAR_FORMAT_VERSION)
         task.aarMetadataVersion.set(AarMetadataTask.AAR_METADATA_VERSION)
+        task.minCompileSdk.set(1)
         task.taskAction()
 
         checkAarMetadataFile(
@@ -95,7 +96,7 @@ class AarMetadataTaskTest {
         file: File,
         aarFormatVersion: String,
         aarMetadataVersion: String,
-        minCompileSdk: String? = null
+        minCompileSdk: String = "1"
     ) {
         assertThat(file).exists()
         val properties = Properties()
