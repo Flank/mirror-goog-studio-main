@@ -17,7 +17,6 @@ kotlin_test(
         "//conditions:default": [":libjni-test.so"],
     }),
     jvm_flags = [
-        "-agentpath:/Volumes/android/studio-master-dev/bazel-bin/tools/base/dynamic-layout-inspector/agent/transport/libjni-test.dylib",
         "-Dtest.suite.jar=agent_tests.jar",
         "-Djava.library.path=tools/base/dynamic-layout-inspector/agent/transport",
     ],
@@ -111,7 +110,6 @@ cc_library(
     name = "agent_test_support",
     srcs = [
         "src/test/native/testing/component_tree_test_java_jni.cc",
-        "src/test/native/testing/jvmti_init.cc",
     ],
     copts = ANDROID_COPTS + [
         # TODO: Remove dependency when agent.h no longer includes
