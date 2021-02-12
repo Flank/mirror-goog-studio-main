@@ -18,10 +18,8 @@ package android.os;
 
 import androidx.annotation.NonNull;
 
-// Note: This class must be written in Java, as Kotlin otherwise creates a companion object for the
-// static methods, which it references even when the methods are marked @JvmStatic if called from
-// Kotlin source (which the inspector is). This causes a runtime exception on the device in its
-// Java version, where there is no Companion object.
+// Note: This class is intentionally written in Java, to avoid the compiler generating different
+// static bytecode than the original Java code.
 public final class Handler {
 
     @NonNull

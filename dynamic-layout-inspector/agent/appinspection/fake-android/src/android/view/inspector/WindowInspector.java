@@ -14,11 +14,18 @@
  * limitations under the License.
  */
 
-package android.view.inspector
+package android.view.inspector;
 
-import android.view.WindowManagerGlobal
+import android.view.View;
+import android.view.WindowManagerGlobal;
+import androidx.annotation.NonNull;
+import java.util.List;
 
-object WindowInspector {
-    @JvmStatic
-    fun getGlobalWindowViews() = WindowManagerGlobal.instance.rootViews
+// Note: This class is intentionally written in Java, to avoid the compiler generating different
+// static bytecode than the original Java code.
+public final class WindowInspector {
+    @NonNull
+    public static List<View> getGlobalWindowViews() {
+        return WindowManagerGlobal.getInstance().getRootViews();
+    }
 }

@@ -14,17 +14,16 @@
  * limitations under the License.
  */
 
-package android.os
+package android.os;
 
-// We don't want the compiler to optimize constants when we build our inspector; instead, we want
-// the code to fetch the actual values from the framework at runtime.
-@Suppress("MayBeConstant")
-object Build {
-    object VERSION {
-
-        @JvmField
-        val SDK_INT = 29
-        @JvmField
-        val CODENAME = "F(ake)"
+// Note: This class is intentionally written in Java, to avoid the compiler generating different
+// static bytecode than the original Java code.
+// Note #2: We don't want the compiler to optimize constants when we build our inspector, so fields
+// that normally would be final are defined as normal variables in fake-android.
+@SuppressWarnings({"FieldNamingConvention", "NonConstantFieldWithUpperCaseName"})
+public final class Build {
+    public static final class VERSION {
+        public static int SDK_INT = 29;
+        public static String CODENAME = "F(ake)";
     }
 }

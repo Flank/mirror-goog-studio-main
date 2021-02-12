@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dalvik.system
 
-@Suppress("UNUSED_PARAMETER")
-object VMDebug {
+package dalvik.system;
 
-    @JvmStatic
-    fun <T> allowHiddenApiReflectionFrom(klass: Class<T>) {
-    }
+// Note: This class is intentionally written in Java, to avoid the compiler generating different
+// static bytecode than the original Java code.
+@SuppressWarnings("unused")
+public final class VMDebug {
+    public static <T> void allowHiddenApiReflectionFrom(Class<T> klass) {}
 }
