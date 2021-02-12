@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.errors.SyncIssueReporterImpl
 import com.android.build.gradle.internal.ide.dependencies.LibraryDependencyCacheBuildService
 import com.android.build.gradle.internal.ide.dependencies.MavenCoordinatesCacheBuildService
 import com.android.build.gradle.internal.ide.v2.GlobalLibraryBuildService
+import com.android.build.gradle.internal.lint.AndroidLintAnalysisTask
 import com.android.build.gradle.internal.lint.AndroidLintCopyReportTask
 import com.android.build.gradle.internal.lint.AndroidLintTask
 import com.android.build.gradle.internal.lint.LintFixBuildService
@@ -140,8 +141,31 @@ abstract class LintPlugin : Plugin<Project> {
                 task.description = "Runs lint on `${project.name}` and applies any safe suggestions to the source code."
                 task.configureForStandalone(project, projectServices.projectOptions, javaConvention, customLintChecks, lintOptions!!, autoFix = true)
             }
+            val lintAnalysisTask = project.tasks.register("lintAnalyze", AndroidLintAnalysisTask::class.java) { task ->
+                task.description = "Run lint analysis on project `${project.name}`"
+                task.configureForStandalone(
+                    project,
+                    projectServices.projectOptions,
+                    javaConvention,
+                    customLintChecks,
+                    lintOptions!!
+                )
+            }
+            AndroidLintAnalysisTask.SingleVariantCreationAction.registerOutputArtifacts(
+                lintAnalysisTask,
+                artifacts
+            )
             val lintModelWriterTask = project.tasks.register("generateLintModel", LintModelWriterTask::class.java) { task ->
-                task.configureForStandalone(project, projectServices.projectOptions, javaConvention, lintOptions!!)
+                task.configureForStandalone(
+                    project,
+                    projectServices.projectOptions,
+                    javaConvention,
+                    lintOptions!!,
+                    artifacts.getOutputPath(
+                        InternalArtifactType.LINT_PARTIAL_RESULTS,
+                        AndroidLintAnalysisTask.PARTIAL_RESULTS_DIR_NAME
+                    )
+                )
             }
             LintModelWriterTask.CreationAction.registerOutputArtifacts(lintModelWriterTask, artifacts)
             AndroidLintTask.SingleVariantCreationAction.registerLintReportArtifacts(lintTask, artifacts, null, project.buildDir.resolve("reports"))

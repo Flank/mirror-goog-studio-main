@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.lint
 
 import com.android.Version
+import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.dsl.LintOptions
@@ -196,10 +197,19 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
         override val description = "Run lint analysis on the ${creationConfig.name} variant"
 
         override fun handleProvider(taskProvider: TaskProvider<AndroidLintAnalysisTask>) {
-            creationConfig.artifacts
-                .setInitialProvider(taskProvider, AndroidLintAnalysisTask::partialResultsDirectory)
-                .withName("out")
-                .on(InternalArtifactType.LINT_PARTIAL_RESULTS)
+            registerOutputArtifacts(taskProvider, creationConfig.artifacts)
+        }
+
+        companion object {
+            fun registerOutputArtifacts(
+                taskProvider: TaskProvider<AndroidLintAnalysisTask>,
+                artifacts: ArtifactsImpl
+            ) {
+                artifacts
+                    .setInitialProvider(taskProvider, AndroidLintAnalysisTask::partialResultsDirectory)
+                    .withName(PARTIAL_RESULTS_DIR_NAME)
+                    .on(InternalArtifactType.LINT_PARTIAL_RESULTS)
+            }
         }
     }
 
@@ -318,5 +328,6 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
 
     companion object {
         private const val LINT_PRINT_STACKTRACE_ENVIRONMENT_VARIABLE = "LINT_PRINT_STACKTRACE"
+        const val PARTIAL_RESULTS_DIR_NAME = "out"
     }
 }
