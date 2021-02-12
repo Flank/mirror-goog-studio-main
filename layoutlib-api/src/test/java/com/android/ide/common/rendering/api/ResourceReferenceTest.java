@@ -17,7 +17,6 @@ package com.android.ide.common.rendering.api;
 
 import static org.junit.Assert.assertEquals;
 
-import com.android.SdkConstants;
 import com.android.resources.ResourceType;
 import com.google.common.collect.ImmutableBiMap;
 import org.junit.Test;
@@ -57,7 +56,10 @@ public class ResourceReferenceTest {
         ResourceNamespace.Resolver resolver =
                 ResourceNamespace.Resolver.fromBiMap(
                         ImmutableBiMap.of(
-                                "lib", libNs.getXmlNamespaceUri(), "a", SdkConstants.ANDROID_URI));
+                                "lib",
+                                libNs.getXmlNamespaceUri(),
+                                "a",
+                                AndroidConstants.ANDROID_URI));
 
         assertEquals("@string/app_name", inLib.getRelativeResourceUrl(libNs, resolver).toString());
         assertEquals(

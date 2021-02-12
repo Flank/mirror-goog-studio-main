@@ -13,7 +13,6 @@
 // limitations under the License.
 package com.android.resources;
 
-import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.ide.common.rendering.api.ResourceNamespace.ANDROID;
 import static com.android.ide.common.rendering.api.ResourceNamespace.RES_AUTO;
 import static com.android.ide.common.rendering.api.ResourceNamespace.Resolver.EMPTY_RESOLVER;
@@ -23,7 +22,7 @@ import static com.android.ide.common.rendering.api.ResourceNamespace.fromNamespa
 import static com.android.ide.common.rendering.api.ResourceNamespace.fromPackageName;
 import static org.junit.Assert.*;
 
-import com.android.SdkConstants;
+import com.android.ide.common.rendering.api.AndroidConstants;
 import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.google.common.collect.ImmutableMap;
 import java.io.ByteArrayInputStream;
@@ -47,7 +46,7 @@ public class ResourceNamespaceTest {
                 "com.example",
                 fromNamespacePrefix("com.example", RES_AUTO, EMPTY_RESOLVER).getPackageName());
         assertEquals(
-                SdkConstants.ANDROID_NS_NAME,
+                AndroidConstants.ANDROID_NS_NAME,
                 fromNamespacePrefix("android", RES_AUTO, EMPTY_RESOLVER).getPackageName());
         assertNull(fromNamespacePrefix(null, RES_AUTO, EMPTY_RESOLVER).getPackageName());
 
@@ -66,8 +65,10 @@ public class ResourceNamespaceTest {
     @Test
     public void androidSingleton() throws Exception {
         assertSame(ANDROID, fromPackageName("android"));
-        assertSame(ANDROID, fromNamespacePrefix("android", RES_AUTO, prefix -> ANDROID_URI));
-        assertSame(ANDROID, fromNamespaceUri(ANDROID_URI));
+        assertSame(
+                ANDROID,
+                fromNamespacePrefix("android", RES_AUTO, prefix -> AndroidConstants.ANDROID_URI));
+        assertSame(ANDROID, fromNamespaceUri(AndroidConstants.ANDROID_URI));
         assertSame(ANDROID, serializeAndDeserialize(ANDROID));
     }
 
@@ -91,7 +92,7 @@ public class ResourceNamespaceTest {
 
     @Test
     public void xmlNamespaceUri() {
-        assertEquals(ANDROID_URI, ANDROID.getXmlNamespaceUri());
+        assertEquals(AndroidConstants.ANDROID_URI, ANDROID.getXmlNamespaceUri());
     }
 
     private static ResourceNamespace serializeAndDeserialize(ResourceNamespace namespace)

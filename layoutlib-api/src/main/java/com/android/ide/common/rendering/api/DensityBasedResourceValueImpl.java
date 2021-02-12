@@ -19,7 +19,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.resources.Density;
 import com.android.resources.ResourceType;
-import com.android.utils.HashCodes;
 import java.util.Objects;
 
 public class DensityBasedResourceValueImpl extends ResourceValueImpl
@@ -61,7 +60,7 @@ public class DensityBasedResourceValueImpl extends ResourceValueImpl
 
     @Override
     public int hashCode() {
-        return HashCodes.mix(super.hashCode(), Objects.hashCode(density));
+        return Objects.hash(super.hashCode(), density);
     }
 
     @Override

@@ -18,7 +18,6 @@ package com.android.ide.common.rendering.api;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.resources.ResourceType;
-import com.android.utils.HashCodes;
 import com.google.common.base.MoreObjects;
 import java.util.Objects;
 
@@ -169,12 +168,7 @@ public class ResourceValueImpl implements ResourceValue {
 
     @Override
     public int hashCode() {
-        return HashCodes.mix(
-                resourceType.hashCode(),
-                namespace.hashCode(),
-                name.hashCode(),
-                Objects.hashCode(libraryName),
-                Objects.hashCode(value));
+        return Objects.hash(resourceType, namespace, name, libraryName, value);
     }
 
     @Override

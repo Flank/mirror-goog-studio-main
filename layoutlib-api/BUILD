@@ -20,7 +20,6 @@ iml_module(
         "//prebuilts/studio/intellij-sdk:studio-sdk",
         "//tools/adt/idea/.idea/libraries:kxml2",
         "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
-        "//tools/base/common:studio.android.sdktools.common[module]",
     ],
 )
 
