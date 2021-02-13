@@ -124,6 +124,24 @@ class TreeBuildingCanvas : public SkCanvasVirtualEnforcer<SkCanvas> {
 #endif
   }
 
+  void nonHeaderCommand();
+
+  bool onPeekPixels(SkPixmap* pixmap) override;
+
+  bool onAccessTopLayerPixels(SkPixmap* pixmap) override;
+
+  SkImageInfo onImageInfo() const override;
+
+  bool onGetProps(SkSurfaceProps* props) const override;
+
+  void onFlush() override;
+
+  void willSave() override;
+
+  void willRestore() override;
+
+  void onMarkCTM(const char*) override;
+
   void didConcat44(const SkM44& matrix) override;
 
   void didSetM44(const SkM44& matrix) override;
@@ -132,54 +150,25 @@ class TreeBuildingCanvas : public SkCanvasVirtualEnforcer<SkCanvas> {
 
   void didScale(SkScalar sx, SkScalar sy) override;
 
-  void willSave() override;
-
-  void willRestore() override;
-
-  void nonHeaderCommand();
-
-  bool onPeekPixels(SkPixmap* pixmap) override;
-
-  SkImageInfo onImageInfo() const override;
-
-  bool onGetProps(SkSurfaceProps* props) const override;
-
-  void onFlush() override;
-
-  void onDrawShadowRec(const SkPath& path, const SkDrawShadowRec& rec) override;
-
-  virtual void onDrawVerticesObject(const SkVertices* vertices,
-                                    SkBlendMode mode,
-                                    const SkPaint& paint) override;
-
-  void onDrawImageRect2(const SkImage* image, const SkRect& src,
-                        const SkRect& dst, const SkSamplingOptions&,
-                        const SkPaint* paint,
-                        SrcRectConstraint constraint) override;
-
   void onDrawPaint(const SkPaint& paint) override;
 
-  void onDrawPoints(PointMode mode, size_t count, const SkPoint* pts,
-                    const SkPaint& paint) override;
+  void onDrawBehind(const SkPaint& paint) override;
 
   void onDrawRect(const SkRect& rect, const SkPaint& paint) override;
-
-  void onDrawRegion(const SkRegion& region, const SkPaint& paint) override;
-
-  void onDrawOval(const SkRect& oval, const SkPaint& paint) override;
 
   void onDrawRRect(const SkRRect& rrect, const SkPaint& paint) override;
 
   void onDrawDRRect(const SkRRect& outer, const SkRRect& inner,
                     const SkPaint& paint) override;
 
+  void onDrawOval(const SkRect& oval, const SkPaint& paint) override;
+
   void onDrawArc(const SkRect& oval, SkScalar startAngle, SkScalar sweepAngle,
                  bool useCenter, const SkPaint& paint) override;
 
   void onDrawPath(const SkPath& path, const SkPaint& paint) override;
 
-  void onDrawImage2(const SkImage* image, SkScalar left, SkScalar top,
-                    const SkSamplingOptions&, const SkPaint* paint) override;
+  void onDrawRegion(const SkRegion& region, const SkPaint& paint) override;
 
   void onDrawTextBlob(const SkTextBlob* blob, SkScalar x, SkScalar y,
                       const SkPaint& paint) override;
@@ -188,23 +177,49 @@ class TreeBuildingCanvas : public SkCanvasVirtualEnforcer<SkCanvas> {
                    const SkPoint* texCoords, SkBlendMode mode,
                    const SkPaint& paint) override;
 
+  void onDrawPoints(PointMode mode, size_t count, const SkPoint* pts,
+                    const SkPaint& paint) override;
+
+  void onDrawImage2(const SkImage* image, SkScalar left, SkScalar top,
+                    const SkSamplingOptions&, const SkPaint* paint) override;
+
+  void onDrawImageRect2(const SkImage* image, const SkRect& src,
+                        const SkRect& dst, const SkSamplingOptions&,
+                        const SkPaint* paint,
+                        SrcRectConstraint constraint) override;
+
   void onDrawImageLattice2(const SkImage* image, const Lattice& lattice,
                            const SkRect& dst, SkFilterMode filterMode,
                            const SkPaint* paint) override;
-
-  void onClipShader(sk_sp<SkShader> shader, SkClipOp clipOp) override;
 
   void onDrawAtlas2(const SkImage* atlas, const SkRSXform xform[],
                     const SkRect src[], const SkColor colors[], int count,
                     SkBlendMode mode, const SkSamplingOptions&,
                     const SkRect* cull, const SkPaint* paint) override;
 
+  void onDrawEdgeAAImageSet2(const SkCanvas::ImageSetEntry imageSet[],
+                             int count, const SkPoint dstClips[],
+                             const SkMatrix preViewMatrices[],
+                             const SkSamplingOptions& options,
+                             const SkPaint* paint,
+                             SkCanvas::SrcRectConstraint constraint) override;
+
+  virtual void onDrawVerticesObject(const SkVertices* vertices,
+                                    SkBlendMode mode,
+                                    const SkPaint& paint) override;
+
+  void onDrawAnnotation(const SkRect&, const char* key, SkData*) override;
+
+  void onDrawShadowRec(const SkPath& path, const SkDrawShadowRec& rec) override;
+
   void onDrawDrawable(SkDrawable* drawable, const SkMatrix* matrix) override;
 
   void onDrawPicture(const SkPicture* picture, const SkMatrix* matrix,
                      const SkPaint* paint) override;
 
-  void onDrawAnnotation(const SkRect&, const char* key, SkData*) override;
+  void onDrawEdgeAAQuad(const SkRect& rect, const SkPoint clip[4],
+                        SkCanvas::QuadAAFlags aaFlags, const SkColor4f& color,
+                        SkBlendMode mode) override;
 
   void onClipRect(const SkRect& rect, SkClipOp op,
                   ClipEdgeStyle edgeStyle) override;
@@ -215,17 +230,11 @@ class TreeBuildingCanvas : public SkCanvasVirtualEnforcer<SkCanvas> {
   void onClipPath(const SkPath& path, SkClipOp op,
                   ClipEdgeStyle edgeStyle) override;
 
+  void onClipShader(sk_sp<SkShader> shader, SkClipOp clipOp) override;
+
   void onClipRegion(const SkRegion& deviceRgn, SkClipOp op) override;
 
-  void onDrawEdgeAAQuad(const SkRect& rect, const SkPoint clip[4],
-                        SkCanvas::QuadAAFlags aaFlags, const SkColor4f& color,
-                        SkBlendMode mode) override;
-
-  void onDrawEdgeAAImageSet(const SkCanvas::ImageSetEntry imageSet[], int count,
-                            const SkPoint dstClips[],
-                            const SkMatrix preViewMatrices[],
-                            const SkPaint* paint,
-                            SkCanvas::SrcRectConstraint constraint) override;
+  void onDiscard() override;
 
  private:
   int request_version;
