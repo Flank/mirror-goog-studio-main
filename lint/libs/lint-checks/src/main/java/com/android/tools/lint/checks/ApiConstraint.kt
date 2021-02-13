@@ -27,13 +27,13 @@ inline class ApiConstraint(val bits: Int) {
     /*
      * The API constraint stores the interval [from, to). For example,
      * "if (SDK_INT >= 16) X else Y" would have the range constraint [16,∞) for
-     * X and [1,16) for Y. Here ∞ is using the special marker value 0xFF.
+     * X and [1,16) for Y. Here ∞ is using the special marker value 0xFFF.
      * The int basically is represented by from in the least significant byte
-     * and to in the next byte.
+     * and to in the next byte: from | to << TO_SHIFTS.
      */
 
-    private fun fromInclusive(): Int = bits and API_LEVEL_MASK
-    private fun toExclusive(): Int = (bits shr API_LEVEL_SHIFTS) and API_LEVEL_MASK
+    private fun fromInclusive(): Int = bits and FROM_MASK
+    private fun toExclusive(): Int = (bits shr TO_SHIFTS) and FROM_MASK
 
     /** Is the given [apiLevel] valid for this constraint? */
     fun matches(apiLevel: Int): Boolean {
@@ -92,9 +92,10 @@ inline class ApiConstraint(val bits: Int) {
     }
 
     companion object {
-        private const val INFINITY = 0xFF
-        private const val API_LEVEL_SHIFTS = 8
-        private const val API_LEVEL_MASK = 0xFF
+        // Large enough to hold the 1000 value used by Build.VERSION_CODES.CUR_DEVELOPMENT
+        private const val INFINITY = 0xFFF
+        private const val TO_SHIFTS = 16
+        private const val FROM_MASK = 0xFFFF
 
         private fun createConstraint(
             fromInclusive: Int? = null,
@@ -102,7 +103,7 @@ inline class ApiConstraint(val bits: Int) {
         ): ApiConstraint {
             val from = fromInclusive ?: 1
             val to = toExclusive ?: INFINITY
-            return ApiConstraint(from or (to shl API_LEVEL_SHIFTS))
+            return ApiConstraint(from or (to shl TO_SHIFTS))
         }
 
         /**

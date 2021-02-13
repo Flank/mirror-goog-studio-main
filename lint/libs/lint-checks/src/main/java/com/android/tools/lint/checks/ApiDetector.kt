@@ -117,6 +117,7 @@ import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiModifier
 import com.intellij.psi.PsiModifierListOwner
 import com.intellij.psi.PsiPrimitiveType
+import com.intellij.psi.PsiReferenceExpression
 import com.intellij.psi.PsiSuperExpression
 import com.intellij.psi.PsiType
 import com.intellij.psi.util.PsiTreeUtil
@@ -1763,6 +1764,29 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                     if (api <= 1) {
                         // @RequiresApi has two aliasing attributes: api and value
                         api = getLongAttribute(context, wrapped, "api", -1).toInt()
+                    } else if (api == SdkVersionInfo.CUR_DEVELOPMENT) {
+                        val version = context.project.buildTarget?.version
+                        if (version != null && version.isPreview) {
+                            return version.featureLevel
+                        }
+                        // Special value defined in the Android framework to indicate current development
+                        // version. This is different from the tools where we use current stable + 1 since
+                        // that's the anticipated version.
+                        api = if (SdkVersionInfo.HIGHEST_KNOWN_API > SdkVersionInfo.HIGHEST_KNOWN_STABLE_API) {
+                            SdkVersionInfo.HIGHEST_KNOWN_API
+                        } else {
+                            SdkVersionInfo.HIGHEST_KNOWN_API + 1
+                        }
+
+                        // Try to match it up by codename
+                        val value = annotation.findDeclaredAttributeValue(ATTR_VALUE)
+                            ?: annotation.findDeclaredAttributeValue("api")
+                        if (value is PsiReferenceExpression) {
+                            val name = value.referenceName
+                            if (name?.length == 1) {
+                                api = max(api, SdkVersionInfo.getApiByBuildCode(name, true))
+                            }
+                        }
                     }
                     return api
                 } else if (qualifiedName == null) {

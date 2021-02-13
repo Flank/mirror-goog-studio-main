@@ -127,7 +127,9 @@ class ApiConstraintTest {
 
     @Test
     fun testSerialization() {
-        assertEquals("ff1a", serialize(atLeast(26)))
-        assertEquals("API level ≥ 26", deserialize("ff1a").toString())
+        assertEquals("1d001a", serialize(atLeast(26) + atMost(28)))
+        assertEquals("API level ≥ 26 and API level < 29", deserialize("1d001a").toString())
+        assertEquals("fff001a", serialize(atLeast(26)))
+        assertEquals("API level ≥ 26", deserialize("fff001a").toString())
     }
 }

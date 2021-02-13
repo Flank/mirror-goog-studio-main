@@ -3172,9 +3172,80 @@ class VersionChecksTest : AbstractCheckTest() {
             )
     }
 
+    fun testNextPlatformHandling() {
+        // Regression test for b/172930073
+        // Need to gracefully handle the next version of Android
+        lint().files(
+            classpath(),
+            manifest().minSdk(14),
+            java(
+                """
+                package test.pkg;
+
+                import android.os.Build;
+                import androidx.annotation.ChecksSdkIntAtLeast;
+                import androidx.core.os.BuildCompat;
+                import android.support.annotation.RequiresApi;
+
+                public class TestS {
+                    public int test() {
+                        if (BuildCompat.isAtLeastS()) {
+                            return ApiSImpl.getChecksums();
+                        }
+                        if (BuildCompat.isCurrentDev()) {
+                            return ApiSImpl.getChecksums();
+                        }
+                        return 0;
+                    }
+
+                    @RequiresApi(Build.VERSION_CODES.S)
+                    private static class ApiSImpl {
+                        public static int getChecksums() {
+                            return 0;
+                        }
+                    }
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package androidx.core.os;
+                import android.os.Build;
+                import androidx.annotation.ChecksSdkIntAtLeast;
+
+                public class BuildCompat {
+                    @ChecksSdkIntAtLeast(codename = "S")
+                    public static boolean isAtLeastS() {
+                        return Build.VERSION.CODENAME.equals("S");
+                    }
+                    @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.CUR_DEVELOPMENT)
+                    public static boolean isCurrentDev() {
+                        return false; // stub only; annotation used for version lookup
+                    }
+                }
+                """
+
+            ).indented(),
+            java(
+                """
+                package android.os;
+
+                public class Build {
+                    public static class VERSION_CODES {
+                        public static final int CUR_DEVELOPMENT = 1000;
+                        public static final int S = CUR_DEVELOPMENT;
+                    }
+                }
+                """
+            ).indented(),
+            mSupportJar,
+            checkSdkIntAnnotation
+        ).run().expectClean()
+    }
+
     companion object {
         @JvmField
-        val checkSdkIntAnnotation = java(
+        val checkSdkIntAnnotation: TestFile = java(
             """
             package androidx.annotation;
             import static java.lang.annotation.ElementType.FIELD;

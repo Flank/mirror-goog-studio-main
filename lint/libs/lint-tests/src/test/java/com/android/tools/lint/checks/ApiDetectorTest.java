@@ -20,6 +20,7 @@ import static com.android.tools.lint.checks.AnnotationDetectorTest.SUPPORT_ANNOT
 import static com.android.tools.lint.checks.ApiDetector.INLINED;
 import static com.android.tools.lint.checks.ApiDetector.KEY_REQUIRES_API;
 import static com.android.tools.lint.checks.ApiDetector.UNSUPPORTED;
+import static com.android.tools.lint.checks.VersionChecksTest.checkSdkIntAnnotation;
 import static com.android.tools.lint.checks.infrastructure.TestMode.PARTIAL;
 
 import com.android.annotations.NonNull;
@@ -6983,15 +6984,6 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "}"))
                 .run()
                 .expectClean();
-    }
-
-    @Override
-    protected boolean ignoreSystemErrors() {
-        //noinspection SimplifiableIfStatement
-        if (getName().equals("testMissingApiDatabase")) {
-            return false;
-        }
-        return super.ignoreSystemErrors();
     }
 
     @Override

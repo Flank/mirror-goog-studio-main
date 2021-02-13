@@ -84,6 +84,12 @@ public class SdkVersionInfo {
     public static final int LOWEST_COMPILE_SDK_VERSION = 22;
 
     /**
+     * Build.VERSION_CODES.CUR_DEVELOPMENT; set for platforms in
+     * development before preview
+     */
+    public static final int CUR_DEVELOPMENT = 1000;
+
+    /**
      * Returns the Android version and code name of the given API level
      * The highest number (inclusive) that is supported
      * is {@link SdkVersionInfo#HIGHEST_KNOWN_API}.
