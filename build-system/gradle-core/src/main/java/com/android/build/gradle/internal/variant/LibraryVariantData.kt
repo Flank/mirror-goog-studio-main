@@ -54,14 +54,14 @@ class LibraryVariantData(
     private val testVariants: MutableMap<VariantType, TestVariantData> = mutableMapOf()
 
     override val description: String
-        get() = if (variantDslInfo.hasFlavors()) {
+        get() = if (componentIdentity.productFlavors.isNotEmpty()) {
             val sb = StringBuilder(50)
-            variantDslInfo.componentIdentity.buildType?.let { sb.appendCapitalized(it) }
+            componentIdentity.buildType?.let { sb.appendCapitalized(it) }
             sb.append(" build for flavor ")
-            sb.appendCapitalized(variantDslInfo.componentIdentity.flavorName)
+            sb.appendCapitalized(componentIdentity.flavorName)
             sb.toString()
         } else {
-            variantDslInfo.componentIdentity.buildType!!.capitalizeAndAppend(" build")
+            componentIdentity.buildType!!.capitalizeAndAppend(" build")
         }
 
     override fun getTestVariantData(type: VariantType): TestVariantData? {

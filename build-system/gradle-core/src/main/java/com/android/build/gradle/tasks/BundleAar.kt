@@ -116,9 +116,7 @@ abstract class BundleAar : Zip(), VariantAwareTask {
             task.isReproducibleFileOrder = true
             task.isPreserveFileTimestamps = false
 
-            task.description = ("Assembles a bundle containing the library in "
-                    + creationConfig.variantDslInfo.componentIdentity.name
-                    + ".")
+            task.description = "Assembles a bundle containing the library in ${creationConfig.name}."
 
             task.archiveFileName.set(creationConfig.outputs.getMainSplit().outputFileName)
             task.destinationDirectory.set(creationConfig.paths.aarLocation)
