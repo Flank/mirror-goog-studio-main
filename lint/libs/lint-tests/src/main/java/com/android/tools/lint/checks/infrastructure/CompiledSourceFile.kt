@@ -56,13 +56,13 @@ internal class CompiledSourceFile(
 
     /** The type of test file to create. */
     internal enum class Type {
-        BYTECODE_ONLY, SOURCE_AND_BYTECODE
+        BYTECODE_ONLY, SOURCE_AND_BYTECODE, RESOURCE
     }
 
     val files: List<TestFile >
         get() {
             val files = ArrayList(classFiles)
-            if (type == Type.SOURCE_AND_BYTECODE) {
+            if (type == Type.SOURCE_AND_BYTECODE || type == Type.RESOURCE) {
                 files.add(source)
             }
             return files
@@ -90,6 +90,9 @@ internal class CompiledSourceFile(
      * author is running test without knowing the binary contents yet)
      */
     fun isMissingClasses(): Boolean {
+        if (type == Type.RESOURCE) {
+            return false
+        }
         return encodedFiles.isEmpty() || encodedFiles.size == 1 && encodedFiles[0].isEmpty()
     }
 
@@ -119,6 +122,10 @@ internal class CompiledSourceFile(
         }
 
         val (javaFiles, kotlinFiles) = findSourceFiles(projectDir)
+        if (javaFiles.isEmpty() && kotlinFiles.isEmpty()) {
+            // This is a resource file
+            return false
+        }
 
         // First build with kotlinc; needs access to both Kotlin and Java files
         if (kotlinFiles.isNotEmpty()) {
@@ -136,14 +143,16 @@ internal class CompiledSourceFile(
         // Then build with javac; only pass the Java files (but the -d classes directory
         // contains .class files from the .kt files such that it can resolve references
         // to Kotlin code)
-        val args = ArrayList<String>()
-        args.add(javac)
-        args.add("-classpath")
-        args.add(classesDir.path + File.pathSeparator + classpath)
-        args.add("-d")
-        args.add(classesDir.path)
-        javaFiles.forEach { args.add(it.path) }
-        executeProcess(args)
+        if (javaFiles.isNotEmpty()) {
+            val args = ArrayList<String>()
+            args.add(javac)
+            args.add("-classpath")
+            args.add(classesDir.path + File.pathSeparator + classpath)
+            args.add("-d")
+            args.add(classesDir.path)
+            javaFiles.forEach { args.add(it.path) }
+            executeProcess(args)
+        }
 
         val (kotlinTestFile, javaTestFile) = describeTestFiles(classesDir, target)
         fail(
@@ -346,10 +355,12 @@ internal class CompiledSourceFile(
             java.indent(indent).append("\"").append(path).append(":\" +\n")
             java.append(toBase64gzipJava(bytes, indent * 4, true, false))
 
+            indent--
             kotlin.indent(indent).append("\"\"\"\n")
             kotlin.indent(indent).append(path.replace('$', '＄')).append(":\n")
             kotlin.append(toBase64gzipKotlin(bytes, indent * 4, true, false))
             kotlin.indent(indent).append("\"\"\"")
+            indent++
         }
         indent--
         java.append("\n").indent(indent).append(")\n")

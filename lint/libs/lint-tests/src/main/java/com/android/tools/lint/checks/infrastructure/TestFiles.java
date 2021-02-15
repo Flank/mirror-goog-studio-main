@@ -17,6 +17,8 @@
 package com.android.tools.lint.checks.infrastructure;
 
 import static com.android.SdkConstants.ANDROID_MANIFEST_XML;
+import static com.android.SdkConstants.DOT_JAVA;
+import static com.android.SdkConstants.DOT_KT;
 import static com.android.SdkConstants.DOT_XML;
 import static com.android.SdkConstants.FN_BUILD_GRADLE;
 
@@ -330,6 +332,26 @@ public class TestFiles {
     @NonNull
     public static TestFile.JarTestFile jar(@NonNull String to) {
         return new TestFile.JarTestFile(to);
+    }
+
+    public static CompiledSourceFile compiled(
+            @NonNull String into, @NonNull TestFile source, @NonNull String... encoded) {
+        CompiledSourceFile.Type type =
+                source.targetRelativePath.endsWith(DOT_JAVA)
+                                || source.targetRelativePath.endsWith(DOT_KT)
+                        ? CompiledSourceFile.Type.SOURCE_AND_BYTECODE
+                        : CompiledSourceFile.Type.RESOURCE;
+        return new CompiledSourceFile(into, type, source, encoded);
+    }
+
+    public static CompiledSourceFile bytecode(
+            @NonNull String into, @NonNull TestFile source, @NonNull String... encoded) {
+        CompiledSourceFile.Type type =
+                source.targetRelativePath.endsWith(DOT_JAVA)
+                                || source.targetRelativePath.endsWith(DOT_KT)
+                        ? CompiledSourceFile.Type.BYTECODE_ONLY
+                        : CompiledSourceFile.Type.RESOURCE;
+        return new CompiledSourceFile(into, type, source, encoded);
     }
 
     @NonNull

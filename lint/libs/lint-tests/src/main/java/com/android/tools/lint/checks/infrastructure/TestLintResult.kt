@@ -44,6 +44,7 @@ import java.io.IOException
 import java.io.PrintWriter
 import java.io.StringWriter
 import java.util.regex.Pattern
+import java.util.regex.Pattern.DOTALL
 import java.util.regex.Pattern.MULTILINE
 import javax.swing.text.BadLocationException
 import javax.swing.text.Document
@@ -85,18 +86,21 @@ class TestLintResult internal constructor(
     }
 
     /**
-     * Checks that the lint result had the expected report format. The
-     * [expectedText] is the output of the text report generated from
-     * the text (which you can customize with [textFormat].) If the lint
-     * check is expected to throw an exception, you can pass in its
-     * class with [expectedException]. The [transformer] lets you modify
-     * the test results; the default one will unify paths and remove
-     * absolute paths to just be relative to the test roots. Finally,
-     * the [testMode] lets you check a particular test type output.
+     * Checks that the lint result had the expected report format.
+     * The [expectedText] is the output of the text report
+     * generated from the text (which you can customize with
+     * [TestLintTask.textFormat].) If the lint check is expected
+     * to throw an exception, you can pass in its class with
+     * [expectedException]. The [transformer] lets you modify the test
+     * results; the default one will unify paths and remove absolute
+     * paths to just be relative to the test roots. Finally, the
+     * [testMode] lets you check a particular test type output.
      *
      * @param expectedText the text to expect
      * @param expectedException class, if any
-     * @param
+     * @param transformer a mapping function which can modify the result
+     *     before comparison
+     * @param testMode the test mode whose results to check
      * @return this
      */
     @JvmOverloads
@@ -132,6 +136,42 @@ class TestLintResult internal constructor(
 
             assertEquals(expected.trimIndent(), actual.trimIndent())
         }
+        cleanup()
+        return this
+    }
+
+    /** Checks that the lint report contains the given [substring] */
+    @JvmOverloads
+    fun expectContains(
+        expectedText: String,
+        transformer: TestResultTransformer = TestResultTransformer { it },
+        testMode: TestMode = defaultMode
+    ): TestLintResult {
+        val actual = transformer.transform(describeOutput(null, testMode))
+        val expected = normalizeOutput(expectedText)
+
+        val expectedWithoutIndent = expected.trimIndent()
+        val unixPath = expectedWithoutIndent.replace(File.separatorChar, '/')
+        if (!actual.trim().contains(expectedWithoutIndent.trim())) {
+            // See if it's a Windows path issue
+            if (actual.contains(unixPath)) {
+                assertEquals(
+                    "The expected lint output does not match, but it *does* " +
+                        "match when Windows file separators (\\) are replaced by Unix ones.\n" +
+                        "Make sure your lint detector calls LintClient.getDisplayPath(File) " +
+                        "instead of displaying paths directly (in unit tests they will then " +
+                        "be converted to forward slashes for test output stability.)\n",
+                    expected,
+                    actual
+                )
+            }
+        }
+
+        assertTrue(
+            "Not true that\n\"$expectedWithoutIndent\$\nis found in lint output\n\"$actual\$",
+            actual.contains(expectedWithoutIndent)
+        )
+
         cleanup()
         return this
     }
@@ -371,8 +411,12 @@ class TestLintResult internal constructor(
             throw throwable
         }
         val output = transformer.transform(describeOutput())
-        val pattern = Pattern.compile(regexp, MULTILINE)
-        val found = pattern.matcher(output).find()
+        var pattern = Pattern.compile(regexp, MULTILINE or DOTALL)
+        var found = pattern.matcher(output).find()
+        if (!found) {
+            pattern = Pattern.compile(regexp.trimIndent(), MULTILINE or DOTALL)
+            found = pattern.matcher(output).find()
+        }
         if (!found) {
             val reached = computeSubstringMatch(pattern, output)
             fail(
@@ -438,6 +482,7 @@ class TestLintResult internal constructor(
      * @param severities the severities to count
      * @return this
      */
+    @Suppress("MemberVisibilityCanBePrivate") // Also allow calls by 3rd party checks
     fun expectCount(expectedCount: Int, vararg severities: Severity): TestLintResult {
         val state = states[defaultMode]!!
         val throwable = state.firstThrowable
@@ -492,6 +537,7 @@ class TestLintResult internal constructor(
      * @param after the file after applying the fix
      * @return this
      */
+    @Suppress("Unused") // Library method
     fun checkFix(fix: String?, after: TestFile): TestLintResult {
         verifyFixes().checkFix(fix, after)
         return this
@@ -517,6 +563,7 @@ class TestLintResult internal constructor(
      *
      * @param checkers one or more checks to apply to the output
      */
+    @Suppress("MemberVisibilityCanBePrivate") // Also allow calls by 3rd party checks
     fun checkHtmlReport(
         vararg checkers: TestResultChecker,
         transformer: TestResultTransformer = TestResultTransformer { it }
@@ -526,7 +573,7 @@ class TestLintResult internal constructor(
             fullPaths = false,
             xmlReportType = XmlFileType.REPORT,
             transformer = transformer,
-            checkers = *checkers
+            checkers = checkers
         )
     }
 
@@ -561,6 +608,7 @@ class TestLintResult internal constructor(
      *
      * @param checkers one or more checks to apply to the output
      */
+    @Suppress("MemberVisibilityCanBePrivate") // Also allow calls by 3rd party checks
     fun checkXmlReport(
         vararg checkers: TestResultChecker,
         transformer: TestResultTransformer = TestResultTransformer { it }
@@ -570,7 +618,7 @@ class TestLintResult internal constructor(
             fullPaths = false,
             xmlReportType = XmlFileType.REPORT,
             transformer = transformer,
-            checkers = *checkers
+            checkers = checkers
         )
     }
 
@@ -615,7 +663,7 @@ class TestLintResult internal constructor(
             fullPaths = fullPaths,
             xmlReportType = reportType,
             transformer = transformer,
-            checkers = *checkers
+            checkers = checkers
         )
     }
 
@@ -633,6 +681,9 @@ class TestLintResult internal constructor(
     ): TestLintResult {
         val trimmed = normalizeOutput(expected.trimIndent())
         return checkXmlReport(
+            fullPaths = fullPaths,
+            reportType = reportType,
+            transformer = transformer,
             checkers = arrayOf(
                 TestResultChecker { actual ->
                     val s = normalizeOutput(actual.trimIndent())
@@ -646,9 +697,6 @@ class TestLintResult internal constructor(
                     }
                 }
             ),
-            fullPaths = fullPaths,
-            reportType = reportType,
-            transformer = transformer
         )
     }
 
@@ -663,7 +711,8 @@ class TestLintResult internal constructor(
     ): TestLintResult {
         val trimmed = normalizeOutput(expected.trimIndent())
         return checkSarifReport(
-            checkers = *arrayOf(
+            transformer = transformer,
+            checkers = arrayOf(
                 TestResultChecker { actual ->
                     val s = normalizeOutput(actual.trimIndent())
                     if (s != trimmed && s.replace('\\', '/') == trimmed) {
@@ -676,7 +725,6 @@ class TestLintResult internal constructor(
                     }
                 }
             ),
-            transformer = transformer
         )
     }
 
@@ -685,6 +733,7 @@ class TestLintResult internal constructor(
      *
      * @param checkers one or more checks to apply to the output
      */
+    @Suppress("MemberVisibilityCanBePrivate") // Also allow calls by 3rd party checks
     fun checkSarifReport(
         vararg checkers: TestResultChecker,
         transformer: TestResultTransformer = TestResultTransformer { it }
@@ -692,7 +741,7 @@ class TestLintResult internal constructor(
         return checkReport(
             sarif = true,
             transformer = transformer,
-            checkers = *checkers
+            checkers = checkers
         )
     }
 

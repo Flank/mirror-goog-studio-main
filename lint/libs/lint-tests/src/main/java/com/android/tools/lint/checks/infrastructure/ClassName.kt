@@ -129,7 +129,7 @@ fun stripComments(source: String, stripLineComments: Boolean = true): String {
 private val PACKAGE_PATTERN = Pattern.compile("""package\s+([\S&&[^;]]*)""")
 
 private val CLASS_PATTERN = Pattern.compile(
-    """(\bclass\b|\binterface\b|\benum\b|\bobject\b)+?\s*([^\s:(]+)""",
+    """(\bclass\b|\binterface\b|\benum class\b|\benum\b|\bobject\b)+?\s*([^\s:(]+)""",
     Pattern.MULTILINE
 )
 
