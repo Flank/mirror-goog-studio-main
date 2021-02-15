@@ -20,6 +20,7 @@ import com.android.build.gradle.internal.dsl.AgpDslLockedException
 import com.android.build.gradle.internal.dsl.Lockable
 import com.google.common.truth.Truth.assertThat
 import com.google.common.truth.Truth.assertWithMessage
+import groovy.util.Eval
 import org.gradle.api.provider.Property
 import org.junit.Test
 import java.lang.reflect.Modifier
@@ -316,5 +317,23 @@ class DslDecoratorUnitTest {
         val decorated = dslDecorator.decorate(ConcreteImplementation::class)
             .getDeclaredConstructor().newInstance()
         assertThat(decorated.foo).isEqualTo("hello")
+    }
+
+    interface WithList {
+        val list: MutableList<String>
+    }
+
+    @Test
+    fun `check groovy setter generation`() {
+        val decorated = DslDecorator(listOf(SupportedPropertyType.Val.List))
+            .decorate(WithList::class)
+        val withList = decorated.getDeclaredConstructor().newInstance()
+        Eval.me("withList", withList, "withList.list += ['one', 'two']")
+        assertThat(withList.list).containsExactly("one", "two").inOrder()
+        Eval.me("withList", withList, "withList.list += 'three'")
+        assertThat(withList.list).containsExactly("one", "two", "three").inOrder()
+        // Check self-assignment preserves values
+        Eval.me("withList", withList, "withList.list = withList.list")
+        assertThat(withList.list).containsExactly("one", "two", "three").inOrder()
     }
 }

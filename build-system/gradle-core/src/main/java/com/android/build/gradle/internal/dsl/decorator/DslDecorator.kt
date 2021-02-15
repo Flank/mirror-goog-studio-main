@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.dsl.decorator
 
 import com.android.build.gradle.internal.dsl.AgpDslLockedException
 import com.android.build.gradle.internal.dsl.Lockable
+import com.android.utils.usLocaleCapitalize
 import com.android.utils.usLocaleDecapitalize
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.base.Stopwatch
@@ -148,9 +149,7 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType>) {
 
         for (field in abstractProperties) {
             createFieldBackedGetters(classWriter, generatedClass, field)
-            if (field.settersToGenerate.isNotEmpty()) {
-                createFieldBackedSetters(classWriter, generatedClass, field, lockable)
-            }
+            createFieldBackedSetters(classWriter, generatedClass, field, lockable)
         }
 
         if (lockable) {
@@ -332,14 +331,21 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType>) {
         property: ManagedProperty,
         lockable: Boolean
     ) {
-        for (setter in property.settersToGenerate) {
-            createFieldBackedSetter(
-                classWriter,
-                generatedClass,
-                property,
-                lockable,
-                setter
-            )
+        when (property.supportedPropertyType) {
+            is SupportedPropertyType.Val -> {
+                createGroovyMutatingSetter(classWriter, generatedClass, property)
+            }
+            is SupportedPropertyType.Var -> {
+                for (setter in property.settersToGenerate) {
+                    createFieldBackedSetter(
+                        classWriter,
+                        generatedClass,
+                        property,
+                        lockable,
+                        setter
+                    )
+                }
+            }
         }
     }
 
@@ -353,7 +359,6 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType>) {
         val type = property.supportedPropertyType
         check(type.implementationType == setter.argumentTypes[0]) {
             "Currently only setters that use the same type are supported."
-            // TODO(b/140406102): Support setters for groovy +=
         }
         // Mark bridge methods as synthetic.
         val access = if(type.type == setter.argumentTypes[0]) property.access else property.access.or(Opcodes.ACC_SYNTHETIC)
@@ -380,6 +385,52 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType>) {
             loadThis()
             loadArg(0)
             putField(generatedClass, property.backingFieldName, type.implementationType)
+            returnValue()
+            endMethod()
+        }
+    }
+
+    /**
+     * To allow groovy field += bar, we need to generate a set(...) method.
+     *
+     * Mutability is not controlled here, it depends on the underlying lockable collection type.
+     */
+    private fun createGroovyMutatingSetter(
+        classWriter: ClassWriter,
+        generatedClass: Type,
+        property: ManagedProperty
+    ) {
+        val extraSetter = Method(
+            "set${property.name.usLocaleCapitalize()}",
+            Type.VOID_TYPE,
+            arrayOf(property.supportedPropertyType.type)
+        )
+        GeneratorAdapter(Opcodes.ACC_PUBLIC.or(Opcodes.ACC_SYNTHETIC), extraSetter, null, null, classWriter).apply {
+            // val newList = ArrayList(argument) // Take a copy so e.g. field = field doesn't clear the field!
+            // __backingField.clear()
+            // __backingField.addAll(newList)
+            newInstance(ARRAY_LIST)
+            dup()
+            loadArg(0)
+            checkCast(COLLECTION)
+            invokeConstructor(
+                ARRAY_LIST,
+                ARRAY_LIST_COPY_CONSTRUCTOR
+            )
+            loadThis()
+            getField(generatedClass, property.backingFieldName,
+                property.supportedPropertyType.implementationType
+            )
+            dup()
+            invokeVirtual(
+                property.supportedPropertyType.implementationType,
+                CLEAR
+            )
+            swap()
+            invokeVirtual(
+                property.supportedPropertyType.implementationType,
+                ADD_ALL
+            )
             returnValue()
             endMethod()
         }
@@ -424,6 +475,12 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType>) {
             Method("<init>", Type.VOID_TYPE, arrayOf(Type.getType(String::class.java)))
         private val LOCK_METHOD = Method("lock", Type.VOID_TYPE, arrayOf())
         private val LOCKED_EXCEPTION = Type.getType(AgpDslLockedException::class.java)
+
+        private val COLLECTION = Type.getType(Collection::class.java)
+        private val ARRAY_LIST = Type.getType(ArrayList::class.java)
+        private val ARRAY_LIST_COPY_CONSTRUCTOR = Method("<init>", Type.VOID_TYPE, arrayOf(COLLECTION))
+        private val CLEAR = Method("clear", Type.VOID_TYPE, arrayOf())
+        private val ADD_ALL = Method("addAll", Type.BOOLEAN_TYPE, arrayOf(COLLECTION))
 
         // Use reflection to avoid needing to compile against java11 APIs yet.
         private val privateLookupInMethod by lazy(LazyThreadSafetyMode.PUBLICATION) {
