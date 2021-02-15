@@ -41,6 +41,7 @@ import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
+import com.android.build.gradle.options.StringOption
 import com.android.builder.core.VariantType
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.errors.EvalIssueException
@@ -108,10 +109,15 @@ abstract class LintTool {
     @get:Input
     abstract val runInProcess: Property<Boolean>
 
+    @get:Input
+    @get:Optional
+    abstract val workerHeapSize: Property<String>
+
     fun initialize(project: Project, projectOptions: ProjectOptions) {
         // TODO(b/160392650) Clean this up to use a detached configuration
         classpath.fromDisallowChanges(project.configurations.getByName(LINT_CLASS_PATH))
         runInProcess.setDisallowChanges(projectOptions.getProvider(BooleanOption.RUN_LINT_IN_PROCESS))
+        workerHeapSize.setDisallowChanges(projectOptions.getProvider(StringOption.LINT_HEAP_SIZE))
     }
 
     fun submit(workerExecutor: WorkerExecutor, mainClass: String, arguments: List<String>) {
@@ -138,6 +144,10 @@ abstract class LintTool {
         } else {
             workerExecutor.processIsolation {
                 it.classpath.from(classpath)
+                // Default to using the main Gradle daemon heap size to smooth the transition
+                // for build authors.
+                it.forkOptions.maxHeapSize =
+                    workerHeapSize.orNull ?: "${Runtime.getRuntime().maxMemory() / 1024 / 1024}m"
             }
         }
         workQueue.submit(AndroidLintWorkAction::class.java) { isolatedParameters ->
