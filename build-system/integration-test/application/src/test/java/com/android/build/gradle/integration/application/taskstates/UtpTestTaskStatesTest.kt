@@ -48,9 +48,7 @@ private fun assertTaskDoesNotExist(
 class UtpTestTaskStatesTest {
 
     @get:Rule
-    var project = EmptyActivityProjectBuilder()
-        .also { it.withConfigurationCaching = BaseGradleExecutor.ConfigurationCaching.OFF }
-        .build()
+    var project = EmptyActivityProjectBuilder().build()
 
     lateinit var appProject: GradleTestProject
 
