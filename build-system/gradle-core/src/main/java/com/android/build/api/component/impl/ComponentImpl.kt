@@ -238,7 +238,7 @@ abstract class ComponentImpl(
         if (variantType.isForTesting || !variantDslInfo.getPostProcessingOptions().resourcesShrinkingEnabled()) {
             return false
         }
-        val newResourceShrinker = globalScope.projectOptions[BooleanOption.ENABLE_NEW_RESOURCE_SHRINKER]
+        val newResourceShrinker = services.projectOptions[BooleanOption.ENABLE_NEW_RESOURCE_SHRINKER]
         if (variantType.isDynamicFeature) {
             globalScope
                 .dslServices

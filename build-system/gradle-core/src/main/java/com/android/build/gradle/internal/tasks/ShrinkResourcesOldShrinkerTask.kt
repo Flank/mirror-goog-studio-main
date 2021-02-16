@@ -178,7 +178,7 @@ abstract class ShrinkResourcesOldShrinkerTask : NonIncrementalTask() {
             val artifacts = creationConfig.artifacts
 
             if (creationConfig
-                    .globalScope.projectOptions[BooleanOption.ENABLE_R_TXT_RESOURCE_SHRINKING]) {
+                    .services.projectOptions[BooleanOption.ENABLE_R_TXT_RESOURCE_SHRINKING]) {
                 artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.RUNTIME_SYMBOL_LIST,
                     task.rTxtFile
@@ -211,7 +211,7 @@ abstract class ShrinkResourcesOldShrinkerTask : NonIncrementalTask() {
             task.artifactTransformationRequest.setDisallowChanges(artifactTransformationRequest)
 
             task.enableRTxtResourceShrinking.set(creationConfig
-                .globalScope.projectOptions[BooleanOption.ENABLE_R_TXT_RESOURCE_SHRINKING])
+                .services.projectOptions[BooleanOption.ENABLE_R_TXT_RESOURCE_SHRINKING])
 
             creationConfig.outputs.getEnabledVariantOutputs().forEach(task.variantOutputs::add)
             task.variantOutputs.disallowChanges()

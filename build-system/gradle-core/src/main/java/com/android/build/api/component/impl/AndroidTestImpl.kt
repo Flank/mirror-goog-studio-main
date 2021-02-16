@@ -79,7 +79,11 @@ open class AndroidTestImpl @Inject constructor(
     globalScope
 ), AndroidTest, AndroidTestCreationConfig {
 
-    private val delegate by lazy { AndroidTestCreationConfigImpl(this, globalScope, variantDslInfo) }
+    private val delegate by lazy { AndroidTestCreationConfigImpl(
+        this,
+        internalServices.projectOptions,
+        globalScope,
+        variantDslInfo) }
 
     // ---------------------------------------------------------------------------------------------
     // PUBLIC API
@@ -192,7 +196,7 @@ open class AndroidTestImpl @Inject constructor(
             variantDslInfo.signingConfig,
             variantPropertiesApiServices,
             minSdkVersion.apiLevel,
-            globalScope.projectOptions.get(IntegerOption.IDE_TARGET_DEVICE_API)
+            services.projectOptions.get(IntegerOption.IDE_TARGET_DEVICE_API)
         )
     }
 

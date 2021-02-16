@@ -158,12 +158,12 @@ class DependencyResourcesComputer {
     }
 
     fun initFromVariantScope(creationConfig: ComponentCreationConfig, includeDependencies: Boolean) {
-        val globalScope = creationConfig.globalScope
+        val projectOptions = creationConfig.services.projectOptions
         val variantData = creationConfig.variantData
-        val project = globalScope.project
+        val project = creationConfig.globalScope.project
         val paths = creationConfig.paths
 
-        validateEnabled = !globalScope.projectOptions.get(BooleanOption.DISABLE_RESOURCE_VALIDATION)
+        validateEnabled = !projectOptions.get(BooleanOption.DISABLE_RESOURCE_VALIDATION)
 
         if (includeDependencies) {
             this.libraries = creationConfig.variantDependencies.getArtifactCollection(RUNTIME_CLASSPATH, ALL, ANDROID_RES)

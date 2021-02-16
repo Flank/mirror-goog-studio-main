@@ -114,7 +114,11 @@ open class  LibraryVariantImpl @Inject constructor(
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------
 
-    private val delegate by lazy { ConsumableCreationConfigImpl(this, globalScope, variantDslInfo) }
+    private val delegate by lazy { ConsumableCreationConfigImpl(
+        this,
+        internalServices.projectOptions,
+        globalScope,
+        variantDslInfo) }
 
     override val dexingType: DexingType
         get() = delegate.dexingType

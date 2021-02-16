@@ -57,6 +57,7 @@ import com.android.build.gradle.internal.variant.VariantInputModelBuilder;
 import com.android.build.gradle.internal.variant.VariantModel;
 import com.android.build.gradle.internal.variant.VariantModelImpl;
 import com.android.build.gradle.internal.variant.VariantPathHelper;
+import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.SyncOptions;
 import com.android.builder.core.VariantType;
 import com.android.builder.errors.IssueReporter;
@@ -83,6 +84,7 @@ public class ModelBuilderTest {
     @Mock BaseExtension extension;
     @Mock ExtraModelInfo extraModelInfo;
     @Mock ArtifactsImpl artifacts;
+    @Mock ProjectOptions projectOptions;
 
     @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
@@ -131,6 +133,7 @@ public class ModelBuilderTest {
                         variantModel,
                         extension,
                         extraModelInfo,
+                        projectOptions,
                         syncIssueReporter,
                         AndroidProjectTypes.PROJECT_TYPE_APP);
     }

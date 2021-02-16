@@ -25,7 +25,10 @@ import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.variant.impl.TestVariantBuilderImpl;
 import com.android.build.api.variant.impl.TestVariantImpl;
 import com.android.build.gradle.BaseExtension;
-import com.android.build.gradle.internal.component.*;
+import com.android.build.gradle.internal.component.ApkCreationConfig;
+import com.android.build.gradle.internal.component.ComponentCreationConfig;
+import com.android.build.gradle.internal.component.ConsumableCreationConfig;
+import com.android.build.gradle.internal.component.TestCreationConfig;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
@@ -34,6 +37,7 @@ import com.android.build.gradle.internal.tasks.SigningConfigVersionsWriterTask;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
 import com.android.build.gradle.internal.test.TestApplicationTestData;
 import com.android.build.gradle.internal.variant.ComponentInfo;
+import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.CheckTestedAppObfuscation;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.ProcessTestManifest;
@@ -62,9 +66,10 @@ public class TestApplicationTaskManager
             @NonNull
                     List<ComponentInfo<TestComponentBuilderImpl, TestComponentImpl>> testComponents,
             boolean hasFlavors,
+            @NonNull ProjectOptions projectOptions,
             @NonNull GlobalScope globalScope,
             @NonNull BaseExtension extension) {
-        super(variants, testComponents, hasFlavors, globalScope, extension);
+        super(variants, testComponents, hasFlavors, projectOptions, globalScope, extension);
     }
 
     @Override

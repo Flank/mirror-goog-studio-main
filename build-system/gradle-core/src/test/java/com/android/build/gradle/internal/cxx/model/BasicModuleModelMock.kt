@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.cxx.model
 
-import com.android.build.api.dsl.SdkComponents
 import com.android.build.api.variant.ExternalCmake
 import com.android.build.api.variant.ExternalNdkBuild
 import com.android.build.api.variant.impl.AndroidVersionImpl
@@ -41,7 +40,6 @@ import com.android.build.gradle.internal.dsl.NdkBuildOptions
 import com.android.build.gradle.internal.dsl.Splits
 import com.android.build.gradle.internal.fixtures.FakeGradleDirectory
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider
-import com.android.build.gradle.internal.ndk.NdkHandler
 import com.android.build.gradle.internal.ndk.NdkInstallStatus
 import com.android.build.gradle.internal.ndk.NdkPlatform
 import com.android.build.gradle.internal.ndk.NdkR19Info
@@ -228,6 +226,7 @@ open class BasicModuleModelMock {
 
     val configurationParameters by lazy {
         tryCreateConfigurationParameters(
+            projectOptions,
             variantImpl
         )!!
     }
@@ -370,7 +369,7 @@ open class BasicModuleModelMock {
             sdkDir.mkdirs()
 
             doReturn(FakeGradleProvider(sdkComponents)).`when`(global).sdkComponents
-            doReturn(projectOptions).`when`(global).projectOptions
+            doReturn(projectOptions).`when`(taskCreationServices).projectOptions
 
             doReturn(FakeGradleProvider(FakeGradleDirectory(sdkDir))).`when`(sdkComponents).sdkDirectoryProvider
             doReturn(false).`when`(projectOptions)

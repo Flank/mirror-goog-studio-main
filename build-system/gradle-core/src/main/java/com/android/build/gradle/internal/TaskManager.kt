@@ -164,6 +164,7 @@ import com.android.build.gradle.internal.variant.ApkVariantData
 import com.android.build.gradle.internal.variant.ComponentInfo
 import com.android.build.gradle.internal.variant.VariantModel
 import com.android.build.gradle.options.BooleanOption
+import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.tasks.AidlCompile
 import com.android.build.gradle.tasks.AnalyzeDependenciesTask
 import com.android.build.gradle.tasks.CompatibleScreensManifest
@@ -246,6 +247,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         private val variants: List<ComponentInfo<VariantBuilderT, VariantT>>,
         private val testComponents: List<ComponentInfo<TestComponentBuilderImpl, TestComponentImpl>>,
         private val hasFlavors: Boolean,
+        private val projectOptions: ProjectOptions,
         @JvmField protected val globalScope: GlobalScope,
         @JvmField protected val extension: BaseExtension) {
 
@@ -314,6 +316,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             globalScope.sdkComponents.get(),
             globalScope.dslServices.issueReporter,
             taskFactory,
+            projectOptions,
             variants
         )
     }
@@ -1452,7 +1455,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
     }
 
     protected fun createTestDevicesTasks() {
-        if (!shouldEnableUtp(globalScope.projectOptions, extension.testOptions)) {
+        if (!shouldEnableUtp(projectOptions, extension.testOptions)) {
             return
         }
 
@@ -1578,7 +1581,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             }
         }
 
-        if (shouldEnableUtp(globalScope.projectOptions, extension.testOptions)) {
+        if (shouldEnableUtp(projectOptions, extension.testOptions)) {
             // Now for each managed device defined in the dsl
             val managedDevices = mutableListOf<ManagedVirtualDevice>()
             extension
@@ -2372,7 +2375,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             // for base module only.
             return
         }
-        if (globalScope.projectOptions[BooleanOption.ENABLE_NEW_RESOURCE_SHRINKER]) {
+        if (projectOptions[BooleanOption.ENABLE_NEW_RESOURCE_SHRINKER]) {
             // Shrink resources in APK with a new resource shrinker and produce stripped res
             // package.
             taskFactory.register(ShrinkResourcesNewShrinkerTask.CreationAction(creationConfig))
@@ -2515,7 +2518,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                 .anyMatch { componentProperties: ComponentCreationConfig -> componentProperties.buildFeatures.viewBinding }
         val dataBindingEnabled = allPropertiesList.stream()
                 .anyMatch { componentProperties: ComponentCreationConfig -> componentProperties.buildFeatures.dataBinding }
-        val projectOptions = globalScope.projectOptions
         val useAndroidX = projectOptions[BooleanOption.USE_ANDROID_X]
         val dataBindingBuilder = globalScope.dataBindingBuilder
         if (viewBindingEnabled) {
@@ -2844,6 +2846,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
          */
         @JvmStatic
         fun createTasksBeforeEvaluate(
+                projectOptions: ProjectOptions,
                 globalScope: GlobalScope,
                 variantType: VariantType,
                 sourceSetContainer: Iterable<AndroidSourceSet?>) {
@@ -2872,7 +2875,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
 
             // Make sure MAIN_PREBUILD runs first:
             taskFactory.register(MAIN_PREBUILD)
-            taskFactory.register(ExtractProguardFiles.CreationAction(globalScope))
+            taskFactory.register(ExtractProguardFiles.CreationAction(projectOptions, globalScope))
                 .configure { it: ExtractProguardFiles -> it.dependsOn(MAIN_PREBUILD) }
             taskFactory.register(SourceSetsTask.CreationAction(sourceSetContainer))
             taskFactory.register(

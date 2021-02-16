@@ -40,6 +40,7 @@ import com.android.build.gradle.options.BooleanOption.ENABLE_CMAKE_BUILD_COHABIT
 import com.android.build.gradle.options.BooleanOption.ENABLE_NATIVE_CONFIGURATION_FOLDING
 import com.android.build.gradle.options.BooleanOption.ENABLE_PROFILE_JSON
 import com.android.build.gradle.options.BooleanOption.PREFER_CMAKE_FILE_API
+import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.options.StringOption
 import com.android.build.gradle.options.StringOption.IDE_BUILD_TARGET_ABI
 import com.android.build.gradle.options.StringOption.NATIVE_BUILD_OUTPUT_LEVEL
@@ -171,7 +172,9 @@ data class CxxConfigurationParameters(
  * Return null when there is no C/C++ in the user's project or if there is some other kind of error.
  * In the latter case, an error will have been reported.
  */
-fun tryCreateConfigurationParameters(variant: VariantImpl) : CxxConfigurationParameters? {
+fun tryCreateConfigurationParameters(
+    projectOptions: ProjectOptions,
+    variant: VariantImpl) : CxxConfigurationParameters? {
     val global = variant.globalScope
 
     val (buildSystem, makeFile, buildStagingFolder) =
@@ -185,8 +188,8 @@ fun tryCreateConfigurationParameters(variant: VariantImpl) : CxxConfigurationPar
         global.project.buildDir
     )
     val cxxCacheFolder = join(global.intermediatesDir, "cxx")
-    fun option(option: BooleanOption) = global.projectOptions.get(option)
-    fun option(option: StringOption) = global.projectOptions.get(option)
+    fun option(option: BooleanOption) = variant.services.projectOptions.get(option)
+    fun option(option: StringOption) = variant.services.projectOptions.get(option)
 
     /**
      * Construct an [NdkHandler] and attempt to auto-download an NDK. If auto-download fails then
@@ -239,7 +242,9 @@ fun tryCreateConfigurationParameters(variant: VariantImpl) : CxxConfigurationPar
     }
 
     val prefabClassPath = if (variant.buildFeatures.prefab) {
-        getPrefabFromMaven(variant.globalScope)
+        getPrefabFromMaven(
+            projectOptions,
+            variant.globalScope.project)
     } else {
         null
     }

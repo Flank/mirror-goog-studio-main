@@ -308,7 +308,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                 .setFlavorSelection(getFlavorSelection(variantDslInfo))
                 .addSourceSets(variantSourceSets)
         if (extension is BaseAppModuleExtension) {
-            builder.setFeatureList((extension as BaseAppModuleExtension).dynamicFeatures)
+            builder.setFeatureList(extension.dynamicFeatures)
         }
         val variantDependencies = builder.build()
 
@@ -326,6 +326,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                 variantDependencies,
                 pathHelper,
                 artifacts,
+                taskCreationServices,
                 globalScope,
                 null /* testedVariantProperties*/)
 
@@ -534,6 +535,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                 variantDependencies,
                 pathHelper,
                 artifacts,
+                taskCreationServices,
                 globalScope,
                 testedComponentInfo.variant)
 
@@ -755,16 +757,16 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                         .setCoreLibraryDesugaringEnabled(variant.isCoreLibraryDesugaringEnabled)
                         .testExecution = AnalyticsUtil.toProto(globalScope.extension.testOptions.getExecutionEnum())
 
-                    variant.codeShrinker?.let {
-                        variantAnalytics.codeShrinker = AnalyticsUtil.toProto(it)
+                    variant.codeShrinker?.let { codeShrinker ->
+                        variantAnalytics.codeShrinker = AnalyticsUtil.toProto(codeShrinker)
                     }
                     if (variantDslInfo.targetSdkVersion.apiLevel > 0) {
                         variantAnalytics.targetSdkVersion =
                             AnalyticsUtil.toProto(variantDslInfo.targetSdkVersion)
                     }
-                    variantDslInfo.maxSdkVersion?.let {
+                    variantDslInfo.maxSdkVersion?.let { version ->
                         variantAnalytics.setMaxSdkVersion(
-                            ApiVersion.newBuilder().setApiLevel(it.toLong()))
+                            ApiVersion.newBuilder().setApiLevel(version.toLong()))
                     }
                     val supportType = variant.getJava8LangSupportType()
                     if (supportType != VariantScope.Java8LangSupport.INVALID

@@ -86,7 +86,11 @@ open class DynamicFeatureVariantImpl @Inject constructor(
     globalScope
 ), DynamicFeatureVariant, DynamicFeatureCreationConfig, HasAndroidTestImpl {
 
-    private val delegate by lazy { ApkCreationConfigImpl(this, globalScope, variantDslInfo) }
+    private val delegate by lazy { ApkCreationConfigImpl(
+        this,
+        internalServices.projectOptions,
+        globalScope,
+        variantDslInfo) }
 
     /*
      * Providers of data coming from the base modules. These are loaded just once and finalized.

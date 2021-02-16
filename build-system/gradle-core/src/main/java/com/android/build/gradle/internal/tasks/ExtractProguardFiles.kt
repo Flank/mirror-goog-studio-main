@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationAction
 import com.android.build.gradle.options.BooleanOption
+import com.android.build.gradle.options.ProjectOptions
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
@@ -49,6 +50,7 @@ abstract class ExtractProguardFiles : NonIncrementalGlobalTask() {
     }
 
     class CreationAction(
+        private val projectOptions: ProjectOptions,
         globalScope: GlobalScope
     ) : GlobalTaskCreationAction<ExtractProguardFiles>(globalScope) {
 
@@ -59,7 +61,7 @@ abstract class ExtractProguardFiles : NonIncrementalGlobalTask() {
             super.configure(task)
 
             task.enableKeepRClass.set(
-                !globalScope.projectOptions.get(BooleanOption.ENABLE_R_TXT_RESOURCE_SHRINKING)
+                !projectOptions.get(BooleanOption.ENABLE_R_TXT_RESOURCE_SHRINKING)
             )
             task.buildDirectory.set(task.project.layout.buildDirectory)
             task.outputs.doNotCacheIf(

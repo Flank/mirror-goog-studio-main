@@ -45,6 +45,7 @@ import com.android.build.gradle.internal.variant.ApplicationVariantFactory;
 import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.internal.variant.VariantModel;
 import com.android.build.gradle.options.BooleanOption;
+import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.model.v2.ide.ProjectType;
 import java.util.List;
 import javax.inject.Inject;
@@ -85,6 +86,7 @@ public class AppPlugin
                         variantModel,
                         (BaseAppModuleExtension) extension,
                         extraModelInfo,
+                        projectServices.getProjectOptions(),
                         projectServices.getIssueReporter(),
                         getProjectType()));
     }
@@ -101,7 +103,7 @@ public class AppPlugin
             @NonNull ExtraModelInfo extraModelInfo) {
         ApplicationExtensionImpl applicationExtension =
                 dslServices.newDecoratedInstance(ApplicationExtensionImpl.class, dslServices, dslContainers);
-        if (globalScope.getProjectOptions().get(BooleanOption.USE_NEW_DSL_INTERFACES)) {
+        if (projectServices.getProjectOptions().get(BooleanOption.USE_NEW_DSL_INTERFACES)) {
             return (BaseExtension)
                     project.getExtensions()
                             .create(
@@ -165,10 +167,11 @@ public class AppPlugin
             @NonNull
                     List<ComponentInfo<TestComponentBuilderImpl, TestComponentImpl>> testComponents,
             boolean hasFlavors,
+            @NonNull ProjectOptions projectOptions,
             @NonNull GlobalScope globalScope,
             @NonNull BaseExtension extension) {
         return new ApplicationTaskManager(
-                variants, testComponents, hasFlavors, globalScope, extension);
+                variants, testComponents, hasFlavors, projectOptions, globalScope, extension);
     }
 
     @NonNull

@@ -154,6 +154,7 @@ public class ModelBuilder<Extension extends BaseExtension>
     @NonNull protected final Extension extension;
     @NonNull private final ExtraModelInfo extraModelInfo;
     @NonNull private final VariantModel variantModel;
+    @NonNull private final ProjectOptions projectOptions;
     @NonNull private final SyncIssueReporter syncIssueReporter;
     private final int projectType;
     private int modelLevel = AndroidProject.MODEL_LEVEL_0_ORIGINAL;
@@ -170,12 +171,14 @@ public class ModelBuilder<Extension extends BaseExtension>
             @NonNull VariantModel variantModel,
             @NonNull Extension extension,
             @NonNull ExtraModelInfo extraModelInfo,
+            @NonNull ProjectOptions projectOptions,
             @NonNull SyncIssueReporter syncIssueReporter,
             int projectType) {
         this.globalScope = globalScope;
         this.extension = extension;
         this.extraModelInfo = extraModelInfo;
         this.variantModel = variantModel;
+        this.projectOptions = projectOptions;
         this.syncIssueReporter = syncIssueReporter;
         this.projectType = projectType;
     }
@@ -459,8 +462,7 @@ public class ModelBuilder<Extension extends BaseExtension>
     private AndroidGradlePluginProjectFlagsImpl getFlags() {
         ImmutableMap.Builder<AndroidGradlePluginProjectFlags.BooleanFlag, Boolean> flags =
                 ImmutableMap.builder();
-        boolean finalResIds =
-                !globalScope.getProjectOptions().get(BooleanOption.USE_NON_FINAL_RES_IDS);
+        boolean finalResIds = !projectOptions.get(BooleanOption.USE_NON_FINAL_RES_IDS);
         flags.put(
                 AndroidGradlePluginProjectFlags.BooleanFlag.APPLICATION_R_CLASS_CONSTANT_IDS,
                 finalResIds);
@@ -481,8 +483,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                                 variantProperties ->
                                         variantProperties.getBuildFeatures().getMlModelBinding()));
 
-        boolean transitiveRClass =
-                !globalScope.getProjectOptions().get(BooleanOption.NON_TRANSITIVE_R_CLASS);
+        boolean transitiveRClass = !projectOptions.get(BooleanOption.NON_TRANSITIVE_R_CLASS);
         flags.put(AndroidGradlePluginProjectFlags.BooleanFlag.TRANSITIVE_R_CLASS, transitiveRClass);
 
         return new AndroidGradlePluginProjectFlagsImpl(flags.build());

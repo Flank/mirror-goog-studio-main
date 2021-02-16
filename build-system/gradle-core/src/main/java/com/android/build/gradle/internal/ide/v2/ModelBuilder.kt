@@ -64,6 +64,7 @@ import com.android.build.gradle.internal.tasks.ExtractApksTask
 import com.android.build.gradle.internal.variant.VariantModel
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptionService
+import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.errors.IssueReporter
 import com.android.builder.model.SyncIssue
@@ -114,6 +115,7 @@ class ModelBuilder<
                 VariantBuilderT,
                 VariantT>>(
     private val globalScope: GlobalScope,
+    private val projectOptions: ProjectOptions,
     private val variantModel: VariantModel,
     private val extension: ExtensionT,
     private val syncIssueReporter: SyncIssueReporter,
@@ -527,7 +529,7 @@ class ModelBuilder<
         val flags =
             ImmutableMap.builder<BooleanFlag, Boolean>()
 
-        val finalResIds = !globalScope.projectOptions[BooleanOption.USE_NON_FINAL_RES_IDS]
+        val finalResIds = !projectOptions[BooleanOption.USE_NON_FINAL_RES_IDS]
 
         flags.put(BooleanFlag.APPLICATION_R_CLASS_CONSTANT_IDS, finalResIds)
         flags.put(BooleanFlag.TEST_R_CLASS_CONSTANT_IDS, finalResIds)
@@ -541,7 +543,7 @@ class ModelBuilder<
         )
         flags.put(
             BooleanFlag.TRANSITIVE_R_CLASS,
-            !globalScope.projectOptions[BooleanOption.NON_TRANSITIVE_R_CLASS]
+            !projectOptions[BooleanOption.NON_TRANSITIVE_R_CLASS]
         )
 
         return AndroidGradlePluginProjectFlagsImpl(flags.build())

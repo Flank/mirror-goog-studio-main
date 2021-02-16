@@ -18,9 +18,11 @@ package com.android.build.api.component.impl
 import com.android.build.gradle.internal.component.TestVariantCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.options.ProjectOptions
 
 class TestVariantCreationConfigImpl(
     override val config: TestVariantCreationConfig,
+    projectOptions: ProjectOptions,
     globalScope: GlobalScope,
     variantDslInfo: VariantDslInfo
-) : AbstractApkTestCreationConfigImpl(config, globalScope, variantDslInfo)
+) : AbstractApkTestCreationConfigImpl(config, projectOptions, globalScope, variantDslInfo)

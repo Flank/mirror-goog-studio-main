@@ -226,6 +226,7 @@ public abstract class BasePlugin<
             @NonNull
                     List<ComponentInfo<TestComponentBuilderImpl, TestComponentImpl>> testComponents,
             boolean hasFlavors,
+            @NonNull ProjectOptions projectOptions,
             @NonNull GlobalScope globalScope,
             @NonNull BaseExtension extension);
 
@@ -539,6 +540,7 @@ public abstract class BasePlugin<
         registry.register(
                 new com.android.build.gradle.internal.ide.v2.ModelBuilder(
                         globalScope,
+                        projectServices.getProjectOptions(),
                         variantModel,
                         (CommonExtension) extension,
                         projectServices.getIssueReporter(),
@@ -548,7 +550,10 @@ public abstract class BasePlugin<
 
         NativeModelBuilder nativeModelBuilderV2 =
                 new NativeModelBuilder(
-                        projectServices.getIssueReporter(), globalScope, variantModel);
+                        projectServices.getIssueReporter(),
+                        projectServices.getProjectOptions(),
+                        globalScope,
+                        variantModel);
         registry.register(nativeModelBuilderV2);
     }
 
@@ -581,6 +586,7 @@ public abstract class BasePlugin<
                         variantModel,
                         extension,
                         extraModelInfo,
+                        projectServices.getProjectOptions(),
                         projectServices.getIssueReporter(),
                         getProjectType()));
     }
@@ -592,6 +598,7 @@ public abstract class BasePlugin<
                 null,
                 () ->
                         TaskManager.createTasksBeforeEvaluate(
+                                projectServices.getProjectOptions(),
                                 globalScope,
                                 variantFactory.getVariantType(),
                                 extension.getSourceSets()));
@@ -704,13 +711,19 @@ public abstract class BasePlugin<
                         variants,
                         variantManager.getTestComponents(),
                         !variantInputModel.getProductFlavors().isEmpty(),
+                        projectServices.getProjectOptions(),
                         globalScope,
                         extension);
 
         taskManager.createTasks(variantFactory.getVariantType(), createVariantModel());
 
         new DependencyConfigurator(
-                        project, project.getName(), globalScope, variantInputModel, projectServices)
+                        project,
+                        project.getName(),
+                        projectServices.getProjectOptions(),
+                        globalScope,
+                        variantInputModel,
+                        projectServices)
                 .configureDependencySubstitutions()
                 .configureDependencyChecks()
                 .configureGeneralTransforms()

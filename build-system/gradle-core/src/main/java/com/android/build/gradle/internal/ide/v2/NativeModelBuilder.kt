@@ -33,6 +33,7 @@ import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.variant.VariantModel
 import com.android.build.gradle.options.BooleanOption
+import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.model.v2.models.ndk.NativeBuildSystem.CMAKE
 import com.android.builder.model.v2.models.ndk.NativeBuildSystem.NDK_BUILD
 import com.android.builder.model.v2.models.ndk.NativeModelBuilderParameter
@@ -47,6 +48,7 @@ import org.gradle.tooling.provider.model.ParameterizedToolingModelBuilder
 
 class NativeModelBuilder(
     private val issueReporter: SyncIssueReporter,
+    private val projectOptions: ProjectOptions,
     private val globalScope: GlobalScope,
     private val variantModel: VariantModel
 ) : ParameterizedToolingModelBuilder<NativeModelBuilderParameter> {
@@ -57,7 +59,6 @@ class NativeModelBuilder(
         override fun javaexec(action: Action<in JavaExecSpec>) =
             globalScope.project.javaexec(action)
     }
-    private val projectOptions get() = globalScope.projectOptions
     private val ideRefreshExternalNativeModel
         get() =
             projectOptions.get(BooleanOption.IDE_REFRESH_EXTERNAL_NATIVE_MODEL)

@@ -206,11 +206,6 @@ public class GlobalScope {
         return new File(getJacocoAgentOutputDirectory(), "jacocoagent.jar");
     }
 
-    @NonNull
-    public ProjectOptions getProjectOptions() {
-        return dslServices.getProjectOptions();
-    }
-
     public void setLintChecks(@NonNull Configuration lintChecks) {
         this.lintChecks = lintChecks;
     }

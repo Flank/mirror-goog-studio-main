@@ -204,7 +204,6 @@ class ParseIntegrityConfigTaskTest {
         Mockito.`when`(extension.bundle).thenReturn(bundleOptions)
         Mockito.`when`(globalScope.extension).thenReturn(extension)
         Mockito.`when`(globalScope.dslServices).thenReturn(dslServices)
-        Mockito.`when`(globalScope.projectOptions).thenReturn(dslServices.projectOptions)
         Mockito.`when`(taskContainer.preBuildTask).thenReturn(preBuildTask)
 
         return componentProperties

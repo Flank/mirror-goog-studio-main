@@ -34,6 +34,7 @@ import com.android.build.gradle.internal.tasks.factory.dependsOn
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadataWriterTask
 import com.android.build.gradle.internal.variant.ComponentInfo
 import com.android.build.gradle.options.BooleanOption
+import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.errors.IssueReporter
 import com.google.common.collect.ImmutableMap
 import org.gradle.api.Action
@@ -49,12 +50,14 @@ class ApplicationTaskManager(
     variants: List<ComponentInfo<ApplicationVariantBuilderImpl, ApplicationVariantImpl>>,
     testComponents: List<ComponentInfo<TestComponentBuilderImpl, TestComponentImpl>>,
     hasFlavors: Boolean,
+    projectOptions: ProjectOptions,
     globalScope: GlobalScope,
     extension: BaseExtension
 ) : AbstractAppTaskManager<ApplicationVariantBuilderImpl, ApplicationVariantImpl>(
     variants,
     testComponents,
     hasFlavors,
+    projectOptions,
     globalScope,
     extension
 ) {
