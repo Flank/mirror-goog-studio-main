@@ -150,10 +150,10 @@ val CxxAbiModel.buildOutputFile: File
 
 /**
  * Output file of the Cxx*Model structure
- *   ex, $moduleRootFolder/.cxx/ndkBuild/debug/armeabi-v7a/build_model.json
+ *   ex, $moduleRootFolder/build/intermediates/cxx/Debug/{hashcode}/meta/x86_64/build_model.json
  */
 val CxxAbiModel.modelOutputFile: File
-    get() = join(cxxBuildFolder, "build_model.json")
+    get() = join(variant.intermediatesFolder, "meta", abi.tag, "build_model.json")
 
 /**
  * The build model with hash invariant values unexpanded.
