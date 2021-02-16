@@ -130,6 +130,26 @@ class CmakeBasicProjectTest(
         }
     """.trimIndent())
 
+    // Regression test for b/179062268
+    @Test
+    fun `check clean task and extract proguard files task run together`() {
+        TestFileUtils.appendToFile(
+            project.buildFile,
+            """
+                android {
+                    buildTypes {
+                        release {
+                            minifyEnabled true
+                            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+                        }
+                    }
+                }
+            """.trimIndent()
+        )
+        project.execute("clean", "assembleRelease")
+        assertThat(project.getIntermediateFile("default_proguard_files/global")).exists()
+    }
+
     // See b/134086362
     @Test
     fun `check target rename through transitive CMakeLists add_subdirectory`() {

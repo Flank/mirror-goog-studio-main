@@ -451,7 +451,7 @@ public class PluginDslTest {
         String defaultFile =
                 new File(
                                 project.getBuildDir(),
-                                "intermediates/proguard-files/proguard-defaults.txt-"
+                                "intermediates/default_proguard_files/global/proguard-defaults.txt-"
                                         + Version.ANDROID_GRADLE_PLUGIN_VERSION)
                         .getAbsolutePath();
 

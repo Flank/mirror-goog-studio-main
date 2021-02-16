@@ -2490,10 +2490,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         override fun configure(task: TaskT) {
             super.configure(task)
             task.dependsOn(MAIN_PREBUILD)
-            if (creationConfig is ConsumableCreationConfig
-                    && creationConfig.codeShrinker != null) {
-                task.dependsOn(EXTRACT_PROGUARD_FILES)
-            }
         }
     }
 
@@ -2832,7 +2828,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         const val ASSEMBLE_ANDROID_TEST = "assembleAndroidTest"
         const val LINT = "lint"
         const val LINT_FIX = "lintFix"
-        const val EXTRACT_PROGUARD_FILES = "extractProguardFiles"
 
         // Temporary static variables for Kotlin+Compose configuration
         const val KOTLIN_COMPILER_CLASSPATH_CONFIGURATION_NAME = "kotlinCompilerClasspath"
@@ -2878,7 +2873,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             // Make sure MAIN_PREBUILD runs first:
             taskFactory.register(MAIN_PREBUILD)
             taskFactory.register(ExtractProguardFiles.CreationAction(globalScope))
-                    .configure { it: ExtractProguardFiles -> it.dependsOn(MAIN_PREBUILD) }
+                .configure { it: ExtractProguardFiles -> it.dependsOn(MAIN_PREBUILD) }
             taskFactory.register(SourceSetsTask.CreationAction(sourceSetContainer))
             taskFactory.register(
                     ASSEMBLE_ANDROID_TEST

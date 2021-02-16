@@ -20,10 +20,9 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.android.Version;
 import com.android.annotations.NonNull;
-import com.android.build.gradle.options.BooleanOption;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.builder.model.AndroidProject;
 import com.android.utils.FileUtils;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
@@ -89,13 +88,18 @@ public class ProguardFiles {
         }
 
         return FileUtils.join(
-                buildDirectory.get().getAsFile(),
-                AndroidProject.FD_INTERMEDIATES,
-                "proguard-files",
+                getDefaultProguardFileDir(buildDirectory),
                 name + "-" + Version.ANDROID_GRADLE_PLUGIN_VERSION);
     }
 
-    @VisibleForTesting
+    public static File getDefaultProguardFileDir(@NonNull DirectoryProperty buildDirectory) {
+        return FileUtils.join(
+                buildDirectory.get().getAsFile(),
+                AndroidProject.FD_INTERMEDIATES,
+                InternalArtifactType.DEFAULT_PROGUARD_FILES.INSTANCE.getFolderName(),
+                "global");
+    }
+
     public static void createProguardFile(
             @NonNull String name, @NonNull File destination, @NonNull Boolean keepRClass)
              throws IOException {

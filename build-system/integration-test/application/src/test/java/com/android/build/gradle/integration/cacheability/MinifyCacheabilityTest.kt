@@ -59,7 +59,8 @@ class MinifyCacheabilityTest (val shrinker: CodeShrinker) {
             ":compileMinifiedSources",
             ":generateMinifiedAssets",
             ":generateMinifiedResources",
-            ":preBuild"
+            ":preBuild",
+            ":preMinifiedBuild",
         ),
         FROM_CACHE to setOf(
             ":checkMinifiedAarMetadata",
@@ -119,7 +120,6 @@ class MinifyCacheabilityTest (val shrinker: CodeShrinker) {
             ":compileMinifiedShaders",
             ":mergeMinifiedNativeDebugMetadata",
             ":mergeMinifiedNativeLibs",
-            ":preMinifiedBuild",
             ":processMinifiedJavaRes",
             ":stripMinifiedDebugSymbols"
         ),

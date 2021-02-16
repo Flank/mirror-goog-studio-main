@@ -292,6 +292,8 @@ InternalArtifactType<T : FileSystemLocation>(
     object MERGED_AAPT_PROGUARD_FILE: InternalArtifactType<RegularFile>(FILE), Replaceable
     // Jar file containing a compiled manifest.class file.
     object COMPILE_MANIFEST_JAR: InternalArtifactType<RegularFile>(FILE), Replaceable
+    // the directory of default ProGuard files
+    object DEFAULT_PROGUARD_FILES: InternalArtifactType<Directory>(DIRECTORY), Replaceable
 
     // directory containing an empty class annotated with a data binding annotation (it could be any
     // data binding annotation), so that the Java compiler still invokes data binding in the case

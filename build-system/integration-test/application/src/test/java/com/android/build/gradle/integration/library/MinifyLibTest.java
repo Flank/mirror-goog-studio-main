@@ -77,8 +77,11 @@ public class MinifyLibTest {
                 "\nandroid.buildTypes.debug.minifyEnabled true");
         getExecutor().run(":app:assembleDebug");
 
-        assertThat(project.getIntermediateFile("proguard-files")).doesNotExist();
-        assertThat(project.getSubproject("app").getIntermediateFile("proguard-files")).exists();
+        assertThat(project.getIntermediateFile("default_proguard_files/global")).doesNotExist();
+        assertThat(
+                        project.getSubproject("app")
+                                .getIntermediateFile("default_proguard_files/global"))
+                .exists();
     }
 
     @Test
