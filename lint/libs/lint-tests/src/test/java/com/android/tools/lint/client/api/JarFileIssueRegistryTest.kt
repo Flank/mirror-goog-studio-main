@@ -61,10 +61,7 @@ class JarFileIssueRegistryTest : AbstractCheckTest() {
         assertTrue(applicableCallNames!!.contains("getActionBar"))
 
         assertEquals(
-            "android.support.v7.lint.AppCompatIssueRegistry in " +
-                file1.path +
-                " does not specify a vendor; see IssueRegistry#vendor\n" +
-                "Custom lint rule jar " + file2.path + " does not contain a valid " +
+            "Custom lint rule jar " + file2.path + " does not contain a valid " +
                 "registry manifest key (Lint-Registry-v2).\n" +
                 "Either the custom jar is invalid, or it uses an outdated API not " +
                 "supported this lint client\n",
