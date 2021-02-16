@@ -336,4 +336,23 @@ class DslDecoratorUnitTest {
         Eval.me("withList", withList, "withList.list = withList.list")
         assertThat(withList.list).containsExactly("one", "two", "three").inOrder()
     }
+
+    interface WithSet {
+        val set: MutableSet<String>
+    }
+
+    @Test
+    fun `check groovy setter generation for set`() {
+        val decorated = DslDecorator(listOf(SupportedPropertyType.Val.Set))
+            .decorate(WithSet::class)
+        val withSet = decorated.getDeclaredConstructor().newInstance()
+        assertThat(withSet.set::class.java).isEqualTo(LockableSet::class.java)
+        Eval.me("withSet", withSet, "withSet.set += ['one', 'two']")
+        assertThat(withSet.set).containsExactly("one", "two").inOrder()
+        Eval.me("withSet", withSet, "withSet.set += 'three'")
+        assertThat(withSet.set).containsExactly("one", "two", "three").inOrder()
+        // Check self-assignment preserves values
+        Eval.me("withSet", withSet, "withSet.set = withSet.set")
+        assertThat(withSet.set).containsExactly("one", "two", "three").inOrder()
+    }
 }

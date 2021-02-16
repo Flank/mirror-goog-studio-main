@@ -24,6 +24,16 @@ import kotlin.test.assertFailsWith
 internal class LockableListTest {
 
     @Test
+    fun `check behaves as a list`() {
+        val lockableList = LockableList<String>("someStrings")
+        lockableList += "one"
+        lockableList += "one"
+        assertThat(lockableList).containsExactly("one", "one")
+        lockableList -= "one"
+        assertThat(lockableList).containsExactly("one")
+    }
+
+    @Test
     fun `check list locking addition`() {
         val lockableList = LockableList<String>("someStrings")
         lockableList += "zero"

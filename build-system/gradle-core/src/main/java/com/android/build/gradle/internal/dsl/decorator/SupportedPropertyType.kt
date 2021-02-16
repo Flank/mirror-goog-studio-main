@@ -60,6 +60,14 @@ sealed class SupportedPropertyType(
                 Type.getType(Iterable::class.java),
             ),
         )
+        object Set : Val(
+            Type.getType(kotlin.collections.Set::class.java),
+            implementationType = Type.getType(LockableSet::class.java),
+            bridgeTypes = listOf(
+                Type.getType(Collection::class.java),
+                Type.getType(Iterable::class.java),
+            ),
+        )
     }
 
     override fun toString(): String = "SupportedPropertyType(type=${type.className})"
