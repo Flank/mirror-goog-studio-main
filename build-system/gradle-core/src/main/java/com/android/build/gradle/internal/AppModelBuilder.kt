@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.plugins.AppPlugin
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.ProjectInfo
+import com.android.build.gradle.internal.utils.toImmutableSet
 import com.android.build.gradle.internal.variant.VariantModel
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.model.AppBundleProjectBuildOutput
@@ -70,8 +71,8 @@ class AppModelBuilder(
         } else super.buildAll(modelName, project)
     }
 
-    override fun getDynamicFeatures(): MutableCollection<String> {
-        return extension.dynamicFeatures
+    override fun getDynamicFeatures(): Collection<String> {
+        return extension.dynamicFeatures.toImmutableSet()
     }
 
     private fun buildMinimalisticModel(): Any {

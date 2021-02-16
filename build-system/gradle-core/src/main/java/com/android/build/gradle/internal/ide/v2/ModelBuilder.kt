@@ -62,6 +62,7 @@ import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask
 import com.android.build.gradle.internal.tasks.ExtractApksTask
+import com.android.build.gradle.internal.utils.toImmutableSet
 import com.android.build.gradle.internal.variant.VariantModel
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptionService
@@ -263,7 +264,7 @@ class ModelBuilder<
             lintOptions = extension.lintOptions.convert(),
             javaCompileOptions = extension.compileOptions.convert(),
             resourcePrefix = extension.resourcePrefix,
-            dynamicFeatures = (extension as? BaseAppModuleExtension)?.dynamicFeatures,
+            dynamicFeatures = (extension as? BaseAppModuleExtension)?.dynamicFeatures?.toImmutableSet(),
             viewBindingOptions = ViewBindingOptionsImpl(
                 variantModel.variants.any { it.buildFeatures.viewBinding }
             ),
