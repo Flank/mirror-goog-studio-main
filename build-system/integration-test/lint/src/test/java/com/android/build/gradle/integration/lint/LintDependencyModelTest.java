@@ -18,8 +18,10 @@ package com.android.build.gradle.integration.lint;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
+import com.android.build.gradle.options.BooleanOption;
 import java.io.File;
 import kotlin.io.FilesKt;
 import kotlin.text.Charsets;
@@ -39,7 +41,15 @@ import org.junit.runners.Parameterized;
  *     $ ./gradlew :base:build-system:integration-test:lint:test --tests=LintDependencyModelTest
  * </pre>
  */
+@RunWith(FilterableParameterized.class)
 public class LintDependencyModelTest {
+
+    @Parameterized.Parameters(name = "usePartialAnalysis = {0}")
+    public static Object[] getParameters() {
+        return new Object[] {true, false};
+    }
+
+    @Parameterized.Parameter public boolean usePartialAnalysis;
 
     @Rule
     public final GradleTestProject project =
@@ -48,8 +58,8 @@ public class LintDependencyModelTest {
     @Test
     public void checkFindNestedResult() throws Exception {
         // Run twice to catch issues with configuration caching
-        project.executor().run(":app:cleanLintDebug", ":app:lintDebug");
-        project.executor().run(":app:cleanLintDebug", ":app:lintDebug");
+        getExecutor().run(":app:cleanLintDebug", ":app:lintDebug");
+        getExecutor().run(":app:cleanLintDebug", ":app:lintDebug");
 
         File textReportFile = project.file("app/lint-report.txt");
         String textReport =
@@ -83,5 +93,9 @@ public class LintDependencyModelTest {
         // its sibling
         assertThat(textReport).contains("javalib2/src/main/java/com/example2/MyClass.java:5: Warning: Use Boolean.valueOf(false)");
         assertThat(textReport).doesNotContain("javalib/src/main/java/com/example/MyClass.java:5: Warning: Use Boolean.valueOf(false)");
+    }
+
+    private GradleTaskExecutor getExecutor() {
+        return project.executor().with(BooleanOption.USE_LINT_PARTIAL_ANALYSIS, usePartialAnalysis);
     }
 }

@@ -190,7 +190,14 @@ abstract class LintPlugin : Plugin<Project> {
                     AndroidArtifacts.ArtifactType.LINT_MODEL,
                     AndroidAttributes(category = androidLintCategory)
                 )
-                // We don't want to publish the lint models to repositories. Remove them.
+                publishArtifactToConfiguration(
+                    configuration,
+                    artifacts.get(InternalArtifactType.LINT_PARTIAL_RESULTS),
+                    AndroidArtifacts.ArtifactType.LINT_PARTIAL_RESULTS,
+                    AndroidAttributes(category = androidLintCategory)
+                )
+                // We don't want to publish the lint models or partial results to repositories.
+                // Remove them.
                 project.components.all { component: SoftwareComponent ->
                     if (component.name == "java" && component is AdhocComponentWithVariants) {
                         component.withVariantsFromConfiguration(configuration) { variant: ConfigurationVariantDetails ->

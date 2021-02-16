@@ -32,6 +32,7 @@ import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.model.AndroidProject
 import com.android.tools.lint.model.LintModelSerialization
+import com.android.utils.FileUtils
 import org.gradle.api.Project
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
@@ -145,9 +146,11 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
 
         val variant = variantInputs.toLintModel(module, partialResultsDirectory.get().asFile)
 
+        val destination = lintModelDirectory.get().asFile.also { FileUtils.cleanOutputDir(it) }
+
         LintModelSerialization.writeModule(
             module = module,
-            destination = lintModelDirectory.get().asFile,
+            destination = destination,
             writeVariants = listOf(variant),
             writeDependencies = true
         )
