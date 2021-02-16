@@ -427,6 +427,12 @@ public class ManifestMerger2 {
             PostValidator.enforceToolsNamespaceDeclaration(finalMergedDocument);
         }
 
+        // reset the node operations to their original ones if they get changed
+        finalMergedDocument.originalNodeOperation.forEach(
+                (k, v) -> {
+                    k.setAttributeNS(SdkConstants.TOOLS_URI, "tools:node", v.toXmlName());
+                });
+
         PostValidator.validate(finalMergedDocument, mergingReportBuilder);
         if (mergingReportBuilder.hasErrors()) {
             mergingReportBuilder.addMessage(

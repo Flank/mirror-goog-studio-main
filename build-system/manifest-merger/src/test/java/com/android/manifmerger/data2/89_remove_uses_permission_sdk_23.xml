@@ -21,6 +21,10 @@
         android:name="com.example.TheApp" >
     </application>
 
+    <uses-permission
+            android:name="android.permission.CAMERA"
+            tools:node="remove"/>
+
 </manifest>
 
 
@@ -28,10 +32,14 @@
 
 <manifest
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.example.lib1">
 
     <uses-permission-sdk-23
         android:name="android.permission.USE_FINGERPRINT"/>
+
+    <uses-permission
+            android:name="android.permission.CAMERA"/>
 
 </manifest>
 

@@ -36,6 +36,8 @@ import com.android.utils.XmlUtils;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import org.w3c.dom.Document;
@@ -86,6 +88,7 @@ public class XmlDocument {
     private final Type mType;
     @Nullable private final String mMainManifestPackageName;
     @NonNull private final DocumentModel<ManifestModel.NodeTypes> mModel;
+    @NonNull public Map<Element, NodeOperationType> originalNodeOperation = new HashMap<>();
 
     public XmlDocument(
             @NonNull SourceFile sourceLocation,
@@ -185,14 +188,17 @@ public class XmlDocument {
      */
     @NonNull
     public XmlDocument reparse() {
-        return new XmlDocument(
-                mSourceFile,
-                mSelectors,
-                mSystemPropertyResolver,
-                mRootElement,
-                mType,
-                mMainManifestPackageName,
-                mModel);
+        XmlDocument newXmlDocument =
+                new XmlDocument(
+                        mSourceFile,
+                        mSelectors,
+                        mSystemPropertyResolver,
+                        mRootElement,
+                        mType,
+                        mMainManifestPackageName,
+                        mModel);
+        newXmlDocument.originalNodeOperation = originalNodeOperation;
+        return newXmlDocument;
     }
 
     /** Returns a {@link KeyResolver} capable of resolving all selectors types */

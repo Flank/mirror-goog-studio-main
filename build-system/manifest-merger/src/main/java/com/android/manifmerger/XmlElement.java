@@ -636,19 +636,58 @@ public class XmlElement extends OrphanXmlElement {
     /**
      * Calculate the effective node operation type for a higher priority node when a lower priority
      * node is queried for merge.
+     *
      * @param higherPriority the higher priority node which may have a {@link NodeOperationType}
-     *                       declaration and may also have a {@link Selector} declaration.
+     *     declaration and may also have a {@link Selector} declaration.
      * @param lowerPriority the lower priority node that is elected for merging with the higher
-     *                      priority node.
+     *     priority node.
      * @return the effective {@link NodeOperationType} that should be used to affect higher and
-     * lower priority nodes merging.
+     *     lower priority nodes merging.
+     */
+
+    /**
+     * higherPriority will always dominate lowerPriority if they differ, so returning the
+     * higherPriority node operation is sufficient except when ((highPriority.mNodeOperationType ==
+     * null || MERGE) && lowerPriority.mNodeOperation == REMOVE || REMOVE_ALL)). Because of the
+     * actual merging merges from highest priority manifest to the lowest priority manifest, the
+     * node operation in the lowerPriority is needed in the next round, therefore override the node
+     * operation in higherPriority with the one in the lowerPriority and record the original node
+     * operation in the higherPriority (it will be used later in Post Validator)
+     *
+     * <p>when the node operation in higherPriority is null or MERGE and lowerPriority's node
+     * operation is REMOVE or REMOVE_ALL, the returned node operation type can not be MERGE
+     * otherwise the lowerPriority itself will be merged instead of being removed, change the
+     * operation node to REPLACE will make sure that the lowerPriority itself won't be merged
      */
     @NonNull
     private static NodeOperationType calculateNodeOperationType(
-            @NonNull XmlElement higherPriority,
-            @NonNull XmlElement lowerPriority) {
+            @NonNull XmlElement higherPriority, @NonNull XmlElement lowerPriority) {
 
         @NonNull NodeOperationType operationType = higherPriority.getOperationType();
+        if (lowerPriority.mNodeOperationType != null) {
+            // two special cases where operationType can't equal to
+            // higherPriority.getOperationType()
+            if (higherPriority.getOperationType() == NodeOperationType.MERGE
+                    && (lowerPriority.mNodeOperationType == NodeOperationType.REMOVE
+                            || lowerPriority.mNodeOperationType == NodeOperationType.REMOVE_ALL)) {
+                operationType = NodeOperationType.REPLACE;
+            }
+            // record the original node operation in the higherPriority
+            if (higherPriority.getDocument().originalNodeOperation.get(higherPriority.getXml())
+                    == null) {
+                higherPriority
+                        .getDocument()
+                        .originalNodeOperation
+                        .put(higherPriority.getXml(), higherPriority.getOperationType());
+            }
+            // overwrite the node operation in higherPriority with the one in the lowerPriority
+            higherPriority
+                    .getXml()
+                    .setAttributeNS(
+                            SdkConstants.TOOLS_URI,
+                            "tools:node",
+                            lowerPriority.mNodeOperationType.toString().toLowerCase(Locale.US));
+        }
         // if the operation's selector exists and the lower priority node is not selected,
         // we revert to default operation type which is merge.
         if (higherPriority.supportsSelector()

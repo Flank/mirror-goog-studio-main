@@ -19,6 +19,9 @@ package com.android.manifmerger;
 import com.android.annotations.NonNull;
 import com.android.annotations.concurrency.Immutable;
 import com.google.common.base.Preconditions;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -33,9 +36,11 @@ public class Selector {
     public static final String SELECTOR_LOCAL_NAME = "selector";
 
     @NonNull private final String mPackageName;
+    @NonNull private final List<String> mPackages = new LinkedList<>();
 
     public Selector(@NonNull String packageName) {
         mPackageName = Preconditions.checkNotNull(packageName);
+        mPackages.addAll(Arrays.asList(mPackageName.split(",")));
     }
 
     /**
@@ -44,14 +49,17 @@ public class Selector {
      */
     boolean appliesTo(@NonNull XmlElement element) {
         Optional<XmlAttribute> packageName = element.getDocument().getPackage();
-        return packageName.isPresent() && mPackageName.equals(packageName.get().getValue());
+        return packageName.isPresent() && mPackageName.contains(packageName.get().getValue());
     }
 
     /**
      * Returns true if the passed resolver can resolve this selector, false otherwise.
      */
     boolean isResolvable(@NonNull KeyResolver<String> resolver) {
-        return resolver.resolve(mPackageName) != null;
+        for (String p : mPackages) {
+            if (resolver.resolve(p) == null) return false;
+        }
+        return true;
     }
 
     @NonNull
