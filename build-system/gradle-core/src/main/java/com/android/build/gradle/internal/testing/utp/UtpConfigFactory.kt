@@ -87,7 +87,10 @@ class UtpConfigFactory {
         tmpDir: File,
         retentionConfig: RetentionConfig,
         useOrchestrator: Boolean,
-        testResultListenerServerPort: Int
+        testResultListenerServerPort: Int,
+        resultListenerClientCert: File,
+        resultListenerClientPrivateKey: File,
+        trustCertCollection: File
     ): RunnerConfigProto.RunnerConfig {
         return RunnerConfigProto.RunnerConfig.newBuilder().apply {
             val grpcInfo = findGrpcInfo(device.serialNumber)
@@ -108,15 +111,26 @@ class UtpConfigFactory {
             )
             singleDeviceExecutor = createSingleDeviceExecutor(device.serialNumber)
             addTestResultListener(
-                    createTestResultListener(utpDependencies, testResultListenerServerPort))
+                    createTestResultListener(
+                            utpDependencies,
+                            testResultListenerServerPort,
+                            resultListenerClientCert,
+                            resultListenerClientPrivateKey,
+                            trustCertCollection))
         }.build()
     }
 
     fun createTestResultListener(
             utpDependencies: UtpDependencies,
-            testResultListenerServerPort: Int): ExtensionProto.Extension {
+            testResultListenerServerPort: Int,
+            resultListenerClientCert: File,
+            resultListenerClientPrivateKey: File,
+            trustCertCollection: File): ExtensionProto.Extension {
         val config = Any.pack(GradleAndroidTestResultListenerConfig.newBuilder().apply {
             resultListenerServerPort = testResultListenerServerPort
+            resultListenerClientCertFilePath = resultListenerClientCert.absolutePath
+            resultListenerClientPrivateKeyFilePath = resultListenerClientPrivateKey.absolutePath
+            trustCertCollectionFilePath = trustCertCollection.absolutePath
         }.build())
         return ANDROID_TEST_PLUGIN_RESULT_LISTENER_GRADLE.toExtensionProto(utpDependencies, config)
     }

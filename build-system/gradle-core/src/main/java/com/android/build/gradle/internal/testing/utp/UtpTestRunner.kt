@@ -23,6 +23,7 @@ import com.android.builder.testing.api.DeviceConnector
 import com.android.ide.common.process.JavaProcessExecutor
 import com.android.ide.common.process.ProcessExecutor
 import com.android.ide.common.workers.ExecutorServiceAdapter
+import com.android.prefs.AndroidLocationsSingleton
 import com.android.utils.FileUtils
 import com.android.utils.ILogger
 import com.google.common.collect.ImmutableList
@@ -64,7 +65,21 @@ class UtpTestRunner @JvmOverloads constructor(
             coverageDir: File,
             logger: ILogger): MutableList<TestResult> {
         return apksForDevice.map { (deviceConnector, apks) ->
-            val testResultListenerServer = requireNotNull(UtpTestResultListenerServer.startServer()) {
+            val utpRsaKeysDir = File(AndroidLocationsSingleton.prefsLocation.toFile(), "utp")
+            if (!utpRsaKeysDir.exists()) {
+                utpRsaKeysDir.mkdirs()
+            }
+            val resultListenerServerCert = File.createTempFile("resultListenerServerCert", ".pem", utpRsaKeysDir)
+            val resultListenerServerPrivateKey = File.createTempFile("resultListenerServer", ".key", utpRsaKeysDir)
+            val resultListenerClientCert = File.createTempFile("resultListenerClientCert", ".pem", utpRsaKeysDir)
+            val resultListenerClientPrivateKey = File.createTempFile("resultListenerClient", ".key", utpRsaKeysDir)
+            generateRsaKeyPair(resultListenerServerCert, resultListenerServerPrivateKey)
+            generateRsaKeyPair(resultListenerClientCert, resultListenerClientPrivateKey)
+            val testResultListenerServer = requireNotNull(
+                    UtpTestResultListenerServer.startServer(
+                            resultListenerServerCert,
+                            resultListenerServerPrivateKey,
+                            resultListenerClientCert)) {
                 "Unable to start the UTP test results listener gRPC server."
             }
 
@@ -83,7 +98,10 @@ class UtpTestRunner @JvmOverloads constructor(
                             utpTmpDir,
                             retentionConfig,
                             useOrchestrator,
-                            testResultListenerServer.port).writeTo(writer)
+                            testResultListenerServer.port,
+                            resultListenerClientCert,
+                            resultListenerClientPrivateKey,
+                            resultListenerServerCert).writeTo(writer)
                 }
             }
 
@@ -100,6 +118,10 @@ class UtpTestRunner @JvmOverloads constructor(
             resultsProto.writeTo(File(utpOutputDir, "test-result.pb").outputStream())
 
             try {
+                FileUtils.deleteIfExists(resultListenerServerCert)
+                FileUtils.deleteIfExists(resultListenerServerPrivateKey)
+                FileUtils.deleteIfExists(resultListenerClientCert)
+                FileUtils.deleteIfExists(resultListenerClientPrivateKey)
                 FileUtils.deleteRecursivelyIfExists(utpOutputDir.resolve(TEST_LOG_DIR))
                 FileUtils.deleteRecursivelyIfExists(utpTestRunLogDir)
                 FileUtils.deleteRecursivelyIfExists(utpTmpDir)

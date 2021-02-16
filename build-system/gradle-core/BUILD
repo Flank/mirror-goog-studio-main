@@ -91,6 +91,7 @@ kotlin_library(
         "//tools/base/third_party:net.sf.proguard_proguard-gradle",
         "//tools/base/third_party:org.apache.commons_commons-compress",  # TODO: remove?
         "//tools/base/third_party:org.apache.httpcomponents_httpmime",
+        "//tools/base/third_party:org.bouncycastle_bcpkix-jdk15on",
         "//tools/base/third_party:org.codehaus.groovy_groovy-all",
         "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
         "//tools/base/third_party:org.jetbrains_annotations",

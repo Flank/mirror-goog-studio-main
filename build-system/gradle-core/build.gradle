@@ -141,6 +141,7 @@ dependencies {
     implementation libs.asm_analysis
     implementation libs.asm_commons
     implementation libs.asm_util
+    implementation libs.bouncycastle_pkix
     implementation libs.jaxb_runtime
     implementation libs.jopt
     implementation libs.proguard

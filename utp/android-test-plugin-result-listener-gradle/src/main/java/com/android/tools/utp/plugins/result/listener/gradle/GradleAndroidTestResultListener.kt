@@ -31,8 +31,10 @@ import com.google.testing.platform.proto.api.core.TestCaseProto
 import com.google.testing.platform.proto.api.core.TestResultProto
 import com.google.testing.platform.proto.api.core.TestSuiteResultProto
 import io.grpc.ManagedChannel
-import io.grpc.ManagedChannelBuilder
+import io.grpc.netty.GrpcSslContexts
+import io.grpc.netty.NettyChannelBuilder
 import io.grpc.stub.StreamObserver
+import java.io.File
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
@@ -42,9 +44,15 @@ import java.util.concurrent.TimeUnit
  */
 class GradleAndroidTestResultListener(
         private val channelFactory: (GradleAndroidTestResultListenerConfig) -> ManagedChannel = { config ->
-            ManagedChannelBuilder
+            val sslContext = GrpcSslContexts.forClient().apply {
+                trustManager(File(config.trustCertCollectionFilePath))
+                keyManager(
+                        File(config.resultListenerClientCertFilePath),
+                        File(config.resultListenerClientPrivateKeyFilePath))
+            }.build()
+            NettyChannelBuilder
                     .forAddress("localhost", config.resultListenerServerPort)
-                    .usePlaintext()  // TODO(b/178615871): Consider to enable TLS.
+                    .sslContext(sslContext)
                     .build()
         }) : TestResultListener, Configurable {
     companion object {
@@ -71,6 +79,7 @@ class GradleAndroidTestResultListener(
             override fun onError(error: Throwable) {
                 logger.severe {"recordTestResultEvent failed with an error: $error" }
                 finishLatch.countDown()
+                throw error
             }
 
             override fun onCompleted() {
