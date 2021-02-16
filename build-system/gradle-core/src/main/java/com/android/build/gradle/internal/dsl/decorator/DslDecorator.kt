@@ -26,6 +26,7 @@ import com.google.common.base.Stopwatch
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.google.common.cache.LoadingCache
+import org.gradle.api.Action
 import org.gradle.api.logging.Logging
 import org.objectweb.asm.ClassWriter
 import org.objectweb.asm.Opcodes
@@ -155,6 +156,22 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType>) {
                         }
                         is SupportedPropertyType.Var -> { /* Defaults to field default value */
                         }
+                        is SupportedPropertyType.Block -> {
+                            // field = dslServices.newDecoratedInstance(implType, arrayOf(dslServices))
+                            loadThis()
+                            loadArg(dslServicesArgumentIndex)
+                            visitLdcInsn(type.implementationType)
+                            visitArrayOf {
+                                loadArg(dslServicesArgumentIndex)
+                            }
+                            invokeInterface(DSL_SERVICES_TYPE, DSL_SERVICES_NEW_DECORATED_INSTANCE)
+                            checkCast(type.implementationType)
+                            putField(
+                                generatedClass,
+                                property.backingFieldName,
+                                type.implementationType
+                            )
+                        }
                     }
                 }
                 returnValue()
@@ -169,6 +186,7 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType>) {
         for (field in abstractProperties) {
             createFieldBackedGetters(classWriter, generatedClass, field)
             createFieldBackedSetters(classWriter, generatedClass, field)
+            createBlockAccessor(classWriter, generatedClass, field)
         }
 
         createLockMethod(classWriter, generatedClass, abstractProperties)
@@ -176,6 +194,17 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType>) {
         classWriter.visitEnd()
 
         return lookupDefineClass(dslClass, classWriter.toByteArray())
+    }
+
+    private inline fun GeneratorAdapter.visitArrayOf(item: GeneratorAdapter.() -> Unit) {
+        // array = new Object[1]
+        visitInsn(Opcodes.ICONST_1)
+        newArray(OBJECT_TYPE)
+        dup()
+        // array[0] = item
+        visitInsn(Opcodes.ICONST_0)
+        item()
+        arrayStore(OBJECT_TYPE)
     }
 
     @VisibleForTesting
@@ -186,6 +215,7 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType>) {
     class CollectingInfoVisitor: ClassInfoVisitor {
         val getters = mutableMapOf<String, MutableList<java.lang.reflect.Method>>()
         val setters = mutableMapOf<String, MutableList<java.lang.reflect.Method>>()
+        val blocks = mutableMapOf<String, java.lang.reflect.Method>()
 
         private fun MutableMap<String, MutableList<java.lang.reflect.Method>>.recordMethod(
             name: String, method: java.lang.reflect.Method) {
@@ -205,6 +235,11 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType>) {
                     if (method.returnType != Void.TYPE) return
                     if (method.parameterCount != 1) return
                     setters.recordMethod(method.name.removePrefix("set"), method)
+                }
+                method.returnType === Void.TYPE
+                        && method.parameterCount ==1
+                        && Type.getType(method.parameterTypes[0]) == KOTLIN_FUNCTION1 -> {
+                    blocks.putIfAbsent(method.name, method)
                 }
             }
         }
@@ -239,6 +274,7 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType>) {
         val access: Int,
         val gettersToGenerate: Collection<Method>,
         val settersToGenerate: Collection<Method>,
+        val blockAccessorToGenerate: Method?
     )
 
     private fun findAbstractProperties(dslClass: Class<*>): List<ManagedProperty> {
@@ -278,13 +314,20 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType>) {
             }
 
             val setters = visitor.setters[propertyName]?.filter { Modifier.isAbstract(it.modifiers) } ?: listOf()
+            val blockToGenerate =  visitor.blocks[propertyName]?.also {
+                if (supportedPropertyType !is SupportedPropertyType.Block) {
+                    throw IllegalStateException("Invalid block method $it for non block property $propertyName of type $supportedPropertyType")
+                }
+            }
+
             ManagedProperty(
                 propertyName,
                 "__$propertyName",
                 supportedPropertyType,
                 modifiers,
                 getters.asSequence().map { Method.getMethod(it) }.toSet(),
-                setters.asSequence().map { Method.getMethod(it) }.toSet()
+                setters.asSequence().map { Method.getMethod(it) }.toSet(),
+                blockToGenerate?.let { Method.getMethod(it) }
             )
         }
     }
@@ -317,11 +360,12 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType>) {
             putField(generatedClass, LOCK_FIELD_NAME, Type.BOOLEAN_TYPE)
             for (abstractProperty in abstractProperties) {
                 val type = abstractProperty.supportedPropertyType
-                if (type is SupportedPropertyType.Collection) {
+                if (type is SupportedPropertyType.Collection || type is SupportedPropertyType.Block) {
                     // this.__managedField.lock();
                     loadThis()
                     getField(generatedClass, abstractProperty.backingFieldName, type.implementationType)
-                    invokeVirtual(type.implementationType, LOCK_METHOD)
+                    checkCast(LOCKABLE_TYPE)
+                    invokeInterface(LOCKABLE_TYPE, LOCK_METHOD)
                 }
             }
             returnValue()
@@ -465,12 +509,54 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType>) {
     ) {
         val type = property.supportedPropertyType
         // Mark bridge methods as synthetic.
-        val access = if(type.type == getter.returnType) property.access else property.access.or(Opcodes.ACC_SYNTHETIC)
+        val access = when(getter.returnType) {
+            type.type, type.implementationType -> property.access
+            else -> property.access.or(Opcodes.ACC_SYNTHETIC)
+        }
 
         GeneratorAdapter(access, getter, null, null, classWriter).apply {
             loadThis()
             getField(generatedClass, property.backingFieldName, type.implementationType)
+            checkCast(getter.returnType)
+            returnValue()
+            endMethod()
+        }
+    }
+
+    private fun createBlockAccessor(
+        classWriter: ClassWriter,
+        generatedClass: Type,
+        property: ManagedProperty
+    ) {
+        if (property.supportedPropertyType !is SupportedPropertyType.Block) return
+        val type = property.supportedPropertyType
+        val access = Opcodes.ACC_PUBLIC.or(Opcodes.ACC_FINAL)
+        val method = property.blockAccessorToGenerate ?: return
+        // Implement the expected kotlin 'block' method
+        // ```
+        // fun blockName(action: BlockType.()->Unit) {
+        //
+        // }
+        // ```
+        GeneratorAdapter(access, method, null, null, classWriter).apply {
+            loadArg(0)
+            loadThis()
+            getField(generatedClass, property.backingFieldName, type.implementationType)
             checkCast(type.type)
+            invokeInterface(KOTLIN_FUNCTION1, KOTLIN_FUNCTION1_INVOKE)
+            pop()
+            returnValue()
+            endMethod()
+        }
+        // And for groovy, generate the gradle Action<> taking method, which Gradle will then
+        // generate a groovy closure method for:
+        val gradleActionMethod = Method(method.name, Type.VOID_TYPE, arrayOf(GRADLE_ACTION))
+        GeneratorAdapter(access, gradleActionMethod, null, null, classWriter).apply {
+            loadArg(0)
+            loadThis()
+            getField(generatedClass, property.backingFieldName, type.implementationType)
+            checkCast(type.type)
+            invokeInterface(GRADLE_ACTION, GRADLE_ACTION_EXECUTE)
             returnValue()
             endMethod()
         }
@@ -489,12 +575,22 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType>) {
         private val LOCK_METHOD = Method("lock", Type.VOID_TYPE, arrayOf())
         private val LOCKED_EXCEPTION = Type.getType(AgpDslLockedException::class.java)
         private val DSL_SERVICES_TYPE = Type.getType(DslServices::class.java)
+        private val ARRAY = Type.getType(Array::class.java)
+        private val CLASS = Type.getType(Class::class.java)
+        //    fun <T: Any> newDecoratedInstance(dslClass: Class<T>, vararg args: Any) : T
+        private val DSL_SERVICES_NEW_DECORATED_INSTANCE =
+            Method("newDecoratedInstance", OBJECT_TYPE, arrayOf(CLASS, ARRAY))
 
         private val COLLECTION = Type.getType(Collection::class.java)
         private val ARRAY_LIST = Type.getType(ArrayList::class.java)
         private val ARRAY_LIST_COPY_CONSTRUCTOR = Method("<init>", Type.VOID_TYPE, arrayOf(COLLECTION))
         private val CLEAR = Method("clear", Type.VOID_TYPE, arrayOf())
         private val ADD_ALL = Method("addAll", Type.BOOLEAN_TYPE, arrayOf(COLLECTION))
+        private val KOTLIN_FUNCTION1 = Type.getType("Lkotlin/jvm/functions/Function1;")
+
+        private val KOTLIN_FUNCTION1_INVOKE = Method("invoke", OBJECT_TYPE, arrayOf(OBJECT_TYPE))
+        private val GRADLE_ACTION = Type.getType(Action::class.java)
+        private val GRADLE_ACTION_EXECUTE = Method("execute", Type.VOID_TYPE, arrayOf(OBJECT_TYPE))
 
         // Use reflection to avoid needing to compile against java11 APIs yet.
         private val privateLookupInMethod by lazy(LazyThreadSafetyMode.PUBLICATION) {

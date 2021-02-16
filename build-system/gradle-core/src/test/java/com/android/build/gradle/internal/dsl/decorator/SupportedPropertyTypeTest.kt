@@ -59,6 +59,19 @@ class SupportedPropertyTypeTest {
             }
     }
 
+    @Test
+    fun checkAgpBlockTypes() {
+        AGP_SUPPORTED_PROPERTY_TYPES
+            .filterIsInstance<SupportedPropertyType.Block>()
+            .forEach { propertyType ->
+                val type = load(propertyType.type)
+                val implementationType = load(propertyType.implementationType)
+                assertWithMessage("Implementation type must be a subtype of property type %s", propertyType)
+                    .that(implementationType)
+                    .isAssignableTo(type)
+            }
+    }
+
     private fun load(type: Type): Class<*> {
         return this::class.java.classLoader.loadClass(type.className)
     }
