@@ -263,6 +263,7 @@ public abstract class BasePlugin<
                 () -> {
                     basePluginApply(project);
                     pluginSpecificApply(project);
+                    project.getPluginManager().apply(AndroidBasePlugin.class);
                 });
     }
 
@@ -300,8 +301,6 @@ public abstract class BasePlugin<
         }
 
         DependencyResolutionChecks.registerDependencyCheck(project, projectOptions);
-
-        project.getPluginManager().apply(AndroidBasePlugin.class);
 
         checkPathForErrors();
         checkModulesForErrors();
