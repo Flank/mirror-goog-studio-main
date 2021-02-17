@@ -19,25 +19,24 @@ package com.android.tools.appinspection
 import android.app.AlarmManager
 import android.app.AlarmManager.OnAlarmListener
 import android.app.PendingIntent
+import android.util.Log
 import androidx.inspection.Connection
 import androidx.inspection.InspectorEnvironment
 import backgroundtask.inspection.BackgroundTaskInspectorProtocol
 import backgroundtask.inspection.BackgroundTaskInspectorProtocol.*
+import com.android.tools.appinspection.BackgroundTaskUtil.sendBackgroundTaskEvent
 import java.util.concurrent.ConcurrentHashMap
 
+/**
+ * A handler class that adds necessary hooks to track alarm related events.
+ */
 internal class AlarmHandler(
-    connection: Connection,
+    private val connection: Connection,
     environment: InspectorEnvironment
 ) {
 
-    /** Data structure for {@link OnAlarmListener} parameters. */
-    data class ListenerParams(val id: Long, val tag: String)
-
-    /** Data structure for PendingIntent Alarm parameters. */
-    data class PendingIntentParams(val id: Long, val isRepeating: Boolean)
-
-    private val operationMap = ConcurrentHashMap<PendingIntent, PendingIntentParams>()
-    private val listenerMap = ConcurrentHashMap<OnAlarmListener, ListenerParams>()
+    private val operationIdMap = ConcurrentHashMap<PendingIntent, Long>()
+    private val listenerIdMap = ConcurrentHashMap<OnAlarmListener, Long>()
 
     init {
         environment.artTooling().registerEntryHook(
@@ -67,22 +66,14 @@ internal class AlarmHandler(
                 val listenerTag = args[7] as String?
                 when {
                     operation != null -> {
-                        operationMap.putIfAbsent(
-                            operation,
-                            PendingIntentParams(BackgroundTaskUtil.nextId(), intervalMs != 0L)
-                        )
-                        taskId = operationMap[operation]!!.id
+                        taskId = operationIdMap.getOrPut(operation, { BackgroundTaskUtil.nextId() })
                         this.operation = BackgroundTaskInspectorProtocol.PendingIntent.newBuilder()
                             .setCreatorPackage(operation.creatorPackage)
                             .setCreatorUid(operation.creatorUid)
                             .build()
                     }
                     listener != null -> {
-                        listenerMap.putIfAbsent(
-                            listener,
-                            ListenerParams(BackgroundTaskUtil.nextId(), listenerTag ?: "")
-                        )
-                        taskId = listenerMap[listener]!!.id
+                        taskId = listenerIdMap.getOrPut(listener, { BackgroundTaskUtil.nextId() })
                         this.listener = AlarmListener.newBuilder()
                             .setTag(listenerTag)
                             .build()
@@ -90,12 +81,9 @@ internal class AlarmHandler(
                     else -> throw IllegalStateException("Invalid alarm: neither operation or listener is set.")
                 }
             }.build()
-            val backgroundTaskEvent = BackgroundTaskEvent.newBuilder()
-                .setTaskId(taskId)
-                .setAlarmSet(alarmSet)
-                .build()
-            val event = Event.newBuilder().setBackgroundTaskEvent(backgroundTaskEvent).build()
-            connection.sendEvent(event.toByteArray())
+            connection.sendBackgroundTaskEvent(taskId) {
+                it.setAlarmSet(alarmSet)
+            }
         }
 
         environment.artTooling().registerEntryHook(
@@ -103,13 +91,10 @@ internal class AlarmHandler(
             "cancel(Landroid/app/PendingIntent;)V"
         ) { _, args ->
             val operation = args[0] as PendingIntent
-            val taskId = operationMap[operation]?.id ?: return@registerEntryHook
-            val backgroundTaskEvent = BackgroundTaskEvent.newBuilder()
-                .setTaskId(taskId)
-                .setAlarmCancelled(AlarmCancelled.getDefaultInstance())
-                .build()
-            val event = Event.newBuilder().setBackgroundTaskEvent(backgroundTaskEvent).build()
-            connection.sendEvent(event.toByteArray())
+            val taskId = operationIdMap[operation] ?: return@registerEntryHook
+            connection.sendBackgroundTaskEvent(taskId) {
+                it.setAlarmCancelled(AlarmCancelled.getDefaultInstance())
+            }
         }
 
         environment.artTooling().registerEntryHook(
@@ -117,41 +102,28 @@ internal class AlarmHandler(
             "cancel(Landroid/app/AlarmManager\$OnAlarmListener;)V"
         ) { _, args ->
             val listener = args[0] as OnAlarmListener
-            val taskId = listenerMap[listener]?.id ?: return@registerEntryHook
-            val backgroundTaskEvent = BackgroundTaskEvent.newBuilder()
-                .setTaskId(taskId)
-                .setAlarmCancelled(AlarmCancelled.getDefaultInstance())
-                .build()
-            val event = Event.newBuilder().setBackgroundTaskEvent(backgroundTaskEvent).build()
-            connection.sendEvent(event.toByteArray())
+            val taskId = listenerIdMap[listener] ?: return@registerEntryHook
+            connection.sendBackgroundTaskEvent(taskId) {
+                it.setAlarmCancelled(AlarmCancelled.getDefaultInstance())
+            }
         }
 
         environment.artTooling().registerEntryHook(
-            AlarmManager.OnAlarmListener::class.java,
+            OnAlarmListener::class.java,
             "onAlarm()V"
         ) { _, args ->
-            val operation = args[0] as PendingIntent
-            val taskId = operationMap[operation]?.id ?: return@registerEntryHook
-            val backgroundTaskEvent = BackgroundTaskEvent.newBuilder()
-                .setTaskId(taskId)
-                .setAlarmFired(AlarmFired.getDefaultInstance())
-                .build()
-            val event = Event.newBuilder().setBackgroundTaskEvent(backgroundTaskEvent).build()
-            connection.sendEvent(event.toByteArray())
+            val listener = args[0] as OnAlarmListener
+            val taskId = listenerIdMap[listener] ?: return@registerEntryHook
+            connection.sendBackgroundTaskEvent(taskId) {
+                it.setAlarmFired(AlarmFired.getDefaultInstance())
+            }
         }
+    }
 
-        environment.artTooling().registerEntryHook(
-            AlarmManager.OnAlarmListener::class.java,
-            "onAlarm()V"
-        ) { _, args ->
-            val operation = args[0] as PendingIntent
-            val taskId = operationMap[operation]?.id ?: return@registerEntryHook
-            val backgroundTaskEvent = BackgroundTaskEvent.newBuilder()
-                .setTaskId(taskId)
-                .setAlarmFired(AlarmFired.getDefaultInstance())
-                .build()
-            val event = Event.newBuilder().setBackgroundTaskEvent(backgroundTaskEvent).build()
-            connection.sendEvent(event.toByteArray())
+    fun sendIntentAlarmFiredIfExists(pendingIntent: PendingIntent) {
+        val taskId = operationIdMap[pendingIntent] ?: return
+        connection.sendBackgroundTaskEvent(taskId) {
+            it.setAlarmFired(AlarmFired.getDefaultInstance())
         }
     }
 }

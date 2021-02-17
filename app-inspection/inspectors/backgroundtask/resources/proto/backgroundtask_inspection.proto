@@ -21,24 +21,27 @@ option optimize_for = LITE_RUNTIME;
 
 // ======= MESSAGES =======
 
-message TrackBackgroundTaskCommand {}
-message TrackBackgroundTaskResponse {}
-
 message Command {
     oneof specialized {
         TrackBackgroundTaskCommand track_background_task = 1;
     }
 }
+
+message TrackBackgroundTaskCommand {}
+
 message Response {
     oneof specialized {
         TrackBackgroundTaskResponse track_background_task = 1;
     }
 }
 
+message TrackBackgroundTaskResponse {}
+
 message Event {
+    int64 timestamp = 1;
     oneof specialized {
-        BackgroundTaskEvent background_task_event = 1;
-        DebugEvent debug = 2;
+        BackgroundTaskEvent background_task_event = 2;
+        DebugEvent debug = 3;
     }
 }
 
