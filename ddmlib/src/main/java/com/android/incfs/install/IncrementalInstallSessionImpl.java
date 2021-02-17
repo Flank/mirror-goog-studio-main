@@ -17,7 +17,6 @@ package com.android.incfs.install;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.utils.Pair;
 import com.google.common.base.Charsets;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -185,7 +184,7 @@ class IncrementalInstallSessionImpl implements AutoCloseable {
                     buffer.flip();
                     // Find the next incremental request, install success message, install failure
                     // message magic to know how to interpret the data following the magic.
-                    final MagicMatcher.Magic magic = magicMatcher.findMagic(buffer);
+                    final MagicMatcher.MagicType magic = magicMatcher.findMagic(buffer);
                     if (magic == null) {
                         return ConditionResult.UNFULFILLED;
                     }
@@ -351,22 +350,35 @@ class IncrementalInstallSessionImpl implements AutoCloseable {
     }
 
     private static class MagicMatcher {
-        private enum Magic {
+        private enum MagicType {
             INCREMENTAL,
             INSTALLATION_FAILURE,
             INSTALLATION_SUCCESS,
         }
 
-        private static final ArrayList<Pair<Magic, byte[]>> MAGICS = new ArrayList<>();
+        private static class Magic {
+            final MagicType type;
+            final byte[] value;
+
+            Magic(MagicType type, byte[] value) {
+                this.type = type;
+                this.value = value;
+            }
+        }
+
+        private static final ArrayList<Magic> MAGICS = new ArrayList<>();
 
         static {
-            MAGICS.add(Pair.of(Magic.INCREMENTAL, "INCR".getBytes(Charsets.UTF_8)));
-            MAGICS.add(Pair.of(Magic.INSTALLATION_FAILURE, "Failure [".getBytes(Charsets.UTF_8)));
-            MAGICS.add(Pair.of(Magic.INSTALLATION_SUCCESS, "Success".getBytes(Charsets.UTF_8)));
+            MAGICS.add(new Magic(MagicType.INCREMENTAL, "INCR".getBytes(Charsets.UTF_8)));
+            MAGICS.add(
+                    new Magic(
+                            MagicType.INSTALLATION_FAILURE, "Failure [".getBytes(Charsets.UTF_8)));
+            MAGICS.add(
+                    new Magic(MagicType.INSTALLATION_SUCCESS, "Success".getBytes(Charsets.UTF_8)));
         }
 
         private final int[] mPositions = new int[MAGICS.size()];
-        private Magic mFoundMatch = null;
+        private MagicType mFoundMatch = null;
 
         /**
          * Move to the end of the next magic. This method continues matching the magics using the
@@ -375,17 +387,17 @@ class IncrementalInstallSessionImpl implements AutoCloseable {
          *
          * @return true if the magic was found; otherwise, false
          */
-        Magic findMagic(ByteBuffer buffer) {
+        MagicType findMagic(ByteBuffer buffer) {
             if (mFoundMatch != null) {
                 return mFoundMatch;
             }
             while (buffer.hasRemaining()) {
                 final byte nextByte = buffer.get();
                 for (int i = 0; i < mPositions.length; i++) {
-                    final byte[] magic = MAGICS.get(i).getSecond();
+                    final byte[] magic = MAGICS.get(i).value;
                     if (nextByte == magic[mPositions[i]]) {
                         if (++mPositions[i] == magic.length) {
-                            mFoundMatch = MAGICS.get(i).getFirst();
+                            mFoundMatch = MAGICS.get(i).type;
                             mPositions[i] = 0;
                             return mFoundMatch;
                         }

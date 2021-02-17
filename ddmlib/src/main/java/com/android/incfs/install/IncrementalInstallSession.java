@@ -17,8 +17,7 @@
 package com.android.incfs.install;
 
 import com.android.annotations.NonNull;
-import com.android.utils.ILogger;
-import com.android.utils.NullLogger;
+import com.android.annotations.Nullable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -62,7 +61,6 @@ import java.util.concurrent.TimeUnit;
  * }</pre>
  */
 public class IncrementalInstallSession implements AutoCloseable {
-
     public static class Builder {
         private final List<Path> mApks = new ArrayList<>();
         private final List<Path> mSignatures = new ArrayList<>();
@@ -256,5 +254,29 @@ public class IncrementalInstallSession implements AutoCloseable {
     @Override
     public void close() {
         mImpl.close();
+    }
+
+    // Default implementation of a logger.
+    private static class NullLogger implements ILogger {
+
+        @Override
+        public void error(@Nullable Throwable t, @Nullable String msgFormat, Object... args) {
+            // ignored
+        }
+
+        @Override
+        public void warning(@NonNull String msgFormat, Object... args) {
+            // ignored
+        }
+
+        @Override
+        public void info(@NonNull String msgFormat, Object... args) {
+            // ignored
+        }
+
+        @Override
+        public void verbose(@NonNull String msgFormat, Object... args) {
+            // ignored
+        }
     }
 }
