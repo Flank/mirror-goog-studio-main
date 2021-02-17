@@ -23,7 +23,7 @@ import org.gradle.api.provider.Property
  * Properties for the main Variant of an application.
  */
 @Incubating
-interface ApplicationVariant : Variant, ProducesDex<Dexing>, HasAndroidTest {
+interface ApplicationVariant : Variant, HasAndroidTest {
 
     /**
      * Variant's application ID as present in the final manifest file of the APK.
@@ -68,4 +68,10 @@ interface ApplicationVariant : Variant, ProducesDex<Dexing>, HasAndroidTest {
      * Variant's packagingOptions, initialized by the corresponding global DSL element.
      */
     fun packaging(action: ApkPackaging.() -> Unit)
+
+    /**
+     * Variant settings related to transforming bytecodes into dex files initialized from
+     * the corresponding fields in the DSL.
+     */
+    val dexing: Dexing
 }

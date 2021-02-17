@@ -96,10 +96,4 @@ open class AnalyticsEnabledDynamicFeatureVariant @Inject constructor(
                 VariantPropertiesMethodType.DEXING_VALUE
             return userVisibleDexing
         }
-
-    override fun dexing(action: Dexing.() -> Unit) {
-        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-            VariantPropertiesMethodType.DEXING_ACTION_VALUE
-        action.invoke(userVisibleDexing)
-    }
 }

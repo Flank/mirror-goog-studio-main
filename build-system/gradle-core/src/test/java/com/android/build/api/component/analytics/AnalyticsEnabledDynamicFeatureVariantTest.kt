@@ -41,7 +41,7 @@ class AnalyticsEnabledDynamicFeatureVariantTest {
 
     @get:Rule
     val rule: MockitoRule = MockitoJUnit.rule().strictness(Strictness.STRICT_STUBS)
-    
+
     @Mock
     lateinit var delegate: DynamicFeatureVariant
 
@@ -172,20 +172,6 @@ class AnalyticsEnabledDynamicFeatureVariantTest {
                 VariantPropertiesMethodType.MULTI_DEX_KEEP_PROGUARD_VALUE,
             )
         )
-        Mockito.verify(delegate, Mockito.times(1)).dexing
-    }
-
-    @Test
-    fun dexingAction() {
-        val function = { param : Dexing -> println(param) }
-        val dexing = Mockito.mock(Dexing::class.java)
-        Mockito.`when`(delegate.dexing).thenReturn(dexing)
-        proxy.dexing(function)
-
-        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
-        Truth.assertThat(
-            stats.variantApiAccess.variantPropertiesAccessList.first().type
-        ).isEqualTo(VariantPropertiesMethodType.DEXING_ACTION_VALUE)
         Mockito.verify(delegate, Mockito.times(1)).dexing
     }
 }

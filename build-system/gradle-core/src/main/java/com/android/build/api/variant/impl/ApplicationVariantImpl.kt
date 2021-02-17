@@ -139,10 +139,6 @@ open class ApplicationVariantImpl @Inject constructor(
         }
     }
 
-    override fun dexing(action: Dexing.() -> Unit) {
-        action.invoke(dexing)
-    }
-
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------
