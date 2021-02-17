@@ -139,10 +139,18 @@ public class SimpleTestRunnable implements WorkerExecutorFacade.WorkAction {
 
             if (!helperApks.isEmpty()) {
                 ArrayList<String> helperApkInstallOptions = new ArrayList<>(installOptions);
-                if (device.getApiLevel() >= 23) {
+                int apiLevel = device.getApiLevel();
+                if (apiLevel >= 23) {
                     // Grant all permissions listed in the app manifest (Introduced at Android 6.0)
-                    // for test helper APKs. b/154754919.
+                    // for test helper APKs.
                     helperApkInstallOptions.add("-g");
+                }
+                if (apiLevel >= 30) {
+                    // AndroidX Test services and orchestrator APK set android:forceQueryable="true"
+                    // in their manifest file however this attribute seems to be ignored on some
+                    // physical devices. See https://github.com/android/android-test/issues/743
+                    // for details.
+                    helperApkInstallOptions.add("--force-queryable");
                 }
                 for (File helperApk : helperApks) {
                     logger.verbose(
