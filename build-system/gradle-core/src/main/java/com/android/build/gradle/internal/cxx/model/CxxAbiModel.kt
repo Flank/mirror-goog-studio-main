@@ -135,38 +135,67 @@ val CxxAbiModel.objFolder: File
     }
 
 /**
+ * Location of model generation metadata
+ *   ex, $moduleRootFolder/build/intermediates/cxx/Debug/{hashcode}/meta
+ */
+private val CxxAbiModel.modelMetadataFolder: File
+    get() = join(variant.intermediatesFolder, "meta", abi.tag)
+
+/**
  * The command that is executed to build or generate projects
- *   ex, $moduleRootFolder/.cxx/ndkBuild/debug/armeabi-v7a/build_command.txt
+ *   ex, $moduleRootFolder/build/intermediates/cxx/Debug/{hashcode}/meta/x86_64/build_command.txt
  */
 val CxxAbiModel.buildCommandFile: File
-    get() = join(cxxBuildFolder, "build_command.txt")
+    get() = join(modelMetadataFolder, "build_command.txt")
 
 /**
  * Output of the build
- *   ex $moduleRootFolder/.cxx/ndkBuild/debug/armeabi-v7a/build_output.txt
+ *   ex, $moduleRootFolder/build/intermediates/cxx/Debug/{hashcode}/meta/x86_64/build_output.txt
  */
 val CxxAbiModel.buildOutputFile: File
-    get() = join(cxxBuildFolder, "build_output.txt")
+    get() = join(modelMetadataFolder, "build_output.txt")
 
 /**
  * Output file of the Cxx*Model structure
  *   ex, $moduleRootFolder/build/intermediates/cxx/Debug/{hashcode}/meta/x86_64/build_model.json
  */
 val CxxAbiModel.modelOutputFile: File
-    get() = join(variant.intermediatesFolder, "meta", abi.tag, "build_model.json")
-
-/**
- * The build model with hash invariant values unexpanded.
- *   ex, $moduleRootFolder/build/intermediates/ndkBuild/debug/hash_invariant_build_command.txt
- */
-val CxxAbiModel.hashInvariantBuildCommandFile: File
-    get() = join(variant.cxxBuildFolder, "hash_invariant_build_command.txt")
+    get() = join(modelMetadataFolder, "build_model.json")
 
 /**
  * Json Generation logging record
+ *   ex, $moduleRootFolder/build/intermediates/cxx/Debug/{hashcode}/meta/x86_64/metadata_generation_record.json
  */
 val CxxAbiModel.jsonGenerationLoggingRecordFile: File
-    get() = join(cxxBuildFolder, "json_generation_record.json")
+    get() = join(modelMetadataFolder, "metadata_generation_record.json")
+
+/**
+ * Text file containing command run to generate C/C++ metadata.
+ *   ex, $moduleRootFolder/build/intermediates/cxx/Debug/{hashcode}/meta/x86_64/metadata_generation_command.txt
+ */
+val CxxAbiModel.metadataGenerationCommandFile: File
+    get() = join(modelMetadataFolder, "metadata_generation_command.txt")
+
+/**
+ * Text file containing STDOUT for the process run to generate C/C++ metadata.
+ *   ex, $moduleRootFolder/build/intermediates/cxx/Debug/{hashcode}/meta/x86_64/metadata_generation_stdout.txt
+ */
+val CxxAbiModel.metadataGenerationStdoutFile: File
+    get() = join(modelMetadataFolder, "metadata_generation_stdout.txt")
+
+/**
+ * Text file containing STDERR for the process run to generate C/C++ metadata.
+ *   ex, $moduleRootFolder/build/intermediates/cxx/Debug/{hashcode}/meta/x86_64/metadata_generation_stderr.txt
+ */
+val CxxAbiModel.metadataGenerationStderrFile: File
+    get() = join(modelMetadataFolder, "metadata_generation_stderr.txt")
+
+/**
+ * When CMake server is used, this is the log of the interaction with it.
+ *   ex, $moduleRootFolder/build/intermediates/cxx/Debug/{hashcode}/meta/x86_64/cmake_server_log.txt
+ */
+val CxxAbiModel.cmakeServerLogFile: File
+    get() = join(modelMetadataFolder, "cmake_server_log.txt")
 
 /**
  * The prefab configuration used when building this project
@@ -213,31 +242,6 @@ val CxxAbiModel.buildFileIndexFile: File
     get() = join(cxxBuildFolder, "build_file_index.txt")
 
 /**
- * Text file containing command run to generate C/C++ metadata.
- *
- * For example, $moduleRootFolder/.cxx/ndkBuild/debug/armeabi-v7a/metadata_generation_command.txt
- */
-val CxxAbiModel.metadataGenerationCommandFile: File
-    get() = join(cxxBuildFolder, "metadata_generation_command.txt")
-
-/**
- * Text file containing STDOUT for the process run to generate C/C++ metadata.
- *
- * For example, $moduleRootFolder/.cxx/ndkBuild/debug/armeabi-v7a/metadata_generation_stdout.txt
- */
-val CxxAbiModel.metadataGenerationStdoutFile: File
-    get() = join(cxxBuildFolder, "metadata_generation_stdout.txt")
-
-/**
- * Text file containing STDERR for the process run to generate C/C++ metadata.
- *
- * For example, $moduleRootFolder/.cxx/ndkBuild/debug/armeabi-v7a/metadata_generation_stderr.txt
- */
-val CxxAbiModel.metadataGenerationStderrFile: File
-    get() = join(cxxBuildFolder, "metadata_generation_stderr.txt")
-
-
-/**
  * The CMake file API query folder.
  *   ex, $moduleRootFolder/.cxx/cmake/debug/armeabi-v7a/.cmake/api/v1/query/client-agp
  */
@@ -250,9 +254,6 @@ val CxxAbiModel.clientQueryFolder: File
  */
 val CxxAbiModel.clientReplyFolder: File
     get() = join(cxxBuildFolder, ".cmake/api/v1/reply")
-
-val CxxAbiModel.cmakeServerLogFile: File
-    get() = join(cxxBuildFolder, "cmake_server_log.txt")
 
 fun CxxAbiModel.shouldGeneratePrefabPackages(): Boolean {
     // Prefab will fail if we try to create ARMv5/MIPS/MIPS64 modules. r17 was the first NDK version
