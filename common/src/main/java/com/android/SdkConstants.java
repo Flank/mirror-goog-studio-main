@@ -1143,6 +1143,7 @@ public final class SdkConstants {
     public static final String TAG_ACTION = "action"; //$NON-NLS-1$
     public static final String TAG_INSTRUMENTATION = "instrumentation";
     public static final String TAG_META_DATA = "meta-data";
+    public static final String TAG_PROPERTY = "property";
     public static final String TAG_RESOURCE = "resource";
     public static final String TAG_MODULE = "module";
     public static final String TAG_NAV_GRAPH = "nav-graph";

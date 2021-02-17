@@ -19,7 +19,7 @@ package com.android.tools.lint.checks
 import com.android.SdkConstants.ANDROID_URI
 import com.android.SdkConstants.ATTR_NAME
 import com.android.SdkConstants.TAG_APPLICATION
-import com.android.SdkConstants.TAG_META_DATA
+import com.android.SdkConstants.TAG_PROPERTY
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.ClassContext
 import com.android.tools.lint.detector.api.ClassScanner
@@ -49,7 +49,7 @@ import java.util.EnumSet
  * Check which makes sure that an application that uses MediaStore.Video anywhere in code
  * defines its media capabilities in the Manifest to enable transcoding on Android 12+
  */
-class MediaCapabilitiesMetadataDetector : Detector(), SourceCodeScanner, ClassScanner, XmlScanner {
+class MediaCapabilitiesDetector : Detector(), SourceCodeScanner, ClassScanner, XmlScanner {
 
     private var foundVideoUsage = false
 
@@ -119,27 +119,31 @@ class MediaCapabilitiesMetadataDetector : Detector(), SourceCodeScanner, ClassSc
     }
 
     private fun checkManifest(context: Context) {
+        // Lint check only relevant on Android S/12 +
+        if (context.mainProject.targetSdkVersion.featureLevel < 31) {
+            return
+        }
         val mergedManifest = context.mainProject.mergedManifest ?: return
         val application = getFirstSubTagByName(
             mergedManifest.documentElement, TAG_APPLICATION
         ) ?: return
 
-        val metadataElement =
-            getSubTagsByName(application, TAG_META_DATA).find { element ->
+        val propertyElement =
+            getSubTagsByName(application, TAG_PROPERTY).find { element ->
                 element.getAttributeNS(ANDROID_URI, ATTR_NAME) == VALUE_MEDIA_CAPABILITIES
             }
-        if (metadataElement == null) {
+        if (propertyElement == null) {
             context.report(
                 ISSUE,
                 context.getLocation(application),
-                "The app accesses `MediaStore.Video`, but is missing a `<meta-data>` tag " +
+                "The app accesses `MediaStore.Video`, but is missing a `<property>` tag " +
                     "with a `$VALUE_MEDIA_CAPABILITIES` declaration"
             )
-        } else if (!metadataElement.hasAttributeNS(ANDROID_URI, ATTR_RESOURCE)) {
+        } else if (!propertyElement.hasAttributeNS(ANDROID_URI, ATTR_RESOURCE)) {
             context.report(
                 ISSUE,
-                context.getLocation(metadataElement),
-                "The `$VALUE_MEDIA_CAPABILITIES` `<meta-data>` tag is missing the" +
+                context.getLocation(propertyElement),
+                "The `$VALUE_MEDIA_CAPABILITIES` `<property>` tag is missing the" +
                     " `android:resource` attribute pointing to a valid XML file"
             )
         }
@@ -149,7 +153,7 @@ class MediaCapabilitiesMetadataDetector : Detector(), SourceCodeScanner, ClassSc
         @JvmField
         val ISSUE = Issue.create(
             id = "MediaCapabilities",
-            briefDescription = "Media Capabilities meta-data not specified",
+            briefDescription = "Media Capabilities property not specified",
             explanation =
                 """
                 In Android 12 and higher, an app that opens media files should explicitly specify \
@@ -161,7 +165,7 @@ class MediaCapabilitiesMetadataDetector : Detector(), SourceCodeScanner, ClassSc
             severity = Severity.WARNING,
             androidSpecific = true,
             implementation = Implementation(
-                MediaCapabilitiesMetadataDetector::class.java,
+                MediaCapabilitiesDetector::class.java,
                 EnumSet.of(
                     Scope.MANIFEST,
                     Scope.JAVA_FILE,
