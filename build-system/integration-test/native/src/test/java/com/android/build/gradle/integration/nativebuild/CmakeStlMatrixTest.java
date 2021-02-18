@@ -40,8 +40,10 @@ import com.android.testutils.apk.Apk;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -165,32 +167,32 @@ public class CmakeStlMatrixTest {
                                 + "          > abis:\n"
                                 + "             * NativeAbi:\n"
                                 + "                * name                            = \"armeabi-v7a\"\n"
-                                + "                * sourceFlagsFile                 = {PROJECT}/.cxx/{DEBUG}/armeabi-v7a/compile_commands.json.bin{!}\n"
-                                + "                * symbolFolderIndexFile           = {PROJECT}/.cxx/{DEBUG}/armeabi-v7a/symbol_folder_index.txt{!}\n"
-                                + "                * buildFileIndexFile              = {PROJECT}/.cxx/{DEBUG}/armeabi-v7a/build_file_index.txt{!}\n"
-                                + "                * additionalProjectFilesIndexFile = {PROJECT}/.cxx/{DEBUG}/armeabi-v7a/additional_project_files.txt{!}\n"
+                                + "                * sourceFlagsFile                 = {PROJECT}/build/intermediates/{DEBUG}/meta/armeabi-v7a/compile_commands.json.bin{!}\n"
+                                + "                * symbolFolderIndexFile           = {PROJECT}/build/intermediates/{DEBUG}/meta/armeabi-v7a/symbol_folder_index.txt{!}\n"
+                                + "                * buildFileIndexFile              = {PROJECT}/build/intermediates/{DEBUG}/meta/armeabi-v7a/build_file_index.txt{!}\n"
+                                + "                * additionalProjectFilesIndexFile = {PROJECT}/build/intermediates/{DEBUG}/meta/armeabi-v7a/additional_project_files.txt{!}\n"
                                 + "             * NativeAbi:\n"
                                 + "                * name                            = \"x86_64\"\n"
-                                + "                * sourceFlagsFile                 = {PROJECT}/.cxx/{DEBUG}/x86_64/compile_commands.json.bin{!}\n"
-                                + "                * symbolFolderIndexFile           = {PROJECT}/.cxx/{DEBUG}/x86_64/symbol_folder_index.txt{!}\n"
-                                + "                * buildFileIndexFile              = {PROJECT}/.cxx/{DEBUG}/x86_64/build_file_index.txt{!}\n"
-                                + "                * additionalProjectFilesIndexFile = {PROJECT}/.cxx/{DEBUG}/x86_64/additional_project_files.txt{!}\n"
+                                + "                * sourceFlagsFile                 = {PROJECT}/build/intermediates/{DEBUG}/meta/x86_64/compile_commands.json.bin{!}\n"
+                                + "                * symbolFolderIndexFile           = {PROJECT}/build/intermediates/{DEBUG}/meta/x86_64/symbol_folder_index.txt{!}\n"
+                                + "                * buildFileIndexFile              = {PROJECT}/build/intermediates/{DEBUG}/meta/x86_64/build_file_index.txt{!}\n"
+                                + "                * additionalProjectFilesIndexFile = {PROJECT}/build/intermediates/{DEBUG}/meta/x86_64/additional_project_files.txt{!}\n"
                                 + "          < abis\n"
                                 + "       * NativeVariant:\n"
                                 + "          * name = \"release\"\n"
                                 + "          > abis:\n"
                                 + "             * NativeAbi:\n"
                                 + "                * name                            = \"armeabi-v7a\"\n"
-                                + "                * sourceFlagsFile                 = {PROJECT}/.cxx/{RELEASE}/armeabi-v7a/compile_commands.json.bin{!}\n"
-                                + "                * symbolFolderIndexFile           = {PROJECT}/.cxx/{RELEASE}/armeabi-v7a/symbol_folder_index.txt{!}\n"
-                                + "                * buildFileIndexFile              = {PROJECT}/.cxx/{RELEASE}/armeabi-v7a/build_file_index.txt{!}\n"
-                                + "                * additionalProjectFilesIndexFile = {PROJECT}/.cxx/{RELEASE}/armeabi-v7a/additional_project_files.txt{!}\n"
+                                + "                * sourceFlagsFile                 = {PROJECT}/build/intermediates/{RELEASE}/meta/armeabi-v7a/compile_commands.json.bin{!}\n"
+                                + "                * symbolFolderIndexFile           = {PROJECT}/build/intermediates/{RELEASE}/meta/armeabi-v7a/symbol_folder_index.txt{!}\n"
+                                + "                * buildFileIndexFile              = {PROJECT}/build/intermediates/{RELEASE}/meta/armeabi-v7a/build_file_index.txt{!}\n"
+                                + "                * additionalProjectFilesIndexFile = {PROJECT}/build/intermediates/{RELEASE}/meta/armeabi-v7a/additional_project_files.txt{!}\n"
                                 + "             * NativeAbi:\n"
                                 + "                * name                            = \"x86_64\"\n"
-                                + "                * sourceFlagsFile                 = {PROJECT}/.cxx/{RELEASE}/x86_64/compile_commands.json.bin{!}\n"
-                                + "                * symbolFolderIndexFile           = {PROJECT}/.cxx/{RELEASE}/x86_64/symbol_folder_index.txt{!}\n"
-                                + "                * buildFileIndexFile              = {PROJECT}/.cxx/{RELEASE}/x86_64/build_file_index.txt{!}\n"
-                                + "                * additionalProjectFilesIndexFile = {PROJECT}/.cxx/{RELEASE}/x86_64/additional_project_files.txt{!}\n"
+                                + "                * sourceFlagsFile                 = {PROJECT}/build/intermediates/{RELEASE}/meta/x86_64/compile_commands.json.bin{!}\n"
+                                + "                * symbolFolderIndexFile           = {PROJECT}/build/intermediates/{RELEASE}/meta/x86_64/symbol_folder_index.txt{!}\n"
+                                + "                * buildFileIndexFile              = {PROJECT}/build/intermediates/{RELEASE}/meta/x86_64/build_file_index.txt{!}\n"
+                                + "                * additionalProjectFilesIndexFile = {PROJECT}/build/intermediates/{RELEASE}/meta/x86_64/additional_project_files.txt{!}\n"
                                 + "          < abis\n"
                                 + "    < variants\n"
                                 + "    - nativeBuildSystem       = CMAKE\n"
@@ -216,32 +218,32 @@ public class CmakeStlMatrixTest {
                                 + "          > abis:\n"
                                 + "             * NativeAbi:\n"
                                 + "                * name                            = \"armeabi-v7a\"\n"
-                                + "                * sourceFlagsFile                 = {PROJECT}/.cxx/{DEBUG}/armeabi-v7a/compile_commands.json.bin{F}\n"
-                                + "                * symbolFolderIndexFile           = {PROJECT}/.cxx/{DEBUG}/armeabi-v7a/symbol_folder_index.txt{F}\n"
-                                + "                * buildFileIndexFile              = {PROJECT}/.cxx/{DEBUG}/armeabi-v7a/build_file_index.txt{F}\n"
-                                + "                * additionalProjectFilesIndexFile = {PROJECT}/.cxx/{DEBUG}/armeabi-v7a/additional_project_files.txt{F}\n"
+                                + "                * sourceFlagsFile                 = {PROJECT}/build/intermediates/{DEBUG}/meta/armeabi-v7a/compile_commands.json.bin{F}\n"
+                                + "                * symbolFolderIndexFile           = {PROJECT}/build/intermediates/{DEBUG}/meta/armeabi-v7a/symbol_folder_index.txt{F}\n"
+                                + "                * buildFileIndexFile              = {PROJECT}/build/intermediates/{DEBUG}/meta/armeabi-v7a/build_file_index.txt{F}\n"
+                                + "                * additionalProjectFilesIndexFile = {PROJECT}/build/intermediates/{DEBUG}/meta/armeabi-v7a/additional_project_files.txt{F}\n"
                                 + "             * NativeAbi:\n"
                                 + "                * name                            = \"x86_64\"\n"
-                                + "                * sourceFlagsFile                 = {PROJECT}/.cxx/{DEBUG}/x86_64/compile_commands.json.bin{F}\n"
-                                + "                * symbolFolderIndexFile           = {PROJECT}/.cxx/{DEBUG}/x86_64/symbol_folder_index.txt{F}\n"
-                                + "                * buildFileIndexFile              = {PROJECT}/.cxx/{DEBUG}/x86_64/build_file_index.txt{F}\n"
-                                + "                * additionalProjectFilesIndexFile = {PROJECT}/.cxx/{DEBUG}/x86_64/additional_project_files.txt{F}\n"
+                                + "                * sourceFlagsFile                 = {PROJECT}/build/intermediates/{DEBUG}/meta/x86_64/compile_commands.json.bin{F}\n"
+                                + "                * symbolFolderIndexFile           = {PROJECT}/build/intermediates/{DEBUG}/meta/x86_64/symbol_folder_index.txt{F}\n"
+                                + "                * buildFileIndexFile              = {PROJECT}/build/intermediates/{DEBUG}/meta/x86_64/build_file_index.txt{F}\n"
+                                + "                * additionalProjectFilesIndexFile = {PROJECT}/build/intermediates/{DEBUG}/meta/x86_64/additional_project_files.txt{F}\n"
                                 + "          < abis\n"
                                 + "       * NativeVariant:\n"
                                 + "          * name = \"release\"\n"
                                 + "          > abis:\n"
                                 + "             * NativeAbi:\n"
                                 + "                * name                            = \"armeabi-v7a\"\n"
-                                + "                * sourceFlagsFile                 = {PROJECT}/.cxx/{RELEASE}/armeabi-v7a/compile_commands.json.bin{F}\n"
-                                + "                * symbolFolderIndexFile           = {PROJECT}/.cxx/{RELEASE}/armeabi-v7a/symbol_folder_index.txt{F}\n"
-                                + "                * buildFileIndexFile              = {PROJECT}/.cxx/{RELEASE}/armeabi-v7a/build_file_index.txt{F}\n"
-                                + "                * additionalProjectFilesIndexFile = {PROJECT}/.cxx/{RELEASE}/armeabi-v7a/additional_project_files.txt{F}\n"
+                                + "                * sourceFlagsFile                 = {PROJECT}/build/intermediates/{RELEASE}/meta/armeabi-v7a/compile_commands.json.bin{F}\n"
+                                + "                * symbolFolderIndexFile           = {PROJECT}/build/intermediates/{RELEASE}/meta/armeabi-v7a/symbol_folder_index.txt{F}\n"
+                                + "                * buildFileIndexFile              = {PROJECT}/build/intermediates/{RELEASE}/meta/armeabi-v7a/build_file_index.txt{F}\n"
+                                + "                * additionalProjectFilesIndexFile = {PROJECT}/build/intermediates/{RELEASE}/meta/armeabi-v7a/additional_project_files.txt{F}\n"
                                 + "             * NativeAbi:\n"
                                 + "                * name                            = \"x86_64\"\n"
-                                + "                * sourceFlagsFile                 = {PROJECT}/.cxx/{RELEASE}/x86_64/compile_commands.json.bin{F}\n"
-                                + "                * symbolFolderIndexFile           = {PROJECT}/.cxx/{RELEASE}/x86_64/symbol_folder_index.txt{F}\n"
-                                + "                * buildFileIndexFile              = {PROJECT}/.cxx/{RELEASE}/x86_64/build_file_index.txt{F}\n"
-                                + "                * additionalProjectFilesIndexFile = {PROJECT}/.cxx/{RELEASE}/x86_64/additional_project_files.txt{F}\n"
+                                + "                * sourceFlagsFile                 = {PROJECT}/build/intermediates/{RELEASE}/meta/x86_64/compile_commands.json.bin{F}\n"
+                                + "                * symbolFolderIndexFile           = {PROJECT}/build/intermediates/{RELEASE}/meta/x86_64/symbol_folder_index.txt{F}\n"
+                                + "                * buildFileIndexFile              = {PROJECT}/build/intermediates/{RELEASE}/meta/x86_64/build_file_index.txt{F}\n"
+                                + "                * additionalProjectFilesIndexFile = {PROJECT}/build/intermediates/{RELEASE}/meta/x86_64/additional_project_files.txt{F}\n"
                                 + "          < abis\n"
                                 + "    < variants\n"
                                 + "    - nativeBuildSystem       = CMAKE\n"
@@ -265,14 +267,19 @@ public class CmakeStlMatrixTest {
             }
         }
 
-        project.execute("clean");
-
+        List<File> soFolders = new ArrayList<File>();
         for (NativeVariant variant : nativeModule.getVariants()) {
             for (NativeAbi abi : variant.getAbis()) {
                 for (File soFolder : readAsFileIndex(abi.getSymbolFolderIndexFile())) {
-                    assertThat(soFolder).doesNotExist();
+                    soFolders.add(soFolder);
                 }
             }
+        }
+
+        project.execute("clean");
+
+        for (File soFolder : soFolders) {
+            assertThat(soFolder).doesNotExist();
         }
     }
 }
