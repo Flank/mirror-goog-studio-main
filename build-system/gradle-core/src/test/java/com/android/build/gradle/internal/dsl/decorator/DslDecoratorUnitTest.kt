@@ -18,11 +18,13 @@ package com.android.build.gradle.internal.dsl.decorator
 
 import com.android.build.gradle.internal.dsl.AgpDslLockedException
 import com.android.build.gradle.internal.dsl.Lockable
+import com.android.build.gradle.internal.services.DslServices
 import com.google.common.truth.Truth.assertThat
 import com.google.common.truth.Truth.assertWithMessage
 import groovy.util.Eval
 import org.gradle.api.provider.Property
 import org.junit.Test
+import org.mockito.Mockito.mock
 import java.lang.reflect.Modifier
 import javax.inject.Inject
 import kotlin.test.assertFailsWith
@@ -37,53 +39,40 @@ class DslDecoratorUnitTest {
         val decorator = DslDecorator(listOf())
 
         val decorated = decorator.decorate(Empty::class)
-        val constructor = decorated.getConstructor()
+        val constructor = decorated.getConstructor(DslServices::class.java)
 
-        assertWithMessage("Expected to not have @Injected on constructor")
-            .that(constructor.declaredAnnotations.map { it.annotationClass })
-            .isEmpty()
-
-        // Check does not throw
-        constructor.newInstance()
-    }
-
-    abstract class EmptyWithInjectAnnotation @Inject constructor()
-
-    @Test
-    fun `check generated constructor keeps the inject annotation from the constructor it delegates to`() {
-        val decorator = DslDecorator(listOf())
-
-        val decorated = decorator.decorate(EmptyWithInjectAnnotation::class)
-        val constructor = decorated.getConstructor()
-
-        assertWithMessage("Expected to be copied to generated constructor")
+        assertWithMessage("Expected to have @Injected on constructor")
             .that(constructor.declaredAnnotations.map { it.annotationClass })
             .containsExactly(Inject::class)
 
         // Check does not throw
-        constructor.newInstance()
+        constructor.newInstance(dslServices)
     }
 
-    abstract class WithPrimitiveInConstructor @Inject constructor(val integer: Int, val boxed: Int?)
+    abstract class EmptyWithInjectAnnotation @Inject constructor()
+
+    abstract class WithPrimitiveInConstructor @Inject constructor(val integer: Int, val boxed: Int?, val dslServices: DslServices)
 
     @Test
     fun `check constructors with arguments work correctly`() {
         val decorator = DslDecorator(listOf())
 
         val decorated = decorator.decorate(WithPrimitiveInConstructor::class)
-        val o = decorated.getDeclaredConstructor(Int::class.java, Integer::class.java).newInstance(1, 2)
+        val o = decorated.getDeclaredConstructor(Int::class.java, Integer::class.java, DslServices::class.java).newInstance(1, 2, dslServices)
 
         assertWithMessage("Constructor values should be passed through")
             .that(o.integer).isEqualTo(1)
         assertWithMessage("Constructor values should be passed through")
             .that(o.boxed).isEqualTo(2)
+        assertWithMessage("Constructor values should be passed through")
+            .that(o.dslServices).isSameInstanceAs(dslServices)
     }
 
 
     @Suppress("unused")
-    abstract class ConstructorWithArgsWithoutInject constructor(val integer: Int) {
-        constructor(): this(0)
-        @Inject constructor(string: String): this(Integer.getInteger(string)!!)
+    abstract class ConstructorWithArgsWithoutInject constructor(val integer: Int, val dslServices: DslServices?) {
+        constructor(): this(0, null)
+        @Inject constructor(string: String, dslServices: DslServices): this(Integer.getInteger(string)!!, dslServices)
     }
 
     @Test
@@ -91,18 +80,23 @@ class DslDecoratorUnitTest {
         val decorator = DslDecorator(listOf())
 
         val decorated = decorator.decorate(ConstructorWithArgsWithoutInject::class)
-        val zeroArgumentConstructor = decorated.getDeclaredConstructor()
-        assertWithMessage("Expected to not have @Injected")
-            .that(zeroArgumentConstructor.declaredAnnotations.map { it.annotationClass })
-            .isEmpty()
+        val basedOnZeroArgumentConstructor = decorated.getDeclaredConstructor(DslServices::class.java)
+        assertWithMessage("Expected to have @Injected added")
+            .that(basedOnZeroArgumentConstructor.declaredAnnotations.map { it.annotationClass })
+            .containsExactly(Inject::class)
 
-        val injectAnnotatedConstructor = decorated.getDeclaredConstructor(String::class.java)
+        val injectAnnotatedConstructor = decorated.getDeclaredConstructor(String::class.java, DslServices::class.java)
         assertWithMessage("Expected to be copied to generated constructor")
             .that(injectAnnotatedConstructor.declaredAnnotations.map { it.annotationClass })
             .containsExactly(Inject::class)
 
+
+        fun Class<*>.getIntConstructor() = getDeclaredConstructor(Int::class.java, DslServices::class.java)
+        // Given a constructor that is not annotated on the superclass
+        assertThat(decorated.superclass.getIntConstructor().declaredAnnotations).isEmpty()
+        // No constructor should be generated
         assertFailsWith(NoSuchMethodException::class) {
-            decorated.getDeclaredConstructor(Int::class.java)
+            decorated.getIntConstructor()
         }
     }
 
@@ -114,7 +108,8 @@ class DslDecoratorUnitTest {
     fun `check managed var properties`() {
         val decorator = DslDecorator(listOf(SupportedPropertyType.Var.String))
 
-        val o = decorator.decorate(WithManagedString::class.java).getConstructor().newInstance()
+        val decorated = decorator.decorate(WithManagedString::class.java)
+        val o = decorated.getDeclaredConstructor(DslServices::class.java).newInstance(dslServices)
 
         assertThat(o).isNotNull()
         assertThat(o.managedString).isNull()
@@ -130,7 +125,8 @@ class DslDecoratorUnitTest {
     @Test
     fun `check locking works for managed var properties`() {
         val decorator = DslDecorator(listOf(SupportedPropertyType.Var.String))
-        val o = decorator.decorate(WithManagedStringLockable::class).getConstructor().newInstance()
+        val decorated = decorator.decorate(WithManagedStringLockable::class)
+        val o = decorated.getDeclaredConstructor(DslServices::class.java).newInstance(dslServices)
          o.managedString = "a"
         o.lock()
         val failure = assertFailsWith<AgpDslLockedException> {
@@ -151,7 +147,8 @@ class DslDecoratorUnitTest {
     @Test
     fun `check extra setters`() {
         val decorator = DslDecorator(listOf(SupportedPropertyType.Var.String))
-        val o = decorator.decorate(WithExtraSetter::class.java).getConstructor().newInstance()
+        val decorated = decorator.decorate(WithExtraSetter::class.java)
+        val o = decorated.getDeclaredConstructor(DslServices::class.java).newInstance(dslServices)
         assertThat(o).isNotNull()
         assertThat(o.managedString).isNull()
         o.managedString = "a"
@@ -186,7 +183,7 @@ class DslDecoratorUnitTest {
     fun `check protected field is implemented`() {
         val decorated = DslDecorator(listOf(SupportedPropertyType.Var.String))
             .decorate(WithProtectedField::class)
-        val o = decorated.getConstructor().newInstance()
+        val o = decorated.getDeclaredConstructor(DslServices::class.java).newInstance(dslServices)
         assertThat(o).isNotNull()
         assertThat(o.compileSdk).isNull()
         o.compileSdk = "a"
@@ -201,7 +198,7 @@ class DslDecoratorUnitTest {
     fun `check protected field in superclass is implemented`() {
         val decorated = DslDecorator(listOf(SupportedPropertyType.Var.String))
             .decorate(Subclass::class)
-        val o = decorated.getConstructor().newInstance()
+        val o = decorated.getDeclaredConstructor(DslServices::class.java).newInstance(dslServices)
         assertThat(o).isNotNull()
         assertThat(o.compileSdk).isNull()
         o.compileSdk = "a"
@@ -218,7 +215,7 @@ class DslDecoratorUnitTest {
     fun `check handling of public override of a protected field`() {
         val decorated = DslDecorator(listOf(SupportedPropertyType.Var.String))
             .decorate(PublicFieldOverridesProtectedField::class)
-        val o = decorated.getConstructor().newInstance()
+        val o = decorated.getDeclaredConstructor(DslServices::class.java).newInstance(dslServices)
         assertThat(o).isNotNull()
         assertThat(o.compileSdkVersion).isNull()
         o.compileSdkVersion = "a"
@@ -235,7 +232,7 @@ class DslDecoratorUnitTest {
     fun `check locking propagation`() {
         val decorated = DslDecorator(listOf(SupportedPropertyType.Collection.List))
             .decorate(LockableWithList::class)
-        val o = decorated.getDeclaredConstructor().newInstance()
+        val o = decorated.getDeclaredConstructor(DslServices::class.java).newInstance(dslServices)
         o.foo += "one"
         o.lock()
         assertThat(o.foo).containsExactly("one")
@@ -265,7 +262,7 @@ class DslDecoratorUnitTest {
     @Test
     fun `check synthetic methods where interface has more specific type`() {
         val decorated = DslDecorator(listOf(SupportedPropertyType.Collection.List)).decorate(C::class)
-        val c = decorated.getDeclaredConstructor().newInstance()
+        val c = decorated.getDeclaredConstructor(DslServices::class.java).newInstance(dslServices)
         val asA: A = c
         asA.foo.add("a")
         assertThat(c.foo).containsExactly("a")
@@ -287,7 +284,7 @@ class DslDecoratorUnitTest {
     @Test
     fun `check synthetic methods where supertype has more specific type`() {
         val decorated = DslDecorator(listOf(SupportedPropertyType.Collection.List)).decorate(Z::class)
-        val z = decorated.getDeclaredConstructor().newInstance()
+        val z = decorated.getDeclaredConstructor(DslServices::class.java).newInstance(dslServices)
         val asX: X = z
         asX.foo.add("a")
         assertThat(asX.foo).containsExactly("a")
@@ -312,10 +309,10 @@ class DslDecoratorUnitTest {
     fun `check doesn't override concrete implementations`() {
         val dslDecorator = DslDecorator(listOf(SupportedPropertyType.Var.String))
         val decoratedInterface = dslDecorator.decorate(WithoutConcreteImplementation::class)
-            .getDeclaredConstructor().newInstance()
+            .getDeclaredConstructor(DslServices::class.java).newInstance(dslServices)
         assertThat(decoratedInterface.foo).isNull()
         val decorated = dslDecorator.decorate(ConcreteImplementation::class)
-            .getDeclaredConstructor().newInstance()
+            .getDeclaredConstructor(DslServices::class.java).newInstance(dslServices)
         assertThat(decorated.foo).isEqualTo("hello")
     }
 
@@ -327,7 +324,7 @@ class DslDecoratorUnitTest {
     fun `check groovy setter generation`() {
         val decorated = DslDecorator(listOf(SupportedPropertyType.Collection.List))
             .decorate(WithList::class)
-        val withList = decorated.getDeclaredConstructor().newInstance()
+        val withList = decorated.getDeclaredConstructor(DslServices::class.java).newInstance(dslServices)
         Eval.me("withList", withList, "withList.list += ['one', 'two']")
         assertThat(withList.list).containsExactly("one", "two").inOrder()
         Eval.me("withList", withList, "withList.list += 'three'")
@@ -345,7 +342,7 @@ class DslDecoratorUnitTest {
     fun `check groovy setter generation for set`() {
         val decorated = DslDecorator(listOf(SupportedPropertyType.Collection.Set))
             .decorate(WithSet::class)
-        val withSet = decorated.getDeclaredConstructor().newInstance()
+        val withSet = decorated.getDeclaredConstructor(DslServices::class.java).newInstance(dslServices)
         assertThat(withSet.set::class.java).isEqualTo(LockableSet::class.java)
         Eval.me("withSet", withSet, "withSet.set += ['one', 'two']")
         assertThat(withSet.set).containsExactly("one", "two").inOrder()
@@ -355,4 +352,7 @@ class DslDecoratorUnitTest {
         Eval.me("withSet", withSet, "withSet.set = withSet.set")
         assertThat(withSet.set).containsExactly("one", "two", "three").inOrder()
     }
+
+    private val dslServices: DslServices = mock(DslServices::class.java)
+
 }

@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.dsl.decorator
 
 import com.android.build.gradle.internal.dsl.AgpDslLockedException
 import com.android.build.gradle.internal.dsl.Lockable
+import com.android.build.gradle.internal.services.DslServices
 import com.android.utils.usLocaleCapitalize
 import com.android.utils.usLocaleDecapitalize
 import com.google.common.annotations.VisibleForTesting
@@ -108,14 +109,26 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType>) {
                 // Gradle only looks at constructors with arguments if they are marked with @Inject.
                 continue
             }
-            GeneratorAdapter(constructor.modifiers, method, null, null, classWriter).apply {
-                if (inject) {
-                    visitAnnotation(INJECT_TYPE, true).visitEnd()
+            // Replace any zero-argument constructor with a single-argument constructor that
+            // takes the DSL services type - to support generation from interfaces.
+            val methodToGenerate =
+                if(method.argumentTypes.isEmpty()) {
+                    Method(method.name, method.returnType, arrayOf(DSL_SERVICES_TYPE))
+                } else {
+                    method
                 }
+            val dslServicesArgumentIndex = methodToGenerate.argumentTypes.indexOf(DSL_SERVICES_TYPE)
+            check(dslServicesArgumentIndex != -1) {
+                "Cannot generate implementation for $dslClassType" +
+                        "@Inject marked constructor $method for does not include $DSL_SERVICES_TYPE argument"
+            }
+            GeneratorAdapter(constructor.modifiers, methodToGenerate, null, null, classWriter).apply {
+                // Always mark the generated constructor with @Inject
+                visitAnnotation(INJECT_TYPE, true).visitEnd()
                 // super(...args...)
                 visitCode()
                 loadThis()
-                loadArgs()
+                loadArgs(0, method.argumentTypes.size)
                 invokeConstructor(generatedClassSuperClass, method)
                 for (property in abstractProperties) {
                     when (val type = property.supportedPropertyType) {
@@ -475,6 +488,7 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType>) {
             Method("<init>", Type.VOID_TYPE, arrayOf(Type.getType(String::class.java)))
         private val LOCK_METHOD = Method("lock", Type.VOID_TYPE, arrayOf())
         private val LOCKED_EXCEPTION = Type.getType(AgpDslLockedException::class.java)
+        private val DSL_SERVICES_TYPE = Type.getType(DslServices::class.java)
 
         private val COLLECTION = Type.getType(Collection::class.java)
         private val ARRAY_LIST = Type.getType(ArrayList::class.java)
