@@ -534,4 +534,74 @@ class CallSuperDetectorTest : AbstractCheckTest() {
             """
         )
     }
+
+    fun testWorkaround180509152() {
+        // We have a temporary workaround for 180509152; this tests verifies that
+        // workaround. When the bug is fixed the super.onCreate call in MainActivity
+        // below should be uncommented.
+        lint().files(
+            kotlin(
+                """
+                package androidx.fragment.app
+                open class FragmentActivity {
+                }
+                """
+            ).indented(),
+            kotlin(
+                """
+                package androidx.appcompat.app
+                import android.os.Bundle
+                import androidx.annotation.CallSuper
+                open class AppCompatActivity : androidx.fragment.app.FragmentActivity() {
+                    protected fun unrelated() {}
+                    @CallSuper
+                    fun onCreate(savedInstanceState: Bundle?) {
+                        println("Hello")
+                    }
+                }
+                """
+            ).indented(),
+            kotlin(
+                """
+                package test.pkg
+
+                import android.os.Bundle
+                import androidx.appcompat.app.AppCompatActivity
+
+                class MainActivity : AppCompatActivity() {
+                    override fun onCreate(savedInstanceState: Bundle?) { // OK
+                        // Deliberately not calling super. In a normal
+                        // scenario, lint should flag this as an error.
+                        // But because of unknown recent problems (described
+                        // in 180509152) we're temporarily filtering out this
+                        // specific instance to avoid a lot of false positives
+                        // until we track this down.
+                        //super.onCreate(savedInstanceState)
+                        // The warning *will* kick in if there are no
+                        // super calls at all in the method, so make sure
+                        // it finds at least one super call
+                        super.unrelated()
+                    }
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package androidx.annotation;
+
+                import java.lang.annotation.Retention;
+                import java.lang.annotation.Target;
+
+                import static java.lang.annotation.ElementType.CONSTRUCTOR;
+                import static java.lang.annotation.ElementType.METHOD;
+                import static java.lang.annotation.RetentionPolicy.CLASS;
+
+                @Retention(CLASS)
+                @Target({METHOD,CONSTRUCTOR})
+                public @interface CallSuper {
+                }
+                """
+            ).indented()
+        ).run().expectClean()
+    }
 }

@@ -123,10 +123,10 @@ class CallSuperDetector : Detector(), SourceCodeScanner {
         }
     }
 
-    override fun getApplicableUastTypes(): List<Class<out UElement>>? =
+    override fun getApplicableUastTypes(): List<Class<out UElement>> =
         listOf(UMethod::class.java)
 
-    override fun createUastHandler(context: JavaContext): UElementHandler? =
+    override fun createUastHandler(context: JavaContext): UElementHandler =
         object : UElementHandler() {
             override fun visitMethod(node: UMethod) {
                 val evaluator = context.evaluator
@@ -135,7 +135,19 @@ class CallSuperDetector : Detector(), SourceCodeScanner {
                 node.accept(visitor)
                 val count = visitor.callsSuperCount
                 if (count == 0) {
-                    val message = "Overriding method should call `super.${node.name}`"
+                    val methodName = node.name
+                    // Temporary workaround for 180509152:
+                    if (methodName == "onCreate" && visitor.anySuperCallCount > 0) {
+                        val superMethodClass = superMethod.containingClass?.qualifiedName
+                        if (superMethodClass == "androidx.appcompat.app.AppCompatActivity") {
+                            // In recent versions this class has no onCreate implementation
+                            // and the super call visitor should not have found one; the
+                            // implementation it should jump to is in indirect superclass
+                            // FragmentActivity. For now hide this message.
+                            return
+                        }
+                    }
+                    val message = "Overriding method should call `super.$methodName`"
                     val location = context.getNameLocation(node)
                     val fix = fix().data(KEY_METHOD, superMethod)
                     context.report(ISSUE, node, location, message, fix)
@@ -153,8 +165,10 @@ class CallSuperDetector : Detector(), SourceCodeScanner {
         AbstractUastVisitor() {
         val superCalls = mutableListOf<USuperExpression>()
         val callsSuperCount: Int get() = superCalls.size
+        var anySuperCallCount: Int = 0
 
         override fun visitSuperExpression(node: USuperExpression): Boolean {
+            anySuperCallCount++
             val parent = com.android.tools.lint.detector.api.skipParentheses(node.uastParent)
             if (parent is UReferenceExpression) {
                 val resolved = parent.resolve()
