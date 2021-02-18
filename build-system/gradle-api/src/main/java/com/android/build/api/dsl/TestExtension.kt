@@ -32,7 +32,7 @@ interface TestExtension<
         BuildTypeT : TestBuildType<SigningConfigT>,
         DefaultConfigT : TestDefaultConfig<SigningConfigT>,
         ProductFlavorT : TestProductFlavor<SigningConfigT>,
-        SigningConfigT : SigningConfig> :
+        SigningConfigT : ApkSigningConfig> :
     CommonExtension<
             AndroidSourceSetT,
             TestBuildFeatures,

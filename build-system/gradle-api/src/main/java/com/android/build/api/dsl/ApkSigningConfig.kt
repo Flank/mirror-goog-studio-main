@@ -20,47 +20,51 @@ import org.gradle.api.Incubating
 import org.gradle.api.Named
 import java.io.File
 
-/**
- * DSL object for configuring options related to signing for APKs and bundles.
- *
- * [ApkSigningConfig] extends this with options relating to just APKs
- *
- */
+/** DSL object to configure signing configs. */
 @Incubating
-interface SigningConfig: Named {
-
+interface ApkSigningConfig: SigningConfig {
     /**
-     * Store file used when signing.
+     * Whether signing using JAR Signature Scheme (aka v1 signing) is enabled.
      *
      * See [Signing Your Applications](http://developer.android.com/tools/publishing/app-signing.html)
      */
-    var storeFile: File?
+    @Deprecated("This property is deprecated", ReplaceWith("enableV1Signing"))
+    var isV1SigningEnabled: Boolean
 
     /**
-     * Store password used when signing.
+     * Whether signing using APK Signature Scheme v2 (aka v2 signing) is enabled.
      *
      * See [Signing Your Applications](http://developer.android.com/tools/publishing/app-signing.html)
      */
-    var storePassword: String?
+    @Deprecated("This property is deprecated", ReplaceWith("enableV2Signing"))
+    var isV2SigningEnabled: Boolean
 
     /**
-     * Key alias used when signing.
+     * Enable signing using JAR Signature Scheme (aka v1 signing). If null, a default value is used.
      *
      * See [Signing Your Applications](http://developer.android.com/tools/publishing/app-signing.html)
      */
-    var keyAlias: String?
+    var enableV1Signing: Boolean?
 
     /**
-     * Key password used when signing.
+     * Enable signing using APK Signature Scheme v2 (aka v2 signing). If null, a default value is
+     * used.
      *
      * See [Signing Your Applications](http://developer.android.com/tools/publishing/app-signing.html)
      */
-    var keyPassword: String?
+    var enableV2Signing: Boolean?
 
     /**
-     * Store type used when signing.
+     * Enable signing using APK Signature Scheme v3 (aka v3 signing). If null, a default value is
+     * used.
      *
-     * See [Signing Your Applications](http://developer.android.com/tools/publishing/app-signing.html)
+     * See [APK Signature Scheme v3](https://source.android.com/security/apksigning/v3)
      */
-    var storeType: String?
+    var enableV3Signing: Boolean?
+
+    /**
+     * Enable signing using APK Signature Scheme v4 (aka v4 signing). If null, a default value is
+     * used.
+     */
+    var enableV4Signing: Boolean?
 }

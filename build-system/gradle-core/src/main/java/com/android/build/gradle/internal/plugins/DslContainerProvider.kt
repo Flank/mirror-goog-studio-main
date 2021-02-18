@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.plugins
 import com.android.build.api.dsl.BuildType
 import com.android.build.api.dsl.DefaultConfig
 import com.android.build.api.dsl.ProductFlavor
-import com.android.build.api.dsl.SigningConfig
+import com.android.build.api.dsl.ApkSigningConfig
 import com.android.build.gradle.internal.dependency.SourceSetManager
 import org.gradle.api.NamedDomainObjectContainer
 
@@ -34,7 +34,7 @@ interface DslContainerProvider<
         DefaultConfigT : DefaultConfig,
         BuildTypeT : BuildType,
         ProductFlavorT : ProductFlavor,
-        SigningConfigT : SigningConfig> {
+        SigningConfigT : ApkSigningConfig> {
 
     val defaultConfig: DefaultConfigT
 

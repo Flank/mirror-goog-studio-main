@@ -28,7 +28,7 @@ import com.android.builder.model.v2.ide.AaptOptions.Namespacing.REQUIRED
 import com.android.builder.model.v2.ide.CodeShrinker
 import com.android.builder.model.v2.ide.JavaCompileOptions
 import com.android.builder.model.v2.ide.TestInfo
-import com.android.build.api.dsl.SigningConfig as DslSigningConfig
+import com.android.build.api.dsl.ApkSigningConfig as DslSigningConfig
 import com.android.build.gradle.internal.dsl.BuildType as DslBuildType
 import com.android.build.gradle.internal.dsl.DefaultConfig as DslDefaultConfig
 import com.android.build.gradle.internal.dsl.ProductFlavor as DslProductFlavor

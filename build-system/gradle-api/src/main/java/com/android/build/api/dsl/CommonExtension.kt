@@ -34,7 +34,7 @@ interface CommonExtension<
         BuildTypeT : BuildType,
         DefaultConfigT : DefaultConfig,
         ProductFlavorT : ProductFlavor,
-        SigningConfigT : SigningConfig,
+        SigningConfigT : ApkSigningConfig,
         VariantBuilderT : VariantBuilder,
         VariantT : Variant> {
 
@@ -414,7 +414,7 @@ interface CommonExtension<
      * or manually
      * [configuring your `build.gradle` file](https://developer.android.com/studio/publish/app-signing.html#gradle-sign).
      *
-     * @see [SigningConfig]
+     * @see [ApkSigningConfig]
      */
     @get:Incubating
     val signingConfigs: NamedDomainObjectContainer<SigningConfigT>
@@ -424,7 +424,7 @@ interface CommonExtension<
      * [BuildType] and [ProductFlavor] configurations.
      *
      * For more information about the properties you can configure in this block,
-     * see [SigningConfig].
+     * see [ApkSigningConfig].
      */
     @Incubating
     fun signingConfigs(action: Action<NamedDomainObjectContainer<SigningConfigT>>)

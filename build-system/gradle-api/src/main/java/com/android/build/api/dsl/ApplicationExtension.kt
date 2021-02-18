@@ -32,7 +32,7 @@ interface ApplicationExtension<
         BuildTypeT : ApplicationBuildType<SigningConfigT>,
         DefaultConfigT : ApplicationDefaultConfig<SigningConfigT>,
         ProductFlavorT : ApplicationProductFlavor<SigningConfigT>,
-        SigningConfigT : SigningConfig> :
+        SigningConfigT : ApkSigningConfig> :
     CommonExtension<
             AndroidSourceSetT,
             ApplicationBuildFeatures,
