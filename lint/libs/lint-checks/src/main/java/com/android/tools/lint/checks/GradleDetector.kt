@@ -1006,7 +1006,11 @@ open class GradleDetector : Detector(), GradleScanner {
 
         // Network check for really up to date libraries? Only done in batch mode.
         var issue = DEPENDENCY
-        if (context.scope.size > 1 && context.isEnabled(REMOTE_VERSION)) {
+        if (context.scope.size > 1 && context.isEnabled(REMOTE_VERSION) &&
+            // Common but served from maven.google.com so no point to
+            // ping other maven repositories about these
+            !groupId.startsWith("androidx.")
+        ) {
             val latest = getLatestVersionFromRemoteRepo(
                 context.client, dependency, filter, dependency.isPreview
             )
@@ -2888,7 +2892,11 @@ open class GradleDetector : Detector(), GradleScanner {
             }
 
             query.append("%22&core=gav")
-            if (filter == null && allowPreview) {
+            if (groupId == "com.google.guava" || artifactId == "kotlinx-coroutines-core") {
+                // These libraries aren't releasing previews in their version strings;
+                // instead, the suffix is used to indicate different variants (JRE vs Android,
+                // JVM vs Kotlin Native)
+            } else if (filter == null && allowPreview) {
                 query.append("&rows=1")
             }
             query.append("&wt=json")
@@ -2942,6 +2950,7 @@ open class GradleDetector : Detector(), GradleScanner {
 
             // Look for version info:  This is just a cheap skim of the above JSON results.
             var index = response.indexOf("\"response\"")
+            val versions = mutableListOf<GradleVersion>()
             while (index != -1) {
                 index = response.indexOf("\"v\":", index)
                 if (index != -1) {
@@ -2952,24 +2961,55 @@ open class GradleDetector : Detector(), GradleScanner {
                         val substring = response.substring(start, end)
                         val revision = GradleVersion.tryParse(substring)
                         if (revision != null) {
-                            // Guava unfortunately put "-jre" and "-android" in the version number
-                            // instead of using a different artifact name; this turns off maven
-                            // semantic versioning. Special case this.
-                            val preview = revision.isPreview && !substring.endsWith("-android")
-                            if ((allowPreview || !preview) && (
-                                filter == null || filter.test(
-                                    revision
-                                )
-                                )
-                            ) {
-                                return revision
-                            }
+                            versions.add(revision)
                         }
                     }
                 }
             }
 
-            return null
+            // Some special cases for specific artifacts that were versioned
+            // incorrectly (using a string suffix to delineate separate branches
+            // whereas Gradle will just use an alphabetical sort on these). See
+            // 171369798 for an example.
+
+            if (groupId == "com.google.guava") {
+                val version = dependency.version
+                if (version != null) {
+                    // GradleVersion does not store unknown suffixes so do simple string lookup here
+                    val suffix = version.toString()
+                    val jre: (GradleVersion) -> Boolean = { v -> v.toString().endsWith("-jre") }
+                    val android: (GradleVersion) -> Boolean = { v -> !v.toString().endsWith("-jre") }
+                    return versions.filter(if (suffix.endsWith("-jre")) jre else android).max()
+                }
+            } else if (artifactId == "kotlinx-coroutines-core") {
+                val version = dependency.version
+                if (version != null) {
+                    val suffix = version.toString()
+                    return versions.filter(
+                        when {
+                            suffix.indexOf('-') == -1 -> {
+                                { (allowPreview || !it.isPreview) && !it.toString().contains("-native-mt") }
+                            }
+                            suffix.contains("-native-mt-2") -> {
+                                { it.toString().contains("-native-mt-2") }
+                            }
+                            suffix.contains("-native-mt") -> {
+                                {
+                                    it.toString().contains("-native-mt") && !it.toString().contains("-native-mt-2")
+                                }
+                            }
+                            else -> {
+                                { (allowPreview || !it.isPreview) && !it.toString().contains("-native-mt") }
+                            }
+                        }
+                    ).max()
+                }
+            }
+
+            return versions
+                .filter { filter == null || filter.test(it) }
+                .filter { allowPreview || !it.isPreview }
+                .max()
         }
 
         // Convert a long-hand dependency, like

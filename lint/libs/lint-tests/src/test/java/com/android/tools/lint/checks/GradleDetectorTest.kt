@@ -503,6 +503,130 @@ class GradleDetectorTest : AbstractCheckTest() {
             )
     }
 
+    fun testGuavaVersionsAndroidVsJre() {
+        lint().files(
+            gradle(
+                "" +
+                    "apply plugin: 'com.android.application'\n" +
+                    "\n" +
+                    "android {\n" +
+                    "    compileSdkVersion 29\n" +
+                    "}\n" +
+                    "\n" +
+                    "dependencies {\n" +
+                    // Applicable updates: 30.1-android, 30.0-android, 29.0-android, 28.2-android, 28.1-android
+                    "    compile 'com.google.guava:guava:24.1-android'\n" +
+                    // Applicable updates: 30.1-jre, 30.0-jre, 29.0-jre, 28.2-jre, 28.1-jre
+                    "    compile 'com.google.guava:guava:24.1-jre'\n" +
+                    // Applicable updates: 30.1-android, 30.0-android, 29.0-android, 28.2-android, 28.1-android
+                    "    compile 'com.google.guava:guava:16.0-rc1'\n" +
+                    // Applicable updates: 30.1-android, 30.0-android, 29.0-android, 28.2-android, 28.1-android
+                    "    compile 'com.google.guava:guava:16.0'\n" +
+                    "}\n"
+            )
+        )
+            .issues(REMOTE_VERSION)
+            .networkData(
+                "http://search.maven.org/solrsearch/select?q=g:%22com.google.guava%22+AND+a:%22guava%22&core=gav&rows=1&wt=json",
+                """{"responseHeader":{"status":0,"QTime":0,"params":{"q":"g:\"com.google.guava\" AND a:\"guava\"","core":"gav","indent":"off","fl":"id,g,a,v,p,ec,timestamp,tags","start":"","sort":"score desc,timestamp desc,g asc,a asc,v desc","rows":"1","wt":"json","version":"2.2"}},"response":{"numFound":100,"start":0,"docs":[{"id":"com.google.guava:guava:30.1-jre","g":"com.google.guava","a":"guava","v":"30.1-jre","p":"bundle","timestamp":1607961950000,"ec":["-javadoc.jar","-sources.jar",".jar",".pom"],"tags":["libraries","classes","google","expanded","much","include","that","more","utility","guava","core","suite","collections"]}]}}"""
+            )
+            .networkData(
+                "http://search.maven.org/solrsearch/select?q=g:%22com.google.guava%22+AND+a:%22guava%22&core=gav&wt=json",
+                """{"responseHeader":{"status":0,"QTime":5,"params":{"q":"g:\"com.google.guava\" AND a:\"guava\"","core":"gav","indent":"off","fl":"id,g,a,v,p,ec,timestamp,tags","start":"","sort":"score desc,timestamp desc,g asc,a asc,v desc","rows":"","wt":"json","version":"2.2"}},"response":{"numFound":100,"start":0,"docs":[{"id":"com.google.guava:guava:30.1-jre","g":"com.google.guava","a":"guava","v":"30.1-jre","p":"bundle","timestamp":1607961950000,"ec":["-javadoc.jar","-sources.jar",".jar",".pom"],"tags":["libraries","classes","google","expanded","much","include","that","more","utility","guava","core","suite","collections"]},{"id":"com.google.guava:guava:30.1-android","g":"com.google.guava","a":"guava","v":"30.1-android","p":"bundle","timestamp":1607961275000,"ec":["-javadoc.jar","-sources.jar",".jar",".pom"],"tags":["libraries","classes","google","expanded","much","include","that","more","utility","guava","core","suite","collections"]},{"id":"com.google.guava:guava:30.0-jre","g":"com.google.guava","a":"guava","v":"30.0-jre","p":"bundle","timestamp":1602880862000,"ec":["-javadoc.jar","-sources.jar",".jar",".pom"],"tags":["libraries","classes","google","expanded","much","include","that","more","utility","guava","core","suite","collections"]},{"id":"com.google.guava:guava:30.0-android","g":"com.google.guava","a":"guava","v":"30.0-android","p":"bundle","timestamp":1602880118000,"ec":["-javadoc.jar","-sources.jar",".jar",".pom"],"tags":["libraries","classes","google","expanded","much","include","that","more","utility","guava","core","suite","collections"]},{"id":"com.google.guava:guava:29.0-jre","g":"com.google.guava","a":"guava","v":"29.0-jre","p":"bundle","timestamp":1586813033000,"ec":["-javadoc.jar","-sources.jar",".jar",".pom"],"tags":["libraries","classes","google","expanded","much","include","that","more","utility","guava","core","suite","collections"]},{"id":"com.google.guava:guava:29.0-android","g":"com.google.guava","a":"guava","v":"29.0-android","p":"bundle","timestamp":1586812496000,"ec":["-javadoc.jar","-sources.jar",".jar",".pom"],"tags":["libraries","classes","google","expanded","much","include","that","more","utility","guava","core","suite","collections"]},{"id":"com.google.guava:guava:28.2-jre","g":"com.google.guava","a":"guava","v":"28.2-jre","p":"bundle","timestamp":1577416125000,"ec":["-javadoc.jar","-sources.jar",".jar",".pom"],"tags":["libraries","classes","google","expanded","much","include","that","more","utility","guava","core","suite","collections"]},{"id":"com.google.guava:guava:28.2-android","g":"com.google.guava","a":"guava","v":"28.2-android","p":"bundle","timestamp":1577413219000,"ec":["-javadoc.jar","-sources.jar",".jar",".pom"],"tags":["libraries","classes","google","expanded","much","include","that","more","utility","guava","core","suite","collections"]},{"id":"com.google.guava:guava:28.1-jre","g":"com.google.guava","a":"guava","v":"28.1-jre","p":"bundle","timestamp":1567025587000,"ec":["-javadoc.jar","-sources.jar",".jar",".pom"],"tags":["libraries","classes","google","expanded","much","include","that","more","utility","guava","core","suite","collections"]},{"id":"com.google.guava:guava:28.1-android","g":"com.google.guava","a":"guava","v":"28.1-android","p":"bundle","timestamp":1567025039000,"ec":["-javadoc.jar","-sources.jar",".jar",".pom"],"tags":["libraries","classes","google","expanded","much","include","that","more","utility","guava","core","suite","collections"]}]}}"""
+            )
+            .run()
+            .expect(
+                """
+                build.gradle:8: Warning: A newer version of com.google.guava:guava than 24.1-android is available: 30.1-android [NewerVersionAvailable]
+                    compile 'com.google.guava:guava:24.1-android'
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                build.gradle:9: Warning: A newer version of com.google.guava:guava than 24.1-jre is available: 30.1-jre [NewerVersionAvailable]
+                    compile 'com.google.guava:guava:24.1-jre'
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                build.gradle:10: Warning: A newer version of com.google.guava:guava than 16.0-rc1 is available: 30.1-android [NewerVersionAvailable]
+                    compile 'com.google.guava:guava:16.0-rc1'
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                build.gradle:11: Warning: A newer version of com.google.guava:guava than 16.0 is available: 30.1-android [NewerVersionAvailable]
+                    compile 'com.google.guava:guava:16.0'
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                0 errors, 4 warnings
+                """
+            )
+    }
+
+    fun testCoroutines() {
+        // 171369798: False positive "Obsolete Gradle Dependency" for native version of `kotlinx-coroutines-core`
+        //
+        // The native version of the coroutines library is versioned incorrectly (as described in comment #2
+        // of the above bug) but they're not changing it (see https://github.com/Kotlin/kotlinx.coroutines/issues/2482)
+        // so manually filter this case.
+
+        lint().files(
+            gradle(
+                "" +
+                    "apply plugin: 'com.android.application'\n" +
+                    "\n" +
+                    "android {\n" +
+                    "    compileSdkVersion 29\n" +
+                    "}\n" +
+                    "\n" +
+                    // Available versions:
+                    // 1.4.2-native-mt
+                    // 1.4.2
+                    // 1.4.1-native-mt
+                    // 1.4.1
+                    // 1.4.0
+                    // 1.4.0-M1
+                    // 1.3.9-native-mt-2
+                    // 1.3.9-native-mt
+                    // 1.3.8-native-mt-1.4.0-rc
+                    // 1.3.9
+                    //
+                    // Which means latest stable update is 1.4.2
+                    // Latest native-mt is 1.4.1-native-mt
+                    // Latest native-mt-2 is 1.3.9-native-mt-2
+                    "dependencies {\n" +
+                    // Applicable: 1.4.2, 1.4.1, 1.4.0, 1.3.9
+                    "    compile 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.9' // Suggest 1.4.2\n" +
+                    // Applicable: 1.3.9-native-mt-2
+                    "    compile 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.8-native-mt-2' // Suggest 1.3.9-native-mt-2\n" +
+                    // Applicable: 1.3.9-native-mt-2
+                    "    compile 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.9-native-mt-2' // Suggest nothing\n" +
+                    // Applicable: 1.4.2, 1.4.1, 1.4.0, 1.3.9
+                    "    compile 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.2' // Suggest nothing\n" +
+                    // Applicable: 1.4.2-native-mt, 1.4.1-native-mt, 1.3.9-native-mt, 1.3.8-native-mt-1.4.0-rc
+                    "    compile 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.0-native-mt' // Suggest 1.4.2-native-mt\n" +
+                    // Applicable:
+                    "    compile 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.8-native-mt-1.4.0-rc'\n" +
+                    "}\n"
+            )
+        )
+            .issues(REMOTE_VERSION)
+            .networkData(
+                "http://search.maven.org/solrsearch/select?q=g:%22org.jetbrains.kotlinx%22+AND+a:%22kotlinx-coroutines-core%22&core=gav&wt=json",
+                """{"responseHeader":{"status":0,"QTime":1,"params":{"q":"g:\"org.jetbrains.kotlinx\" AND a:\"kotlinx-coroutines-core\"","core":"gav","indent":"off","fl":"id,g,a,v,p,ec,timestamp,tags","start":"","sort":"score desc,timestamp desc,g asc,a asc,v desc","rows":"","wt":"json","version":"2.2"}},"response":{"numFound":77,"start":0,"docs":[{"id":"org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.2-native-mt","g":"org.jetbrains.kotlinx","a":"kotlinx-coroutines-core","v":"1.4.2-native-mt","p":"jar","timestamp":1606484996000,"ec":["-javadoc.jar","-sources.jar",".jar",".module",".pom"],"tags":["libraries","support","kotlin","coroutines"]},{"id":"org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.2","g":"org.jetbrains.kotlinx","a":"kotlinx-coroutines-core","v":"1.4.2","p":"jar","timestamp":1606411162000,"ec":["-sources.jar","-javadoc.jar",".jar",".module",".pom"],"tags":["libraries","support","kotlin","coroutines"]},{"id":"org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.1-native-mt","g":"org.jetbrains.kotlinx","a":"kotlinx-coroutines-core","v":"1.4.1-native-mt","p":"jar","timestamp":1605797411000,"ec":["-javadoc.jar","-sources.jar",".jar",".module",".pom"],"tags":["libraries","support","kotlin","coroutines"]},{"id":"org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.1","g":"org.jetbrains.kotlinx","a":"kotlinx-coroutines-core","v":"1.4.1","p":"jar","timestamp":1604486053000,"ec":["-sources.jar","-javadoc.jar",".jar",".module",".pom"],"tags":["libraries","support","kotlin","coroutines"]},{"id":"org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.0","g":"org.jetbrains.kotlinx","a":"kotlinx-coroutines-core","v":"1.4.0","p":"jar","timestamp":1603735442000,"ec":["-sources.jar","-javadoc.jar",".jar",".module",".pom"],"tags":["libraries","support","kotlin","coroutines"]},{"id":"org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.0-M1","g":"org.jetbrains.kotlinx","a":"kotlinx-coroutines-core","v":"1.4.0-M1","p":"jar","timestamp":1602593229000,"ec":["-javadoc.jar","-sources.jar",".jar",".module",".pom"],"tags":["libraries","support","kotlin","coroutines"]},{"id":"org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.9-native-mt-2","g":"org.jetbrains.kotlinx","a":"kotlinx-coroutines-core","v":"1.3.9-native-mt-2","p":"jar","timestamp":1600769552000,"ec":["-sources.jar","-javadoc.jar",".jar",".module",".pom"],"tags":["libraries","support","kotlin","coroutines"]},{"id":"org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.9-native-mt","g":"org.jetbrains.kotlinx","a":"kotlinx-coroutines-core","v":"1.3.9-native-mt","p":"jar","timestamp":1598043333000,"ec":["-sources.jar","-javadoc.jar",".jar",".module",".pom"],"tags":["libraries","support","kotlin","coroutines"]},{"id":"org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.8-native-mt-1.4.0-rc","g":"org.jetbrains.kotlinx","a":"kotlinx-coroutines-core","v":"1.3.8-native-mt-1.4.0-rc","p":"jar","timestamp":1597826260000,"ec":["-sources.jar","-javadoc.jar",".jar",".module",".pom"],"tags":["libraries","support","kotlin","coroutines"]},{"id":"org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.9","g":"org.jetbrains.kotlinx","a":"kotlinx-coroutines-core","v":"1.3.9","p":"jar","timestamp":1597402470000,"ec":["-sources.jar","-javadoc.jar",".jar",".module",".pom"],"tags":["libraries","support","kotlin","coroutines"]}]}}"""
+            ).networkData(
+                "http://search.maven.org/solrsearch/select?q=g:%22org.jetbrains.kotlinx%22+AND+a:%22kotlinx-coroutines-core%22&core=gav&rows=1&wt=json",
+                """{"responseHeader":{"status":0,"QTime":0,"params":{"q":"g:\"22org.jetbrains.kotlinx\" AND a:\"kotlinx-coroutines-core\"","core":"gav","indent":"off","fl":"id,g,a,v,p,ec,timestamp,tags","start":"","sort":"score desc,timestamp desc,g asc,a asc,v desc","rows":"","wt":"json","version":"2.2"}},"response":{"numFound":0,"start":0,"docs":[]}}"""
+            ).run().expect(
+                """
+                build.gradle:8: Warning: A newer version of org.jetbrains.kotlinx:kotlinx-coroutines-core than 1.3.9 is available: 1.4.2 [NewerVersionAvailable]
+                    compile 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.9' // Suggest 1.4.2
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                build.gradle:9: Warning: A newer version of org.jetbrains.kotlinx:kotlinx-coroutines-core than 1.3.8-native-mt-2 is available: 1.3.9-native-mt-2 [NewerVersionAvailable]
+                    compile 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.8-native-mt-2' // Suggest 1.3.9-native-mt-2
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                build.gradle:12: Warning: A newer version of org.jetbrains.kotlinx:kotlinx-coroutines-core than 1.4.0-native-mt is available: 1.4.2-native-mt [NewerVersionAvailable]
+                    compile 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.0-native-mt' // Suggest 1.4.2-native-mt
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                build.gradle:13: Warning: A newer version of org.jetbrains.kotlinx:kotlinx-coroutines-core than 1.3.8-native-mt-1.4.0-rc is available: 1.4.2-native-mt [NewerVersionAvailable]
+                    compile 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.8-native-mt-1.4.0-rc'
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                0 errors, 4 warnings
+                """
+            )
+    }
+
     fun testQvsAndroidX() {
         // Regression test for 128648458: Lint Warning to update appCompat in Q
         val expected = "" +
@@ -1314,7 +1438,7 @@ class GradleDetectorTest : AbstractCheckTest() {
             "build.gradle:9: Warning: A newer version of com.google.guava:guava than 11.0.2 is available: 23.6-android [NewerVersionAvailable]\n" +
             "    compile 'com.google.guava:guava:11.0.2'\n" +
             "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-            "build.gradle:10: Warning: A newer version of com.google.guava:guava than 16.0-rc1 is available: 18.0-rc1 [NewerVersionAvailable]\n" +
+            "build.gradle:10: Warning: A newer version of com.google.guava:guava than 16.0-rc1 is available: 23.6-android [NewerVersionAvailable]\n" +
             "    compile 'com.google.guava:guava:16.0-rc1'\n" +
             "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "0 errors, 2 warnings\n"
