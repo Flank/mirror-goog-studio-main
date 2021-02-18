@@ -28,7 +28,7 @@ public class SdkVersionInfo {
      * updated for a new release. This number is used as a baseline and any more recent platforms
      * found can be used to increase the highest known number.
      */
-    public static final int HIGHEST_KNOWN_API = 30;
+    public static final int HIGHEST_KNOWN_API = 31;
 
     /**
      * Like {@link #HIGHEST_KNOWN_API} but does not include preview platforms.
@@ -151,6 +151,7 @@ public class SdkVersionInfo {
             case 28: return "9.0";
             case 29: return "10.0";
             case 30: return "11.0";
+            case 31: return "12 Preview";
             // If you add more versions here, also update #getBuildCodes and
             // #HIGHEST_KNOWN_API
 
@@ -209,6 +210,8 @@ public class SdkVersionInfo {
                 return "Q";
             case 30:
                 return "R";
+            case 31:
+                return "S";
             // If you add more versions here, also update #getBuildCodes and
             // #HIGHEST_KNOWN_API
 
@@ -259,6 +262,7 @@ public class SdkVersionInfo {
             case 28: return "P";
             case 29: return "Q";
             case 30: return "R";
+            case 31: return "S";
             // If you add more versions here, also update #getCodeName and
             // #HIGHEST_KNOWN_API
         }
