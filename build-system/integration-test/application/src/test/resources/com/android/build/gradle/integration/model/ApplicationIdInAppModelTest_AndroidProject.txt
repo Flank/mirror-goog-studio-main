@@ -1,6 +1,4 @@
 > AndroidProject:
-    - modelVersion      = "n/a"
-    - apiVersion        = 3
     - projectType       = "APPLICATION"
     - path              = ":"
     - groupId           = ""

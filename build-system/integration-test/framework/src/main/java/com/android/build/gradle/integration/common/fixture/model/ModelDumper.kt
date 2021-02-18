@@ -41,8 +41,6 @@ import com.android.builder.model.v2.models.ndk.NativeVariant
 
 internal fun AndroidProject.writeToBuilder(builder: DumpBuilder) {
     builder.apply {
-        item("modelVersion", "n/a")
-        item("apiVersion", apiVersion)
         item("projectType", projectType.name)
         item("path", path)
         item("groupId", groupId)

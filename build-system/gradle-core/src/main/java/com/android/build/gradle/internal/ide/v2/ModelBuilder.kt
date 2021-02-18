@@ -239,9 +239,6 @@ class ModelBuilder<
         val variantList = variants.map { createVariant(it, buildFeatures, instantAppResultMap) }
 
         return AndroidProjectImpl(
-            modelVersion = Version.ANDROID_GRADLE_PLUGIN_VERSION,
-            apiVersion = Version.BUILDER_MODEL_API_VERSION,
-
             path = project.path,
             buildFolder = project.layout.buildDirectory.get().asFile,
 
