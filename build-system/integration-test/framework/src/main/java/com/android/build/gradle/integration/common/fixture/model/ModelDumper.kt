@@ -470,7 +470,7 @@ internal fun GlobalLibraryMap.writeToBuilder(builder: DumpBuilder) {
     builder.apply {
         multiLineList("libraries", libraries.values.sortedBy { it.artifactAddress }) {
             largeObject("library", it) { library ->
-                item("type", library.type)
+                item("type", library.type.name)
                 artifactAddress("artifactAddress", library.artifactAddress)
                 item("artifact", library.artifact)
                 buildId("buildId", library.buildId)

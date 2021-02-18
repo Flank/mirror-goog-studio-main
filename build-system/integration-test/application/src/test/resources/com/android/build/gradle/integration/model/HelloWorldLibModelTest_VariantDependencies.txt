@@ -36,7 +36,7 @@
 > GlobalLibraryMap:
     > libraries:
        > library:
-          - type                = 3
+          - type                = "PROJECT"
           - artifactAddress     = "{BUILD_1}@@:::debug"
           - artifact            = (null)
           - buildId             = "{BUILD_1}"
