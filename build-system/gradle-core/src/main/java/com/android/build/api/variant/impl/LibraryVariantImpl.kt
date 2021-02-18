@@ -76,7 +76,7 @@ open class  LibraryVariantImpl @Inject constructor(
     internalServices,
     taskCreationServices,
     globalScope
-), LibraryVariant, LibraryCreationConfig, HasAndroidTestImpl {
+), LibraryVariant, LibraryCreationConfig, HasAndroidTest {
 
     // ---------------------------------------------------------------------------------------------
     // PUBLIC API
@@ -106,9 +106,7 @@ open class  LibraryVariantImpl @Inject constructor(
         LibraryPackagingImpl(globalScope.extension.packagingOptions, internalServices)
     }
 
-    override fun packaging(action: LibraryPackaging.() -> Unit) {
-        action.invoke(packaging)
-    }
+    override var androidTest: AndroidTest? = null
 
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API
@@ -156,6 +154,4 @@ open class  LibraryVariantImpl @Inject constructor(
 
     override val packageJacocoRuntime: Boolean
         get() = variantDslInfo.isTestCoverageEnabled
-
-    override var androidTest: AndroidTest? = null
 }

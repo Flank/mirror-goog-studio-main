@@ -43,11 +43,6 @@ interface AndroidTest : TestComponent {
     val aapt: Aapt
 
     /**
-     * Variant's aaptOptions, initialized by the corresponding global DSL element.
-     */
-    fun aaptOptions(action: Aapt.() -> Unit)
-
-    /**
      * The namespace of the generated R and BuildConfig classes. Also, the namespace used to resolve
      * any relative class names that are declared in the AndroidManifest.xml.
      *
@@ -115,17 +110,7 @@ interface AndroidTest : TestComponent {
     val signingConfig: SigningConfig
 
     /**
-     * Variant's signingConfig, initialized by the corresponding DSL element.
-     */
-    fun signingConfig(action: SigningConfig.() -> Unit)
-
-    /**
      * Variant's packagingOptions, initialized by the corresponding global DSL element.
      */
     val packaging: ApkPackaging
-
-    /**
-     * Variant's packagingOptions, initialized by the corresponding global DSL element.
-     */
-    fun packaging(action: ApkPackaging.() -> Unit)
 }

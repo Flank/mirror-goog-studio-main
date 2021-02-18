@@ -842,17 +842,15 @@ com.android.build.api.variant.ApkPackaging.dex: void (kotlin.jvm.functions.Funct
 com.android.build.api.variant.ApkPackaging.getDex: com.android.build.api.variant.DexPackagingOptions ()
 com.android.build.api.variant.ApkPackaging.getJniLibs: com.android.build.api.variant.JniLibsApkPackaging ()
 com.android.build.api.variant.ApkPackaging.jniLibs: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.JniLibsApkPackaging, kotlin.Unit>)
-com.android.build.api.variant.ApplicationVariant implements com.android.build.api.variant.Variant, com.android.build.api.variant.HasAndroidTest
-com.android.build.api.variant.ApplicationVariant.aaptOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.Aapt, kotlin.Unit>)
+com.android.build.api.variant.ApplicationVariant implements com.android.build.api.variant.Variant
 com.android.build.api.variant.ApplicationVariant.getAapt: com.android.build.api.variant.Aapt ()
+com.android.build.api.variant.ApplicationVariant.getAndroidTest: com.android.build.api.component.AndroidTest ()
 com.android.build.api.variant.ApplicationVariant.getApplicationId: org.gradle.api.provider.Property<java.lang.String> ()
 com.android.build.api.variant.ApplicationVariant.getDependenciesInfo: com.android.build.api.variant.DependenciesInfo ()
 com.android.build.api.variant.ApplicationVariant.getDexing: com.android.build.api.variant.Dexing ()
 com.android.build.api.variant.ApplicationVariant.getOutputs: java.util.List<com.android.build.api.variant.VariantOutput> ()
 com.android.build.api.variant.ApplicationVariant.getPackaging: com.android.build.api.variant.ApkPackaging ()
 com.android.build.api.variant.ApplicationVariant.getSigningConfig: com.android.build.api.variant.SigningConfig ()
-com.android.build.api.variant.ApplicationVariant.packaging: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.ApkPackaging, kotlin.Unit>)
-com.android.build.api.variant.ApplicationVariant.signingConfig: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.SigningConfig, kotlin.Unit>)
 com.android.build.api.variant.ApplicationVariantBuilder implements com.android.build.api.variant.VariantBuilder, com.android.build.api.variant.HasAndroidTestBuilder
 com.android.build.api.variant.ApplicationVariantBuilder.dependenciesInfo: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.DependenciesInfo, kotlin.Unit>)
 com.android.build.api.variant.ApplicationVariantBuilder.getDebuggable: boolean ()
@@ -894,13 +892,12 @@ com.android.build.api.variant.DexPackagingOptions.getUseLegacyPackaging: org.gra
 com.android.build.api.variant.Dexing
 com.android.build.api.variant.Dexing.getMultiDexKeepFile: org.gradle.api.file.RegularFileProperty ()
 com.android.build.api.variant.Dexing.getMultiDexKeepProguard: org.gradle.api.file.RegularFileProperty ()
-com.android.build.api.variant.DynamicFeatureVariant implements com.android.build.api.variant.Variant, com.android.build.api.variant.HasAndroidTest
-com.android.build.api.variant.DynamicFeatureVariant.aaptOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.Aapt, kotlin.Unit>)
+com.android.build.api.variant.DynamicFeatureVariant implements com.android.build.api.variant.Variant
 com.android.build.api.variant.DynamicFeatureVariant.getAapt: com.android.build.api.variant.Aapt ()
+com.android.build.api.variant.DynamicFeatureVariant.getAndroidTest: com.android.build.api.component.AndroidTest ()
 com.android.build.api.variant.DynamicFeatureVariant.getApplicationId: org.gradle.api.provider.Provider<java.lang.String> ()
 com.android.build.api.variant.DynamicFeatureVariant.getDexing: com.android.build.api.variant.Dexing ()
 com.android.build.api.variant.DynamicFeatureVariant.getPackaging: com.android.build.api.variant.ApkPackaging ()
-com.android.build.api.variant.DynamicFeatureVariant.packaging: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.ApkPackaging, kotlin.Unit>)
 com.android.build.api.variant.DynamicFeatureVariantBuilder implements com.android.build.api.variant.VariantBuilder, com.android.build.api.variant.HasAndroidTestBuilder
 com.android.build.api.variant.ExternalCmake implements com.android.build.api.variant.ExternalNativeGenericOptions
 com.android.build.api.variant.ExternalNativeGenericOptions
@@ -935,10 +932,10 @@ com.android.build.api.variant.JniLibsPackaging.getKeepDebugSymbols: org.gradle.a
 com.android.build.api.variant.JniLibsPackaging.getPickFirsts: org.gradle.api.provider.SetProperty<java.lang.String> ()
 com.android.build.api.variant.LibraryPackaging implements com.android.build.api.variant.Packaging
 com.android.build.api.variant.LibraryPackaging.jniLibs: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.JniLibsPackaging, kotlin.Unit>)
-com.android.build.api.variant.LibraryVariant implements com.android.build.api.variant.Variant, com.android.build.api.variant.HasAndroidTest
+com.android.build.api.variant.LibraryVariant implements com.android.build.api.variant.Variant
+com.android.build.api.variant.LibraryVariant.getAndroidTest: com.android.build.api.component.AndroidTest ()
 com.android.build.api.variant.LibraryVariant.getApplicationId: org.gradle.api.provider.Provider<java.lang.String> ()
 com.android.build.api.variant.LibraryVariant.getPackaging: com.android.build.api.variant.LibraryPackaging ()
-com.android.build.api.variant.LibraryVariant.packaging: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.LibraryPackaging, kotlin.Unit>)
 com.android.build.api.variant.LibraryVariantBuilder implements com.android.build.api.variant.VariantBuilder, com.android.build.api.variant.HasAndroidTestBuilder
 com.android.build.api.variant.Packaging
 com.android.build.api.variant.Packaging.getJniLibs: com.android.build.api.variant.JniLibsPackaging ()

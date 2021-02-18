@@ -55,12 +55,6 @@ open class AnalyticsEnabledLibraryVariant @Inject constructor(
             return userVisiblePackagingOptions
         }
 
-    override fun packaging(action: LibraryPackaging.() -> Unit) {
-        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-            VariantPropertiesMethodType.PACKAGING_OPTIONS_ACTION_VALUE
-        action.invoke(userVisiblePackagingOptions)
-    }
-
     override val androidTest: AndroidTest?
         get() = delegate.androidTest
 }

@@ -74,7 +74,7 @@ open class ApplicationVariantImpl @Inject constructor(
     internalServices,
     taskCreationServices,
     globalScope
-), ApplicationVariant, ApplicationCreationConfig, HasAndroidTestImpl {
+), ApplicationVariant, ApplicationCreationConfig, HasAndroidTest {
 
     val delegate by lazy { ApkCreationConfigImpl(
         this,
@@ -100,10 +100,6 @@ open class ApplicationVariantImpl @Inject constructor(
         )
     }
 
-    override fun aaptOptions(action: Aapt.() -> Unit) {
-        action.invoke(aapt)
-    }
-
     override val signingConfig: SigningConfig by lazy {
         SigningConfigImpl(
             variantDslInfo.signingConfig,
@@ -113,20 +109,12 @@ open class ApplicationVariantImpl @Inject constructor(
         )
     }
 
-    override fun signingConfig(action: SigningConfig.() -> Unit) {
-        action.invoke(signingConfig)
-    }
-
     override val packaging: ApkPackaging by lazy {
         ApkPackagingImpl(
             globalScope.extension.packagingOptions,
             internalServices,
             minSdkVersion.apiLevel
         )
-    }
-
-    override fun packaging(action: ApkPackaging.() -> Unit) {
-        action.invoke(packaging)
     }
 
     override val minifiedEnabled: Boolean
@@ -138,6 +126,8 @@ open class ApplicationVariantImpl @Inject constructor(
             it.multiDexKeepProguard.set(variantDslInfo.multiDexKeepProguard)
         }
     }
+
+    override var androidTest: AndroidTest? = null
 
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API
@@ -236,5 +226,4 @@ open class ApplicationVariantImpl @Inject constructor(
     override val packageJacocoRuntime: Boolean
         get() = variantDslInfo.isTestCoverageEnabled
 
-    override var androidTest: AndroidTest? = null
 }

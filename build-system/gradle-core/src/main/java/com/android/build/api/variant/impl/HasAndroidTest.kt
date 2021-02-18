@@ -17,8 +17,10 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.component.AndroidTest
-import com.android.build.api.variant.HasAndroidTest
 
-interface HasAndroidTestImpl: HasAndroidTest {
-    override var androidTest: AndroidTest?
+/**
+ * Internal marker interface for [VariantImpl] that potentially has associated android tests.
+ */
+interface HasAndroidTest {
+    var androidTest: AndroidTest?
 }

@@ -84,7 +84,7 @@ open class DynamicFeatureVariantImpl @Inject constructor(
     internalServices,
     taskCreationServices,
     globalScope
-), DynamicFeatureVariant, DynamicFeatureCreationConfig, HasAndroidTestImpl {
+), DynamicFeatureVariant, DynamicFeatureCreationConfig, HasAndroidTest {
 
     private val delegate by lazy { ApkCreationConfigImpl(
         this,
@@ -112,10 +112,6 @@ open class DynamicFeatureVariantImpl @Inject constructor(
         )
     }
 
-    override fun aaptOptions(action: Aapt.() -> Unit) {
-        action.invoke(aapt)
-    }
-
     override val minifiedEnabled: Boolean
         get() = variantDslInfo.isMinifyEnabled
 
@@ -127,16 +123,14 @@ open class DynamicFeatureVariantImpl @Inject constructor(
         )
     }
 
-    override fun packaging(action: ApkPackaging.() -> Unit) {
-        action.invoke(packaging)
-    }
-
     override val dexing: Dexing by lazy {
         internalServices.newInstance(Dexing::class.java).also {
             it.multiDexKeepFile.set(variantDslInfo.multiDexKeepFile)
             it.multiDexKeepProguard.set(variantDslInfo.multiDexKeepProguard)
         }
     }
+
+    override var androidTest: AndroidTest? = null
 
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API
@@ -288,6 +282,4 @@ open class DynamicFeatureVariantImpl @Inject constructor(
 
     override val needsShrinkDesugarLibrary: Boolean
         get() = delegate.needsShrinkDesugarLibrary
-
-    override var androidTest: AndroidTest? = null
 }

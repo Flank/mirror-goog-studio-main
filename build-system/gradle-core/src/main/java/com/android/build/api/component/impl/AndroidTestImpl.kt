@@ -115,20 +115,12 @@ open class AndroidTestImpl @Inject constructor(
         )
     }
 
-    override fun aaptOptions(action: Aapt.() -> Unit) {
-        action.invoke(aapt)
-    }
-
     override val packaging: ApkPackaging by lazy {
         ApkPackagingImpl(
             globalScope.extension.packagingOptions,
             variantPropertiesApiServices,
             minSdkVersion.apiLevel
         )
-    }
-
-    override fun packaging(action: ApkPackaging.() -> Unit) {
-        action.invoke(packaging)
     }
 
     override val dexing: Dexing by lazy {
@@ -198,10 +190,6 @@ open class AndroidTestImpl @Inject constructor(
             minSdkVersion.apiLevel,
             services.projectOptions.get(IntegerOption.IDE_TARGET_DEVICE_API)
         )
-    }
-
-    override fun signingConfig(action: SigningConfig.() -> Unit) {
-        action.invoke(signingConfig)
     }
 
     // ---------------------------------------------------------------------------------------------

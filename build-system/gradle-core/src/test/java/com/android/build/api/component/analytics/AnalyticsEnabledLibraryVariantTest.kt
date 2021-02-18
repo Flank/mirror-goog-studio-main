@@ -82,31 +82,4 @@ class AnalyticsEnabledLibraryVariantTest {
         )
         Mockito.verify(delegate, Mockito.times(1)).packaging
     }
-
-    @Test
-    fun packagingOptionsActions() {
-        val packagingOptions = Mockito.mock(LibraryPackaging::class.java)
-        val jniLibsPackagingOptions = Mockito.mock(JniLibsPackaging::class.java)
-        val resourcesPackagingOptions = Mockito.mock(ResourcesPackaging::class.java)
-        Mockito.`when`(packagingOptions.jniLibs).thenReturn(jniLibsPackagingOptions)
-        Mockito.`when`(packagingOptions.resources).thenReturn(resourcesPackagingOptions)
-        Mockito.`when`(delegate.packaging).thenReturn(packagingOptions)
-        val action: LibraryPackaging.() -> Unit = {
-            this.jniLibs {}
-            this.resources {}
-        }
-        proxy.packaging(action)
-
-        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(3)
-        Truth.assertThat(
-            stats.variantApiAccess.variantPropertiesAccessList.map { it.type }
-        ).containsExactlyElementsIn(
-            listOf(
-                VariantPropertiesMethodType.PACKAGING_OPTIONS_ACTION_VALUE,
-                VariantPropertiesMethodType.JNI_LIBS_PACKAGING_OPTIONS_ACTION_VALUE,
-                VariantPropertiesMethodType.RESOURCES_PACKAGING_OPTIONS_ACTION_VALUE
-            )
-        )
-        Mockito.verify(delegate, Mockito.times(1)).packaging
-    }
 }

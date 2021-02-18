@@ -38,12 +38,6 @@ open class AnalyticsEnabledDynamicFeatureVariant @Inject constructor(
             return delegate.aapt
         }
 
-    override fun aaptOptions(action: Aapt.() -> Unit) {
-        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-            VariantPropertiesMethodType.AAPT_OPTIONS_ACTION_VALUE
-        delegate.aaptOptions(action)
-    }
-
     private val userVisiblePackagingOptions: ApkPackaging by lazy {
         objectFactory.newInstance(
             AnalyticsEnabledApkPackaging::class.java,
@@ -58,12 +52,6 @@ open class AnalyticsEnabledDynamicFeatureVariant @Inject constructor(
                 VariantPropertiesMethodType.PACKAGING_OPTIONS_VALUE
             return userVisiblePackagingOptions
         }
-
-    override fun packaging(action: ApkPackaging.() -> Unit) {
-        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-            VariantPropertiesMethodType.PACKAGING_OPTIONS_ACTION_VALUE
-        action.invoke(userVisiblePackagingOptions)
-    }
 
     private val userVisibleAndroidTest: AndroidTest? by lazy {
         delegate.androidTest?.let {

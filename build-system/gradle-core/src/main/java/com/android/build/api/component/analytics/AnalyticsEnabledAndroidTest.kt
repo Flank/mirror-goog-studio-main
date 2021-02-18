@@ -51,12 +51,6 @@ open class AnalyticsEnabledAndroidTest @Inject constructor(
             return delegate.aapt
         }
 
-    override fun aaptOptions(action: Aapt.() -> Unit) {
-        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-            VariantPropertiesMethodType.AAPT_OPTIONS_ACTION_VALUE
-        delegate.aaptOptions(action)
-    }
-
     override val namespace: Provider<String>
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
@@ -128,12 +122,6 @@ open class AnalyticsEnabledAndroidTest @Inject constructor(
             return delegate.signingConfig
         }
 
-    override fun signingConfig(action: SigningConfig.() -> Unit) {
-        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-            VariantPropertiesMethodType.SIGNING_CONFIG_ACTION_VALUE
-        delegate.signingConfig(action)
-    }
-
     private val userVisiblePackaging: ApkPackaging by lazy {
         objectFactory.newInstance(
             AnalyticsEnabledApkPackaging::class.java,
@@ -148,10 +136,4 @@ open class AnalyticsEnabledAndroidTest @Inject constructor(
                 VariantPropertiesMethodType.PACKAGING_OPTIONS_VALUE
             return userVisiblePackaging
         }
-
-    override fun packaging(action: ApkPackaging.() -> Unit) {
-        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-            VariantPropertiesMethodType.PACKAGING_OPTIONS_ACTION_VALUE
-        action.invoke(userVisiblePackaging)
-    }
 }

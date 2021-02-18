@@ -15,11 +15,12 @@
  */
 package com.android.build.api.variant
 
+import com.android.build.api.component.AndroidTest
 import org.gradle.api.Incubating
 import org.gradle.api.provider.Provider
 
 @Incubating
-interface DynamicFeatureVariant : Variant, HasAndroidTest {
+interface DynamicFeatureVariant : Variant {
 
     /**
      * Variant's application ID as present in the final manifest file of the APK.
@@ -34,19 +35,15 @@ interface DynamicFeatureVariant : Variant, HasAndroidTest {
     val aapt: Aapt
 
     /**
-     * Variant's aaptOptions, initialized by the corresponding global DSL element.
+     * Variant's [AndroidTest] configuration, or null if android tests are disabled for this
+     * variant.
      */
-    fun aaptOptions(action: Aapt.() -> Unit)
+    val androidTest: AndroidTest?
 
     /**
      * Variant's packagingOptions, initialized by the corresponding global DSL element.
      */
     override val packaging: ApkPackaging
-
-    /**
-     * Variant's packagingOptions, initialized by the corresponding global DSL element.
-     */
-    fun packaging(action: ApkPackaging.() -> Unit)
 
     /**
      * Variant settings related to transforming bytecodes into dex files initialized from

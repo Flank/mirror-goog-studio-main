@@ -41,7 +41,7 @@ import com.android.build.api.variant.HasAndroidTestBuilder
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
-import com.android.build.api.variant.impl.HasAndroidTestImpl
+import com.android.build.api.variant.impl.HasAndroidTest
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.crash.ExternalApiUsageException
@@ -690,7 +690,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                                 variantInfo, VariantTypeImpl.ANDROID_TEST)
                         androidTest?.let {
                             addTestComponent(it)
-                            (variantInfo.variant as HasAndroidTestImpl).androidTest = it.variant as AndroidTest
+                            (variantInfo.variant as HasAndroidTest).androidTest = it.variant as AndroidTest
                         }
                     }
                     val unitTest = createTestComponents(
