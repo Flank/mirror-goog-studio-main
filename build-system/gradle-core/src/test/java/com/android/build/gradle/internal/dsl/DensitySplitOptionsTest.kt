@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.dsl
 
 import com.android.resources.Density
 import com.google.common.truth.Truth
+import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
 class DensitySplitOptionsTest {
@@ -79,5 +80,19 @@ class DensitySplitOptionsTest {
 
         val values = options.applicableFilters
         Truth.assertThat(values).doesNotContain(Density.XXHIGH.resourceValue)
+    }
+
+
+    @Test
+    fun testCompatibleScreens() {
+        val options = DensitySplitOptions()
+        options.compatibleScreens += listOf("a", "b")
+        assertThat(options.compatibleScreens).containsExactly("a", "b")
+
+        options.setCompatibleScreens(listOf("c"))
+        assertThat(options.compatibleScreens).containsExactly("c")
+
+        options.compatibleScreens("d", "e")
+        assertThat(options.compatibleScreens).containsExactly("c", "d", "e")
     }
 }
