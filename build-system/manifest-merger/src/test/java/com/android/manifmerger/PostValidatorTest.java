@@ -872,6 +872,32 @@ public class PostValidatorTest extends TestCase {
         assertEquals(warningCount, 1);
     }
 
+    public void testMultipleUsesSdk()
+            throws ParserConfigurationException, SAXException, IOException {
+        String input =
+                ""
+                        + "<manifest\n"
+                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    package=\"com.example.lib3\">\n"
+                        + "\n"
+                        + "    <uses-sdk minSdkVersion=\"19\"/>"
+                        + "\n"
+                        + "    <uses-sdk minSdkVersion=\"14\"/>"
+                        + "\n"
+                        + "</manifest>";
+        XmlDocument xmlDocument =
+                loadXmlDoc(TestUtils.sourceFile(getClass(), "testMultipleUsesSdk"), input);
+        MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mILogger);
+        PostValidator.validate(xmlDocument, mergingReportBuilder);
+        assertTrue(mergingReportBuilder.hasErrors());
+        assertTrue(
+                mergingReportBuilder
+                        .build()
+                        .getReportString()
+                        .contains(
+                                "Multiple <uses-sdk>s cannot be present in the merged AndroidManifest.xml. "));
+    }
+
     private XmlDocument loadXmlDoc(SourceFile location, String input)
             throws ParserConfigurationException, SAXException, IOException {
         return TestUtils.xmlDocumentFromString(location, input, mModel);

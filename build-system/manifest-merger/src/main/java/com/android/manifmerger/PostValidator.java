@@ -65,6 +65,7 @@ public class PostValidator {
                 xmlDocument.getRootNode(),
                 mergingReport.getActionRecorder().build(),
                 mergingReport);
+        checkOnlyOneUsesSdk(xmlDocument, mergingReport);
     }
 
     /**
@@ -449,5 +450,19 @@ public class PostValidator {
             }
         }
         return false;
+    }
+
+    private static void checkOnlyOneUsesSdk(
+            @NonNull XmlDocument manifest, @NonNull MergingReport.Builder mergingReport) {
+        XmlElement root = manifest.getRootNode();
+        Preconditions.checkNotNull(root);
+        List<XmlElement> list = root.getAllNodesByType(ManifestModel.NodeTypes.USES_SDK);
+        if (list.size() > 1) {
+            mergingReport.addMessage(
+                    manifest.getSourceFile(),
+                    MergingReport.Record.Severity.ERROR,
+                    "Multiple <uses-sdk>s cannot be present in the merged AndroidManifest.xml. ");
+            mergingReport.build();
+        }
     }
 }
