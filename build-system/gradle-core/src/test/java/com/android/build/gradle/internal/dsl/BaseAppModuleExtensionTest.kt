@@ -26,12 +26,16 @@ import com.android.build.gradle.internal.fixtures.ProjectFactory
 import com.android.build.gradle.internal.plugins.DslContainerProvider
 import com.android.build.gradle.internal.scope.DelayedActionsExecutor
 import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.services.AndroidLocationsBuildService
 import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.services.createDslServices
 import com.android.build.gradle.internal.variant.LegacyVariantInputManager
 import com.android.builder.core.VariantTypeImpl
+import com.google.common.truth.Truth.assertThat
+import groovy.util.Eval
 import org.gradle.api.NamedDomainObjectContainer
 import org.junit.Before
+import org.junit.Test
 import org.mockito.Mockito
 
 /**
@@ -44,7 +48,7 @@ class BaseAppModuleExtensionTest {
     fun setUp() {
         val sdkComponents = Mockito.mock(SdkComponentsBuildService::class.java)
         val dslServices = createDslServices(sdkComponents = FakeGradleProvider(sdkComponents))
-
+        AndroidLocationsBuildService.RegistrationAction(ProjectFactory.project).execute()
         val variantInputModel = LegacyVariantInputManager(
             dslServices,
             VariantTypeImpl.BASE_APK,
@@ -70,4 +74,19 @@ class BaseAppModuleExtensionTest {
         )
     }
 
+    @Test
+    fun `check dynamic features`() {
+        appExtension.dynamicFeatures += ":df1"
+        assertThat(appExtension.dynamicFeatures).containsExactly(":df1")
+        Eval.me("android", appExtension, "android.dynamicFeatures = [':other']")
+        assertThat(appExtension.dynamicFeatures).containsExactly(":other")
+    }
+
+    @Test
+    fun `check asset packs`() {
+        appExtension.assetPacks += ":ap"
+        assertThat(appExtension.assetPacks).containsExactly(":ap")
+        Eval.me("android", appExtension, "android.assetPacks = [':other']")
+        assertThat(appExtension.assetPacks).containsExactly(":other")
+    }
 }

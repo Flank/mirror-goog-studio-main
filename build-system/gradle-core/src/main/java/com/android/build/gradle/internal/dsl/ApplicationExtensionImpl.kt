@@ -46,9 +46,19 @@ abstract class ApplicationExtensionImpl @Inject constructor(
     override val buildFeatures: ApplicationBuildFeatures =
         dslServices.newInstance(ApplicationBuildFeaturesImpl::class.java)
 
-    override var dynamicFeatures: MutableSet<String> = mutableSetOf()
-    override var assetPacks: MutableSet<String> = mutableSetOf()
+    override val dynamicFeatures: MutableSet<String> = mutableSetOf()
+    override fun setDynamicFeatures(dynamicFeatures: Set<String>) {
+        val newDynamicFeatures = ArrayList(dynamicFeatures)
+        this.dynamicFeatures.clear()
+        this.dynamicFeatures.addAll(newDynamicFeatures)
+    }
 
+    override val assetPacks: MutableSet<String> = mutableSetOf()
+    override fun setAssetPacks(assetPacks: Set<String>) {
+        val newAssetPacks = ArrayList(assetPacks)
+        this.assetPacks.clear()
+        this.assetPacks.addAll(newAssetPacks)
+    }
     override val dependenciesInfo: DependenciesInfo =
         dslServices.newInstance(DependenciesInfoImpl::class.java)
 

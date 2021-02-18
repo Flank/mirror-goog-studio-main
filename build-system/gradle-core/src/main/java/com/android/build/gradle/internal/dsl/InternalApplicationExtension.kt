@@ -39,6 +39,8 @@ interface InternalApplicationExtension :
                 ProductFlavor,
                 ApplicationVariantBuilder,
                 ApplicationVariant> {
-    override var dynamicFeatures: MutableSet<String>
-    override var assetPacks: MutableSet<String>
+    override val dynamicFeatures: MutableSet<String>
+    fun setDynamicFeatures(dynamicFeatures: Set<String>)
+    override val assetPacks: MutableSet<String>
+    fun setAssetPacks(assetPacks: Set<String>)
 }
