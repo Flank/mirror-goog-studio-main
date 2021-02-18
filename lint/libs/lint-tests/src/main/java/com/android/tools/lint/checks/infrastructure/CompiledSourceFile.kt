@@ -139,7 +139,7 @@ internal class CompiledSourceFile(
         val args = ArrayList<String>()
         args.add(javac)
         args.add("-classpath")
-        args.add(classpath)
+        args.add(classesDir.path + File.pathSeparator + classpath)
         args.add("-d")
         args.add(classesDir.path)
         javaFiles.forEach { args.add(it.path) }

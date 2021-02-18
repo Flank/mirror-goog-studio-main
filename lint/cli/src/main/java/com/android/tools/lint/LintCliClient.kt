@@ -463,26 +463,34 @@ open class LintCliClient : LintClient {
             val registry = driver.registry
 
             val conditional = getSerializationFile(project, XmlFileType.CONDITIONAL_INCIDENTS)
-            provisionalMap[project] = XmlReader(this, registry, project, conditional).getIncidents()
+            if (conditional.isFile) {
+                provisionalMap[project] = XmlReader(this, registry, project, conditional).getIncidents()
+            }
 
             val definite = getSerializationFile(project, XmlFileType.INCIDENTS)
-            definiteMap[project] = XmlReader(this, registry, project, definite).getIncidents()
+            if (definite.isFile) {
+                definiteMap[project] = XmlReader(this, registry, project, definite).getIncidents()
+            }
 
             val partialFile = getSerializationFile(project, XmlFileType.PARTIAL_RESULTS)
-            val partial = XmlReader(this, registry, project, partialFile).getPartialResults()
+            if (partialFile.isFile) {
+                val partial = XmlReader(this, registry, project, partialFile).getPartialResults()
 
-            for ((issue, list) in partial) {
-                val projectMap = dataMap[issue]
-                    ?: HashMap<Project, LintMap>().also { dataMap[issue] = it }
-                projectMap[project] = list
+                for ((issue, list) in partial) {
+                    val projectMap = dataMap[issue]
+                        ?: HashMap<Project, LintMap>().also { dataMap[issue] = it }
+                    projectMap[project] = list
+                }
             }
 
             val issuesFile = getSerializationFile(project, XmlFileType.CONFIGURED_ISSUES)
-            val issues = XmlReader(this, registry, project, issuesFile).getConfiguredIssues()
-            for ((issue: String, severity) in issues) {
-                val projectMap = issueMap[project]
-                    ?: HashMap<String, Severity>().also { issueMap[project] = it }
-                projectMap[issue] = severity
+            if (issuesFile.isFile) {
+                val issues = XmlReader(this, registry, project, issuesFile).getConfiguredIssues()
+                for ((issue: String, severity) in issues) {
+                    val projectMap = issueMap[project]
+                        ?: HashMap<String, Severity>().also { issueMap[project] = it }
+                    projectMap[issue] = severity
+                }
             }
         }
 
@@ -539,8 +547,11 @@ open class LintCliClient : LintClient {
         val mainConfiguration = main.getConfiguration(driver)
         val mainConfigured: Map<String, Severity> = mainConfiguration.getConfiguredIssues(registry, true)
         for ((issue, severity) in mainConfigured) {
+            if (severity == Severity.IGNORE) {
+                continue
+            }
             val librarySeverity = libraryConfigured[issue]
-            if (librarySeverity == Severity.IGNORE && severity != Severity.IGNORE ||
+            if (librarySeverity == Severity.IGNORE ||
                 // Also flag issues not explicitly listed in the other configuration
                 // if they're off by default
                 librarySeverity == null && registry.getIssue(issue)?.isEnabledByDefault() == false
@@ -927,6 +938,9 @@ open class LintCliClient : LintClient {
                     .also { this.partialResults = it }
                 for (dep in project.allLibraries.filter { !it.isExternalLibrary }) {
                     val file = getSerializationFile(dep, XmlFileType.PARTIAL_RESULTS)
+                    if (!file.isFile) {
+                        continue
+                    }
                     val reader = XmlReader(this, driver.registry, project, file)
                     val results = reader.getPartialResults()
                     for ((loadedIssue: Issue, map) in results) {

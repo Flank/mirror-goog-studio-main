@@ -24,9 +24,10 @@ import com.android.sdklib.AndroidTargetHash
 import com.android.sdklib.AndroidVersion
 import com.android.support.AndroidxNameUtils
 import com.android.tools.lint.client.api.LintClient
+import com.android.tools.lint.model.LintModelDependency
 import com.android.tools.lint.model.LintModelExternalLibrary
-import com.android.tools.lint.model.LintModelMavenName
 import com.android.tools.lint.model.LintModelModule
+import com.android.tools.lint.model.LintModelModuleLibrary
 import com.android.tools.lint.model.LintModelModuleType
 import com.android.tools.lint.model.LintModelSourceProvider
 import com.android.tools.lint.model.LintModelVariant
@@ -36,7 +37,6 @@ import com.google.common.io.Files
 import org.w3c.dom.Document
 import java.io.File
 import java.io.IOException
-import java.util.ArrayList
 
 /**
  * Lint project for a project backed by a [LintModelModule] (which could be an app, a library,
@@ -54,18 +54,19 @@ open class LintModelModuleProject(
     init {
         gradleProject = true
         mergeManifests = true
+        // Initialized after all projects are available by [resolveDependencies]
         directLibraries = mutableListOf()
         mergedManifest?.let { readManifest(it) }
         manifestMinSdk = variant.minSdkVersion
         manifestTargetSdk = variant.targetSdkVersion
     }
 
-    fun setExternalLibrary(external: Boolean) {
-        externalLibrary = external
+    override fun toString(): String {
+        return getName()
     }
 
-    fun setMavenCoordinates(mc: LintModelMavenName) {
-        mavenCoordinates = mc
+    fun setExternalLibrary(external: Boolean) {
+        externalLibrary = external
     }
 
     fun addDirectLibrary(project: Project) {
@@ -95,7 +96,7 @@ open class LintModelModuleProject(
         get() = variant.testSourceProviders
 
     override fun getBuildModule(): LintModelModule = variant.module
-    override fun getBuildVariant(): LintModelVariant? = variant
+    override fun getBuildVariant(): LintModelVariant = variant
     override fun isLibrary(): Boolean = model.type === LintModelModuleType.LIBRARY ||
         model.type === LintModelModuleType.JAVA_LIBRARY
 
@@ -369,6 +370,49 @@ open class LintModelModuleProject(
         } catch (ioe: IOException) {
             client.log(ioe, "Could not read %1\$s", manifest)
             null
+        }
+    }
+
+    companion object {
+        /**
+         * Given a collection of model projects, set up the lint project
+         * dependency lists based on the dependencies found in the
+         * underlying models.
+         */
+        fun resolveDependencies(projects: Collection<LintModelModuleProject>): List<LintModelModuleProject> {
+            // Record project names such that we can resolve dependencies once all the
+            // projects have been initialized
+            val projectMap: MutableMap<String, LintModelModuleProject> = HashMap()
+            for (project in projects) {
+                val module = project.model
+                val modulePath = module.modulePath
+                assert(projectMap[modulePath] == null)
+                projectMap[modulePath] = project
+            }
+
+            for (project: LintModelModuleProject in projects) {
+                val variant = project.buildVariant
+                val roots = variant.mainArtifact.dependencies.compileDependencies.roots
+                for (dependency: LintModelDependency in roots) {
+                    val library = dependency.findLibrary()
+                    if (library is LintModelModuleLibrary) {
+                        val projectPath = library.projectPath
+                        val dependsOn = projectMap[projectPath]
+                            ?: error("WARNING: Dependency from ${project.name} to $projectPath was not found")
+                        project.addDirectLibrary(dependsOn)
+                    }
+                }
+            }
+
+            val roots = LinkedHashSet<LintModelModuleProject>()
+            projects.forEach { roots.add(it) }
+            for (project: LintModelModuleProject in projects) {
+                for (dependency in project.getDirectLibraries()) {
+                    roots.remove(dependency)
+                }
+            }
+
+            return roots.toList()
         }
     }
 }

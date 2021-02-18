@@ -251,7 +251,7 @@ open class Context(
                         ?: (doc.getUserData(PsiFile::class.java.name) as? PsiFile)?.virtualFile?.let {
                             VfsUtilCore.virtualToIoFile(it)
                         }
-                        ?: return Location.create(project.manifestFiles.firstOrNull() ?: project.dir)
+                        ?: return Location.create(project.getManifestFiles().firstOrNull() ?: project.dir)
                     // We're only calling location methods here so we don't need an accurate
                     // folder type for example
                     XmlContext(driver, project, main, file, null, null, doc)
@@ -319,14 +319,14 @@ open class Context(
             val projects = sequenceOf(project) +
                 project.allLibraries.filter { !it.isExternalLibrary }
             for (p in projects) {
-                for (manifest in project.manifestFiles) {
+                for (manifest in p.getManifestFiles()) {
                     try {
                         val document = client.xmlParser.parseXml(manifest) ?: continue
                         val sourceNode: Node? = matchXmlElement(element, document)
                         if (sourceNode != null && sourceNode !== element) {
                             val doc = node.ownerDocument
                             val xmlContext = XmlContext(
-                                driver, project, main, manifest, null, null, doc
+                                driver, p, main, manifest, null, null, doc
                             )
                             return xmlContext.getLocation(sourceNode, type)
                         }
@@ -335,7 +335,7 @@ open class Context(
                 }
             }
         }
-        return Location.create(project.manifestFiles.firstOrNull() ?: project.dir)
+        return Location.create(project.getManifestFiles().firstOrNull() ?: project.dir)
     }
 
     // ---- Convenience wrappers  ---- (makes the detector code a bit leaner)

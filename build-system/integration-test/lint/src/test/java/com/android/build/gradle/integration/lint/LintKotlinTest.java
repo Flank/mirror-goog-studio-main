@@ -68,14 +68,7 @@ public class LintKotlinTest {
         assertThat(lintReport).doesNotContain("id=\"CallSuper\"");
 
         File lintResults = project.file("app/build/reports/lint-results.txt");
-        String expectedString;
-        if (usePartialAnalysis) {
-            // TODO (b/178810169) investigate why there are fewer warnings with partial analysis
-            expectedString = "8 errors, 3 warnings";
-        } else {
-            expectedString = "8 errors, 6 warnings";
-        }
-        assertThat(lintResults).contains(expectedString);
+        assertThat(lintResults).contains("8 errors, 6 warnings");
     }
 
     private GradleTaskExecutor getExecutor() {
