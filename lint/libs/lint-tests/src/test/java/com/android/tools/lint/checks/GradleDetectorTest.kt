@@ -404,6 +404,104 @@ class GradleDetectorTest : AbstractCheckTest() {
         ).issues(DEPENDENCY).run().expect(expected)
     }
 
+    fun testWorkManager() {
+        // The AndroidX work manager library plans to have preview versions released at the same
+        // time: 2.6 for normal/stable work manager, and 2.7 for Android S preview work. They don't
+        // want 2.6 preview users to get suggestions to update 2.7, so this is special cased.
+        lint().files(
+            gradle(
+                "" +
+                    "apply plugin: 'com.android.application'\n" +
+                    "\n" +
+                    "android {\n" +
+                    "    compileSdkVersion 30\n" +
+                    "}\n" +
+                    "\n" +
+                    "dependencies {\n" +
+
+                    // Made up versions for the various work manager artifacts
+                    // to make sure we can test the various upgrade scenarios
+                    // separately:
+                    // work-runtime: 2.6.0-alpha06, 2.7.0-alpha06
+                    // work-runtime-ktx: 2.6.0-alpha05, 2.7.0-alpha05
+                    // work-rxjava2: 2.6.0-alpha06, 2.7.0
+                    // work-rxjava3: 2.7.0-alpha06
+                    // work-gcm: 2.7.0-alpha05
+                    // work-testing: 2.8.0-alpha01
+                    // work-multiprocess: 2.7.0-alpha06
+
+                    // Test 2.6.0 alpha05 going up to 2.6.0 alpha6, NOT 2.7 preview
+                    "    implementation \"androidx.work:work-runtime:2.6.0-alpha05\" // expect 2.6.0-alpha06\n" +
+                    // Test 2.6.0 alpha05 (latest available) NOT going up to 2.7 preview
+                    "    implementation \"androidx.work:work-runtime-ktx:2.6.0-alpha05\" // No suggestion\n" +
+                    // Test 2.6.0 alpha05 going up to 2.7.0 (once stable)
+                    "    implementation \"androidx.work:work-rxjava2:2.6.0-alpha05\" // expect 2.7.0\n" +
+                    // Test 2.6.0 NOT going up to 2.7.0 preview
+                    "    implementation \"androidx.work:work-gcm:2.6.0\" // No suggestion\n" +
+                    // Test 2.6.0 alpha05 going up to 2.8 preview
+                    "    androidTestImplementation \"androidx.work:work-testing:2.6.0-alpha05\" // expect 2.8.0-alpha01\n" +
+                    // Test 2.7.0 alpha05 going up to 2.7.0 alpha06
+                    "    implementation \"androidx.work:work-multiprocess:2.7.0-alpha05\" // expect 2.7.0-alpha06\n" +
+                    // Test normal upgrades in 2.7: 2.7.0 alpha05 going up to 2.7.0 alpha6
+                    "    implementation \"androidx.work:work-rxjava3:2.7.0-alpha05\" // expect 2.7.0-alpha06\n" +
+                    // Make sure dynamic versions also work: don't upgrade from < 2.7 to 2.7 previews
+                    "    implementation \"androidx.work:work-rxjava3:2.5.+\" // expect 2.6.0\n" +
+                    // Also update to 2.6, not 2.7, from older stable releases
+                    "    implementation \"androidx.work:work-runtime:2.5.0-alpha05\" // expect 2.6.0-alpha06\n" +
+                    "}\n"
+            )
+        )
+            .issues(DEPENDENCY)
+            .networkData(
+                "https://maven.google.com/master-index.xml",
+                """
+                <?xml version='1.0' encoding='UTF-8'?>
+                <metadata>
+                  <androidx.core/>
+                  <androidx.work/>
+                </metadata>
+                """.trimIndent()
+            )
+            .networkData(
+                "https://maven.google.com/androidx/work/group-index.xml",
+                """
+                <?xml version='1.0' encoding='UTF-8'?>
+                <androidx.work>
+                  <work-runtime versions="2.7.0-alpha06,2.6.0-alpha06"/>
+                  <work-runtime-ktx versions="2.7.0-alpha05,2.6.0-alpha05"/>
+                  <work-rxjava2 versions="2.7.0,2.6.0-alpha06"/>
+                  <work-rxjava3 versions="2.7.0-alpha06"/>
+                  <work-gcm versions="2.7.0-alpha05"/>
+                  <work-testing versions="2.8.0-alpha01"/>
+                  <work-multiprocess versions="2.7.0-alpha06,2.6.0"/>
+                </androidx.work>
+                """.trimIndent()
+            )
+            .run().expect(
+                """
+                build.gradle:8: Warning: A newer version of androidx.work:work-runtime than 2.6.0-alpha05 is available: 2.6.0-alpha06 [GradleDependency]
+                    implementation "androidx.work:work-runtime:2.6.0-alpha05" // expect 2.6.0-alpha06
+                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                build.gradle:10: Warning: A newer version of androidx.work:work-rxjava2 than 2.6.0-alpha05 is available: 2.7.0 [GradleDependency]
+                    implementation "androidx.work:work-rxjava2:2.6.0-alpha05" // expect 2.7.0
+                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                build.gradle:12: Warning: A newer version of androidx.work:work-testing than 2.6.0-alpha05 is available: 2.8.0-alpha01 [GradleDependency]
+                    androidTestImplementation "androidx.work:work-testing:2.6.0-alpha05" // expect 2.8.0-alpha01
+                                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                build.gradle:13: Warning: A newer version of androidx.work:work-multiprocess than 2.7.0-alpha05 is available: 2.7.0-alpha06 [GradleDependency]
+                    implementation "androidx.work:work-multiprocess:2.7.0-alpha05" // expect 2.7.0-alpha06
+                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                build.gradle:14: Warning: A newer version of androidx.work:work-rxjava3 than 2.7.0-alpha05 is available: 2.7.0-alpha06 [GradleDependency]
+                    implementation "androidx.work:work-rxjava3:2.7.0-alpha05" // expect 2.7.0-alpha06
+                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                build.gradle:16: Warning: A newer version of androidx.work:work-runtime than 2.5.0-alpha05 is available: 2.6.0-alpha06 [GradleDependency]
+                    implementation "androidx.work:work-runtime:2.5.0-alpha05" // expect 2.6.0-alpha06
+                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                0 errors, 6 warnings
+                """
+            )
+    }
+
     fun testQvsAndroidX() {
         // Regression test for 128648458: Lint Warning to update appCompat in Q
         val expected = "" +

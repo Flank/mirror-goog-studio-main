@@ -85,6 +85,23 @@ abstract class GoogleMavenRepository @JvmOverloads constructor(
                 null
             }
         }
+        // Temporary special casing for AndroidX: don't offer upgrades from 2.6 to 2.7 previews
+        if (groupId == "androidx.work") {
+            val version = dependency.version
+            if (version != null) {
+                if (version.major == 1 || version.major == 2 && version.minor <= 6) {
+                    val artifactInfo = findArtifact(groupId, artifactId) ?: return null
+                    artifactInfo.getGradleVersions()
+                        .filter { v ->
+                            (v.major != 2 || (v.minor != 7 || !v.isPreview)) &&
+                                    (filter == null || filter(v))
+                        }
+                        .max()
+                        ?.let { return it }
+                }
+            }
+        }
+
         return findVersion(groupId, artifactId, filter, allowPreview)
     }
 
