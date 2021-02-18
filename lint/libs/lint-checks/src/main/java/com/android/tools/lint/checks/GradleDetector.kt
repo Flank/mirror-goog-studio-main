@@ -17,10 +17,13 @@ package com.android.tools.lint.checks
 
 import com.android.SdkConstants
 import com.android.SdkConstants.ANDROIDX_PKG_PREFIX
+import com.android.SdkConstants.ANDROID_URI
+import com.android.SdkConstants.ATTR_NAME
 import com.android.SdkConstants.FD_BUILD_TOOLS
 import com.android.SdkConstants.GRADLE_PLUGIN_MINIMUM_VERSION
 import com.android.SdkConstants.GRADLE_PLUGIN_RECOMMENDED_VERSION
 import com.android.SdkConstants.SUPPORT_LIB_GROUP_ID
+import com.android.SdkConstants.TAG_USES_FEATURE
 import com.android.ide.common.repository.GoogleMavenRepository
 import com.android.ide.common.repository.GoogleMavenRepository.Companion.MAVEN_GOOGLE_CACHE_DIR_KEY
 import com.android.ide.common.repository.GradleCoordinate
@@ -63,6 +66,7 @@ import com.android.tools.lint.model.LintModelLibrary
 import com.android.tools.lint.model.LintModelMavenName
 import com.android.tools.lint.model.LintModelModuleType
 import com.android.utils.appendCapitalized
+import com.android.utils.iterator
 import com.android.utils.usLocaleCapitalize
 import com.google.common.base.Joiner
 import com.google.common.base.Splitter
@@ -268,7 +272,7 @@ open class GradleDetector : Detector(), GradleScanner {
                                     context.isSuppressedWithComment(statementCookie, issue)
 
                             if (!alreadySuppressed) {
-                                report(context, statementCookie, issue, message, fix)
+                                report(context, statementCookie, issue, message, fix, true)
                             }
                             warned = true
                         }
@@ -2024,8 +2028,28 @@ open class GradleDetector : Detector(), GradleScanner {
     }
 
     override fun filterIncident(context: Context, incident: Incident, map: LintMap): Boolean {
-        assert(incident.issue === DUPLICATE_CLASSES)
-        return context.mainProject.minSdk < 23 || usesLegacyHttpLibrary(context.mainProject)
+        val issue = incident.issue
+        if (issue === DUPLICATE_CLASSES) {
+            return context.mainProject.minSdk < 23 || usesLegacyHttpLibrary(context.mainProject)
+        } else if (issue == EXPIRING_TARGET_SDK_VERSION || issue == EXPIRED_TARGET_SDK_VERSION) {
+            // These checks only apply if the merged manifest does not mark this app as a wear app
+            // (which may not appear in the manifest of the app module)
+            return !isWearApp(context)
+        } else {
+            error(issue.id)
+        }
+    }
+
+    private fun isWearApp(context: Context): Boolean {
+        val manifest = context.mainProject.mergedManifest?.documentElement ?: return false
+        for (element in manifest) {
+            if (element.tagName == TAG_USES_FEATURE &&
+                element.getAttributeNS(ANDROID_URI, ATTR_NAME) == "android.hardware.type.watch"
+            ) {
+                return true
+            }
+        }
+        return false
     }
 
     override fun checkMergedProject(context: Context) {

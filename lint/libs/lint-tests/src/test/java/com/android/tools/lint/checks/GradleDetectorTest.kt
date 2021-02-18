@@ -2928,6 +2928,47 @@ class GradleDetectorTest : AbstractCheckTest() {
         }
     }
 
+    fun testWearNotExpired() {
+        try {
+            val calendar = Calendar.getInstance()
+            GradleDetector.calendar = calendar
+            // Make sure test doesn't fail on computers without a correct date set
+            calendar.set(Calendar.YEAR, 2021)
+            calendar.set(Calendar.MONTH, 2)
+
+            lint().files(
+                manifest(
+                    """
+                        <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="test.pkg">
+                            <uses-feature android:name="android.hardware.type.watch" />
+                            <application
+                                android:icon="@mipmap/ic_launcher"
+                                android:label="@string/app_name">
+                            </application>
+                        </manifest>
+                        """
+                ).indented(),
+                gradle(
+                    """
+                    apply plugin: 'com.android.application'
+
+                    android {
+                        defaultConfig {
+                            targetSdkVersion 17
+                        }
+                    }
+                    """
+                ).indented()
+            )
+                .issues(EXPIRED_TARGET_SDK_VERSION, EXPIRING_TARGET_SDK_VERSION)
+                .sdkHome(mockSupportLibraryInstallation)
+                .run()
+                .expectClean()
+        } finally {
+            GradleDetector.calendar = null
+        }
+    }
+
     fun testDeprecatedLibrary() {
         lint().files(
             gradle(
