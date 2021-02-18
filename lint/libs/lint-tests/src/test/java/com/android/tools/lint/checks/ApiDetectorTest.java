@@ -20,7 +20,6 @@ import static com.android.tools.lint.checks.AnnotationDetectorTest.SUPPORT_ANNOT
 import static com.android.tools.lint.checks.ApiDetector.INLINED;
 import static com.android.tools.lint.checks.ApiDetector.KEY_REQUIRES_API;
 import static com.android.tools.lint.checks.ApiDetector.UNSUPPORTED;
-import static com.android.tools.lint.checks.VersionChecksTest.checkSdkIntAnnotation;
 import static com.android.tools.lint.checks.infrastructure.TestMode.PARTIAL;
 
 import com.android.annotations.NonNull;

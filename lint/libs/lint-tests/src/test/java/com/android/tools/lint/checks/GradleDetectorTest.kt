@@ -3816,7 +3816,8 @@ class GradleDetectorTest : AbstractCheckTest() {
         )
             .issues(JCENTER_REPOSITORY_OBSOLETE)
             .run()
-            .expect("""
+            .expect(
+                """
                 build.gradle:7: Warning: JCenter is at end of life [JcenterRepositoryObsolete]
                         jcenter()
                         ~~~~~~~~~
@@ -3824,8 +3825,10 @@ class GradleDetectorTest : AbstractCheckTest() {
                         jcenter()
                         ~~~~~~~~~
                 0 errors, 2 warnings
-            """)
-            .expectFixDiffs("""
+            """
+            )
+            .expectFixDiffs(
+                """
                 Fix for build.gradle line 7: Replace with mavenCentral:
                 @@ -7 +7
                 -         jcenter()
@@ -3840,7 +3843,8 @@ class GradleDetectorTest : AbstractCheckTest() {
                 Fix for build.gradle line 14: Delete this repository declaration:
                 @@ -14 +14
                 -         jcenter()
-            """)
+            """
+            )
     }
 
     fun testJCenterObsoleteKts() {
@@ -3866,7 +3870,8 @@ class GradleDetectorTest : AbstractCheckTest() {
         )
             .issues(JCENTER_REPOSITORY_OBSOLETE)
             .run()
-            .expect("""
+            .expect(
+                """
                 build.gradle.kts:5: Warning: JCenter is at end of life [JcenterRepositoryObsolete]
                         jcenter()
                         ~~~~~~~~~
@@ -3874,8 +3879,10 @@ class GradleDetectorTest : AbstractCheckTest() {
                         jcenter()
                         ~~~~~~~~~
                 0 errors, 2 warnings
-            """)
-            .expectFixDiffs("""
+            """
+            )
+            .expectFixDiffs(
+                """
                 Fix for build.gradle.kts line 5: Replace with mavenCentral:
                 @@ -5 +5
                 -         jcenter()
@@ -3890,7 +3897,8 @@ class GradleDetectorTest : AbstractCheckTest() {
                 Fix for build.gradle.kts line 12: Delete this repository declaration:
                 @@ -12 +12
                 -         jcenter()
-            """)
+            """
+            )
     }
 
     fun testJCenterObsoleteContent() {
