@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 The Android Open Source Project
+ * Copyright (C) 2021 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,12 +17,12 @@ package com.android.incfs.install.adb.ddmlib;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.utils.ILogger;
 
+/** Bridge class to use utils.ILogger for Incremental. */
 public class DeviceLogger implements com.android.incfs.install.ILogger {
-    private @NonNull ILogger mLogger;
+    private @NonNull com.android.utils.ILogger mLogger;
 
-    public DeviceLogger(@NonNull ILogger logger) {
+    public DeviceLogger(@NonNull com.android.utils.ILogger logger) {
         mLogger = logger;
     }
 
