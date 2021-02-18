@@ -18,6 +18,7 @@ package com.android.builder.dexing
 
 import com.android.builder.packaging.JarFlinger
 import com.android.ide.common.blame.MessageReceiver
+import com.android.testutils.TestClassesGenerator
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.TestUtils
 import com.android.testutils.apk.Dex
@@ -26,6 +27,7 @@ import com.android.testutils.truth.DexSubject.assertThat
 import com.android.testutils.truth.DexSubject.assertThatDex
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.testutils.truth.ZipFileSubject.assertThat
+import com.android.tools.r8.CompilationFailedException
 import com.android.utils.Pair
 import com.android.utils.FileUtils
 import com.android.zipflinger.ZipArchive
@@ -37,6 +39,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
+import java.util.zip.ZipOutputStream
 import kotlin.test.fail
 
 /**
@@ -49,7 +52,7 @@ class R8ToolTest {
 
     private val emptyProguardOutputFiles by lazy {
         val fakeOutput = tmp.newFolder().resolve("fake_output.txt").toPath()
-        ProguardOutputFiles(fakeOutput, fakeOutput, fakeOutput, fakeOutput)
+        ProguardOutputFiles(fakeOutput, fakeOutput, fakeOutput, fakeOutput, fakeOutput)
     }
 
     @Test
@@ -379,7 +382,8 @@ class R8ToolTest {
                             tmp.root.toPath().resolve("mapping.txt"),
                             tmp.root.toPath().resolve("seeds.txt"),
                             tmp.root.toPath().resolve("usage.txt"),
-                            tmp.root.toPath().resolve("configuration.txt")
+                            tmp.root.toPath().resolve("configuration.txt"),
+                            tmp.root.toPath().resolve("missing_rules.txt"),
                         )
                 )
 
@@ -437,7 +441,8 @@ class R8ToolTest {
                     tmp.root.toPath().resolve("mapping.txt"),
                     proguardSeedsOutput,
                     proguardUsageOutput,
-                    proguardConfigurationOutput
+                    proguardConfigurationOutput,
+                    tmp.root.toPath().resolve("missing_rules.txt"),
                 )
             )
         runR8(
@@ -697,6 +702,82 @@ class R8ToolTest {
                 "foo",
                 "Ljava/lang/AssertionError;-><init>(Ljava/lang/Object;)V"
             );
+    }
+
+    @Test
+    fun testMissingRulesGenerated() {
+        val missingRules = tmp.newFile()
+        val proguardConfig = ProguardConfig(listOf(), null, listOf("-ignorewarnings"),
+                ProguardOutputFiles(
+                        tmp.newFile().toPath(),
+                        tmp.newFile().toPath(),
+                        tmp.newFile().toPath(),
+                        tmp.newFile().toPath(),
+                        missingRules.toPath()
+                )
+        )
+        val mainDexConfig = MainDexListConfig(listOf(), listOf())
+        val toolConfig = ToolConfig(
+                minSdkVersion = 21,
+                isDebuggable = true,
+                disableTreeShaking = true,
+                disableDesugaring = true,
+                disableMinification = true,
+                r8OutputType = R8OutputType.DEX
+        )
+
+        val classes = tmp.newFolder().toPath().resolve("classes.jar").also {
+            val classToWrite = TestClassesGenerator.classWithEmptyMethods(
+                    "A", "foo:()Ltest/B;", "bar:()Ltest/C;")
+            ZipOutputStream(it.toFile().outputStream()).use { zip ->
+                zip.putNextEntry(ZipEntry("test/A.class"))
+                zip.write(classToWrite)
+                zip.closeEntry()
+            }
+        }
+
+
+        val output = tmp.newFolder().toPath()
+        val javaRes = tmp.root.resolve("res.jar").toPath()
+        runR8(
+                listOf(classes),
+                output,
+                listOf(),
+                javaRes,
+                bootClasspath,
+                emptyList(),
+                toolConfig,
+                proguardConfig,
+                mainDexConfig,
+                NoOpMessageReceiver(),
+                featureClassJars = listOf(),
+                featureJavaResourceJars = listOf(),
+                featureDexDir = null,
+                featureJavaResourceOutputDir = null
+        )
+        assertThat(missingRules).containsAllOf("-dontwarn test.B", "-dontwarn test.C")
+
+        try {
+            runR8(
+                    listOf(classes),
+                    output,
+                    listOf(),
+                    javaRes,
+                    bootClasspath,
+                    emptyList(),
+                    toolConfig,
+                    proguardConfig.copy(proguardConfigurations = emptyList()),
+                    mainDexConfig,
+                    NoOpMessageReceiver(),
+                    featureClassJars = listOf(),
+                    featureJavaResourceJars = listOf(),
+                    featureDexDir = null,
+                    featureJavaResourceOutputDir = null
+            )
+            fail("This should fail as classes are missing")
+        } catch (ignored: CompilationFailedException) {
+            // this should fail
+        }
     }
 
     private fun getDexFileCount(dir: Path): Long =

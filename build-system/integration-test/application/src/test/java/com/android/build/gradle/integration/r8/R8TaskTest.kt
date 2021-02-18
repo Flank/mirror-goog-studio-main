@@ -22,22 +22,27 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.options.BooleanOption
+import com.android.testutils.TestClassesGenerator
+import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth.assertThat
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 
 class R8TaskTest {
 
     @get:Rule
     val project = GradleTestProject.builder()
-        .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
-        .create()
+            .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
+            .create()
 
     @Before
     fun setUp() {
         TestFileUtils.appendToFile(project.buildFile,
-            """
+                """
                 android {
                     buildTypes {
                         debug {
@@ -53,20 +58,56 @@ class R8TaskTest {
     @Test
     fun testCheckDuplicateClassesTaskDidWork() {
         val buildResult =
-            project.executor().run(":minifyDebugWithR8")
+                project.executor().run(":minifyDebugWithR8")
         assertThat(buildResult.didWorkTasks).contains(":checkDebugDuplicateClasses")
     }
 
     @Test
     fun testTestedClassesPassedAsClasspathToR8() {
         val buildResult =
-            project.executor().withLoggingLevel(LoggingLevel.DEBUG).run(":assembleDebugAndroidTest")
+                project.executor()
+                        .withLoggingLevel(LoggingLevel.DEBUG)
+                        .run(":assembleDebugAndroidTest")
         val appClasses = project.getIntermediateFile(
                 InternalArtifactType.APP_CLASSES.getFolderName() + "/debug/classes.jar"
-            );
+        );
         buildResult.stdout.use {
             ScannerSubject.assertThat(it)
-                .contains("[R8] Classpath classes: [$appClasses]")
+                    .contains("[R8] Classpath classes: [$appClasses]")
+        }
+    }
+
+    @Test
+    fun testMissingKeepRules() {
+        project.projectDir.resolve("lib.jar").also {
+            val classToWrite = TestClassesGenerator.classWithEmptyMethods(
+                    "A", "foo:()Ltest/B;", "bar:()Ltest/C;")
+            ZipOutputStream(it.outputStream()).use { zip ->
+                zip.putNextEntry(ZipEntry("test/A.class"))
+                zip.write(classToWrite)
+                zip.closeEntry()
+            }
+        }
+        project.buildFile.appendText("""
+
+            dependencies {
+                implementation files("lib.jar")
+            }
+        """.trimIndent())
+        project.file("proguard-rules.pro").appendText("-keep class test.A { *; }")
+
+        project.executor().run(":assembleDebug")
+        val missingRules = project.buildDir.resolve("outputs/mapping/debug/missing_rules.txt")
+        assertThat(missingRules).containsAllOf("-dontwarn test.B", "-dontwarn test.C")
+
+        val result =
+                project.executor()
+                        .with(BooleanOption.R8_FAIL_ON_MISSING_CLASSES, true)
+                        .expectFailure()
+                        .run(":assembleDebug")
+        result.stderr.use {
+            ScannerSubject.assertThat(it)
+                    .contains("Missing classes detected while running R8.")
         }
     }
 }

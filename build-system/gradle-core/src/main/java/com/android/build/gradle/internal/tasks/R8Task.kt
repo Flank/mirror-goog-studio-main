@@ -188,6 +188,12 @@ abstract class R8Task: ProguardConfigurableTask() {
                 providerFactory.provider { it.asFile.resolveSibling("configuration.txt") }
             }
 
+    @OutputFile
+    fun getMissingKeepRulesOutput(): Provider<File> =
+            mappingFile.flatMap {
+                providerFactory.provider { it.asFile.resolveSibling("missing_rules.txt") }
+            }
+
     @get:Optional
     @get:OutputFile
     abstract val mainDexListOutput: RegularFileProperty
@@ -207,8 +213,7 @@ abstract class R8Task: ProguardConfigurableTask() {
         private var disableTreeShaking: Boolean = false
         private var disableMinification: Boolean = false
 
-        // This is a huge sledgehammer, but it is necessary until http://b/72683872 is fixed.
-        private val proguardConfigurations: MutableList<String> = mutableListOf("-ignorewarnings")
+        private val proguardConfigurations: MutableList<String> = mutableListOf()
 
         override fun handleProvider(
             taskProvider: TaskProvider<R8Task>
@@ -289,7 +294,12 @@ abstract class R8Task: ProguardConfigurableTask() {
             task.disableMinification.set(disableMinification)
             task.messageReceiver = creationConfig.globalScope.messageReceiver
             task.dexingType = creationConfig.dexingType
-            task.useFullR8.set(creationConfig.services.projectOptions[BooleanOption.FULL_R8])
+            task.useFullR8.setDisallowChanges(creationConfig.services.projectOptions[BooleanOption.FULL_R8])
+
+            if (!creationConfig.services.projectOptions[BooleanOption.R8_FAIL_ON_MISSING_CLASSES]) {
+                // Keep until AGP 8.0. It used to be necessary because of http://b/72683872.
+                proguardConfigurations.add("-ignorewarnings")
+            }
 
             task.proguardConfigurations = proguardConfigurations
 
@@ -439,7 +449,8 @@ abstract class R8Task: ProguardConfigurableTask() {
                     mappingFile.get().asFile.toPath(),
                     getProguardSeedsOutput().get().toPath(),
                     getProguardUsageOutput().get().toPath(),
-                    getProguardConfigurationOutput().get().toPath()),
+                    getProguardConfigurationOutput().get().toPath(),
+                    getMissingKeepRulesOutput().get().toPath()),
             output = output.get().asFile,
             outputResources = outputResources.get().asFile,
             mainDexListOutput = mainDexListOutput.orNull?.asFile,
@@ -448,7 +459,7 @@ abstract class R8Task: ProguardConfigurableTask() {
             featureDexDir = featureDexDir.asFile.orNull,
             featureJavaResourceOutputDir = featureJavaResourceOutputDir.asFile.orNull,
             libConfiguration = coreLibDesugarConfig.orNull,
-            outputKeepRulesDir = projectOutputKeepRules.asFile.orNull
+            outputKeepRulesDir = projectOutputKeepRules.asFile.orNull,
         )
     }
 
@@ -481,7 +492,7 @@ abstract class R8Task: ProguardConfigurableTask() {
             featureDexDir: File?,
             featureJavaResourceOutputDir: File?,
             libConfiguration: String?,
-            outputKeepRulesDir: File?
+            outputKeepRulesDir: File?,
         ) {
             val logger = LoggerWrapper.getLogger(R8Task::class.java)
             logger
@@ -520,7 +531,7 @@ abstract class R8Task: ProguardConfigurableTask() {
                 disableTreeShaking = disableTreeShaking,
                 disableDesugaring = !enableDesugaring,
                 disableMinification = disableMinification,
-                r8OutputType = r8OutputType
+                r8OutputType = r8OutputType,
             )
 
             val proguardConfig = ProguardConfig(

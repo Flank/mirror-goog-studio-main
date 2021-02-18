@@ -181,7 +181,8 @@ fun runR8(
                 mappingFile.toPath(),
                 proguardOutputDir.resolve("seeds.txt").toPath(),
                 proguardOutputDir.resolve("usage.txt").toPath(),
-                proguardOutputDir.resolve("configuration.txt").toPath()
+                proguardOutputDir.resolve("configuration.txt").toPath(),
+                proguardOutputDir.resolve("missing_rules.txt").toPath(),
             ),
         output = output,
         outputResources = outputDir.resolve("java_res.jar").toFile(),
