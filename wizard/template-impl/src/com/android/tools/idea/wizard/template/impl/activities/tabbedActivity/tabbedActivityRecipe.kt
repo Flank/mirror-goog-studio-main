@@ -28,6 +28,9 @@ import com.android.tools.idea.wizard.template.impl.activities.common.generateNoA
 import com.android.tools.idea.wizard.template.impl.activities.tabbedActivity.res.layout.appBarActivityXml
 import com.android.tools.idea.wizard.template.impl.activities.tabbedActivity.res.layout.fragmentSimpleXml
 import com.android.tools.idea.wizard.template.impl.activities.tabbedActivity.res.values.dimensXml
+import com.android.tools.idea.wizard.template.impl.activities.tabbedActivity.res.values_land.dimensXml as dimensXmlLand
+import com.android.tools.idea.wizard.template.impl.activities.tabbedActivity.res.values_w1240dp.dimensXml as dimensXmlW1240dp
+import com.android.tools.idea.wizard.template.impl.activities.tabbedActivity.res.values_w600dp.dimensXml as dimensXmlW600dp
 import com.android.tools.idea.wizard.template.impl.activities.tabbedActivity.res.values_w820dp.dimensXml as dimensXmlW820dp
 import com.android.tools.idea.wizard.template.impl.activities.tabbedActivity.res.values.stringsXml
 import com.android.tools.idea.wizard.template.impl.activities.tabbedActivity.src.app_package.tabsActivityJava
@@ -68,6 +71,9 @@ fun RecipeExecutor.tabbedActivityRecipe(
   mergeXml(stringsXml(), resOut.resolve("values/strings.xml"))
   mergeXml(dimensXml(), resOut.resolve("values/dimens.xml"))
   mergeXml(dimensXmlW820dp(), resOut.resolve("values-w820dp/dimens.xml"))
+  mergeXml(dimensXmlLand(), resOut.resolve("values-land/dimens.xml"))
+  mergeXml(dimensXmlW600dp(), resOut.resolve("values-w600dp/dimens.xml"))
+  mergeXml(dimensXmlW1240dp(), resOut.resolve("values-w1240dp/dimens.xml"))
 
   val appBarActivityLayoutXml = appBarActivityXml(
     activityClass,
