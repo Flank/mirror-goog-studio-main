@@ -1,5 +1,5 @@
 > AndroidProject:
-    - projectType       = "LIBRARY"
+    - projectType       = LIBRARY
     - path              = ":"
     - groupId           = ""
     - defaultVariant    = "debug"
@@ -7,7 +7,7 @@
     - compileTarget     = "30"
     - buildFolder       = {PROJECT}/build{!}
     - resourcePrefix    = (null)
-    - buildToolsVersion = "30.0.2"
+    - buildToolsVersion = DEFAULT_BUILD_TOOLS_REVISION
     - dynamicFeatures   = (null)
     > bootClasspath:
        * {ANDROID_SDK}/platforms/android-30/android.jar{F}
