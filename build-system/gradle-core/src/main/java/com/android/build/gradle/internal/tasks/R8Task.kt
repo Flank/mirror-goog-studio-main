@@ -46,6 +46,8 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
+import org.gradle.api.provider.ProviderFactory
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
@@ -59,6 +61,7 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
 import java.nio.file.Path
+import javax.inject.Inject
 
 /**
  * Task that uses R8 to convert class files to dex. In case of a library variant, this
@@ -167,24 +170,30 @@ abstract class R8Task: ProguardConfigurableTask() {
     @get:OutputFile
     abstract val outputResources: RegularFileProperty
 
-    @Optional
     @OutputFile
-    fun getProguardSeedsOutput(): File? =
-        mappingFile.orNull?.asFile?.resolveSibling("seeds.txt")
+    fun getProguardSeedsOutput(): Provider<File> =
+            mappingFile.flatMap {
+                providerFactory.provider { it.asFile.resolveSibling("seeds.txt") }
+            }
 
-    @Optional
     @OutputFile
-    fun getProguardUsageOutput(): File? =
-        mappingFile.orNull?.asFile?.resolveSibling("usage.txt")
+    fun getProguardUsageOutput(): Provider<File> =
+            mappingFile.flatMap {
+                providerFactory.provider { it.asFile.resolveSibling("usage.txt") }
+            }
 
-    @Optional
     @OutputFile
-    fun getProguardConfigurationOutput(): File? =
-        mappingFile.orNull?.asFile?.resolveSibling("configuration.txt")
+    fun getProguardConfigurationOutput(): Provider<File> =
+            mappingFile.flatMap {
+                providerFactory.provider { it.asFile.resolveSibling("configuration.txt") }
+            }
 
     @get:Optional
     @get:OutputFile
     abstract val mainDexListOutput: RegularFileProperty
+
+    @get:Inject
+    abstract val providerFactory: ProviderFactory
 
     class CreationAction(
             creationConfig: ConsumableCreationConfig,
@@ -426,15 +435,11 @@ abstract class R8Task: ProguardConfigurableTask() {
                 },
             resources = resources.toList(),
             proguardOutputFiles =
-                if (mappingFile.isPresent) {
-                    ProguardOutputFiles(
-                        mappingFile.get().asFile.toPath(),
-                        getProguardSeedsOutput()!!.toPath(),
-                        getProguardUsageOutput()!!.toPath(),
-                        getProguardConfigurationOutput()!!.toPath())
-                } else {
-                    null
-                },
+                ProguardOutputFiles(
+                    mappingFile.get().asFile.toPath(),
+                    getProguardSeedsOutput().get().toPath(),
+                    getProguardUsageOutput().get().toPath(),
+                    getProguardConfigurationOutput().get().toPath()),
             output = output.get().asFile,
             outputResources = outputResources.get().asFile,
             mainDexListOutput = mainDexListOutput.orNull?.asFile,
@@ -467,7 +472,7 @@ abstract class R8Task: ProguardConfigurableTask() {
             referencedInputs: List<File>,
             classes: List<File>,
             resources: List<File>,
-            proguardOutputFiles: ProguardOutputFiles?,
+            proguardOutputFiles: ProguardOutputFiles,
             output: File,
             outputResources: File,
             mainDexListOutput: File?,

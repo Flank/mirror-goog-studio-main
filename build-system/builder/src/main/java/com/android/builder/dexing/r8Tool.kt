@@ -146,25 +146,23 @@ fun runR8(
         )
     }
 
-    if (proguardConfig.proguardOutputFiles != null) {
-        val proguardOutputFiles = proguardConfig.proguardOutputFiles
-        Files.deleteIfExists(proguardOutputFiles.proguardMapOutput)
-        Files.deleteIfExists(proguardOutputFiles.proguardSeedsOutput)
-        Files.deleteIfExists(proguardOutputFiles.proguardUsageOutput)
-        Files.deleteIfExists(proguardOutputFiles.proguardConfigurationOutput)
+    val proguardOutputFiles = proguardConfig.proguardOutputFiles
+    Files.deleteIfExists(proguardOutputFiles.proguardMapOutput)
+    Files.deleteIfExists(proguardOutputFiles.proguardSeedsOutput)
+    Files.deleteIfExists(proguardOutputFiles.proguardUsageOutput)
+    Files.deleteIfExists(proguardOutputFiles.proguardConfigurationOutput)
 
-        Files.createDirectories(proguardOutputFiles.proguardMapOutput.parent)
-        r8CommandBuilder.setProguardMapOutputPath(proguardOutputFiles.proguardMapOutput)
-        r8CommandBuilder.setProguardSeedsConsumer(
-            StringConsumer.FileConsumer(proguardOutputFiles.proguardSeedsOutput))
-        r8CommandBuilder.setProguardUsageConsumer(
-            StringConsumer.FileConsumer(proguardOutputFiles.proguardUsageOutput))
-        r8CommandBuilder.setProguardConfigurationConsumer(
-            StringConsumer.FileConsumer(
-                proguardOutputFiles.proguardConfigurationOutput
-            )
+    Files.createDirectories(proguardOutputFiles.proguardMapOutput.parent)
+    r8CommandBuilder.setProguardMapOutputPath(proguardOutputFiles.proguardMapOutput)
+    r8CommandBuilder.setProguardSeedsConsumer(
+        StringConsumer.FileConsumer(proguardOutputFiles.proguardSeedsOutput))
+    r8CommandBuilder.setProguardUsageConsumer(
+        StringConsumer.FileConsumer(proguardOutputFiles.proguardUsageOutput))
+    r8CommandBuilder.setProguardConfigurationConsumer(
+        StringConsumer.FileConsumer(
+            proguardOutputFiles.proguardConfigurationOutput
         )
-    }
+    )
 
     val compilationMode =
         if (toolConfig.isDebuggable) CompilationMode.DEBUG else CompilationMode.RELEASE
@@ -297,7 +295,7 @@ fun runR8(
         }
     }
 
-    proguardConfig.proguardOutputFiles?.proguardMapOutput?.let {
+    proguardConfig.proguardOutputFiles.proguardMapOutput.let {
         if (Files.notExists(it)) {
             // R8 might not create a mapping file, so we have to create it, http://b/37053758.
             Files.createFile(it)
@@ -323,7 +321,7 @@ data class ProguardConfig(
     val proguardConfigurationFiles: List<Path>,
     val proguardMapInput: Path?,
     val proguardConfigurations: List<String>,
-    val proguardOutputFiles: ProguardOutputFiles?
+    val proguardOutputFiles: ProguardOutputFiles
 )
 
 data class ProguardOutputFiles(
