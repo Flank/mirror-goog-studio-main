@@ -128,7 +128,7 @@ class DslDecoratorUnitTest {
 
     @Test
     fun `check locking works for managed var properties`() {
-        val decorator = DslDecorator()
+        val decorator = DslDecorator(listOf(SupportedPropertyType.Var.String))
         val o = decorator.decorate(WithManagedStringLockable::class).getConstructor().newInstance()
          o.managedString = "a"
         o.lock()
@@ -183,7 +183,8 @@ class DslDecoratorUnitTest {
 
     @Test
     fun `check protected field is implemented`() {
-        val decorated = DslDecorator().decorate(WithProtectedField::class)
+        val decorated = DslDecorator(listOf(SupportedPropertyType.Var.String))
+            .decorate(WithProtectedField::class)
         val o = decorated.getConstructor().newInstance()
         assertThat(o).isNotNull()
         assertThat(o.compileSdk).isNull()
@@ -197,7 +198,8 @@ class DslDecoratorUnitTest {
 
     @Test
     fun `check protected field in superclass is implemented`() {
-        val decorated = DslDecorator().decorate(Subclass::class)
+        val decorated = DslDecorator(listOf(SupportedPropertyType.Var.String))
+            .decorate(Subclass::class)
         val o = decorated.getConstructor().newInstance()
         assertThat(o).isNotNull()
         assertThat(o.compileSdk).isNull()
@@ -213,7 +215,8 @@ class DslDecoratorUnitTest {
 
     @Test
     fun `check handling of public override of a protected field`() {
-        val decorated = DslDecorator().decorate(PublicFieldOverridesProtectedField::class)
+        val decorated = DslDecorator(listOf(SupportedPropertyType.Var.String))
+            .decorate(PublicFieldOverridesProtectedField::class)
         val o = decorated.getConstructor().newInstance()
         assertThat(o).isNotNull()
         assertThat(o.compileSdkVersion).isNull()

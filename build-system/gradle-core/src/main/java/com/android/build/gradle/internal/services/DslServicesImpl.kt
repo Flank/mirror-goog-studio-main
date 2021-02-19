@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.services
 
 import com.android.build.gradle.internal.SdkComponentsBuildService
-import com.android.build.gradle.internal.dsl.decorator.DslDecorator
+import com.android.build.gradle.internal.dsl.decorator.androidPluginDslDecorator
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.ExtensiblePolymorphicDomainObjectContainer
 import org.gradle.api.NamedDomainObjectContainer
@@ -32,8 +32,6 @@ class DslServicesImpl constructor(
     projectServices: ProjectServices,
     override val sdkComponents: Provider<SdkComponentsBuildService>
 ) : BaseServicesImpl(projectServices), DslServices {
-
-    private val dslDecorator = DslDecorator() // TODO: Share between projects?
 
     override fun <T> domainObjectSet(type: Class<T>): DomainObjectSet<T> =
         projectServices.objectFactory.domainObjectSet(type)
@@ -65,6 +63,6 @@ class DslServicesImpl constructor(
     override fun file(file: Any): File = projectServices.fileResolver(file)
 
     override fun <T: Any> newDecoratedInstance(dslClass: Class<T>, vararg args: Any) : T {
-        return newInstance(dslDecorator.decorate(dslClass), *args)
+        return newInstance(androidPluginDslDecorator.decorate(dslClass), *args)
     }
 }

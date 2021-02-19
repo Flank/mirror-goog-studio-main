@@ -42,7 +42,7 @@ import kotlin.reflect.KClass
  * Given an abstract class, calling [decorate] will return a generated subclass which has
  * anything that was abstract and is included in the [supportedPropertyTypes] implemented.
  */
-class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType> = AGP_SUPPORTED_PROPERTY_TYPES) {
+class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType>) {
 
     private val supportedPropertyTypes: Map<Type, SupportedPropertyType> = supportedPropertyTypes.associateBy { it.type }
 

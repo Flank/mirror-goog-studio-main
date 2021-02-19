@@ -21,3 +21,11 @@ val AGP_SUPPORTED_PROPERTY_TYPES: List<SupportedPropertyType> = listOf(
     SupportedPropertyType.Var.String,
     SupportedPropertyType.Val.List,
 )
+
+/**
+ * The DSL decorator in this classloader in AGP.
+ *
+ * This is a static field, rather than a build service as it shares its lifetime with
+ * the classloader that AGP is loaded in.
+ */
+val androidPluginDslDecorator = DslDecorator(AGP_SUPPORTED_PROPERTY_TYPES)
