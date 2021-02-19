@@ -26,8 +26,8 @@ package ${escapeKotlinIdentifier(packageName)}.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-${MaterialColor.PURPLE_200.kotlinVal()}
-${MaterialColor.PURPLE_500.kotlinVal()}
-${MaterialColor.PURPLE_700.kotlinVal()}
-${MaterialColor.TEAL_200.kotlinVal()}
+${MaterialColor.PURPLE_200.kotlinComposeVal()}
+${MaterialColor.PURPLE_500.kotlinComposeVal()}
+${MaterialColor.PURPLE_700.kotlinComposeVal()}
+${MaterialColor.TEAL_200.kotlinComposeVal()}
 """
