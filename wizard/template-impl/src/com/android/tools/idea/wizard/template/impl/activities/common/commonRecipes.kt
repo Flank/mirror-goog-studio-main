@@ -160,12 +160,6 @@ fun RecipeExecutor.generateAppBar(
   themesData: ThemesData = moduleData.themesData,
   useAndroidX: Boolean
 ) {
-  val appBarDimens = """
-    <resources>
-        <dimen name="fab_margin">16dp</dimen>
-    </resources>
-  """.trimIndent()
-
   val coordinatorLayout = getMaterialComponentName("android.support.design.widget.CoordinatorLayout", useAndroidX)
   val layoutTag = getMaterialComponentName("android.support.design.widget.AppBarLayout", useAndroidX)
 
@@ -200,7 +194,8 @@ fun RecipeExecutor.generateAppBar(
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom|end"
-            android:layout_margin="@dimen/fab_margin"
+            android:layout_marginEnd="@dimen/fab_margin"
+            android:layout_marginBottom="16dp"
             app:srcCompat="@android:drawable/ic_dialog_email" />
 
     </$coordinatorLayout>
@@ -211,10 +206,19 @@ fun RecipeExecutor.generateAppBar(
 
   save(appBarLayout, resDir.resolve("layout/$appBarLayoutName.xml"))
 
-  mergeXml(appBarDimens, resDir.resolve("values/dimens.xml"))
+  mergeXml(appBarDimens(16), resDir.resolve("values/dimens.xml"))
+  mergeXml(appBarDimens(48), resDir.resolve("values-land/dimens.xml"))
+  mergeXml(appBarDimens(48), resDir.resolve("values-w600dp/dimens.xml"))
+  mergeXml(appBarDimens(200), resDir.resolve("values-w1240dp/dimens.xml"))
 
   generateNoActionBarStyles(baseFeatureResOut, resDir, themesData)
 }
+
+private fun appBarDimens(fabMargin: Int) =
+"""<resources>
+        <dimen name="fab_margin">${fabMargin}dp</dimen>
+    </resources>
+"""
 
 fun RecipeExecutor.addLifecycleDependencies(useAndroidX: Boolean) {
   if (useAndroidX) {
