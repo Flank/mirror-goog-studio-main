@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.common.fixture.testprojects
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.SUPPORT_LIB_MIN_SDK
+import com.android.build.gradle.internal.packaging.IncrementalPackagerBuilder
 
 internal class AndroidProjectBuilderImpl(
     internal val subProject: SubProjectBuilderImpl,
@@ -28,13 +29,24 @@ internal class AndroidProjectBuilderImpl(
     override var minSdk: Int? = null
     override var minSdkCodename: String? = null
 
-    override val buildFeatures = BuildFeaturesBuilderImpl()
-    override val main: Config? = ConfigImpl(this, "main")
-    override val debug: Config? = ConfigImpl(this, "debug")
-    override val release: Config? = ConfigImpl(this, "release")
+    private val buildFeatures = BuildFeaturesBuilderImpl()
+    private val main: Config? = ConfigImpl(this, "main")
+    private val debug: Config? = ConfigImpl(this, "debug")
+    private val release: Config? = ConfigImpl(this, "release")
+
+    private val buildTypes = BuildTypeContainerBuilderImpl()
+    private val flavors = ProductFlavorContainerBuilderImpl()
 
     override fun buildFeatures(action: BuildFeaturesBuilder.() -> Unit) {
         action(buildFeatures)
+    }
+
+    override fun buildTypes(action: ContainerBuilder<BuildTypeBuilder>.() -> Unit) {
+        action(buildTypes)
+    }
+
+    override fun productFlavors(action: ContainerBuilder<ProductFlavorBuilder>.() -> Unit) {
+        action(flavors)
     }
 
     override fun addFile(relativePath: String, content: String) {
@@ -83,6 +95,36 @@ internal class AndroidProjectBuilderImpl(
             sb.append("  }\n") // BUILD-FEATURES
         }
 
+        if (buildTypes.items.isNotEmpty()) {
+            sb.append("  buildTypes {\n")
+            for (item in buildTypes.items.values) {
+                sb.append("    ${item.name} {\n")
+                item.isDefault?.let {
+                    sb.append("      isDefault = $it\n")
+                }
+                sb.append("    }\n")
+            }
+            sb.append("  }\n") // BUILD-TYPES
+        }
+
+        if (flavors.items.isNotEmpty()) {
+            // fix me, we need proper ordering
+            val dimensions = flavors.items.values.map { "\"${it.dimension}\"" }.toSet()
+
+            sb.append("  flavorDimensions ${dimensions.joinToString(separator = ",")}\n")
+            sb.append("  productFlavors {\n")
+            for (item in flavors.items.values) {
+                sb.append("    ${item.name} {\n")
+                sb.append("      dimension = \"${item.dimension}\"\n")
+
+                item.isDefault?.let {
+                    sb.append("      isDefault = $it\n")
+                }
+                sb.append("    }\n")
+            }
+            sb.append("  }\n") // FLAVORS
+        }
+
         sb.append("}\n") // ANDROID
     }
 }
@@ -117,4 +159,29 @@ internal class BuildFeaturesBuilderImpl: BuildFeaturesBuilder {
                 || androidResources != null
                 || mlModelBinding != null
     }
+}
+
+internal class BuildTypeContainerBuilderImpl: ContainerBuilder<BuildTypeBuilder> {
+    internal val items = mutableMapOf<String, BuildTypeBuilder>()
+    override fun named(name: String, action: BuildTypeBuilder.() -> Unit) {
+        val newItem = items.computeIfAbsent(name) { BuildTypeBuilderImpl(name) }
+        action(newItem)
+    }
+}
+
+internal class ProductFlavorContainerBuilderImpl: ContainerBuilder<ProductFlavorBuilder> {
+    internal val items = mutableMapOf<String, ProductFlavorBuilder>()
+    override fun named(name: String, action: ProductFlavorBuilder.() -> Unit) {
+        val newItem = items.computeIfAbsent(name) { ProductFlavorBuilderImpl(name) }
+        action(newItem)
+    }
+}
+
+internal class BuildTypeBuilderImpl(override val name: String): BuildTypeBuilder {
+    override var isDefault: Boolean? = null
+}
+
+internal class ProductFlavorBuilderImpl(override val name: String): ProductFlavorBuilder {
+    override var isDefault: Boolean? = null
+    override var dimension: String? = null
 }

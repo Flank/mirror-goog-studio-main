@@ -253,3 +253,67 @@ class EnabledMlModelBindingInAppModelTest: ModelComparator() {
         )
     }
 }
+
+class DefaultBuildTypeAppModelTest: ModelComparator() {
+    @get:Rule
+    val project = createGradleProject {
+        configureRoot {
+            plugins.add(PluginType.ANDROID_APP)
+            android {
+                setUpHelloWorld()
+
+                buildTypes {
+                    named("debug") {
+                        isDefault = true
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `test AndroidProject model`() {
+        val result = project.modelV2()
+            .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
+            .fetchAndroidProjects()
+
+        with(result).compare(
+            model = result.container.singleModel,
+            goldenFile = "AndroidProject"
+        )
+    }
+}
+
+class DefaultFlavorAppModelTest: ModelComparator() {
+    @get:Rule
+    val project = createGradleProject {
+        configureRoot {
+            plugins.add(PluginType.ANDROID_APP)
+            android {
+                setUpHelloWorld()
+
+                productFlavors {
+                    named("flavorA") {
+                        dimension = "foo"
+                        isDefault = true
+                    }
+                    named("flavorB") {
+                        dimension = "foo"
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `test AndroidProject model`() {
+        val result = project.modelV2()
+            .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
+            .fetchAndroidProjects()
+
+        with(result).compare(
+            model = result.container.singleModel,
+            goldenFile = "AndroidProject"
+        )
+    }
+}

@@ -45,7 +45,6 @@ internal fun AndroidProject.writeToBuilder(builder: DumpBuilder) {
         item("projectType", projectType)
         item("path", path)
         item("groupId", groupId)
-        item("defaultVariant", defaultVariant)
         list("flavorDimensions", flavorDimensions.sorted())
         item("compileTarget", compileTarget)
         item("buildFolder", buildFolder)
@@ -281,6 +280,7 @@ private fun BaseConfig.dumpBaseConfig(builder: DumpBuilder) {
         item("multiDexEnabled", multiDexEnabled)
         item("multiDexKeepFile", multiDexKeepFile)
         item("multiDexKeepProguard", multiDexKeepProguard)
+        item("isDefault", isDefault)
     }
 }
 

@@ -253,7 +253,6 @@ class ModelBuilder<
             productFlavors = productFlavors,
 
             variants = variantList,
-            defaultVariant = variantModel.defaultVariant,
 
             compileTarget = extension.compileSdk.toString(), // FIXME
             bootClasspath = bootClasspath,

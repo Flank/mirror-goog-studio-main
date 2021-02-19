@@ -166,15 +166,6 @@ interface AndroidProject: AndroidModel {
     val variants: Collection<Variant>
 
     /**
-     * Returns the name of the variant the IDE should use when opening the project for the first
-     * time.
-     *
-     * @return the name of a variant that exists under the presence of the variant filter. Only
-     * returns null if all variants are removed.
-     */
-    val defaultVariant: String?
-
-    /**
      * Returns a list of all the flavor dimensions, may be empty.
      *
      * @return a list of the flavor dimensions.

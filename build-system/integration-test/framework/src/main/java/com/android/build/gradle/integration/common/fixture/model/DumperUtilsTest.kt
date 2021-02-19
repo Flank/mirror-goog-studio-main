@@ -75,7 +75,8 @@ class DumperUtilsTest {
             "isMinifyEnabled", "isZipAlignEnabled", "isEmbedMicroApp", "signingConfig",
             "applicationIdSuffix", "versionNameSuffix", "buildConfigFields",
             "resValues", "proguardFiles", "consumerProguardFiles", "testProguardFiles",
-            "manifestPlaceholders", "multiDexEnabled", "multiDexKeepFile", "multiDexKeepProguard"
+            "manifestPlaceholders", "multiDexEnabled", "multiDexKeepFile", "multiDexKeepProguard",
+            "isDefault"
         )
     }
 }
@@ -111,5 +112,6 @@ data class FakeBuildType(
     override val manifestPlaceholders: Map<String, Any>,
     override val multiDexEnabled: Boolean?,
     override val multiDexKeepFile: File?,
-    override val multiDexKeepProguard: File?
+    override val multiDexKeepProguard: File?,
+    override val isDefault: Boolean?
 ): BuildType

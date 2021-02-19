@@ -16,7 +16,7 @@
           - name                               = "main"
           - applicationIdSuffix                = (null)
           - versionNameSuffix                  = (null)
-          - buildConfigFields                  = (null)
+          - buildConfigFields                  = []
           - resValues                          = []
           - proguardFiles                      = []
           - consumerProguardFiles              = []
@@ -157,7 +157,7 @@
              - name                     = "debug"
              - applicationIdSuffix      = (null)
              - versionNameSuffix        = (null)
-             - buildConfigFields        = (null)
+             - buildConfigFields        = []
              - resValues                = []
              - proguardFiles            = []
              - consumerProguardFiles    = []
@@ -166,7 +166,7 @@
              - multiDexEnabled          = (null)
              - multiDexKeepFile         = (null)
              - multiDexKeepProguard     = (null)
-             - isDefault                = false
+             - isDefault                = true
              - isDebuggable             = true
              - isTestCoverageEnabled    = false
              - isPseudoLocalesEnabled   = false
@@ -283,7 +283,7 @@
              - name                     = "release"
              - applicationIdSuffix      = (null)
              - versionNameSuffix        = (null)
-             - buildConfigFields        = (null)
+             - buildConfigFields        = []
              - resValues                = []
              - proguardFiles            = []
              - consumerProguardFiles    = []
@@ -440,6 +440,7 @@
                 * {PROJECT}/build/generated/aidl_source_output_dir/debug/out{!}
                 * {PROJECT}/build/generated/ap_generated_sources/debug/out{!}
                 * {PROJECT}/build/generated/renderscript_source_output_dir/debug/out{!}
+                * {PROJECT}/build/generated/source/buildConfig/debug{!}
              < generatedSourceFolders
              - variantSourceProvider         = (null)
              - multiFlavorSourceProvider     = (null)
@@ -469,6 +470,7 @@
                 * {PROJECT}/build/generated/aidl_source_output_dir/debugAndroidTest/out{!}
                 * {PROJECT}/build/generated/ap_generated_sources/debugAndroidTest/out{!}
                 * {PROJECT}/build/generated/renderscript_source_output_dir/debugAndroidTest/out{!}
+                * {PROJECT}/build/generated/source/buildConfig/androidTest/debug{!}
              < generatedSourceFolders
              - variantSourceProvider         = (null)
              - multiFlavorSourceProvider     = (null)
@@ -523,6 +525,7 @@
                 * {PROJECT}/build/generated/aidl_source_output_dir/release/out{!}
                 * {PROJECT}/build/generated/ap_generated_sources/release/out{!}
                 * {PROJECT}/build/generated/renderscript_source_output_dir/release/out{!}
+                * {PROJECT}/build/generated/source/buildConfig/release{!}
              < generatedSourceFolders
              - variantSourceProvider         = (null)
              - multiFlavorSourceProvider     = (null)

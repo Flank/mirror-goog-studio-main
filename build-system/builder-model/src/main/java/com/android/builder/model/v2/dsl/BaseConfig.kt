@@ -97,4 +97,9 @@ interface BaseConfig: AndroidModel {
 
     val multiDexKeepFile: File?
     val multiDexKeepProguard: File?
+
+    /**
+     * Whether this is marked as a default value in its dimension
+     */
+    val isDefault: Boolean?
 }

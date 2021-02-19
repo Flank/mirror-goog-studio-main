@@ -57,6 +57,7 @@ data class ProductFlavorImpl(
     override val multiDexEnabled: Boolean?,
     override val multiDexKeepFile: File?,
     override val multiDexKeepProguard: File?,
+    override val isDefault: Boolean? = null,
     override val name: String?,
     override val dimension: String?
 ) : ProductFlavor, Serializable {

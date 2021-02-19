@@ -2,7 +2,6 @@
     - projectType       = LIBRARY
     - path              = ":"
     - groupId           = ""
-    - defaultVariant    = "debug"
     - flavorDimensions  = []
     - compileTarget     = "30"
     - buildFolder       = {PROJECT}/build{!}
@@ -26,6 +25,7 @@
           - multiDexEnabled                    = (null)
           - multiDexKeepFile                   = (null)
           - multiDexKeepProguard               = (null)
+          - isDefault                          = (null)
           - dimension                          = (null)
           - applicationId                      = (null)
           - versionCode                        = (null)
@@ -160,6 +160,7 @@
              - multiDexEnabled          = (null)
              - multiDexKeepFile         = (null)
              - multiDexKeepProguard     = (null)
+             - isDefault                = false
              - isDebuggable             = true
              - isTestCoverageEnabled    = false
              - isPseudoLocalesEnabled   = false
@@ -279,6 +280,7 @@
              - multiDexEnabled          = (null)
              - multiDexKeepFile         = (null)
              - multiDexKeepProguard     = (null)
+             - isDefault                = false
              - isDebuggable             = false
              - isTestCoverageEnabled    = false
              - isPseudoLocalesEnabled   = false

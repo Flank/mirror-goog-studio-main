@@ -100,12 +100,10 @@ interface AndroidProjectBuilder {
     var minSdk: Int?
     var minSdkCodename: String?
 
-    val buildFeatures: BuildFeaturesBuilder
-    val main: Config?
-    val debug: Config?
-    val release: Config?
-
     fun buildFeatures(action: BuildFeaturesBuilder.() -> Unit)
+
+    fun buildTypes(action: ContainerBuilder<BuildTypeBuilder>.() -> Unit)
+    fun productFlavors(action: ContainerBuilder<ProductFlavorBuilder>.() -> Unit)
 
     fun addFile(relativePath: String, content: String)
 }
@@ -123,4 +121,19 @@ interface BuildFeaturesBuilder {
     var shaders: Boolean?
     var androidResources: Boolean?
     var mlModelBinding: Boolean?
+}
+
+interface ContainerBuilder<T> {
+    fun named(name: String, action: T.() -> Unit)
+}
+
+interface BuildTypeBuilder {
+    val name: String
+    var isDefault: Boolean?
+}
+
+interface ProductFlavorBuilder {
+    val name: String
+    var isDefault: Boolean?
+    var dimension: String?
 }

@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-f9bbeb8f7d303e16a501621f5e33efe3cc3526d7c849709de236420ae4fa44bd
+c199b84cffa853ec53c1c244f1dbddc93f19d8d3d337e79c9513dcac75497ac8
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -490,6 +490,7 @@ com.android.builder.model.v2.dsl.BaseConfig.getProguardFiles: java.util.Collecti
 com.android.builder.model.v2.dsl.BaseConfig.getResValues: java.util.Map<java.lang.String, com.android.builder.model.v2.dsl.ClassField> ()
 com.android.builder.model.v2.dsl.BaseConfig.getTestProguardFiles: java.util.Collection<java.io.File> ()
 com.android.builder.model.v2.dsl.BaseConfig.getVersionNameSuffix: java.lang.String ()
+com.android.builder.model.v2.dsl.BaseConfig.isDefault: java.lang.Boolean ()
 com.android.builder.model.v2.dsl.BuildType implements com.android.builder.model.v2.dsl.BaseConfig, com.android.builder.model.v2.AndroidModel
 com.android.builder.model.v2.dsl.BuildType.getRenderscriptOptimLevel: int ()
 com.android.builder.model.v2.dsl.BuildType.getSigningConfig: java.lang.String ()
@@ -728,7 +729,6 @@ com.android.builder.model.v2.models.AndroidProject.getBuildToolsVersion: java.la
 com.android.builder.model.v2.models.AndroidProject.getBuildTypes: java.util.Collection<com.android.builder.model.v2.ide.BuildTypeContainer> ()
 com.android.builder.model.v2.models.AndroidProject.getCompileTarget: java.lang.String ()
 com.android.builder.model.v2.models.AndroidProject.getDefaultConfig: com.android.builder.model.v2.ide.ProductFlavorContainer ()
-com.android.builder.model.v2.models.AndroidProject.getDefaultVariant: java.lang.String ()
 com.android.builder.model.v2.models.AndroidProject.getDependenciesInfo: com.android.builder.model.v2.dsl.DependenciesInfo ()
 com.android.builder.model.v2.models.AndroidProject.getDynamicFeatures: java.util.Collection<java.lang.String> ()
 com.android.builder.model.v2.models.AndroidProject.getFlags: com.android.builder.model.v2.ide.AndroidGradlePluginProjectFlags ()

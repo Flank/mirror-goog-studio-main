@@ -71,7 +71,7 @@ internal fun DslDefaultConfig.convert(features: BuildFeatureValues) = ProductFla
     manifestPlaceholders = manifestPlaceholders,
     multiDexEnabled = multiDexEnabled,
     multiDexKeepFile = multiDexKeepFile,
-    multiDexKeepProguard = multiDexKeepProguard
+    multiDexKeepProguard = multiDexKeepProguard,
 )
 
 internal fun DslProductFlavor.convert(features: BuildFeatureValues) = ProductFlavorImpl(
@@ -106,8 +106,9 @@ internal fun DslProductFlavor.convert(features: BuildFeatureValues) = ProductFla
     manifestPlaceholders = manifestPlaceholders,
     multiDexEnabled = multiDexEnabled,
     multiDexKeepFile = multiDexKeepFile,
-    multiDexKeepProguard = multiDexKeepProguard
- )
+    multiDexKeepProguard = multiDexKeepProguard,
+    isDefault = isDefault
+)
 
 internal fun DslBuildType.convert(features: BuildFeatureValues) = BuildTypeImpl(
     name = name,
@@ -131,7 +132,8 @@ internal fun DslBuildType.convert(features: BuildFeatureValues) = BuildTypeImpl(
     manifestPlaceholders = manifestPlaceholders,
     multiDexEnabled = multiDexEnabled,
     multiDexKeepFile = multiDexKeepFile,
-    multiDexKeepProguard = multiDexKeepProguard
+    multiDexKeepProguard = multiDexKeepProguard,
+    isDefault = isDefault
 )
 
 internal fun DslSigningConfig.convert() = SigningConfigImpl(
