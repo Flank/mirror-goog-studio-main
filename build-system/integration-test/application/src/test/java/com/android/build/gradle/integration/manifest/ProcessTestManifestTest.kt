@@ -122,15 +122,26 @@ class ProcessTestManifestTest {
         project.executor().run("assembleDebugAndroidTest")
 
         val manifestContent = getManifestContent(project.testApk.file)
-        assertManifestContent(manifestContent, "com.example.helloworld.TestReceiver")
-        assertManifestContent(manifestContent, "com.example.helloworld.MainReceiver")
-        assertManifestContent(manifestContent, "A: http://schemas.android.com/apk/res/android:minSdkVersion(0x0101020c)=21")
-        assertManifestContent(manifestContent, "A: http://schemas.android.com/apk/res/android:targetSdkVersion(0x01010270)=22")
-        assertManifestContent(manifestContent, "A: http://schemas.android.com/apk/res/android:maxSdkVersion(0x01010271)=29")
-        assertManifestContent(
+        assertManifestContentContainsString(manifestContent, "com.example.helloworld.TestReceiver")
+        assertManifestContentContainsString(manifestContent, "com.example.helloworld.MainReceiver")
+        assertManifestContentContainsString(manifestContent, "A: http://schemas.android.com/apk/res/android:minSdkVersion(0x0101020c)=21")
+        assertManifestContentContainsString(manifestContent, "A: http://schemas.android.com/apk/res/android:targetSdkVersion(0x01010270)=22")
+        assertManifestContentContainsString(manifestContent, "A: http://schemas.android.com/apk/res/android:maxSdkVersion(0x01010271)=29")
+        assertManifestContentContainsString(
             manifestContent,
             "A: http://schemas.android.com/apk/res/android:extractNativeLibs(0x010104ea)=false"
         )
+        assertManifestContentContainsString(
+            manifestContent,
+            "http://schemas.android.com/apk/res/android:debuggable(0x0101000f)=true"
+        )
+
+        // The manifest shouldn't contain android:debuggable if we set the testBuildType to release.
+        project.buildFile.appendText("\n\nandroid.testBuildType \"release\"\n\n")
+        project.executor().run("assembleReleaseAndroidTest")
+        val releaseManifestContent =
+            getManifestContent(project.getApk(GradleTestProject.ApkType.ANDROIDTEST_RELEASE).file)
+        assertManifestContentDoesNotContainString(releaseManifestContent, "android:debuggable")
     }
 
     @Test
@@ -204,8 +215,22 @@ class ProcessTestManifestTest {
         assertThat(manifestContent).contains("android:allowBackup=\"true\"")
     }
 
-    fun assertManifestContent(manifestContent: Iterable<String>, stringToAssert: String) {
+    private fun assertManifestContentContainsString(
+        manifestContent: Iterable<String>,
+        stringToAssert: String
+    ) {
         manifestContent.forEach { if (it.trim().contains(stringToAssert)) return }
         fail("Cannot find $stringToAssert in ${manifestContent.joinToString(separator = "\n")}")
+    }
+
+    private fun assertManifestContentDoesNotContainString(
+        manifestContent: Iterable<String>,
+        stringToAssert: String
+    ) {
+        manifestContent.forEach {
+            if (it.trim().contains(stringToAssert)) {
+                fail("$stringToAssert found in ${manifestContent.joinToString(separator = "\n")}")
+            }
+        }
     }
 }
