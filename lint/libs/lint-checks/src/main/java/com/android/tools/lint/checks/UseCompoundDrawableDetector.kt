@@ -39,7 +39,7 @@ import org.w3c.dom.Element
 /** Checks whether the current node can be replaced by a TextView using compound drawables. */
 class UseCompoundDrawableDetector : LayoutDetector() {
 
-    override fun getApplicableElements(): Collection<String>? {
+    override fun getApplicableElements(): Collection<String> {
         return listOf(LINEAR_LAYOUT)
     }
 

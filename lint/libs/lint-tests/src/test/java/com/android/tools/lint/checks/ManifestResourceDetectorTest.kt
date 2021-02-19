@@ -24,8 +24,7 @@ class ManifestResourceDetectorTest : AbstractCheckTest() {
 
     fun test() {
         lint().files(
-            xml(
-                "AndroidManifest.xml",
+            manifest(
                 """
                 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
                     package="foo.bar2"
@@ -87,8 +86,7 @@ class ManifestResourceDetectorTest : AbstractCheckTest() {
 
     fun testInvalidManifestReference() {
         lint().files(
-            xml(
-                "AndroidManifest.xml",
+            manifest(
                 """
 
                 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
@@ -172,8 +170,7 @@ class ManifestResourceDetectorTest : AbstractCheckTest() {
 
     fun testInvalidReferences() {
         lint().files(
-            xml(
-                "AndroidManifest.xml",
+            manifest(
                 """
 
                 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
@@ -296,8 +293,7 @@ class ManifestResourceDetectorTest : AbstractCheckTest() {
 
     fun testAllowPermissionNameLocalizations() {
         lint().files(
-            xml(
-                "AndroidManifest.xml",
+            manifest(
                 """
                 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
                     package="foo.bar2"
@@ -347,8 +343,7 @@ class ManifestResourceDetectorTest : AbstractCheckTest() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=216279
         // <meta-data> elements are free to reference resources as they see fit.
         lint().files(
-            xml(
-                "AndroidManifest.xml",
+            manifest(
                 """
                 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
                           xmlns:tools="http://schemas.android.com/tools"
@@ -399,8 +394,7 @@ class ManifestResourceDetectorTest : AbstractCheckTest() {
         // Allow round icons in density folders
         // Regression test for https://code.google.com/p/android/issues/detail?id=225711
         lint().files(
-            xml(
-                "AndroidManifest.xml",
+            manifest(
                 """
                 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
                     package="webp.test.tools.android.com.myapplication" >
@@ -420,8 +414,7 @@ class ManifestResourceDetectorTest : AbstractCheckTest() {
     fun testAnyDensity() {
         // Allow round icons in density folders
         lint().files(
-            xml(
-                "AndroidManifest.xml",
+            manifest(
                 """
                 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
                     package="webp.test.tools.android.com.myapplication" >

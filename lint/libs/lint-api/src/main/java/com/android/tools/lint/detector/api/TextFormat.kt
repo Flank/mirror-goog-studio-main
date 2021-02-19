@@ -20,11 +20,10 @@ import com.android.utils.SdkUtils
 import com.android.utils.XmlUtils
 
 /**
- * Lint error message, issue explanations and location descriptions
- * are described in a [.RAW] format which looks similar to text
- * but which can contain bold, symbols and links. These issues can
- * also be converted to plain text and to HTML markup, using the
- * [.convertTo] method.
+ * Lint error message, issue explanations and location descriptions are
+ * described in a [RAW] format which looks similar to text but which can
+ * contain bold, symbols and links. These issues can also be converted
+ * to plain text and to HTML markup, using the [convertTo] method.
  *
  * @see Issue.getExplanation
  * @see Issue.getBriefDescription
@@ -65,11 +64,13 @@ enum class TextFormat {
     HTML,
 
     /**
-     * HTML formatted output (note: does not include surrounding `<html></html>` tags).
-     * This is like [.HTML], but it does not escape unicode characters with entities.
+     * HTML formatted output (note: does not include surrounding
+     * `<html></html>` tags). This is like [HTML], but it does not
+     * escape unicode characters with entities.
      *
-     * (This is used for example in the IDE, where some partial HTML support in some
-     * label widgets support some HTML markup, but not numeric code character entities.)
+     * (This is used for example in the IDE, where some partial HTML
+     * support in some label widgets support some HTML markup, but not
+     * numeric code character entities.)
      */
     HTML_WITH_UNICODE;
 

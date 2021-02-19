@@ -758,13 +758,6 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
         lint().files(mFormatstrings9, mStringFormat9).run().expectClean();
     }
 
-    public void testXliffIncremental() {
-        lint().files(mFormatstrings9, mStringFormat9)
-                .incremental("src/test/pkg/StringFormat9.java")
-                .run()
-                .expectClean();
-    }
-
     public void testBigDecimal() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=69527
         //noinspection all // Sample code

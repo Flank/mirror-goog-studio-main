@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+ProviderFactory providerFactory = project.providers
 ext.testEnvironment =
         /*
          * We keep the following properties:
@@ -24,7 +25,7 @@ ext.testEnvironment =
          */
         System.getenv().findAll { entry ->
             String key = entry.key
-            key.startsWith("CUSTOM_") ||
+            Boolean captureValue = key.startsWith("CUSTOM_") ||
                     key.startsWith("ACTD_") || // environment variables for uploading to Dana
                     key.startsWith("PERF_") || // environment variables for controlling perf tests
                     key == "GENERATE_MODEL_GOLDEN_FILES" || // For updating model files
@@ -41,13 +42,20 @@ ext.testEnvironment =
                     key.startsWith("LC_") ||
                     key.startsWith("LANG") ||
                     key.startsWith("BUILDBOT_")
+            if (captureValue) {
+                providerFactory.environmentVariable(key).forUseAtConfigurationTime().get()
+            }
+            captureValue
         }
 
 ext.testEnvironment << [
         TEST_TMPDIR:
-                System.env.TEST_TMPDIR != null
-                        ? new File(System.env.TEST_TMPDIR)
-                        : project.buildDir, // Use the same environment variable as Bazel for now.
+                providerFactory.
+                        environmentVariable("TEST_TMPDIR").
+                        forUseAtConfigurationTime()
+                        .map { new File(it) }
+                        .orElse(project.buildDir) // Use the same environment variable as Bazel for now.
+                        .get(),
         CUSTOM_REPO: new File(rootProject.ext.androidHostOut, "repo").toString()
                 + File.pathSeparator
                 + rootProject.file("../prebuilts/tools/common/m2/repository/").toString(),
@@ -73,8 +81,9 @@ test {
     maxParallelForks = Runtime.runtime.availableProcessors() / 4
 
     useJUnit {
-        if (System.properties['test.includeCategories'] != null) {
-            def categories = System.properties['test.includeCategories'].split(',')
+        String includedCategories = providerFactory.systemProperty('test.includeCategories').forUseAtConfigurationTime().orNull
+        if (includedCategories != null) {
+            def categories = includedCategories.split(',')
             String defaultPackage = "com.android.build.gradle.integration.common.category."
             categories = categories.collect { it.charAt(0).isUpperCase() ? defaultPackage + it : it }
             includeCategories categories as String[]

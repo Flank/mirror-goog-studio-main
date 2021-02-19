@@ -24,18 +24,18 @@ import com.android.build.api.apiTest.VariantApiBaseTest
 open class BuildSrcScriptApiTest: VariantApiBaseTest(
     TestType.BuildSrc
 ) {
-    protected fun addCommonBuildFile(givenBuilder: GivenBuilder) {
+    protected fun addCommonBuildFile(givenBuilder: GivenBuilder, androidBlock: String? = null) {
         givenBuilder.buildFile =
             """
             plugins {
                     id("com.android.application")
                     kotlin("android")
-                    kotlin("android.extensions")
             }
 
             apply<ExamplePlugin>()
 
             android { ${testingElements.addCommonAndroidBuildLogic()}
+                ${androidBlock ?: ""}
             }
             """.trimIndent()
     }

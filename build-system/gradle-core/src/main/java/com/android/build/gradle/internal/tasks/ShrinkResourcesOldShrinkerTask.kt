@@ -204,7 +204,7 @@ abstract class ShrinkResourcesOldShrinkerTask : NonIncrementalTask() {
                 task.mergedManifests
             )
 
-            task.buildTypeName = creationConfig.variantDslInfo.componentIdentity.buildType
+            task.buildTypeName = creationConfig.buildType
 
             task.debuggableBuildType.setDisallowChanges(creationConfig.debuggable)
 

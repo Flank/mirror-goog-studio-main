@@ -36,7 +36,7 @@ public class VectorPathDetectorTest extends AbstractCheckTest {
         return new VectorPathDetector();
     }
 
-    public void test() {
+    public void testBasic() {
         lint().files(
                         xml(
                                 "res/drawable/my_vector.xml",
@@ -178,14 +178,14 @@ public class VectorPathDetectorTest extends AbstractCheckTest {
                                         + "android.defaultConfig.vectorDrawables.useSupportLibrary = true\n"))
                 .run()
                 .maxLineLength(100)
-                .expectWarningCount(1)
-                .expectErrorCount(0)
                 .expect(
                         ""
                                 + "src/main/res/drawable/my_vector.xml:7: Warning: Very long vector path (1623 characters), which is b…\n"
                                 + "    android:pathData=\"M 37.8337860107,-40.3974914551 c 0,0 -35.8077850342,31.5523681641 -35.8077850…\n"
                                 + "                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~…\n"
-                                + "0 errors, 1 warnings\n");
+                                + "0 errors, 1 warnings")
+                .expectWarningCount(1) // redundant, just testing lint testing infrastructure
+                .expectErrorCount(0);
     }
 
     public void testInvalidScientificNotation() {

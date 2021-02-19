@@ -75,6 +75,7 @@ import org.xml.sax.SAXException;
 public class LintFixVerifier {
     private final TestLintTask task;
     private final List<Incident> incidents;
+    private final TestLintClient client;
     private int diffWindow = 0;
     private Boolean reformat;
     private boolean robot = false;
@@ -82,6 +83,7 @@ public class LintFixVerifier {
     public LintFixVerifier(@NonNull TestLintTask task, @NonNull TestResultState state) {
         this.task = task;
         this.incidents = state.incidents;
+        this.client = state.client;
     }
 
     /** Sets up 2 lines of context in the diffs */

@@ -22,6 +22,7 @@ import com.android.SdkConstants.TAG_ACTION
 import com.android.SdkConstants.TAG_RECEIVER
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Implementation
+import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.ResourceXmlDetector
@@ -29,6 +30,7 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.XmlContext
+import com.android.tools.lint.detector.api.targetSdkAtLeast
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiField
 import org.jetbrains.uast.UReferenceExpression
@@ -72,7 +74,7 @@ class BatteryDetector : ResourceXmlDetector(), SourceCodeScanner {
         )
     }
 
-    override fun getApplicableElements(): Collection<String>? = listOf(TAG_ACTION)
+    override fun getApplicableElements(): Collection<String> = listOf(TAG_ACTION)
 
     override fun visitElement(context: XmlContext, element: Element) {
         assert(element.tagName == TAG_ACTION)
@@ -82,24 +84,26 @@ class BatteryDetector : ResourceXmlDetector(), SourceCodeScanner {
             element.parentNode != null &&
             element.parentNode.parentNode != null &&
             TAG_RECEIVER == element.parentNode.parentNode.nodeName &&
-            context.mainProject.targetSdkVersion.featureLevel >= 24
+            context.project.targetSdkVersion.featureLevel >= 24
         ) {
             val message = "Declaring a broadcastreceiver for " +
                 "`android.net.conn.CONNECTIVITY_CHANGE` is deprecated for apps targeting " +
                 "N and higher. In general, apps should not rely on this broadcast and " +
                 "instead use `WorkManager`."
-            context.report(ISSUE, element, context.getValueLocation(attr), message)
+            val incident = Incident(ISSUE, element, context.getValueLocation(attr), message)
+            context.report(incident, constraint = targetSdkAtLeast(24))
         }
 
         if ("android.settings.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" == name &&
-            context.mainProject.targetSdkVersion.featureLevel >= 23
+            context.project.targetSdkVersion.featureLevel >= 23
         ) {
-            context.report(
+            val incident = Incident(
                 ISSUE, element, context.getValueLocation(attr),
                 "Use of `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` violates the " +
                     "Play Store Content Policy regarding acceptable use cases, as described in " +
                     "https://developer.android.com/training/monitoring-device-state/doze-standby.html"
             )
+            context.report(incident, constraint = targetSdkAtLeast(23))
         }
 
         if ("android.hardware.action.NEW_PICTURE" == name ||
@@ -109,11 +113,12 @@ class BatteryDetector : ResourceXmlDetector(), SourceCodeScanner {
             val message = "Use of `$name` is deprecated for all apps starting " +
                 "with the N release independent of the target SDK. Apps should not " +
                 "rely on these broadcasts and instead use `WorkManager`"
-            context.report(ISSUE, element, context.getValueLocation(attr), message)
+            val incident = Incident(ISSUE, element, context.getValueLocation(attr), message)
+            context.report(incident)
         }
     }
 
-    override fun getApplicableReferenceNames(): List<String>? =
+    override fun getApplicableReferenceNames(): List<String> =
         listOf("ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS")
 
     override fun visitReference(
@@ -121,19 +126,18 @@ class BatteryDetector : ResourceXmlDetector(), SourceCodeScanner {
         reference: UReferenceExpression,
         referenced: PsiElement
     ) {
+        val evaluator = context.evaluator
         if (referenced is PsiField &&
-            context.evaluator.isMemberInSubClassOf(
-                referenced,
-                "android.provider.Settings", false
-            ) &&
-            context.mainProject.targetSdkVersion.featureLevel >= 23
+            evaluator.isMemberInSubClassOf(referenced, "android.provider.Settings", false) &&
+            context.project.targetSdkVersion.featureLevel >= 23
         ) {
-            context.report(
+            val incident = Incident(
                 ISSUE, reference, context.getNameLocation(reference),
                 "Use of `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` violates the " +
                     "Play Store Content Policy regarding acceptable use cases, as described in " +
                     "https://developer.android.com/training/monitoring-device-state/doze-standby.html"
             )
+            context.report(incident, constraint = targetSdkAtLeast(23))
         }
     }
 }

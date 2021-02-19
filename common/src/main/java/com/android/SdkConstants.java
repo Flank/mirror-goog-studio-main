@@ -1143,6 +1143,7 @@ public final class SdkConstants {
     public static final String TAG_ACTION = "action"; //$NON-NLS-1$
     public static final String TAG_INSTRUMENTATION = "instrumentation";
     public static final String TAG_META_DATA = "meta-data";
+    public static final String TAG_PROPERTY = "property";
     public static final String TAG_RESOURCE = "resource";
     public static final String TAG_MODULE = "module";
     public static final String TAG_NAV_GRAPH = "nav-graph";
@@ -2802,7 +2803,7 @@ public final class SdkConstants {
      * Studio product. It need not actually be the latest version of Gradle, but it will most likely
      * be fairly recent.
      */
-    public static final String GRADLE_LATEST_VERSION = "6.8.1";
+    public static final String GRADLE_LATEST_VERSION = "6.8.2";
 
     public static final String GRADLE_PLUGIN_MINIMUM_VERSION = "1.0.0";
     public static final String GRADLE_PLUGIN_RECOMMENDED_VERSION = "3.3.2";

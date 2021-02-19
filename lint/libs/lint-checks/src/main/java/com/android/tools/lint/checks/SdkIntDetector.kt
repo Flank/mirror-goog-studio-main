@@ -18,20 +18,26 @@ package com.android.tools.lint.checks
 
 import com.android.sdklib.SdkVersionInfo
 import com.android.tools.lint.checks.VersionChecks.Companion.CHECKS_SDK_INT_AT_LEAST_ANNOTATION
+import com.android.tools.lint.client.api.JavaEvaluator
+import com.android.tools.lint.client.api.LintClient
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.ConstantEvaluator
+import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.LintFix
 import com.android.tools.lint.detector.api.Location
+import com.android.tools.lint.detector.api.PartialResult
+import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiField
 import com.intellij.psi.PsiMethod
+import com.intellij.psi.PsiModifierListOwner
 import com.intellij.psi.PsiParameter
 import com.intellij.psi.PsiParameterList
 import org.jetbrains.uast.UAnnotated
@@ -47,6 +53,7 @@ import org.jetbrains.uast.UQualifiedReferenceExpression
 import org.jetbrains.uast.UReferenceExpression
 import org.jetbrains.uast.UReturnExpression
 import org.jetbrains.uast.UastBinaryOperator
+import org.jetbrains.uast.getContainingUClass
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.tryResolve
 
@@ -69,6 +76,11 @@ class SdkIntDetector : Detector(), SourceCodeScanner {
 
     override fun visitMethodCall(context: JavaContext, node: UCallExpression, method: PsiMethod) {
         checkAnnotation(context, node)
+    }
+
+    override fun checkPartialResults(context: Context, partialResults: PartialResult) {
+        // Nothing to do here; the partial results are consumed in the VersionChecks lookup
+        // along the way
     }
 
     companion object {
@@ -100,7 +112,8 @@ class SdkIntDetector : Detector(), SourceCodeScanner {
         fun checkAnnotation(context: JavaContext, sdkInt: UElement) {
             // In app module analysis we always have source access to the
             // check method bodies; don't nag users to annotate these.
-            if (!context.project.isLibrary) {
+            val project = context.project
+            if (!project.isLibrary || !project.isAndroidProject) {
                 return
             }
             val comparison = sdkInt.getParentOfType(UBinaryExpression::class.java, true)
@@ -204,6 +217,17 @@ class SdkIntDetector : Detector(), SourceCodeScanner {
                         "This method should be annotated with `@ChecksSdkIntAtLeast($args)`"
                     val fix = createAnnotationFix(context, args, context.getLocation(method))
                     context.report(ISSUE, method, location, message, fix)
+
+                    if (!context.isGlobalAnalysis()) {
+                        // Store data for VersionChecks used by for example ApiDetector
+                        val methodDesc = getMethodKey(context.evaluator, method)
+                        val map = context.getPartialResults(ISSUE).map()
+                        // See VersionChecks#isKnownVersionCheck
+                        map.put(
+                            methodDesc,
+                            "api=$apiAtLeast${if (lambda != -1) ",lambda=$lambda" else ""}"
+                        )
+                    }
                 }
             } else if (apiOperand is UReferenceExpression) {
                 val parameter = apiOperand.resolve()
@@ -216,6 +240,16 @@ class SdkIntDetector : Detector(), SourceCodeScanner {
                         val location = context.getNameLocation(method)
                         val fix = createAnnotationFix(context, args, context.getLocation(method))
                         context.report(ISSUE, method, location, message, fix)
+
+                        if (!context.isGlobalAnalysis()) {
+                            // Store data for the Version Check, used from ApiDetector etc
+                            val methodDesc = getMethodKey(context.evaluator, method)
+                            val map = context.getPartialResults(ISSUE).map()
+                            map.put(
+                                methodDesc,
+                                "parameter=$index${if (lambda != -1) ",lambda=$lambda" else ""}"
+                            )
+                        }
                     }
                 }
             }
@@ -262,6 +296,13 @@ class SdkIntDetector : Detector(), SourceCodeScanner {
                 val location = context.getLocation(field)
                 val fix = createAnnotationFix(context, args, location)
                 context.report(ISSUE, field, location, message, fix)
+
+                if (!context.isGlobalAnalysis()) {
+                    // Store data for VersionChecks used by for example ApiDetector
+                    val fieldDesc = getFieldKey(context.evaluator, field)
+                    val map = context.getPartialResults(ISSUE).map()
+                    map.put(fieldDesc, "api=$atLeast")
+                }
             }
         }
 
@@ -270,6 +311,79 @@ class SdkIntDetector : Detector(), SourceCodeScanner {
             return context.evaluator.getAllAnnotations(annotated, false).any {
                 it.qualifiedName == CHECKS_SDK_INT_AT_LEAST_ANNOTATION
             }
+        }
+
+        private fun getMethodKey(
+            evaluator: JavaEvaluator,
+            method: UMethod
+        ): String {
+            val desc = evaluator.getMethodDescription(
+                method,
+                includeName = false,
+                includeReturn = false
+            )
+            val cls = method.getContainingUClass()?.let { evaluator.getQualifiedName(it) }
+            return "$cls#${method.name}$desc"
+        }
+
+        private fun getFieldKey(
+            evaluator: JavaEvaluator,
+            field: UField
+        ): String {
+            val cls = field.getContainingUClass()?.let { evaluator.getQualifiedName(it) }
+            return "$cls#${field.name}"
+        }
+
+        private fun getMethodKey(
+            evaluator: JavaEvaluator,
+            method: PsiMethod
+        ): String {
+            val desc = evaluator.getMethodDescription(
+                method,
+                includeName = false,
+                includeReturn = false
+            )
+            val cls = method.containingClass?.let { evaluator.getQualifiedName(it) }
+            return "$cls#${method.name}$desc"
+        }
+
+        private fun getFieldKey(
+            evaluator: JavaEvaluator,
+            field: PsiField
+        ): String {
+            val cls = field.containingClass?.let { evaluator.getQualifiedName(it) }
+            return "$cls#${field.name}"
+        }
+
+        fun findSdkIntAnnotation(
+            client: LintClient,
+            evaluator: JavaEvaluator,
+            project: Project,
+            owner: PsiModifierListOwner
+        ): SdkIntAnnotation? {
+            val key = when (owner) {
+                is PsiMethod -> getMethodKey(evaluator, owner)
+                is PsiField -> getFieldKey(evaluator, owner)
+                else -> return null
+            }
+            val map = client.getPartialResults(project, ISSUE).map()
+            val args = map[key] ?: return null
+            val api = findAttribute(args, "api")?.toIntOrNull()
+            val codename = findAttribute(args, "codename")
+            val parameter = findAttribute(args, "parameter")?.toIntOrNull()
+            val lambda = findAttribute(args, "lambda")?.toIntOrNull()
+            return SdkIntAnnotation(api, codename, parameter, lambda)
+        }
+
+        private fun findAttribute(args: String, name: String): String? {
+            val key = "$name="
+            val index = args.indexOf(key)
+            if (index == -1) {
+                return null
+            }
+            val start = index + key.length
+            val end = args.indexOf(',', start).let { if (it == -1) args.length else it }
+            return args.substring(start, end)
         }
     }
 }

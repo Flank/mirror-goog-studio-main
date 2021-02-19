@@ -37,7 +37,9 @@ import com.android.resources.ResourceFolderType
 import com.android.resources.ResourceFolderType.LAYOUT
 import com.android.resources.ResourceFolderType.XML
 import com.android.tools.lint.detector.api.Category
+import com.android.tools.lint.detector.api.minSdkAtLeast
 import com.android.tools.lint.detector.api.Implementation
+import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.Issue.Companion.create
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.ResourceXmlDetector
@@ -99,7 +101,7 @@ class DeprecationDetector : ResourceXmlDetector(), SourceCodeScanner {
         }
     }
 
-    override fun getApplicableElements(): Collection<String>? {
+    override fun getApplicableElements(): Collection<String> {
         return listOf(ABSOLUTE_LAYOUT, TAG_USES_PERMISSION_SDK_M)
     }
 
@@ -191,20 +193,18 @@ class DeprecationDetector : ResourceXmlDetector(), SourceCodeScanner {
                 minSdk = 3
             }
         }
-        if (context.project.minSdk < minSdk) {
-            return
-        }
-        context.report(
+        val incident = Incident(
             ISSUE,
             attribute,
             context.getLocation(attribute),
             "`${attribute.name}` is deprecated: $fix"
         )
+        context.report(incident, minSdkAtLeast(minSdk))
     }
 
     // Kotlin and Java deprecation checks:
 
-    override fun getApplicableConstructorTypes(): List<String>? {
+    override fun getApplicableConstructorTypes(): List<String> {
         return listOf(FIREBASE_JOB_DISPATCHER_CLASS)
     }
 
@@ -223,7 +223,7 @@ class DeprecationDetector : ResourceXmlDetector(), SourceCodeScanner {
         )
     }
 
-    override fun getApplicableMethodNames(): List<String>? {
+    override fun getApplicableMethodNames(): List<String> {
         return listOf("getInstance")
     }
 
@@ -241,7 +241,7 @@ class DeprecationDetector : ResourceXmlDetector(), SourceCodeScanner {
         )
     }
 
-    override fun applicableSuperClasses(): List<String>? {
+    override fun applicableSuperClasses(): List<String> {
         return listOf(CHOOSER_TARGET_SERVICE_CLASS)
     }
 

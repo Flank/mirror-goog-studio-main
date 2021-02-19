@@ -22,9 +22,14 @@ import com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidT
 import com.google.common.annotations.VisibleForTesting
 import io.grpc.Server
 import io.grpc.ServerBuilder
+import io.grpc.netty.GrpcSslContexts
+import io.grpc.netty.NettyServerBuilder
 import io.grpc.stub.StreamObserver
+import io.netty.handler.ssl.ClientAuth
+import io.netty.handler.ssl.SslContextBuilder
 import org.gradle.api.logging.Logging
 import java.io.Closeable
+import java.io.File
 import java.io.IOException
 
 /**
@@ -47,10 +52,13 @@ class UtpTestResultListenerServer private constructor(
          * port number by 1 until it reaches to the [maxRetryAttempt].
          */
         fun startServer(
+                certChainFile: File,
+                privateKeyFile: File,
+                trustCertCollectionFile: File,
                 defaultPort: Int = DEFAULT_GRPC_SERVER_PORT,
                 maxRetryAttempt: Int = DEFAULT_MAX_RETRY_ATTEMPT,
                 serverFactory: (Int) -> ServerBuilder<*> = { port ->
-                    ServerBuilder.forPort(port)
+                    createServerBuilder(certChainFile, privateKeyFile, trustCertCollectionFile, port)
                 }
         ): UtpTestResultListenerServer? {
             for (attempt in 0 until maxRetryAttempt) {
@@ -64,6 +72,19 @@ class UtpTestResultListenerServer private constructor(
             }
             logger.error("Unable to start the gRPC server.")
             return null
+        }
+
+        private fun createServerBuilder(
+                certChainFile: File,
+                privateKeyFile: File,
+                trustCertCollectionFile: File,
+                port: Int): ServerBuilder<*> {
+            val sslContext = SslContextBuilder.forServer(certChainFile, privateKeyFile).apply {
+                trustManager(trustCertCollectionFile)
+                clientAuth(ClientAuth.REQUIRE)
+                GrpcSslContexts.configure(this)
+            }.build()
+            return NettyServerBuilder.forPort(port).sslContext(sslContext)
         }
     }
 

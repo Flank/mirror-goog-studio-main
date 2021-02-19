@@ -278,22 +278,14 @@ abstract class DexMergingTask : NewIncrementalTask() {
                     InternalArtifactType.LEGACY_MULTIDEX_AAPT_DERIVED_PROGUARD_RULES,
                     task.sharedParams.mainDexListConfig.aaptGeneratedRules
                 )
-                val variantDslInfo = creationConfig.variantDslInfo
-                val project = creationConfig.globalScope.project
 
-                if (variantDslInfo.multiDexKeepProguard != null) {
-                    task.sharedParams.mainDexListConfig.userMultidexProguardRules.fileProvider(
-                        project.provider { variantDslInfo.multiDexKeepProguard }
-                    )
-                }
-                task.sharedParams.mainDexListConfig.userMultidexProguardRules.disallowChanges()
+                task.sharedParams.mainDexListConfig.userMultidexProguardRules.setDisallowChanges(
+                    creationConfig.dexing.multiDexKeepProguard
+                )
 
-                if (variantDslInfo.multiDexKeepFile != null) {
-                    task.sharedParams.mainDexListConfig.userMultidexKeepFile.fileProvider(
-                        project.provider { variantDslInfo.multiDexKeepFile }
-                    )
-                }
-                task.sharedParams.mainDexListConfig.userMultidexKeepFile.disallowChanges()
+                task.sharedParams.mainDexListConfig.userMultidexKeepFile.setDisallowChanges(
+                    creationConfig.dexing.multiDexKeepFile
+                )
 
                 task.sharedParams.mainDexListConfig.platformMultidexProguardRules
                     .setDisallowChanges(getPlatformRules())

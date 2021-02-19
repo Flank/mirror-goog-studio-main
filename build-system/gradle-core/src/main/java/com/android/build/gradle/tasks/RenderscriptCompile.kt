@@ -41,9 +41,12 @@ import com.android.utils.FileUtils
 import com.google.common.base.Preconditions.checkNotNull
 import com.google.common.collect.Lists
 import com.google.common.collect.Sets
+import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
@@ -66,10 +69,10 @@ abstract class RenderscriptCompile : NdkTask() {
     // ----- PUBLIC TASK API -----
 
     @get:OutputDirectory
-    lateinit var resOutputDir: File
+    abstract val resOutputDir: DirectoryProperty
 
     @get:OutputDirectory
-    lateinit var objOutputDir: File
+    lateinit var objOutputDir: Provider<Directory>
 
     // ----- PRIVATE TASK API -----
 
@@ -152,10 +155,10 @@ abstract class RenderscriptCompile : NdkTask() {
         val sourceDestDir = sourceOutputDir.get().asFile
         FileUtils.cleanOutputDir(sourceDestDir)
 
-        val resDestDir = resOutputDir
+        val resDestDir = resOutputDir.get().asFile
         FileUtils.cleanOutputDir(resDestDir)
 
-        val objDestDir = objOutputDir
+        val objDestDir = objOutputDir.get().asFile
         FileUtils.cleanOutputDir(objDestDir)
 
         val libDestDir = libOutputDir.get().asFile
@@ -307,7 +310,7 @@ abstract class RenderscriptCompile : NdkTask() {
                 COMPILE_CLASSPATH, ALL, RENDERSCRIPT
             )
 
-            task.resOutputDir = creationConfig.paths.renderscriptResOutputDir
+            task.resOutputDir.setDisallowChanges(creationConfig.paths.renderscriptResOutputDir)
             task.objOutputDir = creationConfig.paths.renderscriptObjOutputDir
 
             task.ndkConfig = variantDslInfo.ndkConfig

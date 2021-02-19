@@ -34,7 +34,6 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.XmlContext
 import org.w3c.dom.Attr
-import java.util.Arrays
 
 /**
  * Check which looks at the children of ScrollViews and ensures that they fill/match the parent
@@ -46,8 +45,8 @@ import java.util.Arrays
  */
 class HardcodedValuesDetector : LayoutDetector() {
 
-    override fun getApplicableAttributes(): Collection<String>? {
-        return Arrays.asList(
+    override fun getApplicableAttributes(): Collection<String> {
+        return listOf(
             // Layouts
             ATTR_TEXT,
             ATTR_CONTENT_DESCRIPTION,

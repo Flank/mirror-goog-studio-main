@@ -138,7 +138,7 @@ class ArraySizeDetectorTest : AbstractCheckTest() {
         ).run().expectClean()
     }
 
-    fun testArraySizesIncremental() {
+    fun testArraySizesWithRepository() {
         lint().files(
             xml(
                 "res/values/arrays.xml",
@@ -228,13 +228,24 @@ class ArraySizeDetectorTest : AbstractCheckTest() {
                 """
             ).indented()
         )
-            .incremental("res/values/arrays.xml")
             .run().expect(
                 """
-                res/values/arrays.xml:3: Warning: Array security_questions has an inconsistent number of items (4 in values/arrays.xml, 3 in values-nl-rNL/arrays.xml) [InconsistentArrays]
+                res/values/arrays.xml:3: Warning: Array security_questions has an inconsistent number of items (3 in values-nl-rNL/arrays.xml, 4 in values-cs/arrays.xml) [InconsistentArrays]
                     <string-array name="security_questions">
                     ^
+                    res/values-cs/arrays.xml:3: Declaration with array size (4)
+                  <string-array name="security_questions">
+                  ^
+                    res/values-es/strings.xml:12: Declaration with array size (4)
+                  <string-array name="security_questions">
+                  ^
+                    res/values-nl-rNL/arrays.xml:3: Declaration with array size (3)
+                  <string-array name="security_questions">
+                  ^
                 res/values/arrays.xml:10: Warning: Array signal_strength has an inconsistent number of items (5 in values/arrays.xml, 6 in values-land/arrays.xml) [InconsistentArrays]
+                    <array name="signal_strength">
+                    ^
+                    res/values-land/arrays.xml:2: Declaration with array size (6)
                     <array name="signal_strength">
                     ^
                 0 errors, 2 warnings

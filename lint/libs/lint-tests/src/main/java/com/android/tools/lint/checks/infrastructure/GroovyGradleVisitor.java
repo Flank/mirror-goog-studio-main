@@ -134,17 +134,26 @@ public class GroovyGradleVisitor extends GradleVisitor {
                                 String parent = getParent();
                                 String parentParent = getParentN(2);
                                 String parent3 = getParentN(3);
+                                Map<String, String> namedArguments = new HashMap<>();
+                                List<String> unnamedArguments = new ArrayList<>();
+                                extractMethodCallArguments(
+                                        tupleExpression, unnamedArguments, namedArguments);
                                 if (tupleExpression instanceof ArgumentListExpression) {
                                     ArgumentListExpression ale =
                                             (ArgumentListExpression) tupleExpression;
                                     List<Expression> expressions = ale.getExpressions();
-                                    // a pure block has its effect recorded in mMethodCallStack
-                                    if (expressions.size() != 1
-                                            || !(expressions.get(0) instanceof ClosureExpression)) {
-                                        Map<String, String> namedArguments = new HashMap<>();
-                                        List<String> unnamedArguments = new ArrayList<>();
-                                        extractMethodCallArguments(
-                                                tupleExpression, unnamedArguments, namedArguments);
+                                    if (expressions.size() == 1
+                                            && expressions.get(0) instanceof ClosureExpression) {
+                                        // a pure block has its effect recorded in mMethodCallStack
+                                        // but may need to be inspected for deprecations
+                                        checkMethodCall(
+                                                parent,
+                                                parentParent,
+                                                parent3,
+                                                unnamedArguments,
+                                                namedArguments,
+                                                call);
+                                    } else {
                                         checkMethodCall(
                                                 parent,
                                                 parentParent,
@@ -161,10 +170,6 @@ public class GroovyGradleVisitor extends GradleVisitor {
                                                 call);
                                     }
                                 } else {
-                                    Map<String, String> namedArguments = new HashMap<>();
-                                    List<String> unnamedArguments = new ArrayList<>();
-                                    extractMethodCallArguments(
-                                            tupleExpression, unnamedArguments, namedArguments);
                                     checkMethodCall(
                                             parent,
                                             parentParent,

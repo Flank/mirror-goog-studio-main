@@ -41,6 +41,7 @@ class TestApplicationTestData constructor(
     providerFactory,
     componentImpl,
     creationConfig,
+    creationConfig,
     creationConfig.variantSources,
     testApkDir,
     testedApksDir

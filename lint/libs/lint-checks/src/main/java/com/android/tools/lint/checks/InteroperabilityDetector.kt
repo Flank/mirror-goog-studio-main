@@ -232,7 +232,7 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
         return JavaVisitor(context)
     }
 
-    override fun getApplicableUastTypes(): List<Class<out UElement>>? {
+    override fun getApplicableUastTypes(): List<Class<out UElement>> {
         return listOf(UMethod::class.java, UField::class.java)
     }
 
@@ -745,7 +745,7 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
 
         private fun initializeAnnotationNames(context: JavaContext) {
             if (nonNullAnnotation == null) {
-                val library = context.mainProject.buildVariant?.mainArtifact
+                val library = context.project.buildVariant?.mainArtifact
                     ?.findCompileDependency("androidx.annotation:annotation")
                 if (library != null) {
                     nonNullAnnotation = "@androidx.annotation.NonNull"

@@ -27,6 +27,7 @@
          -extension -Xandroid-inheritance \
          -b repository/src/main/java/com/android/repository/api/global.xjb \
          -b repository/src/main/java/com/android/repository/impl/meta/generic-custom.xjb \
+         -d repository/src/main/java/ \
          -no-header
 
     from tools/base with jaxb-inheritance-plugin.jar, repository classes, guava, and the

@@ -23,7 +23,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import java.util.Map;
 
-@SuppressWarnings("javadoc")
 public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
     @Override
     protected Detector getDetector() {
@@ -101,7 +100,7 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
 
             String expected =
                     ""
-                            + "AndroidManifest.xml:12: Error: This host does not support app links to your app. Checks the Digital Asset Links JSON file: http://example.com/.well-known/assetlinks.json [AppLinksAutoVerifyError]\n"
+                            + "AndroidManifest.xml:12: Error: This host does not support app links to your app. Checks the Digital Asset Links JSON file: http://example.com/.well-known/assetlinks.json [AppLinksAutoVerify]\n"
                             + "                    android:host=\"example.com\"\n"
                             + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                             + "1 errors, 0 warnings\n";
@@ -157,7 +156,7 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
 
             String expected =
                     ""
-                            + "AndroidManifest.xml:12: Error: This host does not support app links to your app. Checks the Digital Asset Links JSON file: http://example.com/.well-known/assetlinks.json [AppLinksAutoVerifyError]\n"
+                            + "AndroidManifest.xml:12: Error: This host does not support app links to your app. Checks the Digital Asset Links JSON file: http://example.com/.well-known/assetlinks.json [AppLinksAutoVerify]\n"
                             + "                    android:host=\"example.com\"\n"
                             + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                             + "1 errors, 0 warnings\n";
@@ -200,7 +199,7 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
 
             String expected =
                     ""
-                            + "AndroidManifest.xml:12: Warning: HTTP request for Digital Asset Links JSON file http://example.com/.well-known/assetlinks.json fails. HTTP response code: 404 [AppLinksAutoVerifyWarning]\n"
+                            + "AndroidManifest.xml:12: Warning: HTTP request for Digital Asset Links JSON file http://example.com/.well-known/assetlinks.json fails. HTTP response code: 404 [AppLinksAutoVerify]\n"
                             + "                    android:host=\"example.com\"\n"
                             + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                             + "0 errors, 1 warnings\n";
@@ -246,7 +245,7 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
 
             String expected =
                     ""
-                            + "AndroidManifest.xml:12: Warning: Connection to Digital Asset Links JSON file http://example.com/.well-known/assetlinks.json fails [AppLinksAutoVerifyWarning]\n"
+                            + "AndroidManifest.xml:12: Warning: Connection to Digital Asset Links JSON file http://example.com/.well-known/assetlinks.json fails [AppLinksAutoVerify]\n"
                             + "                    android:host=\"example.com\"\n"
                             + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                             + "0 errors, 1 warnings\n";
@@ -292,7 +291,7 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
 
             String expected =
                     ""
-                            + "AndroidManifest.xml:12: Error: Malformed URL of Digital Asset Links JSON file: http://example.com/.well-known/assetlinks.json. An unknown protocol is specified [AppLinksAutoVerifyError]\n"
+                            + "AndroidManifest.xml:12: Error: Malformed URL of Digital Asset Links JSON file: http://example.com/.well-known/assetlinks.json. An unknown protocol is specified [AppLinksAutoVerify]\n"
                             + "                    android:host=\"example.com\"\n"
                             + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                             + "1 errors, 0 warnings\n";
@@ -338,7 +337,7 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
 
             String expected =
                     ""
-                            + "AndroidManifest.xml:12: Warning: Unknown host: http://example.com. Check if the host exists, and check your network connection [AppLinksAutoVerifyWarning]\n"
+                            + "AndroidManifest.xml:12: Warning: Unknown host: http://example.com. Check if the host exists, and check your network connection [AppLinksAutoVerify]\n"
                             + "                    android:host=\"example.com\"\n"
                             + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                             + "0 errors, 1 warnings\n";
@@ -384,7 +383,7 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
 
             String expected =
                     ""
-                            + "AndroidManifest.xml:12: Error: Digital Asset Links JSON file http://example.com/.well-known/assetlinks.json is not found on the host [AppLinksAutoVerifyError]\n"
+                            + "AndroidManifest.xml:12: Error: Digital Asset Links JSON file http://example.com/.well-known/assetlinks.json is not found on the host [AppLinksAutoVerify]\n"
                             + "                    android:host=\"example.com\"\n"
                             + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                             + "1 errors, 0 warnings\n";
@@ -430,7 +429,7 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
 
             String expected =
                     ""
-                            + "AndroidManifest.xml:12: Error: http://example.com/.well-known/assetlinks.json has incorrect JSON syntax [AppLinksAutoVerifyError]\n"
+                            + "AndroidManifest.xml:12: Error: http://example.com/.well-known/assetlinks.json has incorrect JSON syntax [AppLinksAutoVerify]\n"
                             + "                    android:host=\"example.com\"\n"
                             + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                             + "1 errors, 0 warnings\n";
@@ -476,7 +475,7 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
 
             String expected =
                     ""
-                            + "AndroidManifest.xml:12: Error: Parsing JSON file http://example.com/.well-known/assetlinks.json fails [AppLinksAutoVerifyError]\n"
+                            + "AndroidManifest.xml:12: Error: Parsing JSON file http://example.com/.well-known/assetlinks.json fails [AppLinksAutoVerify]\n"
                             + "                    android:host=\"example.com\"\n"
                             + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                             + "1 errors, 0 warnings\n";
@@ -603,16 +602,16 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
 
             String expected =
                     ""
-                            + "AndroidManifest.xml:12: Error: Digital Asset Links JSON file https://example.com/.well-known/assetlinks.json is not found on the host [AppLinksAutoVerifyError]\n"
+                            + "AndroidManifest.xml:12: Error: Digital Asset Links JSON file https://example.com/.well-known/assetlinks.json is not found on the host [AppLinksAutoVerify]\n"
                             + "                    android:host=\"example.com\"\n"
                             + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                            + "AndroidManifest.xml:15: Error: https://www.example.com/.well-known/assetlinks.json has incorrect JSON syntax [AppLinksAutoVerifyError]\n"
+                            + "AndroidManifest.xml:15: Error: https://www.example.com/.well-known/assetlinks.json has incorrect JSON syntax [AppLinksAutoVerify]\n"
                             + "                <data android:host=\"www.example.com\" />\n"
                             + "                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                            + "AndroidManifest.xml:12: Warning: Connection to Digital Asset Links JSON file http://example.com/.well-known/assetlinks.json fails [AppLinksAutoVerifyWarning]\n"
+                            + "AndroidManifest.xml:12: Warning: Connection to Digital Asset Links JSON file http://example.com/.well-known/assetlinks.json fails [AppLinksAutoVerify]\n"
                             + "                    android:host=\"example.com\"\n"
                             + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                            + "AndroidManifest.xml:15: Warning: Unknown host: http://www.example.com. Check if the host exists, and check your network connection [AppLinksAutoVerifyWarning]\n"
+                            + "AndroidManifest.xml:15: Warning: Unknown host: http://www.example.com. Check if the host exists, and check your network connection [AppLinksAutoVerify]\n"
                             + "                <data android:host=\"www.example.com\" />\n"
                             + "                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                             + "2 errors, 2 warnings\n";
@@ -664,10 +663,10 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
 
             String expected =
                     ""
-                            + "AndroidManifest.xml:12: Warning: Unknown host: http://www.example.com. Check if the host exists, and check your network connection [AppLinksAutoVerifyWarning]\n"
+                            + "AndroidManifest.xml:12: Warning: Unknown host: http://www.example.com. Check if the host exists, and check your network connection [AppLinksAutoVerify]\n"
                             + "                    android:host=\"www.example.com\"\n"
                             + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                            + "AndroidManifest.xml:20: Warning: Connection to Digital Asset Links JSON file http://example.com/.well-known/assetlinks.json fails [AppLinksAutoVerifyWarning]\n"
+                            + "AndroidManifest.xml:20: Warning: Connection to Digital Asset Links JSON file http://example.com/.well-known/assetlinks.json fails [AppLinksAutoVerify]\n"
                             + "                    android:host=\"example.com\"\n"
                             + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                             + "0 errors, 2 warnings\n";
@@ -766,7 +765,7 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
 
             String expected =
                     ""
-                            + "src/main/AndroidManifest.xml:12: Warning: Unknown host: http://example.com. Check if the host exists, and check your network connection [AppLinksAutoVerifyWarning]\n"
+                            + "src/main/AndroidManifest.xml:12: Warning: Unknown host: http://example.com. Check if the host exists, and check your network connection [AppLinksAutoVerify]\n"
                             + "                    android:host=\"${intentFilterHost}\"\n"
                             + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                             + "0 errors, 1 warnings\n";

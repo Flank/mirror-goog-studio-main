@@ -30,7 +30,6 @@ import com.android.tools.lint.detector.api.XmlContext
 import com.android.tools.lint.detector.api.isLayoutMarkerTag
 import com.android.utils.iterator
 import org.w3c.dom.Element
-import java.util.Arrays
 
 /**
  * Check which makes sure that views have the expected number of declared
@@ -76,7 +75,7 @@ class ChildCountDetector : LayoutDetector() {
         )
     }
 
-    override fun getApplicableElements(): Collection<String>? = Arrays.asList(
+    override fun getApplicableElements(): Collection<String> = listOf(
         SCROLL_VIEW,
         HORIZONTAL_SCROLL_VIEW,
         LIST_VIEW,

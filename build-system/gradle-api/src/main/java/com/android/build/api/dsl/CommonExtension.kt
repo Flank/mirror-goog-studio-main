@@ -37,7 +37,6 @@ interface CommonExtension<
         SigningConfigT : SigningConfig,
         VariantBuilderT : VariantBuilder,
         VariantT : Variant> {
-    // TODO(b/140406102)
 
     /**
      * Specifies options for the Android Asset Packaging Tool (AAPT).
@@ -45,6 +44,7 @@ interface CommonExtension<
      * For more information about the properties you can configure in this block, see [AaptOptions].
      */
     @get:Incubating
+    @Deprecated("Replaced by ", replaceWith = ReplaceWith("androidResources"))
     val aaptOptions: AaptOptions
 
     /**
@@ -53,7 +53,22 @@ interface CommonExtension<
      * For more information about the properties you can configure in this block, see [AaptOptions].
      */
     @Incubating
+    @Deprecated("Replaced by ", replaceWith = ReplaceWith("androidResources"))
     fun aaptOptions(action: AaptOptions.() -> Unit)
+
+    /**
+     * Specifies options related to the processing of Android Resources.
+     *
+     * For more information about the properties you can configure in this block, see [AndroidResources].
+     */
+    val androidResources: AndroidResources
+
+    /**
+     * Specifies options related to the processing of Android Resources.
+     *
+     * For more information about the properties you can configure in this block, see [AndroidResources].
+     */
+    fun androidResources(action: AndroidResources.() -> Unit)
 
     /**
      * Specifies options for the
@@ -81,7 +96,6 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [CompileOptions].
      */
-    @get:Incubating
     val compileOptions: CompileOptions
 
     /**
@@ -90,7 +104,6 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [CompileOptions].
      */
-    @Incubating
     fun compileOptions(action: CompileOptions.() -> Unit)
 
     /**
@@ -172,7 +185,6 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [DataBinding]
      */
-    @get:Incubating
     val dataBinding: DataBinding
 
     /**
@@ -181,41 +193,75 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [DataBinding]
      */
-    @Incubating
     fun dataBinding(action: DataBinding.() -> Unit)
 
     /**
-     * Configure JaCoCo version that is used for offline instrumentation and coverage report.
+     * Configure the gathering of code-coverage from tests.
      *
-     * To specify the version of JaCoCo you want to use, add the following to `build.gradle
-     * ` file:
-     *
-     * ```
-     * android {
-     *     jacoco {
-     *         version "<jacoco-version>"
-     *     }
-     * }
-     * ```
+     * This is replaced by [testCoverage].
      */
     @get:Incubating
+    @Deprecated("Renamed to testCoverage", replaceWith = ReplaceWith("testCoverage"))
     val jacoco: JacocoOptions
+
     /**
-     * Configure JaCoCo version that is used for offline instrumentation and coverage report.
+     * Configure the gathering of code-coverage from tests.
      *
-     * To specify the version of JaCoCo you want to use, add the following to `build.gradle
-     * ` file:
+     * This is replaced by [testCoverage].
+     */
+    @Incubating
+    @Deprecated("Renamed to testCoverage", replaceWith = ReplaceWith("testCoverage"))
+    fun jacoco(action: JacocoOptions.() -> Unit)
+
+    /**
+     * Configure the gathering of code-coverage from tests.
+     *
+     * To override the JaCoCo version that is used for offline instrumentation and coverage report,
+     * add the following to `build.gradle` file:
      *
      * ```
      * android {
-     *     jacoco {
-     *         version "<jacoco-version>"
+     *     testCoverage {
+     *         jacocoVersion "<jacoco-version>"
      *     }
      * }
      * ```
+     *
+     * For more information about the properties you can configure in this block, see [TestCoverage].
      */
-    @Incubating
-    fun jacoco(action: JacocoOptions.() -> Unit)
+    val testCoverage: TestCoverage
+
+    /**
+     * Configure the gathering of code-coverage from tests.
+     *
+     * To override the JaCoCo version that is used for offline instrumentation and coverage report,
+     * add the following to `build.gradle` file:
+     *
+     * ```
+     * android {
+     *     testCoverage {
+     *         jacocoVersion "<jacoco-version>"
+     *     }
+     * }
+     * ```
+     *
+     * For more information about the properties you can configure in this block, see [TestCoverage].
+     */
+    fun testCoverage(action: TestCoverage.() -> Unit)
+
+    /**
+     * Specifies options for the lint tool.
+     *
+     * For more information about the properties you can configure in this block, see [Lint].
+     */
+    val lint: Lint
+
+    /**
+     * Specifies options for the lint tool.
+     *
+     * For more information about the properties you can configure in this block, see [Lint].
+     */
+    fun lint(action: Lint.() -> Unit)
 
     /**
      * Specifies options for the lint tool.
@@ -223,6 +269,7 @@ interface CommonExtension<
      * For more information about the properties you can configure in this block, see [LintOptions].
      */
     @get:Incubating
+    @Deprecated("Renamed to lint", replaceWith = ReplaceWith("lint"))
     val lintOptions: LintOptions
 
     /**
@@ -231,6 +278,7 @@ interface CommonExtension<
      * For more information about the properties you can configure in this block, see [LintOptions].
      */
     @Incubating
+    @Deprecated("Renamed to lint", replaceWith = ReplaceWith("lint"))
     fun lintOptions(action: LintOptions.() -> Unit)
 
     /**

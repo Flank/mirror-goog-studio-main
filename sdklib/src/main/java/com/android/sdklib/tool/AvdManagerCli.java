@@ -27,7 +27,6 @@ import com.android.repository.api.ConsoleProgressIndicator;
 import com.android.repository.api.LocalPackage;
 import com.android.repository.api.ProgressIndicator;
 import com.android.repository.api.ProgressIndicatorAdapter;
-import com.android.repository.io.FileOp;
 import com.android.repository.io.FileOpUtils;
 import com.android.resources.Density;
 import com.android.resources.ScreenSize;
@@ -721,7 +720,9 @@ class AvdManagerCli extends CommandLineParser {
             if (cmdTag == null) {
                 DetailsTypes.SysImgDetailsType details =
                         (DetailsTypes.SysImgDetailsType) imagePkg.getTypeDetails();
-                tag = details.getTag();
+                // TODO: support multi-tag
+                List<IdDisplay> tags = details.getTags();
+                tag = tags.isEmpty() ? null : tags.get(0);
             }
 
             if (abiType != null && abiType.indexOf('/') != -1) {
@@ -1029,7 +1030,6 @@ class AvdManagerCli extends CommandLineParser {
         if (emulatorPackage == null) {
             errorAndExit("\"emulator\" package must be installed!");
         }
-        FileOp fop = mSdkHandler.getFileOp();
         Path libDir = emulatorPackage.getLocation().resolve(SdkConstants.FD_LIB);
         Path hardwareDefs = libDir.resolve(SdkConstants.FN_HARDWARE_INI);
         Map<String, HardwareProperties.HardwareProperty> hwMap =

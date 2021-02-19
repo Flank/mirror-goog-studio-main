@@ -19,85 +19,74 @@ package com.android.tools.lint.checks
 import com.android.SdkConstants.ANDROID_URI
 import com.android.SdkConstants.ATTR_NAME
 import com.android.SdkConstants.ATTR_REQUIRED
-import com.android.SdkConstants.TAG_MANIFEST
 import com.android.SdkConstants.TAG_USES_FEATURE
 import com.android.SdkConstants.TAG_USES_PERMISSION
+import com.android.SdkConstants.VALUE_FALSE
 import com.android.tools.lint.detector.api.Category
+import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
-import com.android.tools.lint.detector.api.XmlContext
 import com.android.tools.lint.detector.api.XmlScanner
 import com.android.utils.iterator
 import org.w3c.dom.Element
 
 class LeanbackWifiUsageDetector : Detector(), XmlScanner {
-    override fun getApplicableElements() = setOf(TAG_MANIFEST)
-    private var hasLeanBack: Boolean? = null
-    private var wifiFeatureNode: Element? = null
-    private var wifiFeatureNodeSearched = false
-    private var wifiFeatureNodeRequired: Boolean? = null
+    override fun checkMergedProject(context: Context) {
+        var wifiFeatureNode: Element? = null
+        val document = context.mainProject.mergedManifest?.documentElement ?: return
+        var wifiPermissionsNode: Element? = null
 
-    override fun visitElement(context: XmlContext, element: Element) {
-        if (hasLeanBack == null) {
-            hasLeanBack = context.mainProject.mergedManifest
-                ?.documentElement?.iterator()?.asSequence()?.any { node ->
-                node.localName == TAG_USES_FEATURE && node.attributes.getNamedItemNS(
-                    ANDROID_URI,
-                    ATTR_NAME
-                )?.nodeValue == LEANBACK_ATTR_NAME
-            }
+        // Only applies if manifest has <uses-feature> which includes android.software.leanback
+        val leanBack = document.iterator().asSequence().any { element ->
+            element.tagName == TAG_USES_FEATURE &&
+                element.getAttributeNS(ANDROID_URI, ATTR_NAME) == LEANBACK_ATTR_NAME
         }
-        if (hasLeanBack != true) return
-        if (!wifiFeatureNodeSearched) {
-            wifiFeatureNode = context.mainProject.mergedManifest
-                ?.documentElement?.iterator()?.asSequence()?.firstOrNull { node ->
-                when (node.localName) {
-                    TAG_USES_FEATURE -> {
-                        with(node.attributes) {
-                            getNamedItemNS(
-                                ANDROID_URI,
-                                ATTR_NAME
-                            )?.nodeValue == WIFI_FEATURE_NAME
-                        }
+        if (!leanBack) {
+            return
+        }
+
+        var hasLeanBack = false
+        for (element in document) {
+            when (element.tagName) {
+                TAG_USES_FEATURE -> {
+                    val name = element.getAttributeNS(ANDROID_URI, ATTR_NAME)
+                    if (name == LEANBACK_ATTR_NAME) {
+                        hasLeanBack = true
+                    } else if (name == WIFI_FEATURE_NAME) {
+                        wifiFeatureNode = element
                     }
-                    else -> {
-                        false
+                }
+                TAG_USES_PERMISSION -> {
+                    val name = element.getAttributeNS(ANDROID_URI, ATTR_NAME)
+                    if (isWifiStatePermission(name)) {
+                        wifiPermissionsNode = element
                     }
                 }
             }
-            wifiFeatureNodeRequired = wifiFeatureNode?.let { wifiNode ->
-                wifiNode.attributes.getNamedItemNS(ANDROID_URI, ATTR_REQUIRED)?.nodeValue != "false"
-            } ?: false
-            if (wifiFeatureNode != null && wifiFeatureNodeRequired == true) {
+        }
+
+        if (!hasLeanBack) {
+            return
+        }
+
+        val wifiFeatureNodeRequired = wifiFeatureNode?.let { wifiNode ->
+            wifiNode.getAttributeNS(ANDROID_URI, ATTR_REQUIRED) != VALUE_FALSE
+        } ?: false
+
+        if (wifiFeatureNode != null) {
+            if (wifiFeatureNodeRequired) {
                 context.report(
                     ISSUE,
-                    wifiFeatureNode,
-                    context.getLocation(wifiFeatureNode!!),
+                    context.getLocation(wifiFeatureNode),
                     "Requiring `android.hardware.wifi` limits app availability on TVs that support only Ethernet"
                 )
             }
-            wifiFeatureNodeSearched = true
-        }
-        val wifiPermissionsNode = element.iterator().asSequence().firstOrNull { node ->
-            when (node.localName) {
-                TAG_USES_PERMISSION -> {
-                    node.attributes.getNamedItemNS(
-                        ANDROID_URI,
-                        ATTR_NAME
-                    )?.let { attr -> WIFI_STATE_PERMISSIONS.contains(attr.nodeValue) } ?: false
-                }
-                else -> {
-                    false
-                }
-            }
-        }
-        if (wifiPermissionsNode != null && wifiFeatureNode == null) {
+        } else if (wifiPermissionsNode != null) {
             context.report(
                 ISSUE,
-                wifiPermissionsNode,
                 context.getLocation(wifiPermissionsNode),
                 "Requiring Wifi permissions limits app availability on TVs that support only Ethernet"
             )
@@ -107,11 +96,15 @@ class LeanbackWifiUsageDetector : Detector(), XmlScanner {
     companion object {
         private const val LEANBACK_ATTR_NAME = "android.software.leanback"
         private const val WIFI_FEATURE_NAME = "android.hardware.wifi"
-        private val WIFI_STATE_PERMISSIONS = setOf(
-            "android.permission.ACCESS_WIFI_STATE",
-            "android.permission.CHANGE_WIFI_STATE",
-            "android.permission.CHANGE_WIFI_MULTICAST_STATE"
-        )
+
+        private fun isWifiStatePermission(s: String): Boolean {
+            return when (s) {
+                "android.permission.ACCESS_WIFI_STATE",
+                "android.permission.CHANGE_WIFI_STATE",
+                "android.permission.CHANGE_WIFI_MULTICAST_STATE" -> true
+                else -> false
+            }
+        }
 
         @JvmField
         val ISSUE = Issue.create(
@@ -129,14 +122,15 @@ class LeanbackWifiUsageDetector : Detector(), XmlScanner {
                 Un-metered or non-roaming connections can be detected in software using
                 `NetworkCapabilities#NET_CAPABILITY_NOT_METERED` and \
                 `NetworkCapabilities#NET_CAPABILITY_NOT_ROAMING.`
-            """,
+                """,
             category = Category.CORRECTNESS,
             priority = 5,
             severity = Severity.WARNING,
             implementation = Implementation(
                 LeanbackWifiUsageDetector::class.java,
                 Scope.MANIFEST_SCOPE
-            )
+            ),
+            androidSpecific = true
         )
     }
 }

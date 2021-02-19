@@ -17,6 +17,5 @@
     <orderEntry type="module" module-name="android.sdktools.sdk-common" exported="" />
     <orderEntry type="module" module-name="android.sdktools.layoutlib-api" exported="" />
     <orderEntry type="module" module-name="android.sdktools.manifest-merger" exported="" />
-    <orderEntry type="library" name="kotlin-stdlib-jdk8" level="project" />
   </component>
 </module>

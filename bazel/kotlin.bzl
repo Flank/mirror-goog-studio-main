@@ -6,8 +6,8 @@ load(":lint.bzl", "lint_test")
 
 def test_kotlin_use_ir():
     return select({
-        "//tools/base/bazel:kotlin_use_ir": True,
-        "//conditions:default": False,
+        "//tools/base/bazel:kotlin_no_use_ir": False,
+        "//conditions:default": True,
     })
 
 def kotlin_compile(ctx, name, srcs, deps, friends, out, jre):
@@ -61,7 +61,7 @@ def kotlin_compile(ctx, name, srcs, deps, friends, out, jre):
     args.add("-Xjvm-default=enable")
 
     # Dependency jars may be compiled with a new kotlinc IR backend.
-    args.add("-Xallow-jvm-ir-dependencies")
+    args.add("-Xallow-unstable-dependencies")
 
     # Add "use-ir" to enable the new IR backend for kotlinc tasks when the
     # attribute "kotlin_use_ir" is set

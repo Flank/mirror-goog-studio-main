@@ -186,7 +186,7 @@ public class LocalSourceProviderTest {
     @Test
     public void allowedModules() {
         @SuppressWarnings("unchecked")
-        SchemaModule<Object> dummy = mock(SchemaModule.class);
+        SchemaModule<Object> fakeSchema = mock(SchemaModule.class);
 
         FileSystem fs = InMemoryFileSystems.createInMemoryFileSystem();
         Path sourcesPath =
@@ -200,7 +200,7 @@ public class LocalSourceProviderTest {
                         + "src00=http\\://example.com/foo\n"
                         + "src01=http\\://example.com/foo2\n"
                         + "count=2");
-        ImmutableList<SchemaModule<?>> modules = ImmutableList.of(dummy);
+        ImmutableList<SchemaModule<?>> modules = ImmutableList.of(fakeSchema);
         LocalSourceProvider provider = new LocalSourceProvider(sourcesPath, modules);
         provider.setRepoManager(new FakeRepoManager(new RepositoryPackages()));
         List<RepositorySource> sources =

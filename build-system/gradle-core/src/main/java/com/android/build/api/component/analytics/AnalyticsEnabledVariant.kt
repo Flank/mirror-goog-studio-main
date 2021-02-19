@@ -137,4 +137,10 @@ abstract class AnalyticsEnabledVariant (
 
     override val unitTest: UnitTest?
         get() = delegate.unitTest
+
+    override fun <T> getExtension(type: Class<T>): T? {
+        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+            VariantPropertiesMethodType.GET_EXTENSION_VALUE
+        return delegate.getExtension(type)
+    }
 }

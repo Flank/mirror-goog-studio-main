@@ -24,6 +24,7 @@ import com.android.SdkConstants.ANDROID_MANIFEST_XML
 import com.android.SdkConstants.ANDROID_NS_NAME_PREFIX
 import com.android.SdkConstants.ANDROID_PREFIX
 import com.android.SdkConstants.ANDROID_URI
+import com.android.SdkConstants.ATTR_ID
 import com.android.SdkConstants.ATTR_LOCALE
 import com.android.SdkConstants.ATTR_NAME
 import com.android.SdkConstants.ATTR_PACKAGE
@@ -82,6 +83,7 @@ import com.android.utils.PositionXmlParser
 import com.android.utils.SdkUtils
 import com.android.utils.XmlUtils
 import com.android.utils.findGradleBuildFile
+import com.android.utils.iterator
 import com.google.common.base.MoreObjects
 import com.google.common.base.Objects
 import com.google.common.base.Splitter
@@ -123,6 +125,7 @@ import org.objectweb.asm.Opcodes
 import org.objectweb.asm.tree.AbstractInsnNode
 import org.objectweb.asm.tree.ClassNode
 import org.objectweb.asm.tree.FieldNode
+import org.w3c.dom.Document
 import org.w3c.dom.Element
 import org.w3c.dom.Node
 import java.io.File
@@ -2047,6 +2050,106 @@ fun isJreFolder(homePath: File): Boolean {
 
 fun isJdkFolder(homePath: File): Boolean {
     return File(homePath, "bin/javac").isFile || File(homePath, "bin/javac.exe").isFile
+}
+
+/**
+ * Given an [element] somewhere in a document, find and return the
+ * equivalent element within the given [targetDocument] (a similar but
+ * different instance of the document). Typically the element will be
+ * something from a merged manifest, and the target we're seeking is the
+ * corresponding source element in one of the manifest files that were
+ * merged.
+ *
+ * Note that the documents will typically not be equivalent, so the
+ * algorithm is to match up elements by tag path and name, and then some
+ * heuristics for matching siblings (such as matching by attributes like
+ * id and name and as a last resort, their positions).
+ */
+fun matchXmlElement(element: Element, targetDocument: Document): Element? {
+    val target = targetDocument.documentElement
+    val path = mutableListOf<Element>()
+    var curr = element
+    while (true) {
+        path.add(curr)
+        curr = curr.parentNode as? Element ?: break
+    }
+    if (path.size == 1 && element.tagName == target.tagName) {
+        return target
+    }
+    path.reverse() // NO, can just reverse indices instead!
+
+    // Search forwards (there could be multiple subtrees to search so we can't
+    // just use a recursive solution where we recurse to find parent matching
+    // element and then choose among siblings).
+    val start = target ?: return null
+    if (start.tagName != path[0].tagName) {
+        return null
+    }
+
+    return search(path, 1, start)
+}
+
+private fun search(path: List<Element>, index: Int, parent: Element): Element? {
+    if (index == path.size) { // done searching
+        return parent
+    }
+    val source = path[index]
+
+    // If the source element has a name attribute, match it with the target
+    when {
+        source.hasAttribute(ATTR_NAME) -> {
+            val name = source.getAttribute(ATTR_NAME)
+            for (child in parent) {
+                if (child.getAttribute(ATTR_NAME) == name) {
+                    return search(path, index + 1, child)
+                }
+            }
+        }
+        source.hasAttribute(ATTR_ID) -> {
+            val id = source.getAttribute(ATTR_ID)
+            for (child in parent) {
+                if (child.getAttribute(ATTR_ID) == id) {
+                    return search(path, index + 1, child)
+                }
+            }
+        }
+        else -> {
+            // Search by ordinal number.
+            val tag = source.nodeName
+            var ordinal = 0
+            var curr: Node? = source
+            while (curr != null) {
+                if (curr.nodeType == Node.ELEMENT_NODE && curr.nodeName == tag) {
+                    ordinal++
+                }
+                curr = curr.previousSibling
+            }
+
+            curr = parent.firstChild
+            while (curr != null) {
+                curr = curr.nextSibling
+                if (curr.nodeType == Node.ELEMENT_NODE && curr.nodeName == tag) {
+                    ordinal--
+                    if (ordinal == 0) {
+                        val child = curr as Element
+                        search(path, index + 1, child)?.let { return it }
+                            ?: break
+                    }
+                }
+            }
+
+            // No match by ordinal search; instead search all children tags that match.
+            // This can happen if the parents are reordered; we'll also allow a match
+            // by path.
+            for (child in parent) {
+                if (child.tagName == tag) {
+                    search(path, index + 1, child)?.let { return it }
+                }
+            }
+        }
+    }
+
+    return null
 }
 
 // For compatibility reasons

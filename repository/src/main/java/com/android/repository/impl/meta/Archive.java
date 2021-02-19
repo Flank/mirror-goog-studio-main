@@ -19,9 +19,12 @@ package com.android.repository.impl.meta;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.repository.Revision;
+import com.android.repository.api.Checksum;
 import com.android.repository.api.RepoPackage;
 import com.android.repository.api.SchemaModule;
+import com.android.tools.analytics.CommonMetricsData;
 import com.google.common.collect.ImmutableList;
+import com.google.wireless.android.sdk.stats.ProductDetails;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -58,7 +61,7 @@ public abstract class Archive {
             return false;
         }
 
-        if (getHostBits() != null && getHostBits() != sHostConfig.mHostBits) {
+        if (getHostArch() != null && !getHostArch().equals(sHostConfig.mHostArch)) {
             return false;
         }
 
@@ -70,9 +73,7 @@ public abstract class Archive {
         return true;
     }
 
-    /**
-     * Gets the full zip of this package.
-     */
+    /** Returns the full zip of this package. */
     @NonNull
     public abstract CompleteType getComplete();
 
@@ -84,12 +85,24 @@ public abstract class Archive {
     }
 
     /**
-     * Gets the required host bit size (32 or 64), if any
+     * Returns the required host bit size (32 or 64), if any. This is just for compatibility with v1
+     * schema, you should use {@link #getHostArch()}.
      */
     @Nullable
-    public Integer getHostBits() {
+    protected Integer getHostBits() {
         // Stub
         return null;
+    }
+
+    /** Returns the required host architecture ("x86", "x64", or "aarch64"). */
+    @Nullable
+    public String getHostArch() {
+        // Implementation is used as a fallback with the v1 implementation.
+        Integer bits = getHostBits();
+        if (bits == null) {
+            return null;
+        }
+        return bits == 32 ? "x86" : "x64";
     }
 
     /**
@@ -99,9 +112,7 @@ public abstract class Archive {
         // Stub
     }
 
-    /**
-     * Gets the required JVM bit size (32 or 64), if any
-     */
+    /** Returns the required JVM bit size (32 or 64), if any */
     @Nullable
     public Integer getJvmBits() {
         // Stub
@@ -115,9 +126,7 @@ public abstract class Archive {
         // Stub
     }
 
-    /**
-     * Gets the required host OS ("windows", "linux", "macosx"), if any.
-     */
+    /** Returns the required host OS ("windows", "linux", "macosx"), if any. */
     @Nullable
     public String getHostOs() {
         // Stub
@@ -131,9 +140,7 @@ public abstract class Archive {
         // Stub
     }
 
-    /**
-     * Gets all the version-to-version patches for this {@code Archive}.
-     */
+    /** Returns all the version-to-version patches for this {@code Archive}. */
     @NonNull
     public List<PatchType> getAllPatches() {
         PatchesType patches = getPatches();
@@ -153,9 +160,7 @@ public abstract class Archive {
         return null;
     }
 
-    /**
-     * Gets the {@link PatchesType} for this Archive. Probably only needed internally.
-     */
+    /** Returns the {@link PatchesType} for this Archive. Probably only needed internally. */
     @Nullable
     protected PatchesType getPatches() {
         // Stub
@@ -169,9 +174,7 @@ public abstract class Archive {
         // Stub
     }
 
-    /**
-     * Gets the minimum JVM version needed for this {@code Archive}, if any.
-     */
+    /** Returns the minimum JVM version needed for this {@code Archive}, if any. */
     @Nullable
     public RevisionType getMinJvmVersion() {
         // Stub
@@ -209,10 +212,8 @@ public abstract class Archive {
          */
         private final int mJvmBits;
 
-        /**
-         * The detected bit size of the host.
-         */
-        private final int mHostBits;
+        /** The detected bit size of the host. */
+        private final String mHostArch;
 
         /**
          * The detected OS.
@@ -238,7 +239,7 @@ public abstract class Archive {
         public HostConfig(String os) {
             mOs = os;
             mJvmBits = detectJvmBits();
-            mHostBits = detectHostBits(mJvmBits);
+            mHostArch = detectHostArch();
             mJvmVersion = detectJvmRevision();
         }
 
@@ -258,24 +259,26 @@ public abstract class Archive {
         }
 
         private static int detectJvmBits() {
-            int jvmBits;
-            String arch = System.getProperty("os.arch");
-
-            if (arch.equalsIgnoreCase("x86_64") ||
-                    arch.equalsIgnoreCase("ia64") ||
-                    arch.equalsIgnoreCase("amd64")) {
-                jvmBits = 64;
-            } else {
-                jvmBits = 32;
+            ProductDetails.CpuArchitecture arch = CommonMetricsData.getJvmArchitecture();
+            if (arch == ProductDetails.CpuArchitecture.X86) {
+                return 32;
             }
-            return jvmBits;
+            return 64;
         }
 
-        private static int detectHostBits(int jvmBits) {
-            // TODO figure out the host bit size.
-            // When jvmBits is 64 we know it's surely 64
-            // but that's not necessarily obvious when jvmBits is 32.
-            return jvmBits;
+        private static String detectHostArch() {
+            ProductDetails.CpuArchitecture arch = CommonMetricsData.getOsArchitecture();
+            switch (arch) {
+                case X86:
+                    return "x86";
+                case X86_64:
+                    return "x64";
+                case ARM:
+                case X86_ON_ARM:
+                    return "aarch64";
+                default:
+                    return null;
+            }
         }
 
         private static Revision detectJvmRevision() {
@@ -297,22 +300,27 @@ public abstract class Archive {
      */
     public abstract static class ArchiveFile {
 
-        /**
-         * Gets the checksum for the zip.
-         */
+        /** Returns the checksum for the zip. */
         @NonNull
-        public abstract String getChecksum();
-
-        /**
-         * Sets the checksum for this zip.
-         */
-        public void setChecksum(@NonNull String checksum) {
-            // Stub
+        public Checksum getTypedChecksum() {
+            // Implementation for compatibility with v1
+            return Checksum.create(getLegacyChecksum(), "sha-1");
         }
 
-        /**
-         * Gets the URL to download from.
-         */
+        /** Sets the checksum for this zip. */
+        public void setTypedChecksum(@NonNull Checksum checksum) {
+            // Implementation for compatibility with v1
+            setLegacyChecksum(checksum.getValue());
+        }
+
+        protected String getLegacyChecksum() {
+            // Overridden by v1 and shouldn't be used otherwise
+            throw new UnsupportedOperationException();
+        }
+
+        protected void setLegacyChecksum(String checksum) {}
+
+        /** Returns the URL to download from. */
         @NonNull
         public abstract String getUrl();
 
@@ -323,9 +331,7 @@ public abstract class Archive {
             // Stub
         }
 
-        /**
-         * Gets the size of the zip.
-         */
+        /** Returns the size of the zip. */
         public abstract long getSize();
 
         /**
@@ -351,9 +357,7 @@ public abstract class Archive {
     @XmlTransient
     public abstract static class PatchType extends ArchiveFile {
 
-        /**
-         * Gets the source revision for this patch.
-         */
+        /** Returns the source revision for this patch. */
         @NonNull
         public abstract RevisionType getBasedOn();
 

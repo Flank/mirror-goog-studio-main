@@ -36,7 +36,7 @@ import org.jetbrains.uast.UCallExpression
  */
 class DeletedProviderDetector : Detector(), SourceCodeScanner {
 
-    override fun getApplicableMethodNames(): List<String>? {
+    override fun getApplicableMethodNames(): List<String> {
         return listOf(GET_INSTANCE)
     }
 

@@ -9,10 +9,7 @@ iml_module(
     lint_baseline = "lint_baseline.xml",
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
-    deps = [
-        "//prebuilts/studio/intellij-sdk:studio-sdk",
-        "//tools/adt/idea/.idea/libraries:kotlin-stdlib-jdk8",
-    ],
+    deps = ["//prebuilts/studio/intellij-sdk:studio-sdk"],
 )
 
 maven_java_library(

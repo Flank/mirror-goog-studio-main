@@ -17,6 +17,8 @@ cc_binary(
         "crash_logger.h",
         "dex_verify.cc",
         "dex_verify.h",
+        "hidden_api_silencer.cc",
+        "hidden_api_silencer.h",
         "hotswap.cc",
         "hotswap.h",
         "instrumenter.cc",
@@ -49,6 +51,7 @@ cc_binary(
     visibility = ["//tools/base/deploy:__subpackages__"],
     deps = [
         ":instrumentation_header",
+        ":jvmti_android",
         "//external:slicer",
         "//prebuilts/studio/jdk:jni_headers",
         "//tools/base/deploy/agent/native/jni:agent_jni",
@@ -56,6 +59,17 @@ cc_binary(
         "//tools/base/deploy/common:log",
         "//tools/base/deploy/proto:cc_proto",
     ],
+)
+
+cc_library(
+    name = "jvmti_android",
+    srcs = [
+        "jvmti/android.cc",
+    ],
+    hdrs = [
+        "jvmti/android.h",
+    ],
+    visibility = ["//visibility:public"],
 )
 
 cc_library(

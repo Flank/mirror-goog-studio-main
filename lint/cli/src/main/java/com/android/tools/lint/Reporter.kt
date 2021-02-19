@@ -239,8 +239,7 @@ abstract class Reporter protected constructor(
          *
          * @param client the client
          * @param output the output file
-         * @param intendedForBaseline whether this XML report is used to write a baseline file
-         * @param includeFixes whether to include descriptions of quickfixes
+         * @param reportType the type of report to generate
          * @throws IOException if an error occurs
          */
         @JvmStatic
@@ -248,13 +247,9 @@ abstract class Reporter protected constructor(
         fun createXmlReporter(
             client: LintCliClient,
             output: File,
-            intendedForBaseline: Boolean,
-            includeFixes: Boolean
+            reportType: XmlFileType = XmlFileType.REPORT
         ): XmlReporter {
-            val reporter = XmlReporter(client, output)
-            reporter.isIntendedForBaseline = intendedForBaseline
-            reporter.includeFixes = !intendedForBaseline && includeFixes
-            return reporter
+            return XmlReporter(client, output, reportType)
         }
 
         /**
@@ -391,8 +386,7 @@ abstract class Reporter protected constructor(
                         DuplicateResourceDetector.STRING_ESCAPING,
                         DuplicateResourceDetector.TYPE_MISMATCH,
                         EllipsizeMaxLinesDetector.ISSUE,
-                        FontDetector.FONT_VALIDATION_ERROR,
-                        FontDetector.FONT_VALIDATION_WARNING,
+                        FontDetector.FONT_VALIDATION,
                         GradleDetector.ANNOTATION_PROCESSOR_ON_COMPILE_PATH,
                         GradleDetector.COMPATIBILITY,
                         GradleDetector.DEPENDENCY,

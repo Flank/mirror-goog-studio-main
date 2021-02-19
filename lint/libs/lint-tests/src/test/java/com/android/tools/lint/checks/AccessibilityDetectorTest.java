@@ -22,7 +22,6 @@ import com.android.tools.lint.detector.api.TextFormat;
 @SuppressWarnings("javadoc")
 public class AccessibilityDetectorTest extends AbstractCheckTest {
     public void testAccessibility() {
-        String name = getName();
         String expected =
                 ""
                         + "res/layout/accessibility.xml:4: Warning: Missing `contentDescription` attribute on image [ContentDescription]\n"

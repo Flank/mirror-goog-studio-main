@@ -25,7 +25,6 @@ iml_module(
         "//tools/base/sdk-common:studio.android.sdktools.sdk-common[module]",
         "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
         "//tools/adt/idea/.idea/libraries:truth[test]",
-        "//tools/adt/idea/.idea/libraries:kotlin-stdlib-jdk8",
     ],
 )
 
@@ -107,7 +106,7 @@ maven_pom(
 )
 
 # The Gradle APIs to build against and run against.
-GRADLE_VERSION = "6.8.1"
+GRADLE_VERSION = "6.8.2"
 
 filegroup(
     name = "gradle-distrib",
@@ -217,7 +216,39 @@ maven_repo(
         "//tools/base/third_party:org.jetbrains.kotlin_kotlin-gradle-plugin",
         "//tools/base/third_party:org.jetbrains.kotlin_kotlin-android-extensions-runtime",
         "//tools/base/third_party:org.jetbrains.kotlin_kotlin-compiler-embeddable",
-        "//prebuilts/tools/common/m2/repository/androidx/compose/compiler/compiler/1.0.0-alpha04:jar",
+        "//prebuilts/tools/common/m2/repository/androidx/activity/activity/1.3.0-alpha02:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/activity/activity-compose/1.3.0-alpha02:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/activity/activity-ktx/1.3.0-alpha02:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/compose/animation/animation-core/1.0.0-beta01:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/compose/animation/animation/1.0.0-beta01:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/compose/compiler/compiler/1.0.0-beta01:jar",
+        "//prebuilts/tools/common/m2/repository/androidx/compose/foundation/foundation-layout/1.0.0-beta01:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/compose/foundation/foundation/1.0.0-beta01:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/compose/material/material-icons-core/1.0.0-beta01:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/compose/material/material-icons-extended/1.0.0-beta01:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/compose/material/material-ripple/1.0.0-beta01:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/compose/material/material/1.0.0-beta01:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/compose/runtime/runtime-livedata/1.0.0-beta01:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/compose/runtime/runtime-saveable/1.0.0-beta01:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/compose/runtime/runtime/1.0.0-beta01:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/compose/ui/ui-geometry/1.0.0-beta01:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/compose/ui/ui-graphics/1.0.0-beta01:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/compose/ui/ui-text/1.0.0-beta01:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/compose/ui/ui-tooling-data/1.0.0-beta01:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/compose/ui/ui-tooling/1.0.0-beta01:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/compose/ui/ui-unit/1.0.0-beta01:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/compose/ui/ui-util/1.0.0-beta01:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/compose/ui/ui/1.0.0-beta01:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/lifecycle/lifecycle-common/2.3.0:jar",
+        "//prebuilts/tools/common/m2/repository/androidx/lifecycle/lifecycle-livedata-core/2.3.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/lifecycle/lifecycle-runtime-ktx/2.3.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/lifecycle/lifecycle-runtime/2.3.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/lifecycle/lifecycle-viewmodel-ktx/2.3.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/lifecycle/lifecycle-viewmodel-savedstate/2.3.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/lifecycle/lifecycle-viewmodel/2.3.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/savedstate/savedstate-ktx/1.1.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/savedstate/savedstate/1.1.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/tracing/tracing/1.0.0:aar",
         "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-android-extensions-runtime/1.3.70:jar",
         "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-build-common/1.3.70:jar",
         "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-daemon-client/1.3.70:jar",

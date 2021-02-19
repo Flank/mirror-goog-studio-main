@@ -20,7 +20,6 @@ import com.android.SdkConstants.CURRENT_PLATFORM
 import com.android.SdkConstants.PLATFORM_DARWIN
 import com.android.SdkConstants.PLATFORM_LINUX
 import com.android.SdkConstants.PLATFORM_WINDOWS
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_NDK_SIDE_BY_SIDE_VERSION
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.builder
@@ -54,7 +53,6 @@ class V2NativeModelTest(private val cmakeVersion: String) : ModelComparator() {
       .addFile(TestSourceFile(".", "blah.h", "int i = 3;"))
       .addFile(TestSourceFile(".", "blah.txt", "foobar"))
       .addFile(HelloWorldJniApp.executableCpp("src/main/cxx/executable", "main.cpp"))
-      .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
       .setCmakeVersion(cmakeVersion)
       .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
       .setWithCmakeDirInLocalProp(true)

@@ -85,6 +85,9 @@ public class TestPlugin
                             dslContainers,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> buildOutputs,
             @NonNull ExtraModelInfo extraModelInfo) {
+        TestExtensionImpl testExtension =
+                dslServices.newDecoratedInstance(
+                        TestExtensionImpl.class, dslServices, dslContainers);
         if (globalScope.getProjectOptions().get(BooleanOption.USE_NEW_DSL_INTERFACES)) {
             return (BaseExtension)
                     project.getExtensions()
@@ -97,8 +100,9 @@ public class TestPlugin
                                     buildOutputs,
                                     dslContainers.getSourceSetManager(),
                                     extraModelInfo,
-                                    new TestExtensionImpl(dslServices, dslContainers));
+                                    testExtension);
         }
+
         return project.getExtensions()
                 .create(
                         "android",
@@ -108,7 +112,7 @@ public class TestPlugin
                         buildOutputs,
                         dslContainers.getSourceSetManager(),
                         extraModelInfo,
-                        new TestExtensionImpl(dslServices, dslContainers));
+                        testExtension);
     }
 
     @NonNull
@@ -134,7 +138,8 @@ public class TestPlugin
                         TestAndroidComponentsExtensionImpl.class,
                         dslServices,
                         sdkComponents,
-                        variantApiOperationsRegistrar);
+                        variantApiOperationsRegistrar,
+                        getExtension());
     }
 
     @NonNull

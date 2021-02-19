@@ -18,6 +18,7 @@ package com.android.sdklib.repository.legacy;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.io.CancellableFileIo;
+import com.android.repository.api.Checksum;
 import com.android.repository.api.Downloader;
 import com.android.repository.api.ProgressIndicator;
 import com.android.repository.api.SettingsController;
@@ -79,17 +80,19 @@ public class LegacyDownloader implements Downloader {
     public void downloadFully(
             @NonNull URL url,
             @NonNull Path target,
-            @Nullable String checksum,
+            @Nullable Checksum checksum,
             @NonNull ProgressIndicator indicator)
             throws IOException {
         if (CancellableFileIo.exists(target) && checksum != null) {
             indicator.setText("Verifying previous download...");
             try (InputStream in = new BufferedInputStream(mFileOp.newFileInputStream(target))) {
-                if (checksum.equals(
-                        Downloader.hash(
-                                in,
-                                CancellableFileIo.size(target),
-                                indicator.createSubProgress(0.3)))) {
+                if (checksum.getValue()
+                        .equals(
+                                Downloader.hash(
+                                        in,
+                                        CancellableFileIo.size(target),
+                                        checksum.getType(),
+                                        indicator.createSubProgress(0.3)))) {
                     return;
                 }
             }

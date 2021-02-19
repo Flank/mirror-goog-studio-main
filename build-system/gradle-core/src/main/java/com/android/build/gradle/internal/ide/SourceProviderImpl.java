@@ -25,6 +25,7 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Objects;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Implementation of SourceProvider that is serializable. Objects used in the DSL cannot be
@@ -40,8 +41,8 @@ final class SourceProviderImpl implements SourceProvider, Serializable {
     private final File manifestFile;
     @NonNull
     private final Collection<File> javaDirs;
-    @NonNull
-    private final Collection<File> resourcesDirs;
+    @NonNull private final Collection<File> kotlinDirs;
+    @NonNull private final Collection<File> resourcesDirs;
     @NonNull
     private final Collection<File> aidlDirs;
     @NonNull
@@ -60,6 +61,7 @@ final class SourceProviderImpl implements SourceProvider, Serializable {
         this.name = sourceProvider.getName();
         this.manifestFile = sourceProvider.getManifestFile();
         this.javaDirs = sourceProvider.getJavaDirectories();
+        this.kotlinDirs = sourceProvider.getKotlinDirectories();
         this.resourcesDirs = sourceProvider.getResourcesDirectories();
         this.aidlDirs = sourceProvider.getAidlDirectories();
         this.rsDirs = sourceProvider.getRenderscriptDirectories();
@@ -86,6 +88,12 @@ final class SourceProviderImpl implements SourceProvider, Serializable {
     @Override
     public Collection<File> getJavaDirectories() {
         return javaDirs;
+    }
+
+    @NotNull
+    @Override
+    public Collection<File> getKotlinDirectories() {
+        return kotlinDirs;
     }
 
     @NonNull
@@ -160,6 +168,7 @@ final class SourceProviderImpl implements SourceProvider, Serializable {
         return Objects.equals(name, that.name)
                 && Objects.equals(manifestFile, that.manifestFile)
                 && Objects.equals(javaDirs, that.javaDirs)
+                && Objects.equals(kotlinDirs, that.kotlinDirs)
                 && Objects.equals(resourcesDirs, that.resourcesDirs)
                 && Objects.equals(aidlDirs, that.aidlDirs)
                 && Objects.equals(rsDirs, that.rsDirs)
@@ -176,6 +185,7 @@ final class SourceProviderImpl implements SourceProvider, Serializable {
                 name,
                 manifestFile,
                 javaDirs,
+                kotlinDirs,
                 resourcesDirs,
                 aidlDirs,
                 rsDirs,
@@ -192,6 +202,7 @@ final class SourceProviderImpl implements SourceProvider, Serializable {
                 .add("name", name)
                 .add("manifestFile", manifestFile)
                 .add("javaDirs", javaDirs)
+                .add("kotlinDirs", kotlinDirs)
                 .add("resourcesDirs", resourcesDirs)
                 .add("aidlDirs", aidlDirs)
                 .add("rsDirs", rsDirs)

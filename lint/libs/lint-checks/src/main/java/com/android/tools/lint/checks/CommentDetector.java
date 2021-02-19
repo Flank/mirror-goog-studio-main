@@ -25,9 +25,11 @@ import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.GradleScanner;
 import com.android.tools.lint.detector.api.Implementation;
+import com.android.tools.lint.detector.api.Incident;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.LintFix;
+import com.android.tools.lint.detector.api.LintMap;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
@@ -189,18 +191,11 @@ public class CommentDetector extends ResourceXmlDetector
                     && c == 'T'
                     && regionMatches(
                             source, i - 1, STOPSHIP_COMMENT, 0, STOPSHIP_COMMENT.length())) {
-                // Only flag this issue in release mode?? (but in the IDE, always
-                // flag it)
-                if (!Scope.checkSingleFile(context.getDriver().getScope())) {
-                    Boolean releaseMode = getReleaseMode(context);
-                    if (releaseMode == Boolean.FALSE) {
-                        return;
-                    }
-                }
 
                 String message =
                         "`STOPSHIP` comment found; points to code which must be fixed prior "
                                 + "to release";
+                Incident incident;
                 if (context instanceof JavaContext && node instanceof UElement) {
                     JavaContext javaContext = (JavaContext) context;
                     UElement javaNode = (UElement) node;
@@ -208,14 +203,14 @@ public class CommentDetector extends ResourceXmlDetector
                             javaContext.getRangeLocation(
                                     javaNode, offset + i - 1, STOPSHIP_COMMENT.length());
                     LintFix fix = createRemoveStopShipFix();
-                    javaContext.report(STOP_SHIP, javaNode, location, message, fix);
+                    incident = new Incident(STOP_SHIP, javaNode, location, message, fix);
                 } else if (context instanceof XmlContext && node instanceof Node) {
                     XmlContext xmlContext = (XmlContext) context;
                     Node xmlNode = (Node) node;
                     Location location =
                             xmlContext.getLocation(xmlNode, i, i + STOPSHIP_COMMENT.length());
                     LintFix fix = createRemoveStopShipFix();
-                    xmlContext.report(STOP_SHIP, xmlNode, location, message, fix);
+                    incident = new Incident(STOP_SHIP, xmlNode, location, message, fix);
                 } else {
                     // Plain location
                     Location location =
@@ -225,9 +220,23 @@ public class CommentDetector extends ResourceXmlDetector
                                     i - 1,
                                     i + -1 + STOPSHIP_COMMENT.length());
                     LintFix fix = createRemoveStopShipFix();
-                    context.report(STOP_SHIP, location, message, fix);
+                    incident = new Incident(STOP_SHIP, location, message, fix);
                 }
+                context.report(incident, new LintMap());
             }
+        }
+    }
+
+    @Override
+    public boolean filterIncident(
+            @NonNull Context context, @NonNull Incident incident, @NonNull LintMap map) {
+        // Only flag this issue in release mode?? (but in the IDE, always
+        // flag it)
+        if (!context.getDriver().isIsolated()) {
+            Boolean releaseMode = getReleaseMode(context);
+            return releaseMode != Boolean.FALSE;
+        } else {
+            return true;
         }
     }
 

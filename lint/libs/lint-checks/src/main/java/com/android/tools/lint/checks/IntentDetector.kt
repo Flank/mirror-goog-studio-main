@@ -68,7 +68,7 @@ class IntentDetector : Detector(), SourceCodeScanner {
         private const val SET_TYPE = "setType"
     }
 
-    override fun getApplicableConstructorTypes(): List<String>? {
+    override fun getApplicableConstructorTypes(): List<String> {
         return listOf(INTENT_CLASS)
     }
 

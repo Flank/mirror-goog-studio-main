@@ -453,8 +453,8 @@ config_setting(
 )
 
 config_setting(
-    name = "kotlin_use_ir",
-    values = {"define": "kotlin_use_ir=true"},
+    name = "kotlin_no_use_ir",
+    values = {"define": "kotlin_no_use_ir=true"},
     visibility = ["//visibility:public"],
 )
 

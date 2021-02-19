@@ -16,10 +16,13 @@
 
 package com.android.build.gradle.internal.dsl
 
+import com.android.build.api.dsl.AndroidResources
 import com.android.build.api.dsl.BuildFeatures
 import com.android.build.api.dsl.ComposeOptions
 import com.android.build.api.dsl.DefaultConfig
+import com.android.build.api.dsl.Lint
 import com.android.build.api.dsl.SdkComponents
+import com.android.build.api.dsl.TestCoverage
 import com.android.build.api.variant.VariantBuilder
 import com.android.build.api.variant.Variant
 import com.android.build.gradle.api.AndroidSourceSet
@@ -65,7 +68,7 @@ abstract class CommonExtensionImpl<
         dslServices.newInstance(
             SdkComponentsImpl::class.java,
             dslServices,
-            dslServices.provider(String::class.java, _compileSdkVersion),
+            dslServices.provider(String::class.java, compileSdkVersion),
             dslServices.provider(Revision::class.java, buildToolsRevision),
             dslServices.provider(String::class.java, ndkVersion),
             dslServices.provider(String::class.java, ndkPath)
@@ -83,11 +86,16 @@ abstract class CommonExtensionImpl<
     override val signingConfigs: NamedDomainObjectContainer<SigningConfig> =
         dslContainers.signingConfigContainer
 
-    override val aaptOptions: AaptOptions =
-        dslServices.newInstance(
-            AaptOptions::class.java,
-            dslServices.projectOptions[BooleanOption.ENABLE_RESOURCE_NAMESPACING_DEFAULT]
-        )
+    override val androidResources: AndroidResources = dslServices.newInstance(
+        AaptOptions::class.java,
+        dslServices.projectOptions[BooleanOption.ENABLE_RESOURCE_NAMESPACING_DEFAULT]
+    )
+
+    override fun androidResources(action: AndroidResources.() -> Unit) {
+        action.invoke(androidResources)
+    }
+
+    override val aaptOptions: AaptOptions get() = androidResources as AaptOptions
 
     override fun aaptOptions(action: com.android.build.api.dsl.AaptOptions.() -> Unit) {
         action.invoke(aaptOptions)
@@ -114,16 +122,16 @@ abstract class CommonExtensionImpl<
         action.invoke(compileOptions)
     }
 
-    private var _compileSdkVersion: String? by dslServices.newVar(null)
+    protected abstract var compileSdkVersion: String?
 
     override var compileSdk: Int?
         get() {
-            if (_compileSdkVersion == null) {
+            if (compileSdkVersion == null) {
                 return null
             }
-            if (_compileSdkVersion!!.startsWith("android-")) {
+            if (compileSdkVersion!!.startsWith("android-")) {
                 return try {
-                    Integer.valueOf(_compileSdkVersion!!.substring(8))
+                    Integer.valueOf(compileSdkVersion!!.substring(8))
                 } catch (e: Exception) {
                     null
                 }
@@ -131,17 +139,17 @@ abstract class CommonExtensionImpl<
             return null
         }
         set(value) {
-            _compileSdkVersion = if (value == null) null
+            compileSdkVersion = if (value == null) null
             else "android-$value"
         }
     override var compileSdkPreview: String?
-        get() = _compileSdkVersion
+        get() = compileSdkVersion
         set(value) {
-            _compileSdkVersion = value
+            compileSdkVersion = value
         }
 
     override fun compileSdkAddon(vendor: String, name: String, version: Int) {
-        _compileSdkVersion = "$vendor:$name:$version"
+        compileSdkVersion = "$vendor:$name:$version"
     }
 
     override val composeOptions: ComposeOptionsImpl =
@@ -185,14 +193,27 @@ abstract class CommonExtensionImpl<
         action.invoke(externalNativeBuild)
     }
 
-    override val jacoco: JacocoOptions = dslServices.newInstance(JacocoOptions::class.java)
+    override val testCoverage: TestCoverage  = dslServices.newInstance(JacocoOptions::class.java)
+
+    override fun testCoverage(action: TestCoverage.() -> Unit) {
+        action.invoke(testCoverage)
+    }
+
+    override val jacoco: JacocoOptions
+        get() = testCoverage as JacocoOptions
 
     override fun jacoco(action: com.android.build.api.dsl.JacocoOptions.() -> Unit) {
         action.invoke(jacoco)
     }
 
-    override val lintOptions: LintOptions =
-        dslServices.newInstance(LintOptions::class.java, dslServices)
+    override val lint: Lint = dslServices.newInstance(LintOptions::class.java, dslServices)
+
+    override fun lint(action: Lint.() -> Unit) {
+        action.invoke(lint)
+    }
+
+    override val lintOptions: LintOptions
+        get() = lint as LintOptions
 
     override fun lintOptions(action: com.android.build.api.dsl.LintOptions.() -> Unit) {
         action.invoke(lintOptions)
@@ -233,8 +254,6 @@ abstract class CommonExtensionImpl<
     override fun testOptions(action: com.android.build.api.dsl.TestOptions.() -> Unit) {
         action.invoke(testOptions)
     }
-
-    override val flavorDimensions: MutableList<String> = mutableListOf()
 
     override var resourcePrefix: String? = null
 

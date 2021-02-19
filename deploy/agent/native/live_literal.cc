@@ -38,6 +38,10 @@ namespace {
 std::unordered_set<std::string> instrumented_helpers;
 std::string applicationId;
 
+// Note that this is a callback we pass into JVMTI. It is likely
+// that our agent already exited upon invocation. Therefore,
+// we will not be passing any failture message to the installer
+// from here.
 extern "C" void JNICALL Agent_LiveLiteralHelperClassFileLoadHook(
     jvmtiEnv* jvmti, JNIEnv* jni, jclass klass, jobject loader,
     const char* name, jobject protection_domain, jint class_data_len,
@@ -98,10 +102,6 @@ extern "C" void JNICALL Agent_LiveLiteralHelperClassFileLoadHook(
 }  // namespace
 
 jstring LiveLiteral::LookUpKeyByOffSet(const std::string& helper, int offset) {
-  // TODO: This method needs some TLC in terms of error reporting.
-  // The current UX (under review) is built toward a "best effort" approach
-  // with zero user feedback. So for now we are just going use Log::E().
-
   // Java:
   // Method[] results = Class.forName(helper).getDeclaredMethods();
   jclass klass = class_finder_.FindInClassLoader(
@@ -109,7 +109,8 @@ jstring LiveLiteral::LookUpKeyByOffSet(const std::string& helper, int offset) {
 
   if (klass == nullptr) {
     jni_->ExceptionClear();
-    Log::E("Cannot find Live Literal helper class: '%s'", helper.c_str());
+    response_.set_status(proto::AgentLiveLiteralUpdateResponse::ERROR);
+    response_.set_extra("Cannot find Live Literal helper class: + helper");
     return nullptr;
   }
 
@@ -119,7 +120,8 @@ jstring LiveLiteral::LookUpKeyByOffSet(const std::string& helper, int offset) {
 
   if (get_all_methods == nullptr) {
     // Almost impossible.
-    Log::E("java.lang.Class.getDeclaredMethods does not exists");
+    response_.set_status(proto::AgentLiveLiteralUpdateResponse::ERROR);
+    response_.set_extra("java.lang.Class.getDeclaredMethods does not exists");
     return nullptr;
   }
 
@@ -142,7 +144,8 @@ jstring LiveLiteral::LookUpKeyByOffSet(const std::string& helper, int offset) {
   jclass method_class = jni_->FindClass("java/lang/reflect/Method");
   if (method_class == nullptr) {
     // Almost impossible.
-    Log::E("java.lang.reflect.Method does not exists");
+    response_.set_status(proto::AgentLiveLiteralUpdateResponse::ERROR);
+    response_.set_extra("java.lang.reflect.Method does not exists");
     return nullptr;
   }
 
@@ -152,7 +155,9 @@ jstring LiveLiteral::LookUpKeyByOffSet(const std::string& helper, int offset) {
 
   if (get_annotation == nullptr) {
     // Almost impossible.
-    Log::E("java.lang.reflect.Method.getAnnotation() does not exists");
+    response_.set_status(proto::AgentLiveLiteralUpdateResponse::ERROR);
+    response_.set_extra(
+        "java.lang.reflect.Method.getAnnotation() does not exists");
     return nullptr;
   }
 
@@ -161,7 +166,8 @@ jstring LiveLiteral::LookUpKeyByOffSet(const std::string& helper, int offset) {
   if (get_key == nullptr) {
     // key() should be in the Compose API. Most likely we are out of sync
     // with the Compose compiler.
-    Log::E("LiveLiteralInfo.key() does not exists");
+    response_.set_status(proto::AgentLiveLiteralUpdateResponse::ERROR);
+    response_.set_extra("LiveLiteralInfo.key() does not exists");
     return nullptr;
   }
 
@@ -169,7 +175,8 @@ jstring LiveLiteral::LookUpKeyByOffSet(const std::string& helper, int offset) {
   if (get_offset == nullptr) {
     // offset() should be in the Compose API. Most likely we are out of sync
     // with the Compose compiler.
-    Log::E("LiveLiteralInfo.offset() does not exists");
+    response_.set_status(proto::AgentLiveLiteralUpdateResponse::ERROR);
+    response_.set_extra("LiveLiteralInfo.offset() does not exists");
     return nullptr;
   }
 
@@ -193,7 +200,8 @@ jstring LiveLiteral::LookUpKeyByOffSet(const std::string& helper, int offset) {
 
 proto::AgentLiveLiteralUpdateResponse LiveLiteral::Update(
     const proto::LiveLiteralUpdateRequest& request) {
-  proto::AgentLiveLiteralUpdateResponse response;
+  // Set to OK until first sign of an error.
+  response_.set_status(proto::AgentLiveLiteralUpdateResponse::OK);
   applicationId = package_name_;
 
   jclass klass = class_finder_.FindInClassLoader(
@@ -201,19 +209,16 @@ proto::AgentLiveLiteralUpdateResponse LiveLiteral::Update(
       "androidx/compose/runtime/internal/LiveLiteralKt");
   if (klass == nullptr) {
     jni_->ExceptionClear();
-    Log::V(
-        "LiveLiteralKt Not found. Not Starting JetPack Compose Live Literal "
-        "Update");
-  } else {
-    Log::V("LiveLiteralKt found. Starting JetPack Compose Live Literal Update");
+    response_.set_status(proto::AgentLiveLiteralUpdateResponse::ERROR);
+    response_.set_extra("LiveLiteralKt Not found!");
   }
 
   if (!InstrumentApplication(jvmti_, jni_, request.package_name(),
                              /*overlay_swap*/ false)) {
-    response.set_status(
+    response_.set_status(
         proto::AgentLiveLiteralUpdateResponse::INSTRUMENTATION_FAILED);
     ErrEvent("Could not instrument application");
-    return response;
+    return response_;
   }
 
   // Call Support the support class enable() first.
@@ -346,24 +351,21 @@ proto::AgentLiveLiteralUpdateResponse LiveLiteral::Update(
           "updateLiveLiteralValue", "(Ljava/lang/String;Ljava/lang/Object;)V",
           jkey, value);
     } else {
-      // TODO: Error Handling.
-      Log::E("Live Literal Update with Unknown Type: %s",
-             update.type().c_str());
+      response_.set_status(proto::AgentLiveLiteralUpdateResponse::ERROR);
+      response_.set_extra("Live Literal Update with Unknown Type: " +
+                          update.type());
     }
     jstring helper_name = jni_->NewStringUTF(update.helper_class().c_str());
     support.CallStaticVoidMethod(
         "add", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Object;)V",
         helper_name, jkey, value);
   }
-
-  response.set_status(proto::AgentLiveLiteralUpdateResponse::OK);
-  return response;
+  return response_;
 }
 
 void LiveLiteral::InstrumentHelper(const std::string& helper) {
   // First chech if we already instrumented this at least once.
   if (instrumented_helpers.find(helper) != instrumented_helpers.end()) {
-    Log::V("Already Instrumented %s", helper.c_str());
     return;
   }
   instrumented_helpers.insert(helper);

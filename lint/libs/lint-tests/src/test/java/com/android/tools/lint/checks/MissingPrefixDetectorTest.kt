@@ -124,8 +124,7 @@ class MissingPrefixDetectorTest : AbstractCheckTest() {
 
     fun testManifest() {
         lint().files(
-            xml(
-                "AndroidManifest.xml",
+            manifest(
                 """
 
                 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
@@ -473,10 +472,7 @@ class MissingPrefixDetectorTest : AbstractCheckTest() {
             ).indented()
         )
             .sdkHome(TestUtils.getSdk().toFile())
-            // The built-in AGP test repository does not model libraries correctly,
-            // though it could -- TODO
             .skipTestModes(TestMode.RESOURCE_REPOSITORIES)
-            .incremental("src/main/res/layout/app_compat.xml")
             .run()
             .expectClean()
     }
@@ -528,6 +524,45 @@ class MissingPrefixDetectorTest : AbstractCheckTest() {
             0 errors, 1 warnings
             """
         )
+    }
+
+    fun test173154717() {
+        // Regression test for
+        //   https://buganizer.corp.google.com/issues/173154717
+        lint().files(
+            xml(
+                "res/layout/foo.xml",
+                """
+                <foo.bar.Baz xmlns:android="http://schemas.android.com/apk/res/android"
+                    xmlns:app="http://schemas.android.com/apk/res-auto"
+                    xmlns:tools="http://schemas.android.com/tools"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@color/grey50"
+                    android:paddingBottom="16dp"
+                    android:elevation="3dp">
+
+                  <TextView
+                      android:id="@+id/apply_by_time_text_view"
+                      style="@style/Text2.Roboto.14"
+                      android:layout_width="0dp"
+                      android:layout_height="wrap_content"
+                      android:layout_marginStart="@dimen/margin24"
+                      android:layout_marginTop="@dimen/margin16"
+                      android:layout_marginEnd="@dimen/margin24"
+                      app:drawableStartCompat="@drawable/drawable"
+                      app:drawableTint="@color/grey800"
+                      android:drawablePadding="@dimen/margin8"
+                      android:gravity="center_vertical"
+                      android:textColor="@color/grey800"
+                      app:layout_constraintEnd_toEndOf="parent"
+                      app:layout_constraintStart_toStartOf="parent"
+                      app:layout_constraintTop_toBottomOf="@+id/separator_top"
+                      tools:text="My Text" />
+                </foo.bar.Baz>
+                """
+            ).indented()
+        ).run().expectClean()
     }
 
     fun testFontFamilyWithAppCompat() {
@@ -588,7 +623,6 @@ class MissingPrefixDetectorTest : AbstractCheckTest() {
                 // not care about the difference:
                 //
                 // Simulates model mocker's location of where the AAR res folder is located
-//                "build/intermediates/exploded-aar/com.android.support/appcompat-v7/+/res/values/res.xml",
                 "build/intermediates/exploded-aar/com.google.android.material/material/1.0/res/values/res.xml",
                 """
                 <resources>

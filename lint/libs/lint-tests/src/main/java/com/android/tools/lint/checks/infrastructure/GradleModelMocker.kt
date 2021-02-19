@@ -2123,6 +2123,10 @@ class GradleModelMocker @JvmOverloads constructor(
                     File(root, "src/$name/java").path,
                     File(root, "src/$name/kotlin").path
                 ),
+                myKotlinDirectories = listOf(
+                    File(root, "src/$name/java").path,
+                    File(root, "src/$name/kotlin").path
+                ),
                 myResDirectories = listOf(
                     File(root, "src/$name/res").path
                 ),

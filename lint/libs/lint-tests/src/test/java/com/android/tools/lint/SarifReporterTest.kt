@@ -399,8 +399,12 @@ class SarifReporterTest {
                 </resources>
                 """
             ).indented()
-        ).stripRoot(false).issues(AutofillDetector.ISSUE, PxUsageDetector.DP_ISSUE).run().expectSarif(
-            """
+        )
+            .issues(AutofillDetector.ISSUE, PxUsageDetector.DP_ISSUE)
+            .stripRoot(false)
+            .run()
+            .expectSarif(
+                """
             {
                 "＄schema" : "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
                 "version" : "2.1.0",
@@ -631,7 +635,7 @@ class SarifReporterTest {
                 ]
             }
             """
-        )
+            )
     }
 
     @Test
@@ -652,8 +656,12 @@ class SarifReporterTest {
                 </menu>
                 """
             ).indented()
-        ).stripRoot(false).issues(AppCompatResourceDetector.ISSUE).run().expectSarif(
-            """
+        )
+            .issues(AppCompatResourceDetector.ISSUE)
+            .stripRoot(false)
+            .run()
+            .expectSarif(
+                """
             {
                 "＄schema" : "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
                 "version" : "2.1.0",
@@ -783,7 +791,7 @@ class SarifReporterTest {
                 ]
             }
            """
-        )
+            )
     }
 
     private fun lint(): TestLintTask {

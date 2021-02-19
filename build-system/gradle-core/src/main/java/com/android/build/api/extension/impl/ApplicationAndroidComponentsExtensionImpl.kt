@@ -16,6 +16,7 @@
 
 package com.android.build.api.extension.impl
 
+import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.api.dsl.SdkComponents
 import com.android.build.api.extension.ApplicationAndroidComponentsExtension
 import com.android.build.api.variant.ApplicationVariant
@@ -26,10 +27,12 @@ import javax.inject.Inject
 open class ApplicationAndroidComponentsExtensionImpl @Inject constructor(
         dslServices: DslServices,
         sdkComponents: SdkComponents,
-        variantApiOperations: VariantApiOperationsRegistrar<ApplicationVariantBuilder, ApplicationVariant>
+        variantApiOperations: VariantApiOperationsRegistrar<ApplicationVariantBuilder, ApplicationVariant>,
+        applicationExtension: ApplicationExtension<*, *, *, *, *>
 ): ApplicationAndroidComponentsExtension,
         AndroidComponentsExtensionImpl<ApplicationVariantBuilder, ApplicationVariant>(
                 dslServices,
                 sdkComponents,
-                variantApiOperations
+                variantApiOperations,
+                applicationExtension
         )

@@ -13,18 +13,16 @@
 // limitations under the License.
 package com.android.ide.common.rendering.api;
 
-import static com.android.SdkConstants.URI_DOMAIN_PREFIX;
-
-import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.utils.TraceUtils;
 import com.google.common.base.Strings;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * Represents a namespace used by aapt when processing resources.
@@ -44,7 +42,7 @@ import java.util.logging.Logger;
  */
 public class ResourceNamespace implements Comparable<ResourceNamespace>, Serializable {
     public static final ResourceNamespace ANDROID =
-            new ResourceNamespace(SdkConstants.ANDROID_URI, SdkConstants.ANDROID_NS_NAME);
+            new ResourceNamespace(AndroidConstants.ANDROID_URI, AndroidConstants.ANDROID_NS_NAME);
     public static final ResourceNamespace RES_AUTO = new ResAutoNamespace();
     public static final ResourceNamespace TOOLS = new ToolsNamespace();
     public static final ResourceNamespace AAPT = new AaptNamespace();
@@ -66,8 +64,11 @@ public class ResourceNamespace implements Comparable<ResourceNamespace>, Seriali
     @NonNull
     public static ResourceNamespace TODO() {
         if (noncomplianceLogging) {
-            LOG.warning(
-                    "This code does not support namespaces yet\n" + TraceUtils.getCurrentStack(1));
+            String trace =
+                    Arrays.stream(Thread.currentThread().getStackTrace())
+                            .map(Object::toString)
+                            .collect(Collectors.joining("\n"));
+            LOG.warning("This code does not support namespaces yet\n" + trace);
         }
         return RES_AUTO;
     }
@@ -109,7 +110,9 @@ public class ResourceNamespace implements Comparable<ResourceNamespace>, Seriali
          * namespaces.
          */
         Resolver TOOLS_ONLY =
-                fromBiMap(ImmutableBiMap.of(SdkConstants.TOOLS_NS_NAME, SdkConstants.TOOLS_URI));
+                fromBiMap(
+                        ImmutableBiMap.of(
+                                AndroidConstants.TOOLS_NS_NAME, AndroidConstants.TOOLS_URI));
 
         /**
          * Creates a new {@link Resolver} which looks up prefix definitions in the given {@link
@@ -152,11 +155,11 @@ public class ResourceNamespace implements Comparable<ResourceNamespace>, Seriali
     @NonNull
     public static ResourceNamespace fromPackageName(@NonNull String packageName) {
         assert !Strings.isNullOrEmpty(packageName);
-        if (packageName.equals(SdkConstants.ANDROID_NS_NAME)) {
+        if (packageName.equals(AndroidConstants.ANDROID_NS_NAME)) {
             // Make sure ANDROID is a singleton, so we can use object identity to check for it.
             return ANDROID;
         } else {
-            return new ResourceNamespace(SdkConstants.URI_PREFIX + packageName, packageName);
+            return new ResourceNamespace(AndroidConstants.URI_PREFIX + packageName, packageName);
         }
     }
 
@@ -211,21 +214,21 @@ public class ResourceNamespace implements Comparable<ResourceNamespace>, Seriali
      */
     @Nullable
     public static ResourceNamespace fromNamespaceUri(@NonNull String uri) {
-        if (uri.equals(SdkConstants.ANDROID_URI)) {
+        if (uri.equals(AndroidConstants.ANDROID_URI)) {
             return ANDROID;
         }
-        if (uri.equals(SdkConstants.AUTO_URI)) {
+        if (uri.equals(AndroidConstants.AUTO_URI)) {
             return RES_AUTO;
         }
-        if (uri.equals(SdkConstants.TOOLS_URI)) {
+        if (uri.equals(AndroidConstants.TOOLS_URI)) {
             return TOOLS;
         }
-        if (uri.equals(SdkConstants.AAPT_URI)) {
+        if (uri.equals(AndroidConstants.AAPT_URI)) {
             return AAPT;
         }
-        if (uri.startsWith(SdkConstants.URI_PREFIX)) {
+        if (uri.startsWith(AndroidConstants.URI_PREFIX)) {
             // TODO(namespaces): What is considered a good package name by aapt?
-            String packageName = uri.substring(SdkConstants.URI_PREFIX.length());
+            String packageName = uri.substring(AndroidConstants.URI_PREFIX.length());
             if (!packageName.isEmpty()) {
                 return fromPackageName(packageName);
             }
@@ -271,13 +274,13 @@ public class ResourceNamespace implements Comparable<ResourceNamespace>, Seriali
     @NonNull
     public Object readResolve() {
         switch (uri) {
-            case SdkConstants.ANDROID_URI:
+            case AndroidConstants.ANDROID_URI:
                 return ANDROID;
-            case SdkConstants.AUTO_URI:
+            case AndroidConstants.AUTO_URI:
                 return RES_AUTO;
-            case SdkConstants.TOOLS_URI:
+            case AndroidConstants.TOOLS_URI:
                 return TOOLS;
-            case SdkConstants.AAPT_URI:
+            case AndroidConstants.AAPT_URI:
                 return AAPT;
             default:
                 return this;
@@ -291,7 +294,7 @@ public class ResourceNamespace implements Comparable<ResourceNamespace>, Seriali
 
     @Override
     public String toString() {
-        return uri.substring(URI_DOMAIN_PREFIX.length());
+        return uri.substring(AndroidConstants.URI_DOMAIN_PREFIX.length());
     }
 
     @Override
@@ -301,19 +304,19 @@ public class ResourceNamespace implements Comparable<ResourceNamespace>, Seriali
 
     private static class ResAutoNamespace extends ResourceNamespace {
         private ResAutoNamespace() {
-            super(SdkConstants.AUTO_URI, null);
+            super(AndroidConstants.AUTO_URI, null);
         }
     }
 
     private static class ToolsNamespace extends ResourceNamespace {
         private ToolsNamespace() {
-            super(SdkConstants.TOOLS_URI, null);
+            super(AndroidConstants.TOOLS_URI, null);
         }
     }
 
     private static class AaptNamespace extends ResourceNamespace {
         private AaptNamespace() {
-            super(SdkConstants.AAPT_URI, null);
+            super(AndroidConstants.AAPT_URI, null);
         }
     }
 }

@@ -271,11 +271,6 @@ public class IrToBazel {
                         imports.put(library, javaImport);
                     }
                     imlModule.addDependency(javaImport, dependency.exported, scopes);
-                    if (library.owner == module
-                            && !scopes.contains(ImlModule.Tag.TEST)
-                            && !dependency.scope.equals(IrModule.Scope.PROVIDED)) {
-                        imlModule.addBundledDep(javaImport);
-                    }
                 } else if (dependency.dependency instanceof IrModule) {
                     scopes.add(0, ImlModule.Tag.MODULE);
                     imlModule.addDependency(

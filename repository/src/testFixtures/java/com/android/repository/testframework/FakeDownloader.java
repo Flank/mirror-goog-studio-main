@@ -18,6 +18,7 @@ package com.android.repository.testframework;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.repository.api.Checksum;
 import com.android.repository.api.Downloader;
 import com.android.repository.api.ProgressIndicator;
 import com.android.repository.io.FileOpUtils;
@@ -88,7 +89,7 @@ public class FakeDownloader implements Downloader {
     public void downloadFully(
             @NonNull URL url,
             @NonNull Path target,
-            @Nullable String checksum,
+            @Nullable Checksum checksum,
             @NonNull ProgressIndicator indicator)
             throws IOException {
         InMemoryFileSystems.recordExistingFile(target, 0, mRegisteredFiles.get(url));

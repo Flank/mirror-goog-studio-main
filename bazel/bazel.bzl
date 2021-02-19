@@ -216,8 +216,18 @@ def _iml_module_impl(ctx):
             form_deps += this_dep.module.forms
         if JavaInfo in this_dep:
             java_deps += [this_dep[JavaInfo]]
-    module_deps = depset(direct = [dep for dep in ctx.attr.deps if hasattr(dep, "module")])
-    plugin_deps = depset(direct = [dep for dep in ctx.attr.deps if hasattr(dep, "plugin_info")])
+    module_deps = []
+    plugin_deps = []
+    external_deps = []
+    for dep in ctx.attr.deps:
+        if hasattr(dep, "module"):
+            module_deps += [dep]
+        elif hasattr(dep, "plugin_info"):
+            plugin_deps += [dep]
+        elif hasattr(dep, "platform_info"):
+            pass
+        else:
+            external_deps += [dep]
 
     # Test dependencies (superset of prod).
     test_java_deps = []
@@ -293,15 +303,15 @@ def _iml_module_impl(ctx):
 
     return struct(
         module = struct(
-            bundled_deps = ctx.files.bundled_deps,
             module_jars = ctx.outputs.production_jar,
             forms = main_forms,
             test_forms = test_forms,
             java_deps = java_deps,
             test_provider = test_provider,
             main_provider = main_provider,
-            module_deps = module_deps,
-            plugin_deps = plugin_deps,
+            module_deps = depset(direct = module_deps),
+            plugin_deps = depset(direct = plugin_deps),
+            external_deps = depset(direct = external_deps),
             names = names,
             plugin = plugin_xml,
         ),
@@ -341,7 +351,6 @@ _iml_module_ = rule(
         "test_friends": attr.label_list(),
         "data": attr.label_list(allow_files = True),
         "test_data": attr.label_list(allow_files = True),
-        "bundled_deps": attr.label_list(allow_files = True),
         "_java_toolchain": attr.label(default = Label("@bazel_tools//tools/jdk:current_java_toolchain")),
         "_host_javabase": attr.label(default = Label("@bazel_tools//tools/jdk:current_host_java_runtime")),
         "_zipper": attr.label(
@@ -487,7 +496,6 @@ def iml_module(
         lint_baseline = None,
         lint_timeout = None,
         back_deps = [],
-        bundled_deps = [],
         exec_properties = {}):
     prod_deps = []
     test_deps = []
@@ -527,7 +535,6 @@ def iml_module(
         data = data,
         test_data = test_data,
         test_class = test_class,
-        bundled_deps = bundled_deps,
     )
 
     if srcs.javas + srcs.kotlins:

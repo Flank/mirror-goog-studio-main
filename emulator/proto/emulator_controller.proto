@@ -169,23 +169,38 @@ service EmulatorController {
   // display state can be observed by the returned configuration.
   //
   // The following gRPC error codes can be returned:
-  // -  unimplemented (code 14) if the AVD does NOT support a configurable secondary display.
-  // -  aborted (code 10) if:
+  // -  FAILED_PRECONDITION (code 9) if the AVD does not support a configurable
+  //    secondary display.
+  // -  INVALID_ARGUMENT (code 3) if:
   //     - The same display id is defined multiple times.
   //     - The display configurations are outside valid ranges
   //       (see DisplayConfiguration)
-  //     - Internal emulator failure.
+  // -  INTERNAL (code 13) if there was an internal emulator failure.
   rpc setDisplayConfigurations(DisplayConfigurations)
       returns (DisplayConfigurations) {}
 
   // Returns all currently valid logical displays.
+  // The gRPC error code FAILED_PRECONDITION (code 9) is returned if the AVD
+  // does not support a configurable secondary display.
   rpc getDisplayConfigurations(google.protobuf.Empty)
       returns (DisplayConfigurations) {}
 
-  // Currently, only notify client of virtual scene camera status change.
-  // Note that this method will send the state and wait for the first change.
+  // Notifies client of the following changes:
+  //
+  // - Virtual scene camera status change.
+  // - Display configuration changes from extended ui. This will only be fired
+  //   if the user makes modifications the extended displays through the extended
+  //   control tab.
+  //
+  // Note that this method will send the initial virtual scene state immediately.
   rpc streamNotification(google.protobuf.Empty) returns (stream Notification) {}
 
+  // RotationRadian is relative to the camera's current orientation.
+  rpc rotateVirtualSceneCamera(RotationRadian) returns (google.protobuf.Empty) {
+  }
+  // Velocity is absolute
+  rpc setVirtualSceneCameraVelocity(Velocity)
+          returns (google.protobuf.Empty) {}
 }
 
 // A Run State that describes the state of the Virtual Machine.
@@ -441,7 +456,8 @@ message Touch {
   // when their associated tools move out of range.
   //
   // The emulator currently supports up to 10 concurrent touch events. The
-  // identifier should be a value from the set [0, 10]
+  // identifier can be any uninque value and will be mapped to the next
+  // available internal identifier.
   int32 identifier = 3;
 
   // Reports the physical pressure applied to the tip of the tool or the
@@ -464,7 +480,22 @@ message Touch {
   // contact. This axis will be ignored if touch_major is reporting an
   // area measurement greater than 0.
   int32 touch_minor = 6;
-}
+
+    enum EventExpiration {
+      // The system will use the default time of 120s to track
+      // the touch event with the given identifier. If no update happens
+      // within this timeframe the identifier is considered expired
+      // and can be made available for re-use. This means that a touch event
+      // with pressure 0 for this identifier will be send to the emulator.
+      EVENT_EXPIRATION_UNSPECIFIED = 0;
+
+      // Never expire the given slot. You must *ALWAYS* close the identifier
+      // by sending a touch event with 0 pressure.
+      NEVER_EXPIRE = 1;
+    }
+
+    EventExpiration expiration = 7;
+  };
 
 // A TouchEvent contains a list of Touch objects that are in contact with
 // the touch surface.
@@ -596,6 +627,10 @@ message KeyboardEvent {
   // Note that most printable ASCII characters (range [32-127) can be send
   // individually with the "key" param. Do not expect arbitrary UTF symbols to
   // arrive in the emulator (most will be ignored).
+  //
+  // Note that it is possible to overrun the keyboard buffer by slamming this
+  // endpoint with large quantities of text (>1kb). The clipboard api is better
+  // suited for transferring large quantities of text.
   string text = 5;
 }
 
@@ -954,7 +989,7 @@ message DisplayConfiguration {
 
   // The pixel density (dpi).
   // See https://developer.android.com/training/multiscreen/screendensities
-  // for details. This value should be in the range [120, ..., 640]
+  // for details. This value shoud be in the range [120, ..., 640]
   uint32 dpi = 3;
 
   // A combination of virtual display flags. These flags can be constructed
@@ -978,10 +1013,29 @@ message DisplayConfigurations {
 }
 
 message Notification {
-     enum EventType {
-           VIRTUAL_SCENE_CAMERA_INACTIVE = 0;
-           VIRTUAL_SCENE_CAMERA_ACTIVE = 1;
-           // Keep adding more for other event types
-     }
-     EventType event = 1;
+  enum EventType {
+    VIRTUAL_SCENE_CAMERA_INACTIVE = 0;
+    VIRTUAL_SCENE_CAMERA_ACTIVE = 1;
+
+    // Fired when an update to a display event has been fired through
+    // the extended ui. This does not fire events when the display
+    // is changed through the console or gRPC endpoint.
+    DISPLAY_CONFIGURATIONS_CHANGED_UI = 2;
+    // Keep adding more for other event types
+  }
+
+  EventType event = 1;
+}
+
+message RotationRadian {
+    float x = 1;  // x axis is horizontal and orthogonal to the view direction.
+    float y = 2;  // y axis points up and is perpendicular to the floor.
+    float z = 3;  // z axis is the view direction and is set to 0.0 in
+                  // rotateVirtualSceneCamera call.
+}
+
+message Velocity {
+    float x = 1;  // x axis is horizontal and orthogonal to the view direction.
+    float y = 2;  // y axis points up and is perpendicular to the floor.
+    float z = 3;  // z axis is the view direction
 }

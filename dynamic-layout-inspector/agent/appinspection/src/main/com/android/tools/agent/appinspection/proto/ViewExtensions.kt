@@ -17,6 +17,7 @@
 package com.android.tools.agent.appinspection.proto
 
 import android.content.res.Resources
+import android.graphics.Matrix
 import android.graphics.Point
 import android.os.Build
 import android.view.View
@@ -33,9 +34,11 @@ import layoutinspector.view.inspection.LayoutInspectorViewProtocol.AppContext
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Bounds
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.GetPropertiesResponse
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.PropertyGroup
+import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Quad
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Rect
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Resource
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.ViewNode
+import kotlin.math.roundToInt
 
 /**
  * Convert the target [View] into a proto [ViewNode].
@@ -44,7 +47,12 @@ import layoutinspector.view.inspection.LayoutInspectorViewProtocol.ViewNode
  */
 fun View.toNode(stringTable: StringTable, skipSystemViews: Boolean): ViewNode {
     ThreadUtils.assertOnMainThread()
-    val absPos = Point(left, top)
+
+    // Screen location is (0, 0) for main window but useful inside floating dialogs
+    val screenLocation = IntArray(2)
+    getLocationOnScreen(screenLocation)
+
+    val absPos = Point(screenLocation[0], screenLocation[1])
     val rootNode = this.toNodeImpl(stringTable, absPos)
     populateNodesRecursively(stringTable, skipSystemViews, rootNode, absPos)
 
@@ -68,7 +76,8 @@ private fun View.populateNodesRecursively(
 ) {
     if (this is ViewGroup) {
         for (child in getChildren()) {
-            val childPos = Point(parentPos.x + child.left, parentPos.y + child.top)
+            val childPos =
+                Point(parentPos.x + child.left - scrollX, parentPos.y + child.top - scrollY)
             val childNode =
                 if (!(skipSystemViews && child.isSystemView())) {
                     child.toNodeImpl(stringTable, childPos)
@@ -116,7 +125,30 @@ private fun View.toNodeImpl(
                 w = view.width
                 h = view.height
             }.build()
-            // TODO(b/17089580): Set render bounds
+
+            val transform = Matrix()
+            view.transformMatrixToGlobal(transform)
+            if (!transform.isIdentity) {
+                val w = view.width.toFloat()
+                val h = view.height.toFloat()
+                val corners = floatArrayOf(
+                    0f, 0f,
+                    w, 0f,
+                    w, h,
+                    0f, h,
+                )
+                transform.mapPoints(corners)
+                render = Quad.newBuilder().apply {
+                    x0 = corners[0].roundToInt()
+                    y0 = corners[1].roundToInt()
+                    x1 = corners[2].roundToInt()
+                    y1 = corners[3].roundToInt()
+                    x2 = corners[4].roundToInt()
+                    y2 = corners[5].roundToInt()
+                    x3 = corners[6].roundToInt()
+                    y3 = corners[7].roundToInt()
+                }.build()
+            }
         }.build()
 
         createResource(stringTable, view.sourceLayoutResId)?.let { layoutResource = it }
@@ -154,7 +186,6 @@ fun View.createAppContext(stringTable: StringTable): AppContext {
         apiCodeName = stringTable.put(Build.VERSION.CODENAME)
         appPackageName = stringTable.put(context.packageName)
 
-        // getThemeResId is @hide; stubbed in fake-android but IDE doesn't find it
         createResource(stringTable, context.themeResId)?.let { themeResource ->
             theme = themeResource
         }

@@ -1462,7 +1462,7 @@ public class LintFix {
          * A location range for the source region where the fix will operate. Useful when the fix is
          * applying in a wider range than the highlighted problem range.
          */
-        @Nullable public final Location range;
+        @Nullable public Location range;
 
         private AnnotateFix(
                 @Nullable String displayName,

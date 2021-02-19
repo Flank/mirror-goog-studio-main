@@ -504,4 +504,16 @@ public final class FileOpUtils {
         permissions.add(PosixFilePermission.OTHERS_EXECUTE);
         Files.setPosixFilePermissions(path, permissions);
     }
+
+    /**
+     * Convenience method to allow Path-based code to interop with legacy File-based code.
+     *
+     * <p>Note that the resulting File may not refer to an actual file on the default FileSystem.
+     */
+    public static @NonNull File toFile(@NonNull Path path) {
+        if (path.getFileSystem() == FileSystems.getDefault()) {
+            return path.toFile();
+        }
+        return new File(path.toString());
+    }
 }

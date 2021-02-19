@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.util.Collection;
 import org.gradle.api.tasks.SourceSet;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * An implementation of SourceProvider that's wrapper around a Java SourceSet.
@@ -54,6 +55,12 @@ public class SourceSetSourceProviderWrapper implements SourceProvider {
     @Override
     public Collection<File> getJavaDirectories() {
         return sourceSet.getJava().getSrcDirs();
+    }
+
+    @NotNull
+    @Override
+    public Collection<File> getKotlinDirectories() {
+        return ImmutableList.of();
     }
 
     @NonNull

@@ -18,12 +18,10 @@ package com.android.tools.deployer.tasks;
 
 import com.android.tools.deploy.proto.Deploy;
 import com.android.tools.deployer.AdbClient;
-import com.android.tools.deployer.DeploymentCacheDatabase;
 import com.android.tools.deployer.Installer;
-import com.android.tools.deployer.OverlayId;
-
 import java.io.IOException;
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -54,14 +52,21 @@ public class LiveLiteralDeployer {
         }
     }
 
-    private final DeploymentCacheDatabase deployCache;
+    /**
+     * Everything is an error at the moment. While they are hard error that might cause the update
+     * to be aborted. These should not be presented to the user with any sense of urgency due to the
+     * agreed "best effort" nature of LL updates.
+     */
+    public static class UpdateLiveLiteralError {
+        public final String msg;
 
-    public LiveLiteralDeployer(DeploymentCacheDatabase db) {
-        this.deployCache = db;
+        public UpdateLiveLiteralError(String msg) {
+            this.msg = msg;
+        }
     }
 
     /** Temp solution. Going to refactor / move this elsewhere later. */
-    public void updateLiveLiteral(
+    public List<UpdateLiveLiteralError> updateLiveLiteral(
             Installer installer,
             AdbClient adb,
             String packageName,
@@ -87,22 +92,17 @@ public class LiveLiteralDeployer {
         requestBuilder.addAllProcessIds(pids);
         requestBuilder.setArch(arch);
 
-        // We update the OID on the device as thought we did an install of an unchanged APK.
-        OverlayId overlayId = deployCache.get(adb.getSerial(), packageName).getOverlayId();
-        if (overlayId.isBaseInstall()) {
-            requestBuilder.setExpectedOverlayId("");
-            deployCache.store(adb.getSerial(), packageName, overlayId.getInstalledApks(), overlayId);
-        } else {
-            requestBuilder.setExpectedOverlayId(overlayId.getSha());
-        }
-        requestBuilder.setOverlayId(overlayId.getSha());
-
         Deploy.LiveLiteralUpdateRequest request = requestBuilder.build();
 
+        List<UpdateLiveLiteralError> errors = new LinkedList<>();
         try {
-            installer.updateLiveLiterals(request);
+            Deploy.LiveLiteralUpdateResponse response = installer.updateLiveLiterals(request);
+            for (Deploy.AgentResponse failure : response.getFailedAgentsList()) {
+                errors.add(new UpdateLiveLiteralError(failure.getLiveLiteralResponse().getExtra()));
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
+        return errors;
     }
 }

@@ -23,7 +23,10 @@ import com.android.builder.model.SourceProvider;
 import com.google.common.truth.Truth;
 import java.io.File;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public final class SourceProviderHelper {
 
@@ -33,6 +36,7 @@ public final class SourceProviderHelper {
     @NonNull private final SourceProvider sourceProvider;
     @NonNull private final File projectDir;
     private String javaDir;
+    private List<String> kotlinDirs;
     private String resourcesDir;
     private String manifestFile;
     private String resDir;
@@ -49,6 +53,7 @@ public final class SourceProviderHelper {
         this.sourceProvider = sourceProvider;
         // configure tester with default relative paths
         setJavaDir("src/" + configName + "/java");
+        setKotlinDirs("src/" + configName + "/java", "src/" + configName + "/kotlin");
         setResourcesDir("src/" + configName + "/resources");
         setManifestFile("src/" + configName + "/AndroidManifest.xml");
         setResDir("src/" + configName + "/res");
@@ -61,6 +66,12 @@ public final class SourceProviderHelper {
     @NonNull
     public SourceProviderHelper setJavaDir(String javaDir) {
         this.javaDir = javaDir;
+        return this;
+    }
+
+    @NonNull
+    public SourceProviderHelper setKotlinDirs(String... kotlinDirs) {
+        this.kotlinDirs = Arrays.asList(kotlinDirs);
         return this;
     }
 
@@ -117,6 +128,12 @@ public final class SourceProviderHelper {
         Truth.assertWithMessage("AndroidManifest")
                 .that((Comparable<Path>) new File(projectDir, manifestFile).toPath())
                 .isEquivalentAccordingToCompareTo(sourceProvider.getManifestFile().toPath());
+
+        Truth.assertThat(sourceProvider.getKotlinDirectories())
+                .containsExactlyElementsIn(
+                        kotlinDirs.stream()
+                                .map(f -> new File(projectDir, f))
+                                .collect(Collectors.toList()));
     }
 
     private void testSinglePathCollection(

@@ -133,7 +133,7 @@ public class MinifyTest {
                 project.file(
                         "build/"
                                 + AndroidProject.FD_INTERMEDIATES
-                                + "/proguard-files"
+                                + "/default_proguard_files/global"
                                 + "/proguard-android.txt"
                                 + "-"
                                 + Version.ANDROID_GRADLE_PLUGIN_VERSION);

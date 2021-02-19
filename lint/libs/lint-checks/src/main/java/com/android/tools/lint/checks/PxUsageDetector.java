@@ -237,7 +237,7 @@ public class PxUsageDetector extends LayoutDetector {
                                                 Lint.getFileNameWithParent(client, sourceFile));
                                 Location location = context.getLocation(attribute);
 
-                                if (!Scope.checkSingleFile(context.getDriver().getScope())) {
+                                if (!context.getDriver().isIsolated()) {
                                     // Secondary location: this is a waste of time in the IDE when
                                     // analyzing
                                     // just a single file

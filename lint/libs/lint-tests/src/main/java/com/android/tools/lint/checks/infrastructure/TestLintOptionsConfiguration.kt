@@ -41,17 +41,17 @@ class TestLintOptionsConfiguration(
         associatedLocation = Location.create(project.dir)
     }
 
-    override fun getDefinedSeverity(issue: Issue, source: Configuration): Severity? {
-        val override = overrideSeverity(task, issue)
+    override fun getDefinedSeverity(issue: Issue, source: Configuration, visibleDefault: Severity): Severity {
+        val override = overrideSeverity(task, issue, visibleDefault)
         if (override != null) {
             return override
         }
-        val severity = super.getDefinedSeverity(issue, source)
+        val severity = super.getDefinedSeverity(issue, source, visibleDefault)
         if (severity != null) {
             return severity
         }
 
-        val parentSeverity = parent?.getDefinedSeverity(issue, source)
+        val parentSeverity = parent?.getDefinedSeverity(issue, source, visibleDefault)
         if (parentSeverity != null) {
             return parentSeverity
         }
@@ -59,12 +59,12 @@ class TestLintOptionsConfiguration(
         // In unit tests, include issues that are ignored by default
         for (id in task.issueIds ?: emptyArray()) {
             if (issue.id == id) {
-                return getNonIgnoredSeverity(issue.defaultSeverity, issue)
+                return getNonIgnoredSeverity(visibleDefault, issue)
             }
         }
 
         return if (task.checkedIssues.contains(issue))
-            getNonIgnoredSeverity(issue.defaultSeverity, issue)
+            getNonIgnoredSeverity(visibleDefault, issue)
         else
             Severity.IGNORE
     }

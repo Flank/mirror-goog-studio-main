@@ -19,13 +19,12 @@ import static com.android.ide.common.rendering.api.RenderResources.REFERENCE_EMP
 import static com.android.ide.common.rendering.api.RenderResources.REFERENCE_NULL;
 import static com.android.ide.common.rendering.api.RenderResources.REFERENCE_UNDEFINED;
 
-import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
+import com.android.ide.common.rendering.api.AndroidConstants;
 import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.rendering.api.ResourceReference;
-import com.android.utils.HashCodes;
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -51,7 +50,7 @@ public class ResourceUrl implements Serializable {
 
     /** If true, the resource is in the android: framework. */
     public boolean isFramework() {
-        return SdkConstants.ANDROID_NS_NAME.equals(namespace);
+        return AndroidConstants.ANDROID_NS_NAME.equals(namespace);
     }
 
     /** Whether an id resource is of the form {@code @+id} rather than just {@code @id}. */
@@ -110,7 +109,11 @@ public class ResourceUrl implements Serializable {
     public static ResourceUrl create(
             @NonNull ResourceType type, @NonNull String name, boolean framework) {
         return new ResourceUrl(
-                type, name, framework ? SdkConstants.ANDROID_NS_NAME : null, UrlType.NORMAL, false);
+                type,
+                name,
+                framework ? AndroidConstants.ANDROID_NS_NAME : null,
+                UrlType.NORMAL,
+                false);
     }
 
     /**
@@ -201,8 +204,8 @@ public class ResourceUrl implements Serializable {
         char currentChar = url.charAt(currentIndex);
 
         // The prefix could be one of @, @+, @+*, @*, ?
-        char themePrefix = SdkConstants.PREFIX_THEME_REF.charAt(0);
-        char resourcePrefix = SdkConstants.PREFIX_RESOURCE_REF.charAt(0);
+        char themePrefix = AndroidConstants.PREFIX_THEME_REF.charAt(0);
+        char resourcePrefix = AndroidConstants.PREFIX_RESOURCE_REF.charAt(0);
         if (themePrefix == currentChar) {
             currentIndex++;
             urlType = UrlType.THEME;
@@ -315,7 +318,7 @@ public class ResourceUrl implements Serializable {
         if (namespaceStart < namespaceEnd) {
             namespace = url.substring(namespaceStart, namespaceEnd);
         } else {
-            namespace = defaultToFramework ? SdkConstants.ANDROID_NS_NAME : null;
+            namespace = defaultToFramework ? AndroidConstants.ANDROID_NS_NAME : null;
         }
         return new ResourceUrl(type, name, namespace, urlType, privateAccessOverride);
     }
@@ -398,7 +401,7 @@ public class ResourceUrl implements Serializable {
 
         int slash = input.indexOf('/', pos);
         if (slash != -1) {
-            if (!input.startsWith(SdkConstants.REFERENCE_STYLE, pos)) {
+            if (!input.startsWith(AndroidConstants.REFERENCE_STYLE, pos)) {
                 // Wrong resource type used.
                 return null;
             }
@@ -486,13 +489,13 @@ public class ResourceUrl implements Serializable {
         StringBuilder sb = new StringBuilder();
         switch (urlType) {
             case NORMAL:
-                sb.append(SdkConstants.PREFIX_RESOURCE_REF);
+                sb.append(AndroidConstants.PREFIX_RESOURCE_REF);
                 break;
             case CREATE:
                 sb.append("@+");
                 break;
             case THEME:
-                sb.append(SdkConstants.PREFIX_THEME_REF);
+                sb.append(AndroidConstants.PREFIX_THEME_REF);
                 break;
             case ATTR:
                 // No prefix.
@@ -550,10 +553,6 @@ public class ResourceUrl implements Serializable {
 
     @Override
     public int hashCode() {
-        return HashCodes.mix(
-                urlType.hashCode(),
-                type.hashCode(),
-                Objects.hashCode(name),
-                Objects.hashCode(namespace));
+        return Objects.hash(urlType, type, name, namespace);
     }
 }

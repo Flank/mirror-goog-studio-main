@@ -29,6 +29,7 @@ import com.android.annotations.concurrency.Immutable;
 import com.android.ide.common.xml.XmlFormatPreferences;
 import com.android.ide.common.xml.XmlFormatStyle;
 import com.android.ide.common.xml.XmlPrettyPrinter;
+import com.android.sdklib.SdkVersionInfo;
 import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.android.utils.Pair;
@@ -393,10 +394,44 @@ public class ManifestMerger2 {
                 return mergingReportBuilder.build();
             }
         }
+        // android:exported should have an explicit value for S and above with <intent-filter>,
+        // output an
+        // error message to the user if android:exported is not explicitly specified
+        String targetSdkVersion = finalMergedDocument.getTargetSdkVersion();
+        int targetSdkApi =
+                Character.isDigit(targetSdkVersion.charAt(0))
+                        ? Integer.parseInt(targetSdkVersion)
+                        : SdkVersionInfo.getApiByPreviewName(targetSdkVersion, true);
+        if (targetSdkApi > 30) {
+            NodeList activityList =
+                    finalMergedDocument.getXml().getElementsByTagName(SdkConstants.TAG_ACTIVITY);
+            checkIfExportedIsNeeded(activityList, mergingReportBuilder, loadedMainManifestInfo);
+            if (mergingReportBuilder.hasErrors()) {
+                return mergingReportBuilder.build();
+            }
+            NodeList serviceList =
+                    finalMergedDocument.getXml().getElementsByTagName(SdkConstants.TAG_SERVICE);
+            checkIfExportedIsNeeded(serviceList, mergingReportBuilder, loadedMainManifestInfo);
+            if (mergingReportBuilder.hasErrors()) {
+                return mergingReportBuilder.build();
+            }
+            NodeList receiverList =
+                    finalMergedDocument.getXml().getElementsByTagName(SdkConstants.TAG_RECEIVER);
+            checkIfExportedIsNeeded(receiverList, mergingReportBuilder, loadedMainManifestInfo);
+            if (mergingReportBuilder.hasErrors()) {
+                return mergingReportBuilder.build();
+            }
+        }
 
         if (!mOptionalFeatures.contains(Invoker.Feature.REMOVE_TOOLS_DECLARATIONS)) {
             PostValidator.enforceToolsNamespaceDeclaration(finalMergedDocument);
         }
+
+        // reset the node operations to their original ones if they get changed
+        finalMergedDocument.originalNodeOperation.forEach(
+                (k, v) -> {
+                    k.setAttributeNS(SdkConstants.TOOLS_URI, "tools:node", v.toXmlName());
+                });
 
         PostValidator.validate(finalMergedDocument, mergingReportBuilder);
         if (mergingReportBuilder.hasErrors()) {
@@ -1357,6 +1392,29 @@ public class ManifestMerger2 {
          */
         protected InputStream getInputStream(@NonNull File file) throws IOException {
             return new BufferedInputStream(new FileInputStream(file));
+        }
+    }
+
+    private void checkIfExportedIsNeeded(
+            NodeList list,
+            MergingReport.Builder mergingReportBuilder,
+            LoadedManifestInfo loadedMainManifestInfo) {
+        for (int i = 0; i < list.getLength(); i++) {
+            Element element = (Element) list.item(i);
+
+            if (element.getElementsByTagName(SdkConstants.TAG_INTENT_FILTER).getLength() > 0
+                    && element.getAttributes()
+                                    .getNamedItemNS(
+                                            SdkConstants.ANDROID_URI, SdkConstants.ATTR_EXPORTED)
+                            == null) {
+                mergingReportBuilder.addMessage(
+                        loadedMainManifestInfo.getXmlDocument().getSourceFile(),
+                        MergingReport.Record.Severity.ERROR,
+                        String.format(
+                                "Apps targeting Android 12 and higher are required to specify an explicit value "
+                                        + "for `android:exported` when the corresponding component has an intent filter defined. "
+                                        + "See https://developer.android.com/guide/topics/manifest/activity-element#exported for details."));
+            }
         }
     }
 

@@ -50,6 +50,7 @@ class LiveLiteral {
   JNIEnv* jni_;
   const std::string package_name_;
   ClassFinder class_finder_;
+  proto::AgentLiveLiteralUpdateResponse response_;
 };
 
 }  // namespace deploy

@@ -60,7 +60,7 @@ import java.util.Locale
 /** Looks for leaks via static fields */
 class LeakDetector : Detector(), SourceCodeScanner {
 
-    override fun applicableSuperClasses(): List<String>? {
+    override fun applicableSuperClasses(): List<String> {
         return SUPER_CLASSES
     }
 
@@ -139,11 +139,11 @@ class LeakDetector : Detector(), SourceCodeScanner {
         )
     }
 
-    override fun getApplicableUastTypes(): List<Class<out UElement>>? {
+    override fun getApplicableUastTypes(): List<Class<out UElement>> {
         return listOf<Class<out UElement>>(UField::class.java)
     }
 
-    override fun createUastHandler(context: JavaContext): UElementHandler? {
+    override fun createUastHandler(context: JavaContext): UElementHandler {
         return FieldChecker(context)
     }
 

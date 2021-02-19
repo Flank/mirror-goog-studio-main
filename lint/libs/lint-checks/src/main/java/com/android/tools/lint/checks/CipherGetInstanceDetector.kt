@@ -18,10 +18,13 @@ package com.android.tools.lint.checks
 
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.ConstantEvaluator
+import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
+import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
+import com.android.tools.lint.detector.api.LintMap
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
@@ -38,7 +41,7 @@ import org.jetbrains.uast.UQualifiedReferenceExpression
  */
 class CipherGetInstanceDetector : Detector(), SourceCodeScanner {
 
-    override fun getApplicableMethodNames(): List<String>? {
+    override fun getApplicableMethodNames(): List<String> {
         return listOf(GET_INSTANCE)
     }
 
@@ -118,24 +121,25 @@ class CipherGetInstanceDetector : Detector(), SourceCodeScanner {
         provider: String
     ) {
         if (provider == "BC") {
-            val message =
-                (
-                    if (context.mainProject.targetSdkVersion.featureLevel >= 28) {
-                        "The `BC` provider is deprecated and as of Android P " +
-                            "this method will throw a `NoSuchAlgorithmException`."
-                    } else {
-                        "The `BC` provider is deprecated and when `targetSdkVersion` is moved " +
-                            "to `P` this method will throw a `NoSuchAlgorithmException`."
-                    }
-                    ) +
-                    " To fix " +
-                    "this you should stop specifying a provider and use the default " +
-                    "implementation"
-            context.report(
-                ISSUE, call, context.getLocation(node),
-                message
-            )
+            val incident = Incident(ISSUE, call, context.getLocation(node), "")
+            context.report(incident, map())
         }
+    }
+
+    override fun filterIncident(context: Context, incident: Incident, map: LintMap): Boolean {
+        val prefix =
+            if (context.mainProject.targetSdkVersion.featureLevel >= 28) {
+                "The `BC` provider is deprecated and as of Android P " +
+                    "this method will throw a `NoSuchAlgorithmException`."
+            } else {
+                "The `BC` provider is deprecated and when `targetSdkVersion` is moved " +
+                    "to `P` this method will throw a `NoSuchAlgorithmException`."
+            }
+        val message = prefix + " To fix " +
+            "this you should stop specifying a provider and use the default " +
+            "implementation"
+        incident.message = message
+        return true
     }
 
     companion object {

@@ -858,9 +858,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                 MergeType.MERGE,
                 globalScope.projectBaseName)
         val projectOptions = creationConfig.services.projectOptions
-        // TODO(b/156339511): get rid of separate flag for app modules.
-        val nonTransitiveR = (projectOptions[BooleanOption.NON_TRANSITIVE_R_CLASS]
-                && projectOptions[BooleanOption.NON_TRANSITIVE_APP_R_CLASS])
+        val nonTransitiveR = projectOptions[BooleanOption.NON_TRANSITIVE_R_CLASS]
         val namespaced: Boolean = creationConfig.globalScope.extension.aaptOptions.namespaced
 
         // TODO(b/138780301): Also use compile time R class in android tests.
@@ -952,8 +950,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                     taskFactory.register(
                             GenerateLibraryProguardRulesTask.CreationAction(creationConfig))
                 }
-                val nonTransitiveRClassInApp = (projectOptions[BooleanOption.NON_TRANSITIVE_R_CLASS]
-                        && projectOptions[BooleanOption.NON_TRANSITIVE_APP_R_CLASS])
+                val nonTransitiveRClassInApp = projectOptions[BooleanOption.NON_TRANSITIVE_R_CLASS]
                 // Generate the R class for a library using both local symbols and symbols
                 // from dependencies.
                 // TODO: double check this (what about dynamic features?)
@@ -2493,10 +2490,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         override fun configure(task: TaskT) {
             super.configure(task)
             task.dependsOn(MAIN_PREBUILD)
-            if (creationConfig is ConsumableCreationConfig
-                    && creationConfig.codeShrinker != null) {
-                task.dependsOn(EXTRACT_PROGUARD_FILES)
-            }
         }
     }
 
@@ -2835,11 +2828,10 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         const val ASSEMBLE_ANDROID_TEST = "assembleAndroidTest"
         const val LINT = "lint"
         const val LINT_FIX = "lintFix"
-        const val EXTRACT_PROGUARD_FILES = "extractProguardFiles"
 
         // Temporary static variables for Kotlin+Compose configuration
         const val KOTLIN_COMPILER_CLASSPATH_CONFIGURATION_NAME = "kotlinCompilerClasspath"
-        const val COMPOSE_KOTLIN_COMPILER_EXTENSION_VERSION = "1.0.0-alpha08"
+        const val COMPOSE_KOTLIN_COMPILER_EXTENSION_VERSION = "1.0.0-beta01"
         const val CREATE_MOCKABLE_JAR_TASK_NAME = "createMockableJar"
 
         /**
@@ -2881,7 +2873,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             // Make sure MAIN_PREBUILD runs first:
             taskFactory.register(MAIN_PREBUILD)
             taskFactory.register(ExtractProguardFiles.CreationAction(globalScope))
-                    .configure { it: ExtractProguardFiles -> it.dependsOn(MAIN_PREBUILD) }
+                .configure { it: ExtractProguardFiles -> it.dependsOn(MAIN_PREBUILD) }
             taskFactory.register(SourceSetsTask.CreationAction(sourceSetContainer))
             taskFactory.register(
                     ASSEMBLE_ANDROID_TEST

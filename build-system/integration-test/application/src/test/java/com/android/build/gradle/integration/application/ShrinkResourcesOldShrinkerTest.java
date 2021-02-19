@@ -952,7 +952,8 @@ public class ShrinkResourcesOldShrinkerTest {
         }
         // Check R class keep rule is removed from proguard files when R.txt is used when useRTxt is
         // enabled and kept when useRTxt is disabled.
-        File proguardFilesIntermediateDir = project.getIntermediateFile("proguard-files");
+        File proguardFilesIntermediateDir =
+                project.getIntermediateFile("default_proguard_files/global");
         assertThat(containsRClassKeepRule(proguardFilesIntermediateDir)).isEqualTo(!useRTxt);
     }
 

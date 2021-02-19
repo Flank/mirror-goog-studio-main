@@ -235,7 +235,7 @@ public abstract class JacocoReportTask extends NonIncrementalTask {
                                     (Callable<List<ConfigurableFileTree>>)
                                             testedVariant::getJavaSources);
 
-            task.setReportDir(testedVariant.getPaths().getCoverageReportDir());
+            task.setReportDir(testedVariant.getPaths().getCoverageReportDir().get().getAsFile());
         }
     }
 

@@ -29,22 +29,20 @@ import com.android.tools.lint.model.LintModelModule
 import com.android.tools.lint.model.LintModelSerialization
 import org.gradle.api.Project
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.file.FileCollection
 import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.api.plugins.JavaPluginConvention
-import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskProvider
+import java.io.File
 
 /**
  * Task to write the [LintModelModule] representation of one variant of a Gradle project to disk.
  *
  * When checkDependencies is used in a consuming project, this serialized [LintModelModule] file is
  * read by Lint in consuming projects to get all the information about this variant in project.
- *
- * This is an interim solution, eventually lint will run all checks locally in each project,
- * and export partial results to be interpreted and merged.
  */
 abstract class LintModelWriterTask : NonIncrementalTask() {
 
@@ -54,12 +52,25 @@ abstract class LintModelWriterTask : NonIncrementalTask() {
     @get:Nested
     abstract val variantInputs: VariantInputs
 
+    // Ideally, we'd annotate this property with @Input because we only care about its location, not
+    // its contents, but task validation prohibits annotating a File property with @Input. The
+    // suggested workaround is to instead annotate the File property with @Internal and add a
+    // separate String property annotated with @Input which returns the absolute path of the file
+    // (https://github.com/gradle/gradle/issues/5789).
+    @get:Internal
+    lateinit var partialResultsDir: File
+        private set
+
+    @get:Input
+    lateinit var partialResultsDirPath: String
+        private set
+
     @get:OutputDirectory
     abstract val outputDirectory: DirectoryProperty
 
     override fun doTaskAction() {
         val module = projectInputs.convertToLintModelModule()
-        val variant = variantInputs.toLintModel(module)
+        val variant = variantInputs.toLintModel(module, partialResultsDir)
         LintModelSerialization.writeModule(
             module = module,
             destination = outputDirectory.get().asFile,
@@ -72,7 +83,8 @@ abstract class LintModelWriterTask : NonIncrementalTask() {
         project: Project,
         projectOptions: ProjectOptions,
         javaConvention: JavaPluginConvention,
-        lintOptions: LintOptions
+        lintOptions: LintOptions,
+        partialResultsDir: File
     ) {
         this.group = JavaBasePlugin.VERIFICATION_GROUP
         this.variantName = ""
@@ -80,6 +92,8 @@ abstract class LintModelWriterTask : NonIncrementalTask() {
         this.projectInputs.initializeForStandalone(project, javaConvention, lintOptions)
         // The artifact produced is only used by lint tasks with checkDependencies=true
         this.variantInputs.initializeForStandalone(project, javaConvention, projectOptions, checkDependencies=true)
+        this.partialResultsDir = partialResultsDir
+        this.partialResultsDirPath = partialResultsDir.absolutePath
     }
 
     class CreationAction(
@@ -109,6 +123,12 @@ abstract class LintModelWriterTask : NonIncrementalTask() {
                 checkDependencies = true,
                 warnIfProjectTreatedAsExternalDependency = false
             )
+            task.partialResultsDir =
+                creationConfig.artifacts.getOutputPath(
+                    InternalArtifactType.LINT_PARTIAL_RESULTS,
+                    AndroidLintAnalysisTask.PARTIAL_RESULTS_DIR_NAME
+                )
+            task.partialResultsDirPath = task.partialResultsDir.absolutePath
         }
 
         companion object {

@@ -27,17 +27,16 @@ inline class ApiConstraint(val bits: Int) {
     /*
      * The API constraint stores the interval [from, to). For example,
      * "if (SDK_INT >= 16) X else Y" would have the range constraint [16,∞) for
-     * X and [1,16) for Y. Here ∞ is using the special marker value 0xFF.
+     * X and [1,16) for Y. Here ∞ is using the special marker value 0xFFF.
      * The int basically is represented by from in the least significant byte
-     * and to in the next byte.
+     * and to in the next byte: from | to << TO_SHIFTS.
      */
 
-    private fun fromInclusive(): Int = bits and API_LEVEL_MASK
-    private fun toExclusive(): Int = (bits shr API_LEVEL_SHIFTS) and API_LEVEL_MASK
+    private fun fromInclusive(): Int = bits and FROM_MASK
+    private fun toExclusive(): Int = (bits shr TO_SHIFTS) and FROM_MASK
 
     /** Is the given [apiLevel] valid for this constraint? */
     fun matches(apiLevel: Int): Boolean {
-        assert(this != NONE && this != UNKNOWN)
         return apiLevel >= fromInclusive() && apiLevel < toExclusive()
     }
 
@@ -58,17 +57,14 @@ inline class ApiConstraint(val bits: Int) {
     }
 
     /**
-     * Combines two API constraints. May return [NONE] if the range
-     * is not supported by lint. (This basically is an intersection
-     * operator.)
+     * Combines two API constraints. The result may be empty. (This
+     * basically is an intersection operator.)
      */
     operator fun plus(other: ApiConstraint): ApiConstraint {
-        assert(this != NONE && this != UNKNOWN)
-        assert(other != NONE && other != UNKNOWN)
         val from = max(fromInclusive(), other.fromInclusive())
         val to = min(toExclusive(), other.toExclusive())
         return if (from >= to) {
-            NONE
+            createConstraint(from, from)
         } else {
             createConstraint(from, to)
         }
@@ -76,7 +72,6 @@ inline class ApiConstraint(val bits: Int) {
 
     /** Inverts the given constraint, e.g. X < 20 becomes X >= 20 */
     operator fun not(): ApiConstraint {
-        assert(this != NONE && this != UNKNOWN)
         val from = fromInclusive()
         val to = toExclusive()
         return createConstraint(
@@ -89,8 +84,7 @@ inline class ApiConstraint(val bits: Int) {
         val from = fromInclusive()
         val to = toExclusive()
         return when {
-            this == NONE -> "Unconstrained"
-            this == UNKNOWN -> "Unknown"
+            from == to -> "Nothing"
             to == INFINITY -> "API level ≥ $from"
             from == 1 -> "API level < $to"
             else -> "API level ≥ $from and API level < $to"
@@ -98,9 +92,10 @@ inline class ApiConstraint(val bits: Int) {
     }
 
     companion object {
-        private const val INFINITY = 0xFF
-        private const val API_LEVEL_SHIFTS = 8
-        private const val API_LEVEL_MASK = 0xFF
+        // Large enough to hold the 1000 value used by Build.VERSION_CODES.CUR_DEVELOPMENT
+        private const val INFINITY = 0xFFF
+        private const val TO_SHIFTS = 16
+        private const val FROM_MASK = 0xFFFF
 
         private fun createConstraint(
             fromInclusive: Int? = null,
@@ -108,7 +103,7 @@ inline class ApiConstraint(val bits: Int) {
         ): ApiConstraint {
             val from = fromInclusive ?: 1
             val to = toExclusive ?: INFINITY
-            return ApiConstraint(from or (to shl API_LEVEL_SHIFTS))
+            return ApiConstraint(from or (to shl TO_SHIFTS))
         }
 
         /**
@@ -160,25 +155,12 @@ inline class ApiConstraint(val bits: Int) {
             return createConstraint(apiLevel, apiLevel + 1)
         }
 
-        /** There is no constraint on the API level */
-        val NONE = ApiConstraint(-1)
-
-        /**
-         * The constraint is unknown (return value from lookup functions
-         * that cannot determine an answer)
-         */
-        val UNKNOWN = ApiConstraint(-2)
-
         /**
          * Serializes the given constraint into a String, which can
          * later be retrieved by calling [deserialize].
          */
         fun serialize(constraint: ApiConstraint): String {
-            return when (constraint) {
-                NONE -> "none"
-                UNKNOWN -> "unknown"
-                else -> Integer.toHexString(constraint.bits)
-            }
+            return Integer.toHexString(constraint.bits)
         }
 
         /**
@@ -186,11 +168,7 @@ inline class ApiConstraint(val bits: Int) {
          * [serialize] into the corresponding constraint
          */
         fun deserialize(s: String): ApiConstraint {
-            return when (s) {
-                "none" -> NONE
-                "unknown" -> UNKNOWN
-                else -> ApiConstraint(s.toInt(16))
-            }
+            return ApiConstraint(s.toInt(16))
         }
     }
 }

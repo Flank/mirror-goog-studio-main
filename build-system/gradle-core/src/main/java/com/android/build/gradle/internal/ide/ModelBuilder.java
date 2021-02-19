@@ -341,7 +341,7 @@ public class ModelBuilder<Extension extends BaseExtension>
 
         List<String> flavorDimensionList =
                 extension.getFlavorDimensionList() != null
-                        ? extension.getFlavorDimensionList()
+                        ? ImmutableList.copyOf(extension.getFlavorDimensionList())
                         : Lists.newArrayList();
 
         final VariantInputModel<
@@ -1064,7 +1064,11 @@ public class ModelBuilder<Extension extends BaseExtension>
             folders.add(aidlSources.getAsFile());
         }
         if (component.getBuildConfigType() == BuildConfigType.JAVA_CLASS) {
-            folders.add(component.getPaths().getBuildConfigSourceOutputDir());
+            Directory maybeBuildConfig =
+                    component.getPaths().getBuildConfigSourceOutputDir().getOrNull();
+            if (maybeBuildConfig != null) {
+                folders.add(maybeBuildConfig.getAsFile());
+            }
         }
         boolean ndkMode = component.getVariantDslInfo().getRenderscriptNdkModeEnabled();
         if (!ndkMode) {
@@ -1100,8 +1104,8 @@ public class ModelBuilder<Extension extends BaseExtension>
             result = Lists.newArrayListWithCapacity(2);
         }
 
-        result.add(component.getPaths().getRenderscriptResOutputDir());
-        result.add(component.getPaths().getGeneratedResOutputDir());
+        result.add(component.getPaths().getRenderscriptResOutputDir().get().getAsFile());
+        result.add(component.getPaths().getGeneratedResOutputDir().get().getAsFile());
         return result;
     }
 

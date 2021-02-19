@@ -90,6 +90,8 @@ enum class StringOption(
     // Jetifier: List of regular expressions for libraries that should not be jetified
     JETIFIER_IGNORE_LIST("android.jetifier.ignorelist", ApiStage.Experimental),
 
+    // Lint: Allow customization of the heap size of the process started to run lint
+    LINT_HEAP_SIZE("android.experimental.lint.heapSize", ApiStage.Experimental),
     /* ---------------
      * DEPRECATED APIs
      */

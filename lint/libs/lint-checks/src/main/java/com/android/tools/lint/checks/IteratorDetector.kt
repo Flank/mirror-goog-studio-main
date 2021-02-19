@@ -17,8 +17,10 @@
 package com.android.tools.lint.checks
 
 import com.android.tools.lint.detector.api.Category
+import com.android.tools.lint.detector.api.minSdkLessThan
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
+import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Scope
@@ -83,7 +85,7 @@ class IteratorDetector : Detector(), SourceCodeScanner {
         )
     }
 
-    override fun getApplicableMethodNames(): List<String>? =
+    override fun getApplicableMethodNames(): List<String> =
         listOf("add", "spliterator", "stream", "parallelStream")
 
     override fun visitMethodCall(
@@ -91,10 +93,6 @@ class IteratorDetector : Detector(), SourceCodeScanner {
         node: UCallExpression,
         method: PsiMethod
     ) {
-        if (context.mainProject.minSdk >= 26) {
-            // Bug only affects API level 24 and 25 (Android N and N_MR1)
-            return
-        }
         val receiver = node.receiver ?: return
 
         val name = method.name
@@ -132,14 +130,20 @@ class IteratorDetector : Detector(), SourceCodeScanner {
                 }
                 // b/33945212
                 context.report(
-                    ISSUE, node, context.getLocation(node),
-                    "`LinkedHashMap#$name` was broken in API 24 and 25. Workaround: $workaround"
+                    Incident(
+                        ISSUE, node, context.getLocation(node),
+                        "`LinkedHashMap#$name` was broken in API 24 and 25. Workaround: $workaround"
+                    ),
+                    minSdkLessThan(26)
                 )
             } else if (canonical == "java.util.Vector") {
                 // b/30974375
                 context.report(
-                    ISSUE, node, context.getLocation(node),
-                    "`Vector#listIterator` was broken in API 24 and 25; it can return `hasNext()=false` before the last element. Consider switching to `ArrayList` with synchronization if you need it."
+                    Incident(
+                        ISSUE, node, context.getLocation(node),
+                        "`Vector#listIterator` was broken in API 24 and 25; it can return `hasNext()=false` before the last element. Consider switching to `ArrayList` with synchronization if you need it."
+                    ),
+                    minSdkLessThan(26)
                 )
             }
         }

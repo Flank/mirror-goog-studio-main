@@ -23,9 +23,10 @@ import com.android.build.api.variant.LibraryVariantBuilder
 import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.plugins.DslContainerProvider
 import org.gradle.api.NamedDomainObjectContainer
+import javax.inject.Inject
 
 /** Internal implementation of the 'new' DSL interface */
-class LibraryExtensionImpl(
+abstract class LibraryExtensionImpl @Inject constructor(
     dslServices: DslServices,
     dslContainers: DslContainerProvider<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
 ) :

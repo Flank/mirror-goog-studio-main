@@ -238,7 +238,9 @@ public class InefficientWeightDetector extends LayoutDetector {
             if (element.hasAttribute(ATTR_STYLE)) {
                 List<ResourceValue> values =
                         Lint.getStyleAttributes(
-                                context.getMainProject(),
+                                context.isGlobalAnalysis()
+                                        ? context.getMainProject()
+                                        : context.getProject(),
                                 context.getClient(),
                                 element.getAttribute(ATTR_STYLE),
                                 ANDROID_URI,
@@ -308,7 +310,9 @@ public class InefficientWeightDetector extends LayoutDetector {
                 String style = weightChild.getAttribute(ATTR_STYLE);
                 List<ResourceValue> sizes =
                         Lint.getStyleAttributes(
-                                context.getMainProject(),
+                                context.isGlobalAnalysis()
+                                        ? context.getMainProject()
+                                        : context.getProject(),
                                 context.getClient(),
                                 style,
                                 ANDROID_URI,

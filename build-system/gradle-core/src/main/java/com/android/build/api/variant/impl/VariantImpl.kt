@@ -155,11 +155,17 @@ abstract class VariantImpl(
         }
     }
 
+    override fun <T> getExtension(type: Class<T>): T? =
+        type.cast(externalExtensions?.get(type))
+
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------
 
     val testComponents = mutableMapOf<VariantType, ComponentImpl>()
+    val externalExtensions: Map<Class<*>, Any>? by lazy {
+        variantBuilder.getRegisteredExtensions()
+    }
 
     override val resValues: MapProperty<ResValue.Key, ResValue> by lazy {
         internalServices.mapPropertyOf(
@@ -200,7 +206,7 @@ abstract class VariantImpl(
 
     abstract override fun <T : Component> createUserVisibleVariantObject(
             projectServices: ProjectServices,
-            operationsRegistrar: VariantApiOperationsRegistrar<VariantBuilder, Variant>,
+            operationsRegistrar: VariantApiOperationsRegistrar<out VariantBuilder, out Variant>,
             stats: GradleBuildVariant.Builder?): T
 
     override var unitTest: UnitTest? = null

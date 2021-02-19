@@ -594,8 +594,7 @@ class NamespaceDetectorTest : AbstractCheckTest() {
             1 errors, 0 warnings
             """
         lint().files(
-            xml(
-                "AndroidManifest.xml",
+            manifest(
                 "" +
                     "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
                     "<manifest xmlns:android=\"https://schemas.android.com/apk/res/android\"\n" +

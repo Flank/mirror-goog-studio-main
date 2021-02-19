@@ -27,6 +27,7 @@ data class SourceProviderImpl(
     override val name: String,
     override val manifestFile: File,
     override val javaDirectories: Collection<File>,
+    override val kotlinDirectories: Collection<File>,
     override val resourcesDirectories: Collection<File>,
     override val aidlDirectories: Collection<File>?,
     override val renderscriptDirectories: Collection<File>?,

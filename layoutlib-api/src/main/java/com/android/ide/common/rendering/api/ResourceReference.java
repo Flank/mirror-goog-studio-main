@@ -20,9 +20,9 @@ import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
-import com.android.utils.HashCodes;
 import com.google.common.base.MoreObjects;
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * A resource reference, contains the namespace, type and name. Can be used to look for resources in
@@ -173,7 +173,7 @@ public final class ResourceReference implements Comparable<ResourceReference>, S
 
     @Override
     public int hashCode() {
-        return HashCodes.mix(resourceType.hashCode(), namespace.hashCode(), name.hashCode());
+        return Objects.hash(resourceType, namespace, name);
     }
 
     @Override

@@ -20,7 +20,7 @@
     <license id="lic2" type="text">
         license text 2
     </license>
-    <localPackage path="dummy;bar">
+    <localPackage path="mypackage;bar">
         <type-details xsi:type="repo:genericDetailsType"/>
         <revision>
             <major>4</major>

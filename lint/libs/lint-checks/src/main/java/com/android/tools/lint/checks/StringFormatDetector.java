@@ -1262,8 +1262,9 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
         List<Pair<Handle, String>> list = mFormatStrings != null ? mFormatStrings.get(name) : null;
         if (list == null) {
             LintClient client = context.getClient();
-            Project mainProject = context.getMainProject();
-            ResourceRepository resources = client.getResources(mainProject, LOCAL_DEPENDENCIES);
+            boolean full = context.isGlobalAnalysis();
+            Project project = full ? context.getMainProject() : context.getProject();
+            ResourceRepository resources = client.getResources(project, LOCAL_DEPENDENCIES);
             List<ResourceItem> items;
             items = resources.getResources(ResourceNamespace.TODO(), ResourceType.STRING, name);
             for (ResourceItem item : items) {

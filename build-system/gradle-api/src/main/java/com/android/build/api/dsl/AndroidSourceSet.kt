@@ -16,6 +16,7 @@
 
 package com.android.build.api.dsl
 
+import org.gradle.api.Action
 import org.gradle.api.Incubating
 import org.gradle.api.Named
 
@@ -33,6 +34,11 @@ interface AndroidSourceSet : Named {
     val java: AndroidSourceDirectorySet
     /** The Java source for this source-set */
     fun java(action: AndroidSourceDirectorySet.() -> Unit)
+
+    /** The Kotlin source for this source-set */
+    val kotlin: AndroidSourceDirectorySet
+    /** The Java source for this source-set */
+    fun kotlin(action: Action<AndroidSourceDirectorySet>)
 
     /** The Java-style resources for this source-set */
     val resources: AndroidSourceDirectorySet

@@ -21,6 +21,7 @@ import static com.android.tools.lint.checks.ChromeOsDetector.PERMISSION_IMPLIES_
 import static com.android.tools.lint.checks.ChromeOsDetector.SETTING_ORIENTATION_ON_ACTIVITY;
 import static com.android.tools.lint.checks.ChromeOsDetector.UNSUPPORTED_CHROME_OS_HARDWARE;
 
+import com.android.tools.lint.checks.infrastructure.ProjectDescription;
 import com.android.tools.lint.detector.api.Detector;
 
 @SuppressWarnings("javadoc")
@@ -328,5 +329,53 @@ public class ChromeOsDetectorTest extends AbstractCheckTest {
                                 + "@@ -8 +8\n"
                                 + "-             android:screenOrientation=\"portrait\" />\n"
                                 + "+             android:screenOrientation=\"fullSensor\" />");
+    }
+
+    public void testProvisionalLibrary() {
+        // If a library declaring this feature in consumed by a library, the library
+        // report should not flag this issue.
+        ProjectDescription lib =
+                project(
+                        manifest(
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    xmlns:tools=\"http://schemas.android.com/tools\">\n"
+                                        + "    <uses-feature\n"
+                                        + "        android:name=\"android.hardware.touchscreen\" android:required=\"true\"/>\n"
+                                        + "\n"
+                                        + "</manifest>\n"));
+        ProjectDescription main =
+                project(manifest().minSdk(15)).type(ProjectDescription.Type.LIBRARY).dependsOn(lib);
+
+        lint().projects(lib, main).issues(UNSUPPORTED_CHROME_OS_HARDWARE).run().expectClean();
+    }
+
+    public void testProvisionalApp() {
+        // If a library declaring this feature in consumed by an app, the library
+        // report should be reported.
+        ProjectDescription lib =
+                project(
+                        manifest(
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    xmlns:tools=\"http://schemas.android.com/tools\">\n"
+                                        + "    <uses-feature\n"
+                                        + "        android:name=\"android.hardware.touchscreen\" android:required=\"true\"/>\n"
+                                        + "\n"
+                                        + "</manifest>\n"));
+        ProjectDescription main =
+                project(manifest().minSdk(15)).type(ProjectDescription.Type.APP).dependsOn(lib);
+
+        lint().projects(lib, main)
+                .issues(UNSUPPORTED_CHROME_OS_HARDWARE)
+                .run()
+                .expect(
+                        ""
+                                + "../lib/AndroidManifest.xml:5: Error: Expecting android:required=\"false\" for this hardware feature that may not be supported by all Chrome OS devices [UnsupportedChromeOsHardware]\n"
+                                + "        android:name=\"android.hardware.touchscreen\" android:required=\"true\"/>\n"
+                                + "                                                    ~~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "1 errors, 0 warnings\n");
     }
 }

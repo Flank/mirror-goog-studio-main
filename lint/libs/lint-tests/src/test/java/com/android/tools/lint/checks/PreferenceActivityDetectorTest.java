@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks;
 
+import com.android.tools.lint.checks.infrastructure.ProjectDescription;
 import com.android.tools.lint.checks.infrastructure.TestFile;
 import com.android.tools.lint.detector.api.Detector;
 
@@ -33,10 +34,8 @@ public class PreferenceActivityDetectorTest extends AbstractCheckTest {
                         + "        <activity\n"
                         + "        ^\n"
                         + "0 errors, 1 warnings\n";
-        //noinspection all // Sample code
         lint().files(
-                        xml(
-                                "AndroidManifest.xml",
+                        manifest(
                                 ""
                                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                         + "<!--\n"
@@ -87,10 +86,8 @@ public class PreferenceActivityDetectorTest extends AbstractCheckTest {
                         + "        <activity\n"
                         + "        ^\n"
                         + "0 errors, 1 warnings\n";
-        //noinspection all // Sample code
         lint().files(
-                        xml(
-                                "AndroidManifest.xml",
+                        manifest(
                                 ""
                                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                         + "<!--\n"
@@ -137,8 +134,7 @@ public class PreferenceActivityDetectorTest extends AbstractCheckTest {
 
     public void testNoWarningWhenSuppressed() {
         lint().files(
-                        xml(
-                                "AndroidManifest.xml",
+                        manifest(
                                 ""
                                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                         + "<!--\n"
@@ -190,12 +186,10 @@ public class PreferenceActivityDetectorTest extends AbstractCheckTest {
                         + "        <activity\n"
                         + "        ^\n"
                         + "0 errors, 1 warnings\n";
-        //noinspection all // Sample code
         lint().files(
                         mPreferenceActivity,
                         mPreferenceActivitySubclass,
-                        xml(
-                                "AndroidManifest.xml",
+                        manifest(
                                 ""
                                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                         + "<!--\n"
@@ -246,12 +240,10 @@ public class PreferenceActivityDetectorTest extends AbstractCheckTest {
                         + "        <activity\n"
                         + "        ^\n"
                         + "0 errors, 1 warnings\n";
-        //noinspection all // Sample code
         lint().files(
                         mPreferenceActivity,
                         mPreferenceActivitySubclass,
-                        xml(
-                                "AndroidManifest.xml",
+                        manifest(
                                 ""
                                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                         + "<!--\n"
@@ -293,10 +285,8 @@ public class PreferenceActivityDetectorTest extends AbstractCheckTest {
     }
 
     public void testNoWarningWhenActivityNotExported() {
-        //noinspection all // Sample code
         lint().files(
-                        xml(
-                                "AndroidManifest.xml",
+                        manifest(
                                 ""
                                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                         + "<!--\n"
@@ -340,7 +330,7 @@ public class PreferenceActivityDetectorTest extends AbstractCheckTest {
         lint().files(
                         mPreferenceActivity,
                         mPreferenceActivitySubclass,
-                        mExport_preference_activity_subclass_target_sdk_19)
+                        mExportPreferenceActivitySubclassTargetSdk19)
                 .run()
                 .expect(
                         ""
@@ -351,7 +341,6 @@ public class PreferenceActivityDetectorTest extends AbstractCheckTest {
     }
 
     public void testNoWarningWhenTargetSDK19AndIsValidFragmentOverridden() {
-        //noinspection all // Sample code
         lint().files(
                         mPreferenceActivity,
                         java(
@@ -366,13 +355,63 @@ public class PreferenceActivityDetectorTest extends AbstractCheckTest {
                                         + "        return false;\n"
                                         + "    }\n"
                                         + "}\n"),
-                        mExport_preference_activity_subclass_target_sdk_19)
+                        mExportPreferenceActivitySubclassTargetSdk19)
                 .run()
                 .expectClean();
     }
 
+    public void testLibraryActivityConsumedFromTargetPreS() {
+        // Check that implicitly exported via intent filter works for target < 31
+        ProjectDescription library =
+                project(mPreferenceActivity, mPreferenceActivitySubclass, noExportButIntentFilter)
+                        .type(ProjectDescription.Type.LIBRARY);
+        ProjectDescription app = project(manifest().minSdk(16).targetSdk(19)).dependsOn(library);
+        lint().projects(library, app)
+                .run()
+                .expect(
+                        ""
+                                + "../lib/AndroidManifest.xml:11: Warning: PreferenceActivity should not be exported [ExportedPreferenceActivity]\n"
+                                + "        <activity\n"
+                                + "        ^\n"
+                                + "0 errors, 1 warnings");
+    }
+
+    public void testLibraryActivityConsumedFromTargetS() {
+        // Check that not implicitly exported via intent filter for target >= 31
+        ProjectDescription library =
+                project(mPreferenceActivity, mPreferenceActivitySubclass, noExportButIntentFilter)
+                        .type(ProjectDescription.Type.LIBRARY);
+        ProjectDescription app = project(manifest().minSdk(16).targetSdk(31)).dependsOn(library);
+        lint().projects(library, app).run().expectClean();
+    }
+
+    private final TestFile noExportButIntentFilter =
+            manifest(
+                    ""
+                            + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                            + "    package=\"test.library\"\n"
+                            + "    android:versionCode=\"1\"\n"
+                            + "    android:versionName=\"1.0\" >\n"
+                            + "\n"
+                            + "    <uses-sdk android:minSdkVersion=\"10\" />\n"
+                            + "\n"
+                            + "    <application\n"
+                            + "        android:icon=\"@drawable/ic_launcher\"\n"
+                            + "        android:label=\"@string/app_name\" >\n"
+                            + "        <activity\n"
+                            + "            android:name=\"android.preference.PreferenceActivity\"\n"
+                            + "            android:label=\"@string/app_name\" >\n"
+                            + "            <intent-filter>\n"
+                            + "                <action android:name=\"android.intent.action.MAIN\" />\n"
+                            + "                <category android:name=\"android.intent.category.LAUNCHER\" />\n"
+                            + "            </intent-filter>\n"
+                            + "        </activity>\n"
+                            + "    </application>\n"
+                            + "\n"
+                            + "</manifest>\n");
+
     @SuppressWarnings("all") // Sample code
-    private TestFile mExport_preference_activity_subclass_target_sdk_19 =
+    private TestFile mExportPreferenceActivitySubclassTargetSdk19 =
             xml(
                     "AndroidManifest.xml",
                     ""

@@ -27,6 +27,7 @@ import com.android.SdkConstants.TAG_USES_PERMISSION
 import com.android.SdkConstants.TAG_USES_PERMISSION_SDK_23
 import com.android.SdkConstants.TAG_USES_PERMISSION_SDK_M
 import com.android.SdkConstants.VALUE_FALSE
+import com.android.sdklib.AndroidVersion
 import com.android.tools.lint.checks.AnnotationDetector.PERMISSION_ANNOTATION
 import com.android.tools.lint.checks.AnnotationDetector.PERMISSION_ANNOTATION_READ
 import com.android.tools.lint.checks.AnnotationDetector.PERMISSION_ANNOTATION_WRITE
@@ -41,8 +42,10 @@ import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.ConstantEvaluator
 import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Implementation
+import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
+import com.android.tools.lint.detector.api.LintMap
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
@@ -62,7 +65,7 @@ import org.jetbrains.uast.getContainingUClass
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.util.isMethodCall
 import org.jetbrains.uast.visitor.AbstractUastVisitor
-import java.util.Arrays
+import org.w3c.dom.Document
 
 class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     override fun applicableAnnotations(): List<String> = listOf(
@@ -143,7 +146,8 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         if (!requirement.isSatisfied(permissions)) {
             // See if it looks like we're holding the permission implicitly by @RequirePermission
             // annotations in the surrounding context
-            permissions = addLocalPermissions(permissions, node)
+            val localPermissionRequirements = getLocalPermissions(node)
+            permissions = mergePermissions(permissions, localPermissionRequirements)
             if (!requirement.isSatisfied(permissions)) {
                 val operation: PermissionFinder.Operation
                 val name: String
@@ -170,17 +174,10 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                     }
                     operation = PermissionFinder.Operation.CALL
                 }
-                val message = String.format(
-                    "Missing permissions required %1\$s %2\$s: %3\$s", operation.prefix(),
-                    name, requirement.describeMissingPermissions(permissions)
-                ).replace(
-                    "carrier privileges",
-                    "carrier privileges (see TelephonyManager#hasCarrierPrivileges)"
-                )
                 // Report locations on the call, not just the flown parameter
                 var location = context.getLocation(node)
                 val expressionNode =
-                    node.getParentOfType<UCallExpression>(UCallExpression::class.java, true)
+                    node.getParentOfType(UCallExpression::class.java, true)
                 if (expressionNode != null) {
                     val callIdentifier = expressionNode.methodIdentifier
                     if (callIdentifier != null && callIdentifier != node) {
@@ -203,21 +200,43 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                     return
                 }
 
-                report(
-                    context, MISSING_PERMISSION, node, location, message,
+                val messageFormat = "Missing permissions required ${operation.prefix()} $name: %1\$s"
+                val incident = Incident(
+                    MISSING_PERMISSION, node, location, "",
                     // Pass data to IDE quickfix: names to add, and max applicable API version
                     fix().data(
+                        KEY_MESSAGE,
+                        messageFormat,
                         KEY_MISSING_PERMISSIONS,
                         missingPermissions.toList(),
                         KEY_LAST_API,
                         requirement.lastApplicableApi
                     )
                 )
+                if (context.isGlobalAnalysis()) {
+                    incident.message = getMissingMessage(messageFormat, requirement, permissions)
+                    context.report(incident)
+                } else {
+                    val map = map()
+                    map.put(KEY_REQUIREMENT, requirement.serialize())
+                    map.put(KEY_MESSAGE, messageFormat)
+
+                    // Store local permissions too
+                    if (localPermissionRequirements.isNotEmpty()) {
+                        map.put(
+                            KEY_LOCAL_PERMISSION,
+                            localPermissionRequirements.joinToString(separator = ";") { it.serialize() }
+                        )
+                    }
+                    context.report(incident, map)
+                }
+                return
             }
-        } else if (requirement.isRevocable(permissions) &&
-            context.mainProject.targetSdkVersion.featureLevel >= 23 &&
-            requirement.lastApplicableApi >= 23 &&
-            !isAndroidThingsProject(context)
+        }
+
+        if (requirement.isRevocable(permissions) &&
+            context.project.targetSdkVersion.featureLevel >= 23 &&
+            requirement.lastApplicableApi >= 23
         ) {
 
             var handlesMissingPermission = handlesSecurityException(node)
@@ -227,18 +246,19 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             if (!handlesMissingPermission) {
 
                 // See if the requirement is passed on via surrounding requires permissions
-                val localRequirements = addLocalPermissions(
+                val localPermissionRequirements = getLocalPermissions(node)
+                val localRequirements = mergePermissions(
                     PermissionHolder.SetPermissionLookup(
                         mutableSetOf(), mutableSetOf(),
                         permissions.minSdkVersion, permissions.targetSdkVersion
                     ),
-                    node
+                    localPermissionRequirements
                 )
                 if (requirement.isSatisfied(localRequirements)) {
                     return
                 }
 
-                val methodNode = node.getParentOfType<UMethod>(UMethod::class.java, true)
+                val methodNode = node.getParentOfType(UMethod::class.java, true)
                 if (methodNode != null) {
                     val visitor = CheckPermissionVisitor(node)
                     methodNode.accept(visitor)
@@ -252,8 +272,8 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                         "check to see if permission is available (with `checkPermission`) or explicitly " +
                         "handle a potential `SecurityException`"
                 val location = context.getLocation(node)
-                report(
-                    context, MISSING_PERMISSION, node, location, message,
+                val incident = Incident(
+                    MISSING_PERMISSION, node, location, message,
                     // Pass data to IDE quickfix: revocable names, and permission requirement
                     fix().data(
                         KEY_MISSING_PERMISSIONS,
@@ -262,8 +282,52 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                         requirement.serialize()
                     )
                 )
+                context.report(incident, map())
             }
         }
+    }
+
+    private fun getMissingMessage(
+        messageFormat: String,
+        requirement: PermissionRequirement,
+        permissions: PermissionHolder
+    ): String {
+        return String.format(
+            messageFormat, requirement.describeMissingPermissions(permissions)
+        ).replace(
+            "carrier privileges",
+            "carrier privileges (see TelephonyManager#hasCarrierPrivileges)"
+        )
+    }
+
+    override fun filterIncident(context: Context, incident: Incident, map: LintMap): Boolean {
+        val requirementString = map.getString(KEY_REQUIREMENT, null)
+        if (requirementString == null) {
+            if (!isAndroidThingsProject(context)) {
+                return true
+            }
+            return false
+        }
+
+        val requirement = PermissionRequirement.deserialize(requirementString)
+        var permissions = getPermissions(context, accessMergedManifest = true)
+        if (requirement.isSatisfied(permissions)) {
+            return false
+        }
+
+        map.getString(KEY_LOCAL_PERMISSION, null)?.let {
+            it.splitToSequence(';').forEach { serialized ->
+                val r = PermissionRequirement.deserialize(serialized)
+                permissions = mergePermissions(permissions, listOf(r))
+            }
+            if (requirement.isSatisfied(permissions)) {
+                return false
+            }
+        }
+
+        val messageFormat = map.getString(KEY_MESSAGE, "")!!
+        incident.message = getMissingMessage(messageFormat, requirement, permissions)
+        return true
     }
 
     private fun handlesSecurityException(node: UElement): Boolean {
@@ -288,10 +352,10 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
         // If not, check to see if the method itself declares that it throws a
         // SecurityException or something wider.
-        val declaration = parent.getParentOfType<UMethod>(UMethod::class.java, false)
+        val declaration = parent.getParentOfType(UMethod::class.java, false)
         if (declaration != null) {
             val thrownTypes = declaration.throwsList.referencedTypes
-            if (containsSecurityException(Arrays.asList<PsiClassType>(*thrownTypes))) {
+            if (containsSecurityException(listOf<PsiClassType>(*thrownTypes))) {
                 return true
             }
         }
@@ -299,38 +363,33 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         return false
     }
 
-    private fun addLocalPermissions(
-        permissions: PermissionHolder,
-        node: UElement
-    ): PermissionHolder {
-        var merged = permissions
+    private fun getLocalPermissions(node: UElement): List<PermissionRequirement> {
         // Accumulate @RequirePermissions available in the local context
-        val method = node.getParentOfType<UMethod>(UMethod::class.java, true) ?: return merged
-        var annotation =
-            method.findAnnotation(PERMISSION_ANNOTATION.oldName()) ?: method.findAnnotation(
-                PERMISSION_ANNOTATION.newName()
-            )
-        merged = mergeAnnotationPermissions(merged, annotation)
+        val method = node.getParentOfType(UMethod::class.java, true) ?: return emptyList()
+        val methodAnnotation =
+            method.findAnnotation(PERMISSION_ANNOTATION.oldName())
+                ?: method.findAnnotation(
+                    PERMISSION_ANNOTATION.newName()
+                )
 
         val containingClass = method.getContainingUClass()
-        if (containingClass != null) {
-            annotation = containingClass.findAnnotation(PERMISSION_ANNOTATION.oldName())
-                ?: containingClass.findAnnotation(PERMISSION_ANNOTATION.newName())
-            merged = mergeAnnotationPermissions(merged, annotation)
-        }
-        return merged
+        val classAnnotation =
+            containingClass?.findAnnotation(PERMISSION_ANNOTATION.oldName())
+                ?: containingClass?.findAnnotation(
+                    PERMISSION_ANNOTATION.newName()
+                )
+
+        return listOfNotNull(methodAnnotation, classAnnotation).map { PermissionRequirement.create(it) }
     }
 
-    private fun mergeAnnotationPermissions(
+    private fun mergePermissions(
         permissions: PermissionHolder,
-        annotation: UAnnotation?
+        requirements: List<PermissionRequirement>
     ): PermissionHolder {
         var merged = permissions
-        if (annotation != null) {
-            val requirement = PermissionRequirement.create(annotation)
+        for (requirement in requirements) {
             merged = PermissionHolder.SetPermissionLookup.join(merged, requirement)
         }
-
         return merged
     }
 
@@ -404,50 +463,80 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     private var mPermissions: PermissionHolder? = null
 
     private fun getPermissions(
-        context: JavaContext
+        context: Context,
+        accessMergedManifest: Boolean = false
     ): PermissionHolder {
-        if (mPermissions == null) {
-            val permissions = Sets.newHashSetWithExpectedSize<String>(30)
-            val revocable = Sets.newHashSetWithExpectedSize<String>(4)
-            val mainProject = context.mainProject
-            val mergedManifest = mainProject.mergedManifest
+        return mPermissions
+            ?: if (accessMergedManifest || context.isGlobalAnalysis())
+                createMergedManifestPermissionHolder(context).also { mPermissions = it }
+            else
+                createLocalPermissionHolder(context).also { mPermissions = it }
+    }
 
-            if (mergedManifest != null) {
-                for (element in XmlUtils.getSubTags(mergedManifest.documentElement)) {
-                    val nodeName = element.nodeName
-                    if (TAG_USES_PERMISSION == nodeName ||
-                        TAG_USES_PERMISSION_SDK_23 == nodeName ||
-                        TAG_USES_PERMISSION_SDK_M == nodeName
-                    ) {
-                        val name = element.getAttributeNS(ANDROID_URI, ATTR_NAME)
-                        if (name.isNotEmpty()) {
-                            permissions.add(name)
-                        }
-                    } else if (nodeName == TAG_PERMISSION) {
-                        val protectionLevel = element.getAttributeNS(
-                            ANDROID_URI,
-                            ATTR_PROTECTION_LEVEL
-                        )
-                        if (VALUE_DANGEROUS == protectionLevel) {
-                            val name = element.getAttributeNS(ANDROID_URI, ATTR_NAME)
-                            if (name.isNotEmpty()) {
-                                revocable.add(name)
-                            }
-                        }
-                    }
-                }
-            }
-            val minSdkVersion = mainProject.minSdkVersion
-            val targetSdkVersion = mainProject.targetSdkVersion
-            mPermissions = PermissionHolder.SetPermissionLookup(
-                permissions,
-                revocable,
+    private fun createLocalPermissionHolder(context: Context): PermissionHolder {
+        val project = context.project
+        val minSdkVersion = project.minSdkVersion
+        val targetSdkVersion = project.targetSdkVersion
+
+        val dom = project.manifestDom
+        return if (dom != null) {
+            createManifestPermissionHolder(dom, minSdkVersion, targetSdkVersion)
+        } else {
+            PermissionHolder.SetPermissionLookup(
+                emptySet(),
+                emptySet(),
                 minSdkVersion,
                 targetSdkVersion
             )
         }
+    }
 
-        return mPermissions!!
+    private fun createMergedManifestPermissionHolder(context: Context): PermissionHolder {
+        val mainProject = context.mainProject
+        val mergedManifest = mainProject.mergedManifest
+        val minSdkVersion = mainProject.minSdkVersion
+        val targetSdkVersion = mainProject.targetSdkVersion
+        return createManifestPermissionHolder(mergedManifest, minSdkVersion, targetSdkVersion)
+    }
+
+    private fun createManifestPermissionHolder(
+        manifest: Document?,
+        minSdkVersion: AndroidVersion,
+        targetSdkVersion: AndroidVersion
+    ): PermissionHolder {
+        val permissions = Sets.newHashSetWithExpectedSize<String>(30)
+        val revocable = Sets.newHashSetWithExpectedSize<String>(4)
+        if (manifest != null) {
+            for (element in XmlUtils.getSubTags(manifest.documentElement)) {
+                val nodeName = element.nodeName
+                if (TAG_USES_PERMISSION == nodeName ||
+                    TAG_USES_PERMISSION_SDK_23 == nodeName ||
+                    TAG_USES_PERMISSION_SDK_M == nodeName
+                ) {
+                    val name = element.getAttributeNS(ANDROID_URI, ATTR_NAME)
+                    if (name.isNotEmpty()) {
+                        permissions.add(name)
+                    }
+                } else if (nodeName == TAG_PERMISSION) {
+                    val protectionLevel = element.getAttributeNS(
+                        ANDROID_URI,
+                        ATTR_PROTECTION_LEVEL
+                    )
+                    if (VALUE_DANGEROUS == protectionLevel) {
+                        val name = element.getAttributeNS(ANDROID_URI, ATTR_NAME)
+                        if (name.isNotEmpty()) {
+                            revocable.add(name)
+                        }
+                    }
+                }
+            }
+        }
+        return PermissionHolder.SetPermissionLookup(
+            permissions,
+            revocable,
+            minSdkVersion,
+            targetSdkVersion
+        )
     }
 
     private var mIsAndroidThingsProject: Boolean? = null
@@ -486,14 +575,16 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     }
 
     companion object {
+        const val KEY_MISSING_PERMISSIONS = "missing"
+        const val KEY_LAST_API = "lastApi"
+        const val KEY_REQUIREMENT = "requirement"
+        const val KEY_LOCAL_PERMISSION = "local"
+        private const val KEY_MESSAGE = "message"
+
         private val IMPLEMENTATION = Implementation(
             PermissionDetector::class.java,
             Scope.JAVA_FILE_SCOPE
         )
-
-        const val KEY_MISSING_PERMISSIONS = "missing"
-        const val KEY_LAST_API = "lastApi"
-        const val KEY_REQUIREMENT = "requirement"
 
         private const val THINGS_LIBRARY = "com.google.android.things"
 

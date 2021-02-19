@@ -11,7 +11,6 @@ import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
-import com.android.tools.lint.detector.api.guessGradleLocation
 import com.android.tools.lint.model.LintModelExternalLibrary
 import org.jetbrains.uast.UClass
 
@@ -51,7 +50,7 @@ class MediaBrowserServiceCompatVersionDetector : Detector(), SourceCodeScanner {
             "android.support.v4.media.MediaBrowserServiceCompat"
     }
 
-    override fun applicableSuperClasses(): List<String>? {
+    override fun applicableSuperClasses(): List<String> {
         return listOf(MEDIA_BROWSER_SERVICE_COMPAT)
     }
 
@@ -70,10 +69,7 @@ class MediaBrowserServiceCompatVersionDetector : Detector(), SourceCodeScanner {
         if (mc.version.isNotBlank()) {
             val libVersion = GradleCoordinate.parseVersionOnly(mc.version)
             if (COMPARE_PLUS_HIGHER.compare(libVersion, MIN_SUPPORT_V4_VERSION) < 0) {
-                val location = guessGradleLocation(
-                    context.client, context.project.dir,
-                    "${mc.groupId}:${mc.artifactId}:${mc.version}"
-                )
+                val location = GradleDetector.getDependencyLocation(context, mc)
                 val message = "Using a version of the class that is not forward compatible"
                 context.report(ISSUE, location, message)
             }

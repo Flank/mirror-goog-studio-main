@@ -43,6 +43,7 @@ class TestDataImpl(
     providerFactory,
     componentImpl,
     testConfig,
+    testConfig,
     testConfig.variantSources,
     testApkDir,
     testedApksDir

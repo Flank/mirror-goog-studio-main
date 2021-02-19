@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks.infrastructure;
 
+import static com.android.SdkConstants.VALUE_TRUE;
 import static com.android.tools.lint.checks.infrastructure.TestFile.createTempDirectory;
 import static com.android.tools.lint.checks.infrastructure.TestMode.UI_INJECTION_HOST;
 import static com.android.tools.lint.client.api.LintClient.CLIENT_UNIT_TESTS;
@@ -72,16 +73,21 @@ public class TestLintTask {
     /** The test execution */
     final TestLintRunner runner = new TestLintRunner(this);
 
+    static DuplicateProjectFinder duplicateFinder = null;
+
+    static {
+        if (VALUE_TRUE.equals(System.getenv("LINT_FIND_DUPLICATE_TESTS"))
+                || VALUE_TRUE.equals(System.getProperty("lint.find-duplicate-tests"))) {
+            duplicateFinder = new DuplicateProjectFinder();
+        }
+    }
+
     /** Cache for {@link #getCheckedIssues()} */
     private List<Issue> checkedIssues;
-    /** Whether the {@link #run} method has already been invoked */
-    private boolean alreadyRun;
 
     // Configuration options
 
     protected ProjectDescriptionList projects = new ProjectDescriptionList();
-    /** True if the project in the task was only constructed from {@link #files(TestFile...)} */
-    boolean impliedProject;
 
     boolean requestedResourceRepository;
     boolean forceAgpResourceRepository;
@@ -171,7 +177,6 @@ public class TestLintTask {
         ensurePreRun();
         ProjectDescription project = new ProjectDescription(files);
         this.projects.addProject(project);
-        this.impliedProject = true;
         return this;
     }
 
@@ -269,12 +274,27 @@ public class TestLintTask {
     }
 
     /**
-     * Configures the test task to run incrementally, with the given file as the current file
+     * Alias for {@link #isolated()}; this is the older terminology, but is misleading. Lint isn't
+     * computing anything incrementally with previous data; instead incremental here refers to the
+     * original integration of lint into Eclipse where when a file was edited, lint would update the
+     * Problems list incrementally; removing previous markers for the current file and adding
+     * markers for the current version, but leaving the rest of the problem markers alone.
+     *
+     * @return this, for constructor chaining
+     */
+    public TestLintTask incremental(@NonNull String currentFileName) {
+        return isolated(currentFileName);
+    }
+
+    /**
+     * Configures the test task to run on a single file within the project, with the given file as
+     * the file to be analyzed. This is the mode used in the IDE when users are editing a file; lint
+     * runs on the fly without visiting any other files.
      *
      * @param currentFileName the relative path to the current file
      * @return this, for constructor chaining
      */
-    public TestLintTask incremental(@NonNull String currentFileName) {
+    public TestLintTask isolated(@NonNull String currentFileName) {
         ensurePreRun();
         this.incrementalFileName = currentFileName;
         return this;
@@ -362,17 +382,6 @@ public class TestLintTask {
     public TestLintTask testModes(TestMode... testModes) {
         this.testModes = new ArrayList<>(Arrays.asList(testModes));
         return this;
-    }
-
-    /**
-     * Returns the test types set which you can mutate instead of having to create a new set and
-     * pass it to {@link #testModes(Collection)}.
-     *
-     * <p>Should not be called if you have instead called {@link #testModes(Collection)} with an
-     * immutable set.
-     */
-    public Collection<TestMode> testModes() {
-        return testModes;
     }
 
     /**
@@ -499,13 +508,26 @@ public class TestLintTask {
     }
 
     /**
-     * Configures the test task to run incrementally. This method can be called if the project only
-     * contains a single file, which will be considered the current file. If there are multiple
-     * files in the project you must call {@link #incremental(String)} instead.
+     * Alias for {@link #isolated()}; this is the older terminology, but is misleading. Lint isn't
+     * computing anything incrementally with previous data; instead incremental here refers to the
+     * original integration of lint into Eclipse where when a file was edited, lint would update the
+     * Problems list incrementally; removing previous markers for the current file and adding
+     * markers for the current version, but leaving the rest of the problem markers alone.
      *
      * @return this, for constructor chaining
      */
     public TestLintTask incremental() {
+        return isolated();
+    }
+
+    /**
+     * Configures the test task to run on a single file. This method can be called if the project
+     * only contains a single file, which will be considered the current file. If there are multiple
+     * files in the project you must call {@link #isolated(String)} instead.
+     *
+     * @return this, for constructor chaining
+     */
+    public TestLintTask isolated() {
         ensurePreRun();
         if (projects.getSize() == 1 && projects.get(0).getFiles().length == 1) {
             this.incrementalFileName = projects.get(0).getFiles()[0].getTargetPath();
@@ -809,13 +831,13 @@ public class TestLintTask {
      * Whether lint should check that the lint checks correctly handles the UInjectionHost string
      * literals. This will run lint checks that contain Kotlin files twice and diff the results.
      *
-     * <p>This is just an alias for {@code testModes().remove(LintTestMode.UI_INJECTION_HOSE)}.
+     * <p>This is just an alias for {@code testModes().remove(TestMode.UI_INJECTION_HOSE)}.
      */
     public TestLintTask checkUInjectionHost(boolean check) {
         if (check) {
-            testModes().add(UI_INJECTION_HOST);
+            testModes.add(UI_INJECTION_HOST);
         } else {
-            testModes().remove(UI_INJECTION_HOST);
+            testModes.remove(UI_INJECTION_HOST);
         }
         return this;
     }
@@ -867,7 +889,7 @@ public class TestLintTask {
     }
 
     private void ensurePreRun() {
-        if (alreadyRun) {
+        if (runner.getAlreadyRun()) {
             throw new RuntimeException("This method should only be called before run()");
         }
     }

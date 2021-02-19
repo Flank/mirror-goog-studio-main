@@ -21,8 +21,7 @@
     For an example XML document implmenting this schema, see
     src/test/java/com/android/repository/impl/testData/testRepo.xml
 
-    JAXB-usable classes can be generated from this schema using the "xjc (common)" run target
-    in the tools/base IntelliJ project, or from the commandline as follows:
+    JAXB-usable classes can be generated from this schema from the commandline as follows:
     java com.sun.tools.xjc.Driver \
          -episode repository/src/main/java/com/android/repository/api/common.xjb \
          -p com.android.repository.impl.generated.v1 \
@@ -276,6 +275,11 @@
             <xsd:element name="size" type="xsd:long"/>
             <!-- The checksum of the archive file. -->
             <xsd:element name="checksum">
+                <xsd:annotation>
+                    <xsd:appinfo>
+                        <jaxb:property name="legacyChecksum"/>
+                    </xsd:appinfo>
+                </xsd:annotation>
                 <xsd:simpleType>
                     <xsd:annotation>
                         <xsd:documentation>A SHA1 checksum.</xsd:documentation>

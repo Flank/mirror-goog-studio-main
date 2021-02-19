@@ -91,7 +91,7 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
         return folderType == ResourceFolderType.LAYOUT
     }
 
-    override fun getApplicableAttributes(): Collection<String>? {
+    override fun getApplicableAttributes(): Collection<String> {
         return listOf(ATTR_ID, ATTR_TAG)
     }
 
@@ -152,7 +152,7 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
 
     // ---- Implements SourceCodeScanner ----
 
-    override fun getApplicableMethodNames(): List<String>? {
+    override fun getApplicableMethodNames(): List<String> {
         return listOf(
             FIND_VIEW_BY_ID,
             REQUIRE_VIEW_BY_ID,
@@ -256,7 +256,9 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
             if (id != null || tag != null) {
                 // We can't search for tags in the resource repository incrementally
                 if (id != null) {
-                    val resources = client.getResources(context.mainProject, LOCAL_DEPENDENCIES)
+                    val full = context.isGlobalAnalysis()
+                    val project = if (full) context.mainProject else context.project
+                    val resources = client.getResources(project, LOCAL_DEPENDENCIES)
                     val items =
                         resources.getResources(ResourceNamespace.TODO(), ResourceType.ID, id)
                     if (items.isNotEmpty()) {

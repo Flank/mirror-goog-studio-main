@@ -21,19 +21,11 @@ import com.android.tools.lint.detector.api.Category.Companion.getCategory
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.model.LintModelModule
-import java.io.File
 import com.android.tools.lint.model.LintModelSeverity as ModelSeverity
 
 // Operations related to syncing LintOptions to lint's internal state
 
-fun syncTo(
-    project: LintModelModule,
-    client: LintCliClient,
-    flags: LintCliFlags,
-    variantName: String?,
-    reportsDir: File?,
-    report: Boolean
-) {
+fun syncTo(project: LintModelModule, flags: LintCliFlags) {
     val options = project.lintOptions
     val disabled = options.disable
     if (disabled.isNotEmpty()) {

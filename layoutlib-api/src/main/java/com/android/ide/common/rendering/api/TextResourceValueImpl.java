@@ -18,7 +18,6 @@ package com.android.ide.common.rendering.api;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.resources.ResourceType;
-import com.android.utils.HashCodes;
 import java.util.Objects;
 
 /** A {@link ResourceValue} intended for text nodes where we need access to the raw XML text. */
@@ -67,7 +66,7 @@ public class TextResourceValueImpl extends ResourceValueImpl implements TextReso
 
     @Override
     public int hashCode() {
-        return HashCodes.mix(super.hashCode(), Objects.hashCode(rawXmlValue));
+        return Objects.hash(super.hashCode(), rawXmlValue);
     }
 
     @Override

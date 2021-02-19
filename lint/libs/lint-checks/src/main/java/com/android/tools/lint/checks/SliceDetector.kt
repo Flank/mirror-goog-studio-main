@@ -24,10 +24,14 @@ import com.android.SdkConstants.TAG_INTENT_FILTER
 import com.android.SdkConstants.TAG_PROVIDER
 import com.android.tools.lint.client.api.TYPE_LONG
 import com.android.tools.lint.detector.api.Category
+import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
+import com.android.tools.lint.detector.api.LintMap
+import com.android.tools.lint.detector.api.Location
+import com.android.tools.lint.detector.api.PartialResult
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
@@ -42,6 +46,7 @@ import com.intellij.psi.PsiLocalVariable
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiParameter
 import com.intellij.psi.PsiVariable
+import org.jetbrains.uast.UAnnotated
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UElement
@@ -104,7 +109,10 @@ class SliceDetector : Detector(), SourceCodeScanner {
         private const val CATEGORY_SLICE = "android.app.slice.category.SLICE"
         const val WARN_ABOUT_TOO_MANY_ROWS = false
 
-        /** Checks whether a provider is a slice provider  */
+        private const val KEY_DECLARATION = "declaration"
+        private const val KEY_MAP_METHOD = "onMapMethod"
+
+        /** Checks whether a provider is a slice provider */
         fun isSliceProvider(provider: Element): Boolean {
             var intentFilter = getFirstSubTagByName(provider, TAG_INTENT_FILTER)
             while (intentFilter != null) {
@@ -123,13 +131,67 @@ class SliceDetector : Detector(), SourceCodeScanner {
         }
     }
 
-    override fun applicableSuperClasses(): List<String>? {
+    override fun applicableSuperClasses(): List<String> {
         return listOf(SLICE_PROVIDER_CLASS_1, SLICE_PROVIDER_CLASS_2)
     }
 
     override fun visitClass(context: JavaContext, declaration: UClass) {
         val sliceProvider = declaration.qualifiedName ?: return
 
+        val onMapMethod = declaration.methods.firstOrNull {
+            it.name == "onMapIntentToUri" && it.uastParameters.size == 1
+        }
+
+        if (onMapMethod != null) {
+            if (context.driver.isSuppressed(context, ISSUE, onMapMethod as UAnnotated)) {
+                return
+            }
+        } else if (context.driver.isSuppressed(context, ISSUE, declaration as UAnnotated)) {
+            return
+        }
+
+        val onMapMethodLocation = onMapMethod?.let { context.getNameLocation(it) }
+        val declarationLocation = context.getNameLocation(declaration)
+
+        if (context.isGlobalAnalysis()) {
+            checkManifest(context, sliceProvider, onMapMethodLocation, declarationLocation)
+        } else {
+            val partial = context.getPartialResults(ISSUE)
+            if (onMapMethodLocation != null) {
+                val map = LintMap()
+                map.put(KEY_DECLARATION, declarationLocation)
+                map.put(KEY_MAP_METHOD, onMapMethodLocation)
+                partial.map().put(sliceProvider, map)
+            } else {
+                partial.map().put(sliceProvider, declarationLocation)
+            }
+        }
+    }
+
+    override fun checkPartialResults(context: Context, partialResults: PartialResult) {
+        for ((_, map) in partialResults) {
+            for (sliceProvider in map) {
+                assert(sliceProvider.contains('.'))
+                var onMapMethodLocation: Location?
+                var declarationLocation = map.getLocation(sliceProvider)
+                if (declarationLocation != null) {
+                    onMapMethodLocation = null
+                } else {
+                    val providerMap = map.getMap(sliceProvider) ?: continue
+                    declarationLocation = providerMap.getLocation(KEY_DECLARATION) ?: continue
+                    onMapMethodLocation = providerMap.getLocation(KEY_MAP_METHOD)
+                }
+                checkManifest(context, sliceProvider, onMapMethodLocation, declarationLocation)
+            }
+        }
+    }
+
+    private fun checkManifest(
+        context: Context,
+        sliceProvider: String,
+        onMapMethodLocation: Location?,
+        declarationLocation: Location
+    ) {
         // Make sure slice provider is registered correctly in the manifest
         // Make sure this actions resource is registered in the manifest
         if (context.mainProject.isLibrary) {
@@ -178,7 +240,7 @@ class SliceDetector : Detector(), SourceCodeScanner {
             if (!foundCategory) {
                 val location =
                     context.client.findManifestSourceLocation(intentFilter)?.withSecondary(
-                        context.getNameLocation(declaration),
+                        declarationLocation,
                         "SliceProvider declaration"
                     )
                 if (location != null) {
@@ -194,33 +256,28 @@ class SliceDetector : Detector(), SourceCodeScanner {
             intentFilter = getNextTagByName(intentFilter, TAG_INTENT_FILTER)
         }
 
-        val onMapMethod = declaration.methods.firstOrNull {
-            it.name == "onMapIntentToUri" && it.uastParameters.size == 1
-        }
-
         // declares intent: firstCategory != null
         // requires intent: onMapMethod != null
 
-        if (onMapMethod != null && firstCategory == null) {
+        if (onMapMethodLocation != null && firstCategory == null) {
             context.report(
-                ISSUE, declaration, context.getNameLocation(onMapMethod),
+                ISSUE, onMapMethodLocation,
                 "Define intent filters in your manifest on your " +
                     "`<provider android:name=\"$sliceProvider\">`; otherwise " +
                     "`onMapIntentToUri` will not be called"
             )
-        } else if (firstCategory != null && onMapMethod == null) {
-            val location = context.getNameLocation(declaration)
+        } else if (firstCategory != null && onMapMethodLocation == null) {
             context.client.findManifestSourceLocation(firstCategory)
-                ?.let { location.secondary = it }
+                ?.let { declarationLocation.secondary = it }
             context.report(
-                ISSUE, declaration, location,
+                ISSUE, declarationLocation,
                 "Implement `SliceProvider#onMapIntentToUri` to handle the intents " +
                     "defined on your slice `<provider>` in your manifest"
             )
         }
     }
 
-    override fun getApplicableConstructorTypes(): List<String>? {
+    override fun getApplicableConstructorTypes(): List<String> {
         return listOf(
             LIST_BUILDER_CLASS,
             ROW_BUILDER_CLASS,

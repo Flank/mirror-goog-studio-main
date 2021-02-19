@@ -292,7 +292,7 @@ public final class LocalRepoLoaderImpl implements LocalRepoLoader {
                 repo.addLicense(license);
             }
 
-            CommonFactory factory = RepoManager.getCommonModule().createLatestFactory();
+            CommonFactory factory = p.createFactory();
             SchemaModuleUtil.marshal(
                     factory.generateRepository(repo),
                     mRepoManager.getSchemaModules(),

@@ -50,6 +50,19 @@ abstract class AbstractAndroidLocations protected constructor(
         @JvmField
         val FOLDER_AVD = "avd"
 
+        /**
+         * Folder for the Android plugin for gradle, containing managed devices.
+         */
+        @JvmField
+        val FOLDER_GRADLE = "gradle"
+
+        /**
+         * Virtual Device folder for devices managed by the Android plugin for gradle inside the
+         * path returned by [gradleAvdLocation].
+         */
+        @JvmField
+        val FOLDER_GRADLE_AVD = "avd"
+
         @JvmField
         val ANDROID_PREFS_ROOT = "ANDROID_PREFS_ROOT"
     }
@@ -88,6 +101,11 @@ This is the path of preference folder expected by the Android tools."""
     override val avdLocation: Path by lazy {
         // check if the location is overridden, if not use default
         findValidPath(mutableListOf(), Global.ANDROID_AVD_HOME) ?: prefsLocation.resolve(FOLDER_AVD)
+    }
+
+    @get:Throws(AndroidLocationsException::class)
+    override val gradleAvdLocation: Path by lazy {
+        prefsLocation.resolve(FOLDER_GRADLE).resolve(FOLDER_GRADLE_AVD)
     }
 
     /**

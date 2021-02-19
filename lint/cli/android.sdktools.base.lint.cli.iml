@@ -30,5 +30,6 @@
     <orderEntry type="library" name="studio-analytics-proto" level="project" />
     <orderEntry type="module" module-name="android.sdktools.analytics.shared-base" />
     <orderEntry type="module" module-name="android.sdktools.analytics.tracker-base" />
+    <orderEntry type="library" name="kxml2" level="project" />
   </component>
 </module>

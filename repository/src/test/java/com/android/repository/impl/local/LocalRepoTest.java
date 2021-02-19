@@ -40,6 +40,8 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import junit.framework.TestCase;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
@@ -105,7 +107,7 @@ public class LocalRepoTest extends TestCase {
         LocalPackageImpl p = factory.createLocalPackage();
         License license = factory.createLicenseType("some license text", "license1");
         p.setLicense(license);
-        p.setPath("dummy;path");
+        p.setPath("mypackage;path");
         p.setVersion(new Revision(1, 2));
         p.setDisplayName("package name");
         p.setTypeDetails((TypeDetails) genericFactory.createGenericDetailsType());
@@ -154,27 +156,34 @@ public class LocalRepoTest extends TestCase {
             }
         });
 
-        // Can't just check the output against expected directly, since e.g. attribute node order
-        // can change.
-        String expected = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
-                + "<ns3:repository "
-                + "xmlns:ns2=\"http://schemas.android.com/repository/android/generic/01\" "
-                + "xmlns:ns3=\"http://schemas.android.com/repository/android/common/01\">"
-                + "<license type=\"text\" id=\"license1\">some license text</license>"
-                + "<localPackage path=\"dummy;path\">"
-                + "<type-details xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "
-                + "xsi:type=\"ns2:genericDetailsType\"/>"
-                + "<revision><major>1</major><minor>2</minor></revision>"
-                + "<display-name>package name</display-name>"
-                + "<uses-license ref=\"license1\"/>"
-                + "<dependencies>"
-                + "<dependency path=\"depId1\">"
-                + "<min-revision><major>1</major><minor>2</minor><micro>3</micro></min-revision>"
-                + "</dependency>"
-                + "<dependency path=\"depId2\"/></dependencies></localPackage></ns3:repository>";
         Document doc = db.parse(new ByteArrayInputStream(output.toByteArray()));
-        Document doc2 = db.parse(new ByteArrayInputStream(expected.getBytes()));
-        assertTrue(doc.isEqualNode(doc2));
+
+        NodeList licences = doc.getElementsByTagName("license");
+        assertEquals(1, licences.getLength());
+        Element licenseNode = (Element) licences.item(0);
+        assertEquals("license1", licenseNode.getAttribute("id"));
+        assertEquals("some license text", licenseNode.getTextContent());
+        Element packageNode = (Element) doc.getElementsByTagName("localPackage").item(0);
+        assertEquals("mypackage;path", packageNode.getAttribute("path"));
+        Element details = (Element) packageNode.getElementsByTagName("type-details").item(0);
+        assertEquals("genericDetailsType", details.getSchemaTypeInfo().getTypeName());
+        Element revision = (Element) packageNode.getElementsByTagName("revision").item(0);
+        assertEquals("1", revision.getElementsByTagName("major").item(0).getTextContent());
+        assertEquals("2", revision.getElementsByTagName("minor").item(0).getTextContent());
+        assertEquals(
+                "package name",
+                packageNode.getElementsByTagName("display-name").item(0).getTextContent());
+        Element usesLicense = (Element) packageNode.getElementsByTagName("uses-license").item(0);
+        assertEquals("license1", usesLicense.getAttribute("ref"));
+        Element dependencies = (Element) packageNode.getElementsByTagName("dependencies").item(0);
+        Element dependency = (Element) dependencies.getElementsByTagName("dependency").item(0);
+        assertEquals("depId1", dependency.getAttribute("path"));
+        revision = (Element) dependency.getElementsByTagName("min-revision").item(0);
+        assertEquals("1", revision.getElementsByTagName("major").item(0).getTextContent());
+        assertEquals("2", revision.getElementsByTagName("minor").item(0).getTextContent());
+        assertEquals("3", revision.getElementsByTagName("micro").item(0).getTextContent());
+        dependency = (Element) dependencies.getElementsByTagName("dependency").item(1);
+        assertEquals("depId2", dependency.getAttribute("path"));
     }
 
     // Test that a package in an inconsistent location gives a warning.

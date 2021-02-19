@@ -16,8 +16,10 @@
 package com.android.sdklib.repository.legacy;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.repository.Revision;
 import com.android.repository.api.Channel;
+import com.android.repository.api.Checksum;
 import com.android.repository.api.ConsoleProgressIndicator;
 import com.android.repository.api.Dependency;
 import com.android.repository.api.Downloader;
@@ -63,13 +65,13 @@ import java.util.List;
  */
 public class LegacyRemoteRepoLoader implements FallbackRemoteRepoLoader {
 
-    /**
-     * Parses xml files using the {@link SdkSource} mechanism into {@link LegacyRemotePackage}s.
-     */
+    /** Parses xml files using the {@link SdkSource} mechanism into {@link LegacyRemotePackage}s. */
     @NonNull
     @Override
-    public Collection<RemotePackage> parseLegacyXml(@NonNull RepositorySource source,
-            @NonNull Downloader downloader, @NonNull SettingsController settings,
+    public Collection<RemotePackage> parseLegacyXml(
+            @NonNull RepositorySource source,
+            @NonNull Downloader downloader,
+            @Nullable SettingsController settings,
             @NonNull ProgressIndicator progress) {
         SdkSource legacySource;
         RemotePkgInfo[] packages = null;
@@ -251,13 +253,13 @@ public class LegacyRemoteRepoLoader implements FallbackRemoteRepoLoader {
 
         @Override
         public Archive getArchive() {
-            for (com.android.sdklib.repository.legacy.remote.internal.archives.Archive archive : mWrapped
-                    .getArchives()) {
+            for (com.android.sdklib.repository.legacy.remote.internal.archives.Archive archive :
+                    mWrapped.getArchives()) {
                 if (archive.isCompatible()) {
                     CommonFactory f = RepoManager.getCommonModule().createLatestFactory();
                     Archive arch = f.createArchiveType();
                     Archive.CompleteType complete = f.createCompleteType();
-                    complete.setChecksum(archive.getChecksum());
+                    complete.setTypedChecksum(Checksum.create(archive.getChecksum(), "sha1"));
                     complete.setSize(archive.getSize());
                     complete.setUrl(archive.getUrl());
                     arch.setComplete(complete);

@@ -218,7 +218,7 @@ public class InstallerUtil {
         p.asMarshallable().addTo(repo);
 
         Path packageXml = packageRoot.resolve(PENDING_PACKAGE_XML_FN);
-        writeRepoXml(manager, repo, packageXml, progress);
+        writeRepoXml(manager, repo, packageXml, factory, progress);
     }
 
     @Nullable
@@ -265,7 +265,7 @@ public class InstallerUtil {
         if (!CancellableFileIo.isDirectory(packageRoot)) {
             throw new IllegalArgumentException("packageRoot must exist and be a directory.");
         }
-        CommonFactory factory = RepoManager.getCommonModule().createLatestFactory();
+        CommonFactory factory = p.createFactory();
         // Create the package.xml
         Repository repo = factory.createRepositoryType();
         License l = p.getLicense();
@@ -275,17 +275,17 @@ public class InstallerUtil {
         LocalPackageImpl impl = LocalPackageImpl.create(p);
         repo.setLocalPackage(impl);
         Path packageXml = packageRoot.resolve(LocalRepoLoaderImpl.PACKAGE_XML_FN);
-        writeRepoXml(manager, repo, packageXml, progress);
+        writeRepoXml(manager, repo, packageXml, factory, progress);
     }
 
     public static void writeRepoXml(
             @NonNull RepoManager manager,
             @NonNull Repository repo,
             @NonNull Path packageXml,
+            @NonNull CommonFactory factory,
             @NonNull ProgressIndicator progress)
             throws IOException {
-        JAXBElement<Repository> element = RepoManager.getCommonModule().createLatestFactory().
-                generateRepository(repo);
+        JAXBElement<Repository> element = factory.generateRepository(repo);
         try (OutputStream fos = Files.newOutputStream(packageXml)) {
             SchemaModuleUtil.marshal(element, manager.getSchemaModules(), fos,
                     manager.getResourceResolver(progress), progress);
@@ -387,6 +387,10 @@ public class InstallerUtil {
                     return null;
                 }
                 LocalPackage localDependency = updatableDependency.getLocal();
+                if (localDependency == null && d.isSoft()) {
+                    // Soft dependency and package isn't already installed -> skip
+                    continue;
+                }
                 Revision requiredMinRevision = null;
                 RevisionType r = d.getMinRevision();
                 if (r != null) {

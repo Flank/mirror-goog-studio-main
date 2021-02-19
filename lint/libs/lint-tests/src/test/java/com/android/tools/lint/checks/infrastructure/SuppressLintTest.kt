@@ -160,7 +160,7 @@ class SuppressLintTest {
                 ).indented(),
                 java(
                     """
-                    import android.annotation.SuppressLint
+                    import android.annotation.SuppressLint;
                     import forbidden;
                     @SuppressLint("_SecureIssue")
                     class Test {
@@ -276,26 +276,27 @@ class SuppressLintTest {
                 xml(
                     "baseline.xml",
                     """
-                <issues format="5" by="lint 3.3.0">
-                    <issue
-                        id="_SecureIssue"
-                        severity="Warning"
-                        message="Some error message here"
-                        category="Security"
-                        priority="10"
-                        summary="Some important security issue"
-                        explanation="Blahdiblah"
-                        errorLine1="    forbidden()"
-                        errorLine2="    ~~~~~~~~~~~">
-                        <location
-                            file="src/test.kt"
-                            line="2"
-                            column="5"/>
-                    </issue>
-                </issues>
-            """
+                    <issues format="5" by="lint 3.3.0">
+                        <issue
+                            id="_SecureIssue"
+                            severity="Warning"
+                            message="Some error message here"
+                            category="Security"
+                            priority="10"
+                            summary="Some important security issue"
+                            explanation="Blahdiblah"
+                            errorLine1="    forbidden()"
+                            errorLine2="    ~~~~~~~~~~~">
+                            <location
+                                file="src/test.kt"
+                                line="2"
+                                column="5"/>
+                        </issue>
+                    </issues>
+                    """
                 ).indented()
             )
+            .skipTestModes(TestMode.PARTIAL)
             .sdkHome(TestUtils.getSdk().toFile())
             .run()
             .expect(
@@ -346,6 +347,7 @@ class SuppressLintTest {
                 """
                 ).indented()
             )
+            .skipTestModes(TestMode.PARTIAL)
             .sdkHome(TestUtils.getSdk().toFile())
             .run()
             .expect(
@@ -383,6 +385,7 @@ class SuppressLintTest {
                 ).indented()
             )
             .issues(MySecurityDetector.TEST_ISSUE)
+            .skipTestModes(TestMode.PARTIAL)
             .sdkHome(TestUtils.getSdk().toFile())
             .run()
             .expect(

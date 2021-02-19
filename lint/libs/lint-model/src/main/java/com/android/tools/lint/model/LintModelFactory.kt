@@ -325,7 +325,8 @@ class LintModelFactory : LintModelModuleLoader {
             debuggable = buildType.isDebuggable,
             shrinkable = buildType.isMinifyEnabled,
             buildFeatures = getBuildFeatures(project, module.gradleVersion),
-            libraryResolver = libraryResolver
+            libraryResolver = libraryResolver,
+            partialResultsDir = null
         )
     }
 
@@ -791,6 +792,9 @@ class LintModelFactory : LintModelModuleLoader {
         override val buildFeatures: LintModelBuildFeatures
             get() = _buildFeatures
                 ?: getBuildFeatures(project, module.gradleVersion).also { _buildFeatures = it }
+
+        override val partialResultsDir: File?
+            get() = null
     }
 
     companion object {

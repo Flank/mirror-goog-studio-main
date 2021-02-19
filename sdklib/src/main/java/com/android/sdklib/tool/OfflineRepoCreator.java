@@ -21,6 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Slow;
 import com.android.prefs.AndroidLocationsSingleton;
 import com.android.repository.api.Channel;
+import com.android.repository.api.Checksum;
 import com.android.repository.api.ConsoleProgressIndicator;
 import com.android.repository.api.License;
 import com.android.repository.api.ProgressIndicator;
@@ -34,11 +35,11 @@ import com.android.repository.io.FileOpUtils;
 import com.android.repository.util.InstallerUtil;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.legacy.LegacyDownloader;
-import com.google.common.collect.Lists;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -66,7 +67,7 @@ public class OfflineRepoCreator {
 
     @Slow
     public void run() throws IOException {
-        Path tempDir = FileOpUtils.getNewTempDir("OfflineRepoCreator", FileOpUtils.create());
+        Path tempDir = FileOpUtils.getNewTempDir("OfflineRepoCreator", FileSystems.getDefault());
         AndroidSdkHandler handler =
                 AndroidSdkHandler.getInstance(AndroidLocationsSingleton.INSTANCE, tempDir);
         ProgressIndicator progress = new ConsoleProgressIndicator();
@@ -124,7 +125,8 @@ public class OfflineRepoCreator {
             throws IOException {
         if (Files.exists(dest)) {
             try {
-                MessageDigest digest = MessageDigest.getInstance("SHA-1");
+                Checksum existingChecksum = remote.getArchive().getComplete().getTypedChecksum();
+                MessageDigest digest = MessageDigest.getInstance(existingChecksum.getType());
                 try (InputStream in = new BufferedInputStream(Files.newInputStream(dest))) {
                     byte[] buf = new byte[4096];
                     int n;
@@ -133,8 +135,7 @@ public class OfflineRepoCreator {
                     }
                 }
                 if (DatatypeConverter.printHexBinary(digest.digest())
-                        .equals(remote.getArchive().getComplete().getChecksum()
-                                .toUpperCase())) {
+                        .equals(existingChecksum.getValue().toUpperCase())) {
                     System.out.println(dest + " is up to date");
                     return true;
                 }
@@ -149,7 +150,10 @@ public class OfflineRepoCreator {
 
     private void writeRepoXml(@NonNull List<RemotePackageImpl> toWrite, @NonNull RepoManager mgr,
             @NonNull ProgressIndicator progress) throws IOException {
-        CommonFactory factory = RepoManager.getCommonModule().createLatestFactory();
+        if (toWrite.isEmpty()) {
+            return;
+        }
+        CommonFactory factory = toWrite.get(0).createFactory();
         Repository repo = factory.createRepositoryType();
         Set<String> seenLicenses = new HashSet<>();
         for (RemotePackageImpl remote : toWrite) {
@@ -164,7 +168,7 @@ public class OfflineRepoCreator {
         }
         Path outFile = mConfig.mDest.resolve("offline-repo.xml");
         System.out.println("Writing repo xml to " + outFile);
-        InstallerUtil.writeRepoXml(mgr, repo, outFile, progress);
+        InstallerUtil.writeRepoXml(mgr, repo, outFile, factory, progress);
     }
 
     public static void main(String[] args) throws IOException {
@@ -179,7 +183,7 @@ public class OfflineRepoCreator {
     private static class OfflineRepoConfig {
 
         private Path mDest;
-        private List<String> mPackages = Lists.newArrayList();
+        private final List<String> mPackages = new ArrayList<>();
 
         private static final String DEST = "--dest";
         private static final String PKG_LIST = "--package_file";

@@ -82,6 +82,9 @@ class LintTaskManager constructor(private val globalScope: GlobalScope, private 
                 variantLintTaskToLintVitalTask[getTaskPath(variantLintTask)] = lintVitalTask
             }
             taskFactory.register(AndroidLintTask.FixSingleVariantCreationAction(variantWithTests))
+            taskFactory.register(
+                AndroidLintAnalysisTask.SingleVariantCreationAction(variantWithTests)
+            )
         }
 
         val defaultVariant = variantModel.defaultVariant

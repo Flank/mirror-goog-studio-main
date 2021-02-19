@@ -19,8 +19,10 @@ package com.android.tools.lint.checks
 import com.android.tools.lint.client.api.TYPE_OBJECT
 import com.android.tools.lint.client.api.TYPE_STRING
 import com.android.tools.lint.detector.api.Category
+import com.android.tools.lint.detector.api.minSdkLessThan
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
+import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Scope
@@ -62,7 +64,7 @@ class AddJavascriptInterfaceDetector : Detector(), SourceCodeScanner {
 
     // ---- implements SourceCodeScanner ----
 
-    override fun getApplicableMethodNames(): List<String>? = listOf(ADD_JAVASCRIPT_INTERFACE)
+    override fun getApplicableMethodNames(): List<String> = listOf(ADD_JAVASCRIPT_INTERFACE)
 
     override fun visitMethodCall(
         context: JavaContext,
@@ -70,7 +72,7 @@ class AddJavascriptInterfaceDetector : Detector(), SourceCodeScanner {
         method: PsiMethod
     ) {
         // Ignore the issue if we never build for any API less than 17.
-        if (context.mainProject.minSdk >= 17) {
+        if (context.project.minSdk >= 17) {
             return
         }
 
@@ -82,6 +84,7 @@ class AddJavascriptInterfaceDetector : Detector(), SourceCodeScanner {
         val message = "`WebView.addJavascriptInterface` should not be called with " +
             "minSdkVersion < 17 for security reasons: JavaScript can use reflection " +
             "to manipulate application"
-        context.report(ISSUE, node, context.getNameLocation(node), message)
+        val incident = Incident(ISSUE, node, context.getNameLocation(node), message)
+        context.report(incident, minSdkLessThan(17))
     }
 }

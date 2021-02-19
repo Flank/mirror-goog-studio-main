@@ -155,6 +155,7 @@ public class InstantAppDetectorTest extends AbstractCheckTest {
                                         + "\n"
                                         + "</manifest>\n"),
                         gradle(
+                                "../app/build.gradle",
                                 ""
                                         + "buildscript {\n"
                                         + "    dependencies {\n"
@@ -418,14 +419,15 @@ public class InstantAppDetectorTest extends AbstractCheckTest {
                                         + "    </application>\n"
                                         + "\n"
                                         + "</manifest>\n"),
-                        createGradleTestFile())
+                        createGradleTestFile(),
+                        createGradleTestFile().to("../app/build.gradle"))
                 .run()
                 .expect(
                         ""
-                                + "src/debug/AndroidManifest.xml:9: Warning: Instant Apps are not allowed to have multiple launchable activities [InstantApps]\n"
+                                + "../lib/src/debug/AndroidManifest.xml:9: Warning: Instant Apps are not allowed to have multiple launchable activities [InstantApps]\n"
                                 + "                <category android:name=\"android.intent.category.LAUNCHER\" />\n"
                                 + "                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                                + "    src/main/AndroidManifest.xml:14: Other launchable activity here\n"
+                                + "    ../lib/src/main/AndroidManifest.xml:14: Other launchable activity here\n"
                                 + "                <category android:name=\"android.intent.category.LAUNCHER\" />\n"
                                 + "                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                                 + "0 errors, 1 warnings");

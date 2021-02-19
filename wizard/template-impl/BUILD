@@ -12,6 +12,5 @@ iml_module(
     deps = [
         "//prebuilts/studio/intellij-sdk:studio-sdk",
         "//tools/base/wizard/template-plugin:studio.intellij.android.wizardTemplate.plugin[module]",
-        "//tools/adt/idea/.idea/libraries:kotlin-stdlib-jdk8",
     ],
 )

@@ -45,4 +45,4 @@ cmake;3.10.2.4988404
 # Instant apps sdk used in integration tests
 extras;google;instantapps
 
-ndk;21.3.6528147:**:{**/OWNERS,**/BUILD.bazel}
+ndk;21.4.7075529:**:{**/OWNERS,**/BUILD.bazel}

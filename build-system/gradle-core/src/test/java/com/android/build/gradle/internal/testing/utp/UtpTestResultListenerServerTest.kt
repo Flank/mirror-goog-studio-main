@@ -27,15 +27,29 @@ import io.grpc.stub.StreamObserver
 import io.grpc.testing.GrpcCleanupRule
 import org.junit.Rule
 import org.junit.Test
+import org.mockito.Mock
+import org.mockito.junit.MockitoJUnit
+import org.mockito.junit.MockitoRule
+import java.io.File
 import java.io.IOException
 
 /**
- * Unit tests for [UtpTestResultListenerServerTest].
+ * Unit tests for [UtpTestResultListenerServer].
  */
 class UtpTestResultListenerServerTest {
 
     @get:Rule
     val grpcCleanup = GrpcCleanupRule()
+
+    @get:Rule
+    var mockitoJUnitRule: MockitoRule = MockitoJUnit.rule()
+
+    @Mock
+    lateinit var mockResultListenerClientCert: File
+    @Mock
+    lateinit var mockResultListenerClientPrivateKey: File
+    @Mock
+    lateinit var mockTrustCertCollection: File
 
     @Test
     fun startServer() {
@@ -44,6 +58,9 @@ class UtpTestResultListenerServerTest {
         var capturedPort: Int? = null
 
         val server = UtpTestResultListenerServer.startServer(
+                mockTrustCertCollection,
+                mockResultListenerClientPrivateKey,
+                mockTrustCertCollection,
                 defaultPort = 1234,
                 maxRetryAttempt = 1
         ) { port ->
@@ -62,6 +79,9 @@ class UtpTestResultListenerServerTest {
     @Test
     fun availablePortNotFound() {
         val server = UtpTestResultListenerServer.startServer(
+                mockTrustCertCollection,
+                mockResultListenerClientPrivateKey,
+                mockTrustCertCollection,
                 defaultPort = 1234,
                 maxRetryAttempt = 1
         ) { port ->
@@ -78,6 +98,9 @@ class UtpTestResultListenerServerTest {
         var capturedPort: Int? = null
 
         val server = UtpTestResultListenerServer.startServer(
+                mockTrustCertCollection,
+                mockResultListenerClientPrivateKey,
+                mockTrustCertCollection,
                 defaultPort = 1234,
                 maxRetryAttempt = 2
         ) { port ->
@@ -101,6 +124,9 @@ class UtpTestResultListenerServerTest {
         val serverName = InProcessServerBuilder.generateName()
 
         val server = UtpTestResultListenerServer.startServer(
+                mockTrustCertCollection,
+                mockResultListenerClientPrivateKey,
+                mockTrustCertCollection,
                 defaultPort = 1234,
                 maxRetryAttempt = 1
         ) {

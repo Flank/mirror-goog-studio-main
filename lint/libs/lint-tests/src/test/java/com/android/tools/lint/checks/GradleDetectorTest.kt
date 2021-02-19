@@ -42,6 +42,7 @@ import com.android.tools.lint.checks.GradleDetector.Companion.GRADLE_GETTER
 import com.android.tools.lint.checks.GradleDetector.Companion.GRADLE_PLUGIN_COMPATIBILITY
 import com.android.tools.lint.checks.GradleDetector.Companion.HIGH_APP_VERSION_CODE
 import com.android.tools.lint.checks.GradleDetector.Companion.JAVA_PLUGIN_LANGUAGE_LEVEL
+import com.android.tools.lint.checks.GradleDetector.Companion.JCENTER_REPOSITORY_OBSOLETE
 import com.android.tools.lint.checks.GradleDetector.Companion.KTX_EXTENSION_AVAILABLE
 import com.android.tools.lint.checks.GradleDetector.Companion.LIFECYCLE_ANNOTATION_PROCESSOR_WITH_JAVA8
 import com.android.tools.lint.checks.GradleDetector.Companion.MIN_SDK_TOO_LOW
@@ -402,6 +403,228 @@ class GradleDetectorTest : AbstractCheckTest() {
                     "}\n"
             )
         ).issues(DEPENDENCY).run().expect(expected)
+    }
+
+    fun testWorkManager() {
+        // The AndroidX work manager library plans to have preview versions released at the same
+        // time: 2.6 for normal/stable work manager, and 2.7 for Android S preview work. They don't
+        // want 2.6 preview users to get suggestions to update 2.7, so this is special cased.
+        lint().files(
+            gradle(
+                "" +
+                    "apply plugin: 'com.android.application'\n" +
+                    "\n" +
+                    "android {\n" +
+                    "    compileSdkVersion 30\n" +
+                    "}\n" +
+                    "\n" +
+                    "dependencies {\n" +
+
+                    // Made up versions for the various work manager artifacts
+                    // to make sure we can test the various upgrade scenarios
+                    // separately:
+                    // work-runtime: 2.6.0-alpha06, 2.7.0-alpha06
+                    // work-runtime-ktx: 2.6.0-alpha05, 2.7.0-alpha05
+                    // work-rxjava2: 2.6.0-alpha06, 2.7.0
+                    // work-rxjava3: 2.7.0-alpha06
+                    // work-gcm: 2.7.0-alpha05
+                    // work-testing: 2.8.0-alpha01
+                    // work-multiprocess: 2.7.0-alpha06
+
+                    // Test 2.6.0 alpha05 going up to 2.6.0 alpha6, NOT 2.7 preview
+                    "    implementation \"androidx.work:work-runtime:2.6.0-alpha05\" // expect 2.6.0-alpha06\n" +
+                    // Test 2.6.0 alpha05 (latest available) NOT going up to 2.7 preview
+                    "    implementation \"androidx.work:work-runtime-ktx:2.6.0-alpha05\" // No suggestion\n" +
+                    // Test 2.6.0 alpha05 going up to 2.7.0 (once stable)
+                    "    implementation \"androidx.work:work-rxjava2:2.6.0-alpha05\" // expect 2.7.0\n" +
+                    // Test 2.6.0 NOT going up to 2.7.0 preview
+                    "    implementation \"androidx.work:work-gcm:2.6.0\" // No suggestion\n" +
+                    // Test 2.6.0 alpha05 going up to 2.8 preview
+                    "    androidTestImplementation \"androidx.work:work-testing:2.6.0-alpha05\" // expect 2.8.0-alpha01\n" +
+                    // Test 2.7.0 alpha05 going up to 2.7.0 alpha06
+                    "    implementation \"androidx.work:work-multiprocess:2.7.0-alpha05\" // expect 2.7.0-alpha06\n" +
+                    // Test normal upgrades in 2.7: 2.7.0 alpha05 going up to 2.7.0 alpha6
+                    "    implementation \"androidx.work:work-rxjava3:2.7.0-alpha05\" // expect 2.7.0-alpha06\n" +
+                    // Make sure dynamic versions also work: don't upgrade from < 2.7 to 2.7 previews
+                    "    implementation \"androidx.work:work-rxjava3:2.5.+\" // expect 2.6.0\n" +
+                    // Also update to 2.6, not 2.7, from older stable releases
+                    "    implementation \"androidx.work:work-runtime:2.5.0-alpha05\" // expect 2.6.0-alpha06\n" +
+                    "}\n"
+            )
+        )
+            .issues(DEPENDENCY)
+            .networkData(
+                "https://maven.google.com/master-index.xml",
+                """
+                <?xml version='1.0' encoding='UTF-8'?>
+                <metadata>
+                  <androidx.core/>
+                  <androidx.work/>
+                </metadata>
+                """.trimIndent()
+            )
+            .networkData(
+                "https://maven.google.com/androidx/work/group-index.xml",
+                """
+                <?xml version='1.0' encoding='UTF-8'?>
+                <androidx.work>
+                  <work-runtime versions="2.7.0-alpha06,2.6.0-alpha06"/>
+                  <work-runtime-ktx versions="2.7.0-alpha05,2.6.0-alpha05"/>
+                  <work-rxjava2 versions="2.7.0,2.6.0-alpha06"/>
+                  <work-rxjava3 versions="2.7.0-alpha06"/>
+                  <work-gcm versions="2.7.0-alpha05"/>
+                  <work-testing versions="2.8.0-alpha01"/>
+                  <work-multiprocess versions="2.7.0-alpha06,2.6.0"/>
+                </androidx.work>
+                """.trimIndent()
+            )
+            .run().expect(
+                """
+                build.gradle:8: Warning: A newer version of androidx.work:work-runtime than 2.6.0-alpha05 is available: 2.6.0-alpha06 [GradleDependency]
+                    implementation "androidx.work:work-runtime:2.6.0-alpha05" // expect 2.6.0-alpha06
+                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                build.gradle:10: Warning: A newer version of androidx.work:work-rxjava2 than 2.6.0-alpha05 is available: 2.7.0 [GradleDependency]
+                    implementation "androidx.work:work-rxjava2:2.6.0-alpha05" // expect 2.7.0
+                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                build.gradle:12: Warning: A newer version of androidx.work:work-testing than 2.6.0-alpha05 is available: 2.8.0-alpha01 [GradleDependency]
+                    androidTestImplementation "androidx.work:work-testing:2.6.0-alpha05" // expect 2.8.0-alpha01
+                                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                build.gradle:13: Warning: A newer version of androidx.work:work-multiprocess than 2.7.0-alpha05 is available: 2.7.0-alpha06 [GradleDependency]
+                    implementation "androidx.work:work-multiprocess:2.7.0-alpha05" // expect 2.7.0-alpha06
+                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                build.gradle:14: Warning: A newer version of androidx.work:work-rxjava3 than 2.7.0-alpha05 is available: 2.7.0-alpha06 [GradleDependency]
+                    implementation "androidx.work:work-rxjava3:2.7.0-alpha05" // expect 2.7.0-alpha06
+                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                build.gradle:16: Warning: A newer version of androidx.work:work-runtime than 2.5.0-alpha05 is available: 2.6.0-alpha06 [GradleDependency]
+                    implementation "androidx.work:work-runtime:2.5.0-alpha05" // expect 2.6.0-alpha06
+                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                0 errors, 6 warnings
+                """
+            )
+    }
+
+    fun testGuavaVersionsAndroidVsJre() {
+        lint().files(
+            gradle(
+                "" +
+                    "apply plugin: 'com.android.application'\n" +
+                    "\n" +
+                    "android {\n" +
+                    "    compileSdkVersion 29\n" +
+                    "}\n" +
+                    "\n" +
+                    "dependencies {\n" +
+                    // Applicable updates: 30.1-android, 30.0-android, 29.0-android, 28.2-android, 28.1-android
+                    "    compile 'com.google.guava:guava:24.1-android'\n" +
+                    // Applicable updates: 30.1-jre, 30.0-jre, 29.0-jre, 28.2-jre, 28.1-jre
+                    "    compile 'com.google.guava:guava:24.1-jre'\n" +
+                    // Applicable updates: 30.1-android, 30.0-android, 29.0-android, 28.2-android, 28.1-android
+                    "    compile 'com.google.guava:guava:16.0-rc1'\n" +
+                    // Applicable updates: 30.1-android, 30.0-android, 29.0-android, 28.2-android, 28.1-android
+                    "    compile 'com.google.guava:guava:16.0'\n" +
+                    "}\n"
+            )
+        )
+            .issues(REMOTE_VERSION)
+            .networkData(
+                "http://search.maven.org/solrsearch/select?q=g:%22com.google.guava%22+AND+a:%22guava%22&core=gav&rows=1&wt=json",
+                """{"responseHeader":{"status":0,"QTime":0,"params":{"q":"g:\"com.google.guava\" AND a:\"guava\"","core":"gav","indent":"off","fl":"id,g,a,v,p,ec,timestamp,tags","start":"","sort":"score desc,timestamp desc,g asc,a asc,v desc","rows":"1","wt":"json","version":"2.2"}},"response":{"numFound":100,"start":0,"docs":[{"id":"com.google.guava:guava:30.1-jre","g":"com.google.guava","a":"guava","v":"30.1-jre","p":"bundle","timestamp":1607961950000,"ec":["-javadoc.jar","-sources.jar",".jar",".pom"],"tags":["libraries","classes","google","expanded","much","include","that","more","utility","guava","core","suite","collections"]}]}}"""
+            )
+            .networkData(
+                "http://search.maven.org/solrsearch/select?q=g:%22com.google.guava%22+AND+a:%22guava%22&core=gav&wt=json",
+                """{"responseHeader":{"status":0,"QTime":5,"params":{"q":"g:\"com.google.guava\" AND a:\"guava\"","core":"gav","indent":"off","fl":"id,g,a,v,p,ec,timestamp,tags","start":"","sort":"score desc,timestamp desc,g asc,a asc,v desc","rows":"","wt":"json","version":"2.2"}},"response":{"numFound":100,"start":0,"docs":[{"id":"com.google.guava:guava:30.1-jre","g":"com.google.guava","a":"guava","v":"30.1-jre","p":"bundle","timestamp":1607961950000,"ec":["-javadoc.jar","-sources.jar",".jar",".pom"],"tags":["libraries","classes","google","expanded","much","include","that","more","utility","guava","core","suite","collections"]},{"id":"com.google.guava:guava:30.1-android","g":"com.google.guava","a":"guava","v":"30.1-android","p":"bundle","timestamp":1607961275000,"ec":["-javadoc.jar","-sources.jar",".jar",".pom"],"tags":["libraries","classes","google","expanded","much","include","that","more","utility","guava","core","suite","collections"]},{"id":"com.google.guava:guava:30.0-jre","g":"com.google.guava","a":"guava","v":"30.0-jre","p":"bundle","timestamp":1602880862000,"ec":["-javadoc.jar","-sources.jar",".jar",".pom"],"tags":["libraries","classes","google","expanded","much","include","that","more","utility","guava","core","suite","collections"]},{"id":"com.google.guava:guava:30.0-android","g":"com.google.guava","a":"guava","v":"30.0-android","p":"bundle","timestamp":1602880118000,"ec":["-javadoc.jar","-sources.jar",".jar",".pom"],"tags":["libraries","classes","google","expanded","much","include","that","more","utility","guava","core","suite","collections"]},{"id":"com.google.guava:guava:29.0-jre","g":"com.google.guava","a":"guava","v":"29.0-jre","p":"bundle","timestamp":1586813033000,"ec":["-javadoc.jar","-sources.jar",".jar",".pom"],"tags":["libraries","classes","google","expanded","much","include","that","more","utility","guava","core","suite","collections"]},{"id":"com.google.guava:guava:29.0-android","g":"com.google.guava","a":"guava","v":"29.0-android","p":"bundle","timestamp":1586812496000,"ec":["-javadoc.jar","-sources.jar",".jar",".pom"],"tags":["libraries","classes","google","expanded","much","include","that","more","utility","guava","core","suite","collections"]},{"id":"com.google.guava:guava:28.2-jre","g":"com.google.guava","a":"guava","v":"28.2-jre","p":"bundle","timestamp":1577416125000,"ec":["-javadoc.jar","-sources.jar",".jar",".pom"],"tags":["libraries","classes","google","expanded","much","include","that","more","utility","guava","core","suite","collections"]},{"id":"com.google.guava:guava:28.2-android","g":"com.google.guava","a":"guava","v":"28.2-android","p":"bundle","timestamp":1577413219000,"ec":["-javadoc.jar","-sources.jar",".jar",".pom"],"tags":["libraries","classes","google","expanded","much","include","that","more","utility","guava","core","suite","collections"]},{"id":"com.google.guava:guava:28.1-jre","g":"com.google.guava","a":"guava","v":"28.1-jre","p":"bundle","timestamp":1567025587000,"ec":["-javadoc.jar","-sources.jar",".jar",".pom"],"tags":["libraries","classes","google","expanded","much","include","that","more","utility","guava","core","suite","collections"]},{"id":"com.google.guava:guava:28.1-android","g":"com.google.guava","a":"guava","v":"28.1-android","p":"bundle","timestamp":1567025039000,"ec":["-javadoc.jar","-sources.jar",".jar",".pom"],"tags":["libraries","classes","google","expanded","much","include","that","more","utility","guava","core","suite","collections"]}]}}"""
+            )
+            .run()
+            .expect(
+                """
+                build.gradle:8: Warning: A newer version of com.google.guava:guava than 24.1-android is available: 30.1-android [NewerVersionAvailable]
+                    compile 'com.google.guava:guava:24.1-android'
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                build.gradle:9: Warning: A newer version of com.google.guava:guava than 24.1-jre is available: 30.1-jre [NewerVersionAvailable]
+                    compile 'com.google.guava:guava:24.1-jre'
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                build.gradle:10: Warning: A newer version of com.google.guava:guava than 16.0-rc1 is available: 30.1-android [NewerVersionAvailable]
+                    compile 'com.google.guava:guava:16.0-rc1'
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                build.gradle:11: Warning: A newer version of com.google.guava:guava than 16.0 is available: 30.1-android [NewerVersionAvailable]
+                    compile 'com.google.guava:guava:16.0'
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                0 errors, 4 warnings
+                """
+            )
+    }
+
+    fun testCoroutines() {
+        // 171369798: False positive "Obsolete Gradle Dependency" for native version of `kotlinx-coroutines-core`
+        //
+        // The native version of the coroutines library is versioned incorrectly (as described in comment #2
+        // of the above bug) but they're not changing it (see https://github.com/Kotlin/kotlinx.coroutines/issues/2482)
+        // so manually filter this case.
+
+        lint().files(
+            gradle(
+                "" +
+                    "apply plugin: 'com.android.application'\n" +
+                    "\n" +
+                    "android {\n" +
+                    "    compileSdkVersion 29\n" +
+                    "}\n" +
+                    "\n" +
+                    // Available versions:
+                    // 1.4.2-native-mt
+                    // 1.4.2
+                    // 1.4.1-native-mt
+                    // 1.4.1
+                    // 1.4.0
+                    // 1.4.0-M1
+                    // 1.3.9-native-mt-2
+                    // 1.3.9-native-mt
+                    // 1.3.8-native-mt-1.4.0-rc
+                    // 1.3.9
+                    //
+                    // Which means latest stable update is 1.4.2
+                    // Latest native-mt is 1.4.1-native-mt
+                    // Latest native-mt-2 is 1.3.9-native-mt-2
+                    "dependencies {\n" +
+                    // Applicable: 1.4.2, 1.4.1, 1.4.0, 1.3.9
+                    "    compile 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.9' // Suggest 1.4.2\n" +
+                    // Applicable: 1.3.9-native-mt-2
+                    "    compile 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.8-native-mt-2' // Suggest 1.3.9-native-mt-2\n" +
+                    // Applicable: 1.3.9-native-mt-2
+                    "    compile 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.9-native-mt-2' // Suggest nothing\n" +
+                    // Applicable: 1.4.2, 1.4.1, 1.4.0, 1.3.9
+                    "    compile 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.2' // Suggest nothing\n" +
+                    // Applicable: 1.4.2-native-mt, 1.4.1-native-mt, 1.3.9-native-mt, 1.3.8-native-mt-1.4.0-rc
+                    "    compile 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.0-native-mt' // Suggest 1.4.2-native-mt\n" +
+                    // Applicable:
+                    "    compile 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.8-native-mt-1.4.0-rc'\n" +
+                    "}\n"
+            )
+        )
+            .issues(REMOTE_VERSION)
+            .networkData(
+                "http://search.maven.org/solrsearch/select?q=g:%22org.jetbrains.kotlinx%22+AND+a:%22kotlinx-coroutines-core%22&core=gav&wt=json",
+                """{"responseHeader":{"status":0,"QTime":1,"params":{"q":"g:\"org.jetbrains.kotlinx\" AND a:\"kotlinx-coroutines-core\"","core":"gav","indent":"off","fl":"id,g,a,v,p,ec,timestamp,tags","start":"","sort":"score desc,timestamp desc,g asc,a asc,v desc","rows":"","wt":"json","version":"2.2"}},"response":{"numFound":77,"start":0,"docs":[{"id":"org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.2-native-mt","g":"org.jetbrains.kotlinx","a":"kotlinx-coroutines-core","v":"1.4.2-native-mt","p":"jar","timestamp":1606484996000,"ec":["-javadoc.jar","-sources.jar",".jar",".module",".pom"],"tags":["libraries","support","kotlin","coroutines"]},{"id":"org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.2","g":"org.jetbrains.kotlinx","a":"kotlinx-coroutines-core","v":"1.4.2","p":"jar","timestamp":1606411162000,"ec":["-sources.jar","-javadoc.jar",".jar",".module",".pom"],"tags":["libraries","support","kotlin","coroutines"]},{"id":"org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.1-native-mt","g":"org.jetbrains.kotlinx","a":"kotlinx-coroutines-core","v":"1.4.1-native-mt","p":"jar","timestamp":1605797411000,"ec":["-javadoc.jar","-sources.jar",".jar",".module",".pom"],"tags":["libraries","support","kotlin","coroutines"]},{"id":"org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.1","g":"org.jetbrains.kotlinx","a":"kotlinx-coroutines-core","v":"1.4.1","p":"jar","timestamp":1604486053000,"ec":["-sources.jar","-javadoc.jar",".jar",".module",".pom"],"tags":["libraries","support","kotlin","coroutines"]},{"id":"org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.0","g":"org.jetbrains.kotlinx","a":"kotlinx-coroutines-core","v":"1.4.0","p":"jar","timestamp":1603735442000,"ec":["-sources.jar","-javadoc.jar",".jar",".module",".pom"],"tags":["libraries","support","kotlin","coroutines"]},{"id":"org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.0-M1","g":"org.jetbrains.kotlinx","a":"kotlinx-coroutines-core","v":"1.4.0-M1","p":"jar","timestamp":1602593229000,"ec":["-javadoc.jar","-sources.jar",".jar",".module",".pom"],"tags":["libraries","support","kotlin","coroutines"]},{"id":"org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.9-native-mt-2","g":"org.jetbrains.kotlinx","a":"kotlinx-coroutines-core","v":"1.3.9-native-mt-2","p":"jar","timestamp":1600769552000,"ec":["-sources.jar","-javadoc.jar",".jar",".module",".pom"],"tags":["libraries","support","kotlin","coroutines"]},{"id":"org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.9-native-mt","g":"org.jetbrains.kotlinx","a":"kotlinx-coroutines-core","v":"1.3.9-native-mt","p":"jar","timestamp":1598043333000,"ec":["-sources.jar","-javadoc.jar",".jar",".module",".pom"],"tags":["libraries","support","kotlin","coroutines"]},{"id":"org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.8-native-mt-1.4.0-rc","g":"org.jetbrains.kotlinx","a":"kotlinx-coroutines-core","v":"1.3.8-native-mt-1.4.0-rc","p":"jar","timestamp":1597826260000,"ec":["-sources.jar","-javadoc.jar",".jar",".module",".pom"],"tags":["libraries","support","kotlin","coroutines"]},{"id":"org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.9","g":"org.jetbrains.kotlinx","a":"kotlinx-coroutines-core","v":"1.3.9","p":"jar","timestamp":1597402470000,"ec":["-sources.jar","-javadoc.jar",".jar",".module",".pom"],"tags":["libraries","support","kotlin","coroutines"]}]}}"""
+            ).networkData(
+                "http://search.maven.org/solrsearch/select?q=g:%22org.jetbrains.kotlinx%22+AND+a:%22kotlinx-coroutines-core%22&core=gav&rows=1&wt=json",
+                """{"responseHeader":{"status":0,"QTime":0,"params":{"q":"g:\"22org.jetbrains.kotlinx\" AND a:\"kotlinx-coroutines-core\"","core":"gav","indent":"off","fl":"id,g,a,v,p,ec,timestamp,tags","start":"","sort":"score desc,timestamp desc,g asc,a asc,v desc","rows":"","wt":"json","version":"2.2"}},"response":{"numFound":0,"start":0,"docs":[]}}"""
+            ).run().expect(
+                """
+                build.gradle:8: Warning: A newer version of org.jetbrains.kotlinx:kotlinx-coroutines-core than 1.3.9 is available: 1.4.2 [NewerVersionAvailable]
+                    compile 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.9' // Suggest 1.4.2
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                build.gradle:9: Warning: A newer version of org.jetbrains.kotlinx:kotlinx-coroutines-core than 1.3.8-native-mt-2 is available: 1.3.9-native-mt-2 [NewerVersionAvailable]
+                    compile 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.8-native-mt-2' // Suggest 1.3.9-native-mt-2
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                build.gradle:12: Warning: A newer version of org.jetbrains.kotlinx:kotlinx-coroutines-core than 1.4.0-native-mt is available: 1.4.2-native-mt [NewerVersionAvailable]
+                    compile 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.0-native-mt' // Suggest 1.4.2-native-mt
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                build.gradle:13: Warning: A newer version of org.jetbrains.kotlinx:kotlinx-coroutines-core than 1.3.8-native-mt-1.4.0-rc is available: 1.4.2-native-mt [NewerVersionAvailable]
+                    compile 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.8-native-mt-1.4.0-rc'
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                0 errors, 4 warnings
+                """
+            )
     }
 
     fun testQvsAndroidX() {
@@ -1215,7 +1438,7 @@ class GradleDetectorTest : AbstractCheckTest() {
             "build.gradle:9: Warning: A newer version of com.google.guava:guava than 11.0.2 is available: 23.6-android [NewerVersionAvailable]\n" +
             "    compile 'com.google.guava:guava:11.0.2'\n" +
             "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-            "build.gradle:10: Warning: A newer version of com.google.guava:guava than 16.0-rc1 is available: 18.0-rc1 [NewerVersionAvailable]\n" +
+            "build.gradle:10: Warning: A newer version of com.google.guava:guava than 16.0-rc1 is available: 23.6-android [NewerVersionAvailable]\n" +
             "    compile 'com.google.guava:guava:16.0-rc1'\n" +
             "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "0 errors, 2 warnings\n"
@@ -1590,11 +1813,21 @@ class GradleDetectorTest : AbstractCheckTest() {
 
     fun testSupportLibraryConsistencyNonIncremental() {
         val expected = "" +
+            "" +
             "build.gradle:6: Error: All com.android.support libraries must use the exact same version specification (mixing versions can lead to runtime crashes). Found versions 25.0-SNAPSHOT, 24.2, 24.1. Examples include com.android.support:preference-v7:25.0-SNAPSHOT and com.android.support:animated-vector-drawable:24.2 [GradleCompatible]\n" +
             "    compile \"com.android.support:preference-v7:25.0-SNAPSHOT\"\n" +
             "             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "    build.gradle:4: <No location-specific message>\n" +
+            "    compile \"com.android.support:appcompat-v7:24.2\"\n" +
+            "             ~~~~~~~~~~~~~~~~~~~\n" +
             "1 errors, 0 warnings\n"
         lint().files(
+            gradle(
+                "../lib/build.gradle",
+                "" +
+                    "buildscript {\n" +
+                    "}"
+            ),
             gradle(
                 "" +
                     "apply plugin: 'android'\n" +
@@ -1632,10 +1865,10 @@ class GradleDetectorTest : AbstractCheckTest() {
 
     fun testPlayServiceConsistencyNonIncremental() {
         val expected = "" +
-            "build.gradle:4: Error: All gms/firebase libraries must use the exact same version specification (mixing versions can lead to runtime crashes). Found versions 7.5.0, 7.3.0. Examples include com.google.android.gms:play-services-wearable:7.5.0 and com.google.android.gms:play-services-location:7.3.0 [GradleCompatible]\n" +
+            "build.gradle:5: Error: All gms/firebase libraries must use the exact same version specification (mixing versions can lead to runtime crashes). Found versions 7.5.0, 7.3.0. Examples include com.google.android.gms:play-services-wearable:7.5.0 and com.google.android.gms:play-services-location:7.3.0 [GradleCompatible]\n" +
             "    compile 'com.google.android.gms:play-services-wearable:7.5.0'\n" +
             "             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-            "    build.gradle:5: <No location-specific message>\n" +
+            "    build.gradle:4: <No location-specific message>\n" +
             "    compile 'com.google.android.gms:play-services-location:7.3.0'\n" +
             "             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "1 errors, 0 warnings"
@@ -1643,11 +1876,20 @@ class GradleDetectorTest : AbstractCheckTest() {
         lint().files(
             gradle(
                 "" +
+                    "apply plugin: 'android-library'\n" +
+                    "\n" +
+                    "dependencies {\n" +
+                    "    compile 'com.google.android.gms:play-services-location:7.3.0'\n" +
+                    "}\n"
+            ),
+            gradle(
+                "../app/build.gradle",
+                "" +
                     "apply plugin: 'android'\n" +
                     "\n" +
                     "dependencies {\n" +
-                    "    compile 'com.google.android.gms:play-services-wearable:7.5.0'\n" +
                     "    compile 'com.google.android.gms:play-services-location:7.3.0'\n" +
+                    "    compile 'com.google.android.gms:play-services-wearable:7.5.0'\n" +
                     "}\n"
             )
         ).issues(COMPATIBILITY).run().expect(expected)
@@ -2842,10 +3084,22 @@ class GradleDetectorTest : AbstractCheckTest() {
     fun testAndroidxMixedDependencies() {
         val expected =
             """
-            build.gradle: Error: Dependencies using groupId com.android.support and androidx.* can not be combined but found __ and __ incompatible dependencies [GradleCompatible]
-            1 errors, 0 warnings"""
+            build.gradle:10: Error: Dependencies using groupId com.android.support and androidx.* can not be combined but found TEST_VERSION1 and TEST_VERSION2 incompatible dependencies [GradleCompatible]
+                compile 'com.android.support:recyclerview-v7:28.0.0'
+                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                build.gradle:11: <No location-specific message>
+                compile 'androidx.appcompat:appcompat:1.0.0'
+                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            1 errors, 0 warnings
+            """
 
         lint().files(
+            gradle(
+                "../lib/build.gradle",
+                "" +
+                    "buildscript {\n" +
+                    "}"
+            ),
             gradle(
                 "" +
                     "buildscript {\n" +
@@ -2869,7 +3123,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                 transformer = TestResultTransformer {
                     it.replace(
                         Regex("found .* and .* incompatible"),
-                        "found __ and __ incompatible"
+                        "found TEST_VERSION1 and TEST_VERSION2 incompatible"
                     )
                 }
             )
@@ -3757,6 +4011,202 @@ class GradleDetectorTest : AbstractCheckTest() {
                     """.trimIndent()
                 )
         }
+    }
+
+    fun testJCenterObsolete() {
+        lint().files(
+            gradle(
+                """
+                    buildscript {
+                        ext {
+                            versions = [kotlin: '1.4.20']
+                        }
+                        repositories {
+                            google()
+                            jcenter()
+                        }
+                    }
+
+                    allprojects {
+                        repositories {
+                            google()
+                            jcenter()
+                        }
+                    }
+                """
+            ).indented()
+        )
+            .issues(JCENTER_REPOSITORY_OBSOLETE)
+            .run()
+            .expect(
+                """
+                build.gradle:7: Warning: JCenter is at end of life [JcenterRepositoryObsolete]
+                        jcenter()
+                        ~~~~~~~~~
+                build.gradle:14: Warning: JCenter is at end of life [JcenterRepositoryObsolete]
+                        jcenter()
+                        ~~~~~~~~~
+                0 errors, 2 warnings
+            """
+            )
+            .expectFixDiffs(
+                """
+                Fix for build.gradle line 7: Replace with mavenCentral:
+                @@ -7 +7
+                -         jcenter()
+                +         mavenCentral()
+                Fix for build.gradle line 7: Delete this repository declaration:
+                @@ -7 +7
+                -         jcenter()
+                Fix for build.gradle line 14: Replace with mavenCentral:
+                @@ -14 +14
+                -         jcenter()
+                +         mavenCentral()
+                Fix for build.gradle line 14: Delete this repository declaration:
+                @@ -14 +14
+                -         jcenter()
+            """
+            )
+    }
+
+    fun testJCenterObsoleteKts() {
+        lint().files(
+            kts(
+                """
+                    buildscript {
+                        val versions by extra("1.4.20")
+                        repositories {
+                            google()
+                            jcenter()
+                        }
+                    }
+
+                    allprojects {
+                        repositories {
+                            google()
+                            jcenter()
+                        }
+                    }
+                """
+            ).indented()
+        )
+            .issues(JCENTER_REPOSITORY_OBSOLETE)
+            .run()
+            .expect(
+                """
+                build.gradle.kts:5: Warning: JCenter is at end of life [JcenterRepositoryObsolete]
+                        jcenter()
+                        ~~~~~~~~~
+                build.gradle.kts:12: Warning: JCenter is at end of life [JcenterRepositoryObsolete]
+                        jcenter()
+                        ~~~~~~~~~
+                0 errors, 2 warnings
+            """
+            )
+            .expectFixDiffs(
+                """
+                Fix for build.gradle.kts line 5: Replace with mavenCentral:
+                @@ -5 +5
+                -         jcenter()
+                +         mavenCentral()
+                Fix for build.gradle.kts line 5: Delete this repository declaration:
+                @@ -5 +5
+                -         jcenter()
+                Fix for build.gradle.kts line 12: Replace with mavenCentral:
+                @@ -12 +12
+                -         jcenter()
+                +         mavenCentral()
+                Fix for build.gradle.kts line 12: Delete this repository declaration:
+                @@ -12 +12
+                -         jcenter()
+            """
+            )
+    }
+
+    fun testJCenterObsoleteContent() {
+        lint().files(
+            gradle(
+                """
+                    repositories {
+                        jcenter {
+                            content {
+                                // exclude artifacts starting with "my.company"
+                                excludeGroupByRegex "^my\\.company.*"
+                            }
+                        }
+                    }
+                """
+            ).indented()
+        )
+            .issues(JCENTER_REPOSITORY_OBSOLETE)
+            .run()
+            .expect(
+                """
+                build.gradle:2: Warning: JCenter is at end of life [JcenterRepositoryObsolete]
+                    jcenter {
+                    ^
+                0 errors, 1 warnings
+                """
+            )
+            .expectFixDiffs(
+                """
+                Fix for build.gradle line 2: Replace with mavenCentral:
+                @@ -2 +2
+                -     jcenter {
+                +     mavenCentral {
+                Fix for build.gradle line 2: Delete this repository declaration:
+                @@ -2 +2
+                -     jcenter {
+                -         content {
+                -             // exclude artifacts starting with "my.company"
+                -             excludeGroupByRegex "^my\\.company.*"
+                -         }
+                -     }
+                """
+            )
+    }
+
+    fun testJCenterObsoleteContentKts() {
+        lint().files(
+            kts(
+                """
+                    repositories {
+                        jcenter {
+                            content {
+                                // exclude artifacts starting with "my.company"
+                                excludeGroupByRegex("^my\\.company.*")
+                            }
+                        }
+                    }
+                """
+            ).indented()
+        )
+            .issues(JCENTER_REPOSITORY_OBSOLETE)
+            .run()
+            .expect(
+                """
+                build.gradle.kts:2: Warning: JCenter is at end of life [JcenterRepositoryObsolete]
+                    jcenter {
+                    ^
+                0 errors, 1 warnings
+                """
+            )
+            .expectFixDiffs(
+                """
+                Fix for build.gradle.kts line 2: Replace with mavenCentral:
+                @@ -2 +2
+                -     jcenter {
+                +     mavenCentral {
+                Fix for build.gradle.kts line 2: Delete this repository declaration:
+                @@ -2 +2
+                -     jcenter {
+                -         content {
+                -             // exclude artifacts starting with "my.company"
+                -             excludeGroupByRegex("^my\\.company.*")
+                -         }
+                -     }
+                """
+            )
     }
 
     // -------------------------------------------------------------------------------------------

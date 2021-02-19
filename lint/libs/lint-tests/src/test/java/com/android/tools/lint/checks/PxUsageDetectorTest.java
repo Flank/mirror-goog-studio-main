@@ -311,6 +311,8 @@ public class PxUsageDetectorTest extends AbstractCheckTest {
     }
 
     public void testIncrementalDimensions() {
+        // Like testBatchDimensions, but because we specify a single file we're skipping
+        // computing secondary locations
         String expected =
                 ""
                         + "res/layout/textsize2.xml:9: Warning: Should use \"sp\" instead of \"dp\" for text sizes (@dimen/bottom_bar_portrait_button_font_size is defined as 16dp in values/dimens.xml [SpUsage]\n"

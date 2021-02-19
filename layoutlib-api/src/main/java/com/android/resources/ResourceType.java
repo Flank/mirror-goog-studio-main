@@ -17,9 +17,9 @@ package com.android.resources;
 
 import static com.google.common.base.MoreObjects.firstNonNull;
 
-import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.common.rendering.api.AndroidConstants;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -142,8 +142,8 @@ public enum ResourceType {
 
     static {
         ImmutableMap.Builder<String, ResourceType> tagNames = ImmutableMap.builder();
-        tagNames.put(SdkConstants.TAG_DECLARE_STYLEABLE, STYLEABLE);
-        tagNames.put(SdkConstants.TAG_PUBLIC, PUBLIC);
+        tagNames.put(AndroidConstants.TAG_DECLARE_STYLEABLE, STYLEABLE);
+        tagNames.put(AndroidConstants.TAG_PUBLIC, PUBLIC);
         tagNames.put(OVERLAYABLE.getName(), OVERLAYABLE);
 
         ImmutableMap.Builder<String, ResourceType> classNames = ImmutableMap.builder();
@@ -222,7 +222,7 @@ public enum ResourceType {
      */
     @Nullable
     public static ResourceType fromXmlValue(@NonNull String xmlValue) {
-        if (xmlValue.equals(SdkConstants.TAG_DECLARE_STYLEABLE)
+        if (xmlValue.equals(AndroidConstants.TAG_DECLARE_STYLEABLE)
                 || xmlValue.equals(STYLEABLE.mName)) {
             return null;
         }
@@ -249,10 +249,10 @@ public enum ResourceType {
             @NonNull BiFunction<? super T, ? super String, String> attributeFunction) {
         String tagName = nameFunction.apply(tag);
         switch (tagName) {
-            case SdkConstants.TAG_EAT_COMMENT:
+            case AndroidConstants.TAG_EAT_COMMENT:
                 return null;
-            case SdkConstants.TAG_ITEM:
-                String typeAttribute = attributeFunction.apply(tag, SdkConstants.ATTR_TYPE);
+            case AndroidConstants.TAG_ITEM:
+                String typeAttribute = attributeFunction.apply(tag, AndroidConstants.ATTR_TYPE);
                 if (!Strings.isNullOrEmpty(typeAttribute)) {
                     return fromClassName(typeAttribute);
                 } else {

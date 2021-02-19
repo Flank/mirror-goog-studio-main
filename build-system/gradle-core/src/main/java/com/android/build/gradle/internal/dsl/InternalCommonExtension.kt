@@ -51,7 +51,7 @@ interface InternalCommonExtension<
         ProductFlavorT,
         SigningConfig,
         VariantBuilderT,
-        VariantT> {
+        VariantT>, Lockable {
 
     override val aaptOptions: AaptOptionsImpl
 

@@ -127,6 +127,13 @@ open class AndroidTestImpl @Inject constructor(
         action.invoke(packaging)
     }
 
+    override val dexing: Dexing by lazy {
+        internalServices.newInstance(Dexing::class.java).also {
+            it.multiDexKeepFile.set(variantDslInfo.multiDexKeepFile)
+            it.multiDexKeepProguard.set(variantDslInfo.multiDexKeepProguard)
+        }
+    }
+
     override val minifiedEnabled: Boolean
         get() = variantDslInfo.isMinifyEnabled
 
@@ -270,7 +277,7 @@ open class AndroidTestImpl @Inject constructor(
 
     override fun <T : Component> createUserVisibleVariantObject(
             projectServices: ProjectServices,
-            operationsRegistrar: VariantApiOperationsRegistrar<VariantBuilder, Variant>,
+            operationsRegistrar: VariantApiOperationsRegistrar<out VariantBuilder, out Variant>,
             stats: GradleBuildVariant.Builder?
     ): T =
         if (stats == null) {

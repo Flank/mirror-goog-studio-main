@@ -67,15 +67,19 @@ import static com.android.utils.XmlUtils.getFirstSubTagByName;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.common.resources.configuration.FolderConfiguration;
+import com.android.ide.common.resources.configuration.VersionQualifier;
 import com.android.tools.lint.client.api.UElementHandler;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Implementation;
+import com.android.tools.lint.detector.api.Incident;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.LayoutDetector;
 import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.LintFix;
+import com.android.tools.lint.detector.api.LintMap;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
@@ -97,6 +101,7 @@ import org.jetbrains.uast.USimpleNameReferenceExpression;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 
 /** Check which looks for RTL issues (right-to-left support) in layouts */
 public class RtlDetector extends LayoutDetector implements SourceCodeScanner {
@@ -223,11 +228,6 @@ public class RtlDetector extends LayoutDetector implements SourceCodeScanner {
             return false;
         }
 
-        int buildTarget = project.getBuildSdk();
-        if (buildTarget != -1 && buildTarget < RTL_API) {
-            return false;
-        }
-
         if (mEnabledRtlSupport != null && !mEnabledRtlSupport) {
             return false;
         }
@@ -238,6 +238,8 @@ public class RtlDetector extends LayoutDetector implements SourceCodeScanner {
             if (mEnabledRtlSupport == null) {
                 mEnabledRtlSupport = false;
             }
+
+            return mEnabledRtlSupport;
         }
 
         return true;
@@ -263,16 +265,96 @@ public class RtlDetector extends LayoutDetector implements SourceCodeScanner {
     }
 
     @Override
+    public boolean filterIncident(
+            @NonNull Context context, @NonNull Incident incident, @NonNull LintMap map) {
+        int flags = map.getInt(KEY_APPLIES, 0);
+        if (applies(context, flags, incident.getLocation().getFile())) {
+            String message = incident.getMessage();
+            if (message.contains("%s")) {
+                // Patch in the actual minSdkVersion
+                String minApi = context.getMainProject().getMinSdkVersion().getApiString();
+                incident.setMessage(String.format(message, minApi));
+            }
+            return true;
+        }
+        return false;
+    }
+
+    private boolean applies(@NonNull Context context, int flags, @NonNull File location) {
+        // Access merged manifest from main project to see if RTL is on/off
+        if ((flags & APPLIES_REQUIRES_RTL) != 0 && !rtlApplies(context)) {
+            return false;
+        }
+
+        // targetSdkVersion constraints
+        if ((flags & APPLIES_TARGET_PRE_17) != 0
+                && context.getMainProject().getTargetSdk() >= RTL_API) {
+            return false;
+        }
+
+        // folder and minSdkVersion checks.
+        if ((flags & APPLIES_FOLDER_OR_MIN_17) != 0) {
+            return context.getProject().getMinSdk() >= RTL_API
+                    || getFolderVersion(location) >= RTL_API;
+        } else if ((flags & APPLIES_MIN_17) != 0) {
+            return context.getMainProject().getMinSdk() >= RTL_API;
+        } else if ((flags & APPLIES_MIN_PRE_17) != 0) {
+            return context.getMainProject().getMinSdk() < RTL_API;
+        } else {
+            return true;
+        }
+    }
+
+    /** For a resource folder config like */
+    static int getFolderVersion(@NonNull File resourceFile) {
+        String path = resourceFile.getPath();
+        int i = path.length() - 1;
+        for (; i >= 0; i--) {
+            char c = path.charAt(i);
+            if (c == '/' || c == '\\') {
+                i--;
+                break;
+            }
+        }
+        if (i != 0) {
+            boolean haveDash = false;
+            int j = i;
+            for (; j >= 0; j--) {
+                char c = path.charAt(j);
+                if (c == '/' || c == '\\') {
+                    j++;
+                    break;
+                } else if (c == '-') {
+                    haveDash = true;
+                }
+            }
+            if (haveDash) {
+                String folderName = path.substring(Math.max(j, 0), i + 1);
+                FolderConfiguration config = FolderConfiguration.getConfigForFolder(folderName);
+                if (config != null) {
+                    VersionQualifier qualifier = config.getVersionQualifier();
+                    if (qualifier != null) {
+                        return qualifier.getVersion();
+                    }
+                }
+            }
+        }
+        return -1;
+    }
+
+    @Override
     public void afterCheckRootProject(@NonNull Context context) {
-        if (mUsesRtlAttributes && !mSpecifiesRtlMode && rtlApplies(context)) {
-            List<File> manifestFile = context.getMainProject().getManifestFiles();
+        if (mUsesRtlAttributes && !mSpecifiesRtlMode) {
+            List<File> manifestFile = context.getProject().getManifestFiles();
             if (!manifestFile.isEmpty()) {
                 Location location = Location.create(manifestFile.get(0));
                 context.report(
-                        ENABLED,
-                        location,
-                        "The project references RTL attributes, but does not explicitly enable "
-                                + "or disable RTL support with `android:supportsRtl` in the manifest");
+                        new Incident(
+                                ENABLED,
+                                location,
+                                "The project references RTL attributes, but does not explicitly enable "
+                                        + "or disable RTL support with `android:supportsRtl` in the manifest"),
+                        map().put(KEY_APPLIES, APPLIES_REQUIRES_RTL));
             }
         }
     }
@@ -394,7 +476,6 @@ public class RtlDetector extends LayoutDetector implements SourceCodeScanner {
 
     @Override
     public void visitAttribute(@NonNull XmlContext context, @NonNull Attr attribute) {
-        Project project = context.getMainProject();
         String value = attribute.getValue();
 
         if (!ANDROID_URI.equals(attribute.getNamespaceURI())) {
@@ -412,28 +493,30 @@ public class RtlDetector extends LayoutDetector implements SourceCodeScanner {
             mEnabledRtlSupport = Boolean.valueOf(value);
             if (!attribute.getOwnerElement().getTagName().equals(TAG_APPLICATION)) {
                 context.report(
-                        ENABLED,
-                        attribute,
-                        context.getLocation(attribute),
-                        String.format(
-                                "Wrong declaration: `%1$s` should be defined on the `<application>` element",
-                                attribute.getName()));
+                        new Incident(
+                                ENABLED,
+                                attribute,
+                                context.getLocation(attribute),
+                                String.format(
+                                        "Wrong declaration: `%1$s` should be defined on the `<application>` element",
+                                        attribute.getName())));
             }
-            int targetSdk = project.getTargetSdk();
-            if (mEnabledRtlSupport && targetSdk < RTL_API) {
+            if (mEnabledRtlSupport && context.getProject().getMinSdk() < RTL_API) {
                 String message =
                         String.format(
                                 Locale.getDefault(),
                                 "You must set `android:targetSdkVersion` to at least %1$d when "
-                                        + "enabling RTL support (is %2$d)",
-                                RTL_API,
-                                project.getTargetSdk());
-                context.report(ENABLED, attribute, context.getValueLocation(attribute), message);
+                                        + "enabling RTL support",
+                                RTL_API);
+                reportRtl(
+                        context,
+                        ENABLED,
+                        attribute,
+                        context.getValueLocation(attribute),
+                        message,
+                        null,
+                        APPLIES_TARGET_PRE_17);
             }
-            return;
-        }
-
-        if (!rtlApplies(context)) {
             return;
         }
 
@@ -451,7 +534,7 @@ public class RtlDetector extends LayoutDetector implements SourceCodeScanner {
             } else if (element.hasAttributeNS(ANDROID_URI, ATTR_LAYOUT_GRAVITY)) {
                 gravityNode = element.getAttributeNodeNS(ANDROID_URI, ATTR_LAYOUT_GRAVITY);
                 gravitySpec = gravityNode.getValue();
-            } else if (project.getMinSdk() < RTL_API) {
+            } else if (context.getProject().getMinSdk() < RTL_API) {
                 int folderVersion = context.getFolderVersion();
                 if (folderVersion < RTL_API && context.isEnabled(COMPAT)) {
                     String expectedGravity = getTextAlignmentToGravity(value);
@@ -459,9 +542,9 @@ public class RtlDetector extends LayoutDetector implements SourceCodeScanner {
                         String message =
                                 String.format(
                                         Locale.getDefault(),
-                                        "To support older versions than API 17 (project specifies %1$d) "
-                                                + "you must **also** specify `gravity` or `layout_gravity=\"%2$s\"`",
-                                        project.getMinSdk(),
+                                        // %%: place holder; will be replaced when reporting
+                                        "To support older versions than API 17 (project specifies %%s) "
+                                                + "you must **also** specify `gravity` or `layout_gravity=\"%1$s\"`",
                                         expectedGravity);
 
                         LintFix fix1 =
@@ -470,12 +553,14 @@ public class RtlDetector extends LayoutDetector implements SourceCodeScanner {
                                 fix().set(ANDROID_URI, ATTR_LAYOUT_GRAVITY, expectedGravity)
                                         .build();
                         LintFix fix = fix().alternatives(fix1, fix2);
-                        context.report(
+                        reportRtl(
+                                context,
                                 COMPAT,
                                 attribute,
                                 context.getNameLocation(attribute),
                                 message,
-                                fix);
+                                fix,
+                                APPLIES_MIN_PRE_17 | APPLIES_REQUIRES_RTL);
                     }
                 }
                 return;
@@ -505,7 +590,14 @@ public class RtlDetector extends LayoutDetector implements SourceCodeScanner {
                                             + "`gravity` attributes: was `%1$s`, expected `%2$s`",
                                     gravitySpec, expectedGravity);
                     Location location = context.getValueLocation(attribute);
-                    context.report(COMPAT, attribute, location, message);
+                    reportRtl(
+                            context,
+                            COMPAT,
+                            attribute,
+                            location,
+                            message,
+                            null,
+                            APPLIES_REQUIRES_RTL);
                     Location secondary = context.getValueLocation(gravityNode);
                     secondary.setMessage("Incompatible direction here");
                     location.setSecondary(secondary);
@@ -530,14 +622,20 @@ public class RtlDetector extends LayoutDetector implements SourceCodeScanner {
                             isLeft ? GRAVITY_VALUE_START : GRAVITY_VALUE_END,
                             isLeft ? GRAVITY_VALUE_LEFT : GRAVITY_VALUE_RIGHT);
             if (context.isEnabled(USE_START)) {
-                context.report(USE_START, attribute, context.getValueLocation(attribute), message);
+                reportRtl(
+                        context,
+                        USE_START,
+                        attribute,
+                        context.getValueLocation(attribute),
+                        message,
+                        null,
+                        APPLIES_REQUIRES_RTL);
             }
 
             return;
         }
 
         // Some other left/right/start/end attribute
-        int targetSdk = project.getTargetSdk();
 
         // TODO: If attribute is drawableLeft or drawableRight, add note that you might
         // want to consider adding a specialized image in the -ldrtl folder as well
@@ -563,7 +661,14 @@ public class RtlDetector extends LayoutDetector implements SourceCodeScanner {
                                 "When you define `%1$s` you should probably also define `%2$s` for "
                                         + "right-to-left symmetry",
                                 name, opposite);
-                context.report(SYMMETRY, attribute, context.getNameLocation(attribute), message);
+                reportRtl(
+                        context,
+                        SYMMETRY,
+                        attribute,
+                        context.getNameLocation(attribute),
+                        message,
+                        null,
+                        APPLIES_REQUIRES_RTL);
             }
         }
 
@@ -574,55 +679,75 @@ public class RtlDetector extends LayoutDetector implements SourceCodeScanner {
             }
             String rtl = convertOldToNew(name);
             if (element.hasAttributeNS(ANDROID_URI, rtl)) {
-                if (project.getMinSdk() >= RTL_API || context.getFolderVersion() >= RTL_API) {
-                    // Warn that left/right isn't needed
-                    String message =
-                            String.format(
-                                    "Redundant attribute `%1$s`; already defining `%2$s` with "
-                                            + "`targetSdkVersion` %3$s",
-                                    name, rtl, targetSdk);
-                    LintFix fix = fix().unset(ANDROID_URI, name).autoFix().build();
-                    context.report(
-                            USE_START, attribute, context.getNameLocation(attribute), message, fix);
-                }
+                // Warn that left/right isn't needed (provisionally; can't just look
+                // at current minSdkVersion since it can be higher in the app report
+                String message =
+                        String.format(
+                                "Redundant attribute `%1$s`; already defining `%2$s` with "
+                                        + "`targetSdkVersion` %3$s",
+                                name, rtl, context.getProject().getTargetSdk());
+                LintFix fix = fix().unset(ANDROID_URI, name).autoFix().build();
+                reportRtl(
+                        context,
+                        USE_START,
+                        attribute,
+                        context.getNameLocation(attribute),
+                        message,
+                        fix,
+                        APPLIES_FOLDER_OR_MIN_17 | APPLIES_REQUIRES_RTL);
             } else {
-                String message;
-                LintFix lintFix;
-                if (project.getMinSdk() >= RTL_API || context.getFolderVersion() >= RTL_API) {
-                    message =
-                            String.format(
-                                    "Consider replacing `%1$s` with `%2$s:%3$s=\"%4$s\"` to better support "
-                                            + "right-to-left layouts",
-                                    attribute.getName(), attribute.getPrefix(), rtl, value);
-
-                    lintFix =
-                            fix().replace()
-                                    .name(
-                                            String.format(
-                                                    "Replace with %1$s:%2$s=\"%3$s\"",
-                                                    attribute.getPrefix(), rtl, value))
-                                    .text(name)
-                                    .with(rtl)
-                                    .build();
-                } else {
-                    message =
+                // No need to check these levels in the main app; the main app's
+                // minSdkVersion is always at least as high, and the folder version
+                // is constant
+                if (context.getProject().getMinSdk() < RTL_API
+                        && context.getFolderVersion() < RTL_API) {
+                    String message =
                             String.format(
                                     "Consider adding `%1$s:%2$s=\"%3$s\"` to better support "
                                             + "right-to-left layouts",
                                     attribute.getPrefix(), rtl, value);
-                    lintFix =
+                    LintFix lintFix =
                             fix().name(
                                             String.format(
                                                     "Add %1$s:%2$s=\"%3$s\"",
                                                     attribute.getPrefix(), rtl, value))
                                     .set(attribute.getNamespaceURI(), rtl, attribute.getValue())
                                     .build();
+                    reportRtl(
+                            context,
+                            USE_START,
+                            attribute,
+                            context.getNameLocation(attribute),
+                            message,
+                            lintFix,
+                            APPLIES_MIN_PRE_17);
                 }
-                context.report(
-                        USE_START, attribute, context.getNameLocation(attribute), message, lintFix);
+                String message =
+                        String.format(
+                                "Consider replacing `%1$s` with `%2$s:%3$s=\"%4$s\"` to better support "
+                                        + "right-to-left layouts",
+                                attribute.getName(), attribute.getPrefix(), rtl, value);
+
+                LintFix lintFix =
+                        fix().replace()
+                                .name(
+                                        String.format(
+                                                "Replace with %1$s:%2$s=\"%3$s\"",
+                                                attribute.getPrefix(), rtl, value))
+                                .text(name)
+                                .with(rtl)
+                                .build();
+                reportRtl(
+                        context,
+                        USE_START,
+                        attribute,
+                        context.getNameLocation(attribute),
+                        message,
+                        lintFix,
+                        APPLIES_MIN_17 | APPLIES_REQUIRES_RTL);
             }
         } else {
-            if (project.getMinSdk() >= RTL_API || !context.isEnabled(COMPAT)) {
+            if (context.getProject().getMinSdk() >= RTL_API || !context.isEnabled(COMPAT)) {
                 // Only supporting 17+: no need to define older attributes
                 return;
             }
@@ -639,15 +764,47 @@ public class RtlDetector extends LayoutDetector implements SourceCodeScanner {
             String message =
                     String.format(
                             Locale.getDefault(),
-                            "To support older versions than API 17 (project specifies %1$d) "
-                                    + "you should **also** add `%2$s:%3$s=\"%4$s\"`",
-                            project.getMinSdk(),
+                            "To support older versions than API 17 (project specifies %%s) "
+                                    + "you should **also** add `%1$s:%2$s=\"%3$s\"`",
                             attribute.getPrefix(),
                             old,
                             oldValue);
             LintFix fix = fix().set(attribute.getNamespaceURI(), old, oldValue).build();
-            context.report(COMPAT, attribute, context.getNameLocation(attribute), message, fix);
+            reportRtl(
+                    context,
+                    COMPAT,
+                    attribute,
+                    context.getNameLocation(attribute),
+                    message,
+                    fix,
+                    APPLIES_MIN_PRE_17 | APPLIES_REQUIRES_RTL);
         }
+    }
+
+    /** The targetSdkVersion must be less than 17 */
+    @SuppressWarnings("PointlessBitwiseExpression") // for symmetry
+    private static final int APPLIES_TARGET_PRE_17 = 1 << 0; // does not require rtl
+    /** The application must specify that it requires RTL */
+    private static final int APPLIES_REQUIRES_RTL = 1 << 1;
+    /** The minSdkVersion must be less than 17 */
+    private static final int APPLIES_MIN_PRE_17 = 1 << 2; // also requires rtl
+    /** The minSdkVersion must be at least 17 */
+    private static final int APPLIES_MIN_17 = 1 << 3; // also requires rtl
+    /** Either minSdkVersion of resource folder version >= 17 */
+    private static final int APPLIES_FOLDER_OR_MIN_17 = 1 << 4; // aso requires minSdk >= 17
+
+    private static final String KEY_APPLIES = "applies";
+
+    private void reportRtl(
+            @NonNull XmlContext context,
+            @NonNull Issue issue,
+            @NonNull Node scope,
+            @NonNull Location nameLocation,
+            @NonNull String message,
+            @Nullable LintFix fix,
+            int constraint) {
+        Incident incident = new Incident(issue, scope, nameLocation, message, fix);
+        context.report(incident, map().put(KEY_APPLIES, constraint));
     }
 
     private static boolean isOldAttribute(String name) {
@@ -672,11 +829,7 @@ public class RtlDetector extends LayoutDetector implements SourceCodeScanner {
     @Nullable
     @Override
     public UElementHandler createUastHandler(@NonNull JavaContext context) {
-        if (rtlApplies(context)) {
-            return new IdentifierChecker(context);
-        }
-
-        return null;
+        return new IdentifierChecker(context);
     }
 
     private static class IdentifierChecker extends UElementHandler {
@@ -715,7 +868,8 @@ public class RtlDetector extends LayoutDetector implements SourceCodeScanner {
                             (isLeft ? GRAVITY_VALUE_LEFT : GRAVITY_VALUE_RIGHT)
                                     .toUpperCase(Locale.US));
             Location location = context.getLocation(element);
-            context.report(USE_START, element, location, message);
+            Incident incident = new Incident(USE_START, element, location, message);
+            context.report(incident, new LintMap().put(KEY_APPLIES, APPLIES_REQUIRES_RTL));
         }
     }
 }

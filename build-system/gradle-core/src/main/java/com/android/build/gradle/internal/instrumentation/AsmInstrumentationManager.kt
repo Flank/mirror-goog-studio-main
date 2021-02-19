@@ -183,27 +183,35 @@ class AsmInstrumentationManager(
             entry.isInstrumentable(classData)
         }.reversed()
 
-        return if (filteredVisitors.isNotEmpty()) {
-            classInputStream.invoke().use {
-                val classContext = ClassContextImpl(classData, classesHierarchyResolver)
-                val classReader = ClassReader(performProfilingTransformations(it))
-                val classWriter =
-                    FixFramesClassWriter(classReader, classWriterFlags, classesHierarchyResolver)
-                var nextVisitor: ClassVisitor = classWriter
+        return when {
+            filteredVisitors.isNotEmpty() -> {
+                classInputStream.invoke().use {
+                    val classContext = ClassContextImpl(classData, classesHierarchyResolver)
+                    val classReader = ClassReader(performProfilingTransformations(it))
+                    val classWriter =
+                        FixFramesClassWriter(classReader, classWriterFlags, classesHierarchyResolver)
+                    var nextVisitor: ClassVisitor = classWriter
 
-                if (framesComputationMode == FramesComputationMode.COMPUTE_FRAMES_FOR_INSTRUMENTED_CLASSES) {
-                    nextVisitor = MaxsInvalidatingClassVisitor(apiVersion, classWriter)
+                    if (framesComputationMode == FramesComputationMode.COMPUTE_FRAMES_FOR_INSTRUMENTED_CLASSES) {
+                        nextVisitor = MaxsInvalidatingClassVisitor(apiVersion, classWriter)
+                    }
+
+                    filteredVisitors.forEach { entry ->
+                        nextVisitor = entry.createClassVisitor(classContext, nextVisitor)
+                    }
+
+                    classReader.accept(nextVisitor, classReaderFlags)
+                    classWriter.toByteArray()
                 }
-
-                filteredVisitors.forEach { entry ->
-                    nextVisitor = entry.createClassVisitor(classContext, nextVisitor)
-                }
-
-                classReader.accept(nextVisitor, classReaderFlags)
-                classWriter.toByteArray()
             }
-        } else {
-            null
+            profilingTransforms.isNotEmpty() -> {
+                classInputStream.invoke().use {
+                    performProfilingTransformations(it)
+                }
+            }
+            else -> {
+                null
+            }
         }
     }
 

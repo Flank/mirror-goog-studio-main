@@ -17,7 +17,6 @@
 package com.android.build.gradle.integration.databinding
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.testutils.TestUtils
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -28,7 +27,7 @@ class DataBindingKtsTest {
     @get:Rule
     val project = GradleTestProject.builder()
             .fromTestProject("databinding")
-            .withPluginManagementBlock(TestUtils.runningFromBazel())
+            .withPluginManagementBlock(true)
             .create()
 
     @Before

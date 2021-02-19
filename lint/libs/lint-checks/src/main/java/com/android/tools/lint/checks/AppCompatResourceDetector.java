@@ -79,8 +79,8 @@ public class AppCompatResourceDetector extends ResourceXmlDetector {
 
     @Override
     public void visitAttribute(@NonNull XmlContext context, @NonNull Attr attribute) {
-        Project mainProject = context.getMainProject();
-        Boolean appCompat = mainProject.dependsOn(APPCOMPAT_LIB_ARTIFACT);
+        Project project = context.getProject();
+        Boolean appCompat = project.dependsOn(APPCOMPAT_LIB_ARTIFACT);
         String localName = attribute.getLocalName();
         if (ANDROID_URI.equals(attribute.getNamespaceURI())) {
             if (context.getFolderVersion() >= 14) {

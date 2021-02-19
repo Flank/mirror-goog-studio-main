@@ -17,6 +17,7 @@
 package com.android.tools.lint.detector.api
 
 import com.google.common.annotations.Beta
+import java.util.Locale
 
 /**
  * Severity of an issue found by lint
@@ -63,14 +64,23 @@ enum class Severity constructor(
     val isError: Boolean
         get() = this == ERROR || this == FATAL
 
+    /**
+     * The persistent name of this enum, which can be matched with
+     * [fromName]
+     */
+    fun toName(): String {
+        return name.toLowerCase(Locale.ROOT)
+    }
+
     companion object {
         /**
-         * Looks up the severity corresponding to a given named severity. The severity
-         * string should be one returned by [.toString]
+         * Looks up the severity corresponding to a given named
+         * severity. The severity string should be one returned by
+         * [toString].
          *
          * @param name the name to look up
-         *
-         * @return the corresponding severity, or null if it is not a valid severity name
+         * @return the corresponding severity, or null if it is not a
+         *     valid severity name
          */
         @JvmStatic
         fun fromName(name: String): Severity? {

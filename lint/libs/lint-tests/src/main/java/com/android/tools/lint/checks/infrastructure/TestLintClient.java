@@ -95,6 +95,7 @@ import com.android.tools.lint.model.LintModelVariant;
 import com.android.utils.ILogger;
 import com.android.utils.NullLogger;
 import com.android.utils.PositionXmlParser;
+import com.android.utils.SdkUtils;
 import com.android.utils.StdLogger;
 import com.android.utils.XmlUtils;
 import com.google.common.base.Charsets;
@@ -293,7 +294,10 @@ public class TestLintClient extends LintCliClient {
     }
 
     protected TestResultState checkLint(
-            @NonNull File rootDir, @NonNull List<File> files, @NonNull List<Issue> issues)
+            @NonNull File rootDir,
+            @NonNull List<File> files,
+            @NonNull List<Issue> issues,
+            @NonNull TestMode mode)
             throws Exception {
         String incrementalFileName = task.incrementalFileName;
         if (incrementalFileName != null) {
@@ -338,8 +342,12 @@ public class TestLintClient extends LintCliClient {
                             + "files in $ANDROID_HOST_OUT etc), and this confuses lint.");
         }
 
-        String result = analyze(rootDir, files, issues);
-        return new TestResultState(this, rootDir, result, getIncidents(), firstThrowable);
+        String result =
+                mode == TestMode.PARTIAL
+                        ? analyzeAndReportProvisionally(rootDir, files, issues)
+                        : analyze(rootDir, files, issues);
+
+        return new TestResultState(this, rootDir, result, getDefiniteIncidents(), firstThrowable);
     }
 
     private static List<File> getFilesRecursively(File root) {
@@ -545,7 +553,37 @@ public class TestLintClient extends LintCliClient {
     @SuppressWarnings("StringBufferField")
     private final StringBuilder output = new StringBuilder();
 
+    private interface LintTestAnalysis {
+        void analyze(LintDriver driver);
+    }
+
     public String analyze(File rootDir, List<File> files, List<Issue> issues) throws Exception {
+        return analyze(rootDir, files, issues, LintDriver::analyze);
+    }
+
+    public String analyzeAndReportProvisionally(
+            @NonNull File rootDir, @NonNull List<File> files, @NonNull List<Issue> issues)
+            throws Exception {
+        for (File dir : files) {
+            // We don't want to share client instances between the analysis of each module
+            // and the final report generation.
+            TestLintClient client = task.runner.createClient();
+            client.incrementalCheck = incrementalCheck;
+            client.analyze(
+                    rootDir, Collections.singletonList(dir), issues, LintDriver::analyzeOnly);
+        }
+
+        // This isn't expressing it right; I want to be able to say "load the graph from all of
+        // these" but focus the report on one in particular
+        return analyze(rootDir, files, issues, LintDriver::mergeOnly);
+    }
+
+    public String analyze(
+            @NonNull File rootDir,
+            @NonNull List<File> files,
+            @NonNull List<Issue> issues,
+            @NonNull LintTestAnalysis work)
+            throws Exception {
         // We'll sync lint options to flags later when the project is created, but try
         // to do it early before the driver is initialized
         if (!files.isEmpty()) {
@@ -589,11 +627,11 @@ public class TestLintClient extends LintCliClient {
 
         validateIssueIds();
 
-        driver.analyze();
+        work.analyze(driver);
 
         // Check compare contract
         Incident prev = null;
-        List<Incident> incidents = getIncidents();
+        List<Incident> incidents = getDefiniteIncidents();
         for (Incident incident : incidents) {
             if (prev != null) {
                 boolean equals = incident.equals(prev);
@@ -855,14 +893,67 @@ public class TestLintClient extends LintCliClient {
     }
 
     @Override
+    public boolean supportsPartialAnalysis() {
+        return driver.getMode() != LintDriver.DriverMode.GLOBAL;
+    }
+
+    @Override
+    protected void mergeIncidents(
+            @NonNull Project library,
+            @NonNull Project main,
+            @NonNull Context mainContext,
+            @NonNull Map<Project, List<Incident>> definiteMap,
+            @NonNull Map<Project, List<Incident>> provisionalMap) {
+        // Some basic validity checks to make sure test projects aren't set up correctly;
+        // normally AGP manifest merging enforces this
+        // We have to initialize the manifest because these projects haven't been loaded
+        // and processed
+        if (library.getMinSdk() <= 1 && !library.getManifestFiles().isEmpty()) {
+            String xml = FilesKt.readText(library.getManifestFiles().get(0), Charsets.UTF_8);
+            Document document = XmlUtils.parseDocumentSilently(xml, true);
+            if (document != null) {
+                library.readManifest(document);
+            }
+        }
+        if (main.getMinSdk() <= 1 && !main.getManifestFiles().isEmpty()) {
+            String xml = FilesKt.readText(main.getManifestFiles().get(0), Charsets.UTF_8);
+            Document document = XmlUtils.parseDocumentSilently(xml, true);
+            if (document != null) {
+                main.readManifest(document);
+            }
+        }
+        int libraryMinSdk = library.getMinSdk() == -1 ? 1 : library.getMinSdk();
+        int mainMinSdk = main.getMinSdk() == -1 ? 1 : main.getMinSdk();
+        if (libraryMinSdk > mainMinSdk) {
+            fail(
+                    "Library project minSdkVersion ("
+                            + libraryMinSdk
+                            + ") cannot be higher than consuming project's minSdkVersion ("
+                            + mainMinSdk
+                            + ")");
+        }
+
+        ProjectDescription reportFrom = task.reportFrom;
+        if (reportFrom != null) {
+            setIncidentProjects(reportFrom, definiteMap);
+            setIncidentProjects(reportFrom, provisionalMap);
+        }
+
+        super.mergeIncidents(library, main, mainContext, definiteMap, provisionalMap);
+    }
+
+    private void setIncidentProjects(ProjectDescription project, Map<Project, List<Incident>> map) {
+        for (List<Incident> incidents : map.values()) {
+            useProjectRelativePaths(project, incidents);
+        }
+    }
+
+    @Override
     public void report(
-            @NonNull Context context,
-            @NonNull Issue issue,
-            @NonNull Severity severity,
-            @NonNull Location location,
-            @NonNull String message,
-            @NonNull TextFormat format,
-            @Nullable LintFix fix) {
+            @NonNull Context context, @NonNull Incident incident, @NonNull TextFormat format) {
+        Location location = incident.getLocation();
+        LintFix fix = incident.getFix();
+        Issue issue = incident.getIssue();
         assertNotNull(location);
 
         if (fix != null && !task.allowExceptions) {
@@ -890,7 +981,7 @@ public class TestLintClient extends LintCliClient {
 
             // We don't care about this error message from lint tests; we don't compile
             // test project files
-            if (message.startsWith("No `.class` files were found in project")) {
+            if (incident.getMessage().startsWith("No `.class` files were found in project")) {
                 return;
             }
         }
@@ -906,16 +997,16 @@ public class TestLintClient extends LintCliClient {
                                 != null)) {
             task.messageChecker.checkReportedError(
                     context,
-                    issue,
-                    severity,
-                    location,
-                    format.convertTo(message, TextFormat.TEXT),
+                    incident.getIssue(),
+                    incident.getSeverity(),
+                    incident.getLocation(),
+                    format.convertTo(incident.getMessage(), TextFormat.TEXT),
                     fix);
         }
 
-        if (severity == Severity.FATAL) {
+        if (incident.getSeverity() == Severity.FATAL) {
             // Treat fatal errors like errors in the golden files.
-            severity = Severity.ERROR;
+            incident.setSeverity(Severity.ERROR);
         }
 
         // For messages into all secondary locations to ensure they get
@@ -936,43 +1027,78 @@ public class TestLintClient extends LintCliClient {
             }
         }
 
-        super.report(context, issue, severity, location, message, format, fix);
+        super.report(context, incident, format);
 
         // Make sure errors are unique! See documentation for #allowDuplicates.
-        List<Incident> incidents = getIncidents();
+        List<Incident> incidents = getDefiniteIncidents();
         int incidentCount = incidents.size();
         if (incidentCount > 1) {
             Incident prev = incidents.get(incidentCount - 2);
-            // Just added by the super.report() call above
-            Incident incident = incidents.get(incidentCount - 1);
             if (incident.equals(prev)) {
                 if (task.allowDuplicates) {
                     // If we allow duplicates, don't list them multiple times.
                     incidents.remove(incidentCount - 1);
-                    if (severity.isError()) {
+                    if (incident.getSeverity().isError()) {
                         setErrorCount(getErrorCount() - 1);
-                    } else if (severity
-                            == Severity.WARNING) { // Don't count informational as a warning
+                    } else if (incident.getSeverity() == Severity.WARNING) {
+                        // Don't count informational as a warning
                         setWarningCount(getWarningCount() - 1);
                     }
                 } else {
-                    String error =
+                    TestMode mode = task.runner.getCurrentTestMode();
+                    String field = mode.getFieldName();
+                    String prologue =
                             ""
-                                    + "Incident (message, location) reported more\n"
-                                    + "than once; this typically means that your detector is incorrectly\n"
-                                    + "reaching the same element twice (for example, visiting each call of a\n"
-                                    + "method and reporting the error on the method itself), or that you\n"
-                                    + "should incorporate more details in your error message such as specific\n"
-                                    + "names of methods or variables to make each message unique if\n"
-                                    + "overlapping errors are expected.\n"
-                                    + "\n"
+                                    + "java.lang.AssertionError: Incident (message, location) reported more\n"
+                                    + "than once";
+
+                    if (mode != TestMode.DEFAULT) {
+                        prologue += "in test mode " + field;
+                    }
+
+                    prologue +=
+                            "; this typically "
+                                    + "means that your detector is incorrectly reaching the same element "
+                                    + "twice (for example, visiting each call of a method and reporting the "
+                                    + "error on the method itself), or that you should incorporate more "
+                                    + "details in your error message such as specific names of methods or "
+                                    + "variables to make each message unique if overlapping errors are "
+                                    + "expected.\n"
+                                    + "\n";
+
+                    if (mode != TestMode.DEFAULT) {
+                        prologue +=
+                                ""
+                                        + "To debug the unit test in this test mode, add the following to the"
+                                        + "lint() test task: testModes("
+                                        + field
+                                        + ")\n"
+                                        + "\n";
+                    }
+
+                    prologue = SdkUtils.wrap(prologue.substring(prologue.indexOf(':') + 2), 72, "");
+
+                    String interlogue = "";
+                    if (driver.getMode() == LintDriver.DriverMode.MERGE) {
+                        interlogue =
+                                ""
+                                        + "This error happened while merging in provisional results; a common\n"
+                                        + "cause for this is that your detector is\tusing the merged manifest from\n"
+                                        + "each project to report problems. This means that these same errors are\n"
+                                        + "reported repeatedly, from each sub project,\tinstead\tof only\tbeing\n"
+                                        + "reported on the\tmain/app project. To fix this, consider\tadding a check\n"
+                                        + "for (context.project == context.mainProject).\n"
+                                        + "\n";
+                    }
+                    String epilogue =
+                            ""
                                     + "If you *really* want to allow this, add .allowDuplicates() to the test\n"
                                     + "task.\n"
                                     + "\n"
-                                    + "Identical incident encountered at the same location more than once\n"
+                                    + "Identical incident encountered at the same location more than once:\n"
                                     + incident;
 
-                    fail(error);
+                    fail(prologue + interlogue + epilogue);
                 }
             }
         }
@@ -1025,7 +1151,7 @@ public class TestLintClient extends LintCliClient {
     protected void sortResults() {
         super.sortResults();
         // Make sure Incident comparator is correct. (See also IncidentTest#testComparator)
-        checkTransitiveComparator(getIncidents());
+        checkTransitiveComparator(getDefiniteIncidents());
     }
 
     /**
@@ -1034,7 +1160,7 @@ public class TestLintClient extends LintCliClient {
      */
     private void useRootRelativePaths() {
         boolean multipleProjects = false;
-        Iterator<Incident> iterator = getIncidents().iterator();
+        Iterator<Incident> iterator = getDefiniteIncidents().iterator();
         if (iterator.hasNext()) {
             Incident prev = iterator.next();
             Project firstProject = prev.getProject();
@@ -1049,7 +1175,7 @@ public class TestLintClient extends LintCliClient {
         if (multipleProjects) {
             // Null out projects on incidents such that it won't print project
             // local paths
-            for (Incident incident : getIncidents()) {
+            for (Incident incident : getDefiniteIncidents()) {
                 incident.setProject(null);
             }
         }
@@ -1060,16 +1186,25 @@ public class TestLintClient extends LintCliClient {
      * that all the paths are relative to that project's directory.
      */
     private void useProjectRelativePaths(ProjectDescription from) {
+        useProjectRelativePaths(from, getDefiniteIncidents());
+    }
+
+    private void useProjectRelativePaths(ProjectDescription from, List<Incident> incidents) {
+        if (incidents.isEmpty()) {
+            return;
+        }
+
         Project project = findProject(from);
-        if (project != null) {
-            for (Incident incident : getIncidents()) {
-                Project incidentProject = incident.getProject();
-                if (incidentProject != null && incidentProject != project) {
-                    Location location =
-                            ensureAbsolutePaths(incidentProject.getDir(), incident.getLocation());
-                    incident.setLocation(location);
+        for (Incident incident : incidents) {
+            Project incidentProject = incident.getProject();
+            if (incidentProject != null && incidentProject != project) {
+                File dir = incidentProject.getDir();
+                Location location = ensureAbsolutePaths(dir, incident.getLocation());
+                incident.setLocation(location);
+                if (project != null) {
                     incident.setProject(project);
                 }
+                // TODO: Handle secondary
             }
         }
     }
@@ -1807,6 +1942,10 @@ public class TestLintClient extends LintCliClient {
             }
 
             return testSourceFolders;
+        }
+
+        public void setReferenceDir(File dir) {
+            this.referenceDir = dir;
         }
     }
 }

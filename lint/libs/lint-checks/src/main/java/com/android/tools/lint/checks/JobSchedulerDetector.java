@@ -27,12 +27,15 @@ import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Category;
+import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Lint;
+import com.android.tools.lint.detector.api.LintMap;
 import com.android.tools.lint.detector.api.Location;
+import com.android.tools.lint.detector.api.PartialResult;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
@@ -135,14 +138,34 @@ public class JobSchedulerDetector extends Detector implements SourceCodeScanner 
                             serviceClass.getName());
             context.report(ISSUE, componentName, context.getLocation(componentName), message);
         } else {
-            ensureBindServicePermission(context, serviceType.getCanonicalText(), classRef);
+            if (context.getDriver().isSuppressed(context, ISSUE, typeReference)) {
+                return;
+            }
+            String fqcn = serviceType.getCanonicalText();
+            Location location = context.getLocation(classRef);
+            if (context.isGlobalAnalysis()) {
+                ensureBindServicePermission(context, fqcn, location);
+            } else {
+                context.getPartialResults(ISSUE).map().put(fqcn, location);
+            }
+        }
+    }
+
+    @Override
+    public void checkPartialResults(
+            @NonNull Context context, @NonNull PartialResult partialResults) {
+        for (LintMap map : partialResults.maps()) {
+            for (String fqcn : map) {
+                Location location = map.getLocation(fqcn);
+                if (location != null) {
+                    ensureBindServicePermission(context, fqcn, location);
+                }
+            }
         }
     }
 
     private static void ensureBindServicePermission(
-            @NonNull JavaContext context,
-            @NonNull String fqcn,
-            @NonNull UClassLiteralExpression typeReference) {
+            @NonNull Context context, @NonNull String fqcn, @NonNull Location location) {
         // Make sure the app has
         //    android:permission="android.permission.BIND_JOB_SERVICE"
         // as well.
@@ -169,7 +192,6 @@ public class JobSchedulerDetector extends Detector implements SourceCodeScanner 
                 // Check that it has the desired permission
                 String permission = service.getAttributeNS(ANDROID_URI, ATTR_PERMISSION);
                 if (!"android.permission.BIND_JOB_SERVICE".equals(permission)) {
-                    Location location = context.getLocation(typeReference);
                     // Also report the manifest location, if possible
                     LintClient client = context.getClient();
                     Location secondary = client.findManifestSourceLocation(service);
@@ -181,7 +203,6 @@ public class JobSchedulerDetector extends Detector implements SourceCodeScanner 
 
                     context.report(
                             ISSUE,
-                            typeReference,
                             location,
                             "The manifest registration for this service does not declare "
                                     + "`android:permission=\"android.permission.BIND_JOB_SERVICE\"`");
@@ -193,10 +214,6 @@ public class JobSchedulerDetector extends Detector implements SourceCodeScanner 
         }
 
         // Service not found in the manifest; flag it
-        context.report(
-                ISSUE,
-                typeReference,
-                context.getLocation(typeReference),
-                "Did not find a manifest registration for this service");
+        context.report(ISSUE, location, "Did not find a manifest registration for this service");
     }
 }

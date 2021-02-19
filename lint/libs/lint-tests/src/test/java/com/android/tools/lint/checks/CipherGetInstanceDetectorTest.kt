@@ -236,7 +236,7 @@ class CipherGetInstanceDetectorTest : AbstractCheckTest() {
             0 errors, 1 warnings
             """
         lint().files(
-            manifest().targetSdk("P"),
+            manifest().targetSdk(28),
             java(
                 """
                 package test.pkg;

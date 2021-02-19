@@ -83,6 +83,46 @@ public class CompositeIssueRegistryTest extends TestCase {
                         .getIssues());
     }
 
+    public void testDeleted() {
+        IssueRegistry registry1 =
+                new IssueRegistry() {
+                    @NonNull
+                    @Override
+                    public List<Issue> getIssues() {
+                        return Collections.singletonList(APPLICATION_ICON);
+                    }
+
+                    @NonNull
+                    @Override
+                    public List<String> getDeletedIssues() {
+                        return Arrays.asList(ICON_DIP_SIZE.getId(), ICON_COLORS.getId());
+                    }
+                };
+        IssueRegistry registry2 =
+                new IssueRegistry() {
+                    @NonNull
+                    @Override
+                    public List<Issue> getIssues() {
+                        return Collections.singletonList(DUPLICATE_ACTIVITY);
+                    }
+
+                    @NonNull
+                    @Override
+                    public List<String> getDeletedIssues() {
+                        return Collections.singletonList(DEVICE_ADMIN.getId());
+                    }
+                };
+
+        CompositeIssueRegistry registry =
+                new CompositeIssueRegistry(Arrays.asList(registry1, registry2));
+        assertTrue(registry.getIssues().contains(DUPLICATE_ACTIVITY));
+        assertTrue(registry.getIssues().contains(APPLICATION_ICON));
+        assertFalse(registry.getDeletedIssues().contains(DUPLICATE_ACTIVITY.getId()));
+        assertTrue(registry.getDeletedIssues().contains(ICON_DIP_SIZE.getId()));
+        assertTrue(registry.getDeletedIssues().contains(ICON_COLORS.getId()));
+        assertTrue(registry.getDeletedIssues().contains(DEVICE_ADMIN.getId()));
+    }
+
     static class MyCompositeRegistry extends CompositeIssueRegistry {
         public MyCompositeRegistry(@NonNull List<? extends IssueRegistry> registries) {
             super(registries);

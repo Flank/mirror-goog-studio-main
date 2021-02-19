@@ -33,4 +33,5 @@ class VariantApiOperationsRegistrar<VariantBuilderT: VariantBuilder, VariantT: V
     internal val androidTestBuilderOperations = OperationsRegistrar<AndroidTestBuilder>()
     internal val unitTestOperations = OperationsRegistrar<UnitTest>()
     internal val androidTestOperations = OperationsRegistrar<AndroidTest>()
+    internal val dslExtensions = mutableListOf<AndroidComponentsExtensionImpl.RegisteredApiExtension<VariantT>>()
 }

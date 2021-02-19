@@ -83,9 +83,17 @@ protected constructor() {
     abstract val issues: List<Issue>
 
     /**
-     * Whether this issue registry is up to date. Normally true but for example
-     * for custom rules loaded from disk, may return false if the underlying file is updated
-     * or deleted.
+     * The issue id's from any issues that have been deleted from this
+     * registry. This is here such that when an issue no longer applies
+     * and is no longer registered, any existing mentions of the issue
+     * id in baselines, lint.xml files etc are gracefully handled.
+     */
+    open val deletedIssues: List<String> = emptyList()
+
+    /**
+     * Whether this issue registry is up to date. Normally true but for
+     * example for custom rules loaded from disk, may return false if
+     * the underlying file is updated or deleted.
      */
     open val isUpToDate: Boolean = true
 
@@ -194,7 +202,7 @@ protected constructor() {
         val detectors = ArrayList<Detector>(detectorClasses.size)
         for (clz in detectorClasses) {
             try {
-                val detector = clz.newInstance()
+                val detector = clz.getDeclaredConstructor().newInstance()
                 detectors.add(detector)
 
                 if (scopeToDetectors != null) {
@@ -331,9 +339,17 @@ protected constructor() {
 
     private fun createIdToIssueMap(): Map<String, Issue> {
         val issues = issues
-        val map = Maps.newHashMapWithExpectedSize<String, Issue>(issues.size + 2)
+        val map = Maps.newHashMapWithExpectedSize<String, Issue>(issues.size + 20)
         for (issue in issues) {
             map[issue.id] = issue
+            issue.getAliases()?.forEach { alias ->
+                map[alias] = issue
+                renamedIds[alias] = issue.id
+            }
+        }
+
+        for (id in deletedIssues) {
+            deletedIds.add(id)
         }
 
         map[PARSER_ERROR.id] = PARSER_ERROR
@@ -341,6 +357,7 @@ protected constructor() {
         map[LINT_WARNING.id] = LINT_WARNING
         map[BASELINE.id] = BASELINE
         map[UNKNOWN_ISSUE_ID.id] = UNKNOWN_ISSUE_ID
+        map[CANNOT_ENABLE_HIDDEN.id] = CANNOT_ENABLE_HIDDEN
         map[OBSOLETE_LINT_CHECK.id] = OBSOLETE_LINT_CHECK
         return map
     }
@@ -389,39 +406,20 @@ protected constructor() {
             EnumSet.noneOf(Scope::class.java)
         )
 
+        private var deletedIds = mutableSetOf<String>()
+        private var renamedIds = mutableMapOf<String, String>()
+
         /**
-         * Returns true if the given [id] used to be a valid id in lint but has since been
-         * deleted or renamed
+         * Returns true if the given [id] used to be a valid id in lint
+         * but has since been deleted or renamed
          */
-        fun isDeletedIssueId(id: String): Boolean {
-            return when (id) {
-                // Off by default for a while; unlikely to be turned on (and this is
-                // just an awareness check which is unlikely to be enabled by those
-                // who could benefit from it)
-                "GoogleAppIndexingWarning",
+        fun isDeletedIssueId(id: String): Boolean = deletedIds.contains(id)
 
-                // Implementation not correct and would require rewrite to fix, not worth it
-                "GoogleAppIndexingApiWarning",
-
-                // Deleted a while back when restrictions were removed on launcher icons
-
-                "IconLauncherFormat",
-
-                // No longer relevant, only applied to minSdk < 14
-                "ViewTag",
-
-                // No longer relevant, only applied to minSdk < 9
-                "FieldGetter",
-
-                // Renamed to MissingClass
-                "MissingRegistered",
-
-                // Deleted; no longer needed thanks to d8
-                "Assert" -> true
-
-                else -> false
-            }
-        }
+        /**
+         * If the given issue has been renamed (which involves deleting
+         * the previous id) return its new name
+         */
+        fun getNewId(id: String): String? = renamedIds[id]
 
         /**
          * Issue reported by lint (not a specific detector) when it cannot even
@@ -507,8 +505,34 @@ protected constructor() {
         )
 
         /**
-         * Issue reported by lint for various other issues which prevents lint from
-         * running normally when it's not necessarily an error in the user's code base.
+         * When lint runs in partial analysis mode, any issues that are
+         * turned off in a library cannot be re-enabled in the main
+         * project.
+         */
+        @JvmField
+        val CANNOT_ENABLE_HIDDEN = Issue.create(
+            id = "CannotEnableHidden",
+            briefDescription = "Issue Already Disabled",
+            explanation =
+                """
+                Any issues that are specifically disabled in a library cannot be re-enabled \
+                in a dependent project. To fix this you need to also enable the issue in \
+                the library project.
+
+                (This also applies for issues that are off by default; they cannot just be \
+                enabled in a dependent project; they must also be enabled in all the \
+                libraries the project depends on.)
+                """,
+            category = Category.LINT,
+            priority = 1,
+            severity = Severity.WARNING,
+            implementation = EMPTY_IMPLEMENTATION
+        )
+
+        /**
+         * Issue reported by lint for various other issues which
+         * prevents lint from running normally when it's not necessarily
+         * an error in the user's code base.
          */
         @JvmField // temporarily
         val BASELINE = Issue.create(

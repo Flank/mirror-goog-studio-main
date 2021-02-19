@@ -16,6 +16,8 @@
 
 package com.android.sdklib.repository.meta;
 
+import static com.android.sdklib.repository.targets.SystemImage.DEFAULT_TAG;
+
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -23,8 +25,9 @@ import com.android.repository.Revision;
 import com.android.repository.api.RepoPackage;
 import com.android.repository.impl.meta.TypeDetails;
 import com.android.sdklib.AndroidVersion;
-import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.OptionalLibrary;
 import com.android.sdklib.repository.IdDisplay;
+import java.util.ArrayList;
 import java.util.List;
 import javax.xml.bind.annotation.XmlTransient;
 
@@ -142,15 +145,11 @@ public final class DetailsTypes {
         @NonNull
         IdDisplay getVendor();
 
-        /**
-         * Gets the {@link IAndroidTarget.OptionalLibrary}s provided by this package.
-         */
+        /** Gets the {@link OptionalLibrary}s provided by this package. */
         @Nullable
         Libraries getLibraries();
 
-        /**
-         * Gets the {@link IAndroidTarget.OptionalLibrary}s provided by this package.
-         */
+        /** Gets the {@link OptionalLibrary}s provided by this package. */
         void setLibraries(@Nullable Libraries libraries);
 
         /**
@@ -206,18 +205,50 @@ public final class DetailsTypes {
          */
         boolean isValidAbi(@Nullable String value);
 
-        /**
-         * Sets the tag for this package. Used to match addon packages with corresponding system
-         * images.
-         */
-        void setTag(@NonNull IdDisplay tag);
+        default List<IdDisplay> getTags() {
+            // Implementation for v1
+
+            return new ArrayList<IdDisplay>() {
+                @Override
+                public int size() {
+                    return DEFAULT_TAG.equals(getTag()) ? 0 : 1;
+                }
+
+                @Override
+                public IdDisplay get(int index) {
+                    return getTag();
+                }
+
+                @Override
+                public boolean add(@Nullable IdDisplay idDisplay) {
+                    setTag(idDisplay);
+                    return true;
+                }
+
+                @Override
+                public boolean isEmpty() {
+                    return DEFAULT_TAG.equals(getTag());
+                }
+            };
+        }
 
         /**
-         * Sets the tag for this package. Used to match addon packages with corresponding system
+         * Gets the tag for this package. Used to match addon packages with corresponding system
          * images.
+         *
+         * @deprecated This is only supported in v1. Use {@link #getTags()} instead.
          */
-        @NonNull
-        IdDisplay getTag();
+        @Nullable
+        default IdDisplay getTag() {
+            // This should be overridden in v1 and shouldn't be called after that
+            throw new UnsupportedOperationException();
+        }
+
+        /** @deprecated This is only supported in v1. Add to {@link #getTags()} instead. */
+        default void setTag(@Nullable IdDisplay tag) {
+            // This should be overridden in v1 and shouldn't be called after that
+            throw new UnsupportedOperationException();
+        }
 
         /**
          * Sets the vendor of this package.

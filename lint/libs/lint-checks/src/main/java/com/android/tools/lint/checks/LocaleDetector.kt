@@ -46,7 +46,7 @@ import org.jetbrains.uast.getParentOfType
 /** Constructs a new [LocaleDetector] */
 class LocaleDetector : Detector(), SourceCodeScanner {
 
-    override fun getApplicableMethodNames(): List<String>? {
+    override fun getApplicableMethodNames(): List<String> {
         return listOf(
             TO_LOWER_CASE,
             TO_UPPER_CASE,

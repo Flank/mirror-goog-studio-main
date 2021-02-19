@@ -16,13 +16,13 @@
 
 package com.android.build.gradle.integration.ndk
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_NDK_SIDE_BY_SIDE_VERSION
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.truth.TruthHelper
 import com.android.build.gradle.integration.common.utils.ZipHelper
+import com.android.build.gradle.options.BooleanOption
 import com.android.utils.FileUtils
 import org.junit.Rule
 import org.junit.Test
@@ -58,7 +58,6 @@ class KeepDebugSymbolsTest {
     val project: GradleTestProject =
         GradleTestProject.builder()
             .fromTestApp(MultiModuleTestProject.builder().subproject("app", app).build())
-            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
             .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
             .create()
 
@@ -71,7 +70,9 @@ class KeepDebugSymbolsTest {
         createAbiFile("x86", "debugDoNotStrip.so")
         createAbiFile("x86", "releaseDoNotStrip.so")
 
-        project.executor().run("app:assembleDebug", "app:assembleRelease")
+        project.executor()
+            .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
+            .run("app:assembleDebug", "app:assembleRelease")
 
         val debugApk = project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG)
         TruthHelper.assertThatApk(debugApk).contains("lib/x86/strip.so")

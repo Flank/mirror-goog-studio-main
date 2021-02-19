@@ -13,8 +13,8 @@ compileKotlin {
 }
 
 dependencies {
+    api project(':base:lint-api')
     api project(':base:lint-checks')
-    implementation libs.guava
     implementation project(':base:uast')
     implementation project(':base:sdk-common')
     implementation project(':base:sdklib')
@@ -27,8 +27,10 @@ dependencies {
     implementation project(':analytics-library:protos')
     implementation project(':analytics-library:tracker')
 
+    implementation libs.guava
     implementation libs.kotlin_reflect
     implementation libs.kotlin_stdlib
+    implementation libs.kxml
 }
 
 sourceSets {

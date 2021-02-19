@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.dsl.Lint;
 import com.android.build.gradle.internal.errors.DeprecationReporter.DeprecationTarget;
 import com.android.build.gradle.internal.services.DslServices;
 import com.google.common.collect.Maps;
@@ -36,6 +37,7 @@ import org.gradle.api.tasks.OutputFile;
 public class LintOptions
         implements com.android.builder.model.LintOptions,
                 com.android.build.api.dsl.LintOptions,
+                Lint,
                 Serializable {
     private static final long serialVersionUID = 1L;
 

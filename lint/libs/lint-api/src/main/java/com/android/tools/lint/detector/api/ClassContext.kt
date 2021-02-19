@@ -240,17 +240,13 @@ class ClassContext(
     /**
      * Reports an issue.
      *
-     * Detectors should only call this method if an error applies to the whole class
-     * scope and there is no specific method or field that applies to the error.
-     * If so, use
-     * [.report] or
-     * [.report], such that
-     * suppress annotations are checked.
+     * Detectors should only call this method if an error applies to the
+     * whole class scope and there is no specific method or field that
+     * applies to the error. If so, use [.report], such that suppress
+     * annotations are checked.
      *
      * @param issue the issue to report
-     *
      * @param location the location of the issue, or null if not known
-     *
      * @param message the message for this warning
      */
     override fun report(
@@ -288,7 +284,8 @@ class ClassContext(
             }
         }
 
-        super.doReport(issue, location, message, quickfixData)
+        val incident = Incident(issue, location, message, quickfixData)
+        driver.client.report(this, incident)
     }
 
     // Unfortunately, ASMs nodes do not extend a common DOM node type with parent
@@ -335,13 +332,11 @@ class ClassContext(
      * Reports an issue applicable to a given method node.
      *
      * @param issue the issue to report
-     *
-     * @param field the scope the error applies to. The lint infrastructure
-     *    will check whether there are suppress annotations on this field (or its enclosing
-     *    class) and if so suppress the warning without involving the client.
-     *
+     * @param field the scope the error applies to. The lint
+     *     infrastructure will check whether there are suppress
+     *     annotations on this field (or its enclosing class) and
+     *     if so suppress the warning without involving the client.
      * @param location the location of the issue, or null if not known
-     *
      * @param message the message for this warning
      */
     fun report(
@@ -355,44 +350,6 @@ class ClassContext(
         }
         report(issue, location, message) // also checks the class node
     }
-
-    /**
-     * Report an error.
-     * Like [.report] but with
-     * a now-unused data parameter at the end.
-     */
-    @Deprecated(
-        "Use {@link #report(Issue, FieldNode, Location, String)} instead; this method " +
-            "is here for custom rule compatibility",
-        ReplaceWith("report(issue, method, instruction, location, message)")
-    )
-    fun report(
-        issue: Issue,
-        method: MethodNode?,
-        instruction: AbstractInsnNode?,
-        location: Location,
-        message: String,
-        data: Any?
-    ) = report(issue, method, instruction, location, message)
-
-    /**
-     * Report an error.
-     * Like [.report] but with
-     * a now-unused data parameter at the end.
-     *
-     */
-    @Deprecated(
-        "Use {@link #report(Issue, FieldNode, Location, String)} instead; this method " +
-            "is here for custom rule compatibility",
-        ReplaceWith("report(issue, field, location, message)")
-    )
-    fun report(
-        issue: Issue,
-        field: FieldNode?,
-        location: Location,
-        message: String,
-        data: Any?
-    ) = report(issue, field, location, message)
 
     /**
      * Returns a location for the given [ClassNode], where class node is

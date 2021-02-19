@@ -24,6 +24,7 @@ data class IdeSourceProviderImpl(
   private val myFolder: File?,
   private val myManifestFile: String,
   private val myJavaDirectories: Collection<String>,
+  private val myKotlinDirectories: Collection<String>,
   private val myResourcesDirectories: Collection<String>,
   private val myAidlDirectories: Collection<String>,
   private val myRenderscriptDirectories: Collection<String>,
@@ -42,6 +43,7 @@ data class IdeSourceProviderImpl(
     myFolder = File(""),
     myManifestFile = "",
     myJavaDirectories = mutableListOf(),
+    myKotlinDirectories = mutableListOf(),
     myResourcesDirectories = mutableListOf(),
     myAidlDirectories = mutableListOf(),
     myRenderscriptDirectories = mutableListOf(),
@@ -55,6 +57,7 @@ data class IdeSourceProviderImpl(
   override val name: String get() = myName
   override val manifestFile: File get() = myManifestFile.translate()
   override val javaDirectories: Collection<File> get() = myJavaDirectories.translate()
+  override val kotlinDirectories: Collection<File> get() = myKotlinDirectories.translate()
   override val resourcesDirectories: Collection<File> get() = myResourcesDirectories.translate()
   override val aidlDirectories: Collection<File> get() = myAidlDirectories.translate()
   override val renderscriptDirectories: Collection<File> get() = myRenderscriptDirectories.translate()

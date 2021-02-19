@@ -30,10 +30,13 @@ import com.android.tools.lint.detector.api.ClassContext;
 import com.android.tools.lint.detector.api.ClassScanner;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Implementation;
+import com.android.tools.lint.detector.api.Incident;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Location;
+import com.android.tools.lint.detector.api.LocationType;
+import com.android.tools.lint.detector.api.PartialResult;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
@@ -50,8 +53,9 @@ import org.jetbrains.uast.UCallExpression;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
  * Checks for extractNativeLibs flag in <code>AndroidManifest.xml</code> when Native code is
@@ -96,9 +100,6 @@ public class UnpackedNativeCodeDetector extends ResourceXmlDetector
 
     /** This will be <code>true</code> if the project or dependencies use native libraries */
     private boolean mHasNativeLibs;
-
-    /** The <application> manifest tag location for the main project, */
-    private Location.Handle mApplicationTagHandle;
 
     /** If the issue should be suppressed. */
     private boolean mSuppress;
@@ -168,19 +169,18 @@ public class UnpackedNativeCodeDetector extends ResourceXmlDetector
     @Override
     public void beforeCheckRootProject(@NonNull Context context) {
         mHasNativeLibs = false;
-        mApplicationTagHandle = null;
 
-        if (!context.getMainProject().isGradleProject()
-                || context.getMainProject().getGradleModelVersion() == null) {
+        if (!context.getProject().isGradleProject()
+                || context.getProject().getGradleModelVersion() == null) {
             mSuppress = true;
             return;
         }
 
         // compileSdkVersion must be >= 23
-        boolean projectSupportsAttribute = context.getMainProject().getBuildSdk() >= 23;
+        boolean projectSupportsAttribute = context.getProject().getBuildSdk() >= 23;
 
         // android gradle plugin must be 2.2.0+
-        GradleVersion gradleVersion = context.getMainProject().getGradleModelVersion();
+        GradleVersion gradleVersion = context.getProject().getGradleModelVersion();
         boolean gradleSupportsAttribute =
                 MIN_GRADLE_VERSION.compareIgnoringQualifiers(gradleVersion) <= 0;
 
@@ -190,46 +190,65 @@ public class UnpackedNativeCodeDetector extends ResourceXmlDetector
 
     @Override
     public void afterCheckRootProject(@NonNull Context context) {
+        if (context.isGlobalAnalysis() && context.getProject() == context.getMainProject()) {
+            checkManifest(context);
+        } else if (mHasNativeLibs && !mSuppress) {
+            context.getPartialResults(ISSUE).map().put("hasNativeLibs", true);
+        }
+    }
+
+    @Override
+    public void checkPartialResults(
+            @NonNull Context context, @NonNull PartialResult partialResults) {
+        mHasNativeLibs = true; // or we wouldn't have been called
+        checkManifest(context);
+    }
+
+    private void checkManifest(@NonNull Context context) {
         // Don't report issues on libraries
-        if (context.getProject() == context.getMainProject()
-                && !context.getMainProject().isLibrary()
-                && mApplicationTagHandle != null) {
-            if (!mSuppress && mHasNativeLibs) {
-                LintFix fix =
-                        fix().set(ANDROID_URI, ATTRIBUTE_EXTRACT_NATIVE_LIBS, VALUE_FALSE).build();
-                context.report(
-                        ISSUE,
-                        mApplicationTagHandle.resolve(),
-                        "Missing attribute `android:extractNativeLibs=\"false\"`"
-                                + " on the `<application>` tag",
-                        fix);
+        if (context.getMainProject().isLibrary()) {
+            return;
+        }
+
+        if (!mSuppress && mHasNativeLibs) {
+            LintFix fix =
+                    fix().set(ANDROID_URI, ATTRIBUTE_EXTRACT_NATIVE_LIBS, VALUE_FALSE).build();
+            Document mergedManifest = context.getProject().getMergedManifest();
+            if (mergedManifest == null) {
+                return;
             }
+            NodeList tags = mergedManifest.getElementsByTagName(TAG_APPLICATION);
+            if (tags.getLength() == 0) {
+                return;
+            }
+            Element application = (Element) tags.item(0);
+            if (application.hasAttributeNS(
+                    ANDROID_URI, AndroidManifest.ATTRIBUTE_EXTRACT_NATIVE_LIBS)) {
+                return;
+            }
+            Location location = context.getLocation(application, LocationType.DEFAULT);
+            Incident incident =
+                    new Incident(
+                            ISSUE,
+                            "Missing attribute `android:extractNativeLibs=\"false\"`"
+                                    + " on the `<application>` tag",
+                            location,
+                            fix);
+            context.report(incident);
         }
     }
 
     @Override
     public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
         // Don't check library manifests
-        if (context.getProject() != context.getMainProject()
-                || context.getMainProject().isLibrary()) {
+        if (context.getProject().isLibrary()) {
             return;
         }
 
-        if (context.getDriver().isSuppressed(context, ISSUE, element)) {
+        if (context.getDriver().isSuppressed(context, ISSUE, element)
+                || element.hasAttributeNS(
+                        ANDROID_URI, AndroidManifest.ATTRIBUTE_EXTRACT_NATIVE_LIBS)) {
             mSuppress = true;
-            return;
-        }
-
-        if (TAG_APPLICATION.equals(element.getNodeName())) {
-            Node extractAttr =
-                    element.getAttributeNodeNS(
-                            ANDROID_URI, AndroidManifest.ATTRIBUTE_EXTRACT_NATIVE_LIBS);
-            //noinspection VariableNotUsedInsideIf
-            if (extractAttr != null) {
-                mSuppress = true;
-            } else {
-                mApplicationTagHandle = context.createLocationHandle(element);
-            }
         }
     }
 }

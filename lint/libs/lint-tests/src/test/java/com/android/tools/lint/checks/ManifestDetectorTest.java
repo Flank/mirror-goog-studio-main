@@ -18,6 +18,7 @@ package com.android.tools.lint.checks;
 
 import static com.android.tools.lint.checks.GradleDetectorTest.createRelativePaths;
 import static com.android.tools.lint.checks.infrastructure.ProjectDescription.Type.LIBRARY;
+import static com.android.tools.lint.checks.infrastructure.TestMode.PARTIAL;
 
 import com.android.testutils.TestUtils;
 import com.android.tools.lint.checks.infrastructure.ProjectDescription;
@@ -602,6 +603,22 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void testNoApplication() {
+        lint().files(
+                        xml(
+                                "AndroidManifest.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    package=\"test.pkg\"\n"
+                                        + "    android:versionCode=\"1\"\n"
+                                        + "    android:versionName=\"1.0\" >\n"
+                                        + "</manifest>\n"))
+                .issues(ManifestDetector.ALLOW_BACKUP, ManifestDetector.APPLICATION_ICON)
+                .run()
+                .expectClean();
+    }
+
     public void testDuplicatePermissions() {
         String expected =
                 ""
@@ -900,6 +917,9 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                                         + "    </application>\n"
                                         + "\n"
                                         + "</manifest>\n"))
+                // Looking for a version in the manifest that is replaced by the provisional test
+                // infrastructure
+                .skipTestModes(PARTIAL)
                 .issues(ManifestDetector.ILLEGAL_REFERENCE)
                 .run()
                 .expect(expected);
@@ -1229,6 +1249,10 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                                         + "    }\n"
                                         + "}"))
                 .issues(ManifestDetector.GRADLE_OVERRIDES)
+                // Exclude because the testing framework for partial analysis will
+                // change a string in the error message that is just a manifestation
+                // of the way it mutates the project (to lower the minSdkVersion)
+                .skipTestModes(PARTIAL)
                 .run()
                 .expect(expected);
     }
@@ -1476,9 +1500,9 @@ public class ManifestDetectorTest extends AbstractCheckTest {
     public void testMissingFullContentBackupInTarget23() {
         String expected =
                 ""
-                        + "AndroidManifest.xml:5: Warning: On SDK version 23 and up, your app data will be automatically backed up and restored on app install. Consider adding the attribute android:fullBackupContent to specify an @xml resource which configures which files to backup, or just set android:fullBackupOnly=true. More info: https://developer.android.com/guide/topics/data/autobackup [AllowBackup]\n"
-                        + "    <application\n"
-                        + "     ~~~~~~~~~~~\n"
+                        + "AndroidManifest.xml:6: Warning: On SDK version 23 and up, your app data will be automatically backed up and restored on app install. Consider adding the attribute android:fullBackupContent to specify an @xml resource which configures which files to backup, or just set android:fullBackupOnly=true. More info: https://developer.android.com/guide/topics/data/autobackup [AllowBackup]\n"
+                        + "        android:allowBackup=\"true\"\n"
+                        + "        ~~~~~~~~~~~~~~~~~~~\n"
                         + "0 errors, 1 warnings";
 
         //noinspection all // Sample code
@@ -1549,9 +1573,9 @@ public class ManifestDetectorTest extends AbstractCheckTest {
     public void testMissingFullContentBackupWithoutGcmPostTarget23() {
         String expected =
                 ""
-                        + "AndroidManifest.xml:5: Warning: On SDK version 23 and up, your app data will be automatically backed up and restored on app install. Consider adding the attribute android:fullBackupContent to specify an @xml resource which configures which files to backup, or just set android:fullBackupOnly=true. More info: https://developer.android.com/guide/topics/data/autobackup [AllowBackup]\n"
-                        + "    <application\n"
-                        + "     ~~~~~~~~~~~\n"
+                        + "AndroidManifest.xml:6: Warning: On SDK version 23 and up, your app data will be automatically backed up and restored on app install. Consider adding the attribute android:fullBackupContent to specify an @xml resource which configures which files to backup, or just set android:fullBackupOnly=true. More info: https://developer.android.com/guide/topics/data/autobackup [AllowBackup]\n"
+                        + "        android:allowBackup=\"true\"\n"
+                        + "        ~~~~~~~~~~~~~~~~~~~\n"
                         + "0 errors, 1 warnings";
 
         //noinspection all // Sample code
@@ -1608,9 +1632,9 @@ public class ManifestDetectorTest extends AbstractCheckTest {
     public void testMissingFullContentBackupWithGcmPostTarget23() {
         String expected =
                 ""
-                        + "AndroidManifest.xml:5: Warning: On SDK version 23 and up, your app data will be automatically backed up, and restored on app install. Your GCM regid will not work across restores, so you must ensure that it is excluded from the back-up set. Use the attribute android:fullBackupContent to specify an @xml resource which configures which files to backup. More info: https://developer.android.com/guide/topics/data/autobackup [AllowBackup]\n"
-                        + "    <application\n"
-                        + "     ~~~~~~~~~~~\n"
+                        + "AndroidManifest.xml:6: Warning: On SDK version 23 and up, your app data will be automatically backed up, and restored on app install. Your GCM regid will not work across restores, so you must ensure that it is excluded from the back-up set. Use the attribute android:fullBackupContent to specify an @xml resource which configures which files to backup. More info: https://developer.android.com/guide/topics/data/autobackup [AllowBackup]\n"
+                        + "        android:allowBackup=\"true\"\n"
+                        + "        ~~~~~~~~~~~~~~~~~~~\n"
                         + "0 errors, 1 warnings";
         //noinspection all // Sample code
         lint().files(

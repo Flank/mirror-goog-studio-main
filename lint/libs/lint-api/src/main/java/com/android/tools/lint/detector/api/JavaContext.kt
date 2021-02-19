@@ -35,7 +35,6 @@ import com.intellij.psi.PsiNewExpression
 import com.intellij.psi.PsiReferenceExpression
 import com.intellij.psi.PsiSwitchStatement
 import org.jetbrains.kotlin.psi.KtProperty
-import org.jetbrains.uast.UAnnotated
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UDeclaration
@@ -285,49 +284,19 @@ open class JavaContext(
         this.psiFile = javaFile
     }
 
-    override fun report(
-        issue: Issue,
-        location: Location,
-        message: String,
-        quickfixData: LintFix?
-    ) {
-        when (val source = location.source) {
-            is UElement -> {
-                // Detector accidentally invoked scope-less report method inherited
-                // from generic Context, but we remember the actual node from the
-                // location construction, so use it to find the best suppress scope
-                report(issue, source, location, message, quickfixData)
-            }
-            is PsiElement -> {
-                report(issue, source, location, message, quickfixData)
-            }
-            else -> {
-                // No specific scope node for the error: just look at the root
-                // of the file for suppress annotations
-                if (driver.isSuppressed(this, issue, psiFile)) {
-                    return
-                }
-                super.report(issue, location, message, quickfixData)
-            }
-        }
-    }
-
     /**
-     * Reports an issue applicable to a given AST node. The AST node is used as the
-     * scope to check for suppress lint annotations.
+     * Reports an issue applicable to a given AST node. The AST node is
+     * used as the scope to check for suppress lint annotations.
      *
      * @param issue the issue to report
-     *
-     * @param scope the AST node scope the error applies to. The lint infrastructure will
-     *                     check whether there are suppress annotations on this node (or its
-     *                     enclosing nodes) and if so suppress the warning without involving the
-     *                     client.
-     *
+     * @param scope the AST node scope the error applies to. The lint
+     *     infrastructure will check whether there are suppress
+     *     annotations on this node (or its enclosing nodes) and if
+     *     so suppress the warning without involving the client.
      * @param location the location of the issue, or null if not known
-     *
      * @param message the message for this warning
-     *
-     * @param quickfixData optional data to pass to the IDE for use by a quickfix.
+     * @param quickfixData optional data to pass to the IDE for use by a
+     *     quickfix.
      */
     @JvmOverloads
     fun report(
@@ -337,47 +306,23 @@ open class JavaContext(
         message: String,
         quickfixData: LintFix? = null
     ) {
-        if (scope != null) {
-            if (scope is UAnnotated) {
-                if (driver.isSuppressed(this, issue, scope as UAnnotated)) {
-                    return
-                }
-            } else if (driver.isSuppressed(this, issue, scope)) {
-                return
-            }
-        }
-        super.doReport(issue, location, message, quickfixData)
+        val incident = Incident(issue, message, location, scope, quickfixData)
+        driver.client.report(this, incident)
     }
 
-    @Suppress("DeprecatedCallableAddReplaceWith")
-    @Deprecated(
-        "Here for temporary compatibility; the new typed quickfix data parameter " +
-            "should be used instead"
-    )
-    fun report(
-        issue: Issue,
-        scope: PsiElement?,
-        location: Location,
-        message: String,
-        quickfixData: Any?
-    ) = report(issue, scope, location, message)
-
     /**
-     * Reports an issue applicable to a given AST node. The AST node is used as the
-     * scope to check for suppress lint annotations.
+     * Reports an issue applicable to a given AST node. The AST node is
+     * used as the scope to check for suppress lint annotations.
      *
      * @param issue the issue to report
-     *
-     * @param scope the AST node scope the error applies to. The lint infrastructure will
-     *                     check whether there are suppress annotations on this node (or its
-     *                     enclosing nodes) and if so suppress the warning without involving the
-     *                     client.
-     *
+     * @param scope the AST node scope the error applies to. The lint
+     *     infrastructure will check whether there are suppress
+     *     annotations on this node (or its enclosing nodes) and if
+     *     so suppress the warning without involving the client.
      * @param location the location of the issue, or null if not known
-     *
      * @param message the message for this warning
-     *
-     * @param quickfixData optional data to pass to the IDE for use by a quickfix.
+     * @param quickfixData optional data to pass to the IDE for use by a
+     *     quickfix.
      */
     @JvmOverloads
     fun report(
@@ -387,33 +332,14 @@ open class JavaContext(
         message: String,
         quickfixData: LintFix? = null
     ) {
-        if (scope is UAnnotated) {
-            if (driver.isSuppressed(this, issue, scope)) {
-                return
-            }
-        } else if (driver.isSuppressed(this, issue, scope)) {
-            return
-        }
-        super.doReport(issue, location, message, quickfixData)
+        val incident = Incident(issue, message, location, scope, quickfixData)
+        driver.client.report(this, incident)
     }
-
-    @Suppress("DeprecatedCallableAddReplaceWith")
-    @Deprecated(
-        "Here for temporary compatibility; the new typed quickfix data parameter " +
-            "should be used instead"
-    )
-    fun report(
-        issue: Issue,
-        scope: UElement?,
-        location: Location,
-        message: String,
-        quickfixData: Any?
-    ) = report(issue, scope, location, message)
 
     /**
      * [UClass] is both a [PsiElement] and a [UElement] so this method
-     * is here to make calling report(..., UClass, ...) easier without having to make
-     * an explicit cast.
+     * is here to make calling report(..., UClass, ...) easier without
+     * having to make an explicit cast.
      */
     fun report(
         issue: Issue,
@@ -437,8 +363,8 @@ open class JavaContext(
 
     /**
      * [UMethod] is both a [PsiElement] and a [UElement] so this method
-     * is here to make calling report(..., UMethod, ...) easier without having to make
-     * an explicit cast.
+     * is here to make calling report(..., UMethod, ...) easier without
+     * having to make an explicit cast.
      */
     fun report(
         issue: Issue,

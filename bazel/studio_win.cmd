@@ -36,7 +36,7 @@ set BASEDIR=%RETVAL%
 
 @rem Generate a UUID for use as the Bazel invocation ID
 FOR /F "tokens=*" %%F IN ('uuidgen') DO (
-SET INVOCATIONID=%%F
+  SET INVOCATIONID=%%F
 )
 
 echo "Called with the following:  OUTDIR=%OUTDIR%, DISTDIR=%DISTDIR%, BUILDNUMBER=%BUILDNUMBER%, SCRIPTDIR=%SCRIPTDIR%, BASEDIR=%BASEDIR%"
@@ -94,7 +94,10 @@ IF %IS_POST_SUBMIT% EQU 1 (
   SET PERFGATE_ARG=
 )
 
-CALL %SCRIPTDIR%bazel.cmd run //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector ^
+
+CALL %SCRIPTDIR%bazel.cmd ^
+ --max_idle_secs=60 ^
+ run //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector ^
  --config=dynamic ^
  -- ^
  -bes %DISTDIR%\bazel-%BUILDNUMBER%.bes ^
@@ -103,7 +106,10 @@ CALL %SCRIPTDIR%bazel.cmd run //tools/vendor/adt_infra_internal/rbe/logscollecto
 
 IF ERRORLEVEL 1 (
   @echo Bazel logs-collector failed
-  EXIT /B 1
+  IF %IS_POST_SUBMIT% EQU 1 (
+    SET EXITCODE=1
+  )
+  GOTO ENDSCRIPT
 )
 
 @echo studio_win.cmd time: %time%

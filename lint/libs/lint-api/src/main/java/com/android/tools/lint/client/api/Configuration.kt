@@ -18,6 +18,7 @@ package com.android.tools.lint.client.api
 
 import com.android.SdkConstants.ATTR_ID
 import com.android.tools.lint.detector.api.Context
+import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.LintFix
 import com.android.tools.lint.detector.api.Location
@@ -84,24 +85,42 @@ abstract class Configuration(
     abstract var baselineFile: File?
 
     /**
-     * Checks whether this issue should be ignored because the user has already
-     * suppressed the error? Note that this refers to individual issues being
-     * suppressed/ignored, not a whole detector being disabled via something
-     * like [.isEnabled].
+     * Checks whether this incident should be ignored because the user
+     * has already suppressed the error. Note that this refers to
+     * individual issues being suppressed/ignored, not a whole detector
+     * being disabled via something like [isEnabled].
      *
-     * @param context the context used by the detector when the issue was found
+     * @param context the context used by the detector when the issue
+     *     was found
      * @param issue the issue that was found
      * @param location the location of the issue
      * @param message the associated user message
      * @return true if this issue should be suppressed
      */
-    open fun isIgnored(
+    @Deprecated(
+        "Use the new isIgnored(Context, Incident) method instead",
+        ReplaceWith(
+            "isIgnored(Incident(context, incident))",
+            "com.android.tools.lint.detector.api.Incident"
+        )
+    )
+    fun isIgnored(
         context: Context,
         issue: Issue,
         location: Location?,
         message: String
     ): Boolean {
-        return parent?.isIgnored(context, issue, location, message) ?: false
+        return isIgnored(context, Incident(issue, location ?: Location.NONE, message))
+    }
+
+    /**
+     * Checks whether this [incident] should be ignored because the
+     * user has already suppressed the error. Note that this refers to
+     * individual issues being suppressed/ignored, not a whole detector
+     * being disabled via something like [isEnabled].
+     */
+    open fun isIgnored(context: Context, incident: Incident): Boolean {
+        return parent?.isIgnored(context, incident) ?: false
     }
 
     /**
@@ -116,21 +135,38 @@ abstract class Configuration(
     }
 
     /**
-     * Return the severity configured for this [issue] by this configuration
-     * or any configurations it inherits from, or null if the given issue
-     * has not been configured. The [source] is the original configuration
-     * this is requested for.
+     * Return the severity configured for this [issue] by this
+     * configuration or any configurations it inherits from, or null
+     * if the given issue has not been configured. The [source]
+     * is the original configuration this is requested for. The
+     * [visibleDefault] severity is a severity to use if the
+     * configuration forces an issue to be visible (for example via
+     * `--check IssueId` or in a unit test where the test infrastructure
+     * forces the tested issues to not be hidden) without specifying
+     * what the severity should be (normally [Issue.defaultSeverity]).
      */
-    open fun getDefinedSeverity(issue: Issue, source: Configuration = this): Severity? {
+    open fun getDefinedSeverity(
+        issue: Issue,
+        source: Configuration = this,
+        visibleDefault: Severity = issue.defaultSeverity
+    ): Severity? {
+        if (!isOverriding && source === this) {
+            overrides?.let {
+                it.getDefinedSeverity(issue, source, visibleDefault)?.let { severity ->
+                    return severity
+                }
+            }
+        }
+
         return null
     }
 
     /**
-     * The default severity of an issue; should be ignore for disabled issues, not
-     * its severity when it's enabled
+     * The default severity of an issue; should be ignore for disabled
+     * issues, not its severity when it's enabled
      */
-    protected open fun getDefaultSeverity(issue: Issue): Severity {
-        return if (!issue.isEnabledByDefault()) Severity.IGNORE else issue.defaultSeverity
+    protected open fun getDefaultSeverity(issue: Issue, visibleDefault: Severity = issue.defaultSeverity): Severity {
+        return if (!issue.isEnabledByDefault()) Severity.IGNORE else visibleDefault
     }
 
     /**
@@ -150,7 +186,7 @@ abstract class Configuration(
             return it
         }
 
-        return getDefinedSeverity(issue, this) ?: getDefaultSeverity(issue)
+        return getDefinedSeverity(issue) ?: getDefaultSeverity(issue)
     }
 
     /**
@@ -248,18 +284,19 @@ abstract class Configuration(
     abstract fun setSeverity(issue: Issue, severity: Severity?)
 
     /**
-     * Marks the beginning of a "bulk" editing operation with repeated calls to
-     * [.setSeverity] or [.ignore]. After all the values have been
-     * set, the client **must** call [.finishBulkEditing]. This
-     * allows configurations to avoid doing expensive I/O (such as writing out a
-     * config XML file) for each and every editing operation when they are
-     * applied in bulk, such as from a configuration dialog's "Apply" action.
+     * Marks the beginning of a "bulk" editing operation with repeated
+     * calls to [setSeverity] or [ignore]. After all the values have
+     * been set, the client **must** call [finishBulkEditing]. This
+     * allows configurations to avoid doing expensive I/O (such as
+     * writing out a config XML file) for each and every editing
+     * operation when they are applied in bulk, such as from a
+     * configuration dialog's "Apply" action.
      */
     open fun startBulkEditing() {}
 
     /**
-     * Marks the end of a "bulk" editing operation, where values should be
-     * committed to persistent storage. See [.startBulkEditing] for
+     * Marks the end of a "bulk" editing operation, where values should
+     * be committed to persistent storage. See [startBulkEditing] for
      * details.
      */
     open fun finishBulkEditing() {}
@@ -291,22 +328,84 @@ abstract class Configuration(
     fun setParent(parent: Configuration) = configurations.setParent(this, parent)
 
     /**
-     * Attempts to find the configuration location responsible for a given [issue]'s
-     * configuration (such as severity). It will make sure that the location applies;
-     * e.g. if an issue is specified in a parent configuration, but is blocked by an
-     * "all" match in a closer configuration, this will return that "all" location,
-     * or if [specificOnly] is true, null.
-     *
-     * If [specificOnly] is true, it will ignore generic configuration matches (such
-     * as references to "all" or flags like checkAllWarnings).
-     *
-     * If [severityOnly] is true, limit the search to configurations that set the
-     * issue severity (as opposed to option configuration, setting ignore paths, etc.)
+     * Returns a map of all the issues configured by this configuration
+     * and the configured severities. The issue registry is the
+     * registry used for analysis; this normally has no effect, but if
+     * a configuration for example specifies "enable all warnings",
+     * then all the (not warning by default) issues found in the given
+     * registry will be returned. (Another example: lint.xml specifying
+     * <issue="all" ...>. We need to store the specific id's rather than
+     * "all" because the meaning of "all" can vary from module to module
+     * based on which issues are present in the issue registry -- saying
+     * severity for "all" is error in a library shouldn't also configure
+     * additional issues available in downstream app modules as well.)
      */
-    open fun getIssueConfigLocation(
+    fun getConfiguredIssues(registry: IssueRegistry, specificOnly: Boolean): Map<String, Severity> {
+        val map = mutableMapOf<String, Severity>()
+        overrides?.addConfiguredIssues(map, registry, specificOnly)
+        addConfiguredIssues(map, registry, specificOnly)
+        return map
+    }
+
+    /**
+     * Helper method overridden in most configurations to provide
+     * partial results for [getConfiguredIssues]. Generally the
+     * algorithm is to first call super, and then to analyze the
+     * current configuration; that makes sure that if a more specific
+     * configuration overrides an outer configuration, the map ends up
+     * with the override severity.
+     *
+     * If [specificOnly] is true, it will ignore generic configuration
+     * matches (such as references to "all" or flags like
+     * checkAllWarnings).
+     */
+    abstract fun addConfiguredIssues(
+        targetMap: MutableMap<String, Severity>,
+        registry: IssueRegistry,
+        specificOnly: Boolean
+        // TODO: IF you enable all warnings with -w, those will be enabled individually
+        // here. Decide if that's the right behavior. Probably more relevant for
+        // -nowarn.
+    )
+
+    /**
+     * Attempts to find the configuration location responsible for a
+     * given [issue]'s configuration (such as severity). It will make
+     * sure that the location applies; e.g. if an issue is specified in
+     * a parent configuration, but is blocked by an "all" match in a
+     * closer configuration, this will return that "all" location, or if
+     * [specificOnly] is true, null.
+     *
+     * If [specificOnly] is true, it will ignore generic configuration
+     * matches (such as references to "all" or flags like
+     * checkAllWarnings).
+     *
+     * If [severityOnly] is true, limit the search to configurations
+     * that set the issue severity (as opposed to option configuration,
+     * setting ignore paths, etc.)
+     */
+    fun getIssueConfigLocation(
         issue: String,
         specificOnly: Boolean = false,
         severityOnly: Boolean = false
+    ): Location? {
+        overrides?.getLocalIssueConfigLocation(issue, specificOnly, severityOnly, this)?.let {
+            return it
+        }
+
+        return getLocalIssueConfigLocation(issue, specificOnly, severityOnly)
+    }
+
+    /**
+     * Like [getIssueConfigLocation] but only looks at this specific
+     * configuration whereas [getIssueConfigLocation] will consult
+     * override configurations too (and should not recurse).
+     */
+    open fun getLocalIssueConfigLocation(
+        issue: String,
+        specificOnly: Boolean = false,
+        severityOnly: Boolean = false,
+        source: Configuration = this
     ): Location? = null
 
     /** Convenience method for configurations to report unknown issue id problems */
@@ -317,11 +416,17 @@ abstract class Configuration(
         project: Project?,
         id: String
     ) {
-        if (IssueRegistry.isDeletedIssueId(id)) {
-            // Recently deleted, but avoid complaining about leftover configuration
-            return
-        }
-        val message = getUnknownIssueIdErrorMessage(id, issueRegistry)
+        val newId = IssueRegistry.getNewId(id)
+        val message =
+            if (newId != null) {
+                return
+            } else if (IssueRegistry.isDeletedIssueId(id)) {
+                // Recently deleted, but avoid complaining about leftover configuration
+                null
+            } else {
+                getUnknownIssueIdErrorMessage(id, issueRegistry)
+            }
+                ?: return
         if (driver != null) {
             val severity = getSeverity(IssueRegistry.UNKNOWN_ISSUE_ID)
             if (severity !== Severity.IGNORE) {

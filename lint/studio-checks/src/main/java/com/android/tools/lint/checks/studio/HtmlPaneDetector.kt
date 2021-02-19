@@ -83,7 +83,7 @@ class HtmlPaneDetector : Detector(), SourceCodeScanner {
         }
     }
 
-    override fun getApplicableMethodNames(): List<String>? = listOf("setContentType")
+    override fun getApplicableMethodNames(): List<String> = listOf("setContentType")
 
     override fun visitMethodCall(
         context: JavaContext,

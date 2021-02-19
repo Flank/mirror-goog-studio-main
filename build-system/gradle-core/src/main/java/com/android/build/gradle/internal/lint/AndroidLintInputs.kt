@@ -41,6 +41,7 @@ import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
+import com.android.build.gradle.options.StringOption
 import com.android.builder.core.VariantType
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.errors.EvalIssueException
@@ -108,10 +109,15 @@ abstract class LintTool {
     @get:Input
     abstract val runInProcess: Property<Boolean>
 
+    @get:Input
+    @get:Optional
+    abstract val workerHeapSize: Property<String>
+
     fun initialize(project: Project, projectOptions: ProjectOptions) {
         // TODO(b/160392650) Clean this up to use a detached configuration
         classpath.fromDisallowChanges(project.configurations.getByName(LINT_CLASS_PATH))
         runInProcess.setDisallowChanges(projectOptions.getProvider(BooleanOption.RUN_LINT_IN_PROCESS))
+        workerHeapSize.setDisallowChanges(projectOptions.getProvider(StringOption.LINT_HEAP_SIZE))
     }
 
     fun submit(workerExecutor: WorkerExecutor, mainClass: String, arguments: List<String>) {
@@ -138,6 +144,10 @@ abstract class LintTool {
         } else {
             workerExecutor.processIsolation {
                 it.classpath.from(classpath)
+                // Default to using the main Gradle daemon heap size to smooth the transition
+                // for build authors.
+                it.forkOptions.maxHeapSize =
+                    workerHeapSize.orNull ?: "${Runtime.getRuntime().maxMemory() / 1024 / 1024}m"
             }
         }
         workQueue.submit(AndroidLintWorkAction::class.java) { isolatedParameters ->
@@ -593,7 +603,7 @@ abstract class VariantInputs {
         mavenCoordinatesCache.setDisallowChanges(getBuildService(project.gradle.sharedServices))
     }
 
-    fun toLintModel(module: LintModelModule): LintModelVariant {
+    fun toLintModel(module: LintModelModule, partialResultsDir: File? = null): LintModelVariant {
         val dependencyCaches = DependencyCaches(
             libraryDependencyCacheBuildService.get().localJarCache,
             mavenCoordinatesCache.get().cache)
@@ -625,7 +635,8 @@ abstract class VariantInputs {
             debuggable = debuggable.get(),
             shrinkable = false, //FIXME
             buildFeatures = buildFeatures.toLintModel(),
-            libraryResolver = DefaultLintModelLibraryResolver(dependencyCaches.libraryMap)
+            libraryResolver = DefaultLintModelLibraryResolver(dependencyCaches.libraryMap),
+            partialResultsDir = partialResultsDir
         )
     }
 
@@ -695,14 +706,7 @@ abstract class SourceProviderInput {
 
     internal fun initialize(sourceProvider: SourceProvider): SourceProviderInput {
         this.manifestFile.set(sourceProvider.manifestFile)
-        var javaDirectories = sourceProvider.javaDirectories
-        (sourceProvider as HasConvention).convention.plugins["kotlin"]?.let { kotlinSourceSet ->
-            val sourceDirectorySet =
-                kotlinSourceSet.javaClass.getDeclaredMethod("getKotlin")
-                    .invoke(kotlinSourceSet) as SourceDirectorySet
-            // Kotlin and java source directories may overlap, so de-duplicate
-            javaDirectories = sourceDirectorySet.srcDirs.plus(javaDirectories)
-        }
+        val javaDirectories = sourceProvider.javaDirectories + sourceProvider.kotlinDirectories
         this.javaDirectories.fromDisallowChanges(javaDirectories)
         this.resDirectories.fromDisallowChanges(sourceProvider.resDirectories)
         this.assetsDirectories.fromDisallowChanges(sourceProvider.assetsDirectories)

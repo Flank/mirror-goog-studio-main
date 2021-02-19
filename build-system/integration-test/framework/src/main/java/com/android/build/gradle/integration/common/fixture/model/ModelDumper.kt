@@ -292,6 +292,9 @@ private fun SourceProvider.writeToBuilder(builder: DumpBuilder) {
         multiLineList("javaDirectories", javaDirectories.sorted()) {
             value(it)
         }
+        multiLineList("kotlinDirectories", kotlinDirectories.sorted()) {
+            value(it)
+        }
         multiLineList("resourcesDirectories", resourcesDirectories.sorted()) {
             value(it)
         }

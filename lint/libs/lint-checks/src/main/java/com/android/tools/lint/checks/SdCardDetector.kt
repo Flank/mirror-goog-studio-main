@@ -20,6 +20,7 @@ import com.android.tools.lint.client.api.UElementHandler
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
+import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Scope
@@ -80,13 +81,11 @@ class SdCardDetector : Detector(), SourceCodeScanner {
                     ) {
                         val message =
                             """Do not hardcode "/sdcard/"; use `Environment.getExternalStorageDirectory().getPath()` instead"""
-                        val location = context.getLocation(node)
-                        context.report(ISSUE, node, location, message)
+                        Incident(context).issue(ISSUE).at(node).message(message).report()
                     } else if (s.startsWith("/data/data/") || s.startsWith("/data/user/")) {
                         val message =
                             """Do not hardcode "`/data/`"; use `Context.getFilesDir().getPath()` instead"""
-                        val location = context.getLocation(node)
-                        context.report(ISSUE, node, location, message)
+                        Incident(context).issue(ISSUE).at(node).message(message).report()
                     }
                 }
             }

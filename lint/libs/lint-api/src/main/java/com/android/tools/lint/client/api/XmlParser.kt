@@ -55,13 +55,13 @@ abstract class XmlParser {
     abstract fun parseXml(file: File): Document?
 
     /**
-     * Parse the given XML string and return document, or null if any error
-     * occurs (does **not** throw parsing exceptions). Most clients should
-     * call [.parseXml] instead.
+     * Parse the given XML string and return document, or null if any
+     * error occurs (does **not** throw parsing exceptions). Most
+     * clients should call [parseXml] instead.
      *
      * @param xml the parsing string
-     * @param file the file corresponding to the XML string, **if known**.
-     * May be null.
+     * @param file the file corresponding to the XML string, **if
+     *     known**. May be null.
      * @return the parsed DOM document, or null if parsing fails
      */
     abstract fun parseXml(xml: CharSequence, file: File): Document?
@@ -100,9 +100,8 @@ abstract class XmlParser {
     abstract fun getLocation(file: File, node: Node): Location
 
     /**
-     * Returns a [Location] for the given DOM node. Like
-     * [.getLocation], but allows a position range that
-     * is a subset of the node range.
+     * Returns a [Location] for the given DOM node. Like [getLocation],
+     * but allows a position range that is a subset of the node range.
      *
      * @param context information about the file being parsed
      * @param node the node to create a location for

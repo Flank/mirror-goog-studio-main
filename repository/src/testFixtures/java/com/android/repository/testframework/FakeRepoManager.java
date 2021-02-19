@@ -34,7 +34,6 @@ import com.google.common.collect.Lists;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import org.w3c.dom.ls.LSResourceResolver;
 
 /**
@@ -87,14 +86,16 @@ public class FakeRepoManager extends RepoManager {
 
     @NonNull
     @Override
-    public Set<RepositorySourceProvider> getSourceProviders() {
-        return Collections.emptySet();
+    public List<RepositorySourceProvider> getSourceProviders() {
+        return Collections.emptyList();
     }
 
     @Override
-    public Set<RepositorySource> getSources(@Nullable Downloader downloader,
-            @NonNull ProgressIndicator progress, boolean forceRefresh) {
-        return Collections.emptySet();
+    public List<RepositorySource> getSources(
+            @Nullable Downloader downloader,
+            @NonNull ProgressIndicator progress,
+            boolean forceRefresh) {
+        return Collections.emptyList();
     }
 
     @Override

@@ -20,11 +20,13 @@ import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_SINGLE_LINE;
 import static com.android.SdkConstants.VALUE_1;
 import static com.android.SdkConstants.VALUE_TRUE;
+import static com.android.tools.lint.detector.api.Constraints.minSdkLessThan;
 
 import com.android.annotations.NonNull;
 import com.android.resources.ResourceFolderType;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Implementation;
+import com.android.tools.lint.detector.api.Incident;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
 import com.android.tools.lint.detector.api.LintFix;
@@ -84,7 +86,7 @@ public class EllipsizeMaxLinesDetector extends LayoutDetector {
             return;
         }
 
-        if (context.getMainProject().getMinSdk() >= 23) {
+        if (context.getProject().getMinSdk() >= 23) {
             // This is not a problem as of Android 6.0:
             // https://issuetracker.google.com/36950033
             return;
@@ -106,17 +108,20 @@ public class EllipsizeMaxLinesDetector extends LayoutDetector {
                                     fix().unset(ANDROID_URI, other.getLocalName()).build())
                             .autoFix();
 
-            context.report(
-                    ISSUE,
-                    attribute,
-                    location,
-                    String.format(
-                            "Combining `ellipsize=%1$s` and `%2$s=%3$s` can lead to "
-                                    + "crashes. Use `singleLine=true` instead.",
-                            element.getAttributeNS(ANDROID_URI, ATTR_ELLIPSIZE),
-                            other.getLocalName(),
-                            other.getValue()),
-                    fix);
+            Incident incident =
+                    new Incident(
+                            ISSUE,
+                            attribute,
+                            location,
+                            String.format(
+                                    "Combining `ellipsize=%1$s` and `%2$s=%3$s` can lead to "
+                                            + "crashes. Use `singleLine=true` instead.",
+                                    element.getAttributeNS(ANDROID_URI, ATTR_ELLIPSIZE),
+                                    other.getLocalName(),
+                                    other.getValue()),
+                            fix);
+            // Fixed as of Android M
+            context.report(incident, minSdkLessThan(23));
         }
     }
 }

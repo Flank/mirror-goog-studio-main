@@ -81,6 +81,7 @@ import com.android.builder.model.v2.models.GlobalLibraryMap
 import com.android.builder.model.v2.models.ModelBuilderParameter
 import com.android.builder.model.v2.models.ProjectSyncIssues
 import com.android.builder.model.v2.models.VariantDependencies
+import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
 import org.gradle.api.Project
@@ -249,7 +250,7 @@ class ModelBuilder<
 
             defaultConfig = defaultConfig,
             buildTypes = buildTypes,
-            flavorDimensions = extension.flavorDimensions,
+            flavorDimensions = ImmutableList.copyOf(extension.flavorDimensions),
             productFlavors = productFlavors,
 
             variants = variantList,

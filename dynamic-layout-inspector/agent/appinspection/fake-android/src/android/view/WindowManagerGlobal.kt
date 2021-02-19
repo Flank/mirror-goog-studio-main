@@ -20,7 +20,7 @@ import androidx.annotation.VisibleForTesting
 
 class WindowManagerGlobal {
     companion object {
-
+        @JvmStatic
         val instance = WindowManagerGlobal()
     }
 

@@ -26,7 +26,8 @@ public enum DeviceId {
     API_27("8.1", 27),
     API_28("9.0", 28),
     API_29("10.0", 29),
-    API_30("11.0", 30);
+    API_30("11.0", 30),
+    API_31("12.0", 31);
 
     public static final DeviceId MIN_VALUE = DeviceId.values()[0];
     public static final DeviceId MAX_VALUE = DeviceId.values()[DeviceId.values().length - 1];

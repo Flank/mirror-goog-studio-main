@@ -25,6 +25,8 @@ import com.android.utils.CharSequences.lastIndexOf
 import com.android.utils.CharSequences.startsWith
 import com.google.common.annotations.Beta
 import java.io.File
+import kotlin.math.max
+import kotlin.math.min
 
 /**
  * Location information for a warning
@@ -37,19 +39,16 @@ import java.io.File
 open class Location
 /**
  * (Private constructor, use one of the factory methods
- * [Location.create],
- * [Location.create], or
- * [Location.create].)
+ * [Location.create], [Location.create], or [Location.create].)
  *
- * Constructs a new location range for the given file, from start to end. If
- * the length of the range is not known, end may be null.
+ * Constructs a new location range for the given file, from start to
+ * end. If the length of the range is not known, end may be null.
  *
  * @param file the associated file (but see the documentation for
- * *            [.getFile] for more information on what the file
- * *            represents)
+ * * [Location.file] for more information on what the file
+ * * represents)
  *
  * @param start the starting position, or null
- *
  * @param end the ending position, or null
  */
 protected constructor(
@@ -135,16 +134,14 @@ protected constructor(
     var source: Any? = null
 
     /**
-     * Sets a secondary location with the given message and returns the current location
-     * updated with the given secondary location.
+     * Sets a secondary location with the given message and returns the
+     * current location updated with the given secondary location.
      *
-     * @param secondary a secondary location associated with this location
-     *
+     * @param secondary a secondary location associated with this
+     *     location
      * @param message a message to be set on the secondary location
-     *
-     * @param selfExplanatory if true, the message is itself self-explanatory; see
-     *                        [.isSelfExplanatory]}
-     *
+     * @param selfExplanatory if true, the message is itself
+     *     self-explanatory; see [isSelfExplanatory]}
      * @return current location updated with the secondary location
      */
     @JvmOverloads
@@ -230,9 +227,10 @@ protected constructor(
     fun isSelfExplanatory(): Boolean = selfExplanatory
 
     /**
-     * Sets whether this message is self-explanatory. See [.isSelfExplanatory].
-     * @param selfExplanatory whether this message is self explanatory.
+     * Sets whether this message is self-explanatory. See
+     * [isSelfExplanatory].
      *
+     * @param selfExplanatory whether this message is self explanatory.
      * @return this, for constructor chaining
      */
     open fun setSelfExplanatory(selfExplanatory: Boolean): Location {
@@ -447,10 +445,11 @@ protected constructor(
         private const val SUPER_KEYWORD = "super"
 
         /**
-         * Special marker location which means location not available, or not applicable,
-         * or filtered out, etc. For example, the infrastructure may return [.NONE] if you ask
-         * [UastParser.getLocation] for an element which is not in the current
-         * file during an incremental lint run in a single file.
+         * Special marker location which means location not
+         * available, or not applicable, or filtered out, etc. For
+         * example, the infrastructure may return [NONE] if you ask
+         * [UastParser.getLocation] for an element which is not in the
+         * current file during an incremental lint run in a single file.
          */
         @JvmField
         val NONE: Location = object : Location(File("NONE"), null, null) {
@@ -460,9 +459,11 @@ protected constructor(
 
             override fun setSelfExplanatory(selfExplanatory: Boolean): Location = this
 
+            @Suppress("UNUSED_PARAMETER")
             override var visible: Boolean = false
                 set(value) = Unit
 
+            @Suppress("UNUSED_PARAMETER")
             override var secondary: Location? = null
                 set(value) = Unit
         }
@@ -565,16 +566,12 @@ protected constructor(
             val size = contents.length
             var startOffset = startOffset
             var endOffset = endOffset
-            endOffset = Math.min(endOffset, size)
-            startOffset = Math.min(startOffset, endOffset)
-            var start: Position? = null
-            var line = 0
-            var lineOffset = 0
-            var prev: Char = 0.toChar()
-            for (offset in 0..size) {
-                if (offset == startOffset) {
-                    start = DefaultPosition(line, offset - lineOffset, offset)
-                }
+            endOffset = min(endOffset, size)
+            startOffset = min(startOffset, endOffset)
+            var lineOffset = findLineBeginFromOffset(startOffset, contents)
+            var line = findLineFromOffset(lineOffset, contents)
+            val start = DefaultPosition(line, startOffset - lineOffset, startOffset)
+            for (offset in startOffset..size) {
                 if (offset == endOffset) {
                     val end = DefaultPosition(line, offset - lineOffset, offset)
                     return Location(file, start, end)
@@ -582,16 +579,11 @@ protected constructor(
                 val c = contents[offset]
                 if (c == '\n') {
                     lineOffset = offset + 1
-                    if (prev != '\r') {
-                        line++
-                    }
-                } else if (c == '\r') {
                     line++
-                    lineOffset = offset + 1
                 }
-                prev = c
             }
-            return create(file)
+            val end = DefaultPosition(line, size - lineOffset, size)
+            return Location(file, start, end)
         }
 
         /**
@@ -641,127 +633,118 @@ protected constructor(
             patternEnd: String?,
             hints: SearchHints?
         ): Location {
+
             var targetLine = line
             var targetPattern = patternStart
-            var currentLine = 0
-            var offset = 0
-            while (currentLine < targetLine) {
-                offset = indexOf(contents, '\n', offset)
-                if (offset == -1) {
-                    return create(file)
-                }
-                currentLine++
-                offset++
+            var offset = findLineOffset(targetLine, contents)
+            if (offset == -1) {
+                return create(file)
             }
 
-            if (targetLine == currentLine) {
-                if (targetPattern != null) {
-                    var direction = SearchDirection.NEAREST
-                    if (hints != null) {
-                        direction = hints.direction
+            if (targetPattern != null) {
+                var direction = SearchDirection.NEAREST
+                if (hints != null) {
+                    direction = hints.direction
+                }
+
+                val index: Int
+                if (direction == SearchDirection.BACKWARD) {
+                    index = findPreviousMatch(contents, offset, targetPattern, hints)
+                    targetLine = adjustLine(contents, targetLine, offset, index)
+                } else if (direction == SearchDirection.EOL_BACKWARD) {
+                    var lineEnd = indexOf(contents, '\n', offset)
+                    if (lineEnd == -1) {
+                        lineEnd = contents.length
                     }
 
-                    val index: Int
-                    if (direction == SearchDirection.BACKWARD) {
-                        index = findPreviousMatch(contents, offset, targetPattern, hints)
-                        targetLine = adjustLine(contents, targetLine, offset, index)
-                    } else if (direction == SearchDirection.EOL_BACKWARD) {
-                        var lineEnd = indexOf(contents, '\n', offset)
-                        if (lineEnd == -1) {
-                            lineEnd = contents.length
-                        }
+                    index = findPreviousMatch(contents, lineEnd, targetPattern, hints)
+                    targetLine = adjustLine(contents, targetLine, offset, index)
+                } else if (direction == SearchDirection.FORWARD) {
+                    index = findNextMatch(contents, offset, targetPattern, hints)
+                    targetLine = adjustLine(contents, targetLine, offset, index)
+                } else {
+                    assert(
+                        direction == SearchDirection.NEAREST ||
+                            direction == SearchDirection.EOL_NEAREST
+                    )
 
-                        index = findPreviousMatch(contents, lineEnd, targetPattern, hints)
+                    var lineEnd = indexOf(contents, '\n', offset)
+                    if (lineEnd == -1) {
+                        lineEnd = contents.length
+                    }
+                    offset = lineEnd
+
+                    val before = findPreviousMatch(contents, offset, targetPattern, hints)
+                    val after = findNextMatch(contents, offset, targetPattern, hints)
+
+                    if (before == -1) {
+                        index = after
                         targetLine = adjustLine(contents, targetLine, offset, index)
-                    } else if (direction == SearchDirection.FORWARD) {
-                        index = findNextMatch(contents, offset, targetPattern, hints)
+                    } else if (after == -1) {
+                        index = before
                         targetLine = adjustLine(contents, targetLine, offset, index)
                     } else {
-                        assert(
-                            direction == SearchDirection.NEAREST ||
-                                direction == SearchDirection.EOL_NEAREST
-                        )
-
-                        var lineEnd = indexOf(contents, '\n', offset)
-                        if (lineEnd == -1) {
-                            lineEnd = contents.length
+                        var newLinesBefore = 0
+                        for (i in before until offset) {
+                            if (contents[i] == '\n') {
+                                newLinesBefore++
+                            }
                         }
-                        offset = lineEnd
-
-                        val before = findPreviousMatch(contents, offset, targetPattern, hints)
-                        val after = findNextMatch(contents, offset, targetPattern, hints)
-
-                        if (before == -1) {
-                            index = after
-                            targetLine = adjustLine(contents, targetLine, offset, index)
-                        } else if (after == -1) {
+                        var newLinesAfter = 0
+                        for (i in offset until after) {
+                            if (contents[i] == '\n') {
+                                newLinesAfter++
+                            }
+                        }
+                        if (newLinesBefore < newLinesAfter || newLinesBefore == newLinesAfter &&
+                            offset - before < after - offset
+                        ) {
                             index = before
                             targetLine = adjustLine(contents, targetLine, offset, index)
                         } else {
-                            var newLinesBefore = 0
-                            for (i in before until offset) {
-                                if (contents[i] == '\n') {
-                                    newLinesBefore++
-                                }
-                            }
-                            var newLinesAfter = 0
-                            for (i in offset until after) {
-                                if (contents[i] == '\n') {
-                                    newLinesAfter++
-                                }
-                            }
-                            if (newLinesBefore < newLinesAfter || newLinesBefore == newLinesAfter &&
-                                offset - before < after - offset
-                            ) {
-                                index = before
-                                targetLine = adjustLine(contents, targetLine, offset, index)
-                            } else {
-                                index = after
-                                targetLine = adjustLine(contents, targetLine, offset, index)
-                            }
+                            index = after
+                            targetLine = adjustLine(contents, targetLine, offset, index)
                         }
-                    }
-
-                    if (index != -1) {
-                        var lineStart = contents.lastIndexOf('\n', index)
-                        if (lineStart == -1) {
-                            lineStart = 0
-                        } else {
-                            lineStart++ // was pointing to the previous line's CR, not line start
-                        }
-                        val column = index - lineStart
-                        if (patternEnd != null) {
-                            val end = indexOf(contents, patternEnd, offset + targetPattern.length)
-                            if (end != -1) {
-                                return Location(
-                                    file, DefaultPosition(targetLine, column, index),
-                                    DefaultPosition(targetLine, -1, end + patternEnd.length)
-                                )
-                            }
-                        } else if (hints != null && (hints.isJavaSymbol || hints.isWholeWord)) {
-                            if (hints.isConstructor && startsWith(contents, SUPER_KEYWORD, index)) {
-                                targetPattern = SUPER_KEYWORD
-                            }
-                            return Location(
-                                file, DefaultPosition(targetLine, column, index),
-                                DefaultPosition(
-                                    targetLine, column + targetPattern.length,
-                                    index + targetPattern.length
-                                )
-                            )
-                        }
-                        return Location(
-                            file, DefaultPosition(targetLine, column, index),
-                            DefaultPosition(targetLine, column, index + targetPattern.length)
-                        )
                     }
                 }
 
-                val position = DefaultPosition(targetLine, -1, offset)
-                return Location(file, position, position)
+                if (index != -1) {
+                    var lineStart = contents.lastIndexOf('\n', index)
+                    if (lineStart == -1) {
+                        lineStart = 0
+                    } else {
+                        lineStart++ // was pointing to the previous line's CR, not line start
+                    }
+                    val column = index - lineStart
+                    if (patternEnd != null) {
+                        val end = indexOf(contents, patternEnd, offset + targetPattern.length)
+                        if (end != -1) {
+                            return Location(
+                                file, DefaultPosition(targetLine, column, index),
+                                DefaultPosition(targetLine, -1, end + patternEnd.length)
+                            )
+                        }
+                    } else if (hints != null && (hints.isJavaSymbol || hints.isWholeWord)) {
+                        if (hints.isConstructor && startsWith(contents, SUPER_KEYWORD, index)) {
+                            targetPattern = SUPER_KEYWORD
+                        }
+                        return Location(
+                            file, DefaultPosition(targetLine, column, index),
+                            DefaultPosition(
+                                targetLine, column + targetPattern.length,
+                                index + targetPattern.length
+                            )
+                        )
+                    }
+                    return Location(
+                        file, DefaultPosition(targetLine, column, index),
+                        DefaultPosition(targetLine, column, index + targetPattern.length)
+                    )
+                }
             }
 
-            return create(file)
+            val position = DefaultPosition(targetLine, -1, offset)
+            return Location(file, position, position)
         }
 
         @JvmStatic
@@ -772,7 +755,7 @@ protected constructor(
             hints: SearchHints?
         ): Int {
             var currentOffset = offset
-            val loopDecrement = Math.max(1, pattern.length)
+            val loopDecrement = max(1, pattern.length)
             while (true) {
                 val index = lastIndexOf(contents, pattern, currentOffset)
                 if (index == -1) {
@@ -805,7 +788,7 @@ protected constructor(
                 }
             }
 
-            val loopIncrement = Math.max(1, pattern.length)
+            val loopIncrement = max(1, pattern.length)
             while (true) {
                 val index = indexOf(contents, pattern, currentOffset)
                 if (index == -1 || index == contents.length) {
@@ -813,7 +796,7 @@ protected constructor(
                 } else {
                     if (isMatch(contents, index, pattern, hints)) {
                         if (constructorIndex != -1) {
-                            return Math.min(constructorIndex, index)
+                            return min(constructorIndex, index)
                         }
                         return index
                     } else {
@@ -930,6 +913,54 @@ protected constructor(
             }
 
             return currentLocation
+        }
+
+        /**
+         * Returns the offset of the first character on the given line
+         */
+        private fun findLineBeginFromOffset(offset: Int, contents: CharSequence): Int {
+            var i = offset - 1
+            while (i >= 0) {
+                if (contents[i] == '\n') {
+                    return i + 1
+                }
+                i--
+            }
+            return 0
+        }
+
+        private fun findLineOffset(targetLine: Int, contents: CharSequence): Int {
+            var currentLine = 0
+            var offset = 0
+
+            while (currentLine < targetLine) {
+                offset = indexOf(contents, '\n', offset)
+                if (offset == -1) {
+                    return -1
+                }
+                currentLine++
+                offset++
+            }
+
+            return offset
+        }
+
+        private fun findLineFromOffset(startOffset: Int, contents: CharSequence): Int {
+            val size = contents.length
+            val target = min(startOffset, size)
+            var line = 0
+
+            for (offset in 0..size) {
+                if (offset == target) {
+                    return line
+                }
+                val c = contents[offset]
+                if (c == '\n') {
+                    line++
+                }
+            }
+
+            return line
         }
     }
 }

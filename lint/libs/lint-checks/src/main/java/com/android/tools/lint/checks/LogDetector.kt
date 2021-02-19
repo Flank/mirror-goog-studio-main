@@ -19,8 +19,10 @@ package com.android.tools.lint.checks
 import com.android.tools.lint.client.api.TYPE_STRING
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.ConstantEvaluator
+import com.android.tools.lint.detector.api.minSdkLessThan
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
+import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Scope
@@ -170,10 +172,11 @@ class LogDetector : Detector(), SourceCodeScanner {
             ) {
                 val argument = argumentList[tagArgumentIndex]
                 val tag = ConstantEvaluator.evaluateString(context, argument, true)
-                if (tag != null && tag.length > 23 && context.mainProject.minSdk <= 23) {
+                if (tag != null && tag.length > 23 && context.project.minSdk <= 23) {
                     val message =
                         "The logging tag can be at most 23 characters, was ${tag.length} ($tag)"
-                    context.report(LONG_TAG, node, context.getLocation(argument), message)
+                    val incident = Incident(LONG_TAG, message, context.getLocation(argument), node)
+                    context.report(incident, minSdkLessThan(23))
                 }
             }
         }

@@ -74,7 +74,7 @@ class WorkManagerDetector : Detector(), SourceCodeScanner {
         private const val METHOD_COMBINE = "combine"
     }
 
-    override fun getApplicableMethodNames(): List<String>? {
+    override fun getApplicableMethodNames(): List<String> {
         return listOf(METHOD_BEGIN_WITH, METHOD_BEGIN_UNIQUE_WORK, METHOD_THEN, METHOD_COMBINE)
     }
 

@@ -109,6 +109,11 @@ public class SourceProviderImpl implements SourceProvider, Serializable {
     }
 
     @NonNull
+    Collection<File> getKotlinDirectories() {
+        return Collections.emptyList()
+    }
+
+    @NonNull
     Collection<File> getResourcesDirectories() {
         return Collections.emptyList()
     }

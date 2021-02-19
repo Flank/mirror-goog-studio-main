@@ -36,7 +36,6 @@ import com.android.SdkConstants.TOOLS_URI
 import com.android.SdkConstants.VIEW_FRAGMENT
 import com.android.SdkConstants.VIEW_TAG
 import com.android.SdkConstants.XMLNS
-import com.android.ide.common.rendering.api.ResourceNamespace
 import com.android.resources.ResourceFolderType
 import com.android.resources.ResourceFolderType.ANIM
 import com.android.resources.ResourceFolderType.ANIMATOR
@@ -45,8 +44,6 @@ import com.android.resources.ResourceFolderType.DRAWABLE
 import com.android.resources.ResourceFolderType.INTERPOLATOR
 import com.android.resources.ResourceFolderType.LAYOUT
 import com.android.resources.ResourceFolderType.MENU
-import com.android.resources.ResourceType
-import com.android.tools.lint.client.api.ResourceRepositoryScope.ALL_DEPENDENCIES
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
@@ -197,31 +194,6 @@ class MissingPrefixDetector : LayoutDetector() {
                 ) {
                     return
                 }
-
-                // Look for other app compat attributes - such as buttonTint
-                val project = context.mainProject
-                val client = context.client
-
-                val repository = client.getResources(project, ALL_DEPENDENCIES)
-                val items = repository.getResources(
-                    ResourceNamespace.TODO(),
-                    ResourceType.ATTR,
-                    attribute.localName
-                )
-                if (items.isNotEmpty()) {
-                    for (item in items) {
-                        val libraryName = item.libraryName ?: continue
-                        if (libraryName.contains("appcompat") || libraryName.contains("material")) {
-                            return
-                        }
-                    }
-                }
-
-                context.report(
-                    MISSING_NAMESPACE, attribute,
-                    context.getLocation(attribute),
-                    "Unexpected namespace prefix \"$prefix\" found for tag `${attribute.ownerElement.tagName}`"
-                )
             }
         }
     }

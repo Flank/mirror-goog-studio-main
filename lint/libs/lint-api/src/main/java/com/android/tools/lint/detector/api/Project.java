@@ -110,9 +110,10 @@ import org.w3c.dom.NodeList;
 public class Project {
     protected final LintClient client;
     protected final File dir;
-    protected final File referenceDir;
+    protected File referenceDir;
     protected Configuration configuration;
     protected String pkg;
+    protected Document dom;
     protected int buildSdk = -1;
     protected String buildTargetHash;
     protected IAndroidTarget target;
@@ -320,6 +321,12 @@ public class Project {
     @Nullable
     public Document getMergedManifest() {
         if (mergedManifest == null) {
+            // Don't provide the merged manifest if doing partial analysis on a library
+            // project; accessing this here means the detector is not correctly handling
+            // libraries
+            if (Context.Companion.checkForbidden("project.getMergedManifest()", dir, null)) {
+                return null;
+            }
             mergedManifest = client.getMergedManifest(this);
         }
 
@@ -938,11 +945,21 @@ public class Project {
     }
 
     /**
+     * Returns the manifest document that the project metadata like {@link #manifestMinSdk} was
+     * initially read from.
+     */
+    @Nullable
+    public Document getManifestDom() {
+        return dom;
+    }
+
+    /**
      * Initialized the manifest state from the given manifest model
      *
      * @param document the DOM document for the manifest XML document
      */
     public void readManifest(@NonNull Document document) {
+        dom = document;
         Element root = document.getDocumentElement();
         if (root == null) {
             return;

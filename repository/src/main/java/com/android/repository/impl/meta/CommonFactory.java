@@ -20,10 +20,10 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.repository.Revision;
 import com.android.repository.api.Channel;
+import com.android.repository.api.Checksum;
 import com.android.repository.api.Dependency;
 import com.android.repository.api.License;
 import com.android.repository.api.Repository;
-import com.google.common.annotations.VisibleForTesting;
 import javax.xml.bind.JAXBElement;
 
 /**
@@ -59,6 +59,20 @@ public abstract class CommonFactory {
 
     @NonNull
     public abstract Archive.PatchesType createPatchesType();
+
+    @NonNull
+    public Checksum createChecksum(String checksum, String type) {
+        Checksum result = createChecksumType();
+        result.setValue(checksum);
+        result.setType(type);
+        return result;
+    }
+
+    @NonNull
+    protected Checksum createChecksumType() {
+        // Not supported for v1. This method is overridden in later versions.
+        throw new UnsupportedOperationException();
+    }
 
     @NonNull
     public abstract JAXBElement<Repository> generateRepository(Repository repo);

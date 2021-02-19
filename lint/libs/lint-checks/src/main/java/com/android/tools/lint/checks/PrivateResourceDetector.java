@@ -46,8 +46,10 @@ import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Implementation;
+import com.android.tools.lint.detector.api.Incident;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
+import com.android.tools.lint.detector.api.LintMap;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
@@ -76,7 +78,8 @@ public class PrivateResourceDetector extends ResourceXmlDetector implements Sour
     /** Attribute for overriding a resource */
     private static final String ATTR_OVERRIDE = "override";
 
-    @SuppressWarnings("unchecked")
+    private static final String KEY_URL = "url";
+
     private static final Implementation IMPLEMENTATION =
             new Implementation(
                     PrivateResourceDetector.class,
@@ -118,43 +121,64 @@ public class PrivateResourceDetector extends ResourceXmlDetector implements Sour
             @NonNull ResourceType resourceType,
             @NonNull String name,
             boolean isFramework) {
-        if (!isFramework) {
-            if (isPrivate(context, resourceType, name)) {
-                // See if it's a local package reference
-                boolean foreignPackage = false;
-                if (node instanceof UReferenceExpression) {
-                    PsiElement resolved = ((UReferenceExpression) node).resolve();
-                    if (resolved instanceof PsiField) {
-                        PsiPackage pkg = context.getEvaluator().getPackage(resolved);
-                        if (pkg != null) {
-                            String pkgName = pkg.getQualifiedName();
-                            if (!(pkgName.equals(context.getProject().getPackage())
-                                    || pkgName.equals(context.getMainProject().getPackage()))) {
-                                foreignPackage = true;
-                            }
+        if (!isFramework && isPrivate(context, resourceType, name)) {
+            // See if it's a local package reference
+            boolean foreignPackage = false;
+            boolean globalAnalysis = context.isGlobalAnalysis();
+            if (node instanceof UReferenceExpression) {
+                PsiElement resolved = ((UReferenceExpression) node).resolve();
+                if (resolved instanceof PsiField) {
+                    PsiPackage pkg = context.getEvaluator().getPackage(resolved);
+                    if (pkg != null) {
+                        String pkgName = pkg.getQualifiedName();
+                        if (!(pkgName.equals(context.getProject().getPackage())
+                                || globalAnalysis
+                                        && pkgName.equals(context.getMainProject().getPackage()))) {
+                            foreignPackage = true;
                         }
                     }
                 }
+            }
 
-                // See if this is resource we're overriding locally
-                if (!foreignPackage) {
-                    Project project = context.getMainProject();
-                    LintClient client = context.getClient();
-                    ResourceRepository repository =
-                            client.getResources(project, LOCAL_DEPENDENCIES);
-                    if (repository.hasResources(ResourceNamespace.TODO(), resourceType, name)) {
-                        return;
-                    }
-
-                    if (overriding != null && overriding.contains(resourceType + ":" + name)) {
-                        return;
-                    }
+            // See if this is resource we're overriding locally
+            if (!foreignPackage) {
+                if (globalAnalysis && referencedInMain(context, resourceType, name)) {
+                    return;
                 }
 
-                String message = createUsageErrorMessage(context, resourceType, name);
-                context.report(ISSUE, node, context.getLocation(node), message);
+                if (overriding != null && overriding.contains(resourceType + ":" + name)) {
+                    return;
+                }
+            }
+
+            String message = createUsageErrorMessage(context, resourceType, name);
+            Incident incident = new Incident(ISSUE, node, context.getLocation(node), message);
+            if (globalAnalysis) {
+                context.report(incident);
+            } else {
+                context.report(incident, map().put(KEY_URL, "@" + resourceType + "/" + name));
             }
         }
+    }
+
+    @Override
+    public boolean filterIncident(
+            @NonNull Context context, @NonNull Incident incident, @NonNull LintMap map) {
+        String urlString = map.getString(KEY_URL, null);
+        if (urlString != null) {
+            ResourceUrl url = ResourceUrl.parse(urlString);
+            return url != null && !referencedInMain(context, url.type, url.name);
+        }
+
+        return false;
+    }
+
+    private static boolean referencedInMain(
+            @NonNull Context context, @NonNull ResourceType resourceType, @NonNull String name) {
+        LintClient client = context.getClient();
+        Project mainProject = context.getMainProject();
+        ResourceRepository repository = client.getResources(mainProject, LOCAL_DEPENDENCIES);
+        return repository.hasResources(ResourceNamespace.TODO(), resourceType, name);
     }
 
     // ---- Implements XmlScanner ----

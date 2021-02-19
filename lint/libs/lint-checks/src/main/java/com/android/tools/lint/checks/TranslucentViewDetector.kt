@@ -31,10 +31,14 @@ import com.android.resources.ResourceUrl
 import com.android.sdklib.AndroidVersion
 import com.android.tools.lint.client.api.ResourceReference
 import com.android.tools.lint.detector.api.Category
+import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
+import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
+import com.android.tools.lint.detector.api.LintMap
+import com.android.tools.lint.detector.api.LocationType
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
@@ -88,17 +92,13 @@ class TranslucentViewDetector : Detector(), XmlScanner, SourceCodeScanner {
     private var interestingThemes: MutableList<String>? = null
     private var defaultTheme: String? = null
 
-    override fun getApplicableAttributes(): Collection<String>? = listOf(ATTR_SCREEN_ORIENTATION)
-    override fun getApplicableElements(): Collection<String>? = listOf(TAG_STYLE)
+    override fun getApplicableAttributes(): Collection<String> = listOf(ATTR_SCREEN_ORIENTATION)
+    override fun getApplicableElements(): Collection<String> = listOf(TAG_STYLE)
     override fun appliesTo(folderType: ResourceFolderType): Boolean {
         return folderType == ResourceFolderType.VALUES
     }
 
     override fun visitAttribute(context: XmlContext, attribute: Attr) {
-        if (context.mainProject.targetSdk < AndroidVersion.VersionCodes.O) {
-            return
-        }
-
         // If anyone specifies screenOrientation (other than "unspecified"), then
         // write down the theme applied on this activity.  (If theme is not specified,
         // look it up in the activity or worst of all, use default in manifest)
@@ -165,10 +165,6 @@ class TranslucentViewDetector : Detector(), XmlScanner, SourceCodeScanner {
             return
         }
 
-        if (context.mainProject.targetSdk < AndroidVersion.VersionCodes.O) {
-            return
-        }
-
         // TODO: Need full map to chase parent pointers etc
         val themeName = element.getAttribute(ATTR_NAME)
         if (themeName == defaultTheme || themes != null && themes.contains(themeName)) {
@@ -181,38 +177,9 @@ class TranslucentViewDetector : Detector(), XmlScanner, SourceCodeScanner {
                 ) {
                     val attributeNode = curr.getAttributeNode(ATTR_NAME)
                     val location = context.getValueLocation(attributeNode)
-                    // TODO: look up the manifest location too and attach it here
-                    // TODO: Consider going about this from the other end: if we find
-                    // a theme occurrence, THEN look up merged manifest to see if it's referenced
-                    // from an interesting manifest location!
-
-                    val mergedManifest = context.mainProject.mergedManifest
-                    if (mergedManifest != null) {
-                        val application = XmlUtils.getFirstSubTagByName(
-                            mergedManifest.documentElement, TAG_APPLICATION
-                        )
-                        var currentActivity = XmlUtils.getFirstSubTag(application)
-                        while (currentActivity != null) {
-                            val attr = currentActivity.getAttributeNodeNS(
-                                ANDROID_URI,
-                                ATTR_SCREEN_ORIENTATION
-                            )
-                            // TODO - pick the one that doesn't specify unspecified (and ideally
-                            // map back to the same activity that contributed the activity,
-                            // which is why it might make sense to compute forwards instead.)
-                            if (attr != null) {
-                                val secondary = context.getValueLocation(attr)
-                                location.secondary = secondary
-                                break
-                            }
-
-                            currentActivity = XmlUtils.getNextTag(currentActivity)
-                        }
-                    }
-
                     val message = "Should not specify screen orientation with translucent or " +
                         "floating theme"
-                    context.report(ISSUE, curr, location, message)
+                    context.report(Incident(ISSUE, curr, location, message), map())
                     break
                 }
 
@@ -221,10 +188,43 @@ class TranslucentViewDetector : Detector(), XmlScanner, SourceCodeScanner {
         }
     }
 
+    override fun filterIncident(context: Context, incident: Incident, map: LintMap): Boolean {
+        if (context.mainProject.targetSdk < AndroidVersion.VersionCodes.O) {
+            return false
+        }
+
+        // TODO: Consider going about this from the other end: if we find
+        // a theme occurrence, THEN look up merged manifest to see if it's referenced
+        // from an interesting manifest location!
+        val mergedManifest = context.mainProject.mergedManifest ?: return false
+        val application = XmlUtils.getFirstSubTagByName(
+            mergedManifest.documentElement, TAG_APPLICATION
+        )
+        var currentActivity = XmlUtils.getFirstSubTag(application)
+        while (currentActivity != null) {
+            val attr = currentActivity.getAttributeNodeNS(
+                ANDROID_URI,
+                ATTR_SCREEN_ORIENTATION
+            )
+            // TODO - pick the one that doesn't specify unspecified (and ideally
+            // map back to the same activity that contributed the activity,
+            // which is why it might make sense to compute forwards instead.)
+            if (attr != null) {
+                val secondary = context.getLocation(attr, LocationType.VALUE)
+                incident.location.secondary = secondary
+                break
+            }
+
+            currentActivity = XmlUtils.getNextTag(currentActivity)
+        }
+
+        return true
+    }
+
     // In Java/Kotlin files, look for setTheme() calls in activities listed in
     // interestingActivities
 
-    override fun getApplicableMethodNames(): List<String>? {
+    override fun getApplicableMethodNames(): List<String> {
         return listOf("setTheme")
     }
 

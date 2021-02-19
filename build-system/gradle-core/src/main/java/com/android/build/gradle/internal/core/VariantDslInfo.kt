@@ -189,40 +189,6 @@ interface VariantDslInfo {
     val versionCode: Provider<Int?>
 
     /**
-     * Returns the instrumentationRunner to use to test this variant, or if the variant is a test,
-     * the one to use to test the tested variant.
-     *
-     * @param dexingType the selected dexing type for this variant.
-     * @return the instrumentation test runner name
-     */
-    fun getInstrumentationRunner(dexingType: DexingType): Provider<String>
-
-    /**
-     * Returns the instrumentationRunner arguments to use to test this variant, or if the variant is
-     * a test, the ones to use to test the tested variant
-     */
-    val instrumentationRunnerArguments: Map<String, String>
-
-    /**
-     * Returns handleProfiling value to use to test this variant, or if the variant is a test, the
-     * one to use to test the tested variant.
-     *
-     * @return the handleProfiling value
-     */
-    val handleProfiling: Provider<Boolean>
-
-    /**
-     * Returns functionalTest value to use to test this variant, or if the variant is a test, the
-     * one to use to test the tested variant.
-     *
-     * @return the functionalTest value
-     */
-    val functionalTest: Provider<Boolean>
-
-    /** Gets the test label for this variant  */
-    val testLabel: Provider<String?>
-
-    /**
      * Return the minSdkVersion for this variant.
      *
      *
@@ -296,10 +262,6 @@ interface VariantDslInfo {
     // Only require specific multidex opt-in for legacy multidex.
     val isMultiDexEnabled: Boolean?
 
-    val multiDexKeepFile: File?
-
-    val multiDexKeepProguard: File?
-
     // dynamic features can always be build in native multidex mode
     val dexingType: DexingType?
 
@@ -364,4 +326,53 @@ interface VariantDslInfo {
     val isJniDebuggable: Boolean
 
     val aarMetadata: MergedAarMetadata
+
+    ////////////////////////////////////////////////////////////////////////////////////////
+    //  APIs below should only be used at CreationConfig/Variant instantiation time       //
+    //  DO NOT USE THOSE IN TASKS                                                         //
+    ////////////////////////////////////////////////////////////////////////////////////////
+
+    // DO NOT USE, Use CreationConfig and subtypes methods.
+    val multiDexKeepFile: File?
+    // DO NOT USE, Use CreationConfig and subtypes methods.
+    val multiDexKeepProguard: File?
+
+    /**
+     * Returns handleProfiling value to use to test this variant, or if the variant is a test, the
+     * one to use to test the tested variant.
+     *
+     * @return the handleProfiling value
+     */
+    // DO NOT USE, Use CreationConfig and subtypes methods.
+    val handleProfiling: Provider<Boolean>
+
+    /**
+     * Returns functionalTest value to use to test this variant, or if the variant is a test, the
+     * one to use to test the tested variant.
+     *
+     * @return the functionalTest value
+     */
+    // DO NOT USE, Use CreationConfig and subtypes methods.
+    val functionalTest: Provider<Boolean>
+
+    /** Gets the test label for this variant  */
+    // DO NOT USE, Use CreationConfig and subtypes methods.
+    val testLabel: Provider<String?>
+
+    /**
+     * Returns the instrumentationRunner to use to test this variant, or if the variant is a test,
+     * the one to use to test the tested variant.
+     *
+     * @param dexingType the selected dexing type for this variant.
+     * @return the instrumentation test runner name
+     */
+    // DO NOT USE, Use CreationConfig and subtypes methods.
+    fun getInstrumentationRunner(dexingType: DexingType): Provider<String>
+
+    /**
+     * Returns the instrumentationRunner arguments to use to test this variant, or if the variant is
+     * a test, the ones to use to test the tested variant
+     */
+    // DO NOT USE, Use CreationConfig and subtypes methods.
+    val instrumentationRunnerArguments: Map<String, String>
 }

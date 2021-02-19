@@ -313,14 +313,14 @@ public abstract class SdkSource implements Comparable<SdkSource> {
     /**
      * Tries to fetch the repository index for the given URL and updates the package list. When a
      * source is disabled, this create an empty non-null package list.
-     * <p/>
-     * Callers can get the package list using {@link #getPackages()} after this. It will be null in
-     * case of error, in which case {@link #getFetchError()} can be used to an error message.
      *
-     * TODO(jbakermalone): clean up below once validation in UI can match most restrictive case.
+     * <p>Callers can get the package list using {@link #getPackages()} after this. It will be null
+     * in case of error, in which case {@link #getFetchError()} can be used to an error message.
      */
-    public void load(@NonNull Downloader downloader, @NonNull SettingsController settings,
-      @NonNull ProgressIndicator progress) {
+    public void load(
+            @NonNull Downloader downloader,
+            @Nullable SettingsController settings,
+            @NonNull ProgressIndicator progress) {
 
         if (!isEnabled()) {
             setPackages(new RemotePkgInfo[0]);
@@ -329,7 +329,7 @@ public abstract class SdkSource implements Comparable<SdkSource> {
         }
 
         String url = mUrl;
-        if (settings.getForceHttp()) {
+        if (settings != null && settings.getForceHttp()) {
             url = url.replaceAll("https://", "http://");  //$NON-NLS-1$ //$NON-NLS-2$
         }
 

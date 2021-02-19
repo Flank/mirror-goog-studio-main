@@ -36,7 +36,7 @@ import org.jetbrains.uast.expressions.UInjectionHost
 /** Checks for errors related to Date Formats */
 class DateFormatDetector : Detector(), SourceCodeScanner {
     // ---- implements SourceCodeScanner ----
-    override fun getApplicableConstructorTypes(): List<String>? {
+    override fun getApplicableConstructorTypes(): List<String> {
         return listOf(JAVA_SIMPLE_DATE_FORMAT_CLS, ICU_SIMPLE_DATE_FORMAT_CLS)
     }
 
@@ -59,7 +59,7 @@ class DateFormatDetector : Detector(), SourceCodeScanner {
         }
     }
 
-    override fun getApplicableMethodNames(): List<String>? {
+    override fun getApplicableMethodNames(): List<String> {
         return listOf("ofPattern")
     }
 

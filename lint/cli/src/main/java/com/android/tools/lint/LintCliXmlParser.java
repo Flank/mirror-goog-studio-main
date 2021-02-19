@@ -61,13 +61,17 @@ public class LintCliXmlParser extends XmlParser {
             throw new IOException();
         }
 
-        return PositionXmlParser.parse(xml.toString());
+        Document document = PositionXmlParser.parse(xml.toString());
+        document.setUserData(File.class.getName(), file, null);
+        return document;
     }
 
     @Override
     public Document parseXml(@NonNull CharSequence xml, @Nullable File file) {
         try {
-            return PositionXmlParser.parse(xml.toString());
+            Document document = PositionXmlParser.parse(xml.toString());
+            document.setUserData(File.class.getName(), file, null);
+            return document;
         } catch (Exception ignore) {
             return null;
         }
@@ -81,7 +85,9 @@ public class LintCliXmlParser extends XmlParser {
             CharSequence contents = context.getContents();
             if (contents != null) {
                 xml = contents.toString();
-                return PositionXmlParser.parse(xml);
+                Document document = PositionXmlParser.parse(xml);
+                document.setUserData(File.class.getName(), context.file, null);
+                return document;
             }
         } catch (UnsupportedEncodingException e) {
             context.report(

@@ -77,7 +77,7 @@ public class AutofillDetector extends LayoutDetector {
 
     @Override
     public void visitElement(@NonNull XmlContext xmlContext, @NonNull Element element) {
-        if (xmlContext.getMainProject().getTargetSdk() < 26) {
+        if (xmlContext.getProject().getTargetSdk() < 26) {
             return;
         }
 

@@ -21,7 +21,6 @@ import com.android.manifmerger.XmlNode
 import com.android.utils.Pair
 import com.google.common.collect.Lists
 import com.google.common.collect.Maps
-import com.google.common.io.Files
 import org.w3c.dom.Attr
 import org.w3c.dom.Document
 import org.w3c.dom.Element
@@ -324,7 +323,7 @@ class BlameFile internal constructor(
 
         @Throws(IOException::class)
         fun parse(file: File): BlameFile {
-            val lines = Files.readLines(file, Charsets.UTF_8)
+            val lines = file.readLines()
             return parse(lines)
         }
 
@@ -380,7 +379,7 @@ class BlameFile internal constructor(
         }
 
         private fun getIndent(line: String): Int {
-            for (i in 0 until line.length) {
+            for (i in line.indices) {
                 val c = line[i]
                 if (c != '\t') {
                     return i

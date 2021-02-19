@@ -22,7 +22,7 @@ import com.android.tools.lint.detector.api.TextFormat.Companion.HTTP_PREFIX
 import java.lang.StringBuilder
 
 /** Information about the provenance of a lint check */
-class Vendor
+data class Vendor
 @JvmOverloads
 constructor(
     /**

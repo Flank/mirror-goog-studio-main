@@ -16,19 +16,10 @@
 
 package com.android.build.api.component.analytics
 
-import com.android.build.api.component.AndroidTestBuilder
-import com.android.build.api.component.AndroidTest
-import com.android.build.api.component.UnitTestBuilder
-import com.android.build.api.component.UnitTest
-import com.android.build.api.component.impl.AndroidTestBuilderImpl
-import com.android.build.api.component.impl.UnitTestBuilderImpl
-import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.AndroidVersion
-import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
 import com.android.tools.build.gradle.internal.profile.VariantMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
-import org.gradle.api.Action
 
 abstract class AnalyticsEnabledVariantBuilder(
         override val delegate: VariantBuilder,
@@ -74,4 +65,10 @@ abstract class AnalyticsEnabledVariantBuilder(
             stats.variantApiAccessBuilder.addVariantAccessBuilder().type = VariantMethodType.UNIT_TEST_ENABLED_VALUE
             delegate.unitTestEnabled = value
         }
+
+    override fun <T: Any> registerExtension(type: Class<out T>, instance: T) {
+        stats.variantApiAccessBuilder.addVariantAccessBuilder()
+            .type = VariantMethodType.REGISTER_EXTENSION_VALUE
+        delegate.registerExtension(type, instance)
+    }
 }

@@ -45,8 +45,10 @@ import com.android.sdklib.AndroidVersion;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Implementation;
+import com.android.tools.lint.detector.api.Incident;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LintFix;
+import com.android.tools.lint.detector.api.LintMap;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
@@ -64,6 +66,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -76,26 +79,15 @@ public class FontDetector extends ResourceXmlDetector {
             Integer.MAX_VALUE - 1;
 
     public static final String KEY_ARTIFACT_ID = "artifact";
+    public static final String KEY_UNEXPECTED_NAMESPACE = "unexpected-ns";
     public static final String KEY_APP_NAMESPACE = "app-namespace";
 
     private static final Implementation IMPLEMENTATION =
             new Implementation(FontDetector.class, Scope.RESOURCE_FILE_SCOPE);
 
-    public static final Issue FONT_VALIDATION_WARNING =
+    public static final Issue FONT_VALIDATION =
             Issue.create(
-                            "FontValidationWarning",
-                            "Validation of font files",
-                            "Look for problems in various font files.",
-                            Category.CORRECTNESS,
-                            9,
-                            Severity.WARNING,
-                            IMPLEMENTATION)
-                    .addMoreInfo(
-                            "https://developer.android.com/guide/topics/text/downloadable-fonts.html");
-
-    public static final Issue FONT_VALIDATION_ERROR =
-            Issue.create(
-                            "FontValidationError",
+                            "FontValidation",
                             "Validation of font files",
                             "Look for problems in various font files.",
                             Category.CORRECTNESS,
@@ -103,7 +95,8 @@ public class FontDetector extends ResourceXmlDetector {
                             Severity.ERROR,
                             IMPLEMENTATION)
                     .addMoreInfo(
-                            "https://developer.android.com/guide/topics/text/downloadable-fonts.html");
+                            "https://developer.android.com/guide/topics/text/downloadable-fonts.html")
+                    .setAliases(Arrays.asList("FontValidationWarning", "FontValidationError"));
 
     public static final GradleCoordinate MIN_APPSUPPORT_VERSION =
             new GradleCoordinate(SUPPORT_LIB_GROUP_ID, APPCOMPAT_LIB_ARTIFACT_ID, "26.0.0");
@@ -148,7 +141,6 @@ public class FontDetector extends ResourceXmlDetector {
 
         Element fontTag = XmlUtils.getFirstSubTagByName(element, TAG_FONT);
 
-        AndroidVersion minSdk = context.getMainProject().getMinSdkVersion();
         boolean downloadableFontFile = coalesce(firstAndroidAttribute, firstAppAttribute) != null;
 
         if (downloadableFontFile) {
@@ -156,34 +148,19 @@ public class FontDetector extends ResourceXmlDetector {
             if (reportMisplacedFontTag(context, fontTag)) {
                 return;
             }
-            if (minSdk.getApiLevel()
-                    >= FUTURE_API_VERSION_WHERE_DOWNLOADABLE_FONTS_WORK_IN_FRAMEWORK) {
-                reportUnexpectedAttributeNamespace(context, firstAppAttribute, ANDROID_NS_NAME);
-            } else {
-                reportUnexpectedAttributeNamespace(context, firstAndroidAttribute, APP_PREFIX);
-            }
+            reportUnexpectedNamespace(context, firstAndroidAttribute, firstAppAttribute);
             FontProvider provider = reportUnknownProvider(context, authority, appAuthority);
             if (provider != null) {
                 reportUnknownPackage(context, androidPackage, appPackage, provider);
                 reportQueryProblem(context, query, appQuery, provider);
             }
-            if (minSdk.getFeatureLevel() > AndroidVersion.VersionCodes.O_MR1) {
-                reportMissingAppAttribute(
-                        context,
-                        firstAndroidAttribute,
-                        missingAndroidAttributes,
-                        ANDROID_URI,
-                        ANDROID_NS_NAME,
-                        provider);
-            } else {
-                reportMissingAppAttribute(
-                        context,
-                        firstAppAttribute,
-                        missingAppAttributes,
-                        AUTO_URI,
-                        APP_PREFIX,
-                        provider);
-            }
+            reportMissingAttribute(
+                    context,
+                    firstAndroidAttribute,
+                    firstAppAttribute,
+                    missingAndroidAttributes,
+                    missingAppAttributes,
+                    provider);
         }
     }
 
@@ -214,7 +191,7 @@ public class FontDetector extends ResourceXmlDetector {
 
     private static void checkSupportLibraryVersion(
             @NonNull XmlContext context, @NonNull Element element) {
-        LintModelVariant variant = context.getMainProject().getBuildVariant();
+        LintModelVariant variant = context.getProject().getBuildVariant();
         if (variant == null) {
             return;
         }
@@ -260,38 +237,123 @@ public class FontDetector extends ResourceXmlDetector {
         return true;
     }
 
-    private static void reportUnexpectedAttributeNamespace(
-            @NonNull XmlContext context, @Nullable Attr first, @NonNull String namespace) {
-        if (first != null) {
+    private void reportUnexpectedNamespace(
+            @NonNull XmlContext context,
+            @Nullable Attr firstAndroidAttribute,
+            @Nullable Attr firstAppAttribute) {
+        if (context.getProject().getMinSdk()
+                        < FUTURE_API_VERSION_WHERE_DOWNLOADABLE_FONTS_WORK_IN_FRAMEWORK
+                && firstAndroidAttribute != null) {
+            reportUnexpectedNamespace(context, firstAndroidAttribute, true);
+        }
+        //noinspection ConstantConditions
+        if (FUTURE_API_VERSION_WHERE_DOWNLOADABLE_FONTS_WORK_IN_FRAMEWORK < Integer.MAX_VALUE - 1
+                && firstAppAttribute != null) {
+            reportUnexpectedNamespace(context, firstAppAttribute, false);
+        }
+    }
+
+    private void reportUnexpectedNamespace(
+            @NonNull XmlContext context, @NonNull Attr first, boolean appNamespace) {
+        // Report conditionally. The minSdkVersion could be higher when merged in
+        // from an app module.
+        AndroidVersion minSdk = context.getProject().getMinSdkVersion();
+        String message = createUnexpectedAttributeMessage(appNamespace, minSdk);
+        LintFix fix = LintFix.create().unset(first.getNamespaceURI(), first.getLocalName()).build();
+        Incident incident =
+                new Incident(FONT_VALIDATION, message, context.getLocation(first), first, fix)
+                        .overrideSeverity(Severity.WARNING);
+        context.report(incident, map().put(KEY_UNEXPECTED_NAMESPACE, appNamespace));
+    }
+
+    @NonNull
+    private static String createUnexpectedAttributeMessage(
+            boolean appNamespace, AndroidVersion minSdk) {
+        String formatString = "For `minSdkVersion`=%1$d only `%2$s:` attributes should be used";
+        String prefix = appNamespace ? APP_PREFIX : ANDROID_NS_NAME;
+        return String.format(Locale.US, formatString, minSdk.getApiLevel(), prefix);
+    }
+
+    @Override
+    public boolean filterIncident(
+            @NonNull Context context, @NonNull Incident incident, @NonNull LintMap map) {
+        if (map.containsKey(KEY_UNEXPECTED_NAMESPACE)) {
+            // From reportUnexpectedNamespace
+            boolean app = map.getBoolean(KEY_UNEXPECTED_NAMESPACE, false);
             AndroidVersion minSdk = context.getMainProject().getMinSdkVersion();
-            String message =
-                    String.format(
-                            "For `minSdkVersion`=%1$d only `%2$s:` attributes should be used",
-                            minSdk.getApiLevel(), namespace);
-            LintFix fix =
-                    LintFix.create().unset(first.getNamespaceURI(), first.getLocalName()).build();
-            reportWarning(context, first, message, context.getLocation(first), fix);
+            if (minSdk.getApiLevel()
+                    >= FUTURE_API_VERSION_WHERE_DOWNLOADABLE_FONTS_WORK_IN_FRAMEWORK) {
+                if (app) {
+                    return false;
+                }
+            } else if (!app) {
+                return false;
+            }
+            String message = createUnexpectedAttributeMessage(app, minSdk);
+            incident.setMessage(message);
+            return true;
+        }
+
+        // From reportMissingAppAttribute
+        if (map.containsKey(KEY_APP_NAMESPACE)) {
+            boolean app = map.getBoolean(KEY_APP_NAMESPACE, false);
+            AndroidVersion minSdk = context.getMainProject().getMinSdkVersion();
+            if (minSdk.getFeatureLevel() <= AndroidVersion.VersionCodes.O_MR1) {
+                // Flag any app: namespace attributes
+                return app;
+            } else {
+                // Flag any android: namespace attributes
+                return !app;
+            }
+        }
+        return false;
+    }
+
+    private void reportMissingAttribute(
+            @NonNull XmlContext context,
+            @Nullable Attr firstAndroidAttribute,
+            @Nullable Attr firstAppAttribute,
+            @NonNull List<String> missingAndroidAttributes,
+            @NonNull List<String> missingAppAttributes,
+            @Nullable FontProvider provider) {
+        AndroidVersion minSdk = context.getProject().getMinSdkVersion();
+        // TODO: <= O_MR1 or < O_MR1?
+        if (minSdk.getFeatureLevel() <= AndroidVersion.VersionCodes.O_MR1) {
+            if (firstAppAttribute != null && !missingAppAttributes.isEmpty()) {
+                reportMissingAppAttribute(
+                        context, firstAppAttribute, missingAppAttributes, true, provider);
+            }
+        }
+        if (firstAndroidAttribute != null && !missingAndroidAttributes.isEmpty()) {
+            reportMissingAppAttribute(
+                    context, firstAndroidAttribute, missingAndroidAttributes, false, provider);
         }
     }
 
     private void reportMissingAppAttribute(
             @NonNull XmlContext context,
-            @Nullable Attr firstFontAttribute,
+            @NonNull Attr firstFontAttribute,
             @NonNull List<String> missingAttributes,
-            @NonNull String namespaceUri,
-            @NonNull String namespacePrefix,
+            boolean appNamespace,
             @Nullable FontProvider provider) {
-        if (firstFontAttribute != null && !missingAttributes.isEmpty()) {
-            String message =
-                    String.format(
-                            "Missing required %1$s: %2$s:%3$s",
-                            StringUtil.pluralize("attribute", missingAttributes.size()),
-                            namespacePrefix,
-                            Joiner.on(", " + namespacePrefix + ":").join(missingAttributes));
-            LintFix fix = makeMissingAttributeFix(missingAttributes, namespaceUri, provider);
-            Element element = firstFontAttribute.getOwnerElement();
-            reportError(context, element, message, context.getElementLocation(element), fix);
-        }
+        @NonNull String namespaceUri = appNamespace ? AUTO_URI : ANDROID_URI;
+        @NonNull String namespacePrefix = appNamespace ? APP_PREFIX : ANDROID_NS_NAME;
+        String message =
+                String.format(
+                        "Missing required %1$s: %2$s:%3$s",
+                        StringUtil.pluralize("attribute", missingAttributes.size()),
+                        namespacePrefix,
+                        Joiner.on(", " + namespacePrefix + ":").join(missingAttributes));
+        LintFix fix = makeMissingAttributeFix(missingAttributes, namespaceUri, provider);
+        Element element = firstFontAttribute.getOwnerElement();
+        Incident incident =
+                new Incident(
+                        FONT_VALIDATION,
+                        element,
+                        context.getElementLocation(element),
+                        message,
+                        fix);
+        context.report(incident, map().put(KEY_APP_NAMESPACE, appNamespace));
     }
 
     private LintFix makeMissingAttributeFix(
@@ -503,10 +565,10 @@ public class FontDetector extends ResourceXmlDetector {
             @NonNull String message,
             @NonNull Location location,
             @Nullable LintFix fix) {
-        if (!context.isEnabled(FONT_VALIDATION_ERROR)) {
-            return;
-        }
-        context.report(FONT_VALIDATION_ERROR, node, location, message, fix);
+        Incident incident =
+                new Incident(FONT_VALIDATION, node, location, message, fix)
+                        .overrideSeverity(Severity.ERROR);
+        context.report(incident);
     }
 
     private static void reportWarning(
@@ -515,9 +577,9 @@ public class FontDetector extends ResourceXmlDetector {
             @NonNull String message,
             @NonNull Location location,
             @Nullable LintFix fix) {
-        if (!context.isEnabled(FONT_VALIDATION_WARNING)) {
-            return;
-        }
-        context.report(FONT_VALIDATION_WARNING, node, location, message, fix);
+        Incident incident =
+                new Incident(FONT_VALIDATION, node, location, message, fix)
+                        .overrideSeverity(Severity.WARNING);
+        context.report(incident);
     }
 }

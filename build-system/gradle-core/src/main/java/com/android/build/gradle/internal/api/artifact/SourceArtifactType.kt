@@ -28,6 +28,7 @@ sealed class SourceArtifactType: Artifact.SingleArtifact<Directory>(
     Category.SOURCES
 ) {
     object JAVA_SOURCES : SourceArtifactType()
+    object KOTLIN_SOURCES : SourceArtifactType()
     object JAVA_RESOURCES : SourceArtifactType()
     object ASSETS : SourceArtifactType()
     object ANDROID_RESOURCES : SourceArtifactType()

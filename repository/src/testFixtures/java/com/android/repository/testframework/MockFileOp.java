@@ -249,12 +249,6 @@ public class MockFileOp extends FileOp {
 
     @NonNull
     @Override
-    public Path toPath(@NonNull File file) {
-        return toPath(file.getPath());
-    }
-
-    @NonNull
-    @Override
     public Path toPath(@NonNull String path) {
         return getFileSystem().getPath(getPlatformSpecificPath(path));
     }

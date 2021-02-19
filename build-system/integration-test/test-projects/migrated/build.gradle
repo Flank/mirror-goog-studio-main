@@ -24,6 +24,9 @@ android {
                 srcDirs = ['src']
                 exclude 'some/unwanted/packageName/**'
             }
+            kotlin {
+                srcDirs = []
+            }
             res {
                 srcDirs = ['res']
             }

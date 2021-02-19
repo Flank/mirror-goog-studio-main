@@ -15,6 +15,7 @@
  */
 package com.android.tools.lint.client.api
 
+import com.android.testutils.TestUtils
 import com.android.tools.lint.checks.infrastructure.TestFiles.base64gzip
 import com.android.tools.lint.checks.infrastructure.TestFiles.classpath
 import com.android.tools.lint.checks.infrastructure.TestFiles.gradle
@@ -22,7 +23,8 @@ import com.android.tools.lint.checks.infrastructure.TestFiles.java
 import com.android.tools.lint.checks.infrastructure.TestFiles.manifest
 import com.android.tools.lint.checks.infrastructure.TestFiles.xml
 import com.android.tools.lint.checks.infrastructure.TestLintClient
-import com.android.tools.lint.checks.infrastructure.TestLintTask.lint
+import com.android.tools.lint.checks.infrastructure.TestLintTask
+import com.android.tools.lint.checks.infrastructure.TestMode
 import com.android.tools.lint.checks.infrastructure.TestResultChecker
 import com.android.tools.lint.detector.api.Project
 import com.google.common.truth.Truth.assertThat
@@ -32,6 +34,10 @@ import org.junit.rules.TemporaryFolder
 import java.io.File
 
 class CustomRuleTest {
+    private fun lint(): TestLintTask {
+        return TestLintTask.lint().sdkHome(TestUtils.getSdk().toFile())
+    }
+
     @Test
     fun testProjectLintJar() {
         val expected = expectedOutput
@@ -199,6 +205,9 @@ class CustomRuleTest {
             .allowMissingSdk()
             .allowObsoleteLintChecks(false)
             .allowCompilationErrors()
+            // When running multiple passes of lint each pass will warn
+            // about the obsolete lint checks; that's fine
+            .skipTestModes(TestMode.PARTIAL)
             .run()
             .check(
                 TestResultChecker {
@@ -252,6 +261,9 @@ class CustomRuleTest {
             .allowMissingSdk()
             .allowCompilationErrors()
             .allowObsoleteLintChecks(false)
+            // When running multiple passes of lint each pass will warn
+            // about the obsolete lint checks; that's fine
+            .skipTestModes(TestMode.PARTIAL)
             .run()
             .check(
                 TestResultChecker {
@@ -342,6 +354,9 @@ class CustomRuleTest {
             .allowCompilationErrors()
             .allowObsoleteLintChecks(false)
             .rootDirectory(lintApiLevel1000.parentFile.canonicalFile)
+            // When running multiple passes of lint each pass will warn
+            // about the obsolete lint checks; that's fine
+            .skipTestModes(TestMode.PARTIAL)
             .run()
             .expect(
                 "../../lint6.jar: Warning: Lint found an issue registry " +

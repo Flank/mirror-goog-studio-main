@@ -40,6 +40,11 @@ abstract class AndroidLintWorkAction : WorkAction<AndroidLintWorkAction.LintWork
         val logger = Logging.getLogger(this.javaClass)
         val arguments = parameters.arguments.get()
         logger.debug("Running lint " + arguments.joinToString(" "))
+        logger.info(
+            "Max memory for Android Lint: {}m\n(can be configured by {}=2G in gradle.properties)",
+            Runtime.getRuntime().maxMemory() / 1024 / 1024,
+            com.android.build.gradle.options.StringOption.LINT_HEAP_SIZE.propertyName
+        )
         val execResult = runLint(arguments)
         logger.debug("Lint returned $execResult")
         if (execResult == ERRNO_SUCCESS) {

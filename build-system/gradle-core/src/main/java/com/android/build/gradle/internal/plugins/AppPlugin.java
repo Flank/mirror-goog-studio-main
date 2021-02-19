@@ -99,6 +99,8 @@ public class AppPlugin
                             dslContainers,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> buildOutputs,
             @NonNull ExtraModelInfo extraModelInfo) {
+        ApplicationExtensionImpl applicationExtension =
+                dslServices.newDecoratedInstance(ApplicationExtensionImpl.class, dslServices, dslContainers);
         if (globalScope.getProjectOptions().get(BooleanOption.USE_NEW_DSL_INTERFACES)) {
             return (BaseExtension)
                     project.getExtensions()
@@ -111,8 +113,9 @@ public class AppPlugin
                                     buildOutputs,
                                     dslContainers.getSourceSetManager(),
                                     extraModelInfo,
-                                    new ApplicationExtensionImpl(dslServices, dslContainers));
+                                    applicationExtension);
         }
+
         return project.getExtensions()
                 .create(
                         "android",
@@ -122,7 +125,7 @@ public class AppPlugin
                         buildOutputs,
                         dslContainers.getSourceSetManager(),
                         extraModelInfo,
-                        new ApplicationExtensionImpl(dslServices, dslContainers));
+                        applicationExtension);
     }
 
     @NonNull
@@ -149,7 +152,8 @@ public class AppPlugin
                         ApplicationAndroidComponentsExtensionImpl.class,
                         dslServices,
                         sdkComponents,
-                        variantApiOperationsRegistrar);
+                        variantApiOperationsRegistrar,
+                        getExtension());
     }
 
     @NonNull

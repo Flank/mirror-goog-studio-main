@@ -59,6 +59,10 @@
           > javaDirectories:
              * {PROJECT}/src/main/java{D}
           < javaDirectories
+          > kotlinDirectories:
+             * {PROJECT}/src/main/java{D}
+             * {PROJECT}/src/main/kotlin{!}
+          < kotlinDirectories
           > resourcesDirectories:
              * {PROJECT}/src/main/resources{!}
           < resourcesDirectories
@@ -88,6 +92,10 @@
           > javaDirectories:
              * {PROJECT}/src/androidTest/java{D}
           < javaDirectories
+          > kotlinDirectories:
+             * {PROJECT}/src/androidTest/java{D}
+             * {PROJECT}/src/androidTest/kotlin{!}
+          < kotlinDirectories
           > resourcesDirectories:
              * {PROJECT}/src/androidTest/resources{!}
           < resourcesDirectories
@@ -117,6 +125,10 @@
           > javaDirectories:
              * {PROJECT}/src/test/java{!}
           < javaDirectories
+          > kotlinDirectories:
+             * {PROJECT}/src/test/java{!}
+             * {PROJECT}/src/test/kotlin{!}
+          < kotlinDirectories
           > resourcesDirectories:
              * {PROJECT}/src/test/resources{!}
           < resourcesDirectories
@@ -173,6 +185,10 @@
              > javaDirectories:
                 * {PROJECT}/src/debug/java{!}
              < javaDirectories
+             > kotlinDirectories:
+                * {PROJECT}/src/debug/java{!}
+                * {PROJECT}/src/debug/kotlin{!}
+             < kotlinDirectories
              > resourcesDirectories:
                 * {PROJECT}/src/debug/resources{!}
              < resourcesDirectories
@@ -202,6 +218,10 @@
              > javaDirectories:
                 * {PROJECT}/src/androidTestDebug/java{!}
              < javaDirectories
+             > kotlinDirectories:
+                * {PROJECT}/src/androidTestDebug/java{!}
+                * {PROJECT}/src/androidTestDebug/kotlin{!}
+             < kotlinDirectories
              > resourcesDirectories:
                 * {PROJECT}/src/androidTestDebug/resources{!}
              < resourcesDirectories
@@ -231,6 +251,10 @@
              > javaDirectories:
                 * {PROJECT}/src/testDebug/java{!}
              < javaDirectories
+             > kotlinDirectories:
+                * {PROJECT}/src/testDebug/java{!}
+                * {PROJECT}/src/testDebug/kotlin{!}
+             < kotlinDirectories
              > resourcesDirectories:
                 * {PROJECT}/src/testDebug/resources{!}
              < resourcesDirectories
@@ -286,6 +310,10 @@
              > javaDirectories:
                 * {PROJECT}/src/release/java{!}
              < javaDirectories
+             > kotlinDirectories:
+                * {PROJECT}/src/release/java{!}
+                * {PROJECT}/src/release/kotlin{!}
+             < kotlinDirectories
              > resourcesDirectories:
                 * {PROJECT}/src/release/resources{!}
              < resourcesDirectories
@@ -315,6 +343,10 @@
              > javaDirectories:
                 * {PROJECT}/src/androidTestRelease/java{!}
              < javaDirectories
+             > kotlinDirectories:
+                * {PROJECT}/src/androidTestRelease/java{!}
+                * {PROJECT}/src/androidTestRelease/kotlin{!}
+             < kotlinDirectories
              > resourcesDirectories:
                 * {PROJECT}/src/androidTestRelease/resources{!}
              < resourcesDirectories
@@ -344,6 +376,10 @@
              > javaDirectories:
                 * {PROJECT}/src/testRelease/java{!}
              < javaDirectories
+             > kotlinDirectories:
+                * {PROJECT}/src/testRelease/java{!}
+                * {PROJECT}/src/testRelease/kotlin{!}
+             < kotlinDirectories
              > resourcesDirectories:
                 * {PROJECT}/src/testRelease/resources{!}
              < resourcesDirectories

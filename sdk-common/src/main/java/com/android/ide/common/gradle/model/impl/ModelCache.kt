@@ -194,6 +194,7 @@ private fun modelCacheImpl(buildFolderPaths: BuildFolderPaths): ModelCacheTestin
       myFolder = folder,
       myManifestFile = provider.manifestFile.makeRelativeAndDeduplicate(),
       myJavaDirectories = provider.javaDirectories.makeRelativeAndDeduplicate(),
+      myKotlinDirectories = copy(provider::getKotlinDirectories, mapper = { it }).makeRelativeAndDeduplicate(),
       myResourcesDirectories = provider.resourcesDirectories.makeRelativeAndDeduplicate(),
       myAidlDirectories = provider.aidlDirectories.makeRelativeAndDeduplicate(),
       myRenderscriptDirectories = provider.renderscriptDirectories.makeRelativeAndDeduplicate(),

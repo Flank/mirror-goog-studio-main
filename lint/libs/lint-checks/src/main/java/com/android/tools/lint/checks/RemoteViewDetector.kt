@@ -83,7 +83,9 @@ class RemoteViewDetector : Detector(), SourceCodeScanner {
             return
         }
 
-        val project = context.mainProject
+        val client = context.client
+        val full = context.isGlobalAnalysis()
+        val project = if (full) context.mainProject else context.project
         val resources = context.client.getResources(project, LOCAL_DEPENDENCIES)
 
         // See if the associated resource references propertyValuesHolder, and if so
@@ -94,7 +96,7 @@ class RemoteViewDetector : Detector(), SourceCodeScanner {
         val paths = items.asSequence().mapNotNull { it.source }.toSet()
         for (path in paths) {
             try {
-                val parser = context.client.createXmlPullParser(path) ?: continue
+                val parser = client.createXmlPullParser(path) ?: continue
                 while (true) {
                     val event = parser.next()
                     if (event == XmlPullParser.START_TAG) {

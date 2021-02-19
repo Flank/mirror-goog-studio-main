@@ -21,5 +21,6 @@
     <orderEntry type="module" module-name="android.sdktools.testutils" scope="TEST" />
     <orderEntry type="library" name="kotlin-stdlib-jdk8" level="project" />
     <orderEntry type="library" name="jaxb-api" level="project" />
+    <orderEntry type="library" name="Guava" level="project" />
   </component>
 </module>

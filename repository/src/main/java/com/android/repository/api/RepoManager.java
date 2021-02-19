@@ -29,7 +29,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.w3c.dom.ls.LSResourceResolver;
@@ -180,24 +179,26 @@ public abstract class RepoManager {
      */
     @NonNull
     @VisibleForTesting
-    public abstract Set<RepositorySourceProvider> getSourceProviders();
+    public abstract List<RepositorySourceProvider> getSourceProviders();
 
     /**
      * Gets the actual {@link RepositorySource}s from the registered {@link
      * RepositorySourceProvider}s.
      *
-     * Probably should only be needed by a repository UI.
+     * <p>Probably should only be needed by a repository UI.
      *
-     * @param downloader   The {@link Downloader} to use for downloading source lists, if needed.
-     * @param progress     A {@link ProgressIndicator} for source providers to use to show their
-     *                     progress and for logging.
+     * @param downloader The {@link Downloader} to use for downloading source lists, if needed.
+     * @param progress A {@link ProgressIndicator} for source providers to use to show their
+     *     progress and for logging.
      * @param forceRefresh Individual {@link RepositorySourceProvider}s may cache their results. If
-     *                     {@code forceRefresh} is true, specifies that they should reload rather
-     *                     than returning cached results.
+     *     {@code forceRefresh} is true, specifies that they should reload rather than returning
+     *     cached results.
      * @return The {@link RepositorySource}s obtained from the providers.
      */
-    public abstract Set<RepositorySource> getSources(@Nullable Downloader downloader,
-            @NonNull ProgressIndicator progress, boolean forceRefresh);
+    public abstract List<RepositorySource> getSources(
+            @Nullable Downloader downloader,
+            @NonNull ProgressIndicator progress,
+            boolean forceRefresh);
 
     /**
      * Sets the {@link FallbackRemoteRepoLoader} to try when we encounter a remote xml file that the

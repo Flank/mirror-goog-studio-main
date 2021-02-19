@@ -20,6 +20,7 @@ import com.android.tools.lint.client.api.UElementHandler
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
+import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Scope
@@ -60,7 +61,7 @@ class WebViewApiAvailabilityDetector : Detector(), SourceCodeScanner {
             "isVisibleToUserForAutofill"
         )
 
-        /** Main issue investigated by this detector  */
+        /** Main issue investigated by this detector */
         @JvmField
         val ISSUE = Issue.create(
             id = "WebViewApiAvailability",
@@ -71,25 +72,21 @@ class WebViewApiAvailabilityDetector : Detector(), SourceCodeScanner {
             category = Category.CORRECTNESS,
             priority = 7,
             severity = Severity.WARNING,
+            moreInfo = "https://developer.android.com/reference/androidx/webkit/package-summary",
             implementation = Implementation(
                 WebViewApiAvailabilityDetector::class.java,
                 Scope.JAVA_FILE_SCOPE
-            )
+            ),
+            androidSpecific = true
         )
-            .addMoreInfo(
-                "https://developer.android.com/reference/androidx/webkit/package-summary"
-            )
-            .setAndroidSpecific(true)
     }
 
-    override fun getApplicableUastTypes(): List<Class<out UElement>>? {
+    override fun getApplicableUastTypes(): List<Class<out UElement>> {
         return listOf<Class<out UElement>>(UCallExpression::class.java)
     }
 
-    override fun createUastHandler(context: JavaContext): UElementHandler? {
-        return if (!context.mainProject.isAndroidProject) {
-            null
-        } else Handler(context)
+    override fun createUastHandler(context: JavaContext): UElementHandler {
+        return Handler(context)
     }
 
     private class Handler(private val context: JavaContext) : UElementHandler() {
@@ -106,7 +103,8 @@ class WebViewApiAvailabilityDetector : Detector(), SourceCodeScanner {
                 return
             }
 
-            val apiLookup = ApiLookup.get(context.client, context.mainProject.buildTarget) ?: return
+            val client = context.client
+            val apiLookup = ApiLookup.get(client, context.project.buildTarget) ?: return
             val api = apiLookup.getMethodVersion(
                 WEBVIEW_CLASS_NAME,
                 method.name,
@@ -118,16 +116,17 @@ class WebViewApiAvailabilityDetector : Detector(), SourceCodeScanner {
             if (api == INVALID || api <= 21 || api > 28) {
                 return
             }
-            if (!VersionChecks.isWithinVersionCheckConditional(context, node, api)) {
+            if (!VersionChecks.isWithinVersionCheckConditional(client, evaluator, node, api)) {
                 return
             }
 
-            context.report(
+            val incident = Incident(
                 issue = ISSUE,
                 scope = node,
                 location = context.getLocation(node),
                 message = "Consider using `WebViewCompat." + method.name + "` instead which will support more devices."
             )
+            context.report(incident)
         }
     }
 }

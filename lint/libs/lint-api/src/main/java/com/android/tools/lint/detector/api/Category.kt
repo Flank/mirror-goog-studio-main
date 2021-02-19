@@ -48,9 +48,9 @@ constructor(
     private val priority: Int
 ) : Comparable<Category> {
     /**
-     * Returns a full name for this category. For a top level category, this is just
-     * the [.getName] value, but for nested categories it will include the parent
-     * names as well.
+     * Returns a full name for this category. For a top level category,
+     * this is just the [name] value, but for nested categories it will
+     * include the parent names as well.
      *
      * @return a full name for this category
      */

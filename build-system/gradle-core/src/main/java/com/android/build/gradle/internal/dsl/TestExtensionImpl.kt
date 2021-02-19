@@ -21,9 +21,10 @@ import com.android.build.api.variant.TestVariant
 import com.android.build.api.variant.TestVariantBuilder
 import com.android.build.gradle.internal.plugins.DslContainerProvider
 import com.android.build.gradle.internal.services.DslServices
+import javax.inject.Inject
 
 /** Internal implementation of the 'new' DSL interface */
-class TestExtensionImpl(
+abstract class TestExtensionImpl @Inject constructor(
     dslServices: DslServices,
     dslContainers: DslContainerProvider<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
 ) :

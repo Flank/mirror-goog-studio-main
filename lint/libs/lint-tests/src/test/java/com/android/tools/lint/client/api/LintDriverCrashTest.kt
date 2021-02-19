@@ -63,6 +63,7 @@ class LintDriverCrashTest : AbstractCheckTest() {
             .check(
                 TestResultChecker {
                     assertThat(it).contains("Foo.java: Error: Unexpected failure during lint analysis of Foo.java (this is a bug in lint or one of the libraries it depends on)")
+                    assertThat(it).contains("The crash seems to involve the detector com.android.tools.lint.client.api.LintDriverCrashTest＄CrashingDetector.")
                     assertThat(
                         it.contains(
                             """
@@ -133,6 +134,7 @@ class LintDriverCrashTest : AbstractCheckTest() {
                 )
             )
                 .allowSystemErrors(true)
+                .allowExceptions(false)
                 .issues(LinkageErrorDetector.LINKAGE_ERROR)
                 .run()
                 .expect(

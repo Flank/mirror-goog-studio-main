@@ -9,8 +9,6 @@ build --enable_runfiles
 build:remote --python_path="C:/Python27/python.exe"
 build:remote --jobs=250
 
-build:remote_common --remote_instance_name=projects/google.com:android-studio-alphasource/instances/windows
-
 build --extra_toolchains=@native_toolchain//:cc-toolchain-x64_windows-clang-cl
 
 build:remote --extra_execution_platforms=//tools/base/bazel/foundry:rbe_windows2019_as
@@ -21,3 +19,6 @@ build --compiler=clang-cl
 
 # Static link native artifacts
 build --features=static_link_msvcrt
+
+# Windows does not have support for the sandboxed strategy
+build:dynamic --dynamic_local_strategy=worker,local

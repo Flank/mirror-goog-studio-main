@@ -11,13 +11,17 @@ import com.android.ide.common.resources.ANDROID_AAPT_IGNORE
 import com.android.ide.common.resources.ResourceSet
 import com.android.ide.common.resources.writeIdentifiedSourceSetsFile
 import com.android.utils.FileUtils
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
 
@@ -29,9 +33,10 @@ abstract class MapSourceSetPathsTask : NonIncrementalTask() {
     @get:Input
     abstract val namespace: Property<String>
 
-    @get:Input
+    @get:InputDirectory
     @get:Optional
-    abstract val generatedPngsOutputDir: Property<String>
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val generatedPngsOutputDir: DirectoryProperty
 
     @get:Input
     @get:Optional
@@ -58,7 +63,7 @@ abstract class MapSourceSetPathsTask : NonIncrementalTask() {
         // a number of source sets (such as generated vector drawable pngs). Therefore, these are
         // derived from merge resources.
         val uncreatedSourceSets = listOfNotNull(
-                generatedPngsOutputDir.orNull,
+                generatedPngsOutputDir.orNull?.asFile?.absolutePath,
                 mergeResourcesOutputDir.orNull,
                 getPathIfPresentOrNull(
                         incrementalMergedDir, listOf(SdkConstants.FD_MERGED_DOT_DIR)),
@@ -118,7 +123,7 @@ abstract class MapSourceSetPathsTask : NonIncrementalTask() {
                 }
                 if (!mergeResources.isVectorSupportLibraryUsed) {
                     mergeResources.generatedPngsOutputDir?.let {
-                        task.generatedPngsOutputDir.setDisallowChanges(it.absolutePath)
+                        task.generatedPngsOutputDir.setDisallowChanges(it)
                     }
                 }
                 if (mergeResources.incremental && mergeResources.incrementalFolder != null) {

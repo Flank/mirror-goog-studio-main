@@ -39,16 +39,6 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="library" name="jps-build-script-dependencies-bootstrap" level="project" />
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../../prebuilts/tools/common/kotlin-plugin-ij/Kotlin/kotlinc/lib/kotlin-compiler.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
     <orderEntry type="library" name="aether" level="project" />
     <orderEntry type="module" module-name="android.sdktools.base.sdklib-base" />
     <orderEntry type="library" name="antlr3" level="project" />
@@ -136,5 +126,7 @@
       </library>
     </orderEntry>
     <orderEntry type="module" module-name="android.sdktools.zipflinger" scope="TEST" />
+    <orderEntry type="library" scope="TEST" name="intellij-core" level="project" />
+    <orderEntry type="library" scope="TEST" name="lint-psi-kotlin-compiler" level="project" />
   </component>
 </module>

@@ -27,4 +27,14 @@ option java_outer_classname = 'GradleAndroidTestResultListenerConfigProto';
 message GradleAndroidTestResultListenerConfig {
     // Test Result Listener gRPC server port number.
     int32 resultListenerServerPort = 1;
+
+    // A file path to the cert of the gRPC client.
+    string resultListenerClientCertFilePath = 2;
+
+    // A file path to the private key of the gRPC client.
+    // This private key is used to enable mutual TLS.
+    string resultListenerClientPrivateKeyFilePath = 3;
+
+    // A file path to the trusted cert chain.
+    string trustCertCollectionFilePath = 4;
 }

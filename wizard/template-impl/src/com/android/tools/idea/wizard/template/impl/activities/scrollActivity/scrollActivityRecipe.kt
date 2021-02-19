@@ -26,8 +26,13 @@ import com.android.tools.idea.wizard.template.impl.activities.common.generateMan
 import com.android.tools.idea.wizard.template.impl.activities.common.generateNoActionBarStyles
 import com.android.tools.idea.wizard.template.impl.activities.common.generateSimpleMenu
 import com.android.tools.idea.wizard.template.impl.activities.scrollActivity.res.layout.appBarXml
-import com.android.tools.idea.wizard.template.impl.activities.scrollActivity.res.layout.simpleXml
+import com.android.tools.idea.wizard.template.impl.activities.scrollActivity.res.layout.contentScrollingXml
+import com.android.tools.idea.wizard.template.impl.activities.scrollActivity.res.layout_w1240dp.contentScrollingXml as contentScrollingXmlW1240dp
+import com.android.tools.idea.wizard.template.impl.activities.scrollActivity.res.layout_w936dp.contentScrollingXml as contentScrollingXmlW936dp
 import com.android.tools.idea.wizard.template.impl.activities.scrollActivity.res.values.dimensXml
+import com.android.tools.idea.wizard.template.impl.activities.scrollActivity.res.values_land.dimensXml as dimensXmlLand
+import com.android.tools.idea.wizard.template.impl.activities.scrollActivity.res.values_w1240dp.dimensXml as dimensXmlW1240dp
+import com.android.tools.idea.wizard.template.impl.activities.scrollActivity.res.values_w600dp.dimensXml as dimensXmlW600dp
 import com.android.tools.idea.wizard.template.impl.activities.scrollActivity.res.values.stringsXml
 import com.android.tools.idea.wizard.template.impl.activities.scrollActivity.src.app_package.scrollActivityJava
 import com.android.tools.idea.wizard.template.impl.activities.scrollActivity.src.app_package.scrollActivityKt
@@ -50,6 +55,7 @@ fun RecipeExecutor.scrollActivityRecipe(
 
   addDependency("com.android.support:appcompat-v7:${appCompatVersion}.+")
   addDependency("com.android.support:design:${appCompatVersion}.+")
+  addDependency("com.android.support.constraint:constraint-layout:+")
   addMaterialDependency(useAndroidX)
   addViewBindingSupport(moduleData.viewBindingSupport, true)
 
@@ -59,6 +65,9 @@ fun RecipeExecutor.scrollActivityRecipe(
   )
   mergeXml(stringsXml(), resOut.resolve("values/strings.xml"))
   mergeXml(dimensXml(), resOut.resolve("values/dimens.xml"))
+  mergeXml(dimensXmlLand(), resOut.resolve("values-land/dimens.xml"))
+  mergeXml(dimensXmlW1240dp(), resOut.resolve("values-w1240dp/dimens.xml"))
+  mergeXml(dimensXmlW600dp(), resOut.resolve("values-w600dp/dimens.xml"))
   generateNoActionBarStyles(moduleData.baseFeature?.resDir, resOut, moduleData.themesData)
   generateSimpleMenu(packageName, activityClass, resOut, menuName)
   save(
@@ -66,7 +75,9 @@ fun RecipeExecutor.scrollActivityRecipe(
                 moduleData.themesData.appBarOverlay.name, moduleData.themesData.popupOverlay.name, useAndroidX),
     resOut.resolve("layout/${layoutName}.xml")
   )
-  save(simpleXml(activityClass, layoutName, packageName, useAndroidX), resOut.resolve("layout/${contentLayoutName}.xml"))
+  save(contentScrollingXml(activityClass, layoutName, packageName, useAndroidX), resOut.resolve("layout/${contentLayoutName}.xml"))
+  save(contentScrollingXmlW1240dp(activityClass, layoutName, packageName, useAndroidX), resOut.resolve("layout-w1240dp/${contentLayoutName}.xml"))
+  save(contentScrollingXmlW936dp(activityClass, layoutName, packageName, useAndroidX), resOut.resolve("layout-w936dp/${contentLayoutName}.xml"))
 
   open(resOut.resolve("layout/${contentLayoutName}.xml"))
 

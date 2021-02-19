@@ -17,6 +17,7 @@ package com.android.tools.lint.checks
 
 import com.android.tools.lint.checks.VersionChecks.Companion.getMinSdkVersionFromMethodName
 import com.android.tools.lint.checks.infrastructure.TestFile
+import com.android.tools.lint.checks.infrastructure.TestMode.Companion.PARTIAL
 import com.android.tools.lint.detector.api.Detector
 
 /** Unit tests for [VersionChecks]. This is using the ApiDetector to drive the analysis. */
@@ -79,6 +80,10 @@ class VersionChecksTest : AbstractCheckTest() {
                 """
             ).indented()
         )
+            // We *don't* want to use provisional computation for this:
+            // limit suggestions around SDK_INT checks to those implied
+            // by the minSdkVersion of the library.
+            .skipTestModes(PARTIAL)
             .run()
             .expect(
                 """
@@ -1724,6 +1729,97 @@ class VersionChecksTest : AbstractCheckTest() {
         )
     }
 
+    fun testVersionCheckInLibrary() {
+        // Include SdkIntDetector such that we record partial state about
+        // SDK_INT checks in the library which are then later used by
+        // the VersionChecks during ApiDetector analysis
+        val issues = arrayOf(ApiDetector.UNSUPPORTED, SdkIntDetector.ISSUE)
+
+        lint().files(
+            manifest().minSdk(4),
+            java(
+                """
+                package test.pkg;
+
+                import android.support.annotation.RequiresApi;
+                import test.utils.Utils;
+                import static test.utils.Utils.isNougat;
+                import static test.utils.Utils.versionCheck;
+                import static test.utils.Utils.CAPABILITIES_FROM_O;
+                import static android.os.Build.VERSION.SDK_INT;
+                import static android.os.Build.VERSION_CODES.N;
+
+                public class CheckInLibraryTest {
+                    public void testVersionCheckMethods() {
+                        if (isNougat()) { methodN(); } // OK
+                        if (versionCheck(14)) { methodN(); } // ERROR
+                        if (versionCheck(28)) { methodN(); } // OK
+                        if (CAPABILITIES_FROM_O) { methodN(); } // OK
+                    }
+
+                    @RequiresApi(N)
+                    public boolean methodN() {
+                        return true;
+                    }
+                }
+                """
+            ).indented(),
+            compiled(
+                "../lib/bin/classes",
+                java(
+                    "../lib/src/test/utils/Utils.java",
+                    """
+                        package test.utils;
+                        import static android.os.Build.VERSION.SDK_INT;
+                        import static android.os.Build.VERSION_CODES.N;
+                        import static android.os.Build.VERSION_CODES.O;
+                        @SuppressWarnings("AnnotateVersionCheck")
+                        public class Utils {
+                            public static boolean isNougat() {
+                                return SDK_INT >= N;
+                            }
+                            // Not named "isAtLeast" since lint has hardcoded some common names
+                            // like that one
+                            public static boolean versionCheck(int api) {
+                                return SDK_INT >= api;
+                            }
+                            public static final boolean CAPABILITIES_FROM_O = SDK_INT >= O;
+
+                            public static void runOnNougat(Runnable runnable) {
+                                if (SDK_INT >= N) {
+                                    runnable.run();
+                                }
+                            }
+                        }
+                    """
+                ).indented(),
+                """
+                    test/utils/Utils.class:
+                    H4sIAAAAAAAAAHWTy27TQBSG/0nSTC7OpQmlaaEtpQXSIGGQkECiQrRuKlmk
+                    MYpDF91EjmMVt2aMfOn7sGLDJrBAsOABeCjEGctNq6B6MT5zfL7z/3NG/vP3
+                    128AL/CYY6UEjrtFrGG9jA3cKyKPTY77HFsMTW3v3d6+3tOHetccHQ6Mo5HB
+                    wE4Y8ruucKPXDNn2zjFDTvMnDkOt5wqnH38cO8HQGnuUKbhh349PrSipJLBi
+                    RpZ9fmR9SguUCycIXV9oHxz7nBq1dVlVDmJhiEtyud07sy4s1bPEqTqIhZDo
+                    K6lb2LW91EjJ9OPAdg5d2bX0PnK98ImkOLYZ1i0xCXx3ovqhuh+73mT7uDsw
+                    daM/0oyDrkm25vaKLoQTaJ4Vhk6ooIQyxwMFj9Dm2FHQQVlBAUWGeuSEkRpL
+                    OTURpdSVWWN85th0gvq8PkPrJksM/CoyD96O9P6Qhq4zNP6fAo2VRoVNujVO
+                    V8qwIm1RtEAxuaZVod0avZnMdn4gM00KK7Tmk2SegCpqaekzZCCf6jdk663P
+                    4LkvyGW/UiZzjSmgnohklDeM8EU0UvwplcmCCuGrN9GVS7qc0E3cSumXKV1L
+                    xYudn8gxTGd8FVlaG6TfpHgp6ZMFq1JiaXba5+kRFmWXmYnvWJjO+ahdP0UG
+                    t5PPy7iTSEgnLaxC/hstPETxH5PQHcg3AwAA
+                    """
+            ),
+            mSupportJar
+        ).issues(*issues).run().expect(
+            """
+            src/test/pkg/CheckInLibraryTest.java:14: Error: Call requires API level 24 (current min is 4): methodN [NewApi]
+                    if (versionCheck(14)) { methodN(); } // ERROR
+                                            ~~~~~~~
+            1 errors, 0 warnings
+            """
+        )
+    }
+
     fun testVersionCheckMethodsInBinaryOperator() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=199572
         lint().files(
@@ -1803,8 +1899,10 @@ class VersionChecksTest : AbstractCheckTest() {
                 public class TestVersionInVariable {
                     private static final int STASHED_VERSION = Build.VERSION.SDK_INT;
                     public void getLayout1() {
-                        final int version = Build.VERSION.SDK_INT;
-                        if (version >= 14) {            new GridLayout(null);
+                        final int v = Build.VERSION.SDK_INT;
+                        final int version = v;
+                        if (version >= 14) {
+                            new GridLayout(null);
                         }
                         if (STASHED_VERSION >= 14) {
                             new GridLayout(null);
@@ -2011,8 +2109,11 @@ class VersionChecksTest : AbstractCheckTest() {
                     }
                 }"""
             ).indented()
-        ).run().expect(
-            """
+        )
+            .skipTestModes(PARTIAL)
+            .run()
+            .expect(
+                """
                 src/p1/p2/Class.java:39: Error: Call requires API level 14 (current min is 11): new android.widget.GridLayout [NewApi]
                         new GridLayout(null); // ERROR
                         ~~~~~~~~~~~~~~
@@ -2021,7 +2122,7 @@ class VersionChecksTest : AbstractCheckTest() {
                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 1 errors, 1 warnings
                 """
-        )
+            )
     }
 
     fun testNestedChecksKotlin() {
@@ -2088,8 +2189,11 @@ class VersionChecksTest : AbstractCheckTest() {
                     }
                 }"""
             ).indented()
-        ).run().expect(
-            """
+        )
+            .skipTestModes(PARTIAL)
+            .run()
+            .expect(
+                """
                 src/p1/p2/NestedChecks.kt:39: Error: Call requires API level 14 (current min is 11): android.widget.GridLayout() [NewApi]
                         GridLayout(null) // ERROR
                         ~~~~~~~~~~~~~~~~
@@ -2098,7 +2202,7 @@ class VersionChecksTest : AbstractCheckTest() {
                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 1 errors, 1 warnings
                 """
-        )
+            )
     }
 
     fun testGetMinSdkVersionFromMethodName() {
@@ -2786,13 +2890,81 @@ class VersionChecksTest : AbstractCheckTest() {
             )
     }
 
+// TODO: Test out of order parameters!
+    fun testChecksSdkIntAtLeastLambda() {
+        // Regression test for https://issuetracker.google.com/120255046
+        // The @ChecksSdkIntAtLeast annotation allows annotating methods and
+        // fields as version check methods without relying on (a) accessing
+        // the method body to see if it's an SDK_INT check, which doesn't work
+        // for compiled libraries, and (b) name patterns, which doesn't
+        // work for unusually named version methods.
+        lint().files(
+            java(
+                """
+                package test.pkg;
+                import android.support.annotation.RequiresApi;
+                class Scratch {
+                    @RequiresApi(24)
+                    public static void requiresApiN() {
+                    }
+
+                    public static void main(String[] args) {
+                        Constants.runOnNougat(new Runnable() {
+                            @Override
+                            public void run() {
+                                requiresApiN(); // OK 1
+                            }
+                        });
+                        Constants.runOnNougat2(new Runnable() {
+                            @Override
+                            public void run() {
+                                requiresApiN(); // OK 2
+                            }
+                        });
+                        Constants.runOnNougat(() -> requiresApiN()); // OK 3
+                        Constants.runOnNougat2(() -> requiresApiN()); // OK 4
+                    }
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package test.pkg;
+
+                import android.os.Build;
+
+                import static android.os.Build.VERSION.SDK_INT;
+                import static android.os.Build.VERSION_CODES.N;
+                import androidx.annotation.ChecksSdkIntAtLeast;
+
+                public class Constants {
+                    @ChecksSdkIntAtLeast(api=Build.VERSION_CODES.N, lambda=0)
+                    public static void runOnNougat(Runnable runnable) {
+                    }
+
+                    public static void runOnNougat2(Runnable runnable) {
+                        if (SDK_INT >= N) {
+                            runnable.run();
+                        }
+                    }
+                }
+                """
+            ).indented(),
+            checkSdkIntAnnotation,
+            mSupportJar
+        )
+            .run()
+// TODO: Add in other positions, maybe even out of order, to make sure we handle it right
+            .expectClean()
+    }
+
     fun testChecksSdkIntAtLeastBytecode() {
         // Similar to testChecksSdkIntAtLeast, but with precompiled bytecode
         // for the source files in that test insted of sources, since PSI
         // treats annotations from bytecode and source files quite differently,
         // and we want to have a unit test for the main intended purpose
         // of this functionality: identified compiled version check methods
-        // in libraries as version chek methods, since here looking inside
+        // in libraries as version check methods, since here looking inside
         // the method bodies won't work at all.
         // Regression test for https://issuetracker.google.com/120255046
         lint().files(
@@ -3000,9 +3172,80 @@ class VersionChecksTest : AbstractCheckTest() {
             )
     }
 
+    fun testNextPlatformHandling() {
+        // Regression test for b/172930073
+        // Need to gracefully handle the next version of Android
+        lint().files(
+            classpath(),
+            manifest().minSdk(14),
+            java(
+                """
+                package test.pkg;
+
+                import android.os.Build;
+                import androidx.annotation.ChecksSdkIntAtLeast;
+                import androidx.core.os.BuildCompat;
+                import android.support.annotation.RequiresApi;
+
+                public class TestS {
+                    public int test() {
+                        if (BuildCompat.isAtLeastS()) {
+                            return ApiSImpl.getChecksums();
+                        }
+                        if (BuildCompat.isCurrentDev()) {
+                            return ApiSImpl.getChecksums();
+                        }
+                        return 0;
+                    }
+
+                    @RequiresApi(Build.VERSION_CODES.S)
+                    private static class ApiSImpl {
+                        public static int getChecksums() {
+                            return 0;
+                        }
+                    }
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package androidx.core.os;
+                import android.os.Build;
+                import androidx.annotation.ChecksSdkIntAtLeast;
+
+                public class BuildCompat {
+                    @ChecksSdkIntAtLeast(codename = "S")
+                    public static boolean isAtLeastS() {
+                        return Build.VERSION.CODENAME.equals("S");
+                    }
+                    @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.CUR_DEVELOPMENT)
+                    public static boolean isCurrentDev() {
+                        return false; // stub only; annotation used for version lookup
+                    }
+                }
+                """
+
+            ).indented(),
+            java(
+                """
+                package android.os;
+
+                public class Build {
+                    public static class VERSION_CODES {
+                        public static final int CUR_DEVELOPMENT = 1000;
+                        public static final int S = CUR_DEVELOPMENT;
+                    }
+                }
+                """
+            ).indented(),
+            mSupportJar,
+            checkSdkIntAnnotation
+        ).run().expectClean()
+    }
+
     companion object {
         @JvmField
-        val checkSdkIntAnnotation = java(
+        val checkSdkIntAnnotation: TestFile = java(
             """
             package androidx.annotation;
             import static java.lang.annotation.ElementType.FIELD;

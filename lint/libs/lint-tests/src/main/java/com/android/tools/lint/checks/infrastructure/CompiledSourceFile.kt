@@ -473,7 +473,7 @@ internal class CompiledSourceFile(
             }
         }
 
-        private fun executeProcess(args: List<String?>) {
+        private fun executeProcess(args: List<String>) {
             try {
                 val process = Runtime.getRuntime().exec(args.toTypedArray())
                 val input = BufferedReader(InputStreamReader(process.inputStream))

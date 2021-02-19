@@ -35,10 +35,11 @@ def main():
 
   env = {}
   env['JAVA_HOME'] = os.path.join(workspace, 'prebuilts', 'studio', 'jdk', jdk_subdir)
-  env['ANDROID_NDK_HOME'] = os.path.join(workspace, 'prebuilts', 'studio', 'sdk', config, 'ndk-bundle')
+  env['ANDROID_NDK_HOME'] = os.path.join(workspace, 'prebuilts', 'studio', 'sdk', config, 'ndk', '16.1.4479499')
   env['TERM'] = os.environ.get('TERM', '')
   env['SHELL'] = os.environ.get('SHELL', '')
   env['HOME'] = os.environ.get('HOME', '')
+  env['DISPLAY'] = os.environ.get('DISPLAY', '')
   if 'QA_ANDROID_SDK_ROOT' in os.environ:
     env['QA_ANDROID_SDK_ROOT'] = os.environ['QA_ANDROID_SDK_ROOT']
   if sys.platform == 'darwin':

@@ -229,6 +229,7 @@ message AgentResponse {
     SET_CAPABILITIES_FAILED = 6;  // JVMTI capabilities could not be set.
 
     SWAP_FAILURE = 7;             // Has a corresponding AgentSwapResponse with error.
+    LITERAL_FAILURE = 8;          // Has a corresponding AgentLiveLiteralUpdateResponse with error.
   }
   Status status = 1;
 
@@ -284,6 +285,7 @@ message AgentLiveLiteralUpdateResponse {
     ERROR = 3;
   }
   Status status = 1;
+  string extra = 2;
 }
 
 message AgentExceptionLog {

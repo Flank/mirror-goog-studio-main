@@ -88,7 +88,7 @@ def fixedDokkaProvider = tasks.register("fixedDokka", FixedDokka) {
     skipEmptyPackages = false
     noJdkLink = true
 
-    dacRoot = "/reference/tools"
+    dacRoot = "/reference/tools/gradle-api/" + version.substring(0, version.lastIndexOf("."))
     additionalDokkaClasspath.from(configurations.additionalDokkaClasspath)
     doFirst {
         classpath = additionalDokkaClasspath.files

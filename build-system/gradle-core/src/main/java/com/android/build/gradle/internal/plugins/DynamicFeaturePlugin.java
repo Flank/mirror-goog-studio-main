@@ -98,6 +98,9 @@ public class DynamicFeaturePlugin
                             dslContainers,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> buildOutputs,
             @NonNull ExtraModelInfo extraModelInfo) {
+        DynamicFeatureExtensionImpl dynamicFeatureExtension =
+                dslServices.newDecoratedInstance(
+                        DynamicFeatureExtensionImpl.class, dslServices, dslContainers);
         if (globalScope.getProjectOptions().get(BooleanOption.USE_NEW_DSL_INTERFACES)) {
             return (BaseExtension)
                     project.getExtensions()
@@ -110,8 +113,9 @@ public class DynamicFeaturePlugin
                                     buildOutputs,
                                     dslContainers.getSourceSetManager(),
                                     extraModelInfo,
-                                    new DynamicFeatureExtensionImpl(dslServices, dslContainers));
+                                    dynamicFeatureExtension);
         }
+
         return project.getExtensions()
                 .create(
                         "android",
@@ -121,7 +125,7 @@ public class DynamicFeaturePlugin
                         buildOutputs,
                         dslContainers.getSourceSetManager(),
                         extraModelInfo,
-                        new DynamicFeatureExtensionImpl(dslServices, dslContainers));
+                        dynamicFeatureExtension);
     }
 
     @NonNull
@@ -148,7 +152,8 @@ public class DynamicFeaturePlugin
                         DynamicFeatureAndroidComponentsExtensionImpl.class,
                         dslServices,
                         sdkComponents,
-                        variantApiOperationsRegistrar);
+                        variantApiOperationsRegistrar,
+                        getExtension());
     }
 
     @NonNull
@@ -172,4 +177,6 @@ public class DynamicFeaturePlugin
             @NonNull ProjectServices projectServices, @NonNull GlobalScope globalScope) {
         return new DynamicFeatureVariantFactory(projectServices, globalScope);
     }
+
+
 }

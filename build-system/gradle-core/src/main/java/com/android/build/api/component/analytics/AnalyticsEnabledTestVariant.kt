@@ -19,6 +19,7 @@ package com.android.build.api.component.analytics
 import com.android.build.api.component.UnitTest
 import com.android.build.api.variant.Aapt
 import com.android.build.api.variant.ApkPackaging
+import com.android.build.api.variant.Dexing
 import com.android.build.api.variant.TestVariant
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
@@ -109,4 +110,25 @@ open class AnalyticsEnabledTestVariant @Inject constructor(
     }
 
     override val unitTest: UnitTest? = null
+
+    private val userVisibleDexing: Dexing by lazy {
+        objectFactory.newInstance(
+            Dexing::class.java,
+            delegate.dexing,
+            stats
+        )
+    }
+
+    override val dexing: Dexing
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.DEXING_VALUE
+            return userVisibleDexing
+        }
+
+    override fun dexing(action: Dexing.() -> Unit) {
+        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+            VariantPropertiesMethodType.DEXING_ACTION_VALUE
+        action.invoke(userVisibleDexing)
+    }
 }

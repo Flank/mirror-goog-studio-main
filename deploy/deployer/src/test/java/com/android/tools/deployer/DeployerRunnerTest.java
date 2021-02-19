@@ -1591,6 +1591,51 @@ public class DeployerRunnerTest {
     }
 
     @Test
+    @ApiLevel.InRange(min = 31)
+    public void testHiddenAPISuppression() throws Exception {
+        AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
+
+        Path oldApk = TestUtils.resolveWorkspacePath(BASE + "apks/simple.apk");
+        Path newApk = TestUtils.resolveWorkspacePath(BASE + "apks/simple+code.apk");
+
+        assertTrue(device.getApps().isEmpty());
+        DeployerRunner runner = new DeployerRunner(cacheDb, dexDB, service);
+
+        Path installersPath = DeployerTestUtils.prepareInstaller().toPath();
+
+        String[] args = {
+            "install", "com.example.simpleapp", oldApk.toString(), "--force-full-install"
+        };
+
+        assertEquals(0, runner.run(args, logger));
+        assertInstalled("com.example.simpleapp", oldApk);
+
+        String cmd =
+                "am start -n com.example.simpleapp/.MainActivity -a android.intent.action.MAIN";
+        assertEquals(0, device.executeScript(cmd, new byte[] {}).value);
+
+        device.getShell().clearHistory();
+
+        // This swap is just to put the agent in place.
+        args =
+                new String[] {
+                    "codeswap",
+                    "com.example.simpleapp",
+                    newApk.toString(),
+                    "--installers-path=" + installersPath.toString()
+                };
+
+        assertEquals(0, runner.run(args, logger));
+
+        // Stop the app so we can restart it and attach a startup agent.
+        device.stopApp("com.example.simpleapp");
+        assertEquals(0, device.executeScript(cmd, new byte[] {}).value);
+
+        String logcat = getLogcatContent(device);
+        assertHiddenAPISilencer(logcat, "Suppressing", "Restoring");
+    }
+
+    @Test
     public void testCodeSwapThatFails() throws Exception {
         AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
 
@@ -1864,6 +1909,10 @@ public class DeployerRunnerTest {
 
     private static void assertRetransformed(String logcat, String... classes) {
         assertPrefixedInLogcat(logcat, "JVMTI::RetransformClasses:", classes);
+    }
+
+    private static void assertHiddenAPISilencer(String logcat, String... classes) {
+        assertPrefixedInLogcat(logcat, "JVMTI::HiddenAPIWarning:", classes);
     }
 
     private static void assertPrefixedInLogcat(String logcat, String prefix, String... expected) {

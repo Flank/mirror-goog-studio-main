@@ -212,9 +212,10 @@ class ModelBuilderTest {
             )
         )
 
-        val extension = ApplicationExtensionImpl(
-            dslServices = dslServices,
-            dslContainers = variantInputModel
+        val extension = dslServices.newDecoratedInstance(
+            ApplicationExtensionImpl::class.java,
+            dslServices,
+            variantInputModel
         )
 
         // make sure the global issue reporter is registered

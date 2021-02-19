@@ -23,26 +23,6 @@ class DeprecationDetectorTest : AbstractCheckTest() {
         return DeprecationDetector()
     }
 
-    fun testApi1() {
-        val expected =
-            """
-            res/layout/deprecation.xml:1: Warning: AbsoluteLayout is deprecated [Deprecated]
-            <AbsoluteLayout xmlns:android="http://schemas.android.com/apk/res/android"
-             ~~~~~~~~~~~~~~
-            res/layout/deprecation.xml:17: Warning: android:editable is deprecated: Use an <EditText> to make it editable [Deprecated]
-                    android:editable="true"
-                    ~~~~~~~~~~~~~~~~~~~~~~~
-            res/layout/deprecation.xml:25: Warning: android:editable is deprecated: <EditText> is already editable [Deprecated]
-                <EditText android:editable="true" />
-                          ~~~~~~~~~~~~~~~~~~~~~~~
-            res/layout/deprecation.xml:26: Warning: android:editable is deprecated: Use inputType instead [Deprecated]
-                <EditText android:editable="false" />
-                          ~~~~~~~~~~~~~~~~~~~~~~~~
-            0 errors, 4 warnings
-            """
-        lint().files(manifest().minSdk(1), mDeprecation).run().expect(expected)
-    }
-
     fun testApi4() {
         val expected =
             """
@@ -90,8 +70,7 @@ class DeprecationDetectorTest : AbstractCheckTest() {
             0 errors, 1 warnings
             """
         lint().files(
-            xml(
-                "AndroidManifest.xml",
+            manifest(
                 """
                 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
                     package="test.pkg">
@@ -424,8 +403,7 @@ class DeprecationDetectorTest : AbstractCheckTest() {
             0 errors, 1 warnings
             """
         lint().files(
-            xml(
-                "AndroidManifest.xml",
+            manifest(
                 """
                 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
                     package="test.pkg">

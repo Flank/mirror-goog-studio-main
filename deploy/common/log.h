@@ -40,6 +40,10 @@ class Log {
   // Log a message at the error level
   static void E(const char* msg, ...) __attribute__((format(printf, 1, 2)));
 
+  // Log a message for testing and debugging purpose. Disabled in android
+  // user build.
+  static void T(const char* msg, ...) __attribute__((format(printf, 1, 2)));
+
  private:
   static void Handle(const char level, const char* fmt, va_list args);
 

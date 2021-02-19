@@ -65,7 +65,6 @@ class AllCapsDetectorTest : AbstractCheckTest() {
                 """
             ).indented()
         )
-            .incremental("res/layout/constraint.xml")
             .run().expect(
                 """
                 res/layout/constraint.xml:12: Warning: Using textAllCaps with a string (has_markup) that contains markup; the markup will be dropped by the caps conversion [AllCaps]

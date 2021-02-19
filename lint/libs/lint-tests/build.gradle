@@ -21,6 +21,7 @@ dependencies {
     implementation libs.asm_tree
     implementation libs.groovy
     implementation libs.mockito_core
+    implementation libs.kxml
 
     testImplementation project(':base:testutils')
     testImplementation project(':analytics-library:shared')
@@ -47,4 +48,5 @@ project.ext.pomDesc = 'API to build lint check tests'
 
 test {
     jvmArgs '-Djdk.attach.allowAttachSelf=true'
+    maxHeapSize = "2048m"
 }

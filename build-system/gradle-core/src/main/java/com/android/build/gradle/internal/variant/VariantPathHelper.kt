@@ -18,8 +18,8 @@ package com.android.build.gradle.internal.variant
 
 import com.android.SdkConstants
 import com.android.build.api.artifact.Artifact
-import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.options.StringOption
 import com.android.builder.core.BuilderConstants
 import com.android.builder.core.VariantType
@@ -28,59 +28,60 @@ import com.android.utils.FileUtils
 import com.android.utils.toStrings
 import org.gradle.api.Project
 import org.gradle.api.file.Directory
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.provider.Provider
 import java.io.File
 import java.util.Locale
 
 class VariantPathHelper(
-    private val project: Project,
+    val buildDirectory: DirectoryProperty,
     private val variantDslInfo: VariantDslInfo,
     private val dslServices: DslServices
 ) {
 
-    // this is very inefficient as we re-instantiate intermediats/outputDir every time
-    // FIXME replace all this with Project.layout.getBuildDirectory() which returns a dynamic DirectoryProperty
+    fun intermediatesDir(vararg subDirs: String): Provider<Directory> =
+        getBuildSubDir(AndroidProject.FD_INTERMEDIATES, subDirs)
 
-    val intermediatesDir: File
-        get() = File(project.buildDir, AndroidProject.FD_INTERMEDIATES)
-    val outputDir: File
-        get() = File(project.buildDir, AndroidProject.FD_OUTPUTS)
-    val generatedDir: File
-        get() = File(project.buildDir, AndroidProject.FD_GENERATED)
-    val reportsDir: File
-        get() = File(project.buildDir, BuilderConstants.FD_REPORTS)
+    fun outputDir(vararg subDirs: String): Provider<Directory> =
+        getBuildSubDir(AndroidProject.FD_OUTPUTS, subDirs)
 
-    val generatedResOutputDir: File
-        get() = getGeneratedResourcesDir("resValues")
+    fun generatedDir(vararg subDirs: String): Provider<Directory> =
+        getBuildSubDir(AndroidProject.FD_GENERATED, subDirs)
 
-    val generatedPngsOutputDir: File
-        get() = getGeneratedResourcesDir("pngs")
+    fun reportsDir(vararg subDirs: String): Provider<Directory> =
+        getBuildSubDir(BuilderConstants.FD_REPORTS, subDirs)
 
-    val renderscriptResOutputDir: File
-        get() = getGeneratedResourcesDir("rs")
+    val generatedResOutputDir: Provider<Directory>
+            by lazy { getGeneratedResourcesDir("resValues") }
+
+    val generatedPngsOutputDir: Provider<Directory>
+            by lazy { getGeneratedResourcesDir("pngs") }
+
+    val renderscriptResOutputDir: Provider<Directory>
+            by lazy { getGeneratedResourcesDir("rs") }
 
     val defaultMergeResourcesOutputDir: File
-        get() = FileUtils.join(
-            intermediatesDir,
-            SdkConstants.FD_RES,
-            SdkConstants.FD_MERGED,
-            variantDslInfo.dirName
-        )
+            by lazy {
+                intermediatesDir(
+                    SdkConstants.FD_RES,
+                    SdkConstants.FD_MERGED,
+                    variantDslInfo.dirName
+                ).get().asFile
+            }
 
-    val buildConfigSourceOutputDir: File
-        get() = FileUtils.join(generatedDir, "source", "buildConfig", variantDslInfo.dirName)
+    val buildConfigSourceOutputDir: Provider<Directory>
+            by lazy { generatedDir("source", "buildConfig", variantDslInfo.dirName) }
 
-    val renderscriptObjOutputDir: File
-        get() = FileUtils.join(
-            intermediatesDir,
-            toStrings(
-                "rs",
-                variantDslInfo.directorySegments,
-                "obj"
-            )
-        )
+    val renderscriptObjOutputDir: Provider<Directory>
+            by lazy {
+                getBuildSubDir(
+                    AndroidProject.FD_INTERMEDIATES,
+                    toStrings("rs", variantDslInfo.directorySegments, "obj").toTypedArray()
+                )
+            }
 
-    val coverageReportDir: File
-        get() = FileUtils.join(reportsDir, "coverage", variantDslInfo.dirName)
+    val coverageReportDir: Provider<Directory>
+            by lazy { reportsDir("coverage", variantDslInfo.dirName) }
 
     /**
      * Obtains the location where APKs should be placed.
@@ -88,40 +89,35 @@ class VariantPathHelper(
      * @return the location for APKs
      */
     val apkLocation: File
-        get() {
-            val override = dslServices.projectOptions.get(StringOption.IDE_APK_LOCATION)
-            val baseDirectory =
-                if (override != null) dslServices.file(override) else getDefaultApkLocation()
-            return File(baseDirectory, variantDslInfo.dirName)
-        }
+            by lazy {
+                val override = dslServices.projectOptions.get(StringOption.IDE_APK_LOCATION)
+                val baseDirectory =
+                    if (override != null) {
+                        dslServices.file(override)
+                    } else {
+                        defaultApkLocation.get().asFile
+                    }
+                File(baseDirectory, variantDslInfo.dirName)
+            }
 
     /**
      * Obtains the default location for APKs.
-     *
-     * @return the default location for APKs
      */
-    private fun getDefaultApkLocation(): File {
-        return FileUtils.join(outputDir, "apk")
-    }
+    private val defaultApkLocation: Provider<Directory>
+            by lazy { outputDir("apk") }
 
-    val aarLocation: File
-        get() = FileUtils.join(outputDir, BuilderConstants.EXT_LIB_ARCHIVE)
+    val aarLocation: Provider<Directory>
+            by lazy { outputDir(BuilderConstants.EXT_LIB_ARCHIVE) }
 
-    val manifestOutputDirectory: File
+    val manifestOutputDirectory: Provider<Directory>
         get() {
             val variantType: VariantType = variantDslInfo.variantType
             if (variantType.isTestComponent) {
                 if (variantType.isApk) { // ANDROID_TEST
-                    return FileUtils.join(
-                        intermediatesDir,
-                        "manifest",
-                        variantDslInfo.dirName
-                    )
+                    return intermediatesDir("manifest", variantDslInfo.dirName)
                 }
             } else {
-                return FileUtils.join(
-                    intermediatesDir, "manifests", "full", variantDslInfo.dirName
-                )
+                return intermediatesDir("manifests", "full", variantDslInfo.dirName)
             }
             throw RuntimeException("getManifestOutputDirectory called for an unexpected variant.")
         }
@@ -131,18 +127,25 @@ class VariantPathHelper(
      * per task, ideally generated with [TaskInformation.name].
      */
     fun getIncrementalDir(name: String): File {
-        return FileUtils.join(intermediatesDir, "incremental", name)
+        return intermediatesDir("incremental", name).get().asFile
     }
 
     fun getIntermediateDir(taskOutput: Artifact<Directory>): File {
         return intermediate(taskOutput.name().toLowerCase(Locale.US))
     }
 
-    private fun getGeneratedResourcesDir(name: String): File {
-        return FileUtils.join(
-            generatedDir,
-            listOf("res", name) + variantDslInfo.directorySegments
-        )
+    private fun getGeneratedResourcesDir(name: String): Provider<Directory> {
+        val dirs: List<String> =
+            listOf("res", name) + variantDslInfo.directorySegments.filterNotNull()
+        return generatedDir(*dirs.toTypedArray())
+    }
+
+    private fun getBuildSubDir(childDir: String, subDirs: Array<out String>): Provider<Directory> {
+        // Prevent accidental usage with files.
+        if (subDirs.any() && subDirs.last().contains('.')) {
+            throw IllegalStateException("Directory should not contain '.'.")
+        }
+        return buildDirectory.dir("$childDir${subDirs.joinToString(separator = "/", prefix = "/")}")
     }
 
     /**
@@ -152,6 +155,6 @@ class VariantPathHelper(
      * Of the form build/intermediates/dirName/variant/
      */
     private fun intermediate(directoryName: String): File {
-        return FileUtils.join(intermediatesDir, directoryName, variantDslInfo.dirName)
+        return intermediatesDir(directoryName, variantDslInfo.dirName).get().asFile
     }
 }

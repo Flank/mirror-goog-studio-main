@@ -92,7 +92,7 @@ public class InstallerUtilTest extends TestCase {
     }
 
     /**
-     * Request r1 and r1. r1 is installed but there is an update for it available, and so both r1
+     * Request r1 and r2. r1 is installed but there is an update for it available, and so both r1
      * and r2 are returned.
      */
     public void testLocalInstalledWithUpdate() {
@@ -337,6 +337,74 @@ public class InstallerUtilTest extends TestCase {
         assertTrue(result.get(0).equals(r1) || result.get(1).equals(r1));
         assertTrue(result.get(1).equals(r2) || result.get(2).equals(r2));
 
+        progress.assertNoErrorsOrWarnings();
+    }
+
+    /** r1->r2 with a soft dependency, with r2 not installed. Only r1 should be returned. */
+    public void testSoftNotInstalled() {
+        FakeRemotePackage r1 = new FakeRemotePackage("r1");
+        RemotePackage r2 = new FakeRemotePackage("r2");
+        r1.setDependencies(ImmutableList.of(new FakeDependency("r2", 2, 0, 0, true)));
+
+        FakeProgressIndicator progress = new FakeProgressIndicator();
+        ImmutableList<RemotePackage> request = ImmutableList.of(r1);
+        ImmutableList<RemotePackage> expected = ImmutableList.of(r1);
+        assertEquals(
+                expected,
+                InstallerUtil.computeRequiredPackages(
+                        request,
+                        new RepositoryPackages(ImmutableList.of(), ImmutableList.of(r1, r2)),
+                        progress));
+        progress.assertNoErrorsOrWarnings();
+    }
+
+    /**
+     * r1->r2 with a soft dependency, with r2 installed but already at the requested version. Only
+     * r1 should be returned.
+     */
+    public void testSoftInstalledSameVersion() {
+        FakeRemotePackage r1 = new FakeRemotePackage("r1");
+        r1.setDependencies(ImmutableList.of(new FakeDependency("r2", 2, 0, 0, true)));
+        FakeRemotePackage r2 = new FakeRemotePackage("r2");
+        r2.setRevision(new Revision(2));
+
+        FakeLocalPackage localR2 = new FakeLocalPackage("r2");
+        localR2.setRevision(new Revision(2));
+
+        FakeProgressIndicator progress = new FakeProgressIndicator();
+        ImmutableList<RemotePackage> request = ImmutableList.of(r1);
+        ImmutableList<RemotePackage> expected = ImmutableList.of(r1);
+        assertEquals(
+                expected,
+                InstallerUtil.computeRequiredPackages(
+                        request,
+                        new RepositoryPackages(ImmutableList.of(localR2), ImmutableList.of(r1, r2)),
+                        progress));
+        progress.assertNoErrorsOrWarnings();
+    }
+
+    /**
+     * r1->r2 with a soft dependency, with r2 installed and not at the requested version. r1 and r2
+     * should be returned.
+     */
+    public void testSoftInstalledLowerVersion() {
+        FakeRemotePackage r1 = new FakeRemotePackage("r1");
+        r1.setDependencies(ImmutableList.of(new FakeDependency("r2", 3, 0, 0, true)));
+        FakeRemotePackage r2 = new FakeRemotePackage("r2");
+        r2.setRevision(new Revision(3));
+
+        FakeLocalPackage localR2 = new FakeLocalPackage("r2");
+        localR2.setRevision(new Revision(2));
+
+        FakeProgressIndicator progress = new FakeProgressIndicator();
+        ImmutableList<RemotePackage> request = ImmutableList.of(r1);
+        ImmutableList<RemotePackage> expected = ImmutableList.of(r2, r1);
+        assertEquals(
+                expected,
+                InstallerUtil.computeRequiredPackages(
+                        request,
+                        new RepositoryPackages(ImmutableList.of(localR2), ImmutableList.of(r1, r2)),
+                        progress));
         progress.assertNoErrorsOrWarnings();
     }
 

@@ -106,10 +106,10 @@ import org.gradle.api.tasks.TaskProvider;
 public abstract class MergeResources extends ResourceAwareTask {
     // ----- PUBLIC TASK API -----
 
-    /**
-     * Directory to write the merged resources to
-     */
-    private File generatedPngsOutputDir;
+    /** Directory to write the merged resources to */
+    @OutputDirectory
+    @Optional
+    public abstract DirectoryProperty getGeneratedPngsOutputDir();
 
     // ----- PRIVATE TASK API -----
 
@@ -488,7 +488,7 @@ public abstract class MergeResources extends ResourceAwareTask {
         for (ResourceSet sourceSet : resourceSets) {
             sourceSets.addAll(sourceSet.getSourceFiles());
         }
-        sourceSets.add(getGeneratedPngsOutputDir());
+        sourceSets.add(getGeneratedPngsOutputDir().get().getAsFile());
         sourceSets.add(destinationDir);
         if (getIncremental()) {
             sourceSets.add(FileUtils.join(getIncrementalFolder(), SdkConstants.FD_MERGED_DOT_DIR));
@@ -674,7 +674,7 @@ public abstract class MergeResources extends ResourceAwareTask {
         return new MergeResourcesVectorDrawableRenderer(
                 getMinSdk().get(),
                 vectorSupportLibraryIsUsed,
-                generatedPngsOutputDir,
+                this.getGeneratedPngsOutputDir().get().getAsFile(),
                 densities,
                 LoggerWrapper.supplierFor(MergeResources.class));
     }
@@ -754,12 +754,6 @@ public abstract class MergeResources extends ResourceAwareTask {
     @OutputDirectory
     @Optional
     public abstract DirectoryProperty getBlameLogOutputFolder();
-
-    @Optional
-    @OutputDirectory
-    public File getGeneratedPngsOutputDir() {
-        return generatedPngsOutputDir;
-    }
 
     @Input
     public Collection<String> getGeneratedDensities() {
@@ -904,7 +898,7 @@ public abstract class MergeResources extends ResourceAwareTask {
             task.getResourcesComputer().initFromVariantScope(creationConfig, includeDependencies);
 
             if (!task.disableVectorDrawables) {
-                task.generatedPngsOutputDir = paths.getGeneratedPngsOutputDir();
+                task.getGeneratedPngsOutputDir().set(paths.getGeneratedPngsOutputDir());
             }
 
             final BuildFeatureValues features = creationConfig.getBuildFeatures();

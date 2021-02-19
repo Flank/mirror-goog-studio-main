@@ -58,9 +58,9 @@ public class AdbClient {
         public final String reason;
         public final InstallMetrics metrics;
 
-        InstallResult(InstallStatus status) {
+        InstallResult(InstallStatus status, String reason) {
             this.status = status;
-            reason = null;
+            this.reason = reason;
             metrics = null;
         }
 
@@ -131,7 +131,9 @@ public class AdbClient {
                 return new InstallResult(InstallStatus.OK, null, device.getLastInstallMetrics());
             } else {
                 if (apks.size() != 1) {
-                    return new InstallResult(InstallStatus.MULTI_APKS_NO_SUPPORTED_BELOW21);
+                    return new InstallResult(
+                            InstallStatus.MULTI_APKS_NO_SUPPORTED_BELOW21,
+                            "Splits are not supported below API 21");
                 } else {
                     device.installPackage(apks.get(0), reinstall, options.toArray(new String[0]));
                     return new InstallResult(
@@ -142,7 +144,7 @@ public class AdbClient {
             String code = e.getErrorCode();
             if (code != null) {
                 try {
-                    return ApkInstaller.parseInstallerResultErrorCode(code);
+                    return ApkInstaller.toInstallerResult(code, e.getMessage());
                 } catch (IllegalArgumentException | NullPointerException ignored) {
                     logger.warning(
                             "Unrecognized Installation Failure: %s\n%s\n", code, e.getMessage());
@@ -150,13 +152,13 @@ public class AdbClient {
             } else {
                 Throwable cause = e.getCause();
                 if (cause instanceof ShellCommandUnresponsiveException) {
-                    return new InstallResult(InstallStatus.SHELL_UNRESPONSIVE);
+                    return new InstallResult(InstallStatus.SHELL_UNRESPONSIVE, e.getMessage());
                 } else {
                     logger.warning("Installation Failure: %s\n", e.getMessage());
                     return new InstallResult(InstallStatus.UNKNOWN_ERROR, e.getMessage(), null);
                 }
             }
-            return new InstallResult(InstallStatus.UNKNOWN_ERROR);
+            return new InstallResult(InstallStatus.UNKNOWN_ERROR, "Unknown Error");
         }
     }
 

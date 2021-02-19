@@ -17,6 +17,7 @@
 package com.android.tools.lint.detector.api
 
 import com.android.SdkConstants.ANDROID_URI
+import com.android.SdkConstants.ATTR_ID
 import com.android.SdkConstants.ATTR_NAME
 import com.android.SdkConstants.DOT_JAR
 import com.android.SdkConstants.DOT_JAVA
@@ -59,6 +60,7 @@ import com.android.tools.lint.client.api.TYPE_SHORT_WRAPPER
 import com.android.utils.Pair
 import com.android.utils.SdkUtils.escapePropertyValue
 import com.android.utils.XmlUtils
+import com.android.utils.iterator
 import com.google.common.base.Charsets
 import com.google.common.collect.Iterables
 import com.google.common.io.Files
@@ -694,6 +696,131 @@ class LintUtilsTest : TestCase() {
         assertTrue(uri.endsWith("/foo"))
     }
 
+    fun testMatchElements() {
+        /**
+         * Find an element under [element] whose id or name or position
+         * descriptor matches [id]
+         */
+        fun findElement(element: Element, id: String, parents: String = ""): Element? {
+            if (element.getAttribute(ATTR_ID) == id) {
+                return element
+            }
+            if (element.getAttribute(ATTR_NAME) == id) {
+                return element
+            }
+            var number = 1
+            for (child in element) {
+                val desc = "$parents<${child.tagName}:$number>"
+                if (desc == id) {
+                    return child
+                }
+                val found = findElement(child, id, desc)
+                if (found != null) {
+                    return found
+                }
+                number++
+            }
+
+            return null
+        }
+
+        /**
+         * Given two XML documents and two id's, look up the nodes, then
+         * test the matching method ([matchXmlElement]) to make sure
+         * that the match for the first id returns the same element as
+         * the one found by id search
+         */
+        fun testMatch(
+            sourceDocument: Document,
+            sourceId: String,
+            targetDocument: Document,
+            targetId: String
+        ) {
+            val source = findElement(sourceDocument.documentElement, sourceId)!!
+            val target = findElement(targetDocument.documentElement, targetId)!!
+
+            assertSame(target, matchXmlElement(source, targetDocument))
+        }
+
+        /** Creates an XML DOM document from the given XML */
+        fun xml(@Language("XML") xml: String): Document {
+            return XmlUtils.parseDocumentSilently(xml, false)!!
+        }
+
+        // The document we're going to search for equivalent elements from
+        val doc1 = xml(
+            """
+                <root>
+                    <extra/>
+                    <child>
+                        <grandchild id="1"/>
+                        <grandchild id="2"/>
+                    </child>
+                    <child>
+                        <grandchild id="3"/>
+                        <duplicate/> <!-- first -->
+                        <grandchild id="4"/>
+                        <duplicate/> <!-- second -->
+                        <grandchild name="n1"/>
+                        <grandchild name="n2"/>
+                        <nomatch id="nomatch"/>
+                    </child>
+                </root>
+                """
+        )
+
+        // The document we're trying to find matches in
+        val doc2 = xml(
+            """
+                <root>
+                    <child2>
+                        <grandchild name="n2"/> <!-- wrong path -->
+                    </child2>
+                    <child>
+                        <!-- comment here -->
+                        <grandchild id="1"/>
+                    </child>
+                    <child>
+                        <unrelated/>
+                        <grandchild id="3"/>
+                        <grandchild id="2"/>
+                        <grandchild id="4"/>
+                        <anchor id="anchor" />
+                        <duplicate/> <!-- first -->
+                        <duplicate/> <!-- second -->
+                        <grandchild name="n2"/>
+                        <grandchild name="n1"/>
+                    </child>
+                </root>
+                """,
+        )
+
+        // ID matching
+        testMatch(doc1, "1", doc2, "1")
+        testMatch(doc1, "2", doc2, "2")
+        testMatch(doc1, "3", doc2, "3")
+        testMatch(doc1, "4", doc2, "4")
+
+        // Name matching
+        testMatch(doc1, "n1", doc2, "n1")
+
+        // Ordinal matching
+        testMatch(
+            doc1, "n2", doc2,
+            // Don't search for n2 in the target since there's an identically named incorrect
+            // match in the wrong parent path
+            "<child:3><grandchild:8>"
+        )
+        testMatch(doc1, "<child:3><duplicate:4>", doc2, "<child:3><duplicate:7>")
+
+        // Trivial matching
+        assertSame(doc2.documentElement, matchXmlElement(doc1.documentElement, doc2))
+
+        // Make sure we gracefully handle case where no match is found
+        val missing = findElement(doc1.documentElement, "nomatch")!!
+        assertNull(matchXmlElement(missing, doc2))
+    }
+
     private class JavaTestContext(
         driver: LintDriver,
         project: Project,
@@ -850,14 +977,16 @@ class LintUtilsTest : TestCase() {
 
                 override fun createProject(dir: File, referenceDir: File): Project {
                     val clone = super.createProject(dir, referenceDir)
-                    val p = object : TestLintClient.TestProject(this, dir, referenceDir, null, null) {
-                        override fun isLibrary(): Boolean {
-                            return library
+                    val p =
+                        object : TestLintClient.TestProject(this, dir, referenceDir, null, null) {
+                            override fun isLibrary(): Boolean {
+                                return library
+                            }
+
+                            override fun isAndroidProject(): Boolean {
+                                return android
+                            }
                         }
-                        override fun isAndroidProject(): Boolean {
-                            return android
-                        }
-                    }
                     p.buildTargetHash = clone.buildTargetHash
                     p.ideaProject = clone.ideaProject
                     return p

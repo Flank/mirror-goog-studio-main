@@ -31,12 +31,16 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.detector.api.Category;
+import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Implementation;
+import com.android.tools.lint.detector.api.Incident;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.LayoutDetector;
 import com.android.tools.lint.detector.api.Lint;
+import com.android.tools.lint.detector.api.LintMap;
 import com.android.tools.lint.detector.api.Location;
+import com.android.tools.lint.detector.api.PartialResult;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
@@ -46,6 +50,7 @@ import com.google.common.collect.Maps;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import org.jetbrains.uast.UAnnotated;
 import org.jetbrains.uast.UClass;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -78,6 +83,9 @@ public class RegistrationDetector extends LayoutDetector implements SourceCodeSc
                     .setEnabledByDefault(false);
 
     protected Map<String, String> mManifestRegistrations;
+
+    private static final String KEY_LOCATION = "location";
+    private static final String KEY_ID = "id";
 
     /** Constructs a new {@link RegistrationDetector} */
     public RegistrationDetector() {}
@@ -144,6 +152,11 @@ public class RegistrationDetector extends LayoutDetector implements SourceCodeSc
             return;
         }
 
+        if (context.isTestSource()) {
+            // Don't flag activities registered in test source sets
+            return;
+        }
+
         if (cls.getName() == null) {
             // anonymous class; can't be registered
             return;
@@ -161,42 +174,69 @@ public class RegistrationDetector extends LayoutDetector implements SourceCodeSc
             // some non-registered Context, such as a BackupAgent
             return;
         }
+
+        if (rightTag.equals(TAG_RECEIVER)) {
+            // Receivers can be registered in code; don't flag these.
+            return;
+        }
+
         String className = cls.getQualifiedName();
         if (className == null) {
             return;
         }
+
+        if (!context.isGlobalAnalysis()) {
+            if (!context.getDriver().isSuppressed(context, ISSUE, (UAnnotated) cls)) {
+                LintMap map = new LintMap();
+                map.put(KEY_LOCATION, context.getNameLocation(cls));
+                map.put(KEY_ID, rightTag);
+                context.getPartialResults(ISSUE).map().put(className, map);
+            }
+            return;
+        }
+
         Map<String, String> manifestRegistrations =
                 getManifestRegistrations(context.getMainProject());
         if (manifestRegistrations != null) {
             String framework = manifestRegistrations.get(className);
             if (framework == null) {
-                reportMissing(context, cls, className, rightTag);
+                Location location = context.getNameLocation(cls);
+                String message = getMissingMessage(className, rightTag);
+                context.report(ISSUE, cls, location, message);
             }
             // Checking that the registered classes extends the right type is handled
             // by the MissingClassDetector
         }
     }
 
-    private static void reportMissing(
-            @NonNull JavaContext context,
-            @NonNull UClass node,
-            @NonNull String className,
-            @NonNull String tag) {
-        if (tag.equals(TAG_RECEIVER)) {
-            // Receivers can be registered in code; don't flag these.
-            return;
+    @Override
+    public void checkPartialResults(
+            @NonNull Context context, @NonNull PartialResult partialResults) {
+        Map<String, String> manifestRegistrations =
+                getManifestRegistrations(context.getMainProject());
+        if (manifestRegistrations != null) {
+            for (LintMap map : partialResults.maps()) {
+                for (String className : map) {
+                    String framework = manifestRegistrations.get(className);
+                    if (framework == null) {
+                        LintMap m = map.getMap(className);
+                        if (m != null) {
+                            Location location = m.getLocation(KEY_LOCATION);
+                            String rightTag = m.getString(KEY_ID, null);
+                            if (location != null && rightTag != null) {
+                                String message = getMissingMessage(className, rightTag);
+                                context.report(new Incident(ISSUE, location, message));
+                            }
+                        }
+                    }
+                }
+            }
         }
+    }
 
-        // Don't flag activities registered in test source sets
-        if (context.isTestSource()) {
-            return;
-        }
-
-        Location location = context.getNameLocation(node);
-        String message =
-                String.format(
-                        "The `<%1$s> %2$s` is not registered in the manifest", tag, className);
-        context.report(ISSUE, node, location, message);
+    @NonNull
+    private static String getMissingMessage(@NonNull String className, @NonNull String tag) {
+        return String.format("The `<%1$s> %2$s` is not registered in the manifest", tag, className);
     }
 
     private static String getTag(@NonNull JavaEvaluator evaluator, @NonNull UClass cls) {

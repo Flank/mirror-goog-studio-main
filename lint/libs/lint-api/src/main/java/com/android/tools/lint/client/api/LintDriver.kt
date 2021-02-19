@@ -47,16 +47,20 @@ import com.android.tools.lint.detector.api.BinaryResourceScanner
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.ClassContext
 import com.android.tools.lint.detector.api.ClassScanner
+import com.android.tools.lint.detector.api.Constraint
 import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Desugaring
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.GradleContext
 import com.android.tools.lint.detector.api.GradleScanner
+import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.LintFix
+import com.android.tools.lint.detector.api.LintMap
 import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.OtherFileScanner
+import com.android.tools.lint.detector.api.PartialResult
 import com.android.tools.lint.detector.api.Platform
 import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.ResourceContext
@@ -65,6 +69,7 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.TextFormat
+import com.android.tools.lint.detector.api.UastLintUtils.Companion.getContainingFile
 import com.android.tools.lint.detector.api.XmlContext
 import com.android.tools.lint.detector.api.XmlScanner
 import com.android.tools.lint.detector.api.assertionsEnabled
@@ -121,6 +126,7 @@ import org.objectweb.asm.tree.MethodNode
 import org.w3c.dom.Attr
 import org.w3c.dom.Document
 import org.w3c.dom.Element
+import org.w3c.dom.Node
 import org.xmlpull.v1.XmlPullParser
 import java.io.File
 import java.io.IOException
@@ -136,6 +142,7 @@ import java.util.HashMap
 import java.util.HashSet
 import java.util.IdentityHashMap
 import java.util.LinkedHashMap
+import java.util.LinkedHashSet
 import java.util.function.Predicate
 import java.util.regex.Pattern
 import kotlin.system.measureTimeMillis
@@ -202,8 +209,9 @@ class LintDriver(
     private var listeners: MutableList<LintListener>? = null
 
     /**
-     * Returns the current phase number. The first pass is numbered 1. Only one pass
-     * will be performed, unless a [Detector] calls [.requestRepeat].
+     * Returns the current phase number. The first pass is numbered
+     * 1. Only one pass will be performed, unless a [Detector] calls
+     *    [requestRepeat].
      *
      * @return the current phase, usually 1
      */
@@ -292,12 +300,47 @@ class LintDriver(
     var reportGenerationTimeMs = 0L
 
     /**
-     * Returns the project containing a given file, or null if not found. This searches
-     * only among the currently checked project and its library projects, not among all
-     * possible projects being scanned sequentially.
+     * Different operation mode that the driver can be in. This can also
+     * be thought of as stages; when doing partial analysis, first the
+     * driver will be in the [ANALYSIS_ONLY] mode while analyzing each
+     * project in isolation, and then in [MERGE] mode while aggregating,
+     * merging and filtering the results from the earlier stage.
+     */
+    enum class DriverMode {
+        /**
+         * Normal analysis: looking at the whole project and performing
+         * both analysis and report generation.
+         */
+        GLOBAL,
+
+        /**
+         * With partial, module independent analysis, the driver is now
+         * analyzing one single project and storing the state for later
+         * reporting
+         */
+        ANALYSIS_ONLY,
+
+        /**
+         * After running through [ANALYSIS_ONLY] analysis for all
+         * the libraries as well as the current module, this stage
+         * aggregates all the stored incidents and produces a report
+         * (which in some cases includes callbacks into the detectors to
+         * filter their provisionally reported results.)
+         */
+        MERGE
+    }
+
+    /** The mode that the driver is currently running in */
+    var mode: DriverMode = DriverMode.GLOBAL
+        private set
+
+    /**
+     * Returns the project containing a given file, or null if not
+     * found. This searches only among the currently checked project
+     * and its library projects, not among all possible projects being
+     * scanned sequentially.
      *
      * @param file the file to be checked
-     *
      * @return the corresponding project, or null if not found
      */
     fun findProjectFor(file: File): Project? {
@@ -346,18 +389,142 @@ class LintDriver(
         get() = currentProjects ?: emptyList()
 
     /**
-     * Analyze the given files (which can point to Android projects or directories
-     * containing Android projects). Issues found are reported to the associated
-     * [LintClient].
+     * Analyze the current request.
      *
-     *
-     * Note that the [LintDriver] is not multi thread safe or re-entrant;
-     * if you want to run potentially overlapping lint jobs, create a separate driver
-     * for each job.
+     * Note that the [LintDriver] is not multi thread safe or
+     * re-entrant; if you want to run potentially overlapping lint jobs,
+     * create a separate driver for each job.
      */
     fun analyze() {
+        //noinspection ExpensiveAssertion
         assert(!scope.contains(Scope.ALL_RESOURCE_FILES) || scope.contains(Scope.RESOURCE_FILE))
+        mode = DriverMode.GLOBAL
+        doAnalyze(
+            analysis = { roots ->
+                for (root in roots) {
+                    checkProjectRoot(root)
+                }
+            }
+        )
+    }
 
+    /**
+     * Analyzes a specific project independently; stores partial results
+     * for that library, which will later be loaded and merged with
+     * other projects in [mergeOnly].
+     */
+    fun analyzeOnly() {
+        mode = DriverMode.ANALYSIS_ONLY
+
+        doAnalyze(
+            analysis = {
+                // Partial analysis only looks at a single project, not multiple projects
+                // with source dependencies
+                //noinspection ExpensiveAssertion
+                assert(projectRoots.size == 1)
+                val project = projectRoots.first()
+                checkProjectRoot(project)
+                client.storeState(project)
+            },
+            partial = true
+        )
+    }
+
+    /**
+     * Loads in all the partial results for a set of modules and creates
+     * a single report based on both taking the definite results
+     * as well as conditionally processing the provisional results
+     */
+    fun mergeOnly() {
+        mode = DriverMode.MERGE
+        doAnalyze(
+            analysis = { roots ->
+                val main = roots.first()
+                val projectContext = Context(this, main, main, main.dir)
+                fireEvent(EventType.MERGING, projectContext)
+                client.mergeState(main, this)
+            }
+        )
+    }
+
+    /**
+     * Performs the actual execution of the driver; it performs setup;
+     * then performs the some work provided as a lambda, and finally
+     * performs some cleanup.
+     */
+    private fun doAnalyze(
+        partial: Boolean = false,
+        analysis: (Collection<Project>) -> Unit = {}
+    ) {
+        try {
+            synchronized(currentDrivers) {
+                currentDrivers.add(this)
+            }
+
+            checkCircularProjectErrors()
+
+            val roots = initializeProjectRoots()
+            if (roots.isEmpty()) {
+                return
+            }
+
+            initializeExtraRegistries()
+
+            // Note: We don't consult baselines in partial analysis mode; that's left
+            // for the final report merge (since different baselines consuming these
+            // partial results can include/exclude different issues.)
+            if (!partial) {
+                initializeBaseline(roots)
+            }
+
+            fireEvent(EventType.STARTING, null)
+
+            try {
+                analysis(roots)
+            } catch (throwable: Throwable) {
+                // Process canceled etc
+                if (!handleDetectorError(null, this, throwable)) {
+                    dispose(roots, EventType.ABORTED)
+                    return
+                }
+            }
+
+            if (!partial) {
+                reportBaselineIssues(roots)
+            }
+            dispose(roots, EventType.COMPLETED)
+        } finally {
+            synchronized(currentDrivers) {
+                currentDrivers.remove(this)
+            }
+        }
+    }
+
+    /**
+     * Returns true if lint is running in "global" mode, such as when
+     * running in the IDE. This is where lint is analyzing the whole
+     * project including libraries, where it is given access to for
+     * example library dependencies' sources (if local), and where you
+     * can look up the main project via [Context.mainProject].
+     *
+     * This is the opposite of "partial analysis", where lint can be
+     * either analyzing an individual module, or performing reporting
+     * where it merges individual module results. You can look up the
+     * exact mode via [LintDriver.mode].
+     */
+    fun isGlobalAnalysis(): Boolean {
+        return mode == DriverMode.GLOBAL
+    }
+
+    /**
+     * Returns true if lint is analyzing a single file in isolation (so
+     * it will not visit other source files in the same folder and so
+     * on). This is true when lint runs on the fly in the editor in the
+     * IDE for example.
+     */
+    fun isIsolated(): Boolean = Scope.checkSingleFile(scope)
+
+    private fun checkCircularProjectErrors() {
         circularProjectError?.let {
             val project = it.project
             if (project != null) {
@@ -372,11 +539,13 @@ class LintDriver(
             circularProjectError = null
             return
         }
+    }
 
+    private fun initializeProjectRoots(): Collection<Project> {
         val projects = projectRoots
         if (projects.isEmpty()) {
             client.log(null, "No projects found for %1\$s", request.files.toString())
-            return
+            return emptyList()
         }
         initializeTimeMs += measureTimeMillis {
             realClient.performInitializeProjects(projects)
@@ -386,10 +555,16 @@ class LintDriver(
             fireEvent(EventType.REGISTERED_PROJECT, project = project)
         }
 
-        registerCustomDetectorsTimeMs += measureTimeMillis {
-            registerCustomDetectors(projects)
-        }
+        return projects
+    }
 
+    private fun initializeExtraRegistries() {
+        registerCustomDetectorsTimeMs += measureTimeMillis {
+            registerCustomDetectors(projectRoots)
+        }
+    }
+
+    private fun initializeBaseline(projects: Collection<Project>) {
         // See if the lint.xml file specifies a baseline and we're not in incremental mode
         if (baseline == null && scope.size > 2) {
             val lastProject = Iterables.getLast(projects)
@@ -399,41 +574,33 @@ class LintDriver(
                 baseline = LintBaseline(client, baselineFile)
             }
         }
+    }
 
-        fireEvent(EventType.STARTING, null)
+    private fun checkProjectRoot(project: Project) {
+        phase = 1
 
-        try {
-            for (project in projects) {
-                phase = 1
+        val main = request.getMainProject(project)
 
-                val main = request.getMainProject(project)
-
-                // The set of available detectors varies between projects
-                computeDetectorsTimeMs += measureTimeMillis {
-                    computeDetectors(project)
-                }
-
-                if (applicableDetectors.isEmpty()) {
-                    // No detectors enabled in this project: skip it
-                    continue
-                }
-
-                checkProjectTimeMs += measureTimeMillis {
-                    checkProject(project, main)
-                }
-
-                extraPhasesTimeMs += measureTimeMillis {
-                    runExtraPhases(project, main)
-                }
-            }
-        } catch (throwable: Throwable) {
-            // Process canceled etc
-            if (!handleDetectorError(null, this, throwable)) {
-                realClient.performDisposeProjects(projects)
-                return
-            }
+        // The set of available detectors varies between projects
+        computeDetectorsTimeMs += measureTimeMillis {
+            computeDetectors(project)
         }
 
+        if (applicableDetectors.isEmpty()) {
+            // No detectors enabled in this project: skip it
+            return
+        }
+
+        checkProjectTimeMs += measureTimeMillis {
+            checkProject(project, main)
+        }
+
+        extraPhasesTimeMs += measureTimeMillis {
+            runExtraPhases(project, main)
+        }
+    }
+
+    private fun reportBaselineIssues(projects: Collection<Project>) {
         val baseline = this.baseline
         if (baseline != null) {
             val lastProject = Iterables.getLast(projects)
@@ -442,10 +609,52 @@ class LintDriver(
                 baseline.reportBaselineIssues(this, main)
             }
         }
+    }
 
-        fireEvent(EventType.COMPLETED, null)
+    private fun dispose(projects: Collection<Project>, eventType: EventType) {
+        fireEvent(eventType, null)
         disposeProjectsTimeMs += measureTimeMillis {
             realClient.performDisposeProjects(projects)
+        }
+    }
+
+    /** Add some final checks when merging projects */
+    fun processMergedProjects(projectContext: Context) {
+        for (detector in applicableDetectors) {
+            detector.checkMergedProject(projectContext)
+        }
+    }
+
+    /** Process the given conditionally reported incidents */
+    fun mergeConditionalIncidents(
+        projectContext: Context,
+        provisional: List<Incident>
+    ) {
+        if (provisional.isNotEmpty()) {
+            val detectorMap = HashMap<Issue, Detector>()
+            for (incident in provisional) {
+                // If incident.clientProperties is null, we've loaded incidents from an analysis
+                // phase, and the issue had an empty map. This means it wants to do
+                // custom checking in accept() but didn't have any data to store
+                val map = incident.clientProperties ?: LintMap()
+                val condition = if (map.size == 1) map.getConstraint(KEY_CONDITION) else null
+                if (condition != null) {
+                    if (!condition.accept(projectContext, incident)) {
+                        continue
+                    }
+                } else {
+                    val issue = incident.issue
+                    val detector = detectorMap[issue]
+                        ?: issue.implementation.detectorClass.newInstance()
+                            .also { detectorMap[issue] = it }
+                    // TODO: Block calling context.report() from this method in case
+                    // detectors are not written correctly!
+                    if (!detector.filterIncident(projectContext, incident, map)) {
+                        continue
+                    }
+                }
+                projectContext.report(incident)
+            }
         }
     }
 
@@ -610,7 +819,7 @@ class LintDriver(
         validateScopeList()
     }
 
-    private fun computeDetectors(project: Project) {
+    fun computeDetectors(project: Project) {
         // Ensure that the current visitor is recomputed
         currentFolderType = null
         currentVisitor = null
@@ -724,7 +933,9 @@ class LintDriver(
         @Suppress("UnnecessaryVariable")
         val files = absolute
 
-        if (files.size > 1) {
+        if (request.srcRoot != null) {
+            sharedRoot = request.srcRoot
+        } else if (files.size > 1) {
             sharedRoot = getCommonParent(files)
             if (sharedRoot != null && sharedRoot.parentFile == null) { // "/" ?
                 sharedRoot = null
@@ -908,7 +1119,11 @@ class LintDriver(
         runFileDetectors(project, main)
         runDelayedRunnables()
 
-        if (checkDependencies && !Scope.checkSingleFile(scope)) {
+        val analyzeLibraries = checkDependencies && !isIsolated() &&
+            // If the client supports partial analysis, it should merge results
+            // from libraries and call mergeIncidents
+            !client.supportsPartialAnalysis()
+        if (analyzeLibraries) {
             val libraries = project.directLibraries
             val seen = HashSet<Project>(project.allLibraries.size)
             analyzeDependencies(libraries, projectConfiguration, project, main, seen)
@@ -917,12 +1132,17 @@ class LintDriver(
         currentProject = project
 
         for (check in applicableDetectors) {
-            client.runReadAction(
-                Runnable {
-                    check.afterCheckEachProject(projectContext)
-                    check.afterCheckRootProject(projectContext)
+            client.runReadAction {
+                check.afterCheckEachProject(projectContext)
+                check.afterCheckRootProject(projectContext)
+
+                // Make it easy to put all the post-processing logic in a single method
+                // like afterCheckRootProject project which also needs to run when analyzing
+                // the root project.
+                if (projectContext.isGlobalAnalysis()) {
+                    check.checkMergedProject(projectContext)
                 }
-            )
+            }
         }
 
         currentProjects = null
@@ -1195,59 +1415,55 @@ class LintDriver(
             }
             val gradleKtsContexts = uastSourceList?.gradleKtsContexts ?: emptyList()
             for (context in gradleKtsContexts) {
-                client.runReadAction(
-                    Runnable {
-                        // Gradle Kotlin Script? Use Java parsing mechanism.
-                        val uFile = context.uastParser.parse(context)
-                        if (uFile != null) {
-                            context.setJavaFile(uFile.psi) // needed for getLocation
-                            context.uastFile = uFile
-                            fireEvent(EventType.SCANNING_FILE, context)
+                client.runReadAction {
+                    // Gradle Kotlin Script? Use Java parsing mechanism.
+                    val uFile = context.uastParser.parse(context)
+                    if (uFile != null) {
+                        context.setJavaFile(uFile.psi) // needed for getLocation
+                        context.uastFile = uFile
+                        fireEvent(EventType.SCANNING_FILE, context)
 
-                            val uastVisitor = UastGradleVisitor(context)
-                            val gradleContext =
-                                GradleContext(uastVisitor, this, project, main, context.file)
-                            fireEvent(EventType.SCANNING_FILE, context)
-                            for (detector in detectors) {
-                                detector.beforeCheckFile(gradleContext)
-                            }
-
-                            uastVisitor.visitBuildScript(gradleContext, gradleScanners)
-                            for (scanner in customVisitedGradleScanners) {
-                                scanner.visitBuildScript(gradleContext)
-                            }
-                            for (detector in detectors) {
-                                detector.afterCheckFile(gradleContext)
-                            }
-
-                            context.setJavaFile(null)
-                            context.uastFile = null
+                        val uastVisitor = UastGradleVisitor(context)
+                        val gradleContext =
+                            GradleContext(uastVisitor, this, project, main, context.file)
+                        fireEvent(EventType.SCANNING_FILE, context)
+                        for (detector in detectors) {
+                            detector.beforeCheckFile(gradleContext)
                         }
 
-                        fileCount++
+                        uastVisitor.visitBuildScript(gradleContext, gradleScanners)
+                        for (scanner in customVisitedGradleScanners) {
+                            scanner.visitBuildScript(gradleContext)
+                        }
+                        for (detector in detectors) {
+                            detector.afterCheckFile(gradleContext)
+                        }
+
+                        context.setJavaFile(null)
+                        context.uastFile = null
                     }
-                )
+
+                    fileCount++
+                }
             }
             for (file in files) {
                 if (file.path.endsWith(DOT_GRADLE)) {
-                    client.runReadAction(
-                        Runnable {
-                            val gradleVisitor = project.client.getGradleVisitor()
-                            val context = GradleContext(gradleVisitor, this, project, main, file)
-                            fireEvent(EventType.SCANNING_FILE, context)
-                            for (detector in detectors) {
-                                detector.beforeCheckFile(context)
-                            }
-                            gradleVisitor.visitBuildScript(context, gradleScanners)
-                            for (scanner in customVisitedGradleScanners) {
-                                scanner.visitBuildScript(context)
-                            }
-                            for (detector in detectors) {
-                                detector.afterCheckFile(context)
-                            }
-                            fileCount++
+                    client.runReadAction {
+                        val gradleVisitor = project.client.getGradleVisitor()
+                        val context = GradleContext(gradleVisitor, this, project, main, file)
+                        fireEvent(EventType.SCANNING_FILE, context)
+                        for (detector in detectors) {
+                            detector.beforeCheckFile(context)
                         }
-                    )
+                        gradleVisitor.visitBuildScript(context, gradleScanners)
+                        for (scanner in customVisitedGradleScanners) {
+                            scanner.visitBuildScript(context)
+                        }
+                        for (detector in detectors) {
+                            detector.afterCheckFile(context)
+                        }
+                        fileCount++
+                    }
                 }
             }
         }
@@ -1404,9 +1620,8 @@ class LintDriver(
 
     /**
      * Stack of [ClassNode] nodes for outer classes of the currently
-     * processed class, including that class itself. Populated by
-     * [.runClassDetectors] and used by
-     * [.getOuterClassNode]
+     * processed class, including that class itself. Populated
+     * by [runClassDetectors] and used by [getOuterClassNode]
      */
     private var outerClasses: Deque<ClassNode>? = null
 
@@ -1763,7 +1978,7 @@ class LintDriver(
         for (context in srcContexts) {
             fireEvent(EventType.SCANNING_FILE, context)
             // TODO: Don't hold read lock around the entire process?
-            client.runReadAction(Runnable { uElementVisitor.visitFile(context) })
+            client.runReadAction { uElementVisitor.visitFile(context) }
             fileCount++
             if (context.file.name.endsWith(DOT_JAVA)) {
                 javaFileCount++
@@ -2104,14 +2319,24 @@ class LintDriver(
 
     /**
      * Wrapper around the lint client. This sits in the middle between a
-     * detector calling for example [LintClient.report] and
-     * the actual embedding tool, and performs filtering etc such that detectors
-     * and lint clients don't have to make sure they check for ignored issues or
-     * filtered out warnings.
+     * detector calling for example [LintClient.report] and the actual
+     * embedding tool, and performs filtering etc such that detectors
+     * and lint clients don't have to make sure they check for ignored
+     * issues or filtered out warnings.
+     *
+     * TODO: Extract this out to a top level internal class (with driver
+     * as a member property) since LintDriver is getting really large
+     * and this class also contains quite a bit of filtering code now.
+     * Just not doing it immediately since the current CLs have a lot of
+     * changes here which makes diffing tricky.)
      */
     private inner class LintClientWrapper(private val delegate: LintClient) :
         LintClient(clientName) {
-        override val configurations = delegate.configurations
+        override val configurations: ConfigurationHierarchy
+            get() = delegate.configurations
+
+        override val printInternalErrorStackTrace: Boolean
+            get() = delegate.printInternalErrorStackTrace
 
         override fun getMergedManifest(project: Project): Document? =
             delegate.getMergedManifest(project)
@@ -2122,57 +2347,140 @@ class LintDriver(
         ) =
             delegate.resolveMergeManifestSources(mergedManifest, reportFile)
 
-        override fun findManifestSourceNode(
-            mergedNode: org.w3c.dom.Node
-        ): Pair<File, out org.w3c.dom.Node>? =
+        override fun findManifestSourceNode(mergedNode: Node): Pair<File, out Node>? =
             delegate.findManifestSourceNode(mergedNode)
 
-        override fun findManifestSourceLocation(mergedNode: org.w3c.dom.Node): Location? =
+        override fun findManifestSourceLocation(mergedNode: Node): Location? =
             delegate.findManifestSourceLocation(mergedNode)
 
         override fun getXmlDocument(file: File, contents: CharSequence?): Document? {
             return delegate.getXmlDocument(file, contents)
         }
 
-        override fun report(
-            context: Context,
-            issue: Issue,
-            severity: Severity,
-            location: Location,
-            message: String,
-            format: TextFormat,
-            fix: LintFix?
-        ) {
+        private fun inSameFile(element1: PsiElement?, element2: PsiFile?): Boolean {
+            return getContainingFile(element1) == getContainingFile(element2)
+        }
 
-            if (currentProject != null && currentProject?.reportIssues == false) {
-                return
+        /**
+         * Is the given incident suppressed with an annotation, a
+         * comment, etc? This only looks at the local context around the
+         * incident; it does not check baselines, issue configuration in
+         * lint.xml, etc
+         */
+        private fun isSuppressedLocally(context: Context, incident: Incident): Boolean {
+            val driver = context.driver
+            val scope = incident.scope ?: incident.location.source
+            val issue = incident.issue
+
+            // XML DOM
+            if (scope is Node) {
+                // Also see if we have the context for this location (e.g. code could
+                // have directly called XmlContext/JavaContext report methods instead); this
+                // is better because the context also checks for issues suppressed via comment
+                return if (context is XmlContext && scope.ownerDocument === context.document) {
+                    driver.isSuppressed(context, issue, scope)
+                } else {
+                    driver.isSuppressed(null, issue, scope)
+                }
             }
 
+            // UAST
+            if (scope is UElement) {
+                val javaContext = context as? JavaContext
+                val psi = scope.sourcePsi
+                if (psi == null || javaContext != null && inSameFile(psi, javaContext.psiFile)) {
+                    if (scope is UAnnotated) {
+                        if (driver.isSuppressed(javaContext, issue, scope)) {
+                            return true
+                        }
+                    } else if (driver.isSuppressed(javaContext, issue, scope)) {
+                        return true
+                    }
+                } else if (scope is UAnnotated) {
+                    if (driver.isSuppressed(null, issue, scope)) {
+                        return true
+                    }
+                } else if (driver.isSuppressed(null, issue, scope)) {
+                    return true
+                }
+                return false
+            }
+
+            // PSI
+            if (scope is PsiElement) {
+                // Check for suppressed issue via location node
+                if (context is JavaContext) {
+                    if (inSameFile(scope, context.psiFile)) {
+                        if (scope is UAnnotated) {
+                            if (driver.isSuppressed(context, issue, scope as UAnnotated)) {
+                                return true
+                            }
+                        } else if (driver.isSuppressed(context, issue, scope)) {
+                            return true
+                        }
+                        return false
+                    }
+                }
+                return driver.isSuppressed(null, issue, scope)
+            }
+
+            // ASM
+            if (scope is FieldNode) {
+                if (driver.isSuppressed(issue, scope)) {
+                    return true
+                }
+            }
+
+            return false
+        }
+
+        /** Suppressed? Ignored in lint.xml? Hidden by baseline? */
+        private fun isHidden(
+            context: Context,
+            incident: Incident
+        ): Boolean {
+            if (currentProject != null && currentProject?.reportIssues == false) {
+                return true
+            }
+
+            val location = incident.location
+            if (location === Location.NONE) {
+                // Detector reported error for issue in a non-applicable location etc
+                return true
+            }
+
+            if (isSuppressedLocally(context, incident)) {
+                return true
+            }
+
+            val issue = incident.issue
             val configuration = context.findConfiguration(location.file)
             if (!configuration.isEnabled(issue)) {
-                if (issue.category !== Category.LINT) {
+                if (issue.category !== Category.LINT &&
+                    configuration.isEnabled(IssueRegistry.LINT_ERROR)
+                ) {
                     delegate.log(
                         null, "Incorrect detector reported disabled issue %1\$s",
                         issue.toString()
                     )
                 }
-                return
+                return true
             }
 
-            if (configuration.isIgnored(context, issue, location, message)) {
-                return
+            if (configuration.isIgnored(context, incident)) {
+                return true
             }
 
-            if (severity == Severity.IGNORE) {
-                return
+            val severity = configuration.getDefinedSeverity(incident.issue, configuration, incident.severity)
+                ?: incident.severity
+            if (severity === Severity.IGNORE) {
+                return true
             }
+            incident.severity = severity
 
             val baseline = baseline
             if (baseline != null) {
-                val filtered = baseline.findAndMark(
-                    issue, location, message, severity,
-                    context.project
-                )
+                val filtered = baseline.findAndMark(incident)
                 if (filtered) {
                     if (!allowSuppress && issue.suppressNames != null) {
                         flagInvalidSuppress(
@@ -2180,14 +2488,76 @@ class LintDriver(
                             issue.suppressNames
                         )
                     } else {
-                        return
+                        return true
                     }
                 }
             }
+            return false
+        }
+
+        private fun Incident.ensureInitialized(context: Context) {
+            if (project == null) {
+                project = context.project
+            }
+        }
+
+        override fun report(context: Context, incident: Incident, format: TextFormat) {
+            incident.ensureInitialized(context)
+            if (isHidden(context, incident)) {
+                return
+            }
 
             reportGenerationTimeMs += measureTimeMillis {
-                delegate.report(context, issue, severity, location, message, format, fix)
+                delegate.report(context, incident, format)
             }
+        }
+
+        override fun report(context: Context, incident: Incident, constraint: Constraint) {
+            incident.ensureInitialized(context)
+            if (isHidden(context, incident)) {
+                return
+            }
+
+            reportGenerationTimeMs += measureTimeMillis {
+                if (!delegate.supportsPartialAnalysis()) {
+                    // We can't just call report(context, issue) here because detectors
+                    // may report multiple alternatives and plan to filter among them
+                    // based on the minSdkVersion; we can't assume they're all valid.
+                    // Instead, just turn around and process them immediately.
+                    if (constraint.accept(context, incident)) {
+                        context.report(incident)
+                    }
+                } else {
+                    delegate.report(context, incident, constraint)
+                }
+            }
+        }
+
+        override fun report(context: Context, incident: Incident, map: LintMap) {
+            incident.ensureInitialized(context)
+            if (isHidden(context, incident)) {
+                return
+            }
+
+            reportGenerationTimeMs += measureTimeMillis {
+                if (!delegate.supportsPartialAnalysis()) {
+                    // We can't just call report(context, issue) here because detectors
+                    // may report multiple alternatives and plan to filter among them
+                    // based on the minSdkVersion; we can't assume they're all valid.
+                    // Instead, just turn around and process them immediately.
+                    val issue = incident.issue
+                    val detector = issue.implementation.detectorClass.newInstance()
+                    if (detector.filterIncident(context, incident, map)) {
+                        context.report(incident)
+                    }
+                } else {
+                    delegate.report(context, incident, map)
+                }
+            }
+        }
+
+        override fun getPartialResults(project: Project, issue: Issue): PartialResult {
+            return delegate.getPartialResults(project, issue)
         }
 
         private fun unsupported(): Nothing =
@@ -2405,6 +2775,18 @@ class LintDriver(
             return delegate.getKotlinLanguageLevel(project)
         }
 
+        override fun supportsPartialAnalysis(): Boolean {
+            return delegate.supportsPartialAnalysis()
+        }
+
+        override fun storeState(project: Project) {
+            delegate.storeState(project)
+        }
+
+        override fun mergeState(root: Project, driver: LintDriver) {
+            delegate.mergeState(root, driver)
+        }
+
         override fun getRootDir(): File? {
             return delegate.getRootDir()
         }
@@ -2436,20 +2818,21 @@ class LintDriver(
     }
 
     /**
-     * Requests another pass through the data for the given detector. This is
-     * typically done when a detector needs to do more expensive computation,
-     * but it only wants to do this once it **knows** that an error is
-     * present, or once it knows more specifically what to check for.
+     * Requests another pass through the data for the given detector.
+     * This is typically done when a detector needs to do more expensive
+     * computation, but it only wants to do this once it **knows** that
+     * an error is present, or once it knows more specifically what to
+     * check for.
      *
-     * @param detector the detector that should be included in the next pass.
-     *            Note that the lint runner may refuse to run more than a couple
-     *            of runs.
-     *
-     * @param scope the scope to be revisited. This must be a subset of the
-     *       current scope ([.getScope], and it is just a performance hint;
-     *       in particular, the detector should be prepared to be called on other
-     *       scopes as well (since they may have been requested by other detectors).
-     *       You can pall null to indicate "all".
+     * @param detector the detector that should be included in the next
+     *     pass. Note that the lint runner may
+     *     refuse to run more than a couple of runs.
+     * @param scope the scope to be revisited. This must be a subset of
+     *     the current scope, [LintDriver.scope], and it is
+     *     just a performance hint; in particular, the detector
+     *     should be prepared to be called on other scopes as
+     *     well (since they may have been requested by other
+     *     detectors). You can pall null to indicate "all".
      */
     fun requestRepeat(detector: Detector, scope: EnumSet<Scope>?) {
         if (repeatingDetectors == null) {
@@ -2891,7 +3274,7 @@ class LintDriver(
     fun isSuppressed(
         context: XmlContext?,
         issue: Issue,
-        node: org.w3c.dom.Node?
+        node: Node?
     ): Boolean {
         if (context != null && context.resourceFolderType == null && node != null) {
             // manifest file
@@ -2914,7 +3297,7 @@ class LintDriver(
         val checkComments = client.checkForSuppressComments() &&
             context != null && context.containsCommentSuppress()
         while (currentNode != null) {
-            if (currentNode.nodeType == org.w3c.dom.Node.ELEMENT_NODE) {
+            if (currentNode.nodeType == Node.ELEMENT_NODE) {
                 val element = currentNode as Element
                 if (element.hasAttributeNS(TOOLS_URI, ATTR_IGNORE)) {
                     val ignore = element.getAttributeNS(TOOLS_URI, ATTR_IGNORE)
@@ -2967,8 +3350,8 @@ class LintDriver(
 
     companion object {
         /**
-         * Max number of passes to run through the lint runner if requested by
-         * [.requestRepeat]
+         * Max number of passes to run through the lint runner if
+         * requested by [requestRepeat]
          */
         private const val MAX_PHASES = 3
 
@@ -2981,8 +3364,12 @@ class LintDriver(
 
         const val KEY_THROWABLE = "throwable"
 
+        /** Special key used to store [Constraint]s */
+        const val KEY_CONDITION = "_condition_"
+
         /**
-         * For testing only: returns the number of exceptions thrown during Java AST analysis
+         * For testing only: returns the number of exceptions thrown
+         * during Java AST analysis
          *
          * @return the number of internal errors found
          */
@@ -2994,9 +3381,11 @@ class LintDriver(
         /** Max number of logs to include  */
         private const val MAX_REPORTED_CRASHES = 20
 
+        val currentDrivers: MutableList<LintDriver> = ArrayList(2)
+
         /**
-         * Handles an exception and returns whether the lint analysis can continue (true means
-         * continue, false means abort)
+         * Handles an exception and returns whether the lint analysis
+         * can continue (true means continue, false means abort)
          */
         @JvmStatic
         fun handleDetectorError(
@@ -3276,6 +3665,9 @@ class LintDriver(
             if (issue != null) {
                 val issueId = issue.id
                 if (id.equals(issueId, ignoreCase = true)) {
+                    return true
+                }
+                if (issueId.equals(IssueRegistry.getNewId(id), ignoreCase = true)) {
                     return true
                 }
                 if (id.startsWith(STUDIO_ID_PREFIX) &&

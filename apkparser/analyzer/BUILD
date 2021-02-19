@@ -5,11 +5,6 @@ load("//tools/base/bazel:coverage.bzl", "coverage_java_test", "coverage_java_lib
 iml_module(
     name = "studio.android.sdktools.analyzer",
     srcs = ["src/main/java"],
-    bundled_deps = [
-        "//prebuilts/tools/common/archive-patcher:explainer",
-        "//prebuilts/tools/common/archive-patcher:generator",
-        "//prebuilts/tools/common/archive-patcher:shared",
-    ],
     iml_files = ["android.sdktools.analyzer.iml"],
     lint_baseline = "lint_baseline.xml",
     test_resources = ["src/test/resources"],

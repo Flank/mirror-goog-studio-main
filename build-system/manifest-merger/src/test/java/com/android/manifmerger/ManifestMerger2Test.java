@@ -132,7 +132,8 @@ public class ManifestMerger2Test {
                 "98_fail_if_package_name_does_not_contain_dot.xml",
                 "99_info_severity_on_non_unique_androidx_test_package.xml",
                 "100_enforce_unique_package_name_warning.xml",
-                "101_enforce_unique_package_name_same_as_app_warning.xml"
+                "101_enforce_unique_package_name_same_as_app_warning.xml",
+                "102_tools_node_opeartion_ordering.xml"
             };
 
     private static final Multimap<Predicate<String>, ManifestMerger2.Invoker.Feature>

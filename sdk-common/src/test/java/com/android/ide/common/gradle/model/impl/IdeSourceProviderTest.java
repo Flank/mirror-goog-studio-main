@@ -52,6 +52,7 @@ public class IdeSourceProviderTest {
                                 getName(),
                                 getManifestFile(),
                                 getJavaDirectories(),
+                                getKotlinDirectories(),
                                 getResourcesDirectories(),
                                 getAidlDirectories(),
                                 getRenderscriptDirectories(),

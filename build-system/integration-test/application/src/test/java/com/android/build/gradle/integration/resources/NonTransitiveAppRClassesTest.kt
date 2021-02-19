@@ -22,7 +22,6 @@ import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.options.BooleanOption
-import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
 
@@ -87,42 +86,33 @@ class NonTransitiveAppRClassesTest {
             "api '"
         )
 
-        // If both flags are off, app R should be transitive.
+        // If the flag is off, app R should be transitive.
         project.executor()
-            .with(BooleanOption.NON_TRANSITIVE_APP_R_CLASS, false)
             .with(BooleanOption.NON_TRANSITIVE_R_CLASS, false)
             .run("assembleDebug")
 
-        // Even if the flag for app is enabled, but the global non-transitive R is disabled, app's
-        // R should be still transitive.
+        // When the flag is enabled, references to non-local resources need to be updated to the
+        // correct R class.
         project.executor()
-            .with(BooleanOption.NON_TRANSITIVE_APP_R_CLASS, true)
-            .with(BooleanOption.NON_TRANSITIVE_R_CLASS, false)
-            .run("assembleDebug")
-
-        project.executor()
-            .with(BooleanOption.NON_TRANSITIVE_APP_R_CLASS, false)
             .with(BooleanOption.NON_TRANSITIVE_R_CLASS, true)
             .expectFailure()
             .run("assembleDebug")
 
+        // Update R references in the lib code.
         TestFileUtils.searchAndReplace(
             project.file("lib/src/main/java/com/example/lib/Example.java"),
             "com.example.lib.R.string.appbar_scrolling_view_behavior",
             "android.support.design.R.string.appbar_scrolling_view_behavior"
         )
 
+        // Changing just the code lib shouldn't be enough anymore - build should still fail because
+        // the references in the app module haven't been updated.
         project.executor()
-            .with(BooleanOption.NON_TRANSITIVE_APP_R_CLASS, false)
-            .with(BooleanOption.NON_TRANSITIVE_R_CLASS, true)
-            .run("assembleDebug")
-
-        project.executor()
-            .with(BooleanOption.NON_TRANSITIVE_APP_R_CLASS, true)
             .with(BooleanOption.NON_TRANSITIVE_R_CLASS, true)
             .expectFailure()
             .run("assembleDebug")
 
+        // Fix references in the app module.
         TestFileUtils.searchAndReplace(
             project.file("app/src/main/java/com/example/app/Example.java"),
             "com.example.app.R.string.libString",
@@ -135,8 +125,8 @@ class NonTransitiveAppRClassesTest {
             "android.support.design.R.string.appbar_scrolling_view_behavior"
         )
 
+        // Finally, everything should build with the fixed non-transitive R references.
         project.executor()
-            .with(BooleanOption.NON_TRANSITIVE_APP_R_CLASS, true)
             .with(BooleanOption.NON_TRANSITIVE_R_CLASS, true)
             .run("assembleDebug")
     }

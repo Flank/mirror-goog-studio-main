@@ -22,7 +22,7 @@
     <channel id="channel-1"/>
     <channel id="channel-2"/>
     <channel id="channel-3"/>
-    <remotePackage path="dummy;foo">
+    <remotePackage path="mypackage;foo">
         <type-details xsi:type="generic:genericDetailsType"/>
         <revision>
             <major>1</major>
@@ -41,7 +41,7 @@
             </archive>
         </archives>
     </remotePackage>
-    <remotePackage path="dummy;foo">
+    <remotePackage path="mypackage;foo">
         <type-details xsi:type="generic:genericDetailsType"/>
         <revision>
             <major>1</major>
@@ -60,7 +60,7 @@
             </archive>
         </archives>
     </remotePackage>
-    <remotePackage path="dummy;foo">
+    <remotePackage path="mypackage;foo">
         <type-details xsi:type="generic:genericDetailsType"/>
         <revision>
             <major>1</major>
@@ -79,7 +79,7 @@
             </archive>
         </archives>
     </remotePackage>
-    <remotePackage path="dummy;bar">
+    <remotePackage path="mypackage;bar">
         <type-details xsi:type="generic:genericDetailsType"/>
         <revision>
             <major>4</major>
@@ -97,7 +97,7 @@
             </archive>
         </archives>
     </remotePackage>
-    <remotePackage path="dummy;bar">
+    <remotePackage path="mypackage;bar">
         <type-details xsi:type="generic:genericDetailsType"/>
         <revision>
             <major>4</major>

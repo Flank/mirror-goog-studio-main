@@ -475,8 +475,9 @@ public class XmlAttributeTest extends TestCase {
         Optional<XmlAttribute> toolsRemove = activityOne.get().getAttribute(
                 XmlNode.fromNSName(SdkConstants.TOOLS_URI, "tools", "node"));
         assertTrue(toolsRemove.isPresent());
-        assertEquals("replace", toolsRemove.get().getValue());
-
+        assertEquals("remove", toolsRemove.get().getValue());
+        XmlElement e = refDocument.getByTypeAndKey(ManifestModel.NodeTypes.ACTIVITY, null).get();
+        assertTrue(refDocument.originalNodeOperation.get(e.getXml()).toXmlName().equals("replace"));
     }
 
     private XmlDocument loadXmlDoc(SourceFile location, String input)

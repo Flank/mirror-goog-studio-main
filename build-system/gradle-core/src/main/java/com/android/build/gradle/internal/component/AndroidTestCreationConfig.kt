@@ -22,4 +22,7 @@ import org.gradle.api.provider.MapProperty
 /**
  * Internal interface for Android Test component
  */
-interface AndroidTestCreationConfig: TestComponentCreationConfig, ApkCreationConfig
+interface AndroidTestCreationConfig:
+    TestComponentCreationConfig,
+    ApkCreationConfig,
+    InstrumentedTestCreationConfig

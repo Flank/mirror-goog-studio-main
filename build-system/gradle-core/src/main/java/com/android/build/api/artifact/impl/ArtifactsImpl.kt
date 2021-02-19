@@ -30,6 +30,7 @@ import com.android.build.gradle.internal.scope.getOutputPath
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileSystemLocation
@@ -276,7 +277,7 @@ internal class SingleInitialProviderRequestImpl<TASK: Task, FILE_TYPE: FileSyste
 ) {
     var fileName: String? = null
     private var buildOutputLocation: String? = null
-    private var buildOutputLocationResolver: ((TASK) -> DirectoryProperty)? = null
+    private var buildOutputLocationResolver: ((TASK) -> Provider<Directory>)? = null
 
     /**
      * Internal API to set the location of the directory where the produced [FILE_TYPE] should
@@ -293,9 +294,9 @@ internal class SingleInitialProviderRequestImpl<TASK: Task, FILE_TYPE: FileSyste
      * Internal API to set the location of the directory where the produced [FILE_TYPE] should be
      * located in.
      *
-     * @param location a method reference on the [TASK] to return a [DirectoryProperty]
+     * @param location a method reference on the [TASK] to return a [Provider<Directory>]
      */
-    fun atLocation(location: (TASK) -> DirectoryProperty)
+    fun atLocation(location: (TASK) -> Provider<Directory>)
             : SingleInitialProviderRequestImpl<TASK, FILE_TYPE> {
         buildOutputLocationResolver = location
         return this

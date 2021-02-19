@@ -1,13 +1,12 @@
 
 package com.android.repository.impl.generated.v1;
 
+import com.android.repository.api.Repository;
+import com.android.repository.impl.meta.CommonFactory;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.annotation.XmlElementDecl;
 import javax.xml.bind.annotation.XmlRegistry;
 import javax.xml.namespace.QName;
-import com.android.repository.api.Repository;
-import com.android.repository.impl.meta.CommonFactory;
-
 
 /**
  * DO NOT EDIT
@@ -163,10 +162,14 @@ public class ObjectFactory
     }
 
     /**
-     * Create an instance of {@link JAXBElement }{@code <}{@link RepositoryType }{@code >}}
-     * 
+     * Create an instance of {@link JAXBElement }{@code <}{@link RepositoryType }{@code >}
+     *
+     * @param value Java instance representing xml element's value.
+     * @return the new instance of {@link JAXBElement }{@code <}{@link RepositoryType }{@code >}
      */
-    @XmlElementDecl(namespace = "http://schemas.android.com/repository/android/common/01", name = "repository")
+    @XmlElementDecl(
+            namespace = "http://schemas.android.com/repository/android/common/01",
+            name = "repository")
     public JAXBElement<RepositoryType> createRepositoryInternal(RepositoryType value) {
         return new JAXBElement<RepositoryType>(_Repository_QNAME, RepositoryType.class, null, value);
     }

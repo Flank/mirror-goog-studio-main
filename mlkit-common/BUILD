@@ -5,10 +5,6 @@ load("//tools/base/bazel:coverage.bzl", "coverage_java_library")
 iml_module(
     name = "studio.android.sdktools.mlkit-common",
     srcs = ["src/main/java"],
-    bundled_deps = [
-        "//prebuilts/tools/common/m2/repository/com/google/flatbuffers/flatbuffers-java/1.12.0:flatbuffers-java",
-        "//prebuilts/tools/common/m2/repository/org/tensorflow/tensorflow-lite-metadata/0.1.0-rc2:tensorflow-lite-metadata",
-    ],
     iml_files = ["android.sdktools.mlkit-common.iml"],
     lint_baseline = "lint_baseline.xml",
     test_data = ["//prebuilts/tools/common/mlkit/testData"],

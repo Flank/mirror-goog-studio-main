@@ -40,7 +40,7 @@ import org.jetbrains.uast.visitor.AbstractUastVisitor
  */
 class CanvasSizeDetector : Detector(), SourceCodeScanner {
 
-    override fun applicableSuperClasses(): List<String>? {
+    override fun applicableSuperClasses(): List<String> {
         return listOf(CLASS_VIEW, CLASS_DRAWABLE)
     }
 

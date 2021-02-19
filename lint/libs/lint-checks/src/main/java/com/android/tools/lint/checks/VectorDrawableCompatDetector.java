@@ -143,8 +143,9 @@ public class VectorDrawableCompatDetector extends ResourceXmlDetector {
 
         Predicate<String> isVector;
         LintClient client = context.getClient();
-        Project mainProject = context.getMainProject();
-        ResourceRepository resources = client.getResources(mainProject, LOCAL_DEPENDENCIES);
+        boolean full = context.isGlobalAnalysis();
+        Project project = full ? context.getMainProject() : context.getProject();
+        ResourceRepository resources = client.getResources(project, LOCAL_DEPENDENCIES);
         isVector = name -> checkResourceRepository(resources, name);
 
         String name = attribute.getLocalName();
@@ -170,9 +171,8 @@ public class VectorDrawableCompatDetector extends ResourceXmlDetector {
                 && ATTR_SRC_COMPAT.equals(name)
                 && isVector.test(resourceUrl.name)) {
             Location location = context.getNameLocation(attribute);
-            Project project = context.getProject();
             String path = "build.gradle";
-            LintModelModule model = project.getBuildModule();
+            LintModelModule model = context.getProject().getBuildModule();
             if (model != null) {
                 path = model.getModulePath() + File.separator + path;
             }

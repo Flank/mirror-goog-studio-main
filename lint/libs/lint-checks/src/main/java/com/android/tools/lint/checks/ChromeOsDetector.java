@@ -34,9 +34,11 @@ import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
+import com.android.tools.lint.detector.api.Incident;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Location;
+import com.android.tools.lint.detector.api.NotLibraryProject;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
@@ -235,108 +237,107 @@ public class ChromeOsDetector extends Detector implements XmlScanner {
     public void afterCheckFile(@NonNull Context context) {
         XmlContext xmlContext = (XmlContext) context;
 
-        if (!context.getMainProject().isLibrary()) {
-            // Report all unsupported Chrome OS hardware uses-feature.
-            // These point to all unsupported Chrome OS uses features that have not be marked
-            // required = false;
-            if (!unsupportedChromeOsUsesFeatures.isEmpty()
-                    && xmlContext.isEnabled(UNSUPPORTED_CHROME_OS_HARDWARE)) {
-                List<Element> usesFeatureElements =
-                        AndroidTvDetector.findUsesFeatureElements(
-                                unsupportedChromeOsUsesFeatures, xmlContext.document);
-                for (Element element : usesFeatureElements) {
-                    Attr attrRequired = element.getAttributeNodeNS(ANDROID_URI, ATTRIBUTE_REQUIRED);
-                    Location location =
-                            attrRequired == null
-                                    ? xmlContext.getNameLocation(element)
-                                    : xmlContext.getLocation(attrRequired);
-                    LintFix fix =
-                            fix().set(ANDROID_URI, ATTRIBUTE_REQUIRED, VALUE_FALSE)
-                                    .autoFix()
-                                    .build();
-                    xmlContext.report(
-                            UNSUPPORTED_CHROME_OS_HARDWARE,
-                            element,
-                            location,
-                            "Expecting `android:required=\"false\"` for this hardware "
-                                    + "feature that may not be supported by all Chrome OS "
-                                    + "devices",
-                            fix);
-                }
+        // Report all unsupported Chrome OS hardware uses-feature.
+        // These point to all unsupported Chrome OS uses features that have not be marked
+        // required = false;
+        if (!unsupportedChromeOsUsesFeatures.isEmpty()
+                && xmlContext.isEnabled(UNSUPPORTED_CHROME_OS_HARDWARE)) {
+            List<Element> usesFeatureElements =
+                    AndroidTvDetector.findUsesFeatureElements(
+                            unsupportedChromeOsUsesFeatures, xmlContext.document);
+            for (Element element : usesFeatureElements) {
+                Attr attrRequired = element.getAttributeNodeNS(ANDROID_URI, ATTRIBUTE_REQUIRED);
+                Location location =
+                        attrRequired == null
+                                ? xmlContext.getNameLocation(element)
+                                : xmlContext.getLocation(attrRequired);
+                LintFix fix =
+                        fix().set(ANDROID_URI, ATTRIBUTE_REQUIRED, VALUE_FALSE).autoFix().build();
+                Incident incident =
+                        new Incident(
+                                UNSUPPORTED_CHROME_OS_HARDWARE,
+                                element,
+                                location,
+                                "Expecting `android:required=\"false\"` for this hardware "
+                                        + "feature that may not be supported by all Chrome OS "
+                                        + "devices",
+                                fix);
+                xmlContext.report(incident, new NotLibraryProject());
             }
+        }
 
-            // Report permissions implying unsupported hardware
-            if (!unsupportedHardwareImpliedPermissions.isEmpty()
-                    && xmlContext.isEnabled(PERMISSION_IMPLIES_UNSUPPORTED_HARDWARE)) {
-                Predicate<String> p =
-                        (String input) -> {
-                            // Special-case handling for camera permission - needs to check that
-                            // both camera and camera autofocus features are present and set to
-                            // android:required="false".
-                            if (ANDROID_PERMISSION_CAMERA.equals(input)) {
-                                return (!usesFeatureCamera || !usesFeatureCameraAutofocus);
-                            }
-                            // Filter out all permissions that already have their corresponding
-                            // implied hardware declared in the AndroidManifest.xml.
-                            String usesFeature =
-                                    input != null ? getImpliedUnsupportedHardware(input) : null;
-                            return usesFeature != null
-                                    && !allUnsupportedChromeOsUsesFeatures.contains(usesFeature);
-                        };
-
-                Collection<String> filteredPermissions =
-                        unsupportedHardwareImpliedPermissions.stream()
-                                .filter(p)
-                                .collect(Collectors.toCollection(HashSet::new));
-
-                List<Element> permissionsWithoutUsesFeatures =
-                        AndroidTvDetector.findPermissionElements(
-                                filteredPermissions, xmlContext.document);
-
-                for (Element permissionElement : permissionsWithoutUsesFeatures) {
-                    String name = permissionElement.getAttributeNS(ANDROID_URI, ATTR_NAME);
-                    String[] unsupportedHardwareNames = new String[2];
-                    unsupportedHardwareNames[0] = getImpliedUnsupportedHardware(name);
-
-                    // Special-case handling of camera permission - either or both implied features
-                    // might be missing.
-                    if (ANDROID_PERMISSION_CAMERA.equals(name)) {
-                        if (usesFeatureCamera) {
-                            unsupportedHardwareNames[0] = null;
+        // Report permissions implying unsupported hardware
+        if (!unsupportedHardwareImpliedPermissions.isEmpty()
+                && xmlContext.isEnabled(PERMISSION_IMPLIES_UNSUPPORTED_HARDWARE)) {
+            Predicate<String> p =
+                    (String input) -> {
+                        // Special-case handling for camera permission - needs to check that
+                        // both camera and camera autofocus features are present and set to
+                        // android:required="false".
+                        if (ANDROID_PERMISSION_CAMERA.equals(input)) {
+                            return (!usesFeatureCamera || !usesFeatureCameraAutofocus);
                         }
-                        if (!usesFeatureCameraAutofocus) {
-                            unsupportedHardwareNames[1] = HARDWARE_FEATURE_CAMERA_AUTOFOCUS;
-                        }
+                        // Filter out all permissions that already have their corresponding
+                        // implied hardware declared in the AndroidManifest.xml.
+                        String usesFeature =
+                                input != null ? getImpliedUnsupportedHardware(input) : null;
+                        return usesFeature != null
+                                && !allUnsupportedChromeOsUsesFeatures.contains(usesFeature);
+                    };
+
+            Collection<String> filteredPermissions =
+                    unsupportedHardwareImpliedPermissions.stream()
+                            .filter(p)
+                            .collect(Collectors.toCollection(HashSet::new));
+
+            List<Element> permissionsWithoutUsesFeatures =
+                    AndroidTvDetector.findPermissionElements(
+                            filteredPermissions, xmlContext.document);
+
+            for (Element permissionElement : permissionsWithoutUsesFeatures) {
+                String name = permissionElement.getAttributeNS(ANDROID_URI, ATTR_NAME);
+                String[] unsupportedHardwareNames = new String[2];
+                unsupportedHardwareNames[0] = getImpliedUnsupportedHardware(name);
+
+                // Special-case handling of camera permission - either or both implied features
+                // might be missing.
+                if (ANDROID_PERMISSION_CAMERA.equals(name)) {
+                    if (usesFeatureCamera) {
+                        unsupportedHardwareNames[0] = null;
                     }
-
-                    for (String unsupportedHardwareName : unsupportedHardwareNames) {
-                        if (unsupportedHardwareName != null) {
-                            String message =
-                                    String.format(
-                                            "Permission exists without corresponding hardware `<uses-feature "
-                                                    + "android:name=\"%1$s\" required=\"false\">` tag",
-                                            unsupportedHardwareName);
-                            LintFix fix = fix().data(KEY_FEATURE_NAME, unsupportedHardwareName);
-                            xmlContext.report(
-                                    PERMISSION_IMPLIES_UNSUPPORTED_HARDWARE,
-                                    permissionElement,
-                                    xmlContext.getNameLocation(permissionElement),
-                                    message,
-                                    fix);
-                        }
+                    if (!usesFeatureCameraAutofocus) {
+                        unsupportedHardwareNames[1] = HARDWARE_FEATURE_CAMERA_AUTOFOCUS;
                     }
                 }
-            }
 
-            if (!nonResizeableActivities.isEmpty()
-                    && xmlContext.isEnabled(NON_RESIZEABLE_ACTIVITY)) {
-                generateNonResizeableActivityReports(xmlContext);
+                for (String unsupportedHardwareName : unsupportedHardwareNames) {
+                    if (unsupportedHardwareName != null) {
+                        String message =
+                                String.format(
+                                        "Permission exists without corresponding hardware `<uses-feature "
+                                                + "android:name=\"%1$s\" required=\"false\">` tag",
+                                        unsupportedHardwareName);
+                        LintFix fix = fix().data(KEY_FEATURE_NAME, unsupportedHardwareName);
+                        Incident incident =
+                                new Incident(
+                                        PERMISSION_IMPLIES_UNSUPPORTED_HARDWARE,
+                                        permissionElement,
+                                        xmlContext.getNameLocation(permissionElement),
+                                        message,
+                                        fix);
+                        xmlContext.report(incident, new NotLibraryProject());
+                    }
+                }
             }
+        }
 
-            if (!lockedOrientationActivities.isEmpty()
-                    && xmlContext.isEnabled(SETTING_ORIENTATION_ON_ACTIVITY)) {
-                generateLockedOrientationActivityReports(xmlContext);
-            }
+        if (!nonResizeableActivities.isEmpty() && xmlContext.isEnabled(NON_RESIZEABLE_ACTIVITY)) {
+            generateNonResizeableActivityReports(xmlContext);
+        }
+
+        if (!lockedOrientationActivities.isEmpty()
+                && xmlContext.isEnabled(SETTING_ORIENTATION_ON_ACTIVITY)) {
+            generateLockedOrientationActivityReports(xmlContext);
         }
     }
 
@@ -346,26 +347,16 @@ public class ChromeOsDetector extends Detector implements XmlScanner {
             case ANDROID_PERMISSION_CAMERA:
                 return HARDWARE_FEATURE_CAMERA;
             case "android.permission.CALL_PHONE":
-                return HARDWARE_FEATURE_TELEPHONY;
             case "android.permission.CALL_PRIVILEGED":
-                return HARDWARE_FEATURE_TELEPHONY;
             case "android.permission.MODIFY_PHONE_STATE":
-                return HARDWARE_FEATURE_TELEPHONY;
             case "android.permission.PROCESS_OUTGOING_CALLS":
-                return HARDWARE_FEATURE_TELEPHONY;
             case "android.permission.READ_SMS":
-                return HARDWARE_FEATURE_TELEPHONY;
             case "android.permission.RECEIVE_SMS":
-                return HARDWARE_FEATURE_TELEPHONY;
             case "android.permission.RECEIVE_MMS":
-                return HARDWARE_FEATURE_TELEPHONY;
-            case "android.permission.RECEIVE_WAP_PUSH":
-                return HARDWARE_FEATURE_TELEPHONY;
-            case "android.permission.SEND_SMS":
-                return HARDWARE_FEATURE_TELEPHONY;
-            case "android.permission.WRITE_APN_SETTINGS":
-                return HARDWARE_FEATURE_TELEPHONY;
             case "android.permission.WRITE_SMS":
+            case "android.permission.WRITE_APN_SETTINGS":
+            case "android.permission.SEND_SMS":
+            case "android.permission.RECEIVE_WAP_PUSH":
                 return HARDWARE_FEATURE_TELEPHONY;
             default:
                 return null;
@@ -444,14 +435,16 @@ public class ChromeOsDetector extends Detector implements XmlScanner {
                             .set(ANDROID_URI, ATTRIBUTE_RESIZEABLE_ACTIVITY, VALUE_TRUE)
                             .autoFix()
                             .build();
-            xmlContext.report(
-                    NON_RESIZEABLE_ACTIVITY,
-                    element,
-                    location,
-                    "Expecting `android:resizeableActivity=\"true\"` for this activity "
-                            + "so the user can take advantage of the multi-window environment on "
-                            + "Chrome OS devices",
-                    fix);
+            Incident incident =
+                    new Incident(
+                            NON_RESIZEABLE_ACTIVITY,
+                            element,
+                            location,
+                            "Expecting `android:resizeableActivity=\"true\"` for this activity "
+                                    + "so the user can take advantage of the multi-window environment on "
+                                    + "Chrome OS devices",
+                            fix);
+            xmlContext.report(incident, new NotLibraryProject());
         }
     }
 
@@ -471,14 +464,16 @@ public class ChromeOsDetector extends Detector implements XmlScanner {
                             .set(ANDROID_URI, ATTRIBUTE_SCREEN_ORIENTATION, "fullSensor")
                             .autoFix()
                             .build();
-            xmlContext.report(
-                    SETTING_ORIENTATION_ON_ACTIVITY,
-                    element,
-                    location,
-                    "Expecting `android:screenOrientation=\"unspecified\"` or `\"fullSensor\"` for this activity "
-                            + "so the user can use the application in any orientation and provide a great experience on "
-                            + "Chrome OS devices",
-                    fix);
+            Incident incident =
+                    new Incident(
+                            SETTING_ORIENTATION_ON_ACTIVITY,
+                            element,
+                            location,
+                            "Expecting `android:screenOrientation=\"unspecified\"` or `\"fullSensor\"` for this activity "
+                                    + "so the user can use the application in any orientation and provide a great experience on "
+                                    + "Chrome OS devices",
+                            fix);
+            xmlContext.report(incident, new NotLibraryProject());
         }
     }
 

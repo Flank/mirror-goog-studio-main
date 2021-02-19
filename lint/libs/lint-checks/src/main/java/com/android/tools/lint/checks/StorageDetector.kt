@@ -33,7 +33,7 @@ import org.jetbrains.uast.visitor.AbstractUastVisitor
  */
 class StorageDetector : Detector(), SourceCodeScanner {
 
-    override fun getApplicableMethodNames(): List<String>? {
+    override fun getApplicableMethodNames(): List<String> {
         return listOf("getUsableSpace")
     }
 

@@ -23,7 +23,6 @@ import static com.android.testutils.truth.PathSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.SdkConstants;
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelBuilderV2;
 import com.android.build.gradle.integration.common.fixture.ModelContainerV2;
@@ -32,6 +31,7 @@ import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.common.utils.ZipHelper;
 import com.android.build.gradle.internal.core.Abi;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.StringOption;
 import com.android.builder.model.v2.models.ndk.NativeAbi;
 import com.android.builder.model.v2.models.ndk.NativeModule;
@@ -56,7 +56,6 @@ public class NdkBuildTest {
         project =
                 GradleTestProject.builder()
                         .fromTestApp(HelloWorldJniApp.builder().build())
-                        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                         .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
                         .addFile(HelloWorldJniApp.androidMkC("src/main/jni"))
                         .create();
@@ -232,8 +231,10 @@ public class NdkBuildTest {
     }
 
     @Test
-    public void clean() {
-        project.execute("clean", "assembleDebug", "assembleRelease");
+    public void clean() throws Exception {
+        project.executor()
+                .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
+                .run("clean", "assembleDebug", "assembleRelease");
         ModelBuilderV2.FetchResult<ModelContainerV2<NativeModule>> fetchResult =
                 project.modelV2().fetchNativeModules(ImmutableList.of(), ImmutableList.of());
         assertThat(dump(fetchResult))
@@ -297,9 +298,11 @@ public class NdkBuildTest {
     }
 
     @Test
-    public void abiSubset() throws IOException {
+    public void abiSubset() throws Exception {
         List<File> allBuildOutputs = Lists.newArrayList();
-        project.execute("clean", "assembleDebug", "assembleRelease");
+        project.executor()
+                .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
+                .run("clean", "assembleDebug", "assembleRelease");
         ModelBuilderV2.FetchResult<ModelContainerV2<NativeModule>> fetchResult =
                 project.modelV2().fetchNativeModules(ImmutableList.of(), ImmutableList.of());
         assertThat(dump(fetchResult))

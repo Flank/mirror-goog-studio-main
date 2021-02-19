@@ -37,7 +37,7 @@ import org.jetbrains.uast.tryResolve
 /** Constructs a new [SecureRandomDetector]  */
 class SecureRandomDetector : Detector(), SourceCodeScanner {
 
-    override fun getApplicableMethodNames(): List<String>? {
+    override fun getApplicableMethodNames(): List<String> {
         return listOf(SET_SEED)
     }
 

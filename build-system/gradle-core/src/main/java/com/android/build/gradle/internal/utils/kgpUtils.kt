@@ -18,15 +18,20 @@
 
 package com.android.build.gradle.internal.utils
 
+import com.android.build.api.dsl.AndroidSourceSet
 import com.android.build.gradle.BaseExtension
+import com.android.build.gradle.internal.api.DefaultAndroidSourceDirectorySet
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.profile.AnalyticsConfiguratorService
 import com.android.build.gradle.internal.services.getBuildService
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
+import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.SourceDirectorySet
+import org.gradle.api.internal.HasConvention
 import org.gradle.api.plugins.ExtensionAware
 import org.gradle.api.tasks.ClasspathNormalizer
 import org.gradle.api.tasks.TaskProvider
@@ -35,6 +40,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 const val KOTLIN_ANDROID_PLUGIN_ID = "org.jetbrains.kotlin.android"
 const val KOTLIN_KAPT_PLUGIN_ID = "org.jetbrains.kotlin.kapt"
+private val KOTLIN_MPP_PLUGIN_IDS = listOf("kotlin-multiplatform", "org.jetbrains.kotlin.multiplatform")
 
 /**
  * Returns `true` if any of the Kotlin plugins is applied (there are many Kotlin plugins). If we
@@ -135,7 +141,7 @@ fun addComposeArgsToKotlinCompile(
                 "-Xplugin=${compilerExtension.files.first().absolutePath}",
                 "-XXLanguage:+NonParenthesizedAnnotationsOnFunctionalTypes",
                 "-P", "plugin:androidx.compose.plugins.idea:enabled=true",
-                "-Xallow-jvm-ir-dependencies"
+                "-Xallow-unstable-dependencies"
         )
         if (debuggable) {
             extraFreeCompilerArgs += listOf(
@@ -149,5 +155,26 @@ fun addComposeArgsToKotlinCompile(
             }
         }
         it.kotlinOptions.freeCompilerArgs += extraFreeCompilerArgs
+    }
+}
+
+/**
+ * Get information about Kotlin sources from KGP, until there is a KGP version that can work
+ * with AGP which supports Kotlin source directories.
+ */
+fun syncAgpAndKgpSources(project: Project, sourceSets: NamedDomainObjectContainer<com.android.build.gradle.api.AndroidSourceSet>) {
+    val hasMpp = KOTLIN_MPP_PLUGIN_IDS.any { project.pluginManager.hasPlugin(it) }
+    sourceSets.all {
+        val kotlinConvention = (it as HasConvention).convention.plugins["kotlin"]
+        if (kotlinConvention!=null) {
+            val sourceDir =
+                    kotlinConvention::class.java.getMethod("getKotlin")
+                            .invoke(kotlinConvention) as SourceDirectorySet
+
+            if (!hasMpp) {
+                sourceDir.srcDirs((it.kotlin as DefaultAndroidSourceDirectorySet).srcDirs)
+            }
+            it.kotlin.setSrcDirs(listOf(sourceDir.sourceDirectories))
+        }
     }
 }

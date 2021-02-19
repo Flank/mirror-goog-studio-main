@@ -1213,6 +1213,67 @@ class LintModelSerializationTest {
         assertTrue(lintOptions.htmlOutput!!.isAbsolute)
     }
 
+    @Test
+    fun testLintModelSerializationWithPartialResultsDir() {
+        val temp = temporaryFolder.newFolder()
+        val projectDirectory = temp.resolve("projectDir").createDirectories()
+        val buildDirectory = temp.resolve("buildDir").createDirectories()
+        val modelsDir = buildDirectory.resolve("intermediates/lint-models").createDirectories()
+        val partialResultsDir = buildDirectory.resolve("intermediates/lint_partial_results/debug/out")
+        modelsDir.resolve("module.xml")
+            .writeText(
+                """<lint-module
+                    format="1"
+                    dir="${projectDirectory.absolutePath}"
+                    name="test_project"
+                    type="APP"
+                    maven="com.android.tools.demo:test_project:"
+                    gradle="4.0.0-beta01"
+                    buildFolder="${buildDirectory.absolutePath}"
+                    javaSourceLevel="1.7"
+                    compileTarget="android-25"
+                    neverShrinking="true">
+                  <lintOptions />
+                  <variant name="debug"/>
+                </lint-module>"""
+            )
+        modelsDir.resolve("debug.xml")
+            .writeText(
+                """<variant
+                    name="debug"
+                    minSdkVersion="5"
+                    targetSdkVersion="16"
+                    debuggable="true"
+                    partialResultsDir="${partialResultsDir.absolutePath}">
+                  <buildFeatures />
+                  <mainArtifact applicationId="com.android.tools.test">
+                  </mainArtifact>
+                </variant>"""
+            )
+
+        val module = LintModelSerialization.readModule(modelsDir, readDependencies = false)
+
+        val debugVariant1 = module.defaultVariant()!!
+
+        assertWithMessage("partialResultsDir is read correctly")
+            .about(PathSubject.paths())
+            .that(debugVariant1.partialResultsDir?.toPath())
+            .isEqualTo(partialResultsDir)
+
+        // Now delete the original model files, serialize the model, and read it back to check that partialResultsDir
+        // is written correctly.
+        modelsDir.listFiles()?.forEach { Files.delete(it.toPath()) }
+
+        LintModelSerialization.writeModule(module, modelsDir, listOf(debugVariant1), writeDependencies = false)
+
+        val debugVariant2 = LintModelSerialization.readModule(modelsDir, readDependencies = false).defaultVariant()!!
+
+        assertWithMessage("partialResultsDir is written and read correctly")
+            .about(PathSubject.paths())
+            .that(debugVariant2.partialResultsDir?.toPath())
+            .isEqualTo(partialResultsDir)
+    }
+
     // ----------------------------------------------------------------------------------
     // Test infrastructure below this line
     // ----------------------------------------------------------------------------------

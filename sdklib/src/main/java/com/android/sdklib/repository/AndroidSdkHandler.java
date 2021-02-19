@@ -57,6 +57,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
+import java.io.File;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -124,12 +125,6 @@ public final class AndroidSdkHandler {
      * testing.
      */
     public static final String SDK_TEST_BASE_URL_PROPERTY = "sdk.test.base.url";
-
-    /**
-     * The latest version of legacy remote packages we should expect to receive from a server. If
-     * you think you need to change this value you should create a new-style package instead.
-     */
-    public static final int LATEST_LEGACY_VERSION = 12;
 
     /**
      * The name of the file containing user-specified remote repositories.
@@ -584,6 +579,12 @@ public final class AndroidSdkHandler {
         /** Provider for the main new-style {@link RepositorySource} */
         private final ConstantSourceProvider mRepositorySourceProvider;
 
+        /**
+         * Provider for the previous version of the main new-style {@link RepositorySource}, useful
+         * during transition to the new version.
+         */
+        private ConstantSourceProvider mPrevRepositorySourceProvider;
+
         /** Extra source providers that were added externally. */
         private final Set<RepositorySourceProvider> mCustomSourceProviders = new HashSet<>();
 
@@ -627,6 +628,18 @@ public final class AndroidSdkHandler {
                             REPOSITORY_MODULE.getNamespaceVersionMap().size());
             mRepositorySourceProvider = new ConstantSourceProvider(url, "Android Repository",
                     ImmutableSet.of(REPOSITORY_MODULE, RepoManager.getGenericModule()));
+
+            int prevRev = REPOSITORY_MODULE.getNamespaceVersionMap().size() - 1;
+            if (prevRev > 0) {
+                url = String.format(Locale.US, REPO_URL_PATTERN, getBaseUrl(progress), prevRev);
+                mPrevRepositorySourceProvider =
+                        new ConstantSourceProvider(
+                                url,
+                                "Android Repository v" + prevRev,
+                                ImmutableSet.of(REPOSITORY_MODULE, RepoManager.getGenericModule()));
+            } else {
+                mPrevRepositorySourceProvider = null;
+            }
         }
 
         /** Creates a customizable {@link RepositorySourceProvider}. */
@@ -692,6 +705,9 @@ public final class AndroidSdkHandler {
             result.registerSchemaModule(COMMON_MODULE);
 
             result.registerSourceProvider(mRepositorySourceProvider);
+            if (mPrevRepositorySourceProvider != null) {
+                result.registerSourceProvider(mPrevRepositorySourceProvider);
+            }
             mCustomSourceProviders.forEach(result::registerSourceProvider);
             String customSourceUrl = System.getProperty(CUSTOM_SOURCE_PROPERTY);
             if (customSourceUrl != null && !customSourceUrl.isEmpty()) {
@@ -804,5 +820,25 @@ public final class AndroidSdkHandler {
     @NonNull
     public FileOp getFileOp() {
         return mFop;
+    }
+
+    /** Converts a {@code File} into a {@code Path} on the {@code FileSystem} used by this SDK. */
+    @NonNull
+    public Path toCompatiblePath(@NonNull File file) {
+        Path localPath = mRepoManager.getLocalPath();
+        if (localPath != null) {
+            return localPath.getFileSystem().getPath(file.getPath());
+        }
+        return file.toPath();
+    }
+
+    /** Converts a {@code String} into a {@code Path} on the {@code FileSystem} used by this SDK. */
+    @NonNull
+    public Path toCompatiblePath(@NonNull String file) {
+        Path localPath = mRepoManager.getLocalPath();
+        if (localPath != null) {
+            return localPath.getFileSystem().getPath(file);
+        }
+        return Paths.get(file);
     }
 }

@@ -57,7 +57,7 @@ class SwingWorkerDetector : Detector(), SourceCodeScanner {
         )
     }
 
-    override fun applicableSuperClasses(): List<String>? = listOf("javax.swing.SwingWorker")
+    override fun applicableSuperClasses(): List<String> = listOf("javax.swing.SwingWorker")
 
     override fun visitClass(context: JavaContext, declaration: UClass) {
         val locationNode = declaration.uastSuperTypes.firstOrNull() ?: declaration

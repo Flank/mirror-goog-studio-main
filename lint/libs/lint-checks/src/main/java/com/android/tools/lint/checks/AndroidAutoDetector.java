@@ -224,8 +224,7 @@ public class AndroidAutoDetector extends Detector implements XmlScanner, SourceC
         } else if (NODE_APPLICATION.equals(tagName)) {
             // Disable reporting the error if the Issue was suppressed at
             // the application level.
-            if (context.getMainProject() == context.getProject()
-                    && !context.getProject().isLibrary()) {
+            if (!context.getProject().isLibrary()) {
                 mMainApplicationHandle = context.createLocationHandle(element);
                 mMainApplicationHandle.setClientData(element);
             }

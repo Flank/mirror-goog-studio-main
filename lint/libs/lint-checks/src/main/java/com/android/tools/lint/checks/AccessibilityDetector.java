@@ -30,6 +30,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Implementation;
+import com.android.tools.lint.detector.api.Incident;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
 import com.android.tools.lint.detector.api.LintFix;
@@ -97,12 +98,13 @@ public class AccessibilityDetector extends LayoutDetector {
     public void visitAttribute(@NonNull XmlContext context, @NonNull Attr attribute) {
         Element element = attribute.getOwnerElement();
         if (element.hasAttributeNS(ANDROID_URI, ATTR_HINT)) {
-            context.report(
-                    ISSUE,
-                    element,
-                    context.getLocation(attribute),
-                    "Do not set both `contentDescription` and `hint`: the `contentDescription` "
-                            + "will mask the `hint`");
+            Incident incident =
+                    new Incident(
+                            ISSUE,
+                            "Do not set both `contentDescription` and `hint`: the `contentDescription` "
+                                    + "will mask the `hint`",
+                            context.getLocation(attribute));
+            context.report(incident);
         }
     }
 

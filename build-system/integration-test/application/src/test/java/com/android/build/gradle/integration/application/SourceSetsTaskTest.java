@@ -49,6 +49,11 @@ public class SourceSetsTaskTest {
                         + "Java sources: ["
                         + FileUtils.toSystemDependentPath("src/debug/java")
                         + "]\n"
+                        + "Kotlin sources: ["
+                        + FileUtils.toSystemDependentPath("src/debug/java")
+                        + ", "
+                        + FileUtils.toSystemDependentPath("src/debug/kotlin")
+                        + "]\n"
                         + "Manifest file: "
                         + FileUtils.toSystemDependentPath("src/debug/AndroidManifest.xml")
                         + "\n"

@@ -1010,6 +1010,8 @@ class TranslationDetectorTest : AbstractCheckTest() {
     fun TestFile.toSrcMain(): TestFile = xml("src/main/" + targetRelativePath, contents)
 
     fun testResConfigsIncremental() {
+        // Like testResConfigs, but because we're analyzing a single file, we won't
+        // compute secondary locations
         val expected =
             """
             src/main/res/values/strings.xml:25: Error: "menu_settings" is not translated in "cs" (Czech) or "de" (German) [MissingTranslation]

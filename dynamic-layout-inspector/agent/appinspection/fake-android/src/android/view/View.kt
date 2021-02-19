@@ -18,6 +18,8 @@ package android.view
 
 import android.content.Context
 import android.content.res.Resources
+import android.graphics.Canvas
+import android.graphics.Matrix
 import android.graphics.Picture
 import android.graphics.Point
 import android.os.Handler
@@ -69,10 +71,27 @@ open class View @VisibleForTesting constructor(val context: Context) {
     var top: Int = 0
     var width: Int = 0
     var height: Int = 0
+    var scrollX: Int = 0
+    var scrollY: Int = 0
     var layoutParams: ViewGroup.LayoutParams = ViewGroup.LayoutParams()
 
     @VisibleForTesting
     val locationInSurface = Point(0, 0)
+
+    @VisibleForTesting
+    val locationOnScreen = Point(0, 0)
+
+    var drawHandler: (Canvas) -> Unit = {}
+
+    /**
+     * If set, used to fake what is normally more complex Matrix math
+     */
+    @VisibleForTesting
+    var transformedPoints: FloatArray? = null
+        set(value) {
+            check(value == null || value.size == 8)
+            field = value
+        }
 
     // Name is important: Accessed via reflection
     private var mAttachInfo: AttachInfo? = null
@@ -87,9 +106,20 @@ open class View @VisibleForTesting constructor(val context: Context) {
         location[1] = locationInSurface.y
     }
 
+    fun getLocationOnScreen(location: IntArray) {
+        location[0] = locationOnScreen.x
+        location[1] = locationOnScreen.y
+    }
+
     fun getAttributeResolutionStack(attributeId: Int) = intArrayOf()
 
     fun invalidate() {}
+
+    fun draw(canvas: Canvas) = drawHandler(canvas)
+
+    fun transformMatrixToGlobal(matrix: Matrix) {
+        matrix.transformedPoints = transformedPoints
+    }
 
     // Only works with views that were constructed with an AttachInfo
     @VisibleForTesting // Normally, the rendering system triggers this

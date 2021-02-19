@@ -793,4 +793,53 @@ class ActionsXmlDetectorTest : AbstractCheckTest() {
             """
         )
     }
+
+    fun testProvisional() {
+        // Test provisional handling where the actions file is in a library and the
+        // manifest registration is in a downstream app module
+        lint().files(
+            xml(
+                "res/xml/actions.xml",
+                """
+                <actions supportedLocales="en-US,en-GB,es-ES,es-419">
+                    <action intentName="com.taxiapp.my.GET_ESTIMATE">
+                        <action-display
+                                labelTemplate="@array/rideActionLabel"
+                                icon="@mipmap/rideActionIcon"/>
+
+                        <fulfillment
+                                urlTemplate="https://m.taxiapp.com/ul/?action=getRide{&amp;destLat,destLong}">
+                            <parameter-mapping
+                                    intentParameter="destination.latitude"
+                                    urlParameter="destLat"/>
+                            <parameter-mapping
+                                    intentParameter="destination.longitude"
+                                    urlParameter="destLong"/>
+                        </fulfillment>
+
+                        <parameter name="destination" type="shared.types.Location"/>
+                        <parameter name="serviceClass" type="com.taxiapp.types.ServiceClass"/>
+                    </action>
+                </actions>
+                """
+            ).indented(),
+            manifest(
+                "../app/AndroidManifest.xml",
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                     package="com.example.helloworld"
+                     android:versionCode="1"
+                     android:versionName="1.0">
+                   <uses-sdk android:minSdkVersion="15" />
+                   <application android:icon="@drawable/icon" android:label="@string/app_name">
+                       <meta-data android:name="com.google.android.actions" android:resource="@xml/actions" />
+                       <activity android:name=".HelloWorld"
+                                 android:label="@string/app_name">
+                       </activity>
+                   </application>
+                </manifest>
+            """
+            ).indented()
+        ).run().expectClean()
+    }
 }

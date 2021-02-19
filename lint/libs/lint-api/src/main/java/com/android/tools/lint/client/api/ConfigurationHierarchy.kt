@@ -18,8 +18,8 @@ package com.android.tools.lint.client.api
 
 import com.android.ide.common.resources.ResourceRepository
 import com.android.tools.lint.detector.api.Context
+import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.Issue
-import com.android.tools.lint.detector.api.LintFix
 import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Severity
@@ -413,14 +413,18 @@ open class ConfigurationHierarchy(
      * [Severity.IGNORE] but we want the severity to be what was configured in
      * the original severity context (lint.xml etc), not just the default severity.
      */
-    fun getDefinedSeverityWithoutOverride(source: Configuration, issue: Issue): Severity? {
+    fun getDefinedSeverityWithoutOverride(
+        source: Configuration,
+        issue: Issue,
+        visibleDefault: Severity = issue.defaultSeverity
+    ): Severity? {
         if (source == overrides || overrides == null) {
             return null
         }
         val prev = overrides
         try {
             overrides = null
-            return source.getDefinedSeverity(issue, source)
+            return source.getDefinedSeverity(issue, source, visibleDefault)
         } finally {
             overrides = prev
         }
@@ -445,15 +449,7 @@ open class ConfigurationHierarchy(
                     error("Not supported")
                 }
 
-                override fun report(
-                    context: Context,
-                    issue: Issue,
-                    severity: Severity,
-                    location: Location,
-                    message: String,
-                    format: TextFormat,
-                    fix: LintFix?
-                ) {
+                override fun report(context: Context, incident: Incident, format: TextFormat) {
                     unsupported()
                 }
 
@@ -501,6 +497,15 @@ open class ConfigurationHierarchy(
             override fun ignore(issue: Issue, file: File) {}
             override fun ignore(issueId: String, file: File) {}
             override fun setSeverity(issue: Issue, severity: Severity?) {}
+
+            override fun addConfiguredIssues(
+                targetMap: MutableMap<String, Severity>,
+                registry: IssueRegistry,
+                specificOnly: Boolean
+            ) {
+            }
+
+            override fun getOption(issue: Issue, name: String, default: String?): String? = default
             override fun getOptionAsFile(issue: Issue, name: String, default: File?): File? =
                 default
 
@@ -546,9 +551,9 @@ open class ConfigurationHierarchy(
             return parent?.isEnabled(issue) ?: super.isEnabled(issue)
         }
 
-        override fun getDefinedSeverity(issue: Issue, source: Configuration): Severity? {
-            return parent?.getDefinedSeverity(issue, source)
-                ?: super.getDefinedSeverity(issue, source)
+        override fun getDefinedSeverity(issue: Issue, source: Configuration, visibleDefault: Severity): Severity? {
+            return parent?.getDefinedSeverity(issue, source, visibleDefault)
+                ?: super.getDefinedSeverity(issue, source, visibleDefault)
         }
 
         override fun startBulkEditing() {
@@ -568,12 +573,21 @@ open class ConfigurationHierarchy(
             parent?.validateIssueIds(client, driver, project, registry)
         }
 
-        override fun getIssueConfigLocation(
+        override fun addConfiguredIssues(
+            targetMap: MutableMap<String, Severity>,
+            registry: IssueRegistry,
+            specificOnly: Boolean
+        ) {
+            parent?.addConfiguredIssues(targetMap, registry, specificOnly)
+        }
+
+        override fun getLocalIssueConfigLocation(
             issue: String,
             specificOnly: Boolean,
-            severityOnly: Boolean
+            severityOnly: Boolean,
+            source: Configuration
         ): Location? {
-            return parent?.getIssueConfigLocation(issue, specificOnly, severityOnly)
+            return parent?.getLocalIssueConfigLocation(issue, specificOnly, severityOnly, source)
         }
 
         override var fileLevel = false

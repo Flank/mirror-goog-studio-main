@@ -25,12 +25,15 @@ import androidx.inspection.InspectorEnvironment
 import androidx.inspection.InspectorFactory
 import com.android.tools.agent.appinspection.framework.SkiaQWorkaround
 import com.android.tools.agent.appinspection.framework.flatten
+import com.android.tools.agent.appinspection.framework.takeScreenshot
+import com.android.tools.agent.appinspection.framework.toByteArray
 import com.android.tools.agent.appinspection.proto.StringTable
 import com.android.tools.agent.appinspection.proto.createAppContext
 import com.android.tools.agent.appinspection.proto.createGetPropertiesResponse
 import com.android.tools.agent.appinspection.proto.createPropertyGroup
 import com.android.tools.agent.appinspection.proto.toNode
 import com.android.tools.agent.appinspection.util.ThreadUtils
+import com.android.tools.agent.appinspection.util.compress
 import com.android.tools.idea.protobuf.ByteString
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.*
 import java.io.ByteArrayOutputStream
@@ -66,6 +69,11 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
         var isLastCapture: Boolean = false
     )
 
+    private class ScreenshotSettings(
+        val type: Screenshot.Type,
+        val scale: Float = 1.0f
+    )
+
     private class InspectorState {
         /**
          * A mapping of root view IDs to data that should be accessed across multiple threads.
@@ -77,6 +85,11 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
          * views created by the user's app.
          */
         var skipSystemViews: Boolean = false
+
+        /**
+         * Settings that determine the format of screenshots taken when doing a layout capture.
+         */
+        var screenshotSettings = ScreenshotSettings(Screenshot.Type.SKP)
     }
 
     private val stateLock = Any()
@@ -101,6 +114,10 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
             Command.SpecializedCase.STOP_FETCH_COMMAND -> handleStopFetchCommand(callback)
             Command.SpecializedCase.GET_PROPERTIES_COMMAND -> handleGetProperties(
                 command.getPropertiesCommand,
+                callback
+            )
+            Command.SpecializedCase.UPDATE_SCREENSHOT_TYPE_COMMAND -> handleUpdateScreenshotType(
+                command.updateScreenshotTypeCommand,
                 callback
             )
             else -> error("Unexpected view inspector command case: ${command.specializedCase}")
@@ -184,9 +201,11 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
         val captureExecutor = Executor { command ->
             sequentialExecutor.execute {
                 var context: CaptureContext
+                var screenshotSettings: ScreenshotSettings
                 var skipSystemViews: Boolean
                 synchronized(stateLock) {
                     skipSystemViews = state.skipSystemViews
+                    screenshotSettings = state.screenshotSettings
                     // We might get some lingering captures even though we already finished
                     // listening earlier (this would be indicated by no context). Just abort
                     // early in that case.
@@ -204,8 +223,21 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
                 checkRoots(continuous)
 
                 run { // Prepare and send LayoutEvent
-                    command.run() // Triggers image fetch into `os`
-                    val screenshot = ByteString.copyFrom(os.toByteArray())
+                    // Triggers image fetch into `os`
+                    // We always have to do this even if we don't use the bytes it gives us,
+                    // because otherwise an internal queue backs up
+                    command.run()
+                    val screenshot = when(screenshotSettings.type) {
+                        Screenshot.Type.SKP -> ByteString.copyFrom(os.toByteArray())
+                        Screenshot.Type.BITMAP -> {
+                            root.takeScreenshot(screenshotSettings.scale)
+                                ?.toByteArray()
+                                ?.compress()
+                                ?.let { ByteString.copyFrom(it) }
+                                ?: ByteString.EMPTY
+                        }
+                        else -> ByteString.EMPTY
+                    }
                     os.reset() // Clear stream, ready for next frame
 
                     if (context.isLastCapture) {
@@ -233,7 +265,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
                                 y = rootOffset[1]
                             }.build()
                             this.screenshot = Screenshot.newBuilder().apply {
-                                type = Screenshot.Type.SKP
+                                type = screenshotSettings.type
                                 bytes = screenshot
                             }.build()
                         }.build()
@@ -300,6 +332,28 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
             }
         }
     }
+
+    private fun handleUpdateScreenshotType(
+        updateScreenshotTypeCommand: UpdateScreenshotTypeCommand,
+        callback: CommandCallback
+    ) {
+        synchronized(stateLock) {
+            state.screenshotSettings = ScreenshotSettings(
+                updateScreenshotTypeCommand.type,
+                updateScreenshotTypeCommand.scale
+            )
+        }
+        callback.reply {
+            updateScreenshotTypeResponse = UpdateScreenshotTypeResponse.getDefaultInstance()
+        }
+
+        ThreadUtils.runOnMainThread {
+            for (rootView in getRootViews()) {
+                rootView.invalidate()
+            }
+        }
+    }
+
 
     private fun handleStopFetchCommand(callback: CommandCallback) {
         callback.reply {

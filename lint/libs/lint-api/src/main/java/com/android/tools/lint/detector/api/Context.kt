@@ -20,21 +20,32 @@ import com.android.SdkConstants.DOT_GRADLE
 import com.android.SdkConstants.DOT_JAVA
 import com.android.SdkConstants.DOT_XML
 import com.android.SdkConstants.SUPPRESS_ALL
+import com.android.SdkConstants.TAG_APPLICATION
+import com.android.SdkConstants.TAG_MANIFEST
 import com.android.tools.lint.client.api.Configuration
+import com.android.tools.lint.client.api.IssueRegistry
 import com.android.tools.lint.client.api.LintClient
 import com.android.tools.lint.client.api.LintDriver
 import com.android.tools.lint.client.api.LintDriver.Companion.STUDIO_ID_PREFIX
+import com.android.tools.lint.client.api.LintDriver.DriverMode
 import com.android.tools.lint.client.api.SdkInfo
 import com.android.utils.CharSequences
 import com.android.utils.CharSequences.indexOf
 import com.google.common.annotations.Beta
 import com.google.common.annotations.VisibleForTesting
+import com.intellij.openapi.vfs.VfsUtilCore
 import com.intellij.psi.PsiElement
-import org.jetbrains.uast.UAnnotated
+import com.intellij.psi.PsiFile
+import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UElement
+import org.objectweb.asm.tree.AbstractInsnNode
+import org.objectweb.asm.tree.ClassNode
+import org.w3c.dom.Attr
+import org.w3c.dom.Element
 import org.w3c.dom.Node
 import java.io.File
 import java.util.EnumSet
+import java.util.HashSet
 
 /**
  * Context passed to the detectors during an analysis run. It provides
@@ -51,19 +62,21 @@ open class Context(
     /** The project containing the file being checked  */
     val project: Project,
     /**
-     * The "main" project. For normal projects, this is the same as [.project],
-     * but for library projects, it's the root project that includes (possibly indirectly)
-     * the various library projects and their library projects.
+     * The "main" project. For normal projects, this is the same as
+     * [project], but for library projects, it's the root project that
+     * includes (possibly indirectly) the various library projects and
+     * their library projects.
      *
-     * Note that this is a property on the [Context], not the
-     * [Project], since a library project can be included from multiple
-     * different top level projects, so there isn't **one** main project,
-     * just one per main project being analyzed with its library projects.
+     * Note that this is a property on the [Context], not the [Project],
+     * since a library project can be included from multiple different
+     * top level projects, so there isn't **one** main project, just
+     * one per main project being analyzed with its library projects.
      */
-    main: Project?,
+    private val main: Project?,
+
     /**
-     * The file being checked. Note that this may not always be to a concrete
-     * file. For example, in the [Detector.beforeCheckProject]
+     * The file being checked. Note that this may not always be to a
+     * concrete file. For example, in the [Detector.beforeCheckProject]
      * method, the context file is the directory of the project.
      */
     @JvmField
@@ -93,7 +106,16 @@ open class Context(
      *
      * @return the main project, never null
      */
-    val mainProject: Project = main ?: project
+    val mainProject: Project
+        get() {
+            if (forbidMainAccess) {
+                val forbidden = checkForbidden("context.getMainProject()", file, driver)
+                if (forbidden) {
+                    return project
+                }
+            }
+            return main ?: project
+        }
 
     /**
      * The lint client requesting the lint check
@@ -125,14 +147,204 @@ open class Context(
     val sdkInfo: SdkInfo
         get() = project.getSdkInfo()
 
+    /**
+     * Returns the location of the given [node], which could be an AST
+     * node, an XML element, and so on.
+     */
+    fun getLocation(node: Any?, type: LocationType = LocationType.DEFAULT): Location {
+        node ?: return Location.NONE
+
+        // Switch location lookup by element type. Note that we handle all the cases
+        // here instead of via overriding this method in each [Context] subclass
+        // because we want to allow looking up locations even if the context isn't
+        // of the right type (which is relevant when you for example try to look up
+        // nodes in an after-analysis project hook).
+        when (node) {
+            is UElement -> {
+                val context: JavaContext = if (this is JavaContext) {
+                    this
+                } else {
+                    val file = node.sourcePsi?.containingFile?.virtualFile?.let {
+                        VfsUtilCore.virtualToIoFile(it)
+                    } ?: file
+                    JavaContext(driver, project, main, file)
+                }
+                return when (type) {
+                    LocationType.DEFAULT -> context.getLocation(node)
+                    LocationType.ALL -> context.getLocation(node)
+                    LocationType.NAME -> context.getNameLocation(node)
+                    LocationType.CALL_WITH_ARGUMENTS -> context.getCallLocation(
+                        node as UCallExpression,
+                        includeReceiver = false,
+                        includeArguments = true
+                    )
+                    LocationType.CALL_WITH_RECEIVER -> context.getCallLocation(
+                        node as UCallExpression,
+                        includeReceiver = true,
+                        includeArguments = false
+                    )
+                    LocationType.VALUE -> error("$type not supported for ${node.javaClass}")
+                }
+            }
+            is PsiElement -> {
+                val context: JavaContext = if (this is JavaContext) {
+                    this
+                } else {
+                    val file = node.containingFile?.virtualFile?.let {
+                        VfsUtilCore.virtualToIoFile(it)
+                    } ?: file
+                    JavaContext(driver, project, main, file)
+                }
+                return when (type) {
+                    LocationType.DEFAULT -> context.getLocation(node)
+                    LocationType.ALL -> context.getLocation(node)
+                    LocationType.NAME -> context.getNameLocation(node)
+                    LocationType.CALL_WITH_ARGUMENTS -> context.getCallLocation(
+                        node as UCallExpression,
+                        includeReceiver = false,
+                        includeArguments = true
+                    )
+                    LocationType.CALL_WITH_RECEIVER -> context.getCallLocation(
+                        node as UCallExpression,
+                        includeReceiver = true,
+                        includeArguments = false
+                    )
+                    LocationType.VALUE -> error("$type not supported for ${node.javaClass}")
+                }
+            }
+            is Node -> {
+                if (client.isMergeManifestNode(node)) {
+                    if (node.nodeName == TAG_APPLICATION && node.parentNode?.nodeName == TAG_MANIFEST) {
+                        // The manifest merger does a really poor job picking the right blame file
+                        // attribution for the application element -- it is often the first library
+                        // in the path that it processed (such as unpacked AAR library manifest
+                        // resources in .gradle/caches/transforms-3/...). Special case this element
+                        // to the current project's manifest
+                        return findNodeInProject(node, type)
+                    }
+                    val source = client.findManifestSourceNode(node)
+                    if (source != null && source.second !== node) {
+                        //noinspection FileComparisons
+                        if (source.first == file) {
+                            return getLocation(source.second, type)
+                        }
+                        val doc = node.ownerDocument
+                        val xmlContext = XmlContext(
+                            driver, project, main, source.first, null, null, doc
+                        )
+                        return xmlContext.getLocation(source.second, type)
+                    }
+                }
+
+                // Fallback if we're calling this on a project context and we
+                // have no manifest merger records to fall back on: check source
+                // manifests.
+                if (!file.path.endsWith(DOT_XML)) {
+                    return findNodeInProject(node, type)
+                }
+
+                val context: XmlContext = if (this is XmlContext) {
+                    this
+                } else {
+                    val doc = node.ownerDocument
+                    val file = doc.getUserData(File::class.java.name) as? File
+                        ?: (doc.getUserData(PsiFile::class.java.name) as? PsiFile)?.virtualFile?.let {
+                            VfsUtilCore.virtualToIoFile(it)
+                        }
+                        ?: return Location.create(project.manifestFiles.firstOrNull() ?: project.dir)
+                    // We're only calling location methods here so we don't need an accurate
+                    // folder type for example
+                    XmlContext(driver, project, main, file, null, null, doc)
+                }
+                return when (type) {
+                    LocationType.ALL -> context.getLocation(node)
+                    LocationType.DEFAULT ->
+                        if (node is Element)
+                            context.getElementLocation(node)
+                        else
+                            context.getLocation(node)
+                    LocationType.NAME -> context.getNameLocation(node)
+                    LocationType.VALUE ->
+                        if (node is Attr)
+                            context.getValueLocation(node)
+                        else
+                            context.getLocation(node)
+                    LocationType.CALL_WITH_ARGUMENTS,
+                    LocationType.CALL_WITH_RECEIVER -> error("$type not supported for ${node.javaClass}")
+                }
+            }
+            is ClassNode -> {
+                if (this is ClassContext) {
+                    return this.getLocation(node)
+                } else {
+                    error("Can only get ClassNode locations on a ClassContext")
+                }
+            }
+            is AbstractInsnNode -> {
+                if (this is ClassContext) {
+                    return this.getLocation(node)
+                } else {
+                    error("Can only get AbstractInsnNode locations on a ClassContext")
+                }
+            }
+            else -> {
+                if (this is GradleContext) {
+                    return this.getLocation(node)
+                }
+            }
+        }
+
+        return Location.create(file)
+    }
+
+    /**
+     * Given a merged node, search in the projects (starting with this
+     * one) to find a match in one of the existing manifest files.
+     * If none is found just return this project's primary location.
+     */
+    private fun findNodeInProject(
+        node: Node,
+        type: LocationType
+    ): Location {
+        // Project context - need to find the right source file
+        // when there's no merge manifest file
+        val element = when (node) {
+            is Element -> node
+            is Attr -> {
+                node.ownerElement
+            }
+            else -> null
+        }
+        if (element != null) {
+            val projects = sequenceOf(project) +
+                project.allLibraries.filter { !it.isExternalLibrary }
+            for (p in projects) {
+                for (manifest in project.manifestFiles) {
+                    try {
+                        val document = client.xmlParser.parseXml(manifest) ?: continue
+                        val sourceNode: Node? = matchXmlElement(element, document)
+                        if (sourceNode != null && sourceNode !== element) {
+                            val doc = node.ownerDocument
+                            val xmlContext = XmlContext(
+                                driver, project, main, manifest, null, null, doc
+                            )
+                            return xmlContext.getLocation(sourceNode, type)
+                        }
+                    } catch (ignore: Exception) {
+                    }
+                }
+            }
+        }
+        return Location.create(project.manifestFiles.firstOrNull() ?: project.dir)
+    }
+
     // ---- Convenience wrappers  ---- (makes the detector code a bit leaner)
 
     /**
-     * Returns false if the given issue has been disabled. Convenience wrapper
-     * around [Configuration.getSeverity].
+     * Returns false if the given issue has been disabled. Convenience
+     * wrapper around [Configuration.getSeverity].
      *
      * @param issue the issue to check
-     *
      * @return false if the issue has been disabled
      */
     fun isEnabled(issue: Issue): Boolean = configuration.isEnabled(issue)
@@ -141,13 +353,23 @@ open class Context(
      * Reports an issue. Convenience wrapper around [LintClient.report]
      *
      * @param issue the issue to report
-     *
      * @param location the location of the issue
-     *
      * @param message the message for this warning
-     *
      * @param quickfixData parameterized data for IDE quickfixes
      */
+    /*
+    Not deprecating this yet: wait until report(Incident) has been available for
+    a reasonable number of releases such that third party checks can rely on it
+    being present in all lint versions it will be run with. Note that all the
+    report methods should be annotated like this, not just this one:
+    @Deprecated(
+        "Use the new report(Incident) method instead, which is more future proof",
+        ReplaceWith(
+            "report(Incident(issue, message, location, null, quickfixData))",
+            "com.android.tools.lint.detector.api.Incident"
+        )
+    )
+    */
     @JvmOverloads
     open fun report(
         issue: Issue,
@@ -155,102 +377,71 @@ open class Context(
         message: String,
         quickfixData: LintFix? = null
     ) {
-        // See if we actually have an associated source for this location, and if so
-        // check to see if the warning might be suppressed.
-        val source = location.source
-        if (source is Node) {
-            // Also see if we have the context for this location (e.g. code could
-            // have directly called XmlContext/JavaContext report methods instead); this
-            // is better because the context also checks for issues suppressed via comment
-            if (this is XmlContext) {
-                if (source.ownerDocument === this.document) {
-                    this.report(issue, source, location, message, quickfixData)
-                    return
-                }
-            }
-            if (driver.isSuppressed(null, issue, source)) {
-                return
-            }
-        } else if (source is PsiElement) {
-            // Check for suppressed issue via location node
-            if (this is JavaContext) {
-                val javaContext = this
-                if (source.containingFile == javaContext.psiFile) {
-                    javaContext.report(issue, source, location, message, quickfixData)
-                    return
-                }
-            }
-            if (driver.isSuppressed(null, issue, source)) {
-                return
-            }
-        } else if (source is UElement) {
-            val element = source.psi
-            if (element != null && this is JavaContext) {
-                val javaContext = this
-                if (element.containingFile == javaContext.psiFile) {
-                    javaContext.report(issue, source, location, message, quickfixData)
-                    return
-                }
-            }
-            if (element is UAnnotated) {
-                if (driver.isSuppressed(null, issue, element as UAnnotated)) {
-                    return
-                }
-            } else if (driver.isSuppressed(null, issue, element)) {
-                return
-            }
-        }
-
-        doReport(issue, location, message, quickfixData)
+        val incident = Incident(issue, location, message, quickfixData)
+        driver.client.report(this, incident)
     }
 
-    @Deprecated(
-        "Here for temporary compatibility; the new typed quickfix data parameter" +
-            " should be used instead",
-        ReplaceWith("report(issue, location, message)")
-    )
-    fun report(
-        issue: Issue,
-        location: Location,
-        message: String,
-        quickfixData: Any?
-    ) = report(issue, location, message)
+    /**
+     * Reports the given incident.
+     *
+     * See [LintClient.report] for more details.
+     */
+    fun report(incident: Incident) {
+        driver.client.report(this, incident)
+    }
 
-    // Method not callable outside of the lint infrastructure: perform the actual reporting.
-    // This is a separate method instead of just having Context#report() do this work,
-    // since Context#report() will possibly redirect to the XmlContext or JavaContext reporting
-    // mechanisms if it discovers that it's been called on the wrong node.
-    protected fun doReport(
-        issue: Issue,
-        location: Location,
-        message: String,
-        quickfixData: LintFix?
-    ) {
-        if (location === Location.NONE) {
-            // Detector reported error for issue in a non-applicable location etc
-            return
-        }
+    /**
+     * Returns true if lint is running in "global" mode: This is where
+     * lint is analyzing the whole project, where it is given access to
+     * for example library dependencies' sources (if local), where you
+     * can look up the main project via [Context.mainProject].
+     *
+     * This is the opposite of "partial analysis", where lint can be
+     * either analyzing an individual module, or performing reporting
+     * where it merges individual module results. You can look up the
+     * exact mode via [LintDriver.mode].
+     */
+    fun isGlobalAnalysis(): Boolean = driver.isGlobalAnalysis()
 
-        val configuration = findConfiguration(location.file)
+    /**
+     * Reports the given incident to lint as a provisional incident,
+     * meaning that it is not yet conclusive. Lint will evaluate the
+     * given [constraint] for each project that depends on this one and
+     * check the condition against the parameters in that project.
+     */
+    fun report(incident: Incident, constraint: Constraint) {
+        client.report(this, incident, constraint)
+    }
 
-        // TODO: Consider this special case carefully! Is it necessary now with the new inheritance semantics?
-        // If an error occurs in a library project, but you've disabled that check in the
-        // main project, disable it in the library project too. (In some cases you don't
-        // control the lint.xml of a library project, and besides, if you're not interested in
-        // a check for your main project you probably don't care about it in the library either.)
-        if (configuration !== this.configuration && this.configuration.getSeverity(issue) === Severity.IGNORE) {
-            return
-        }
+    /**
+     * Reports the given incident to lint as a conditional incident,
+     * meaning that it is not yet conclusive. Lint will later ask the
+     * detector to decide, via [Detector.filterIncident] whether the
+     * issue should be included in the reporting project's report or
+     * not. The map can be used to store and retrieve state, since the
+     * callback will happen on a different instance of the [Detector].
+     *
+     * See [LintClient.report] for more details.
+     */
+    fun report(incident: Incident, map: LintMap) {
+        client.report(this, incident, map)
+    }
 
-        val severity = configuration.getSeverity(issue)
-        if (severity === Severity.IGNORE) {
-            return
-        }
-
-        driver.client.report(
-            this, issue, severity, location, message, TextFormat.RAW,
-            quickfixData
-        )
+    /**
+     * Returns a [PartialResult] where state can be stored for later
+     * analysis. This is a more general mechanism for reporting
+     * provisional issues when you need to collect a lot of data and do
+     * some post processing before figuring out what to report and you
+     * can't enumerate out specific [Incident] occurrences up front.
+     *
+     * Note that in this case, the lint infrastructure will not
+     * automatically look up the error location (since there isn't one
+     * yet) to see if the issue has been suppressed (via annotations,
+     * lint.xml and other mechanisms), so you should do this
+     * yourself, via the various [LintDriver.isSuppressed] methods.
+     */
+    fun getPartialResults(issue: Issue): PartialResult {
+        return client.getPartialResults(project, issue)
     }
 
     /** Finds the right configuration to use for the given file */
@@ -268,12 +459,12 @@ open class Context(
     }
 
     /**
-     * Send an exception to the log. Convenience wrapper around [LintClient.log].
+     * Send an exception to the log. Convenience wrapper around
+     * [LintClient.log].
      *
      * @param exception the exception, possibly null
-     *
-     * @param format the error message using [java.lang.String.format] syntax, possibly null
-     *
+     * @param format the error message using [java.lang.String.format]
+     *     syntax, possibly null
      * @param args any arguments for the format string
      */
     fun log(
@@ -283,8 +474,9 @@ open class Context(
     ) = driver.client.log(exception, format, *args)
 
     /**
-     * Returns the current phase number. The first pass is numbered 1. Only one pass
-     * will be performed, unless a [Detector] calls [.requestRepeat].
+     * Returns the current phase number. The first pass is phase number
+     * one, and only one pass will be performed, unless a [Detector]
+     * calls [requestRepeat].
      *
      * @return the current phase, usually 1
      */
@@ -292,25 +484,29 @@ open class Context(
         get() = driver.phase
 
     /**
-     * Requests another pass through the data for the given detector. This is
-     * typically done when a detector needs to do more expensive computation,
-     * but it only wants to do this once it **knows** that an error is
-     * present, or once it knows more specifically what to check for.
+     * Requests another pass through the data for the given detector.
+     * This is typically done when a detector needs to do more expensive
+     * computation, but it only wants to do this once it **knows** that
+     * an error is present, or once it knows more specifically what to
+     * check for.
      *
-     * @param detector the detector that should be included in the next pass.
-     *            Note that the lint runner may refuse to run more than a couple
-     *            of runs.
-     *
-     * @param scope the scope to be revisited. This must be a subset of the
-     *       current scope ([.getScope], and it is just a performance hint;
-     *       in particular, the detector should be prepared to be called on other
-     *       scopes as well (since they may have been requested by other detectors).
-     *       You can pall null to indicate "all".
+     * @param detector the detector that should be included in the next
+     *     pass. Note that the lint runner may
+     *     refuse to run more than a couple of runs.
+     * @param scope the scope to be revisited. This must be a subset of
+     *     the current scope ([this.scope], and it is just
+     *     a performance hint; in particular, the detector
+     *     should be prepared to be called on other scopes as
+     *     well (since they may have been requested by other
+     *     detectors). You can pall null to indicate "all".
      */
     fun requestRepeat(detector: Detector, scope: EnumSet<Scope>?) =
         driver.requestRepeat(detector, scope)
 
-    /** Returns the comment marker used in Studio to suppress statements for language, if any  */
+    /**
+     * Returns the comment marker used in Studio to suppress statements
+     * for language, if any
+     */
     protected open val suppressCommentPrefix: String?
         get() {
             val path = file.path
@@ -325,7 +521,9 @@ open class Context(
             return null
         }
 
-    /** Returns whether this file contains any suppress comment markers  */
+    /**
+     * Returns whether this file contains any suppress comment markers
+     */
     fun containsCommentSuppress(): Boolean {
         if (containsCommentSuppress == null) {
             containsCommentSuppress = false
@@ -342,8 +540,8 @@ open class Context(
     }
 
     /**
-     * Returns true if the given issue is suppressed at the given character offset
-     * in the file's contents
+     * Returns true if the given issue is suppressed at the given
+     * character offset in the file's contents
      */
     fun isSuppressedWithComment(startOffset: Int, issue: Issue): Boolean {
         val prefix = suppressCommentPrefix ?: return false
@@ -372,6 +570,12 @@ open class Context(
         return false
     }
 
+    /**
+     * When set, access to state outside of the current project is not
+     * allowed. This is intended for lint infrastructure usage.
+     */
+    private val forbidMainAccess: Boolean get() = driver.mode == DriverMode.ANALYSIS_ONLY
+
     companion object {
         @VisibleForTesting
         fun isSuppressedWithComment(line: String, issue: Issue): Boolean {
@@ -382,11 +586,8 @@ open class Context(
 
         private fun isSuppressedWithComment(line: String, category: Category): Boolean {
             return lineContainsId(line, category.name) ||
-                category.parent != null &&
-                (
-                    lineContainsId(line, category.fullName) ||
-                        isSuppressedWithComment(line, category.parent)
-                    )
+                lineContainsId(line, category.fullName) ||
+                category.parent != null && isSuppressedWithComment(line, category.parent)
         }
 
         // Like line.contains(id), but requires word match (e.g. "MyId" is found
@@ -466,6 +667,107 @@ open class Context(
             }
 
             return -1
+        }
+
+        private var detectorsWarned: MutableSet<String>? = null
+
+        /** Check forbidden access and report issue if necessary */
+        fun checkForbidden(methodName: String, file: File, driver: LintDriver? = null): Boolean {
+            val currentDriver = driver ?: LintDriver.currentDrivers.firstOrNull() ?: return true
+            if (currentDriver.mode == DriverMode.ANALYSIS_ONLY) {
+                val (detector, issues) = findCallingDetector(currentDriver) ?: return false
+                val warnings = detectorsWarned ?: HashSet<String>().also { detectorsWarned = it }
+                if (warnings.add(detector)) {
+                    val stack = StringBuilder()
+                    LintDriver.appendStackTraceSummary(
+                        RuntimeException(), stack,
+                        skipFrames = 1, maxFrames = 20
+                    )
+                    val vendors = issues.mapNotNull { it.vendor ?: it.registry?.vendor }.toSet()
+                        .sortedBy { it.identifier }
+                    val vendorString = if (issues.isNotEmpty()) {
+                        val sb = StringBuilder()
+                        sb.append("\nIssue Vendors:\n")
+                        for (vendor in vendors) {
+                            vendor.vendorName?.let { sb.append("Vendor: $it\n") }
+                            vendor.identifier?.let { sb.append("Identifier: $it\n") }
+                            vendor.contact?.let { sb.append("Contact: $it\n") }
+                            vendor.feedbackUrl?.let { sb.append("Feedback: $it\n") }
+                            sb.append("\n")
+                        }
+                        sb.toString()
+                    } else {
+                        ""
+                    }
+
+                    val message =
+                        """
+                        The lint detector
+                            `$detector`
+                        called `$methodName` during module analysis.
+
+                        This does not work correctly when running in ${driver?.client?.getClientDisplayName() ?: LintClient.clientName}.
+
+                        In particular, there may be false positives or false negatives because
+                        the lint check may be using the minSdkVersion or manifest information
+                        from the library instead of any consuming app module.
+
+                        Contact the vendor of the lint issue to get it fixed/updated (if
+                        known, listed below), and in the meantime you can try to work around
+                        this by disabling the following issues:
+
+                        ${issues.joinToString(separator = ",") { "\"$it\"" }}
+                        """.trimIndent() + "\n" + vendorString + "Call stack: $stack"
+                    LintClient.report(
+                        client = currentDriver.client,
+                        issue = IssueRegistry.LINT_ERROR,
+                        message = message,
+                        location = Location.create(file),
+                        driver = currentDriver
+                    )
+                }
+
+                return true
+            }
+
+            return false
+        }
+
+        private fun findCallingDetector(driver: LintDriver): Pair<String, List<Issue>>? {
+            val throwable = Throwable().fillInStackTrace()
+            val frames = throwable.stackTrace
+
+            // Special allowed case:
+            if (frames.size >= 4) {
+                val callerCaller = frames[3]
+                if (callerCaller.methodName == "beforeCheckEachProject" ||
+                    callerCaller.methodName == "afterCheckEachProject"
+                ) {
+                    // Built in compatibility check in Detector; these ones are okay
+                    return null
+                }
+            }
+
+            val result = LintDriver.getAssociatedDetector(throwable, driver)
+            if (result != null) {
+                return result
+            } else {
+                // No detector named *Detector on the stack; assume that the caller to report()
+                // was by detector
+                for (element in frames) {
+                    val detectorClass = element.className
+                    if (!detectorClass.startsWith("com.android.tools.lint.") ||
+                        detectorClass.startsWith("com.android.tools.lint.checks.")
+                    ) {
+                        return Pair(
+                            detectorClass,
+                            LintDriver.getDetectorIssues(detectorClass, driver)
+                        )
+                    }
+                }
+            }
+
+            return Pair("unknown detector", emptyList())
         }
     }
 }

@@ -137,6 +137,10 @@ public class UnitTestingModelTest {
         Truth.assertThat(sourceProvider.getJavaDirectories()).hasSize(1);
         Truth.assertThat(sourceProvider.getJavaDirectories().iterator().next().getAbsolutePath())
                 .endsWith(FileUtils.join("test", "java"));
+        Truth.assertThat(sourceProvider.getKotlinDirectories()).hasSize(2);
+        Truth.assertThat(sourceProvider.getKotlinDirectories())
+                .containsExactly(
+                        project.file("app/src/test/java"), project.file("app/src/test/kotlin"));
     }
 
     @Test
@@ -161,12 +165,14 @@ public class UnitTestingModelTest {
                             .getSourceProvider();
 
             assertThat(sourceProvider.getJavaDirectories()).hasSize(1);
+            String flavorDir =
+                    StringHelper.appendCapitalized("test", flavor.getProductFlavor().getName());
             assertThat(sourceProvider.getJavaDirectories().iterator().next().getAbsolutePath())
-                    .endsWith(
-                            StringHelper.appendCapitalized(
-                                    "test",
-                                    flavor.getProductFlavor().getName(),
-                                    File.separator + "java"));
+                    .endsWith(flavorDir + File.separator + "java");
+            Truth.assertThat(sourceProvider.getKotlinDirectories())
+                    .containsExactly(
+                            project.file("app/src/" + flavorDir + "/java"),
+                            project.file("app/src/" + flavorDir + "/kotlin"));
         }
     }
 }

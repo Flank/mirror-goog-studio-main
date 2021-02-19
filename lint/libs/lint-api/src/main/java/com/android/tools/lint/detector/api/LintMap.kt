@@ -18,38 +18,45 @@ package com.android.tools.lint.detector.api
 
 import com.android.sdklib.SdkVersionInfo
 import org.jetbrains.annotations.Contract
+import java.util.HashMap
 
 /**
- * A [LintMap] represents a collection of key value pairs used.
- * The map can be serialized, and this is the main use-case for
- * it: storing and retrieving additional information as part
- * of incidents such that the incidents can later be filtered
- * quickly to see if they're relevant in a downstream module's
- * lint report.
+ * A [LintMap] represents a collection of key value pairs used in lint.
+ * The map can be serialized, and this is the main use-case for it:
+ * storing and retrieving additional information as part of incidents
+ * for incremental build purposes.
  *
- * The specific types of values that are allowed are:
- *  - [String]
- *  - int
- *  - boolean
- *  - an [Incident]
- *  - a [Location]
- *  - a nested [LintMap]
+ * The specific types of values that are currently allowed are:
+ * - [String]
+ * - int
+ * - boolean
+ * - [Incident]
+ * - [Location]
+ * - [LintMap] (which allows nesting of data via maps of maps,
+ *   recursively)
+ * - [Constraint]
  */
 class LintMap : Iterable<String> {
-    /**
-     * Notes related to this incident. This is intended to be used by
-     * [Context.reportProvisional] and [Detector.processProvisional].
-     * This is limited to a few primitive data types (because it needs
-     * to be safely persisted across lint invocations.)
-     */
+    /** Internal untyped map storage */
     private var map: MutableMap<String, Any> = HashMap()
 
     /**
-     * Records a string note related to this incident. This is intended to
-     * be used to record notes via [Context.reportProvisional] for later
-     * usage by [Detector.processProvisional] to decide whether the incident
-     * still applies and perhaps to customize the message.
+     * Simple string get operator to be able to use Kotlin array syntax;
+     * this is short for [getString] with a null default
      */
+    operator fun get(key: String): String? {
+        return getString(key, null)
+    }
+
+    /**
+     * Simple string set operator to be able to use Kotlin array syntax;
+     * this is mapped to the [put] method for strings.
+     */
+    operator fun set(key: String, value: String): LintMap {
+        return put(key, value)
+    }
+
+    /** Records a string into the map */
     fun put(key: String, value: String): LintMap {
         map[key] = value
         return this
@@ -85,6 +92,12 @@ class LintMap : Iterable<String> {
         return this
     }
 
+    /** Like [put] but for a [Constraint]. */
+    fun put(key: String, constraint: Constraint): LintMap {
+        map[key] = constraint
+        return this
+    }
+
     /** Returns the keys of the items in this map */
     fun keys(): Sequence<String> {
         return map.keys.asSequence()
@@ -95,13 +108,13 @@ class LintMap : Iterable<String> {
         return map.containsKey(key)
     }
 
-    /** Returns a note previously stored as a String by [put] */
+    /** Returns a string previously stored by [put] */
     @Contract("_, !null -> !null")
     fun getString(key: String, default: String? = null): String? {
         return map[key] as? String ?: default
     }
 
-    /** Returns a note previously stored as an integer by [put] */
+    /** Returns an int previously stored by [put] */
     @Contract("_, !null -> !null")
     fun getInt(key: String, default: Int? = null): Int? {
         return map[key] as? Int ?: default
@@ -118,28 +131,34 @@ class LintMap : Iterable<String> {
         }
     }
 
-    /** Returns a note previously stored as a boolean by [put] */
+    /** Returns a boolean previously stored by [put] */
     @Contract("_, !null -> !null")
     fun getBoolean(key: String, default: Boolean? = null): Boolean? {
         return map[key] as? Boolean ?: default
     }
 
-    /** Returns a note previously stored as a boolean by [put] */
+    /** Returns a location previously stored by [put] */
     @Contract("_, !null -> !null")
     fun getLocation(key: String): Location? {
         return map[key] as? Location
     }
 
-    /** Returns a note previously stored as a map by [put] */
+    /** Returns a map previously stored by [put] */
     fun getMap(key: String): LintMap? {
         @Suppress("UNCHECKED_CAST")
         return map[key] as? LintMap
     }
 
-    /** Returns a note previously stored as a map by [put] */
+    /** Returns an incident previously stored by [put] */
     fun getIncident(key: String): Incident? {
         @Suppress("UNCHECKED_CAST")
         return map[key] as? Incident
+    }
+
+    /** Returns a condition previously stored by [put] */
+    fun getConstraint(key: String): Constraint? {
+        @Suppress("UNCHECKED_CAST")
+        return map[key] as? Constraint
     }
 
     /** Removes the given key's value from the map, if any */
@@ -147,6 +166,21 @@ class LintMap : Iterable<String> {
         map.remove(key)
         return this
     }
+
+    /** Copies all the values from the given [from] into this one */
+    fun putAll(from: LintMap): LintMap {
+        this.map.putAll(from.map)
+        return this
+    }
+
+    /** The number of elements in the map */
+    val size: Int get() = map.size
+
+    /** Is this map empty? */
+    fun isEmpty(): Boolean = map.isEmpty()
+
+    /** Is this map non-empty? */
+    fun isNotEmpty(): Boolean = !isEmpty()
 
     companion object {
         /**

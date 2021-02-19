@@ -31,4 +31,9 @@ class FakeAndroidLocationsProvider(override val userHomeLocation: Path): Android
 
     override val avdLocation: Path
         get() = prefsLocation.resolve(AbstractAndroidLocations.FOLDER_AVD)
+
+    override val gradleAvdLocation: Path
+        get() = prefsLocation
+            .resolve(AbstractAndroidLocations.FOLDER_GRADLE)
+            .resolve(AbstractAndroidLocations.FOLDER_GRADLE_AVD)
 }

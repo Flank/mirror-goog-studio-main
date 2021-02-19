@@ -22,6 +22,7 @@ import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Implementation of SourceProvider for testing that provides the default convention paths.
@@ -44,6 +45,12 @@ class MockSourceProvider implements SourceProvider {
     @Override
     public Set<File> getJavaDirectories() {
         return Collections.singleton(new File(mRoot, "java"));
+    }
+
+    @NotNull
+    @Override
+    public Collection<File> getKotlinDirectories() {
+        return Collections.singleton(new File(mRoot, "kotlin"));
     }
 
     @NonNull

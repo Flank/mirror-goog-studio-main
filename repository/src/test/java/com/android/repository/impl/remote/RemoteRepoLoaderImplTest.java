@@ -22,10 +22,12 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.repository.Revision;
 import com.android.repository.api.Channel;
+import com.android.repository.api.Checksum;
 import com.android.repository.api.ProgressIndicator;
 import com.android.repository.api.RemotePackage;
 import com.android.repository.api.RepoManager;
 import com.android.repository.api.RepositorySource;
+import com.android.repository.api.RepositorySourceProvider;
 import com.android.repository.api.SimpleRepositorySource;
 import com.android.repository.impl.manager.RemoteRepoLoader;
 import com.android.repository.impl.manager.RemoteRepoLoaderImpl;
@@ -46,12 +48,14 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.URL;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CyclicBarrier;
 import junit.framework.TestCase;
+import org.mockito.Mockito;
 
 /** Tests for {@link RemoteRepoLoaderImpl} */
 public class RemoteRepoLoaderImplTest extends TestCase {
@@ -62,8 +66,9 @@ public class RemoteRepoLoaderImplTest extends TestCase {
                 ImmutableSet.of(RepoManager.getGenericModule()),
                 null);
         FakeDownloader downloader = new FakeDownloader(new MockFileOp());
-        downloader.registerUrl(new URL("http://www.example.com"),
-                getClass().getResourceAsStream("/testRepo.xml"));
+        downloader.registerUrl(
+                new URL("http://www.example.com"),
+                getClass().getResourceAsStream("/testRepo2.xml"));
         FakeProgressIndicator progress = new FakeProgressIndicator(true);
         RemoteRepoLoader loader =
                 new RemoteRepoLoaderImpl(
@@ -74,18 +79,21 @@ public class RemoteRepoLoaderImplTest extends TestCase {
                 .fetchPackages(progress, downloader, new FakeSettingsController(false));
         progress.assertNoErrorsOrWarnings();
         assertEquals(2, pkgs.size());
-        RemotePackage p1 = pkgs.get("dummy;foo");
+        RemotePackage p1 = pkgs.get("mypackage;foo");
         assertEquals(new Revision(1, 2, 3), p1.getVersion());
         assertEquals("the license text", p1.getLicense().getValue().trim());
-        assertEquals(3, ((RemotePackageImpl) p1).getAllArchives().size());
-        assertTrue(p1.getTypeDetails() instanceof TypeDetails.GenericType);
         Collection<Archive> archives = ((RemotePackageImpl) p1).getAllArchives();
-        assertEquals(3, archives.size());
+        assertEquals(4, archives.size());
+        assertTrue(p1.getTypeDetails() instanceof TypeDetails.GenericType);
         Iterator<Archive> archiveIter = ((RemotePackageImpl) p1).getAllArchives().iterator();
         Archive a1 = archiveIter.next();
         assertEquals(1234, a1.getComplete().getSize());
+        assertEquals("x64", a1.getHostArch());
         Archive a2 = archiveIter.next();
-        Iterator<Archive.PatchType> patchIter = a2.getAllPatches().iterator();
+        assertEquals(1234, a2.getComplete().getSize());
+        assertEquals("aarch64", a2.getHostArch());
+        Archive a3 = archiveIter.next();
+        Iterator<Archive.PatchType> patchIter = a3.getAllPatches().iterator();
         Archive.PatchType patch = patchIter.next();
         assertEquals(new Revision(1, 3, 2), patch.getBasedOn().toRevision());
         patch = patchIter.next();
@@ -113,37 +121,46 @@ public class RemoteRepoLoaderImplTest extends TestCase {
         progress.assertNoErrorsOrWarnings();
 
         assertEquals(2, pkgs.size());
-        assertEquals(new Revision(1, 2, 3), pkgs.get("dummy;foo").getVersion());
-        assertEquals(new Revision(4, 5, 6), pkgs.get("dummy;bar").getVersion());
+        assertEquals(new Revision(1, 2, 3), pkgs.get("mypackage;foo").getVersion());
+        assertEquals(new Revision(4, 5, 6), pkgs.get("mypackage;bar").getVersion());
 
         settings.setChannel(Channel.create(1));
         pkgs = loader.fetchPackages(progress, downloader, settings);
         assertEquals(2, pkgs.size());
-        assertEquals(new Revision(1, 2, 4), pkgs.get("dummy;foo").getVersion());
-        assertEquals(new Revision(4, 5, 6), pkgs.get("dummy;bar").getVersion());
+        assertEquals(new Revision(1, 2, 4), pkgs.get("mypackage;foo").getVersion());
+        assertEquals(new Revision(4, 5, 6), pkgs.get("mypackage;bar").getVersion());
 
         settings.setChannel(Channel.create(2));
         pkgs = loader.fetchPackages(progress, downloader, settings);
         assertEquals(2, pkgs.size());
-        assertEquals(new Revision(1, 2, 5), pkgs.get("dummy;foo").getVersion());
-        assertEquals(new Revision(4, 5, 6), pkgs.get("dummy;bar").getVersion());
+        assertEquals(new Revision(1, 2, 5), pkgs.get("mypackage;foo").getVersion());
+        assertEquals(new Revision(4, 5, 6), pkgs.get("mypackage;bar").getVersion());
 
         settings.setChannel(Channel.create(3));
         pkgs = loader.fetchPackages(progress, downloader, settings);
         assertEquals(2, pkgs.size());
-        assertEquals(new Revision(1, 2, 5), pkgs.get("dummy;foo").getVersion());
-        assertEquals(new Revision(4, 5, 7), pkgs.get("dummy;bar").getVersion());
+        assertEquals(new Revision(1, 2, 5), pkgs.get("mypackage;foo").getVersion());
+        assertEquals(new Revision(4, 5, 7), pkgs.get("mypackage;bar").getVersion());
     }
 
     public void testFallback() throws Exception {
-        RepositorySource source = new SimpleRepositorySource("http://www.example.com",
-                "Source UI Name", true,
-                ImmutableSet.of(RepoManager.getGenericModule()),
-                null);
+        RepositorySource source =
+                new SimpleRepositorySource(
+                        "http://www.example.com",
+                        "Source UI Name",
+                        true,
+                        ImmutableSet.of(
+                                RepoManager.getCommonModule(), RepoManager.getGenericModule()),
+                        null);
         final String legacyUrl = "http://www.example.com/legacy";
-        RepositorySource legacySource = new SimpleRepositorySource(legacyUrl,
-                "Legacy UI Name", true, ImmutableSet.of(RepoManager.getGenericModule()),
-                null);
+        RepositorySource legacySource =
+                new SimpleRepositorySource(
+                        legacyUrl,
+                        "Legacy UI Name",
+                        true,
+                        ImmutableSet.of(
+                                RepoManager.getCommonModule(), RepoManager.getGenericModule()),
+                        null);
         FakeDownloader downloader = new FakeDownloader(new MockFileOp());
         downloader.registerUrl(new URL("http://www.example.com"),
                 getClass().getResourceAsStream("/testRepo.xml"));
@@ -170,17 +187,27 @@ public class RemoteRepoLoaderImplTest extends TestCase {
     }
 
     public void testNonFallbackPreferred() throws Exception {
-        RepositorySource source = new SimpleRepositorySource("http://www.example.com",
-                "Source UI Name", true,
-                ImmutableSet.of(RepoManager.getGenericModule()),
-                null);
+        RepositorySource source =
+                new SimpleRepositorySource(
+                        "http://www.example.com",
+                        "Source UI Name",
+                        true,
+                        ImmutableSet.of(
+                                RepoManager.getCommonModule(), RepoManager.getGenericModule()),
+                        null);
         final String legacyUrl = "http://www.example.com/legacy";
-        RepositorySource legacySource = new SimpleRepositorySource(legacyUrl,
-                "Legacy UI Name", true, ImmutableSet.of(RepoManager.getGenericModule()),
-                null);
+        RepositorySource legacySource =
+                new SimpleRepositorySource(
+                        legacyUrl,
+                        "Legacy UI Name",
+                        true,
+                        ImmutableSet.of(
+                                RepoManager.getCommonModule(), RepoManager.getGenericModule()),
+                        null);
         FakeDownloader downloader = new FakeDownloader(new MockFileOp());
-        downloader.registerUrl(new URL("http://www.example.com"),
-                getClass().getResourceAsStream("/testRepo.xml"));
+        downloader.registerUrl(
+                new URL("http://www.example.com"),
+                getClass().getResourceAsStream("/testRepo2.xml"));
         downloader.registerUrl(new URL(legacyUrl),
                 "foo".getBytes());
         FakeProgressIndicator progress = new FakeProgressIndicator();
@@ -191,7 +218,7 @@ public class RemoteRepoLoaderImplTest extends TestCase {
                                         ImmutableList.of(source, legacySource))),
                         (source1, downloader1, settings, progress1) -> {
                             assertEquals(legacyUrl, source1.getUrl());
-                            FakeRemotePackage legacy = new FakeRemotePackage("dummy;foo");
+                            FakeRemotePackage legacy = new FakeRemotePackage("mypackage;foo");
                             legacy.setRevision(new Revision(1, 2, 3));
                             legacy.setCompleteUrl("http://www.example.com/legacy.zip");
                             return ImmutableSet.of(legacy);
@@ -200,43 +227,53 @@ public class RemoteRepoLoaderImplTest extends TestCase {
                 .fetchPackages(progress, downloader, new FakeSettingsController(false));
         progress.assertNoErrorsOrWarnings();
         assertEquals(2, pkgs.size());
-        assertFalse(pkgs.get("dummy;foo") instanceof FakePackage);
+        assertFalse(pkgs.get("mypackage;foo") instanceof FakePackage);
     }
 
-    private static final String TEST_LOCAL_PREFERRED_REPO = "\n"
-            + "<repo:repository\n"
-            + "        xmlns:repo=\"http://schemas.android.com/repository/android/generic/01\"\n"
-            + "        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n"
-            + "    <remotePackage path=\"dummy;foo\">\n"
-            + "        <type-details xsi:type=\"repo:genericDetailsType\"/>\n"
-            + "        <revision><major>%1$d</major></revision>\n"
-            + "        <display-name>%2$s</display-name>\n"
-            + "        <archives>\n"
-            + "            <archive>\n"
-            + "                <complete>\n"
-            + "                    <size>2345</size>\n"
-            + "                    <checksum>e1b7e62ecc3925054900b70e6eb9038bba8f702a</checksum>\n"
-            + "                    <url>%3$s</url>\n"
-            + "                </complete>\n"
-            + "            </archive>\n"
-            + "        </archives>\n"
-            + "    </remotePackage>\n"
-            + "</repo:repository>\n"
-            + "\n";
+    private static final String TEST_LOCAL_PREFERRED_REPO =
+            "\n"
+                    + "<repo:repository\n"
+                    + "        xmlns:repo=\"http://schemas.android.com/repository/android/generic/01\"\n"
+                    + "        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n"
+                    + "    <remotePackage path=\"mypackage;foo\">\n"
+                    + "        <type-details xsi:type=\"repo:genericDetailsType\"/>\n"
+                    + "        <revision><major>%1$d</major></revision>\n"
+                    + "        <display-name>%2$s</display-name>\n"
+                    + "        <archives>\n"
+                    + "            <archive>\n"
+                    + "                <complete>\n"
+                    + "                    <size>2345</size>\n"
+                    + "                    <checksum>e1b7e62ecc3925054900b70e6eb9038bba8f702a</checksum>\n"
+                    + "                    <url>%3$s</url>\n"
+                    + "                </complete>\n"
+                    + "            </archive>\n"
+                    + "        </archives>\n"
+                    + "    </remotePackage>\n"
+                    + "</repo:repository>\n"
+                    + "\n";
 
     public void testLocalPreferred() throws Exception {
-        RepositorySource httpSource = new SimpleRepositorySource("http://www.example.com",
-                "HTTP Source UI Name", true,
-                ImmutableSet.of(RepoManager.getGenericModule()),
-                null);
-        RepositorySource fileSource = new SimpleRepositorySource("file:///foo/bar",
-                "File Source UI Name", true,
-                ImmutableSet.of(RepoManager.getGenericModule()),
-                null);
-        RepositorySource fileSource2 = new SimpleRepositorySource("file:///foo/bar2",
-                "File Source UI Name 2", true,
-                ImmutableSet.of(RepoManager.getGenericModule()),
-                null);
+        RepositorySource httpSource =
+                new SimpleRepositorySource(
+                        "http://www.example.com",
+                        "HTTP Source UI Name",
+                        true,
+                        ImmutableSet.of(RepoManager.getGenericModule()),
+                        new FakeRepositorySourceProvider(ImmutableList.of()));
+        RepositorySource fileSource =
+                new SimpleRepositorySource(
+                        "file:///foo/bar",
+                        "File Source UI Name",
+                        true,
+                        ImmutableSet.of(RepoManager.getGenericModule()),
+                        new FakeRepositorySourceProvider(ImmutableList.of()));
+        RepositorySource fileSource2 =
+                new SimpleRepositorySource(
+                        "file:///foo/bar2",
+                        "File Source UI Name 2",
+                        true,
+                        ImmutableSet.of(RepoManager.getGenericModule()),
+                        new FakeRepositorySourceProvider(ImmutableList.of()));
         FakeDownloader downloader = new FakeDownloader(new MockFileOp());
         FakeProgressIndicator progress = new FakeProgressIndicator();
         RemoteRepoLoader loader =
@@ -253,7 +290,7 @@ public class RemoteRepoLoaderImplTest extends TestCase {
                 String.format(TEST_LOCAL_PREFERRED_REPO, 1, "file", "bar").getBytes());
         Map<String, RemotePackage> pkgs =
                 loader.fetchPackages(progress, downloader, new FakeSettingsController(false));
-        assertEquals("file", pkgs.get("dummy;foo").getDisplayName());
+        assertEquals("file", pkgs.get("mypackage;foo").getDisplayName());
 
         // file preferred over url: absolute paths
         downloader = new FakeDownloader(new MockFileOp());
@@ -262,7 +299,7 @@ public class RemoteRepoLoaderImplTest extends TestCase {
         downloader.registerUrl(new URL("file:///foo/bar2"),
                 String.format(TEST_LOCAL_PREFERRED_REPO, 1, "file", "file:///foo/bar2").getBytes());
         pkgs = loader.fetchPackages(progress, downloader, new FakeSettingsController(false));
-        assertEquals("file", pkgs.get("dummy;foo").getDisplayName());
+        assertEquals("file", pkgs.get("mypackage;foo").getDisplayName());
 
         // newer http preferred over file
         downloader = new FakeDownloader(new MockFileOp());
@@ -271,21 +308,31 @@ public class RemoteRepoLoaderImplTest extends TestCase {
         downloader.registerUrl(new URL("file:///foo/bar"),
                 String.format(TEST_LOCAL_PREFERRED_REPO, 1, "file", "bar").getBytes());
         pkgs = loader.fetchPackages(progress, downloader, new FakeSettingsController(false));
-        assertEquals("http", pkgs.get("dummy;foo").getDisplayName());
+        assertEquals("http", pkgs.get("mypackage;foo").getDisplayName());
     }
 
     public void testNewerFallbackPreferred() throws Exception {
-        RepositorySource source = new SimpleRepositorySource("http://www.example.com",
-                "Source UI Name", true,
-                ImmutableSet.of(RepoManager.getGenericModule()),
-                null);
+        RepositorySource source =
+                new SimpleRepositorySource(
+                        "http://www.example.com",
+                        "Source UI Name",
+                        true,
+                        ImmutableSet.of(
+                                RepoManager.getCommonModule(), RepoManager.getGenericModule()),
+                        null);
         final String legacyUrl = "http://www.example.com/legacy";
-        RepositorySource legacySource = new SimpleRepositorySource(legacyUrl,
-                "Legacy UI Name", true, ImmutableSet.of(RepoManager.getGenericModule()),
-                null);
+        RepositorySource legacySource =
+                new SimpleRepositorySource(
+                        legacyUrl,
+                        "Legacy UI Name",
+                        true,
+                        ImmutableSet.of(
+                                RepoManager.getCommonModule(), RepoManager.getGenericModule()),
+                        null);
         FakeDownloader downloader = new FakeDownloader(new MockFileOp());
-        downloader.registerUrl(new URL("http://www.example.com"),
-                getClass().getResourceAsStream("/testRepo.xml"));
+        downloader.registerUrl(
+                new URL("http://www.example.com"),
+                getClass().getResourceAsStream("/testRepo2.xml"));
         downloader.registerUrl(new URL(legacyUrl),
                 "foo".getBytes());
         FakeProgressIndicator progress = new FakeProgressIndicator(true);
@@ -296,7 +343,7 @@ public class RemoteRepoLoaderImplTest extends TestCase {
                                         ImmutableList.of(source, legacySource))),
                         (source1, downloader1, settings, progress1) -> {
                             assertEquals(legacyUrl, source1.getUrl());
-                            FakeRemotePackage legacy = new FakeRemotePackage("dummy;foo");
+                            FakeRemotePackage legacy = new FakeRemotePackage("mypackage;foo");
                             legacy.setRevision(new Revision(1, 2, 4));
                             legacy.setCompleteUrl("http://www.example.com/legacy.zip");
                             return ImmutableSet.of(legacy);
@@ -305,9 +352,60 @@ public class RemoteRepoLoaderImplTest extends TestCase {
                 .fetchPackages(progress, downloader, new FakeSettingsController(false));
         progress.assertNoErrorsOrWarnings();
         assertEquals(2, pkgs.size());
-        assertTrue(pkgs.get("dummy;foo") instanceof FakePackage);
+        assertTrue(pkgs.get("mypackage;foo") instanceof FakePackage);
     }
 
+    /** Create five sources and verify that they're processed in the right order */
+    public void testRepoOrdering() throws Exception {
+        List<RepositorySourceProvider> providers = new ArrayList<>();
+        for (int i = 1; i <= 5; i++) {
+            SimpleRepositorySource source =
+                    new SimpleRepositorySource(
+                            "http://www.example.com/f" + i,
+                            "Source UI Name",
+                            true,
+                            ImmutableSet.of(
+                                    RepoManager.getCommonModule(), RepoManager.getGenericModule()),
+                            Mockito.mock(RepositorySourceProvider.class));
+            providers.add(new FakeRepositorySourceProvider(ImmutableList.of(source)));
+        }
+        String template =
+                "<repo:repository\n"
+                        + "        xmlns:repo=\"http://schemas.android.com/repository/android/generic/01\"\n"
+                        + "        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n"
+                        + "%s"
+                        + "</repo:repository>\n";
+        String packageTemplate =
+                "    <remotePackage path=\"mypackage;foo%d\">\n"
+                        + "        <type-details xsi:type=\"repo:genericDetailsType\"/>\n"
+                        + "        <revision><major>1</major></revision>\n"
+                        + "        <display-name>%s</display-name>\n"
+                        + "        <archives><archive><complete>\n"
+                        + "                    <size>1234</size>\n"
+                        + "                    <checksum type='sha-1'>123</checksum>\n"
+                        + "                    <url>foo</url>\n"
+                        + "        </complete></archive></archives>\n"
+                        + "    </remotePackage>\n";
+
+        FakeDownloader downloader = new FakeDownloader(new MockFileOp());
+        for (int i = 1; i <= 5; i++) {
+            String package1 = String.format(packageTemplate, i, "bad");
+            String package2 = String.format(packageTemplate, i + 1, "good");
+            downloader.registerUrl(
+                    new URL("http://www.example.com/f" + i),
+                    String.format(template, package1 + package2).getBytes());
+        }
+        FakeProgressIndicator progress = new FakeProgressIndicator(true);
+        RemoteRepoLoader loader = new RemoteRepoLoaderImpl(providers, null);
+        Map<String, RemotePackage> pkgs =
+                loader.fetchPackages(progress, downloader, new FakeSettingsController(false));
+        progress.assertNoErrorsOrWarnings();
+        assertEquals(6, pkgs.size());
+
+        for (int i = 2; i <= 6; i++) {
+            assertEquals("good", pkgs.get("mypackage;foo" + i).getDisplayName());
+        }
+    }
 
     public void testDownloadsAreParallel() throws Exception {
         RepositorySource httpSource =
@@ -372,7 +470,7 @@ public class RemoteRepoLoaderImplTest extends TestCase {
                     public void downloadFully(
                             @NonNull URL url,
                             @NonNull Path target,
-                            @Nullable String checksum,
+                            @Nullable Checksum checksum,
                             @NonNull ProgressIndicator indicator)
                             throws IOException {
                         super.downloadFully(url, target, checksum, indicator);

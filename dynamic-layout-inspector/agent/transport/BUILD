@@ -108,13 +108,21 @@ cc_library(
 
 cc_library(
     name = "agent_test_support",
-    srcs = ["src/test/native/testing/component_tree_test_java_jni.cc"],
+    srcs = [
+        "src/test/native/testing/component_tree_test_java_jni.cc",
+    ],
+    copts = ANDROID_COPTS + [
+        # TODO: Remove dependency when agent.h no longer includes
+        # memory_component.h.
+        "-Itools/base/profiler/native/agent",
+    ],
     linkstatic = 1,
     tags = ["no_windows"],
     visibility = ["//visibility:public"],
     deps = [
         "//prebuilts/studio/jdk:jni_headers",
         "//tools/base/dynamic-layout-inspector/skia/proto:layout_inspector_skia_cc_proto",
+        "//tools/base/transport/native/agent:jvmti_helper",
         "//tools/base/transport/proto:cc_proto",
         "//tools/base/transport/test-framework:native_test_support",
     ],

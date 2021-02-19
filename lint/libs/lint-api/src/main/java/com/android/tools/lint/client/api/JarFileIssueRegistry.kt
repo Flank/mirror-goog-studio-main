@@ -221,7 +221,7 @@ private constructor(
                     JarFileIssueRegistry::class.java.classLoader
                 )
                 val registryClass = Class.forName(className, true, loader)
-                val registry = registryClass.newInstance() as IssueRegistry
+                val registry = registryClass.getDeclaredConstructor().newInstance() as IssueRegistry
 
                 val issues = try {
                     registry.issues
@@ -334,11 +334,6 @@ private constructor(
 
                     val registryClass = registry.javaClass.name
 
-                    client.log(
-                        Severity.WARNING, null,
-                        "$registryClass in $jarFile does not specify a vendor; see IssueRegistry#vendor"
-                    )
-
                     // Try to guess a vendor from the path and catch some common cases
                     // until the various libraries are updated
                     val matcher = ARTIFACT_PATTERN.matcher(jarFile.path)
@@ -351,7 +346,7 @@ private constructor(
                                 .removeSuffix(".").toLowerCase(Locale.US)
                         }
 
-                    if (registryClass.startsWith("androidx.") ||
+                    val inferredVendor: Vendor? = if (registryClass.startsWith("androidx.") ||
                         registryClass.startsWith("android.")
                     ) {
                         Vendor(
@@ -365,6 +360,17 @@ private constructor(
                             identifier = identifier
                         )
                     } else {
+                        null
+                    }
+
+                    if (inferredVendor != null) {
+                        inferredVendor
+                    } else {
+                        client.log(
+                            Severity.WARNING, null,
+                            "$registryClass in $jarFile does not specify a vendor; see IssueRegistry#vendor"
+                        )
+
                         Vendor(identifier = identifier)
                     }
                 }

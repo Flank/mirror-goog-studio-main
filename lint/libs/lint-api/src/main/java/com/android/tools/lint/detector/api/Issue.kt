@@ -68,18 +68,18 @@ class Issue private constructor(
     val priority: Int,
 
     /**
-     * Returns the default severity of the issues found by this detector (some
-     * tools may allow the user to specify custom severities for detectors).
+     * Returns the default severity of the issues found by this detector
+     * (some tools may allow the user to specify custom severities for
+     * detectors).
      *
-     *
-     * Note that even though the normal way for an issue to be disabled is for
-     * the [Configuration] to return [Severity.IGNORE], there is a
-     * [.isEnabledByDefault] method which can be used to turn off issues
-     * by default. This is done rather than just having the severity as the only
-     * attribute on the issue such that an issue can be configured with an
-     * appropriate severity (such as [Severity.ERROR]) even when issues
-     * are disabled by default for example because they are experimental or not
-     * yet stable.
+     * Note that even though the normal way for an issue to be disabled
+     * is for the [Configuration] to return [Severity.IGNORE], there
+     * is a [isEnabledByDefault] method which can be used to turn
+     * off issues by default. This is done rather than just having
+     * the severity as the only attribute on the issue such that an
+     * issue can be configured with an appropriate severity (such as
+     * [Severity.ERROR]) even when issues are disabled by default
+     * for example because they are experimental or not yet stable.
      *
      * @return the severity of the issues found by this detector
      */
@@ -172,9 +172,24 @@ class Issue private constructor(
         return _platforms.contains(Platform.ANDROID)
     }
 
+    private var aliases: List<String>? = null
+
     /**
-     * A link (a URL string) to more information, or null
+     * Sets previous names for this issue; this is useful when you
+     * for various reasons have to rename or combine multiple issues
+     * into one; by declaring it here, lint can more gracefully handle
+     * existing incidents listed in baselines etc
      */
+    fun setAliases(aliases: List<String>?): Issue {
+        assert(this.aliases == null) // calling more than once is probably not intentional
+        this.aliases = aliases
+        return this
+    }
+
+    /** Returns any names for this issue; see [setAliases]. */
+    fun getAliases(): List<String>? = aliases
+
+    /** A link (a URL string) to more information, or null */
     val moreInfo: List<String>
         get() {
             when (moreInfoUrls) {
@@ -189,8 +204,8 @@ class Issue private constructor(
         }
 
     init {
-        assert(!briefDescription.isEmpty())
-        assert(!explanation.isEmpty())
+        assert(briefDescription.isNotEmpty())
+        assert(explanation.isNotEmpty())
     }
 
     /**
@@ -203,10 +218,10 @@ class Issue private constructor(
     }
 
     /**
-     * Describes the error found by this rule, e.g.
-     * "Buttons must define contentDescriptions". Preferably the explanation
-     * should also contain a description of how the problem should be solved.
-     * Additional info can be provided via [.getMoreInfo].
+     * Describes the error found by this rule, e.g. "Buttons must
+     * define contentDescriptions". Preferably the explanation should
+     * also contain a description of how the problem should be solved.
+     * Additional info can be provided via [moreInfo].
      *
      * @param format the format to write the format as
      * @return an explanation of the issue, never null, never empty

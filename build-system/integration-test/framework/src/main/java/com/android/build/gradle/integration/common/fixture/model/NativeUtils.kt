@@ -96,9 +96,9 @@ fun GradleTestProject.goldenBuildProducts() : String {
 fun GradleTestProject.goldenConfigurationFlags(abi: Abi) : String {
     val fetchResult =
             modelV2().fetchNativeModules(listOf("debug"), listOf(abi.tag))
-    val abi = recoverExistingCxxAbiModels().single { it.abi == abi }
+    val recoveredAbiModel = recoverExistingCxxAbiModels().single { it.abi == abi }
     val hashToKey = fetchResult.cxxFileVariantSegmentTranslator()
-    return hashToKey(abi.goldenConfigurationFlags())
+    return hashToKey(recoveredAbiModel.goldenConfigurationFlags())
 }
 
 private fun CxxAbiModel.goldenConfigurationFlags() : String {
@@ -188,14 +188,7 @@ private fun ModelBuilderV2.FetchResult<ModelContainerV2<NativeModule>>.hashEquiv
  * No new configures should be done.
  */
 fun GradleTestProject.recoverExistingCxxAbiModels(): List<CxxAbiModel> {
-    val abis = modelV2().fetchNativeModules(listOf(), listOf())
-            .container.infoMaps.values
-            .flatMap { it.values }
-            .flatMap { it.model.variants }
-            .flatMap { it.abis }
-    val modelFiles = abis
-            .map { abi -> abi.sourceFlagsFile.parentFile.resolve("build_model.json") }
-            .distinct()
+    val modelFiles = buildDir.parentFile.walk().filter { file -> file.name == "build_model.json" }.toList()
     val models = modelFiles.filter { it.isFile }
             .map { createCxxAbiModelFromJson(it.readText()) }
             .distinct()
@@ -279,7 +272,7 @@ fun ModelBuilderV2.FetchResult<ModelContainerV2<NativeModule>>.dump(map:(NativeM
 }
 
 /**
- * Add a C/C++ path normalizer to this [FetchResult]
+ * Add a C/C++ path normalizer to this [ModelBuilderV2.FetchResult]
  */
 fun ModelBuilderV2.FetchResult<ModelContainerV2<NativeModule>>.withCxxFileNormalizer()
         : ModelBuilderV2.FetchResult<ModelContainerV2<NativeModule>> {

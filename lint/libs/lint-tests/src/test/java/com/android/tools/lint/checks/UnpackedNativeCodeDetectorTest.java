@@ -34,12 +34,10 @@ public class UnpackedNativeCodeDetectorTest extends AbstractCheckTest {
     public void testRuntimeLoadLibrary() {
         String expected =
                 ""
-                        + "src/main/AndroidManifest.xml:4: Warning: Missing attribute "
-                        + "android:extractNativeLibs=\"false\" on the "
-                        + "<application> tag [UnpackedNativeCode]\n"
+                        + "src/main/AndroidManifest.xml:4: Warning: Missing attribute android:extractNativeLibs=\"false\" on the <application> tag [UnpackedNativeCode]\n"
                         + "    <application android:allowBackup=\"true\">\n"
-                        + "    ^\n"
-                        + "0 errors, 1 warnings\n";
+                        + "     ~~~~~~~~~~~\n"
+                        + "0 errors, 1 warnings";
 
         //noinspection all // Sample code
         lint().files(
@@ -92,8 +90,8 @@ public class UnpackedNativeCodeDetectorTest extends AbstractCheckTest {
                 ""
                         + "src/main/AndroidManifest.xml:4: Warning: Missing attribute android:extractNativeLibs=\"false\" on the <application> tag [UnpackedNativeCode]\n"
                         + "    <application>\n"
-                        + "    ^\n"
-                        + "0 errors, 1 warnings\n";
+                        + "     ~~~~~~~~~~~\n"
+                        + "0 errors, 1 warnings";
 
         //noinspection all // Sample code
         lint().files(

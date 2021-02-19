@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-7a3053deade7b6f5f705c71ef0e993849ff0dbca005f5d48a40ead9d808feea3
+ad86777617ad0b98cff81003ed5c1dffb295203eac43b7ccd9367e6d68df3155
 -------------------------------------------------------------------------
 com.android.build.api.artifact.FileNames extends java.lang.Enum
 com.android.build.api.artifact.FileNames.getFileName: java.lang.String ()
@@ -12,19 +12,34 @@ com.android.build.api.artifact.FileNames.valueOf: com.android.build.api.artifact
 com.android.build.api.artifact.FileNames.values: com.android.build.api.artifact.FileNames[] ()
 com.android.build.api.attributes.BuildTypeAttr implements org.gradle.api.Named
 com.android.build.api.attributes.BuildTypeAttr$Companion
-com.android.build.api.attributes.BuildTypeAttr$Companion.<init>: com.android.build.api.attributes.BuildTypeAttr$Companion (kotlin.jvm.internal.DefaultConstructorMarker)
 com.android.build.api.attributes.ProductFlavorAttr implements org.gradle.api.Named
 com.android.build.api.attributes.VariantAttr implements org.gradle.api.Named
 com.android.build.api.attributes.VariantAttr$Companion
-com.android.build.api.attributes.VariantAttr$Companion.<init>: com.android.build.api.attributes.VariantAttr$Companion (kotlin.jvm.internal.DefaultConstructorMarker)
+com.android.build.api.dsl.AndroidResources
 com.android.build.api.dsl.CommonExtension
+com.android.build.api.dsl.CommonExtension.androidResources: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.AndroidResources, kotlin.Unit>)
+com.android.build.api.dsl.CommonExtension.compileOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.CompileOptions, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.compileSdkAddon: void (java.lang.String, java.lang.String, int)
+com.android.build.api.dsl.CommonExtension.dataBinding: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.DataBinding, kotlin.Unit>)
+com.android.build.api.dsl.CommonExtension.getAndroidResources: com.android.build.api.dsl.AndroidResources ()
+com.android.build.api.dsl.CommonExtension.getCompileOptions: com.android.build.api.dsl.CompileOptions ()
 com.android.build.api.dsl.CommonExtension.getCompileSdk: java.lang.Integer ()
 com.android.build.api.dsl.CommonExtension.getCompileSdkPreview: java.lang.String ()
+com.android.build.api.dsl.CommonExtension.getDataBinding: com.android.build.api.dsl.DataBinding ()
+com.android.build.api.dsl.CommonExtension.getLint: com.android.build.api.dsl.Lint ()
 com.android.build.api.dsl.CommonExtension.getNamespace: java.lang.String ()
+com.android.build.api.dsl.CommonExtension.getTestCoverage: com.android.build.api.dsl.TestCoverage ()
+com.android.build.api.dsl.CommonExtension.lint: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.Lint, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.setCompileSdk: void (java.lang.Integer)
 com.android.build.api.dsl.CommonExtension.setCompileSdkPreview: void (java.lang.String)
 com.android.build.api.dsl.CommonExtension.setNamespace: void (java.lang.String)
+com.android.build.api.dsl.CommonExtension.testCoverage: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.TestCoverage, kotlin.Unit>)
+com.android.build.api.dsl.CompileOptions
+com.android.build.api.dsl.DataBinding
+com.android.build.api.dsl.Lint
+com.android.build.api.dsl.TestCoverage
+com.android.build.api.dsl.TestCoverage.getJacocoVersion: java.lang.String ()
+com.android.build.api.dsl.TestCoverage.setJacocoVersion: void (java.lang.String)
 com.android.build.api.transform.Context
 com.android.build.api.transform.Context.getLogging: org.gradle.api.logging.LoggingManager ()
 com.android.build.api.transform.Context.getPath: java.lang.String ()
