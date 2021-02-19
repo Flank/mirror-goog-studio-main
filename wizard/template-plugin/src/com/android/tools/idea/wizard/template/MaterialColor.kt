@@ -35,5 +35,5 @@ enum class MaterialColor(val colorName: String, val color: String) {
 
   fun xmlElement(): String = """<color name="$colorName">#$color</color>"""
 
-  fun kotlinVal(): String = """val ${underscoreToLowerCamelCase(colorName)} = Color(0x$color)"""
+  fun kotlinComposeVal(): String = """val ${underscoreToCamelCase(colorName)} = Color(0x$color)"""
 }
