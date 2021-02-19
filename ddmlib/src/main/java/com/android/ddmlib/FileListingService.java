@@ -97,7 +97,7 @@ public final class FileListingService {
             "([\\d\\s,]*)\\s+(\\d{4}-\\d\\d-\\d\\d)\\s+(\\d\\d:\\d\\d)\\s+(.*)$"); //$NON-NLS-1$
 
     public static final Pattern LS_LD_PATTERN = Pattern.compile(
-            "d[rwx-]{9}\\s+" + // We only use this to match directories!
+            "d[rwxs-]{9}\\s+" + // We only use this to match directories!
             "(\\d+\\s+)?" + // toolbox ls (<=M) didn't have nlink; toybox's POSIX ls does.
             "\\S+\\s+\\S+\\s+" +
             "(\\d+\\s+)?" + // toolbox ls (<=M) didn't have size; toybox's POSIX ls does.
