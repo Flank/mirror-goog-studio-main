@@ -1054,22 +1054,12 @@ class GradleModelMocker @JvmOverloads constructor(
             key.startsWith(
                 "android.compileOptions.sourceCompatibility JavaVersion.VERSION_"
             ) -> {
-                updateCompileOptions {
-                    it.copy(
-                        sourceCompatibility =
-                            key.substring(key.indexOf("VERSION_") + "VERSION_".length).replace('_', '.')
-                    )
-                }
+                updateSourceCompatibility(key.substring(key.indexOf("VERSION_") + "VERSION_".length).replace('_', '.'))
             }
             key.startsWith(
                 "android.compileOptions.targetCompatibility JavaVersion.VERSION_"
             ) -> {
-                updateCompileOptions {
-                    it.copy(
-                        targetCompatibility =
-                            key.substring(key.indexOf("VERSION_") + "VERSION_".length).replace('_', '.')
-                    )
-                }
+                updateTargetCompatibility(key.substring(key.indexOf("VERSION_") + "VERSION_".length).replace('_', '.'))
             }
             key.startsWith("buildscript.dependencies.classpath ") -> {
                 if (key.contains("'com.android.tools.build:gradle:")) {
@@ -1482,6 +1472,14 @@ class GradleModelMocker @JvmOverloads constructor(
             isMinifyEnabled = false,
             isZipAlignEnabled = false
         )
+    }
+
+    private fun updateSourceCompatibility(level: String) {
+        updateCompileOptions { it.copy(sourceCompatibility = level) }
+    }
+
+    private fun updateTargetCompatibility(level: String) {
+        updateCompileOptions { it.copy(targetCompatibility = level) }
     }
 
     private fun updateCompileOptions(f: (IdeJavaCompileOptionsImpl) -> IdeJavaCompileOptionsImpl) {
