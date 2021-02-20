@@ -83,8 +83,7 @@ class UseCompoundDrawableDetector : LayoutDetector() {
         val ISSUE = Issue.create(
             id = "UseCompoundDrawables",
             briefDescription = "Node can be replaced by a `TextView` with compound drawables",
-            explanation =
-                """
+            explanation = """
                 A `LinearLayout` which contains an `ImageView` and a `TextView` can be more \
                 efficiently handled as a compound drawable (a single TextView, using the \
                 `drawableTop`, `drawableLeft`, `drawableRight` and/or `drawableBottom` \

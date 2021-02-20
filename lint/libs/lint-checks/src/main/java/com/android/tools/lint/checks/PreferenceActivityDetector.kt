@@ -172,8 +172,7 @@ class PreferenceActivityDetector : Detector(), XmlScanner, SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "ExportedPreferenceActivity",
             briefDescription = "PreferenceActivity should not be exported",
-            explanation =
-                """
+            explanation = """
                 Fragment injection gives anyone who can send your `PreferenceActivity` an intent \
                 the ability to load any fragment, with any arguments, in your process.""",
             //noinspection LintImplUnexpectedDomain

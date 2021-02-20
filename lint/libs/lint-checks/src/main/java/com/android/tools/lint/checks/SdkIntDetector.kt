@@ -94,8 +94,7 @@ class SdkIntDetector : Detector(), SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "AnnotateVersionCheck",
             briefDescription = "Annotate SDK_INT checks",
-            explanation =
-                """
+            explanation = """
                 Methods which perform `SDK_INT` version checks (or field constants which reflect \
                 the result of a version check) in libraries should be annotated with \
                 `@ChecksSdkIntAtLeast`. This makes it possible for lint to correctly \

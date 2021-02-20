@@ -53,8 +53,7 @@ class RemoteViewDetector : Detector(), SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "RemoteViewLayout",
             briefDescription = "Unsupported View in RemoteView",
-            explanation =
-                """
+            explanation = """
             In a `RemoteView`, only some layouts and views are allowed.
             """,
             moreInfo = "https://developer.android.com/reference/android/widget/RemoteViews",

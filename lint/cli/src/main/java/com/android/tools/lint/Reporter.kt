@@ -32,7 +32,6 @@ import com.android.tools.lint.checks.CheckResultDetector
 import com.android.tools.lint.checks.ChromeOsDetector
 import com.android.tools.lint.checks.CleanupDetector
 import com.android.tools.lint.checks.CommentDetector
-import com.android.tools.lint.checks.MissingPrefixDetector
 import com.android.tools.lint.checks.DuplicateResourceDetector
 import com.android.tools.lint.checks.EllipsizeMaxLinesDetector
 import com.android.tools.lint.checks.FontDetector
@@ -47,6 +46,7 @@ import com.android.tools.lint.checks.LabelForDetector
 import com.android.tools.lint.checks.ManifestDetector
 import com.android.tools.lint.checks.MissingClassDetector
 import com.android.tools.lint.checks.MissingIdDetector
+import com.android.tools.lint.checks.MissingPrefixDetector
 import com.android.tools.lint.checks.NamespaceDetector
 import com.android.tools.lint.checks.NetworkSecurityConfigDetector
 import com.android.tools.lint.checks.ObjectAnimatorDetector

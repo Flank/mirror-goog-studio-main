@@ -110,8 +110,8 @@ class NamespaceDetector : ResourceXmlDetector() {
                         )
                     } else if (value == TOOLS_URI && (
                         prefix == XMLNS_ANDROID || prefix.endsWith(
-                            APP_PREFIX
-                        ) && prefix == XMLNS_PREFIX + APP_PREFIX
+                                APP_PREFIX
+                            ) && prefix == XMLNS_PREFIX + APP_PREFIX
                         )
                     ) {
                         context.report(
@@ -174,8 +174,8 @@ class NamespaceDetector : ResourceXmlDetector() {
                     }
                 } else if (prefix != XMLNS_ANDROID && (
                     prefix.endsWith(TOOLS_PREFIX) && prefix == XMLNS_PREFIX + TOOLS_PREFIX || prefix.endsWith(
-                        APP_PREFIX
-                    ) && prefix == XMLNS_PREFIX + APP_PREFIX
+                            APP_PREFIX
+                        ) && prefix == XMLNS_PREFIX + APP_PREFIX
                     )
                 ) {
                     val attribute = item as Attr
@@ -332,8 +332,7 @@ class NamespaceDetector : ResourceXmlDetector() {
         val TYPO = Issue.create(
             id = "NamespaceTypo",
             briefDescription = "Misspelled namespace declaration",
-            explanation =
-                """
+            explanation = """
                 Accidental misspellings in namespace declarations can lead to some very obscure \
                 error messages. This check looks for potential misspellings to help track these \
                 down.""",
@@ -348,8 +347,7 @@ class NamespaceDetector : ResourceXmlDetector() {
         val UNUSED = Issue.create(
             id = "UnusedNamespace",
             briefDescription = "Unused namespace",
-            explanation =
-                """
+            explanation = """
                 Unused namespace declarations take up space and require processing that is \
                 not necessary""",
             category = Category.PERFORMANCE,
@@ -363,8 +361,7 @@ class NamespaceDetector : ResourceXmlDetector() {
         val REDUNDANT = Issue.create(
             id = "RedundantNamespace",
             briefDescription = "Redundant namespace",
-            explanation =
-                """
+            explanation = """
                 In Android XML documents, only specify the namespace on the root/document \
                 element. Namespace declarations elsewhere in the document are typically \
                 accidental leftovers from copy/pasting XML from other files or documentation.""",
@@ -379,8 +376,7 @@ class NamespaceDetector : ResourceXmlDetector() {
         val CUSTOM_VIEW = Issue.create(
             id = "LibraryCustomView",
             briefDescription = "Custom views in libraries should use res-auto-namespace",
-            explanation =
-                """
+            explanation = """
                 When using a custom view with custom attributes in a library project, the \
                 layout must use the special namespace $AUTO_URI instead of a URI which includes \
                 the library project's own package. This will be used to automatically adjust \
@@ -397,8 +393,7 @@ class NamespaceDetector : ResourceXmlDetector() {
         val RES_AUTO = Issue.create(
             id = "ResAuto",
             briefDescription = "Hardcoded Package in Namespace",
-            explanation =
-                """
+            explanation = """
                 In Gradle projects, the actual package used in the final APK can vary; for \
                 example,you can add a `.debug` package suffix in one version and not the other. \
                 Therefore, you should **not** hardcode the application package in the resource; \

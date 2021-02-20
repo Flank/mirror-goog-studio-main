@@ -80,8 +80,7 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
             id = "NoHardKeywords",
             briefDescription = "No Hard Kotlin Keywords",
 
-            explanation =
-                """
+            explanation = """
             Do not use Kotlin’s hard keywords as the name of methods or fields.
             These require the use of backticks to escape when calling from Kotlin.
             Soft keywords, modifier keywords, and special identifiers are allowed.
@@ -104,8 +103,7 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
             id = "LambdaLast",
             briefDescription = "Lambda Parameters Last",
 
-            explanation =
-                """
+            explanation = """
             To improve calling this code from Kotlin,
             parameter types eligible for SAM conversion should be last.
             """,
@@ -122,8 +120,7 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
             id = "UnknownNullness",
             briefDescription = "Unknown nullness",
 
-            explanation =
-                """
+            explanation = """
             To improve referencing this code from Kotlin, consider adding
             explicit nullness information here with either `@NonNull` or `@Nullable`.
 
@@ -145,8 +142,7 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
             id = "KotlinPropertyAccess",
             briefDescription = "Kotlin Property Access",
 
-            explanation =
-                """
+            explanation = """
             For a method to be represented as a property in Kotlin, strict “bean”-style prefixing must be used.
 
             Accessor methods require a ‘get’ prefix or for boolean-returning methods an ‘is’ prefix can be used.

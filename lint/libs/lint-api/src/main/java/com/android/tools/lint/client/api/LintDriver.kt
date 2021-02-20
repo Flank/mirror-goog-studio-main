@@ -1697,11 +1697,11 @@ class LintDriver(
                     oldRootLength = sourceName.length
                 }
                 if (newRootLength != oldRootLength || !sourceName.regionMatches(
-                    0,
-                    newName,
-                    0,
-                    newRootLength
-                )
+                        0,
+                        newName,
+                        0,
+                        newRootLength
+                    )
                 ) {
                     sourceContents = null
                 }
@@ -3462,8 +3462,8 @@ class LintDriver(
 
             val throwableMessage = throwable.message
             if (throwableMessage != null && throwableMessage.startsWith(
-                "loader constraint violation: when resolving field \"QUALIFIER_SPLITTER\" the class loader"
-            )
+                    "loader constraint violation: when resolving field \"QUALIFIER_SPLITTER\" the class loader"
+                )
             ) {
                 // Rewrite error message
                 sb.setLength(0)
@@ -3672,12 +3672,12 @@ class LintDriver(
                 }
                 if (id.startsWith(STUDIO_ID_PREFIX) &&
                     id.regionMatches(
-                        STUDIO_ID_PREFIX.length,
-                        issueId,
-                        0,
-                        issueId.length,
-                        ignoreCase = true
-                    ) &&
+                            STUDIO_ID_PREFIX.length,
+                            issueId,
+                            0,
+                            issueId.length,
+                            ignoreCase = true
+                        ) &&
                     id.substring(STUDIO_ID_PREFIX.length).equals(issueId, ignoreCase = true)
                 ) {
                     return true

@@ -185,8 +185,8 @@ class CleanupDetector : Detector(), SourceCodeScanner {
                     evaluator.extendsClass(containingClass, CONTENT_RESOLVER_CLS, false) ||
                     evaluator.extendsClass(containingClass, CLASS_CONTENTPROVIDER, false) ||
                     evaluator.extendsClass(
-                        containingClass, CONTENT_PROVIDER_CLIENT_CLS, false
-                    )
+                            containingClass, CONTENT_PROVIDER_CLIENT_CLS, false
+                        )
                 ) {
                     // Other potential cursors-returning methods that should be tracked:
                     //    android.app.DownloadManager#query
@@ -372,8 +372,8 @@ class CleanupDetector : Detector(), SourceCodeScanner {
                                 } else if (resolved is PsiMethod &&
                                     operand is UCallExpression &&
                                     isCommittedInChainedCalls(
-                                        this.context, operand
-                                    )
+                                            this.context, operand
+                                        )
                                 ) {
                                     // Check that the target of the committed chains is the
                                     // right variable!
@@ -507,9 +507,9 @@ class CleanupDetector : Detector(), SourceCodeScanner {
                 val commitVisitor = object : FinishVisitor(context, boundVariable) {
                     override fun isCleanupCall(call: UCallExpression): Boolean {
                         if (isEditorApplyMethodCall(this.context, call) || isEditorCommitMethodCall(
-                            this.context,
-                            call
-                        )
+                                this.context,
+                                call
+                            )
                         ) {
                             val chain = call.getOutermostQualified().getQualifiedChain()
                             if (chain.isEmpty()) {
@@ -525,8 +525,8 @@ class CleanupDetector : Detector(), SourceCodeScanner {
                                 } else if (resolved is PsiMethod &&
                                     operand is UCallExpression &&
                                     isEditorCommittedInChainedCalls(
-                                        this.context, operand
-                                    )
+                                            this.context, operand
+                                        )
                                 ) {
                                     // Check that the target of the committed chains is the
                                     // right variable!
@@ -648,8 +648,8 @@ class CleanupDetector : Detector(), SourceCodeScanner {
                 val containingClass = method.containingClass
                 val evaluator = context.evaluator
                 if (evaluator.extendsClass(
-                    containingClass, ANDROID_CONTENT_SHARED_PREFERENCES_EDITOR, false
-                )
+                        containingClass, ANDROID_CONTENT_SHARED_PREFERENCES_EDITOR, false
+                    )
                 ) {
                     suggestApplyIfApplicable(context, call)
                     return true
@@ -744,10 +744,10 @@ class CleanupDetector : Detector(), SourceCodeScanner {
             val containingClass = method.containingClass
             val evaluator = context.evaluator
             if (evaluator.extendsClass(
-                containingClass,
-                FRAGMENT_MANAGER_CLS,
-                false
-            ) || evaluator.extendsClass(containingClass, FRAGMENT_MANAGER_V4_CLS, false)
+                    containingClass,
+                    FRAGMENT_MANAGER_CLS,
+                    false
+                ) || evaluator.extendsClass(containingClass, FRAGMENT_MANAGER_V4_CLS, false)
             ) {
                 return true
             }
@@ -942,8 +942,7 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         val RECYCLE_RESOURCE = Issue.create(
             id = "Recycle",
             briefDescription = "Missing `recycle()` calls",
-            explanation =
-                """
+            explanation = """
                 Many resources, such as TypedArrays, VelocityTrackers, etc., should be recycled \
                 (with a `recycle()` call) after use. This lint check looks for missing \
                 `recycle()` calls.""",
@@ -959,8 +958,7 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         val COMMIT_FRAGMENT = Issue.create(
             id = "CommitTransaction",
             briefDescription = "Missing `commit()` calls",
-            explanation =
-                """
+            explanation = """
                 After creating a `FragmentTransaction`, you typically need to commit it as well
                 """,
             category = Category.CORRECTNESS,
@@ -975,8 +973,7 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         val SHARED_PREF = Issue.create(
             id = "CommitPrefEdits",
             briefDescription = "Missing `commit()` on `SharedPreference` editor",
-            explanation =
-                """
+            explanation = """
                 After calling `edit()` on a `SharedPreference`, you must call `commit()` or \
                 `apply()` on the editor to save the results.""",
             category = Category.CORRECTNESS,
@@ -991,8 +988,7 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         val APPLY_SHARED_PREF = Issue.create(
             id = "ApplySharedPref",
             briefDescription = "Use `apply()` on `SharedPreferences`",
-            explanation =
-                """
+            explanation = """
                 Consider using `apply()` instead of `commit` on shared preferences. Whereas \
                 `commit` blocks and writes its data to persistent storage immediately, `apply` \
                 will handle it in the background.""",

@@ -171,8 +171,7 @@ class WrongThreadInterproceduralDetector : Detector(), SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "WrongThreadInterprocedural",
             briefDescription = "Wrong Thread (Interprocedural)",
-            explanation =
-                """
+            explanation = """
                 Searches for interprocedural call paths that violate thread annotations \
                 in the program. Tracks the flow of instantiated types and lambda \
                 expressions to increase accuracy across method boundaries.

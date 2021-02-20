@@ -110,8 +110,7 @@ class LeanbackWifiUsageDetector : Detector(), XmlScanner {
         val ISSUE = Issue.create(
             id = "LeanbackUsesWifi",
             briefDescription = "Using android.hardware.wifi on TV",
-            explanation =
-                """
+            explanation = """
                 WiFi is not required for Android TV and many devices connect to the internet via \
                 alternative methods e.g. Ethernet.
 

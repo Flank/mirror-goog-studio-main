@@ -19,7 +19,6 @@ package com.android.tools.lint.checks
 import com.android.tools.lint.client.api.TYPE_OBJECT
 import com.android.tools.lint.client.api.TYPE_STRING
 import com.android.tools.lint.detector.api.Category
-import com.android.tools.lint.detector.api.minSdkLessThan
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Incident
@@ -28,6 +27,7 @@ import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
+import com.android.tools.lint.detector.api.minSdkLessThan
 import com.intellij.psi.PsiMethod
 import org.jetbrains.uast.UCallExpression
 
@@ -41,8 +41,7 @@ class AddJavascriptInterfaceDetector : Detector(), SourceCodeScanner {
             id = "AddJavascriptInterface",
             //noinspection LintImplTextFormat
             briefDescription = "`addJavascriptInterface` Called",
-            explanation =
-                """
+            explanation = """
             For applications built for API levels below 17, `WebView#addJavascriptInterface` presents a \
             security hazard as JavaScript on the target web page has the ability to use reflection to access \
             the injected object's public fields and thus manipulate the host application in unintended ways.

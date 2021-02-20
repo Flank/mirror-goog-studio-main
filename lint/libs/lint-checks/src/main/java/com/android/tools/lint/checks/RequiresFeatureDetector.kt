@@ -282,9 +282,9 @@ class RequiresFeatureDetector : AbstractAnnotationDetector(), SourceCodeScanner 
                     }
                 } else if (current is UPolyadicExpression && (
                     isAndedWithConditional(
-                        current,
-                        prev
-                    ) || isOredWithConditional(current, prev)
+                            current,
+                            prev
+                        ) || isOredWithConditional(current, prev)
                     )
                 ) {
                     return true
@@ -334,8 +334,8 @@ class RequiresFeatureDetector : AbstractAnnotationDetector(), SourceCodeScanner 
                             val lambdaInvocation = match.get()
                             val newApiLookup = NameLookup(call.valueArguments)
                             if (lambdaInvocation != null && isWithinNameCheckConditional(
-                                evaluator, lambdaInvocation, newApiLookup
-                            )
+                                    evaluator, lambdaInvocation, newApiLookup
+                                )
                             ) {
                                 return true
                             }
@@ -595,8 +595,7 @@ class RequiresFeatureDetector : AbstractAnnotationDetector(), SourceCodeScanner 
         val REQUIRES_FEATURE = Issue.create(
             id = "RequiresFeature",
             briefDescription = "Requires Feature",
-            explanation =
-                """
+            explanation = """
                 Some APIs require optional features to be present. This check makes sure that \
                 calls to these APIs are surrounded by a check which enforces this.""",
             category = Category.CORRECTNESS,

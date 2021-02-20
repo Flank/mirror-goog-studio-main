@@ -55,8 +55,7 @@ class PrivateApiDetector : Detector(), SourceCodeScanner {
         val PRIVATE_API = Issue.create(
             id = "PrivateApi",
             briefDescription = "Using Private APIs",
-            explanation =
-                """
+            explanation = """
             Using reflection to access hidden/private Android APIs is not safe; it will often not work on \
             devices from other vendors, and it may suddenly stop working (if the API is removed) or crash \
             spectacularly (if the API behavior changes, since there are no guarantees for compatibility).
@@ -76,8 +75,7 @@ class PrivateApiDetector : Detector(), SourceCodeScanner {
         val DISCOURAGED_PRIVATE_API = Issue.create(
             id = "DiscouragedPrivateApi",
             briefDescription = "Using Discouraged Private API",
-            explanation =
-                """
+            explanation = """
             Usage of restricted non-SDK interface may throw an exception at runtime. Accessing \
             non-SDK methods or fields through reflection has a high likelihood to break your app \
             between versions, and is being restricted to facilitate future app compatibility.
@@ -97,8 +95,7 @@ class PrivateApiDetector : Detector(), SourceCodeScanner {
         val SOON_BLOCKED_PRIVATE_API = Issue.create(
             id = "SoonBlockedPrivateApi",
             briefDescription = "Using Soon-to-Be Blocked Private API",
-            explanation =
-                """
+            explanation = """
             Usage of restricted non-SDK interface will throw an exception at runtime. Accessing \
             non-SDK methods or fields through reflection has a high likelihood to break your app \
             between versions, and is being restricted to facilitate future app compatibility.
@@ -118,8 +115,7 @@ class PrivateApiDetector : Detector(), SourceCodeScanner {
         val BLOCKED_PRIVATE_API = Issue.create(
             id = "BlockedPrivateApi",
             briefDescription = "Using Blocked Private API",
-            explanation =
-                """
+            explanation = """
             Usage of restricted non-SDK interface is forbidden for this targetSDK. Accessing \
             non-SDK methods or fields through reflection has a high likelihood to break your app \
             between versions, and is being restricted to facilitate future app compatibility.
@@ -352,8 +348,8 @@ class PrivateApiDetector : Detector(), SourceCodeScanner {
                         if (arguments.isNotEmpty()) {
                             return ConstantEvaluator
                                 .evaluateString(null, arguments[0], false)?.let {
-                                psiFactory!!.createTypeFromText(it, null)
-                            }
+                                    psiFactory!!.createTypeFromText(it, null)
+                                }
                         }
                     } else if (GET_CLASS == name) {
                         return TypeEvaluator.evaluate(element.receiver)
@@ -403,8 +399,8 @@ class PrivateApiDetector : Detector(), SourceCodeScanner {
             Restriction.MAYBE_MAX_O ->
                 if (targetSdk <= AndroidVersion.VersionCodes.O ||
                     VersionChecks.isWithinVersionCheckConditional(
-                        client, evaluator, call, AndroidVersion.VersionCodes.O, false
-                    )
+                            client, evaluator, call, AndroidVersion.VersionCodes.O, false
+                        )
                 ) {
                     warning()
                 } else {
@@ -413,8 +409,8 @@ class PrivateApiDetector : Detector(), SourceCodeScanner {
             Restriction.MAYBE_MAX_P ->
                 if (targetSdk <= AndroidVersion.VersionCodes.P ||
                     VersionChecks.isWithinVersionCheckConditional(
-                        client, evaluator, call, AndroidVersion.VersionCodes.P, false
-                    )
+                            client, evaluator, call, AndroidVersion.VersionCodes.P, false
+                        )
                 ) {
                     warning()
                 } else {

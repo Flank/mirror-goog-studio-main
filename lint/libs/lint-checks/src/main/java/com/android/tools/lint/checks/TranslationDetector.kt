@@ -623,10 +623,10 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
         // Check to make sure it's not suppressed with the older flag, EXTRA,
         // which this issue used to be reported under.
         if (context.driver.isSuppressed(
-            context,
-            EXTRA,
-            locationNode
-        )
+                context,
+                EXTRA,
+                locationNode
+            )
         ) {
             return
         }
@@ -820,8 +820,7 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
         val MISSING = Issue.create(
             id = "MissingTranslation",
             briefDescription = "Incomplete translation",
-            explanation =
-                """
+            explanation = """
                 If an application has more than one locale, then all the strings declared \
                 in one language should also be translated in all other languages.
 
@@ -847,8 +846,7 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
         val EXTRA = Issue.create(
             id = "ExtraTranslation",
             briefDescription = "Extra translation",
-            explanation =
-                """
+            explanation = """
                 If a string appears in a specific language translation file, but there is \
                 no corresponding string in the default locale, then this string is probably \
                 unused. (It's technically possible that your application is only intended \
@@ -867,8 +865,7 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
         val MISSING_BASE = Issue.create(
             id = "MissingDefaultResource",
             briefDescription = "Missing Default",
-            explanation =
-                """
+            explanation = """
                 If a resource is only defined in folders with qualifiers like `-land` or \
                 `-en`, and there is no default declaration in the base folder (`layout` or \
                 `values` etc), then the app will crash if that resource is accessed on a \
@@ -902,8 +899,7 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
         val TRANSLATED_UNTRANSLATABLE = Issue.create(
             id = "Untranslatable",
             briefDescription = "Translated Untranslatable",
-            explanation =
-                """
+            explanation = """
                 Strings can be marked with `translatable=false` to indicate that they are not \
                 intended to be translated, but are present in the resource file for other \
                 purposes (for example for non-display strings that should vary by some other \

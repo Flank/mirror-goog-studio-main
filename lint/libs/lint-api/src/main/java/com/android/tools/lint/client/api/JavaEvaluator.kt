@@ -1002,8 +1002,8 @@ class JavaEvaluator {
         for (annotation in annotations) {
             val signature = annotation.qualifiedName
             if (signature == null || signature.startsWith("java.") && !relevantAnnotations!!.contains(
-                signature
-            )
+                    signature
+                )
             ) {
                 // @Override, @SuppressWarnings etc. Ignore
                 continue

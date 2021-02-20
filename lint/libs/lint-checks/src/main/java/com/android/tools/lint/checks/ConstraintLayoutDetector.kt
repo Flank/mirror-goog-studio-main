@@ -183,8 +183,7 @@ class ConstraintLayoutDetector : LayoutDetector() {
             Issue.create(
                 id = "MissingConstraints",
                 briefDescription = "Missing Constraints in ConstraintLayout",
-                explanation =
-                    """
+                explanation = """
                     The layout editor allows you to place widgets anywhere on the canvas, \
                     and it records the current position with designtime attributes (such as \
                     `layout_editor_absoluteX`). These attributes are **not** applied at \

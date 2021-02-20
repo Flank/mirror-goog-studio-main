@@ -195,8 +195,7 @@ class CanvasSizeDetector : Detector(), SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "CanvasSize",
             briefDescription = "Wrong Canvas Size",
-            explanation =
-                """
+            explanation = """
                 In a custom view's draw implementation, you should normally call `getWidth` \
                 and `getHeight` on the custom view itself, not on the `canvas` instance.
 

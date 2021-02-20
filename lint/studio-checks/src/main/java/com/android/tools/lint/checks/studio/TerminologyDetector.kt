@@ -56,8 +56,7 @@ class TerminologyDetector : Detector(), SourceCodeScanner, OtherFileScanner {
             Issue.create(
                 id = "WrongTerminology",
                 briefDescription = "Code uses deprecated terminology",
-                explanation =
-                    """
+                explanation = """
                     Our codebase follows the recommendations in \
                     https://developers.google.com/style/word-list. This lint check \
                     flags accidental usages in names, strings and comments of terminology that \

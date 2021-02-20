@@ -98,9 +98,9 @@ class ObjectAnimatorDetector : Detector(), SourceCodeScanner, XmlScanner {
             !(
                 method.name == "ofPropertyValuesHolder" &&
                     evaluator.isMemberInClass(
-                        method,
-                        "android.animation.ValueAnimator"
-                    )
+                            method,
+                            "android.animation.ValueAnimator"
+                        )
                 )
         ) {
             return
@@ -446,9 +446,9 @@ class ObjectAnimatorDetector : Detector(), SourceCodeScanner, XmlScanner {
             val resolved = callExpression.resolve()
             if (resolved != null &&
                 context.evaluator.isMemberInClass(
-                    resolved,
-                    "android.animation.PropertyValuesHolder"
-                )
+                        resolved,
+                        "android.animation.PropertyValuesHolder"
+                    )
             ) {
                 return true
             }
@@ -647,8 +647,7 @@ class ObjectAnimatorDetector : Detector(), SourceCodeScanner, XmlScanner {
             Issue.create(
                 id = "AnimatorKeep",
                 briefDescription = "Missing @Keep for Animated Properties",
-                explanation =
-                    """
+                explanation = """
                     When you use property animators, properties can be accessed via reflection. \
                     Those methods should be annotated with @Keep to ensure that during release \
                     builds, the methods are not potentially treated as unused and removed, or \
@@ -670,8 +669,7 @@ class ObjectAnimatorDetector : Detector(), SourceCodeScanner, XmlScanner {
             Issue.create(
                 id = "ObjectAnimatorBinding",
                 briefDescription = "Incorrect ObjectAnimator Property",
-                explanation =
-                    """
+                explanation = """
                     This check cross references properties referenced by String from \
                     `ObjectAnimator` and `PropertyValuesHolder` method calls and ensures that \
                     the corresponding setter methods exist and have the right signatures.

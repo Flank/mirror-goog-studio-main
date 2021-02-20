@@ -317,8 +317,7 @@ class LeakDetector : Detector(), SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "StaticFieldLeak",
             briefDescription = "Static Field Leaks",
-            explanation =
-                """
+            explanation = """
                 A static field will leak contexts.
 
                 Non-static inner classes have an implicit reference to their outer class. \

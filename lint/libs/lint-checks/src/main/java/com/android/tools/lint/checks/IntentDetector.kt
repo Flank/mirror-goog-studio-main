@@ -47,8 +47,7 @@ class IntentDetector : Detector(), SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "IntentReset",
             briefDescription = "Suspicious mix of `setType` and `setData`",
-            explanation =
-                """
+            explanation = """
                 Intent provides the following APIs: `setData(Uri)` and `setType(String)`. \
                 Unfortunately, setting one clears the other. If you want to set both, you \
                 should call `setDataAndType(Uri, String)` instead.""",

@@ -636,8 +636,7 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
         val WRONG_VIEW_CAST = Issue.create(
             id = "WrongViewCast",
             briefDescription = "Mismatched view type",
-            explanation =
-                """
+            explanation = """
                 Keeps track of the view types associated with ids and if it finds a usage \
                 of the id in the Java code it ensures that it is treated as the same type.""",
             category = Category.CORRECTNESS,
@@ -656,8 +655,7 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
         val ADD_CAST = Issue.create(
             id = "FindViewByIdCast",
             briefDescription = "Add Explicit Cast",
-            explanation =
-                """
+            explanation = """
                 In Android O, the `findViewById` signature switched to using generics, which \
                 means that most of the time you can leave out explicit casts and just assign \
                 the result of the `findViewById` call to variables of specific view classes.

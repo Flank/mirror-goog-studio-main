@@ -66,8 +66,7 @@ class MissingPrefixDetector : LayoutDetector() {
         val MISSING_NAMESPACE = Issue.create(
             id = "MissingPrefix",
             briefDescription = "Missing Android XML namespace",
-            explanation =
-                """
+            explanation = """
             Most Android views have attributes in the Android namespace. When referencing these attributes \
             you **must** include the namespace prefix, or your attribute will be interpreted by `aapt` as \
             just a custom attribute.

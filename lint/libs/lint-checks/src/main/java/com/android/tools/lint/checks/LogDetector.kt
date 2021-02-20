@@ -19,7 +19,6 @@ package com.android.tools.lint.checks
 import com.android.tools.lint.client.api.TYPE_STRING
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.ConstantEvaluator
-import com.android.tools.lint.detector.api.minSdkLessThan
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Incident
@@ -29,6 +28,7 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.UastLintUtils
+import com.android.tools.lint.detector.api.minSdkLessThan
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiVariable
@@ -65,8 +65,7 @@ class LogDetector : Detector(), SourceCodeScanner {
         val CONDITIONAL = Issue.create(
             id = "LogConditional",
             briefDescription = "Unconditional Logging Calls",
-            explanation =
-                """
+            explanation = """
             The `BuildConfig` class provides a constant, `DEBUG`, which indicates \
             whether the code is being built in release mode or in debug mode. In release mode, you typically \
             want to strip out all the logging calls. Since the compiler will automatically remove all code \
@@ -87,8 +86,7 @@ class LogDetector : Detector(), SourceCodeScanner {
         val WRONG_TAG = Issue.create(
             id = "LogTagMismatch",
             briefDescription = "Mismatched Log Tags",
-            explanation =
-                """
+            explanation = """
             When guarding a `Log.v(tag, ...)` call with `Log.isLoggable(tag)`, the tag passed to both calls \
             should be the same. Similarly, the level passed in to `Log.isLoggable` should typically match \
             the type of `Log` call, e.g. if checking level `Log.DEBUG`, the corresponding `Log` call should \
@@ -105,8 +103,7 @@ class LogDetector : Detector(), SourceCodeScanner {
         val LONG_TAG = Issue.create(
             id = "LongLogTag",
             briefDescription = "Too Long Log Tags",
-            explanation =
-                """
+            explanation = """
             Log tags are only allowed to be at most 23 tag characters long.""",
             category = Category.CORRECTNESS,
             priority = 5,
@@ -307,15 +304,15 @@ class LogDetector : Detector(), SourceCodeScanner {
 
         if (logTag != null) {
             if (!areLiteralsEqual(isLoggableTag, logTag) && !UastLintUtils.areIdentifiersEqual(
-                isLoggableTag,
-                logTag
-            )
+                    isLoggableTag,
+                    logTag
+                )
             ) {
                 val resolved1 = isLoggableTag.tryResolveNamed()
                 val resolved2 = logTag.tryResolveNamed()
                 if ((resolved1 == null || resolved2 == null || resolved1 != resolved2) && context.isEnabled(
-                    WRONG_TAG
-                )
+                        WRONG_TAG
+                    )
                 ) {
                     val location = context.getLocation(logTag)
                     val alternate = context.getLocation(isLoggableTag)

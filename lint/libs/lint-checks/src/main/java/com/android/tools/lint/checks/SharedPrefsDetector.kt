@@ -45,8 +45,7 @@ class SharedPrefsDetector : Detector(), SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "MutatingSharedPrefs",
             briefDescription = "Mutating an Immutable SharedPrefs Set",
-            explanation =
-                """
+            explanation = """
                 As stated in the docs for `SharedPreferences.getStringSet`, you must \
                 not modify the set returned by `getStringSet`:
 

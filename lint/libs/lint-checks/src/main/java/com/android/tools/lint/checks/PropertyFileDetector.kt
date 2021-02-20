@@ -194,8 +194,7 @@ class PropertyFileDetector : Detector() {
         val ESCAPE = Issue.create(
             id = "PropertyEscape",
             briefDescription = "Incorrect property escapes",
-            explanation =
-                """
+            explanation = """
                 All backslashes and colons in .property files must be escaped with a \
                 backslash (\). This means that when writing a Windows path, you must \
                 escape the file separators, so the path \My\Files should be written as \
@@ -211,8 +210,7 @@ class PropertyFileDetector : Detector() {
         val HTTP = Issue.create(
             id = "UsingHttp",
             briefDescription = "Using HTTP instead of HTTPS",
-            explanation =
-                """
+            explanation = """
                 The Gradle Wrapper is available both via HTTP and HTTPS. HTTPS is more \
                 secure since it protects against man-in-the-middle attacks etc. Older \
                 projects created in Android Studio used HTTP but we now default to HTTPS \
@@ -228,8 +226,7 @@ class PropertyFileDetector : Detector() {
         val PROXY_PASSWORD = Issue.create(
             id = "ProxyPassword",
             briefDescription = "Proxy Password in Cleartext",
-            explanation =
-                """
+            explanation = """
                 Storing proxy server passwords in clear text is dangerous if this file is \
                 shared via version control. If this is deliberate or this is a truly private \
                 project, suppress this warning.""",

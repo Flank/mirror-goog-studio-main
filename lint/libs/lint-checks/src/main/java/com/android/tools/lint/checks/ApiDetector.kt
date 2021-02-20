@@ -525,9 +525,9 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             if (curr.nodeType == Node.ELEMENT_NODE && TAG_ITEM == curr.nodeName) {
                 val e = curr as Element
                 if (e.hasAttributeNS(ANDROID_URI, ATTR_WIDTH) || e.hasAttributeNS(
-                    ANDROID_URI,
-                    ATTR_HEIGHT
-                )
+                        ANDROID_URI,
+                        ATTR_HEIGHT
+                    )
                 ) {
                     val attributeApiLevel =
                         23 // Using width and height on layer-list children requires M
@@ -1023,8 +1023,8 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             ) {
                 val methodModifierList = node.modifierList
                 if (methodModifierList.hasExplicitModifier(PsiModifier.DEFAULT) || methodModifierList.hasExplicitModifier(
-                    PsiModifier.STATIC
-                )
+                        PsiModifier.STATIC
+                    )
                 ) {
                     val api = 24 // minSdk for default methods
                     val minSdk = getMinSdk(context)
@@ -1479,9 +1479,9 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                             val anonymousBaseType = cls.baseClassType
                             val anonymousBase = anonymousBaseType.resolve()
                             if (anonymousBase != null && anonymousBase.isInheritor(
-                                containingClass,
-                                true
-                            )
+                                    containingClass,
+                                    true
+                                )
                             ) {
                                 cls = anonymousBase
                                 found = true
@@ -1489,9 +1489,9 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                                 val surroundingBaseType =
                                     PsiTreeUtil.getParentOfType(cls, PsiClass::class.java, true)
                                 if (surroundingBaseType != null && surroundingBaseType.isInheritor(
-                                    containingClass,
-                                    true
-                                )
+                                        containingClass,
+                                        true
+                                    )
                                 ) {
                                     cls = surroundingBaseType
                                     found = true
@@ -1503,9 +1503,9 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                         }
                         val expressionOwner = evaluator.getQualifiedName(cls)
                         if (expressionOwner == null || equivalentName(
-                            expressionOwner,
-                            "java/lang/Object"
-                        )
+                                expressionOwner,
+                                "java/lang/Object"
+                            )
                         ) {
                             break
                         }
@@ -2047,10 +2047,10 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                         val fix = fix().data(KEY_REQUIRES_API, api, KEY_REQUIRE_CLASS, true)
                         val clause = typeReference.uastParent as? UCatchClause
                         if (clause != null && context.driver.isSuppressed(
-                            context,
-                            UNSUPPORTED,
-                            clause
-                        )
+                                context,
+                                UNSUPPORTED,
+                                clause
+                            )
                         ) {
                             return
                         }
@@ -2343,8 +2343,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
         val UNSUPPORTED = Issue.create(
             id = "NewApi",
             briefDescription = "Calling new methods on older versions",
-            explanation =
-                """
+            explanation = """
                 This check scans through all the Android API calls in the application and \
                 warns about any calls that are not available on **all** versions targeted by \
                 this application (according to its minimum SDK attribute in the manifest).
@@ -2388,8 +2387,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
         val INLINED = Issue.create(
             id = "InlinedApi",
             briefDescription = "Using inlined constants on older versions",
-            explanation =
-                """
+            explanation = """
                 This check scans through all the Android API field references in the \
                 application and flags certain constants, such as static final integers and \
                 Strings, which were introduced in later versions. These will actually be \
@@ -2423,8 +2421,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
         val OVERRIDE = Issue.create(
             id = "Override",
             briefDescription = "Method conflicts with new inherited method",
-            explanation =
-                """
+            explanation = """
                 Suppose you are building against Android API 8, and you've subclassed \
                 Activity. In your subclass you add a new method called `isDestroyed`(). \
                 At some later point, a method of the same name and signature is added to \
@@ -2454,8 +2451,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
         val UNUSED = Issue.create(
             id = "UnusedAttribute",
             briefDescription = "Attribute unused on older versions",
-            explanation =
-                """
+            explanation = """
                 This check finds attributes set in XML files that were introduced in a version \
                 newer than the oldest version targeted by your application (with the \
                 `minSdkVersion` attribute).
@@ -2487,8 +2483,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
         val OBSOLETE_SDK = Issue.create(
             id = "ObsoleteSdkInt",
             briefDescription = "Obsolete SDK_INT Version Check",
-            explanation =
-                """
+            explanation = """
                 This check flags version checks that are not necessary, because the \
                 `minSdkVersion` (or surrounding known API level) is already at least as high \
                 as the version checked for.
@@ -2781,16 +2776,16 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 return true
             }
             if (equivalentName(
-                owner,
-                "android/view/ViewGroup\$LayoutParams"
-            ) && name == "MATCH_PARENT"
+                    owner,
+                    "android/view/ViewGroup\$LayoutParams"
+                ) && name == "MATCH_PARENT"
             ) {
                 return true
             }
             if (equivalentName(
-                owner,
-                "android/widget/AbsListView"
-            ) && (
+                    owner,
+                    "android/widget/AbsListView"
+                ) && (
                     name == "CHOICE_MODE_NONE" ||
                         name == "CHOICE_MODE_MULTIPLE" ||
                         name == "CHOICE_MODE_SINGLE"
@@ -2808,9 +2803,9 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             // be backwards compatible (by using the same lower bits for START as LEFT and
             // for END as RIGHT)
             if (equivalentName(
-                owner,
-                "android/view/Gravity"
-            ) && ("START" == name || "END" == name)
+                    owner,
+                    "android/view/Gravity"
+                ) && ("START" == name || "END" == name)
             ) {
                 return true
             }

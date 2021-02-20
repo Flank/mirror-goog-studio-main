@@ -31,8 +31,10 @@ import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Severity
 import com.android.utils.SdkUtils
+import com.android.utils.iterator
 import com.google.common.annotations.Beta
 import com.google.common.base.Splitter
+import org.w3c.dom.Element
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
 import java.io.BufferedWriter
@@ -49,8 +51,6 @@ import java.util.Locale
 import java.util.regex.Pattern
 import java.util.regex.PatternSyntaxException
 import kotlin.math.max
-import com.android.utils.iterator
-import org.w3c.dom.Element
 
 /**
  * Default implementation of a [Configuration] which reads and writes configuration data into
@@ -1017,10 +1017,10 @@ open class LintXmlConfiguration protected constructor(
         if (client.contains(',')) {
             for (c in client.splitToSequence(",")) {
                 if (isApplicableClient(
-                    c.trim(),
-                    checkEquals = checkEquals,
-                    checkOther = checkOther
-                )
+                        c.trim(),
+                        checkEquals = checkEquals,
+                        checkOther = checkOther
+                    )
                 ) {
                     return true
                 }

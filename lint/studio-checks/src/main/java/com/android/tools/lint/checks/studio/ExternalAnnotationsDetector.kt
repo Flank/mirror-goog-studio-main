@@ -43,8 +43,7 @@ class ExternalAnnotationsDetector : Detector(), SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "ExternalAnnotations",
             briefDescription = "External annotations not considered",
-            explanation =
-                """
+            explanation = """
                 Lint supports XML files with "external annotations", which means any detectors that \
                 recognize certain annotations should get them from `JavaEvaluator.getAllAnnotations` \
                 and not by calling `uAnnotations` directly on UAST or PSI elements.

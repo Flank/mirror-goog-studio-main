@@ -42,8 +42,7 @@ class SwingWorkerDetector : Detector(), SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "SwingWorker",
             briefDescription = "Using SwingWorker",
-            explanation =
-                """
+            explanation = """
                 Do not use `javax.swing.SwingWorker`; use
                 `com.intellij.util.concurrency.SwingWorker` instead.
 

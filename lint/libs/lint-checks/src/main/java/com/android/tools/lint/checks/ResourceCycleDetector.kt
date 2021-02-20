@@ -647,8 +647,7 @@ class ResourceCycleDetector : ResourceXmlDetector() {
         val CYCLE = Issue.create(
             id = "ResourceCycle",
             briefDescription = "Cycle in resource definitions",
-            explanation =
-                """
+            explanation = """
                 There should be no cycles in resource definitions as this can lead to \
                 runtime exceptions.""",
             category = Category.CORRECTNESS,
@@ -662,8 +661,7 @@ class ResourceCycleDetector : ResourceXmlDetector() {
         val CRASH = Issue.create(
             id = "AaptCrash",
             briefDescription = "Potential AAPT crash",
-            explanation =
-                """
+            explanation = """
                 Defining a style which sets `android:id` to a dynamically generated id can \
                 cause many versions of `aapt`, the resource packaging tool, to crash. \
                 To work around this, declare the id explicitly with \

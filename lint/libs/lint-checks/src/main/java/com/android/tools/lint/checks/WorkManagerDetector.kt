@@ -50,8 +50,7 @@ class WorkManagerDetector : Detector(), SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "EnqueueWork",
             briefDescription = "WorkManager Enqueue",
-            explanation =
-                """
+            explanation = """
                 `WorkContinuations` cannot be enqueued automatically.  You must call `enqueue()` \
                 on a `WorkContinuation` to have it and its parent continuations enqueued inside \
                 `WorkManager`.

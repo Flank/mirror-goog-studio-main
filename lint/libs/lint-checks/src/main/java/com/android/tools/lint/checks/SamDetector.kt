@@ -58,8 +58,7 @@ class SamDetector : Detector(), SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "ImplicitSamInstance",
             briefDescription = "Implicit SAM Instances",
-            explanation =
-                """
+            explanation = """
                 Kotlin's support for SAM (single accessor method) interfaces lets you pass \
                 a lambda to the interface. This will create a new instance on the fly even \
                 though there is no explicit constructor call. If you pass one of these \

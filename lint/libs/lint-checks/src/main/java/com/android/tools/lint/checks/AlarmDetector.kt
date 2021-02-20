@@ -44,8 +44,7 @@ class AlarmDetector : Detector(), SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "ShortAlarm",
             briefDescription = "Short or Frequent Alarm",
-            explanation =
-                """
+            explanation = """
             Frequent alarms are bad for battery life. As of API 22, the `AlarmManager` will override \
             near-future and high-frequency alarm requests, delaying the alarm at least 5 seconds into the \
             future and ensuring that the repeat interval is at least 60 seconds.

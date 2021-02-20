@@ -54,8 +54,7 @@ class BatteryDetector : ResourceXmlDetector(), SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "BatteryLife",
             briefDescription = "Battery Life Issues",
-            explanation =
-                """
+            explanation = """
             This issue flags code that either
             * negatively affects battery life, or
             * uses APIs that have recently changed behavior to prevent background tasks from \

@@ -60,8 +60,7 @@ class BottomAppBarDetector : LayoutDetector() {
         val ISSUE = Issue.create(
             id = "BottomAppBar",
             briefDescription = "BottomAppBar Problems",
-            explanation =
-                """
+            explanation = """
             The `BottomAppBar` widget must be placed within a `CoordinatorLayout`.
             """,
             category = Category.CORRECTNESS,

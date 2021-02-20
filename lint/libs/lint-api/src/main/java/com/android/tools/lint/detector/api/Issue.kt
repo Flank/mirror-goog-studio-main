@@ -16,12 +16,12 @@
 
 package com.android.tools.lint.detector.api
 
+import com.android.tools.lint.client.api.CompositeIssueRegistry
 import com.android.tools.lint.client.api.Configuration
 import com.android.tools.lint.client.api.IssueRegistry
+import com.android.tools.lint.client.api.Vendor
 import com.android.tools.lint.detector.api.TextFormat.RAW
 import com.google.common.annotations.Beta
-import com.android.tools.lint.client.api.CompositeIssueRegistry
-import com.android.tools.lint.client.api.Vendor
 import java.util.ArrayList
 import java.util.EnumSet
 

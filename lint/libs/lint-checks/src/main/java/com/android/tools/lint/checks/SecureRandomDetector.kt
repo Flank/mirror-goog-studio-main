@@ -107,8 +107,7 @@ class SecureRandomDetector : Detector(), SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "SecureRandom",
             briefDescription = "Using a fixed seed with `SecureRandom`",
-            explanation =
-                """
+            explanation = """
                 Specifying a fixed seed will cause the instance to return a predictable \
                 sequence of numbers. This may be useful for testing but it is not appropriate \
                 for secure use.

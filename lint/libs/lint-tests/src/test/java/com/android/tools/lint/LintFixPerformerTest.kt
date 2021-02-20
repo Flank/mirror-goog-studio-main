@@ -84,7 +84,7 @@ class LintFixPerformerTest : TestCase() {
         check(
             file, source, fix,
             expected =
-                """
+            """
             First line.
             2nd line.
             Third line.""",
@@ -112,12 +112,12 @@ class LintFixPerformerTest : TestCase() {
         check(
             file, source, fix1, fix2, fix3,
             expected =
-                """
+            """
             1st line.
             2nd line.
             3rd line.""",
             expectedOutput =
-                """
+            """
             Applied 3 edits across 1 files
             1: Replace with 3rd
             1: Replace with 2nd
@@ -144,7 +144,7 @@ class LintFixPerformerTest : TestCase() {
         check(
             file, source, fix,
             expected =
-                """
+            """
             <root xmlns:android="http://schemas.android.com/apk/res/android">
                 <element1 attribute1="value1" android:new_attribute="new value"  />
                 <element2 attribute1="value1" attribute2="value2"/>
@@ -171,7 +171,7 @@ class LintFixPerformerTest : TestCase() {
             file, source, fix,
             expected =
 
-                """
+            """
             <root xmlns:android="http://schemas.android.com/apk/res/android">
                 <element1 android:layout_width="wrap_content" android:layout_height="wrap_content" android:width="foo" />
             </root>
@@ -196,7 +196,7 @@ class LintFixPerformerTest : TestCase() {
         check(
             file, source, fix,
             expected =
-                """
+            """
             <root xmlns:android="http://schemas.android.com/apk/res/android">
                 <element1 android:id="@+id/my_id" android:layout_width="wrap_content" android:width="foo" />
             </root>
@@ -221,7 +221,7 @@ class LintFixPerformerTest : TestCase() {
         check(
             file, source, fix,
             expected =
-                """
+            """
             <root xmlns:android="http://schemas.android.com/apk/res/android">
                 <element1 android:layout_width="wrap_content" android:width="foo" android:z-order="5"  />
             </root>
@@ -247,7 +247,7 @@ class LintFixPerformerTest : TestCase() {
         check(
             file, source, fix,
             expected =
-                """
+            """
             <root>
                 <element1 attribute1="value1" />
                 <element2 attribute1="value1" />
@@ -278,7 +278,7 @@ class LintFixPerformerTest : TestCase() {
         check(
             file, source, fix,
             expected =
-                """
+            """
             <root xmlns:android="http://schemas.android.com/apk/res/android">
                 <element1  android:new_attribute="new value"  />
                 <element2 attribute1="value1" attribute2="value2"/>

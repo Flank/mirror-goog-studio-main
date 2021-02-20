@@ -435,8 +435,7 @@ class ThreadDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             id = "WrongThread",
             briefDescription = "Wrong Thread",
 
-            explanation =
-                """
+            explanation = """
                 Ensures that a method which expects to be called on a specific thread, is \
                 actually called from that thread. For example, calls on methods in widgets \
                 should always be made on the UI thread.

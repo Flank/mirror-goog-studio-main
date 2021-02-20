@@ -49,8 +49,7 @@ class RegexpPathDetector : Detector(), SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "RegexPath",
             briefDescription = "Using Path as Regular Expression",
-            explanation =
-                """
+            explanation = """
                 Be careful when passing in a path into a method which expects \
                 a regular expression. Your code may work on Linux or OSX, but on \
                 Windows the file separator is a back slash, which in a regular \

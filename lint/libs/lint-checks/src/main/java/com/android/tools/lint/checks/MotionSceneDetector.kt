@@ -271,8 +271,7 @@ class MotionSceneDetector : ResourceXmlDetector() {
         val MOTION_SCENE_FILE_VALIDATION_ERROR = Issue.create(
             id = "MotionSceneFileValidationError",
             briefDescription = "Validation errors in `MotionScene` files",
-            explanation =
-                """
+            explanation = """
                 A motion scene file specifies the animations used in a `MotionLayout`. \
                 This check performs various serious correctness checks in a motion scene file.
                 """,

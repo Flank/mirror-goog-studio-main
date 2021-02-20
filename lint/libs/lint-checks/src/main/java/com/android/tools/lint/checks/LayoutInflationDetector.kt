@@ -187,8 +187,7 @@ class LayoutInflationDetector : LayoutDetector(), SourceCodeScanner {
             Issue.create(
                 id = "InflateParams",
                 briefDescription = "Layout Inflation without a Parent",
-                explanation =
-                    """
+                explanation = """
                     When inflating a layout, avoid passing in null as the parent view, since \
                     otherwise any layout parameters on the root of the inflated layout will be \
                     ignored.""",
@@ -301,8 +300,8 @@ class LayoutInflationDetector : LayoutDetector(), SourceCodeScanner {
                             val prefix = parser.getAttributePrefix(i)
                             if (prefix != null && !prefix.isEmpty() &&
                                 SdkConstants.ANDROID_URI == parser.getNamespace(
-                                    prefix
-                                )
+                                        prefix
+                                    )
                             ) {
                                 return true
                             }

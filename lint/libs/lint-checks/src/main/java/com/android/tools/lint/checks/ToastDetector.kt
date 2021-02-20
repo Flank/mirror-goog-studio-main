@@ -144,8 +144,7 @@ class ToastDetector : Detector(), SourceCodeScanner {
             Issue.create(
                 id = "ShowToast",
                 briefDescription = "Toast created but not shown",
-                explanation =
-                    """
+                explanation = """
                     `Toast.makeText()` creates a `Toast` but does **not** show it. You must \
                     call `show()` on the resulting object to actually make the `Toast` \
                     appear.""",

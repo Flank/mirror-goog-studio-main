@@ -69,8 +69,7 @@ class StorageDetector : Detector(), SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "UsableSpace",
             briefDescription = "Using getUsableSpace()",
-            explanation =
-                """
+            explanation = """
                 When you need to allocate disk space for large files, consider using the new \
                 `allocateBytes(FileDescriptor, long)` API, which will automatically clear \
                 cached files belonging to other apps (as needed) to meet your request.

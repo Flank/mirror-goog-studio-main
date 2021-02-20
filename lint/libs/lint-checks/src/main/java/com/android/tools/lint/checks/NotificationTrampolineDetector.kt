@@ -64,8 +64,7 @@ class NotificationTrampolineDetector : Detector(), SourceCodeScanner {
         val TRAMPOLINE = Issue.create(
             id = "NotificationTrampoline",
             briefDescription = "Notification Trampolines",
-            explanation =
-                """
+            explanation = """
                 Activities should not be launched indirectly from a notification via an \
                 intermediate `BroadcastReceiver` or `Service`. This can lead to significant lags \
                 in some scenarios, and is forbidden if `targetSdkVersion` is set to the API level \
@@ -85,8 +84,7 @@ class NotificationTrampolineDetector : Detector(), SourceCodeScanner {
         val ACTIVITY = Issue.create(
             id = "LaunchActivityFromNotification",
             briefDescription = "Notification Launches Services or BroadcastReceivers",
-            explanation =
-                """
+            explanation = """
                 Notifications should only launch activities -- that's what users expect (and \
                 has been the guidance in both the Android SDK and Material Design documentation \
                 for a while).

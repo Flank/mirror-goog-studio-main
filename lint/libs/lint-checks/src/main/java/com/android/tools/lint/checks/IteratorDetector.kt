@@ -17,7 +17,6 @@
 package com.android.tools.lint.checks
 
 import com.android.tools.lint.detector.api.Category
-import com.android.tools.lint.detector.api.minSdkLessThan
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Incident
@@ -28,6 +27,7 @@ import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.TypeEvaluator
 import com.android.tools.lint.detector.api.UastLintUtils
+import com.android.tools.lint.detector.api.minSdkLessThan
 import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiVariable
@@ -51,8 +51,7 @@ class IteratorDetector : Detector(), SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "BrokenIterator",
             briefDescription = "Broken Iterator",
-            explanation =
-                """
+            explanation = """
                 **For LinkedHashMap:**
 
                 The spliterators returned by `LinkedHashMap` in Android Nougat (API levels 24 \

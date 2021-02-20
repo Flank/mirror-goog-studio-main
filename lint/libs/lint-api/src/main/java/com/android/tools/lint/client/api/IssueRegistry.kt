@@ -429,8 +429,7 @@ protected constructor() {
         val PARSER_ERROR = Issue.create(
             id = "ParserError",
             briefDescription = "Parser Errors",
-            explanation =
-                """
+            explanation = """
                 Lint will ignore any files that contain fatal parsing errors. These may \
                 contain other errors, or contain code which affects issues in other files.""",
             category = Category.LINT,
@@ -447,8 +446,7 @@ protected constructor() {
         val LINT_ERROR = Issue.create(
             id = "LintError",
             briefDescription = "Lint Failure",
-            explanation =
-                """
+            explanation = """
                 This issue type represents a problem running lint itself. Examples include \
                 failure to find bytecode for source files (which means certain detectors \
                 could not be run), parsing errors in lint configuration files, etc.
@@ -472,8 +470,7 @@ protected constructor() {
         val LINT_WARNING = Issue.create(
             id = "LintWarning",
             briefDescription = "Lint Failure",
-            explanation =
-                """
+            explanation = """
                 This issue type represents a problem running lint itself. Examples include \
                 unsupported tags in configuration files, etc.
 
@@ -493,8 +490,7 @@ protected constructor() {
         val UNKNOWN_ISSUE_ID = Issue.create(
             id = "UnknownIssueId",
             briefDescription = "Unknown Lint Issue Id",
-            explanation =
-                """
+            explanation = """
                 Lint will report this issue if it is configured with an issue id it does \
                 not recognize in for example Gradle files or `lint.xml` configuration files.
                 """,
@@ -513,8 +509,7 @@ protected constructor() {
         val CANNOT_ENABLE_HIDDEN = Issue.create(
             id = "CannotEnableHidden",
             briefDescription = "Issue Already Disabled",
-            explanation =
-                """
+            explanation = """
                 Any issues that are specifically disabled in a library cannot be re-enabled \
                 in a dependent project. To fix this you need to also enable the issue in \
                 the library project.
@@ -538,8 +533,7 @@ protected constructor() {
         val BASELINE = Issue.create(
             id = "LintBaseline",
             briefDescription = "Baseline Issues",
-            explanation =
-                """
+            explanation = """
                 Lint can be configured with a "baseline"; a set of current issues found \
                 in a codebase, which future runs of lint will silently ignore. Only new \
                 issues not found in the baseline are reported.
@@ -571,8 +565,7 @@ protected constructor() {
         val OBSOLETE_LINT_CHECK = Issue.create(
             id = "ObsoleteLintCustomCheck",
             briefDescription = "Obsolete custom lint check",
-            explanation =
-                """
+            explanation = """
                 Lint can be extended with "custom checks": additional checks implemented \
                 by developers and libraries to for example enforce specific API usages \
                 required by a library or a company coding style guideline.

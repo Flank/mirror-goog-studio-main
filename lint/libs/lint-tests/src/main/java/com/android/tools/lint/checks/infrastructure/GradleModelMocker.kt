@@ -74,7 +74,6 @@ import java.util.jar.Attributes
 import java.util.jar.JarOutputStream
 import java.util.jar.Manifest
 import java.util.regex.Pattern
-import java.util.stream.Stream
 import java.util.zip.ZipEntry
 
 /**
@@ -275,7 +274,6 @@ class GradleModelMocker @JvmOverloads constructor(
             return moduleModel.variants.single { it.name == defaultVariantName }.mainArtifact.generatedSourceFolders
         }
 
-
     fun syncFlagsTo(to: LintCliFlags) {
         ensureInitialized()
         to.suppressedIds.clear()
@@ -335,23 +333,23 @@ class GradleModelMocker @JvmOverloads constructor(
             val productFlavorsInConfigOrder = productFlavors.sortedBy { this.productFlavors.indexOf(it) }
             val sourceProviders: List<TestLintModelSourceProvider> =
                 listOfNotNull(defaultConfig.mainSourceProvider) +
-                  productFlavorsInConfigOrder.mapNotNull { it.mainSourceProvider } +
-                  listOfNotNull(
-                      if (productFlavorsInConfigOrder.size > 1) createSourceProvider(
-                          projectDir,
-                          buildVariantName(productFlavors)
-                      ) else null
-                  ) +
-                  listOfNotNull(buildType.mainSourceProvider) +
-                  listOfNotNull(
-                      if (productFlavorsInConfigOrder.isNotEmpty())
-                          createSourceProvider(projectDir, variantName, isDebugOnly = buildType.isDebuggable)
-                      else null
-                  )
+                    productFlavorsInConfigOrder.mapNotNull { it.mainSourceProvider } +
+                    listOfNotNull(
+                        if (productFlavorsInConfigOrder.size > 1) createSourceProvider(
+                            projectDir,
+                            buildVariantName(productFlavors)
+                        ) else null
+                    ) +
+                    listOfNotNull(buildType.mainSourceProvider) +
+                    listOfNotNull(
+                        if (productFlavorsInConfigOrder.isNotEmpty())
+                            createSourceProvider(projectDir, variantName, isDebugOnly = buildType.isDebuggable)
+                        else null
+                    )
             val testSourceProviders =
                 listOfNotNull(defaultConfig.instrumentationTestSourceProvider, defaultConfig.unitTestSourceProvider) +
-                        productFlavorsInConfigOrder.flatMap { listOfNotNull(it.instrumentationTestSourceProvider, it.unitTestSourceProvider) } +
-                        listOfNotNull(buildType.instrumentationTestSourceProvider, buildType.unitTestSourceProvider)
+                    productFlavorsInConfigOrder.flatMap { listOfNotNull(it.instrumentationTestSourceProvider, it.unitTestSourceProvider) } +
+                    listOfNotNull(buildType.instrumentationTestSourceProvider, buildType.unitTestSourceProvider)
             val generated = File(projectDir, "generated")
             val mergedFlavorsAndBuildType = merge(defaultConfig, productFlavors, buildType)
             variants.add(
@@ -526,7 +524,8 @@ class GradleModelMocker @JvmOverloads constructor(
                         dependencies = emptyList(),
                         this
                     ) to it.provided
-                }).flatten()
+                }
+            ).flatten()
 
         return TestLintModelDependencies(
             DefaultLintModelDependencyGraph(deps.map { it.first }, this),
@@ -839,56 +838,56 @@ class GradleModelMocker @JvmOverloads constructor(
         }
 
         if (when (line) {
-                "apply plugin: 'com.android.library'",
-                "apply plugin: 'android-library'" ->
-                    updateProjectType(
+            "apply plugin: 'com.android.library'",
+            "apply plugin: 'android-library'" ->
+                updateProjectType(
                         LintModelModuleType.LIBRARY,
                         hasJavaOrJavaLibraryPlugin = false,
                         isLibrary = true
                     )
-                "apply plugin: 'com.android.application'",
-                "apply plugin: 'android'" ->
-                    updateProjectType(
+            "apply plugin: 'com.android.application'",
+            "apply plugin: 'android'" ->
+                updateProjectType(
                         LintModelModuleType.APP,
                         hasJavaOrJavaLibraryPlugin = false,
                         isLibrary = false
                     )
-                "apply plugin: 'com.android.feature'" ->
-                    updateProjectType(
+            "apply plugin: 'com.android.feature'" ->
+                updateProjectType(
                         LintModelModuleType.FEATURE,
                         hasJavaOrJavaLibraryPlugin = false,
                         isLibrary = false
                     )
-                "apply plugin: 'com.android.instantapp'" ->
-                    updateProjectType(
+            "apply plugin: 'com.android.instantapp'" ->
+                updateProjectType(
                         LintModelModuleType.INSTANT_APP,
                         hasJavaOrJavaLibraryPlugin = false,
                         isLibrary = false
                     )
-                "apply plugin: 'java'" ->
-                    updateProjectType(
+            "apply plugin: 'java'" ->
+                updateProjectType(
                         LintModelModuleType.JAVA_LIBRARY,
                         hasJavaOrJavaLibraryPlugin = true,
                         isLibrary = false
                     )
-                "apply plugin: 'java-library'" ->
-                    updateProjectType(
+            "apply plugin: 'java-library'" ->
+                updateProjectType(
                         LintModelModuleType.LIBRARY,
                         hasJavaOrJavaLibraryPlugin = true,
                         isLibrary = true
                     )
-                else -> when {
-                    context == "buildscript.repositories" || context == "allprojects.repositories" -> {
-                        // Plugins not modeled in the builder model
-                        true
-                    }
-                    line.startsWith("apply plugin: ") -> {
-                        // Some other plugin not relevant to the builder-model
-                        true
-                    }
-                    else -> false
+            else -> when {
+                context == "buildscript.repositories" || context == "allprojects.repositories" -> {
+                    // Plugins not modeled in the builder model
+                    true
                 }
+                line.startsWith("apply plugin: ") -> {
+                    // Some other plugin not relevant to the builder-model
+                    true
+                }
+                else -> false
             }
+        }
         ) return
 
         var key = if (context.isEmpty()) line else "$context.$line"
@@ -1051,15 +1050,16 @@ class GradleModelMocker @JvmOverloads constructor(
                     val manifestPlaceholders = it.manifestPlaceholders.toMutableMap()
                     updateManifestPlaceholders(manifestPlaceholders)
                     it.copy(manifestPlaceholders = manifestPlaceholders)
-
                 }
             }
             key.startsWith("android.flavorDimensions ") -> {
                 val value = key.substring("android.flavorDimensions ".length)
-                flavorDimensions = (flavorDimensions.toSet() +
+                flavorDimensions = (
+                    flavorDimensions.toSet() +
                         Splitter.on(',').omitEmptyStrings()
                             .trimResults().split(value)
-                            .map { getUnquotedValue(it) }).toList()
+                            .map { getUnquotedValue(it) }
+                    ).toList()
             }
             line.startsWith("dimension ") && key.startsWith("android.productFlavors.") -> {
                 val name = key.substring("android.productFlavors.".length, key.indexOf(".dimension"))
@@ -1104,7 +1104,6 @@ class GradleModelMocker @JvmOverloads constructor(
                         val resValues = it.resValues.toMutableMap()
                         updateResValues(resValues)
                         it.copy(resValues = resValues)
-
                     }
                 } else updateFlavorFromContext(context, defaultToDefault = true) {
                     val resValues = it.resValues.toMutableMap()
@@ -1434,7 +1433,7 @@ class GradleModelMocker @JvmOverloads constructor(
             updateProductFlavor(name, true) { it }
         }
         if ("android.buildTypes" == context && buildTypes
-                .none { buildType -> buildType.name == name }
+            .none { buildType -> buildType.name == name }
         ) {
             // Defining new build types
             updateBuildType(name, true) { it }
@@ -1499,7 +1498,7 @@ class GradleModelMocker @JvmOverloads constructor(
         if (wellKnownLibrary != null) {
             val version = declaration
                 .substring(wellKnownLibrary.groupAndName.length + 1)
-                .substringBefore("@") //@jar/aar is not part of the version and should not be applied to other dependencies.
+                .substringBefore("@") // @jar/aar is not part of the version and should not be applied to other dependencies.
             addTransitiveLibrary(
                 wellKnownLibrary.dependencies.replace("VERSION", version),
                 artifact
@@ -1567,11 +1566,11 @@ class GradleModelMocker @JvmOverloads constructor(
         val dir = File(
             projectDir,
             "build/intermediates/exploded-aar/" +
-                    coordinate.groupId +
-                    "/" +
-                    coordinate.artifactId +
-                    "/" +
-                    coordinate.revision
+                coordinate.groupId +
+                "/" +
+                coordinate.artifactId +
+                "/" +
+                coordinate.revision
         )
         if (jar == null) {
             jar = dir.resolve(File("jars/" + SdkConstants.FN_CLASSES_JAR))
@@ -1615,18 +1614,18 @@ class GradleModelMocker @JvmOverloads constructor(
             jar = File(
                 projectDir,
                 "caches/modules-2/files-2.1/" +
-                        coordinate.groupId +
-                        "/" +
-                        coordinate.artifactId +
-                        "/" +
-                        coordinate.revision +
-                        // Usually some hex string here, but keep same to keep test
-                        // behavior stable
-                        "9c6ef172e8de35fd8d4d8783e4821e57cdef7445/" +
-                        coordinate.artifactId +
-                        "-" +
-                        coordinate.revision +
-                        SdkConstants.DOT_JAR
+                    coordinate.groupId +
+                    "/" +
+                    coordinate.artifactId +
+                    "/" +
+                    coordinate.revision +
+                    // Usually some hex string here, but keep same to keep test
+                    // behavior stable
+                    "9c6ef172e8de35fd8d4d8783e4821e57cdef7445/" +
+                    coordinate.artifactId +
+                    "-" +
+                    coordinate.revision +
+                    SdkConstants.DOT_JAR
             )
             if (!jar.exists()) {
                 createEmptyJar(jar)
@@ -2000,8 +1999,8 @@ class GradleModelMocker @JvmOverloads constructor(
             } else if (declaration.startsWith("com.google.android.wearable:wearable:")) {
                 return true
             } else if (declaration.startsWith(
-                "com.android.support.constraint:constraint-layout-solver:"
-            )
+                    "com.android.support.constraint:constraint-layout-solver:"
+                )
             ) {
                 return true
             } else if (declaration.startsWith("junit:junit:")) {
@@ -2186,7 +2185,7 @@ private data class TestLintModelModule(
     override fun neverShrinking(): Boolean = neverShrinking
 }
 
-private object TestLintModelModuleLoader : LintModelModuleLoader {}
+private object TestLintModelModuleLoader : LintModelModuleLoader
 
 private data class TestLintModelLintOptions(
     override val disable: Set<String> = emptySet(),

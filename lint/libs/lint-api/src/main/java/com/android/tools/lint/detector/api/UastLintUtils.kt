@@ -92,8 +92,8 @@ class UastLintUtils {
             val cls = containingFile.javaClass
             val name = cls.name
             if (name.startsWith(
-                "org.jetbrains.kotlin.asJava.classes.KtLightClassForSourceDeclaration"
-            )
+                    "org.jetbrains.kotlin.asJava.classes.KtLightClassForSourceDeclaration"
+                )
             ) {
                 try {
                     val declaredField = cls.superclass.getDeclaredField("ktFile")

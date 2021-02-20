@@ -51,8 +51,7 @@ class StringCasingDetector : ResourceXmlDetector() {
         val DUPLICATE_STRINGS = Issue.create(
             id = "DuplicateStrings",
             briefDescription = "Duplicate Strings",
-            explanation =
-                """
+            explanation = """
                 Duplicate strings can make applications larger unnecessarily.
 
                 This lint check looks for duplicate strings, including differences for strings \

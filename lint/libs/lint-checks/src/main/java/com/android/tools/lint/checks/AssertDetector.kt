@@ -59,8 +59,7 @@ class AssertDetector : Detector(), SourceCodeScanner {
         val EXPENSIVE = Issue.create(
             id = "ExpensiveAssertion",
             briefDescription = "Expensive Assertions",
-            explanation =
-                """
+            explanation = """
                 In Kotlin, assertions are not handled the same way as from the Java programming \
                 language. In particular, they're just implemented as a library call, and inside \
                 the library call the error is only thrown if assertions are enabled.

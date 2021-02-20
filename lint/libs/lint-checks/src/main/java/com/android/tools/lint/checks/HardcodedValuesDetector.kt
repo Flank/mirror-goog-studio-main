@@ -128,8 +128,7 @@ class HardcodedValuesDetector : LayoutDetector() {
         val ISSUE = Issue.create(
             id = "HardcodedText",
             briefDescription = "Hardcoded text",
-            explanation =
-                """
+            explanation = """
                 Hardcoding text attributes directly in layout files is bad for several reasons:
 
                 * When creating configuration variations (for example for landscape or \

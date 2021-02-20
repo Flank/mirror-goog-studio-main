@@ -441,9 +441,9 @@ class LintDetectorDetector : Detector(), UastScanner {
                             @Suppress("ControlFlowWithEmptyBody")
                             if (issue is JavaUField &&
                                 evaluator.inheritsFrom(
-                                    issue.getContainingUClass(),
-                                    CLASS_DETECTOR
-                                )
+                                        issue.getContainingUClass(),
+                                        CLASS_DETECTOR
+                                    )
                             ) {
                                 // Don't need to do anything; we'll see this registration
                                 // as part of our regular detector visit
@@ -1006,9 +1006,9 @@ class LintDetectorDetector : Detector(), UastScanner {
             if (type is PsiClassType) {
                 val psiClass = type.resolve()
                 if (psiClass != null && context.evaluator.inheritsFrom(
-                    psiClass,
-                    CLASS_PSI_ELEMENT, strict = false
-                )
+                        psiClass,
+                        CLASS_PSI_ELEMENT, strict = false
+                    )
                 ) {
                     if (arg1?.isNullLiteral() == true) { // comparisons with null are ok
                         return
@@ -1061,8 +1061,7 @@ class LintDetectorDetector : Detector(), UastScanner {
             Issue.create(
                 id = "LintImplIdFormat",
                 briefDescription = "Lint ID Format",
-                explanation =
-                    """
+                explanation = """
                     This check looks at lint issue id registrations and makes sure the id \
                     follows the expected conventions: capitalized, camel case, no spaces, \
                     and not too long.
@@ -1096,8 +1095,7 @@ class LintDetectorDetector : Detector(), UastScanner {
             Issue.create(
                 id = "LintImplBadUrl",
                 briefDescription = "Bad More Info Link",
-                explanation =
-                    """
+                explanation = """
                    More Info URLs let a link check point to additional resources about \
                    the problem and solution it's checking for.
 
@@ -1118,8 +1116,7 @@ class LintDetectorDetector : Detector(), UastScanner {
             Issue.create(
                 id = "LintImplUnexpectedDomain",
                 briefDescription = "Unexpected URL Domain",
-                explanation =
-                    """
+                explanation = """
                     This checks flags URLs to domains that have not been explicitly \
                     allowed for use as a documentation source.
                 """,
@@ -1139,8 +1136,7 @@ class LintDetectorDetector : Detector(), UastScanner {
             Issue.create(
                 id = "LintImplTextFormat",
                 briefDescription = "Lint Text Format",
-                explanation =
-                    """
+                explanation = """
                     Lint supports various markdown like formatting directives in all of its \
                     strings (issue explanations, reported error messages, etc).
 
@@ -1168,8 +1164,7 @@ class LintDetectorDetector : Detector(), UastScanner {
             Issue.create(
                 id = "LintImplUseExistingConstants",
                 briefDescription = "Use Existing Lint Constants",
-                explanation =
-                    """
+                explanation = """
                     This check looks for opportunities to reuse predefined lint constants.
                 """,
                 category = CUSTOM_LINT_CHECKS,
@@ -1185,8 +1180,7 @@ class LintDetectorDetector : Detector(), UastScanner {
             Issue.create(
                 id = "LintImplUseUast",
                 briefDescription = "Using Wrong UAST Method",
-                explanation =
-                    """
+                explanation = """
                     UAST is a library that sits on top of PSI, and in many cases PSI is \
                     part of the UAST API; for example, UResolvable#resolve returns a \
                     PsiElement.
@@ -1215,8 +1209,7 @@ class LintDetectorDetector : Detector(), UastScanner {
             Issue.create(
                 id = "LintImplPsiEquals",
                 briefDescription = "Comparing PsiElements with Equals",
-                explanation =
-                    """
+                explanation = """
                     You should never compare two PSI elements for equality with `equals`;
                     use `isEquivalentTo(PsiElement)` instead.
                     """,
@@ -1236,8 +1229,7 @@ class LintDetectorDetector : Detector(), UastScanner {
             Issue.create(
                 id = "LintImplUseKotlin",
                 briefDescription = "Non-Kotlin Lint Detectors",
-                explanation =
-                    """
+                explanation = """
                     New lint checks should be written in Kotlin; the Lint API is written in \
                     Kotlin and uses a number of language features that makes it beneficial \
                     to also write the lint checks in Kotlin. Examples include many extension \
@@ -1258,8 +1250,7 @@ class LintDetectorDetector : Detector(), UastScanner {
             Issue.create(
                 id = "MissingVendor",
                 briefDescription = "IssueRegistry not providing a vendor",
-                explanation =
-                    """
+                explanation = """
                     Recent versions of lint includes a `vendor` property (or from Java, \
                     `getVendor` and `setVendor` methods) on `IssueRegistry`.
 
@@ -1289,8 +1280,7 @@ class LintDetectorDetector : Detector(), UastScanner {
             Issue.create(
                 id = "LintImplTrimIndent",
                 briefDescription = "Calling `.trimIndent` on Lint Strings",
-                explanation =
-                    """
+                explanation = """
                     Lint implicitly calls `.trimIndent()` (lazily, at the last minute) in \
                     a number of places:
                     * Issue explanations
@@ -1322,8 +1312,7 @@ class LintDetectorDetector : Detector(), UastScanner {
                 id = "LintImplDollarEscapes",
                 briefDescription = "Using Dollar Escapes",
                 //noinspection LintImplDollarEscapes
-                explanation =
-                    """
+                explanation = """
                     Instead of putting ${"$"}{"$"} in your Kotlin raw string literals \
                     you can simply use ＄. This looks like the dollar sign but is instead \
                     the full width dollar sign, U+FF04. And this character does not need \

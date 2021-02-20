@@ -37,7 +37,6 @@ import com.android.resources.ResourceFolderType
 import com.android.resources.ResourceFolderType.LAYOUT
 import com.android.resources.ResourceFolderType.XML
 import com.android.tools.lint.detector.api.Category
-import com.android.tools.lint.detector.api.minSdkAtLeast
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.Issue.Companion.create
@@ -50,6 +49,7 @@ import com.android.tools.lint.detector.api.Scope.Companion.RESOURCE_FILE_SCOPE
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.XmlContext
+import com.android.tools.lint.detector.api.minSdkAtLeast
 import com.intellij.psi.PsiMethod
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UClass
@@ -278,8 +278,7 @@ class DeprecationDetector : ResourceXmlDetector(), SourceCodeScanner {
         val ISSUE = create(
             id = "Deprecated",
             briefDescription = "Using deprecated resources",
-            explanation =
-                """
+            explanation = """
                 Deprecated views, attributes and so on are deprecated because there \
                 is a better way to do something. Do it that new way. You've been warned.
                 """,

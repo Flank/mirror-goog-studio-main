@@ -825,8 +825,8 @@ protected constructor(
 
                 if (hints.isWholeWord && (
                     Character.isLetter(prevChar) || Character.isLetter(
-                        nextChar
-                    )
+                            nextChar
+                        )
                     )
                 ) {
                     return false
@@ -834,8 +834,8 @@ protected constructor(
 
                 if (hints.isJavaSymbol) {
                     if (Character.isJavaIdentifierPart(prevChar) || Character.isJavaIdentifierPart(
-                        nextChar
-                    )
+                            nextChar
+                        )
                     ) {
                         return false
                     }

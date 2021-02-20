@@ -44,8 +44,7 @@ class ExportedReceiverDetector : Detector(), XmlScanner {
         val ISSUE = Issue.create(
             id = "IntentFilterExportedReceiver",
             briefDescription = "Unspecified `android:exported` in manifest",
-            explanation =
-                """
+            explanation = """
                 Apps targeting Android 12 and higher are required to specify an explicit value \
                 for `android:exported` when the corresponding component has an intent filter defined. \
                 Otherwise, installation will fail.

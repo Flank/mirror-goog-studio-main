@@ -296,8 +296,8 @@ class HtmlReporter(
                             // Only display up to 3 inlined views to keep big reports from
                             // getting massive in rendering cost
                             if (shownSnippetsCount < 3 && !SdkUtils.isBitmapFile(
-                                l.file
-                            )
+                                    l.file
+                                )
                             ) {
                                 val s = client.readFile(l.file)
                                 if (s.isNotEmpty()) {

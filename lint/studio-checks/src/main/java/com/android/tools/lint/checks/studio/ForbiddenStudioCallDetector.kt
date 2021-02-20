@@ -43,8 +43,7 @@ class ForbiddenStudioCallDetector : Detector(), SourceCodeScanner {
         val INTERN = Issue.create(
             id = "NoInterning",
             briefDescription = "Do not intern strings",
-            explanation =
-                """
+            explanation = """
                 Strings should not be interned; you are better off managing \
                 your own string cache.
                 """,

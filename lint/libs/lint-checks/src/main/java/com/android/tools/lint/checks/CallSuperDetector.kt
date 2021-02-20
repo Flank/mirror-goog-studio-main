@@ -53,8 +53,7 @@ class CallSuperDetector : Detector(), SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "MissingSuperCall",
             briefDescription = "Missing Super Call",
-            explanation =
-                """
+            explanation = """
             Some methods, such as `View#onDetachedFromWindow`, require that you also call the \
             super implementation as part of your method.
             """,
@@ -97,9 +96,9 @@ class CallSuperDetector : Detector(), SourceCodeScanner {
                 // is updated to supply it once @CallSuper is available in
                 // the support library
                 if (!evaluator.isMemberInSubClassOf(
-                    method,
-                    "android.support.wearable.watchface.WatchFaceService.Engine", false
-                )
+                        method,
+                        "android.support.wearable.watchface.WatchFaceService.Engine", false
+                    )
                 ) {
                     return null
                 }

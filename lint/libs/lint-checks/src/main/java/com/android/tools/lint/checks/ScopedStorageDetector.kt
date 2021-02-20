@@ -138,8 +138,7 @@ class ScopedStorageDetector : Detector(), XmlScanner {
         val ISSUE = Issue.create(
             id = "ScopedStorage",
             briefDescription = "Affected by scoped storage",
-            explanation =
-                """
+            explanation = """
                 Scoped storage is enforced on Android 10+ (or Android 11+ if using \
                 `requestLegacyExternalStorage`). In particular, `WRITE_EXTERNAL_STORAGE` \
                 will no longer provide write access to all files; it will provide the \

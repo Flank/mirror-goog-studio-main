@@ -622,9 +622,9 @@ open class Context(
                 val prefixStart = index - STUDIO_ID_PREFIX.length
                 if (index >= STUDIO_ID_PREFIX.length &&
                     line.regionMatches(
-                        prefixStart, STUDIO_ID_PREFIX,
-                        0, STUDIO_ID_PREFIX.length
-                    ) && (prefixStart == 0 || isWordDelimiter(line[prefixStart - 1]))
+                            prefixStart, STUDIO_ID_PREFIX,
+                            0, STUDIO_ID_PREFIX.length
+                        ) && (prefixStart == 0 || isWordDelimiter(line[prefixStart - 1]))
                 ) {
                     return true
                 }
@@ -657,9 +657,9 @@ open class Context(
                 }
 
                 if (c == first && CharSequences.regionMatches(
-                    contents, offset, prefix, 0,
-                    prefix.length
-                )
+                        contents, offset, prefix, 0,
+                        prefix.length
+                    )
                 ) {
                     return offset
                 }

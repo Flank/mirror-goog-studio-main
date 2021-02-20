@@ -61,8 +61,7 @@ class SyntheticAccessorDetector : Detector(), SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "SyntheticAccessor",
             briefDescription = "Synthetic Accessor",
-            explanation =
-                """
+            explanation = """
                 A private inner class which is accessed from the outer class will force \
                 the compiler to insert a synthetic accessor; this means that you are \
                 causing extra overhead. This is not important in small projects, but is \

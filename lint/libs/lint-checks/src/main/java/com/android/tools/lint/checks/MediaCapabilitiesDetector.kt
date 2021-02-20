@@ -154,8 +154,7 @@ class MediaCapabilitiesDetector : Detector(), SourceCodeScanner, ClassScanner, X
         val ISSUE = Issue.create(
             id = "MediaCapabilities",
             briefDescription = "Media Capabilities property not specified",
-            explanation =
-                """
+            explanation = """
                 In Android 12 and higher, an app that opens media files should explicitly specify \
                 media formats that it doesn't support, so the OS can provide a transcoded file \
                 instead.

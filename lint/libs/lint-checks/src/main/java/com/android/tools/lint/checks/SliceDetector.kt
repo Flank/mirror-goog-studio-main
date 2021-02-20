@@ -75,8 +75,7 @@ class SliceDetector : Detector(), SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "Slices",
             briefDescription = "Slices",
-            explanation =
-                """
+            explanation = """
             This check analyzes usages of the Slices API and offers suggestions based
             on best practices.
             """,

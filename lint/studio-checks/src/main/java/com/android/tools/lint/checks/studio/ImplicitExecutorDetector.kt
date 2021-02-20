@@ -42,8 +42,7 @@ class ImplicitExecutorDetector : Detector(), SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "ImplicitExecutor",
             briefDescription = "Using an implicitly chosen Executor",
-            explanation =
-                """
+            explanation = """
                 Not specifying an Executor for running callbacks is a common source of threading
                 issues, resulting in too much work running on the UI thread or the shared
                 ForkJoinPool used by the IDE for highlighting.

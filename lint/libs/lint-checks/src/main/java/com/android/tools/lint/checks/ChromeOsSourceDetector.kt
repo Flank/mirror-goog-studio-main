@@ -111,8 +111,7 @@ class ChromeOsSourceDetector : Detector(), SourceCodeScanner {
         val UNSUPPORTED_LOCKED_ORIENTATION = Issue.create(
             id = "SourceLockedOrientationActivity",
             briefDescription = "Incompatible setRequestedOrientation value",
-            explanation =
-                """
+            explanation = """
                 The `Activity` should not be locked to a portrait orientation so that users
                 can take advantage of the multi-window environments and larger landscape-first screens
                 that Android runs on such as Chrome OS. To fix the issue, consider calling
@@ -131,8 +130,7 @@ class ChromeOsSourceDetector : Detector(), SourceCodeScanner {
         val UNSUPPORTED_CAMERA_FEATURE = Issue.create(
             id = "UnsupportedChromeOsCameraSystemFeature",
             briefDescription = "Looking for Rear Camera only feature",
-            explanation =
-                """
+            explanation = """
                 You should look for the `FEATURE_CAMERA_ANY` features to include all
                 possible cameras that may be on the device. Looking for `FEATURE_CAMERA`
                 only looks for a rear facing camera, which certain tablets or Chrome OS

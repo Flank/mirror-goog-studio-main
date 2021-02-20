@@ -143,10 +143,10 @@ class LocaleDetector : Detector(), SourceCodeScanner {
     ) {
         // Only check the non-locale version of String.format
         if (method.parameterList.parametersCount == 0 || !context.evaluator.parameterHasType(
-            method,
-            0,
-            TYPE_STRING
-        )
+                method,
+                0,
+                TYPE_STRING
+            )
         ) {
             return
         }
@@ -245,8 +245,7 @@ class LocaleDetector : Detector(), SourceCodeScanner {
         val STRING_LOCALE = Issue.create(
             id = "DefaultLocale",
             briefDescription = "Implied default locale in case conversion",
-            explanation =
-                """
+            explanation = """
                 Calling `String#toLowerCase()` or `#toUpperCase()` **without specifying an \
                 explicit locale** is a common source of bugs. The reason for that is that \
                 those methods will use the current locale on the user's device, and even \
@@ -271,8 +270,7 @@ class LocaleDetector : Detector(), SourceCodeScanner {
         val FINAL_LOCALE = Issue.create(
             id = "ConstantLocale",
             briefDescription = "Constant Locale",
-            explanation =
-                """
+            explanation = """
                 Assigning `Locale.getDefault()` to a constant is suspicious, because \
                 the locale can change while the app is running.""",
             category = Category.I18N,

@@ -593,8 +593,7 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         val MISSING_PERMISSION = Issue.create(
             id = "MissingPermission",
             briefDescription = "Missing Permissions",
-            explanation =
-                """
+            explanation = """
                 This check scans through your code and libraries and looks at the APIs being \
                 used, and checks this against the set of permissions required to access \
                 those APIs. If the code using those APIs is called at runtime, then the \

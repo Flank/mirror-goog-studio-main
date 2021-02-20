@@ -88,10 +88,10 @@ class GradleContext(
         fun getStringLiteralValue(value: String): String? {
             return if (value.length > 2 && (
                 value.startsWith("'") && value.endsWith("'") || value.startsWith(
-                    "\""
-                ) && value.endsWith(
-                    "\""
-                )
+                        "\""
+                    ) && value.endsWith(
+                        "\""
+                    )
                 )
             ) {
                 value.substring(1, value.length - 1)

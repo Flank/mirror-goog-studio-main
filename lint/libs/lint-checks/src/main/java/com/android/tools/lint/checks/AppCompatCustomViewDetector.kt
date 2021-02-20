@@ -114,8 +114,7 @@ class AppCompatCustomViewDetector : Detector(), SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "AppCompatCustomView",
             briefDescription = "Appcompat Custom Widgets",
-            explanation =
-                """
+            explanation = """
                 In order to support features such as tinting, the appcompat library will \
                 automatically load special appcompat replacements for the builtin widgets. \
                 However, this does not work for your own custom views.

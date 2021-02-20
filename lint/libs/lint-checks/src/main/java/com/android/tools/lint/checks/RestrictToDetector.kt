@@ -296,10 +296,10 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             }
             val qualifiedName = methodClass.qualifiedName
             if (qualifiedName == null || evaluator.inheritsFrom(
-                thisClass,
-                qualifiedName,
-                false
-            )
+                    thisClass,
+                    qualifiedName,
+                    false
+                )
             ) {
                 return
             }
@@ -747,8 +747,7 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         val RESTRICTED = Issue.create(
             id = "RestrictedApi",
             briefDescription = "Restricted API",
-            explanation =
-                """
+            explanation = """
                 This API has been flagged with a restriction that has not been met.
 
                 Examples of API restrictions:
@@ -768,8 +767,7 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         val TEST_VISIBILITY = Issue.create(
             id = "VisibleForTests",
             briefDescription = "Visible Only For Tests",
-            explanation =
-                """
+            explanation = """
                 With the `@VisibleForTesting` annotation you can specify an `otherwise=` \
                 attribute which specifies the intended visibility if the method had not \
                 been made more widely visible for the tests.

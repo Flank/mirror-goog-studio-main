@@ -439,11 +439,11 @@ open class GradleDetector : Detector(), GradleScanner {
                         "Do not use Windows file separators in .gradle files; use / instead"
                     report(context, valueCookie, PATH, message, fix)
                 } else if (path.startsWith("/") || File(
-                    path.replace(
-                        '/',
-                        File.separatorChar
-                    )
-                ).isAbsolute
+                        path.replace(
+                                '/',
+                                File.separatorChar
+                            )
+                    ).isAbsolute
                 ) {
                     val message = "Avoid using absolute paths in .gradle files"
                     report(context, valueCookie, PATH, message)
@@ -2184,8 +2184,7 @@ open class GradleDetector : Detector(), GradleScanner {
         val DEPENDENCY = Issue.create(
             id = "GradleDependency",
             briefDescription = "Obsolete Gradle Dependency",
-            explanation =
-                """
+            explanation = """
                 This detector looks for usages of libraries where the version you are using \
                 is not the current stable release. Using older versions is fine, and there \
                 are cases where you deliberately want to stick with an older version. \
@@ -2202,8 +2201,7 @@ open class GradleDetector : Detector(), GradleScanner {
         val AGP_DEPENDENCY = Issue.create(
             id = "AndroidGradlePluginVersion",
             briefDescription = "Obsolete Android Gradle Plugin Version",
-            explanation =
-                """
+            explanation = """
                 This detector looks for usage of the Android Gradle Plugin where the version \
                 you are using is not the current stable release. Using older versions is fine, \
                 and there are cases where you deliberately want to stick with an older version. \
@@ -2221,8 +2219,7 @@ open class GradleDetector : Detector(), GradleScanner {
         val DEPRECATED = Issue.create(
             id = "GradleDeprecated",
             briefDescription = "Deprecated Gradle Construct",
-            explanation =
-                """
+            explanation = """
                 This detector looks for deprecated Gradle constructs which currently work \
                 but will likely stop working in a future update.""",
             category = Category.CORRECTNESS,
@@ -2237,8 +2234,7 @@ open class GradleDetector : Detector(), GradleScanner {
         val DEPRECATED_CONFIGURATION = Issue.create(
             id = "GradleDeprecatedConfiguration",
             briefDescription = "Deprecated Gradle Configuration",
-            explanation =
-                """
+            explanation = """
                 Some Gradle configurations have been deprecated since Android Gradle Plugin 3.0.0 \
                 and will be removed in a future version of the Android Gradle Plugin.
              """,
@@ -2254,8 +2250,7 @@ open class GradleDetector : Detector(), GradleScanner {
         val GRADLE_PLUGIN_COMPATIBILITY = Issue.create(
             id = "GradlePluginVersion",
             briefDescription = "Incompatible Android Gradle Plugin",
-            explanation =
-                """
+            explanation = """
                 Not all versions of the Android Gradle plugin are compatible with all \
                 versions of the SDK. If you update your tools, or if you are trying to \
                 open a project that was built with an old version of the tools, you may \
@@ -2272,8 +2267,7 @@ open class GradleDetector : Detector(), GradleScanner {
         val PATH = Issue.create(
             id = "GradlePath",
             briefDescription = "Gradle Path Issues",
-            explanation =
-                """
+            explanation = """
                 Gradle build scripts are meant to be cross platform, so file paths use \
                 Unix-style path separators (a forward slash) rather than Windows path \
                 separators (a backslash). Similarly, to keep projects portable and \
@@ -2291,8 +2285,7 @@ open class GradleDetector : Detector(), GradleScanner {
         val IDE_SUPPORT = Issue.create(
             id = "GradleIdeError",
             briefDescription = "Gradle IDE Support Issues",
-            explanation =
-                """
+            explanation = """
                 Gradle is highly flexible, and there are things you can do in Gradle \
                 files which can make it hard or impossible for IDEs to properly handle \
                 the project. This lint check looks for constructs that potentially \
@@ -2308,8 +2301,7 @@ open class GradleDetector : Detector(), GradleScanner {
         val PLUS = Issue.create(
             id = "GradleDynamicVersion",
             briefDescription = "Gradle Dynamic Version",
-            explanation =
-                """
+            explanation = """
                 Using `+` in dependencies lets you automatically pick up the latest \
                 available version rather than a specific, named version. However, \
                 this is not recommended; your builds are not repeatable; you may have \
@@ -2327,8 +2319,7 @@ open class GradleDetector : Detector(), GradleScanner {
         val GRADLE_GETTER = Issue.create(
             id = "GradleGetter",
             briefDescription = "Gradle Implicit Getter Call",
-            explanation =
-                """
+            explanation = """
                 Gradle will let you replace specific constants in your build scripts \
                 with method calls, so you can for example dynamically compute a version \
                 string based on your current version control revision number, rather \
@@ -2353,8 +2344,7 @@ open class GradleDetector : Detector(), GradleScanner {
         val COMPATIBILITY = Issue.create(
             id = "GradleCompatible",
             briefDescription = "Incompatible Gradle Versions",
-            explanation =
-                """
+            explanation = """
                 There are some combinations of libraries, or tools and libraries, that \
                 are incompatible, or can lead to bugs. One such incompatibility is \
                 compiling with a version of the Android support libraries that is not \
@@ -2372,8 +2362,7 @@ open class GradleDetector : Detector(), GradleScanner {
         val STRING_INTEGER = Issue.create(
             id = "StringShouldBeInt",
             briefDescription = "String should be int",
-            explanation =
-                """
+            explanation = """
                 The properties `compileSdkVersion`, `minSdkVersion` and `targetSdkVersion` \
                 are usually numbers, but can be strings when you are using an add-on (in \
                 the case of `compileSdkVersion`) or a preview platform (for the other two \
@@ -2394,8 +2383,7 @@ open class GradleDetector : Detector(), GradleScanner {
         val NOT_INTERPOLATED = Issue.create(
             id = "NotInterpolated",
             briefDescription = "Incorrect Interpolation",
-            explanation =
-                """
+            explanation = """
                 To insert the value of a variable, you can use `${"$"}{variable}` inside a \
                 string literal, but **only** if you are using double quotes!""",
             moreInfo = "https://www.groovy-lang.org/syntax.html#_string_interpolation",
@@ -2410,8 +2398,7 @@ open class GradleDetector : Detector(), GradleScanner {
         val REMOTE_VERSION = Issue.create(
             id = "NewerVersionAvailable",
             briefDescription = "Newer Library Versions Available",
-            explanation =
-                """
+            explanation = """
                 This detector checks with a central repository to see if there are newer \
                 versions available for the dependencies used by this project. This is \
                 similar to the `GradleDependency` check, which checks for newer versions \
@@ -2430,8 +2417,7 @@ open class GradleDetector : Detector(), GradleScanner {
         val MIN_SDK_TOO_LOW = Issue.create(
             id = "MinSdkTooLow",
             briefDescription = "API Version Too Low",
-            explanation =
-                """
+            explanation = """
                 The value of the `minSdkVersion` property is too low and can be \
                 incremented without noticeably reducing the number of supported \
                 devices.""",
@@ -2448,8 +2434,7 @@ open class GradleDetector : Detector(), GradleScanner {
         val ACCIDENTAL_OCTAL = Issue.create(
             id = "AccidentalOctal",
             briefDescription = "Accidental Octal",
-            explanation =
-                """
+            explanation = """
                 In Groovy, an integer literal that starts with a leading 0 will be \
                 interpreted as an octal number. That is usually (always?) an accident \
                 and can lead to subtle bugs, for example when used in the `versionCode` \
@@ -2464,8 +2449,7 @@ open class GradleDetector : Detector(), GradleScanner {
         val BUNDLED_GMS = Issue.create(
             id = "UseOfBundledGooglePlayServices",
             briefDescription = "Use of bundled version of Google Play services",
-            explanation =
-                """
+            explanation = """
                 Google Play services SDK's can be selectively included, which enables a \
                 smaller APK size. Consider declaring dependencies on individual Google \
                 Play services SDK's. If you are using Firebase API's \
@@ -2485,8 +2469,7 @@ open class GradleDetector : Detector(), GradleScanner {
         val HIGH_APP_VERSION_CODE = Issue.create(
             id = "HighAppVersionCode",
             briefDescription = "VersionCode too high",
-            explanation =
-                """
+            explanation = """
                 The declared `versionCode` is an Integer. Ensure that the version number is \
                 not close to the limit. It is recommended to monotonically increase this \
                 number each minor or major release of the app. Note that updating an app \
@@ -2504,8 +2487,7 @@ open class GradleDetector : Detector(), GradleScanner {
         val DEV_MODE_OBSOLETE = Issue.create(
             id = "DevModeObsolete",
             briefDescription = "Dev Mode Obsolete",
-            explanation =
-                """
+            explanation = """
                 In the past, our documentation recommended creating a `dev` product flavor \
                 with has a minSdkVersion of 21, in order to enable multidexing to speed up \
                 builds significantly during development.
@@ -2531,8 +2513,7 @@ open class GradleDetector : Detector(), GradleScanner {
         val DUPLICATE_CLASSES = Issue.create(
             id = "DuplicatePlatformClasses",
             briefDescription = "Duplicate Platform Classes",
-            explanation =
-                """
+            explanation = """
                 There are a number of libraries that duplicate not just functionality \
                 of the Android platform but using the exact same class names as the ones \
                 provided in Android -- for example the apache http classes. This can \
@@ -2555,8 +2536,7 @@ open class GradleDetector : Detector(), GradleScanner {
         val EXPIRING_TARGET_SDK_VERSION = Issue.create(
             id = "ExpiringTargetSdkVersion",
             briefDescription = "TargetSdkVersion Soon Expiring",
-            explanation =
-                """
+            explanation = """
                 In the second half of 2018, Google Play will require that new apps and app \
                 updates target API level 26 or higher. This will be required for new apps in \
                 August 2018, and for updates to existing apps in November 2018.
@@ -2589,8 +2569,7 @@ open class GradleDetector : Detector(), GradleScanner {
             id = "ExpiredTargetSdkVersion",
             briefDescription = "TargetSdkVersion No Longer Supported",
             moreInfo = "https://support.google.com/googleplay/android-developer/answer/113469#targetsdk",
-            explanation =
-                """
+            explanation = """
                 As of the second half of 2018, Google Play requires that new apps and app \
                 updates target API level 26 or higher.
 
@@ -2616,8 +2595,7 @@ open class GradleDetector : Detector(), GradleScanner {
         val DEPRECATED_LIBRARY = Issue.create(
             id = "OutdatedLibrary",
             briefDescription = "Outdated Library",
-            explanation =
-                """
+            explanation = """
                 Your app is using an outdated version of a library. This may cause violations \
                 of Google Play policies (see https://play.google.com/about/monetization-ads/ads/) \
                 and/or may affect your app’s visibility on the Play Store.
@@ -2638,8 +2616,7 @@ open class GradleDetector : Detector(), GradleScanner {
             id = "DataBindingWithoutKapt",
             briefDescription = "Data Binding without Annotation Processing",
             moreInfo = "https://kotlinlang.org/docs/reference/kapt.html",
-            explanation =
-                """
+            explanation = """
                 Apps that use Kotlin and data binding should also apply the kotlin-kapt plugin. \
                 """,
             category = Category.CORRECTNESS,
@@ -2655,8 +2632,7 @@ open class GradleDetector : Detector(), GradleScanner {
             id = "LifecycleAnnotationProcessorWithJava8",
             briefDescription = "Lifecycle Annotation Processor with Java 8 Compile Option",
             moreInfo = "https://d.android.com/r/studio-ui/lifecycle-release-notes",
-            explanation =
-                """
+            explanation = """
                 For faster incremental build, switch to the Lifecycle Java 8 API with these steps:
 
                 First replace
@@ -2683,8 +2659,7 @@ open class GradleDetector : Detector(), GradleScanner {
         val RISKY_LIBRARY = Issue.create(
             id = "RiskyLibrary",
             briefDescription = "Libraries with Privacy or Security Risks",
-            explanation =
-                """
+            explanation = """
                 Your app is using a version of a library that has been identified by \
                 the library developer as a potential source of privacy and/or security risks. \
                 This may be a violation of Google Play policies (see \
@@ -2708,8 +2683,7 @@ open class GradleDetector : Detector(), GradleScanner {
         val ANNOTATION_PROCESSOR_ON_COMPILE_PATH = Issue.create(
             id = "AnnotationProcessorOnCompilePath",
             briefDescription = "Annotation Processor on Compile Classpath",
-            explanation =
-                """
+            explanation = """
                This dependency is identified as an annotation processor. Consider adding it to the \
                processor path using `annotationProcessor` instead of including it to the
                compile path.
@@ -2725,8 +2699,7 @@ open class GradleDetector : Detector(), GradleScanner {
         val KTX_EXTENSION_AVAILABLE = Issue.create(
             id = "KtxExtensionAvailable",
             briefDescription = "KTX Extension Available",
-            explanation =
-                """
+            explanation = """
                 Android KTX extensions augment some libraries with support for modern Kotlin \
                 language features like extension functions, extension properties, lambdas, named \
                 parameters, coroutines, and more.
@@ -2747,8 +2720,7 @@ open class GradleDetector : Detector(), GradleScanner {
         val JAVA_PLUGIN_LANGUAGE_LEVEL = Issue.create(
             id = "JavaPluginLanguageLevel",
             briefDescription = "No Explicit Java Language Level Given",
-            explanation =
-                """
+            explanation = """
                 In modules using plugins deriving from the Gradle `java` plugin (e.g. \
                 `java-library` or `application`), the java source and target compatibility \
                 default to the version of the JDK being used to run Gradle, which may cause \
@@ -2767,8 +2739,7 @@ open class GradleDetector : Detector(), GradleScanner {
         val JCENTER_REPOSITORY_OBSOLETE = Issue.create(
             id = "JcenterRepositoryObsolete",
             briefDescription = "The JCenter Maven repository is obsolete from 1st May 2021",
-            explanation =
-                """
+            explanation = """
                 JFrog announced that the JCenter Maven repository would reach end of service \
                 and would no longer be available from 1st May 2021; no new submissions would be \
                 accepted from 28th February 2021, and there might be accessibility problems due \

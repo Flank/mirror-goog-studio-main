@@ -18,8 +18,6 @@ package com.android.tools.lint.checks
 
 import com.android.tools.lint.client.api.UElementHandler
 import com.android.tools.lint.detector.api.Category
-import com.android.tools.lint.detector.api.isAndroidProject
-import com.android.tools.lint.detector.api.targetSdkAtLeast
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Incident
@@ -29,6 +27,8 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.TypeEvaluator
+import com.android.tools.lint.detector.api.isAndroidProject
+import com.android.tools.lint.detector.api.targetSdkAtLeast
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiMethod
@@ -110,8 +110,7 @@ class JavaScriptInterfaceDetector : Detector(), SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "JavascriptInterface",
             briefDescription = "Missing @JavascriptInterface on methods",
-            explanation =
-                """
+            explanation = """
                 As of API 17, you must annotate methods in objects registered with the \
                 `addJavascriptInterface` method with a `@JavascriptInterface` annotation.
                 """,
