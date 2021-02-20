@@ -1434,8 +1434,7 @@ private class LintModelModuleReader(
                 neverShrinking = neverShrinking,
 
                 // still empty list; will construct it below
-                variants = variants,
-                oldProject = null
+                variants = variants
             )
 
             // Always last; requires separate handling since we need to pass in the

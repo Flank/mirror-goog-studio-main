@@ -83,9 +83,6 @@ interface LintModelModule {
 
     val variants: List<LintModelVariant>
 
-    // For temporary backwards compatibility
-    val oldProject: com.android.ide.common.gradle.model.IdeAndroidProject?
-
     fun defaultVariant(): LintModelVariant? = variants.firstOrNull()
 
     /**
@@ -158,8 +155,7 @@ class DefaultLintModelModule(
     override val javaSourceLevel: String,
     override val compileTarget: String,
     override val variants: List<LintModelVariant>,
-    private val neverShrinking: Boolean,
-    override val oldProject: com.android.ide.common.gradle.model.IdeAndroidProject?
+    private val neverShrinking: Boolean
 ) : LintModelModule {
     override fun neverShrinking(): Boolean {
         return neverShrinking

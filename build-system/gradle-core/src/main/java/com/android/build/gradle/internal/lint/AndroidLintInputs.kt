@@ -279,8 +279,7 @@ abstract class ProjectInputs {
             javaSourceLevel = javaSourceLevel.get().toString(),
             compileTarget = compileTarget.get(),
             variants = listOf(),
-            neverShrinking = neverShrinking.get(),
-            oldProject = null
+            neverShrinking = neverShrinking.get()
         )
     }
 }

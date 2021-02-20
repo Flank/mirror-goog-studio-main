@@ -99,8 +99,7 @@ class LintModelFactory : LintModelModuleLoader {
                 javaSourceLevel = project.javaCompileOptions.sourceCompatibility,
                 compileTarget = project.compileTarget,
                 neverShrinking = isNeverShrinking(project),
-                variants = variantList,
-                oldProject = project
+                variants = variantList
             )
 
             for (variant in variants) {
@@ -663,8 +662,6 @@ class LintModelFactory : LintModelModuleLoader {
             get() = project.javaCompileOptions.sourceCompatibility
         override val compileTarget: String
             get() = project.compileTarget
-        override val oldProject: IdeAndroidProject
-            get() = project
         override val lintRuleJars: List<File> = project.getLintRuleJarsForAnyAgpVersion()
 
         override fun neverShrinking(): Boolean {
