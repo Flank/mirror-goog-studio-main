@@ -31,7 +31,6 @@ import java.io.Serializable
 
 data class IdeAndroidProjectImpl(
   override val modelVersion: String,
-  override val apiVersion: Int,
   override val name: String,
   override val projectType: Int,
   override val defaultConfig: IdeProductFlavorContainer,

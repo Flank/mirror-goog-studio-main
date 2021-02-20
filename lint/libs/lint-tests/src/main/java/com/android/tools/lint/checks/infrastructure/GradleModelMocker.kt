@@ -514,7 +514,6 @@ class GradleModelMocker @JvmOverloads constructor(
 
     private fun createAndroidProject() = IdeAndroidProjectImpl(
         modelVersion = "2.2.2",
-        apiVersion = 3,
         name = "test_project",
         projectType = 0,
         defaultConfig =
@@ -1504,8 +1503,7 @@ class GradleModelMocker @JvmOverloads constructor(
     private fun updateModelVersion(modelVersion: String) {
         updateProject {
             it.copy(
-                modelVersion = modelVersion,
-                apiVersion = if (GradleVersion.parse(modelVersion).major >= 2) 3 else 2
+                modelVersion = modelVersion
             )
         }
     }

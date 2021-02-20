@@ -20,7 +20,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.gradle.model.IdeAndroidArtifact;
 import com.android.ide.common.gradle.model.IdeAndroidLibrary;
-import com.android.ide.common.gradle.model.IdeAndroidProject;
 import com.android.ide.common.gradle.model.IdeLibrary;
 import com.android.ide.common.gradle.model.IdeVariant;
 import com.android.resources.ResourceType;
@@ -376,39 +375,18 @@ public abstract class ResourceVisibilityLookup {
         }
 
         /**
-         * Returns true if the given Gradle model is compatible with public resources. (Older models
-         * than 1.3 will throw exceptions if we attempt to for example query the public resource
-         * file location.
-         *
-         * @param project the project to check
-         * @return true if the model is recent enough to support resource visibility queries
-         */
-        public static boolean isVisibilityAwareModel(@NonNull IdeAndroidProject project) {
-            String modelVersion = project.getModelVersion();
-            // getApiVersion doesn't work prior to 1.2, and API level must be at least 3
-            return !(modelVersion.startsWith("1.0") || modelVersion.startsWith("1.1"))
-                    && project.getApiVersion() >= 3;
-        }
-
-        /**
          * Looks up a (possibly cached) {@link ResourceVisibilityLookup} for the given {@link
-         * AndroidArtifact}
+         * IdeAndroidArtifact}
          *
-         * @param project the project
          * @return the corresponding {@link ResourceVisibilityLookup}
          */
         @NonNull
-        public ResourceVisibilityLookup get(
-                @NonNull IdeAndroidProject project, @NonNull IdeVariant variant) {
+        public ResourceVisibilityLookup get(@NonNull IdeVariant variant) {
             String key = getMapKey(variant);
             ResourceVisibilityLookup visibility = mInstances.get(key);
             if (visibility == null) {
-                if (isVisibilityAwareModel(project)) {
-                    IdeAndroidArtifact artifact = variant.getMainArtifact();
-                    visibility = get(artifact);
-                } else {
-                    visibility = NONE;
-                }
+                IdeAndroidArtifact artifact = variant.getMainArtifact();
+                visibility = get(artifact);
                 mInstances.put(key, visibility);
             }
             return visibility;
