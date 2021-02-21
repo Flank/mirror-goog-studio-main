@@ -613,10 +613,10 @@ class LintModelSerializationTest {
                             resDirectories="src/release/res"
                             assetsDirectories="src/release/assets"/>
                         <sourceProvider
-                            manifest="src/freeBetaDebug/AndroidManifest.xml"
-                            javaDirectories="src/freeBetaDebug/java:src/freeBetaDebug/kotlin"
-                            resDirectories="src/freeBetaDebug/res"
-                            assetsDirectories="src/freeBetaDebug/assets"/>
+                            manifest="src/paidNormalRelease/AndroidManifest.xml"
+                            javaDirectories="src/paidNormalRelease/java:src/paidNormalRelease/kotlin"
+                            resDirectories="src/paidNormalRelease/res"
+                            assetsDirectories="src/paidNormalRelease/assets"/>
                       </sourceProviders>
                       <testSourceProviders>
                         <sourceProvider

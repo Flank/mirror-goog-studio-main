@@ -380,7 +380,7 @@ class GradleModelMocker @JvmOverloads constructor(
                             },
                             variantSourceProvider = let {
                                 if (productFlavors.isNotEmpty())
-                                    createSourceProvider(projectDir, defaultVariantName)
+                                    createSourceProvider(projectDir, variantName)
                                 else null
                             },
                         ),
