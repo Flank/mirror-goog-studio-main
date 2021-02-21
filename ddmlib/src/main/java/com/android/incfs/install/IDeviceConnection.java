@@ -30,25 +30,31 @@ public interface IDeviceConnection extends AutoCloseable {
                 throws IOException;
     }
 
-    /*
+    /**
      * Reads a sequence of bytes from this connection into the given buffer.
      *
-     * An attempt is made to read up to r bytes to the device, where r is the number of bytes
+     * <p>An attempt is made to read up to r bytes to the device, where r is the number of bytes
      * remaining in the buffer, that is, dst.remaining(), at the moment this method is invoked.
      *
+     * @param buffer where to store data read from the socket
+     * @param timeOutMs timeout in milliseconds (for the full operation to complete)
      * @return The number of bytes read, possibly zero, or -1 if the command has ended.
-     * @see {@link java.nio.channels.SocketChannel#read(ByteBuffer dst)}
+     * @see {@link java.nio.channels.Selector#select(long timeoutMs)}
+     * @see {@link java.nio.channels.SocketChannel#read(ByteBuffer buffer)}
      */
-    int read(@NonNull ByteBuffer dst) throws IOException;
+    int read(@NonNull ByteBuffer buffer, long timeOutMs) throws IOException;
 
-    /*
+    /**
      * Writes a sequence of bytes to the device from the given buffer.
      *
-     * An attempt is made to write up to r bytes to the device, where r is the number of bytes
-     * remaining in the buffer, that is, src.remaining(), at the moment this method is invoked.
+     * <p>An attempt is made to write up to r bytes to the device, where r is the number of bytes
+     * remaining in the buffer, that is, src.remaining(), at the moment this method is invoked. It's
      *
+     * @param buffer data to be sent
+     * @param timeOutMs timeout in milliseconds (for the full operation to complete)
      * @return The number of bytes written, possibly zero, or -1 if the command has ended.
-     * @see {@link java.nio.channels.SocketChannel#write(ByteBuffer dst)}
+     * @see {@link java.nio.channels.Selector#select(long timeoutMs)}
+     * @see {@link java.nio.channels.SocketChannel#write(ByteBuffer buffer)}
      */
-    int write(@NonNull ByteBuffer src) throws IOException;
+    int write(@NonNull ByteBuffer buffer, long timeOutMs) throws IOException;
 }

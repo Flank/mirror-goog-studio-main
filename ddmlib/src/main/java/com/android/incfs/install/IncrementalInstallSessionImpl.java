@@ -26,12 +26,15 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
 class IncrementalInstallSessionImpl implements AutoCloseable {
+    private static final int FULL_REQUEST_SIZE = 12;
     private static final int REQUEST_SIZE = 8;
     private static final byte RESPONSE_CHUNK_HEADER_SIZE = 4;
     private static final int RESPONSE_HEADER_SIZE = 10;
+    private static final int DONT_WAIT_TIME_MS = 0;
     private static final int WAIT_TIME_MS = 10;
 
     @NonNull private final IDeviceConnection mConnection;
+    @NonNull private final ILogger mLogger;
     @NonNull private final List<StreamingApk> mApks;
     private final long mResponseTimeoutNs;
 
@@ -52,16 +55,19 @@ class IncrementalInstallSessionImpl implements AutoCloseable {
     IncrementalInstallSessionImpl(
             @NonNull IDeviceConnection device,
             @NonNull List<StreamingApk> apks,
-            long responseTimeout) {
+            long responseTimeout,
+            @NonNull ILogger logger) {
         mConnection = device;
         mApks = apks;
         mResponseTimeoutNs = responseTimeout;
+        mLogger = logger;
     }
 
     void waitForInstallCompleted(long timeout, TimeUnit timeOutUnits)
             throws IOException, InterruptedException {
         waitForCondition(
                 timeOutUnits.toNanos(timeout),
+                WAIT_TIME_MS,
                 () -> {
                     if (mPendingException != null) {
                         throw new RuntimeException(mPendingException);
@@ -76,6 +82,7 @@ class IncrementalInstallSessionImpl implements AutoCloseable {
             throws IOException, InterruptedException {
         waitForCondition(
                 timeOutUnits.toNanos(timeout),
+                WAIT_TIME_MS,
                 () -> {
                     if (mPendingException != null) {
                         throw new RuntimeException(mPendingException);
@@ -96,7 +103,8 @@ class IncrementalInstallSessionImpl implements AutoCloseable {
         RESET_TIMEOUT,
     }
 
-    private void waitForCondition(long timeoutNs, IOSupplier<ConditionResult> condition)
+    private void waitForCondition(
+            long timeoutNs, long waitMs, IOSupplier<ConditionResult> condition)
             throws IOException, InterruptedException {
         long startNs = System.nanoTime();
         while (timeoutNs == 0 || startNs + timeoutNs >= System.nanoTime()) {
@@ -104,7 +112,9 @@ class IncrementalInstallSessionImpl implements AutoCloseable {
             if (result == ConditionResult.FULFILLED) {
                 return;
             }
-            Thread.sleep(WAIT_TIME_MS);
+            if (waitMs > DONT_WAIT_TIME_MS) {
+                Thread.sleep(waitMs);
+            }
             if (result == ConditionResult.RESET_TIMEOUT) {
                 startNs = System.nanoTime();
             }
@@ -165,23 +175,34 @@ class IncrementalInstallSessionImpl implements AutoCloseable {
      */
     private void processDeviceData() throws IOException, InterruptedException {
         final ByteBuffer buffer = ByteBuffer.allocate(16384);
+        // Switch buffer to read mode - this is what underlying code expects the buffer to be in
+        // between operations.
+        buffer.flip();
+
         final MagicMatcher magicMatcher = new MagicMatcher();
         final StringBuilder errorBuilder = new StringBuilder();
 
         // Wait for installation to succeed and streaming to be complete.
         waitForCondition(
                 mResponseTimeoutNs,
+                DONT_WAIT_TIME_MS,
                 () -> {
                     if (mClosed) {
                         return ConditionResult.FULFILLED;
                     }
-                    buffer.compact();
-                    final int count = mConnection.read(buffer);
-                    if (count < 0) {
-                        throw new IOException("EOF");
+
+                    // Read only when there is not enough data for better performance.
+                    if (buffer.remaining() < FULL_REQUEST_SIZE) {
+                        // This allows the connection to write to the buffer and then flips it back
+                        // to the read mode.
+                        buffer.compact();
+                        final int count = mConnection.read(buffer, WAIT_TIME_MS);
+                        buffer.flip();
+                        if (count < 0) {
+                            throw new IOException("EOF");
+                        }
                     }
 
-                    buffer.flip();
                     // Find the next incremental request, install success message, install failure
                     // message magic to know how to interpret the data following the magic.
                     final MagicMatcher.MagicType magic = magicMatcher.findMagic(buffer);
@@ -265,6 +286,7 @@ class IncrementalInstallSessionImpl implements AutoCloseable {
     }
 
     private boolean processReadData(ReadRequest request) throws IOException, InterruptedException {
+        mLogger.verbose("Received %s", request.toString());
         switch (request.requestType) {
             case SERVING_COMPLETE:
                 return true;
@@ -338,11 +360,12 @@ class IncrementalInstallSessionImpl implements AutoCloseable {
     private void writeToDevice(final ByteBuffer data) throws IOException, InterruptedException {
         waitForCondition(
                 mResponseTimeoutNs,
+                DONT_WAIT_TIME_MS,
                 () -> {
                     if (!data.hasRemaining()) {
                         return ConditionResult.FULFILLED;
                     }
-                    if (mConnection.write(data) < 0) {
+                    if (mConnection.write(data, WAIT_TIME_MS) < 0) {
                         throw new IOException("channel EOF");
                     }
                     return ConditionResult.UNFULFILLED;

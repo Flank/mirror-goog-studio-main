@@ -25,6 +25,9 @@ import com.android.incfs.install.IncrementalInstallSession;
 import com.android.utils.ILogger;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.Channel;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.util.concurrent.Executor;
 
@@ -33,7 +36,6 @@ import java.util.concurrent.Executor;
  * IncrementalInstallSession.Builder#execute(Executor, IDeviceConnection.Factory, ILogger)}.
  */
 public class DeviceConnection implements IDeviceConnection {
-
     /**
      * Creates a factory for creating a connection to the device.
      *
@@ -79,22 +81,34 @@ public class DeviceConnection implements IDeviceConnection {
 
     @NonNull private final SocketChannel mChannel;
 
-    private DeviceConnection(@NonNull SocketChannel channel) {
+    @NonNull private final Selector mReadSelector;
+    @NonNull private final Selector mWriteSelector;
+
+    private DeviceConnection(@NonNull SocketChannel channel) throws IOException {
         mChannel = channel;
+        mChannel.configureBlocking(false);
+        mReadSelector = Selector.open();
+        mChannel.register(mReadSelector, SelectionKey.OP_READ);
+        mWriteSelector = Selector.open();
+        mChannel.register(mWriteSelector, SelectionKey.OP_WRITE);
     }
 
     @Override
-    public int read(@NonNull ByteBuffer dst) throws IOException {
+    public int read(@NonNull ByteBuffer dst, long timeoutMs) throws IOException {
+        mReadSelector.select(timeoutMs);
         return mChannel.read(dst);
     }
 
     @Override
-    public int write(@NonNull ByteBuffer src) throws IOException {
+    public int write(@NonNull ByteBuffer src, long timeoutMs) throws IOException {
+        mWriteSelector.select(timeoutMs);
         return mChannel.write(src);
     }
 
     @Override
     public void close() throws Exception {
-        mChannel.close();
+        try (Channel c = mChannel;
+                Selector r = mReadSelector;
+                Selector w = mWriteSelector) {}
     }
 }

@@ -181,23 +181,30 @@ public class IncrementalInstallSession implements AutoCloseable {
             }
 
             return new IncrementalInstallSession(
-                    commandBuilder.toArray(new String[0]), apkArguments, mResponseTimeoutNs);
+                    commandBuilder.toArray(new String[0]),
+                    apkArguments,
+                    mResponseTimeoutNs,
+                    mLogger);
         }
     }
 
-    private final String[] mCommandArgs;
-    private final ArrayList<StreamingApk> mApks;
+    @NonNull private final String[] mCommandArgs;
+    @NonNull private final ArrayList<StreamingApk> mApks;
     private final long mResponseTimeoutNs;
+
+    @NonNull private final ILogger mLogger;
 
     private IncrementalInstallSessionImpl mImpl;
 
     private IncrementalInstallSession(
             @NonNull String[] commandArgs,
             @NonNull ArrayList<StreamingApk> apks,
-            long responseTimeoutNs) {
+            long responseTimeoutNs,
+            @NonNull ILogger logger) {
         mCommandArgs = commandArgs;
         mApks = apks;
         mResponseTimeoutNs = responseTimeoutNs;
+        mLogger = logger;
     }
 
     /**
@@ -215,7 +222,7 @@ public class IncrementalInstallSession implements AutoCloseable {
         }
 
         final IDeviceConnection con = conFactory.connectToService("package", mCommandArgs);
-        mImpl = new IncrementalInstallSessionImpl(con, mApks, mResponseTimeoutNs);
+        mImpl = new IncrementalInstallSessionImpl(con, mApks, mResponseTimeoutNs, mLogger);
         mImpl.execute(executor);
         return this;
     }
@@ -253,7 +260,7 @@ public class IncrementalInstallSession implements AutoCloseable {
     /** Cancels communication with the device. */
     @Override
     public void close() {
-        mImpl.close();
+        try (IncrementalInstallSessionImpl impl = mImpl) {}
     }
 
     // Default implementation of a logger.
