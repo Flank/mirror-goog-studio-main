@@ -72,6 +72,7 @@ import com.android.sdklib.SdkVersionInfo
 import com.android.tools.lint.LintCliFlags
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.model.LintModelFactory
+import com.android.tools.lint.model.LintModelMavenName
 import com.android.tools.lint.model.LintModelModule
 import com.android.tools.lint.model.LintModelVariant
 import com.android.utils.ILogger
@@ -602,15 +603,25 @@ class GradleModelMocker @JvmOverloads constructor(
         mockablePlatformJar = null,
     )
 
-    private fun createDependencies(dep: DepConf? = null) =
-        if (dep != null)
+    private fun createDependencies(dep: DepConf? = null): IdeDependenciesImpl {
+        fun <T : IdeLibrary> Collection<T>.resolveConflicts(): Collection<T> {
+            return groupBy { getMavenName(it.artifactAddress).let { it.groupId to it.artifactId } }
+                .mapValues { (_, libs) ->
+                    libs.maxBy { GradleVersion.tryParse(getMavenName(it.artifactAddress).version) ?: GradleVersion(0, 0) }
+                }
+                .values
+                .mapNotNull { it }
+        }
+
+        return if (dep != null)
             IdeDependenciesImpl(
-                androidLibraries = dep.androidLibraries,
-                javaLibraries = dep.javaLibraries,
+                androidLibraries = dep.androidLibraries.resolveConflicts(),
+                javaLibraries = dep.javaLibraries.resolveConflicts(),
                 moduleDependencies = dep.moduleLibraries,
                 emptyList()
             )
         else IdeDependenciesImpl(emptyList(), emptyList(), emptyList(), emptyList())
+    }
 
     private fun addLocalLibs(libsDir: File) {
         val libs = libsDir.listFiles()
@@ -2325,3 +2336,24 @@ private val wellKnownLibraries = listOf(
 |         \--- org.jetbrains.kotlin:kotlin-stdlib:VERSION (*)"""
     ),
 )
+
+private fun getMavenName(artifactAddress: String): LintModelMavenName {
+    fun Int.nextDelimiterIndex(vararg delimiters: Char): Int {
+        return delimiters.asSequence()
+            .map {
+                val index = artifactAddress.indexOf(it, startIndex = this + 1)
+                if (index == -1) artifactAddress.length else index
+            }.min() ?: artifactAddress.length
+    }
+
+    val lastDelimiterIndex = 0
+        .nextDelimiterIndex(':')
+        .nextDelimiterIndex(':')
+        .nextDelimiterIndex(':', '@')
+
+    // Currently [LintModelMavenName] supports group:name:version format only.
+    return LintModelMavenName.parse(artifactAddress.substring(0, lastDelimiterIndex))
+        ?: error("Cannot parse '$artifactAddress'")
+}
+
+
