@@ -247,18 +247,19 @@ class GradleModelMocker @JvmOverloads constructor(
         if (initialized) error("GradleModelMocker has been already initialized.")
     }
 
+    private var _hasJavaOrJavaLibraryPlugin: Boolean = false
+    private var _isLibrary: Boolean = false
+
     /** Whether the Gradle file applied the java or java-library plugin  */
     fun hasJavaOrJavaLibraryPlugin(): Boolean {
         ensureInitialized()
-        return project.projectType == PROJECT_TYPE_JAVA ||
-                project.projectType == PROJECT_TYPE_JAVA_LIBRARY
+        return _hasJavaOrJavaLibraryPlugin
     }
 
     val isLibrary: Boolean
         get() {
             ensureInitialized()
-            return project.projectType == PROJECT_TYPE_LIBRARY ||
-                project.projectType == PROJECT_TYPE_JAVA_LIBRARY
+            return _isLibrary
         }
 
     val buildTargetHash: String?
@@ -904,22 +905,26 @@ class GradleModelMocker @JvmOverloads constructor(
             return
         }
 
-        fun updateProjectType(type: Int): Boolean {
+        fun updateProjectType(type: Int, hasJavaOrJavaLibraryPlugin: Boolean, isLibrary: Boolean): Boolean {
+            _hasJavaOrJavaLibraryPlugin = hasJavaOrJavaLibraryPlugin
+            _isLibrary = isLibrary
             updateProject { it.copy(projectType = type) }
             return true
         }
 
         if (when (line) {
-            "apply plugin: 'com.android.library'", "apply plugin: 'android-library'" -> updateProjectType(
-                PROJECT_TYPE_LIBRARY
-            )
-            "apply plugin: 'com.android.application'", "apply plugin: 'android'" -> updateProjectType(
-                PROJECT_TYPE_APP
-            )
-            "apply plugin: 'com.android.feature'" -> updateProjectType(PROJECT_TYPE_FEATURE)
-            "apply plugin: 'com.android.instantapp'" -> updateProjectType(PROJECT_TYPE_INSTANTAPP)
-            "apply plugin: 'java'" -> updateProjectType(PROJECT_TYPE_JAVA)
-            "apply plugin: 'java-library'" -> updateProjectType(PROJECT_TYPE_JAVA_LIBRARY)
+            "apply plugin: 'com.android.library'", "apply plugin: 'android-library'" ->
+                updateProjectType(PROJECT_TYPE_LIBRARY, hasJavaOrJavaLibraryPlugin = false, isLibrary = true)
+            "apply plugin: 'com.android.application'", "apply plugin: 'android'" ->
+                updateProjectType(PROJECT_TYPE_APP, hasJavaOrJavaLibraryPlugin = false, isLibrary = false)
+            "apply plugin: 'com.android.feature'" ->
+                updateProjectType(PROJECT_TYPE_FEATURE, hasJavaOrJavaLibraryPlugin = false, isLibrary = false)
+            "apply plugin: 'com.android.instantapp'" ->
+                updateProjectType(PROJECT_TYPE_INSTANTAPP, hasJavaOrJavaLibraryPlugin = false, isLibrary = false)
+            "apply plugin: 'java'" ->
+                updateProjectType(PROJECT_TYPE_JAVA, hasJavaOrJavaLibraryPlugin = true, isLibrary = false)
+            "apply plugin: 'java-library'" ->
+                updateProjectType(PROJECT_TYPE_JAVA_LIBRARY, hasJavaOrJavaLibraryPlugin = true, isLibrary = true)
             else -> when {
                 context == "buildscript.repositories" || context == "allprojects.repositories" -> {
                     // Plugins not modeled in the builder model
