@@ -1637,7 +1637,9 @@ class GradleModelMocker @JvmOverloads constructor(
         // a test project and then run ./gradlew app:dependencies
         val wellKnownLibrary = wellKnownLibraries.firstOrNull { declaration.startsWith(it.groupAndName + ":") }
         if (wellKnownLibrary != null) {
-            val version = declaration.substring(wellKnownLibrary.groupAndName.length + 1)
+            val version = declaration
+                .substring(wellKnownLibrary.groupAndName.length + 1)
+                .substringBefore("@") //@jar/aar is not part of the version and should not be applied to other dependencies.
             addTransitiveLibrary(
                 wellKnownLibrary.dependencies.replace("VERSION", version),
                 artifact
@@ -2144,6 +2146,15 @@ class GradleModelMocker @JvmOverloads constructor(
          * artifacts. For mocking purposes we have a hardcoded list.
          */
         private fun isJavaLibrary(declaration: String): Boolean {
+            return _isJavaLibrary(declaration).also {
+                when (it) {
+                    true -> assert(!declaration.contains("@aar"))
+                    false -> assert(!declaration.contains("@jar"))
+                }
+            }
+        }
+
+        private fun _isJavaLibrary(declaration: String): Boolean {
             if (declaration.startsWith("com.android.support:support-annotations:")) {
                 return true
             } else if (declaration.startsWith("com.android.support:support-v4:") ||
