@@ -247,16 +247,11 @@ class GradleModelMocker @JvmOverloads constructor(
         if (initialized) error("GradleModelMocker has been already initialized.")
     }
 
-    /** Whether the Gradle file applied the java plugin  */
-    fun hasJavaPlugin(): Boolean {
+    /** Whether the Gradle file applied the java or java-library plugin  */
+    fun hasJavaOrJavaLibraryPlugin(): Boolean {
         ensureInitialized()
-        return project.projectType == PROJECT_TYPE_JAVA
-    }
-
-    /** Whether the Gradle file applied the java-library plugin  */
-    fun hasJavaLibraryPlugin(): Boolean {
-        ensureInitialized()
-        return project.projectType == PROJECT_TYPE_JAVA_LIBRARY
+        return project.projectType == PROJECT_TYPE_JAVA ||
+                project.projectType == PROJECT_TYPE_JAVA_LIBRARY
     }
 
     val isLibrary: Boolean
