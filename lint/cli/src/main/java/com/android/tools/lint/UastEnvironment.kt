@@ -20,7 +20,6 @@ import com.android.SdkConstants.DOT_KT
 import com.android.SdkConstants.DOT_KTS
 import com.android.SdkConstants.DOT_SRCJAR
 import com.android.SdkConstants.EXT_JAR
-import com.android.tools.lint.UastEnvironment.Companion.disposeApplicationEnvironment
 import com.intellij.codeInsight.CustomExceptionHandler
 import com.intellij.codeInsight.ExternalAnnotationsManager
 import com.intellij.codeInsight.InferredAnnotationsManager

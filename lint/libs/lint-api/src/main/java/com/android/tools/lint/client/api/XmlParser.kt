@@ -22,7 +22,6 @@ import com.android.SdkConstants.NEW_ID_PREFIX
 import com.android.ide.common.resources.ResourceItem
 import com.android.ide.common.resources.ResourceMergerItem
 import com.android.resources.ResourceType
-import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.XmlContext
 import com.android.utils.iterator

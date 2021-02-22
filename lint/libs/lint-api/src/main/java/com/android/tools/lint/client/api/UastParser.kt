@@ -16,7 +16,6 @@
 
 package com.android.tools.lint.client.api
 
-import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Location
 import com.google.common.annotations.Beta

@@ -43,7 +43,6 @@ import java.io.File
 import java.io.IOException
 import java.io.PrintWriter
 import java.io.StringWriter
-import java.util.regex.Matcher
 import java.util.regex.Pattern
 import java.util.regex.Pattern.MULTILINE
 import javax.swing.text.BadLocationException
