@@ -29,7 +29,7 @@ public class FakeDependency extends Dependency {
 
     private final RevisionType mRevision;
 
-    private final boolean mSoft;
+    private final Boolean mSoft;
 
     public FakeDependency(String path) {
         this(path, null, null, null, false);
@@ -41,11 +41,11 @@ public class FakeDependency extends Dependency {
     }
 
     public FakeDependency(
-            String path,
-            final Integer major,
-            final Integer minor,
-            final Integer micro,
-            boolean soft) {
+            @NonNull String path,
+            @Nullable final Integer major,
+            @Nullable final Integer minor,
+            @Nullable final Integer micro,
+            @Nullable Boolean soft) {
         mPath = path;
         mRevision = major == null ? null : new RevisionType() {
             @Override
@@ -81,6 +81,7 @@ public class FakeDependency extends Dependency {
     }
 
     @Override
+    @Nullable
     public Boolean isSoft() {
         return mSoft;
     }

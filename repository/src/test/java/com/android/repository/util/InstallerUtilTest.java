@@ -75,6 +75,26 @@ public class InstallerUtilTest extends TestCase {
         progress.assertNoErrorsOrWarnings();
     }
 
+    /** Simple dependencies, with isSoft = null (the default). */
+    public void testSoftIsNull() {
+        FakeRemotePackage r1 = new FakeRemotePackage("r1");
+        r1.setDependencies(ImmutableList.of(new FakeDependency("r2", 1, 0, 0, null)));
+        FakeRemotePackage r2 = new FakeRemotePackage("r2");
+
+        FakeProgressIndicator progress = new FakeProgressIndicator();
+        ImmutableList<RemotePackage> request = ImmutableList.of(r1);
+        ImmutableList<RemotePackage> expected = ImmutableList.of(r2, r1);
+        assertEquals(
+                expected,
+                InstallerUtil.computeRequiredPackages(
+                        request,
+                        new RepositoryPackages(
+                                ImmutableList.of(new FakeLocalPackage("l1")),
+                                ImmutableList.of(r1, r2)),
+                        progress));
+        progress.assertNoErrorsOrWarnings();
+    }
+
     /** Request r1 and r1. The latest version of r1 is installed so only r2 is returned. */
     public void testLocalInstalled() {
         RemotePackage r1 = new FakeRemotePackage("r1");
