@@ -60,6 +60,7 @@ public abstract class Dependency {
         // Stub
     }
 
+    @Nullable
     public Boolean isSoft() {
         // Stub for v1
         return false;
