@@ -28,7 +28,7 @@ import com.android.build.gradle.integration.common.fixture.testprojects.createPr
  */
 fun createHelloWorldAppGradleProject(): GradleTestProject {
     return createGradleProject {
-        configureRoot {
+        rootProject {
             plugins.add(PluginType.ANDROID_APP)
             android {
                 setUpHelloWorld()
@@ -42,7 +42,7 @@ fun createHelloWorldAppGradleProject(): GradleTestProject {
  */
 fun createHelloWorldLibGradleProject(): GradleTestProject {
     return createGradleProject {
-        configureRoot {
+        rootProject {
             plugins.add(PluginType.ANDROID_LIB)
             android {
                 setUpHelloWorld()
@@ -56,7 +56,7 @@ fun createHelloWorldLibGradleProject(): GradleTestProject {
  */
 fun createHelloWorldAppProject(): TestProject {
     return createProject {
-        configureRoot {
+        rootProject {
             plugins.add(PluginType.ANDROID_APP)
             android {
                 setUpHelloWorld()
@@ -70,7 +70,7 @@ fun createHelloWorldAppProject(): TestProject {
  */
 fun createHelloWorldLibProject(): TestProject {
     return createProject {
-        configureRoot {
+        rootProject {
             plugins.add(PluginType.ANDROID_APP)
             android {
                 setUpHelloWorld()

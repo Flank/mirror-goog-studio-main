@@ -1,45 +1,40 @@
 > VariantDependencies:
     - name = "debug"
-    > mainArtifact:
+    - mainArtifact:
        - compileDependencies = []
        - runtimeDependencies = []
-    < mainArtifact
     > androidTestArtifact:
-       > compileDependencies:
-          * GraphItem:
-             * artifactAddress      = "{BUILD_1}@@:::debug"
-             * requestedCoordinates = (null)
-             * dependencies         = []
-       < compileDependencies
-       > runtimeDependencies:
-          * GraphItem:
-             * artifactAddress      = "{BUILD_1}@@:::debug"
-             * requestedCoordinates = (null)
-             * dependencies         = []
-       < runtimeDependencies
+       - compileDependencies:
+          - GraphItem:
+             - artifactAddress      = {BUILD_0}@@:::debug
+             - requestedCoordinates = (null)
+             - dependencies         = []
+       - runtimeDependencies:
+          - GraphItem:
+             - artifactAddress      = {BUILD_0}@@:::debug
+             - requestedCoordinates = (null)
+             - dependencies         = []
     < androidTestArtifact
     > unitTestArtifact:
-       > compileDependencies:
-          * GraphItem:
-             * artifactAddress      = "{BUILD_1}@@:::debug"
-             * requestedCoordinates = (null)
-             * dependencies         = []
-       < compileDependencies
-       > runtimeDependencies:
-          * GraphItem:
-             * artifactAddress      = "{BUILD_1}@@:::debug"
-             * requestedCoordinates = (null)
-             * dependencies         = []
-       < runtimeDependencies
+       - compileDependencies:
+          - GraphItem:
+             - artifactAddress      = {BUILD_0}@@:::debug
+             - requestedCoordinates = (null)
+             - dependencies         = []
+       - runtimeDependencies:
+          - GraphItem:
+             - artifactAddress      = {BUILD_0}@@:::debug
+             - requestedCoordinates = (null)
+             - dependencies         = []
     < unitTestArtifact
 < VariantDependencies
 > GlobalLibraryMap:
     > libraries:
        > library:
           - type                = PROJECT
-          - artifactAddress     = "{BUILD_1}@@:::debug"
+          - artifactAddress     = {BUILD_0}@@:::debug
           - artifact            = (null)
-          - buildId             = "{BUILD_1}"
+          - buildId             = {BUILD_0}
           - projectPath         = ":"
           - variant             = "debug"
           - compileJarFiles     = (null)
