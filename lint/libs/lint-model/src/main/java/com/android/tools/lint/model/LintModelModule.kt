@@ -134,9 +134,6 @@ interface LintModelModuleLoader {
 
     /** Loads a module from a dependency in a dependency graph */
     fun getModule(library: LintModelDependency): LintModelModule? = null
-
-    /** Loads a module from a project path */
-    fun getModule(path: String, factory: LintModelFactory? = null): LintModelModule? = null
 }
 
 class DefaultLintModelModule(
