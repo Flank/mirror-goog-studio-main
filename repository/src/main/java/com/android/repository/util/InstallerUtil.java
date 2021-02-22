@@ -387,7 +387,7 @@ public class InstallerUtil {
                     return null;
                 }
                 LocalPackage localDependency = updatableDependency.getLocal();
-                if (localDependency == null && d.isSoft()) {
+                if (localDependency == null && d.isSoft() != null && d.isSoft()) {
                     // Soft dependency and package isn't already installed -> skip
                     continue;
                 }
