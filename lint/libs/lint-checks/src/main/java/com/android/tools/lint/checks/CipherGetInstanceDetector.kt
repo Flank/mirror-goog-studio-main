@@ -36,8 +36,8 @@ import org.jetbrains.uast.ULiteralExpression
 import org.jetbrains.uast.UQualifiedReferenceExpression
 
 /**
- * Ensures that Cipher.getInstance is not called with AES as the parameter.
- * Also flags usages of deprecated BC provider.
+ * Ensures that Cipher.getInstance is not called with AES as the
+ * parameter. Also flags usages of deprecated BC provider.
  */
 class CipherGetInstanceDetector : Detector(), SourceCodeScanner {
 

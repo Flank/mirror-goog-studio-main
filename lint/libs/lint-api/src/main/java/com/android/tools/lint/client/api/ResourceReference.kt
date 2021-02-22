@@ -45,14 +45,15 @@ import org.jetbrains.uast.getQualifiedParentOrThis
 import org.jetbrains.uast.java.JavaUDeclarationsExpression
 
 /**
- * A reference to an Android resource in the AST; the reference may not be qualified.
- * For example, in the below, the `foo` reference on the right hand side of
- * the assignment can be resolved as an [ResourceReference].
+ * A reference to an Android resource in the AST; the reference may
+ * not be qualified. For example, in the below, the `foo` reference
+ * on the right hand side of the assignment can be resolved as an
+ * [ResourceReference].
  * <pre>
  * import my.pkg.R.string.foo;
  * ...
  * int id = foo;
-</pre> *
+ * </pre> *
  */
 class ResourceReference(
     val node: UExpression,
@@ -244,8 +245,8 @@ class ResourceReference(
         }
 
         /**
-         * Returns true if the type represents an int array (int[]), which is the
-         * type of styleable R fields.
+         * Returns true if the type represents an int array (int[]),
+         * which is the type of styleable R fields.
          */
         private fun isIntArray(type: PsiType): Boolean =
             (type as? PsiArrayType)?.componentType == PsiType.INT

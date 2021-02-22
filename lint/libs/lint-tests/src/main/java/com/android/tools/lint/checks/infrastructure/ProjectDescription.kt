@@ -30,9 +30,7 @@ import java.io.FileWriter
 import java.io.IOException
 import java.util.ArrayList
 
-/**
- * A description of a lint test project
- */
+/** A description of a lint test project. */
 class ProjectDescription : Comparable<ProjectDescription> {
     var files: Array<out TestFile> = emptyArray()
     val dependsOn: MutableList<ProjectDescription> = mutableListOf()
@@ -45,24 +43,19 @@ class ProjectDescription : Comparable<ProjectDescription> {
     var under: ProjectDescription? = null
     var variantName: String? = null
 
-    /**
-     * Creates a new project description
-     */
+    /** Creates a new project description. */
     constructor()
 
-    /**
-     * Creates a new project with the given set of files
-     */
+    /** Creates a new project with the given set of files. */
     constructor(vararg files: TestFile) {
         files(*files)
     }
 
     /**
-     * Names the project; most useful in multi-project tests where the project name
-     * will be part of the error output
+     * Names the project; most useful in multi-project tests where the
+     * project name will be part of the error output
      *
      * @param name the name for the project
-     *
      * @return this for constructor chaining
      */
     fun name(name: String): ProjectDescription {
@@ -74,7 +67,6 @@ class ProjectDescription : Comparable<ProjectDescription> {
      * Sets the given set of test files as the project contents
      *
      * @param files the test files
-     *
      * @return this for constructor chaining
      */
     fun files(vararg files: TestFile): ProjectDescription {
@@ -83,10 +75,10 @@ class ProjectDescription : Comparable<ProjectDescription> {
     }
 
     /**
-     * Adds the given project description as a direct dependency for this project
+     * Adds the given project description as a direct dependency for
+     * this project
      *
      * @param library the project to depend on
-     *
      * @return this for constructor chaining
      */
     fun dependsOn(library: ProjectDescription): ProjectDescription {
@@ -99,9 +91,7 @@ class ProjectDescription : Comparable<ProjectDescription> {
         return this
     }
 
-    /**
-     * Adds a dependency on the given named project
-     */
+    /** Adds a dependency on the given named project. */
     fun dependsOn(name: String): ProjectDescription {
         if (!dependsOnNames.contains(name)) {
             dependsOnNames.add(name)
@@ -109,7 +99,7 @@ class ProjectDescription : Comparable<ProjectDescription> {
         return this
     }
 
-    /** Adds the given test file into this project */
+    /** Adds the given test file into this project. */
     fun addFile(file: TestFile): ProjectDescription {
         if (!files.contains(file)) {
             files = (files.asSequence() + file).toList().toTypedArray()
@@ -118,15 +108,16 @@ class ProjectDescription : Comparable<ProjectDescription> {
     }
 
     /**
-     * Adds the given dependency graph (the output of the Gradle dependency task)
-     * to be constructed when mocking a Gradle model for this project.
-     * <p>
+     * Adds the given dependency graph (the output of the Gradle
+     * dependency task) to be constructed when mocking a Gradle model
+     * for this project.
+     *
      * To generate this, run for example
      * <pre>
      *     ./gradlew :app:dependencies
      * </pre>
-     * and then look at the debugCompileClasspath (or other graph that you want
-     * to model).
+     * and then look at the debugCompileClasspath (or other graph that
+     * you want to model).
      *
      * @param dependencyGraph the graph description
      * @return this for constructor chaining
@@ -140,7 +131,6 @@ class ProjectDescription : Comparable<ProjectDescription> {
      * Marks the project as an app, library or Java module
      *
      * @param type the type of project to create
-     *
      * @return this for constructor chaining
      */
     fun type(type: Type): ProjectDescription {
@@ -149,8 +139,8 @@ class ProjectDescription : Comparable<ProjectDescription> {
     }
 
     /**
-     * Places this project in a subdirectory (determined by
-     * the project name) of the given [parent] project
+     * Places this project in a subdirectory (determined by the project
+     * name) of the given [parent] project.
      */
     fun under(parent: ProjectDescription): ProjectDescription {
         this.under = parent
@@ -158,8 +148,8 @@ class ProjectDescription : Comparable<ProjectDescription> {
     }
 
     /**
-     * Tells lint to select a particular Gradle variant.
-     * This only applies when using Gradle mocks.
+     * Tells lint to select a particular Gradle variant. This only
+     * applies when using Gradle mocks.
      *
      * @param variantName the name of the variant to use
      * @return this, for constructor chaining
@@ -171,14 +161,14 @@ class ProjectDescription : Comparable<ProjectDescription> {
 
     /**
      * Marks this project as reportable (the default) or non-reportable.
-     * Lint projects are usually reportable, but if they depend on libraries
-     * (such as appcompat) those dependencies are marked as non-reportable.
-     * Lint will still analyze those projects (for example, an unused resource
-     * analysis should list resources pulled in from these libraries) but issues
-     * found within those libraries will not be reported.
+     * Lint projects are usually reportable, but if they depend
+     * on libraries (such as appcompat) those dependencies
+     * are marked as non-reportable. Lint will still analyze
+     * those projects (for example, an unused resource analysis
+     * should list resources pulled in from these libraries) but
+     * issues found within those libraries will not be reported.
      *
      * @param report whether we should report issues for this project
-     *
      * @return this for constructor chaining
      */
     fun report(report: Boolean): ProjectDescription {
@@ -188,9 +178,9 @@ class ProjectDescription : Comparable<ProjectDescription> {
 
     /**
      * Checks that all the files in this project are unique. This
-     * catches cases where you've accidentally specified a target
-     * more than once (where only the last will be used by lint since
-     * it will overwrite any earlier occurrences.)
+     * catches cases where you've accidentally specified a target more
+     * than once (where only the last will be used by lint since it will
+     * overwrite any earlier occurrences.)
      */
     fun ensureUnique() {
         val targets = mutableSetOf<String>()
@@ -208,15 +198,19 @@ class ProjectDescription : Comparable<ProjectDescription> {
     override fun toString(): String =
         "$type:${if (name.isNotBlank()) name else ProjectDescription::class.java.simpleName}"
 
-    /** Returns true if this project is nested under (see [under]) the given project */
+    /**
+     * Returns true if this project is nested under (see [under]) the
+     * given project.
+     */
     fun isUnder(desc: ProjectDescription): Boolean {
         val under = under ?: return false
         return under == desc || under.isUnder(desc)
     }
 
     /**
-     * Compare by dependency order such that dependencies are always listed before
-     * their dependents, and order unrelated projects alphabetically.
+     * Compare by dependency order such that dependencies are always
+     * listed before their dependents, and order unrelated projects
+     * alphabetically.
      */
     override fun compareTo(other: ProjectDescription): Int {
         return if (this.dependsOn.contains(other)) {
@@ -236,7 +230,10 @@ class ProjectDescription : Comparable<ProjectDescription> {
     }
 
     companion object {
-        /** Returns the path to use for the given project description under a given root */
+        /**
+         * Returns the path to use for the given project description
+         * under a given root.
+         */
         fun getProjectDirectory(project: ProjectDescription, rootDir: File): File {
             var curr = project
             if (curr.under == null) {
@@ -374,8 +371,8 @@ class ProjectDescription : Comparable<ProjectDescription> {
         }
 
         /**
-         * All Android projects must have a manifest file; this one creates it if the test file
-         * didn't add an explicit one.
+         * All Android projects must have a manifest file; this one
+         * creates it if the test file didn't add an explicit one.
          */
         private fun addManifestFileIfNecessary(manifest: File) {
             // Ensure that there is at least a manifest file there to make it a valid project
@@ -402,7 +399,7 @@ class ProjectDescription : Comparable<ProjectDescription> {
         }
     }
 
-    /** Describes different types of lint test projects  */
+    /** Describes different types of lint test projects. */
     enum class Type {
         APP,
         LIBRARY,

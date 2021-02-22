@@ -70,29 +70,29 @@ class XmlReader(
     private var configs: MutableMap<String, Severity>? = null
     private val parser: XmlPullParser
 
-    /** Issue ID for the incident currently being assembled */
+    /** Issue ID for the incident currently being assembled. */
     private var issueId: String? = null
-    /** Message for the incident currently being assembled */
+    /** Message for the incident currently being assembled. */
     private var message: String? = null
-    /** Severity for the incident currently being assembled */
+    /** Severity for the incident currently being assembled. */
     private var severity: Severity? = null
-    /** Location for the incident currently being assembled */
+    /** Location for the incident currently being assembled. */
     private var location: Location? = null
     /**
      * Linked list of locations for the incident currently being
-     * assembled
+     * assembled.
      */
     private var prevLocation: Location? = null
     /**
      * Additional keys and values for the incident currently being
-     * assembled
+     * assembled.
      */
     private var lintMap: LintMap? = null
-    /** A quickfix for the incident currently being assembled */
+    /** A quickfix for the incident currently being assembled. */
     private var fix: LintFix? = null
     /**
      * A list of fixes for the incident currently being assembled, if
-     * composite
+     * composite.
      */
     private val fixLists = ArrayDeque<MutableList<LintFix>>()
 
@@ -106,17 +106,17 @@ class XmlReader(
         }
     }
 
-    /** Returns the incidents loaded from this XML file */
+    /** Returns the incidents loaded from this XML file. */
     fun getIncidents(): List<Incident> {
         return incidents
     }
 
-    /** Returns any partial results loaded from this XML file */
+    /** Returns any partial results loaded from this XML file. */
     fun getPartialResults(): Map<Issue, LintMap> {
         return data ?: emptyMap()
     }
 
-    /** Returns the configured issues loaded from this XML file */
+    /** Returns the configured issues loaded from this XML file. */
     fun getConfiguredIssues(): Map<String, Severity> {
         return configs ?: emptyMap()
     }
@@ -135,7 +135,7 @@ class XmlReader(
         fixLists.last.last()
     }
 
-    /** Read in and parse the XML file */
+    /** Read in and parse the XML file. */
     private fun parse() {
         try {
             while (parser.next() != XmlPullParser.END_DOCUMENT) {

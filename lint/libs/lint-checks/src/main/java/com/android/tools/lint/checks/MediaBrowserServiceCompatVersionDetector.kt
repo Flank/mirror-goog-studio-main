@@ -15,7 +15,7 @@ import com.android.tools.lint.model.LintModelExternalLibrary
 import org.jetbrains.uast.UClass
 
 /**
- * Constructs a new [MediaBrowserServiceCompatVersionDetector] check
+ * Constructs a new [MediaBrowserServiceCompatVersionDetector] check.
  */
 class MediaBrowserServiceCompatVersionDetector : Detector(), SourceCodeScanner {
 
@@ -40,8 +40,9 @@ class MediaBrowserServiceCompatVersionDetector : Detector(), SourceCodeScanner {
         )
 
         /**
-         * Minimum recommended support library version that has the necessary fixes
-         * to ensure that MediaBrowserServiceCompat is forward compatible with N
+         * Minimum recommended support library version that has the
+         * necessary fixes to ensure that MediaBrowserServiceCompat is
+         * forward compatible with N.
          */
         val MIN_SUPPORT_V4_VERSION: GradleCoordinate = GradleCoordinate.parseVersionOnly("24.0.0")
 

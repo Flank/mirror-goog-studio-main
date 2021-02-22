@@ -47,7 +47,10 @@ import org.jetbrains.uast.UClass
 import org.w3c.dom.Element
 import java.util.EnumSet
 
-/** Ensures that PreferenceActivity and its subclasses are never exported.  */
+/**
+ * Ensures that PreferenceActivity and its subclasses are never
+ * exported.
+ */
 class PreferenceActivityDetector : Detector(), XmlScanner, SourceCodeScanner {
 
     // ---- Implements XmlScanner ----

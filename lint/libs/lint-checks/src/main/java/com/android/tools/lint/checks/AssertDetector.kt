@@ -49,12 +49,10 @@ import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.kotlin.KotlinUTypeCheckExpression
 import org.jetbrains.uast.toUElement
 
-/**
- * Looks for assertion usages.
- */
+/** Looks for assertion usages. */
 class AssertDetector : Detector(), SourceCodeScanner {
     companion object Issues {
-        /** In Kotlin arguments to assertions are always evaluated */
+        /** In Kotlin arguments to assertions are always evaluated. */
         @JvmField
         val EXPENSIVE = Issue.create(
             id = "ExpensiveAssertion",
@@ -166,14 +164,18 @@ class AssertDetector : Detector(), SourceCodeScanner {
     }
 
     /**
-     * Returns true if the given assert call is performing computation in its condition
-     * without explicitly checking for whether assertions are enabled
+     * Returns true if the given assert call is performing computation
+     * in its condition without explicitly checking for whether
+     * assertions are enabled.
      */
     private fun warnAboutWork(assertCall: UCallExpression, condition: UExpression): Boolean {
         return isExpensive(condition, 0) && !isWithinAssertionStatusCheck(assertCall)
     }
 
-    /** Returns true if the given logging call performs "work" to compute the message  */
+    /**
+     * Returns true if the given logging call performs "work" to compute
+     * the message.
+     */
     private fun isExpensive(argument: UExpression, depth: Int): Boolean {
         if (depth == 4) {
             return true

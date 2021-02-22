@@ -32,7 +32,8 @@ import com.intellij.psi.PsiMethod
 import org.jetbrains.uast.UCallExpression
 
 /**
- * Ensures that addJavascriptInterface is not called for API levels below 17.
+ * Ensures that addJavascriptInterface is not called for API levels
+ * below 17.
  */
 class AddJavascriptInterfaceDetector : Detector(), SourceCodeScanner {
     companion object {

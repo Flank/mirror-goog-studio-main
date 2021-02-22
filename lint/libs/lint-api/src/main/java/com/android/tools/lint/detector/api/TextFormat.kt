@@ -30,36 +30,38 @@ import com.android.utils.XmlUtils
  */
 enum class TextFormat {
     /**
-     * Raw output format which is similar to text but allows some markup:
+     * Raw output format which is similar to text but allows some
+     * markup:
+     * * HTTP urls (http://...)
+     * * Sentences immediately surrounded by * will be shown as italics.
+     * * Sentences immediately surrounded by ** will be shown as bold.
+     * * Sentences immediately surrounded by *** will be shown as bold
+     *   italics.
+     * * Sentences immediately surrounded by ` will be shown using
+     *   monospace fonts
+     * * You can escape the previous characters with a backslash, \.
+     *   Backslash characters must themselves be
+     *   escaped with a backslash, e.g. use \\.
+     * * If you want to use bold or italics within a word, you can use
+     *   the trick of putting a zero-width space between the
+     *   characters by entering a \\u200b unicode character.
+     * * Blocks of lines surrounded with ``` will be formatted as code;
+     *   you can optionally add "xml", "java", "kotlin" etc
+     *   immediately after ``` on the opening line to get syntax
+     *   highlighting when lint supports it (such as in HTML reports.)
      *
-     *  * HTTP urls (http://...)
-     *  * Sentences immediately surrounded by * will be shown as italics.
-     *  * Sentences immediately surrounded by ** will be shown as bold.
-     *  * Sentences immediately surrounded by *** will be shown as bold italics.
-     *  * Sentences immediately surrounded by ` will be shown using monospace
-     *     fonts
-     *  * You can escape the previous characters with a backslash, \. Backslash
-     *    characters must themselves be escaped with a backslash, e.g. use \\.
-     *  * If you want to use bold or italics within a word, you can use the
-     *    trick of putting a zero-width space between the characters by entering
-     *    a \\u200b unicode character.
-     *  * Blocks of lines surrounded with ``` will be formatted as code; you
-     *    can optionally add "xml", "java", "kotlin" etc immediately after ``` on
-     *    the opening line to get syntax highlighting when lint supports it
-     *    (such as in HTML reports.)
-     *
-     * Furthermore, newlines are converted to br's when converting newlines.
-     * Note: It does not insert `<html>` tags around the fragment for HTML output.
+     * Furthermore, newlines are converted to br's when converting
+     * newlines. Note: It does not insert `<html>` tags around the
+     * fragment for HTML output.
      */
     RAW,
 
-    /**
-     * Plain text output
-     */
+    /** Plain text output. */
     TEXT,
 
     /**
-     * HTML formatted output (note: does not include surrounding `<html></html>` tags)
+     * HTML formatted output (note: does not include surrounding
+     * `<html></html>` tags)
      */
     HTML,
 
@@ -92,10 +94,10 @@ enum class TextFormat {
 
     /**
      * Converts the given message to the given format. Note that some
-     * conversions are lossy; e.g. once converting away from the raw format
-     * (which contains all the markup) you can't convert back to it.
-     * Note that you can convert to the format it's already in; that just
-     * returns the same string.
+     * conversions are lossy; e.g. once converting away from the raw
+     * format (which contains all the markup) you can't convert back to
+     * it. Note that you can convert to the format it's already in; that
+     * just returns the same string.
      *
      * @param message the message to convert
      * @param to the format to convert to
@@ -141,7 +143,9 @@ enum class TextFormat {
         }
     }
 
-    /** Converts to this output format from the given HTML-format text  */
+    /**
+     * Converts to this output format from the given HTML-format text.
+     */
     private fun fromHtml(html: String): String {
         assert(this == RAW || this == TEXT) { this }
 
@@ -258,7 +262,9 @@ enum class TextFormat {
         return s
     }
 
-    /** Converts to this output format from the given raw-format text  */
+    /**
+     * Converts to this output format from the given raw-format text.
+     */
     private fun fromRaw(text: String): String {
         assert(this == HTML || this == HTML_WITH_UNICODE || this == TEXT) { this }
         val sb = StringBuilder(3 * text.length / 2)
@@ -422,8 +428,8 @@ enum class TextFormat {
         const val HTTPS_PREFIX = "https://"
 
         /**
-         * Given an http URL starting at [start] in [text], find the position right after the
-         * URL end
+         * Given an http URL starting at [start] in [text], find the
+         * position right after the URL end.
          */
         fun findUrlEnd(text: String, start: Int): Int {
             // Find url end

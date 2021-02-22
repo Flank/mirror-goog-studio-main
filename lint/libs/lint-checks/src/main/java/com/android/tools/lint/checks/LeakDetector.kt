@@ -57,14 +57,17 @@ import org.jetbrains.uast.util.isAssignment
 import org.jetbrains.uast.visitor.AbstractUastVisitor
 import java.util.Locale
 
-/** Looks for leaks via static fields */
+/** Looks for leaks via static fields. */
 class LeakDetector : Detector(), SourceCodeScanner {
 
     override fun applicableSuperClasses(): List<String> {
         return SUPER_CLASSES
     }
 
-    /** Warn about inner classes that aren't static: these end up retaining the outer class */
+    /**
+     * Warn about inner classes that aren't static: these end up
+     * retaining the outer class.
+     */
     override fun visitClass(context: JavaContext, declaration: UClass) {
         val containingClass = declaration.getContainingUClass()
         val isAnonymous = declaration is UAnonymousClass
@@ -220,8 +223,8 @@ class LeakDetector : Detector(), SourceCodeScanner {
         }
 
         /**
-         * If it's a static field see if it's initialized to an app context in one of the
-         * constructors
+         * If it's a static field see if it's initialized to an app
+         * context in one of the constructors.
          */
         private fun isInitializedToAppContext(field: UField, typeClass: PsiClass): Boolean {
             val containingClass = field.getContainingUClass() ?: return false
@@ -312,7 +315,7 @@ class LeakDetector : Detector(), SourceCodeScanner {
     }
 
     companion object {
-        /** Leaking data via static fields */
+        /** Leaking data via static fields. */
         @JvmField
         val ISSUE = Issue.create(
             id = "StaticFieldLeak",

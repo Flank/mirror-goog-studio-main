@@ -163,7 +163,7 @@ fun getInternalName(psiClass: PsiClass): String? {
     return sig
 }
 
-/** Returns the internal method name  */
+/** Returns the internal method name. */
 fun getInternalMethodName(method: PsiMethod): String {
     return if (method.isConstructor) {
         SdkConstants.CONSTRUCTOR_NAME
@@ -173,10 +173,11 @@ fun getInternalMethodName(method: PsiMethod): String {
 }
 
 /**
- * Format a list of strings, and cut of the list at `maxItems` if the number of items are
- * greater.
+ * Format a list of strings, and cut of the list at `maxItems` if the
+ * number of items are greater.
  *
- * @param strings the list of strings to print out as a comma separated list
+ * @param strings the list of strings to print out as a comma separated
+ *     list
  * @param maxItems the maximum number of items to print
  * @return a comma separated list-string
  */
@@ -185,13 +186,15 @@ fun formatList(strings: List<String>, maxItems: Int = Integer.MAX_VALUE): String
 }
 
 /**
- * Format a list of strings, and cut of the list at `maxItems` if the number of items are
- * greater.
+ * Format a list of strings, and cut of the list at `maxItems` if the
+ * number of items are greater.
  *
- * @param strings the list of strings to print out as a comma separated list
+ * @param strings the list of strings to print out as a comma separated
+ *     list
  * @param maxItems the maximum number of items to print
  * @param sort whether the items should be sorted before printing.
- * @param useConjunction whether the last two items should be joined with "and" instead of ","
+ * @param useConjunction whether the last two items should be joined
+ *     with "and" instead of ","
  * @return a comma separated list-string
  */
 fun formatList(
@@ -232,7 +235,8 @@ fun formatList(
 }
 
 /**
- * Determine if the given type corresponds to a resource that has a unique file
+ * Determine if the given type corresponds to a resource that has a
+ * unique file
  *
  * @param type the resource type to check
  * @return true if the given type corresponds to a file-type resource
@@ -260,7 +264,8 @@ fun isXmlFile(file: File): Boolean {
 /**
  * Case insensitive ends with
  *
- * @param string the string to be tested whether it ends with the given suffix
+ * @param string the string to be tested whether it ends with the given
+ *     suffix
  * @param suffix the suffix to check
  * @return true if `string` ends with `suffix`, case-insensitively.
  */
@@ -276,7 +281,8 @@ fun endsWith(string: String, suffix: String): Boolean {
 /**
  * Case insensitive starts with
  *
- * @param string the string to be tested whether it starts with the given prefix
+ * @param string the string to be tested whether it starts with the
+ *     given prefix
  * @param prefix the prefix to check
  * @param offset the offset to start checking with
  * @return true if `string` starts with `prefix`, case-insensitively.
@@ -292,7 +298,8 @@ fun startsWith(string: String, prefix: String, offset: Int): Boolean {
 }
 
 /**
- * Returns the basename of the given filename, unless it's a dot-file such as ".svn".
+ * Returns the basename of the given filename, unless it's a dot-file
+ * such as ".svn".
  *
  * @param fileName the file name to extract the basename from
  * @return the basename (the filename without the file extension)
@@ -307,12 +314,13 @@ fun getBaseName(fileName: String): String {
 }
 
 /**
- * Returns a description of counts for errors and warnings, such as "5 errors and 2 warnings" or
- * "3 errors" or "2 warnings"
+ * Returns a description of counts for errors and warnings, such as "5
+ * errors and 2 warnings" or "3 errors" or "2 warnings"
  *
  * @param errorCount the count of errors
  * @param warningCount the count of warnings
- * @param comma if true, use a comma to separate messages, otherwise "and"
+ * @param comma if true, use a comma to separate messages, otherwise
+ *     "and"
  * @param capitalize whether we should capitalize sentence
  * @return a description string
  */
@@ -416,8 +424,8 @@ fun stripIdPrefix(id: String?): String {
 }
 
 /**
- * Returns true if the given two id references match. This is similar to String equality, but it
- * also considers "`@+id/foo == @id/foo`.
+ * Returns true if the given two id references match. This is similar to
+ * String equality, but it also considers "`@+id/foo == @id/foo`.
  *
  * @param id1 the first id to compare
  * @param id2 the second id to compare
@@ -456,8 +464,8 @@ fun idReferencesMatch(id1: String?, id2: String?): Boolean {
 }
 
 /**
- * Computes a canonical "display path" for a resource (which typically is the parent name plus a
- * file separator, plus the file name)
+ * Computes a canonical "display path" for a resource (which typically
+ * is the parent name plus a file separator, plus the file name)
  *
  * @param client lint client used for formatting
  * @param file resource file
@@ -468,8 +476,8 @@ fun getFileNameWithParent(client: LintClient, file: File): String {
 }
 
 /**
- * Computes a canonical "display path" for a resource (which typically is the parent name plus a
- * file separator, plus the file name)
+ * Computes a canonical "display path" for a resource (which typically
+ * is the parent name plus a file separator, plus the file name)
  *
  * @param client lint client used for formatting
  * @param file resource file
@@ -481,36 +489,38 @@ fun getFileNameWithParent(client: LintClient, file: PathString): String {
 }
 
 /**
- * Returns true if the first string can be edited (Via insertions, deletions or substitutions)
- * into the second string in at most the given number of editing operations. This computes the
- * edit distance between the two strings and returns true if it is less than or equal to the
- * given threshold.
+ * Returns true if the first string can be edited (Via insertions,
+ * deletions or substitutions) into the second string in at most the
+ * given number of editing operations. This computes the edit distance
+ * between the two strings and returns true if it is less than or equal
+ * to the given threshold.
  *
  * @param s the first string to compare
  * @param t the second string to compare
  * @param max the maximum number of edit operations allowed
- * @return true if the first string is editable to the second string in at most the given number
- * of steps
+ * @return true if the first string is editable to the second string in
+ *     at most the given number of steps
  */
 fun isEditableTo(s: String, t: String, max: Int): Boolean {
     return editDistance(s, t, max) <= max
 }
 
 /**
- * Computes the edit distance (number of insertions, deletions or substitutions to edit one
- * string into the other) between two strings. In particular, this will compute the Levenshtein
- * distance.
- *
+ * Computes the edit distance (number of insertions, deletions or
+ * substitutions to edit one string into the other) between two strings.
+ * In particular, this will compute the Levenshtein distance.
  *
  * See http://en.wikipedia.org/wiki/Levenshtein_distance for details.
  *
  * @param s the first string to compare
  * @param t the second string to compare
- * @param max the maximum edit distance that we care about; if for example the string length
- * delta is greater than this we don't bother computing the exact edit distance since the
- * caller has indicated they're not interested in the result
- * @return the edit distance between the two strings, or some other value greater than that if
- * the edit distance is at least as big as the `max` parameter
+ * @param max the maximum edit distance that we care about; if for
+ *     example the string length delta is greater than this we
+ *     don't bother computing the exact edit distance since the
+ *     caller has indicated they're not interested in the result
+ * @return the edit distance between the two strings, or some other
+ *     value greater than that if the edit distance
+ *     is at least as big as the `max` parameter
  */
 fun editDistance(s: String, t: String, max: Int = Integer.MAX_VALUE): Int {
     if (s == t) {
@@ -572,10 +582,13 @@ fun getLayoutName(layoutFile: File): String {
 }
 
 /**
- * Splits the given path into its individual parts, attempting to be tolerant about path
- * separators (: or ;). It can handle possibly ambiguous paths, such as `c:\foo\bar:\other`, though of course these are to be avoided if possible.
+ * Splits the given path into its individual parts, attempting to be
+ * tolerant about path separators (: or ;). It can handle possibly
+ * ambiguous paths, such as `c:\foo\bar:\other`, though of course these
+ * are to be avoided if possible.
  *
- * @param path the path variable to split, which can use both : and ; as path separators.
+ * @param path the path variable to split, which can use both : and ; as
+ *     path separators.
  * @return the individual path components as an Iterable of strings
  */
 fun splitPath(path: String): Iterable<String> {
@@ -640,7 +653,8 @@ fun getCommonParent(files: List<File>): File? {
  *
  * @param file1 the first file to be compared
  * @param file2 the second file to be compared
- * @return the closest common ancestor file, or null if the two files have no common parent
+ * @return the closest common ancestor file, or null if the two files
+ *     have no common parent
  */
 fun getCommonParent(file1: File, file2: File): File? {
     when {
@@ -668,7 +682,10 @@ fun getCommonParent(file1: File, file2: File): File? {
     return null
 }
 
-/** Returns true if the given [parentCandidate] path is a parent of the given [file] */
+/**
+ * Returns true if the given [parentCandidate] path is a parent of the
+ * given [file]
+ */
 fun isParent(parentCandidate: File?, file: File, strict: Boolean = true): Boolean {
     parentCandidate ?: return false
 
@@ -689,7 +706,7 @@ fun isParent(parentCandidate: File?, file: File, strict: Boolean = true): Boolea
     }
 }
 
-/** Returns a RFC3986 compliant URI for the given file */
+/** Returns a RFC3986 compliant URI for the given file. */
 fun getFileUri(file: File): String {
     return file.toURI().toURL().toString().let {
         // Make URI comply with https://tools.ietf.org/html/rfc3986; the JDK
@@ -703,12 +720,14 @@ fun getFileUri(file: File): String {
 }
 
 /**
- * Returns the encoded String for the given file. This is usually the same as `Files.toString(file, Charsets.UTF8`, but if there's a UTF byte order mark (for UTF8, UTF_16
- * or UTF_16LE), use that instead.
+ * Returns the encoded String for the given file. This is usually the
+ * same as `Files.toString(file, Charsets.UTF8`, but if there's a UTF
+ * byte order mark (for UTF8, UTF_16 or UTF_16LE), use that instead.
  *
  * @param client the client to use for I/O operations
  * @param file the file to read from
- * @param createString If true, create a [String] instead of a general [     ]
+ * @param createString If true, create a [String] instead of a general [
+ *     ]
  * @return the string
  */
 @Throws(IOException::class)
@@ -735,7 +754,10 @@ fun isDataBindingExpression(expression: String): Boolean {
     )
 }
 
-/** Returns true if the given resource value is a manifest place holder expression  */
+/**
+ * Returns true if the given resource value is a manifest place holder
+ * expression.
+ */
 fun isManifestPlaceHolderExpression(expression: String): Boolean {
     return expression.contains(MANIFEST_PLACEHOLDER_PREFIX)
 }
@@ -744,13 +766,13 @@ private const val UTF_16 = "UTF_16"
 private const val UTF_16LE = "UTF_16LE"
 
 /**
- * Returns the String corresponding to the given data. This is usually the same as `new
- * String(data)`, but if there's a UTF byte order mark (for UTF8, UTF_16 or UTF_16LE), use that
- * instead.
+ * Returns the String corresponding to the given data. This is usually
+ * the same as `new String(data)`, but if there's a UTF byte order mark
+ * (for UTF8, UTF_16 or UTF_16LE), use that instead.
  *
- * NOTE: For XML files, there is the additional complication that there could be a
- * `encoding=` attribute in the prologue. For those files, use
- * [PositionXmlParser.getXmlString] instead.
+ * NOTE: For XML files, there is the additional complication that there
+ * could be a `encoding=` attribute in the prologue. For those files,
+ * use [PositionXmlParser.getXmlString] instead.
  *
  * @param data the byte array to construct the string from
  * @param createString If true, create a [String] instead
@@ -870,7 +892,8 @@ fun getEncodedString(data: ByteArray?, createString: Boolean): CharSequence {
  * Returns true if the given class node represents a static inner class.
  *
  * @param classNode the inner class to be checked
- * @return true if the class node represents an inner class that is static
+ * @return true if the class node represents an inner class that is
+ *     static
  */
 fun isStaticInnerClass(classNode: ClassNode): Boolean {
     // Note: We can't just filter out static inner classes like this:
@@ -890,7 +913,8 @@ fun isStaticInnerClass(classNode: ClassNode): Boolean {
 }
 
 /**
- * Returns true if the given class node represents an anonymous inner class
+ * Returns true if the given class node represents an anonymous inner
+ * class
  *
  * @param classNode the class to be checked
  * @return true if the class appears to be an anonymous class
@@ -908,10 +932,12 @@ fun isAnonymousClass(classNode: ClassNode): Boolean {
 }
 
 /**
- * Returns the previous opcode prior to the given node, ignoring label and line number nodes
+ * Returns the previous opcode prior to the given node, ignoring label
+ * and line number nodes
  *
  * @param node the node to look up the previous opcode for
- * @return the previous opcode, or [Opcodes.NOP] if no previous node was found
+ * @return the previous opcode, or [Opcodes.NOP] if no previous node was
+ *     found
  */
 fun getPrevOpcode(node: AbstractInsnNode): Int {
     val prev = getPrevInstruction(node)
@@ -919,11 +945,12 @@ fun getPrevOpcode(node: AbstractInsnNode): Int {
 }
 
 /**
- * Returns the previous instruction prior to the given node, ignoring label and line number
- * nodes.
+ * Returns the previous instruction prior to the given node, ignoring
+ * label and line number nodes.
  *
  * @param node the node to look up the previous instruction for
- * @return the previous instruction, or null if no previous node was found
+ * @return the previous instruction, or null if no previous node was
+ *     found
  */
 fun getPrevInstruction(node: AbstractInsnNode): AbstractInsnNode? {
     var prev: AbstractInsnNode? = node
@@ -944,7 +971,8 @@ fun getPrevInstruction(node: AbstractInsnNode): AbstractInsnNode? {
 }
 
 /**
- * Returns the next opcode after to the given node, ignoring label and line number nodes
+ * Returns the next opcode after to the given node, ignoring label and
+ * line number nodes
  *
  * @param node the node to look up the next opcode for
  * @return the next opcode, or [Opcodes.NOP] if no next node was found
@@ -955,7 +983,8 @@ fun getNextOpcode(node: AbstractInsnNode): Int {
 }
 
 /**
- * Returns the next instruction after to the given node, ignoring label and line number nodes.
+ * Returns the next instruction after to the given node, ignoring label
+ * and line number nodes.
  *
  * @param node the node to look up the next node for
  * @return the next instruction, or null if no next node was found
@@ -979,7 +1008,8 @@ fun getNextInstruction(node: AbstractInsnNode): AbstractInsnNode? {
 }
 
 /**
- * Returns true if the given directory is a lint manifest file directory.
+ * Returns true if the given directory is a lint manifest file
+ * directory.
  *
  * @param dir the directory to check
  * @return true if the directory contains a manifest file
@@ -1006,8 +1036,9 @@ fun isManifestFolder(dir: File?): Boolean {
 }
 
 /**
- * Look up the locale and region from the given parent folder name and return it as a combined
- * string, such as "en", "en-rUS", b+eng-US, etc, or null if no language is specified.
+ * Look up the locale and region from the given parent folder name and
+ * return it as a combined string, such as "en", "en-rUS", b+eng-US,
+ * etc, or null if no language is specified.
  *
  * @param folderName the folder name
  * @return the locale+region string or null
@@ -1220,9 +1251,10 @@ fun getInheritedStyles(
 }
 
 /**
- * Returns true if the given two paths point to the same logical resource file within a source
- * set. This means that it only checks the parent folder name and individual file name, not the
- * path outside the parent folder.
+ * Returns true if the given two paths point to the same logical
+ * resource file within a source set. This means that it only checks the
+ * parent folder name and individual file name, not the path outside the
+ * parent folder.
  *
  * @param file1 the first file to compare
  * @param file2 the second file to compare
@@ -1240,7 +1272,9 @@ fun isSameResourceFile(file1: File?, file2: File?): Boolean {
     return false
 }
 
-/** Computes a suggested name given a resource prefix and resource name  */
+/**
+ * Computes a suggested name given a resource prefix and resource name.
+ */
 fun computeResourceName(
     prefix: String,
     name: String,
@@ -1285,7 +1319,10 @@ fun computeResourceName(
     }
 }
 
-/** Returns true if the given Gradle model is older than the given version number  */
+/**
+ * Returns true if the given Gradle model is older than the given
+ * version number.
+ */
 fun isModelOlderThan(
     project: Project,
     major: Int,
@@ -1304,8 +1341,9 @@ fun isModelOlderThan(
 }
 
 /**
- * Returns the Java language level for the given element, or the default level if an applicable
- * the language level is not found (for example if the element is not a Java element
+ * Returns the Java language level for the given element, or the default
+ * level if an applicable the language level is not found (for example
+ * if the element is not a Java element.
  */
 fun getLanguageLevel(
     element: UElement,
@@ -1317,8 +1355,9 @@ fun getLanguageLevel(
 }
 
 /**
- * Returns the Java language level for the given element, or the default level if an applicable
- * the language level is not found (for example if the element is not a Java element
+ * Returns the Java language level for the given element, or the default
+ * level if an applicable the language level is not found (for example
+ * if the element is not a Java element.
  */
 fun getLanguageLevel(
     element: PsiElement,
@@ -1329,8 +1368,9 @@ fun getLanguageLevel(
 }
 
 /**
- * Returns the Java language level for the given element, or the default level if an applicable
- * the language level is not found (for example if the element is not a Java element
+ * Returns the Java language level for the given element, or the default
+ * level if an applicable the language level is not found (for example
+ * if the element is not a Java element.
  */
 fun getLanguageLevel(
     project: Project,
@@ -1342,8 +1382,9 @@ fun getLanguageLevel(
 }
 
 /**
- * Looks for a certain string within a larger string, which should immediately follow the given
- * prefix and immediately precede the given suffix.
+ * Looks for a certain string within a larger string, which should
+ * immediately follow the given prefix and immediately precede the given
+ * suffix.
  *
  * @param string the full string to search
  * @param prefix the optional prefix to follow
@@ -1375,12 +1416,14 @@ fun findSubstring(
 }
 
 /**
- * Splits up the given message coming from a given string format (where the string format
- * follows the very specific convention of having only strings formatted exactly with the format
- * %n$s where n is between 1 and 9 inclusive, and each formatting parameter appears exactly
- * once, and in increasing order.
+ * Splits up the given message coming from a given string format (where
+ * the string format follows the very specific convention of having only
+ * strings formatted exactly with the format %n$s where n is between 1
+ * and 9 inclusive, and each formatting parameter appears exactly once,
+ * and in increasing order.
  *
- * @param format the format string responsible for creating the error message
+ * @param format the format string responsible for creating the error
+ *     message
  * @param errorMessage an error message formatted with the format string
  * @return the specific values inserted into the format
  */
@@ -1435,8 +1478,8 @@ fun getFormattedParameters(
  * Returns the locale for the given parent folder.
  *
  * @param parent the name of the parent folder
- * @return null if the locale is not known, or a locale qualifier providing the language and
- * possibly region
+ * @return null if the locale is not known, or a locale qualifier
+ *     providing the language and possibly region
  */
 fun getLocale(parent: String): LocaleQualifier? {
     if (parent.indexOf('-') != -1) {
@@ -1452,8 +1495,8 @@ fun getLocale(parent: String): LocaleQualifier? {
  * Returns the locale for the given context.
  *
  * @param context the context to look up the locale for
- * @return null if the locale is not known, or a locale qualifier providing the language and
- * possibly region
+ * @return null if the locale is not known, or a locale qualifier
+ *     providing the language and possibly region
  */
 fun getLocale(context: XmlContext): LocaleQualifier? {
     val root = context.document.documentElement
@@ -1477,8 +1520,8 @@ fun getLocale(context: XmlContext): LocaleQualifier? {
  * Check whether the given resource file is in an English locale
  *
  * @param context the XML context for the resource file
- * @param assumeForBase whether the base folder (e.g. no locale specified) should be treated as
- * English
+ * @param assumeForBase whether the base folder (e.g. no locale
+ *     specified) should be treated as English
  */
 fun isEnglishResource(context: XmlContext, assumeForBase: Boolean): Boolean {
     val locale = getLocale(context)
@@ -1490,13 +1533,14 @@ fun isEnglishResource(context: XmlContext, assumeForBase: Boolean): Boolean {
 }
 
 /**
- * Create a [Location] for an error in the top level build.gradle file. This is necessary
- * when we're doing an analysis based on the Gradle interpreted model, not from parsing Gradle
- * files - and the model doesn't provide source positions.
+ * Create a [Location] for an error in the top level build.gradle file.
+ * This is necessary when we're doing an analysis based on the Gradle
+ * interpreted model, not from parsing Gradle files - and the model
+ * doesn't provide source positions.
  *
  * @param project the project containing the gradle file being analyzed
- * @return location for the top level gradle file if it exists, otherwise fall back to the
- * project directory.
+ * @return location for the top level gradle file if it exists,
+ *     otherwise fall back to the project directory.
  */
 fun guessGradleLocation(project: Project): Location {
     val dir = project.getDir()
@@ -1511,14 +1555,14 @@ fun guessGradleLocation(project: Project): Location {
 }
 
 /**
- * Attempts to find a string in the build.gradle file for a given project directory. It will
- * skip comments.
+ * Attempts to find a string in the build.gradle file for a given
+ * project directory. It will skip comments.
  *
  * @param client the client (used to read the file)
  * @param projectDir the project directory
  * @param string the string to locate
- * @return a suitable location (or just the build.gradle file, or the project directory, if not
- * found)
+ * @return a suitable location (or just the build.gradle file, or the
+ *     project directory, if not found)
  */
 fun guessGradleLocation(
     client: LintClient,
@@ -1529,7 +1573,10 @@ fun guessGradleLocation(
     return guessGradleLocationForFile(client, gradle, string)
 }
 
-/** Like [guessGradleLocation] but where the specific build.gradle file is known */
+/**
+ * Like [guessGradleLocation] but where the specific build.gradle file
+ * is known.
+ */
 fun guessGradleLocationForFile(
     client: LintClient,
     gradle: File,
@@ -1684,8 +1731,9 @@ fun getPrimitiveType(autoBoxedType: String): String? {
 }
 
 /**
- * Returns the fully qualified class name for a manifest entry element that specifies a name
- * attribute. Will also replace $ with dots for inner classes.
+ * Returns the fully qualified class name for a manifest entry element
+ * that specifies a name attribute. Will also replace $ with dots for
+ * inner classes.
  *
  * @param element the element
  * @return the fully qualified class name
@@ -1716,8 +1764,8 @@ fun resolveManifestName(element: Element): String {
 }
 
 /**
- * Finds the place holder values for the current string and replaces them
- * with the current variant version, or values from the default map
+ * Finds the place holder values for the current string and replaces
+ * them with the current variant version, or values from the default map
  * if supplied.
  */
 fun resolvePlaceHolders(
@@ -1745,7 +1793,10 @@ fun resolvePlaceHolders(
     }
 }
 
-/** Looks up the value of a given place holder for the current variant of the given project */
+/**
+ * Looks up the value of a given place holder for the current variant of
+ * the given project.
+ */
 fun resolvePlaceHolder(
     project: Project?,
     name: String
@@ -1755,7 +1806,7 @@ fun resolvePlaceHolder(
     return placeHolders[name]
 }
 
-/** Returns true if the given string is a reserved Java keyword */
+/** Returns true if the given string is a reserved Java keyword. */
 fun isJavaKeyword(keyword: String): Boolean {
     // TODO when we built on top of IDEA core replace this with
     //   JavaLexer.isKeyword(candidate, LanguageLevel.JDK_1_5)
@@ -1818,7 +1869,10 @@ fun isJavaKeyword(keyword: String): Boolean {
     return false
 }
 
-/** Returns true if the given string is a reserved Kotlin **hard** keyword */
+/**
+ * Returns true if the given string is a reserved Kotlin **hard**
+ * keyword.
+ */
 fun isKotlinHardKeyword(keyword: String): Boolean {
     // From https://github.com/JetBrains/kotlin/blob/master/core/descriptors/src/org/jetbrains/kotlin/renderer/KeywordStringsGenerated.java
     when (keyword) {
@@ -1856,7 +1910,10 @@ fun isKotlinHardKeyword(keyword: String): Boolean {
     return false
 }
 
-/** Reads the data from the given URL, with an optional timeout (in milliseconds)  */
+/**
+ * Reads the data from the given URL, with an optional timeout (in
+ * milliseconds)
+ */
 fun readUrlData(client: LintClient, query: String, timeout: Int): ByteArray? {
     val url = URL(query)
 
@@ -1870,8 +1927,8 @@ fun readUrlData(client: LintClient, query: String, timeout: Int): ByteArray? {
 }
 
 /**
- * Reads the data from the given URL, with an optional timeout (in milliseconds), and returns it
- * as a UTF-8 encoded String
+ * Reads the data from the given URL, with an optional timeout (in
+ * milliseconds), and returns it as a UTF-8 encoded String.
  */
 fun readUrlDataAsString(client: LintClient, query: String, timeout: Int): String? {
     val bytes = readUrlData(client, query, timeout)
@@ -1893,9 +1950,9 @@ fun <T> coalesce(vararg ts: T): T? {
 }
 
 /**
- * Looks up the method name of a given call. You should be able to just call
- * [UCallExpression.methodName] but due to bugs in UAST a workaround is currently necessary
- * in some cases.
+ * Looks up the method name of a given call. You should be able to
+ * just call [UCallExpression.methodName] but due to bugs in UAST a
+ * workaround is currently necessary in some cases.
  *
  * @param call the call to look up
  * @return the call name, if any
@@ -1905,15 +1962,15 @@ fun getMethodName(call: UCallExpression): String? {
     return methodIdentifier?.name ?: call.methodName
 }
 
-/** Returns true if the given element is written in Kotlin  */
+/** Returns true if the given element is written in Kotlin. */
 fun isKotlin(element: PsiElement?): Boolean {
     return element != null && isKotlin(element.language)
 }
 
 /**
- * Checks whether the given [element] is just a marker tag in a layout, not a real view.
- * Note that merge and include tags are not considered markers since they are replaced
- * with real views.
+ * Checks whether the given [element] is just a marker tag in a layout,
+ * not a real view. Note that merge and include tags are not considered
+ * markers since they are replaced with real views.
  */
 fun isLayoutMarkerTag(element: Element): Boolean {
     val tagName = element.localName
@@ -1924,9 +1981,9 @@ fun isLayoutMarkerTag(element: Element): Boolean {
 }
 
 /**
- * Checks whether the given [tagName] is just a marker tag in a layout, not a real view.
- * Note that merge and include tags are not considered markers since they are replaced
- * with real views.
+ * Checks whether the given [tagName] is just a marker tag in a layout,
+ * not a real view. Note that merge and include tags are not considered
+ * markers since they are replaced with real views.
  */
 fun isLayoutMarkerTag(tagName: String): Boolean = when (tagName) {
     REQUEST_FOCUS,
@@ -1939,22 +1996,22 @@ fun isLayoutMarkerTag(tagName: String): Boolean = when (tagName) {
     else -> false
 }
 
-/** Returns true if the given element is written in Java  */
+/** Returns true if the given element is written in Java. */
 fun isJava(element: PsiElement?): Boolean {
     return element != null && isJava(element.language)
 }
 
-/** Returns true if the given language is Kotlin  */
+/** Returns true if the given language is Kotlin. */
 fun isKotlin(language: Language?): Boolean {
     return language == KotlinLanguage.INSTANCE
 }
 
-/** Returns true if the given language is Java  */
+/** Returns true if the given language is Java. */
 fun isJava(language: Language?): Boolean {
     return language == JavaLanguage.INSTANCE
 }
 
-/** Returns true if the given string contains only digits */
+/** Returns true if the given string contains only digits. */
 fun isNumberString(s: String?): Boolean {
     if (s == null || s.isEmpty()) {
         return false
@@ -1973,8 +2030,8 @@ fun isNumberString(s: String?): Boolean {
 
 /**
  * Computes argument mapping from arguments to parameters (or returns
- * null if the mapping is 1-1, e.g. in Java), or if the mapping is trivial
- * (Kotlin 0 or 1 args), or if there's some kind of error.
+ * null if the mapping is 1-1, e.g. in Java), or if the mapping is
+ * trivial (Kotlin 0 or 1 args), or if there's some kind of error.
  */
 fun computeKotlinArgumentMapping(call: UCallExpression, method: PsiMethod):
     Map<UExpression, PsiParameter>? {

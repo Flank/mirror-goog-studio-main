@@ -25,57 +25,60 @@ import java.io.File
  * communicated Gradle project information to lint.
  *
  * Not all build systems have the same capabilities. The LintModel skews
- * a bit towards Gradle and some concepts provided by the Android
- * Gradle plugin, such as "variants", "product flavors" and so on.
+ * a bit towards Gradle and some concepts provided by the Android Gradle
+ * plugin, such as "variants", "product flavors" and so on.
  *
- * This is called a "module" to match the Android Studio and IntelliJ notion of
- * what a module is. Lint itself (but not this model) calls modules projects,
- * which matches the older Eclipse and Gradle terminology.
+ * This is called a "module" to match the Android Studio and IntelliJ
+ * notion of what a module is. Lint itself (but not this model) calls
+ * modules projects, which matches the older Eclipse and Gradle
+ * terminology.
  */
 interface LintModelModule {
     val loader: LintModelModuleLoader?
 
-    /** The root location of this module */
+    /** The root location of this module. */
     val dir: File
 
-    /** Build-system specific path of the module */
+    /** Build-system specific path of the module. */
     val modulePath: String
 
-    /** Type of the model */
+    /** Type of the model. */
     val type: LintModelModuleType
 
-    /** The Maven coordinate of this project, if known */
+    /** The Maven coordinate of this project, if known. */
     val mavenName: LintModelMavenName?
 
-    /** If the build model is Gradle, the Gradle version */
+    /** If the build model is Gradle, the Gradle version. */
     val gradleVersion: GradleVersion?
 
-    /** Returns the build folder of this project */
+    /** Returns the build folder of this project. */
     val buildFolder: File
 
-    /** Lint customization options */
+    /** Lint customization options. */
     val lintOptions: LintModelLintOptions
 
     /**
      * The lint jars that this module uses to run extra lint checks.
      *
-     * The files may, or may not exist
+     * The files may, or may not exist.
      */
     val lintRuleJars: List<File>
 
     /**
-     * The resource prefix to use, if any. This is an optional prefix which can be set and
-     * which is used by the defaults to automatically choose new resources with a certain prefix,
-     * warn if resources are not using the given prefix, etc. This helps work with resources in the
-     * app namespace where there could otherwise be unintentional duplicated resource names between
-     * unrelated libraries.
+     * The resource prefix to use, if any. This is an optional
+     * prefix which can be set and which is used by the defaults to
+     * automatically choose new resources with a certain prefix, warn if
+     * resources are not using the given prefix, etc. This helps work
+     * with resources in the app namespace where there could otherwise
+     * be unintentional duplicated resource names between unrelated
+     * libraries.
      */
     val resourcePrefix: String?
     val dynamicFeatures: Collection<String>
 
     /**
-     * Returns the boot classpath matching the compile target. This is typically android.jar plus
-     * other optional libraries.
+     * Returns the boot classpath matching the compile target. This is
+     * typically android.jar plus other optional libraries.
      */
     val bootClassPath: List<File>
     val javaSourceLevel: String
@@ -86,8 +89,9 @@ interface LintModelModule {
     fun defaultVariant(): LintModelVariant? = variants.firstOrNull()
 
     /**
-     * Returns true if none of the build types used by this module have enabled shrinking,
-     * or false if at least one variant's build type is known to use shrinking.
+     * Returns true if none of the build types used by this module have
+     * enabled shrinking, or false if at least one variant's build type
+     * is known to use shrinking.
      */
     fun neverShrinking(): Boolean
 
@@ -101,7 +105,10 @@ interface LintModelModule {
         return null
     }
 
-    /** Given an active variant, return all the *other* (inactive) source providers */
+    /**
+     * Given an active variant, return all the *other* (inactive) source
+     * providers.
+     */
     fun getInactiveSourceProviders(active: LintModelVariant): List<LintModelSourceProvider> {
         val seen = HashSet<File>()
         for (provider in active.sourceProviders) {
@@ -123,16 +130,14 @@ interface LintModelModule {
     }
 }
 
-/**
- * A provider which loads modules given various keys
- */
+/** A provider which loads modules given various keys. */
 interface LintModelModuleLoader {
-    /** Loads a module from a folder */
+    /** Loads a module from a folder. */
     fun getModule(folder: File): LintModelModule {
         return LintModelSerialization.readModule(folder)
     }
 
-    /** Loads a module from a dependency in a dependency graph */
+    /** Loads a module from a dependency in a dependency graph. */
     fun getModule(library: LintModelDependency): LintModelModule? = null
 }
 
@@ -159,9 +164,7 @@ class DefaultLintModelModule(
     }
 }
 
-/**
- * Writes this module model to the given file
- */
+/** Writes this module model to the given file. */
 fun LintModelModule.writeModule(destination: File, createdBy: String? = null) {
     LintModelSerialization.writeModule(this, destination = destination, createdBy = createdBy)
 }

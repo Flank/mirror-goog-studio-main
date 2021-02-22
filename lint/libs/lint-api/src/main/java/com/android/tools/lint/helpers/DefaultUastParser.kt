@@ -73,17 +73,17 @@ open class DefaultUastParser(
         DefaultJavaEvaluator(p, project!!)
 
     /**
-     * Prepare to parse the given contexts. This method will be called before
-     * a series of [.parse] calls, which allows some
-     * parsers to do up front global computation in case they want to more
-     * efficiently process multiple files at the same time. This allows a single
-     * type-attribution pass for example, which is a lot more efficient than
-     * performing global type analysis over and over again for each individual
-     * file
+     * Prepare to parse the given contexts. This method will be called
+     * before a series of [.parse] calls, which allows some parsers
+     * to do up front global computation in case they want to more
+     * efficiently process multiple files at the same time. This allows
+     * a single type-attribution pass for example, which is a lot more
+     * efficient than performing global type analysis over and over
+     * again for each individual file
      *
      * @param contexts a list of contexts to be parsed
-     *
-     * @return true if the preparation succeeded; false if there were errors
+     * @return true if the preparation succeeded; false if there were
+     *     errors
      */
     override fun prepare(
         contexts: List<JavaContext>,
@@ -102,9 +102,10 @@ open class DefaultUastParser(
     /**
      * Parse the file pointed to by the given context.
      *
-     * @param context the context pointing to the file to be parsed, typically via
-     *                [Context.getContents] but the file handle ([Context.file]) can also be
-     *                used to map to an existing editor buffer in the surrounding tool, etc)
+     * @param context the context pointing to the file to be parsed,
+     *     typically via [Context.getContents] but the file
+     *     handle ([Context.file]) can also be used to map to an
+     *     existing editor buffer in the surrounding tool, etc)
      * @return the compilation unit node for the file
      */
     override fun parse(context: JavaContext): UFile? {
@@ -169,9 +170,7 @@ open class DefaultUastParser(
      * Returns a [Location] for the given element
      *
      * @param context information about the file being parsed
-     *
      * @param element the element to create a location for
-     *
      * @return a location for the given node
      */
     override // subclasses may want to override/optimize
@@ -332,19 +331,15 @@ open class DefaultUastParser(
     }
 
     /**
-     * Returns a [Location] for the given node range (from the starting offset of the first
-     * node to the ending offset of the second node).
+     * Returns a [Location] for the given node range (from the starting
+     * offset of the first node to the ending offset of the second
+     * node).
      *
      * @param context information about the file being parsed
-     *
      * @param from the AST node to get a starting location from
-     *
      * @param fromDelta Offset delta to apply to the starting offset
-     *
      * @param to the AST node to get a ending location from
-     *
      * @param toDelta Offset delta to apply to the ending offset
-     *
      * @return a location for the given node
      */
     override fun getRangeLocation(
@@ -477,15 +472,14 @@ open class DefaultUastParser(
     }
 
     /**
-     * Returns a [Location] for the given node. This attempts to pick a shorter
-     * location range than the entire node; for a class or method for example, it picks
-     * the name node (if found). For statement constructs such as a `switch` statement
-     * it will highlight the keyword, etc.
+     * Returns a [Location] for the given node. This attempts to pick
+     * a shorter location range than the entire node; for a class or
+     * method for example, it picks the name node (if found). For
+     * statement constructs such as a `switch` statement it will
+     * highlight the keyword, etc.
      *
      * @param context information about the file being parsed
-     *
      * @param element the node to create a location for
-     *
      * @return a location for the given node
      */
     override fun getNameLocation(context: JavaContext, element: PsiElement): Location {

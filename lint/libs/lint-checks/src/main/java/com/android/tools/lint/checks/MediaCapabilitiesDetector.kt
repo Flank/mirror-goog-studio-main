@@ -46,8 +46,9 @@ import org.objectweb.asm.tree.MethodNode
 import java.util.EnumSet
 
 /**
- * Check which makes sure that an application that uses MediaStore.Video anywhere in code
- * defines its media capabilities in the Manifest to enable transcoding on Android 12+
+ * Check which makes sure that an application that uses MediaStore.Video
+ * anywhere in code defines its media capabilities in the Manifest to
+ * enable transcoding on Android 12+
  */
 class MediaCapabilitiesDetector : Detector(), SourceCodeScanner, ClassScanner, XmlScanner {
 

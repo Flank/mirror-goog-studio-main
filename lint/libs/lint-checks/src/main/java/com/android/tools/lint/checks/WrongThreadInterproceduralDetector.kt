@@ -47,7 +47,10 @@ data class AnnotatedCallPath(
     val sinkAnnotation: String
 )
 
-/** Returns a collection of call paths that violate thread annotations found in source code. */
+/**
+ * Returns a collection of call paths that violate thread annotations
+ * found in source code.
+ */
 // public because accessed from tools/adt/idea tests
 fun searchForInterproceduralThreadAnnotationViolations(
     callGraph: CallGraph,

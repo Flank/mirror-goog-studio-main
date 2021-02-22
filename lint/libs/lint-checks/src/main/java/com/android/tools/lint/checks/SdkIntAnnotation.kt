@@ -41,7 +41,7 @@ class SdkIntAnnotation(
     )
 
     /**
-     * Returns the API level for this annotation in the given context
+     * Returns the API level for this annotation in the given context.
      */
     fun getApiLevel(
         evaluator: JavaEvaluator,
@@ -103,7 +103,7 @@ class SdkIntAnnotation(
     companion object {
         /**
          * Looks up the @ChecksSdkIntAtLeast annotation for the given
-         * method or field
+         * method or field.
          */
         fun get(owner: PsiModifierListOwner): SdkIntAnnotation? {
             val annotation = AnnotationUtil.findAnnotation(

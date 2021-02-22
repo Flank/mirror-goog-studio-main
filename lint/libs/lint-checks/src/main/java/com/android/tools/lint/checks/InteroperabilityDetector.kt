@@ -59,8 +59,8 @@ import org.jetbrains.uast.getContainingUMethod
 import org.jetbrains.uast.getParentOfType
 
 /**
- * Checks for issues around creating APIs that make it harder
- * to interoperate between Java and Kotlin code.
+ * Checks for issues around creating APIs that make it harder to
+ * interoperate between Java and Kotlin code.
  *
  * See https://android.github.io/kotlin-guides/interop.html .
  */
@@ -547,7 +547,10 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
             }
         }
 
-        /** Returns true if the given class has a (possibly inherited) setter of the given type */
+        /**
+         * Returns true if the given class has a (possibly inherited)
+         * setter of the given type.
+         */
         private fun hasSetter(cls: UClass, type: PsiType?, setterName: String): Boolean {
             for (method in cls.findMethodsByName(setterName, true)) {
                 val parameterList = method.parameterList

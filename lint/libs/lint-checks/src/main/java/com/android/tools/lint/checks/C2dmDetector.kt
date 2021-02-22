@@ -33,7 +33,7 @@ import com.android.utils.XmlUtils.getFirstSubTagByName
 import com.android.utils.XmlUtils.getNextTagByName
 import org.w3c.dom.Element
 
-/** Flags usages of C2DM, which as of P no longer works */
+/** Flags usages of C2DM, which as of P no longer works. */
 class C2dmDetector : Detector(), XmlScanner {
 
     override fun getApplicableElements(): Collection<String> {

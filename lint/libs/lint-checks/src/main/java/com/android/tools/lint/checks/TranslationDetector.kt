@@ -81,7 +81,6 @@ import kotlin.collections.set
 /**
  * Checks for incomplete translations - e.g. keys that are only present
  * in some locales but not all.
- *
  * <p>TODO <ul> <li> Port to Kotlin before the following changes: <li>
  * Remove all the batch mode handling here; instead of accumulating all
  * strings we can now limit the analysis directly to references from the
@@ -90,27 +89,48 @@ import kotlin.collections.set
  * except for extra-strings. </ul>
  */
 class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, BinaryResourceScanner {
-    /** The names of resources, for each resource type, defined in the base folder */
+    /**
+     * The names of resources, for each resource type, defined in the
+     * base folder.
+     */
     private val baseNames: MutableMap<ResourceType, MutableSet<String>> =
         Maps.newEnumMap(ResourceType::class.java)
 
-    /** The names of resources, for each resource type, defined in a non-base folder */
+    /**
+     * The names of resources, for each resource type, defined in a
+     * non-base folder.
+     */
     private val nonBaseNames: MutableMap<ResourceType, MutableSet<String>> =
         Maps.newEnumMap(ResourceType::class.java)
 
-    /** For missing strings, a map from the string name to the set of locales where it's missing */
+    /**
+     * For missing strings, a map from the string name to the set of
+     * locales where it's missing.
+     */
     private var missingMap: MutableMap<String, Set<String>>? = null
 
-    /** In incremental mode, a cache for the set of locales in the module */
+    /**
+     * In incremental mode, a cache for the set of locales in the
+     * module.
+     */
     private var locales: Set<String>? = null
 
-    /** In batch mode, the in-progress view of the set of locales we've come across in pass 1 */
+    /**
+     * In batch mode, the in-progress view of the set of locales we've
+     * come across in pass 1.
+     */
     private var pendingLocales: MutableSet<String>? = null
 
-    /** In batch mode, the set of strings we've come across marked as translatable=false */
+    /**
+     * In batch mode, the set of strings we've come across marked as
+     * translatable=false.
+     */
     private var nonTranslatable: MutableSet<String>? = null
 
-    /** In batch mode, the translations: a map from each string name to the set of locales */
+    /**
+     * In batch mode, the translations: a map from each string name to
+     * the set of locales.
+     */
     private var translations: MutableMap<String, MutableSet<String>>? = null
 
     private fun ignoreFile(context: Context) =
@@ -503,14 +523,15 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
     }
 
     /**
-     * Determines whether for the sake of this check the given folder is
-     * a default folder. Normally this would mean that it has no resource
-     * qualifiers, but (a) we allow density qualifiers (since the resource
-     * system will pick among them and (b) we allow version qualifiers since
-     * it's a common practice to create version specific resources only used
-     * from themes (and indirectly theme drawables) dedicates to a specific
-     * platform version, e.g. Material-theme only theme resources, and we
-     * don't want false positives in this area.
+     * Determines whether for the sake of this check the given folder
+     * is a default folder. Normally this would mean that it has
+     * no resource qualifiers, but (a) we allow density qualifiers
+     * (since the resource system will pick among them and (b) we
+     * allow version qualifiers since it's a common practice to create
+     * version specific resources only used from themes (and indirectly
+     * theme drawables) dedicates to a specific platform version, e.g.
+     * Material-theme only theme resources, and we don't want false
+     * positives in this area.
      */
     private fun isDefaultFolder(
         configuration: FolderConfiguration?,
@@ -727,7 +748,7 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
         )
     }
 
-    /** Look up the language for the given folder name */
+    /** Look up the language for the given folder name. */
     private fun getLanguageTagFromFolder(name: String): String? {
         val locale = getLocaleTagFromFolder(name) ?: return null
         val index = locale.indexOf('-')
@@ -738,7 +759,7 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
         }
     }
 
-    /** Look up the locale for the given folder name */
+    /** Look up the locale for the given folder name. */
     private fun getLocaleTagFromFolder(name: String): String? {
         if (name == FD_RES_VALUES) {
             return null
@@ -755,7 +776,7 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
         return null
     }
 
-    /** Look up the language for the given qualifiers */
+    /** Look up the language for the given qualifiers. */
     private fun getLanguageTagFromQualifiers(name: String?): String? {
         name ?: return null
         val locale = getLocaleTagFromQualifiers(name) ?: return null
@@ -767,7 +788,7 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
         }
     }
 
-    /** Look up the locale for the given qualifiers */
+    /** Look up the locale for the given qualifiers. */
     private fun getLocaleTagFromQualifiers(name: String): String? {
         assert(!name.startsWith(FD_RES_VALUES))
         if (name.isEmpty()) {
@@ -841,7 +862,10 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
             implementation = IMPLEMENTATION
         )
 
-        /** Are there extra translations that are "unused" (appear only in specific languages) ? */
+        /**
+         * Are there extra translations that are "unused" (appear only
+         * in specific languages) ?
+         */
         @JvmField
         val EXTRA = Issue.create(
             id = "ExtraTranslation",
@@ -860,7 +884,10 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
             implementation = IMPLEMENTATION
         )
 
-        /** Are there extra resources that are "unused" (appear only in non-default folders) ? */
+        /**
+         * Are there extra resources that are "unused" (appear only in
+         * non-default folders) ?
+         */
         @JvmField
         val MISSING_BASE = Issue.create(
             id = "MissingDefaultResource",
@@ -894,7 +921,10 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
             implementation = IMPLEMENTATION
         )
 
-        /** Are there extra translations that are "unused" (appear only in specific languages) ? */
+        /**
+         * Are there extra translations that are "unused" (appear only
+         * in specific languages) ?
+         */
         @JvmField
         val TRANSLATED_UNTRANSLATABLE = Issue.create(
             id = "Untranslatable",

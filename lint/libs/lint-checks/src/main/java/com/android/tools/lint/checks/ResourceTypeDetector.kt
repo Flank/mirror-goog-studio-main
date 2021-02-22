@@ -275,16 +275,18 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     }
 
     /**
-     * Checks for the following constraints regarding half float annotated shorts:
+     * Checks for the following constraints regarding half float
+     * annotated shorts:
      *
-     * (1) you're not passing literals; this is fraught with danger and there are
-     * a lot of constants available in the android.util.Half class already
+     * (1) you're not passing literals; this is fraught with danger and
+     * there are a lot of constants available in the android.util.Half
+     * class already
      *
-     * (2) you're not performing arithmetic on these operands; there are utility methods
-     * in android.util.Half that should be used instead
+     * (2) you're not performing arithmetic on these operands; there are
+     * utility methods in android.util.Half that should be used instead
      *
-     * (3) when you're operating on Half float variables, none of the operations are
-     * accidentally widening the result to int
+     * (3) when you're operating on Half float variables, none of the
+     * operations are accidentally widening the result to int
      */
     private fun checkHalfFloat(
         context: JavaContext,
@@ -460,8 +462,8 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     }
 
     /**
-     * Returns true if the node is pointing to a TypedArray whose value was obtained
-     * from an array literal
+     * Returns true if the node is pointing to a TypedArray whose value
+     * was obtained from an array literal.
      */
     private fun typeArrayFromArrayLiteral(node: UElement?, context: JavaContext): Boolean {
         if (node == null) {
@@ -558,9 +560,7 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             Scope.JAVA_FILE_SCOPE
         )
 
-        /**
-         * Attempting pass the wrong type of resource
-         */
+        /** Attempting pass the wrong type of resource. */
         @JvmField
         val RESOURCE_TYPE = Issue.create(
             id = "ResourceType",
@@ -575,7 +575,7 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             implementation = IMPLEMENTATION
         )
 
-        /** Attempting to set a resource id as a color */
+        /** Attempting to set a resource id as a color. */
         @JvmField
         val COLOR_USAGE = Issue.create(
             id = "ResourceAsColor",
@@ -594,7 +594,7 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             implementation = IMPLEMENTATION
         )
 
-        /** Incorrect usage of half floats */
+        /** Incorrect usage of half floats. */
         @JvmField
         val HALF_FLOAT = Issue.create(
             id = "HalfFloat",

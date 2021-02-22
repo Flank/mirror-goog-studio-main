@@ -41,7 +41,7 @@ import org.jetbrains.uast.UastBinaryOperator
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.visitor.AbstractUastVisitor
 
-/** Checks related to DiffUtil computation */
+/** Checks related to DiffUtil computation. */
 class DiffUtilDetector : Detector(), SourceCodeScanner {
 
     // ---- implements SourceCodeScanner ----
@@ -143,9 +143,9 @@ class DiffUtilDetector : Detector(), SourceCodeScanner {
     }
 
     /**
-     * Is this .equals() call within another if check which checks instanceof on a more
-     * specific type than we're calling equals on? If so, does that more specific type
-     * define its own equals?
+     * Is this .equals() call within another if check which checks
+     * instanceof on a more specific type than we're calling equals on?
+     * If so, does that more specific type define its own equals?
      */
     private fun withinCastWithEquals(context: JavaContext, node: UCallExpression): Boolean {
         val ifStatement = node.getParentOfType<UElement>(UIfExpression::class.java, false, UMethod::class.java)

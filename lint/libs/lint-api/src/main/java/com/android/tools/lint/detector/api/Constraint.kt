@@ -46,7 +46,7 @@ fun notAndroidProject(): Constraint = NotAndroidProject()
  * conditions must all be persisted, and to avoid having to introduce
  * a whole general serialization mechanism which can work with any
  * arbitrary class, instead we define a specific set of conditions, with
- * a general fallback mechanism
+ * a general fallback mechanism.
  */
 sealed class Constraint {
     /**
@@ -58,7 +58,7 @@ sealed class Constraint {
 
     /**
      * Returns a condition where this condition *and* the given [other]
-     * condition must be met
+     * condition must be met.
      */
     infix fun and(other: Constraint): Constraint {
         return AllOfConstraint(this, other)
@@ -66,7 +66,7 @@ sealed class Constraint {
 
     /**
      * Returns a condition where this condition *or* the given [other]
-     * condition must be met
+     * condition must be met.
      */
     infix fun or(other: Constraint): Constraint {
         return AnyOfConstraint(this, other)

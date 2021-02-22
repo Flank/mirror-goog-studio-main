@@ -184,9 +184,11 @@ class PrivateApiLookup private constructor(
         /**
          * Returns an instance of the private API database
          *
-         * @param client the client to associate with this database - used only for logging
+         * @param client the client to associate with this database -
+         *     used only for logging
          * @param target the associated Android target, if known
-         * @return a (possibly shared) instance of the API database, or null if its data can't be found
+         * @return a (possibly shared) instance of the API database, or
+         *     null if its data can't be found
          */
         private fun get(client: LintClient, target: IAndroidTarget?): PrivateApiLookup? {
             val stream = PrivateApiLookup::class.java.classLoader.getResource(API_FILE_PATH)

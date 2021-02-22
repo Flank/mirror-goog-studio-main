@@ -27,4 +27,5 @@ task formatKotlin(type: JavaExec, group: "verification") {
 task formatlint {
     dependsOn formatJava
     dependsOn formatKotlin
+    // TODO: Check in prebuilts for kdoc-formatter and use that here
 }

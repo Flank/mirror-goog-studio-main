@@ -30,8 +30,9 @@ import org.jetbrains.uast.UAnonymousClass
 import org.jetbrains.uast.UClass
 
 /**
- * Checks that Fragment subclasses can be instantiated via Class.newInstance: the
- * class is public, static, and has a public null constructor.
+ * Checks that Fragment subclasses can be instantiated via
+ * Class.newInstance: the class is public, static, and has a public null
+ * constructor.
  *
  * This helps track down issues like
  * http://stackoverflow.com/questions/8058809/fragment-activity-crashes-on-screen-rotate

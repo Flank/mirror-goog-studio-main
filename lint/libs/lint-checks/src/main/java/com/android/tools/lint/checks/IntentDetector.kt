@@ -38,11 +38,12 @@ import org.jetbrains.uast.tryResolve
 import org.jetbrains.uast.util.isAssignment
 
 /**
- * Detector looking for suspicious combinations of intent.setData and intent.setType
+ * Detector looking for suspicious combinations of intent.setData and
+ * intent.setType.
  */
 class IntentDetector : Detector(), SourceCodeScanner {
     companion object {
-        /** The main issue discovered by this detector  */
+        /** The main issue discovered by this detector. */
         @JvmField
         val ISSUE = Issue.create(
             id = "IntentReset",

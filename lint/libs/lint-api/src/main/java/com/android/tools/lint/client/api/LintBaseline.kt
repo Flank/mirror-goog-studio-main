@@ -51,14 +51,14 @@ import java.nio.charset.StandardCharsets
 import java.util.ArrayList
 
 /**
- * A lint baseline is a collection of warnings for a project that have been
- * obtained from a previous run of lint. These warnings are then exempt from
- * reporting. This lets you set a "baseline" with a known set of issues that you
- * haven't attempted to fix yet, but then be alerted whenever new issues crop
- * up.
+ * A lint baseline is a collection of warnings for a project that have
+ * been obtained from a previous run of lint. These warnings are then
+ * exempt from reporting. This lets you set a "baseline" with a known
+ * set of issues that you haven't attempted to fix yet, but then be
+ * alerted whenever new issues crop up.
  */
 class LintBaseline(
-    /** Client to log to  */
+    /** Client to log to. */
     private val client: LintClient?,
 
     /**
@@ -68,29 +68,34 @@ class LintBaseline(
     val file: File
 ) {
 
-    /** The number of errors that have been matched from the baseline  */
+    /**
+     * The number of errors that have been matched from the baseline.
+     */
     var foundErrorCount: Int = 0
         private set
 
-    /** The number of warnings that have been matched from the baseline  */
+    /**
+     * The number of warnings that have been matched from the baseline.
+     */
     var foundWarningCount: Int = 0
         private set
 
-    /** The total number of issues contained in this baseline  */
+    /** The total number of issues contained in this baseline. */
     var totalCount: Int = 0
         private set
 
-    /** Map from message to [Entry]  */
+    /** Map from message to [Entry] */
     private val messageToEntry = ArrayListMultimap.create<String, Entry>(100, 20)
 
     private val idToMessages = ArrayListMultimap.create<String, String>(30, 20)
 
     /**
-     * Whether we should write the baseline file when the baseline is closed, if the
-     * baseline file doesn't already exist. We don't always do this because for example
-     * when lint is run from Gradle, and it's analyzing multiple variants, it does its own
-     * merging (across variants) of the results first and then writes that, via the
-     * XML reporter.
+     * Whether we should write the baseline file when the baseline is
+     * closed, if the baseline file doesn't already exist. We don't
+     * always do this because for example when lint is run from Gradle,
+     * and it's analyzing multiple variants, it does its own merging
+     * (across variants) of the results first and then writes that, via
+     * the XML reporter.
      */
     var writeOnClose: Boolean = false
         set(writeOnClose) {
@@ -102,29 +107,28 @@ class LintBaseline(
         }
 
     /**
-     * Whether the baseline, when configured to write results into the file, will
-     * include all found issues, or only issues that are already known. The difference
-     * here is whether we're initially creating the baseline (or resetting it), or
-     * whether we're trying to only remove fixed issues.
+     * Whether the baseline, when configured to write results into the
+     * file, will include all found issues, or only issues that are
+     * already known. The difference here is whether we're initially
+     * creating the baseline (or resetting it), or whether we're trying
+     * to only remove fixed issues.
      */
     var removeFixed: Boolean = false
 
     /**
-     * If non-null, a list of issues to write back out to the baseline file when the
-     * baseline is closed.
+     * If non-null, a list of issues to write back out to the baseline
+     * file when the baseline is closed.
      */
     private var entriesToWrite: MutableList<ReportedEntry>? = null
 
     /**
-     * Returns the number of issues that appear to have been fixed (e.g. are present
-     * in the baseline but have not been matched
+     * Returns the number of issues that appear to have been fixed (e.g.
+     * are present in the baseline but have not been matched.
      */
     val fixedCount: Int
         get() = totalCount - foundErrorCount - foundWarningCount
 
-    /**
-     * Custom attributes defined for this baseline
-     */
+    /** Custom attributes defined for this baseline. */
     private var attributes: MutableMap<String, String>? = null
 
     init {
@@ -132,8 +136,8 @@ class LintBaseline(
     }
 
     /**
-     * Checks if we should report baseline activity (filtered out issues, found fixed issues etc
-     * and if so reports them
+     * Checks if we should report baseline activity (filtered out
+     * issues, found fixed issues etc and if so reports them.
      */
     internal fun reportBaselineIssues(driver: LintDriver, project: Project) {
         if (foundErrorCount > 0 || foundWarningCount > 0) {
@@ -325,15 +329,16 @@ class LintBaseline(
     }
 
     /**
-     * Returns a custom attribute previously persistently set with [setAttribute]
+     * Returns a custom attribute previously persistently set with
+     * [setAttribute]
      */
     fun getAttribute(name: String): String? {
         return attributes?.get(name)
     }
 
     /**
-     * Set a custom attribute on this baseline (which is persisted and can be
-     * retrieved later with [getAttribute])
+     * Set a custom attribute on this baseline (which is persisted and
+     * can be retrieved later with [getAttribute])
      */
     fun setAttribute(name: String, value: String) {
         val attributes = attributes ?: run {
@@ -344,7 +349,7 @@ class LintBaseline(
         attributes[name] = value
     }
 
-    /** Read in the XML report  */
+    /** Read in the XML report. */
     private fun readBaselineFile() {
         if (!file.exists()) {
             return
@@ -441,7 +446,7 @@ class LintBaseline(
         }
     }
 
-    /** Finishes writing the baseline  */
+    /** Finishes writing the baseline. */
     fun close() {
         if (writeOnClose) {
             val parentFile = file.parentFile
@@ -492,10 +497,10 @@ class LintBaseline(
     }
 
     /**
-     * Lightweight wrapper for a [Location] to avoid holding on to locations for
-     * too long, since for example the [Location.source] field (but also fields
-     * in subclasses of [Location] and [Position]) can reference large data structures
-     * like PSI.
+     * Lightweight wrapper for a [Location] to avoid holding on to
+     * locations for too long, since for example the [Location.source]
+     * field (but also fields in subclasses of [Location] and
+     * [Position]) can reference large data structures like PSI.
      */
     private class LightLocation(location: Location) {
         val file: File = location.file
@@ -505,9 +510,10 @@ class LintBaseline(
     }
 
     /**
-     * Entries that have been reported during this lint run. We only create these
-     * when we need to write a baseline file (since we need to sort them before
-     * writing out the result file, to ensure stable files.
+     * Entries that have been reported during this lint run. We only
+     * create these when we need to write a baseline file (since we need
+     * to sort them before writing out the result file, to ensure stable
+     * files.
      */
     private class ReportedEntry(
         val issue: Issue,
@@ -588,7 +594,8 @@ class LintBaseline(
         }
 
         /**
-         * Given the report of an issue, add it to the baseline being built in the XML writer
+         * Given the report of an issue, add it to the baseline being
+         * built in the XML writer.
          */
         fun write(
             writer: Writer,
@@ -640,8 +647,9 @@ class LintBaseline(
     }
 
     /**
-     * Entry loaded from the baseline file. Note that for an error with multiple locations,
-     * there may be multiple entries; these are linked by next/previous fields.
+     * Entry loaded from the baseline file. Note that for an error with
+     * multiple locations, there may be multiple entries; these are
+     * linked by next/previous fields.
      */
     private class Entry(
         val issueId: String,
@@ -649,8 +657,9 @@ class LintBaseline(
         val path: String
     ) {
         /**
-         * An issue can have multiple locations; we create a separate entry for each
-         * but we link them together such that we can mark them all fixed
+         * An issue can have multiple locations; we create a separate
+         * entry for each but we link them together such that we can
+         * mark them all fixed.
          */
         var next: Entry? = null
         var previous: Entry? = null
@@ -661,11 +670,12 @@ class LintBaseline(
         const val VARIANT_FATAL = "fatal"
 
         /**
-         * Given an error message produced by this lint detector for the given issue type,
-         * determines whether this corresponds to the warning (produced by
-         * {link {@link #reportBaselineIssues(LintDriver, Project)} above) that one or
-         * more issues have been filtered out.
-         * <p>
+         * Given an error message produced by this lint detector
+         * for the given issue type, determines whether this
+         * corresponds to the warning (produced by {link
+         * {@link #reportBaselineIssues(LintDriver, Project)} above)
+         * that one or more issues have been filtered out.
+         *
          * Intended for IDE quickfix implementations.
          */
         @Suppress("unused") // Used from the IDE
@@ -674,11 +684,13 @@ class LintBaseline(
         }
 
         /**
-         * Given an error message produced by this lint detector for the given issue type,
-         * determines whether this corresponds to the warning (produced by
-         * {link {@link #reportBaselineIssues(LintDriver, Project)} above) that one or
-         * more issues have been fixed (present in baseline but not in project.)
-         * <p>
+         * Given an error message produced by this lint detector
+         * for the given issue type, determines whether this
+         * corresponds to the warning (produced by {link
+         * {@link #reportBaselineIssues(LintDriver, Project)} above)
+         * that one or more issues have been fixed (present in baseline
+         * but not in project.)
+         *
          * Intended for IDE quickfix implementations.
          */
         @Suppress("unused") // Used from the IDE
@@ -700,7 +712,9 @@ class LintBaseline(
             }
         }
 
-        /** Like path.endsWith(suffix), but considers \\ and / identical  */
+        /**
+         * Like path.endsWith(suffix), but considers \\ and / identical.
+         */
         fun isSamePathSuffix(path: String, suffix: String): Boolean {
             var i = path.length - 1
             var j = suffix.length - 1
@@ -760,7 +774,10 @@ class LintBaseline(
             return path
         }
 
-        /** Checks whether two strings end in the same way, from the given start string */
+        /**
+         * Checks whether two strings end in the same way, from the
+         * given start string.
+         */
         private fun sameSuffixFrom(
             target: String,
             new: String,
@@ -777,13 +794,16 @@ class LintBaseline(
         }
 
         /**
-         * Compares two string messages from lint and returns true if they're equivalent,
-         * which will be true if they only vary by suffix or presence of ` characters.
-         * This is done to to handle the case where we tweak the message format over time
-         * to either append extra information or to add better formatting (e.g. to put backticks
-         * around symbols) or to remove trailing periods from single sentence error messages.
-         * Lint is recently suggesting these edits to lint checks -- and we want baselines to
-         * continue to match in the presence of these edits.
+         * Compares two string messages from lint and returns true if
+         * they're equivalent, which will be true if they only vary by
+         * suffix or presence of ` characters. This is done to to handle
+         * the case where we tweak the message format over time to
+         * either append extra information or to add better formatting
+         * (e.g. to put backticks around symbols) or to remove trailing
+         * periods from single sentence error messages. Lint is
+         * recently suggesting these edits to lint checks -- and we
+         * want baselines to continue to match in the presence of these
+         * edits.
          */
         fun stringsEquivalent(s1: String, s2: String, start1: Int = 0, start2: Int = 0): Boolean {
             var i1 = start1

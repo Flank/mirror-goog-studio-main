@@ -45,11 +45,12 @@ import org.jetbrains.uast.visitor.AbstractUastVisitor
 /**
  * Builds a call graph by traversing UAST.
  *
- * Uses [receiverEval] to estimate dispatch receivers, and uses [classHierarchy] to resolve
- * to unique overriding implementations when possible.
+ * Uses [receiverEval] to estimate dispatch receivers, and uses
+ * [classHierarchy] to resolve to unique overriding implementations when
+ * possible.
  *
- * If [conservative] is true, then adds edges to all overriding methods of each call target. This
- * trades precision for soundness.
+ * If [conservative] is true, then adds edges to all overriding methods
+ * of each call target. This trades precision for soundness.
  */
 class CallGraphVisitor(
     private val receiverEval: DispatchReceiverEvaluator,
@@ -186,7 +187,10 @@ class CallGraphVisitor(
 
     private fun UClass.constructors() = methods.filter { it.isConstructor }
 
-    /** Returns whether this method could be the runtime target of a call. */
+    /**
+     * Returns whether this method could be the runtime target of a
+     * call.
+     */
     private fun UMethod.isCallable() = when {
         javaPsi.hasModifierProperty(PsiModifier.ABSTRACT) -> false
         javaPsi.containingClass?.isInterface == true -> {
@@ -207,8 +211,8 @@ class CallGraphVisitor(
     }
 
     /**
-     * Tries to find an explicit call to a super constructor.
-     * Assumes the first element visited is a constructor.
+     * Tries to find an explicit call to a super constructor. Assumes
+     * the first element visited is a constructor.
      */
     private class ExplicitSuperConstructorCallFinder : AbstractUastVisitor() {
         var foundExplicitCall: Boolean = false

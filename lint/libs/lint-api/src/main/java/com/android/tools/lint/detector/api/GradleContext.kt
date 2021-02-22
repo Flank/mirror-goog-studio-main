@@ -21,9 +21,9 @@ import com.android.tools.lint.client.api.LintDriver
 import java.io.File
 import java.util.regex.Pattern
 
-/** Context for analyzing a particular file */
+/** Context for analyzing a particular file. */
 class GradleContext(
-    /** Visitor to use to analyze the file */
+    /** Visitor to use to analyze the file. */
     val gradleVisitor: GradleVisitor,
 
     /** the driver running through the checks */
@@ -33,10 +33,10 @@ class GradleContext(
     project: Project,
 
     /**
-     * The main project if this project is a library project, or
-     * null if this is not a library project. The main project is
-     * the root project of all library projects, not necessarily the
-     * directly including project.
+     * The main project if this project is a library project, or null
+     * if this is not a library project. The main project is the root
+     * project of all library projects, not necessarily the directly
+     * including project.
      */
     main: Project?,
 
@@ -44,7 +44,7 @@ class GradleContext(
     file: File
 ) : Context(driver, project, main, file) {
 
-    /** Returns a location for the given range */
+    /** Returns a location for the given range. */
     fun getLocation(cookie: Any): Location = gradleVisitor.createLocation(this, cookie)
 
     fun isSuppressedWithComment(cookie: Any, issue: Issue): Boolean {

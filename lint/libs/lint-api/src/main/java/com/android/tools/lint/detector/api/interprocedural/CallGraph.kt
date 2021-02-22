@@ -53,8 +53,8 @@ sealed class CallTarget {
 }
 
 /**
- * A graph in which nodes represent methods (including lambdas)
- * and edges indicate that one method calls another.
+ * A graph in which nodes represent methods (including lambdas) and
+ * edges indicate that one method calls another.
  */
 interface CallGraph {
     val nodes: Collection<Node>
@@ -66,9 +66,10 @@ interface CallGraph {
     }
 
     /**
-     * An edge to [node] of type [kind] due to [call].
-     * [call] can be null for, e.g., implicit calls to super constructors or method references.
-     * [node] can be null for variable function invocations in Kotlin.
+     * An edge to [node] of type [kind] due to [call]. [call] can be
+     * null for, e.g., implicit calls to super constructors or method
+     * references. [node] can be null for variable function invocations
+     * in Kotlin.
      */
     data class Edge(val node: Node?, val call: UCallExpression?, val kind: Kind) {
         val isLikely: Boolean get() = kind.isLikely
@@ -115,7 +116,10 @@ interface CallGraph {
     }
 }
 
-/** Describes this node in a form like class#method, using "anon" for anonymous classes/lambdas. */
+/**
+ * Describes this node in a form like class#method, using "anon" for
+ * anonymous classes/lambdas.
+ */
 val Node?.shortName: String
     get() {
         if (this == null)
@@ -162,8 +166,8 @@ class MutableCallGraph : CallGraph {
 }
 
 /**
- * Returns non-intersecting paths from nodes in [sources]
- * to nodes for which [isSink] returns true.
+ * Returns non-intersecting paths from nodes in [sources] to nodes for
+ * which [isSink] returns true.
  */
 fun <T : Any> searchForPaths(
     sources: Collection<T>,
@@ -196,7 +200,10 @@ fun <T : Any> searchForPaths(
     return res
 }
 
-/** Describes a parameter specialization tuple, mapping each parameter to one concrete receiver. */
+/**
+ * Describes a parameter specialization tuple, mapping each parameter to
+ * one concrete receiver.
+ */
 data class ParamContext(
     val params: List<Pair<UVariable, DispatchReceiver>>,
     val implicitThis: DispatchReceiver?
@@ -213,16 +220,20 @@ data class ParamContext(
 data class ContextualNode(val node: Node, val paramContext: ParamContext)
 
 /**
- * An edge to [contextualNode] due to [cause] (usually a call expression).
- * By convention, an edge without cause (e.g., the beginning endpoint of a call path) will
- * have its [cause] field set to the UElement of its own node.
+ * An edge to [contextualNode] due to [cause] (usually a call
+ * expression). By convention, an edge without cause (e.g., the
+ * beginning endpoint of a call path) will have its [cause] field set to
+ * the UElement of its own node.
  */
 data class ContextualEdge(
     val contextualNode: ContextualNode,
     val cause: UElement
 )
 
-/** Augments the non-contextual receiver evaluator with a parameter context. */
+/**
+ * Augments the non-contextual receiver evaluator with a parameter
+ * context.
+ */
 class ContextualDispatchReceiverEvaluator(
     private val paramContext: ParamContext,
     nonContextualEval: IntraproceduralDispatchReceiverEvaluator
@@ -242,9 +253,10 @@ class ContextualDispatchReceiverEvaluator(
 }
 
 /**
- * Builds parameter contexts for the target of [call] by taking the Cartesian product of the call
- * argument receivers. Returns an empty parameter context if there are no call argument receivers.
- * See "The Cartesian Product Algorithm" by Ole Agesen.
+ * Builds parameter contexts for the target of [call] by taking the
+ * Cartesian product of the call argument receivers. Returns an empty
+ * parameter context if there are no call argument receivers. See "The
+ * Cartesian Product Algorithm" by Ole Agesen.
  */
 fun buildParamContextsFromCall(
     callee: CallTarget,
@@ -311,7 +323,10 @@ fun buildParamContextsFromCall(
     return paramContexts
 }
 
-/** Examines call sites to find contextualized neighbors of a search node. */
+/**
+ * Examines call sites to find contextualized neighbors of a search
+ * node.
+ */
 fun ContextualNode.computeEdges(
     callGraph: CallGraph,
     nonContextualReceiverEval: IntraproceduralDispatchReceiverEvaluator
@@ -391,16 +406,20 @@ class MutableContextualCallGraph : ContextualCallGraph {
 }
 
 /**
- * To find initial parameter contexts, we employ a nice trick: we do a BFS from *all* nodes in the
- * call graph (specialized on empty parameter contexts) and take note of all parameter contexts
- * discovered for each node. These parameter contexts are used to form search nodes that can be used
- * to better initialize a subsequent path search.
+ * To find initial parameter contexts, we employ a nice trick: we do
+ * a BFS from *all* nodes in the call graph (specialized on empty
+ * parameter contexts) and take note of all parameter contexts
+ * discovered for each node. These parameter contexts are used to form
+ * search nodes that can be used to better initialize a subsequent path
+ * search.
  *
- * This is useful, e.g., for thread annotation checking. When a method is annotated with @UiThread
- * and takes a lambda as an argument, we want to make sure that we take note of all the lambdas
- * passed to this method, as one of the lambdas may lead to a @WorkerThread method. If we instead
- * initialized the path search with empty parameter contexts, then we would never see evidenced
- * thread violations through the lambda parameter.
+ * This is useful, e.g., for thread annotation checking. When a method
+ * is annotated with @UiThread and takes a lambda as an argument, we
+ * want to make sure that we take note of all the lambdas passed to this
+ * method, as one of the lambdas may lead to a @WorkerThread method. If
+ * we instead initialized the path search with empty parameter contexts,
+ * then we would never see evidenced thread violations through the
+ * lambda parameter.
  */
 fun CallGraph.buildContextualCallGraph(
     nonContextualReceiverEval: IntraproceduralDispatchReceiverEvaluator
@@ -432,8 +451,8 @@ fun CallGraph.buildContextualCallGraph(
 }
 
 /**
- * A context-sensitive search for paths from
- * contextualized [contextualSources] to [contextualSinks].
+ * A context-sensitive search for paths from contextualized
+ * [contextualSources] to [contextualSinks].
  */
 fun ContextualCallGraph.searchForContextualPaths(
     contextualSources: Collection<ContextualNode>,

@@ -142,17 +142,19 @@ class JavaEvaluator {
     }
 
     /**
-     * Returns true if the given method (which is typically looked up by resolving a method call) is
-     * either a method in the exact given class, or if `allowInherit` is true, a method in a
-     * class possibly extending the given class, and if the parameter types are the exact types
-     * specified.
+     * Returns true if the given method (which is typically looked up by
+     * resolving a method call) is either a method in the exact given
+     * class, or if `allowInherit` is true, a method in a class possibly
+     * extending the given class, and if the parameter types are the
+     * exact types specified.
      *
      * @param method the method in question
-     * @param className the class name the method should be defined in or inherit from (or
-     * if null, allow any class)
+     * @param className the class name the method should be defined in
+     *     or inherit from (or if null, allow any class)
      * @param allowInherit whether we allow checking for inheritance
      * @param argumentTypes the names of the types of the parameters
-     * @return true if this method is defined in the given class and with the given parameters
+     * @return true if this method is defined in the given class and
+     *     with the given parameters
      */
     open fun methodMatches(
         method: PsiMethod,
@@ -170,11 +172,13 @@ class JavaEvaluator {
     }
 
     /**
-     * Returns true if the given method's parameters are the exact types specified.
+     * Returns true if the given method's parameters are the exact types
+     * specified.
      *
      * @param method the method in question
      * @param argumentTypes the names of the types of the parameters
-     * @return true if this method is defined in the given class and with the given parameters
+     * @return true if this method is defined in the given class and
+     *     with the given parameters
      */
     open fun parametersMatch(
         method: PsiMethod,
@@ -195,7 +199,10 @@ class JavaEvaluator {
         return true
     }
 
-    /** Returns true if the given type matches the given fully qualified type name  */
+    /**
+     * Returns true if the given type matches the given fully qualified
+     * type name.
+     */
     open fun parameterHasType(
         method: PsiMethod?,
         parameterIndex: Int,
@@ -211,7 +218,10 @@ class JavaEvaluator {
         )
     }
 
-    /** Returns true if the given type matches the given fully qualified type name  */
+    /**
+     * Returns true if the given type matches the given fully qualified
+     * type name.
+     */
     open fun typeMatches(
         type: PsiType?,
         typeName: String
@@ -401,16 +411,19 @@ class JavaEvaluator {
     }
 
     /**
-     * Computes a simplified version of the internal JVM description of the given method. This is in
-     * the same format as the ASM desc fields for methods with an exception that the dot ('.')
-     * character is used instead of slash ('/') and dollar sign ('$') characters. For example,
-     * a method named "foo" that takes an int and a String and returns a void will have description
+     * Computes a simplified version of the internal JVM description
+     * of the given method. This is in the same format as the ASM
+     * desc fields for methods with an exception that the dot ('.')
+     * character is used instead of slash ('/') and dollar sign ('$')
+     * characters. For example, a method named "foo" that takes an
+     * int and a String and returns a void will have description
      * `foo(ILjava.lang.String;):V`.
      *
      * @param method the method to look up the description for
      * @param includeName whether the name should be included
      * @param includeReturn whether the return type should be included
-     * @return a simplified version of the internal JVM description for the method
+     * @return a simplified version of the internal JVM description for
+     *     the method
      */
     open fun getMethodDescription(
         method: PsiMethod,
@@ -463,10 +476,12 @@ class JavaEvaluator {
     }
 
     /**
-     * Constructs a simplified version of the internal JVM description of the given method. This is
-     * in the same format as {@link #getMethodDescription} above, the difference being we don't have
-     * the actual PSI for the method type, we just construct the signature from the [method] name,
-     * the list of [argumentTypes] and optionally include the [returnType].
+     * Constructs a simplified version of the internal JVM
+     * description of the given method. This is in the same format as
+     * {@link #getMethodDescription} above, the difference being we
+     * don't have the actual PSI for the method type, we just construct
+     * the signature from the [method] name, the list of [argumentTypes]
+     * and optionally include the [returnType].
      */
     open fun constructMethodDescription(
         method: String,
@@ -552,8 +567,9 @@ class JavaEvaluator {
     }
 
     /**
-     * The JVM equivalent type name differs from the real JVM name by using dot ('.') instead of
-     * slash ('/') and dollar sign ('$') characters.
+     * The JVM equivalent type name differs from the real JVM name by
+     * using dot ('.') instead of slash ('/') and dollar sign ('$')
+     * characters.
      */
     private fun appendJvmEquivalentTypeName(
         signature: StringBuilder,
@@ -565,8 +581,9 @@ class JavaEvaluator {
     }
 
     /**
-     * The JVM equivalent signature differs from the real JVM signature by using dot ('.') instead
-     * of slash ('/') and dollar sign ('$') characters.
+     * The JVM equivalent signature differs from the real JVM signature
+     * by using dot ('.') instead of slash ('/') and dollar sign ('$')
+     * characters.
      */
     private fun appendJvmEquivalentSignature(
         buffer: StringBuilder,
@@ -724,22 +741,25 @@ class JavaEvaluator {
     ): PsiAnnotation?
 
     /**
-     * Try to determine the path to the .jar file containing the element, **if** applicable
+     * Try to determine the path to the .jar file containing the
+     * element, **if** applicable.
      */
     abstract fun findJarPath(element: PsiElement): String?
 
     /**
-     * Try to determine the path to the .jar file containing the element, **if** applicable
+     * Try to determine the path to the .jar file containing the
+     * element, **if** applicable.
      */
     abstract fun findJarPath(element: UElement): String?
 
     /**
-     * Returns true if the given annotation is inherited (instead of being defined directly
-     * on the given modifier list holder
+     * Returns true if the given annotation is inherited (instead of
+     * being defined directly on the given modifier list holder
      *
      * @param annotation the annotation to check
      * @param owner the owner potentially declaring the annotation
-     * @return true if the annotation is inherited rather than being declared directly on this owner
+     * @return true if the annotation is inherited rather than being
+     *     declared directly on this owner
      */
     open fun isInherited(
         annotation: PsiAnnotation,
@@ -771,12 +791,13 @@ class JavaEvaluator {
     }
 
     /**
-     * Returns true if the given annotation is inherited (instead of being defined directly
-     * on the given modifier list holder
+     * Returns true if the given annotation is inherited (instead of
+     * being defined directly on the given modifier list holder
      *
      * @param annotation the annotation to check
      * @param owner the owner potentially declaring the annotation
-     * @return true if the annotation is inherited rather than being declared directly on this owner
+     * @return true if the annotation is inherited rather than being
+     *     declared directly on this owner
      */
     @SuppressWarnings("ExternalAnnotations")
     open fun isInherited(annotation: UAnnotation, owner: UAnnotated): Boolean {
@@ -793,14 +814,15 @@ class JavaEvaluator {
         return getPackage(node as PsiElement)
     }
 
-    /** Returns the Lint project containing the given element */
+    /** Returns the Lint project containing the given element. */
     open fun getProject(element: PsiElement): Project? {
         return null
     }
 
     /**
-     * Return the Gradle group id for the given element, **if** applicable. For example, for
-     * a method in the appcompat library, this would return "com.android.support".
+     * Return the Gradle group id for the given element, **if**
+     * applicable. For example, for a method in the appcompat library,
+     * this would return "com.android.support".
      */
     open fun getLibrary(element: PsiElement): LintModelMavenName? {
         if (element !is PsiCompiledElement) {
@@ -810,8 +832,9 @@ class JavaEvaluator {
     }
 
     /**
-     * Return the Gradle group id for the given element, **if** applicable. For example, for
-     * a method in the appcompat library, this would return "com.android.support".
+     * Return the Gradle group id for the given element, **if**
+     * applicable. For example, for a method in the appcompat library,
+     * this would return "com.android.support".
      */
     open fun getLibrary(element: UElement): LintModelMavenName? {
         if (element !is PsiCompiledElement) {
@@ -825,7 +848,10 @@ class JavaEvaluator {
         return getLibrary(findJarPath(element as UElement))
     }
 
-    /** Disambiguate between UElement and PsiElement since a UMethod is both  */
+    /**
+     * Disambiguate between UElement and PsiElement since a UMethod is
+     * both.
+     */
     @Suppress("unused")
     open fun getLibrary(element: UMethod): LintModelMavenName? {
         return getLibrary(element as PsiElement)
@@ -966,10 +992,11 @@ class JavaEvaluator {
     }
 
     /**
-     * For a given call, computes the argument to parameter mapping. For Java
-     * this is generally one to one (except for varargs), but in Kotlin it can be
-     * quite a bit more complicated due to extension methods, named parameters,
-     * default parameters, and varargs and the spread operator.
+     * For a given call, computes the argument to parameter mapping. For
+     * Java this is generally one to one (except for varargs), but in
+     * Kotlin it can be quite a bit more complicated due to extension
+     * methods, named parameters, default parameters, and varargs and
+     * the spread operator.
      */
     open fun computeArgumentMapping(
         call: UCallExpression,
@@ -983,12 +1010,13 @@ class JavaEvaluator {
     }
 
     /**
-     * Filters the set of annotations down to those considered by lint (and more importantly,
-     * handles indirection, e.g. a custom annotation annotated with a known annotation will
-     * return the known annotation instead. For example, if you make an annotation named
-     * `@Duration` and annotate it with `@IntDef(a,b,c)`, this method will return
-     * the `@IntDef` annotation instead of `@Duration` for the element annotated
-     * with a duration.
+     * Filters the set of annotations down to those considered by
+     * lint (and more importantly, handles indirection, e.g. a custom
+     * annotation annotated with a known annotation will return the
+     * known annotation instead. For example, if you make an annotation
+     * named `@Duration` and annotate it with `@IntDef(a,b,c)`,
+     * this method will return the `@IntDef` annotation instead
+     * of `@Duration` for the element annotated with a duration.
      */
     open fun filterRelevantAnnotations(annotations: Array<PsiAnnotation>): Array<PsiAnnotation> {
         if (relevantAnnotations == null) {
@@ -1054,8 +1082,9 @@ class JavaEvaluator {
     }
 
     /**
-     * Returns true if this method is overriding a method from a super class, or
-     * optionally if it is implementing a method from an interface
+     * Returns true if this method is overriding a method from a super
+     * class, or optionally if it is implementing a method from an
+     * interface.
      */
     fun isOverride(method: UMethod, includeInterfaces: Boolean = true): Boolean {
         if (isStatic(method)) {
@@ -1079,8 +1108,9 @@ class JavaEvaluator {
     }
 
     /**
-     * Returns true if this method is overriding a method from a super class, or
-     * optionally if it is implementing a method from an interface
+     * Returns true if this method is overriding a method from a super
+     * class, or optionally if it is implementing a method from an
+     * interface.
      */
     fun isOverride(method: PsiMethod, includeInterfaces: Boolean = true): Boolean {
         if (isStatic(method)) {

@@ -33,110 +33,118 @@ import com.google.common.annotations.Beta
 import java.util.EnumSet
 
 /**
- * The scope of a detector is the set of files a detector must consider when
- * performing its analysis. This can be used to determine when issues are
- * potentially obsolete, whether a detector should re-run on a file save, etc.
+ * The scope of a detector is the set of files a detector must consider
+ * when performing its analysis. This can be used to determine when
+ * issues are potentially obsolete, whether a detector should re-run on
+ * a file save, etc.
  *
- *
- * **NOTE: This is not a public or final API; if you rely on this be prepared
- * to adjust your code for the next tools release.**
+ * **NOTE: This is not a public or final API; if you rely on this be
+ * prepared to adjust your code for the next tools release.**
  */
 @Beta
 enum class Scope {
     /**
      * The analysis only considers a single XML resource file at a time.
      *
-     * Issues which are only affected by a single resource file can be checked
-     * for incrementally when a file is edited.
+     * Issues which are only affected by a single resource file can be
+     * checked for incrementally when a file is edited.
      */
     RESOURCE_FILE,
 
     /**
-     * The analysis only considers a single binary (typically a bitmap) resource file at a time.
+     * The analysis only considers a single binary (typically a bitmap)
+     * resource file at a time.
      *
-     * Issues which are only affected by a single resource file can be checked
-     * for incrementally when a file is edited.
+     * Issues which are only affected by a single resource file can be
+     * checked for incrementally when a file is edited.
      */
     BINARY_RESOURCE_FILE,
 
     /**
-     * The analysis considers the resource folders (which also includes asset folders)
+     * The analysis considers the resource folders (which also includes
+     * asset folders)
      */
     RESOURCE_FOLDER,
 
     /**
-     * The analysis considers **all** the resource file. This scope must not
-     * be used in conjunction with [.RESOURCE_FILE]; an issue scope is
-     * either considering just a single resource file or all the resources, not
-     * both.
+     * The analysis considers **all** the resource file. This scope must
+     * not be used in conjunction with [.RESOURCE_FILE]; an issue scope
+     * is either considering just a single resource file or all the
+     * resources, not both.
      */
     ALL_RESOURCE_FILES,
 
     /**
-     * The analysis only considers a single Java or Kotlin source file at a time.
+     * The analysis only considers a single Java or Kotlin source file
+     * at a time.
      *
-     * Issues which are only affected by a single Java/Kotlin source file can be
-     * checked for incrementally when a Java/Kotlin source file is edited.
+     * Issues which are only affected by a single Java/Kotlin source
+     * file can be checked for incrementally when a Java/Kotlin source
+     * file is edited.
      */
     JAVA_FILE,
 
     /**
-     * The analysis considers **all** the Java and Kotlin source files together.
+     * The analysis considers **all** the Java and Kotlin source files
+     * together.
      *
      * This flag is mutually exclusive with [.JAVA_FILE].
      */
     ALL_JAVA_FILES,
 
     /**
-     * The analysis only considers a single Java/Kotlin class file at a time.
+     * The analysis only considers a single Java/Kotlin class file at a
+     * time.
      *
-     * Issues which are only affected by a single Java/Kotlin class file can be checked
-     * for incrementally when a Java/Kotlin source file is edited and then recompiled.
+     * Issues which are only affected by a single Java/Kotlin class file
+     * can be checked for incrementally when a Java/Kotlin source file
+     * is edited and then recompiled.
      */
     CLASS_FILE,
 
     /**
-     * The analysis considers **all** the Java/Kotlin class files together.
+     * The analysis considers **all** the Java/Kotlin class files
+     * together.
      *
      * This flag is mutually exclusive with [.CLASS_FILE].
      */
     ALL_CLASS_FILES,
 
-    /** The analysis considers the manifest file  */
+    /** The analysis considers the manifest file. */
     MANIFEST,
 
-    /** The analysis considers the Proguard configuration file  */
+    /** The analysis considers the Proguard configuration file. */
     PROGUARD_FILE,
 
     /**
-     * The analysis considers classes in the libraries for this project. These
-     * will be analyzed before the classes themselves. NOTE: This excludes
-     * provided libraries.
+     * The analysis considers classes in the libraries for this project.
+     * These will be analyzed before the classes themselves. NOTE: This
+     * excludes provided libraries.
      */
     JAVA_LIBRARIES,
 
-    /** The analysis considers a Gradle build file  */
+    /** The analysis considers a Gradle build file. */
     GRADLE_FILE,
 
-    /** The analysis considers Java property files  */
+    /** The analysis considers Java property files. */
     PROPERTY_FILE,
 
-    /** The analysis considers test sources as well  */
+    /** The analysis considers test sources as well. */
     TEST_SOURCES,
 
     /**
-     * Scope for other files. Issues that specify a custom scope will be called unconditionally.
-     * This will call [Detector.run]} on the detectors unconditionally.
+     * Scope for other files. Issues that specify a custom scope will
+     * be called unconditionally. This will call [Detector.run]} on the
+     * detectors unconditionally.
      */
     OTHER;
 
     companion object {
         /**
-         * Returns true if the given scope set corresponds to scanning a single file
-         * rather than a whole project
+         * Returns true if the given scope set corresponds to scanning a
+         * single file rather than a whole project
          *
          * @param scopes the scope set to check
-         *
          * @return true if the scope set references a single file
          */
         @JvmStatic
@@ -173,13 +181,11 @@ enum class Scope {
         }
 
         /**
-         * Returns the intersection of two scope sets.
-         * The returned set is deliberately mutable by the caller.
+         * Returns the intersection of two scope sets. The returned set
+         * is deliberately mutable by the caller.
          *
          * @param scope1 the first set to intersect
-         *
          * @param scope2 the second set to intersect
-         *
          * @return the intersection of the two sets
          */
         @JvmStatic
@@ -194,9 +200,10 @@ enum class Scope {
         }
 
         /**
-         * Infers a suitable scope to use from the given projects to be analyzed
-         * @param projects the projects to find a suitable scope for
+         * Infers a suitable scope to use from the given projects to be
+         * analyzed
          *
+         * @param projects the projects to find a suitable scope for
          * @return the scope to use
          */
         @JvmStatic
@@ -245,76 +252,121 @@ enum class Scope {
             return scope
         }
 
-        /** All scopes: running lint on a project will check these scopes */
+        /**
+         * All scopes: running lint on a project will check these
+         * scopes.
+         */
         @JvmField
         val ALL: EnumSet<Scope> = EnumSet.allOf(Scope::class.java)
 
-        /** Scope-set used for detectors which are affected by a single resource file */
+        /**
+         * Scope-set used for detectors which are affected by a single
+         * resource file.
+         */
         @JvmField
         val RESOURCE_FILE_SCOPE: EnumSet<Scope> = EnumSet.of(RESOURCE_FILE)
 
-        /** Scope-set used for detectors which are affected by a single resource folder */
+        /**
+         * Scope-set used for detectors which are affected by a single
+         * resource folder.
+         */
         @JvmField
         val RESOURCE_FOLDER_SCOPE: EnumSet<Scope> = EnumSet.of(RESOURCE_FOLDER)
 
-        /** Scope-set used for detectors which scan all resources */
+        /** Scope-set used for detectors which scan all resources. */
         @JvmField
         val ALL_RESOURCES_SCOPE: EnumSet<Scope> = EnumSet.of(ALL_RESOURCE_FILES)
 
-        /** Scope-set used for detectors which are affected by a single Java source file */
+        /**
+         * Scope-set used for detectors which are affected by a single
+         * Java source file.
+         */
         @JvmField
         val JAVA_FILE_SCOPE: EnumSet<Scope> = EnumSet.of(JAVA_FILE)
 
-        /** Scope-set used for detectors which are affected by a single Java class file */
+        /**
+         * Scope-set used for detectors which are affected by a single
+         * Java class file.
+         */
         @JvmField
         val CLASS_FILE_SCOPE: EnumSet<Scope> = EnumSet.of(CLASS_FILE)
 
-        /** Scope-set used for detectors which are affected by a single Gradle build file */
+        /**
+         * Scope-set used for detectors which are affected by a single
+         * Gradle build file.
+         */
         @JvmField
         val GRADLE_SCOPE: EnumSet<Scope> = EnumSet.of(GRADLE_FILE)
 
-        /** Scope-set used for detectors which are affected by the manifest only */
+        /**
+         * Scope-set used for detectors which are affected by the
+         * manifest only.
+         */
         @JvmField
         val MANIFEST_SCOPE: EnumSet<Scope> = EnumSet.of(MANIFEST)
 
-        /** Scope-set used for detectors which correspond to some other context */
+        /**
+         * Scope-set used for detectors which correspond to some other
+         * context.
+         */
         @JvmField
         val OTHER_SCOPE: EnumSet<Scope> = EnumSet.of(OTHER)
 
-        /** Scope-set used for detectors which are affected by a single ProGuard class file */
+        /**
+         * Scope-set used for detectors which are affected by a single
+         * ProGuard class file.
+         */
         @JvmField
         val PROGUARD_SCOPE: EnumSet<Scope> = EnumSet.of(PROGUARD_FILE)
 
-        /** Scope-set used for detectors which correspond to property files */
+        /**
+         * Scope-set used for detectors which correspond to property
+         * files.
+         */
         @JvmField
         val PROPERTY_SCOPE: EnumSet<Scope> = EnumSet.of(PROPERTY_FILE)
 
-        /** Resource XML files and manifest files */
+        /** Resource XML files and manifest files. */
         @JvmField
         val MANIFEST_AND_RESOURCE_SCOPE: EnumSet<Scope> = EnumSet.of(MANIFEST, RESOURCE_FILE)
 
-        /** Scope-set used for detectors which are affected by single XML and Java source files */
+        /**
+         * Scope-set used for detectors which are affected by single XML
+         * and Java source files.
+         */
         @JvmField
         val JAVA_AND_RESOURCE_FILES: EnumSet<Scope> = EnumSet.of(RESOURCE_FILE, JAVA_FILE)
 
-        /** Scope-set used for analyzing individual class files and all resource files */
+        /**
+         * Scope-set used for analyzing individual class files and all
+         * resource files.
+         */
         @JvmField
         val CLASS_AND_ALL_RESOURCE_FILES: EnumSet<Scope> =
             EnumSet.of(ALL_RESOURCE_FILES, CLASS_FILE)
 
-        /** Scope-set used for analyzing all class files, including those in libraries */
+        /**
+         * Scope-set used for analyzing all class files, including those
+         * in libraries.
+         */
         @JvmField
         val ALL_CLASSES_AND_LIBRARIES: EnumSet<Scope> = EnumSet.of(ALL_CLASS_FILES, JAVA_LIBRARIES)
 
-        /** Scope-set used for detectors which are affected by Java libraries */
+        /**
+         * Scope-set used for detectors which are affected by Java
+         * libraries.
+         */
         @JvmField
         val JAVA_LIBRARY_SCOPE: EnumSet<Scope> = EnumSet.of(JAVA_LIBRARIES)
 
-        /** Scope-set used for detectors which are affected by a single binary resource file */
+        /**
+         * Scope-set used for detectors which are affected by a single
+         * binary resource file.
+         */
         @JvmField
         val BINARY_RESOURCE_FILE_SCOPE: EnumSet<Scope> = EnumSet.of(BINARY_RESOURCE_FILE)
 
-        /** No scopes */
+        /** No scopes. */
         @JvmField
         val EMPTY: EnumSet<Scope> = EnumSet.noneOf(Scope::class.java)
     }

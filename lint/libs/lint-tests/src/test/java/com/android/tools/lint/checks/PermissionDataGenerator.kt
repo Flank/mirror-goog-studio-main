@@ -39,29 +39,47 @@ import java.util.HashMap
 import kotlin.text.Charsets.UTF_8
 
 data class Permission(
-    /** Permission name */
+    /** Permission name. */
     val name: String,
-    /** Manifest.permission class field name */
+    /** Manifest.permission class field name. */
     val field: String?,
-    /** API level this permission was introduced in */
+    /** API level this permission was introduced in. */
     val introducedIn: Int
 ) {
 
-    /** Bit mask for API levels where this permission was marked dangerous */
+    /**
+     * Bit mask for API levels where this permission was marked
+     * dangerous.
+     */
     private var dangerous: Long = 0
-    /** Bit mask for API levels where this permission was marked signature/system */
+    /**
+     * Bit mask for API levels where this permission was marked
+     * signature/system.
+     */
     private var signature: Long = 0
 
-    /** API level this permission was made a signature permission in, or 0 */
+    /**
+     * API level this permission was made a signature permission in, or
+     * 0.
+     */
     val signatureIn: Int get() = signatureFrom()
 
-    /** Last API level this permission was a signature permission in, or 0 */
+    /**
+     * Last API level this permission was a signature permission in, or
+     * 0.
+     */
     val signatureOut: Int get() = signatureUntil()
 
-    /** API level this permission was made a dangerous permission in, or 0 */
+    /**
+     * API level this permission was made a dangerous permission in, or
+     * 0.
+     */
     val dangerousIn: Int get() = dangerousFrom()
 
-    /** Last API level this permission was a dangerous permission in, or 0 */
+    /**
+     * Last API level this permission was a dangerous permission in, or
+     * 0.
+     */
     val dangerousOut: Int get() = dangerousUntil()
 
     /* Mark this permission as dangerous in the given API level */
@@ -74,16 +92,28 @@ data class Permission(
         signature = signature or ((1 shl apiLevel).toLong())
     }
 
-    /** Returns the first API level this permission is dangerous in, if any */
+    /**
+     * Returns the first API level this permission is dangerous in, if
+     * any.
+     */
     fun dangerousFrom(): Int = lowestBit(dangerous)
 
-    /** Returns the last API level this permission is dangerous in, if any */
+    /**
+     * Returns the last API level this permission is dangerous in, if
+     * any.
+     */
     fun dangerousUntil(): Int = highestBit(dangerous)
 
-    /** Returns the first API level this permission is dangerous in, if any */
+    /**
+     * Returns the first API level this permission is dangerous in, if
+     * any.
+     */
     fun signatureFrom(): Int = lowestBit(signature)
 
-    /** Returns the last API level this permission is dangerous in, if any */
+    /**
+     * Returns the last API level this permission is dangerous in, if
+     * any.
+     */
     fun signatureUntil(): Int = highestBit(signature)
 
     override fun toString(): String {
@@ -144,9 +174,10 @@ data class Permission(
 }
 
 /**
- * Analyzes the SDK to extract permission data used by various lint
- * checks such as the [com.android.tools.lint.checks.SystemPermissionsDetector]
- * and the [com.android.tools.lint.checks.PermissionDetector]
+ * Analyzes the SDK to extract permission data
+ * used by various lint checks such as the
+ * [com.android.tools.lint.checks.SystemPermissionsDetector] and the
+ * [com.android.tools.lint.checks.PermissionDetector]
  */
 class PermissionDataGenerator {
     val permissions = computePermissions(skipHidden = false)
@@ -167,9 +198,9 @@ class PermissionDataGenerator {
     }
 
     /**
-     * Returns permissions that were added as signature permissions later (not at
-     * the API level they were initially introduced. This only considers non-hidden
-     * permissions.
+     * Returns permissions that were added as signature permissions
+     * later (not at the API level they were initially introduced. This
+     * only considers non-hidden permissions.
      */
     fun getPermissionsMarkedAsSignatureLater(): List<Permission> {
         permissions ?: return emptyList()
@@ -449,7 +480,10 @@ class PermissionDataGenerator {
         return protectionLevelInt and flag == flag
     }
 
-    /** Returns the android.jar file for the given API level, or null if not found/valid */
+    /**
+     * Returns the android.jar file for the given API level, or null if
+     * not found/valid.
+     */
     private fun findSdkJar(top: String, apiLevel: Int): File? {
         var jar = File(top, "prebuilts/sdk/$apiLevel/current/android.jar")
         if (!jar.exists()) {
@@ -480,8 +514,9 @@ class PermissionDataGenerator {
     }
 
     /**
-     * Finds the binary AndroidManifest.xml in the given compiled SDK jar and
-     * returns the DOM document of a pretty printed version of it
+     * Finds the binary AndroidManifest.xml in the given compiled SDK
+     * jar and returns the DOM document of a pretty printed version of
+     * it.
      */
     private fun getManifestDocument(loader: URLClassLoader): Document? {
         val stream = loader.getResourceAsStream("AndroidManifest.xml")
@@ -491,7 +526,10 @@ class PermissionDataGenerator {
         return XmlUtils.parseDocumentSilently(xml, true)
     }
 
-    /** Computes map from permission name to field in Manifest.permission */
+    /**
+     * Computes map from permission name to field in
+     * Manifest.permission.
+     */
     private fun computeFieldToPermissionNameMap(loader: URLClassLoader): HashMap<String, String> {
         val clz = Class.forName("android.Manifest\$permission", true, loader)
         val valueToFieldName = HashMap<String, String>()

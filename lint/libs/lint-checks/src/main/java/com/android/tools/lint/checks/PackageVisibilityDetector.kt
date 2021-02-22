@@ -41,9 +41,10 @@ import org.w3c.dom.Element
 import java.util.EnumSet
 
 /**
- * Android 11 introduces new app visibility restrictions: apps must declare extra permissions
- * when they want to inspect other apps on the device. This detector helps increase visibility
- * into the new restrictions.
+ * Android 11 introduces new app visibility restrictions: apps must
+ * declare extra permissions when they want to inspect other apps on
+ * the device. This detector helps increase visibility into the new
+ * restrictions.
  */
 class PackageVisibilityDetector : Detector(), XmlScanner, SourceCodeScanner {
     private var cachedQueryPermissions: QueryPermissions? = null
@@ -178,7 +179,10 @@ class PackageVisibilityDetector : Detector(), XmlScanner, SourceCodeScanner {
     }
 
     companion object {
-        /** The API version in which package visibility restrictions were introduced. */
+        /**
+         * The API version in which package visibility restrictions were
+         * introduced.
+         */
         private const val INITIAL_API = AndroidVersion.VersionCodes.R
 
         private const val KEY_REQ_QUERY_ALL = "queryAll"

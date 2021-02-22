@@ -51,16 +51,14 @@ import org.jetbrains.uast.evaluateString
 import org.jetbrains.uast.tryResolveNamed
 import java.util.Locale
 
-/**
- * Detector for finding inefficiencies and errors in logging calls.
- */
+/** Detector for finding inefficiencies and errors in logging calls. */
 class LogDetector : Detector(), SourceCodeScanner {
     companion object Issues {
         private val IMPLEMENTATION = Implementation(
             LogDetector::class.java, Scope.JAVA_FILE_SCOPE
         )
 
-        /** Log call missing surrounding if  */
+        /** Log call missing surrounding if. */
         @JvmField
         val CONDITIONAL = Issue.create(
             id = "LogConditional",
@@ -81,7 +79,9 @@ class LogDetector : Detector(), SourceCodeScanner {
             implementation = IMPLEMENTATION
         ).setEnabledByDefault(false)
 
-        /** Mismatched tags between isLogging and log calls within it  */
+        /**
+         * Mismatched tags between isLogging and log calls within it.
+         */
         @JvmField
         val WRONG_TAG = Issue.create(
             id = "LogTagMismatch",
@@ -98,7 +98,7 @@ class LogDetector : Detector(), SourceCodeScanner {
             implementation = IMPLEMENTATION
         )
 
-        /** Log tag is too long  */
+        /** Log tag is too long. */
         @JvmField
         val LONG_TAG = Issue.create(
             id = "LongLogTag",
@@ -189,7 +189,10 @@ class LogDetector : Detector(), SourceCodeScanner {
             else -> null
         }
 
-    /** Returns true if the given logging call performs "work" to compute the message  */
+    /**
+     * Returns true if the given logging call performs "work" to compute
+     * the message.
+     */
     private fun performsWork(node: UCallExpression): Boolean {
         val referenceName = node.methodName ?: return false
         val messageArgumentIndex = if (PRINTLN == referenceName) 2 else 1
@@ -282,7 +285,9 @@ class LogDetector : Detector(), SourceCodeScanner {
         return false
     }
 
-    /** Checks that the tag passed to Log.s and Log.isLoggable match  */
+    /**
+     * Checks that the tag passed to Log.s and Log.isLoggable match.
+     */
     private fun checkTagConsistent(
         context: JavaContext,
         logCall: UCallExpression,

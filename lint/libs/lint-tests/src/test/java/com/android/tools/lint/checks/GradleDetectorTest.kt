@@ -71,9 +71,10 @@ import java.util.Locale
 import java.util.function.Predicate
 
 /**
- * NOTE: Many of these tests are duplicated in the Android Studio plugin to test the custom
- * GradleDetector subclass, LintIdeGradleDetector, which customizes some behavior to be based on top
- * of PSI rather than the Groovy parser.
+ * NOTE: Many of these tests are duplicated in the Android Studio plugin
+ * to test the custom GradleDetector subclass, LintIdeGradleDetector,
+ * which customizes some behavior to be based on top of PSI rather than
+ * the Groovy parser.
  */
 class GradleDetectorTest : AbstractCheckTest() {
 
@@ -3171,8 +3172,8 @@ class GradleDetectorTest : AbstractCheckTest() {
     }
 
     /**
-     * Tests that the navigation libraries are not considered as part of androidx even when
-     * their name does start with "androidx."
+     * Tests that the navigation libraries are not considered as part of
+     * androidx even when their name does start with "androidx."
      */
     fun testAndroidxMixedDependenciesWithNavigation() {
         lint().files(
@@ -4269,14 +4270,20 @@ class GradleDetectorTest : AbstractCheckTest() {
         private var leanSdkDir: File? = null
         private var gradleUserHome: File? = null
 
-        /** Creates a mock SDK installation structure, containing a fixed set of dependencies  */
+        /**
+         * Creates a mock SDK installation structure, containing a fixed
+         * set of dependencies.
+         */
         private val mockSupportLibraryInstallation: File?
             get() {
                 initializeMockSdkDirs()
                 return fullSdkDir
             }
 
-        /** Like [.getMockSupportLibraryInstallation] but without local support library  */
+        /**
+         * Like [.getMockSupportLibraryInstallation] but without local
+         * support library.
+         */
         private val sdkDirWithoutSupportLib: File?
             get() {
                 initializeMockSdkDirs()

@@ -35,7 +35,8 @@ import org.jetbrains.uast.UMethod
 import java.util.EnumSet
 
 /**
- * It checks that there is a reason defined when using the @Ignored annotation from JUnit.
+ * It checks that there is a reason defined when using the @Ignored
+ * annotation from JUnit.
  */
 class IgnoreWithoutReasonDetector : Detector(), Detector.UastScanner {
     companion object {

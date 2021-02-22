@@ -41,8 +41,8 @@ import org.w3c.dom.Element
 import org.w3c.dom.Node
 
 /**
- * Check which looks for potential errors in declarations of ConstraintLayout, such as under
- * specifying constraints
+ * Check which looks for potential errors in declarations of
+ * ConstraintLayout, such as under specifying constraints.
  */
 class ConstraintLayoutDetector : LayoutDetector() {
     override fun getApplicableElements(): Collection<String> {
@@ -204,7 +204,8 @@ class ConstraintLayoutDetector : LayoutDetector() {
 
         /**
          * @param element to scan
-         * @return true if barrier specific constraint is set. False otherwise.
+         * @return true if barrier specific constraint is set. False
+         *     otherwise.
          */
         private fun scanForBarrierConstraint(element: Element): Boolean {
             val attributes = element.attributes

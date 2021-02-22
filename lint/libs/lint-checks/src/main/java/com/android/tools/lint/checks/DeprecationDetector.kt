@@ -273,7 +273,7 @@ class DeprecationDetector : ResourceXmlDetector(), SourceCodeScanner {
         private const val SHARE_API_URL =
             "https://developer.android.com/training/sharing/receive.html?source=studio#providing-direct-share-targets"
 
-        /** Usage of deprecated views or attributes */
+        /** Usage of deprecated views or attributes. */
         @JvmField
         val ISSUE = create(
             id = "Deprecated",

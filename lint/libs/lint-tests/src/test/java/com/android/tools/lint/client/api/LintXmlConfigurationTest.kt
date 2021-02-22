@@ -1218,9 +1218,10 @@ class LintXmlConfigurationTest : AbstractCheckTest() {
     }
 
     /**
-     * Test support for reading and writing configurations; this builds on top of
-     * a normal lint run in order to make it easy to set up configurations etc without
-     * having to manually configure a lot of state, as used to be the case
+     * Test support for reading and writing configurations; this builds
+     * on top of a normal lint run in order to make it easy to set up
+     * configurations etc without having to manually configure a lot of
+     * state, as used to be the case.
      */
     private fun checkConfiguration(
         projectName: String? = null,

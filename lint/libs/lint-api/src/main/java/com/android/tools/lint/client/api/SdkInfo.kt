@@ -21,22 +21,21 @@ import com.google.common.annotations.Beta
 /**
  * Information about SDKs
  *
- *
- * **NOTE: This is not a public or final API; if you rely on this be prepared
- * to adjust your code for the next tools release.**
+ * **NOTE: This is not a public or final API; if you rely on this be
+ * prepared to adjust your code for the next tools release.**
  */
 @Beta
 abstract class SdkInfo {
     /**
-     * Returns true if the given child view is the same class or a sub class of
-     * the given parent view class
+     * Returns true if the given child view is the same class or a sub
+     * class of the given parent view class
      *
-     * @param parentViewFqcn the fully qualified class name of the parent view
-     *
-     * @param childViewFqcn the fully qualified class name of the child view
-     *
-     * @return true if the child view is a sub view of (or the same class as)
-     *         the parent view
+     * @param parentViewFqcn the fully qualified class name of the
+     *     parent view
+     * @param childViewFqcn the fully qualified class name of the child
+     *     view
+     * @return true if the child view is a sub view of (or the same
+     *     class as) the parent view
      */
     open fun isSubViewOf(parentViewFqcn: String, childViewFqcn: String): Boolean {
         var current = childViewFqcn
@@ -53,12 +52,12 @@ abstract class SdkInfo {
     }
 
     /**
-     * Returns the fully qualified name of the parent view, or null if the view
-     * is the root android.view.View class.
+     * Returns the fully qualified name of the parent view, or null if
+     * the view is the root android.view.View class.
      *
      * @param fqcn the fully qualified class name of the view
-     *
-     * @return the fully qualified class name of the parent view, or null
+     * @return the fully qualified class name of the parent view, or
+     *     null
      */
     abstract fun getParentViewClass(fqcn: String): String?
 
@@ -77,7 +76,6 @@ abstract class SdkInfo {
      * Returns true if the given widget name is a layout
      *
      * @param tag the XML tag for the view
-     *
      * @return true if the given tag corresponds to a layout
      */
     open fun isLayout(tag: String): Boolean = tag.endsWith("Layout")

@@ -60,9 +60,7 @@ import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.util.isConstructorCall
 import org.w3c.dom.Element
 
-/**
- * Helps construct slices correctly
- */
+/** Helps construct slices correctly. */
 class SliceDetector : Detector(), SourceCodeScanner {
     companion object {
         private val IMPLEMENTATION = Implementation(
@@ -70,7 +68,7 @@ class SliceDetector : Detector(), SourceCodeScanner {
             Scope.JAVA_FILE_SCOPE
         )
 
-        /** Problems with slice registration and construction */
+        /** Problems with slice registration and construction. */
         @JvmField
         val ISSUE = Issue.create(
             id = "Slices",
@@ -111,7 +109,7 @@ class SliceDetector : Detector(), SourceCodeScanner {
         private const val KEY_DECLARATION = "declaration"
         private const val KEY_MAP_METHOD = "onMapMethod"
 
-        /** Checks whether a provider is a slice provider */
+        /** Checks whether a provider is a slice provider. */
         fun isSliceProvider(provider: Element): Boolean {
             var intentFilter = getFirstSubTagByName(provider, TAG_INTENT_FILTER)
             while (intentFilter != null) {
@@ -435,8 +433,8 @@ class SliceDetector : Detector(), SourceCodeScanner {
     }
 
     /**
-     * Given a list builder construction, returns all the row builder constructor calls
-     * initialized with that list builder
+     * Given a list builder construction, returns all the row builder
+     * constructor calls initialized with that list builder.
      */
     private fun findRows(node: UCallExpression, method: UMethod): List<UCallExpression> {
         val rows = mutableListOf<UCallExpression>()

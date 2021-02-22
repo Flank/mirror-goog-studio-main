@@ -44,18 +44,18 @@ import java.util.HashSet
 import javax.annotation.CheckReturnValue
 
 /**
- * The actual machinery for running lint tests for a given [task].
- * This class is tied closely to the [TestLintTask] class, performing
- * a number of operations with(Task) to access package private
- * state; the intent is for the task class to only contain state
- * and setup, and for this class to contain actual test running code.
+ * The actual machinery for running lint tests for a given [task]. This
+ * class is tied closely to the [TestLintTask] class, performing a
+ * number of operations with(Task) to access package private state; the
+ * intent is for the task class to only contain state and setup, and for
+ * this class to contain actual test running code.
  */
 class TestLintRunner(private val task: TestLintTask) {
-    /** Whether the [.run] method has already been invoked */
+    /** Whether the [.run] method has already been invoked. */
     var alreadyRun = false
         private set
 
-    /** Returns all the platforms encountered by the given issues */
+    /** Returns all the platforms encountered by the given issues. */
     private fun computePlatforms(issues: List<Issue>): EnumSet<Platform> {
         val platforms = EnumSet.noneOf(Platform::class.java)
         for (issue in issues) {
@@ -64,7 +64,7 @@ class TestLintRunner(private val task: TestLintTask) {
         return platforms
     }
 
-    /** The test mode currently being checked */
+    /** The test mode currently being checked. */
     var currentTestMode: TestMode = TestMode.DEFAULT
 
     /**
@@ -289,8 +289,9 @@ class TestLintRunner(private val task: TestLintTask) {
     }
 
     /**
-     * Given a result string possibly containing absolute paths to the given directory,
-     * replaces the directory prefixes with `TESTROOT`, and optionally (if configured via
+     * Given a result string possibly containing absolute paths
+     * to the given directory, replaces the directory prefixes
+     * with `TESTROOT`, and optionally (if configured via
      * TestLinkTask.stripRoot) makes the path relative to the test root.
      */
     fun stripRoot(rootDir: File, path: String): String {
@@ -344,12 +345,14 @@ class TestLintRunner(private val task: TestLintTask) {
     }
 
     /**
-     * Creates lint test projects according to the configured project descriptions. Note that these
-     * are not the same projects that will be used if the [.run] method is called. This
-     * method is intended mainly for testing the lint infrastructure itself. Most detector tests
-     * will just want to use [.run].
+     * Creates lint test projects according to the configured project
+     * descriptions. Note that these are not the same projects that will
+     * be used if the [.run] method is called. This method is intended
+     * mainly for testing the lint infrastructure itself. Most detector
+     * tests will just want to use [.run].
      *
-     * @param keepFiles if true, don't delete the generated temporary project source files
+     * @param keepFiles if true, don't delete the generated temporary
+     *     project source files
      */
     fun createProjects(keepFiles: Boolean): List<Project> {
         var rootDir = Files.createTempDir()
@@ -376,7 +379,7 @@ class TestLintRunner(private val task: TestLintTask) {
         }
     }
 
-    /** Constructs the actual lint projects on disk */
+    /** Constructs the actual lint projects on disk. */
     fun createProjects(rootDir: File): List<File> {
         val projectDirs: MutableList<File> = Lists.newArrayList()
         with(task) {

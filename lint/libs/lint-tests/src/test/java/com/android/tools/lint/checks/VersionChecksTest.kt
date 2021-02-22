@@ -20,7 +20,10 @@ import com.android.tools.lint.checks.infrastructure.TestFile
 import com.android.tools.lint.checks.infrastructure.TestMode.Companion.PARTIAL
 import com.android.tools.lint.detector.api.Detector
 
-/** Unit tests for [VersionChecks]. This is using the ApiDetector to drive the analysis. */
+/**
+ * Unit tests for [VersionChecks]. This is using the ApiDetector to
+ * drive the analysis.
+ */
 class VersionChecksTest : AbstractCheckTest() {
     fun testConditionalApi0() {
         // See https://code.google.com/p/android/issues/detail?id=137195

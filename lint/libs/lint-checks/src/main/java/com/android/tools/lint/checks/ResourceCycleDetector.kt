@@ -69,29 +69,31 @@ import org.w3c.dom.Element
 import org.w3c.dom.Node
 import java.util.TreeMap
 
-/**
- * Checks for cycles in resource definitions
- */
-/** Constructs a new [ResourceCycleDetector]  */
+/** Checks for cycles in resource definitions. */
+/** Constructs a new [ResourceCycleDetector] */
 class ResourceCycleDetector : ResourceXmlDetector() {
 
     /**
-     * For each resource type, a map from a key (style name, layout name, color name, etc) to
-     * a value (parent style, included layout, referenced color, etc). Note that we only initialize
-     * this if we are in "batch mode" (not editor incremental mode) since we allow this detector
-     * to also run incrementally to look for trivial chains (e.g. of length 1).
+     * For each resource type, a map from a key (style name, layout
+     * name, color name, etc) to a value (parent style, included layout,
+     * referenced color, etc). Note that we only initialize this if we
+     * are in "batch mode" (not editor incremental mode) since we allow
+     * this detector to also run incrementally to look for trivial
+     * chains (e.g. of length 1).
      */
     private var mReferences: MutableMap<ResourceType, Multimap<String, String>>? = null
 
     /**
-     * If in batch analysis and cycles were found, in phase 2 this map should be initialized
-     * with locations for declaration definitions of the keys and values in [.mReferences]
+     * If in batch analysis and cycles were found, in phase 2 this map
+     * should be initialized with locations for declaration definitions
+     * of the keys and values in [.mReferences]
      */
     private var mLocations: MutableMap<ResourceType, Multimap<String, Location>>? = null
 
     /**
-     * If in batch analysis and cycles were found, for each resource type this is a list
-     * of chains (where each chain is a list of keys as described in [.mReferences])
+     * If in batch analysis and cycles were found, for each resource
+     * type this is a list of chains (where each chain is a list of keys
+     * as described in [.mReferences])
      */
     private var mChains: MutableMap<ResourceType, MutableList<MutableList<String>>>? = null
 
@@ -642,7 +644,10 @@ class ResourceCycleDetector : ResourceXmlDetector() {
             Scope.RESOURCE_FILE_SCOPE
         )
 
-        /** Style parent cycles, resource alias cycles, layout include cycles, etc  */
+        /**
+         * Style parent cycles, resource alias cycles, layout include
+         * cycles, etc.
+         */
         @JvmField
         val CYCLE = Issue.create(
             id = "ResourceCycle",
@@ -656,7 +661,7 @@ class ResourceCycleDetector : ResourceXmlDetector() {
             implementation = IMPLEMENTATION
         )
 
-        /** Parent cycles  */
+        /** Parent cycles. */
         @JvmField
         val CRASH = Issue.create(
             id = "AaptCrash",

@@ -30,15 +30,15 @@ import org.w3c.dom.Document
 import org.w3c.dom.Node
 
 /**
- * Check which looks for invalid resources. Aapt already performs some validation,
- * such as making sure that resource references point to resources that exist, but this
- * detector looks for additional issues.
+ * Check which looks for invalid resources. Aapt already performs some
+ * validation, such as making sure that resource references point to
+ * resources that exist, but this detector looks for additional issues.
  */
-/** Constructs a new detector  */
+/** Constructs a new detector. */
 class ExtraTextDetector : ResourceXmlDetector() {
     companion object Issues {
 
-        /** The main issue discovered by this detector  */
+        /** The main issue discovered by this detector. */
         @JvmField
         val ISSUE = Issue.create(
             id = "ExtraText",

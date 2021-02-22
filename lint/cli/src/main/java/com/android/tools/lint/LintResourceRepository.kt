@@ -241,7 +241,7 @@ open class LintResourceRepository constructor(
         }
     }
 
-    /** A repository wrapping an AAR backed library */
+    /** A repository wrapping an AAR backed library. */
     class LintLibraryRepository(
         private val client: LintCliClient,
         private val library: LintModelAndroidLibrary,
@@ -319,7 +319,7 @@ open class LintResourceRepository constructor(
         /**
          * An empty repository which is only used if you request the
          * resource repository for a non-Android project or when the
-         * compilation target can't be found etc
+         * compilation target can't be found etc.
          */
         object EmptyRepository : LintResourceRepository(
             null, EnumMap(ResourceType::class.java), ResourceNamespace.RES_AUTO,
@@ -363,7 +363,7 @@ open class LintResourceRepository constructor(
 
         /**
          * Returns the resource repository for the given [project] with
-         * the given scope
+         * the given scope.
          */
         fun get(
             client: LintCliClient,
@@ -563,7 +563,7 @@ open class LintResourceRepository constructor(
                 }
         }
 
-        /** Returns a resource repository for an AAR library */
+        /** Returns a resource repository for an AAR library. */
         private fun getForLibrary(
             client: LintCliClient,
             library: LintModelAndroidLibrary,

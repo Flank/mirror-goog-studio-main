@@ -86,7 +86,7 @@ import java.util.Locale
 import java.util.function.Predicate
 import kotlin.text.Charsets.UTF_8
 
-/** Checks Gradle files for potential errors */
+/** Checks Gradle files for potential errors. */
 open class GradleDetector : Detector(), GradleScanner {
 
     private var minSdkVersion: Int = 0
@@ -111,41 +111,45 @@ open class GradleDetector : Detector(), GradleScanner {
     private var artifactCacheHome: File? = null
 
     /**
-     * If incrementally editing a single build.gradle file, tracks whether we've already
-     * transitively checked GMS versions such that we don't flag the same error on every single
-     * dependency declaration
+     * If incrementally editing a single build.gradle file, tracks
+     * whether we've already transitively checked GMS versions such
+     * that we don't flag the same error on every single dependency
+     * declaration.
      */
     private var mCheckedGms: Boolean = false
 
     /**
-     * If incrementally editing a single build.gradle file, tracks whether we've already
-     * transitively checked support library versions such that we don't flag the same error on every
-     * single dependency declaration
+     * If incrementally editing a single build.gradle file, tracks
+     * whether we've already transitively checked support library
+     * versions such that we don't flag the same error on every single
+     * dependency declaration.
      */
     private var mCheckedSupportLibs: Boolean = false
 
     /**
-     * If incrementally editing a single build.gradle file, tracks whether we've already
-     * transitively checked wearable library versions such that we don't flag the same error on
-     * every single dependency declaration
+     * If incrementally editing a single build.gradle file, tracks
+     * whether we've already transitively checked wearable library
+     * versions such that we don't flag the same error on every single
+     * dependency declaration.
      */
     private var mCheckedWearableLibs: Boolean = false
 
     /**
-     * If incrementally editing a single build.gradle file, tracks whether we've already
-     * applied kotlin-android plugin.
+     * If incrementally editing a single build.gradle file, tracks
+     * whether we've already applied kotlin-android plugin.
      */
     private var mAppliedKotlinAndroidPlugin: Boolean = false
 
     /**
-     * If incrementally editing a single build.gradle file, tracks whether we've already
-     * applied kotlin-kapt plugin.
+     * If incrementally editing a single build.gradle file, tracks
+     * whether we've already applied kotlin-kapt plugin.
      */
     private var mAppliedKotlinKaptPlugin: Boolean = false
 
     /**
-     * If incrementally editing a single build.gradle file, tracks whether we have applied
-     * a java plugin (e.g. application, java-library)
+     * If incrementally editing a single build.gradle file, tracks
+     * whether we have applied a java plugin (e.g. application,
+     * java-library)
      */
     private var mAppliedJavaPlugin: Boolean = false
 
@@ -159,8 +163,9 @@ open class GradleDetector : Detector(), GradleScanner {
     private var mDeclaredTargetCompatibility: Boolean = false
 
     /**
-     * If incrementally editing a single build.gradle file, tracks whether we have declared
-     * the google maven repository in the buildscript block.
+     * If incrementally editing a single build.gradle file, tracks
+     * whether we have declared the google maven repository in the
+     * buildscript block.
      */
     private var mDeclaredGoogleMavenRepository: Boolean = false
 
@@ -174,7 +179,8 @@ open class GradleDetector : Detector(), GradleScanner {
     )
 
     /**
-     * Stores information for a check of the Android gradle plugin dependency version
+     * Stores information for a check of the Android gradle plugin
+     * dependency version.
      */
     private var agpVersionCheckInfo: AgpVersionCheckInfo? = null
 
@@ -205,7 +211,10 @@ open class GradleDetector : Detector(), GradleScanner {
         }
     }
 
-    /** Called with for example "android", "defaultConfig", "minSdkVersion", "7" */
+    /**
+     * Called with for example "android", "defaultConfig",
+     * "minSdkVersion", "7"
+     */
     override fun checkDslPropertyAssignment(
         context: GradleContext,
         property: String,
@@ -1051,8 +1060,8 @@ open class GradleDetector : Detector(), GradleScanner {
     }
 
     /**
-     * Returns a predicate that encapsulates version constraints for the given library, or null if
-     * there are no constraints.
+     * Returns a predicate that encapsulates version constraints for the
+     * given library, or null if there are no constraints.
      */
     private fun getUpgradeVersionFilter(
         context: GradleContext,
@@ -1092,7 +1101,7 @@ open class GradleDetector : Detector(), GradleScanner {
         return null
     }
 
-    /** Home in the Gradle cache for artifact caches */
+    /** Home in the Gradle cache for artifact caches. */
     @Suppress("MemberVisibilityCanBePrivate") // overridden in the IDE
     protected fun getArtifactCacheHome(): File {
         return artifactCacheHome ?: run {
@@ -1364,9 +1373,10 @@ open class GradleDetector : Detector(), GradleScanner {
         isSupportLibraryDependentOnCompileSdk(groupId, artifactId)
 
     /**
-     * Returns if the given group id belongs to an AndroidX artifact. This usually means that it
-     * starts with "androidx." but there is an special case for the navigation artifact which does
-     * start with "androidx." but links to non-androidx classes
+     * Returns if the given group id belongs to an AndroidX artifact.
+     * This usually means that it starts with "androidx." but there is
+     * an special case for the navigation artifact which does start with
+     * "androidx." but links to non-androidx classes.
      */
     private fun LintModelMavenName.isAndroidxArtifact() =
         groupId.startsWith(ANDROIDX_PKG_PREFIX) && groupId != "androidx.navigation"
@@ -1693,11 +1703,13 @@ open class GradleDetector : Detector(), GradleScanner {
     }
 
     /**
-     * Checks to see if a KTX extension is available for the given library.
-     * If so, we offer a suggestion to switch the dependency to the KTX version.
-     * See https://developer.android.com/kotlin/ktx for details.
+     * Checks to see if a KTX extension is available for the given
+     * library. If so, we offer a suggestion to switch the dependency to
+     * the KTX version. See https://developer.android.com/kotlin/ktx for
+     * details.
      *
-     * This should be called outside of a read action, since it may trigger network requests.
+     * This should be called outside of a read action, since it may
+     * trigger network requests.
      */
     private fun checkForKtxExtension(
         context: Context,
@@ -1739,8 +1751,9 @@ open class GradleDetector : Detector(), GradleScanner {
     }
 
     /**
-     * Report any blocked dependencies that weren't found in the build.gradle source file during
-     * processing (we don't have accurate position info at this point)
+     * Report any blocked dependencies that weren't found in the
+     * build.gradle source file during processing (we don't have
+     * accurate position info at this point)
      */
     private fun checkBlockedDependencies(context: Context, project: Project) {
         val blockedDependencies = blockedDependencies[project] ?: return
@@ -1933,7 +1946,7 @@ open class GradleDetector : Detector(), GradleScanner {
         return null
     }
 
-    /** True if the given project uses the legacy http library */
+    /** True if the given project uses the legacy http library. */
     private fun usesLegacyHttpLibrary(project: Project): Boolean {
         val model = project.buildModule ?: return false
         for (path in model.bootClassPath) {
@@ -2007,8 +2020,8 @@ open class GradleDetector : Detector(), GradleScanner {
     }
 
     /**
-     * Checks if the library with the given `groupId` and `artifactId` has to match
-     * compileSdkVersion.
+     * Checks if the library with the given `groupId` and `artifactId`
+     * has to match compileSdkVersion.
      */
     private fun isSupportLibraryDependentOnCompileSdk(
         groupId: String,
@@ -2172,14 +2185,17 @@ open class GradleDetector : Detector(), GradleScanner {
     }
 
     companion object {
-        /** Calendar to use to look up the current time (used by tests to set specific time */
+        /**
+         * Calendar to use to look up the current time (used by tests to
+         * set specific time.
+         */
         var calendar: Calendar? = null
 
         const val KEY_COORDINATE = "coordinate"
 
         private val IMPLEMENTATION = Implementation(GradleDetector::class.java, Scope.GRADLE_SCOPE)
 
-        /** Obsolete dependencies */
+        /** Obsolete dependencies. */
         @JvmField
         val DEPENDENCY = Issue.create(
             id = "GradleDependency",
@@ -2196,7 +2212,10 @@ open class GradleDetector : Detector(), GradleScanner {
             implementation = IMPLEMENTATION
         )
 
-        /** A dependency on an obsolete version of the Android Gradle Plugin */
+        /**
+         * A dependency on an obsolete version of the Android Gradle
+         * Plugin.
+         */
         @JvmField
         val AGP_DEPENDENCY = Issue.create(
             id = "AndroidGradlePluginVersion",
@@ -2214,7 +2233,7 @@ open class GradleDetector : Detector(), GradleScanner {
             implementation = IMPLEMENTATION
         )
 
-        /** Deprecated Gradle constructs */
+        /** Deprecated Gradle constructs. */
         @JvmField
         val DEPRECATED = Issue.create(
             id = "GradleDeprecated",
@@ -2229,7 +2248,7 @@ open class GradleDetector : Detector(), GradleScanner {
             implementation = IMPLEMENTATION
         )
 
-        /** Deprecated Gradle configurations */
+        /** Deprecated Gradle configurations. */
         @JvmField
         val DEPRECATED_CONFIGURATION = Issue.create(
             id = "GradleDeprecatedConfiguration",
@@ -2245,7 +2264,7 @@ open class GradleDetector : Detector(), GradleScanner {
             implementation = IMPLEMENTATION
         )
 
-        /** Incompatible Android Gradle plugin */
+        /** Incompatible Android Gradle plugin. */
         @JvmField
         val GRADLE_PLUGIN_COMPATIBILITY = Issue.create(
             id = "GradlePluginVersion",
@@ -2262,7 +2281,7 @@ open class GradleDetector : Detector(), GradleScanner {
             implementation = IMPLEMENTATION
         )
 
-        /** Invalid or dangerous paths */
+        /** Invalid or dangerous paths. */
         @JvmField
         val PATH = Issue.create(
             id = "GradlePath",
@@ -2280,7 +2299,7 @@ open class GradleDetector : Detector(), GradleScanner {
             implementation = IMPLEMENTATION
         )
 
-        /** Constructs the IDE support struggles with */
+        /** Constructs the IDE support struggles with. */
         @JvmField
         val IDE_SUPPORT = Issue.create(
             id = "GradleIdeError",
@@ -2296,7 +2315,7 @@ open class GradleDetector : Detector(), GradleScanner {
             implementation = IMPLEMENTATION
         )
 
-        /** Using + in versions */
+        /** Using + in versions. */
         @JvmField
         val PLUS = Issue.create(
             id = "GradleDynamicVersion",
@@ -2314,7 +2333,9 @@ open class GradleDetector : Detector(), GradleScanner {
             implementation = IMPLEMENTATION
         )
 
-        /** Accidentally calling a getter instead of your own methods */
+        /**
+         * Accidentally calling a getter instead of your own methods.
+         */
         @JvmField
         val GRADLE_GETTER = Issue.create(
             id = "GradleGetter",
@@ -2339,7 +2360,7 @@ open class GradleDetector : Detector(), GradleScanner {
             implementation = IMPLEMENTATION
         )
 
-        /** Using incompatible versions */
+        /** Using incompatible versions. */
         @JvmField
         val COMPATIBILITY = Issue.create(
             id = "GradleCompatible",
@@ -2357,7 +2378,7 @@ open class GradleDetector : Detector(), GradleScanner {
             implementation = IMPLEMENTATION
         )
 
-        /** Using a string where an integer is expected */
+        /** Using a string where an integer is expected. */
         @JvmField
         val STRING_INTEGER = Issue.create(
             id = "StringShouldBeInt",
@@ -2378,7 +2399,7 @@ open class GradleDetector : Detector(), GradleScanner {
             implementation = IMPLEMENTATION
         )
 
-        /** Attempting to use substitution with single quotes */
+        /** Attempting to use substitution with single quotes. */
         @JvmField
         val NOT_INTERPOLATED = Issue.create(
             id = "NotInterpolated",
@@ -2393,7 +2414,7 @@ open class GradleDetector : Detector(), GradleScanner {
             implementation = IMPLEMENTATION
         )
 
-        /** A newer version is available on a remote server */
+        /** A newer version is available on a remote server. */
         @JvmField
         val REMOTE_VERSION = Issue.create(
             id = "NewerVersionAvailable",
@@ -2429,7 +2450,7 @@ open class GradleDetector : Detector(), GradleScanner {
             enabledByDefault = false
         )
 
-        /** Accidentally using octal numbers */
+        /** Accidentally using octal numbers. */
         @JvmField
         val ACCIDENTAL_OCTAL = Issue.create(
             id = "AccidentalOctal",
@@ -2464,7 +2485,7 @@ open class GradleDetector : Detector(), GradleScanner {
             implementation = IMPLEMENTATION
         )
 
-        /** Using a versionCode that is very high */
+        /** Using a versionCode that is very high. */
         @JvmField
         val HIGH_APP_VERSION_CODE = Issue.create(
             id = "HighAppVersionCode",
@@ -2482,7 +2503,7 @@ open class GradleDetector : Detector(), GradleScanner {
             implementation = IMPLEMENTATION
         )
 
-        /** Dev mode is no longer relevant */
+        /** Dev mode is no longer relevant. */
         @JvmField
         val DEV_MODE_OBSOLETE = Issue.create(
             id = "DevModeObsolete",
@@ -2508,7 +2529,7 @@ open class GradleDetector : Detector(), GradleScanner {
             implementation = IMPLEMENTATION
         )
 
-        /** Duplicate HTTP classes */
+        /** Duplicate HTTP classes. */
         @JvmField
         val DUPLICATE_CLASSES = Issue.create(
             id = "DuplicatePlatformClasses",
@@ -2590,7 +2611,7 @@ open class GradleDetector : Detector(), GradleScanner {
             .addMoreInfo("https://support.google.com/googleplay/android-developer/answer/113469#targetsdk")
             .addMoreInfo("https://developer.android.com/distribute/best-practices/develop/target-sdk.html")
 
-        /** Using a deprecated library */
+        /** Using a deprecated library. */
         @JvmField
         val DEPRECATED_LIBRARY = Issue.create(
             id = "OutdatedLibrary",
@@ -2610,7 +2631,10 @@ open class GradleDetector : Detector(), GradleScanner {
             implementation = IMPLEMENTATION
         )
 
-        /** Using data binding with Kotlin but not Kotlin annotation processing */
+        /**
+         * Using data binding with Kotlin but not Kotlin annotation
+         * processing.
+         */
         @JvmField
         val DATA_BINDING_WITHOUT_KAPT = Issue.create(
             id = "DataBindingWithoutKapt",
@@ -2626,7 +2650,7 @@ open class GradleDetector : Detector(), GradleScanner {
             implementation = IMPLEMENTATION
         )
 
-        /** Using Lifecycle annotation processor with java8 */
+        /** Using Lifecycle annotation processor with java8. */
         @JvmField
         val LIFECYCLE_ANNOTATION_PROCESSOR_WITH_JAVA8 = Issue.create(
             id = "LifecycleAnnotationProcessorWithJava8",
@@ -2654,7 +2678,7 @@ open class GradleDetector : Detector(), GradleScanner {
             implementation = IMPLEMENTATION
         )
 
-        /** Using a vulnerable library */
+        /** Using a vulnerable library. */
         @JvmField
         val RISKY_LIBRARY = Issue.create(
             id = "RiskyLibrary",
@@ -2755,23 +2779,23 @@ open class GradleDetector : Detector(), GradleScanner {
             moreInfo = "https://developer.android.com/r/tools/jcenter-end-of-service"
         )
 
-        /** Gradle plugin IDs based on the Java plugin */
+        /** Gradle plugin IDs based on the Java plugin. */
         val JAVA_PLUGIN_IDS = listOf("java", "java-library", "application")
             .flatMap { listOf(it, "org.gradle.$it") }
 
-        /** The Gradle plugin ID for Android applications */
+        /** The Gradle plugin ID for Android applications. */
         const val APP_PLUGIN_ID = "com.android.application"
 
-        /** The Gradle plugin ID for Android libraries */
+        /** The Gradle plugin ID for Android libraries. */
         const val LIB_PLUGIN_ID = "com.android.library"
 
-        /** Previous plugin id for applications */
+        /** Previous plugin id for applications. */
         const val OLD_APP_PLUGIN_ID = "android"
 
-        /** Previous plugin id for libraries */
+        /** Previous plugin id for libraries. */
         const val OLD_LIB_PLUGIN_ID = "android-library"
 
-        /** Group ID for GMS */
+        /** Group ID for GMS. */
         const val GMS_GROUP_ID = "com.google.android.gms"
 
         const val FIREBASE_GROUP_ID = "com.google.firebase"
@@ -2783,15 +2807,17 @@ open class GradleDetector : Detector(), GradleScanner {
             GradleCoordinate.parseCoordinateString("$GMS_GROUP_ID:play-services:6.5.0")!!
 
         /**
-         * Threshold to consider a versionCode very high and issue a warning.
-         * https://developer.android.com/studio/publish/versioning.html indicates that the highest value
-         * accepted by Google Play is 2100000000
+         * Threshold to consider a versionCode
+         * very high and issue a warning.
+         * https://developer.android.com/studio/publish/versioning.html
+         * indicates that the highest value accepted by Google Play is
+         * 2100000000.
          */
         private const val VERSION_CODE_HIGH_THRESHOLD = 2000000000
 
         /**
          * Returns the best guess for where a dependency is declared in
-         * the given project
+         * the given project.
          */
         fun getDependencyLocation(context: Context, c: LintModelMavenName): Location {
             return getDependencyLocation(context, c.groupId, c.artifactId, c.version)
@@ -2799,7 +2825,7 @@ open class GradleDetector : Detector(), GradleScanner {
 
         /**
          * Returns the best guess for where a dependency is declared in
-         * the given project
+         * the given project.
          */
         fun getDependencyLocation(
             context: Context,
@@ -2828,7 +2854,7 @@ open class GradleDetector : Detector(), GradleScanner {
 
         /**
          * Returns the best guess for where two dependencies are
-         * declared in a project
+         * declared in a project.
          */
         fun getDependencyLocation(
             context: Context,
@@ -2843,7 +2869,7 @@ open class GradleDetector : Detector(), GradleScanner {
 
         /**
          * Returns the best guess for where two dependencies are
-         * declared in a project
+         * declared in a project.
          */
         fun getDependencyLocation(
             context: Context,
@@ -3059,12 +3085,15 @@ open class GradleDetector : Detector(), GradleScanner {
         private var latestBuildTools: GradleVersion? = null
 
         /**
-         * Returns the latest build tools installed for the given major version. We just cache this
-         * once; we don't need to be accurate in the sense that if the user opens the SDK manager and
-         * installs a more recent version, we capture this in the same IDE session.
+         * Returns the latest build tools installed for the given
+         * major version. We just cache this once; we don't need to be
+         * accurate in the sense that if the user opens the SDK manager
+         * and installs a more recent version, we capture this in the
+         * same IDE session.
          *
          * @param client the associated client
-         * @param major the major version of build tools to look up (e.g. typically 18, 19, ...)
+         * @param major the major version of build tools to look up
+         *     (e.g. typically 18, 19, ...)
          * @return the corresponding highest known revision
          */
         private fun getLatestBuildTools(client: LintClient, major: Int): GradleVersion? {

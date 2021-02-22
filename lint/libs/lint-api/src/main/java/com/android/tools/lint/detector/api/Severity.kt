@@ -22,31 +22,30 @@ import java.util.Locale
 /**
  * Severity of an issue found by lint
  *
- * **NOTE: This is not a public or final API; if you rely on this be prepared
- * to adjust your code for the next tools release.**
+ * **NOTE: This is not a public or final API; if you rely on this be
+ * prepared to adjust your code for the next tools release.**
  */
 @Beta
 enum class Severity constructor(
     /**
-     * A description of this severity suitable for display to the user
+     * A description of this severity suitable for display to the user.
      */
     val description: String
 ) {
 
     /**
      * Fatal: Use sparingly because a warning marked as fatal will be
-     * considered critical and will abort Export APK etc in ADT
+     * considered critical and will abort Export APK etc in ADT.
      */
     FATAL("Fatal"),
 
     /**
-     * Errors: The issue is known to be a real error that must be addressed.
+     * Errors: The issue is known to be a real error that must be
+     * addressed.
      */
     ERROR("Error"),
 
-    /**
-     * Warning: Probably a problem.
-     */
+    /** Warning: Probably a problem. */
     WARNING("Warning"),
 
     /**
@@ -55,12 +54,10 @@ enum class Severity constructor(
      */
     INFORMATIONAL("Information"),
 
-    /**
-     * Ignore: The user doesn't want to see this issue
-     */
+    /** Ignore: The user doesn't want to see this issue. */
     IGNORE("Ignore");
 
-    /** Returns true if this severity is at least an error  */
+    /** Returns true if this severity is at least an error. */
     val isError: Boolean
         get() = this == ERROR || this == FATAL
 
@@ -94,7 +91,8 @@ enum class Severity constructor(
         }
 
         /**
-         * Returns the smallest / least severe of the two given severities
+         * Returns the smallest / least severe of the two given
+         * severities
          *
          * @param severity1 the first severity to compare
          * @param severity2 the second severity to compare

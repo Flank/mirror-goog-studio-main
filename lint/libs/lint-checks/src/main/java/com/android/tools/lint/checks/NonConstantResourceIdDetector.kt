@@ -36,8 +36,9 @@ import org.jetbrains.uast.USwitchExpression
 import org.jetbrains.uast.java.JavaUSwitchExpression
 
 /**
- * Warns against using non-constant resource IDs in Java switch statement blocks and annotations.
- * This aims to prevent users from using resource IDs as switch cases and annotations.
+ * Warns against using non-constant resource IDs in Java switch
+ * statement blocks and annotations. This aims to prevent users from
+ * using resource IDs as switch cases and annotations.
  */
 class NonConstantResourceIdDetector : Detector(), SourceCodeScanner {
 
@@ -60,7 +61,8 @@ class NonConstantResourceIdDetector : Detector(), SourceCodeScanner {
         }
 
         /**
-         * Checks switch cases values for non-constant expressions which are R class references.
+         * Checks switch cases values for non-constant expressions which
+         * are R class references.
          */
         private fun checkSwitchCasesForRClassReferences(body: UExpressionList) {
             for (expression in body.expressions) {

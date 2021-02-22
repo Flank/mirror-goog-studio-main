@@ -28,8 +28,9 @@ import java.util.HashMap
 import java.util.Locale
 
 /**
- * "Multiplexing" reporter which allows output to be split up into a separate report for each
- * separate project. It also adds an overview index.
+ * "Multiplexing" reporter which allows output to be split up into a
+ * separate report for each separate project. It also adds an overview
+ * index.
  */
 class MultiProjectHtmlReporter(
     client: LintCliClient,

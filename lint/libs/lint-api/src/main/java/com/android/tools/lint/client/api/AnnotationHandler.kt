@@ -63,7 +63,8 @@ import java.util.ArrayList
 import java.util.HashSet
 
 /**
- * Looks up annotations on method calls and enforces the various things they express.
+ * Looks up annotations on method calls and enforces the various things
+ * they express.
  */
 internal class AnnotationHandler(private val scanners: Multimap<String, SourceCodeScanner>) {
 
@@ -560,7 +561,8 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
     }
 
     /**
-     * Extract the relevant annotations from the call and run the checks on the annotations.
+     * Extract the relevant annotations from the call and run the checks
+     * on the annotations.
      */
     private fun checkCall(
         context: JavaContext,
@@ -591,11 +593,13 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
     }
 
     /**
-     * Extract the relevant annotations from the call and run the checks on the annotations.<p>
+     * Extract the relevant annotations from the call and run the checks
+     * on the annotations.<p>
      *
-     * This method is used in cases where UCallExpression.resolve() returns null. One important
-     * case this happens is when an implicit, generated, default constructor (a class with no
-     * explicit constructor in the source code) is called.
+     * This method is used in cases where UCallExpression.resolve()
+     * returns null. One important case this happens is when an
+     * implicit, generated, default constructor (a class with
+     * no explicit constructor in the source code) is called.
      */
     private fun checkCallUnresolved(
         context: JavaContext,
@@ -655,7 +659,8 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
     }
 
     /**
-     * Do the checks of a call based on the method, class, and package annotations given.
+     * Do the checks of a call based on the method, class, and package
+     * annotations given.
      */
     private fun doCheckCall(
         context: JavaContext,

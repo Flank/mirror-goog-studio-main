@@ -26,13 +26,11 @@ import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.XmlContext
 import org.w3c.dom.Document
 
-/**
- * Checks that the line endings in DOS files are consistent
- */
-/** Constructs a new [DosLineEndingDetector]  */
+/** Checks that the line endings in DOS files are consistent. */
+/** Constructs a new [DosLineEndingDetector] */
 class DosLineEndingDetector : LayoutDetector() {
     companion object Issues {
-        /** Detects mangled DOS line ending documents  */
+        /** Detects mangled DOS line ending documents. */
         @JvmField
         val ISSUE = Issue.create(
             id = "MangledCRLF",

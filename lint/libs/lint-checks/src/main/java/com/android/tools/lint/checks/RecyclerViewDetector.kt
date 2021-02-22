@@ -203,8 +203,9 @@ class RecyclerViewDetector : Detector(), SourceCodeScanner {
     }
 
     /**
-     * Determines whether a given variable "escapes" either to a field or to a nested runnable. (We
-     * deliberately ignore variables that escape via method calls.)
+     * Determines whether a given variable "escapes" either to a field
+     * or to a nested runnable. (We deliberately ignore variables that
+     * escape via method calls.)
      */
     private class ParameterEscapesVisitor(
         private val bindClass: PsiClass,

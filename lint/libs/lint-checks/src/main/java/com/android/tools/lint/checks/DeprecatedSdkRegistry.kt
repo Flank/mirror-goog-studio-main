@@ -30,11 +30,14 @@ import java.io.InputStreamReader
 import java.nio.file.Path
 import kotlin.text.Charsets.UTF_8
 
-/** Remote URL for current SDK metadata */
+/** Remote URL for current SDK metadata. */
 const val SDK_REGISTRY_URL =
     "https://dl.google.com/dl/android/sdk/metadata/sdk_registry.xml"
 
-/** Key used in cache directories to locate the deprecated SDK network cache */
+/**
+ * Key used in cache directories to locate the deprecated SDK network
+ * cache.
+ */
 const val DEPRECATED_SDK_CACHE_DIR_KEY = "sdk-registry.xml"
 
 private const val TAG_ROOT = "sdk_metadata"
@@ -49,12 +52,12 @@ private const val ATTR_STATUS = "status"
 private const val ATTR_DESCRIPTION = "description"
 
 /**
- * Information about deprecated and vulnerable libraries, based on
- * metadata published on dl.google.com:
- *    https://dl.google.com/dl/android/sdk/metadata/sdk_registry.xml
+ * Information about deprecated and vulnerable libraries,
+ * based on metadata published on dl.google.com:
+ * https://dl.google.com/dl/android/sdk/metadata/sdk_registry.xml.
  */
 abstract class DeprecatedSdkRegistry(
-    /** Location to search for cached repository content files */
+    /** Location to search for cached repository content files. */
     cacheDir: Path? = null
 ) : NetworkCache(
     SDK_REGISTRY_URL,
@@ -92,7 +95,7 @@ abstract class DeprecatedSdkRegistry(
         }
     }
 
-    /** Returns the latest recommended version */
+    /** Returns the latest recommended version. */
     fun getRecommendedVersion(dependency: GradleCoordinate): GradleVersion? {
         val library = findDeclaration(dependency) ?: return null
         val recommendedVersion = library.getAttribute(ATTR_RECOMMENDED_VERSION)
@@ -103,7 +106,7 @@ abstract class DeprecatedSdkRegistry(
         }
     }
 
-    /** Finds the metadata element for the given coordinate */
+    /** Finds the metadata element for the given coordinate. */
     fun findDeclaration(dependency: GradleCoordinate): Element? {
         val groupId = dependency.groupId
         val artifactId = dependency.artifactId
@@ -123,7 +126,10 @@ abstract class DeprecatedSdkRegistry(
         return null
     }
 
-    /** Returns metadata about a given library if it is a known deprecated library */
+    /**
+     * Returns metadata about a given library if it is a known
+     * deprecated library.
+     */
     fun getVersionInfo(dependency: GradleCoordinate): DeprecatedLibrary? {
         val library = findDeclaration(dependency) ?: return null
         val currentVersion = dependency.version ?: return null
@@ -165,7 +171,10 @@ abstract class DeprecatedSdkRegistry(
         return null
     }
 
-    /** Returns true if the given version is at least [fromString] and at most [toString] */
+    /**
+     * Returns true if the given version is at least [fromString] and at
+     * most [toString]
+     */
     private fun matches(version: GradleVersion, fromString: String, toString: String): Boolean {
         if (toString.isNotEmpty()) {
             val to = GradleVersion.tryParse(toString)
@@ -187,7 +196,7 @@ abstract class DeprecatedSdkRegistry(
         return DeprecatedSdkRegistry::class.java.getResourceAsStream("/sdks-offline.xml")
     }
 
-    /** Metadata about a deprecated library */
+    /** Metadata about a deprecated library. */
     data class DeprecatedLibrary(
         val groupId: String,
         val artifactId: String,

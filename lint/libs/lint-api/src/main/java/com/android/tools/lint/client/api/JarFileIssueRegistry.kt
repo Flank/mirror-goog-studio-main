@@ -36,21 +36,26 @@ import java.util.jar.JarFile
 import java.util.regex.Pattern
 
 /**
- *  An [IssueRegistry] for a custom lint rule jar file. The rule jar should provide a
- * manifest entry with the key `Lint-Registry` and the value of the fully qualified name of an
- * implementation of [IssueRegistry] (with a default constructor).
+ * An [IssueRegistry] for a custom lint rule jar file. The rule jar
+ * should provide a manifest entry with the key `Lint-Registry` and
+ * the value of the fully qualified name of an implementation of
+ * [IssueRegistry] (with a default constructor).
  *
- *  NOTE: The custom issue registry should not extend this file; it should be a plain
- * IssueRegistry! This file is used internally to wrap the given issue registry.
+ * NOTE: The custom issue registry should not extend this file; it
+ * should be a plain IssueRegistry! This file is used internally to wrap
+ * the given issue registry.
  */
 class JarFileIssueRegistry
 private constructor(
     client: LintClient,
-    /** The jar file the rules were loaded from */
+    /** The jar file the rules were loaded from. */
     val jarFile: File,
-    /** The custom lint check's issue registry that this [JarFileIssueRegistry] wraps */
+    /**
+     * The custom lint check's issue registry that this
+     * [JarFileIssueRegistry] wraps.
+     */
     registry: IssueRegistry,
-    /** Vendor for this lint registry */
+    /** Vendor for this lint registry. */
     override val vendor: Vendor
 ) : IssueRegistry() {
 
@@ -75,35 +80,35 @@ private constructor(
          * Pattern for matching lint jar paths in Gradle's cache, like
          * ../../../../../.gradle/caches/transforms-3/4f61605fce02e0e38b0af6e34f10c4a6/transformed/lifecycle-runtime-ktx-2.2.0/jars/lint.jar
          * and on Windows,
-         * C:\users\example\.gradle\caches\transforms-3\4f61605fce02e0e38b0af6e34f10c4a6\transformed\annotation-experimental-1.0.0\jars\lint.jar
-         *
+         * C:\users\example\.gradle\caches\transforms-3\4f61605fce02e0e38b0af6e34f10c4a6\transformed\annotation-experimental-1.0.0\jars\lint.jar.
          */
         private val ARTIFACT_PATTERN = Pattern.compile(".*[/\\\\].gradle[/\\\\]caches[/\\\\]transforms-[0-9]+[/\\\\][0-9a-f]+[/\\\\]transformed[/\\\\](.+)[/\\\\]jars[/\\\\]lint\\.jar$")
 
-        /** Service key for automatic discovery of lint rules */
+        /** Service key for automatic discovery of lint rules. */
         private const val SERVICE_KEY =
             "META-INF/services/com.android.tools.lint.client.api.IssueRegistry"
 
         /**
          * Manifest constant for declaring an issue provider.
          *
-         * Example: Lint-Registry-v2: foo.bar.CustomIssueRegistry
+         * Example: Lint-Registry-v2: foo.bar.CustomIssueRegistry.
          */
         private const val MF_LINT_REGISTRY = "Lint-Registry-v2"
 
-        /** Older key: these are for older custom rules */
+        /** Older key: these are for older custom rules. */
         private const val MF_LINT_REGISTRY_OLD = "Lint-Registry"
 
-        /** Cache of custom lint check issue registries */
+        /** Cache of custom lint check issue registries. */
         private var cache: MutableMap<File, SoftReference<JarFileIssueRegistry>>? = null
 
         /**
-         * Loads custom rules from the given list of jar files and returns a list
-         * of [JarFileIssueRegistry} instances.
+         * Loads custom rules from the given list of jar files and
+         * returns a list of [JarFileIssueRegistry} instances.
          *
-         * It will also deduplicate issue registries, since in Gradle projects with
-         * local lint.jar's it's possible for the same lint.jar to be handed back
-         * multiple times with different paths through various separate dependencies.
+         * It will also deduplicate issue registries, since in Gradle
+         * projects with local lint.jar's it's possible for the same
+         * lint.jar to be handed back multiple times with different
+         * paths through various separate dependencies.
          */
         fun get(
             client: LintClient,
@@ -137,8 +142,8 @@ private constructor(
         }
 
         /**
-         * Returns a [JarFileIssueRegistry] for the given issue registry class name
-         * and jar file, with caching
+         * Returns a [JarFileIssueRegistry] for the given issue registry
+         * class name and jar file, with caching.
          */
         private fun get(
             client: LintClient,
@@ -186,12 +191,12 @@ private constructor(
                 }
             }
 
-        /** Clear out any cached jar files */
+        /** Clear out any cached jar files. */
         fun clearCache() {
             cache?.clear()
         }
 
-        /** Combine one or more issue registries into a single one */
+        /** Combine one or more issue registries into a single one. */
         fun join(vararg registries: IssueRegistry): IssueRegistry {
             return if (registries.size == 1) {
                 registries[0]
@@ -201,11 +206,12 @@ private constructor(
         }
 
         /**
-         * Given a jar file, create a class loader for it and instantiate
-         * the named issue registry.
+         * Given a jar file, create a class loader for it and
+         * instantiate the named issue registry.
          *
          * TODO: Add a custom class loader architecture here such that
-         * custom rules can have dependent jars without needing to jar-jar them!
+         * custom rules can have dependent jars without needing to
+         * jar-jar them!
          */
         private fun loadIssueRegistry(
             client: LintClient,
@@ -377,8 +383,8 @@ private constructor(
         }
 
         /**
-         * Returns a map from issue registry qualified name to the corresponding jar file
-         * that contains it
+         * Returns a map from issue registry qualified name to the
+         * corresponding jar file that contains it.
          */
         private fun findRegistries(
             client: LintClient,
@@ -451,20 +457,25 @@ private constructor(
         }
 
         /**
-         * Work around http://bugs.java.com/bugdatabase/view_bug.do?bug_id=5041014 :
-         * URLClassLoader, on Windows, locks the .jar file forever.
-         * As of Java 7, there's a workaround: you can call close() when you're "done"
-         * with the file. We'll do that here. However, the whole point of the
-         * [JarFileIssueRegistry] is that when lint is run over and over again
-         * as the user is editing in the IDE and we're background checking the code, we
-         * don't want to keep loading the custom view classes over and over again: we want to
-         * cache them. Therefore, just closing the URLClassLoader right away isn't great
-         * either. However, it turns out it's safe to close the URLClassLoader once you've
-         * loaded the classes you need, since the URLClassLoader will continue to serve
-         * those classes even after its close() methods has been called.
+         * Work around
+         * http://bugs.java.com/bugdatabase/view_bug.do?bug_id=5041014 :
+         * URLClassLoader, on Windows, locks the .jar file forever. As
+         * of Java 7, there's a workaround: you can call close() when
+         * you're "done" with the file. We'll do that here. However, the
+         * whole point of the [JarFileIssueRegistry] is that when lint
+         * is run over and over again as the user is editing in the IDE
+         * and we're background checking the code, we don't want to keep
+         * loading the custom view classes over and over again: we want
+         * to cache them. Therefore, just closing the URLClassLoader
+         * right away isn't great either. However, it turns out it's
+         * safe to close the URLClassLoader once you've loaded the
+         * classes you need, since the URLClassLoader will continue to
+         * serve those classes even after its close() methods has been
+         * called.
          *
-         * Therefore, if we can call close() on this URLClassLoader, we'll proactively load
-         * all class files we find in the .jar file, then close it.
+         * Therefore, if we can call close() on this URLClassLoader,
+         * we'll proactively load all class files we find in the .jar
+         * file, then close it.
          *
          * @param client the client to report errors to
          * @param file the .jar file

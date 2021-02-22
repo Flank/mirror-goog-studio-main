@@ -430,7 +430,7 @@ class TerminologyDetectorTest {
         )
     }
 
-    /** Replaces source ranges in the source tree */
+    /** Replaces source ranges in the source tree. */
     @Suppress("SameParameterValue")
     private fun replace(
         path: String,

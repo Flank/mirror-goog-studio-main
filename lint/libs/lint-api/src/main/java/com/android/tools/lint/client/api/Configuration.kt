@@ -30,11 +30,12 @@ import com.google.common.annotations.Beta
 import java.io.File
 
 /**
- * Lint configuration for an Android project such as which specific rules to include,
- * which specific rules to exclude, and which specific errors to ignore.
+ * Lint configuration for an Android project such as which specific
+ * rules to include, which specific rules to exclude, and which specific
+ * errors to ignore.
  *
- * **NOTE: This is not a public or final API; if you rely on this be prepared
- * to adjust your code for the next tools release.**
+ * **NOTE: This is not a public or final API; if you rely on this be
+ * prepared to adjust your code for the next tools release.**
  */
 @Beta
 abstract class Configuration(
@@ -42,45 +43,47 @@ abstract class Configuration(
 ) {
     val client: LintClient get() = configurations.client
 
-    /** Returns the parent configuration, if any */
+    /** Returns the parent configuration, if any. */
     val parent: Configuration? get() = configurations.getParentConfiguration(this)
 
     /**
-     * Whether this configuration applies below the project level, e.g. typically
-     * for a source folder.
+     * Whether this configuration applies below the project level, e.g.
+     * typically for a source folder.
      */
     open var fileLevel: Boolean = true
 
     /**
-     * Whether this configuration is an overriding configuration. This isn't just true
-     * for [ConfigurationHierarchy.overrides] but any parent configuration of it as well
+     * Whether this configuration is an overriding configuration. This
+     * isn't just true for [ConfigurationHierarchy.overrides] but any
+     * parent configuration of it as well.
      */
     var isOverriding: Boolean = false
 
     /**
-     * Returns the overriding configuration, if any. Returns null when called on
-     * the overriding configuration itself (or any of its parents)
+     * Returns the overriding configuration, if any. Returns null when
+     * called on the overriding configuration itself (or any of its
+     * parents)
      */
     protected val overrides: Configuration?
         get() = if (isOverriding) null else client.configurations.overrides
 
     /**
-     * The "scope" of this configuration. Will be null for configurations
-     * that aren't associated with a specific scope, such as a fallback
-     * configuration (--config) or an override configuration (always applies
-     * first).
+     * The "scope" of this configuration. Will be null for
+     * configurations that aren't associated with a specific scope,
+     * such as a fallback configuration (--config) or an override
+     * configuration (always applies first).
      */
     var dir: File? = null
 
     /**
-     * The baseline file to use, if any. The baseline file is
-     * an XML report previously created by lint, and any warnings and
-     * errors listed in that report will be ignored from analysis.
+     * The baseline file to use, if any. The baseline file is an XML
+     * report previously created by lint, and any warnings and errors
+     * listed in that report will be ignored from analysis.
      *
      * If you have a project with a large number of existing warnings,
-     * this lets you set a baseline and only see newly introduced warnings
-     * until you get a chance to go back and address the "technical debt"
-     * of the earlier warnings.
+     * this lets you set a baseline and only see newly introduced
+     * warnings until you get a chance to go back and address the
+     * "technical debt" of the earlier warnings.
      */
     abstract var baselineFile: File?
 
@@ -163,7 +166,7 @@ abstract class Configuration(
 
     /**
      * The default severity of an issue; should be ignore for disabled
-     * issues, not its severity when it's enabled
+     * issues, not its severity when it's enabled.
      */
     protected open fun getDefaultSeverity(issue: Issue, visibleDefault: Severity = issue.defaultSeverity): Severity {
         return if (!issue.isEnabledByDefault()) Severity.IGNORE else visibleDefault
@@ -174,9 +177,10 @@ abstract class Configuration(
      * [Issue.defaultSeverity] unless the user has selected a custom
      * severity (which is tool context dependent).
      *
-     * If the issue is not configured by this configuration (or configurations
-     * it inherits from), this will return the default severity. To get
-     * the severity only if it's configured, use [getDefinedSeverity].
+     * If the issue is not configured by this configuration (or
+     * configurations it inherits from), this will return the default
+     * severity. To get the severity only if it's configured, use
+     * [getDefinedSeverity].
      *
      * @param issue the issue to look up the severity from
      * @return the severity use for issues for the given detector
@@ -190,8 +194,8 @@ abstract class Configuration(
     }
 
     /**
-     * Returns the value for the given option, or the default value (normally null)
-     * if it has not been specified.
+     * Returns the value for the given option, or the default value
+     * (normally null) if it has not been specified.
      */
     open fun getOption(
         issue: Issue,
@@ -208,8 +212,8 @@ abstract class Configuration(
     }
 
     /**
-     * Returns the value for the given option as an int, or the default value if
-     * not specified (or if the option is not a valid integer)
+     * Returns the value for the given option as an int, or the default
+     * value if not specified (or if the option is not a valid integer)
      */
     fun getOptionAsInt(issue: Issue, name: String, default: Int): Int {
         return try {
@@ -220,21 +224,22 @@ abstract class Configuration(
     }
 
     /**
-     * Returns the value for the given option as a boolean, or the default value if
-     * not specified
+     * Returns the value for the given option as a boolean, or the
+     * default value if not specified.
      */
     fun getOptionAsBoolean(issue: Issue, name: String, default: Boolean): Boolean {
         return getOption(issue, name, null)?.toBoolean() ?: default
     }
 
     /**
-     * Returns the value for the given option as an absolute [File]. It's important to use
-     * this method instead of trying to interpret the string options returned from
-     * [getOption] yourself, since we support relative paths, and the path is relative
-     * to the lint.xml file which defines the option, and since configurations can
+     * Returns the value for the given option as an absolute [File].
+     * It's important to use this method instead of trying to interpret
+     * the string options returned from [getOption] yourself, since we
+     * support relative paths, and the path is relative to the lint.xml
+     * file which defines the option, and since configurations can
      * inherit from other configurations, you can't know by just calling
-     * [getOption] where a value is defined, and therefore how to interpret the
-     * relative path.
+     * [getOption] where a value is defined, and therefore how to
+     * interpret the relative path.
      */
     open fun getOptionAsFile(
         issue: Issue,
@@ -269,17 +274,15 @@ abstract class Configuration(
      */
     abstract fun ignore(issue: Issue, file: File)
 
-    /**
-     * Like [ignore(Issue,file)] but with just the string id
-     */
+    /** Like [ignore(Issue,file)] but with just the string id. */
     abstract fun ignore(issueId: String, file: File)
 
     /**
      * Sets the severity to be used for this issue.
      *
      * @param issue the issue to set the severity for
-     * @param severity the severity to associate with this issue, or null to
-     * reset the severity to the default
+     * @param severity the severity to associate with this issue, or
+     *     null to reset the severity to the default
      */
     abstract fun setSeverity(issue: Issue, severity: Severity?)
 
@@ -302,15 +305,17 @@ abstract class Configuration(
     open fun finishBulkEditing() {}
 
     /**
-     * Makes sure that any custom severity definitions defined in this configuration refer to valid
-     * issue id's, valid severities etc. This helps catch bugs in manually edited config files (see
-     * issue 194382).
+     * Makes sure that any custom severity definitions defined in this
+     * configuration refer to valid issue id's, valid severities etc.
+     * This helps catch bugs in manually edited config files (see issue
+     * 194382).
      *
      * @param client the lint client to report to
      * @param driver the active lint driver
-     * @param project the project relevant to the configuration, if known
-     * @param registry the fully initialized registry (might include custom lint checks from
-     *                 libraries etc)
+     * @param project the project relevant to the configuration, if
+     *     known
+     * @param registry the fully initialized registry (might include
+     *     custom lint checks from libraries etc)
      */
     open fun validateIssueIds(
         client: LintClient,
@@ -321,10 +326,10 @@ abstract class Configuration(
         parent?.validateIssueIds(client, driver, project, registry)
     }
 
-    /** Returns a list of lint jar files to include in the analysis */
+    /** Returns a list of lint jar files to include in the analysis. */
     open fun getLintJars(): List<File> = parent?.getLintJars() ?: emptyList()
 
-    /** Sets the given configuration as the parent of this one */
+    /** Sets the given configuration as the parent of this one. */
     fun setParent(parent: Configuration) = configurations.setParent(this, parent)
 
     /**
@@ -408,7 +413,10 @@ abstract class Configuration(
         source: Configuration = this
     ): Location? = null
 
-    /** Convenience method for configurations to report unknown issue id problems */
+    /**
+     * Convenience method for configurations to report unknown issue id
+     * problems.
+     */
     protected fun reportNonExistingIssueId(
         client: LintClient,
         driver: LintDriver?,
@@ -457,7 +465,8 @@ abstract class Configuration(
 
     companion object {
         /**
-         * Creates the error message to show when an unknown issue id is encountered.
+         * Creates the error message to show when an unknown issue id is
+         * encountered.
          */
         fun getUnknownIssueIdErrorMessage(id: String, issueRegistry: IssueRegistry): String {
             val message = StringBuilder(30)

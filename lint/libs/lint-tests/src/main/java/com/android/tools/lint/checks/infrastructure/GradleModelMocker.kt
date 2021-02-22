@@ -77,12 +77,12 @@ import java.util.regex.Pattern
 import java.util.zip.ZipEntry
 
 /**
- * A utility class which builds mocks for the Gradle builder-model API, by loosely interpreting
- * .gradle files and building models based on recognizing common patterns there.
+ * A utility class which builds mocks for the Gradle builder-model API,
+ * by loosely interpreting .gradle files and building models based on
+ * recognizing common patterns there.
  *
- *
- * TODO: Clean way to configure whether build dep cache is enabled TODO: Handle scopes (test
- * dependencies etc)
+ * TODO: Clean way to configure whether build dep cache is enabled TODO:
+ * Handle scopes (test dependencies etc)
  */
 
 class GradleModelMocker @JvmOverloads constructor(
@@ -198,8 +198,9 @@ class GradleModelMocker @JvmOverloads constructor(
     }
 
     /**
-     * If true, model a full/deep dependency graph in [ ]; the default is flat. (This is normally
-     * controlled by sync/model builder flag [ ][AndroidProject.PROPERTY_BUILD_MODEL_FEATURE_FULL_DEPENDENCIES].)
+     * If true, model a full/deep dependency graph in [ ]; the default
+     * is flat. (This is normally controlled by sync/model builder flag
+     * [AndroidProject.PROPERTY_BUILD_MODEL_FEATURE_FULL_DEPENDENCIES].)
      */
     @Suppress("unused")
     fun withFullDependencies(fullDependencies: Boolean): GradleModelMocker {
@@ -242,7 +243,9 @@ class GradleModelMocker @JvmOverloads constructor(
     private var hasJavaOrJavaLibraryPlugin: Boolean = false
     private var _isLibrary: Boolean = false
 
-    /** Whether the Gradle file applied the java or java-library plugin  */
+    /**
+     * Whether the Gradle file applied the java or java-library plugin.
+     */
     fun hasJavaOrJavaLibraryPlugin(): Boolean {
         ensureInitialized()
         return hasJavaOrJavaLibraryPlugin
@@ -1707,16 +1710,14 @@ class GradleModelMocker @JvmOverloads constructor(
     }
 
     /**
-     * Given a dependency graph, returns a populated [Dependencies] object. You can generate
-     * Gradle dependency graphs by running for example:
-     *
+     * Given a dependency graph, returns a populated [Dependencies]
+     * object. You can generate Gradle dependency graphs by running for
+     * example:
      * <pre>
      * $ ./gradlew :app:dependencies
-     </pre> *
-     *
+     * </pre> *
      *
      * Sample graph:
-     *
      * <pre>
      * \--- com.android.support.test.espresso:espresso-core:2.2.2
      * +--- com.squareup:javawriter:2.1.1
@@ -1734,7 +1735,7 @@ class GradleModelMocker @JvmOverloads constructor(
      * |    \--- org.hamcrest:hamcrest-library:1.3 (*)
      * +--- com.google.code.findbugs:jsr305:2.0.1
      * \--- javax.annotation:javax.annotation-api:1.2
-     </pre> *
+     * </pre> *
      *
      * @param graph the graph
      * @return the corresponding dependencies
@@ -1780,7 +1781,7 @@ class GradleModelMocker @JvmOverloads constructor(
         return root.children
     }
 
-    /** Dependency graph node  */
+    /** Dependency graph node. */
     inner class Dep(coordinateString: String, depth: Int) {
         val coordinate: GradleCoordinate?
         val coordinateString: String
@@ -1969,9 +1970,11 @@ class GradleModelMocker @JvmOverloads constructor(
         }
 
         /**
-         * Returns whether a library declaration is a plain Java library instead of an Android library.
-         * There is no way to tell from the Gradle description; it involves looking at the actual Maven
-         * artifacts. For mocking purposes we have a hardcoded list.
+         * Returns whether a library declaration is a plain Java library
+         * instead of an Android library. There is no way to tell from
+         * the Gradle description; it involves looking at the actual
+         * Maven artifacts. For mocking purposes we have a hardcoded
+         * list.
          */
         private fun isJavaLibrary(declaration: String): Boolean {
             return _isJavaLibrary(declaration).also {

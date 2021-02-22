@@ -36,9 +36,7 @@ import org.jetbrains.uast.UThisExpression
 import org.jetbrains.uast.tryResolve
 import org.jetbrains.uast.util.isAssignment
 
-/**
- * Detect incorrect handling of high density screens.
- */
+/** Detect incorrect handling of high density screens. */
 class HdpiDetector : Detector(), SourceCodeScanner {
 
     companion object Issues {

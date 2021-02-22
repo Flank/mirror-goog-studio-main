@@ -23,22 +23,22 @@ import com.google.common.annotations.Beta
 /**
  * Interface implemented by listeners to be notified of lint events.
  *
- * **NOTE: This is not a public or final API; if you rely on this be prepared
- * to adjust your code for the next tools release.**
+ * **NOTE: This is not a public or final API; if you rely on this be
+ * prepared to adjust your code for the next tools release.**
  */
 @Beta
 interface LintListener {
-    /** The various types of events provided to lint listeners */
+    /** The various types of events provided to lint listeners. */
     enum class EventType {
         REGISTERED_PROJECT,
 
-        /** A lint check is about to begin */
+        /** A lint check is about to begin. */
         STARTING,
 
-        /** Lint is about to check the given project */
+        /** Lint is about to check the given project. */
         SCANNING_PROJECT,
 
-        /** Lint is about to check the given library project */
+        /** Lint is about to check the given library project. */
         SCANNING_LIBRARY_PROJECT,
 
         /**
@@ -46,36 +46,33 @@ interface LintListener {
          */
         SCANNING_FILE,
 
-        /** A new pass was initiated */
+        /** A new pass was initiated. */
         NEW_PHASE,
 
-        /** The lint check was canceled */
+        /** The lint check was canceled. */
         CANCELED,
 
-        /** Lint is about to merge results */
+        /** Lint is about to merge results. */
         MERGING,
 
-        /** The lint check is done */
+        /** The lint check is done. */
         COMPLETED,
 
-        /** Lint ran into a problem or was canceled */
+        /** Lint ran into a problem or was canceled. */
         ABORTED
     }
 
     /**
      * Notifies listeners that the event of the given type has occurred.
-     * Additional information, such as the file being scanned, or the project
-     * being scanned, is available in the [Context] object (except for the
-     * [EventType.STARTING], [EventType.CANCELED] or
+     * Additional information, such as the file being scanned, or the
+     * project being scanned, is available in the [Context] object
+     * (except for the [EventType.STARTING], [EventType.CANCELED] or
      * [EventType.COMPLETED] events which are fired outside of project
      * contexts.)
      *
      * @param driver the driver running through the checks
-     *
      * @param type the type of event that occurred
-     *
      * @param project the applicable project, if any
-     *
      * @param context the context providing additional information
      */
     fun update(

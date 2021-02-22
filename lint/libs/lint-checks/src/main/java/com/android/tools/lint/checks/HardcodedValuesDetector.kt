@@ -36,12 +36,11 @@ import com.android.tools.lint.detector.api.XmlContext
 import org.w3c.dom.Attr
 
 /**
- * Check which looks at the children of ScrollViews and ensures that they fill/match the parent
- * width instead of setting wrap_content.
+ * Check which looks at the children of ScrollViews and ensures that
+ * they fill/match the parent width instead of setting wrap_content.
  *
- *
- * TODO: Consider looking at the localization="suggested" attribute in the platform attrs.xml to
- * catch future recommended attributes.
+ * TODO: Consider looking at the localization="suggested" attribute in
+ * the platform attrs.xml to catch future recommended attributes.
  */
 class HardcodedValuesDetector : LayoutDetector() {
 
@@ -123,7 +122,7 @@ class HardcodedValuesDetector : LayoutDetector() {
     companion object {
         // TODO: Add additional issues here, such as hardcoded colors, hardcoded sizes, etc
 
-        /** The main issue discovered by this detector  */
+        /** The main issue discovered by this detector. */
         @JvmField
         val ISSUE = Issue.create(
             id = "HardcodedText",

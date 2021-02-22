@@ -56,10 +56,12 @@ import java.util.EnumSet
 
 const val ATTR_SCREEN_ORIENTATION = "screenOrientation"
 
-/** Detects potential bugs such as the one described in b/b/33483680 */
+/**
+ * Detects potential bugs such as the one described in b/b/33483680.
+ */
 class TranslucentViewDetector : Detector(), XmlScanner, SourceCodeScanner {
     companion object Issues {
-        /** Mixing Translucency and Orientation  */
+        /** Mixing Translucency and Orientation. */
         @JvmField
         val ISSUE = Issue.create(
             id = "TranslucentOrientation",

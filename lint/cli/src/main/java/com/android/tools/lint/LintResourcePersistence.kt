@@ -345,7 +345,7 @@ object LintResourcePersistence {
          * is intended for cases like the argument lists where we want
          * to pick out the serialized arguments to for example an array,
          * but we will later need to pick out elements from these as
-         * well
+         * well.
          */
         fun readRaw(terminator: Char): String {
             val begin = i
@@ -521,7 +521,7 @@ object LintResourcePersistence {
         return LintResourceRepository(project, map, namespace, libraryName)
     }
 
-    /** Serializes a lint resource repository */
+    /** Serializes a lint resource repository. */
     fun serialize(repository: LintResourceRepository): String {
         return serialize(repository, null)
     }
@@ -534,7 +534,7 @@ object LintResourcePersistence {
         private val config: FolderConfiguration,
         private val fileBased: Boolean,
         private val rawSource: String?,
-        /** Source text */
+        /** Source text. */
         private val text: String?,
         /**
          * Additional serialized data, used to deserialize a specific

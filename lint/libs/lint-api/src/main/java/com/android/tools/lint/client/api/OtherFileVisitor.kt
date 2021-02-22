@@ -36,15 +36,15 @@ import java.util.EnumMap
 import java.util.EnumSet
 
 /**
- * Visitor for "other" files: files that aren't java sources,
- * XML sources, etc -- or which should have custom handling in some
- * other way.
+ * Visitor for "other" files: files that aren't java sources, XML
+ * sources, etc -- or which should have custom handling in some other
+ * way.
  */
 internal class OtherFileVisitor(private val detectors: List<Detector>) {
 
     private val files = EnumMap<Scope, List<File>>(Scope::class.java)
 
-    /** Analyze other files in the given project  */
+    /** Analyze other files in the given project. */
     fun scan(
         driver: LintDriver,
         project: Project,

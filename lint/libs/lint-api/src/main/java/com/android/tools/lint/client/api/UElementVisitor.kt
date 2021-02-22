@@ -98,22 +98,21 @@ import java.util.ArrayList
 import java.util.HashMap
 
 /**
- * Specialized visitor for running detectors on a Java AST.
- * It operates in three phases:
+ * Specialized visitor for running detectors on a Java AST. It operates
+ * in three phases:
+ * 1. First, it computes a set of maps where it generates a map from
+ *    each significant AST attribute (such as method call names)
+ *    to a list of detectors to consult whenever that attribute is
+ *    encountered. Examples of "attributes" are method names, Android
+ *    resource identifiers, and general AST node types such as "cast"
+ *    nodes etc. These are defined on the [SourceCodeScanner] interface.
+ * 2. Second, it iterates over the document a single time, delegating to
+ *    the detectors found at each relevant AST attribute.
+ * 3. Finally, it calls the remaining visitors (those that need to
+ *    process a whole document on their own).
  *
- *  1.  First, it computes a set of maps where it generates a map from each
- * significant AST attribute (such as method call names) to a list
- * of detectors to consult whenever that attribute is encountered.
- * Examples of "attributes" are method names, Android resource identifiers,
- * and general AST node types such as "cast" nodes etc. These are
- * defined on the [SourceCodeScanner] interface.
- *  1.  Second, it iterates over the document a single time, delegating to
- * the detectors found at each relevant AST attribute.
- *  1.  Finally, it calls the remaining visitors (those that need to process a
- * whole document on their own).
- *
- * It also notifies all the detectors before and after the document is processed
- * such that they can do pre- and post-processing.
+ * It also notifies all the detectors before and after the document is
+ * processed such that they can do pre- and post-processing.
  */
 internal class UElementVisitor constructor(
     private val parser: UastParser,
@@ -1016,8 +1015,11 @@ internal class UElementVisitor constructor(
         }
     }
 
-    /** Performs common AST searches for method calls and R-type-field references.
-     * Note that this is a specialized form of the [DispatchPsiVisitor].  */
+    /**
+     * Performs common AST searches for method calls and R-type-field
+     * references. Note that this is a specialized form of the
+     * [DispatchPsiVisitor].
+     */
     private inner class DelegatingPsiVisitor constructor(private val mContext: JavaContext) :
         DispatchPsiVisitor() {
         private val mVisitResources: Boolean = !resourceFieldDetectors.isEmpty()
@@ -1166,7 +1168,10 @@ internal class UElementVisitor constructor(
     }
 
     companion object {
-        /** Default size of lists holding detectors of the same type for a given node type  */
+        /**
+         * Default size of lists holding detectors of the same type for
+         * a given node type.
+         */
         private const val SAME_TYPE_COUNT = 8
 
         private fun getInterfaceNames(

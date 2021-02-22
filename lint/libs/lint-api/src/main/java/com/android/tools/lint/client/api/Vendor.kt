@@ -21,46 +21,48 @@ import com.android.tools.lint.detector.api.TextFormat.Companion.HTTPS_PREFIX
 import com.android.tools.lint.detector.api.TextFormat.Companion.HTTP_PREFIX
 import java.lang.StringBuilder
 
-/** Information about the provenance of a lint check */
+/** Information about the provenance of a lint check. */
 data class Vendor
 @JvmOverloads
 constructor(
     /**
-     * The author or vendor for issues returned by this lint check. These names
-     * are currently shown after "Vendor:" in output reports, in case that helps
-     * frame how you phrase the vendor name.
+     * The author or vendor for issues returned by this lint check.
+     * These names are currently shown after "Vendor:" in output
+     * reports, in case that helps frame how you phrase the vendor name.
      */
     val vendorName: String? = null,
 
     /**
      * An identifier to display next to error messages; this typically
-     * is more specific than the vendor name; for example, for Maven libraries
-     * this would be the maven artifact, or if lint checks from another module
-     * in the project, the subproject.
+     * is more specific than the vendor name; for example, for
+     * Maven libraries this would be the maven artifact, or if lint
+     * checks from another module in the project, the subproject.
      *
      * This helps users pinpoint where the check is coming from.
      *
      * If no vendor is supplied, lint will try to compute a reasonable
-     * default: for Gradle artifacts, the artifact name and version (e.g.
-     * recyclerview-1.0), and failing that, the issue registry fully
-     * qualified name (minus common suffixes like IssueRegistry and Registry).
+     * default: for Gradle artifacts, the artifact name and version
+     * (e.g. recyclerview-1.0), and failing that, the issue registry
+     * fully qualified name (minus common suffixes like IssueRegistry
+     * and Registry).
      */
     val identifier: String? = null,
 
     /**
-     * A URL pointing to the place to report bugs. This lets users report false
-     * positives or false negatives as well as suggest improvements. This doesn't
-     * have to point directly to your issue tracker (which might lead to a lot of
-     * low quality bug reports); it can point to a web page which explains
+     * A URL pointing to the place to report bugs. This lets users
+     * report false positives or false negatives as well as suggest
+     * improvements. This doesn't have to point directly to your issue
+     * tracker (which might lead to a lot of low quality bug reports);
+     * it can point to a web page which explains.
      */
     val feedbackUrl: String? = null,
 
     /**
-     * A contact address (such as an e-mail address or a general contact web page, or
-     * perhaps a GitHub page).
+     * A contact address (such as an e-mail address or a general contact
+     * web page, or perhaps a GitHub page).
      *
-     * Note that this is optional, especially if your [feedbackUrl] provides
-     * general information.
+     * Note that this is optional, especially if your [feedbackUrl]
+     * provides general information.
      */
     val contact: String? = null
 ) {
@@ -73,8 +75,8 @@ constructor(
     }
 
     /**
-     * Appends a description of this vendor into the given [stringBuilder] using
-     * the given text [format].
+     * Appends a description of this vendor into the given
+     * [stringBuilder] using the given text [format].
      */
     fun describeInto(stringBuilder: StringBuilder, format: TextFormat, indent: String = "") {
         if (format == TextFormat.HTML || format == TextFormat.HTML_WITH_UNICODE) {

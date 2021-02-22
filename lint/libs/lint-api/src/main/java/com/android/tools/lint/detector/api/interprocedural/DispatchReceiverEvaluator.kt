@@ -47,22 +47,27 @@ import org.jetbrains.uast.tryResolve
 import org.jetbrains.uast.visitor.AbstractUastVisitor
 
 /**
- * Maps expressions and variables to likely receivers,
- * including classes and lambdas, using static analysis.
- * For example, consider the following code
+ * Maps expressions and variables to likely receivers, including classes
+ * and lambdas, using static analysis. For example, consider the
+ * following code
+ *
  * ```
  * Runnable r = Foo::bar();
  * r.run();
  * ```
- * The call to `run` resolves to the base method in `Runnable`,
- * but we want to know that it will actually dispatch to `Foo#bar`.
- * This information is captured by mapping `r` to the method reference `Foo::bar`.
  *
- * Note that call receiver evaluators often compose with and augment each other.
+ * The call to `run` resolves to the base method in `Runnable`, but
+ * we want to know that it will actually dispatch to `Foo#bar`. This
+ * information is captured by mapping `r` to the method reference
+ * `Foo::bar`.
  *
- * Note that the term "dispatch receiver" is used to distinguish between the receiver of a call
- * (i.e., the implicit `this` argument) and the callable object of the call (e.g., a lambda
- * bound to a variable). The Kotlin frontend seems to use similar terminology.
+ * Note that call receiver evaluators often compose with and augment
+ * each other.
+ *
+ * Note that the term "dispatch receiver" is used to distinguish between
+ * the receiver of a call (i.e., the implicit `this` argument) and the
+ * callable object of the call (e.g., a lambda bound to a variable). The
+ * Kotlin frontend seems to use similar terminology.
  */
 abstract class DispatchReceiverEvaluator(
     // Call receiver evaluators often compose with and augment each other.
@@ -71,9 +76,9 @@ abstract class DispatchReceiverEvaluator(
 ) {
 
     /**
-     * Get dispatch receivers for [element].
-     * Since evaluators augment each other through delegation, [root] gives a way to
-     * recurse back to the topmost evaluator.
+     * Get dispatch receivers for [element]. Since evaluators augment
+     * each other through delegation, [root] gives a way to recurse back
+     * to the topmost evaluator.
      */
     operator fun get(
         element: UElement,
@@ -84,7 +89,10 @@ abstract class DispatchReceiverEvaluator(
         return ours union theirs
     }
 
-    /** Evaluates potential receivers for `this` separately, since `this` can be implicit. */
+    /**
+     * Evaluates potential receivers for `this` separately, since `this`
+     * can be implicit.
+     */
     fun getForImplicitThis(): Collection<DispatchReceiver> {
         val ours = getOwnForImplicitThis()
         val theirs = delegate?.getForImplicitThis() ?: emptyList()
@@ -99,15 +107,18 @@ abstract class DispatchReceiverEvaluator(
     protected abstract fun getOwnForImplicitThis(): Collection<DispatchReceiver>
 }
 
-/** Represents a potential call handler, such as a class or lambda expression. */
+/**
+ * Represents a potential call handler, such as a class or lambda
+ * expression.
+ */
 sealed class DispatchReceiver {
 
     abstract val element: UElement
 
     data class Class(override val element: UClass) : DispatchReceiver() {
         /**
-         * Refines the given method to the overriding method that would appear
-         * in the virtual method table of this class.
+         * Refines the given method to the overriding method that would
+         * appear in the virtual method table of this class.
          */
         fun refineToTarget(method: UMethod) =
             element.javaPsi.findMethodBySignature(method.javaPsi, true)
@@ -145,7 +156,10 @@ sealed class DispatchReceiver {
     }
 }
 
-/** Returns a deterministically ordered list of variables captured by this lambda. */
+/**
+ * Returns a deterministically ordered list of variables captured by
+ * this lambda.
+ */
 private fun ULambdaExpression.getCaptures(): List<UVariable> {
     val res = LinkedHashSet<UVariable>()
 
@@ -167,7 +181,10 @@ private fun ULambdaExpression.getCaptures(): List<UVariable> {
     return res.toList()
 }
 
-/** Tries to map expressions to receivers without relying on interprocedural context. */
+/**
+ * Tries to map expressions to receivers without relying on
+ * interprocedural context.
+ */
 class SimpleExpressionDispatchReceiverEvaluator(
     private val cha: ClassHierarchy
 ) : DispatchReceiverEvaluator() {
@@ -243,7 +260,10 @@ class SimpleExpressionDispatchReceiverEvaluator(
     override fun getOwnForImplicitThis(): Collection<DispatchReceiver> = emptyList()
 }
 
-/** Maps variables and methods to dispatch receivers, based only on local context. */
+/**
+ * Maps variables and methods to dispatch receivers, based only on local
+ * context.
+ */
 class IntraproceduralDispatchReceiverEvaluator(
     simpleExprEval: SimpleExpressionDispatchReceiverEvaluator,
     private val varMap: Multimap<UVariable, DispatchReceiver>,
@@ -267,9 +287,9 @@ class IntraproceduralDispatchReceiverEvaluator(
 }
 
 /**
- * Uses a flow-insensitive UAST traversal to map variables to
- * potential receivers based on local context, building up
- * an intraprocedural receiver evaluator.
+ * Uses a flow-insensitive UAST traversal to map variables to potential
+ * receivers based on local context, building up an intraprocedural
+ * receiver evaluator.
  */
 class IntraproceduralDispatchReceiverVisitor(cha: ClassHierarchy) : AbstractUastVisitor() {
     private val varMap = HashMultimap.create<UVariable, DispatchReceiver>()
@@ -340,7 +360,10 @@ fun UCallExpression.getDispatchReceivers(
     return receiver?.let { receiverEval[it] } ?: receiverEval.getForImplicitThis()
 }
 
-/** Convert this call expression into a list of likely targets given a call dispatch receivers. */
+/**
+ * Convert this call expression into a list of likely targets given a
+ * call dispatch receivers.
+ */
 fun UCallExpression.getTarget(dispatchReceiver: DispatchReceiver): CallTarget? {
 
     // TODO(kotlin-uast-cleanup): See comment in getDispatchReceivers.

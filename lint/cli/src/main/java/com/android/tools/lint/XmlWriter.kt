@@ -70,35 +70,35 @@ import kotlin.text.Charsets.UTF_8
  */
 @Beta
 open class XmlWriter constructor(
-    /** Client handling IO, path normalization and error reporting */
+    /** Client handling IO, path normalization and error reporting. */
     private val client: LintCliClient,
-    /** The type of report to create */
+    /** The type of report to create. */
     private var type: XmlFileType,
-    /** Writer to send output to */
+    /** Writer to send output to. */
     private val writer: Writer
 ) {
     constructor(
         /**
-         * Client handling IO, path normalization and error reporting
+         * Client handling IO, path normalization and error reporting.
          */
         client: LintCliClient,
-        /** File to write report to */
+        /** File to write report to. */
         output: File,
-        /** The type of report to create */
+        /** The type of report to create. */
         type: XmlFileType
     ) : this(client, type, BufferedWriter(Files.newWriter(output, UTF_8)))
 
-    /** Flush any buffered changes to the file */
+    /** Flush any buffered changes to the file. */
     fun close() {
         writer.close()
     }
 
-    /** Writes the prolog of an XML file */
+    /** Writes the prolog of an XML file. */
     private fun writeProlog() {
         writer.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
     }
 
-    /** Standard attributes included in the root tag */
+    /** Standard attributes included in the root tag. */
     private fun getDefaultRootAttributes(): List<Pair<String, String?>> {
         // Format 4: added urls= attribute with all more info links, comma separated
         // Unfortunate tag name here; this is really an incident but historically
@@ -111,7 +111,7 @@ open class XmlWriter constructor(
         )
     }
 
-    /** Writes the given tag with the given set of attributes */
+    /** Writes the given tag with the given set of attributes. */
     private fun writeOpenTag(tag: String, attributes: Map<String, String?>, indent: Int = 0) {
         indent(indent)
         writer.write("<$tag")
@@ -435,7 +435,7 @@ open class XmlWriter constructor(
 
     /**
      * Applies the quickfixes to a temporary doc and writes out the
-     * cumulative set of edits to apply to the doc
+     * cumulative set of edits to apply to the doc.
      */
     private fun emitFixEdits(incident: Incident, lintFix: LintFix) {
         val fixes =
@@ -521,7 +521,7 @@ open class XmlWriter constructor(
 
     /**
      * Applies the quickfixes to a temporary doc and writes out the
-     * cumulative set of edits to apply to the doc
+     * cumulative set of edits to apply to the doc.
      */
     private fun emitFixDescriptors(incident: Incident, lintFix: LintFix, indent: Int = 2) {
         val indented = indent + 1
@@ -714,7 +714,7 @@ open class XmlWriter constructor(
         }
     }
 
-    /** Writes the given list */
+    /** Writes the given list. */
     fun writeIncidents(
         incidents: List<Incident>,
         extraAttributes: List<Pair<String, String?>> = emptyList()
@@ -732,7 +732,7 @@ open class XmlWriter constructor(
         close()
     }
 
-    /** Writes the given list */
+    /** Writes the given list. */
     fun writePartialResults(resultMap: Map<Issue, LintMap>) {
         writeProlog()
         // TODO: Switch root tags
@@ -749,7 +749,7 @@ open class XmlWriter constructor(
         close()
     }
 
-    /** Writes the given list */
+    /** Writes the given list. */
     fun writeConfiguredIssues(severityMap: Map<String, Severity>) {
         writeProlog()
         // TODO: Switch root tags

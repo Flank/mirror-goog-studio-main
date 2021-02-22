@@ -26,9 +26,7 @@ import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.intellij.psi.PsiMethod
 import org.jetbrains.uast.UCallExpression
 
-/**
- * Forbid ForkJoinPool usage
- */
+/** Forbid ForkJoinPool usage. */
 class ForkJoinPoolDetector : Detector(), SourceCodeScanner {
 
     companion object Issues {

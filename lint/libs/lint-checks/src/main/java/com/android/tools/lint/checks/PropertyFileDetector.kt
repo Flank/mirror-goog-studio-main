@@ -33,10 +33,10 @@ import java.io.File
 /**
  * Check for errors in .property files
  *
- *
- * TODO: Warn about bad paths like sdk properties with ' in the path, or suffix of " " etc
+ * TODO: Warn about bad paths like sdk properties with ' in the path, or
+ * suffix of " " etc.
  */
-/** Constructs a new [PropertyFileDetector]  */
+/** Constructs a new [PropertyFileDetector] */
 class PropertyFileDetector : Detector() {
     override fun run(context: Context) {
         val contents = context.getContents() ?: return
@@ -189,7 +189,7 @@ class PropertyFileDetector : Detector() {
     }
 
     companion object {
-        /** Property file not escaped  */
+        /** Property file not escaped. */
         @JvmField
         val ESCAPE = Issue.create(
             id = "PropertyEscape",
@@ -205,7 +205,7 @@ class PropertyFileDetector : Detector() {
             implementation = Implementation(PropertyFileDetector::class.java, Scope.PROPERTY_SCOPE)
         )
 
-        /** Using HTTP instead of HTTPS for the wrapper  */
+        /** Using HTTP instead of HTTPS for the wrapper. */
         @JvmField
         val HTTP = Issue.create(
             id = "UsingHttp",
@@ -221,7 +221,7 @@ class PropertyFileDetector : Detector() {
             implementation = Implementation(PropertyFileDetector::class.java, Scope.PROPERTY_SCOPE)
         )
 
-        /** Using HTTP instead of HTTPS for the wrapper  */
+        /** Using HTTP instead of HTTPS for the wrapper. */
         @JvmField
         val PROXY_PASSWORD = Issue.create(
             id = "ProxyPassword",

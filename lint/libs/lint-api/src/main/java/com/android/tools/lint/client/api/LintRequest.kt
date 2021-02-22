@@ -26,8 +26,8 @@ import java.util.EnumSet
 /**
  * Information about a request to run lint.
  *
- * **NOTE: This is not a public or final API; if you rely on this be prepared
- * to adjust your code for the next tools release.**
+ * **NOTE: This is not a public or final API; if you rely on this be
+ * prepared to adjust your code for the next tools release.**
  */
 @Beta
 open class LintRequest(
@@ -39,16 +39,15 @@ open class LintRequest(
     val client: LintClient,
 
     /**
-     * The set of files to check with lint. This can reference Android projects,
-     * or directories containing Android projects, or individual XML or Java files
-     * (typically for incremental IDE analysis).
+     * The set of files to check with lint. This can reference Android
+     * projects, or directories containing Android projects, or
+     * individual XML or Java files (typically for incremental IDE
+     * analysis).
      */
     val files: List<File>
 ) {
 
-    /**
-     * The root directory containing all the projects
-     */
+    /** The root directory containing all the projects. */
     var srcRoot: File? = null
 
     @JvmField
@@ -73,19 +72,18 @@ open class LintRequest(
     protected var projects: Collection<Project>? = null
 
     /**
-     * Gets the scope to use; lint checks which require a wider scope set
-     * will be ignored
+     * Gets the scope to use; lint checks which require a wider scope
+     * set will be ignored
      *
      * @return the scope to use, or null to use the default
      */
     open fun getScope(): EnumSet<Scope>? = scope
 
     /**
-     * Sets the scope to use; lint checks which require a wider scope set
-     * will be ignored
+     * Sets the scope to use; lint checks which require a wider scope
+     * set will be ignored
      *
      * @param scope the scope
-     *
      * @return this, for constructor chaining
      */
     fun setScope(scope: EnumSet<Scope>?): LintRequest {
@@ -111,11 +109,12 @@ open class LintRequest(
     }
 
     /**
-     * Returns `true` if lint is invoked as part of a release mode build,
-     * `false`  if it is part of a debug mode build, and `null` if
+     * Returns `true` if lint is invoked as part of a release mode
+     * build, `false` if it is part of a debug mode build, and `null` if
      * the release mode is not known
      *
-     * @return true if this lint is running in release mode, null if not known
+     * @return true if this lint is running in release mode, null if not
+     *     known
      */
     fun isReleaseMode(): Boolean? = releaseMode
 
@@ -124,8 +123,8 @@ open class LintRequest(
      * release mode build, `false` if it is part of a debug mode build,
      * and `null` if the release mode is not known
      *
-     * @param releaseMode true if this lint is running in release mode, null if not known
-     *
+     * @param releaseMode true if this lint is running in release mode,
+     *     null if not known
      * @return this, for constructor chaining
      */
     fun setReleaseMode(releaseMode: Boolean?): LintRequest {
@@ -134,12 +133,12 @@ open class LintRequest(
     }
 
     /**
-     * Returns the project to be used as the main project during analysis. This is
-     * usually the project itself, but when you are for example analyzing a library project,
-     * it can be the app project using the library.
+     * Returns the project to be used as the main project during
+     * analysis. This is usually the project itself, but when you are
+     * for example analyzing a library project, it can be the app
+     * project using the library.
      *
      * @param project the project to look up the main project for
-     *
      * @return the main project
      */
     open fun getMainProject(project: Project): Project = project

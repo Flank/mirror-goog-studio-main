@@ -273,8 +273,11 @@ class BlameFile internal constructor(
         }
     }
 
-    /** Represents a node in a manifest merger blame file (for example, in a typical
-     * Gradle project, `app/build/outputs/logs/manifest-merger-debug-report.txt`.  */
+    /**
+     * Represents a node in a manifest merger blame
+     * file (for example, in a typical Gradle project,
+     * `app/build/outputs/logs/manifest-merger-debug-report.txt`.
+     */
     internal class BlameNode(val key: String) {
         var elementLocation: String? = null
         private var attributeLocations: MutableList<Pair<String, String>>? = null

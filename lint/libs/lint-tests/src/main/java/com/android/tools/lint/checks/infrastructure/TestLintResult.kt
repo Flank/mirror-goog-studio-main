@@ -55,23 +55,28 @@ import kotlin.math.min
 /**
  * The result of running a [TestLintTask].
  *
- * **NOTE: This is not a public or final API; if you rely on this be prepared to adjust your
- * code for the next tools release.**
+ * **NOTE: This is not a public or final API; if you rely on this be
+ * prepared to adjust your code for the next tools release.**
  */
 
 class TestLintResult internal constructor(
     private val task: TestLintTask,
     private val states: MutableMap<TestMode, TestResultState>,
-    /** The mode to use for result tasks that do not pass in a specific mode to check */
+    /**
+     * The mode to use for result tasks that do not pass in a specific
+     * mode to check.
+     */
     private val defaultMode: TestMode
 ) {
     private var maxLineLength: Int = 0
 
     /**
-     * Sets the maximum line length in the report. This is useful if some lines are particularly
-     * long and you don't care about the details at the end of the line
+     * Sets the maximum line length in the report. This is useful if
+     * some lines are particularly long and you don't care about the
+     * details at the end of the line
      *
-     * @param maxLineLength the maximum number of characters to show in the report
+     * @param maxLineLength the maximum number of characters to show in
+     *     the report
      * @return this
      */
     // Lint internally always using 100, but allow others
@@ -81,15 +86,14 @@ class TestLintResult internal constructor(
     }
 
     /**
-     * Checks that the lint result had the expected report format.
-     * The [expectedText] is the output of the text report generated
-     * from the text (which you can customize with [textFormat].)
-     * If the lint check is expected to throw an exception, you can
-     * pass in its class with [expectedException]. The
-     * [transformer] lets you modify the test results; the default
-     * one will unify paths and remove absolute paths to just be
-     * relative to the test roots. Finally, the [testMode] lets you
-     * check a particular test type output.
+     * Checks that the lint result had the expected report format. The
+     * [expectedText] is the output of the text report generated from
+     * the text (which you can customize with [textFormat].) If the lint
+     * check is expected to throw an exception, you can pass in its
+     * class with [expectedException]. The [transformer] lets you modify
+     * the test results; the default one will unify paths and remove
+     * absolute paths to just be relative to the test roots. Finally,
+     * the [testMode] lets you check a particular test type output.
      *
      * @param expectedText the text to expect
      * @param expectedException class, if any
@@ -142,9 +146,10 @@ class TestLintResult internal constructor(
     }
 
     /**
-     * The test output is already formatted by the text reporter in the states passed
-     * in to this result, but we do some extra post processing here to truncate output,
-     * clean up whitespace only diffs, etc.
+     * The test output is already formatted by the text reporter in
+     * the states passed in to this result, but we do some extra post
+     * processing here to truncate output, clean up whitespace only
+     * diffs, etc.
      */
     private fun formatOutput(
         originalOutput: String,
@@ -212,7 +217,8 @@ class TestLintResult internal constructor(
     }
 
     /**
-     * Checks that the results correspond to the messages inlined in the source files
+     * Checks that the results correspond to the messages inlined in the
+     * source files
      *
      * @return this
      */
@@ -350,9 +356,10 @@ class TestLintResult internal constructor(
     /**
      * Checks that the lint report matches the given regular expression
      *
-     * @param regexp the regular expression to match the input with (note that it's using
-     * [Matcher.find], not [Matcher.match], so you don't have to include
-     * wildcards at the beginning or end if looking for a match inside the report
+     * @param regexp the regular expression to match the input with
+     *     (note that it's using [Matcher.find], not [Matcher.match],
+     *     so you don't have to include wildcards at the beginning
+     *     or end if looking for a match inside the report
      * @return this
      */
     @JvmOverloads
@@ -385,8 +392,8 @@ class TestLintResult internal constructor(
     }
 
     /**
-     * Checks the output using the given custom checker, which should throw an exception
-     * if the result is not as expected.
+     * Checks the output using the given custom checker, which should
+     * throw an exception if the result is not as expected.
      *
      * @param checker the checker to apply, typically a lambda
      * @return this
@@ -403,7 +410,8 @@ class TestLintResult internal constructor(
     }
 
     /**
-     * Checks that the actual number of errors in this lint check matches exactly the given count
+     * Checks that the actual number of errors in this lint check
+     * matches exactly the given count
      *
      * @param expectedCount the expected error count
      * @return this
@@ -413,7 +421,8 @@ class TestLintResult internal constructor(
     }
 
     /**
-     * Checks that the actual number of errors in this lint check matches exactly the given count
+     * Checks that the actual number of errors in this lint check
+     * matches exactly the given count
      *
      * @param expectedCount the expected error count
      * @return this
@@ -423,8 +432,8 @@ class TestLintResult internal constructor(
     }
 
     /**
-     * Checks that the actual number of problems with a given severity in this lint check matches
-     * exactly the given count.
+     * Checks that the actual number of problems with a given severity
+     * in this lint check matches exactly the given count.
      *
      * @param expectedCount the expected count
      * @param severities the severities to count
@@ -461,7 +470,7 @@ class TestLintResult internal constructor(
         return this
     }
 
-    /** Verify quick fixes */
+    /** Verify quick fixes. */
     fun verifyFixes(): LintFixVerifier {
         return LintFixVerifier(task, states[defaultMode]!!)
     }
@@ -476,8 +485,9 @@ class TestLintResult internal constructor(
     }
 
     /**
-     * Checks what happens with the given fix in this result as applied to the given test file, and
-     * making sure that the result is the new contents
+     * Checks what happens with the given fix in this result as applied
+     * to the given test file, and making sure that the result is the
+     * new contents
      *
      * @param fix the fix description, or null to pick the first one
      * @param after the file after applying the fix
@@ -489,11 +499,13 @@ class TestLintResult internal constructor(
     }
 
     /**
-     * Applies the fixes and provides diffs to all the files. Convenience wrapper around
-     * [.verifyFixes] and [LintFixVerifier.expectFixDiffs] if you don't want to
-     * configure any diff options.
+     * Applies the fixes and provides diffs to all the
+     * files. Convenience wrapper around [.verifyFixes] and
+     * [LintFixVerifier.expectFixDiffs] if you don't want to configure
+     * any diff options.
      *
-     * @param expected the diff description resulting from applying the diffs
+     * @param expected the diff description resulting from applying the
+     *     diffs
      * @return this
      */
     fun expectFixDiffs(expected: String): TestLintResult {
@@ -588,7 +600,8 @@ class TestLintResult internal constructor(
     }
 
     /**
-     * Checks that the XML report, optionally fix descriptions, full paths, etc, is as expected
+     * Checks that the XML report, optionally fix descriptions, full
+     * paths, etc, is as expected
      *
      * @param checkers one or more checks to apply to the output
      */
@@ -608,7 +621,8 @@ class TestLintResult internal constructor(
     }
 
     /**
-     * Checks that the XML report, including fix descriptions, is as expected
+     * Checks that the XML report, including fix descriptions, is as
+     * expected
      *
      * @param expected the expected XML report
      */
@@ -864,12 +878,15 @@ class TestLintResult internal constructor(
         private const val OLD_ERROR_MESSAGE = "No location-specific message"
         private val MATCH_OLD_ERROR_MESSAGE = Regex("$OLD_ERROR_MESSAGE[^>]")
 
-        /** Returns a test-suitable diff of the two strings */
+        /** Returns a test-suitable diff of the two strings. */
         fun getDiff(before: String, after: String): String {
             return getDiff(before, after, 0)
         }
 
-        /** Returns a test-suitable diff of the two strings, including [windowSize] lines around */
+        /**
+         * Returns a test-suitable diff of the two strings, including
+         * [windowSize] lines around.
+         */
         fun getDiff(before: String, after: String, windowSize: Int): String {
             return getDiff(
                 before.split("\n").toTypedArray(),
@@ -878,8 +895,10 @@ class TestLintResult internal constructor(
             )
         }
 
-        /** Returns a test-suitable diff of the two string arrays, including [windowSize]
-         * lines of delta */
+        /**
+         * Returns a test-suitable diff of the two string arrays,
+         * including [windowSize] lines of delta.
+         */
         fun getDiff(
             before: Array<String>,
             after: Array<String>,

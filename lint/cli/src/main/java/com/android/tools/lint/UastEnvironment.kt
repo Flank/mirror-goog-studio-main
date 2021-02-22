@@ -79,17 +79,22 @@ import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
 /**
- * This class provides the setup and configuration needed use VFS/PSI/UAST on the command line.
+ * This class provides the setup and configuration needed use
+ * VFS/PSI/UAST on the command line.
  *
  * Basic usage:
- *   1. Create a configuration via [UastEnvironment.Configuration.create] and mutate it as needed.
- *   2. Create a project environment via [UastEnvironment.create].
- *      You can create multiple environments in the same process (one for each "module").
- *   3. Call [analyzeFiles] to initialize PSI machinery and precompute resolve information.
- *   4. Analyze PSI/UAST.
- *   5. When finished, call [dispose].
- *   6. Once *all* [UastEnvironment]s are disposed, call [disposeApplicationEnvironment]
- *      to clean up some global resources, especially if running in a long-living daemon process.
+ * 1. Create a configuration via [UastEnvironment.Configuration.create]
+ *    and mutate it as needed.
+ * 2. Create a project environment via [UastEnvironment.create]. You can
+ *    create multiple environments in the
+ *    same process (one for each "module").
+ * 3. Call [analyzeFiles] to initialize PSI machinery and precompute
+ *    resolve information.
+ * 4. Analyze PSI/UAST.
+ * 5. When finished, call [dispose].
+ * 6. Once *all* [UastEnvironment]s are disposed, call
+ *    [disposeApplicationEnvironment] to clean up some global
+ *    resources, especially if running in a long-living daemon process.
  */
 class UastEnvironment private constructor(
     // Luckily, the Kotlin compiler already has the machinery for creating an IntelliJ
@@ -104,7 +109,10 @@ class UastEnvironment private constructor(
     val kotlinCompilerConfig: CompilerConfiguration
         get() = kotlinCompilerEnv.configuration
 
-    /** A configuration is just a container for the classpath, compiler flags, etc. */
+    /**
+     * A configuration is just a container for the classpath, compiler
+     * flags, etc.
+     */
     class Configuration private constructor(val kotlinCompilerConfig: CompilerConfiguration) {
         companion object {
             @JvmStatic
@@ -165,9 +173,10 @@ class UastEnvironment private constructor(
         }
 
         /**
-         * Creates a new [UastEnvironment] suitable for analyzing both Java and Kotlin code.
-         * You must still call [analyzeFiles] before doing anything with PSI/UAST.
-         * When finished using the environment, call [dispose].
+         * Creates a new [UastEnvironment] suitable for analyzing both
+         * Java and Kotlin code. You must still call [analyzeFiles]
+         * before doing anything with PSI/UAST. When finished using the
+         * environment, call [dispose].
          */
         @JvmStatic
         fun create(config: Configuration): UastEnvironment {
@@ -177,8 +186,9 @@ class UastEnvironment private constructor(
         }
 
         /**
-         * Disposes the global application environment, which is created implicitly by the first
-         * [UastEnvironment]. Only call this once *all* [UastEnvironment]s have been disposed.
+         * Disposes the global application environment, which is created
+         * implicitly by the first [UastEnvironment]. Only call this
+         * once *all* [UastEnvironment]s have been disposed.
          */
         @JvmStatic
         fun disposeApplicationEnvironment() {
@@ -197,13 +207,16 @@ class UastEnvironment private constructor(
     }
 
     /**
-     * Analyzes the given files so that PSI/UAST resolve works correctly.
+     * Analyzes the given files so that PSI/UAST resolve works
+     * correctly.
      *
-     * For now, only Kotlin files need to be analyzed upfront; Java code is resolved lazily.
-     * However, this method must still be called for Java-only projects in order to properly
-     * initialize the PSI machinery.
+     * For now, only Kotlin files need to be analyzed upfront; Java code
+     * is resolved lazily. However, this method must still be called
+     * for Java-only projects in order to properly initialize the PSI
+     * machinery.
      *
-     * Calling this function multiple times clears previous analysis results.
+     * Calling this function multiple times clears previous analysis
+     * results.
      */
     fun analyzeFiles(ktFiles: List<File>) {
         val ktPsiFiles = mutableListOf<KtFile>()

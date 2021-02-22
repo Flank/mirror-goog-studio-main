@@ -75,7 +75,7 @@ class DataBindingDetector : LayoutDetector() {
     }
 
     companion object {
-        /** The main issue discovered by this detector */
+        /** The main issue discovered by this detector. */
         @JvmField
         val ESCAPE_XML = Issue.create(
             id = "XmlEscapeNeeded",

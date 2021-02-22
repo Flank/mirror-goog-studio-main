@@ -18,20 +18,20 @@ package com.android.tools.lint.model
 
 import java.io.File
 
-/** A library */
+/** A library. */
 interface LintModelLibrary : Comparable<LintModelLibrary> {
     /**
-     * Whether this library is provided ("compileOnly" in Gradle), meaning that it
-     * should not be packed with the app or library; it will be provided in the
-     * running container
+     * Whether this library is provided ("compileOnly" in Gradle),
+     * meaning that it should not be packed with the app or library; it
+     * will be provided in the running container.
      */
     val provided: Boolean
 
     /**
      * Returns the artifact address in a unique way.
      *
-     * This is either a module path for sub-modules (with optional variant name), or a maven
-     * coordinate for external dependencies.
+     * This is either a module path for sub-modules (with optional
+     * variant name), or a maven coordinate for external dependencies.
      */
     val artifactAddress: String
 
@@ -45,9 +45,11 @@ interface LintModelLibrary : Comparable<LintModelLibrary> {
 
 interface LintModelModuleLibrary : LintModelLibrary {
     /**
-     * The path to a local project represented in terms of the current build system.
+     * The path to a local project represented in terms of the current
+     * build system.
      *
-     * Note: Currently, when created from Gradle models it does not support composite builds.
+     * Note: Currently, when created from Gradle models it does not
+     * support composite builds.
      */
     val projectPath: String
 }
@@ -56,12 +58,15 @@ interface LintModelExternalLibrary : LintModelLibrary {
     /** List of jar files in the library. Never empty. */
     val jarFiles: List<File>
 
-    /** The actual resolved Maven coordinates of this library */
+    /** The actual resolved Maven coordinates of this library. */
     val resolvedCoordinates: LintModelMavenName
 }
 
 interface LintModelAndroidLibrary : LintModelExternalLibrary {
-    /** The location of an unzipped AAR or the corresponding Gradle project */
+    /**
+     * The location of an unzipped AAR or the corresponding Gradle
+     * project.
+     */
     val folder: File
     val manifest: File
     val resFolder: File

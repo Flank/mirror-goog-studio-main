@@ -39,8 +39,8 @@ import java.io.File
 import java.io.IOException
 
 /**
- * Lint project for a project backed by a [LintModelModule] (which could be an app, a library,
- * dynamic feature, etc.
+ * Lint project for a project backed by a [LintModelModule] (which could
+ * be an app, a library, dynamic feature, etc.
  */
 open class LintModelModuleProject(
     client: LintClient,
@@ -418,8 +418,8 @@ open class LintModelModuleProject(
 }
 
 /**
- * Adds all the jar files from this library into the given list, skipping provided
- * libraries if requested
+ * Adds all the jar files from this library into the given list,
+ * skipping provided libraries if requested.
  */
 fun LintModelExternalLibrary.addJars(list: MutableList<File>, skipProvided: Boolean) {
     if (skipProvided && provided) {

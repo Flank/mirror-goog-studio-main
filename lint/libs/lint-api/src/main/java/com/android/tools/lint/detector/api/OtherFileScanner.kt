@@ -18,21 +18,22 @@ package com.android.tools.lint.detector.api
 
 import java.util.EnumSet
 
-/** Specialized interface for detectors that scan other files  */
+/** Specialized interface for detectors that scan other files. */
 interface OtherFileScanner : FileScanner {
     /**
-     * Returns the set of files this scanner wants to consider.  If this includes
-     * [Scope.OTHER] then all source files will be checked. Note that the
-     * set of files will not just include files of the indicated type, but all files
-     * within the relevant source folder. For example, returning [Scope.JAVA_FILE]
-     * will not just return `.java` files, but also other resource files such as
+     * Returns the set of files this scanner wants to consider. If this
+     * includes [Scope.OTHER] then all source files will be checked.
+     * Note that the set of files will not just include files of
+     * the indicated type, but all files within the relevant source
+     * folder. For example, returning [Scope.JAVA_FILE] will not just
+     * return `.java` files, but also other resource files such as
      * `.html` and other files found within the Java source folders.
      *
-     *
-     * Lint will call the [.run]} method when the file should be checked.
+     * Lint will call the [.run]} method when the file should be
+     * checked.
      *
      * @return set of scopes that define the types of source files the
-     * detector wants to consider
+     *     detector wants to consider
      */
     fun getApplicableFiles(): EnumSet<Scope>
 }

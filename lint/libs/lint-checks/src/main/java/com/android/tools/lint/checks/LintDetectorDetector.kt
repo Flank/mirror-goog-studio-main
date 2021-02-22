@@ -71,32 +71,34 @@ import java.util.Locale
  * A special check which analyzes lint detectors themselves, looking for
  * common problems
  *
- * Additional ideas:
- * Bundle this check with standalone lint!  Or maybe make driver smart enough
- *    to include it if there's a lint dependency in the project!
- * Look for various instanceof PsiSomething where Something is node types
- *   inside methods (Assignment expression etc)
- * Look for binary instead of polyadic checks
- * Searching for UReturn which may not be there (expression bodies)
- * Not using named parameters in issue registrations
- * Not using raw strings for issue explanations? And not doing line continuations with \ ?
- * Calling context.report without a scope node?
- * Pulling out a constant without using the constant evaluator?
- * Look for error messages ending with ".", look for capitalization on
+ * Additional ideas: Bundle this check with standalone lint! Or maybe
+ * make driver smart enough to include it if there's a lint dependency
+ * in the project! Look for various instanceof PsiSomething where
+ * Something is node types inside methods (Assignment expression etc)
+ * Look for binary instead of polyadic checks Searching for UReturn
+ * which may not be there (expression bodies) Not using named parameters
+ * in issue registrations Not using raw strings for issue explanations?
+ * And not doing line continuations with \ ? Calling context.report
+ * without a scope node? Pulling out a constant without using the
+ * constant evaluator? Look for error messages ending with ".", look for
+ * capitalization on
+ *
  *       issue registration (and maximum word length for the summary)
  * Creating a visitor and only overriding visitCallExpression -- should probably
  *       just use getApplicableMethods and visitMethodCall.
  * Calling accept on a UElement with a PSI visitor
- * Try running TextFormat on all messages to see if there are any problems?
- * Warn about unit test files which do not have any Kotlin test cases (if they
- *   analyze JAVA_SCOPE). Maybe look to see if they're particularly needing it:
- *   - manipulating strings (for kotlin check template and raw strings)
- *   - creating a custom UastHandler
- *   - doing anything with equals checks
- *   - looking at UReturn statements or switch statements etc
- * For Issue.create calls in Kotlin companion objects, suggest adding @JvmField
- *   to help issue registrations
- * Look for TODO in issue registration strings, or empty registration strings
+ *
+ * Try running TextFormat on all messages to see if there are any
+ * problems? Warn about unit test files which do not have any Kotlin
+ * test cases (if they analyze JAVA_SCOPE). Maybe look to see if they're
+ * particularly needing it:
+ * - manipulating strings (for kotlin check template and raw strings)
+ * - creating a custom UastHandler
+ * - doing anything with equals checks
+ * - looking at UReturn statements or switch statements etc For
+ *   Issue.create calls in Kotlin companion objects, suggest
+ *   adding @JvmField to help issue registrations Look for TODO
+ *   in issue registration strings, or empty registration strings
  */
 class LintDetectorDetector : Detector(), UastScanner {
     override fun applicableSuperClasses(): List<String> {
@@ -772,7 +774,7 @@ class LintDetectorDetector : Detector(), UastScanner {
             }
         }
 
-        /** Drops template expressions etc */
+        /** Drops template expressions etc. */
         private fun getString(argument: UExpression): String {
             if (argument is UPolyadicExpression) {
                 val sb = StringBuilder()
@@ -902,7 +904,10 @@ class LintDetectorDetector : Detector(), UastScanner {
                 .build()
         }
 
-        /** Report the typo found at the given offset and suggest the given replacements */
+        /**
+         * Report the typo found at the given offset and suggest the
+         * given replacements.
+         */
         private fun reportTypo(
             argument: UExpression,
             text: String,
@@ -1055,7 +1060,7 @@ class LintDetectorDetector : Detector(), UastScanner {
                 Scope.JAVA_FILE_SCOPE
             )
 
-        /** Expected lint id format */
+        /** Expected lint id format. */
         @JvmField
         val ID =
             Issue.create(
@@ -1089,7 +1094,7 @@ class LintDetectorDetector : Detector(), UastScanner {
                 platforms = JDK_SET
             )
 
-        /** Bad URLs in issue registrations */
+        /** Bad URLs in issue registrations. */
         @JvmField
         val CHECK_URL =
             Issue.create(
@@ -1110,7 +1115,7 @@ class LintDetectorDetector : Detector(), UastScanner {
                 platforms = JDK_SET
             )
 
-        /** Unexpected URL domain */
+        /** Unexpected URL domain. */
         @JvmField
         val UNEXPECTED_DOMAIN =
             Issue.create(
@@ -1130,7 +1135,7 @@ class LintDetectorDetector : Detector(), UastScanner {
                 platforms = JDK_SET
             )
 
-        /** Suggestions around lint string formats */
+        /** Suggestions around lint string formats. */
         @JvmField
         val TEXT_FORMAT =
             Issue.create(
@@ -1158,7 +1163,7 @@ class LintDetectorDetector : Detector(), UastScanner {
                 platforms = JDK_SET
             )
 
-        /** Should reuse existing constants */
+        /** Should reuse existing constants. */
         @JvmField
         val EXISTING_LINT_CONSTANTS =
             Issue.create(
@@ -1174,7 +1179,9 @@ class LintDetectorDetector : Detector(), UastScanner {
                 platforms = JDK_SET
             )
 
-        /** Calling PSI methods when you should be calling UAST methods */
+        /**
+         * Calling PSI methods when you should be calling UAST methods.
+         */
         @JvmField
         val USE_UAST =
             Issue.create(
@@ -1203,7 +1210,7 @@ class LintDetectorDetector : Detector(), UastScanner {
                 platforms = JDK_SET
             )
 
-        /** Comparing PSI elements with equals */
+        /** Comparing PSI elements with equals. */
         @JvmField
         val PSI_COMPARE =
             Issue.create(
@@ -1223,7 +1230,7 @@ class LintDetectorDetector : Detector(), UastScanner {
                 enabledByDefault = false
             )
 
-        /** Still writing lint checks in Java */
+        /** Still writing lint checks in Java. */
         @JvmField
         val USE_KOTLIN =
             Issue.create(
@@ -1244,7 +1251,7 @@ class LintDetectorDetector : Detector(), UastScanner {
                 platforms = JDK_SET
             )
 
-        /** IssueRegistry not providing a vendor */
+        /** IssueRegistry not providing a vendor. */
         @JvmField
         val MISSING_VENDOR =
             Issue.create(
@@ -1274,7 +1281,7 @@ class LintDetectorDetector : Detector(), UastScanner {
                 platforms = JDK_SET
             )
 
-        /** Calling .trimIndent() on messages intended for lint */
+        /** Calling .trimIndent() on messages intended for lint. */
         @JvmField
         val TRIM_INDENT =
             Issue.create(
@@ -1305,7 +1312,10 @@ class LintDetectorDetector : Detector(), UastScanner {
                 platforms = JDK_SET
             )
 
-        /** Using ${"$"} or ${'$'} in Kotlin string literals in lint unit tests */
+        /**
+         * Using ${"$"} or ${'$'} in Kotlin string literals in lint unit
+         * tests.
+         */
         @JvmField
         val DOLLAR_STRINGS =
             Issue.create(

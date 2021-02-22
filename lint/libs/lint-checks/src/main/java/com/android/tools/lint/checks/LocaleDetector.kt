@@ -40,9 +40,7 @@ import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.UThrowExpression
 import org.jetbrains.uast.getParentOfType
 
-/**
- * Checks for errors related to locale handling
- */
+/** Checks for errors related to locale handling. */
 /** Constructs a new [LocaleDetector] */
 class LocaleDetector : Detector(), SourceCodeScanner {
 
@@ -210,7 +208,9 @@ class LocaleDetector : Detector(), SourceCodeScanner {
         }
     }
 
-    /** Returns true if the given node is a parameter to a Logging call */
+    /**
+     * Returns true if the given node is a parameter to a Logging call.
+     */
     private fun isLoggingParameter(
         context: JavaContext,
         node: UCallExpression
@@ -240,7 +240,7 @@ class LocaleDetector : Detector(), SourceCodeScanner {
         const val CAPITALIZE = "capitalize"
         const val DECAPITALIZE = "decapitalize"
 
-        /** Calling risky convenience methods */
+        /** Calling risky convenience methods. */
         @JvmField
         val STRING_LOCALE = Issue.create(
             id = "DefaultLocale",
@@ -265,7 +265,7 @@ class LocaleDetector : Detector(), SourceCodeScanner {
             implementation = IMPLEMENTATION
         )
 
-        /** Assuming locale doesn't change */
+        /** Assuming locale doesn't change. */
         @JvmField
         val FINAL_LOCALE = Issue.create(
             id = "ConstantLocale",

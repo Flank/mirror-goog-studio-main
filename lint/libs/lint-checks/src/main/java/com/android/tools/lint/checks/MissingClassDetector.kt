@@ -72,12 +72,15 @@ import org.w3c.dom.Element
 import org.w3c.dom.Node
 import java.util.Locale
 
-/** Checks to ensure that classes referenced in the manifest actually exist and are included */
+/**
+ * Checks to ensure that classes referenced in the manifest actually
+ * exist and are included.
+ */
 class MissingClassDetector : LayoutDetector(), ClassScanner {
     /**
-     * Prevent checking the same class more than once since it can be referenced
-     * repeatedly. The value in the map is true if the class is okay and false if it
-     * is not.
+     * Prevent checking the same class more than once since it can be
+     * referenced repeatedly. The value in the map is true if the class
+     * is okay and false if it is not.
      */
     private var checkedClasses: MutableMap<String, Boolean> = mutableMapOf()
 
@@ -347,7 +350,7 @@ class MissingClassDetector : LayoutDetector(), ClassScanner {
         context.report(INNERCLASS, element, location, message, fix)
     }
 
-    /** Make sure [cls] is instantiatable */
+    /** Make sure [cls] is instantiatable. */
     private fun checkInstantiatable(
         context: XmlContext,
         evaluator: JavaEvaluator,
@@ -466,7 +469,10 @@ class MissingClassDetector : LayoutDetector(), ClassScanner {
             Scope.RESOURCE_FILE_SCOPE
         )
 
-        /** Manifest or layout referenced classes missing from the project or libraries */
+        /**
+         * Manifest or layout referenced classes missing from the
+         * project or libraries.
+         */
         @JvmField
         val MISSING =
             Issue.create(
@@ -487,7 +493,10 @@ class MissingClassDetector : LayoutDetector(), ClassScanner {
                 implementation = IMPLEMENTATION
             ).setAliases(listOf("MissingRegistered"))
 
-        /** Are activity, service, receiver etc subclasses instantiatable? */
+        /**
+         * Are activity, service, receiver etc subclasses
+         * instantiatable?
+         */
         @JvmField
         val INSTANTIATABLE =
             Issue.create(

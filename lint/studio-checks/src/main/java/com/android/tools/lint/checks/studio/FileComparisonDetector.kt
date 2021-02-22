@@ -33,10 +33,11 @@ import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.UastBinaryOperator
 
 /**
- * Makes sure we compare files properly to handle cross platform issues like
- * case insensitive file systems
+ * Makes sure we compare files properly to handle cross platform issues
+ * like case insensitive file systems
  *
- * TODO: Check for calling file.toURL or file.toURI.toURL: use our sdk utils instead
+ * TODO: Check for calling file.toURL or file.toURI.toURL: use our sdk
+ * utils instead.
  */
 class FileComparisonDetector : Detector(), SourceCodeScanner {
 

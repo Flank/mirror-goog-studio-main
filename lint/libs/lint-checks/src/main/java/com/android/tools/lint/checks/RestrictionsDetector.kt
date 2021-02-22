@@ -38,8 +38,9 @@ import org.w3c.dom.Element
 import org.w3c.dom.Node
 
 /**
- * Check which makes sure that an application restrictions file is correct. The rules are specified
- * in https://developer.android.com/reference/android/content/RestrictionsManager.html
+ * Check which makes sure that an application restrictions
+ * file is correct. The rules are specified in
+ * https://developer.android.com/reference/android/content/RestrictionsManager.html.
  */
 class RestrictionsDetector : ResourceXmlDetector() {
 
@@ -57,7 +58,9 @@ class RestrictionsDetector : ResourceXmlDetector() {
         validateNestedRestrictions(context, root, null, keys, 0)
     }
 
-    /** Validates the `<restriction>` **children** of the given element  */
+    /**
+     * Validates the `<restriction>` **children** of the given element.
+     */
     private fun validateNestedRestrictions(
         context: XmlContext,
         element: Element,
@@ -151,7 +154,10 @@ class RestrictionsDetector : ResourceXmlDetector() {
         }
     }
 
-    /** Validates a `<restriction>` element (and recurses to validate the children)  */
+    /**
+     * Validates a `<restriction>` element (and recurses to validate the
+     * children)
+     */
     private fun validateRestriction(
         context: XmlContext,
         node: Node,
@@ -242,8 +248,8 @@ class RestrictionsDetector : ResourceXmlDetector() {
     }
 
     /**
-     * Makes sure that the given element corresponds to a restriction tag, and if not, reports it
-     * and return false
+     * Makes sure that the given element corresponds to a restriction
+     * tag, and if not, reports it and return false.
      */
     private fun verifyRestrictionTagName(context: XmlContext, element: Element): Boolean {
         val tagName = element.tagName
@@ -309,7 +315,7 @@ class RestrictionsDetector : ResourceXmlDetector() {
         @VisibleForTesting
         const val MAX_NUMBER_OF_NESTED_RESTRICTIONS = 1000
 
-        /** Validation of `<restrictions>` XML elements */
+        /** Validation of `<restrictions>` XML elements. */
         @JvmField
         val ISSUE = Issue.create(
             id = "ValidRestrictions",

@@ -31,23 +31,25 @@ import com.android.sdklib.IAndroidTarget
 const val SUPPORTS_ADD_ONS = false
 
 /**
- * An interface for looking up Android target platforms, by
- * API level, by code name, etc, as well as "give me the latest"
+ * An interface for looking up Android target platforms, by API level,
+ * by code name, etc, as well as "give me the latest"
  */
 interface PlatformLookup {
     /**
-     * Returns the scanned platforms as a list of [IAndroidTarget] (though
-     * note that these [IAndroidTarget] only supports a small subset of the
-     * API surface; unsupported methods will throw an exception or when applicable
-     * just return empty results. Already cached; okay to be called repeatedly.
+     * Returns the scanned platforms as a list of [IAndroidTarget]
+     * (though note that these [IAndroidTarget] only supports a small
+     * subset of the API surface; unsupported methods will throw an
+     * exception or when applicable just return empty results. Already
+     * cached; okay to be called repeatedly.
      */
     fun getTargets(includeAddOns: Boolean = false): List<IAndroidTarget>
 
     /**
-     * Returns the latest installed platform. If [includePreviews] is false,
-     * it will return the most recent stable version. If [minApi] is higher
-     * than 1, and if the highest version installed is at a lower API level than
-     * that, null will be returned instead. Does not include add-ons.
+     * Returns the latest installed platform. If [includePreviews] is
+     * false, it will return the most recent stable version. If [minApi]
+     * is higher than 1, and if the highest version installed is at a
+     * lower API level than that, null will be returned instead. Does
+     * not include add-ons.
      */
     fun getLatestSdkTarget(
         minApi: Int = 1,
@@ -55,13 +57,16 @@ interface PlatformLookup {
         includeAddOns: Boolean = false
     ): IAndroidTarget?
 
-    /** Returns the platform installed for the given [buildTargetHash], if found */
+    /**
+     * Returns the platform installed for the given [buildTargetHash],
+     * if found.
+     */
     fun getTarget(buildTargetHash: String): IAndroidTarget?
 
     /**
-     * Returns the platform installed for the given [api], if found. If there is a
-     * stable version available it will prefer that version over any previews for
-     * the same API level.
+     * Returns the platform installed for the given [api], if found. If
+     * there is a stable version available it will prefer that version
+     * over any previews for the same API level.
      */
     fun getTarget(api: Int): IAndroidTarget? {
         getTarget(PLATFORM_HASH_PREFIX + api.toString())?.let { return it }

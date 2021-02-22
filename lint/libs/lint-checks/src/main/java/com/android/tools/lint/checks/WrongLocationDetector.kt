@@ -26,10 +26,12 @@ import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.XmlContext
 import org.w3c.dom.Document
 
-/** Looks for problems with XML files being placed in the wrong folder  */
+/**
+ * Looks for problems with XML files being placed in the wrong folder.
+ */
 class WrongLocationDetector : LayoutDetector() {
     companion object Issues {
-        /** Main issue investigated by this detector  */
+        /** Main issue investigated by this detector. */
         @JvmField
         val ISSUE = Issue.create(
             id = "WrongFolder",

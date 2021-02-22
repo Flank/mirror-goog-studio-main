@@ -68,11 +68,12 @@ import org.jetbrains.uast.getContainingUFile
 import org.jetbrains.uast.getParentOfType
 import org.w3c.dom.Element
 
-/** Looks for issues around ObjectAnimator usages */
+/** Looks for issues around ObjectAnimator usages. */
 class ObjectAnimatorDetector : Detector(), SourceCodeScanner, XmlScanner {
     /**
-     * Multiple properties might all point back to the same setter; we don't want to highlight these
-     * more than once (duplicate warnings etc) so keep track of them here
+     * Multiple properties might all point back to the same setter; we
+     * don't want to highlight these more than once (duplicate warnings
+     * etc) so keep track of them here.
      */
     private var mAlreadyWarned: MutableSet<Any?>? = null
 
@@ -641,7 +642,7 @@ class ObjectAnimatorDetector : Detector(), SourceCodeScanner, XmlScanner {
                 Scope.JAVA_FILE_SCOPE
             )
 
-        /** Missing @Keep */
+        /** Missing @Keep. */
         @JvmField
         val MISSING_KEEP =
             Issue.create(
@@ -663,7 +664,7 @@ class ObjectAnimatorDetector : Detector(), SourceCodeScanner, XmlScanner {
                 implementation = IMPLEMENTATION
             )
 
-        /** Incorrect ObjectAnimator binding */
+        /** Incorrect ObjectAnimator binding. */
         @JvmField
         val BROKEN_PROPERTY =
             Issue.create(

@@ -30,12 +30,12 @@ import org.jetbrains.uast.UFile
 import java.io.File
 
 /**
- * A wrapper for a UAST parser. This allows tools integrating lint to map directly
- * to builtin services, such as already-parsed data structures in Java editors.
+ * A wrapper for a UAST parser. This allows tools integrating lint
+ * to map directly to builtin services, such as already-parsed data
+ * structures in Java editors.
  *
- *
- * **NOTE: This is not public or final API; if you rely on this be prepared
- * to adjust your code for the next tools release.**
+ * **NOTE: This is not public or final API; if you rely on this be
+ * prepared to adjust your code for the next tools release.**
  */
 @Beta
 abstract class UastParser {
@@ -76,9 +76,10 @@ abstract class UastParser {
     /**
      * Parse the file pointed to by the given context.
      *
-     * @param context the context pointing to the file to be parsed, typically via
-     * [Context.getContents] but the file handle ( [Context.file] can also be
-     * used to map to an existing editor buffer in the surrounding tool, etc)
+     * @param context the context pointing to the file to be parsed,
+     *     typically via [Context.getContents] but the file
+     *     handle ( [Context.file] can also be used to map to an
+     *     existing editor buffer in the surrounding tool, etc)
      * @return the compilation unit node for the file
      */
     abstract fun parse(context: JavaContext): UFile?
@@ -110,8 +111,9 @@ abstract class UastParser {
     abstract fun createLocation(element: UElement): Location
 
     /**
-     * Returns a [Location] for the given node range (from the starting offset of the first
-     * node to the ending offset of the second node).
+     * Returns a [Location] for the given node range (from the starting
+     * offset of the first node to the ending offset of the second
+     * node).
      *
      * @param context information about the file being parsed
      * @param from the AST node to get a starting location from
@@ -163,10 +165,11 @@ abstract class UastParser {
     ): Location
 
     /**
-     * Returns a [Location] for the given node. This attempts to pick a shorter
-     * location range than the entire node; for a class or method for example, it picks
-     * the name node (if found). For statement constructs such as a `switch` statement
-     * it will highlight the keyword, etc.
+     * Returns a [Location] for the given node. This attempts to pick
+     * a shorter location range than the entire node; for a class or
+     * method for example, it picks the name node (if found). For
+     * statement constructs such as a `switch` statement it will
+     * highlight the keyword, etc.
      *
      * @param context information about the file being parsed
      * @param element the node to create a location for

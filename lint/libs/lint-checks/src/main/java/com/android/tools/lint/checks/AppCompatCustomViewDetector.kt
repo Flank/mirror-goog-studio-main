@@ -43,7 +43,9 @@ import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiElement
 import org.jetbrains.uast.UClass
 
-/** Looks for subclasses of custom widgets in projects using app compat */
+/**
+ * Looks for subclasses of custom widgets in projects using app compat.
+ */
 class AppCompatCustomViewDetector : Detector(), SourceCodeScanner {
 
     override fun applicableSuperClasses(): List<String> {
@@ -109,7 +111,7 @@ class AppCompatCustomViewDetector : Detector(), SourceCodeScanner {
     }
 
     companion object {
-        /** Copy/pasted item decorator code */
+        /** Copy/pasted item decorator code. */
         @JvmField
         val ISSUE = Issue.create(
             id = "AppCompatCustomView",

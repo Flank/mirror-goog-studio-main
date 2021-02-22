@@ -37,12 +37,12 @@ import java.util.HashMap
  * - [Constraint]
  */
 class LintMap : Iterable<String> {
-    /** Internal untyped map storage */
+    /** Internal untyped map storage. */
     private var map: MutableMap<String, Any> = HashMap()
 
     /**
      * Simple string get operator to be able to use Kotlin array syntax;
-     * this is short for [getString] with a null default
+     * this is short for [getString] with a null default.
      */
     operator fun get(key: String): String? {
         return getString(key, null)
@@ -56,19 +56,19 @@ class LintMap : Iterable<String> {
         return put(key, value)
     }
 
-    /** Records a string into the map */
+    /** Records a string into the map. */
     fun put(key: String, value: String): LintMap {
         map[key] = value
         return this
     }
 
-    /** Like [put] but for integers */
+    /** Like [put] but for integers. */
     fun put(key: String, value: Int): LintMap {
         map[key] = value
         return this
     }
 
-    /** Like [put] but for booleans */
+    /** Like [put] but for booleans. */
     fun put(key: String, value: Boolean): LintMap {
         map[key] = value
         return this
@@ -98,12 +98,12 @@ class LintMap : Iterable<String> {
         return this
     }
 
-    /** Returns the keys of the items in this map */
+    /** Returns the keys of the items in this map. */
     fun keys(): Sequence<String> {
         return map.keys.asSequence()
     }
 
-    /** Returns true if the given [key] is a key in the map */
+    /** Returns true if the given [key] is a key in the map. */
     fun containsKey(key: String): Boolean {
         return map.containsKey(key)
     }
@@ -120,7 +120,10 @@ class LintMap : Iterable<String> {
         return map[key] as? Int ?: default
     }
 
-    /** Returns an API level previously stored as an integer or string by [put] */
+    /**
+     * Returns an API level previously stored as an integer or string by
+     * [put]
+     */
     @Contract("_, !null -> !null")
     fun getApi(key: String, default: Int? = null): Int? {
         val value = map[key] ?: return default
@@ -161,19 +164,19 @@ class LintMap : Iterable<String> {
         return map[key] as? Constraint
     }
 
-    /** Removes the given key's value from the map, if any */
+    /** Removes the given key's value from the map, if any. */
     fun remove(key: String): LintMap {
         map.remove(key)
         return this
     }
 
-    /** Copies all the values from the given [from] into this one */
+    /** Copies all the values from the given [from] into this one. */
     fun putAll(from: LintMap): LintMap {
         this.map.putAll(from.map)
         return this
     }
 
-    /** The number of elements in the map */
+    /** The number of elements in the map. */
     val size: Int get() = map.size
 
     /** Is this map empty? */
@@ -184,12 +187,15 @@ class LintMap : Iterable<String> {
 
     companion object {
         /**
-         * Returns the internal map. This is **only** intended for
-         * use by lint to be able to persist and restore the data.
+         * Returns the internal map. This is **only** intended for use
+         * by lint to be able to persist and restore the data.
          */
         fun getInternalMap(map: LintMap): MutableMap<String, Any> = map.map
     }
 
-    /** Iterates through the keys. Makes it easy to use this map with a for each statement. */
+    /**
+     * Iterates through the keys. Makes it easy to use this map with a
+     * for each statement.
+     */
     override fun iterator(): Iterator<String> = keys().iterator()
 }

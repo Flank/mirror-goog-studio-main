@@ -26,8 +26,8 @@ import com.android.tools.lint.detector.api.XmlContext
 import org.w3c.dom.Element
 
 /**
- * Check which looks for potential errors in declarations of BottomAppBar, such as having the
- * wrong parent.
+ * Check which looks for potential errors in declarations of
+ * BottomAppBar, such as having the wrong parent.
  */
 class BottomAppBarDetector : LayoutDetector() {
     override fun getApplicableElements(): Collection<String> {
@@ -55,7 +55,7 @@ class BottomAppBarDetector : LayoutDetector() {
             Scope.RESOURCE_FILE_SCOPE
         )
 
-        /** Wrong parent etc  */
+        /** Wrong parent etc. */
         @JvmField
         val ISSUE = Issue.create(
             id = "BottomAppBar",

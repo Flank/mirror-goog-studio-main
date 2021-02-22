@@ -234,7 +234,7 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             Scope.JAVA_FILE_SCOPE
         )
 
-        /** Method result should be used  */
+        /** Method result should be used. */
         @JvmField
         val CHECK_RESULT = Issue.create(
             id = "CheckResult",
@@ -248,7 +248,9 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             implementation = IMPLEMENTATION
         )
 
-        /** Failing to enforce security by just calling check permission  */
+        /**
+         * Failing to enforce security by just calling check permission.
+         */
         @JvmField
         val CHECK_PERMISSION = Issue.create(
             id = "UseCheckPermission",

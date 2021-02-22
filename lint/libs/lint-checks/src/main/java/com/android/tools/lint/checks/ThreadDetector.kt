@@ -75,8 +75,9 @@ class ThreadDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     }
 
     /**
-     * Keeps track of which UAST nodes have already been visited by [visitAnnotationUsage].
-     * See [visitAnnotationUsage] for why this is needed.
+     * Keeps track of which UAST nodes have already been visited by
+     * [visitAnnotationUsage]. See [visitAnnotationUsage] for why this
+     * is needed.
      */
     private val visitedAnnotationUsages = mutableSetOf<PsiElement>()
 
@@ -87,17 +88,20 @@ class ThreadDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     /**
      * Handles a given UAST node relevant to our annotations.
      *
-     * [com.android.tools.lint.client.api.AnnotationHandler] will call us repeatedly (once for every
-     * element in [annotations]) if there are multiple annotations on the target method or method
-     * parameter (see [checkThreading]), but we check every UAST node only once, against all
-     * annotations on the target and the caller at once.
+     * [com.android.tools.lint.client.api.AnnotationHandler] will call
+     * us repeatedly (once for every element in [annotations]) if there
+     * are multiple annotations on the target method or method parameter
+     * (see [checkThreading]), but we check every UAST node only once,
+     * against all annotations on the target and the caller at once.
      *
-     * The reason for this is that depending on [type], [annotations] is populated from either the
-     * target ([METHOD_CALL]) or the caller ([METHOD_CALL_PARAMETER]), which makes it hard to handle
-     * the two cases consistently.
+     * The reason for this is that depending on [type], [annotations] is
+     * populated from either the target ([METHOD_CALL]) or the caller
+     * ([METHOD_CALL_PARAMETER]), which makes it hard to handle the two
+     * cases consistently.
      *
-     * Marking the node also means we will ignore class-level annotations if method-level
-     * annotations were present, since [com.android.tools.lint.client.api.AnnotationHandler] handles
+     * Marking the node also means we will ignore class-level
+     * annotations if method-level annotations were present, since
+     * [com.android.tools.lint.client.api.AnnotationHandler] handles
      * [METHOD_CALL] before [METHOD_CALL_CLASS].
      */
     override fun visitAnnotationUsage(
@@ -147,19 +151,25 @@ class ThreadDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     }
 
     /**
-     * Checks if the given [method] can be referenced from [node] which is either a method
-     * call or a callable reference passed to another method as a callback.
+     * Checks if the given [method] can be referenced from [node] which
+     * is either a method call or a callable reference passed to another
+     * method as a callback.
      *
      * @param context lint scanning context
-     * @param node [UElement] that triggered the check, a method call or a callable reference
-     * @param method method that will be called. When [node] is a call expression, this is the
-     *     method being called. When [node] is a callable reference, this is the referenced method.
-     * @param callerThreads fully qualified names of threading annotations effective in the calling
-     *     code. When [node] is a call expression, these are annotations on the method containing
-     *     the call (or its class). When [node] is a calling reference, these are annotations on the
-     *     parameter to which the reference is passed.
-     * @param calleeThreads fully qualified names of threading annotations effective on
-     *     [method]. These can be specified on the method itself or its class.
+     * @param node [UElement] that triggered the check, a method call or
+     *     a callable reference
+     * @param method method that will be called. When [node] is a call
+     *     expression, this is the method being called. When [node]
+     *     is a callable reference, this is the referenced method.
+     * @param callerThreads fully qualified names of threading
+     *     annotations effective in the calling code. When
+     *     [node] is a call expression, these are annotations on
+     *     the method containing the call (or its class). When
+     *     [node] is a calling reference, these are annotations
+     *     on the parameter to which the reference is passed.
+     * @param calleeThreads fully qualified names of threading
+     *     annotations effective on [method]. These can be
+     *     specified on the method itself or its class.
      */
     private fun checkThreading(
         context: JavaContext,
@@ -238,7 +248,7 @@ class ThreadDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         else -> "other"
     }
 
-    /** returns true if the two threads are compatible  */
+    /** returns true if the two threads are compatible */
     private fun isCompatibleThread(callers: List<String>, callee: String): Boolean {
         // ALL calling contexts must be valid
         assert(callers.isNotEmpty())
@@ -251,7 +261,7 @@ class ThreadDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         return true
     }
 
-    /** returns true if the two threads are compatible  */
+    /** returns true if the two threads are compatible */
     private fun isCompatibleThread(caller: String, callee: String): Boolean {
         if (callee == caller) {
             return true
@@ -285,7 +295,10 @@ class ThreadDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         return false
     }
 
-    /** Attempts to infer the current thread context at the site of the given method call  */
+    /**
+     * Attempts to infer the current thread context at the site of the
+     * given method call.
+     */
     private fun getThreadContext(context: JavaContext, methodCall: UElement): List<String>? {
         val method = methodCall.getParentOfType<UElement>(
             UMethod::class.java, true,
@@ -320,8 +333,9 @@ class ThreadDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     }
 
     /**
-     * Infers the thread context from a lambda or an anonymous class call expression. This will
-     * look into the formal parameters annotation to infer the thread context for the given lambda.
+     * Infers the thread context from a lambda or an anonymous class
+     * call expression. This will look into the formal parameters
+     * annotation to infer the thread context for the given lambda.
      */
     private fun getThreadsFromExpressionContext(
         context: JavaContext,
@@ -342,7 +356,10 @@ class ThreadDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         return getThreadsFromMethod(context, functionalInterfaceMethod)
     }
 
-    /** Attempts to infer the current thread context at the site of the given method call  */
+    /**
+     * Attempts to infer the current thread context at the site of the
+     * given method call.
+     */
     private fun getThreadsFromMethod(
         context: JavaContext,
         originalMethod: PsiMethod?
@@ -429,7 +446,7 @@ class ThreadDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             Scope.JAVA_FILE_SCOPE
         )
 
-        /** Calling methods on the wrong thread  */
+        /** Calling methods on the wrong thread. */
         @JvmField
         val THREAD = Issue.create(
             id = "WrongThread",

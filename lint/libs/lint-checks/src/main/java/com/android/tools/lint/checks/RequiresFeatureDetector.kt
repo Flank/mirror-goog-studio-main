@@ -129,11 +129,11 @@ class RequiresFeatureDetector : AbstractAnnotationDetector(), SourceCodeScanner 
     }
 
     class EnforcementChecker(
-        /** The name of the feature to check */
+        /** The name of the feature to check. */
         private val featureName: String,
         /**
-         * javadoc-syntax reference to the checker method; the first string
-         * parameter should be the feature name parameter
+         * javadoc-syntax reference to the checker method; the first
+         * string parameter should be the feature name parameter
          */
         enforcement: String
     ) {
@@ -590,7 +590,7 @@ class RequiresFeatureDetector : AbstractAnnotationDetector(), SourceCodeScanner 
             Scope.JAVA_FILE_SCOPE
         )
 
-        /** Method result should be used  */
+        /** Method result should be used. */
         @JvmField
         val REQUIRES_FEATURE = Issue.create(
             id = "RequiresFeature",

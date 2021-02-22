@@ -22,7 +22,7 @@ import java.util.ArrayDeque
 
 /**
  * This class finds forbidden dependencies in a project by looking
- * transitively
+ * transitively.
  */
 class BlockedDependencies(val project: Project) {
 
@@ -36,9 +36,10 @@ class BlockedDependencies(val project: Project) {
     }
 
     /**
-     * Returns the path from this dependency to one of the forbidden dependencies,
-     * or null if this dependency is not forbidden. If [remove] is true, the
-     * dependency is removed from the map after this.
+     * Returns the path from this dependency to one of the forbidden
+     * dependencies, or null if this dependency is not forbidden. If
+     * [remove] is true, the dependency is removed from the map after
+     * this.
      */
     fun checkDependency(
         groupId: String,
@@ -55,9 +56,9 @@ class BlockedDependencies(val project: Project) {
     }
 
     /**
-     * Returns all the dependencies found in this project that lead to a
-     * forbidden dependency. Each list is a list from the root dependency
-     * to the forbidden dependency.
+     * Returns all the dependencies found in this project that lead
+     * to a forbidden dependency. Each list is a list from the root
+     * dependency to the forbidden dependency.
      */
     fun getForbiddenDependencies(): List<List<LintModelDependency>> {
         val map = this.map ?: return emptyList()

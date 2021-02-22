@@ -29,9 +29,7 @@ import com.intellij.psi.PsiMethod
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UExpression
 
-/**
- * Makes sure that alarms are handled correctly
- */
+/** Makes sure that alarms are handled correctly. */
 class AlarmDetector : Detector(), SourceCodeScanner {
     companion object Issues {
         private val IMPLEMENTATION = Implementation(
@@ -39,7 +37,7 @@ class AlarmDetector : Detector(), SourceCodeScanner {
             Scope.JAVA_FILE_SCOPE
         )
 
-        /** Alarm set too soon/frequently   */
+        /** Alarm set too soon/frequently. */
         @JvmField
         val ISSUE = Issue.create(
             id = "ShortAlarm",

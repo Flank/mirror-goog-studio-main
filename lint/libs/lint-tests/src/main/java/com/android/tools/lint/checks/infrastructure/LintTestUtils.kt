@@ -89,8 +89,7 @@ fun <T : Comparable<T>> checkTransitiveComparator(list: List<T>) {
 }
 
 /**
- * Checks transitivity for a given [comparator] over the given
- * [list].
+ * Checks transitivity for a given [comparator] over the given [list].
  */
 fun <T> checkTransitiveComparator(list: List<T>, comparator: Comparator<T>) {
     class Wrapper(val item: T) : Comparable<Wrapper> {

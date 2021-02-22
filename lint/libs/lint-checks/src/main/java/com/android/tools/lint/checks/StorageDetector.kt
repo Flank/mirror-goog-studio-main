@@ -28,9 +28,7 @@ import com.intellij.psi.PsiMethod
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.visitor.AbstractUastVisitor
 
-/**
- * Checks related to using the StorageManager APIs correctly
- */
+/** Checks related to using the StorageManager APIs correctly. */
 class StorageDetector : Detector(), SourceCodeScanner {
 
     override fun getApplicableMethodNames(): List<String> {

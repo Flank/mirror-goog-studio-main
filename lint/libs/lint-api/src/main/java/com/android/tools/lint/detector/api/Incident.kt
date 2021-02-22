@@ -31,38 +31,44 @@ import java.util.Comparator
 import java.util.HashSet
 
 /**
- * A [Incident] represents a specific error or warning that has been found and reported.
- * The client stores these as they are reported into a list of warnings such that it can
- * sort them all before presenting them all at the end.
+ * A [Incident] represents a specific error or warning that has been
+ * found and reported. The client stores these as they are reported into
+ * a list of warnings such that it can sort them all before presenting
+ * them all at the end.
  */
 class Incident(
-    /** The [Issue] corresponding to the incident */
+    /** The [Issue] corresponding to the incident. */
     var issue: Issue,
 
     /**
-     * The message to display to the user. This message should typically include the
-     * details of the specific incident instead of just being a generic message, to make the
-     * errors more useful when there are multiple errors in the same file. For example,
-     * instead of just saying "Duplicate resource name", say "Duplicate resource name my_string".
+     * The message to display to the user. This message should typically
+     * include the details of the specific incident instead of just
+     * being a generic message, to make the errors more useful when
+     * there are multiple errors in the same file. For example, instead
+     * of just saying "Duplicate resource name", say "Duplicate resource
+     * name my_string".
      *
      * (Note that the message should be in [TextFormat.RAW] format.)
      */
     var message: String,
 
     /**
-     * The primary location of the error. Secondary locations can be linked from the
-     * primary location.
+     * The primary location of the error. Secondary locations can be
+     * linked from the primary location.
      */
     var location: Location,
 
     /**
-     * The scope element of the error. This is used by lint to search the AST (or XML doc
-     * etc) for suppress annotations or comments. In a Kotlin or Java file, this would be
-     * the nearest [UElement] or [PsiElement]; in an XML document it's the [Node], etc.
+     * The scope element of the error. This is used by lint to search
+     * the AST (or XML doc etc) for suppress annotations or comments. In
+     * a Kotlin or Java file, this would be the nearest [UElement] or
+     * [PsiElement]; in an XML document it's the [Node], etc.
      */
     var scope: Any? = location.source,
 
-    /** A quickfix descriptor, if any, capable of addressing this issue */
+    /**
+     * A quickfix descriptor, if any, capable of addressing this issue.
+     */
     var fix: LintFix? = null
 ) : Comparable<Incident> {
 
@@ -71,43 +77,46 @@ class Incident(
 
     /**
      * Secondary constructor for convenience from Java where default
-     * arguments are not available
+     * arguments are not available.
      */
     constructor(issue: Issue, message: String, location: Location) :
         this(issue, message, location, null, null)
 
-    /** Secondary constructor for convenience from Java where default arguments are not available */
+    /**
+     * Secondary constructor for convenience from Java where default
+     * arguments are not available.
+     */
     constructor(issue: Issue, message: String, location: Location, fix: LintFix?) :
         this(issue, message, location, null, fix)
 
     /**
-     * Secondary constructor which mirrors the old {@link Context#report} signature
-     * parameter orders to make it easy to migrate code: just put new Indent() around
-     * argument list
+     * Secondary constructor which mirrors the old {@link
+     * Context#report} signature parameter orders to make it easy to
+     * migrate code: just put new Indent() around argument list.
      */
     constructor(issue: Issue, location: Location, message: String) :
         this(issue, message, location, null, null)
 
     /**
-     * Secondary constructor which mirrors the old {@link Context#report} signature
-     * parameter orders to make it easy to migrate code: just put new Indent() around
-     * argument list
+     * Secondary constructor which mirrors the old {@link
+     * Context#report} signature parameter orders to make it easy to
+     * migrate code: just put new Indent() around argument list.
      */
     constructor(issue: Issue, location: Location, message: String, fix: LintFix?) :
         this(issue, message, location, null, fix)
 
     /**
-     * Secondary constructor which mirrors the old {@link Context#report} signature
-     * parameter orders to make it easy to migrate code: just put new Indent() around
-     * argument list
+     * Secondary constructor which mirrors the old {@link
+     * Context#report} signature parameter orders to make it easy to
+     * migrate code: just put new Indent() around argument list.
      */
     constructor(issue: Issue, scope: Any, location: Location, message: String) :
         this(issue, message, location, scope, null)
 
     /**
-     * Secondary constructor which mirrors the old {@link Context#report} signature
-     * parameter orders to make it easy to migrate code: just put new Indent() around
-     * argument list
+     * Secondary constructor which mirrors the old {@link
+     * Context#report} signature parameter orders to make it easy to
+     * migrate code: just put new Indent() around argument list.
      */
     constructor(issue: Issue, scope: Any, location: Location, message: String, fix: LintFix?) :
         this(issue, message, location, scope, fix)
@@ -116,9 +125,9 @@ class Incident(
     var project: Project? = null
 
     /**
-     * The display path for this error, which is typically relative to the
-     * project's reference dir, but if project is null, it can also be
-     * displayed relative to the given root directory
+     * The display path for this error, which is typically relative to
+     * the project's reference dir, but if project is null, it can also
+     * be displayed relative to the given root directory.
      */
     fun getDisplayPath(): String {
         return project?.getDisplayPath(file)
@@ -129,39 +138,43 @@ class Incident(
     val file: File get() = location.file
 
     /**
-     * The starting number of the issue, or -1 if there is no line number (e.g. if
-     * it is not in a text file, such as an icon, or if it is not accurately known, as is
-     * the case for certain errors in build.gradle files.)
+     * The starting number of the issue, or -1 if there is no line
+     * number (e.g. if it is not in a text file, such as an icon, or if
+     * it is not accurately known, as is the case for certain errors in
+     * build.gradle files.)
      */
     val line: Int get() = location.start?.line ?: -1
 
     /**
-     * The starting offset or the text range for this incident, or -1 if not known or applicable.
+     * The starting offset or the text range for this incident, or -1 if
+     * not known or applicable.
      */
     val startOffset: Int get() = location.start?.offset ?: -1
 
     /**
-     * The ending offset of the text range for this incident, or the same as the [startOffset]
-     * if there's no range, just a known starting point.
+     * The ending offset of the text range for this incident, or the
+     * same as the [startOffset] if there's no range, just a known
+     * starting point.
      */
     val endOffset: Int get() = location.end?.offset ?: startOffset
 
     /**
-     * The severity of the incident. This should typically **not** be set by detectors; it
-     * should be computed from the [Configuration] hierarchy by lint itself, such that
-     * users can configure lint severities via lint.xml files, build.gradle.kts, and so on.
+     * The severity of the incident. This should typically **not** be
+     * set by detectors; it should be computed from the [Configuration]
+     * hierarchy by lint itself, such that users can configure lint
+     * severities via lint.xml files, build.gradle.kts, and so on.
      */
     var severity: Severity = issue.defaultSeverity
 
-    /** Whether this incident has been fixed via a quickfix */
+    /** Whether this incident has been fixed via a quickfix. */
     var wasAutoFixed = false
 
     /**
-     * Additional details if this incident is reported in a multiple variants
-     * scenario, such as running the "lint" target with the Android Gradle plugin,
-     * which will run it repeatedly for each variant and then accumulate information
-     * here about which variants the incident is found in and which ones it is not
-     * found in
+     * Additional details if this incident is reported in a multiple
+     * variants scenario, such as running the "lint" target with the
+     * Android Gradle plugin, which will run it repeatedly for each
+     * variant and then accumulate information here about which variants
+     * the incident is found in and which ones it is not found in.
      */
     var applicableVariants: ApplicableVariants? = null
 
@@ -187,7 +200,7 @@ class Incident(
      */
     constructor() : this(IssueRegistry.LINT_ERROR, "<missing>", Location.NONE)
 
-    /** Sets the [issue] property */
+    /** Sets the [issue] property. */
     fun issue(issue: Issue): Incident {
         if (this.issue == IssueRegistry.LINT_ERROR) {
             this.severity = issue.defaultSeverity
@@ -196,13 +209,13 @@ class Incident(
         return this
     }
 
-    /** Sets the [message] property */
+    /** Sets the [message] property. */
     fun message(message: String): Incident {
         this.message = message
         return this
     }
 
-    /** Sets the [location] property */
+    /** Sets the [location] property. */
     fun location(location: Location): Incident {
         this.location = location
         return this
@@ -221,7 +234,7 @@ class Incident(
         return this
     }
 
-    /** Sets the [location] and [scope] properties */
+    /** Sets the [location] and [scope] properties. */
     fun at(scope: Any): Incident {
         val context = this.context
             ?: error("This method can only be used when the Incident(context) is used")
@@ -265,19 +278,19 @@ class Incident(
         return this
     }
 
-    /** Sets the [location] property */
+    /** Sets the [location] property. */
     fun scope(scope: Any?): Incident {
         this.scope = scope
         return this
     }
 
-    /** Sets the [project] property */
+    /** Sets the [project] property. */
     fun project(project: Project?): Incident {
         this.project = project
         return this
     }
 
-    /** Sets the [fix] property */
+    /** Sets the [fix] property. */
     fun fix(fix: LintFix?): Incident {
         this.fix = fix
         return this
@@ -382,33 +395,41 @@ class Incident(
     }
 }
 
-/** Information about which particular variants an [Incident] applies to */
+/**
+ * Information about which particular variants an [Incident] applies to.
+ */
 class ApplicableVariants(
-    /** The set of variant names that this incident applies to */
+    /** The set of variant names that this incident applies to. */
     private val applicableVariants: Set<String>
 ) {
-    /** Whether this incident is specific to a subset of the applicable variants */
+    /**
+     * Whether this incident is specific to a subset of the applicable
+     * variants.
+     */
     val variantSpecific: Boolean
         get() = variants.size < applicableVariants.size
 
     // Storage for the [variants] property
     private var _variants: MutableSet<String>? = null
 
-    /** The set of variants where this incident has been reported */
+    /** The set of variants where this incident has been reported. */
     val variants: Set<String>
         get() {
             return _variants ?: emptySet()
         }
 
-    /** Records that this incident has been reported in the named variant */
+    /**
+     * Records that this incident has been reported in the named
+     * variant.
+     */
     fun addVariant(variantName: String) {
         val names = _variants ?: mutableSetOf<String>().also { _variants = it }
         names.add(variantName)
     }
 
     /**
-     * Returns true if this incident is included in more of the applicable variants than
-     * those it does not apply to
+     * Returns true if this incident is included in more of the
+     * applicable variants than those it does not apply to.
      */
     fun includesMoreThanExcludes(): Boolean {
         assert(variantSpecific)
@@ -417,11 +438,11 @@ class ApplicableVariants(
         return variantCount <= allVariantCount - variantCount
     }
 
-    /** The variants this incident is included in */
+    /** The variants this incident is included in. */
     val includedVariantNames: List<String>
         get() = variants.asSequence().sorted().toList()
 
-    /** The variants this incident is not included in */
+    /** The variants this incident is not included in. */
     val excludedVariantNames: List<String>
         get() {
             val included: Set<String> = HashSet(includedVariantNames)
@@ -439,7 +460,7 @@ fun Incident(context: Context): Incident {
 
 /**
  * Constructs an incident associated with the given [context] and
- * [issue] type
+ * [issue] type.
  */
 fun Incident(context: Context, issue: Issue): Incident {
     val incident = Incident()

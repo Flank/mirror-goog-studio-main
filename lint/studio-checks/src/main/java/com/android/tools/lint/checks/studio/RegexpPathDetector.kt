@@ -34,8 +34,9 @@ import org.jetbrains.uast.UReferenceExpression
 import org.jetbrains.uast.tryResolve
 
 /**
- * Looks for places where you accidentally pass a path in as a regular expression;
- * this will fail on Windows where the path separator is \, an escape.
+ * Looks for places where you accidentally pass a path in as a regular
+ * expression; this will fail on Windows where the path separator is \,
+ * an escape.
  */
 class RegexpPathDetector : Detector(), SourceCodeScanner {
 

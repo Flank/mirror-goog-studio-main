@@ -33,12 +33,12 @@ import org.w3c.dom.Attr
 
 /**
  * Checks for the combination of textAllCaps=true and using markup in
- * the string being formatted
+ * the string being formatted.
  */
-/** Constructs an [AllCapsDetector]  */
+/** Constructs an [AllCapsDetector] */
 class AllCapsDetector : LayoutDetector() {
     companion object Issues {
-        /** Using all caps with markup  */
+        /** Using all caps with markup. */
         @JvmField
         val ISSUE = Issue.create(
             id = "AllCaps",

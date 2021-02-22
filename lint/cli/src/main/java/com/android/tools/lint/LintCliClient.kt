@@ -104,11 +104,10 @@ import java.util.LinkedHashSet
 import kotlin.math.max
 
 /**
- * Lint client for command line usage. Supports the flags in [LintCliFlags], and offers text,
- * HTML and XML reporting, etc.
+ * Lint client for command line usage. Supports the flags in
+ * [LintCliFlags], and offers text, HTML and XML reporting, etc.
  *
  * Minimal example:
- *
  * <pre>
  * // files is a list of java.io.Files, typically a directory containing
  * // lint projects or direct references to project root directories
@@ -118,8 +117,8 @@ import kotlin.math.max
  * int exitCode = client.run(registry, files);
  * </pre>
  *
- * **NOTE: This is not a public or final API; if you rely on this be prepared to adjust your
- * code for the next tools release.**
+ * **NOTE: This is not a public or final API; if you rely on this be
+ * prepared to adjust your code for the next tools release.**
  */
 @Beta
 open class LintCliClient : LintClient {
@@ -140,15 +139,15 @@ open class LintCliClient : LintClient {
         initialize()
     }
 
-    /** Returns the issue registry used by this client */
+    /** Returns the issue registry used by this client. */
     open var registry: IssueRegistry? = null
         protected set
 
-    /** Returns the driver running the lint checks */
+    /** Returns the driver running the lint checks. */
     lateinit var driver: LintDriver
         protected set
 
-    /** Flags configuring the lint runs */
+    /** Flags configuring the lint runs. */
     val flags: LintCliFlags
 
     protected var validatedIds = false
@@ -160,7 +159,9 @@ open class LintCliClient : LintClient {
     protected var errorCount = 0
     protected var warningCount = 0
 
-    /** Definite incidents; these should be unconditionally reported */
+    /**
+     * Definite incidents; these should be unconditionally reported.
+     */
     val definiteIncidents: MutableList<Incident> = ArrayList()
 
     /**
@@ -182,7 +183,10 @@ open class LintCliClient : LintClient {
         addGlobalXmlFallbackConfiguration()
     }
 
-    /** Allow configuration override to be injected with a system property */
+    /**
+     * Allow configuration override to be injected with a system
+     * property.
+     */
     private fun addGlobalXmlFallbackConfiguration() {
         var configuration = System.getenv(LINT_OVERRIDE_CONFIGURATION_ENV_VAR)
         if (configuration == null) {
@@ -220,8 +224,8 @@ open class LintCliClient : LintClient {
         }
 
     /**
-     * Runs the static analysis command line driver. You need to add at least one error reporter to
-     * the command line flags.
+     * Runs the static analysis command line driver. You need to add at
+     * least one error reporter to the command line flags.
      */
     @Throws(IOException::class)
     fun run(registry: IssueRegistry, lintRequest: LintRequest): Int {
@@ -245,7 +249,7 @@ open class LintCliClient : LintClient {
      * Loads in all the partial results for a set of module dependencies
      * and creates a single report based on both taking the definite
      * results as well as conditionally processing the provisional
-     * results
+     * results.
      */
     fun mergeOnly(registry: IssueRegistry, lintRequest: LintRequest): Int {
         // We perform some additional validation during reporting
@@ -364,7 +368,7 @@ open class LintCliClient : LintClient {
     }
 
     /**
-     * Writes out the various incidents to all the configured reporters
+     * Writes out the various incidents to all the configured reporters.
      */
     protected open fun writeReports(stats: LintStats) {
         for (reporter in flags.reporters) {
@@ -535,7 +539,7 @@ open class LintCliClient : LintClient {
 
     /**
      * Checks to make sure that for any issues enabled in the reporting
-     * project the corresponding issue was enabled in the libraries
+     * project the corresponding issue was enabled in the libraries.
      */
     private fun checkConfigured(
         library: Project,
@@ -780,12 +784,12 @@ open class LintCliClient : LintClient {
         }
     }
 
-    /** Creates a lint request  */
+    /** Creates a lint request. */
     protected open fun createLintRequest(files: List<File>): LintRequest {
         return LintRequest(this, files).also { configureLintRequest(it) }
     }
 
-    /** Configures a lint request  */
+    /** Configures a lint request. */
     protected open fun configureLintRequest(lintRequest: LintRequest) {
     }
 
@@ -822,24 +826,24 @@ open class LintCliClient : LintClient {
 
     /**
      * Returns the path to the file containing the cached resource
-     * repository for this project
+     * repository for this project.
      */
     open fun getRepositoryFile(project: Project): File {
         val variantName = project.buildVariant?.name ?: "all"
         return File(project.dir, "build${File.separator}lint-resources-$variantName.xml")
     }
 
-    /** File content cache */
+    /** File content cache. */
     private val fileContentCache: MutableMap<File, CharSequence> = HashMap(100)
 
-    /** Read the contents of the given file, possibly cached  */
+    /** Read the contents of the given file, possibly cached. */
     fun getSourceText(file: File): CharSequence {
         return fileContentCache.computeIfAbsent(file) { readFile(file) }
     }
 
     /**
-     * Records the given source text as the source to be used for the given file when
-     * looked up via [getSourceText].
+     * Records the given source text as the source to be used for the
+     * given file when looked up via [getSourceText].
      */
     fun setSourceText(file: File, text: CharSequence?) {
         text?.let { fileContentCache[file] = it }
@@ -1047,11 +1051,13 @@ open class LintCliClient : LintClient {
     }
 
     /**
-     * Checks that any id's specified by id refer to valid, known, issues. This typically can't be
-     * done right away (in for example the Gradle code which handles DSL references to strings, or
-     * in the command line parser for the lint command) because the full set of valid id's is not
-     * known until lint actually starts running and for example gathers custom rules from all AAR
-     * dependencies reachable from libraries, etc.
+     * Checks that any id's specified by id refer to valid, known,
+     * issues. This typically can't be done right away (in for example
+     * the Gradle code which handles DSL references to strings, or in
+     * the command line parser for the lint command) because the full
+     * set of valid id's is not known until lint actually starts running
+     * and for example gathers custom rules from all AAR dependencies
+     * reachable from libraries, etc.
      */
     private fun validateIssueIds(project: Project?) {
         if (::driver.isInitialized) {
@@ -1179,7 +1185,10 @@ open class LintCliClient : LintClient {
         }
     }
 
-    /** Like getDisplayPath(File, project, format), but emits in TextFormat.TEXT */
+    /**
+     * Like getDisplayPath(File, project, format), but emits in
+     * TextFormat.TEXT.
+     */
     fun getDisplayPath(project: Project?, file: File): String {
         return getDisplayPath(project, file, flags.isFullPath)
     }
@@ -1219,8 +1228,9 @@ open class LintCliClient : LintClient {
     }
 
     /**
-     * Is there an embedded parent path in the given path? Should return
-     * true for "foo/bar/../baz" and "..\\foo\\bar" but not "../../foo/bar".
+     * Is there an embedded parent path in the given path? Should
+     * return true for "foo/bar/../baz" and "..\\foo\\bar" but not
+     * "../../foo/bar".
      */
     private fun containsEmbeddedParentRef(path: String): Boolean {
         var index = 0
@@ -1243,19 +1253,24 @@ open class LintCliClient : LintClient {
     }
 
     /**
-     * Is the string at the given [index] in the given [path] a parent reference,
-     * e.g. "../" or "..\" ?
+     * Is the string at the given [index] in the given [path] a parent
+     * reference, e.g. "../" or "..\" ?
      */
     private fun isParentRef(path: String, index: Int): Boolean {
         return path.startsWith("..", index) &&
             (index == path.length - 2 || path[index + 2] == '/' || path[index + 2] == '\\')
     }
 
-    /** Returns whether all warnings are enabled, including those disabled by default  */
+    /**
+     * Returns whether all warnings are enabled, including those
+     * disabled by default.
+     */
     val isAllEnabled: Boolean
         get() = flags.isCheckAllWarnings
 
-    /** Returns true if the given issue has been explicitly disabled  */
+    /**
+     * Returns true if the given issue has been explicitly disabled.
+     */
     fun isSuppressed(issue: Issue): Boolean {
         val disabledCategories = flags.disabledCategories
         if (disabledCategories != null) {
@@ -1269,7 +1284,7 @@ open class LintCliClient : LintClient {
         return flags.suppressedIds.contains(issue.id)
     }
 
-    /** Returns true if the given issue has been explicitly enabled  */
+    /** Returns true if the given issue has been explicitly enabled. */
     fun isExplicitlyEnabled(issue: Issue): Boolean {
         val enabledCategories = flags.enabledCategories
         if (enabledCategories != null) {
@@ -1402,12 +1417,13 @@ open class LintCliClient : LintClient {
     }
 
     /**
-     * Return the best build target to use among the given set of projects.
-     * This is necessary because we need to pick a single target to use to
-     * (for example) configure a boot classpath for the parsing infrastructure,
-     * but in theory Gradle lets you configure different compileSdkVersions for
-     * different modules, so here we pick the highest of the versions to make
-     * sure it's capable of resolving all library calls into the platform.
+     * Return the best build target to use among the given set of
+     * projects. This is necessary because we need to pick a single
+     * target to use to (for example) configure a boot classpath for the
+     * parsing infrastructure, but in theory Gradle lets you configure
+     * different compileSdkVersions for different modules, so here we
+     * pick the highest of the versions to make sure it's capable of
+     * resolving all library calls into the platform.
      */
     private fun pickBuildTarget(knownProjects: Collection<Project>): IAndroidTarget? {
         return knownProjects.asSequence()
@@ -1422,7 +1438,10 @@ open class LintCliClient : LintClient {
         super.disposeProjects(knownProjects)
     }
 
-    /** Synchronizes any options specified in lint.xml with the [LintCliFlags] object  */
+    /**
+     * Synchronizes any options specified in lint.xml with the
+     * [LintCliFlags] object.
+     */
     fun syncConfigOptions() {
         val configs = generateSequence(configurations.fallback) {
             configurations.getParentConfiguration(it)
@@ -1707,7 +1726,10 @@ open class LintCliClient : LintClient {
         private const val LINT_OVERRIDE_CONFIGURATION_ENV_VAR = "LINT_OVERRIDE_CONFIGURATION"
         private const val LINT_CONFIGURATION_OVERRIDE_PROP = "lint.configuration.override"
 
-        /** Whether lint should continue running after a baseline has been created  */
+        /**
+         * Whether lint should continue running after a baseline has
+         * been created.
+         */
         fun continueAfterBaseLineCreated(): Boolean {
             return System.getProperty("lint.baselines.continue") == VALUE_TRUE
         }
@@ -1724,11 +1746,13 @@ open class LintCliClient : LintClient {
         }
 
         /**
-         * Given a file, it produces a cleaned up path from the file. This will clean up the path such
-         * that `foo/./bar` becomes `foo/bar` and `foo/bar/../baz` becomes `foo/baz`.
+         * Given a file, it produces a cleaned up path from the file.
+         * This will clean up the path such that `foo/./bar` becomes
+         * `foo/bar` and `foo/bar/../baz` becomes `foo/baz`.
          *
-         * Unlike [java.io.File.getCanonicalPath] however, it will **not** attempt to make
-         * the file canonical, such as expanding symlinks and network mounts.
+         * Unlike [java.io.File.getCanonicalPath] however, it will
+         * **not** attempt to make the file canonical, such as expanding
+         * symlinks and network mounts.
          *
          * @param file the file to compute a clean path for
          * @return the cleaned up path

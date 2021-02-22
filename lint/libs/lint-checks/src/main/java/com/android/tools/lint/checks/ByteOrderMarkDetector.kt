@@ -33,13 +33,11 @@ import com.android.tools.lint.detector.api.XmlContext
 import org.w3c.dom.Document
 import java.util.EnumSet
 
-/**
- * Checks that byte order marks do not appear in resource names
- */
+/** Checks that byte order marks do not appear in resource names. */
 class ByteOrderMarkDetector : ResourceXmlDetector(), SourceCodeScanner, GradleScanner {
     companion object Issues {
 
-        /** Detects BOM characters in the middle of files  */
+        /** Detects BOM characters in the middle of files. */
         @JvmField
         val BOM = Issue.create(
             id = "ByteOrderMark",

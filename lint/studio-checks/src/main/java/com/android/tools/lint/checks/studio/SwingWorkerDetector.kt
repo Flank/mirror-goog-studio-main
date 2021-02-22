@@ -27,9 +27,7 @@ import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.ULambdaExpression
 
-/**
- * Forbid SwingWorker usage
- */
+/** Forbid SwingWorker usage. */
 class SwingWorkerDetector : Detector(), SourceCodeScanner {
 
     companion object Issues {

@@ -42,7 +42,8 @@ import org.xmlpull.v1.XmlPullParserException
 import java.io.IOException
 
 /**
- * Check to make sure the startDestination attribute on navigation elements is set and valid.
+ * Check to make sure the startDestination attribute on navigation
+ * elements is set and valid.
  */
 class StartDestinationDetector : ResourceXmlDetector() {
     companion object Issues {

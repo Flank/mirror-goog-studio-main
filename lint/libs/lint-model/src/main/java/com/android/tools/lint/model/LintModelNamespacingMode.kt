@@ -20,14 +20,16 @@ enum class LintModelNamespacingMode {
     /**
      * Resources are not namespaced.
      *
-     * They are merged at the application level, as was the behavior with AAPT1
+     * They are merged at the application level, as was the behavior
+     * with AAPT1.
      */
     DISABLED,
 
     /**
      * Resources must be namespaced.
      *
-     * Each library is compiled in to an AAPT2 static library with its own namespace.
+     * Each library is compiled in to an AAPT2 static library with its
+     * own namespace.
      *
      * Projects using this *cannot* consume non-namespaced dependencies.
      */

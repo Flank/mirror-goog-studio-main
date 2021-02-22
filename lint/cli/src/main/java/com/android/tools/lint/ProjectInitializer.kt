@@ -70,7 +70,10 @@ import java.util.zip.ZipException
 import java.util.zip.ZipFile
 import kotlin.math.max
 
-/** Regular expression used to match package statements with [ProjectInitializer.findPackage] */
+/**
+ * Regular expression used to match package statements with
+ * [ProjectInitializer.findPackage]
+ */
 private val PACKAGE_PATTERN = Pattern.compile("package\\s+([\\S&&[^;]]*)")
 private const val TAG_PROJECT = "project"
 private const val TAG_MODULE = "module"
@@ -111,9 +114,10 @@ private const val ATTR_MODEL = "model"
 private const val DOT_SRCJAR = ".srcjar"
 
 /**
- * Compute a list of lint [Project] instances from the given XML descriptor files.
- * Each descriptor is considered completely separate from the other (e.g. you can't
- * have library definitions in one referenced from another descriptor.
+ * Compute a list of lint [Project] instances from the given XML
+ * descriptor files. Each descriptor is considered completely separate
+ * from the other (e.g. you can't have library definitions in one
+ * referenced from another descriptor.
  */
 fun computeMetadata(client: LintClient, descriptor: File): ProjectMetadata {
     val initializer = ProjectInitializer(
@@ -124,59 +128,76 @@ fun computeMetadata(client: LintClient, descriptor: File): ProjectMetadata {
 }
 
 /**
- * Result data passed from parsing a project metadata XML file - returns the
- * set of projects, any SDK or cache directories configured within the file, etc
+ * Result data passed from parsing a project metadata XML file - returns
+ * the set of projects, any SDK or cache directories configured within
+ * the file, etc.
  */
 data class ProjectMetadata(
-    /** List of projects. Will be empty if there was an error in the configuration. */
+    /**
+     * List of projects. Will be empty if there was an error in the
+     * configuration.
+     */
     val projects: List<Project> = emptyList(),
-    /** A baseline file to apply, if any */
+    /** A baseline file to apply, if any. */
     val baseline: File? = null,
-    /** The SDK to use, if overriding the default */
+    /** The SDK to use, if overriding the default. */
     val sdk: File? = null,
-    /** The JDK to use, if overriding the default */
+    /** The JDK to use, if overriding the default. */
     val jdk: File? = null,
-    /** The cache directory to use, if overriding the default */
+    /** The cache directory to use, if overriding the default. */
     val cache: File? = null,
-    /** A map from module to a merged manifest for that module, if any */
+    /**
+     * A map from module to a merged manifest for that module, if any.
+     */
     val mergedManifests: Map<Project, File?> = emptyMap(),
-    /** A map from module to a baseline to apply to that module, if any */
+    /**
+     * A map from module to a baseline to apply to that module, if any.
+     */
     val moduleBaselines: Map<Project, File?> = emptyMap(),
-    /** List of custom check JAR files to apply everywhere */
+    /** List of custom check JAR files to apply everywhere. */
     val globalLintChecks: List<File> = emptyList(),
-    /** A map from module to a list of custom rule JAR files to apply, if any */
+    /**
+     * A map from module to a list of custom rule JAR files to apply, if
+     * any.
+     */
     val lintChecks: Map<Project, List<File>> = emptyMap(),
     /** list of boot classpath jars to use for non-Android projects */
     val jdkBootClasspath: List<File> = emptyList(),
-    /** Target platforms we're analyzing  */
+    /** Target platforms we're analyzing. */
     val platforms: EnumSet<Platform>? = null,
-    /** Set of external annotations.zip files or external annotation directories */
+    /**
+     * Set of external annotations.zip files or external annotation
+     * directories.
+     */
     val externalAnnotations: List<File> = emptyList(),
     /**
-     * If true, the project metadata being passed in only represents a small
-     * subset of the real project sources, so only lint checks which can be run
-     * without full project context should be attempted. This is what happens for
-     * "on-the-fly" checks running in the IDE.
+     * If true, the project metadata being passed in only represents
+     * a small subset of the real project sources, so only lint
+     * checks which can be run without full project context should be
+     * attempted. This is what happens for "on-the-fly" checks running
+     * in the IDE.
      */
     val incomplete: Boolean = false,
     /**
-     * A client name to use instead of the default; this is written into baseline
-     * files, can be queried by detectors from [LintClient] etc
+     * A client name to use instead of the default; this is written into
+     * baseline files, can be queried by detectors from [LintClient]
+     * etc.
      */
     val clientName: String? = null
 )
 
 /**
- * Class which handles initialization of a project hierarchy from a config XML file.
+ * Class which handles initialization of a project hierarchy from a
+ * config XML file.
  *
- * Note: This code uses both the term "projects" and "modules". That's because
- * lint internally uses the term "project" for what Studio (and these XML config
- * files) refers to as a "module".
+ * Note: This code uses both the term "projects" and "modules". That's
+ * because lint internally uses the term "project" for what Studio (and
+ * these XML config files) refers to as a "module".
  *
  * @param client the lint handler
  * @param file the XML description file
- * @param root the root project directory (relative paths in the config file are considered
- *             relative to this directory)
+ * @param root the root project directory (relative paths in the config
+ *     file are considered relative to this directory)
  */
 private class ProjectInitializer(
     val client: LintClient,
@@ -196,36 +217,42 @@ private class ProjectInitializer(
     /** map from module to the merged manifest to use, if any */
     private val mergedManifests = mutableMapOf<Project, File?>()
 
-    /** map from module to a list of custom lint rules to apply for that module, if any */
+    /**
+     * map from module to a list of custom lint rules to apply for that
+     * module, if any
+     */
     private val lintChecks = mutableMapOf<Project, List<File>>()
 
-    /** External annotations */
+    /** External annotations. */
     private val externalAnnotations: MutableList<File> = mutableListOf()
 
-    /** map from module to a baseline to use for a given module, if any */
+    /**
+     * map from module to a baseline to use for a given module, if any
+     */
     private val baselines = mutableMapOf<Project, File?>()
 
     /**
-     * map from aar or jar file to wrapper module name
-     * (which in turn can be looked up in [dependencies])
+     * map from aar or jar file to wrapper module name (which in turn
+     * can be looked up in [dependencies])
      */
     private val jarAarMap = mutableMapOf<File, String>()
 
-    /**
-     * Map from module name to resource visibility lookup
-     */
+    /** Map from module name to resource visibility lookup. */
     private val visibility = mutableMapOf<String, ResourceVisibilityLookup>()
 
-    /** A cache directory to use, if specified */
+    /** A cache directory to use, if specified. */
     private var cache: File? = null
 
-    /** Whether we're analyzing an Android project */
+    /** Whether we're analyzing an Android project. */
     private var android: Boolean = false
 
-    /** Desugaring operations to enable */
+    /** Desugaring operations to enable. */
     private var desugaring: EnumSet<Desugaring>? = null
 
-    /** Compute a list of lint [Project] instances from the given XML descriptor */
+    /**
+     * Compute a list of lint [Project] instances from the given XML
+     * descriptor.
+     */
     fun computeMetadata(): ProjectMetadata {
         val document = client.getXmlDocument(file)
 
@@ -239,7 +266,10 @@ private class ProjectInitializer(
         return parseModules(document.documentElement)
     }
 
-    /** Reports the given error message as an error to lint, with an optional element location */
+    /**
+     * Reports the given error message as an error to lint, with an
+     * optional element location.
+     */
     private fun reportError(message: String, node: Node? = null) {
         // To report an error using the lint infrastructure, we have to have
         // an associated "project", but there isn't an actual project yet
@@ -910,9 +940,9 @@ private class ProjectInitializer(
     }
 
     /**
-     * Given an element that is expected to have a "file" attribute (or "dir" or "jar"),
-     * produces a full path to the file. If [attribute] is specified, only the specific
-     * file attribute name is checked.
+     * Given an element that is expected to have a "file" attribute (or
+     * "dir" or "jar"), produces a full path to the file. If [attribute]
+     * is specified, only the specific file attribute name is checked.
      */
     private fun getFile(
         element: Element,
@@ -977,8 +1007,8 @@ private class ProjectInitializer(
     }
 
     /**
-     * If given a full path to a Java or Kotlin source file, produces the path to
-     * the source root if possible.
+     * If given a full path to a Java or Kotlin source file, produces
+     * the path to the source root if possible.
      */
     private fun findRoot(file: File): File? {
         val path = file.path
@@ -1021,7 +1051,10 @@ private class ProjectInitializer(
         return true
     }
 
-    /** Finds the package of the given Java/Kotlin source file, if possible */
+    /**
+     * Finds the package of the given Java/Kotlin source file, if
+     * possible.
+     */
     private fun findPackage(file: File): String? {
         // Don't use LintClient.readFile; this will attempt to use VFS in some cases
         // (for example, when encountering Windows file line endings, in order to make
@@ -1041,8 +1074,8 @@ private class ProjectInitializer(
 }
 
 /**
- * A special subclass of lint's [Project] class which can be manually configured
- * with custom source locations, custom library types, etc.
+ * A special subclass of lint's [Project] class which can be manually
+ * configured with custom source locations, custom library types, etc.
  */
 private class ManualProject
 constructor(
@@ -1068,7 +1101,7 @@ constructor(
         // Deliberately not calling super; that code is for ADT compatibility
     }
 
-    /** Adds the given project as a dependency from this project */
+    /** Adds the given project as a dependency from this project. */
     fun addDirectDependency(project: ManualProject) {
         directLibraries.add(project)
     }
@@ -1107,40 +1140,48 @@ constructor(
         this.kotlinLanguageLevel = level
     }
 
-    /** Sets the given files as the manifests applicable for this module */
+    /**
+     * Sets the given files as the manifests applicable for this module.
+     */
     fun setManifests(manifests: List<File>) {
         this.manifestFiles = manifests
         addFilteredFiles(manifests)
     }
 
-    /** Sets the given resource files and their roots for this module */
+    /**
+     * Sets the given resource files and their roots for this module.
+     */
     fun setResources(resourceRoots: List<File>, resources: List<File>) {
         this.resourceFolders = resourceRoots
         addFilteredFiles(resources)
     }
 
-    /** Sets the given source files and their roots for this module */
+    /** Sets the given source files and their roots for this module. */
     fun setSources(sourceRoots: List<File>, sources: List<File>) {
         this.javaSourceFolders = sourceRoots
         addFilteredFiles(sources)
     }
 
-    /** Sets the given source files and their roots for this module */
+    /** Sets the given source files and their roots for this module. */
     fun setTestSources(sourceRoots: List<File>, sources: List<File>) {
         this.testSourceFolders = sourceRoots
         addFilteredFiles(sources)
     }
 
-    /** Sets the given generated source files and their roots for this module */
+    /**
+     * Sets the given generated source files and their roots for this
+     * module.
+     */
     fun setGeneratedSources(sourceRoots: List<File>, sources: List<File>) {
         this.generatedSourceFolders = sourceRoots
         addFilteredFiles(sources)
     }
 
     /**
-     * Adds the given files to the set of filtered files for this project. With
-     * a filter applied, lint won't look at all sources in for example the source
-     * or resource roots, it will limit itself to these specific files.
+     * Adds the given files to the set of filtered files for this
+     * project. With a filter applied, lint won't look at all sources in
+     * for example the source or resource roots, it will limit itself to
+     * these specific files.
      */
     private fun addFilteredFiles(sources: List<File>) {
         if (!sources.isEmpty()) {
@@ -1151,7 +1192,7 @@ constructor(
         }
     }
 
-    /** Sets the global class path for this module */
+    /** Sets the global class path for this module. */
     fun setClasspath(allClasses: List<File>, useForAnalysis: Boolean) =
         if (useForAnalysis) {
             this.javaClassFolders = allClasses

@@ -36,7 +36,10 @@ import com.android.utils.XmlUtils.getFirstSubTag
 import com.android.utils.XmlUtils.getNextTag
 import org.w3c.dom.Element
 
-/** Checks whether the current node can be replaced by a TextView using compound drawables. */
+/**
+ * Checks whether the current node can be replaced by a TextView using
+ * compound drawables.
+ */
 class UseCompoundDrawableDetector : LayoutDetector() {
 
     override fun getApplicableElements(): Collection<String> {
@@ -78,7 +81,7 @@ class UseCompoundDrawableDetector : LayoutDetector() {
     }
 
     companion object {
-        /** The main issue discovered by this detector */
+        /** The main issue discovered by this detector. */
         @JvmField
         val ISSUE = Issue.create(
             id = "UseCompoundDrawables",

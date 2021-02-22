@@ -56,7 +56,7 @@ class UastLintUtils {
             return (this as? UResolvable)?.resolve().toUElementOfType()
         }
 
-        /** Returns the containing file for the given element  */
+        /** Returns the containing file for the given element. */
         @JvmStatic
         fun getContainingFile(
             context: JavaContext,
@@ -72,13 +72,13 @@ class UastLintUtils {
             } else containingFile
         }
 
-        /** Returns the containing file for the given element  */
+        /** Returns the containing file for the given element. */
         @JvmStatic
         fun getPsiFile(file: UFile?): PsiFile? {
             return file?.let { getContainingFile(it.psi) }
         }
 
-        /** Returns the containing file for the given element  */
+        /** Returns the containing file for the given element. */
         @JvmStatic
         fun getContainingFile(element: PsiElement?): PsiFile? {
             if (element == null) {

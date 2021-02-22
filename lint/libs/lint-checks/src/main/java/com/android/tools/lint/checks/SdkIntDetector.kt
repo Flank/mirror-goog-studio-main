@@ -89,7 +89,7 @@ class SdkIntDetector : Detector(), SourceCodeScanner {
             Scope.JAVA_FILE_SCOPE
         )
 
-        /** SDK_INT without @ChecksSdkIntAtLeast */
+        /** SDK_INT without @ChecksSdkIntAtLeast. */
         @JvmField
         val ISSUE = Issue.create(
             id = "AnnotateVersionCheck",

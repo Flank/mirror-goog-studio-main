@@ -40,7 +40,7 @@ import java.util.EnumSet
 
 /**
  * Looks at identifiers and comments to check for terminology where we
- * have recommended replacements in our codebase
+ * have recommended replacements in our codebase.
  */
 class TerminologyDetector : Detector(), SourceCodeScanner, OtherFileScanner {
     companion object {
@@ -51,7 +51,10 @@ class TerminologyDetector : Detector(), SourceCodeScanner, OtherFileScanner {
                 Scope.JAVA_FILE_SCOPE
             )
 
-        /** Looks for terminology that has suggested replacements for our codebase */
+        /**
+         * Looks for terminology that has suggested replacements for our
+         * codebase.
+         */
         val ISSUE =
             Issue.create(
                 id = "WrongTerminology",
@@ -273,10 +276,11 @@ class TerminologyDetector : Detector(), SourceCodeScanner, OtherFileScanner {
     }
 
     /**
-     * See whether the text span in the given range in [source] is separated by
-     * word boundaries; this doesn't just include punctuation but also allows words
-     * within camel case strings, for example in the string getFooBar, the word "Foo"
-     * is a whole word match, whereas in getFoobar it would not have been.
+     * See whether the text span in the given range in [source]
+     * is separated by word boundaries; this doesn't just include
+     * punctuation but also allows words within camel case strings, for
+     * example in the string getFooBar, the word "Foo" is a whole word
+     * match, whereas in getFoobar it would not have been.
      */
     private fun matchesWholeWords(source: CharSequence, start: Int, end: Int): Boolean {
         // Check beginning
@@ -310,9 +314,9 @@ class TerminologyDetector : Detector(), SourceCodeScanner, OtherFileScanner {
     /**
      * Checks the text in [source].
      *
-     * If it finds matches in the string, it will report errors into the given
-     * context. The associated AST [element] is used to look look up suppress
-     * annotations and to find the right error range.
+     * If it finds matches in the string, it will report errors into the
+     * given context. The associated AST [element] is used to look look
+     * up suppress annotations and to find the right error range.
      */
     @Suppress("SpellCheckingInspection")
     private fun checkCommentStateMachine(

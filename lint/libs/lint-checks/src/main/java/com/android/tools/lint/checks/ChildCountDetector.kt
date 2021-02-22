@@ -32,10 +32,11 @@ import com.android.utils.iterator
 import org.w3c.dom.Element
 
 /**
- * Check which makes sure that views have the expected number of declared
- * children (e.g. at most one in ScrollViews and none in AdapterViews)
+ * Check which makes sure that views have the expected number of
+ * declared children (e.g. at most one in ScrollViews and none in
+ * AdapterViews)
  */
-/** Constructs a new [ChildCountDetector]  */
+/** Constructs a new [ChildCountDetector] */
 class ChildCountDetector : LayoutDetector() {
     companion object Issues {
         private val IMPLEMENTATION = Implementation(
@@ -43,7 +44,7 @@ class ChildCountDetector : LayoutDetector() {
             Scope.RESOURCE_FILE_SCOPE
         )
 
-        /** The main issue discovered by this detector  */
+        /** The main issue discovered by this detector. */
         @JvmField
         val SCROLLVIEW_ISSUE = Issue.create(
             id = "ScrollViewCount",
@@ -57,7 +58,7 @@ class ChildCountDetector : LayoutDetector() {
             implementation = IMPLEMENTATION
         )
 
-        /** The main issue discovered by this detector  */
+        /** The main issue discovered by this detector. */
         @JvmField
         val ADAPTER_VIEW_ISSUE = Issue.create(
             id = "AdapterViewChildren",

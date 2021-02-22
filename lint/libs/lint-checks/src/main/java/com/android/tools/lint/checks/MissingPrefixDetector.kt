@@ -56,12 +56,12 @@ import org.w3c.dom.Element
 import org.w3c.dom.Node
 
 /**
- * Detects layout attributes on builtin Android widgets that do not specify
- * a prefix but probably should.
+ * Detects layout attributes on builtin Android widgets that do not
+ * specify a prefix but probably should.
  */
 class MissingPrefixDetector : LayoutDetector() {
     companion object Issues {
-        /** Attributes missing the android: prefix  */
+        /** Attributes missing the android: prefix. */
         @JvmField
         val MISSING_NAMESPACE = Issue.create(
             id = "MissingPrefix",

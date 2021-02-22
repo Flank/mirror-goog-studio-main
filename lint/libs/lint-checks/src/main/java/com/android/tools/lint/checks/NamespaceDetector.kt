@@ -43,8 +43,8 @@ import org.w3c.dom.Document
 import org.w3c.dom.Element
 import java.util.HashMap
 
-/** Checks for various issues related to XML namespaces  */
-/** Constructs a new [NamespaceDetector]  */
+/** Checks for various issues related to XML namespaces. */
+/** Constructs a new [NamespaceDetector] */
 class NamespaceDetector : ResourceXmlDetector() {
 
     private var unusedNamespaces: MutableMap<String, Attr>? = null
@@ -327,7 +327,7 @@ class NamespaceDetector : ResourceXmlDetector() {
             Scope.MANIFEST_SCOPE
         )
 
-        /** Typos in the namespace */
+        /** Typos in the namespace. */
         @JvmField
         val TYPO = Issue.create(
             id = "NamespaceTypo",
@@ -342,7 +342,7 @@ class NamespaceDetector : ResourceXmlDetector() {
             implementation = IMPLEMENTATION
         )
 
-        /** Unused namespace declarations */
+        /** Unused namespace declarations. */
         @JvmField
         val UNUSED = Issue.create(
             id = "UnusedNamespace",
@@ -356,7 +356,7 @@ class NamespaceDetector : ResourceXmlDetector() {
             implementation = IMPLEMENTATION
         )
 
-        /** Unused namespace declarations */
+        /** Unused namespace declarations. */
         @JvmField
         val REDUNDANT = Issue.create(
             id = "RedundantNamespace",
@@ -371,7 +371,7 @@ class NamespaceDetector : ResourceXmlDetector() {
             implementation = IMPLEMENTATION
         )
 
-        /** Using custom namespace attributes in a library project */
+        /** Using custom namespace attributes in a library project. */
         @JvmField
         val CUSTOM_VIEW = Issue.create(
             id = "LibraryCustomView",
@@ -388,7 +388,7 @@ class NamespaceDetector : ResourceXmlDetector() {
             implementation = IMPLEMENTATION
         )
 
-        /** Unused namespace declarations */
+        /** Unused namespace declarations. */
         @JvmField
         val RES_AUTO = Issue.create(
             id = "ResAuto",

@@ -42,8 +42,8 @@ import java.io.File
 /**
  * A [Context] used when checking .class files.
  *
- * **NOTE: This is not a public or final API; if you rely on this be prepared
- * to adjust your code for the next tools release.**
+ * **NOTE: This is not a public or final API; if you rely on this be
+ * prepared to adjust your code for the next tools release.**
  */
 @Beta
 class ClassContext(
@@ -54,14 +54,15 @@ class ClassContext(
     project: Project,
 
     /**
-     * The "main" project. For normal projects, this is the same as [.project],
-     * but for library projects, it's the root project that includes (possibly indirectly)
-     * the various library projects and their library projects.
+     * The "main" project. For normal projects, this is the same as
+     * [.project], but for library projects, it's the root project that
+     * includes (possibly indirectly) the various library projects and
+     * their library projects.
      *
-     * Note that this is a property on the [Context], not the
-     * [Project], since a library project can be included from multiple
-     * different top level projects, so there isn't **one** main project,
-     * just one per main project being analyzed with its library projects.
+     * Note that this is a property on the [Context], not the [Project],
+     * since a library project can be included from multiple different
+     * top level projects, so there isn't **one** main project, just
+     * one per main project being analyzed with its library projects.
      */
     main: Project?,
 
@@ -69,8 +70,9 @@ class ClassContext(
     file: File,
 
     /**
-     * The jar file, if any. If this is null, the .class file is a real file
-     * on disk, otherwise it represents a relative path within the jar file.
+     * The jar file, if any. If this is null, the .class file is a real
+     * file on disk, otherwise it represents a relative path within the
+     * jar file.
      *
      * @return the jar file, or null
      */
@@ -79,26 +81,31 @@ class ClassContext(
     /** the root binary directory containing this .class file */
     private val binDir: File,
 
-    /** The class file byte data  */
+    /** The class file byte data. */
     val bytecode: ByteArray,
 
-    /** The class file DOM root node  */
+    /** The class file DOM root node. */
     val classNode: ClassNode,
 
     /**
-     * Whether this class is part of a library (rather than corresponding to one of the
-     * source files in this project
+     * Whether this class is part of a library (rather than
+     * corresponding to one of the source files in this project.
      */
     val isFromClassLibrary: Boolean,
 
-    /** The contents of the source file, if source file is known/found  */
+    /**
+     * The contents of the source file, if source file is known/found.
+     */
     private var sourceContents: CharSequence?
 ) : Context(driver, project, main, file) {
 
-    /** The source file, if known/found  */
+    /** The source file, if known/found. */
     private var sourceFile: File? = null
 
-    /** Whether we've searched for the source file (used to avoid repeated failed searches)  */
+    /**
+     * Whether we've searched for the source file (used to avoid
+     * repeated failed searches)
+     */
     private var searchedForSource: Boolean = false
 
     /**
@@ -157,7 +164,8 @@ class ClassContext(
     }
 
     /**
-     * Returns the contents of the source file for this class file, if found.
+     * Returns the contents of the source file for this class file, if
+     * found.
      *
      * @return the source contents, or ""
      */
@@ -177,18 +185,17 @@ class ClassContext(
     }
 
     /**
-     * Returns the contents of the source file for this class file, if found. If
-     * `read` is false, do not read the source contents if it has not
-     * already been read. (This is primarily intended for the lint
-     * infrastructure; most client code would call [.getSourceContents]
-     * .)
+     * Returns the contents of the source file for this class file,
+     * if found. If `read` is false, do not read the source contents
+     * if it has not already been read. (This is primarily intended
+     * for the lint infrastructure; most client code would call
+     * [.getSourceContents] .)
      *
-     * @param read whether to read the source contents if it has not already
-     *            been initialized
-     *
-     * @return the source contents, which will never be null if `read` is
-     *         true, or null if `read` is false and the source contents
-     *         hasn't already been read.
+     * @param read whether to read the source contents if it has not
+     *     already been initialized
+     * @return the source contents, which will never be null if `read`
+     *     is true, or null if `read` is false and the
+     *     source contents hasn't already been read.
      */
     fun getSourceContents(read: Boolean): CharSequence? {
         return if (read) {
@@ -199,20 +206,16 @@ class ClassContext(
     }
 
     /**
-     * Returns a location for the given source line number in this class file's
-     * source file, if available.
+     * Returns a location for the given source line number in this class
+     * file's source file, if available.
      *
      * @param line the line number (1-based, which is what ASM uses)
-     *
-     * @param patternStart optional pattern to search for in the source for
-     *            range start
-     *
-     * @param patternEnd optional pattern to search for in the source for range
-     *            end
-     *
+     * @param patternStart optional pattern to search for in the source
+     *     for range start
+     * @param patternEnd optional pattern to search for in the source
+     *     for range end
      * @param hints additional hints about the pattern search (provided
-     *            `patternStart` is non null)
-     *
+     *     `patternStart` is non null)
      * @return a location, never null
      */
     fun getLocationForLine(
@@ -296,23 +299,19 @@ class ClassContext(
      * Reports an issue applicable to a given method node.
      *
      * @param issue the issue to report
-     *
      * @param method the method scope the error applies to. The lint
-     *            infrastructure will check whether there are suppress
-     *            annotations on this method (or its enclosing class) and if so
-     *            suppress the warning without involving the client.
-     *
-     * @param instruction the instruction within the method the error applies
-     *            to. You cannot place annotations on individual method
-     *            instructions (for example, annotations on local variables are
-     *            allowed, but are not kept in the .class file). However, this
-     *            instruction is needed to handle suppressing errors on field
-     *            initializations; in that case, the errors may be reported in
-     *            the `<clinit>` method, but the annotation is found not
-     *            on that method but for the [FieldNode]'s.
-     *
+     *     infrastructure will check whether there are suppress
+     *     annotations on this method (or its enclosing class) and
+     *     if so suppress the warning without involving the client.
+     * @param instruction the instruction within the method the error
+     *     applies to. You cannot place annotations on individual method
+     *     instructions (for example, annotations on local variables
+     *     are allowed, but are not kept in the .class file). However,
+     *     this instruction is needed to handle suppressing errors
+     *     on field initializations; in that case, the errors may
+     *     be reported in the `<clinit>` method, but the annotation
+     *     is found not on that method but for the [FieldNode]'s.
      * @param location the location of the issue, or null if not known
-     *
      * @param message the message for this warning
      */
     fun report(
@@ -352,13 +351,13 @@ class ClassContext(
     }
 
     /**
-     * Returns a location for the given [ClassNode], where class node is
-     * either the top level class, or an inner class, in the current context.
+     * Returns a location for the given [ClassNode], where class node
+     * is either the top level class, or an inner class, in the current
+     * context.
      *
      * @param classNode the class in the current context
-     *
-     * @return a location pointing to the class declaration, or as close to it
-     *         as possible
+     * @return a location pointing to the class declaration, or as close
+     *     to it as possible
      */
     fun getLocation(classNode: ClassNode): Location {
         // Attempt to find a proper location for this class. This is tricky
@@ -390,11 +389,9 @@ class ClassContext(
      * Returns a location for the given [MethodNode].
      *
      * @param methodNode the class in the current context
-     *
      * @param classNode the class containing the method
-     *
-     * @return a location pointing to the class declaration, or as close to it
-     *         as possible
+     * @return a location pointing to the class declaration, or as close
+     *     to it as possible
      */
     fun getLocation(
         methodNode: MethodNode,
@@ -428,9 +425,8 @@ class ClassContext(
      * Returns a location for the given [AbstractInsnNode].
      *
      * @param instruction the instruction to look up the location for
-     *
      * @return a location pointing to the instruction, or as close to it
-     *         as possible
+     *     as possible
      */
     fun getLocation(instruction: AbstractInsnNode): Location {
         var hints = SearchHints.create(FORWARD).matchJavaSymbol()
@@ -472,7 +468,6 @@ class ClassContext(
          * Finds the line number closest to the given node
          *
          * @param node the instruction node to get a line number for
-         *
          * @return the closest line number, or -1 if not known
          */
         @JvmStatic
@@ -503,7 +498,6 @@ class ClassContext(
          * Finds the line number closest to the given method declaration
          *
          * @param node the method node to get a line number for
-         *
          * @return the closest line number, or -1 if not known
          */
         @JvmStatic
@@ -519,7 +513,6 @@ class ClassContext(
          * Finds the line number closest to the given class declaration
          *
          * @param node the method node to get a line number for
-         *
          * @return the closest line number, or -1 if not known
          */
         @JvmStatic
@@ -571,23 +564,20 @@ class ClassContext(
          * fully qualified class name (such as foo.bar.Foo.Baz).
          *
          * @param owner the owner name to convert
-         *
          * @return the corresponding fully qualified class name
          */
         @JvmStatic
         fun getFqcn(owner: String): String = owner.replace('/', '.').replace('$', '.')
 
         /**
-         * Computes a user-readable type signature from the given class owner, name
-         * and description. For example, for owner="foo/bar/Foo$Baz", name="foo",
-         * description="(I)V", it returns "void foo.bar.Foo.Bar#foo(int)".
+         * Computes a user-readable type signature from the given
+         * class owner, name and description. For example, for
+         * owner="foo/bar/Foo$Baz", name="foo", description="(I)V", it
+         * returns "void foo.bar.Foo.Bar#foo(int)".
          *
          * @param owner the class name
-         *
          * @param name the method name
-         *
          * @param desc the method description
-         *
          * @return a user-readable string
          */
         @JvmStatic
@@ -638,11 +628,11 @@ class ClassContext(
         }
 
         /**
-         * Computes the internal class name of the given fully qualified class name.
-         * For example, it converts foo.bar.Foo.Bar into foo/bar/Foo$Bar
+         * Computes the internal class name of the given fully qualified
+         * class name. For example, it converts foo.bar.Foo.Bar into
+         * foo/bar/Foo$Bar
          *
          * @param qualifiedName the fully qualified class name
-         *
          * @return the internal class name
          */
         @JvmStatic

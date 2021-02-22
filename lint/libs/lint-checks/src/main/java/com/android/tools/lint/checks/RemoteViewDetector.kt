@@ -38,9 +38,7 @@ import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
 import java.io.IOException
 
-/**
- * Checks related to RemoteViews
- */
+/** Checks related to RemoteViews. */
 class RemoteViewDetector : Detector(), SourceCodeScanner {
     companion object Issues {
         private val IMPLEMENTATION = Implementation(
@@ -48,7 +46,7 @@ class RemoteViewDetector : Detector(), SourceCodeScanner {
             Scope.JAVA_FILE_SCOPE
         )
 
-        /** Unsupported views in a remote view */
+        /** Unsupported views in a remote view. */
         @JvmField
         val ISSUE = Issue.create(
             id = "RemoteViewLayout",

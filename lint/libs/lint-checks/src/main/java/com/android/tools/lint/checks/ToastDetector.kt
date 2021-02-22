@@ -33,7 +33,10 @@ import org.jetbrains.uast.UReturnExpression
 import org.jetbrains.uast.getParentOfType
 import java.util.concurrent.atomic.AtomicBoolean
 
-/** Detector looking for Toast.makeText() without a corresponding show() call */
+/**
+ * Detector looking for Toast.makeText() without a corresponding show()
+ * call.
+ */
 class ToastDetector : Detector(), SourceCodeScanner {
     override fun getApplicableMethodNames(): List<String> {
         return listOf("makeText", "make")

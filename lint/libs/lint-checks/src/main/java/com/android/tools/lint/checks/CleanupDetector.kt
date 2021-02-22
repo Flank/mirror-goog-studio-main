@@ -66,8 +66,8 @@ import org.jetbrains.uast.visitor.AbstractUastVisitor
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * Checks for missing `recycle` calls on resources that encourage it, and for missing `commit`
- * calls on FragmentTransactions, etc.
+ * Checks for missing `recycle` calls on resources that encourage it,
+ * and for missing `commit` calls on FragmentTransactions, etc.
  */
 class CleanupDetector : Detector(), SourceCodeScanner {
 
@@ -757,9 +757,11 @@ class CleanupDetector : Detector(), SourceCodeScanner {
     }
 
     /**
-     * Visitor which checks whether an operation is "finished"; in the case of a FragmentTransaction
-     * we're looking for a "commit" call; in the case of a TypedArray we're looking for a "recycle",
-     * call, in the case of a database cursor we're looking for a "close" call, etc.
+     * Visitor which checks whether an operation is "finished"; in the
+     * case of a FragmentTransaction we're looking for a "commit" call;
+     * in the case of a TypedArray we're looking for a "recycle", call,
+     * in the case of a database cursor we're looking for a "close"
+     * call, etc.
      */
     private abstract class FinishVisitor(
         protected val context: JavaContext,
@@ -937,7 +939,7 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         private val IMPLEMENTATION =
             Implementation(CleanupDetector::class.java, Scope.JAVA_FILE_SCOPE)
 
-        /** Problems with missing recycle calls */
+        /** Problems with missing recycle calls. */
         @JvmField
         val RECYCLE_RESOURCE = Issue.create(
             id = "Recycle",
@@ -968,7 +970,7 @@ class CleanupDetector : Detector(), SourceCodeScanner {
             implementation = IMPLEMENTATION
         )
 
-        /** Failing to commit a shared preference */
+        /** Failing to commit a shared preference. */
         @JvmField
         val SHARED_PREF = Issue.create(
             id = "CommitPrefEdits",
@@ -983,7 +985,7 @@ class CleanupDetector : Detector(), SourceCodeScanner {
             implementation = Implementation(CleanupDetector::class.java, Scope.JAVA_FILE_SCOPE)
         )
 
-        /** Using commit instead of apply on a shared preference */
+        /** Using commit instead of apply on a shared preference. */
         @JvmField
         val APPLY_SHARED_PREF = Issue.create(
             id = "ApplySharedPref",
@@ -1053,7 +1055,9 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         private const val ANDROID_CONTENT_SHARED_PREFERENCES_EDITOR =
             "android.content.SharedPreferences.Editor"
 
-        /** Returns the variable the expression is assigned to, if any */
+        /**
+         * Returns the variable the expression is assigned to, if any.
+         */
         @JvmStatic
         @JvmOverloads
         fun getVariableElement(

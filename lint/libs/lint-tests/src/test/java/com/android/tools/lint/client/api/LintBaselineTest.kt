@@ -46,8 +46,9 @@ class LintBaselineTest {
     var temporaryFolder = TemporaryFolder()
 
     /**
-     * Overrides TestLintClient to use the checked-in SDK that is available in the tools/base repo.
-     * The "real" TestLintClient is a public utility for writing lint tests, so it cannot make
+     * Overrides TestLintClient to use the checked-in SDK that is
+     * available in the tools/base repo. The "real" TestLintClient
+     * is a public utility for writing lint tests, so it cannot make
      * assumptions specific to tools/base.
      */
     protected inner class ToolsBaseTestLintClient : TestLintClient() {

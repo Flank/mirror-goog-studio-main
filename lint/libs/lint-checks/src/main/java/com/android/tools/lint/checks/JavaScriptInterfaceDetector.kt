@@ -38,8 +38,8 @@ import org.jetbrains.uast.UDeclaration
 import org.jetbrains.uast.UElement
 
 /**
- * Looks for addJavascriptInterface calls on interfaces have been properly annotated with
- * `@JavaScriptInterface`
+ * Looks for addJavascriptInterface calls on interfaces have been
+ * properly annotated with `@JavaScriptInterface`
  */
 class JavaScriptInterfaceDetector : Detector(), SourceCodeScanner {
 
@@ -105,7 +105,7 @@ class JavaScriptInterfaceDetector : Detector(), SourceCodeScanner {
     }
 
     companion object {
-        /** The main issue discovered by this detector */
+        /** The main issue discovered by this detector. */
         @JvmField
         val ISSUE = Issue.create(
             id = "JavascriptInterface",

@@ -25,14 +25,18 @@ import com.google.common.annotations.VisibleForTesting
 import java.util.Collections.unmodifiableList
 import java.util.EnumSet
 
-/** Registry which provides a list of checks to be performed on an Android project */
+/**
+ * Registry which provides a list of checks to be performed on an
+ * Android project.
+ */
 open class BuiltinIssueRegistry : IssueRegistry() {
 
     override val vendor: Vendor = AOSP_VENDOR
 
     companion object {
         /**
-         * Reset the registry such that it recomputes its available issues.
+         * Reset the registry such that it recomputes its available
+         * issues.
          *
          * NOTE: This is only intended for testing purposes.
          */

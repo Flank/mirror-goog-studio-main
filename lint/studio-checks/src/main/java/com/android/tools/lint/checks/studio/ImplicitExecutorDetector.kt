@@ -28,7 +28,8 @@ import com.intellij.util.containers.MultiMap
 import org.jetbrains.uast.UCallExpression
 
 /**
- * Forbid methods related to Futures that run code in an implicitly chosen Executor.
+ * Forbid methods related to Futures that run code in an implicitly
+ * chosen Executor.
  */
 class ImplicitExecutorDetector : Detector(), SourceCodeScanner {
 

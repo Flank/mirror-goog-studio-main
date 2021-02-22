@@ -33,7 +33,7 @@ import org.jetbrains.uast.UPolyadicExpression
 import org.jetbrains.uast.UastBinaryOperator
 import org.jetbrains.uast.expressions.UInjectionHost
 
-/** Checks for errors related to Date Formats */
+/** Checks for errors related to Date Formats. */
 class DateFormatDetector : Detector(), SourceCodeScanner {
     // ---- implements SourceCodeScanner ----
     override fun getApplicableConstructorTypes(): List<String> {
@@ -144,7 +144,9 @@ class DateFormatDetector : Detector(), SourceCodeScanner {
                 Scope.JAVA_FILE_SCOPE
             )
 
-        /** Constructing SimpleDateFormat without an explicit locale */
+        /**
+         * Constructing SimpleDateFormat without an explicit locale.
+         */
         @JvmField
         val DATE_FORMAT =
             Issue.create(
@@ -171,7 +173,7 @@ class DateFormatDetector : Detector(), SourceCodeScanner {
                 implementation = IMPLEMENTATION
             )
 
-        /** Accidentally(?) using week year instead of era year */
+        /** Accidentally(?) using week year instead of era year. */
         @JvmField
         val WEEK_YEAR = Issue.create(
             id = "WeekBasedYear",

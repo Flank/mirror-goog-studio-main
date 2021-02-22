@@ -30,9 +30,7 @@ import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.getParentOfType
 
-/**
- * Some lint checks around SharedPreferences
- */
+/** Some lint checks around SharedPreferences. */
 class SharedPrefsDetector : Detector(), SourceCodeScanner {
     companion object {
         private val IMPLEMENTATION = Implementation(
@@ -40,7 +38,7 @@ class SharedPrefsDetector : Detector(), SourceCodeScanner {
             Scope.JAVA_FILE_SCOPE
         )
 
-        /** Modifying a string set */
+        /** Modifying a string set. */
         @JvmField
         val ISSUE = Issue.create(
             id = "MutatingSharedPrefs",

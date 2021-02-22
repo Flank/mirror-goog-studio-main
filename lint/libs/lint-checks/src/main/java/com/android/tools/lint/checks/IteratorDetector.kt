@@ -35,9 +35,7 @@ import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UQualifiedReferenceExpression
 import org.jetbrains.uast.tryResolve
 
-/**
- * Warns about a couple of broken iterators on Android N
- */
+/** Warns about a couple of broken iterators on Android N. */
 class IteratorDetector : Detector(), SourceCodeScanner {
     companion object Issues {
         private val IMPLEMENTATION = Implementation(

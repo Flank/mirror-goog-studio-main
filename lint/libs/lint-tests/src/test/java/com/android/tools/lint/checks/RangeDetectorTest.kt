@@ -320,7 +320,8 @@ src/test/pkg/RangeTest.java:158: Error: Expected length 5 (was 7) [Range]
     }
 
     /**
-     * Test @IntRange and @FloatRange support annotation applied to arrays and vargs.
+     * Test @IntRange and @FloatRange support annotation applied to
+     * arrays and vargs.
      */
     fun testRangesMultiple() {
         lint().files(

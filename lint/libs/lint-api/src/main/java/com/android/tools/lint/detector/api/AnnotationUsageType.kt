@@ -17,54 +17,72 @@
 package com.android.tools.lint.detector.api
 
 enum class AnnotationUsageType {
-    /** A call to a method where the method it self was annotated */
+    /** A call to a method where the method it self was annotated. */
     METHOD_CALL,
 
-    /** A reference to a member in a class where the class was annotated */
+    /**
+     * A reference to a member in a class where the class was annotated.
+     */
     METHOD_CALL_CLASS,
 
-    /** A reference to a member in a package where the package was annotated */
+    /**
+     * A reference to a member in a package where the package was
+     * annotated.
+     */
     METHOD_CALL_PACKAGE,
 
-    /** An argument to a method call where the corresponding parameter was annotated */
+    /**
+     * An argument to a method call where the corresponding parameter
+     * was annotated.
+     */
     METHOD_CALL_PARAMETER,
 
-    /** A method reference (e.g. Class::method) where the corresponding method was annotated. */
+    /**
+     * A method reference (e.g. Class::method) where the corresponding
+     * method was annotated.
+     */
     METHOD_REFERENCE,
 
-    /** An argument to an annotation where the annotation parameter has been annotated */
+    /**
+     * An argument to an annotation where the annotation parameter has
+     * been annotated.
+     */
     ANNOTATION_REFERENCE,
 
-    /** A return from a method that was annotated */
+    /** A return from a method that was annotated. */
     METHOD_RETURN,
 
-    /** A variable whose declaration was annotated */
+    /** A variable whose declaration was annotated. */
     VARIABLE_REFERENCE,
 
     /**
-     * The right hand side of an assignment (or variable/field declaration) where the
-     * left hand side was annotated
+     * The right hand side of an assignment (or variable/field
+     * declaration) where the left hand side was annotated.
      */
     ASSIGNMENT_RHS,
 
     /**
-     * The left hand side of an assignment (or variable/field declaration) where the
-     * right hand side is inferred to have been annotated
+     * The left hand side of an assignment (or variable/field
+     * declaration) where the right hand side is inferred to have been
+     * annotated.
      */
     ASSIGNMENT_LHS,
 
     /**
-     * An annotated element is combined with this element in a binary expression
-     * (such as +, -, >, ==, != etc.). Note that [EQUALITY] is a special case.
+     * An annotated element is combined with this element in a binary
+     * expression (such as +, -, >, ==, != etc.). Note that [EQUALITY]
+     * is a special case.
      */
     BINARY,
 
-    /** An annotated element is compared for equality or not equality */
+    /**
+     * An annotated element is compared for equality or not equality.
+     */
     EQUALITY,
 
-    /** A class extends or implements an annotated element */
+    /** A class extends or implements an annotated element. */
     EXTENDS,
 
-    /** An annotated field is referenced */
+    /** An annotated field is referenced. */
     FIELD_REFERENCE;
 }

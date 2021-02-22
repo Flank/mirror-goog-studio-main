@@ -26,23 +26,25 @@ import java.util.ArrayList
 import java.util.EnumSet
 
 /**
- * An issue is a potential bug in an Android application. An issue is discovered
- * by a [Detector], and has an associated [Severity].
+ * An issue is a potential bug in an Android application. An issue is
+ * discovered by a [Detector], and has an associated [Severity].
  *
- * Issues and detectors are separate classes because a detector can discover
- * multiple different issues as it's analyzing code, and we want to be able to
- * different severities for different issues, the ability to suppress one but
- * not other issues from the same detector, and so on.
+ * Issues and detectors are separate classes because a detector can
+ * discover multiple different issues as it's analyzing code, and we
+ * want to be able to different severities for different issues, the
+ * ability to suppress one but not other issues from the same detector,
+ * and so on.
  *
- * **NOTE: This is not a public or final API; if you rely on this be prepared
- * to adjust your code for the next tools release.**
+ * **NOTE: This is not a public or final API; if you rely on this be
+ * prepared to adjust your code for the next tools release.**
  */
 @Beta
 class Issue private constructor(
     /**
-     * Returns the unique id of this issue. These should not change over time
-     * since they are used to persist the names of issues suppressed by the user
-     * etc. It is typically a single camel-cased word.
+     * Returns the unique id of this issue. These should not change
+     * over time since they are used to persist the names of issues
+     * suppressed by the user etc. It is typically a single camel-cased
+     * word.
      *
      * @return the associated fixed id, never null and always unique
      */
@@ -60,8 +62,8 @@ class Issue private constructor(
     val category: Category,
 
     /**
-     * Returns a priority, in the range 1-10, with 10 being the most severe and
-     * 1 the least
+     * Returns a priority, in the range 1-10, with 10 being the most
+     * severe and 1 the least
      *
      * @return a priority from 1 to 10
      */
@@ -86,36 +88,39 @@ class Issue private constructor(
     val defaultSeverity: Severity,
 
     /**
-     * Set of platforms where this issue applies. For example, if the analysis
-     * is being run on an Android project, lint will include all checks that
-     * either don't specify any platforms, or includes the android scope.
+     * Set of platforms where this issue applies. For example, if the
+     * analysis is being run on an Android project, lint will include
+     * all checks that either don't specify any platforms, or includes
+     * the android scope.
      */
     platforms: EnumSet<Platform>,
 
     /**
-     * If non-null, this issue can **only** be suppressed with one of the
-     * given annotations: not with @Suppress, not with @SuppressLint, not
-     * with lint.xml, not with lintOptions{} and not with baselines.
+     * If non-null, this issue can **only** be suppressed with
+     * one of the given annotations: not with @Suppress, not with
+     * @SuppressLint, not with lint.xml, not with lintOptions{} and not
+     * with baselines.
      *
      * These suppress names can take various forms:
-     *  * Valid qualified names in Kotlin and Java (identifier characters and
-     *    dots). Represents suppress annotation. Examples include
-     *        android.annotation.SuppressLint, java.lang.Suppress and
-     *        kotlin.Suppress (which all happen to be looked at by default by
-     *        lint.)
-     *  * Simple name (no dots): XML suppress attribute in the tools namespace
-     *  * HTTP URL followed by colon and then name: namespace and attribute
-     *    for XML suppress attribute. For example,
-     *        http://schemas.android.com/tools:ignore
-     *    represents "ignore" in the tools namespace (which happens to be the
-     *    default Lint already looks for.)
+     * * Valid qualified names in Kotlin and Java (identifier characters
+     *   and dots). Represents suppress annotation.
+     *   Examples include android.annotation.SuppressLint,
+     *   java.lang.Suppress and kotlin.Suppress (which
+     *   all happen to be looked at by default by lint.)
+     * * Simple name (no dots): XML suppress attribute in the tools
+     *   namespace
+     * * HTTP URL followed by colon and then name: namespace and
+     *   attribute for XML suppress attribute. For example,
+     *   http://schemas.android.com/tools:ignore represents
+     *   "ignore" in the tools namespace (which happens
+     *   to be the default Lint already looks for.)
      */
     val suppressNames: Collection<String>?,
 
     /**
-     * The implementation for the given issue. This is typically done by
-     * IDEs that can offer a replacement for a given issue which performs better
-     * or in some other way works better within the IDE.
+     * The implementation for the given issue. This is typically done
+     * by IDEs that can offer a replacement for a given issue which
+     * performs better or in some other way works better within the IDE.
      */
     var implementation: Implementation
 
@@ -126,16 +131,17 @@ class Issue private constructor(
     private var _platforms = platforms
 
     /**
-     * Set of platforms where this issue applies. For example, if the analysis
-     * is being run on an Android project, lint will include all checks that
-     * either don't specify any platform scopes, or includes the android scope.
+     * Set of platforms where this issue applies. For example, if the
+     * analysis is being run on an Android project, lint will include
+     * all checks that either don't specify any platform scopes, or
+     * includes the android scope.
      */
     val platforms: EnumSet<Platform> get() = _platforms
 
     /**
      * Whether we're analyzing Android sources. Note that within an
-     * Android project there may be non-Android libraries, but this
-     * flag indicates whether there's *any* Android in this project.
+     * Android project there may be non-Android libraries, but this flag
+     * indicates whether there's *any* Android in this project.
      *
      * This is a convenience property around [platforms].
      */
@@ -163,8 +169,8 @@ class Issue private constructor(
 
     /**
      * Whether we're analyzing Android sources. Note that within an
-     * Android project there may be non-Android libraries, but this
-     * flag indicates whether there's *any* Android in this project.
+     * Android project there may be non-Android libraries, but this flag
+     * indicates whether there's *any* Android in this project.
      *
      * This is a convenience property around [platforms].
      */
@@ -178,7 +184,7 @@ class Issue private constructor(
      * Sets previous names for this issue; this is useful when you
      * for various reasons have to rename or combine multiple issues
      * into one; by declaring it here, lint can more gracefully handle
-     * existing incidents listed in baselines etc
+     * existing incidents listed in baselines etc.
      */
     fun setAliases(aliases: List<String>?): Issue {
         assert(this.aliases == null) // calling more than once is probably not intentional
@@ -189,7 +195,7 @@ class Issue private constructor(
     /** Returns any names for this issue; see [setAliases]. */
     fun getAliases(): List<String>? = aliases
 
-    /** A link (a URL string) to more information, or null */
+    /** A link (a URL string) to more information, or null. */
     val moreInfo: List<String>
         get() {
             when (moreInfoUrls) {
@@ -262,8 +268,8 @@ class Issue private constructor(
     }
 
     /**
-     * Returns whether this issue should be enabled by default, unless the user
-     * has explicitly disabled it.
+     * Returns whether this issue should be enabled by default, unless
+     * the user has explicitly disabled it.
      *
      * @return true if this issue should be enabled by default
      */
@@ -272,11 +278,11 @@ class Issue private constructor(
     }
 
     /**
-     * Sorts the detectors alphabetically by id. This is intended to make it
-     * convenient to store settings for detectors in a fixed order. It is not
-     * intended as the order to be shown to the user; for that, a tool embedding
-     * lint might consider the priorities, categories, severities etc of the
-     * various detectors.
+     * Sorts the detectors alphabetically by id. This is intended
+     * to make it convenient to store settings for detectors in a
+     * fixed order. It is not intended as the order to be shown to
+     * the user; for that, a tool embedding lint might consider the
+     * priorities, categories, severities etc of the various detectors.
      *
      * @param other the [Issue] to compare this issue to
      */
@@ -287,7 +293,8 @@ class Issue private constructor(
     /**
      * Sets whether this issue is enabled by default.
      *
-     * @param enabledByDefault whether the issue should be enabled by default
+     * @param enabledByDefault whether the issue should be enabled by
+     *     default
      * @return this, for constructor chaining
      */
     fun setEnabledByDefault(enabledByDefault: Boolean): Issue {
@@ -317,41 +324,44 @@ class Issue private constructor(
     }
 
     /**
-     * The registry providing this issue, if known. Note that this is typically the
-     * original registry providing the issue; there may be other issue registries
-     * providing this issue as well (for example, [CompositeIssueRegistry]), so it
-     * is not the case that each issue returned by registry.getIssues() will point
-     * back to the same registry. (Note that lint will set this on its own
-     * after loading an issue registry.)
+     * The registry providing this issue, if known. Note that this is
+     * typically the original registry providing the issue; there may be
+     * other issue registries providing this issue as well (for example,
+     * [CompositeIssueRegistry]), so it is not the case that each issue
+     * returned by registry.getIssues() will point back to the same
+     * registry. (Note that lint will set this on its own after loading
+     * an issue registry.)
      *
-     * All the built-in issues typically point to [IssueRegistry.AOSP_VENDOR].
+     * All the built-in issues typically point to
+     * [IssueRegistry.AOSP_VENDOR].
      */
     var registry: IssueRegistry? = null
 
     /**
-     * The vendor providing this fix. You do not need to set this for every issue;
-     * as long as the [IssueRegistry] associated with this issue provides a vendor,
-     * lint will find and use it.
+     * The vendor providing this fix. You do not need to set this for
+     * every issue; as long as the [IssueRegistry] associated with this
+     * issue provides a vendor, lint will find and use it.
      */
     var vendor: Vendor? = null
 
     companion object {
         /**
-         * Creates a new issue. The description strings can use some simple markup;
-         * see the [TextFormat.RAW] documentation
-         * for details.
+         * Creates a new issue. The description strings can use some
+         * simple markup; see the [TextFormat.RAW] documentation for
+         * details.
          *
          * @param id the fixed id of the issue
-         * @param briefDescription short summary (typically 5-6 words or less), typically
-         * describing the **problem** rather than the **fix**
-         * (e.g. "Missing minSdkVersion")
-         * @param explanation a full explanation of the issue, with suggestions for
-         * how to fix it
+         * @param briefDescription short summary (typically 5-6 words or
+         *     less), typically describing the **problem** rather
+         *     than the **fix** (e.g. "Missing minSdkVersion")
+         * @param explanation a full explanation of the issue, with
+         *     suggestions for how to fix it
          * @param category the associated category, if any
-         * @param priority the priority, a number from 1 to 10 with 10 being most
-         * important/severe
+         * @param priority the priority, a number from 1 to 10 with 10
+         *     being most important/severe
          * @param severity the default severity of the issue
-         * @param implementation the default implementation for this issue
+         * @param implementation the default implementation for this
+         *     issue
          * @return a new [Issue]
          */
         @JvmStatic
@@ -372,26 +382,29 @@ class Issue private constructor(
         }
 
         /**
-         * Creates a new issue. The description strings can use some simple markup;
-         * see the [TextFormat.RAW] documentation
-         * for details.
+         * Creates a new issue. The description strings can use some
+         * simple markup; see the [TextFormat.RAW] documentation for
+         * details.
          *
          * @param id the fixed id of the issue
-         * @param briefDescription short summary (typically 5-6 words or less), typically
-         * describing the **problem** rather than the **fix**
-         * (e.g. "Missing minSdkVersion")
-         * @param explanation a full explanation of the issue, with suggestions for
-         * @param implementation the default implementation for this issue
-         * @param moreInfo additional information URL
-         * how to fix it
+         * @param briefDescription short summary (typically 5-6 words or
+         *     less), typically describing the **problem** rather
+         *     than the **fix** (e.g. "Missing minSdkVersion")
+         * @param explanation a full explanation of the issue, with
+         *     suggestions for
+         * @param implementation the default implementation for this
+         *     issue
+         * @param moreInfo additional information URL how to fix it
          * @param category the associated category, if any
-         * @param priority the priority, a number from 1 to 10 with 10 being most
-         * important/severe
+         * @param priority the priority, a number from 1 to 10 with 10
+         *     being most important/severe
          * @param severity the default severity of the issue
-         * @param androidSpecific true if this issue only applies to Android, false if it does
-         *     not apply to Android at all, and null if not specified or should run on all
-         *     platforms. Convenience for specifying platforms=[ANDROID].
-         *     @param platforms Set of platform scopes where this issue applies.
+         * @param androidSpecific true if this issue only applies to
+         *     Android, false if it does not apply to Android
+         *     at all, and null if not specified or should run
+         *     on all platforms. Convenience for specifying
+         *     platforms=[ANDROID]. @param platforms Set of
+         *     platform scopes where this issue applies.
          * @return a new [Issue]
          */
         fun create(

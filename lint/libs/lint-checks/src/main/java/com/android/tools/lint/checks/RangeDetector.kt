@@ -403,7 +403,7 @@ class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             }
         }
 
-        /** Makes sure values are within the allowed range */
+        /** Makes sure values are within the allowed range. */
         @JvmField
         val RANGE = Issue.create(
             id = "Range",

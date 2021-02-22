@@ -50,9 +50,7 @@ import com.android.utils.XmlUtils
 import com.android.utils.iterator
 import org.w3c.dom.Element
 
-/**
- * Various checks for MotionScene files.
- */
+/** Various checks for MotionScene files. */
 class MotionSceneDetector : ResourceXmlDetector() {
 
     private val customAttributeNames = mutableSetOf<String>()

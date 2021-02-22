@@ -33,8 +33,8 @@ import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.visitor.AbstractUastVisitor
 
 /**
- * Makes sure that extensions for indexing in the IDE do not
- * break indexing
+ * Makes sure that extensions for indexing in the IDE do not break
+ * indexing.
  */
 class ShortNameCacheDetector : Detector(), SourceCodeScanner {
 

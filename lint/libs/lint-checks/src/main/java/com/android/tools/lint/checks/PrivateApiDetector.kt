@@ -46,11 +46,12 @@ import org.jetbrains.uast.UReferenceExpression
 import org.jetbrains.uast.USimpleNameReferenceExpression
 
 /**
- * Checks that the code is not using reflection to access hidden Android APIs
+ * Checks that the code is not using reflection to access hidden Android
+ * APIs.
  */
 class PrivateApiDetector : Detector(), SourceCodeScanner {
     companion object Issues {
-        /** Using hidden/private APIs  */
+        /** Using hidden/private APIs. */
         @JvmField
         val PRIVATE_API = Issue.create(
             id = "PrivateApi",
@@ -289,17 +290,21 @@ class PrivateApiDetector : Detector(), SourceCodeScanner {
     }
 
     /**
-     * Given a Class#getMethodDeclaration or getFieldDeclaration etc call,
-     * figure out the corresponding class name the method is being invoked on
+     * Given a Class#getMethodDeclaration or getFieldDeclaration etc
+     * call, figure out the corresponding class name the method is being
+     * invoked on
      *
-     * @param call the [Class.getDeclaredMethod] or [Class.getDeclaredField] call
-     *
+     * @param call the [Class.getDeclaredMethod] or
+     *     [Class.getDeclaredField] call
      * @return the fully qualified name of the class, if found
      */
     private fun getJavaClassFromMemberLookup(call: UCallExpression): String? =
         getJavaClassType(call.receiver)?.canonicalText
 
-    /** We know [element] has type java.lang.Class<T> and we try to find out the PsiType for T. */
+    /**
+     * We know [element] has type java.lang.Class<T> and we try to find
+     * out the PsiType for T.
+     */
     private fun getJavaClassType(element: UElement?): PsiType? {
         if (element is UExpression) {
             // First try the type inferred from the Psi, in case it's a known class reference.

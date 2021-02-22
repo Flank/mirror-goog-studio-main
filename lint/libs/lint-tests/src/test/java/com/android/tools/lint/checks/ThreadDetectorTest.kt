@@ -591,8 +591,11 @@ class ThreadDetectorTest : AbstractCheckTest() {
     }
 
     /**
-     * Test that the parent class annotations are not inherited by the static methods declared in a child class. In the example below,
-     * android.view.View is annotated with the UiThread annotation. The test checks that workerThreadMethod does not inherit that annotation.
+     * Test that the parent class annotations are not inherited by the
+     * static methods declared in a child class. In the example below,
+     * android.view.View is annotated with the UiThread annotation.
+     * The test checks that workerThreadMethod does not inherit that
+     * annotation.
      */
     fun testStaticWrongThread() {
 

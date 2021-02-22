@@ -53,7 +53,7 @@ import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
 import java.io.IOException
 
-/** Looks for layout inflation calls passing null as the view root  */
+/** Looks for layout inflation calls passing null as the view root. */
 class LayoutInflationDetector : LayoutDetector(), SourceCodeScanner {
     private var layoutsWithRootLayoutParams: MutableSet<String>? = null
     private var pendingErrors: MutableList<Pair<String?, Location?>>? = null
@@ -181,7 +181,7 @@ class LayoutInflationDetector : LayoutDetector(), SourceCodeScanner {
                 Scope.JAVA_FILE_SCOPE
             )
 
-        /** Passing in a null parent to a layout inflater */
+        /** Passing in a null parent to a layout inflater. */
         @JvmField
         val ISSUE =
             Issue.create(
@@ -203,8 +203,9 @@ class LayoutInflationDetector : LayoutDetector(), SourceCodeScanner {
             "Avoid passing `null` as the view root (needed to resolve layout parameters on the inflated layout's root element)"
 
         /**
-         * Is this call to the layout inflater used for the Alert Dialog? If so, a null root is okay.
-         * See for example "Every Rule Has An Exception" herE:
+         * Is this call to the layout inflater used for the
+         * Alert Dialog? If so, a null root is okay. See
+         * for example "Every Rule Has An Exception" herE:
          * https://wundermanthompsonmobile.com/2013/05/layout-inflation-as-intended/
          */
         private fun isUsedWithAlertDialog(

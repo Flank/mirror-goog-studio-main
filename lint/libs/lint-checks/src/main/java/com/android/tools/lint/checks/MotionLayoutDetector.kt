@@ -35,9 +35,7 @@ import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.XmlContext
 import org.w3c.dom.Element
 
-/**
- * Various checks for Motion Layout files.
- */
+/** Various checks for Motion Layout files. */
 class MotionLayoutDetector : ResourceXmlDetector() {
 
     private var referencesRecorded = false

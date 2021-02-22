@@ -30,12 +30,10 @@ import org.jetbrains.uast.UElement
 import org.jetbrains.uast.ULiteralExpression
 import org.jetbrains.uast.evaluateString
 
-/**
- * Looks for hardcoded references to /sdcard/.
- */
+/** Looks for hardcoded references to /sdcard/. */
 class SdCardDetector : Detector(), SourceCodeScanner {
     companion object Issues {
-        /** Hardcoded /sdcard/ references  */
+        /** Hardcoded /sdcard/ references. */
         @JvmField
         val ISSUE = Issue.create(
             id = "SdCardPath",

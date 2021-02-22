@@ -611,7 +611,7 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
         const val ATTR_OPEN = "open"
 
-        /** Passing the wrong constant to an int or String method  */
+        /** Passing the wrong constant to an int or String method. */
         @JvmField
         val TYPE_DEF = Issue.create(
             id = "WrongConstant",
