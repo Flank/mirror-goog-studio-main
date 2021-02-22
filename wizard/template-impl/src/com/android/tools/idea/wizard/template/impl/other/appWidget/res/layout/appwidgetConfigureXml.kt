@@ -27,8 +27,9 @@ fun appwidgetConfigureXml() = """
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/configure"
-        android:layout_marginBottom="8dp" />
+        android:layout_marginBottom="8dp"
+        android:labelFor="@id/appwidget_text"
+        android:text="@string/configure" />
 
     <EditText
         android:id="@+id/appwidget_text"
