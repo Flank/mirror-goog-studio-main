@@ -46,6 +46,7 @@ import com.google.testing.platform.proto.api.core.TestArtifactProto
 import com.google.testing.platform.proto.api.service.ServerConfigProto
 import java.io.File
 import org.gradle.api.logging.Logging
+import java.util.concurrent.TimeUnit
 
 // This is an arbitrary string. This ID is used to lookup test results from UTP.
 // UTP can run multiple test fixtures at a time so we have to give a name for
@@ -63,6 +64,8 @@ private const val DEFAULT_EMULATOR_GRPC_ADDRESS = "localhost"
 private const val DEFAULT_ADB_SERVER_PORT = 5037
 
 private const val TEST_RUNNER_LOG_FILE_NAME = "test-results.log"
+
+private  val AM_INSTRUMENT_COMMAND_TIME_OUT_SECONDS = TimeUnit.DAYS.toSeconds(365)
 
 // Relative path to the UTP outputDir for test log directory.
 const val TEST_LOG_DIR = "testlog"
@@ -381,6 +384,7 @@ class UtpConfigFactory {
                 }
             }
             this.useOrchestrator = useOrchestrator
+            amInstrumentTimeout = AM_INSTRUMENT_COMMAND_TIME_OUT_SECONDS
         }.build())
         return ANDROID_DRIVER_INSTRUMENTATION.toExtensionProto(utpDependencies, config)
     }
