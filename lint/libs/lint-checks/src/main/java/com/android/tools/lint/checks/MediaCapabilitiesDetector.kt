@@ -122,7 +122,7 @@ class MediaCapabilitiesDetector : Detector(), SourceCodeScanner, ClassScanner, X
     private fun checkManifest(context: Context) {
         // Lint check only relevant on Android S/12 +
         if (context.mainProject.buildModule
-                ?.gradleVersion?.isAtLeastIncludingPreviews(7, 0, 0) != true
+            ?.gradleVersion?.isAtLeastIncludingPreviews(7, 0, 0) != true
         ) {
             return
         }
