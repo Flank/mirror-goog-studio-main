@@ -289,7 +289,7 @@ public class OnClickDetectorTest extends AbstractCheckTest {
                                         + "package my.pkg;\n"
                                         + "\n"
                                         + "/** Parent activity to verify parent handlers */\n"
-                                        + "public class ParentActivity {\n"
+                                        + "public class ParentActivity extends android.app.Activity {\n"
                                         + "    public void parentOnClick(android.view.View view) {\n"
                                         + "    }\n"
                                         + "}\n"),
@@ -351,6 +351,52 @@ public class OnClickDetectorTest extends AbstractCheckTest {
                                         + "        android:onClick=\"@{() -> handlers.goToPercentInListMinHeight()}\"\n"
                                         + "        android:text=\"Button\" />\n"
                                         + "</LinearLayout>\n"))
+                .run()
+                .expectClean();
+    }
+
+    public void testDoNotUserFragmentsAsContextForOnClick() {
+        // Sample code
+        lint().files(
+                        xml(
+                                "res/layout/main_activity.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<LinearLayout\n"
+                                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                                        + "    android:layout_width=\"match_parent\"\n"
+                                        + "    android:layout_height=\"match_parent\"\n"
+                                        + "    tools:context=\"my.pkg.MainFragment\">\n"
+                                        + "\n"
+                                        + "    <Button\n"
+                                        + "        android:layout_width=\"wrap_content\"\n"
+                                        + "        android:layout_height=\"wrap_content\"\n"
+                                        + "        android:onClick=\"activityClick\"\n"
+                                        + "        android:text=\"Button\" />\n"
+                                        + "\n"
+                                        + "    <Button\n"
+                                        + "        android:layout_width=\"wrap_content\"\n"
+                                        + "        android:layout_height=\"wrap_content\"\n"
+                                        + "        android:onClick=\"fragmentClick\"\n"
+                                        + "        android:text=\"Button\" />\n"
+                                        + "\n"
+                                        + "</LinearLayout>"),
+                        java(
+                                ""
+                                        + "package my.pkg;\n"
+                                        + "\n"
+                                        + "public class MainActivity {\n"
+                                        + "    public void activityClick(android.view.View view) {\n"
+                                        + "    }\n"
+                                        + "}\n"),
+                        java(
+                                ""
+                                        + "package my.pkg;\n"
+                                        + "public class MainFragment extends android.app.Fragment {\n"
+                                        + "    public void fragmentClick(android.view.View v) { }\n"
+                                        + "}\n"))
+                .incremental("res/layout/main_activity.xml")
                 .run()
                 .expectClean();
     }
