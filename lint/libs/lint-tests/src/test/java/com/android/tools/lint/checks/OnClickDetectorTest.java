@@ -277,12 +277,27 @@ public class OnClickDetectorTest extends AbstractCheckTest {
                                         + "        android:onClick=\"missing\"\n"
                                         + "        android:text=\"Button\" />\n"
                                         + "\n"
+                                        + "    <Button\n"
+                                        + "        android:layout_width=\"wrap_content\"\n"
+                                        + "        android:layout_height=\"wrap_content\"\n"
+                                        + "        android:onClick=\"parentOnClick\"\n"
+                                        + "        android:text=\"Button\" />\n"
+                                        + "\n"
                                         + "</LinearLayout>"),
+                        java(
+                                ""
+                                        + "package my.pkg;\n"
+                                        + "\n"
+                                        + "/** Parent activity to verify parent handlers */\n"
+                                        + "public class ParentActivity {\n"
+                                        + "    public void parentOnClick(android.view.View view) {\n"
+                                        + "    }\n"
+                                        + "}\n"),
                         java(
                                 "src/my/pkg/MainActivity.java",
                                 ""
                                         + "package my.pkg;\n"
-                                        + "public class MainActivity {\n"
+                                        + "public class MainActivity extends ParentActivity{\n"
                                         + "    public void myHandler(android.view.View v) { }\n"
                                         + "}\n"))
                 .incremental("res/layout/main_activity.xml")
