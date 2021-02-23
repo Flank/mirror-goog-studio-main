@@ -81,8 +81,8 @@ import java.util.zip.ZipEntry
  * by loosely interpreting .gradle files and building models based on
  * recognizing common patterns there.
  *
- * TODO: Clean way to configure whether build dep cache is enabled TODO:
- * Handle scopes (test dependencies etc)
+ * TODO: Clean way to configure whether build dep cache is enabled
+ * TODO: Handle scopes (test dependencies etc)
  */
 
 class GradleModelMocker @JvmOverloads constructor(

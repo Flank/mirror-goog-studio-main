@@ -1672,8 +1672,7 @@ abstract class LintClient {
      * @param includeModuleDependencies if true, include merged view of
      *     all module dependencies
      * @param includeLibraries if true, include merged view of all
-     *     library dependencies (this also requires all module
-     *     dependencies)
+     *     library dependencies (this also requires all module dependencies)
      * @return the project resources, or null if not available
      */
     @Deprecated(

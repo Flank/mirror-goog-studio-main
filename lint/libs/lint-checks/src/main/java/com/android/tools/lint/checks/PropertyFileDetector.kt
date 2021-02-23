@@ -34,7 +34,7 @@ import java.io.File
  * Check for errors in .property files
  *
  * TODO: Warn about bad paths like sdk properties with ' in the path, or
- * suffix of " " etc.
+ *     suffix of " " etc.
  */
 /** Constructs a new [PropertyFileDetector] */
 class PropertyFileDetector : Detector() {

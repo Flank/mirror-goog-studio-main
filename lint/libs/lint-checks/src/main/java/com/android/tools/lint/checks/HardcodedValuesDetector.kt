@@ -40,7 +40,7 @@ import org.w3c.dom.Attr
  * they fill/match the parent width instead of setting wrap_content.
  *
  * TODO: Consider looking at the localization="suggested" attribute in
- * the platform attrs.xml to catch future recommended attributes.
+ *     the platform attrs.xml to catch future recommended attributes.
  */
 class HardcodedValuesDetector : LayoutDetector() {
 

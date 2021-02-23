@@ -189,6 +189,7 @@ import org.jetbrains.uast.UReferenceExpression
  *     UastContext context = UastUtils.getUastContext(element);
  *     UExpression initializer = context.getInitializerBody(field);
  * </pre>
+ *
  * ### Call names
  * In PSI, a call was represented by a PsiCallExpression, and to get
  * to things like the method called or to the operand/qualifier, you'd
@@ -201,6 +202,7 @@ import org.jetbrains.uast.UReferenceExpression
  * ---
  * &gt;    call.getMethodName()
  * </pre>
+ *
  * ### Call qualifiers
  * Similarly,
  * <pre>
@@ -208,6 +210,7 @@ import org.jetbrains.uast.UReferenceExpression
  * ---
  * &gt;    call.getReceiver()
  * </pre>
+ *
  * ### Call arguments
  * PSI had a separate PsiArgumentList element you had to look up before
  * you could get to the actual arguments, as an array. In UAST these are
@@ -226,10 +229,10 @@ import org.jetbrains.uast.UReferenceExpression
  * You may have code which does something like "parent instanceof
  * PsiAssignmentExpression" to see if something is an assignment.
  * Instead, use one of the many utilities in {@link UastExpressionUtils}
- * - such as {@link UastExpressionUtils#isAssignment(UElement)}. Take a
- *   look at all the methods there now - there are methods
- *   for checking whether a call is a constructor, whether
- *   an expression is an array initializer, etc etc.
+ * such as {@link UastExpressionUtils#isAssignment(UElement)}.
+ * Take a look at all the methods there now - there are
+ * methods for checking whether a call is a constructor,
+ * whether an expression is an array initializer, etc etc.
  *
  * ### Android Resources
  * Don't do your own AST lookup to figure out if something is a
@@ -245,6 +248,7 @@ import org.jetbrains.uast.UReferenceExpression
  *        }
  *        ...
  * </pre>
+ *
  * ### Binary Expressions
  * If you had been using {@link PsiBinaryExpression} for things like
  * checking comparator operators or arithmetic combination of operands,

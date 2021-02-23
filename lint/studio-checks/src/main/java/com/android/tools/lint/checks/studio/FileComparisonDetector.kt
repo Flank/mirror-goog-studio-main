@@ -37,7 +37,7 @@ import org.jetbrains.uast.UastBinaryOperator
  * like case insensitive file systems
  *
  * TODO: Check for calling file.toURL or file.toURI.toURL: use our sdk
- * utils instead.
+ *     utils instead.
  */
 class FileComparisonDetector : Detector(), SourceCodeScanner {
 

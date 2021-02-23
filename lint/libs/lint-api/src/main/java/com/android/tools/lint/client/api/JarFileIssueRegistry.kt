@@ -210,8 +210,8 @@ private constructor(
          * instantiate the named issue registry.
          *
          * TODO: Add a custom class loader architecture here such that
-         * custom rules can have dependent jars without needing to
-         * jar-jar them!
+         *     custom rules can have dependent jars
+         *     without needing to jar-jar them!
          */
         private fun loadIssueRegistry(
             client: LintClient,

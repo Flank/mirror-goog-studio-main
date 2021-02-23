@@ -2351,10 +2351,10 @@ class LintDriver(
      * issues or filtered out warnings.
      *
      * TODO: Extract this out to a top level internal class (with driver
-     * as a member property) since LintDriver is getting really large
-     * and this class also contains quite a bit of filtering code now.
-     * Just not doing it immediately since the current CLs have a lot of
-     * changes here which makes diffing tricky.)
+     *     as a member property) since LintDriver is getting really
+     *     large and this class also contains quite a bit of filtering
+     *     code now. Just not doing it immediately since the current
+     *     CLs have a lot of changes here which makes diffing tricky.)
      */
     private inner class LintClientWrapper(private val delegate: LintClient) :
         LintClient(clientName) {
