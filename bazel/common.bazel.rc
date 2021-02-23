@@ -56,10 +56,6 @@ build --java_toolchain=@bazel_tools//tools/jdk:legacy_toolchain
 # Use prebuilt native toolchain
 build --crosstool_top=@native_toolchain//:toolchain
 
-# Report errorprone errors as warnings to avoid failing the build.
-# Temporary until http://b/180537631 is resolved.
-build --javacopt="-XepAllErrorsAsWarnings"
-
 # cpp sandbox is very slow on mac and linux
 build --strategy=CppCompile=standalone
 build --strategy=CppLink=standalone
