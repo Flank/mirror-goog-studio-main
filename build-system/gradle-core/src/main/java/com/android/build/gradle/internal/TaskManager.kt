@@ -850,7 +850,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
     private fun createApkProcessResTask(
             creationConfig: ComponentCreationConfig,
             packageOutputType: SingleArtifact<Directory>?) {
-        val globalScope = creationConfig.globalScope
+        val projectInfo = creationConfig.services.projectInfo
 
         // Check AAR metadata files
         taskFactory.register(CheckAarMetadataTask.CreationAction(creationConfig))
@@ -860,7 +860,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                 creationConfig,
                 packageOutputType,
                 MergeType.MERGE,
-                globalScope.projectBaseName)
+                projectInfo.getProjectBaseName())
         val projectOptions = creationConfig.services.projectOptions
         val nonTransitiveR = projectOptions[BooleanOption.NON_TRANSITIVE_R_CLASS]
         val namespaced: Boolean = creationConfig.globalScope.extension.aaptOptions.namespaced
@@ -876,7 +876,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                     creationConfig,
                     packageOutputType,
                     MergeType.PACKAGE,
-                    globalScope.projectBaseName)
+                    projectInfo.getProjectBaseName())
         }
     }
 

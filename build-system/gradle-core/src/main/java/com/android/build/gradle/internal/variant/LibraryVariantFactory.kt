@@ -92,7 +92,7 @@ class LibraryVariantFactory(
                         globalScope)
 
         // create default output
-        val name = "${globalScope.projectBaseName}-${libVariant.baseName}.${BuilderConstants.EXT_LIB_ARCHIVE}"
+        val name = "${libVariant.services.projectInfo.getProjectBaseName()}-${libVariant.baseName}.${BuilderConstants.EXT_LIB_ARCHIVE}"
         libVariant.addVariantOutput(
                 VariantOutputConfigurationImpl(false, ImmutableList.of()), name)
         return libVariant

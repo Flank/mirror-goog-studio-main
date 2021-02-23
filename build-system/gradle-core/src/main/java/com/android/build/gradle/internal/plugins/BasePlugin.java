@@ -80,6 +80,7 @@ import com.android.build.gradle.internal.res.Aapt2FromMaven;
 import com.android.build.gradle.internal.scope.BuildFeatureValues;
 import com.android.build.gradle.internal.scope.DelayedActionsExecutor;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.scope.ProjectInfo;
 import com.android.build.gradle.internal.services.Aapt2DaemonBuildService;
 import com.android.build.gradle.internal.services.Aapt2ThreadPoolBuildService;
 import com.android.build.gradle.internal.services.AndroidLocationsBuildService;
@@ -588,7 +589,8 @@ public abstract class BasePlugin<
                         extraModelInfo,
                         projectServices.getProjectOptions(),
                         projectServices.getIssueReporter(),
-                        getProjectType()));
+                        getProjectType(),
+                        projectServices.getProjectInfo()));
     }
 
     private void createTasks() {
@@ -951,6 +953,7 @@ public abstract class BasePlugin<
                         project.getGradle().getSharedServices(),
                         aapt2FromMaven,
                         project.getGradle().getStartParameter().getMaxWorkerCount(),
+                        new ProjectInfo(project),
                         project::file);
     }
 

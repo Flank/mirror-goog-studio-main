@@ -1171,7 +1171,8 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                     .set(projectOptions.getProvider(BooleanOption.IDE_INVOKED_FROM_IDE));
             packageAndroidArtifact.getIsInvokedFromIde().disallowChanges();
 
-            packageAndroidArtifact.projectBaseName = globalScope.getProjectBaseName();
+            packageAndroidArtifact.projectBaseName =
+                    creationConfig.getServices().getProjectInfo().getProjectBaseName();
             packageAndroidArtifact.manifestType = manifestType;
             packageAndroidArtifact.buildTargetAbi =
                     globalScope.getExtension().getSplits().getAbi().isEnable()

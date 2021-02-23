@@ -152,7 +152,7 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            val bundleName = "${creationConfig.globalScope.projectBaseName}-${creationConfig.baseName}.aab"
+            val bundleName = "${creationConfig.services.projectInfo.getProjectBaseName()}-${creationConfig.baseName}.aab"
             val apkLocationOverride = creationConfig.services.projectOptions.get(StringOption.IDE_APK_LOCATION)
             if (apkLocationOverride == null) {
                 creationConfig.artifacts.setInitialProvider(

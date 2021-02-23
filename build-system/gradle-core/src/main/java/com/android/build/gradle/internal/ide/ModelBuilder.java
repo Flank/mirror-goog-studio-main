@@ -64,6 +64,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
+import com.android.build.gradle.internal.scope.ProjectInfo;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.services.BuildServicesKt;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
@@ -157,6 +158,7 @@ public class ModelBuilder<Extension extends BaseExtension>
     @NonNull private final VariantModel variantModel;
     @NonNull private final ProjectOptions projectOptions;
     @NonNull private final SyncIssueReporter syncIssueReporter;
+    @NonNull private final ProjectInfo projectInfo;
     private final int projectType;
     private int modelLevel = AndroidProject.MODEL_LEVEL_0_ORIGINAL;
     private boolean modelWithFullDependency = false;
@@ -174,7 +176,8 @@ public class ModelBuilder<Extension extends BaseExtension>
             @NonNull ExtraModelInfo extraModelInfo,
             @NonNull ProjectOptions projectOptions,
             @NonNull SyncIssueReporter syncIssueReporter,
-            int projectType) {
+            int projectType,
+            @NonNull ProjectInfo projectInfo) {
         this.globalScope = globalScope;
         this.extension = extension;
         this.extraModelInfo = extraModelInfo;
@@ -182,6 +185,7 @@ public class ModelBuilder<Extension extends BaseExtension>
         this.projectOptions = projectOptions;
         this.syncIssueReporter = syncIssueReporter;
         this.projectType = projectType;
+        this.projectInfo = projectInfo;
     }
 
     @Override
@@ -946,7 +950,7 @@ public class ModelBuilder<Extension extends BaseExtension>
 
         return new AndroidArtifactImpl(
                 name,
-                globalScope.getProjectBaseName() + "-" + component.getBaseName(),
+                projectInfo.getProjectBaseName() + "-" + component.getBaseName(),
                 taskContainer.getAssembleTask().getName(),
                 artifacts.get(InternalArtifactType.APK_IDE_MODEL.INSTANCE).getOrNull(),
                 isSigningReady || component.getVariantData().outputsAreSigned,

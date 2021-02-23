@@ -28,6 +28,7 @@ import com.android.build.gradle.internal.fixtures.FakeProviderFactory
 import com.android.build.gradle.internal.fixtures.FakeSyncIssueReporter
 import com.android.build.gradle.internal.fixtures.ProjectFactory
 import com.android.build.gradle.internal.res.Aapt2FromMaven
+import com.android.build.gradle.internal.scope.ProjectInfo
 import com.android.build.gradle.options.ProjectOptions
 import com.android.testutils.TestUtils
 import com.google.common.collect.ImmutableMap
@@ -49,6 +50,7 @@ fun createProjectServices(
     projectLayout: ProjectLayout = ProjectFactory.project.layout,
     projectOptions: ProjectOptions = ProjectOptions(ImmutableMap.of(), FakeProviderFactory(FakeProviderFactory.factory, ImmutableMap.of())),
     buildServiceRegistry: BuildServiceRegistry = ProjectFactory.project.gradle.sharedServices,
+    projectInfo: ProjectInfo = ProjectInfo(ProjectFactory.project),
     fileResolver: (Any) -> File = { File(it.toString()) }
 ): ProjectServices =
     ProjectServices(
@@ -62,6 +64,7 @@ fun createProjectServices(
         buildServiceRegistry,
         aapt2FromMaven = Aapt2FromMaven(objectFactory.fileCollection().from(TestUtils.getAapt2().parent), "test-aapt2"),
         maxWorkerCount = 1,
+        projectInfo,
         fileResolver = fileResolver
     )
 

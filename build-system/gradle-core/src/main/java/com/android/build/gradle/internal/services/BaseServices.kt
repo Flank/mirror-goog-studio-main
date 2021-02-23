@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.services
 
 import com.android.build.gradle.internal.errors.DeprecationReporter
+import com.android.build.gradle.internal.scope.ProjectInfo
 import com.android.build.gradle.internal.utils.GradleEnvironmentProvider
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.errors.IssueReporter
@@ -32,6 +33,7 @@ interface BaseServices {
     val projectOptions: ProjectOptions
     val buildServiceRegistry: BuildServiceRegistry
     val gradleEnvironmentProvider: GradleEnvironmentProvider
+    val projectInfo: ProjectInfo
 
     fun <T> newInstance(type: Class<T>, vararg args: Any?): T
 }

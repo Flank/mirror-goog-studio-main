@@ -23,6 +23,7 @@ import static com.android.builder.core.BuilderConstants.FD_REPORTS;
 import com.android.build.gradle.internal.dsl.TestOptions;
 import com.android.build.gradle.internal.errors.DeprecationReporterImpl;
 import com.android.build.gradle.internal.errors.SyncIssueReporterImpl;
+import com.android.build.gradle.internal.scope.ProjectInfo;
 import com.android.build.gradle.internal.services.DslServices;
 import com.android.build.gradle.internal.services.DslServicesImpl;
 import com.android.build.gradle.internal.services.ProjectServices;
@@ -80,6 +81,7 @@ class ReportingPlugin implements org.gradle.api.Plugin<Project> {
                         project.getGradle().getSharedServices(),
                         null,
                         project.getGradle().getStartParameter().getMaxWorkerCount(),
+                        new ProjectInfo(project),
                         project::file);
 
         DslServices dslServices =

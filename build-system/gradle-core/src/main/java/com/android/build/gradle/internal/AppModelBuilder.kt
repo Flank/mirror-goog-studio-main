@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.ide.ModelBuilder
 import com.android.build.gradle.internal.plugins.AppPlugin
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.ProjectInfo
 import com.android.build.gradle.internal.variant.VariantModel
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.model.AppBundleProjectBuildOutput
@@ -43,7 +44,8 @@ class AppModelBuilder(
     extraModelInfo: ExtraModelInfo,
     projectOptions: ProjectOptions,
     syncIssueReporter: SyncIssueReporter,
-    projectType: Int
+    projectType: Int,
+    projectInfo: ProjectInfo
 ) : ModelBuilder<BaseAppModuleExtension>(
     globalScope,
     variantModel,
@@ -51,7 +53,8 @@ class AppModelBuilder(
     extraModelInfo,
     projectOptions,
     syncIssueReporter,
-    projectType
+    projectType,
+    projectInfo
 ) {
     override fun isBaseSplit(): Boolean {
         return true

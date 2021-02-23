@@ -137,14 +137,6 @@ public class GlobalScope {
     }
 
     @NonNull
-    public String getProjectBaseName() {
-        BasePluginConvention convention =
-                Preconditions.checkNotNull(
-                        project.getConvention().findPlugin(BasePluginConvention.class));
-        return convention.getArchivesBaseName();
-    }
-
-    @NonNull
     public Provider<SdkComponentsBuildService> getSdkComponents() {
         return sdkComponents;
     }

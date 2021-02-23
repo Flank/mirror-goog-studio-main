@@ -47,6 +47,7 @@ import com.android.build.gradle.internal.publishing.PublishingSpecs;
 import com.android.build.gradle.internal.scope.BuildFeatureValues;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
+import com.android.build.gradle.internal.scope.ProjectInfo;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.services.DslServices;
 import com.android.build.gradle.internal.services.FakeServices;
@@ -85,6 +86,7 @@ public class ModelBuilderTest {
     @Mock ExtraModelInfo extraModelInfo;
     @Mock ArtifactsImpl artifacts;
     @Mock ProjectOptions projectOptions;
+    @Mock ProjectInfo projectInfo;
 
     @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
@@ -135,7 +137,8 @@ public class ModelBuilderTest {
                         extraModelInfo,
                         projectOptions,
                         syncIssueReporter,
-                        AndroidProjectTypes.PROJECT_TYPE_APP);
+                        AndroidProjectTypes.PROJECT_TYPE_APP,
+                        projectInfo);
     }
 
     @Test(expected = IllegalStateException.class)

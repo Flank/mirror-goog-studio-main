@@ -186,7 +186,7 @@ abstract class BundleToStandaloneApkTask : NonIncrementalTask() {
                 taskProvider,
                 BundleToStandaloneApkTask::outputFile
             )
-                .withName("${creationConfig.globalScope.projectBaseName}-${creationConfig.baseName}-universal$suffix")
+                .withName("${creationConfig.services.projectInfo.getProjectBaseName()}-${creationConfig.baseName}-universal$suffix")
                 .on(InternalArtifactType.UNIVERSAL_APK)
         }
 

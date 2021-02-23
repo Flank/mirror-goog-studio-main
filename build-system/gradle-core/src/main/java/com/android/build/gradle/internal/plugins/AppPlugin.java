@@ -88,7 +88,8 @@ public class AppPlugin
                         extraModelInfo,
                         projectServices.getProjectOptions(),
                         projectServices.getIssueReporter(),
-                        getProjectType()));
+                        getProjectType(),
+                        projectServices.getProjectInfo()));
     }
 
     @NonNull

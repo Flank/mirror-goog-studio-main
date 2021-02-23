@@ -307,7 +307,7 @@ abstract class ComponentImpl(
                 String::class.java,
                 outputFileName
                     ?: variantDslInfo.getOutputFileName(
-                        globalScope.projectBaseName,
+                        internalServices.projectInfo.getProjectBaseName(),
                         variantOutputConfiguration.baseName(variantDslInfo)
                     ),
                 "$name::archivesBaseName")

@@ -165,7 +165,7 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
                     // Switch to package where possible so we stop merging resources in
                     // libraries
                     MergeType.PACKAGE,
-                    globalScope.getProjectBaseName());
+                    libraryVariant.getServices().getProjectInfo().getProjectBaseName());
 
             // Only verify resources if in Release and not namespaced.
             if (!libraryVariant.getDebuggable()
