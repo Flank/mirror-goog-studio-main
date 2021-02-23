@@ -24,6 +24,7 @@ import com.android.tools.build.apkzlib.sign.SigningOptions
 import com.android.tools.build.apkzlib.zfile.ApkCreatorFactory
 import com.android.tools.build.apkzlib.zfile.NativeLibrariesPackagingMode.COMPRESSED
 import com.android.utils.FileUtils
+import com.android.zipflinger.Sources
 import com.android.zipflinger.ZipArchive
 import com.google.common.base.Optional
 import com.google.common.base.Predicate
@@ -157,7 +158,7 @@ class ApkFlingerTest {
     @Test
     fun writeLargeFile() {
         val largeFile = tmp.root.resolve("largeFile.txt")
-        largeFile.writeText("a".repeat(LARGE_FILE_SIZE))
+        largeFile.writeText("a".repeat(Sources.LARGE_LIMIT + 1))
         ApkFlinger(creationData, Deflater.BEST_SPEED).use {
             it.writeFile(largeFile, "largeFile.txt")
         }

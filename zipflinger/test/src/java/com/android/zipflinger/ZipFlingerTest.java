@@ -1059,4 +1059,31 @@ public class ZipFlingerTest extends AbstractZipflingerTest {
             }
         }
     }
+
+    @Test
+    public void testSmallInputStream() throws Exception {
+        byte[] bytes = new byte[500];
+        Random random = new Random(0);
+        random.nextBytes(bytes);
+
+        Path a = getTestPath("testSmallInputStreamCompression.zip");
+        runInputStreamSource(a, Deflater.BEST_COMPRESSION, bytes);
+
+        Path b = getTestPath("testSmallInputStreamNoCompression.zip");
+        runInputStreamSource(b, Deflater.NO_COMPRESSION, bytes);
+    }
+
+    void runInputStreamSource(Path path, int compressionLevel, byte[] bytes) throws IOException {
+        try (ZipArchive archive = new ZipArchive(path);
+                ByteArrayInputStream in = new ByteArrayInputStream(bytes)) {
+            archive.add(Sources.from(in, "foo", compressionLevel));
+        }
+
+        try (ZipRepo zipRepo = new ZipRepo(path)) {
+            ByteBuffer buffer = zipRepo.getContent("foo");
+            Assert.assertEquals("InputStream entry differ", ByteBuffer.wrap(bytes), buffer);
+        }
+
+        verifyArchive(path);
+    }
 }
