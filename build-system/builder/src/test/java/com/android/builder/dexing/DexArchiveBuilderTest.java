@@ -69,6 +69,12 @@ public class DexArchiveBuilderTest {
         JAR
     }
 
+    static class ClassWithAssertions {
+        public static void foo() {
+            assert 1 > System.currentTimeMillis();
+        }
+    }
+
     @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     @Parameterized.Parameters(name = "{0}_{1}")
@@ -275,8 +281,7 @@ public class DexArchiveBuilderTest {
 
         Path classesDir = temporaryFolder.getRoot().toPath().resolve("classes");
         String path =
-                DexArchiveBuilderTestClassWithAssertions.class.getName().replace('.', '/')
-                        + SdkConstants.DOT_CLASS;
+                ClassWithAssertions.class.getName().replace('.', '/') + SdkConstants.DOT_CLASS;
         Path outClassFile = classesDir.resolve(path);
         try (InputStream in = getClass().getClassLoader().getResourceAsStream(path)) {
             Files.createDirectories(outClassFile.getParent());
@@ -363,11 +368,5 @@ public class DexArchiveBuilderTest {
 
     private static String getClassNameWithoutPackage(@NonNull String dexEntryPath) {
         return dexEntryPath.replaceAll(".*" + PACKAGE + "/(.*)\\.dex", "$1");
-    }
-}
-
-class DexArchiveBuilderTestClassWithAssertions {
-    public static void foo() {
-        assert 1 > System.currentTimeMillis();
     }
 }

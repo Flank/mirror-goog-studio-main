@@ -626,9 +626,14 @@ class R8ToolTest {
 
     @Test
     fun testAssertionsGeneration() {
-        val testClass = DexArchiveBuilderTestClassWithAssertions::class.java
+        val testClass = DexArchiveBuilderTest.ClassWithAssertions::class.java
         val proguardConfig = ProguardConfig(
-            listOf(), null, listOf("-keep class ${testClass.name} { public void foo(); }"), emptyProguardOutputFiles
+            listOf(),
+            null,
+            listOf(
+                "-keep class ${testClass.name} { public void foo(); }",
+                "-dontwarn ${testClass.name}"),
+            emptyProguardOutputFiles
         )
         val mainDexConfig = MainDexListConfig(listOf(), listOf())
         val debuggableToolConfig = ToolConfig(
