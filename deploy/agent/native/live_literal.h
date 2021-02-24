@@ -44,7 +44,9 @@ class LiveLiteral {
   // Instrument the LiveLiteral$FooBarKt helper class where the literals'
   // value resides. What we do is change the <clinit> of that class so
   // it reads a mapped value for some of the updated static fields.
-  void InstrumentHelper(const std::string& helper);
+  //
+  // return non-empty error message if operation fails.
+  std::string InstrumentHelper(const std::string& helper);
 
   jvmtiEnv* jvmti_;
   JNIEnv* jni_;

@@ -178,6 +178,27 @@ public class LiveLiteralUpdateTest extends AgentTestBase {
                         RETURN_VALUE_TIMEOUT));
     }
 
+    @Test
+    public void testHelperNotFound() throws Exception {
+        android.loadDex(DEX_LOCATION);
+        android.launchActivity(ACTIVITY_CLASS);
+
+        Deploy.LiveLiteralUpdateRequest request =
+                Deploy.LiveLiteralUpdateRequest.newBuilder()
+                        .addUpdates(
+                                Deploy.LiveLiteral.newBuilder()
+                                        .setHelperClass("app/ThisClassCannotBeFound")
+                                        .setOffset(159)
+                                        .setType("I")
+                                        .setValue("100"))
+                        .setPackageName(PACKAGE)
+                        .build();
+        installer.update(request);
+        Deploy.AgentLiveLiteralUpdateResponse response = installer.getLiveLiteralAgentResponse();
+        Assert.assertEquals(
+                Deploy.AgentLiveLiteralUpdateResponse.Status.ERROR, response.getStatus());
+    }
+
     /** A helper to communicate SwapRequest to the agent with the on-host installer. */
     protected static class LocalLiveLiteralUpdateClient extends InstallServerTestClient {
         protected LocalLiveLiteralUpdateClient(
