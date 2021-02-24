@@ -66,7 +66,7 @@ build --stripopt=--strip-unneeded
 build --action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
 
 # default android native abis
-build --fat_apk_cpu=x86,x86_64,armeabi-v7a,armeabi,arm64-v8a
+build --fat_apk_cpu=x86,x86_64,armeabi-v7a,arm64-v8a
 
 build:release -c opt
 build:release --strip=always
