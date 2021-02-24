@@ -20,7 +20,7 @@ runs_per_test=1000
 
 readonly invocation_id_sanity_longrunning="$(uuidgen)"
 
-target_filters=qa_sanity,-qa_unreliable,-no_linux,-no_test_linux,-requires_emulator
+target_filters=qa_sanity,ui_psq,-qa_unreliable,-no_linux,-no_test_linux,-requires_emulator
 "${script_dir}/../bazel" \
   --max_idle_secs=60 \
   test \
