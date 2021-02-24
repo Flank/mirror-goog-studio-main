@@ -61,15 +61,15 @@ abstract class ReferenceModelComparator(
     }
 
     fun compareAndroidProjectWith(goldenFileSuffix: String) {
-        val referenceResult = syncOptions(referenceProject.modelV2()).fetchAndroidProjects()
-        val result = syncOptions(deltaProject.modelV2()).fetchAndroidProjects()
+        val referenceResult = syncOptions(referenceProject.modelV2()).fetchModels()
+        val result = syncOptions(deltaProject.modelV2()).fetchModels()
 
         Comparator(this, result, referenceResult).compare(
-            model = result.container.singleModel,
-            referenceModel = referenceResult.container.singleModel,
+            model = result.container.singleAndroidProject,
+            referenceModel = referenceResult.container.singleAndroidProject,
             goldenFile = goldenFileSuffix
         )
-    }
+   }
 
     fun compareVariantDependenciesWith(
         variantName: String,
@@ -79,7 +79,7 @@ abstract class ReferenceModelComparator(
         val result = syncOptions(deltaProject.modelV2()).fetchVariantDependencies(variantName)
 
         Comparator(this, result, referenceResult).compare(
-            model = result.container.singleModel,
+            model = result.container.singleVariantDependencies,
             goldenFile = goldenFileSuffix
         )
     }

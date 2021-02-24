@@ -20,7 +20,6 @@ import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.builder
 import com.android.build.gradle.integration.common.fixture.model.ModelComparator
 import com.android.builder.model.v2.ide.SyncIssue
-import org.gradle.api.JavaVersion
 import org.junit.Rule
 import org.junit.Test
 
@@ -33,25 +32,18 @@ class BasicModelV2Test: ModelComparator() {
         .create()
 
     @Test
-    fun testAndroidProjectModel() {
+    fun `test models`() {
         val result = project.modelV2()
             .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
-            .fetchAndroidProjects()
+            .fetchModels(variantName = "debug")
 
         with(result).compare(
-            model = result.container.singleModel,
+            model = result.container.singleAndroidProject,
             goldenFile = "testProject"
         )
-    }
-
-    @Test
-    fun testVariantDependenciesModel() {
-        val result = project.modelV2()
-            .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
-            .fetchVariantDependencies("debug")
 
         with(result).compare(
-            model = result.container.singleModel,
+            model = result.container.singleVariantDependencies,
             goldenFile = "testDep"
         )
     }

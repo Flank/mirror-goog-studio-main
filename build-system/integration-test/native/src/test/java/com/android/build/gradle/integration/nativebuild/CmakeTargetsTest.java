@@ -24,10 +24,10 @@ import static com.android.build.gradle.internal.cxx.configure.CmakeLocatorKt.DEF
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelBuilderV2;
+import com.android.build.gradle.integration.common.fixture.ModelBuilderV2.NativeModuleParams;
 import com.android.build.gradle.integration.common.fixture.ModelContainerV2;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.builder.model.v2.models.ndk.NativeModule;
 import com.android.testutils.apk.Apk;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
@@ -124,8 +124,10 @@ public class CmakeTargetsTest {
     }
 
     private void checkV2Model() {
-        ModelBuilderV2.FetchResult<ModelContainerV2<NativeModule>> result =
-                project.modelV2().fetchNativeModules(ImmutableList.of(), ImmutableList.of());
+        ModelBuilderV2.FetchResult<ModelContainerV2> result =
+                project.modelV2()
+                        .fetchNativeModules(
+                                new NativeModuleParams(ImmutableList.of(), ImmutableList.of()));
         assertThat(dump(result))
                 .isEqualTo(
                         "[:]\n"

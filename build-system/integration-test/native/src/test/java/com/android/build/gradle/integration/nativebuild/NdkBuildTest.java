@@ -25,6 +25,7 @@ import static com.google.common.truth.Truth.assertThat;
 import com.android.SdkConstants;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelBuilderV2;
+import com.android.build.gradle.integration.common.fixture.ModelBuilderV2.NativeModuleParams;
 import com.android.build.gradle.integration.common.fixture.ModelContainerV2;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
@@ -34,7 +35,6 @@ import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.StringOption;
 import com.android.builder.model.v2.models.ndk.NativeAbi;
-import com.android.builder.model.v2.models.ndk.NativeModule;
 import com.android.builder.model.v2.models.ndk.NativeVariant;
 import com.android.testutils.apk.Apk;
 import com.google.common.collect.ImmutableList;
@@ -144,10 +144,11 @@ public class NdkBuildTest {
 
     @Test
     public void model() {
-        ModelBuilderV2.FetchResult<ModelContainerV2<NativeModule>> fetchResult =
+        ModelBuilderV2.FetchResult<ModelContainerV2> fetchResult =
                 project.modelV2()
                         .fetchNativeModules(
-                                ImmutableList.of("debug"), ImmutableList.of("arm64-v8a"));
+                                new NativeModuleParams(
+                                        ImmutableList.of("debug"), ImmutableList.of("arm64-v8a")));
         assertThat(dump(fetchResult))
                 .isEqualTo(
                         "[:]\n"
@@ -189,7 +190,7 @@ public class NdkBuildTest {
                                 + "    - externalNativeBuildFile = {PROJECT}/src/main/jni/Android.mk{F}\n"
                                 + "< NativeModule");
         NativeVariant debugVariant =
-                fetchResult.getContainer().getSingleModel().getVariants().stream()
+                fetchResult.getContainer().getSingleNativeModule().getVariants().stream()
                         .filter(variant -> variant.getName().equals("debug"))
                         .findFirst()
                         .get();
@@ -231,8 +232,10 @@ public class NdkBuildTest {
         project.executor()
                 .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
                 .run("clean", "assembleDebug", "assembleRelease");
-        ModelBuilderV2.FetchResult<ModelContainerV2<NativeModule>> fetchResult =
-                project.modelV2().fetchNativeModules(ImmutableList.of(), ImmutableList.of());
+        ModelBuilderV2.FetchResult<ModelContainerV2> fetchResult =
+                project.modelV2()
+                        .fetchNativeModules(
+                                new NativeModuleParams(ImmutableList.of(), ImmutableList.of()));
         assertThat(dump(fetchResult))
                 .isEqualTo(
                         "[:]\n"
@@ -274,7 +277,7 @@ public class NdkBuildTest {
                                 + "    - externalNativeBuildFile = {PROJECT}/src/main/jni/Android.mk{F}\n"
                                 + "< NativeModule");
         NativeVariant debugVariant =
-                fetchResult.getContainer().getSingleModel().getVariants().stream()
+                fetchResult.getContainer().getSingleNativeModule().getVariants().stream()
                         .filter(variant -> variant.getName().equals("debug"))
                         .findFirst()
                         .get();
@@ -295,8 +298,10 @@ public class NdkBuildTest {
         project.executor()
                 .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
                 .run("clean", "assembleDebug", "assembleRelease");
-        ModelBuilderV2.FetchResult<ModelContainerV2<NativeModule>> fetchResult =
-                project.modelV2().fetchNativeModules(ImmutableList.of(), ImmutableList.of());
+        ModelBuilderV2.FetchResult<ModelContainerV2> fetchResult =
+                project.modelV2()
+                        .fetchNativeModules(
+                                new NativeModuleParams(ImmutableList.of(), ImmutableList.of()));
         assertThat(dump(fetchResult))
                 .isEqualTo(
                         "[:]\n"
@@ -337,7 +342,7 @@ public class NdkBuildTest {
                                 + "    - defaultNdkVersion       = \"{DEFAULT_NDK_VERSION}\"\n"
                                 + "    - externalNativeBuildFile = {PROJECT}/src/main/jni/Android.mk{F}\n"
                                 + "< NativeModule");
-        fetchResult.getContainer().getSingleModel().getVariants().stream()
+        fetchResult.getContainer().getSingleNativeModule().getVariants().stream()
                 .flatMap(variant -> variant.getAbis().stream())
                 .flatMap(abi -> readAsFileIndex(abi.getSymbolFolderIndexFile()).stream())
                 .flatMap(folder -> Arrays.stream(folder.listFiles()))

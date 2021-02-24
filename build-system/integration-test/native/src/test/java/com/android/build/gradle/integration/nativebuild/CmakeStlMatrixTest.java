@@ -28,6 +28,7 @@ import static com.google.common.truth.Truth.assertThat;
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelBuilderV2;
+import com.android.build.gradle.integration.common.fixture.ModelBuilderV2.NativeModuleParams;
 import com.android.build.gradle.integration.common.fixture.ModelContainerV2;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -154,8 +155,10 @@ public class CmakeStlMatrixTest {
 
     @Test
     public void checkModel() {
-        ModelBuilderV2.FetchResult<ModelContainerV2<NativeModule>> result =
-                project.modelV2().fetchNativeModules(ImmutableList.of(), ImmutableList.of());
+        ModelBuilderV2.FetchResult<ModelContainerV2> result =
+                project.modelV2()
+                        .fetchNativeModules(
+                                new NativeModuleParams(ImmutableList.of(), ImmutableList.of()));
         assertThat(dump(result))
                 .isEqualTo(
                         "[:]\n"
@@ -201,8 +204,10 @@ public class CmakeStlMatrixTest {
     @Test
     public void checkClean() {
         project.execute("clean", "assembleDebug", "assembleRelease");
-        ModelBuilderV2.FetchResult<ModelContainerV2<NativeModule>> result =
-                project.modelV2().fetchNativeModules(ImmutableList.of(), ImmutableList.of());
+        ModelBuilderV2.FetchResult<ModelContainerV2> result =
+                project.modelV2()
+                        .fetchNativeModules(
+                                new NativeModuleParams(ImmutableList.of(), ImmutableList.of()));
         assertThat(dump(result))
                 .isEqualTo(
                         "[:]\n"
@@ -244,7 +249,7 @@ public class CmakeStlMatrixTest {
                                 + "    - externalNativeBuildFile = {PROJECT}/CMakeLists.txt{F}\n"
                                 + "< NativeModule");
 
-        NativeModule nativeModule = result.getContainer().getSingleModel();
+        NativeModule nativeModule = result.getContainer().getSingleNativeModule();
         for (NativeVariant variant : nativeModule.getVariants()) {
             for (NativeAbi abi : variant.getAbis()) {
                 for (File soFolder : readAsFileIndex(abi.getSymbolFolderIndexFile())) {

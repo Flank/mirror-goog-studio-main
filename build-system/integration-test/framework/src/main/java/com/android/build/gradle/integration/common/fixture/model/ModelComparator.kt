@@ -20,6 +20,7 @@ import com.android.build.gradle.integration.common.fixture.ModelBuilderV2
 import com.android.build.gradle.integration.common.fixture.ModelContainerV2
 import com.android.builder.model.v2.models.AndroidProject
 import com.android.builder.model.v2.models.GlobalLibraryMap
+import com.android.builder.model.v2.models.ModelVersions
 import com.android.builder.model.v2.models.VariantDependencies
 import com.android.builder.model.v2.models.ndk.NativeModule
 import com.android.utils.FileUtils
@@ -41,18 +42,40 @@ interface BaseModelComparator
  */
 open class ModelComparator: BaseModelComparator {
 
-    open fun <T> with(
-        result: ModelBuilderV2.FetchResult<ModelContainerV2<T>>,
-        referenceResult: ModelBuilderV2.FetchResult<ModelContainerV2<T>>? = null): Comparator<T> {
+    open fun with(
+        result: ModelBuilderV2.FetchResult<ModelContainerV2>,
+        referenceResult: ModelBuilderV2.FetchResult<ModelContainerV2>? = null): Comparator {
         return Comparator(this, result, referenceResult)
     }
 }
 
-class Comparator<T>(
+class Comparator(
     private val testClass: BaseModelComparator,
-    private val result: ModelBuilderV2.FetchResult<ModelContainerV2<T>>,
-    private val referenceResult: ModelBuilderV2.FetchResult<ModelContainerV2<T>>?
+    private val result: ModelBuilderV2.FetchResult<ModelContainerV2>,
+    private val referenceResult: ModelBuilderV2.FetchResult<ModelContainerV2>?
 ) {
+
+    fun compare(
+        model: ModelVersions,
+        referenceModel: ModelVersions? = null,
+        goldenFile: String
+    ) {
+        val content = snapshotModel(
+            modelName = "ModelVersions",
+            normalizer = result.normalizer,
+            model = model,
+            referenceModel = referenceModel,
+            referenceNormalizer = referenceResult?.normalizer,
+        ) {
+            snapshotVersions()
+        }.also {
+            generateStdoutHeader()
+            println(it)
+        }
+
+        runComparison("AndroidProject", content, goldenFile)
+    }
+
     fun compare(
         model: AndroidProject,
         referenceModel: AndroidProject? = null,

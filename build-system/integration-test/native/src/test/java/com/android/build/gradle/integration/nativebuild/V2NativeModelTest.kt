@@ -24,6 +24,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_NDK_SIDE_BY_SIDE_VERSION
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.builder
 import com.android.build.gradle.integration.common.fixture.ModelBuilderV2
+import com.android.build.gradle.integration.common.fixture.ModelBuilderV2.NativeModuleParams
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile
 import com.android.build.gradle.integration.common.fixture.model.FileNormalizer
@@ -91,9 +92,9 @@ class V2NativeModelTest(private val cmakeVersion: String) : ModelComparator() {
     fun `test basic model information`() {
         val result = project.modelV2()
           .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
-          .fetchNativeModules(emptyList(), emptyList())
+          .fetchNativeModules(NativeModuleParams(emptyList(), emptyList()))
           .withCxxFileNormalizer()
-        val nativeModule = result.container.singleModel
+        val nativeModule = result.container.singleNativeModule
         val normalizer = result.normalizer
         for (variant in nativeModule.variants) {
             for (abi in variant.abis) {
@@ -115,8 +116,8 @@ class V2NativeModelTest(private val cmakeVersion: String) : ModelComparator() {
         val modelBuilder: ModelBuilderV2 = project.modelV2()
           .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
         val result = modelBuilder
-          .fetchNativeModules(listOf("debug"), listOf("x86"))
-        val nativeModule = result.container.singleModel
+          .fetchNativeModules(NativeModuleParams(listOf("debug"), listOf("x86")))
+        val nativeModule = result.container.singleNativeModule
         for (variant in nativeModule.variants) {
             for (abi in variant.abis) {
                 if (variant.name == "debug" && abi.name == "x86") continue

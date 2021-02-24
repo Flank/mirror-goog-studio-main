@@ -24,11 +24,11 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import com.android.SdkConstants;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelBuilderV2;
+import com.android.build.gradle.integration.common.fixture.ModelBuilderV2.NativeModuleParams;
 import com.android.build.gradle.integration.common.fixture.ModelContainerV2;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.v2.models.ndk.NativeAbi;
-import com.android.builder.model.v2.models.ndk.NativeModule;
 import com.android.builder.model.v2.models.ndk.NativeVariant;
 import com.android.testutils.apk.Apk;
 import com.google.common.collect.ImmutableList;
@@ -138,8 +138,10 @@ public class NdkBuildTargetsTest {
     }
 
     private void assertV2Model() {
-        ModelBuilderV2.FetchResult<ModelContainerV2<NativeModule>> fetchResult =
-                project.modelV2().fetchNativeModules(ImmutableList.of(), ImmutableList.of());
+        ModelBuilderV2.FetchResult<ModelContainerV2> fetchResult =
+                project.modelV2()
+                        .fetchNativeModules(
+                                new NativeModuleParams(ImmutableList.of(), ImmutableList.of()));
         assertToString(
                 dump(fetchResult),
                 "[:]\n"
@@ -191,7 +193,7 @@ public class NdkBuildTargetsTest {
                         + "    - externalNativeBuildFile = {PROJECT}/src/main/cpp/Android.mk{F}\n"
                         + "< NativeModule");
         NativeVariant debugVariant =
-                fetchResult.getContainer().getSingleModel().getVariants().stream()
+                fetchResult.getContainer().getSingleNativeModule().getVariants().stream()
                         .filter(variant -> variant.getName().equals("debug"))
                         .findFirst()
                         .get();

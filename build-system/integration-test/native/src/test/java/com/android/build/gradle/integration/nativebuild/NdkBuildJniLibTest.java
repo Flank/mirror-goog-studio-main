@@ -24,16 +24,16 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import com.android.SdkConstants;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelBuilderV2;
+import com.android.build.gradle.integration.common.fixture.ModelBuilderV2.NativeModuleParams;
 import com.android.build.gradle.integration.common.fixture.ModelContainerV2;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.v2.models.ndk.NativeAbi;
 import com.android.builder.model.v2.models.ndk.NativeModule;
 import com.android.builder.model.v2.models.ndk.NativeVariant;
+import com.google.common.truth.Truth;
 import java.io.File;
 import java.io.IOException;
-
-import com.google.common.truth.Truth;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -126,25 +126,26 @@ public class NdkBuildJniLibTest {
 
     @Test
     public void checkModel() {
-        ModelBuilderV2.FetchResult<ModelContainerV2<NativeModule>> fetchResult =
-                project.modelV2().fetchNativeModules(null, null);
-        Truth.assertThat(dump(fetchResult)).isNotEqualTo(
-                "[:lib]\n"
+        ModelBuilderV2.FetchResult<ModelContainerV2> fetchResult =
+                project.modelV2().fetchNativeModules(new NativeModuleParams());
+        Truth.assertThat(dump(fetchResult)).isEqualTo(
+                "[:app]\n"
+                        + "[:lib]\n"
                         + "> NativeModule:\n"
                         + "    - name                    = \"lib\"\n"
                         + "    > variants:\n"
                         + "       > debug:\n"
                         + "          > abis:\n"
-                        + "             - armeabi-v7a:\n"
-                        + "                - sourceFlagsFile                 = {PROJECT}/lib/build/intermediates/{DEBUG}/meta/armeabi-v7a/compile_commands.json.bin{F}\n"
-                        + "                - symbolFolderIndexFile           = {PROJECT}/lib/build/intermediates/{DEBUG}/meta/armeabi-v7a/symbol_folder_index.txt{F}\n"
-                        + "                - buildFileIndexFile              = {PROJECT}/lib/build/intermediates/{DEBUG}/meta/armeabi-v7a/build_file_index.txt{F}\n"
-                        + "                - additionalProjectFilesIndexFile = {PROJECT}/lib/build/intermediates/{DEBUG}/meta/armeabi-v7a/additional_project_files.txt{!}\n"
                         + "             - arm64-v8a:\n"
                         + "                - sourceFlagsFile                 = {PROJECT}/lib/build/intermediates/{DEBUG}/meta/arm64-v8a/compile_commands.json.bin{F}\n"
                         + "                - symbolFolderIndexFile           = {PROJECT}/lib/build/intermediates/{DEBUG}/meta/arm64-v8a/symbol_folder_index.txt{F}\n"
                         + "                - buildFileIndexFile              = {PROJECT}/lib/build/intermediates/{DEBUG}/meta/arm64-v8a/build_file_index.txt{F}\n"
                         + "                - additionalProjectFilesIndexFile = {PROJECT}/lib/build/intermediates/{DEBUG}/meta/arm64-v8a/additional_project_files.txt{!}\n"
+                        + "             - armeabi-v7a:\n"
+                        + "                - sourceFlagsFile                 = {PROJECT}/lib/build/intermediates/{DEBUG}/meta/armeabi-v7a/compile_commands.json.bin{F}\n"
+                        + "                - symbolFolderIndexFile           = {PROJECT}/lib/build/intermediates/{DEBUG}/meta/armeabi-v7a/symbol_folder_index.txt{F}\n"
+                        + "                - buildFileIndexFile              = {PROJECT}/lib/build/intermediates/{DEBUG}/meta/armeabi-v7a/build_file_index.txt{F}\n"
+                        + "                - additionalProjectFilesIndexFile = {PROJECT}/lib/build/intermediates/{DEBUG}/meta/armeabi-v7a/additional_project_files.txt{!}\n"
                         + "             - x86:\n"
                         + "                - sourceFlagsFile                 = {PROJECT}/lib/build/intermediates/{DEBUG}/meta/x86/compile_commands.json.bin{F}\n"
                         + "                - symbolFolderIndexFile           = {PROJECT}/lib/build/intermediates/{DEBUG}/meta/x86/symbol_folder_index.txt{F}\n"
@@ -159,16 +160,16 @@ public class NdkBuildJniLibTest {
                         + "       < debug\n"
                         + "       > release:\n"
                         + "          > abis:\n"
-                        + "             - armeabi-v7a:\n"
-                        + "                - sourceFlagsFile                 = {PROJECT}/lib/build/intermediates/{RELEASE}/meta/armeabi-v7a/compile_commands.json.bin{F}\n"
-                        + "                - symbolFolderIndexFile           = {PROJECT}/lib/build/intermediates/{RELEASE}/meta/armeabi-v7a/symbol_folder_index.txt{F}\n"
-                        + "                - buildFileIndexFile              = {PROJECT}/lib/build/intermediates/{RELEASE}/meta/armeabi-v7a/build_file_index.txt{F}\n"
-                        + "                - additionalProjectFilesIndexFile = {PROJECT}/lib/build/intermediates/{RELEASE}/meta/armeabi-v7a/additional_project_files.txt{!}\n"
                         + "             - arm64-v8a:\n"
                         + "                - sourceFlagsFile                 = {PROJECT}/lib/build/intermediates/{RELEASE}/meta/arm64-v8a/compile_commands.json.bin{F}\n"
                         + "                - symbolFolderIndexFile           = {PROJECT}/lib/build/intermediates/{RELEASE}/meta/arm64-v8a/symbol_folder_index.txt{F}\n"
                         + "                - buildFileIndexFile              = {PROJECT}/lib/build/intermediates/{RELEASE}/meta/arm64-v8a/build_file_index.txt{F}\n"
                         + "                - additionalProjectFilesIndexFile = {PROJECT}/lib/build/intermediates/{RELEASE}/meta/arm64-v8a/additional_project_files.txt{!}\n"
+                        + "             - armeabi-v7a:\n"
+                        + "                - sourceFlagsFile                 = {PROJECT}/lib/build/intermediates/{RELEASE}/meta/armeabi-v7a/compile_commands.json.bin{F}\n"
+                        + "                - symbolFolderIndexFile           = {PROJECT}/lib/build/intermediates/{RELEASE}/meta/armeabi-v7a/symbol_folder_index.txt{F}\n"
+                        + "                - buildFileIndexFile              = {PROJECT}/lib/build/intermediates/{RELEASE}/meta/armeabi-v7a/build_file_index.txt{F}\n"
+                        + "                - additionalProjectFilesIndexFile = {PROJECT}/lib/build/intermediates/{RELEASE}/meta/armeabi-v7a/additional_project_files.txt{!}\n"
                         + "             - x86:\n"
                         + "                - sourceFlagsFile                 = {PROJECT}/lib/build/intermediates/{RELEASE}/meta/x86/compile_commands.json.bin{F}\n"
                         + "                - symbolFolderIndexFile           = {PROJECT}/lib/build/intermediates/{RELEASE}/meta/x86/symbol_folder_index.txt{F}\n"
@@ -188,7 +189,7 @@ public class NdkBuildJniLibTest {
                         + "    - externalNativeBuildFile = {PROJECT}/lib/src/main/cxx/Android.mk{F}\n"
                         + "< NativeModule");
         NativeVariant debugVariant =
-                fetchResult.getContainer().getSingleModel().getVariants().stream()
+                fetchResult.getContainer().getSingleNativeModule().getVariants().stream()
                         .filter(variant -> variant.getName().equals("debug"))
                         .findFirst()
                         .get();

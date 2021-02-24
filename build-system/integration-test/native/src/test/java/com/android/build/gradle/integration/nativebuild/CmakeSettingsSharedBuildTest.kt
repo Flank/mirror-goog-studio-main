@@ -19,6 +19,8 @@ package com.android.build.gradle.integration.nativebuild
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_NDK_SIDE_BY_SIDE_VERSION
+import com.android.build.gradle.integration.common.fixture.ModelBuilderV2
+import com.android.build.gradle.integration.common.fixture.ModelBuilderV2.NativeModuleParams
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
 import com.android.build.gradle.integration.common.fixture.model.dump
 import com.android.build.gradle.integration.common.fixture.model.filterByVariantName
@@ -121,7 +123,7 @@ class CmakeSettingsSharedBuildTest(cmakeVersionInDsl: String) {
     @Test
     fun checkBuildFoldersRedirected() {
         val result =
-          project.modelV2().fetchNativeModules(listOf("debug", "release"), listOf("x86_64"))
+          project.modelV2().fetchNativeModules(NativeModuleParams(listOf("debug", "release"), listOf("x86_64")))
         // There are a lot of variants, just peek at the first several lines
         val severalLines = result.dump(filterByVariantName("debug", "release"))
                 .lines().take(40).joinToString("\n")

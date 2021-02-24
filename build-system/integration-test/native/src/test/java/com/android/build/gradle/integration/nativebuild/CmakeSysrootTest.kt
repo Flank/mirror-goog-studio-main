@@ -18,6 +18,8 @@ package com.android.build.gradle.integration.nativebuild
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_NDK_SIDE_BY_SIDE_VERSION
+import com.android.build.gradle.integration.common.fixture.ModelBuilderV2
+import com.android.build.gradle.integration.common.fixture.ModelBuilderV2.NativeModuleParams
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
 import com.android.build.gradle.integration.common.fixture.model.readCompileCommandsJsonBin
 import com.android.build.gradle.integration.common.utils.TestFileUtils
@@ -75,8 +77,8 @@ class CmakeSysrootTest {
 
     @Test
     fun testThatFlagsLooksLikeAndroidProject() {
-        val nativeModules = project.modelV2().fetchNativeModules(null, null)
-        val nativeModule = nativeModules.container.singleModel
+        val nativeModules = project.modelV2().fetchNativeModules(NativeModuleParams())
+        val nativeModule = nativeModules.container.singleNativeModule
         assertThat(nativeModule.variants.map { it.name }).containsExactly("debug", "release")
         for (variant in nativeModule.variants) {
             for (abi in variant.abis) {

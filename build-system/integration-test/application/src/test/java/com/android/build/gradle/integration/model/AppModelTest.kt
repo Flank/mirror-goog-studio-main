@@ -16,8 +16,8 @@
 
 package com.android.build.gradle.integration.model
 
-import com.android.build.gradle.integration.common.fixture.model.ReferenceModelComparator
 import com.android.build.gradle.integration.common.fixture.model.ModelComparator
+import com.android.build.gradle.integration.common.fixture.model.ReferenceModelComparator
 import com.android.build.gradle.integration.common.fixture.testprojects.PluginType
 import com.android.build.gradle.integration.common.fixture.testprojects.createGradleProject
 import com.android.build.gradle.integration.common.fixture.testprojects.prebuilts.setUpHelloWorld
@@ -38,25 +38,23 @@ class HelloWorldAppModelTest: ModelComparator() {
     }
 
     @Test
-    fun `test AndroidProject model`() {
+    fun `test models`() {
         val result = project.modelV2()
             .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
-            .fetchAndroidProjects()
+            .fetchModels(variantName = "debug")
 
         with(result).compare(
-            model = result.container.singleModel,
+            model = result.container.singleVersions,
+            goldenFile = "ModelVersions"
+        )
+
+        with(result).compare(
+            model = result.container.singleAndroidProject,
             goldenFile = "AndroidProject"
         )
-    }
-
-    @Test
-    fun `test VariantDependencies model`() {
-        val result = project.modelV2()
-            .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
-            .fetchVariantDependencies("debug")
 
         with(result).compare(
-            model = result.container.singleModel,
+            model = result.container.singleVariantDependencies,
             goldenFile = "VariantDependencies"
         )
     }
