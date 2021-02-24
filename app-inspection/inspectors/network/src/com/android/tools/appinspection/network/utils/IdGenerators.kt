@@ -14,16 +14,15 @@
  * limitations under the License.
  */
 
-package com.android.tools.appinspection
+package com.android.tools.appinspection.network.utils
 
-import androidx.inspection.Connection
-import androidx.inspection.InspectorEnvironment
-import androidx.inspection.InspectorFactory
+import java.util.concurrent.atomic.AtomicLong
 
-private const val INSPECTOR_ID = "studio.network.inspection"
+sealed class IdGenerator {
 
-class NetworkInspectorFactory : InspectorFactory<NetworkInspector>(INSPECTOR_ID) {
-    override fun createInspector(con: Connection, env: InspectorEnvironment): NetworkInspector {
-        return NetworkInspector(con, env)
-    }
+    private val id = AtomicLong()
+
+    fun nextId() = id.getAndIncrement()
 }
+
+object ConnectionIdGenerator : IdGenerator()

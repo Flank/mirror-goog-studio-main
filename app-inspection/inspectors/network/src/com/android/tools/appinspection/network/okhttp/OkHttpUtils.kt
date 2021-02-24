@@ -18,6 +18,9 @@ package com.android.tools.appinspection.network.okhttp
 import java.io.OutputStream
 import java.util.Arrays
 
+/**
+ * Scans the current stack trace and return the section that starts with OkHttp package.
+ */
 fun getCallstack(okHttpPackage: String): Array<StackTraceElement> {
     val callstack = Throwable().stackTrace
     var okHttpCallstackStart = -1
@@ -34,7 +37,7 @@ fun getCallstack(okHttpPackage: String): Array<StackTraceElement> {
     return if (okHttpCallstackStart >= 0) {
         Arrays.copyOfRange(callstack, okHttpCallstackEnd, callstack.size)
     } else {
-        arrayOf()
+        emptyArray()
     }
 }
 
@@ -44,8 +47,8 @@ fun getCallstack(okHttpPackage: String): Array<StackTraceElement> {
  *
  * Our profiling instrumentation code assumes that a request's body is an [OutputStream] that is
  * written into before the request is sent. However, OkHttp uses [okio.Sink]s instead of
- * [OutputStream]s for their request bodies, so we provide a temporary stub output stream to
- * use that will be wrapped with a [okio.Sink] and can still be tracked.
+ * [OutputStream]s for their request bodies, so we provide a temporary stub output stream to use
+ * that will be wrapped with a [okio.Sink] and can still be tracked.
  *
  *
  * TODO: We may want to clean up this assumption in HttpTracker so these OkHttp gymnastics

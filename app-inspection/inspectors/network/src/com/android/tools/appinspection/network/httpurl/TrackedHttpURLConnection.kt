@@ -15,8 +15,8 @@
  */
 package com.android.tools.appinspection.network.httpurl
 
-import com.android.tools.appinspection.network.HttpConnectionTracker
-import com.android.tools.appinspection.network.HttpTracker
+import com.android.tools.appinspection.network.HttpTrackerFactory
+import com.android.tools.appinspection.network.trackers.HttpConnectionTracker
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
@@ -27,15 +27,18 @@ import java.security.Permission
 /**
  * Wraps a [HttpURLConnection] instance and delegates the method calls to the wrapped object,
  * injecting calls to report HTTP activity through [HttpConnectionTracker]
+ *
+ * [HttpURLConnectionWrapper] and [HttpsURLConnectionWrapper] delegates the heavy lifting of
+ * tracking to this class.
  */
-internal class TrackedHttpURLConnection(
+class TrackedHttpURLConnection(
     private val wrapped: HttpURLConnection,
-    callstack: Array<StackTraceElement>
+    callstack: Array<StackTraceElement>,
+    trackerFactory: HttpTrackerFactory
 ) {
 
-    private val myConnectionTracker: HttpConnectionTracker =
-        HttpTracker.trackConnection(wrapped.url.toString(), callstack)
-
+    private val connectionTracker: HttpConnectionTracker =
+        trackerFactory.trackConnection(wrapped.url.toString(), callstack)
     private var connectTracked = false
     private var responseTracked = false
     private var trackedRequestStream: OutputStream? = null
@@ -52,7 +55,7 @@ internal class TrackedHttpURLConnection(
     private fun trackPreConnect() {
         if (!connectTracked) {
             try {
-                myConnectionTracker.trackRequest(requestMethod, requestProperties)
+                connectionTracker.trackRequest(requestMethod, requestProperties)
             } finally {
                 connectTracked = true
             }
@@ -95,7 +98,7 @@ internal class TrackedHttpURLConnection(
 
                 // Don't call our getResponseMessage/getHeaderFields overrides, as it would call
                 // this method recursively.
-                myConnectionTracker.trackResponse(wrapped.responseMessage, wrapped.headerFields)
+                connectionTracker.trackResponse(wrapped.responseMessage, wrapped.headerFields)
             } finally {
                 responseTracked = true
             }
@@ -132,7 +135,7 @@ internal class TrackedHttpURLConnection(
         } catch (ignored: Exception) {
         }
         wrapped.disconnect()
-        myConnectionTracker.disconnect()
+        connectionTracker.disconnect()
     }
 
     fun connect() {
@@ -143,7 +146,7 @@ internal class TrackedHttpURLConnection(
             // A user can still modify it further, for example updating the request body, before
             // actually sending the request out. Therefore, we don't call trackResponse here.
         } catch (e: IOException) {
-            myConnectionTracker.error(e.toString())
+            connectionTracker.error(e.toString())
             throw e
         }
     }
@@ -271,11 +274,11 @@ internal class TrackedHttpURLConnection(
             // getOutputStream internally calls connect if not already connected.
             trackPreConnect()
             return try {
-                myConnectionTracker.trackRequestBody(wrapped.outputStream).also {
+                connectionTracker.trackRequestBody(wrapped.outputStream).also {
                     trackedRequestStream = it
                 }
             } catch (e: IOException) {
-                myConnectionTracker.error(e.toString())
+                connectionTracker.error(e.toString())
                 throw e
             }
         }
@@ -342,11 +345,11 @@ internal class TrackedHttpURLConnection(
             return try {
                 val stream = wrapped.inputStream
                 trackResponse()
-                myConnectionTracker.trackResponseBody(stream).also {
+                connectionTracker.trackResponseBody(stream).also {
                     trackedResponseStream = it
                 }
             } catch (e: IOException) {
-                myConnectionTracker.error(e.toString())
+                connectionTracker.error(e.toString())
                 throw e
             }
         }

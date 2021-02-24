@@ -15,6 +15,7 @@
  */
 package com.android.tools.appinspection.network.httpurl
 
+import com.android.tools.appinspection.network.HttpTrackerFactory
 import java.io.InputStream
 import java.io.OutputStream
 import java.net.URL
@@ -29,15 +30,14 @@ import javax.net.ssl.SSLSocketFactory
  * An implementation of [javax.net.ssl.HttpsURLConnection] which delegates the method calls to
  * [TrackedHttpURLConnection], which ensures that the appropriate methods are instrumented.
  */
-class HttpsURLConnection(
+class HttpsURLConnectionWrapper(
     private val wrappedHttps: HttpsURLConnection,
-    callstack: Array<StackTraceElement>
-) :
-    HttpsURLConnection(wrappedHttps.url) {
+    callstack: Array<StackTraceElement>,
+    trackerFactory: HttpTrackerFactory
+) : HttpsURLConnection(wrappedHttps.url) {
 
     private val trackedConnection: TrackedHttpURLConnection =
-        TrackedHttpURLConnection(wrappedHttps, callstack)
-
+        TrackedHttpURLConnection(wrappedHttps, callstack, trackerFactory)
     override fun getCipherSuite(): String {
         return wrappedHttps.cipherSuite
     }
@@ -289,4 +289,5 @@ class HttpsURLConnection(
     override fun connect() {
         trackedConnection.connect()
     }
+
 }

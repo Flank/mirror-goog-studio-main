@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.tools.appinspection.network
+package com.android.tools.appinspection.network.trackers
 
 import java.io.InputStream
 import java.io.OutputStream
 
 /**
  * HTTP stacks can use this interface to report the key states and data associated with individual
- * requests, to be consumed by the AndroidStudio network inspector.
+ * requests, to be consumed by the network inspector.
  *
  * The methods in this interface are expected to be called in the following order (the calls marked
  * with question mark are optional)

@@ -15,8 +15,8 @@
  */
 package com.android.tools.appinspection.network.okhttp
 
-import com.android.tools.appinspection.network.HttpConnectionTracker
-import com.android.tools.appinspection.network.HttpTracker
+import com.android.tools.appinspection.network.HttpTrackerFactory
+import com.android.tools.appinspection.network.trackers.HttpConnectionTracker
 import com.android.tools.appinspection.network.utils.StudioLog
 import okhttp3.Interceptor
 import okhttp3.Request
@@ -25,7 +25,7 @@ import okhttp3.ResponseBody
 import okio.Okio
 import java.io.IOException
 
-class OkHttp3Interceptor : Interceptor {
+class OkHttp3Interceptor(private val trackerFactory: HttpTrackerFactory) : Interceptor {
 
     override fun intercept(chain: Interceptor.Chain): Response {
         val request = chain.request()
@@ -66,7 +66,7 @@ class OkHttp3Interceptor : Interceptor {
 
     private fun trackRequest(request: Request): HttpConnectionTracker {
         val callstack = getCallstack(request.javaClass.getPackage().name)
-        val tracker = HttpTracker.trackConnection(request.url().toString(), callstack)
+        val tracker = trackerFactory.trackConnection(request.url().toString(), callstack)
         tracker.trackRequest(request.method(), request.headers().toMultimap())
         if (request.body() != null) {
             val outputStream = tracker.trackRequestBody(createNullOutputStream())
