@@ -176,6 +176,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 HardcodedDebugModeDetector.ISSUE,
                 HardcodedValuesDetector.ISSUE,
                 HardwareIdDetector.ISSUE,
+                HighSensorSamplingRateDetector.ISSUE,
                 IconDetector.DUPLICATES_CONFIGURATIONS,
                 IconDetector.DUPLICATES_NAMES,
                 IconDetector.GIF_USAGE,
