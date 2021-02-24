@@ -14,8 +14,21 @@
  * limitations under the License.
  */
 
-package android.view
+package android.view;
 
-import android.graphics.HardwareRenderer
+import java.util.ArrayList;
+import java.util.List;
 
-class ThreadedRenderer : HardwareRenderer()
+public final class WindowManagerGlobal {
+    private static final WindowManagerGlobal sInstance = new WindowManagerGlobal();
+
+    public static WindowManagerGlobal getInstance() {
+        return sInstance;
+    }
+
+    private final List<View> mRootViews = new ArrayList<>();
+
+    public List<View> getRootViews() {
+        return mRootViews;
+    }
+}

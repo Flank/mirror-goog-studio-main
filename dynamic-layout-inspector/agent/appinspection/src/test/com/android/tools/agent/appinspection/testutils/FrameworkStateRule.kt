@@ -43,7 +43,7 @@ class FrameworkStateRule : ExternalResource() {
     }
 
     public override fun after() {
-        WindowManagerGlobal.instance.rootViews.clear()
+        WindowManagerGlobal.getInstance().rootViews.clear()
 
         StaticInspectionCompanionProvider.cleanup()
     }

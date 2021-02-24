@@ -14,29 +14,20 @@
  * limitations under the License.
  */
 
-package android.view.inspector
+package android.graphics;
 
-import androidx.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting;
 
-class StaticInspectionCompanionProvider {
+public final class Matrix {
+    @VisibleForTesting public float[] transformedPoints = null;
 
-    companion object {
-
-        private val providers = mutableMapOf<Class<*>, InspectionCompanion<*>>()
-
-        @VisibleForTesting
-        fun <T> register(cls: Class<T>, provider: InspectionCompanion<T>) {
-            providers[cls] = provider
-        }
-
-        @VisibleForTesting
-        fun cleanup() {
-            providers.clear()
-        }
+    public boolean isIdentity() {
+        return transformedPoints == null;
     }
 
-    fun <T> provide(cls: Class<T>): InspectionCompanion<T>? {
-        @Suppress("UNCHECKED_CAST")
-        return providers[cls] as? InspectionCompanion<T>
+    public void mapPoints(float[] pts) {
+        if (transformedPoints != null) {
+            System.arraycopy(transformedPoints, 0, pts, 0, transformedPoints.length);
+        }
     }
 }

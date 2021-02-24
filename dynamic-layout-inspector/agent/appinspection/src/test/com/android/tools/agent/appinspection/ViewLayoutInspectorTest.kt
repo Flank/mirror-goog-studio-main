@@ -38,6 +38,7 @@ import layoutinspector.view.inspection.LayoutInspectorViewProtocol.StopFetchComm
 import org.junit.Rule
 import org.junit.Test
 import java.util.concurrent.ArrayBlockingQueue
+import java.util.function.Consumer
 
 class ViewLayoutInspectorTest {
 
@@ -98,7 +99,7 @@ class ViewLayoutInspectorTest {
         val tree1 = View(context).apply { setAttachInfo(View.AttachInfo() )}
         val tree2 = View(context).apply { setAttachInfo(View.AttachInfo() )}
         val tree3 = View(context).apply { setAttachInfo(View.AttachInfo() )}
-        WindowManagerGlobal.instance.rootViews.addAll(listOf(tree1, tree2))
+        WindowManagerGlobal.getInstance().rootViews.addAll(listOf(tree1, tree2))
 
         val startFetchCommand = Command.newBuilder().apply {
             startFetchCommandBuilder.apply {
@@ -152,7 +153,7 @@ class ViewLayoutInspectorTest {
             }
         }
 
-        WindowManagerGlobal.instance.rootViews.add(tree3)
+        WindowManagerGlobal.getInstance().rootViews.add(tree3)
 
         tree1.forcePictureCapture(tree1FakePicture2)
         // As a side-effect, this capture discovers the newly added third tree
@@ -176,7 +177,7 @@ class ViewLayoutInspectorTest {
         }
 
         // Roots changed - this should generate a new roots event
-        WindowManagerGlobal.instance.rootViews.remove(tree2)
+        WindowManagerGlobal.getInstance().rootViews.remove(tree2)
         tree1.forcePictureCapture(tree1FakePicture3)
 
         eventQueue.take().let { bytes ->
@@ -295,7 +296,7 @@ class ViewLayoutInspectorTest {
                 top = 10
                 width = 20
                 height = 30
-                transformedPoints = floatArrayOf(10f, 20f, 30f, 40f, 50f, 60f, 70f, 80f)
+                setTransformedPoints(floatArrayOf(10f, 20f, 30f, 40f, 50f, 60f, 70f, 80f))
             })
         })
 
@@ -319,11 +320,11 @@ class ViewLayoutInspectorTest {
                 top = 10
                 width = 20
                 height = 30
-                transformedPoints = floatArrayOf(10f, 20f, 30f, 40f, 50f, 60f, 70f, 80f)
+                setTransformedPoints(floatArrayOf(10f, 20f, 30f, 40f, 50f, 60f, 70f, 80f))
             })
         })
 
-        WindowManagerGlobal.instance.rootViews.addAll(listOf(mainScreen, floatingDialog))
+        WindowManagerGlobal.getInstance().rootViews.addAll(listOf(mainScreen, floatingDialog))
 
         val startFetchCommand = Command.newBuilder().apply {
             startFetchCommandBuilder.apply {
@@ -459,7 +460,7 @@ class ViewLayoutInspectorTest {
             addView(TextView(context, "Placeholder Text"))
         }
 
-        WindowManagerGlobal.instance.rootViews.addAll(listOf(root))
+        WindowManagerGlobal.getInstance().rootViews.addAll(listOf(root))
 
         run { // Search for properties for View
             val viewChild = root.getChildAt(0)
@@ -541,14 +542,14 @@ class ViewLayoutInspectorTest {
         val root = ViewGroup(context).apply {
             width = 100
             height = 200
-            drawHandler = { canvas ->
+            drawHandler = Consumer { canvas ->
                 assertThat(canvas.bitmap.width).isEqualTo(width * scale)
                 assertThat(canvas.bitmap.height).isEqualTo(height * scale)
                 fakeBitmapHeader.copyInto(canvas.bitmap.bytes)
             }
             setAttachInfo(View.AttachInfo())
         }
-        WindowManagerGlobal.instance.rootViews.addAll(listOf(root))
+        WindowManagerGlobal.getInstance().rootViews.addAll(listOf(root))
 
         val startFetchCommand = Command.newBuilder().apply {
             startFetchCommandBuilder.apply {

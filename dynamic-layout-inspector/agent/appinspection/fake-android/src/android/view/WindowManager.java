@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 
-package android.graphics
+package android.view;
 
-class Point(@JvmField var x: Int, @JvmField var y: Int)
+public final class WindowManager {
+    public static class LayoutParams extends ViewGroup.LayoutParams {
+        public int flags = 0;
+    }
+}

@@ -22,8 +22,6 @@ import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.Map;
 
-// Note: This class is intentionally written in Java, to avoid the compiler generating different
-// static bytecode than the original Java code.
 @SuppressWarnings({"BusyWait", "VariableNotUsedInsideIf"})
 public final class Looper {
     private enum PollMode {

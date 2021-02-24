@@ -14,27 +14,16 @@
  * limitations under the License.
  */
 
-package android.view
+package android.graphics;
 
-import android.content.Context
+public final class Point {
+    public int x = 0;
+    public int y = 0;
 
-class ViewGroup(context: Context) : View(context) {
-    open class LayoutParams {
-        companion object {
+    public Point() {}
 
-            const val MATCH_PARENT = -1
-            const val WRAP_CONTENT = -2
-        }
-
-        @JvmField var width = 0
-        @JvmField var height = 0
-    }
-
-    private val children = mutableListOf<View>()
-
-    val childCount get() = children.size
-    fun getChildAt(i: Int) = children[i]
-    fun addView(view: View) {
-        children.add(view)
+    public Point(int x, int y) {
+        this.x = x;
+        this.y = y;
     }
 }

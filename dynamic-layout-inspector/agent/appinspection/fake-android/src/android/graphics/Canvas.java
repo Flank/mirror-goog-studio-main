@@ -14,13 +14,24 @@
  * limitations under the License.
  */
 
-package android.graphics
+package android.graphics;
 
-class Matrix {
-    internal var transformedPoints: FloatArray? = null
+import androidx.annotation.VisibleForTesting;
 
-    val isIdentity: Boolean get() = transformedPoints == null
-    fun mapPoints(pts: FloatArray) {
-        transformedPoints?.copyInto(pts)
+@SuppressWarnings("unused")
+public final class Canvas {
+
+    private final Bitmap mBitmap;
+
+    @VisibleForTesting
+    public Canvas(Bitmap bitmap) {
+        mBitmap = bitmap;
     }
+
+    @VisibleForTesting
+    public Bitmap getBitmap() {
+        return mBitmap;
+    }
+
+    public void scale(float x, float y) {}
 }

@@ -14,16 +14,8 @@
  * limitations under the License.
  */
 
-package android.graphics
+package android.view;
 
-import androidx.annotation.VisibleForTesting
-import java.io.OutputStream
+import android.graphics.HardwareRenderer;
 
-class Picture @VisibleForTesting constructor(
-    @VisibleForTesting val bytes: ByteArray
-) {
-
-    fun writeToStream(os: OutputStream) {
-        os.write(bytes)
-    }
-}
+public final class ThreadedRenderer extends HardwareRenderer {}

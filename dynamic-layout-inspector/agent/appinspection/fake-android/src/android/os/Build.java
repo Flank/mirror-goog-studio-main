@@ -16,10 +16,6 @@
 
 package android.os;
 
-// Note: This class is intentionally written in Java, to avoid the compiler generating different
-// static bytecode than the original Java code.
-// Note #2: We don't want the compiler to optimize constants when we build our inspector, so fields
-// that normally would be final are defined as normal variables in fake-android.
 @SuppressWarnings({"FieldNamingConvention", "NonConstantFieldWithUpperCaseName"})
 public final class Build {
     public static final class VERSION {

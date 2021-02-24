@@ -21,8 +21,6 @@ import android.view.WindowManagerGlobal;
 import androidx.annotation.NonNull;
 import java.util.List;
 
-// Note: This class is intentionally written in Java, to avoid the compiler generating different
-// static bytecode than the original Java code.
 public final class WindowInspector {
     @NonNull
     public static List<View> getGlobalWindowViews() {

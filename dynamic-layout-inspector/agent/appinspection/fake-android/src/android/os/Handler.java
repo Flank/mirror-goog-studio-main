@@ -18,8 +18,6 @@ package android.os;
 
 import androidx.annotation.NonNull;
 
-// Note: This class is intentionally written in Java, to avoid the compiler generating different
-// static bytecode than the original Java code.
 public final class Handler {
 
     @NonNull

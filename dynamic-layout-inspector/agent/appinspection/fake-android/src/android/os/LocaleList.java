@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 The Android Open Source Project
+ * Copyright (C) 2021 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,17 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package android.graphics
 
-import androidx.annotation.VisibleForTesting
+package android.os;
 
-open class HardwareRenderer {
+import androidx.annotation.VisibleForTesting;
+import java.util.Locale;
 
-    @get:VisibleForTesting // Normally, the framework only has a set method
-    var pictureCaptureCallback: PictureCapturedCallback? = null
+@SuppressWarnings("MethodMayBeStatic")
+public final class LocaleList {
+    private final Locale mLocale;
 
-    interface PictureCapturedCallback {
+    @VisibleForTesting
+    public LocaleList(Locale locale) {
+        mLocale = locale;
+    }
 
-        fun onPictureCaptured(picture: Picture)
+    public boolean isEmpty() {
+        return false;
+    }
+
+    public Locale get(int i) {
+        if (i != 0) {
+            throw new IndexOutOfBoundsException();
+        }
+        return mLocale;
     }
 }

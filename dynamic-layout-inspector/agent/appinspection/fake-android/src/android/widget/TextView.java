@@ -14,15 +14,20 @@
  * limitations under the License.
  */
 
-package android.os
+package android.widget;
 
-import androidx.annotation.VisibleForTesting
-import java.util.Locale
+import android.content.Context;
+import android.view.View;
 
-class LocaleList @VisibleForTesting constructor(private val locale: Locale) {
+public class TextView extends View {
+    private final CharSequence mText;
 
-    val isEmpty = false
-    operator fun get(i: Int): Locale {
-        return locale.takeIf { i == 0 } ?: throw IndexOutOfBoundsException()
+    public TextView(Context context, CharSequence text) {
+        super(context);
+        mText = text;
+    }
+
+    public CharSequence getText() {
+        return mText;
     }
 }
