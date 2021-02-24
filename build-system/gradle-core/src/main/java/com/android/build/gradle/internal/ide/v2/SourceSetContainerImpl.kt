@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 The Android Open Source Project
+ * Copyright (C) 2021 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,20 +16,15 @@
 
 package com.android.build.gradle.internal.ide.v2
 
-import com.android.builder.model.v2.dsl.ProductFlavor
-import com.android.builder.model.v2.ide.ProductFlavorContainer
 import com.android.builder.model.v2.ide.SourceProvider
+import com.android.builder.model.v2.ide.SourceSetContainer
 import java.io.Serializable
 
-/**
- * Implementation of [ProductFlavorContainer] for serialization via the Tooling API.
- */
-data class ProductFlavorContainerImpl(
-    override val productFlavor: ProductFlavor,
+data class SourceSetContainerImpl(
     override val sourceProvider: SourceProvider,
     override val androidTestSourceProvider: SourceProvider? = null,
     override val unitTestSourceProvider: SourceProvider? = null
-) : ProductFlavorContainer, Serializable {
+) : SourceSetContainer, Serializable {
     companion object {
         @JvmStatic
         private val serialVersionUID: Long = 1L

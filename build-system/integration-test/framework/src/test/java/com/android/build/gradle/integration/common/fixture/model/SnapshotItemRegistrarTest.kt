@@ -55,8 +55,8 @@ internal class SnapshotItemRegistrarTest {
 
         Truth.assertThat(snapshot).isEqualTo("""
             - SmallObject:
-                - property1 = "a"
-                - property2 = (null)
+               - property1 = "a"
+               - property2 = (null)
 
         """.trimIndent())
     }
@@ -91,16 +91,16 @@ internal class SnapshotItemRegistrarTest {
 
         Truth.assertThat(snapshot).isEqualTo("""
             > LargeObject:
-                - property1  = "a"
-                - property2  = 12
-                - property3  = $notImportantPath
-                - property4  = ENUM_1
-                - property5  = 1.2
-                - property6  = true
-                - property7  = ["string1", "string2"]
-                - property8  = [100, 101]
-                - property9  = {IMPORTANT_PATH1}/with/some/leaf
-                - property10 = [{IMPORTANT_PATH2}/, $notImportantPath]
+               - property1  = "a"
+               - property2  = 12
+               - property3  = $notImportantPath
+               - property4  = ENUM_1
+               - property5  = 1.2
+               - property6  = true
+               - property7  = ["string1", "string2"]
+               - property8  = [100, 101]
+               - property9  = {IMPORTANT_PATH1}/with/some/leaf
+               - property10 = [{IMPORTANT_PATH2}/, $notImportantPath]
             < LargeObject
 
         """.trimIndent())
@@ -117,10 +117,10 @@ internal class SnapshotItemRegistrarTest {
 
         Truth.assertThat(snapshot).isEqualTo("""
             - SmallObject:
-                - property1 = "a"
-                - property2:
-                   * "b"
-                   * "c"
+               - property1 = "a"
+               - property2:
+                  * "b"
+                  * "c"
 
         """.trimIndent())
     }
@@ -136,8 +136,8 @@ internal class SnapshotItemRegistrarTest {
 
         Truth.assertThat(snapshot).isEqualTo("""
             - SmallObject:
-                - property1 = "a"
-                - property2 = []
+               - property1 = "a"
+               - property2 = []
 
         """.trimIndent())
     }
@@ -153,8 +153,8 @@ internal class SnapshotItemRegistrarTest {
 
         Truth.assertThat(snapshot).isEqualTo("""
             - SmallObject:
-                - property1 = "a"
-                - property2 = (null)
+               - property1 = "a"
+               - property2 = (null)
 
         """.trimIndent())
     }
@@ -171,15 +171,15 @@ internal class SnapshotItemRegistrarTest {
 
         Truth.assertThat(snapshot).isEqualTo("""
             > SmallObject:
-                - property1 = "a"
-                - property2:
-                   * "b"
-                   * "c"
-                   * "d"
-                   * "e"
-                   * "f"
-                   * "g"
-                   * "h"
+               - property1 = "a"
+               - property2:
+                  * "b"
+                  * "c"
+                  * "d"
+                  * "e"
+                  * "f"
+                  * "g"
+                  * "h"
             < SmallObject
 
         """.trimIndent())
@@ -195,7 +195,7 @@ internal class SnapshotItemRegistrarTest {
 
         Truth.assertThat(snapshot).isEqualTo("""
             - SmallObject:
-                - property1 -> "a"
+               - property1 -> "a"
 
         """.trimIndent())
     }
@@ -239,21 +239,21 @@ internal class SnapshotItemRegistrarTest {
 
         Truth.assertThat(snapshot).isEqualTo("""
             > EnclosingObject:
-                - property1:
-                   - property1 = "a"
-                   - property2 = []
-                > property2:
-                   - property1  = "a"
-                   - property2  = 12
-                   - property3  = $notImportantPath
-                   - property4  = ENUM_1
-                   - property5  = 1.2
-                   - property6  = true
-                   - property7  = ["string1", "string2"]
-                   - property8  = [100, 101]
-                   - property9  = {IMPORTANT_PATH1}/with/some/leaf
-                   - property10 = [{IMPORTANT_PATH2}/, $notImportantPath]
-                < property2
+               - property1:
+                  - property1 = "a"
+                  - property2 = []
+               > property2:
+                  - property1  = "a"
+                  - property2  = 12
+                  - property3  = $notImportantPath
+                  - property4  = ENUM_1
+                  - property5  = 1.2
+                  - property6  = true
+                  - property7  = ["string1", "string2"]
+                  - property8  = [100, 101]
+                  - property9  = {IMPORTANT_PATH1}/with/some/leaf
+                  - property10 = [{IMPORTANT_PATH2}/, $notImportantPath]
+               < property2
             < EnclosingObject
 
         """.trimIndent())
@@ -287,10 +287,10 @@ internal class SnapshotItemRegistrarTest {
 
         Truth.assertThat(snapshot).isEqualTo("""
             - EnclosingObject:
-                - property1:
-                   - property1 = "a"
-                   - property2 = []
-                - property2 = (null)
+               - property1:
+                  - property1 = "a"
+                  - property2 = []
+               - property2 = (null)
 
         """.trimIndent())
     }
@@ -315,13 +315,13 @@ internal class SnapshotItemRegistrarTest {
 
         Truth.assertThat(snapshot).isEqualTo("""
             - ObjectWithList:
-                - list:
-                   - item: a:
-                      - property1 = "a"
-                      - property2 = ["b"]
-                   - item: c:
-                      - property1 = "c"
-                      - property2 = (null)
+               - list:
+                  - item: a:
+                     - property1 = "a"
+                     - property2 = ["b"]
+                  - item: c:
+                     - property1 = "c"
+                     - property2 = (null)
 
         """.trimIndent())
     }

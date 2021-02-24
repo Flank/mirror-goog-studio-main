@@ -54,6 +54,11 @@ class HelloWorldAppModelTest: ModelComparator() {
         )
 
         with(result).compare(
+            model = result.container.singleAndroidDsl,
+            goldenFile = "AndroidDsl"
+        )
+
+        with(result).compare(
             model = result.container.singleVariantDependencies,
             goldenFile = "VariantDependencies"
         )
@@ -80,10 +85,14 @@ class ApplicationIdInAppModelTest: ReferenceModelComparator(
         ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
     }
 ) {
-
     @Test
     fun `test AndroidProject model`() {
-        compareAndroidProjectWith(goldenFileSuffix = "AndroidProject")
+        ensureAndroidProjectDeltaIsEmpty()
+    }
+
+    @Test
+    fun `test AndroidDsl model`() {
+        compareAndroidDslWith(goldenFileSuffix = "AndroidDsl")
     }
 }
 
@@ -113,6 +122,11 @@ class DisabledAidlInAppModelTest: ReferenceModelComparator(
     fun `test AndroidProject model`() {
         compareAndroidProjectWith(goldenFileSuffix = "AndroidProject")
     }
+
+    @Test
+    fun `test AndroidDsl model`() {
+        ensureAndroidDslDeltaIsEmpty()
+    }
 }
 
 class DisabledRenderScriptInAppModelTest: ReferenceModelComparator(
@@ -141,6 +155,11 @@ class DisabledRenderScriptInAppModelTest: ReferenceModelComparator(
     fun `test AndroidProject model`() {
         compareAndroidProjectWith(goldenFileSuffix = "AndroidProject")
     }
+
+    @Test
+    fun `test AndroidDsl model`() {
+        ensureAndroidDslDeltaIsEmpty()
+    }
 }
 
 class DisabledResValuesInAppModelTest: ReferenceModelComparator(
@@ -167,7 +186,12 @@ class DisabledResValuesInAppModelTest: ReferenceModelComparator(
 ) {
     @Test
     fun `test AndroidProject model`() {
-        compareAndroidProjectWith(goldenFileSuffix = "AndroidProject")
+        ensureAndroidProjectDeltaIsEmpty()
+    }
+
+    @Test
+    fun `test AndroidDsl model`() {
+        compareAndroidDslWith(goldenFileSuffix = "AndroidDsl")
     }
 }
 
@@ -197,6 +221,11 @@ class DisabledShadersInAppModelTest: ReferenceModelComparator(
     fun `test AndroidProject model`() {
         compareAndroidProjectWith(goldenFileSuffix = "AndroidProject")
     }
+
+    @Test
+    fun `test AndroidDsl model`() {
+        ensureAndroidDslDeltaIsEmpty()
+    }
 }
 
 class DisabledBuildConfigInAppModelTest: ReferenceModelComparator(
@@ -224,6 +253,11 @@ class DisabledBuildConfigInAppModelTest: ReferenceModelComparator(
     @Test
     fun `test AndroidProject model`() {
         compareAndroidProjectWith(goldenFileSuffix = "AndroidProject")
+    }
+
+    @Test
+    fun `test AndroidDsl model`() {
+        compareAndroidDslWith(goldenFileSuffix = "AndroidDsl")
     }
 }
 
@@ -253,6 +287,11 @@ class EnabledMlModelBindingInAppModelTest: ReferenceModelComparator(
     fun `test AndroidProject model`() {
         compareAndroidProjectWith(goldenFileSuffix = "AndroidProject")
     }
+
+    @Test
+    fun `test AndroidDsl model`() {
+        ensureAndroidDslDeltaIsEmpty()
+    }
 }
 
 class DefaultBuildTypeAppModelTest: ReferenceModelComparator(
@@ -281,7 +320,12 @@ class DefaultBuildTypeAppModelTest: ReferenceModelComparator(
 ) {
     @Test
     fun `test AndroidProject model`() {
-        compareAndroidProjectWith(goldenFileSuffix = "AndroidProject")
+        ensureAndroidProjectDeltaIsEmpty()
+    }
+
+    @Test
+    fun `test AndroidDsl model`() {
+        compareAndroidDslWith(goldenFileSuffix = "AndroidDsl")
     }
 }
 
@@ -319,6 +363,11 @@ class DefaultFlavorAppModelTest: ReferenceModelComparator(
 ) {
     @Test
     fun `test AndroidProject model`() {
-        compareAndroidProjectWith(goldenFileSuffix = "AndroidProject")
+        ensureAndroidProjectDeltaIsEmpty()
+    }
+
+    @Test
+    fun `test AndroidDsl model`() {
+        compareAndroidDslWith(goldenFileSuffix = "AndroidDsl")
     }
 }

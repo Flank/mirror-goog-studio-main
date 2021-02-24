@@ -1,0 +1,182 @@
+> AndroidDsl:
+   - groupId           = ""
+   - compileTarget     = "30"
+   - buildToolsVersion = DEFAULT_BUILD_TOOLS_REVISION
+   > defaultConfig:
+      - name                               = "main"
+      - applicationIdSuffix                = (null)
+      - versionNameSuffix                  = (null)
+      > buildConfigFields:
+         - field(DEFAULT):
+            - name          = "DEFAULT"
+            - type          = "boolean"
+            - value         = "true"
+            - documentation = ""
+            - annotations   = []
+         - field(FOO):
+            - name          = "FOO"
+            - type          = "String"
+            - value         = ""foo2""
+            - documentation = ""
+            - annotations   = []
+      < buildConfigFields
+      - resValues:
+         - value(foo):
+            - name          = "foo"
+            - type          = "string"
+            - value         = "foo"
+            - documentation = ""
+            - annotations   = []
+      - proguardFiles                      = []
+      - consumerProguardFiles              = []
+      - testProguardFiles                  = []
+      - manifestPlaceholders:
+         * "someKey -> 12"
+      - multiDexEnabled                    = (null)
+      - multiDexKeepFile                   = (null)
+      - multiDexKeepProguard               = (null)
+      - isDefault                          = (null)
+      - dimension                          = (null)
+      - applicationId                      = (null)
+      - versionCode                        = 12
+      - versionName                        = "2.0"
+      - minSdkVersion:
+         - apiLevel = 16
+         - codename = (null)
+      - targetSdkVersion:
+         - apiLevel = 16
+         - codename = (null)
+      - maxSdkVersion                      = (null)
+      - renderscriptTargetApi              = (null)
+      - renderscriptSupportModeEnabled     = (null)
+      - renderscriptSupportModeBlasEnabled = (null)
+      - renderscriptNdkModeEnabled         = (null)
+      - testApplicationId                  = (null)
+      - testInstrumentationRunner          = "android.support.test.runner.AndroidJUnitRunner"
+      - testInstrumentationRunnerArguments:
+         * "size -> medium"
+      - testHandleProfiling                = false
+      - testFunctionalTest                 = (null)
+      - resourceConfigurations             = ["en", "hdpi"]
+      - signingConfig                      = (null)
+      - wearAppUnbundled                   = (null)
+      - vectorDrawables:
+         - generatedDensities = ["hdpi", "ldpi", "mdpi", "xhdpi", "xxhdpi", "xxxhdpi"]
+         - useSupportLibrary  = false
+   < defaultConfig
+   > buildTypes:
+      > debug:
+         - name                     = "debug"
+         - applicationIdSuffix      = ".debug"
+         - versionNameSuffix        = (null)
+         - buildConfigFields:
+            - field(FOO):
+               - name          = "FOO"
+               - type          = "String"
+               - value         = ""bar""
+               - documentation = ""
+               - annotations   = []
+         - resValues:
+            - value(foo):
+               - name          = "foo"
+               - type          = "string"
+               - value         = "foo2"
+               - documentation = ""
+               - annotations   = []
+         - proguardFiles            = []
+         - consumerProguardFiles    = []
+         - testProguardFiles        = []
+         - manifestPlaceholders     = []
+         - multiDexEnabled          = (null)
+         - multiDexKeepFile         = (null)
+         - multiDexKeepProguard     = (null)
+         - isDefault                = false
+         - isDebuggable             = true
+         - isTestCoverageEnabled    = true
+         - isPseudoLocalesEnabled   = false
+         - isJniDebuggable          = false
+         - isRenderscriptDebuggable = false
+         - renderscriptOptimLevel   = 3
+         - isMinifyEnabled          = false
+         - isZipAlignEnabled        = true
+         - isEmbedMicroApp          = false
+         - signingConfig            = "debug"
+      < debug
+      > release:
+         - name                     = "release"
+         - applicationIdSuffix      = (null)
+         - versionNameSuffix        = (null)
+         - buildConfigFields        = []
+         - resValues                = []
+         - proguardFiles            = []
+         - consumerProguardFiles    = []
+         - testProguardFiles        = []
+         - manifestPlaceholders     = []
+         - multiDexEnabled          = (null)
+         - multiDexKeepFile         = (null)
+         - multiDexKeepProguard     = (null)
+         - isDefault                = false
+         - isDebuggable             = false
+         - isTestCoverageEnabled    = false
+         - isPseudoLocalesEnabled   = false
+         - isJniDebuggable          = false
+         - isRenderscriptDebuggable = false
+         - renderscriptOptimLevel   = 3
+         - isMinifyEnabled          = false
+         - isZipAlignEnabled        = true
+         - isEmbedMicroApp          = true
+         - signingConfig            = (null)
+      < release
+   < buildTypes
+   - flavorDimensions  = []
+   - productFlavors    = []
+   > signingConfigs:
+      > signingConfig(debug):
+         - name            = "debug"
+         - storeFile       = {ANDROID_PREFS}/.android/debug.keystore{!}
+         - storePassword   = "android"
+         - keyAlias        = "AndroidDebugKey"
+         - keyPassword     = "android"
+         - enableV1Signing = (null)
+         - enableV2Signing = (null)
+         - enableV3Signing = (null)
+         - enableV4Signing = (null)
+         - isSigningReady  = true
+      < signingConfig(debug)
+   < signingConfigs
+   - aaptOptions:
+      - namespacing = DISABLED
+   > lintOptions:
+      - disable                 = ["TypographyFractions", "TypographyQuotes"]
+      - enable                  = ["RtlCompat", "RtlEnabled", "RtlHardcoded"]
+      - check                   = ["InlinedApi", "NewApi"]
+      - isAbortOnError          = false
+      - isAbsolutePaths         = true
+      - isNoLines               = true
+      - isQuiet                 = true
+      - isCheckAllWarnings      = true
+      - isIgnoreWarnings        = true
+      - isWarningsAsErrors      = true
+      - isCheckTestSources      = true
+      - isIgnoreTestSources     = false
+      - isCheckGeneratedSources = true
+      - isExplainIssues         = true
+      - isShowAll               = true
+      - lintConfig              = {PROJECT}/default-lint.xml{!}
+      - textReport              = true
+      - textOutput              = stdout{!}
+      - htmlReport              = true
+      - htmlOutput              = {PROJECT}/lint-report.html{!}
+      - xmlReport               = true
+      - xmlOutput               = {PROJECT}/lint-report.xml{!}
+      - sarifReport             = false
+      - sarifOutput             = (null)
+      - isCheckReleaseBuilds    = true
+      - isCheckDependencies     = false
+      - baselineFile            = (null)
+      - severityOverrides       = (null)
+   < lintOptions
+   - dependenciesInfo:
+      - includeInApk    = true
+      - includeInBundle = true
+< AndroidDsl

@@ -1,41 +1,41 @@
 > AndroidProject:
-    - defaultConfig:
-       - sourceProvider:
-          - resDirectories = (null)
-       - androidTestSourceProvider:
-          - resDirectories = (null)
-       - unitTestSourceProvider:
-          - resDirectories = (null)
-    > buildTypes:
-       - buildTypeContainer(debug):
-          - sourceProvider:
-             - resDirectories = (null)
-          - androidTestSourceProvider:
-             - resDirectories = (null)
-          - unitTestSourceProvider:
-             - resDirectories = (null)
-       - buildTypeContainer(release):
-          - sourceProvider:
-             - resDirectories = (null)
-          - androidTestSourceProvider:
-             - resDirectories = (null)
-          - unitTestSourceProvider:
-             - resDirectories = (null)
-    < buildTypes
-    > variants:
-       - variant(debug):
-          - mainArtifact:
-             - classesFolders:
-                * {PROJECT}/build/intermediates/javac/debug/classes{!}
-          - unitTestArtifact:
-             - classesFolders:
-                * {PROJECT}/build/intermediates/javac/debugUnitTest/classes{!}
-       - variant(release):
-          - mainArtifact:
-             - classesFolders:
-                * {PROJECT}/build/intermediates/javac/release/classes{!}
-          - unitTestArtifact:
-             - classesFolders:
-                * {PROJECT}/build/intermediates/javac/releaseUnitTest/classes{!}
-    < variants
+   - defaultConfig:
+      - sourceProvider:
+         - resDirectories = (null)
+      - androidTestSourceProvider:
+         - resDirectories = (null)
+      - unitTestSourceProvider:
+         - resDirectories = (null)
+   > buildTypes:
+      - debug:
+         - sourceProvider:
+            - resDirectories = (null)
+         - androidTestSourceProvider:
+            - resDirectories = (null)
+         - unitTestSourceProvider:
+            - resDirectories = (null)
+      - release:
+         - sourceProvider:
+            - resDirectories = (null)
+         - androidTestSourceProvider:
+            - resDirectories = (null)
+         - unitTestSourceProvider:
+            - resDirectories = (null)
+   < buildTypes
+   > variants:
+      - variant(debug):
+         - mainArtifact:
+            - classesFolders:
+               * {PROJECT}/build/intermediates/javac/debug/classes{!}
+         - unitTestArtifact:
+            - classesFolders:
+               * {PROJECT}/build/intermediates/javac/debugUnitTest/classes{!}
+      - variant(release):
+         - mainArtifact:
+            - classesFolders:
+               * {PROJECT}/build/intermediates/javac/release/classes{!}
+         - unitTestArtifact:
+            - classesFolders:
+               * {PROJECT}/build/intermediates/javac/releaseUnitTest/classes{!}
+   < variants
 < AndroidProject

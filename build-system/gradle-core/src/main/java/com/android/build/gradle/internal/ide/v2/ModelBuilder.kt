@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.ide.v2
 
 import com.android.SdkConstants
-import com.android.Version
 import com.android.build.api.component.impl.AndroidTestImpl
 import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.api.dsl.AndroidSourceSet
@@ -72,13 +71,13 @@ import com.android.builder.errors.IssueReporter
 import com.android.builder.model.SyncIssue
 import com.android.builder.model.v2.ide.AndroidGradlePluginProjectFlags.BooleanFlag
 import com.android.builder.model.v2.ide.ArtifactDependencies
-import com.android.builder.model.v2.ide.BuildTypeContainer
 import com.android.builder.model.v2.ide.BundleInfo
 import com.android.builder.model.v2.ide.JavaArtifact
-import com.android.builder.model.v2.ide.ProductFlavorContainer
 import com.android.builder.model.v2.ide.ProjectType
+import com.android.builder.model.v2.ide.SourceSetContainer
 import com.android.builder.model.v2.ide.TestInfo
 import com.android.builder.model.v2.ide.TestedTargetVariant
+import com.android.builder.model.v2.models.AndroidDsl
 import com.android.builder.model.v2.models.AndroidProject
 import com.android.builder.model.v2.models.GlobalLibraryMap
 import com.android.builder.model.v2.models.ModelBuilderParameter
@@ -132,6 +131,7 @@ class ModelBuilder<
     override fun canBuild(className: String): Boolean {
         return className == ModelVersions::class.java.name
                 || className == AndroidProject::class.java.name
+                || className == AndroidDsl::class.java.name
                 || className == GlobalLibraryMap::class.java.name
                 || className == VariantDependencies::class.java.name
                 || className == ProjectSyncIssues::class.java.name
@@ -143,6 +143,7 @@ class ModelBuilder<
     override fun buildAll(className: String, project: Project): Any = when (className) {
         ModelVersions::class.java.name -> buildModelVersions(project)
         AndroidProject::class.java.name -> buildAndroidProjectModel(project)
+        AndroidDsl::class.java.name -> buildAndroidDslModel(project)
         GlobalLibraryMap::class.java.name -> buildGlobalLibraryMapModel(project)
         ProjectSyncIssues::class.java.name -> buildProjectSyncIssueModel(project)
         VariantDependencies::class.java.name -> throw RuntimeException(
@@ -183,6 +184,7 @@ class ModelBuilder<
         val projectOptions = getBuildService<ProjectOptionService>(project.gradle.sharedServices)
             .get().projectOptions
 
+        // FIXME: remove?
         verifyIDEIsNotOld(projectOptions)
 
         val sdkSetupCorrectly = globalScope.versionedSdkLoader.get().sdkSetupCorrectly.get()
@@ -195,14 +197,6 @@ class ModelBuilder<
             emptyList()
         }
 
-        val dependenciesInfo =
-            if (extension is ApplicationExtension<*, *, *, *, *>) {
-                DependenciesInfoImpl(
-                    extension.dependenciesInfo.includeInApk,
-                    extension.dependenciesInfo.includeInBundle
-                )
-            } else null
-
         val variantInputs = variantModel.inputs
 
         val variants = variantModel.variants
@@ -212,19 +206,17 @@ class ModelBuilder<
 
         // gather the default config
         val defaultConfigData = variantInputs.defaultConfigData
-        val defaultConfig = ProductFlavorContainerImpl(
-            productFlavor = defaultConfigData.defaultConfig.convert(buildFeatures),
+        val defaultConfig = SourceSetContainerImpl(
             sourceProvider = defaultConfigData.sourceSet.convert(buildFeatures),
             androidTestSourceProvider = defaultConfigData.getTestSourceSet(VariantTypeImpl.ANDROID_TEST)?.convert(buildFeatures),
             unitTestSourceProvider = defaultConfigData.getTestSourceSet(VariantTypeImpl.UNIT_TEST)?.convert(buildFeatures)
         )
 
         // gather all the build types
-        val buildTypes = mutableListOf<BuildTypeContainer>()
+        val buildTypes = mutableListOf<SourceSetContainer>()
         for (buildType in variantInputs.buildTypes.values) {
             buildTypes.add(
-                BuildTypeContainerImpl(
-                    buildType = buildType.buildType.convert(buildFeatures),
+                SourceSetContainerImpl(
                     sourceProvider = buildType.sourceSet.convert(buildFeatures),
                     androidTestSourceProvider = buildType.getTestSourceSet(VariantTypeImpl.ANDROID_TEST)?.convert(buildFeatures),
                     unitTestSourceProvider = buildType.getTestSourceSet(VariantTypeImpl.UNIT_TEST)?.convert(buildFeatures)
@@ -233,11 +225,10 @@ class ModelBuilder<
         }
 
         // gather product flavors
-        val productFlavors = mutableListOf<ProductFlavorContainer>()
+        val productFlavors = mutableListOf<SourceSetContainer>()
         for (flavor in variantInputs.productFlavors.values) {
             productFlavors.add(
-                ProductFlavorContainerImpl(
-                    productFlavor = flavor.productFlavor.convert(buildFeatures),
+                SourceSetContainerImpl(
                     sourceProvider = flavor.sourceSet.convert(buildFeatures),
                     androidTestSourceProvider = flavor.getTestSourceSet(VariantTypeImpl.ANDROID_TEST)?.convert(buildFeatures),
                     unitTestSourceProvider = flavor.getTestSourceSet(VariantTypeImpl.UNIT_TEST)?.convert(buildFeatures)
@@ -257,34 +248,75 @@ class ModelBuilder<
             buildFolder = project.layout.buildDirectory.get().asFile,
 
             projectType = projectType,
-            buildToolsVersion = extension.buildToolsVersion,
 
-            groupId = project.group.toString(),
-
-            defaultConfig = defaultConfig,
-            buildTypes = buildTypes,
-            flavorDimensions = ImmutableList.copyOf(extension.flavorDimensions),
-            productFlavors = productFlavors,
+            mainSourceSet = defaultConfig,
+            buildTypeSourceSets = buildTypes,
+            productFlavorSourceSets = productFlavors,
 
             variants = variantList,
 
-            compileTarget = extension.compileSdk.toString(), // FIXME
             bootClasspath = bootClasspath,
 
-            signingConfigs = extension.signingConfigs.map { it.convert() },
-            aaptOptions = extension.aaptOptions.convert(),
-            lintOptions = extension.lintOptions.convert(),
             javaCompileOptions = extension.compileOptions.convert(),
             resourcePrefix = extension.resourcePrefix,
             dynamicFeatures = (extension as? BaseAppModuleExtension)?.dynamicFeatures?.toImmutableSet(),
             viewBindingOptions = ViewBindingOptionsImpl(
                 variantModel.variants.any { it.buildFeatures.viewBinding }
             ),
-            dependenciesInfo = dependenciesInfo,
 
             flags = getFlags(),
             lintRuleJars = getLocalCustomLintChecksForModel(project, syncIssueReporter)
         )
+    }
+
+    private fun buildAndroidDslModel(project: Project): AndroidDsl {
+
+        val variantInputs = variantModel.inputs
+        val variants = variantModel.variants
+
+        // for now grab the first buildFeatureValues as they cannot be different.
+        val buildFeatures = variants.first().buildFeatures
+
+        // gather the default config
+        val defaultConfig = variantInputs.defaultConfigData.defaultConfig.convert(buildFeatures)
+
+        // gather all the build types
+        val buildTypes = mutableListOf<com.android.builder.model.v2.dsl.BuildType>()
+        for (buildType in variantInputs.buildTypes.values) {
+            buildTypes.add(buildType.buildType.convert(buildFeatures))
+        }
+
+        // gather product flavors
+        val productFlavors = mutableListOf<com.android.builder.model.v2.dsl.ProductFlavor>()
+        for (flavor in variantInputs.productFlavors.values) {
+            productFlavors.add(flavor.productFlavor.convert(buildFeatures))
+        }
+
+        val dependenciesInfo =
+                if (extension is ApplicationExtension<*, *, *, *, *>) {
+                    DependenciesInfoImpl(
+                        extension.dependenciesInfo.includeInApk,
+                        extension.dependenciesInfo.includeInBundle
+                    )
+                } else null
+
+        return AndroidDslImpl(
+            buildToolsVersion = extension.buildToolsVersion,
+
+            groupId = project.group.toString(),
+            compileTarget = extension.compileSdk.toString(), // FIXME
+
+            defaultConfig = defaultConfig,
+            buildTypes = buildTypes,
+            flavorDimensions = ImmutableList.copyOf(extension.flavorDimensions),
+            productFlavors = productFlavors,
+
+            signingConfigs = extension.signingConfigs.map { it.convert() },
+            aaptOptions = extension.aaptOptions.convert(),
+            lintOptions = extension.lintOptions.convert(),
+
+            dependenciesInfo = dependenciesInfo,
+            )
     }
 
     private fun buildGlobalLibraryMapModel(project: Project): GlobalLibraryMap {

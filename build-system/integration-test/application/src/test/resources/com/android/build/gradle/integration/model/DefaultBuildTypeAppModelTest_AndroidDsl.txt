@@ -1,0 +1,4 @@
+- AndroidDsl:
+   - buildTypes:
+      - debug:
+         - isDefault = true

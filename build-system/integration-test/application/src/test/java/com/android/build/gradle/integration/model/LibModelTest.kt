@@ -54,6 +54,11 @@ class HelloWorldLibModelTest: ModelComparator() {
         )
 
         with(result).compare(
+            model = result.container.singleAndroidDsl,
+            goldenFile = "AndroidDsl"
+        )
+
+        with(result).compare(
             model = result.container.singleVariantDependencies,
             goldenFile = "VariantDependencies"
         )
@@ -85,5 +90,10 @@ class DisabledAndroidResourcesInLibModelTest: ReferenceModelComparator(
     @Test
     fun `test AndroidProject model`() {
         compareAndroidProjectWith(goldenFileSuffix = "AndroidProject")
+    }
+
+    @Test
+    fun `test AndroidDsl model`() {
+        ensureAndroidDslDeltaIsEmpty()
     }
 }

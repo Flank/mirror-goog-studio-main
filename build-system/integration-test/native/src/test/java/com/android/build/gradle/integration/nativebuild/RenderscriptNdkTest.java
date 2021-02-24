@@ -21,16 +21,12 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.testutils.truth.PathSubject.assertThat;
 import static org.junit.Assert.assertNotNull;
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.utils.FileUtils;
 import com.google.common.base.Throwables;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-
 import org.junit.Rule;
 import org.junit.Test;
 

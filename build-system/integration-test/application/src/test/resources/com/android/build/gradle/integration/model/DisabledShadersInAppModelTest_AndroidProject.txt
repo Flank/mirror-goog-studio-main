@@ -1,25 +1,25 @@
 > AndroidProject:
-    - defaultConfig:
-       - sourceProvider:
-          - shadersDirectories = (null)
-       - androidTestSourceProvider:
-          - shadersDirectories = (null)
-       - unitTestSourceProvider:
-          - shadersDirectories = (null)
-    > buildTypes:
-       - buildTypeContainer(debug):
-          - sourceProvider:
-             - shadersDirectories = (null)
-          - androidTestSourceProvider:
-             - shadersDirectories = (null)
-          - unitTestSourceProvider:
-             - shadersDirectories = (null)
-       - buildTypeContainer(release):
-          - sourceProvider:
-             - shadersDirectories = (null)
-          - androidTestSourceProvider:
-             - shadersDirectories = (null)
-          - unitTestSourceProvider:
-             - shadersDirectories = (null)
-    < buildTypes
+   - defaultConfig:
+      - sourceProvider:
+         - shadersDirectories = (null)
+      - androidTestSourceProvider:
+         - shadersDirectories = (null)
+      - unitTestSourceProvider:
+         - shadersDirectories = (null)
+   > buildTypes:
+      - debug:
+         - sourceProvider:
+            - shadersDirectories = (null)
+         - androidTestSourceProvider:
+            - shadersDirectories = (null)
+         - unitTestSourceProvider:
+            - shadersDirectories = (null)
+      - release:
+         - sourceProvider:
+            - shadersDirectories = (null)
+         - androidTestSourceProvider:
+            - shadersDirectories = (null)
+         - unitTestSourceProvider:
+            - shadersDirectories = (null)
+   < buildTypes
 < AndroidProject

@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.common.fixture.model
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.ModelBuilderV2
+import com.android.build.gradle.integration.common.fixture.ModelContainerV2
 import com.android.build.gradle.integration.common.fixture.testprojects.TestProjectBuilder
 import com.android.build.gradle.integration.common.fixture.testprojects.TestProjectBuilderImpl
 import org.junit.Rule
@@ -40,7 +41,11 @@ abstract class ReferenceModelComparator(
     /**
      * Sync options to be used when syncing both the base state and the modified project state.
      */
-    private val syncOptions: ModelBuilderV2.() -> ModelBuilderV2 = { this }
+    private val syncOptions: ModelBuilderV2.() -> ModelBuilderV2 = { this },
+    /**
+     * Name of the variant to sync for dependencies
+     */
+    private val variantName: String? = null
 ) : BaseModelComparator {
 
     private val referenceBuilder = createBaseProject(referenceConfig)
@@ -56,30 +61,48 @@ abstract class ReferenceModelComparator(
     val deltaProject =
             GradleTestProject.builder().fromTestApp(deltaBuilder).create()
 
-    protected fun modelV2() : ModelBuilderV2 {
-        return syncOptions(deltaProject.modelV2())
+    private val referenceResult: ModelBuilderV2.FetchResult<ModelContainerV2> by lazy {
+        syncOptions(referenceProject.modelV2()).fetchModels(variantName)
+    }
+
+    private val result: ModelBuilderV2.FetchResult<ModelContainerV2> by lazy {
+        syncOptions(deltaProject.modelV2()).fetchModels(variantName)
     }
 
     fun compareAndroidProjectWith(goldenFileSuffix: String) {
-        val referenceResult = syncOptions(referenceProject.modelV2()).fetchModels()
-        val result = syncOptions(deltaProject.modelV2()).fetchModels()
-
         Comparator(this, result, referenceResult).compare(
             model = result.container.singleAndroidProject,
             referenceModel = referenceResult.container.singleAndroidProject,
             goldenFile = goldenFileSuffix
         )
-   }
+    }
 
-    fun compareVariantDependenciesWith(
-        variantName: String,
-        goldenFileSuffix: String
-    ) {
-        val referenceResult = syncOptions(referenceProject.modelV2()).fetchVariantDependencies(variantName)
-        val result = syncOptions(deltaProject.modelV2()).fetchVariantDependencies(variantName)
+    fun ensureAndroidProjectDeltaIsEmpty() {
+        Comparator(this, result, referenceResult).ensureIsEmpty(
+            model = result.container.singleAndroidProject,
+            referenceModel = referenceResult.container.singleAndroidProject
+        )
+    }
 
+    fun compareAndroidDslWith(goldenFileSuffix: String) {
+        Comparator(this, result, referenceResult).compare(
+            model = result.container.singleAndroidDsl,
+            referenceModel = referenceResult.container.singleAndroidDsl,
+            goldenFile = goldenFileSuffix
+        )
+    }
+
+    fun ensureAndroidDslDeltaIsEmpty() {
+        Comparator(this, result, referenceResult).ensureIsEmpty(
+            model = result.container.singleAndroidDsl,
+            referenceModel = referenceResult.container.singleAndroidDsl
+        )
+    }
+
+    fun compareVariantDependenciesWith(goldenFileSuffix: String) {
         Comparator(this, result, referenceResult).compare(
             model = result.container.singleVariantDependencies,
+            referenceModel = referenceResult.container.singleVariantDependencies,
             goldenFile = goldenFileSuffix
         )
     }

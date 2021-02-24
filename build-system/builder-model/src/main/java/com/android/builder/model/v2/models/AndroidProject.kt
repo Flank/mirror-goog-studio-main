@@ -20,11 +20,10 @@ import com.android.builder.model.v2.dsl.DependenciesInfo
 import com.android.builder.model.v2.dsl.SigningConfig
 import com.android.builder.model.v2.ide.AaptOptions
 import com.android.builder.model.v2.ide.AndroidGradlePluginProjectFlags
-import com.android.builder.model.v2.ide.BuildTypeContainer
 import com.android.builder.model.v2.ide.JavaCompileOptions
 import com.android.builder.model.v2.ide.LintOptions
-import com.android.builder.model.v2.ide.ProductFlavorContainer
 import com.android.builder.model.v2.ide.ProjectType
+import com.android.builder.model.v2.ide.SourceSetContainer
 import com.android.builder.model.v2.ide.Variant
 import com.android.builder.model.v2.ide.ViewBindingOptions
 import java.io.File
@@ -127,33 +126,11 @@ interface AndroidProject: AndroidModel {
      */
     val projectType: ProjectType
 
-    /**
-     * Returns the optional group-id of the artifact represented by this project.
-     *
-     * @since 3.6
-     */
-    val groupId: String?
+    val mainSourceSet: SourceSetContainer
 
-    /**
-     * Returns the [ProductFlavorContainer] for the 'main' default config.
-     *
-     * @return the product flavor.
-     */
-    val defaultConfig: ProductFlavorContainer
+    val buildTypeSourceSets: Collection<SourceSetContainer>
 
-    /**
-     * Returns a list of all the [BuildType] in their container.
-     *
-     * @return a list of build type containers.
-     */
-    val buildTypes: Collection<BuildTypeContainer>
-
-    /**
-     * Returns a list of all the [ProductFlavor] in their container.
-     *
-     * @return a list of product flavor containers.
-     */
-    val productFlavors: Collection<ProductFlavorContainer>
+    val productFlavorSourceSets: Collection<SourceSetContainer>
 
     /**
      * Returns a list of all the variants.
@@ -166,42 +143,12 @@ interface AndroidProject: AndroidModel {
     val variants: Collection<Variant>
 
     /**
-     * Returns a list of all the flavor dimensions, may be empty.
-     *
-     * @return a list of the flavor dimensions.
-     */
-    val flavorDimensions: Collection<String>
-
-    /**
-     * Returns the compilation target as a string. This is the full extended target hash string.
-     * (see com.android.sdklib.IAndroidTarget#hashString())
-     *
-     * @return the target hash string
-     */
-    val compileTarget: String
-
-    /**
      * Returns the boot classpath matching the compile target. This is typically android.jar plus
      * other optional libraries.
      *
      * @return a list of jar files.
      */
     val bootClasspath: Collection<File>
-
-    /**
-     * Returns a list of [SigningConfig].
-     */
-    val signingConfigs: Collection<SigningConfig>
-
-    /**
-     * Returns the aapt options.
-     */
-    val aaptOptions: AaptOptions
-
-    /**
-     * Returns the lint options.
-     */
-    val lintOptions: LintOptions
 
     /**
      * Returns the compile options for Java code.
@@ -225,11 +172,6 @@ interface AndroidProject: AndroidModel {
     val resourcePrefix: String?
 
     /**
-     * The build tools version used by this module.
-     */
-    val buildToolsVersion: String
-
-    /**
      * The list of dynamic features.
      *
      * The values are Gradle project paths.
@@ -244,13 +186,6 @@ interface AndroidProject: AndroidModel {
      * Only non-null if view-binding is enabled
      */
     val viewBindingOptions: ViewBindingOptions?
-
-    /**
-     * The options for Dependencies inclusion in APKs.
-     *
-     * Only non-null for [projectType] with values [ProjectType.APPLICATION]
-     */
-    val dependenciesInfo: DependenciesInfo?
 
     /** Returns the AGP flags for this project.  */
     val flags: AndroidGradlePluginProjectFlags

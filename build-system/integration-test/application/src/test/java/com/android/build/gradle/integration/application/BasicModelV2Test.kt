@@ -43,6 +43,11 @@ class BasicModelV2Test: ModelComparator() {
         )
 
         with(result).compare(
+            model = result.container.singleAndroidDsl,
+            goldenFile = "AndroidDsl"
+        )
+
+        with(result).compare(
             model = result.container.singleVariantDependencies,
             goldenFile = "testDep"
         )

@@ -16,6 +16,7 @@
 package com.android.build.gradle.integration.common.fixture
 
 import com.android.build.gradle.integration.common.fixture.ModelContainerV2.ModelInfo
+import com.android.builder.model.v2.models.AndroidDsl
 import com.android.builder.model.v2.models.AndroidProject
 import com.android.builder.model.v2.models.GlobalLibraryMap
 import com.android.builder.model.v2.models.ModelBuilderParameter
@@ -94,6 +95,7 @@ class GetAndroidModelV2Action(
             // if we don't find ModelVersions, then it's not an AndroidProject, move on.
             val modelVersions = buildController.findModel(project, ModelVersions::class.java) ?: continue
             val androidProject = buildController.findModel(project, AndroidProject::class.java)
+            val androidDsl = buildController.findModel(project, AndroidDsl::class.java)
 
             val variantDependencies = if (variantName != null) {
                 buildController.findModel(
@@ -123,6 +125,7 @@ class GetAndroidModelV2Action(
                     ModelInfo(
                         modelVersions,
                         androidProject,
+                        androidDsl,
                         variantDependencies,
                         nativeModule,
                         issues
