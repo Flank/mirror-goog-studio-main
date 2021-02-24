@@ -15,6 +15,7 @@
  */
 package com.android.build.gradle.integration.common.utils
 
+import com.android.builder.model.ApiVersion
 import com.android.builder.model.ProductFlavor
 import com.google.common.truth.Truth
 
@@ -29,6 +30,7 @@ class ProductFlavorHelper(private val productFlavor: ProductFlavor, private val 
     private var testInstrumentationRunner: String? = null
     private var testHandleProfiling: Boolean? = null
     private var testFunctionalTest: Boolean? = null
+
     fun setApplicationId(applicationId: String?): ProductFlavorHelper {
         this.applicationId = applicationId
         return this
@@ -86,12 +88,8 @@ class ProductFlavorHelper(private val productFlavor: ProductFlavor, private val 
         Truth.assertWithMessage("$name:VersionName")
             .that(versionName)
             .isEqualTo(productFlavor.versionName)
-        Truth.assertWithMessage("$name:minSdkVersion")
-            .that(minSdkVersion)
-            .isEqualTo(productFlavor.minSdkVersion)
-        Truth.assertWithMessage("$name:targetSdkVersion")
-            .that(targetSdkVersion)
-            .isEqualTo(productFlavor.targetSdkVersion)
+        minSdkVersion?.assertAgainst("$name:minSdkVersion", productFlavor.minSdkVersion)
+        targetSdkVersion?.assertAgainst("$name:targetSdkVersion", productFlavor.targetSdkVersion)
         Truth.assertWithMessage("$name:renderscriptTargetApi")
             .that(renderscriptTargetApi)
             .isEqualTo(productFlavor.renderscriptTargetApi)
@@ -109,3 +107,23 @@ class ProductFlavorHelper(private val productFlavor: ProductFlavor, private val 
             .isEqualTo(productFlavor.testFunctionalTest)
     }
 }
+
+/**
+ * Asserts this is logically equal to a given [ApiVersion].
+ *
+ * This is better than [ApiVersion.equals] because it does not require the instances to be of the
+ * same type.
+ */
+private fun ApiVersion?.assertAgainst(name: String, apiVersion: ApiVersion?) {
+    if ((this == null) xor (apiVersion == null)) {
+        // this will fail with a nullability difference
+        Truth.assertThat(apiVersion).isEqualTo(this)
+    } else if (this != null) {
+        // this shouldn't be needed due to the XOR above.
+        val nonNullApiVersion = apiVersion!!
+        Truth.assertWithMessage("$name(apiLevel)").that(apiVersion.apiLevel).isEqualTo(apiLevel)
+        Truth.assertWithMessage("$name(codename)").that(apiVersion.codename).isEqualTo(codename)
+        Truth.assertWithMessage("$name(apiString)").that(apiVersion.apiString).isEqualTo(apiString)
+    }
+}
+
