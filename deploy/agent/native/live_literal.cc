@@ -211,6 +211,7 @@ proto::AgentLiveLiteralUpdateResponse LiveLiteral::Update(
     jni_->ExceptionClear();
     response_.set_status(proto::AgentLiveLiteralUpdateResponse::ERROR);
     response_.set_extra("LiveLiteralKt Not found!");
+    return response_;
   }
 
   if (!InstrumentApplication(jvmti_, jni_, request.package_name(),
