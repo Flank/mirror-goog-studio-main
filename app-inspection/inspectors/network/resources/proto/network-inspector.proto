@@ -3,24 +3,101 @@ package studio.network.inspection;
 option java_package = "studio.network.inspection";
 option java_outer_classname = "NetworkInspectorProtocol";
 
-message Command {
-    oneof one_of_command {
-        TestCommand test_command = 1;
+message Event {
+    // Timestamp of the event in nanoseconds.
+    int64 timestamp = 1;
+    oneof union {
+        HttpConnectionEvent http_connection_event = 11;
+        SpeedEvent speed_event = 12;
     }
+}
+
+// Message representing a network event from the inspector.
+message HttpConnectionEvent {
+    message RequestStarted {
+        string url = 1;
+        string trace = 2;
+        // Header fields associated with this request. See also:
+        // https://en.wikipedia.org/wiki/List_of_HTTP_header_fields#Request_fields.
+        string fields = 3;
+        string method = 4;
+    }
+
+    message RequestCompleted {
+    }
+
+    message ResponseStarted {
+        // Header fields associated with this response. See also:
+        // https://en.wikipedia.org/wiki/List_of_HTTP_header_fields#Response_fields.
+        string fields = 1;
+    }
+
+    message ResponseCompleted {
+    }
+
+    // Sent when an http connection is closed or an error occurred.
+    message Closed {
+        // Indicates whether the http connection was completed or aborted.
+        bool completed = 1;
+    }
+
+    // The payload associated with an http request or response.
+    // A connection can have up to two payloads, one for request and one for response.
+    message Payload {
+        bytes payload = 1;
+    }
+
+    message ThreadData {
+        // ID of the thread obtained from Java, which is different from the thread ID
+        // obtained in a JNI context.
+        int64 thread_id = 1;
+        // Name of the thread as obtained by Thread#getName()
+        string thread_name = 2;
+    }
+
+    int64 connection_id = 1;
+
+    oneof union {
+        RequestStarted http_request_started = 11;
+        RequestCompleted http_request_completed = 12;
+        ResponseStarted http_response_started = 13;
+        ResponseCompleted http_response_completed = 14;
+        Closed http_closed = 15;
+        Payload request_payload = 16;
+        Payload response_payload = 17;
+        ThreadData http_thread = 18;
+    }
+}
+
+// The network transmission and receiving speed experienced by the app.
+message SpeedEvent {
+    int64 tx_speed = 1; // transmission speed in bytes / s
+    int64 rx_speed = 2; // receive speed in bytes / s
+}
+
+message Command {
+    oneof union {
+        // Signals the start of inspection. This has the side effect of
+        // causing the inspector to apply bytecode transformation in order
+        // to add hooks into Http code.
+        StartInspectionCommand start_inspection_command = 1;
+    }
+}
+
+message StartInspectionCommand {
 }
 
 message Response {
-    oneof one_of_response {
-        TestResponse test_response = 1;
+    oneof union {
+        // Response to StartInspectionCommand.
+        StartInspectionResponse start_inspection_response = 1;
     }
 }
 
-message TestCommand {
-    int64 cmd_id = 1;
-    string message = 2;
+message StartInspectionResponse {
+    // This timestamp in nanoseconds represents the baseline for the clock the app
+    // is running on. This helps Studio in rendering the inspector timeline.
+    int64 timestamp = 1;
 }
 
-message TestResponse {
-    int64 cmd_id = 1;
-    string response = 2;
-}
+

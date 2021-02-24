@@ -35,13 +35,14 @@ class NetworkInspector(
         CoroutineScope(supervisorJob + environment.executors().primary().asCoroutineDispatcher())
 
     override fun onReceiveCommand(data: ByteArray, callback: CommandCallback) {
+        // Currently only support the start inspection command.
         val command = NetworkInspectorProtocol.Command.parseFrom(data)
+        assert(command.hasStartInspectionCommand())
         callback.reply(
             NetworkInspectorProtocol.Response.newBuilder()
-                .setTestResponse(
-                    NetworkInspectorProtocol.TestResponse.newBuilder()
-                        .setCmdId(command.testCommand.cmdId)
-                        .setResponse("Received: ${command.testCommand.message}")
+                .setStartInspectionResponse(
+                    NetworkInspectorProtocol.StartInspectionResponse.newBuilder()
+                        .setTimestamp(System.nanoTime())
                         .build()
                 )
                 .build()
