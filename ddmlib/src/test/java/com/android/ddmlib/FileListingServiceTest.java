@@ -82,4 +82,10 @@ public class FileListingServiceTest extends TestCase {
                 "drwxrwx--x 12 root sdcard_r 4096 2015-07-20 23:01 /sdcard/");
         assertTrue(m.matches());
     }
+
+    public void testFileEntryEscape() {
+        assertEquals("file\\\"name", FileListingService.FileEntry.escape("file\"name"));
+        assertEquals("file\\$name", FileListingService.FileEntry.escape("file$name"));
+        assertEquals("file\\'name", FileListingService.FileEntry.escape("file'name"));
+    }
 }

@@ -119,7 +119,7 @@ public final class FileListingService {
          *  This pattern identifies any special characters that need to be escaped with a
          *  backslash. */
         private static final Pattern sEscapePattern = Pattern.compile(
-                "([\\\\()*+?\"'&#/\\s])"); //$NON-NLS-1$
+                "([\\\\()*+?\"'&$#/\\s])"); //$NON-NLS-1$
 
         /**
          * Comparator object for FileEntry
