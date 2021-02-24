@@ -26,6 +26,7 @@ import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodTy
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.MapProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import java.io.Serializable
 
@@ -143,4 +144,11 @@ abstract class AnalyticsEnabledVariant (
             VariantPropertiesMethodType.GET_EXTENSION_VALUE
         return delegate.getExtension(type)
     }
+
+    override val isPseudoLocalesEnabled: Property<Boolean>
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                    VariantPropertiesMethodType.VARIANT_PSEUDOLOCALES_ENABLED_VALUE
+            return delegate.isPseudoLocalesEnabled
+        }
 }

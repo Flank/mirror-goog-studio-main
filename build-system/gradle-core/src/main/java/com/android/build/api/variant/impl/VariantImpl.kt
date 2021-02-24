@@ -47,6 +47,7 @@ import com.google.common.collect.ImmutableList
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.provider.MapProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.objectweb.asm.Type
 import java.io.Serializable
@@ -229,4 +230,7 @@ abstract class VariantImpl(
             }
         }
     }
+
+    override val isPseudoLocalesEnabled: Property<Boolean> =
+        internalServices.newPropertyBackingDeprecatedApi(Boolean::class.java, variantDslInfo.isPseudoLocalesEnabled)
 }

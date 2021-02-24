@@ -19,6 +19,7 @@ import com.android.build.api.component.Component
 import com.android.build.api.component.UnitTest
 import org.gradle.api.Incubating
 import org.gradle.api.provider.MapProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import java.io.Serializable
 
@@ -117,4 +118,9 @@ interface Variant : Component {
      * @return the registered object or null.
      */
     fun <T> getExtension(type: Class<T>): T?
+
+    /**
+     * Variant's is pseudo locales enabled, initialized by the corresponding DSL elements.
+     */
+    val isPseudoLocalesEnabled: Property<Boolean>
 }

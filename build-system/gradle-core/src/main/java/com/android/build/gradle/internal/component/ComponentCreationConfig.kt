@@ -44,6 +44,7 @@ import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 
 /**
@@ -79,7 +80,7 @@ interface ComponentCreationConfig : ComponentIdentity {
     val projectClassesAreInstrumented: Boolean
     val dependenciesClassesAreInstrumented: Boolean
     val debuggable: Boolean
-
+    val isPseudoLocalesEnabled: Property<Boolean>
 
     val minSdkVersion: AndroidVersion
 

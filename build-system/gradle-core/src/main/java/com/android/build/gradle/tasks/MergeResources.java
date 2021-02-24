@@ -137,8 +137,6 @@ public abstract class MergeResources extends IncrementalTask {
 
     @Nullable private File mergedNotCompiledResourcesOutputDirectory;
 
-    private boolean pseudoLocalesEnabled;
-
     private boolean precompileDependenciesResources;
 
     private ImmutableSet<Flag> flags;
@@ -177,6 +175,9 @@ public abstract class MergeResources extends IncrementalTask {
 
     @Input
     public abstract Property<Boolean> getRelativePathsEnabled();
+
+    @Input
+    public abstract Property<Boolean> getPseudoLocalesEnabled();
 
     @Internal
     public abstract Property<Aapt2ThreadPoolBuildService> getAapt2ThreadPoolBuildService();
@@ -297,7 +298,7 @@ public abstract class MergeResources extends IncrementalTask {
                                     getIncrementalFolder(),
                                     dataBindingLayoutProcessor,
                                     mergedNotCompiledResourcesOutputDirectory,
-                                    pseudoLocalesEnabled,
+                                    getPseudoLocalesEnabled().get(),
                                     getCrunchPng(),
                                     sourceSetPaths));
 
@@ -461,7 +462,7 @@ public abstract class MergeResources extends IncrementalTask {
                                         getIncrementalFolder(),
                                         dataBindingLayoutProcessor,
                                         mergedNotCompiledResourcesOutputDirectory,
-                                        pseudoLocalesEnabled,
+                                        getPseudoLocalesEnabled().get(),
                                         getCrunchPng(),
                                         sourceSetPaths));
 
@@ -785,11 +786,6 @@ public abstract class MergeResources extends IncrementalTask {
     public abstract DirectoryProperty getMergedNotCompiledResourcesOutputDirectory();
 
     @Input
-    public boolean isPseudoLocalesEnabled() {
-        return pseudoLocalesEnabled;
-    }
-
-    @Input
     public String getFlags() {
         return flags.stream().map(Enum::name).sorted().collect(Collectors.joining(","));
     }
@@ -954,7 +950,8 @@ public abstract class MergeResources extends IncrementalTask {
 
             task.mergedNotCompiledResourcesOutputDirectory = mergedNotCompiledOutputDirectory;
 
-            task.pseudoLocalesEnabled = creationConfig.getVariantDslInfo().isPseudoLocalesEnabled();
+            task.getPseudoLocalesEnabled().set(creationConfig.isPseudoLocalesEnabled());
+            task.getPseudoLocalesEnabled().disallowChanges();
             task.flags = flags;
 
             task.errorFormatMode =

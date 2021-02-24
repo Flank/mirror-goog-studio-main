@@ -288,7 +288,6 @@ abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
                 )
             }
             task.pseudoLocalesEnabled.setDisallowChanges(creationConfig
-                .variantDslInfo
                 .isPseudoLocalesEnabled)
 
             task.crunchPng.setDisallowChanges(creationConfig.variantScope.isCrunchPngs)
