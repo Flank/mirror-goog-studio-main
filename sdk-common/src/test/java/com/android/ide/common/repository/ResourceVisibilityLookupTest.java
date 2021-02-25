@@ -40,6 +40,7 @@ import java.util.List;
 import junit.framework.TestCase;
 
 public class ResourceVisibilityLookupTest extends TestCase {
+
     public void test() throws IOException {
         IdeAndroidLibrary library =
                 createMockLibrary(
@@ -59,7 +60,11 @@ public class ResourceVisibilityLookupTest extends TestCase {
                                 + "id action_settings\n"
                                 + "layout activity_main\n");
 
-        ResourceVisibilityLookup visibility = ResourceVisibilityLookup.create(library);
+        ResourceVisibilityLookup visibility =
+                ResourceVisibilityLookup.create(
+                        library.getArtifactAddress(),
+                        new File(library.getSymbolFile()),
+                        new File(library.getPublicResources()));
         assertTrue(visibility.isPrivate(ResourceType.DIMEN, "activity_horizontal_margin"));
         assertFalse(visibility.isPrivate(ResourceType.ID, "action_settings"));
         assertFalse(visibility.isPrivate(ResourceType.LAYOUT, "activity_main"));
@@ -85,7 +90,11 @@ public class ResourceVisibilityLookupTest extends TestCase {
                                 + "int string hello_world 0x7f040002",
                         "");
 
-        ResourceVisibilityLookup visibility = ResourceVisibilityLookup.create(library);
+        ResourceVisibilityLookup visibility =
+                ResourceVisibilityLookup.create(
+                        library.getArtifactAddress(),
+                        new File(library.getSymbolFile()),
+                        new File(library.getPublicResources()));
         assertTrue(visibility.isPrivate(ResourceType.DIMEN, "activity_horizontal_margin"));
         assertTrue(visibility.isPrivate(ResourceType.ID, "action_settings"));
         assertTrue(visibility.isPrivate(ResourceType.LAYOUT, "activity_main"));
@@ -98,7 +107,11 @@ public class ResourceVisibilityLookupTest extends TestCase {
         IdeAndroidLibrary library =
                 createMockLibrary("com.android.tools:test-library:1.0.0", "", null);
 
-        ResourceVisibilityLookup visibility = ResourceVisibilityLookup.create(library);
+        ResourceVisibilityLookup visibility =
+                ResourceVisibilityLookup.create(
+                        library.getArtifactAddress(),
+                        new File(library.getSymbolFile()),
+                        new File(library.getPublicResources()));
         assertFalse(visibility.isPrivate(ResourceType.DIMEN, "activity_horizontal_margin"));
         assertFalse(visibility.isPrivate(ResourceType.ID, "action_settings"));
         assertFalse(visibility.isPrivate(ResourceType.LAYOUT, "activity_main"));
@@ -198,13 +211,13 @@ public class ResourceVisibilityLookupTest extends TestCase {
                         "");
         ResourceVisibilityLookup.Provider provider = new ResourceVisibilityLookup.Provider();
         assertSame(provider.get(library), provider.get(library));
-        assertTrue(provider.get(library).isPrivate(ResourceType.DIMEN,
-                "activity_horizontal_margin"));
+        assertTrue(
+                provider.get(library).isPrivate(ResourceType.DIMEN, "activity_horizontal_margin"));
 
         IdeAndroidArtifact artifact = createMockArtifact(Collections.singletonList(library));
         assertSame(provider.get(artifact), provider.get(artifact));
-        assertTrue(provider.get(artifact).isPrivate(ResourceType.DIMEN,
-                "activity_horizontal_margin"));
+        assertTrue(
+                provider.get(artifact).isPrivate(ResourceType.DIMEN, "activity_horizontal_margin"));
     }
 
     public void testImportedResources() throws IOException {
