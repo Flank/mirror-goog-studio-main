@@ -407,7 +407,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         override val checkDependencies: Boolean
             get() = false
         override val reportOnly: Boolean
-            get() = false
+            get() = creationConfig.services.projectOptions.get(USE_LINT_PARTIAL_ANALYSIS)
 
         override fun handleProvider(taskProvider: TaskProvider<AndroidLintTask>) {
             variant.main.taskContainer.assembleTask.dependsOn(taskProvider)
@@ -469,9 +469,12 @@ abstract class AndroidLintTask : NonIncrementalTask() {
                 includeDynamicFeatureSourceProviders = includeDynamicFeatureSourceProviders
             )
             if (reportOnly) {
-                task.partialResults.set(
+                val partialResults = if (fatalOnly) {
+                    creationConfig.artifacts.get(InternalArtifactType.LINT_VITAL_PARTIAL_RESULTS)
+                } else {
                     creationConfig.artifacts.get(InternalArtifactType.LINT_PARTIAL_RESULTS)
-                )
+                }
+                task.partialResults.set(partialResults)
                 if (creationConfig.globalScope.hasDynamicFeatures()) {
                     task.dynamicFeatureLintModels.from(
                         creationConfig.variantDependencies.getArtifactFileCollection(

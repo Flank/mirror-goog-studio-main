@@ -20,19 +20,32 @@ import static com.android.build.gradle.integration.common.truth.GradleTaskSubjec
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
+import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TestVersions;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
+import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.options.BooleanOption;
 import java.io.File;
 import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 /** Checks if fatal lint errors stop the release build. */
+@RunWith(FilterableParameterized.class)
 public class LintVitalTest {
+
+    @Parameterized.Parameters(name = "usePartialAnalysis = {0}")
+    public static Object[] getParameters() {
+        return new Object[] {true, false};
+    }
+
+    @Parameterized.Parameter public boolean usePartialAnalysis;
 
     @Rule
     public final GradleTestProject project =
@@ -73,7 +86,7 @@ public class LintVitalTest {
      */
     @Test
     public void runningLintSkipsLintVital() throws Exception {
-        GradleBuildResult result = project.executor().expectFailure().run("lintVitalRelease", "lint");
+        GradleBuildResult result = getExecutor().expectFailure().run("lintVitalRelease", "lint");
         TruthHelper.assertThat(result.getTask(":lintVitalRelease")).wasSkipped();
 
         // We make this assertion to ensure that lint is actually run and runs as expected. Without
@@ -84,8 +97,11 @@ public class LintVitalTest {
 
     @Test
     public void fatalLintCheckFailsBuild() throws IOException, InterruptedException {
-        GradleBuildResult result = project.executor().expectFailure().run("assembleRelease");
+        GradleBuildResult result = getExecutor().expectFailure().run("assembleRelease");
         assertThat(result.getFailureMessage()).contains("fatal errors");
+        if (usePartialAnalysis) {
+            assertThat(result.findTask(":lintVitalAnalyzeRelease")).didWork();
+        }
         TruthHelper.assertThat(result.getTask(":lintVitalRelease")).failed();
     }
 
@@ -95,7 +111,7 @@ public class LintVitalTest {
                 project.getBuildFile(), "com.android.application", "com.android.library");
         TestFileUtils.searchAndReplace(
                 project.getBuildFile(), "dependenciesInfo.includeInApk = false", "");
-        GradleBuildResult result = project.executor().run("assembleRelease");
+        GradleBuildResult result = getExecutor().run("assembleRelease");
         assertThat(result.findTask(":lintVitalRelease")).isNull();
     }
 
@@ -105,7 +121,11 @@ public class LintVitalTest {
                 project.getBuildFile(),
                 "android.lintOptions.checkReleaseBuilds = false\n");
 
-        GradleBuildResult result = project.executor().run("assembleRelease");
+        GradleBuildResult result = getExecutor().run("assembleRelease");
         assertThat(result.findTask(":lintVitalRelease")).isNull();
+    }
+
+    private GradleTaskExecutor getExecutor() {
+        return project.executor().with(BooleanOption.USE_LINT_PARTIAL_ANALYSIS, usePartialAnalysis);
     }
 }

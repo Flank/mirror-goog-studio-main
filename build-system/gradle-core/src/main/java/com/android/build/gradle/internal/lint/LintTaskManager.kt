@@ -87,6 +87,9 @@ class LintTaskManager constructor(private val globalScope: GlobalScope, private 
             ) {
                 val lintVitalTask =
                     taskFactory.register(AndroidLintTask.LintVitalCreationAction(mainVariant))
+                taskFactory.register(
+                    AndroidLintAnalysisTask.LintVitalCreationAction(variantWithTests)
+                )
 
                 // If lint is being run, we do not need to run lint vital.
                 variantLintTaskToLintVitalTask[getTaskPath(variantLintTask)] = lintVitalTask
