@@ -32,7 +32,6 @@ import com.android.SdkConstants.RES_FOLDER
 import com.android.SdkConstants.SRC_FOLDER
 import com.android.ide.common.repository.GradleCoordinate
 import com.android.ide.common.repository.GradleVersion
-import com.android.ide.common.repository.ResourceVisibilityLookup
 import com.android.ide.common.resources.ResourceItem
 import com.android.ide.common.resources.ResourceRepository
 import com.android.ide.common.util.PathString
@@ -1715,20 +1714,6 @@ abstract class LintClient {
         valueOnly: Boolean = true
     ): Location.ResourceItemHandle =
         Location.ResourceItemHandle(this, item, nameOnly, valueOnly)
-
-    private var resourceVisibilityProvider: ResourceVisibilityLookup.Provider? = null
-
-    /**
-     * Returns a shared [ResourceVisibilityLookup.Provider]
-     *
-     * @return a shared provider for looking up resource visibility
-     */
-    open fun getResourceVisibilityProvider(): ResourceVisibilityLookup.Provider {
-        if (resourceVisibilityProvider == null) {
-            resourceVisibilityProvider = ResourceVisibilityLookup.Provider()
-        }
-        return resourceVisibilityProvider!!
-    }
 
     /**
      * Creates a [XmlPullParser] for the given XML file resource.

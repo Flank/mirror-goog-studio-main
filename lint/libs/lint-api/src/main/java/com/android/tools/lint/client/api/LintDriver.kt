@@ -35,7 +35,6 @@ import com.android.SdkConstants.TOOLS_URI
 import com.android.SdkConstants.VALUE_TRUE
 import com.android.ide.common.repository.GradleCoordinate
 import com.android.ide.common.repository.GradleVersion
-import com.android.ide.common.repository.ResourceVisibilityLookup
 import com.android.ide.common.resources.ResourceItem
 import com.android.ide.common.resources.ResourceRepository
 import com.android.ide.common.resources.configuration.FolderConfiguration.QUALIFIER_SPLITTER
@@ -2730,9 +2729,6 @@ class LintDriver(
             project: Project,
             scope: ResourceRepositoryScope
         ): ResourceRepository = delegate.getResources(project, scope)
-
-        override fun getResourceVisibilityProvider(): ResourceVisibilityLookup.Provider =
-            delegate.getResourceVisibilityProvider()
 
         override fun createResourceItemHandle(item: ResourceItem, nameOnly: Boolean, valueOnly: Boolean): Location.ResourceItemHandle {
             return delegate.createResourceItemHandle(item, nameOnly, valueOnly)
