@@ -20,19 +20,32 @@ import static com.android.testutils.truth.PathSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
+import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.truth.ScannerSubject;
+import com.android.build.gradle.options.BooleanOption;
 import java.io.File;
 import kotlin.io.FilesKt;
 import kotlin.text.Charsets;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 /**
  * Test for generating baselines for all variants, making sure we don't accidentally merge resources
  * files in different resource qualifiers; https://issuetracker.google.com/131073349
  */
+@RunWith(FilterableParameterized.class)
 public class LintBaselineTest {
+
+    @Parameterized.Parameters(name = "usePartialAnalysis = {0}")
+    public static Object[] getParameters() {
+        return new Object[] {true, false};
+    }
+
+    @Parameterized.Parameter public boolean usePartialAnalysis;
 
     @Rule public final GradleTestProject project =
             GradleTestProject.builder()
@@ -42,7 +55,7 @@ public class LintBaselineTest {
 
     @Test
     public void checkMerging() throws Exception {
-        GradleBuildResult result = project.executor().expectFailure().run(":app:lint");
+        GradleBuildResult result = getExecutor().expectFailure().run(":app:lint");
         ScannerSubject.assertThat(result.getStderr()).contains("Created baseline file");
 
         File baselineFile =
@@ -75,6 +88,10 @@ public class LintBaselineTest {
                                 + "    </issue>\n"
                                 + "\n");
         // Check the written baseline means that a subsequent lint invocation passes.
-        project.executor().run("clean", ":app:lint");
+        getExecutor().run("clean", ":app:lint");
+    }
+
+    private GradleTaskExecutor getExecutor() {
+        return project.executor().with(BooleanOption.USE_LINT_PARTIAL_ANALYSIS, usePartialAnalysis);
     }
 }

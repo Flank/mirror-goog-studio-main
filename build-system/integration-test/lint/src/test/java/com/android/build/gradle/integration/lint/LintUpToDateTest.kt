@@ -15,16 +15,28 @@
  */
 package com.android.build.gradle.integration.lint
 
+import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.truth.GradleTaskSubject.assertThat
+import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.truth.PathSubject.assertThat
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 
 /** Integration test that lint can be up-to-date  */
-class LintUpToDateTest {
+@RunWith(FilterableParameterized::class)
+class LintUpToDateTest(private val usePartialAnalysis: Boolean) {
+
+    companion object {
+        @Parameterized.Parameters(name = "usePartialAnalysis = {0}")
+        @JvmStatic
+        fun params() = listOf(true, false)
+    }
 
     @get:Rule
     val project: GradleTestProject =
@@ -44,15 +56,20 @@ class LintUpToDateTest {
     }
 
     @Test
-    fun checkLintModels() {
-        val firstRun = project.executor().run(":app:lintDebug")
+    fun checkLintUpToDate() {
+        val firstRun = getExecutor().run(":app:lintDebug")
 
         assertThat(firstRun.getTask(":app:lintDebug")).didWork()
         val lintResults = project.file("app/build/reports/lint-results.txt")
         assertThat(lintResults).contains("8 errors, 6 warnings")
 
-        val secondRun = project.executor().run(":app:lintDebug")
+        val secondRun = getExecutor().run(":app:lintDebug")
         assertThat(secondRun.getTask(":app:lintDebug")).wasUpToDate()
+        if (usePartialAnalysis) {
+            assertThat(secondRun.getTask(":app:lintAnalyzeDebug")).wasUpToDate()
+        }
     }
 
+    private fun getExecutor(): GradleTaskExecutor =
+        project.executor().with(BooleanOption.USE_LINT_PARTIAL_ANALYSIS, usePartialAnalysis)
 }
