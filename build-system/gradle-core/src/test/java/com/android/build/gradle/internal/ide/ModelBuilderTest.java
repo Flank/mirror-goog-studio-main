@@ -105,7 +105,7 @@ public class ModelBuilderTest {
 
         project = ProjectFactory.getProject();
 
-        when(globalScope.getProject()).thenReturn(project);
+        when(projectInfo.getProject()).thenReturn(project);
 
         syncIssueReporter =
                 new SyncIssueReporterImpl(

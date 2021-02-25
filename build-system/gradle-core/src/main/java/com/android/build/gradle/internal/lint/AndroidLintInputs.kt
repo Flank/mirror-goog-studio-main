@@ -213,7 +213,7 @@ abstract class ProjectInputs {
 
     internal fun initialize(variant: VariantWithTests) {
         val creationConfig = variant.main
-        val project = creationConfig.globalScope.project
+        val project = creationConfig.services.projectInfo.getProject()
         val extension = creationConfig.globalScope.extension
         initializeFromProject(project)
         projectType.setDisallowChanges(creationConfig.variantType.toLintModelModuleType())
@@ -820,10 +820,10 @@ abstract class AndroidArtifactInput : ArtifactInput() {
 
         artifactCollectionsInputs.setDisallowChanges(ArtifactCollectionsInputs(
             variantDependencies = componentImpl.variantDependencies,
-            projectPath = componentImpl.globalScope.project.path,
+            projectPath = componentImpl.services.projectInfo.getProject().path,
             variantName = componentImpl.name,
             runtimeType = ArtifactCollectionsInputs.RuntimeType.FULL,
-            buildMapping = componentImpl.globalScope.project.gradle.computeBuildMapping(),
+            buildMapping = componentImpl.services.projectInfo.getProject().gradle.computeBuildMapping(),
             mavenCoordinatesCache = getBuildService(componentImpl.services.buildServiceRegistry)
         ))
         return this
@@ -909,10 +909,10 @@ abstract class JavaArtifactInput : ArtifactInput() {
         }
         artifactCollectionsInputs.setDisallowChanges(ArtifactCollectionsInputs(
             variantDependencies = unitTestImpl.variantDependencies,
-            projectPath = unitTestImpl.globalScope.project.path,
+            projectPath = unitTestImpl.services.projectInfo.getProject().path,
             variantName = unitTestImpl.name,
             runtimeType = ArtifactCollectionsInputs.RuntimeType.FULL,
-            buildMapping = unitTestImpl.globalScope.project.gradle.computeBuildMapping(),
+            buildMapping = unitTestImpl.services.projectInfo.getProject().gradle.computeBuildMapping(),
             mavenCoordinatesCache = getBuildService(unitTestImpl.services.buildServiceRegistry)
         ))
         return this

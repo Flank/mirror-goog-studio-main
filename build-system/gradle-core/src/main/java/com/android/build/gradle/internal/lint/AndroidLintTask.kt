@@ -434,7 +434,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
             task.group = JavaBasePlugin.VERIFICATION_GROUP
             task.description = description
 
-            task.initializeGlobalInputs(creationConfig.globalScope)
+            task.initializeGlobalInputs(creationConfig.globalScope, creationConfig.services.projectInfo.getProject())
             task.lintModelDirectory.set(variant.main.paths.getIncrementalDir(task.name))
             task.lintRulesJar.from(creationConfig.globalScope.localCustomLintChecks)
             task.lintRulesJar.from(
@@ -534,7 +534,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
             task.androidTestDependencyLintModels.disallowChanges()
             task.unitTestDependencyLintModels.disallowChanges()
             task.dependencyPartialResults.disallowChanges()
-            task.lintTool.initialize(creationConfig.globalScope.project, creationConfig.services.projectOptions)
+            task.lintTool.initialize(creationConfig.services.projectInfo.getProject(), creationConfig.services.projectOptions)
             if (checkDependencies) {
                 task.outputs.upToDateWhen {
                     it.logger.debug("Lint with checkDependencies does not model all of its inputs yet.")
@@ -579,9 +579,9 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         textReportToStderr.disallowChanges()
     }
 
-    private fun initializeGlobalInputs(globalScope: GlobalScope) {
+    private fun initializeGlobalInputs(globalScope: GlobalScope, project: Project) {
         initializeGlobalInputs(
-            project = globalScope.project,
+            project = project,
             isAndroid = true
         )
     }

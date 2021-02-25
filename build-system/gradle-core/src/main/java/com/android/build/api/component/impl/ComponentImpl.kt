@@ -395,7 +395,7 @@ abstract class ComponentImpl(
             mainCollection,
             combinedCollection,
             extraArtifact,
-            globalScope.project.path
+            internalServices.projectInfo.getProject().path
         )
 
         return onTestedConfig { testedVariant ->
@@ -423,7 +423,7 @@ abstract class ComponentImpl(
                 extraCollection,
                 combinedCollectionForTest,
                 testedAllClasses,
-                globalScope.project.path,
+                internalServices.projectInfo.getProject().path,
                 null
             )
         } ?: extraCollection
@@ -680,7 +680,7 @@ abstract class ComponentImpl(
 
         // then add the fallbacks which contain the actual requested value
         DependencyConfigurator.addFlavorStrategy(
-            globalScope.project.dependencies.attributesSchema,
+            services.projectInfo.getProject().dependencies.attributesSchema,
             dimension,
             ImmutableMap.of(requestedValue, alternatedValues)
         )

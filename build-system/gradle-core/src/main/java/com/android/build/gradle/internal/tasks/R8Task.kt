@@ -344,7 +344,7 @@ abstract class R8Task: ProguardConfigurableTask() {
                     )
                 }
                 if (creationConfig.isCoreLibraryDesugaringEnabled) {
-                    task.coreLibDesugarConfig.set(getDesugarLibConfig(creationConfig.globalScope.project))
+                    task.coreLibDesugarConfig.set(getDesugarLibConfig(creationConfig.services.projectInfo.getProject()))
                 }
             }
             task.baseJar.disallowChanges()

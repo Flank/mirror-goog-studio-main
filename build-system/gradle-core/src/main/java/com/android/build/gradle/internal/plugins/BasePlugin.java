@@ -230,7 +230,8 @@ public abstract class BasePlugin<
             boolean hasFlavors,
             @NonNull ProjectOptions projectOptions,
             @NonNull GlobalScope globalScope,
-            @NonNull BaseExtension extension);
+            @NonNull BaseExtension extension,
+            @NonNull ProjectInfo projectInfo);
 
     protected abstract int getProjectType();
 
@@ -567,7 +568,8 @@ public abstract class BasePlugin<
                         projectServices.getIssueReporter(),
                         projectServices.getProjectOptions(),
                         globalScope,
-                        variantModel);
+                        variantModel,
+                        projectServices.getProjectInfo());
         registry.register(nativeModelBuilderV2);
     }
 
@@ -616,7 +618,8 @@ public abstract class BasePlugin<
                                 projectServices.getProjectOptions(),
                                 globalScope,
                                 variantFactory.getVariantType(),
-                                extension.getSourceSets()));
+                                extension.getSourceSets(),
+                                projectServices.getProjectInfo()));
 
         project.afterEvaluate(
                 CrashReporting.afterEvaluate(
@@ -728,7 +731,8 @@ public abstract class BasePlugin<
                         !variantInputModel.getProductFlavors().isEmpty(),
                         projectServices.getProjectOptions(),
                         globalScope,
-                        extension);
+                        extension,
+                        projectServices.getProjectInfo());
 
         taskManager.createTasks(variantFactory.getVariantType(), createVariantModel());
 

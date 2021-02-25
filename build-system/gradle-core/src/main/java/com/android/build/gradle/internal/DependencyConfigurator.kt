@@ -576,13 +576,13 @@ class DependencyConfigurator(
 
         for (component in allComponents) {
             registerAsmTransformForComponent(
-                globalScope.project.name,
+                projectServices.projectInfo.getProject().name,
                 dependencies,
                 component
             )
 
             registerRecalculateStackFramesTransformForComponent(
-                globalScope.project.name,
+                projectServices.projectInfo.getProject().name,
                 dependencies,
                 component
             )
@@ -593,10 +593,10 @@ class DependencyConfigurator(
                 allComponents
             )) {
                 artifactConfiguration.registerTransform(
-                    globalScope.project.name,
+                    projectServices.projectInfo.getProject().name,
                     dependencies,
                     project.files(globalScope.bootClasspath),
-                    getDesugarLibConfig(globalScope.project),
+                    getDesugarLibConfig(projectServices.projectInfo.getProject()),
                     SyncOptions.getErrorFormatMode(projectOptions),
                     projectOptions.get(BooleanOption.ENABLE_INCREMENTAL_DEXING_TRANSFORM)
                 )

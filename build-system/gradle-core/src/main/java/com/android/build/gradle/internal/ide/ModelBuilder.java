@@ -241,7 +241,7 @@ public class ModelBuilder<Extension extends BaseExtension>
     @NonNull
     private Object buildNonParameterizedModels(@NonNull String modelName) {
         if (modelName.equals(GlobalLibraryMap.class.getName())) {
-            return buildGlobalLibraryMap(globalScope.getProject().getGradle().getSharedServices());
+            return buildGlobalLibraryMap(projectInfo.getProject().getGradle().getSharedServices());
         } else if (modelName.equals(ProjectSyncIssues.class.getName())) {
             return buildProjectSyncIssuesModel();
         }
@@ -271,7 +271,7 @@ public class ModelBuilder<Extension extends BaseExtension>
         allIssues.addAll(syncIssueReporter.getSyncIssues());
         allIssues.addAll(
                 BuildServicesKt.getBuildService(
-                                globalScope.getProject().getGradle().getSharedServices(),
+                                projectInfo.getProject().getGradle().getSharedServices(),
                                 SyncIssueReporterImpl.GlobalSyncIssueService.class)
                         .get()
                         .getAllIssuesAndClear());
@@ -713,7 +713,7 @@ public class ModelBuilder<Extension extends BaseExtension>
     }
 
     private void checkProguardFiles(@NonNull ComponentImpl component) {
-        final Project project = globalScope.getProject();
+        final Project project = projectInfo.getProject();
 
         // We check for default files unless it's a base module, which can include default files.
         boolean isBaseModule = component.getVariantType().isBaseModule();
@@ -759,7 +759,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                 // probably there was an error...
                 new DependencyFailureHandler()
                         .addErrors(
-                                globalScope.getProject().getPath()
+                                projectInfo.getProject().getPath()
                                         + "@"
                                         + component.getName()
                                         + "/testTarget",
@@ -903,7 +903,7 @@ public class ModelBuilder<Extension extends BaseExtension>
 
         InstantRunImpl instantRun =
                 new InstantRunImpl(
-                        globalScope.getProject().file("build_info_removed"),
+                        projectInfo.getProject().file("build_info_removed"),
                         InstantRun.STATUS_REMOVED);
 
         Pair<Dependencies, DependencyGraphs> dependencies =
@@ -924,7 +924,7 @@ public class ModelBuilder<Extension extends BaseExtension>
 
         if (component.getVariantType().isTestComponent()) {
             Configuration testHelpers =
-                    globalScope
+                    projectInfo
                             .getProject()
                             .getConfigurations()
                             .findByName(SdkConstants.GRADLE_ANDROID_TEST_UTIL_CONFIGURATION);
@@ -1155,7 +1155,7 @@ public class ModelBuilder<Extension extends BaseExtension>
     private List<String> getDesugaredMethods(@NonNull VariantCreationConfig creationConfig) {
         List<String> desugaredMethodsFromDesugarLib =
                 DesugarLibUtils.getDesugaredMethods(
-                        creationConfig.getGlobalScope().getProject(),
+                        creationConfig.getServices().getProjectInfo().getProject(),
                         creationConfig.isCoreLibraryDesugaringEnabled(),
                         creationConfig.getMinSdkVersion(),
                         creationConfig.getGlobalScope().getExtension().getCompileSdkVersion());

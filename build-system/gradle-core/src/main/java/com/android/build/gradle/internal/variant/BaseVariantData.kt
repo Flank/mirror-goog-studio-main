@@ -81,7 +81,7 @@ abstract class BaseVariantData(
     @JvmField
     var outputsAreSigned = false
     @JvmField
-    var applicationIdTextResource: TextResource = globalScope.project.resources.text.fromString("")
+    var applicationIdTextResource: TextResource = services.projectInfo.getProject().resources.text.fromString("")
 
     abstract val description: String
 

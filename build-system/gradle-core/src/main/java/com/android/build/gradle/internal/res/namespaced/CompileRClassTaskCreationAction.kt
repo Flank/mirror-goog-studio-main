@@ -36,7 +36,7 @@ import org.gradle.api.tasks.compile.JavaCompile
 class CompileRClassTaskCreationAction(private val creationConfig: ComponentCreationConfig) :
     TaskCreationAction<JavaCompile>() {
 
-    private val output = creationConfig.globalScope.project.objects.directoryProperty()
+    private val output = creationConfig.services.projectInfo.getProject().objects.directoryProperty()
 
     override val name: String
         get() = creationConfig.computeTaskName("compile", "FinalRClass")

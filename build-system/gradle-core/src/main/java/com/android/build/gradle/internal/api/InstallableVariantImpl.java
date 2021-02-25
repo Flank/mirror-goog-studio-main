@@ -113,9 +113,7 @@ public abstract class InstallableVariantImpl extends AndroidArtifactVariantImpl 
     public Provider<FileCollection> getFinalArtifact(
             @NonNull Artifact.SingleArtifact<? extends FileSystemLocation> artifactType) {
         return component
-                .getGlobalScope()
-                .getProject()
-                .getProviders()
+                .getServices()
                 .provider(
                         () ->
                                 component

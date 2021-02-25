@@ -152,7 +152,7 @@ open class DynamicFeatureVariantImpl @Inject constructor(
         baseModuleMetadata.map { it.debuggable })
 
     override val featureName: Provider<String> = run {
-        val projectPath = globalScope.project.path
+        val projectPath = internalServices.projectInfo.getProject().path
         internalServices.providerOf(String::class.java, featureSetMetadata.map {
             it.getFeatureNameFor(projectPath)
                 ?: throw RuntimeException("Failed to find feature name for $projectPath in ${it.sourceFile}")
@@ -163,7 +163,7 @@ open class DynamicFeatureVariantImpl @Inject constructor(
      * resource offset for resource compilation of a feature.
      * This is computed by the base module and consumed by the features. */
     override val resOffset: Provider<Int> = run {
-        val projectPath = globalScope.project.path
+        val projectPath = internalServices.projectInfo.getProject().path
         internalServices.providerOf(Int::class.java, featureSetMetadata.map {
             it.getResOffsetFor(projectPath)
                 ?: throw RuntimeException("Failed to find resource offset for $projectPath in ${it.sourceFile}")

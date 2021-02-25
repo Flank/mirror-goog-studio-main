@@ -46,6 +46,7 @@ import com.android.build.gradle.internal.ndk.NdkR19Info
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.scope.ProjectInfo
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.variant.BaseVariantData
@@ -129,6 +130,10 @@ open class BasicModuleModelMock {
     val throwUnmocked = RuntimeExceptionAnswer()
     val global = mock(
         GlobalScope::class.java,
+        throwUnmocked
+    )
+    val projectInfo = mock(
+        ProjectInfo::class.java,
         throwUnmocked
     )
 
@@ -261,7 +266,7 @@ open class BasicModuleModelMock {
         val prefabArtifactCollection = mock(ArtifactCollection::class.java, throwUnmocked)
         val prefabFileCollection = mock(FileCollection::class.java, throwUnmocked)
 
-        doReturn(project).`when`(global).project
+        doReturn(project).`when`(projectInfo).getProject()
         doReturn(intermediates).`when`(global).intermediatesDir
         doReturn(appFolder).`when`(project).projectDir
         doReturn(buildDir).`when`(project).buildDir
@@ -293,6 +298,7 @@ open class BasicModuleModelMock {
         doReturn(baseVariantData).`when`(this.variantImpl).variantData
         doReturn(taskCreationServices).`when`(this.variantImpl).services
         doReturn(issueReporter).`when`(this.taskCreationServices).issueReporter
+        doReturn(projectInfo).`when`(this.taskCreationServices).projectInfo
 
         val variantDependencies = Mockito.mock(VariantDependencies::class.java)
         doReturn(prefabArtifactCollection).`when`(variantDependencies).getArtifactCollection(

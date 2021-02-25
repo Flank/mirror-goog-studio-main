@@ -83,7 +83,7 @@ fun JavaCompile.configureProperties(creationConfig: ComponentCreationConfig, tas
                 globalScope.versionedSdkLoader.flatMap { it.coreForSystemModulesProvider }
             )
         )
-        val jdkImage = getJdkImageFromTransform(globalScope.project)
+        val jdkImage = getJdkImageFromTransform(creationConfig.services.projectInfo.getProject())
 
         this.options.compilerArgumentProviders.add(JdkImageInput(jdkImage))
         // Make Javac generate legacy bytecode for string concatenation, see b/65004097

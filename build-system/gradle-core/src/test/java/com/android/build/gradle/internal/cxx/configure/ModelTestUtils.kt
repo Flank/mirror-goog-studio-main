@@ -40,6 +40,7 @@ import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.ndk.*
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.scope.ProjectInfo
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.options.ProjectOptions
@@ -80,6 +81,7 @@ fun createCmakeProjectCxxAbiForTest(projectParentFolder: TemporaryFolder): CxxAb
     val variantDslInfo = Mockito.mock(VariantDslInfo::class.java)
     val splits = Mockito.mock(Splits::class.java)
     val mergedNdkConfig = Mockito.mock(MergedNdkConfig::class.java)
+    val projectInfo = Mockito.mock(ProjectInfo::class.java)
     val minSdkVersion = AndroidVersionImpl(19)
     Mockito.doReturn(global).`when`(variantImpl).globalScope
     Mockito.doReturn(variantScope).`when`(variantImpl).variantScope
@@ -104,7 +106,7 @@ fun createCmakeProjectCxxAbiForTest(projectParentFolder: TemporaryFolder): CxxAb
     Mockito.doReturn(cmake).`when`(externalNativeBuild).cmake
     Mockito.doReturn(ndkBuild).`when`(externalNativeBuild).ndkBuild
     Mockito.doReturn(join(moduleDir, "src", "CMakeLists.txt")).`when`(cmake).path
-    Mockito.doReturn(project).`when`(global).project
+    Mockito.doReturn(projectInfo).`when`(projectInfo).getProject()
     Mockito.doReturn(projectDir).`when`(project).rootDir
     Mockito.doReturn(moduleDir).`when`(project).projectDir
     Mockito.doReturn("app:").`when`(project).path

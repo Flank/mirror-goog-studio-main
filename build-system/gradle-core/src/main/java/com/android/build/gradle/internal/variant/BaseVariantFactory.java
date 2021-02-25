@@ -212,7 +212,10 @@ public abstract class BaseVariantFactory<
                         component,
                         servicesForOldVariantObjectsOnly,
                         readOnlyObjectProvider,
-                        globalScope.getProject().container(VariantOutput.class));
+                        projectServices
+                                .getProjectInfo()
+                                .getProject()
+                                .container(VariantOutput.class));
     }
 
     @Deprecated

@@ -47,6 +47,7 @@ import com.android.build.gradle.internal.res.GenerateEmptyResourceFilesTask;
 import com.android.build.gradle.internal.scope.BuildFeatureValues;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
+import com.android.build.gradle.internal.scope.ProjectInfo;
 import com.android.build.gradle.internal.tasks.AarMetadataTask;
 import com.android.build.gradle.internal.tasks.BundleLibraryClassesDir;
 import com.android.build.gradle.internal.tasks.BundleLibraryClassesJar;
@@ -98,8 +99,16 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
             boolean hasFlavors,
             @NonNull ProjectOptions projectOptions,
             @NonNull GlobalScope globalScope,
-            @NonNull BaseExtension extension) {
-        super(variants, testComponents, hasFlavors, projectOptions, globalScope, extension);
+            @NonNull BaseExtension extension,
+            @NonNull ProjectInfo projectInfo) {
+        super(
+                variants,
+                testComponents,
+                hasFlavors,
+                projectOptions,
+                globalScope,
+                extension,
+                projectInfo);
     }
 
     @Override

@@ -341,7 +341,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             val globalScope =
                 creationConfig.globalScope
             val variantType = creationConfig.variantType
-            val project = globalScope.project
+            val project = creationConfig.services.projectInfo.getProject()
             // This includes the dependent libraries.
             task.manifests = creationConfig
                 .variantDependencies

@@ -500,9 +500,7 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
     @Override
     public Provider<FileCollection> getMappingFileProvider() {
         return component
-                .getGlobalScope()
-                .getProject()
-                .getProviders()
+                .getServices()
                 .provider(
                         () ->
                                 component

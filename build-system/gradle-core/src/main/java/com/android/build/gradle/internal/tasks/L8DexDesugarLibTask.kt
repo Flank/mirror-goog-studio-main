@@ -120,8 +120,8 @@ abstract class L8DexDesugarLibTask : NonIncrementalTask() {
             task: L8DexDesugarLibTask
         ) {
             super.configure(task)
-            task.libConfiguration.set(getDesugarLibConfig(creationConfig.globalScope.project))
-            task.desugarLibJar.from(getDesugarLibJarFromMaven(creationConfig.globalScope.project))
+            task.libConfiguration.set(getDesugarLibConfig(creationConfig.services.projectInfo.getProject()))
+            task.desugarLibJar.from(getDesugarLibJarFromMaven(creationConfig.services.projectInfo.getProject()))
             task.androidJarInput.initialize(creationConfig)
             task.minSdkVersion.set(creationConfig.minSdkVersionWithTargetDeviceApi.getFeatureLevel())
 

@@ -160,7 +160,7 @@ class DependencyResourcesComputer {
     fun initFromVariantScope(creationConfig: ComponentCreationConfig, includeDependencies: Boolean) {
         val projectOptions = creationConfig.services.projectOptions
         val variantData = creationConfig.variantData
-        val project = creationConfig.globalScope.project
+        val project = creationConfig.services.projectInfo.getProject()
         val paths = creationConfig.paths
 
         validateEnabled = !projectOptions.get(BooleanOption.DISABLE_RESOURCE_VALIDATION)

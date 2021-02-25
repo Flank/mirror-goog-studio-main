@@ -234,7 +234,7 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
             super.configure(task)
 
             val variantDslInfo = creationConfig.variantDslInfo
-            val project = creationConfig.globalScope.project
+            val project = creationConfig.services.projectInfo.getProject()
             task.namespace.setDisallowChanges(creationConfig.namespace)
 
             if (creationConfig is ApkCreationConfig) {

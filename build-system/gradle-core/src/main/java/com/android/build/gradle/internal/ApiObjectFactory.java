@@ -84,7 +84,9 @@ public class ApiObjectFactory {
                                 variantApi,
                                 services,
                                 readOnlyObjectProvider,
-                                globalScope.getProject().container(VariantOutput.class));
+                                services.getProjectInfo()
+                                        .getProject()
+                                        .container(VariantOutput.class));
                 createVariantOutput(androidTestVariantProperties, androidTestVariant);
 
                 ((TestedAndroidConfig) extension).getTestVariants().add(androidTestVariant);
@@ -102,7 +104,9 @@ public class ApiObjectFactory {
                                 variantApi,
                                 services,
                                 readOnlyObjectProvider,
-                                globalScope.getProject().container(VariantOutput.class));
+                                services.getProjectInfo()
+                                        .getProject()
+                                        .container(VariantOutput.class));
 
                 ((TestedAndroidConfig) extension).getUnitTestVariants().add(unitTestVariant);
                 ((TestedVariant) variantApi).setUnitTestVariant(unitTestVariant);

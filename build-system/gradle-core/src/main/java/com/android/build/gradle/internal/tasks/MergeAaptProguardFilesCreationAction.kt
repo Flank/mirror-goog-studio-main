@@ -52,7 +52,7 @@ class MergeAaptProguardFilesCreationAction(
     ) {
         super.configure(task)
 
-        val project = creationConfig.globalScope.project
+        val project = creationConfig.services.projectInfo.getProject()
         val inputFiles =
             project
                 .files(

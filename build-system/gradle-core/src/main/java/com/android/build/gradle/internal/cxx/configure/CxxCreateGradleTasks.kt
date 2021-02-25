@@ -156,7 +156,7 @@ fun createPrefabTasks(taskFactory: TaskFactory, libraryVariant: LibraryVariantIm
     if (!libraryVariant.buildFeatures.prefabPublishing) return
     val global = libraryVariant.globalScope
     val extension = global.extension as LibraryExtension
-    val project = global.project
+    val project = libraryVariant.services.projectInfo.getProject()
     val modules = extension.prefab.map { options ->
         val headers = options.headers?.let { headers ->
             project.layout

@@ -413,14 +413,13 @@ public class VariantScopeImpl implements VariantScope {
                                 .collect(ImmutableList.toImmutableList());
 
         // Create a file collection builtBy the dependencies.  The files are resolved later.
-        return globalScope
+        return baseServices
+                .getProjectInfo()
                 .getProject()
                 .files(
                         (Callable<Collection<File>>)
                                 () ->
-                                        dependencies
-                                                .call()
-                                                .stream()
+                                        dependencies.call().stream()
                                                 .flatMap((it) -> it.resolve().stream())
                                                 .filter(filePredicate)
                                                 .collect(Collectors.toList()))
@@ -467,7 +466,7 @@ public class VariantScopeImpl implements VariantScope {
     @NonNull
     @Override
     public FileCollection getBootClasspath() {
-        return globalScope.getProject().files(globalScope.getBootClasspath());
+        return baseServices.getProjectInfo().getProject().files(globalScope.getBootClasspath());
     }
 
     @NonNull

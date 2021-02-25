@@ -209,7 +209,7 @@ abstract class DexFileDependenciesTask: NonIncrementalTask() {
                 SyncOptions.getErrorFormatMode(creationConfig.services.projectOptions)
 
             if (creationConfig.isCoreLibraryDesugaringEnabled) {
-                task.libConfiguration.set(getDesugarLibConfig(creationConfig.globalScope.project))
+                task.libConfiguration.set(getDesugarLibConfig(creationConfig.services.projectInfo.getProject()))
             }
             task.libConfiguration.disallowChanges()
         }

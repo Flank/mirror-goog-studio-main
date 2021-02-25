@@ -536,7 +536,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
 
         /** Creates a detached configuration and sets up artifact transform for dexing. */
         private fun getDexForExternalLibs(task: DexArchiveBuilderTask, inputType: String): FileCollection {
-            val project = creationConfig.globalScope.project
+            val project = creationConfig.services.projectInfo.getProject()
             project.dependencies.registerTransform(
                 DexingExternalLibArtifactTransform::class.java
             ) {

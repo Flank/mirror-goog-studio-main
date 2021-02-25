@@ -37,6 +37,7 @@ import com.android.build.gradle.internal.feature.BundleAllClasses;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
+import com.android.build.gradle.internal.scope.ProjectInfo;
 import com.android.build.gradle.internal.tasks.AnalyticsRecordingTask;
 import com.android.build.gradle.internal.tasks.ApkZipPackagingTask;
 import com.android.build.gradle.internal.tasks.AppClasspathCheckTask;
@@ -83,8 +84,16 @@ public abstract class AbstractAppTaskManager<
             boolean hasFlavors,
             @NonNull ProjectOptions projectOptions,
             @NonNull GlobalScope globalScope,
-            @NonNull BaseExtension extension) {
-        super(variants, testComponents, hasFlavors, projectOptions, globalScope, extension);
+            @NonNull BaseExtension extension,
+            @NonNull ProjectInfo projectInfo) {
+        super(
+                variants,
+                testComponents,
+                hasFlavors,
+                projectOptions,
+                globalScope,
+                extension,
+                projectInfo);
     }
 
     protected void createCommonTasks(
