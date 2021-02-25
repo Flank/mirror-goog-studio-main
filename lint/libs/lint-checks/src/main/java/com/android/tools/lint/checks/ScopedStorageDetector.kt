@@ -69,7 +69,7 @@ class ScopedStorageDetector : Detector(), XmlScanner {
             val incident = Incident(
                 ISSUE,
                 context.getValueLocation(permission),
-                "Most apps are not allowed to use MANAGE_EXTERNAL_STORAGE"
+                "The Google Play store has a policy that limits usage of MANAGE_EXTERNAL_STORAGE"
             )
             context.report(incident)
         }
@@ -149,7 +149,11 @@ class ScopedStorageDetector : Detector(), XmlScanner {
                 it is rarely necessary and most apps on Google Play are not allowed to use it. \
                 Most apps should instead migrate to use scoped storage. To modify or delete files, \
                 apps should request write access from the user as described at \
-                https://developer.android.com/reference/android/provider/MediaStore#createWriteRequest.
+                https://goo.gle/android-mediastore-createwriterequest.
+
+                To learn more, read these resources: \
+                Play policy: https://goo.gle/policy-storage-help \
+                Allowable use cases: https://goo.gle/policy-storage-usecases
             """,
             category = Category.CORRECTNESS,
             priority = 8,
@@ -159,7 +163,7 @@ class ScopedStorageDetector : Detector(), XmlScanner {
                 ScopedStorageDetector::class.java,
                 Scope.MANIFEST_SCOPE
             ),
-            moreInfo = "https://developer.android.com/preview/privacy/storage#scoped-storage"
+            moreInfo = "https://goo.gle/android-storage-usecases"
         )
     }
 }

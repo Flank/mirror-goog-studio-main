@@ -704,6 +704,7 @@ class LintDetectorDetector : Detector(), UastScanner {
                         } else if (host != null &&
                             !host.endsWith(".google.com") &&
                             !host.endsWith(".android.com") &&
+                            host != "goo.gle" &&
                             host != "android.com" &&
                             host != "android-developers.googleblog.com" &&
                             host != "android-developers.blogspot.com" &&
