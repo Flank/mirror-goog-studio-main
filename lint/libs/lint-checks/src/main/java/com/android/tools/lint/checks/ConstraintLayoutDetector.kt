@@ -23,7 +23,6 @@ import com.android.SdkConstants.ATTR_LAYOUT_RESOURCE_PREFIX
 import com.android.SdkConstants.ATTR_LAYOUT_WIDTH
 import com.android.SdkConstants.AUTO_URI
 import com.android.SdkConstants.CLASS_CONSTRAINT_LAYOUT_BARRIER
-import com.android.SdkConstants.CLASS_CONSTRAINT_LAYOUT_FLOW
 import com.android.SdkConstants.CLASS_CONSTRAINT_LAYOUT_GROUP
 import com.android.SdkConstants.CLASS_CONSTRAINT_LAYOUT_GUIDELINE
 import com.android.SdkConstants.CONSTRAINT_LAYOUT
@@ -117,7 +116,11 @@ class ConstraintLayoutDetector : LayoutDetector() {
             }
 
             val elementTagName = (child as Element).tagName
-            if (CLASS_CONSTRAINT_LAYOUT_FLOW.isEquals(elementTagName)) {
+            // Workaround for b/181056543
+            // if (CLASS_CONSTRAINT_LAYOUT_FLOW.isEquals(elementTagName)) {
+            if (elementTagName == "android.support.constraint.helper.Flow" ||
+                elementTagName == "androidx.constraintlayout.helper.widget.Flow"
+            ) {
                 val attributes = child.attributes
                 for (i in 0 until attributes.length) {
                     val attribute = attributes.item(i)

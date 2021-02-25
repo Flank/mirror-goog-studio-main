@@ -556,6 +556,39 @@ class ConstraintLayoutDetectorTest : AbstractCheckTest() {
             .expectClean()
     }
 
+    fun testConstraintReferencedIds() {
+        // 79995034: Lint unused id does not take in account constraint_referenced_ids
+        lint().files(
+            xml(
+                "res/layout/other.xml",
+                """
+                <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                    xmlns:app="http://schemas.android.com/apk/res-auto"
+                    xmlns:tools="http://schemas.android.com/tools"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    tools:context=".MainActivity">
+
+                    <androidx.constraintlayout.helper.widget.Flow
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:constraint_referenced_ids="someTextView"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <TextView
+                        android:id="@+id/someTextView"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Hello World!" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+                """
+            ).indented(),
+            manifest().minSdk(14)
+        ).issues(ConstraintLayoutDetector.ISSUE).run().expectClean()
+    }
+
     override fun checkReportedError(
         context: Context,
         issue: Issue,
