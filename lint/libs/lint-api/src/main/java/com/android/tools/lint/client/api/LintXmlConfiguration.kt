@@ -31,8 +31,10 @@ import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Severity
 import com.android.utils.SdkUtils
+import com.android.utils.iterator
 import com.google.common.annotations.Beta
 import com.google.common.base.Splitter
+import org.w3c.dom.Element
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
 import java.io.BufferedWriter
@@ -49,77 +51,86 @@ import java.util.Locale
 import java.util.regex.Pattern
 import java.util.regex.PatternSyntaxException
 import kotlin.math.max
-import com.android.utils.iterator
-import org.w3c.dom.Element
 
 /**
- * Default implementation of a [Configuration] which reads and writes configuration data into
- * `lint.xml` from a given file.
+ * Default implementation of a [Configuration] which reads and writes
+ * configuration data into `lint.xml` from a given file.
  *
  * XML Syntax
  * ===========
  *
- * The root tag is always `<lint>`, and it can contain one or more `<issue>` elements. Each
- * <issue> can specify the following attributes:
- *  `id`: The issue id the following configuration applies to. Note that this
- *    can be a comma separated list of multiple id's, in which case the configuration
- *    applies to all of them. It can also be the special value "all", which will match
- *    all issue id's. And when configuring severity, the id is also allowed to be a
- *    category, such as "Security".
+ * The root tag is always `<lint>`, and it can contain one or more
+ * `<issue>` elements. Each <issue> can specify the following
+ * attributes: `id`: The issue id the following configuration applies
+ * to. Note that this can be a comma separated list of multiple id's, in
+ * which case the configuration applies to all of them. It can also be
+ * the special value "all", which will match all issue id's. And when
+ * configuring severity, the id is also allowed to be a category, such
+ * as "Security".
  *
- *
- *  `in`: Specifies that this configuration only applies when lint runs in the given
- *    hosts. There are predefined names for various integrations of lint; "gradle" refers
- *    to lint running in the Gradle plugin; "studio" refers to lint running in the IDE,
- *    "cli" refers to lint running from the command line tools "lint" binary, etc.
- *    Like with id's, this can be a comma separated list, which makes the rule match if
- *    the lint host is any of the listed hosts. Finally, note that you can also add a "!"
- *    in front of each host to negate the check. For example, to enable a check anywhere
- *    except when running in Studio, use {@code in="!studio"}.
+ * `in`: Specifies that this configuration only applies when lint
+ * runs in the given hosts. There are predefined names for various
+ * integrations of lint; "gradle" refers to lint running in the Gradle
+ * plugin; "studio" refers to lint running in the IDE, "cli" refers to
+ * lint running from the command line tools "lint" binary, etc. Like
+ * with id's, this can be a comma separated list, which makes the rule
+ * match if the lint host is any of the listed hosts. Finally, note that
+ * you can also add a "!" in front of each host to negate the check. For
+ * example, to enable a check anywhere except when running in Studio,
+ * use {@code in="!studio"}.
  *
  * In addition, the <issue> element can specify one or more children:
  *
- *  `<ignore path="...">`: Specifies a path to ignore. Can contain the globbing
- *    character "*" to match any substring in the path.
- *  `<ignore regexp="...">`: Specifies either a regular expression to ignore. The
- *    regular expression is matched against both the location of the error and the
- *    error message itself.
- *  `<option name="..." value="...">`: Specifies an option value. This can be used
- *    to configure some lint checks with options.
+ * `<ignore path="...">`: Specifies a path to ignore. Can contain the
+ * globbing character "*" to match any substring in the path. `<ignore
+ * regexp="...">`: Specifies either a regular expression to ignore. The
+ * regular expression is matched against both the location of the error
+ * and the error message itself. `<option name="..." value="...">`:
+ * Specifies an option value. This can be used to configure some lint
+ * checks with options.
  *
- * Finally, on the root <lint> element you can specify a number of attributes,
- * such as `lintJars` (a list of jar files containing custom lint checks, separated
- * by a semicolon as a path separator), and flags like warningsAsErrors, checkTestSources,
- * etc (matching most of the flags offered via the lintOptions block in Gradle files.)
+ * Finally, on the root <lint> element you can specify a number of
+ * attributes, such as `lintJars` (a list of jar files containing custom
+ * lint checks, separated by a semicolon as a path separator), and
+ * flags like warningsAsErrors, checkTestSources, etc (matching most
+ * of the flags offered via the lintOptions block in Gradle files.)
  *
  * Nesting & Precedence
  * ======================
  *
- * You can specify configurations for "all", but these will be matched after an
- * exact match has been done. E.g. if we have both `<issue id="all" severity="ignore">`
- * and `<issue id="MyId" severity="error">`, the severity for `MyId` will be "error""
- * since that's a more exact match.
+ * You can specify configurations for "all", but these will be
+ * matched after an exact match has been done. E.g. if we have
+ * both `<issue id="all" severity="ignore">` and `<issue id="MyId"
+ * severity="error">`, the severity for `MyId` will be "error"" since
+ * that's a more exact match.
  *
- * The lint.xml files can be nested in a directory structure, and when lint reports
- * an error, it looks up the closest lint.xml file, and if no configuration is found
- * there, continues searching upwards in the directory tree. This means that the configuration
- * closest to the report location takes precedence. Note however, that this has higher
- * priority than the above all versus id match, so if there is an `all` match in
- * a `lint.xml` file and an exact match in a more distant parent `lint.xml` file, the
- * closest `lint.xml` all match will be used.
+ * The lint.xml files can be nested in a directory structure, and when
+ * lint reports an error, it looks up the closest lint.xml file, and
+ * if no configuration is found there, continues searching upwards in
+ * the directory tree. This means that the configuration closest to the
+ * report location takes precedence. Note however, that this has higher
+ * priority than the above all versus id match, so if there is an `all`
+ * match in a `lint.xml` file and an exact match in a more distant
+ * parent `lint.xml` file, the closest `lint.xml` all match will be
+ * used.
  *
- * When there are configurations which specify a host, lint will search in this order:
- * 1. An exact host match. E.g. if you're running in Studio and there is an `<issue>`
- *   configuration which specifies `in="studio"`, then that configuration will be used.
- * 2. A match which does not specify a host. Usually `<issue>` configurations do not
- *   specify a host, and these will be consulted next.
- * 3. A match which specifies other hosts. For example, if you're running in Studio
- *   and a configuration specifies "!gradle", this will match after the other attempts.
+ * When there are configurations which specify a host, lint will search
+ * in this order:
+ * 1. An exact host match. E.g. if you're running in Studio and there is
+ *    an `<issue>` configuration which specifies
+ *    `in="studio"`, then that configuration will be used.
+ * 2. A match which does not specify a host. Usually `<issue>`
+ *    configurations do not specify a host,
+ *    and these will be consulted next.
+ * 3. A match which specifies other hosts. For example, if you're
+ *    running in Studio and a configuration specifies
+ *    "!gradle", this will match after the other attempts.
  *
- * @sample com.android.tools.lint.client.api.LintXmlConfigurationTest.sampleFile
+ * @sample
+ *     com.android.tools.lint.client.api.LintXmlConfigurationTest.sampleFile
  *
- * **NOTE: This is not a public or final API; if you rely on this be prepared to adjust your
- * code for the next tools release.**
+ * **NOTE: This is not a public or final API; if you rely on this be
+ * prepared to adjust your code for the next tools release.**
  */
 @Beta
 open class LintXmlConfiguration protected constructor(
@@ -140,20 +151,20 @@ open class LintXmlConfiguration protected constructor(
     private var bulkEditing = false
 
     /**
-     * Returns whether lint should check all warnings, including those off by default, or null if
-     * not configured in this configuration
+     * Returns whether lint should check all warnings, including those
+     * off by default, or null if not configured in this configuration.
      */
     private var checkAllWarnings: Boolean? = null
 
     /**
-     * Returns whether lint will only check for errors (ignoring warnings), or null if not
-     * configured in this configuration
+     * Returns whether lint will only check for errors (ignoring
+     * warnings), or null if not configured in this configuration.
      */
     private var ignoreWarnings: Boolean? = null
 
     /**
-     * Returns whether lint should treat all warnings as errors, or null if not configured in this
-     * configuration
+     * Returns whether lint should treat all warnings as errors, or null
+     * if not configured in this configuration.
      */
     private var warningsAsErrors: Boolean? = null
     private var fatalOnly: Boolean? = null
@@ -168,28 +179,33 @@ open class LintXmlConfiguration protected constructor(
     private var lintJars: List<File>? = null
 
     /**
-     * Specific issue configuration specified in a lint.xml file. This corresponds to
-     * configuration for one specific issue. We don't store the issue id in the data
-     * class itself; the issue id's are used as map keys instead.
+     * Specific issue configuration specified in a lint.xml file. This
+     * corresponds to configuration for one specific issue. We don't
+     * store the issue id in the data class itself; the issue id's are
+     * used as map keys instead.
      */
     data class IssueData(
-        /** Severity of the issue */
+        /** Severity of the issue. */
         var severity: Severity? = null,
-        /** Paths (optionally with glob patterns) to treat as ignored/suppressed */
+        /**
+         * Paths (optionally with glob patterns) to treat as
+         * ignored/suppressed.
+         */
         var paths: MutableList<String>? = null,
         /**
-         * Regular expressions to match against the message and location of errors to
-         * suppress or ignore issues
+         * Regular expressions to match against the message and location
+         * of errors to suppress or ignore issues.
          */
         var patterns: MutableList<Pattern>? = null,
         /**
-         * Optional parameters to the issue checker, defined by the detector
+         * Optional parameters to the issue checker, defined by the
+         * detector.
          */
         var options: MutableMap<String, String>? = null
     ) {
         /**
-         * Returns true if there is no significant configuration for this issue (so can be
-         * skipped in serialization)
+         * Returns true if there is no significant configuration for
+         * this issue (so can be skipped in serialization)
          */
         fun isEmpty(): Boolean {
             return severity == null &&
@@ -205,31 +221,35 @@ open class LintXmlConfiguration protected constructor(
     }
 
     /**
-     * Map from issue id (or [VALUE_ALL] to specific issue configuration, such as
-     * a custom severity or specific paths to ignore
+     * Map from issue id (or [VALUE_ALL] to specific issue
+     * configuration, such as a custom severity or specific paths to
+     * ignore.
      */
     private var issueMap: MutableMap<String, IssueData>? = null
 
     /**
-     * Applicable maps to look at: first client-specific maps for the current
-     * client, then the (no client specified) map, then any other applicable
-     * client maps (e.g. !other)
+     * Applicable maps to look at: first client-specific maps for the
+     * current client, then the (no client specified) map, then any
+     * other applicable client maps (e.g. !other)
      */
     private var issueMaps: List<Map<String, IssueData>> = emptyList()
 
     /**
-     * Like [issueMap], but limited to specific integrations of lint, based
-     * on the [LintClient.clientName], as well as negated client names
+     * Like [issueMap], but limited to specific integrations of lint,
+     * based on the [LintClient.clientName], as well as negated client
+     * names.
      */
     private var clientIssueMaps: MutableMap<String, MutableMap<String, IssueData>>? = null
 
     /**
-     * If non null, the whole configuration applies to the given [LintClient].
-     * Could be a comma separated list.
+     * If non null, the whole configuration applies to the given
+     * [LintClient]. Could be a comma separated list.
      */
     private var fileClients: String? = null
 
-    /** Invokes the checker for all the applicable issue configurations */
+    /**
+     * Invokes the checker for all the applicable issue configurations.
+     */
     private fun checkIgnored(id: String, checker: (IssueData) -> Boolean): Boolean {
         val issueMaps = getIssueMaps()
         for (issueMap in issueMaps) {
@@ -302,7 +322,10 @@ open class LintXmlConfiguration protected constructor(
         }
     }
 
-    /** Sets the given string option to the given value. Intended for [LintFix] usage. */
+    /**
+     * Sets the given string option to the given value. Intended for
+     * [LintFix] usage.
+     */
     fun setOption(issue: Issue, name: String, value: String?) {
         if (value != null) {
             addOption(listOf(issue.id), name, value)
@@ -311,17 +334,26 @@ open class LintXmlConfiguration protected constructor(
         }
     }
 
-    /** Sets the given boolean option to the given value. Intended for [LintFix] usage. */
+    /**
+     * Sets the given boolean option to the given value. Intended for
+     * [LintFix] usage.
+     */
     fun setBooleanOption(issue: Issue, name: String, value: Boolean?) {
         setOption(issue, name, value?.toString())
     }
 
-    /** Sets the given integer option to the given value. Intended for [LintFix] usage. */
+    /**
+     * Sets the given integer option to the given value. Intended for
+     * [LintFix] usage.
+     */
     fun setIntOption(issue: Issue, name: String, value: Int?) {
         setOption(issue, name, value?.toString())
     }
 
-    /** Sets the given File option to the given value. Intended for [LintFix] usage. */
+    /**
+     * Sets the given File option to the given value. Intended for
+     * [LintFix] usage.
+     */
     fun setFileOption(issue: Issue, name: String, value: File?) {
         val relative = if (value != null && value.isAbsolute) {
             client.getRelativePath(configFile.parentFile, value)
@@ -999,13 +1031,15 @@ open class LintXmlConfiguration protected constructor(
     }
 
     /**
-     * Checks whether the given [client] name is applicable for the current [LintClient].
-     * If [checkEquals] is true, will check for exact matches. If [checkOther] is true,
-     * will also check to see if the [LintClient] matches client strings like "!name"
-     * where the name is **not** the name of the host, e.g. "studio" would match "!gradle".
-     * A null client name means "not specific to a client" and will always match.
-     * Note also that the [client] string can be a comma separated list, and this method
-     * will return true if **any** of the items match.
+     * Checks whether the given [client] name is applicable for the
+     * current [LintClient]. If [checkEquals] is true, will check for
+     * exact matches. If [checkOther] is true, will also check to see if
+     * the [LintClient] matches client strings like "!name" where the
+     * name is **not** the name of the host, e.g. "studio" would match
+     * "!gradle". A null client name means "not specific to a client"
+     * and will always match. Note also that the [client] string can
+     * be a comma separated list, and this method will return true if
+     * **any** of the items match.
      */
     private fun isApplicableClient(
         client: String?,
@@ -1017,10 +1051,10 @@ open class LintXmlConfiguration protected constructor(
         if (client.contains(',')) {
             for (c in client.splitToSequence(",")) {
                 if (isApplicableClient(
-                    c.trim(),
-                    checkEquals = checkEquals,
-                    checkOther = checkOther
-                )
+                        c.trim(),
+                        checkEquals = checkEquals,
+                        checkOther = checkOther
+                    )
                 ) {
                     return true
                 }
@@ -1043,8 +1077,8 @@ open class LintXmlConfiguration protected constructor(
     }
 
     /**
-     * When parsing an XML file an element can reference multiple id's; this
-     * method sets the given severity to all the referenced id's
+     * When parsing an XML file an element can reference multiple id's;
+     * this method sets the given severity to all the referenced id's.
      */
     private fun addSeverity(
         idList: Iterable<String>,
@@ -1063,8 +1097,9 @@ open class LintXmlConfiguration protected constructor(
     }
 
     /**
-     * When parsing an XML file an element can reference multiple id's; this
-     * method adds the given suppress path to all the referenced id's
+     * When parsing an XML file an element can reference multiple id's;
+     * this method adds the given suppress path to all the referenced
+     * id's.
      */
     private fun addPaths(
         ids: Iterable<String>,
@@ -1083,8 +1118,9 @@ open class LintXmlConfiguration protected constructor(
     }
 
     /**
-     * When parsing an XML file an element can reference multiple id's; this
-     * method adds the given regular expression pattern to all the referenced id's.
+     * When parsing an XML file an element can reference multiple id's;
+     * this method adds the given regular expression pattern to all the
+     * referenced id's.
      */
     private fun addRegexp(
         parser: XmlPullParser,
@@ -1433,9 +1469,10 @@ open class LintXmlConfiguration protected constructor(
         }
 
     /**
-     * Already validated this issue? We can encounter the same configuration multiple times
-     * when searching up the parent tree. (We can't skip calling the parent because the
-     * parent references can change over time.)
+     * Already validated this issue? We can encounter the same
+     * configuration multiple times when searching up the parent tree.
+     * (We can't skip calling the parent because the parent references
+     * can change over time.)
      */
     private var validated = false
 
@@ -1484,10 +1521,10 @@ open class LintXmlConfiguration protected constructor(
     }
 
     companion object {
-        /** Default name of the configuration file */
+        /** Default name of the configuration file. */
         const val CONFIG_FILE_NAME = "lint.xml"
 
-        /** The root tag in a configuration file */
+        /** The root tag in a configuration file. */
         const val TAG_LINT = "lint"
 
         private const val TAG_ISSUE = "issue"

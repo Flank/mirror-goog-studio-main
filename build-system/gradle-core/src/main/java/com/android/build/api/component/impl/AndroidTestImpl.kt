@@ -79,7 +79,11 @@ open class AndroidTestImpl @Inject constructor(
     globalScope
 ), AndroidTest, AndroidTestCreationConfig {
 
-    private val delegate by lazy { AndroidTestCreationConfigImpl(this, globalScope, variantDslInfo) }
+    private val delegate by lazy { AndroidTestCreationConfigImpl(
+        this,
+        internalServices.projectOptions,
+        globalScope,
+        variantDslInfo) }
 
     // ---------------------------------------------------------------------------------------------
     // PUBLIC API
@@ -111,20 +115,12 @@ open class AndroidTestImpl @Inject constructor(
         )
     }
 
-    override fun aaptOptions(action: Aapt.() -> Unit) {
-        action.invoke(aapt)
-    }
-
     override val packaging: ApkPackaging by lazy {
         ApkPackagingImpl(
             globalScope.extension.packagingOptions,
             variantPropertiesApiServices,
             minSdkVersion.apiLevel
         )
-    }
-
-    override fun packaging(action: ApkPackaging.() -> Unit) {
-        action.invoke(packaging)
     }
 
     override val dexing: Dexing by lazy {
@@ -187,17 +183,19 @@ open class AndroidTestImpl @Inject constructor(
         resValues.put(ResValue.Key(type, name), value.map { ResValue(it, comment) })
     }
 
-    override val signingConfig: SigningConfig by lazy {
-        SigningConfigImpl(
-            variantDslInfo.signingConfig,
-            variantPropertiesApiServices,
-            minSdkVersion.apiLevel,
-            globalScope.projectOptions.get(IntegerOption.IDE_TARGET_DEVICE_API)
-        )
+    override val signingConfig: SigningConfigImpl? by lazy {
+        variantDslInfo.signingConfig?.let {
+            SigningConfigImpl(
+                it,
+                variantPropertiesApiServices,
+                minSdkVersion.apiLevel,
+                services.projectOptions.get(IntegerOption.IDE_TARGET_DEVICE_API)
+            )
+        }
     }
 
-    override fun signingConfig(action: SigningConfig.() -> Unit) {
-        action.invoke(signingConfig)
+    override val renderscript: Renderscript? by lazy {
+        delegate.renderscript(internalServices)
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -301,5 +299,8 @@ open class AndroidTestImpl @Inject constructor(
         delegate.getNeedsMergedJavaResStream()
 
     override fun getJava8LangSupportType(): VariantScope.Java8LangSupport = delegate.getJava8LangSupportType()
+
+    override val dslSigningConfig: com.android.build.gradle.internal.dsl.SigningConfig? =
+        variantDslInfo.signingConfig
 }
 

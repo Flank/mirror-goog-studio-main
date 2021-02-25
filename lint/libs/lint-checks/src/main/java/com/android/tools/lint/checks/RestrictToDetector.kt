@@ -138,7 +138,7 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
     /**
      * Returns true if we should report usages of APIs annotated with
-     * com.google.android.gms.common.internal.Hide
+     * com.google.android.gms.common.internal.Hide.
      */
     private fun flagHide(
         context: JavaContext,
@@ -151,8 +151,9 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     }
 
     /**
-     * Is the annotated @Hide element *also* annotated with @ShowFirstParty, *and* we're
-     * in a context where @ShowFirstParty is enabled (e.g. g3).
+     * Is the annotated @Hide element *also* annotated with
+     * @ShowFirstParty, *and* we're in a context where @ShowFirstParty
+     * is enabled (e.g. g3).
      */
     private fun isAllowedFirstParty(
         context: JavaContext,
@@ -175,9 +176,7 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         return containingClass.isFirstParty()
     }
 
-    /**
-     * Checks whether the client code is in the GMS codebase
-     */
+    /** Checks whether the client code is in the GMS codebase. */
     private fun isGmsContext(
         context: JavaContext,
         element: UElement
@@ -296,10 +295,10 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             }
             val qualifiedName = methodClass.qualifiedName
             if (qualifiedName == null || evaluator.inheritsFrom(
-                thisClass,
-                qualifiedName,
-                false
-            )
+                    thisClass,
+                    qualifiedName,
+                    false
+                )
             ) {
                 return
             }
@@ -652,19 +651,19 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             return VISIBILITY_PRIVATE // the default
         }
 
-        /** `RestrictTo(RestrictTo.Scope.GROUP_ID`  */
+        /** `RestrictTo(RestrictTo.Scope.GROUP_ID` */
         private const val RESTRICT_TO_LIBRARY_GROUP = 1 shl 0
 
-        /** `RestrictTo(RestrictTo.Scope.GROUP_ID`  */
+        /** `RestrictTo(RestrictTo.Scope.GROUP_ID` */
         private const val RESTRICT_TO_LIBRARY = 1 shl 1
 
-        /** `RestrictTo(RestrictTo.Scope.GROUP_ID`  */
+        /** `RestrictTo(RestrictTo.Scope.GROUP_ID` */
         private const val RESTRICT_TO_LIBRARY_GROUP_PREFIX = 1 shl 2
 
-        /** `RestrictTo(RestrictTo.Scope.TESTS`  */
+        /** `RestrictTo(RestrictTo.Scope.TESTS` */
         private const val RESTRICT_TO_TESTS = 1 shl 3
 
-        /** `RestrictTo(RestrictTo.Scope.SUBCLASSES`  */
+        /** `RestrictTo(RestrictTo.Scope.SUBCLASSES` */
         private const val RESTRICT_TO_SUBCLASSES = 1 shl 4
         private const val RESTRICT_TO_ALL = 1 shl 5
 
@@ -723,8 +722,9 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         }
 
         /**
-         * Implements the group prefix equality that is described in the documentation
-         * for the RestrictTo.Scope.LIBRARY_GROUP_PREFIX enum constant
+         * Implements the group prefix equality that is described in the
+         * documentation for the RestrictTo.Scope.LIBRARY_GROUP_PREFIX
+         * enum constant.
          */
         fun sameLibraryGroupPrefix(group1: String, group2: String): Boolean {
             // TODO: Allow group1.startsWith(group2) || group2.startsWith(group1) ?
@@ -742,13 +742,12 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             return group1.regionMatches(0, group2, 0, i1)
         }
 
-        /** Using a restricted API */
+        /** Using a restricted API. */
         @JvmField
         val RESTRICTED = Issue.create(
             id = "RestrictedApi",
             briefDescription = "Restricted API",
-            explanation =
-                """
+            explanation = """
                 This API has been flagged with a restriction that has not been met.
 
                 Examples of API restrictions:
@@ -763,13 +762,12 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             implementation = IMPLEMENTATION
         )
 
-        /** Using an intended-for-tests API */
+        /** Using an intended-for-tests API. */
         @JvmField
         val TEST_VISIBILITY = Issue.create(
             id = "VisibleForTests",
             briefDescription = "Visible Only For Tests",
-            explanation =
-                """
+            explanation = """
                 With the `@VisibleForTesting` annotation you can specify an `otherwise=` \
                 attribute which specifies the intended visibility if the method had not \
                 been made more widely visible for the tests.

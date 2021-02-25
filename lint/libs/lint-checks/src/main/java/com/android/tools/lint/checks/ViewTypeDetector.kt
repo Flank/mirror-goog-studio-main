@@ -78,9 +78,7 @@ import java.util.ArrayList
 import java.util.EnumSet
 import java.util.HashMap
 
-/**
- * Detector for finding inconsistent usage of views and casts
- */
+/** Detector for finding inconsistent usage of views and casts. */
 open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
 
     private val idToViewTag = HashMap<String, Any>(50)
@@ -443,7 +441,7 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
         }
     }
 
-    /** Check if the view and cast type are compatible  */
+    /** Check if the view and cast type are compatible. */
     private fun checkCompatible(
         context: JavaContext,
         castType: PsiClassType,
@@ -631,13 +629,12 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
     }
 
     companion object {
-        /** Mismatched view types */
+        /** Mismatched view types. */
         @JvmField
         val WRONG_VIEW_CAST = Issue.create(
             id = "WrongViewCast",
             briefDescription = "Mismatched view type",
-            explanation =
-                """
+            explanation = """
                 Keeps track of the view types associated with ids and if it finds a usage \
                 of the id in the Java code it ensures that it is treated as the same type.""",
             category = Category.CORRECTNESS,
@@ -651,13 +648,12 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
             )
         )
 
-        /** Mismatched view types */
+        /** Mismatched view types. */
         @JvmField
         val ADD_CAST = Issue.create(
             id = "FindViewByIdCast",
             briefDescription = "Add Explicit Cast",
-            explanation =
-                """
+            explanation = """
                 In Android O, the `findViewById` signature switched to using generics, which \
                 means that most of the time you can leave out explicit casts and just assign \
                 the result of the `findViewById` call to variables of specific view classes.

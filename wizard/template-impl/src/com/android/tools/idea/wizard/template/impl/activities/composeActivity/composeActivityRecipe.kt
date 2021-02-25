@@ -38,7 +38,6 @@ fun RecipeExecutor.composeActivityRecipe(
 ) {
   val (_, srcOut, resOut, _) = moduleData
   addAllKotlinDependencies(moduleData)
-  addDependency("com.android.support:appcompat-v7:${moduleData.apis.appCompatVersion}.+")
   addMaterialDependency(true) // useAndroidX should be always true for Compose
 
   val composeVersionVarName = getDependencyVarName("androidx.compose.ui:ui", "compose_version")

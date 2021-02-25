@@ -52,8 +52,7 @@ class HtmlPaneDetector : Detector(), SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "HtmlPaneColors",
             briefDescription = "Incorrect HTML JEditorPane",
-            explanation =
-                """
+            explanation = """
                 If you construct `JEditorPane` and just set the content type
                 to `text/html` (either into the constructor or via an explicit setter),
                 the UI may not use correct colors in all themes. Instead you should

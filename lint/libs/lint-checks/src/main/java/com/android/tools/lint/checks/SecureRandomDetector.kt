@@ -31,10 +31,8 @@ import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.tryResolve
 
-/**
- * Checks for hardcoded seeds with random numbers.
- */
-/** Constructs a new [SecureRandomDetector]  */
+/** Checks for hardcoded seeds with random numbers. */
+/** Constructs a new [SecureRandomDetector] */
 class SecureRandomDetector : Detector(), SourceCodeScanner {
 
     override fun getApplicableMethodNames(): List<String> {
@@ -83,7 +81,8 @@ class SecureRandomDetector : Detector(), SourceCodeScanner {
     }
 
     /**
-     * Returns true if the given invocation is assigned a SecureRandom type
+     * Returns true if the given invocation is assigned a SecureRandom
+     * type.
      */
     private fun isSecureRandomReceiver(
         call: UCallExpression
@@ -93,7 +92,8 @@ class SecureRandomDetector : Detector(), SourceCodeScanner {
     }
 
     /**
-     * Returns true if the node evaluates to an instance of type SecureRandom
+     * Returns true if the node evaluates to an instance of type
+     * SecureRandom.
      */
     private fun isSecureRandomType(
         node: UElement
@@ -102,13 +102,12 @@ class SecureRandomDetector : Detector(), SourceCodeScanner {
     }
 
     companion object {
-        /** Unregistered activities and services  */
+        /** Unregistered activities and services. */
         @JvmField
         val ISSUE = Issue.create(
             id = "SecureRandom",
             briefDescription = "Using a fixed seed with `SecureRandom`",
-            explanation =
-                """
+            explanation = """
                 Specifying a fixed seed will cause the instance to return a predictable \
                 sequence of numbers. This may be useful for testing but it is not appropriate \
                 for secure use.

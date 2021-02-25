@@ -35,9 +35,7 @@ import org.jetbrains.uast.UQualifiedReferenceExpression
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.tryResolve
 
-/**
- * Some lint checks around WorkManager usage
- */
+/** Some lint checks around WorkManager usage. */
 class WorkManagerDetector : Detector(), SourceCodeScanner {
     companion object {
         private val IMPLEMENTATION = Implementation(
@@ -45,13 +43,12 @@ class WorkManagerDetector : Detector(), SourceCodeScanner {
             Scope.JAVA_FILE_SCOPE
         )
 
-        /** Problems with enqueueing work manager continuations */
+        /** Problems with enqueueing work manager continuations. */
         @JvmField
         val ISSUE = Issue.create(
             id = "EnqueueWork",
             briefDescription = "WorkManager Enqueue",
-            explanation =
-                """
+            explanation = """
                 `WorkContinuations` cannot be enqueued automatically.  You must call `enqueue()` \
                 on a `WorkContinuation` to have it and its parent continuations enqueued inside \
                 `WorkManager`.

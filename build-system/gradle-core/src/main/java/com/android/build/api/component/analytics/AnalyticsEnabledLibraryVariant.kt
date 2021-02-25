@@ -17,9 +17,10 @@
 package com.android.build.api.component.analytics
 
 import com.android.build.api.component.AndroidTest
-import com.android.build.api.component.UnitTest
+import com.android.build.api.variant.AarMetadata
 import com.android.build.api.variant.LibraryPackaging
 import com.android.build.api.variant.LibraryVariant
+import com.android.build.api.variant.Renderscript
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.model.ObjectFactory
@@ -55,12 +56,37 @@ open class AnalyticsEnabledLibraryVariant @Inject constructor(
             return userVisiblePackagingOptions
         }
 
-    override fun packaging(action: LibraryPackaging.() -> Unit) {
-        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-            VariantPropertiesMethodType.PACKAGING_OPTIONS_ACTION_VALUE
-        action.invoke(userVisiblePackagingOptions)
-    }
-
     override val androidTest: AndroidTest?
         get() = delegate.androidTest
+
+    private val userVisibleRenderscript: Renderscript by lazy {
+        objectFactory.newInstance(
+            AnalyticsEnabledRenderscript::class.java,
+            delegate.renderscript,
+            stats
+        )
+    }
+
+    override val renderscript: Renderscript?
+        get() {
+            return if (delegate.renderscript != null) {
+                stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                    VariantPropertiesMethodType.RENDERSCRIPT_VALUE
+                userVisibleRenderscript
+            } else null
+        }
+
+    private val userVisibleAarMetadata: AarMetadata by lazy {
+        objectFactory.newInstance(
+            AnalyticsEnabledAarMetadata::class.java,
+            delegate.aarMetadata,
+            stats
+        )
+    }
+    override val aarMetadata: AarMetadata
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.VARIANT_AAR_METADATA_VALUE
+            return userVisibleAarMetadata
+        }
 }

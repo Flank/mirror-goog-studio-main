@@ -48,7 +48,7 @@ abstract class AbstractVariantInputManager<
         DefaultConfigT : com.android.build.api.dsl.DefaultConfig,
         BuildTypeT : com.android.build.api.dsl.BuildType,
         ProductFlavorT : com.android.build.api.dsl.ProductFlavor,
-        SigningConfigT : com.android.build.api.dsl.SigningConfig>(
+        SigningConfigT : com.android.build.api.dsl.ApkSigningConfig>(
             private val variantType: VariantType,
             override val sourceSetManager: SourceSetManager
         ) : VariantInputModel<DefaultConfigT, BuildTypeT, ProductFlavorT, SigningConfigT>,

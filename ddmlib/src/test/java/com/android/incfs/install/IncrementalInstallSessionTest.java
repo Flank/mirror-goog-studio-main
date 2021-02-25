@@ -663,7 +663,7 @@ public class IncrementalInstallSessionTest extends TestCase {
         }
 
         @Override
-        public int read(@NonNull ByteBuffer dst) {
+        public int read(@NonNull ByteBuffer dst, long timeoutMs) {
             synchronized (this) {
                 if (mFromDeviceData.isEmpty()) {
                     return 0;
@@ -683,7 +683,7 @@ public class IncrementalInstallSessionTest extends TestCase {
         }
 
         @Override
-        public int write(@NonNull ByteBuffer src) {
+        public int write(@NonNull ByteBuffer src, long timeoutMs) {
             synchronized (this) {
                 final int count = src.remaining();
                 final byte[] dest = new byte[count];

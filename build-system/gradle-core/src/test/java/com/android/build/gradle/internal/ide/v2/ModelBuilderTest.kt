@@ -234,6 +234,7 @@ class ModelBuilderTest {
                 NoOpMessageReceiver(),
                 Mockito.mock(SoftwareComponentFactory::class.java)
             ),
+            dslServices.projectOptions,
             createVariantModel(),
             extension,
             dslServices.issueReporter as SyncIssueReporter,

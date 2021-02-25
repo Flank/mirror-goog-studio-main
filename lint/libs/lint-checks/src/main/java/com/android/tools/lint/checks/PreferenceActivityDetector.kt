@@ -47,7 +47,10 @@ import org.jetbrains.uast.UClass
 import org.w3c.dom.Element
 import java.util.EnumSet
 
-/** Ensures that PreferenceActivity and its subclasses are never exported.  */
+/**
+ * Ensures that PreferenceActivity and its subclasses are never
+ * exported.
+ */
 class PreferenceActivityDetector : Detector(), XmlScanner, SourceCodeScanner {
 
     // ---- Implements XmlScanner ----
@@ -172,8 +175,7 @@ class PreferenceActivityDetector : Detector(), XmlScanner, SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "ExportedPreferenceActivity",
             briefDescription = "PreferenceActivity should not be exported",
-            explanation =
-                """
+            explanation = """
                 Fragment injection gives anyone who can send your `PreferenceActivity` an intent \
                 the ability to load any fragment, with any arguments, in your process.""",
             //noinspection LintImplUnexpectedDomain

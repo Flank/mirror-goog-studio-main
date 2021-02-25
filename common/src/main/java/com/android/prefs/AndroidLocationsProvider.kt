@@ -52,5 +52,5 @@ interface AndroidLocationsProvider {
      *
      * To query the AVD Folder, use [avdLocation] as it could be overridden
      */
-    val userHomeLocation: Path?
+    val userHomeLocation: Path
 }

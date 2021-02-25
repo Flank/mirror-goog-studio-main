@@ -47,7 +47,7 @@ data class AndroidArtifactImpl(
     override val generatedSourceFolders: Collection<File>,
     override val generatedResourceFolders: Collection<File>,
     override val classesFolders: Set<File>,
-    override val assembleTaskOutputListingFile: File
+    override val assembleTaskOutputListingFile: File?
 ) : AndroidArtifact, Serializable {
     companion object {
         @JvmStatic

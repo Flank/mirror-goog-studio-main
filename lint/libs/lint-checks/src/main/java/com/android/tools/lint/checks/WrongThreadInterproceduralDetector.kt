@@ -47,7 +47,10 @@ data class AnnotatedCallPath(
     val sinkAnnotation: String
 )
 
-/** Returns a collection of call paths that violate thread annotations found in source code. */
+/**
+ * Returns a collection of call paths that violate thread annotations
+ * found in source code.
+ */
 // public because accessed from tools/adt/idea tests
 fun searchForInterproceduralThreadAnnotationViolations(
     callGraph: CallGraph,
@@ -171,8 +174,7 @@ class WrongThreadInterproceduralDetector : Detector(), SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "WrongThreadInterprocedural",
             briefDescription = "Wrong Thread (Interprocedural)",
-            explanation =
-                """
+            explanation = """
                 Searches for interprocedural call paths that violate thread annotations \
                 in the program. Tracks the flow of instantiated types and lambda \
                 expressions to increase accuracy across method boundaries.

@@ -16,6 +16,7 @@
 
 package com.android.build.api.variant
 
+import com.android.build.api.component.AndroidTest
 import org.gradle.api.Incubating
 import org.gradle.api.provider.Property
 
@@ -23,12 +24,18 @@ import org.gradle.api.provider.Property
  * Properties for the main Variant of an application.
  */
 @Incubating
-interface ApplicationVariant : Variant, ProducesDex<Dexing>, HasAndroidTest {
+interface ApplicationVariant : Variant {
 
     /**
      * Variant's application ID as present in the final manifest file of the APK.
      */
     override val applicationId: Property<String>
+
+    /**
+     * Variant's [AndroidTest] configuration, or null if android tests are disabled for this
+     * variant.
+     */
+    val androidTest: AndroidTest?
 
     /**
      * Returns the final list of variant outputs.
@@ -45,19 +52,10 @@ interface ApplicationVariant : Variant, ProducesDex<Dexing>, HasAndroidTest {
     val aapt: Aapt
 
     /**
-     * Variant's aaptOptions, initialized by the corresponding global DSL element.
-     */
-    fun aaptOptions(action: Aapt.() -> Unit)
-
-    /**
      * Variant's signingConfig, initialized by the corresponding DSL element.
+     * @return Variant's config or null if the variant is not configured for signing.
      */
-    val signingConfig: SigningConfig
-
-    /**
-     * Variant's signingConfig, initialized by the corresponding DSL element.
-     */
-    fun signingConfig(action: SigningConfig.() -> Unit)
+    val signingConfig: SigningConfig?
 
     /**
      * Variant's packagingOptions, initialized by the corresponding global DSL element.
@@ -65,7 +63,14 @@ interface ApplicationVariant : Variant, ProducesDex<Dexing>, HasAndroidTest {
     override val packaging: ApkPackaging
 
     /**
-     * Variant's packagingOptions, initialized by the corresponding global DSL element.
+     * Variant settings related to transforming bytecodes into dex files initialized from
+     * the corresponding fields in the DSL.
      */
-    fun packaging(action: ApkPackaging.() -> Unit)
+    val dexing: Dexing
+
+    /**
+     * Variant specific settings for the renderscript compiler. This will return null when
+     * [com.android.build.api.dsl.BuildFeatures.renderScript] is false.
+     */
+    val renderscript: Renderscript?
 }

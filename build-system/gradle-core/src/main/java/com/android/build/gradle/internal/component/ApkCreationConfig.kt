@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.component
 import com.android.build.api.variant.Aapt
 import com.android.build.api.variant.ApkPackaging
 import com.android.build.api.variant.Dexing
-import com.android.build.api.variant.SigningConfig
+import com.android.build.api.variant.impl.SigningConfigImpl
 import org.gradle.api.provider.MapProperty
 
 /**
@@ -52,7 +52,15 @@ interface ApkCreationConfig: ConsumableCreationConfig {
 
     override val packaging: ApkPackaging
 
-    val signingConfig: SigningConfig?
+    /**
+     * Variant's signing information of null if signing is not configured for this variant.
+     */
+    val signingConfig: SigningConfigImpl?
+
+    /**
+     * DO NOT USE, only present for old variant API.
+     */
+    val dslSigningConfig: com.android.build.gradle.internal.dsl.SigningConfig?
 
     val dexing: Dexing
 }

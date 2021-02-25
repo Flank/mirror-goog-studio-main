@@ -38,17 +38,17 @@ import org.jetbrains.uast.tryResolve
 import org.jetbrains.uast.util.isAssignment
 
 /**
- * Detector looking for suspicious combinations of intent.setData and intent.setType
+ * Detector looking for suspicious combinations of intent.setData and
+ * intent.setType.
  */
 class IntentDetector : Detector(), SourceCodeScanner {
     companion object {
-        /** The main issue discovered by this detector  */
+        /** The main issue discovered by this detector. */
         @JvmField
         val ISSUE = Issue.create(
             id = "IntentReset",
             briefDescription = "Suspicious mix of `setType` and `setData`",
-            explanation =
-                """
+            explanation = """
                 Intent provides the following APIs: `setData(Uri)` and `setType(String)`. \
                 Unfortunately, setting one clears the other. If you want to set both, you \
                 should call `setDataAndType(Uri, String)` instead.""",

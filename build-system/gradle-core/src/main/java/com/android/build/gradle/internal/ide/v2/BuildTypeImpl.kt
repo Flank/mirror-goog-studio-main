@@ -37,8 +37,8 @@ data class BuildTypeImpl(
     override val signingConfig: String?,
     override val applicationIdSuffix: String?,
     override val versionNameSuffix: String?,
-    override val buildConfigFields: Map<String, ClassField>,
-    override val resValues: Map<String, ClassField>,
+    override val buildConfigFields: Map<String, ClassField>?,
+    override val resValues: Map<String, ClassField>?,
     override val proguardFiles: Collection<File>,
     override val consumerProguardFiles: Collection<File>,
     override val testProguardFiles: Collection<File>,
@@ -46,6 +46,7 @@ data class BuildTypeImpl(
     override val multiDexEnabled: Boolean?,
     override val multiDexKeepFile: File?,
     override val multiDexKeepProguard: File?,
+    override val isDefault: Boolean? = null,
     override val name: String?
 ) : BuildType, Serializable {
     companion object {

@@ -21,16 +21,16 @@ import com.android.tools.lint.detector.api.GradleScanner
 import com.android.tools.lint.detector.api.Location
 
 /**
- * Visitor which can traverse a Gradle file and invoke the various methods
- * on a {@link GradleScanner}.
+ * Visitor which can traverse a Gradle file and invoke the various
+ * methods on a {@link GradleScanner}.
  *
  * This is only intended to be implemented by lint.
  */
 open class GradleVisitor {
     /**
-     * Manually visiting the build script. Returns true if it has fully handled
-     * the file, otherwise returns true and some of the individual DSL checks below
-     * are run.
+     * Manually visiting the build script. Returns true if it has
+     * fully handled the file, otherwise returns true and some of the
+     * individual DSL checks below are run.
      */
     open fun visitBuildScript(context: GradleContext, detectors: List<GradleScanner>) {
         // Empty implementation. This class is overridden in modules which have

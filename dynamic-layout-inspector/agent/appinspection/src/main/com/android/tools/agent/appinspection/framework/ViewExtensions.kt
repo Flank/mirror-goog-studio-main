@@ -72,6 +72,10 @@ fun View.flatten(): Sequence<View> {
 fun View.isSystemView(): Boolean {
     return try {
         val layoutId = sourceLayoutResId
+        if (layoutId == 0) {
+            // Programmatically added Views are treated as system views:
+            return true
+        }
         val namespace = resources.getResourcePackageName(layoutId)
         val name = resources.getResourceEntryName(layoutId)
 

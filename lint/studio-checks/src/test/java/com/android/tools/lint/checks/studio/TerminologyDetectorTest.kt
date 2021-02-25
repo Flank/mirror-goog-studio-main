@@ -346,11 +346,11 @@ class TerminologyDetectorTest {
         val generated = stringWriter.toString()
 
         if (replace(
-            path = "tools/base/lint/studio-checks/src/main/java/com/android/tools/lint/checks/studio/TerminologyDetector.kt",
-            startMarker = "// <editor-fold",
-            endMarker = "// </editor-fold>",
-            replacementFunction = { generated.trim() }
-        )
+                path = "tools/base/lint/studio-checks/src/main/java/com/android/tools/lint/checks/studio/TerminologyDetector.kt",
+                startMarker = "// <editor-fold",
+                endMarker = "// </editor-fold>",
+                replacementFunction = { generated.trim() }
+            )
         ) {
             return
         }
@@ -430,7 +430,7 @@ class TerminologyDetectorTest {
         )
     }
 
-    /** Replaces source ranges in the source tree */
+    /** Replaces source ranges in the source tree. */
     @Suppress("SameParameterValue")
     private fun replace(
         path: String,

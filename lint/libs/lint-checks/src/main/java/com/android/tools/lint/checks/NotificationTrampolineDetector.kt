@@ -59,13 +59,12 @@ class NotificationTrampolineDetector : Detector(), SourceCodeScanner {
             Scope.JAVA_FILE_SCOPE
         )
 
-        /** Launching activities indirectly from activities */
+        /** Launching activities indirectly from activities. */
         @JvmField
         val TRAMPOLINE = Issue.create(
             id = "NotificationTrampoline",
             briefDescription = "Notification Trampolines",
-            explanation =
-                """
+            explanation = """
                 Activities should not be launched indirectly from a notification via an \
                 intermediate `BroadcastReceiver` or `Service`. This can lead to significant lags \
                 in some scenarios, and is forbidden if `targetSdkVersion` is set to the API level \
@@ -80,13 +79,15 @@ class NotificationTrampolineDetector : Detector(), SourceCodeScanner {
             implementation = IMPLEMENTATION
         )
 
-        /** Launching services or broadcast receivers from a whole notification */
+        /**
+         * Launching services or broadcast receivers from a whole
+         * notification.
+         */
         @JvmField
         val ACTIVITY = Issue.create(
             id = "LaunchActivityFromNotification",
             briefDescription = "Notification Launches Services or BroadcastReceivers",
-            explanation =
-                """
+            explanation = """
                 Notifications should only launch activities -- that's what users expect (and \
                 has been the guidance in both the Android SDK and Material Design documentation \
                 for a while).
@@ -139,10 +140,10 @@ class NotificationTrampolineDetector : Detector(), SourceCodeScanner {
     }
 
     /**
-     * The notification is associated with a broadcast receiver; look at the given
-     * receiver and see if it launches any activities (if so, report the notification
-     * construction with an error), and either way, return true if we found the
-     * receiver class.
+     * The notification is associated with a broadcast receiver; look at
+     * the given receiver and see if it launches any activities (if so,
+     * report the notification construction with an error), and either
+     * way, return true if we found the receiver class.
      */
     private fun checkNonActivityIntent(
         context: JavaContext,
@@ -263,8 +264,9 @@ class NotificationTrampolineDetector : Detector(), SourceCodeScanner {
     }
 
     /**
-     * Given a Foo.class or Foo::class.java class literal in Java or Kotlin,
-     * return the resolved Foo class, unless it's a binary class (bytecode)
+     * Given a Foo.class or Foo::class.java class literal in Java or
+     * Kotlin, return the resolved Foo class, unless it's a binary class
+     * (bytecode)
      */
     private fun findClassFromLiteral(argument: UElement): PsiClass? {
         val type =
@@ -290,10 +292,10 @@ class NotificationTrampolineDetector : Detector(), SourceCodeScanner {
     }
 
     /**
-     * Given a broadcast receiver, check whether its `onReceive` method starts
-     * activities, and if so flag them as errors. Return true if the receiver
-     * class was found (though if it was, and we can't get the UAST for the
-     * onReceive method, return false.)
+     * Given a broadcast receiver, check whether its `onReceive` method
+     * starts activities, and if so flag them as errors. Return true if
+     * the receiver class was found (though if it was, and we can't get
+     * the UAST for the onReceive method, return false.)
      */
     private fun checkBroadcastReceiver(
         context: JavaContext,
@@ -316,9 +318,9 @@ class NotificationTrampolineDetector : Detector(), SourceCodeScanner {
 
     /**
      * Given a service, check whether its `onStartCommand` method starts
-     * activities, and if so flag them as errors. Return true if the service
-     * class was found (though if it was, and we can't get the UAST for the
-     * onStartCommand method, return false.)
+     * activities, and if so flag them as errors. Return true if the
+     * service class was found (though if it was, and we can't get the
+     * UAST for the onStartCommand method, return false.)
      */
     private fun checkService(
         context: JavaContext,

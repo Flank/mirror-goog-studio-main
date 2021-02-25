@@ -25,13 +25,9 @@ import java.io.File
  */
 interface Library: AndroidModel {
     /**
-     * The type of the dependency
-     *
-     * @see [LIBRARY_ANDROID]
-     * @see [LIBRARY_JAVA]
-     * @see [LIBRARY_MODULE]
+     * The type of the dependency.
      */
-    val type: Int
+    val type: LibraryType
 
     /**
      * The artifact address in a unique way.
@@ -191,10 +187,4 @@ interface Library: AndroidModel {
      * Only valid for instances where [type] is [LIBRARY_ANDROID]
      */
     val symbolFile: File?
-
-    companion object {
-        const val LIBRARY_ANDROID = 1
-        const val LIBRARY_JAVA = 2
-        const val LIBRARY_MODULE = 3
-    }
 }

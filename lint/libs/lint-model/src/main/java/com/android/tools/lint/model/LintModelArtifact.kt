@@ -23,11 +23,12 @@ interface LintModelArtifact {
     val classOutputs: List<File>
 
     /**
-     * Finds the library with the given [mavenName] (group id and artifact id)
-     * in any transitive compile-dependency.
+     * Finds the library with the given [mavenName] (group id and
+     * artifact id) in any transitive compile-dependency.
      *
-     * Convenience method for accessing the compile dependencies and then looking up
-     * the library there, since this is a very common operation.
+     * Convenience method for accessing the compile dependencies and
+     * then looking up the library there, since this is a very common
+     * operation.
      */
     fun findCompileDependency(mavenName: String): LintModelLibrary? =
         dependencies.compileDependencies.findLibrary(mavenName, direct = false)
@@ -50,9 +51,9 @@ class DefaultLintModelJavaArtifact(
     classFolders: List<File>,
     dependencies: LintModelDependencies
 ) : DefaultLintModelArtifact(
-    dependencies = dependencies,
-    classOutputs = classFolders
-),
+        dependencies = dependencies,
+        classOutputs = classFolders
+    ),
     LintModelJavaArtifact
 
 class DefaultLintModelAndroidArtifact(
@@ -62,7 +63,7 @@ class DefaultLintModelAndroidArtifact(
     classOutputs: List<File>,
     dependencies: LintModelDependencies
 ) : DefaultLintModelArtifact(
-    dependencies = dependencies,
-    classOutputs = classOutputs
-),
+        dependencies = dependencies,
+        classOutputs = classOutputs
+    ),
     LintModelAndroidArtifact

@@ -34,6 +34,7 @@ import com.android.build.gradle.internal.ide.dependencies.ArtifactHandler
 import com.android.build.gradle.internal.ide.dependencies.ResolvedArtifact
 import com.android.builder.model.MavenCoordinates
 import com.android.builder.model.v2.ide.Library
+import com.android.builder.model.v2.ide.LibraryType
 import com.android.ide.common.caching.CreatingCache
 import com.android.utils.FileUtils
 import java.io.File
@@ -55,7 +56,7 @@ class ArtifactHandlerImpl(
         val apiJar = FileUtils.join(folder, FD_JARS, FN_API_JAR)
         val runtimeJar = FileUtils.join(folder, FD_JARS, FN_CLASSES_JAR)
         return LibraryImpl(
-            type = Library.LIBRARY_ANDROID,
+            type = LibraryType.ANDROID_LIBRARY,
             artifactAddress = addressSupplier(),
             manifest = File(folder, FN_ANDROID_MANIFEST_XML),
             compileJarFiles = listOf(if (apiJar.isFile) apiJar else runtimeJar) + localJavaLibraries,
@@ -91,7 +92,7 @@ class ArtifactHandlerImpl(
         addressSupplier: () -> String
     ): Library {
         return LibraryImpl(
-            type = Library.LIBRARY_MODULE,
+            type = LibraryType.PROJECT,
             artifactAddress = addressSupplier(),
             buildId = buildId,
             projectPath = projectPath,
@@ -123,7 +124,7 @@ class ArtifactHandlerImpl(
         addressSupplier: () -> String
     ): Library {
         return LibraryImpl(
-            type = Library.LIBRARY_JAVA,
+            type = LibraryType.JAVA_LIBRARY,
             artifactAddress = addressSupplier(),
             artifact = jarFile,
 
@@ -155,7 +156,7 @@ class ArtifactHandlerImpl(
         addressSupplier: () -> String
     ): Library {
         return LibraryImpl(
-            type = Library.LIBRARY_MODULE,
+            type = LibraryType.PROJECT,
             artifactAddress = addressSupplier(),
             buildId = buildId,
             projectPath = projectPath,

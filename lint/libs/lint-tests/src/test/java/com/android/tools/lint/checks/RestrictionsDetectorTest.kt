@@ -18,7 +18,6 @@ package com.android.tools.lint.checks
 
 import com.android.tools.lint.checks.RestrictionsDetector.Companion.MAX_NESTING_DEPTH
 import com.android.tools.lint.checks.RestrictionsDetector.Companion.MAX_NUMBER_OF_NESTED_RESTRICTIONS
-
 import com.android.tools.lint.detector.api.Detector
 
 class RestrictionsDetectorTest : AbstractCheckTest() {

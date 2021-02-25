@@ -16,8 +16,9 @@
 
 package com.android.build.gradle.tasks
 
-import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.options.StringOption
+import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.type.ArtifactTypeDefinition
 import org.gradle.api.file.FileCollection
@@ -59,10 +60,12 @@ private fun getPrefabArtifact(configuration: Configuration): FileCollection =
         }
     }.artifacts.artifactFiles
 
-fun getPrefabFromMaven(globalScope: GlobalScope): FileCollection {
-    val project = globalScope.project
+fun getPrefabFromMaven(
+    projectOptions: ProjectOptions,
+    project: Project
+): FileCollection {
 
-    globalScope.projectOptions[StringOption.PREFAB_CLASSPATH]?.let {
+    projectOptions[StringOption.PREFAB_CLASSPATH]?.let {
         return project.files(it)
     }
 
@@ -77,7 +80,7 @@ fun getPrefabFromMaven(globalScope: GlobalScope): FileCollection {
         it.description = "The Prefab tool to use for generating native build system bindings."
     }
 
-    val version = globalScope.projectOptions[StringOption.PREFAB_VERSION] ?: DEFAULT_PREFAB_VERSION
+    val version = projectOptions[StringOption.PREFAB_VERSION] ?: DEFAULT_PREFAB_VERSION
     project.dependencies.add(
         config.name,
         mapOf(

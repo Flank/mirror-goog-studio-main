@@ -137,14 +137,6 @@ public class GlobalScope {
     }
 
     @NonNull
-    public String getProjectBaseName() {
-        BasePluginConvention convention =
-                Preconditions.checkNotNull(
-                        project.getConvention().findPlugin(BasePluginConvention.class));
-        return convention.getArchivesBaseName();
-    }
-
-    @NonNull
     public Provider<SdkComponentsBuildService> getSdkComponents() {
         return sdkComponents;
     }
@@ -204,11 +196,6 @@ public class GlobalScope {
     @NonNull
     public File getJacocoAgent() {
         return new File(getJacocoAgentOutputDirectory(), "jacocoagent.jar");
-    }
-
-    @NonNull
-    public ProjectOptions getProjectOptions() {
-        return dslServices.getProjectOptions();
     }
 
     public void setLintChecks(@NonNull Configuration lintChecks) {

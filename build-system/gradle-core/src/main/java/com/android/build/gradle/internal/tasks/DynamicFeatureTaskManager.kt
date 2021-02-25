@@ -28,17 +28,20 @@ import com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeat
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureNameWriterTask
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclarationWriterTask
 import com.android.build.gradle.internal.variant.ComponentInfo
+import com.android.build.gradle.options.ProjectOptions
 
 internal class DynamicFeatureTaskManager(
         variants: List<ComponentInfo<DynamicFeatureVariantBuilderImpl, DynamicFeatureVariantImpl>>,
         testComponents: List<ComponentInfo<TestComponentBuilderImpl, TestComponentImpl>>,
         hasFlavors: Boolean,
+        projectOptions: ProjectOptions,
         globalScope: GlobalScope,
         extension: BaseExtension
 ) : AbstractAppTaskManager<DynamicFeatureVariantBuilderImpl, DynamicFeatureVariantImpl>(
     variants,
     testComponents,
     hasFlavors,
+    projectOptions,
     globalScope,
     extension
 ) {

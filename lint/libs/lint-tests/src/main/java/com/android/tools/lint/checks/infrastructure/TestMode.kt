@@ -24,11 +24,12 @@ import com.android.tools.lint.detector.api.Context
 import java.io.File
 
 /**
- * Different types of test execution for lint. See [TestLintTask.testModes].
- * Similar to an enum, but left open to make it extendable by other test
- * types outside of lint's built in modes. For example, a third party lint
- * check could be run multiple times with different flags set to for example
- * affect how the lint check uses a particular API it depends on.
+ * Different types of test execution for lint. See
+ * [TestLintTask.testModes]. Similar to an enum, but left open to make
+ * it extendable by other test types outside of lint's built in modes.
+ * For example, a third party lint check could be run multiple times
+ * with different flags set to for example affect how the lint check
+ * uses a particular API it depends on.
  */
 open class TestMode(
     /**
@@ -45,8 +46,8 @@ open class TestMode(
 ) : Iterable<TestMode> {
     /**
      * Folder name to write the test project into. By passing the same
-     * name for multiple test types they can share the same install (since
-     * many/most test types don't modify the project structure.)
+     * name for multiple test types they can share the same install
+     * (since many/most test types don't modify the project structure.)
      */
     open val folderName: String = "default"
 
@@ -83,7 +84,7 @@ open class TestMode(
 
     /**
      * Custom explanation to show when the output is different than a
-     * previous test type
+     * previous test type.
      */
     open val diffExplanation: String? = null
 
@@ -94,11 +95,11 @@ open class TestMode(
     override fun toString(): String = description
 
     companion object {
-        /** The default type of lint execution */
+        /** The default type of lint execution. */
         @JvmField
         val DEFAULT = TestMode(description = "Default", "TestMode.DEFAULT")
 
-        /** Run lint with UI injection host mode turned on */
+        /** Run lint with UI injection host mode turned on. */
         @JvmField
         val UI_INJECTION_HOST = object : TestMode(
             "UInjectionHost Enabled",
@@ -187,7 +188,7 @@ open class TestMode(
         @JvmField
         val PARTIAL: TestMode = PartialTestMode()
 
-        /** Returns all default included test modes */
+        /** Returns all default included test modes. */
         @JvmStatic
         fun values(): List<TestMode> = listOf(
             DEFAULT,

@@ -63,6 +63,7 @@ import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
 import com.android.build.gradle.internal.tasks.factory.TaskProviderCallback;
 import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.options.BooleanOption;
+import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.BundleAar;
 import com.android.build.gradle.tasks.CompileLibraryResourcesTask;
 import com.android.build.gradle.tasks.ExtractAnnotations;
@@ -95,9 +96,10 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
             @NonNull
                     List<ComponentInfo<TestComponentBuilderImpl, TestComponentImpl>> testComponents,
             boolean hasFlavors,
+            @NonNull ProjectOptions projectOptions,
             @NonNull GlobalScope globalScope,
             @NonNull BaseExtension extension) {
-        super(variants, testComponents, hasFlavors, globalScope, extension);
+        super(variants, testComponents, hasFlavors, projectOptions, globalScope, extension);
     }
 
     @Override
@@ -163,7 +165,7 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
                     // Switch to package where possible so we stop merging resources in
                     // libraries
                     MergeType.PACKAGE,
-                    globalScope.getProjectBaseName());
+                    libraryVariant.getServices().getProjectInfo().getProjectBaseName());
 
             // Only verify resources if in Release and not namespaced.
             if (!libraryVariant.getDebuggable()

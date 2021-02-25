@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.tasks
 
 import com.google.common.truth.Truth.assertThat
 
-import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.signing.SigningConfigData
 import java.io.File
 import java.io.IOException
@@ -53,14 +52,18 @@ class SigningConfigWriterTaskTest {
     @Test
     @Throws(IOException::class)
     fun testTask() {
-        val signingConfig = SigningConfig("signingConfig_name")
-        signingConfig.storePassword = "foobar"
-        signingConfig.enableV1Signing = true
-        task.signingConfigData = SigningConfigData.fromSigningConfig(signingConfig)
+        task.signingConfigData.set(SigningConfigData(
+            name = "signingConfig_name",
+            storePassword = "foobar",
+            storeFile = null,
+            keyAlias = null,
+            keyPassword = null,
+            storeType = null
+        ))
 
         task.doTaskAction()
 
         val loadedSigningConfigData = SigningConfigUtils.loadSigningConfigData(outputFile)
-        assertThat(loadedSigningConfigData).isEqualTo(task.signingConfigData)
+        assertThat(loadedSigningConfigData).isEqualTo(task.signingConfigData.get())
     }
 }

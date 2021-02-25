@@ -30,21 +30,20 @@ import org.w3c.dom.Document
 import org.w3c.dom.Node
 
 /**
- * Check which looks for invalid resources. Aapt already performs some validation,
- * such as making sure that resource references point to resources that exist, but this
- * detector looks for additional issues.
+ * Check which looks for invalid resources. Aapt already performs some
+ * validation, such as making sure that resource references point to
+ * resources that exist, but this detector looks for additional issues.
  */
-/** Constructs a new detector  */
+/** Constructs a new detector. */
 class ExtraTextDetector : ResourceXmlDetector() {
     companion object Issues {
 
-        /** The main issue discovered by this detector  */
+        /** The main issue discovered by this detector. */
         @JvmField
         val ISSUE = Issue.create(
             id = "ExtraText",
             briefDescription = "Extraneous text in resource files",
-            explanation =
-                """
+            explanation = """
             Layout resource files should only contain elements and attributes. Any XML text content found \
             in the file is likely accidental (and potentially dangerous if the text resembles XML and the \
             developer believes the text to be functional)""",

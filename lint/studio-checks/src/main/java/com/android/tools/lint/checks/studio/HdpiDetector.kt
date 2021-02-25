@@ -36,9 +36,7 @@ import org.jetbrains.uast.UThisExpression
 import org.jetbrains.uast.tryResolve
 import org.jetbrains.uast.util.isAssignment
 
-/**
- * Detect incorrect handling of high density screens.
- */
+/** Detect incorrect handling of high density screens. */
 class HdpiDetector : Detector(), SourceCodeScanner {
 
     companion object Issues {
@@ -51,8 +49,7 @@ class HdpiDetector : Detector(), SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "JbUiStored",
             briefDescription = "Storing scaled pixel sizes",
-            explanation =
-                """
+            explanation = """
                 `JBUI.scale()` can return different values at different points in time during the \
                 same Studio session (for example when the user changes themes, or changes the \
                 default font size). This means that storing the result of `JBUI.scale()` in \

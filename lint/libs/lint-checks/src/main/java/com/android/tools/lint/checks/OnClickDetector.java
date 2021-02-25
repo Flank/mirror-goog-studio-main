@@ -236,9 +236,11 @@ public class OnClickDetector extends LayoutDetector implements SourceCodeScanner
                     if (parser != null) {
                         JavaEvaluator evaluator = parser.getEvaluator();
                         PsiClass cls = evaluator.findClass(ctx);
-                        if (cls != null) {
+                        // The context can only be an Activity (we do not allow fragments or other
+                        // holders).
+                        if (cls != null && evaluator.extendsClass(cls, CLASS_ACTIVITY, false)) {
                             boolean found = false;
-                            PsiMethod[] methods = cls.findMethodsByName(value, false);
+                            PsiMethod[] methods = cls.findMethodsByName(value, true);
                             for (PsiMethod method : methods) {
                                 boolean rightArguments =
                                         method.getParameterList().getParametersCount() == 1

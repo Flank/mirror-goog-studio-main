@@ -82,9 +82,6 @@ abstract class ProguardTask : ProguardConfigurableTask() {
     override fun doTaskAction() {
         // only run PROGUARD_CONCURRENCY_LIMIT proguard invocations at a time (across projects)
         try {
-            if (!mappingFile.isPresent) {
-                throw RuntimeException("printMapping not initialized")
-            }
             val printMappingFile = mappingFile.get().asFile
             proguardWorkLimiter
                 .limit(

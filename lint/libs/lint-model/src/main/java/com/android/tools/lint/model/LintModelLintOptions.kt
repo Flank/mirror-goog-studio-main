@@ -21,9 +21,7 @@ import java.io.Serializable
 
 /**
  * Options for lint. Example:
- *
  * <pre>
- *
  * android {
  * lintOptions {
  * // set to true to turn off analysis progress reporting by lint
@@ -104,63 +102,73 @@ import java.io.Serializable
  * checkDependencies false
  * }
  * }
-</pre> *
+ * </pre> *
  */
 interface LintModelLintOptions {
     /**
-     * Returns the set of issue id's to suppress. Callers are allowed to modify this collection.
-     * To suppress a given issue, add the lint issue id to the returned set.
+     * Returns the set of issue id's to suppress. Callers are allowed to
+     * modify this collection. To suppress a given issue, add the lint
+     * issue id to the returned set.
      */
     val disable: Set<String>
 
     /**
-     * Returns the set of issue id's to enable. Callers are allowed to modify this collection.
-     * To enable a given issue, add the lint issue id to the returned set.
+     * Returns the set of issue id's to enable. Callers are allowed to
+     * modify this collection. To enable a given issue, add the lint
+     * issue id to the returned set.
      */
     val enable: Set<String>
 
     /**
-     * Returns the exact set of issues to check, or null to run the issues that are enabled
-     * by default plus any issues enabled via [.getEnable] and without issues disabled
-     * via [.getDisable]. If non-null, callers are allowed to modify this collection.
+     * Returns the exact set of issues to check, or null to run the
+     * issues that are enabled by default plus any issues enabled via
+     * [.getEnable] and without issues disabled via [.getDisable].
+     * If non-null, callers are allowed to modify this collection.
      */
     val check: Set<String>?
 
-    /** Whether lint should abort the build if errors are found */
+    /** Whether lint should abort the build if errors are found. */
     val abortOnError: Boolean
 
     /**
-     * Whether lint should display full paths in the error output. By default the paths
-     * are relative to the path lint was invoked from.
+     * Whether lint should display full paths in the error output. By
+     * default the paths are relative to the path lint was invoked from.
      */
     val absolutePaths: Boolean
 
     /**
-     * Whether lint should include the source lines in the output where errors occurred
-     * (true by default)
+     * Whether lint should include the source lines in the output where
+     * errors occurred (true by default)
      */
     val noLines: Boolean
 
     /**
-     * Returns whether lint should be quiet (for example, not write informational messages
-     * such as paths to report files written)
+     * Returns whether lint should be quiet (for example, not write
+     * informational messages such as paths to report files written)
      */
     val quiet: Boolean
 
-    /** Returns whether lint should check all warnings, including those off by default */
+    /**
+     * Returns whether lint should check all warnings, including those
+     * off by default.
+     */
     val checkAllWarnings: Boolean
 
-    /** Returns whether lint will only check for errors (ignoring warnings) */
+    /**
+     * Returns whether lint will only check for errors (ignoring
+     * warnings)
+     */
     val ignoreWarnings: Boolean
 
-    /** Returns whether lint should treat all warnings as errors */
+    /** Returns whether lint should treat all warnings as errors. */
     val warningsAsErrors: Boolean
 
     /**
-     * Returns whether lint should run all checks on test sources, instead of just the
-     * lint checks that have been specifically written to include tests (e.g. checks
-     * looking for specific test errors, or checks that need to consider testing code
-     * such as the unused resource detector)
+     * Returns whether lint should run all checks on test sources,
+     * instead of just the lint checks that have been specifically
+     * written to include tests (e.g. checks looking for specific test
+     * errors, or checks that need to consider testing code such as the
+     * unused resource detector)
      *
      * @return true to check tests, defaults to false
      * @since 2.4
@@ -168,9 +176,9 @@ interface LintModelLintOptions {
     val checkTestSources: Boolean
 
     /**
-     * Like [.isCheckTestSources], but always skips analyzing tests -- meaning that it also
-     * ignores checks that have explicitly asked to look at test sources, such as the unused
-     * resource check.
+     * Like [.isCheckTestSources], but always skips analyzing tests --
+     * meaning that it also ignores checks that have explicitly asked to
+     * look at test sources, such as the unused resource check.
      *
      * @since 3.2.0-alpha14
      */
@@ -184,66 +192,75 @@ interface LintModelLintOptions {
      */
     val checkGeneratedSources: Boolean
 
-    /** Returns whether lint should include explanations for issue errors. (Note that
-     * HTML and XML reports intentionally do this unconditionally, ignoring this setting.) */
+    /**
+     * Returns whether lint should include explanations for issue
+     * errors. (Note that HTML and XML reports intentionally do this
+     * unconditionally, ignoring this setting.)
+     */
     val explainIssues: Boolean
 
     /**
-     * Returns whether lint should include all output (e.g. include all alternate
-     * locations, not truncating long messages, etc.)
+     * Returns whether lint should include all output (e.g. include all
+     * alternate locations, not truncating long messages, etc.)
      */
     val showAll: Boolean
 
-    /**
-     * Returns an optional path to a lint.xml configuration file
-     */
+    /** Returns an optional path to a lint.xml configuration file. */
     val lintConfig: File?
 
-    /** Whether we should write an text report. Default false. The location can be
-     * controlled by [.getTextOutput]. */
+    /**
+     * Whether we should write an text report. Default false. The
+     * location can be controlled by [.getTextOutput].
+     */
     val textReport: Boolean
 
     /**
-     * The optional path to where a text report should be written. The special value
-     * "stdout" can be used to point to standard output.
+     * The optional path to where a text report should be written. The
+     * special value "stdout" can be used to point to standard output.
      */
     val textOutput: File?
 
-    /** Whether we should write an HTML report. Default true. The location can be
-     * controlled by [.getHtmlOutput]. */
+    /**
+     * Whether we should write an HTML report. Default true. The
+     * location can be controlled by [.getHtmlOutput].
+     */
     val htmlReport: Boolean
 
-    /** The optional path to where an HTML report should be written */
+    /** The optional path to where an HTML report should be written. */
     val htmlOutput: File?
 
-    /** Whether we should write an XML report. Default true. The location can be
-     * controlled by [.getXmlOutput]. */
+    /**
+     * Whether we should write an XML report. Default true. The location
+     * can be controlled by [.getXmlOutput].
+     */
     val xmlReport: Boolean
 
-    /** The optional path to where an XML report should be written */
+    /** The optional path to where an XML report should be written. */
     val xmlOutput: File?
 
     /**
-     * Whether we should write a SARIF (OASIS Static Analysis Results Interchange Format) report.
-     * Default is false. The location can be controlled by [sarifOutput].
+     * Whether we should write a SARIF (OASIS Static Analysis Results
+     * Interchange Format) report. Default is false. The location can be
+     * controlled by [sarifOutput].
      */
     val sarifReport: Boolean
 
     /**
-     * The optional path to where a SARIF report (OASIS Static
-     * Analysis Results Interchange Format) should be written.
+     * The optional path to where a SARIF report (OASIS Static Analysis
+     * Results Interchange Format) should be written.
      */
     val sarifOutput: File?
 
     /**
-     * Returns whether lint should check for fatal errors during release builds. Default is true.
-     * If issues with severity "fatal" are found, the release build is aborted.
+     * Returns whether lint should check for fatal errors during release
+     * builds. Default is true. If issues with severity "fatal" are
+     * found, the release build is aborted.
      */
     val checkReleaseBuilds: Boolean
 
     /**
-     * Returns whether lint should check all dependencies too as part of its analysis. Default is
-     * false.
+     * Returns whether lint should check all dependencies too as part of
+     * its analysis. Default is false.
      */
     val checkDependencies: Boolean
 
@@ -252,20 +269,21 @@ interface LintModelLintOptions {
      * an XML report previously created by lint, and any warnings and
      * errors listed in that report will be ignored from analysis.
      *
-     *
      * If you have a project with a large number of existing warnings,
-     * this lets you set a baseline and only see newly introduced warnings
-     * until you get a chance to go back and address the "technical debt"
-     * of the earlier warnings.
+     * this lets you set a baseline and only see newly introduced
+     * warnings until you get a chance to go back and address the
+     * "technical debt" of the earlier warnings.
      *
      * @return the baseline file, if any
      */
     val baselineFile: File?
 
     /**
-     * An optional map of severity overrides. The map maps from issue id's to the corresponding
+     * An optional map of severity overrides. The map maps from issue
+     * id's to the corresponding
      *
-     * severity to use, which must be "fatal", "error", "warning", or "ignore".
+     * severity to use, which must be "fatal", "error", "warning", or
+     * "ignore".
      */
     val severityOverrides: Map<String, LintModelSeverity>?
 }

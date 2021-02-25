@@ -70,7 +70,6 @@ internal fun runUtpTestSuite(
 
     javaProcessExecutor.execute(javaProcessInfo, LoggedProcessOutputHandler(logger)).apply {
         rethrowFailure()
-        assertNormalExitValue()
     }
 
     return getResultsProto(utpOutputDir)
@@ -80,9 +79,11 @@ internal fun runUtpTestSuite(
  * Retrieves a test suite result proto from the Unified Test Platform's output directory.
  */
 internal fun getResultsProto(outputDir: File): TestSuiteResultProto.TestSuiteResult {
+    val testResultInAsciiProto = File(outputDir, TEST_RESULT_OUTPUT_FILE_NAME)
+    check(testResultInAsciiProto.exists())
     return TestSuiteResultProto.TestSuiteResult.newBuilder().apply {
         TextFormat.merge(
-            InputStreamReader(FileInputStream(File(outputDir, TEST_RESULT_OUTPUT_FILE_NAME))),
+            InputStreamReader(FileInputStream(testResultInAsciiProto)),
             this)
     }.build()
 }

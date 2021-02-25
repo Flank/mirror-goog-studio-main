@@ -16,8 +16,12 @@
 
 package com.android.ddmlib.internal.jdwp;
 
+import static com.android.ddmlib.internal.jdwp.chunkhandler.ChunkHandler.DDMS_CMD;
+import static com.android.ddmlib.internal.jdwp.chunkhandler.ChunkHandler.DDMS_CMD_SET;
+
 import com.android.ddmlib.AdbHelper;
 import com.android.ddmlib.JdwpHandshake;
+import com.android.ddmlib.internal.jdwp.chunkhandler.HandleAppName;
 import com.android.ddmlib.internal.jdwp.chunkhandler.JdwpPacket;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.IOException;
@@ -77,6 +81,24 @@ public class JdwpConnectionReader {
         return JdwpHandshake.findHandshake(mReadBuffer) == JdwpHandshake.HANDSHAKE_GOOD;
     }
 
+    /**
+     * Checks the top packet in the buffer and returns true if that packet is a DDMS packet with a
+     * payload packet type of APNM
+     *
+     * @return true if the packet payload is of type APNM.
+     * @throws IOException
+     */
+    public boolean isAPNMPacket() throws IOException {
+        JdwpPacket packet = readPacketHeader();
+        if (packet != null) {
+            if (packet.is(DDMS_CMD_SET, DDMS_CMD)) {
+                ByteBuffer payload = readPacketPayloadPartial(4);
+                return payload.getInt() == HandleAppName.CHUNK_APNM;
+            }
+        }
+        return false;
+    }
+
     /** Creates a command packet with the contents of the current buffer. */
     public DdmCommandPacket parseCommandPacket() {
         return new DdmCommandPacket(mReadBuffer);
@@ -104,6 +126,7 @@ public class JdwpConnectionReader {
         if (packetLength <= 0) {
             return null;
         }
+
         // resize buffer so we can fit whole packet in memory
         if (mReadBuffer.capacity() < packetLength) {
             resizeBuffer(packetLength);
@@ -113,8 +136,32 @@ public class JdwpConnectionReader {
             mSocket.read(mReadBuffer);
         }
         // serialize the packet in memory.
-        JdwpPacket packet = JdwpPacket.findPacket(mReadBuffer);
-        return packet;
+        return JdwpPacket.findPacket(mReadBuffer);
+    }
+
+    public JdwpPacket readPacketHeader() throws IOException {
+        // Get packet length returns -1 if the packet length read is less than the header size.
+        int packetLength = JdwpPacket.getPacketLength(mReadBuffer);
+        if (packetLength <= 0) {
+            return null;
+        }
+        while (mReadBuffer.position() < JdwpPacket.JDWP_HEADER_LEN) {
+            mSocket.read(mReadBuffer);
+        }
+        return JdwpPacket.findPacketHeader(mReadBuffer);
+    }
+
+    public ByteBuffer readPacketPayloadPartial(int size) throws IOException {
+        if (size <= 0) {
+            return ByteBuffer.allocate(0);
+        }
+        while (mReadBuffer.position() < JdwpPacket.JDWP_HEADER_LEN + size) {
+            mSocket.read(mReadBuffer);
+        }
+        ByteBuffer buffer = ByteBuffer.allocate(size);
+        buffer.put(mReadBuffer.array(), JdwpPacket.JDWP_HEADER_LEN, size);
+        buffer.flip();
+        return buffer;
     }
 
     private void resizeBuffer(int requestedSize) {
@@ -125,6 +172,13 @@ public class JdwpConnectionReader {
         newBuffer.put(mReadBuffer); // leaves "position" at end of copied
         newBuffer.position(currPosition);
         mReadBuffer = newBuffer;
+    }
+
+    public void consumePacket() throws IOException {
+        JdwpPacket packet = readPacket();
+        if (packet != null) {
+            packet.consume();
+        }
     }
 
     private boolean bufferOffsetStartsWith(int offset, String match) {

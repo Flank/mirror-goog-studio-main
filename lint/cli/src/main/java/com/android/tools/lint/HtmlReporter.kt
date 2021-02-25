@@ -50,8 +50,8 @@ import kotlin.math.min
 /**
  * A reporter which emits lint results into an HTML report.
  *
- * **NOTE: This is not a public or final API; if you rely on this be prepared to adjust your
- * code for the next tools release.**
+ * **NOTE: This is not a public or final API; if you rely on this be
+ * prepared to adjust your code for the next tools release.**
  */
 @Beta
 class HtmlReporter(
@@ -296,8 +296,8 @@ class HtmlReporter(
                             // Only display up to 3 inlined views to keep big reports from
                             // getting massive in rendering cost
                             if (shownSnippetsCount < 3 && !SdkUtils.isBitmapFile(
-                                l.file
-                            )
+                                    l.file
+                                )
                             ) {
                                 val s = client.readFile(l.file)
                                 if (s.isNotEmpty()) {
@@ -981,7 +981,7 @@ ${action.title}</button>"""
         return highlighter!!
     }
 
-    /** Insert syntax highlighted XML */
+    /** Insert syntax highlighted XML. */
     private fun appendCodeBlock(
         file: File,
         contents: CharSequence,
@@ -996,7 +996,10 @@ ${action.title}</button>"""
     }
 
     companion object {
-        /** Compare icons - first in descending density order, then by name */
+        /**
+         * Compare icons - first in descending density order, then by
+         * name.
+         */
         val ICON_DENSITY_COMPARATOR =
             Comparator { file1: File, file2: File ->
                 val density1 = getDensity(file1)
@@ -1010,55 +1013,57 @@ ${action.title}</button>"""
             }
 
         /**
-         * Maximum number of warnings allowed for a single issue type before we split up and hide all
-         * but the first [.SHOWN_COUNT] items.
+         * Maximum number of warnings allowed for a single issue type
+         * before we split up and hide all but the first [.SHOWN_COUNT]
+         * items.
          */
         private var SPLIT_LIMIT = 0
 
         /**
-         * When a warning has at least [.SPLIT_LIMIT] items, then we show the following number of
-         * items before the "Show more" button/link.
+         * When a warning has at least [.SPLIT_LIMIT] items, then we
+         * show the following number of items before the "Show more"
+         * button/link.
          */
         private var SHOWN_COUNT = 0
 
-        /** Number of lines to show around code snippets */
+        /** Number of lines to show around code snippets. */
         @JvmField
         var CODE_WINDOW_SIZE = 0
         private const val REPORT_PREFERENCE_PROPERTY = "lint.html.prefs"
         private var USE_WAVY_UNDERLINES_FOR_ERRORS = false
 
         /**
-         * Whether we should try to use browser support for wavy underlines. Underlines are not working
-         * well; see https://bugs.chromium.org/p/chromium/issues/detail?id=165462 for when to re-enable.
-         * If false we're using a CSS trick with repeated images instead. (Only applies if
-         * [.USE_WAVY_UNDERLINES_FOR_ERRORS] is true.)
+         * Whether we should try to use browser support for wavy
+         * underlines. Underlines are not working well; see
+         * https://bugs.chromium.org/p/chromium/issues/detail?id=165462
+         * for when to re-enable. If false we're using a CSS
+         * trick with repeated images instead. (Only applies
+         * if [.USE_WAVY_UNDERLINES_FOR_ERRORS] is true.)
          */
         private const val USE_CSS_DECORATION_FOR_WAVY_UNDERLINES = false
         private var preferredThemeName = "light"
 
         /**
-         * CSS themes for syntax highlighting. The following classes map to an IntelliJ color theme like
-         * this:
-         *
-         *
-         *  * pre.errorlines: General > Text > Default Text
-         *  * .prefix: XML > Namespace Prefix
-         *  * .attribute: XML > Attribute name
-         *  * .value: XML > Attribute value
-         *  * .tag: XML > Tag name
-         *  * .comment: XML > Comment
-         *  * .javado: Comments > JavaDoc > Text
-         *  * .annotation: Java > Annotations > Annotation name
-         *  * .string: Java > String > String text
-         *  * .number: Java > Numbers
-         *  * .keyword: Java > Keyword
-         *  * .caretline: General > Editor > Caret row (Background)
-         *  * .lineno: For color, General > Code > Line number, Foreground, and for background-color,
-         * Editor > Gutter background
-         *  * .error: General > Errors and Warnings > Error
-         *  * .warning: General > Errors and Warnings > Warning
-         *  * text-decoration: none;\n"
-         *
+         * CSS themes for syntax highlighting. The following classes map
+         * to an IntelliJ color theme like this:
+         * * pre.errorlines: General > Text > Default Text
+         * * .prefix: XML > Namespace Prefix
+         * * .attribute: XML > Attribute name
+         * * .value: XML > Attribute value
+         * * .tag: XML > Tag name
+         * * .comment: XML > Comment
+         * * .javado: Comments > JavaDoc > Text
+         * * .annotation: Java > Annotations > Annotation name
+         * * .string: Java > String > String text
+         * * .number: Java > Numbers
+         * * .keyword: Java > Keyword
+         * * .caretline: General > Editor > Caret row (Background)
+         * * .lineno: For color, General > Code > Line number,
+         *   Foreground, and for background-color,
+         *   Editor > Gutter background
+         * * .error: General > Errors and Warnings > Error
+         * * .warning: General > Errors and Warnings > Warning
+         * * text-decoration: none;\n"
          */
         @Suppress("ConstantConditionIf")
         private val cssSyntaxColorsLightTheme: String get() = (
@@ -1281,8 +1286,8 @@ pre.errorlines {
         private var cssSyntaxColors: String
 
         /**
-         * Stylesheet for the HTML report. Note that the [LintSyntaxHighlighter] also depends on
-         * these class names.
+         * Stylesheet for the HTML report. Note that the
+         * [LintSyntaxHighlighter] also depends on these class names.
          */
         val cssStyles: String get() =
             """section.section--center {
@@ -1369,8 +1374,8 @@ $cssSyntaxColors.overview {
 """
 
         /**
-         * Sorts the list of warnings into a list of lists where each list contains warnings for the
-         * same base issue type
+         * Sorts the list of warnings into a list of lists where each
+         * list contains warnings for the same base issue type.
          */
         private fun computeIssueLists(issues: List<Incident>): List<List<Incident>> {
             var previousIssue: Issue? = null
@@ -1398,8 +1403,8 @@ $cssSyntaxColors.overview {
         }
 
         /**
-         * Returns the density for the given file, if known (e.g. in a density folder, such as
-         * drawable-mdpi
+         * Returns the density for the given file, if known (e.g. in a
+         * density folder, such as drawable-mdpi.
          */
         private fun getDensity(file: File): Int {
             val parent = file.parentFile

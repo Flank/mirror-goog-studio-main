@@ -40,9 +40,7 @@ import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.UThrowExpression
 import org.jetbrains.uast.getParentOfType
 
-/**
- * Checks for errors related to locale handling
- */
+/** Checks for errors related to locale handling. */
 /** Constructs a new [LocaleDetector] */
 class LocaleDetector : Detector(), SourceCodeScanner {
 
@@ -143,10 +141,10 @@ class LocaleDetector : Detector(), SourceCodeScanner {
     ) {
         // Only check the non-locale version of String.format
         if (method.parameterList.parametersCount == 0 || !context.evaluator.parameterHasType(
-            method,
-            0,
-            TYPE_STRING
-        )
+                method,
+                0,
+                TYPE_STRING
+            )
         ) {
             return
         }
@@ -210,7 +208,9 @@ class LocaleDetector : Detector(), SourceCodeScanner {
         }
     }
 
-    /** Returns true if the given node is a parameter to a Logging call */
+    /**
+     * Returns true if the given node is a parameter to a Logging call.
+     */
     private fun isLoggingParameter(
         context: JavaContext,
         node: UCallExpression
@@ -240,13 +240,12 @@ class LocaleDetector : Detector(), SourceCodeScanner {
         const val CAPITALIZE = "capitalize"
         const val DECAPITALIZE = "decapitalize"
 
-        /** Calling risky convenience methods */
+        /** Calling risky convenience methods. */
         @JvmField
         val STRING_LOCALE = Issue.create(
             id = "DefaultLocale",
             briefDescription = "Implied default locale in case conversion",
-            explanation =
-                """
+            explanation = """
                 Calling `String#toLowerCase()` or `#toUpperCase()` **without specifying an \
                 explicit locale** is a common source of bugs. The reason for that is that \
                 those methods will use the current locale on the user's device, and even \
@@ -266,13 +265,12 @@ class LocaleDetector : Detector(), SourceCodeScanner {
             implementation = IMPLEMENTATION
         )
 
-        /** Assuming locale doesn't change */
+        /** Assuming locale doesn't change. */
         @JvmField
         val FINAL_LOCALE = Issue.create(
             id = "ConstantLocale",
             briefDescription = "Constant Locale",
-            explanation =
-                """
+            explanation = """
                 Assigning `Locale.getDefault()` to a constant is suspicious, because \
                 the locale can change while the app is running.""",
             category = Category.I18N,

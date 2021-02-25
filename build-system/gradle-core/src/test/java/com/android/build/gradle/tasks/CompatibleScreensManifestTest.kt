@@ -123,12 +123,6 @@ class CompatibleScreensManifestTest {
                 "debug"
             )
         )
-        `when`(globalScope.projectOptions).thenReturn(
-            ProjectOptions(
-                ImmutableMap.of(),
-                FakeProviderFactory(FakeProviderFactory.factory, emptyMap())
-            )
-        )
         val applicationId = project.objects.property(String::class.java)
         applicationId.set("com.foo")
         `when`(appVariant.applicationId).thenReturn(applicationId)

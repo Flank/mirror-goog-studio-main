@@ -845,6 +845,8 @@ allprojects { proj ->
             @JvmField
             val ANDROIDTEST_DEBUG = of("debug", "androidTest", true)
             @JvmField
+            val ANDROIDTEST_RELEASE = of("release", "androidTest", true)
+            @JvmField
             val MIN_SIZE_REL = of("minSizeRel", false)
         }
     }

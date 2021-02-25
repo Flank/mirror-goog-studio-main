@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.services
 
 import com.android.build.gradle.internal.errors.DeprecationReporter
+import com.android.build.gradle.internal.scope.ProjectInfo
 import com.android.build.gradle.internal.utils.GradleEnvironmentProvider
 import com.android.build.gradle.internal.utils.GradleEnvironmentProviderImpl
 import com.android.build.gradle.options.ProjectOptions
@@ -42,4 +43,7 @@ open class BaseServicesImpl(protected val projectServices: ProjectServices):
 
     final override val gradleEnvironmentProvider: GradleEnvironmentProvider =
         GradleEnvironmentProviderImpl(projectServices.providerFactory)
+
+    final override val projectInfo: ProjectInfo
+        get() = projectServices.projectInfo
 }

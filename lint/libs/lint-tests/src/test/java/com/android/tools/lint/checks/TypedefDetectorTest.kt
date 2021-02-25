@@ -338,7 +338,8 @@ class TypedefDetectorTest : AbstractCheckTest() {
     }
 
     /**
-     * Test @IntDef when applied to multiple elements like arrays or varargs.
+     * Test @IntDef when applied to multiple elements like arrays or
+     * varargs.
      */
     fun testIntDefMultiple() {
         val expected =

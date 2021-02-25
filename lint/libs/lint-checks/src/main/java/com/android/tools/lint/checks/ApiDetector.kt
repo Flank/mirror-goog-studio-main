@@ -174,8 +174,9 @@ import kotlin.math.max
 import kotlin.math.min
 
 /**
- * Looks for usages of APIs that are not supported in all the versions targeted by this application
- * (according to its minimum API requirement in the manifest).
+ * Looks for usages of APIs that are not supported in all the versions
+ * targeted by this application (according to its minimum API
+ * requirement in the manifest).
  */
 class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScanner {
     private var apiDatabase: ApiLookup? = null
@@ -516,8 +517,9 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
     }
 
     /**
-     * Checks whether the given element is the given tag, and if so, whether it satisfied the
-     * minimum version that the given tag is supported in
+     * Checks whether the given element is the given tag, and if so,
+     * whether it satisfied the minimum version that the given tag is
+     * supported in.
      */
     private fun checkLevelList(context: XmlContext, element: Element) {
         var curr: Node? = element.firstChild
@@ -525,9 +527,9 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             if (curr.nodeType == Node.ELEMENT_NODE && TAG_ITEM == curr.nodeName) {
                 val e = curr as Element
                 if (e.hasAttributeNS(ANDROID_URI, ATTR_WIDTH) || e.hasAttributeNS(
-                    ANDROID_URI,
-                    ATTR_HEIGHT
-                )
+                        ANDROID_URI,
+                        ATTR_HEIGHT
+                    )
                 ) {
                     val attributeApiLevel =
                         23 // Using width and height on layer-list children requires M
@@ -552,8 +554,9 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
     }
 
     /**
-     * Checks whether the given element is the given tag, and if so, whether it satisfied the
-     * minimum version that the given tag is supported in
+     * Checks whether the given element is the given tag, and if so,
+     * whether it satisfied the minimum version that the given tag is
+     * supported in.
      */
     private fun checkElement(
         context: XmlContext,
@@ -1023,8 +1026,8 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             ) {
                 val methodModifierList = node.modifierList
                 if (methodModifierList.hasExplicitModifier(PsiModifier.DEFAULT) || methodModifierList.hasExplicitModifier(
-                    PsiModifier.STATIC
-                )
+                        PsiModifier.STATIC
+                    )
                 ) {
                     val api = 24 // minSdk for default methods
                     val minSdk = getMinSdk(context)
@@ -1479,9 +1482,9 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                             val anonymousBaseType = cls.baseClassType
                             val anonymousBase = anonymousBaseType.resolve()
                             if (anonymousBase != null && anonymousBase.isInheritor(
-                                containingClass,
-                                true
-                            )
+                                    containingClass,
+                                    true
+                                )
                             ) {
                                 cls = anonymousBase
                                 found = true
@@ -1489,9 +1492,9 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                                 val surroundingBaseType =
                                     PsiTreeUtil.getParentOfType(cls, PsiClass::class.java, true)
                                 if (surroundingBaseType != null && surroundingBaseType.isInheritor(
-                                    containingClass,
-                                    true
-                                )
+                                        containingClass,
+                                        true
+                                    )
                                 ) {
                                     cls = surroundingBaseType
                                     found = true
@@ -1503,9 +1506,9 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                         }
                         val expressionOwner = evaluator.getQualifiedName(cls)
                         if (expressionOwner == null || equivalentName(
-                            expressionOwner,
-                            "java/lang/Object"
-                        )
+                                expressionOwner,
+                                "java/lang/Object"
+                            )
                         ) {
                             break
                         }
@@ -2047,10 +2050,10 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                         val fix = fix().data(KEY_REQUIRES_API, api, KEY_REQUIRE_CLASS, true)
                         val clause = typeReference.uastParent as? UCatchClause
                         if (clause != null && context.driver.isSuppressed(
-                            context,
-                            UNSUPPORTED,
-                            clause
-                        )
+                                context,
+                                UNSUPPORTED,
+                                clause
+                            )
                         ) {
                             return
                         }
@@ -2099,8 +2102,9 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
         }
 
         /**
-         * Checks a Java source field reference. Returns true if the field is known regardless of
-         * whether it's an invalid field or not
+         * Checks a Java source field reference. Returns true if the
+         * field is known regardless of whether it's an invalid field or
+         * not.
          */
         private fun checkField(node: UElement, field: PsiField) {
             val apiDatabase = apiDatabase ?: return
@@ -2338,13 +2342,12 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
 
         private val JAVA_IMPLEMENTATION = Implementation(ApiDetector::class.java, Scope.JAVA_FILE_SCOPE)
 
-        /** Accessing an unsupported API */
+        /** Accessing an unsupported API. */
         @JvmField
         val UNSUPPORTED = Issue.create(
             id = "NewApi",
             briefDescription = "Calling new methods on older versions",
-            explanation =
-                """
+            explanation = """
                 This check scans through all the Android API calls in the application and \
                 warns about any calls that are not available on **all** versions targeted by \
                 this application (according to its minimum SDK attribute in the manifest).
@@ -2383,13 +2386,12 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             )
         )
 
-        /** Accessing an inlined API on older platforms */
+        /** Accessing an inlined API on older platforms. */
         @JvmField
         val INLINED = Issue.create(
             id = "InlinedApi",
             briefDescription = "Using inlined constants on older versions",
-            explanation =
-                """
+            explanation = """
                 This check scans through all the Android API field references in the \
                 application and flags certain constants, such as static final integers and \
                 Strings, which were introduced in later versions. These will actually be \
@@ -2418,13 +2420,12 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             implementation = JAVA_IMPLEMENTATION
         )
 
-        /** Method conflicts with new inherited method */
+        /** Method conflicts with new inherited method. */
         @JvmField
         val OVERRIDE = Issue.create(
             id = "Override",
             briefDescription = "Method conflicts with new inherited method",
-            explanation =
-                """
+            explanation = """
                 Suppose you are building against Android API 8, and you've subclassed \
                 Activity. In your subclass you add a new method called `isDestroyed`(). \
                 At some later point, a method of the same name and signature is added to \
@@ -2449,13 +2450,12 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             implementation = JAVA_IMPLEMENTATION
         )
 
-        /** Attribute unused on older versions */
+        /** Attribute unused on older versions. */
         @JvmField
         val UNUSED = Issue.create(
             id = "UnusedAttribute",
             briefDescription = "Attribute unused on older versions",
-            explanation =
-                """
+            explanation = """
                 This check finds attributes set in XML files that were introduced in a version \
                 newer than the oldest version targeted by your application (with the \
                 `minSdkVersion` attribute).
@@ -2482,13 +2482,12 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             )
         )
 
-        /** Obsolete SDK_INT version check */
+        /** Obsolete SDK_INT version check. */
         @JvmField
         val OBSOLETE_SDK = Issue.create(
             id = "ObsoleteSdkInt",
             briefDescription = "Obsolete SDK_INT Version Check",
-            explanation =
-                """
+            explanation = """
                 This check flags version checks that are not necessary, because the \
                 `minSdkVersion` (or surrounding known API level) is already at least as high \
                 as the version checked for.
@@ -2547,8 +2546,8 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
         }
 
         /**
-         * Returns true if this attribute is in a drawable document with one of the root tags that
-         * require API 21
+         * Returns true if this attribute is in a drawable document with
+         * one of the root tags that require API 21.
          */
         private fun isAlreadyWarnedDrawableFile(
             context: XmlContext,
@@ -2583,10 +2582,12 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
         }
 
         /**
-         * Is the given attribute a "benign" unused attribute, one we probably don't need to flag to the
-         * user as not applicable on all versions? These are typically attributes which add some nice
-         * platform behavior when available, but that are not critical and developers would not
-         * typically need to be aware of to try to implement workarounds on older platforms.
+         * Is the given attribute a "benign" unused attribute, one we
+         * probably don't need to flag to the user as not applicable
+         * on all versions? These are typically attributes which add
+         * some nice platform behavior when available, but that are
+         * not critical and developers would not typically need to be
+         * aware of to try to implement workarounds on older platforms.
          */
         fun isBenignUnusedAttribute(name: String): Boolean {
             return when (name) {
@@ -2701,7 +2702,8 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
         }
 
         /**
-         * Returns the minimum SDK to use in the given element context, or -1 if no `tools:targetApi` attribute was found.
+         * Returns the minimum SDK to use in the given element context,
+         * or -1 if no `tools:targetApi` attribute was found.
          *
          * @param element the element to look at, including parents
          * @return the API level to use for this element, or -1
@@ -2735,12 +2737,13 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
         }
 
         /**
-         * Checks if the current project supports features added in `minGradleVersion` version of
-         * the Android gradle plugin.
+         * Checks if the current project supports features added in
+         * `minGradleVersion` version of the Android gradle plugin.
          *
          * @param context Current context.
-         * @param minGradleVersionString Version in which support for a given feature was added, or null
-         * if it's not supported at build time.
+         * @param minGradleVersionString Version in which support for a
+         *     given feature was added, or null if
+         *     it's not supported at build time.
          */
         private fun featureProvidedByGradle(
             context: XmlContext,
@@ -2761,14 +2764,15 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
         }
 
         /**
-         * Checks whether the given instruction is a benign usage of a constant defined in a later
-         * version of Android than the application's `minSdkVersion`.
+         * Checks whether the given instruction is a benign usage of
+         * a constant defined in a later version of Android than the
+         * application's `minSdkVersion`.
          *
          * @param node the instruction to check
          * @param name the name of the constant
          * @param owner the field owner
-         * @return true if the given usage is safe on older versions than the introduction level of the
-         * constant
+         * @return true if the given usage is safe on older versions
+         *     than the introduction level of the constant
          */
         fun isBenignConstantUsage(
             node: UElement?,
@@ -2781,16 +2785,16 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 return true
             }
             if (equivalentName(
-                owner,
-                "android/view/ViewGroup\$LayoutParams"
-            ) && name == "MATCH_PARENT"
+                    owner,
+                    "android/view/ViewGroup\$LayoutParams"
+                ) && name == "MATCH_PARENT"
             ) {
                 return true
             }
             if (equivalentName(
-                owner,
-                "android/widget/AbsListView"
-            ) && (
+                    owner,
+                    "android/widget/AbsListView"
+                ) && (
                     name == "CHOICE_MODE_NONE" ||
                         name == "CHOICE_MODE_MULTIPLE" ||
                         name == "CHOICE_MODE_SINGLE"
@@ -2808,9 +2812,9 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             // be backwards compatible (by using the same lower bits for START as LEFT and
             // for END as RIGHT)
             if (equivalentName(
-                owner,
-                "android/view/Gravity"
-            ) && ("START" == name || "END" == name)
+                    owner,
+                    "android/view/Gravity"
+                ) && ("START" == name || "END" == name)
             ) {
                 return true
             }
@@ -2844,13 +2848,16 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
         }
 
         /**
-         * Returns the first (in DFS order) inheritance chain connecting the two given classes.
+         * Returns the first (in DFS order) inheritance chain connecting
+         * the two given classes.
          *
          * @param derivedClass the derived class
          * @param baseClass the base class
-         * @return The first found inheritance chain connecting the two classes, or `null` if the
-         * classes are not related by inheritance. The `baseClass` is not included in the
-         * returned inheritance chain, which will be empty if the two classes are the same.
+         * @return The first found inheritance chain connecting the two
+         *     classes, or `null` if the classes are not
+         *     related by inheritance. The `baseClass` is not
+         *     included in the returned inheritance chain, which
+         *     will be empty if the two classes are the same.
          */
         private fun getInheritanceChain(
             derivedClass: PsiClassType,

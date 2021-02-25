@@ -18,7 +18,10 @@ package com.android.tools.lint.checks.infrastructure
 
 import java.util.regex.Pattern
 
-/** A pair of package name and class name inferred from Java or Kotlin source code */
+/**
+ * A pair of package name and class name inferred from Java or Kotlin
+ * source code.
+ */
 class ClassName(source: String) {
     val packageName: String?
     val className: String?
@@ -33,7 +36,8 @@ class ClassName(source: String) {
 }
 
 /**
- * Strips line and block comments from the given Java or Kotlin source file
+ * Strips line and block comments from the given Java or Kotlin source
+ * file.
  */
 @Suppress("LocalVariableName")
 fun stripComments(source: String, stripLineComments: Boolean = true): String {

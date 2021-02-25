@@ -63,26 +63,30 @@ object LintModelSerialization : LintModelModuleLoader {
     }
 
     interface LintModelSerializationAdapter {
-        /** Any path mapping to directory variables */
+        /** Any path mapping to directory variables. */
         val pathVariables: LintModelPathVariables
 
         /**
-         * The file we're reading/writing from if known (only used for error message display)
+         * The file we're reading/writing from if known (only used for
+         * error message display)
          */
         fun file(target: TargetFile, variantName: String = "", artifactName: String = ""): File? =
             null
 
-        /** The root folder for the project; used only for making paths relative in persistence */
+        /**
+         * The root folder for the project; used only for making paths
+         * relative in persistence.
+         */
         val root: File?
 
-        /** Returns the reader to use to read the given target file */
+        /** Returns the reader to use to read the given target file. */
         fun getReader(
             target: TargetFile,
             variantName: String = "",
             artifactName: String = ""
         ): Reader
 
-        /** Returns the writer to use to read the given target file */
+        /** Returns the writer to use to read the given target file. */
         fun getWriter(
             target: TargetFile,
             variantName: String = "",
@@ -90,12 +94,14 @@ object LintModelSerialization : LintModelModuleLoader {
         ): Writer
 
         /**
-         * For a given [file], produce a path with variables which applies the path
-         * variable mapping and root file. If [relativeTo] is specified, it will also
-         * consider that as a potential root to make the path relative to (without
-         * a path variable).  This allows some paths to have a local "root" (this is
-         * for example useful for libraries where all the various files (classes,
-         * lint jar, etc) are relative to the library root.)
+         * For a given [file], produce a path with variables which
+         * applies the path variable mapping and root file. If
+         * [relativeTo] is specified, it will also consider that as a
+         * potential root to make the path relative to (without a path
+         * variable). This allows some paths to have a local "root"
+         * (this is for example useful for libraries where all the
+         * various files (classes, lint jar, etc) are relative to the
+         * library root.)
          */
         fun toPathString(file: File, relativeTo: File? = root): String {
             val fullPath = file.path
@@ -145,7 +151,10 @@ object LintModelSerialization : LintModelModuleLoader {
         }
     }
 
-    /** Default implementation of [LintModelSerializationAdapter] which uses files */
+    /**
+     * Default implementation of [LintModelSerializationAdapter] which
+     * uses files.
+     */
     class LintModelSerializationFileAdapter(
         override val root: File,
         override val pathVariables: LintModelPathVariables = emptyList()
@@ -194,11 +203,13 @@ object LintModelSerialization : LintModelModuleLoader {
     override fun getModule(folder: File): LintModelModule = readModule(folder)
 
     /**
-     * Reads in the dependencies. If an (optional) library resolver is provided, merge
-     * in any libraries found into that resolver such that it can be used to resolve
-     * libraries. If not provided, a local library resolver will be created and associated
-     * with the dependencies, available via [LintModelDependencies#getLibraryResolver].
-     * The [source] is the folder containing the serialized model.
+     * Reads in the dependencies. If an (optional) library resolver
+     * is provided, merge in any libraries found into that
+     * resolver such that it can be used to resolve libraries.
+     * If not provided, a local library resolver will be created
+     * and associated with the dependencies, available via
+     * [LintModelDependencies#getLibraryResolver]. The [source] is the
+     * folder containing the serialized model.
      */
     fun readDependencies(
         source: File,
@@ -219,11 +230,14 @@ object LintModelSerialization : LintModelModuleLoader {
         }
     }
 
-    /** Reads in the library definitions. If an (optional) library resolver is provided, merge
-     * in any libraries found into that resolver such that it can be used to resolve
-     * libraries. If not provided, a local library resolver will be created and associated
-     * with the dependencies, available via [LintModelDependencies#getLibraryResolver].
-     * The [source] is the folder containing the serialized model.
+    /**
+     * Reads in the library definitions. If an (optional) library
+     * resolver is provided, merge in any libraries found into that
+     * resolver such that it can be used to resolve libraries.
+     * If not provided, a local library resolver will be created
+     * and associated with the dependencies, available via
+     * [LintModelDependencies#getLibraryResolver]. The [source] is the
+     * folder containing the serialized model.
      */
     fun readLibraries(
         source: File,
@@ -245,10 +259,10 @@ object LintModelSerialization : LintModelModuleLoader {
     }
 
     /**
-     * Reads an XML descriptor from the given [source] and returns a lint model.
-     * The [pathVariables] must include any path variables passed into [writeModule]
-     * when the module was written.
-     * The [source] is the folder containing the serialized model.
+     * Reads an XML descriptor from the given [source] and returns a
+     * lint model. The [pathVariables] must include any path variables
+     * passed into [writeModule] when the module was written. The
+     * [source] is the folder containing the serialized model.
      */
     fun readModule(
         source: File,
@@ -266,9 +280,9 @@ object LintModelSerialization : LintModelModuleLoader {
     }
 
     /**
-     * Reads an XML description from a [adapter] of a model and returns a lint model.
-     * If [variantNames] is not null, limit the variants read into the model to just
-     * the specified ones.
+     * Reads an XML description from a [adapter] of a model and returns
+     * a lint model. If [variantNames] is not null, limit the variants
+     * read into the model to just the specified ones.
      */
     fun readModule(
         adapter: LintModelSerializationAdapter,
@@ -279,14 +293,17 @@ object LintModelSerialization : LintModelModuleLoader {
     }
 
     /**
-     * Reads an XML description from a [reader] of a model and returns a lint dependency model.
+     * Reads an XML description from a [reader] of a model and returns a
+     * lint dependency model.
      *
-     * If an (optional) library resolver is provided, merge
-     * in any libraries found into that resolver such that it can be used to resolve
-     * libraries. If not provided, a local library resolver will be created and associated
-     * with the dependencies, available via [LintModelDependencies#getLibraryResolver].
+     * If an (optional) library resolver is provided, merge in any
+     * libraries found into that resolver such that it can be used to
+     * resolve libraries. If not provided, a local library resolver will
+     * be created and associated with the dependencies, available via
+     * [LintModelDependencies#getLibraryResolver].
      *
-     * The optional variant name indicates which variant this is intended to be used with.
+     * The optional variant name indicates which variant this is
+     * intended to be used with.
      */
     fun readDependencies(
         reader: LintModelSerializationAdapter,
@@ -304,14 +321,18 @@ object LintModelSerialization : LintModelModuleLoader {
         ).readDependencies()
     }
 
-    /** Reads an XML description from a [reader] of a lint model library table.
+    /**
+     * Reads an XML description from a [reader] of a lint model library
+     * table.
      *
-     * If an (optional) library resolver is provided, merge
-     * in any libraries found into that resolver such that it can be used to resolve
-     * libraries. If not provided, a local library resolver will be created and associated
-     * with the dependencies, available via [LintModelDependencies#getLibraryResolver].
+     * If an (optional) library resolver is provided, merge in any
+     * libraries found into that resolver such that it can be used to
+     * resolve libraries. If not provided, a local library resolver will
+     * be created and associated with the dependencies, available via
+     * [LintModelDependencies#getLibraryResolver].
      *
-     * The optional variant name indicates which variant this is intended to be used with.
+     * The optional variant name indicates which variant this is
+     * intended to be used with.
      */
     fun readLibraries(
         reader: LintModelSerializationAdapter,
@@ -329,13 +350,15 @@ object LintModelSerialization : LintModelModuleLoader {
     }
 
     /**
-     * Writes a lint [module] to the given [destination]. If [writeVariants] is not null,
-     * it will also write the given variants into files next to the module file. By
-     * default this includes all module variants.
+     * Writes a lint [module] to the given [destination]. If
+     * [writeVariants] is not null, it will also write the given
+     * variants into files next to the module file. By default this
+     * includes all module variants.
      *
-     * If applicable, you can also record which tool wrote this file (in the case of lint
-     * for example, use LintClient.getClientDisplayRevision()) via the [createdBy] string.
-     * Writes a lint [module] to the given [destination]
+     * If applicable, you can also record which tool wrote
+     * this file (in the case of lint for example, use
+     * LintClient.getClientDisplayRevision()) via the [createdBy]
+     * string. Writes a lint [module] to the given [destination]
      */
     fun writeModule(
         module: LintModelModule,
@@ -348,9 +371,7 @@ object LintModelSerialization : LintModelModuleLoader {
         writer.writeModule(module, writeVariants, writeDependencies, createdBy)
     }
 
-    /**
-     * Writes a lint [variant] to the given [writer]
-     */
+    /** Writes a lint [variant] to the given [writer] */
     fun writeVariant(
         variant: LintModelVariant,
         writer: LintModelSerializationAdapter,
@@ -365,7 +386,8 @@ object LintModelSerialization : LintModelModuleLoader {
     }
 
     /**
-     * Writes a lint [dependencies] model to the given [destination] folder
+     * Writes a lint [dependencies] model to the given [destination]
+     * folder.
      */
     fun writeDependencies(
         dependencies: LintModelDependencies,
@@ -382,9 +404,7 @@ object LintModelSerialization : LintModelModuleLoader {
         }
     }
 
-    /**
-     * Writes a lint [dependencies] model to the given [writer]
-     */
+    /** Writes a lint [dependencies] model to the given [writer] */
     fun writeDependencies(
         dependencies: LintModelDependencies,
         writer: LintModelSerializationAdapter,
@@ -397,7 +417,8 @@ object LintModelSerialization : LintModelModuleLoader {
     }
 
     /**
-     * Writes a lint [LintModelLibraryResolver] library table to the given [destination]
+     * Writes a lint [LintModelLibraryResolver] library table to the
+     * given [destination]
      */
     fun writeLibraries(
         libraryResolver: LintModelLibraryResolver,
@@ -414,7 +435,8 @@ object LintModelSerialization : LintModelModuleLoader {
     }
 
     /**
-     * Writes a lint [LintModelLibraryResolver] library table to the given [writer]
+     * Writes a lint [LintModelLibraryResolver] library table to the
+     * given [writer]
      */
     fun writeLibraries(
         libraryResolver: LintModelLibraryResolver,
@@ -426,16 +448,20 @@ object LintModelSerialization : LintModelModuleLoader {
     }
 
     /**
-     * Writes a lint [module] to the given [destination] folder. If [writeVariants] is not null,
-     * it will also write the given variants into files next to the module file. By
-     * default this includes all module variants. If [writeDependencies] is set, the dependencies
-     * and library files are written as well. The [pathVariables] list lets you
-     * specify an ordered list of directories that should have a logical name in the
-     * XML file instead. The [readModule] call needs to define the same variable names.
-     * This allows the XML files to be relocatable.
+     * Writes a lint [module] to the given [destination] folder. If
+     * [writeVariants] is not null, it will also write the given
+     * variants into files next to the module file. By default this
+     * includes all module variants. If [writeDependencies] is set,
+     * the dependencies and library files are written as well. The
+     * [pathVariables] list lets you specify an ordered list of
+     * directories that should have a logical name in the XML file
+     * instead. The [readModule] call needs to define the same variable
+     * names. This allows the XML files to be relocatable.
      *
-     * If applicable, you can also record which tool wrote these files (in the case of lint
-     * for example, use LintClient.getClientDisplayRevision()) via the [createdBy] string.
+     * If applicable, you can also record which tool wrote
+     * these files (in the case of lint for example, use
+     * LintClient.getClientDisplayRevision()) via the [createdBy]
+     * string.
      */
     fun writeModule(
         module: LintModelModule,
@@ -457,8 +483,9 @@ object LintModelSerialization : LintModelModuleLoader {
     }
 
     /**
-     * Writes a lint [variant] to the given [destination] folder. If applicable, you can also
-     * record which tool wrote this file (in the case of lint for example, use
+     * Writes a lint [variant] to the given [destination]
+     * folder. If applicable, you can also record which tool
+     * wrote this file (in the case of lint for example, use
      * LintClient.getClientDisplayRevision()).
      */
     fun writeVariant(
@@ -498,9 +525,9 @@ object LintModelSerialization : LintModelModuleLoader {
 }
 
 /**
- * Creates a file writer for the given file, encoded as UTF-8. Not using stdlib's
- * File.bufferedWriter because we want to make sure the parent directory exists
- * and delete previous contents if necessary.
+ * Creates a file writer for the given file, encoded as UTF-8. Not using
+ * stdlib's File.bufferedWriter because we want to make sure the parent
+ * directory exists and delete previous contents if necessary.
  */
 private fun File.toWriter(): Writer {
     if (parentFile?.mkdirs() == false) {
@@ -1048,9 +1075,9 @@ private class LintModelLibrariesWriter(
     PrintWriter(writer)
 ) {
     /**
-     * Writes out the libraries in the given resolver.
-     * If a given dependencies filter is provided, limit the emitted libraries to just
-     * those referenced by the specific dependencies instance.
+     * Writes out the libraries in the given resolver. If a given
+     * dependencies filter is provided, limit the emitted libraries to
+     * just those referenced by the specific dependencies instance.
      */
     fun writeLibraries(
         resolver: LintModelLibraryResolver,
@@ -1434,8 +1461,7 @@ private class LintModelModuleReader(
                 neverShrinking = neverShrinking,
 
                 // still empty list; will construct it below
-                variants = variants,
-                oldProject = null
+                variants = variants
             )
 
             // Always last; requires separate handling since we need to pass in the
@@ -1975,10 +2001,10 @@ private class LintModelLibrariesReader(
 }
 
 /**
- * Implementation of [LintModelDependency] with a mutable child list such that we
- * can initialize the [dependencies] child list after all nodes have been
- * read in (since some of the dependency id's can refer to elements that have
- * not been read in yet.)
+ * Implementation of [LintModelDependency] with a mutable child list
+ * such that we can initialize the [dependencies] child list after all
+ * nodes have been read in (since some of the dependency id's can refer
+ * to elements that have not been read in yet.)
  */
 private class LazyLintModelDependency(
     artifactName: String,

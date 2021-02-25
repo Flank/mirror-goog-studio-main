@@ -43,6 +43,7 @@ import com.android.build.gradle.internal.tasks.DynamicFeatureTaskManager;
 import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.internal.variant.DynamicFeatureVariantFactory;
 import com.android.build.gradle.options.BooleanOption;
+import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.model.v2.ide.ProjectType;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import java.util.List;
@@ -101,7 +102,7 @@ public class DynamicFeaturePlugin
         DynamicFeatureExtensionImpl dynamicFeatureExtension =
                 dslServices.newDecoratedInstance(
                         DynamicFeatureExtensionImpl.class, dslServices, dslContainers);
-        if (globalScope.getProjectOptions().get(BooleanOption.USE_NEW_DSL_INTERFACES)) {
+        if (projectServices.getProjectOptions().get(BooleanOption.USE_NEW_DSL_INTERFACES)) {
             return (BaseExtension)
                     project.getExtensions()
                             .create(
@@ -165,10 +166,11 @@ public class DynamicFeaturePlugin
             @NonNull
                     List<ComponentInfo<TestComponentBuilderImpl, TestComponentImpl>> testComponents,
             boolean hasFlavors,
+            @NonNull ProjectOptions projectOptions,
             @NonNull GlobalScope globalScope,
             @NonNull BaseExtension extension) {
         return new DynamicFeatureTaskManager(
-                variants, testComponents, hasFlavors, globalScope, extension);
+                variants, testComponents, hasFlavors, projectOptions, globalScope, extension);
     }
 
     @NonNull

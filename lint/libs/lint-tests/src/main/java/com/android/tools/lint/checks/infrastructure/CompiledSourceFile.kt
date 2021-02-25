@@ -45,7 +45,7 @@ import java.util.HashSet
 internal class CompiledSourceFile(
     into: String,
     private val type: Type,
-    /** The test source file for this compiled file */
+    /** The test source file for this compiled file. */
     val source: TestFile,
     private val encodedFiles: Array<String>
 ) : TestFile() {
@@ -54,7 +54,7 @@ internal class CompiledSourceFile(
         to(into)
     }
 
-    /** The type of test file to create */
+    /** The type of test file to create. */
     internal enum class Type {
         BYTECODE_ONLY, SOURCE_AND_BYTECODE
     }
@@ -139,7 +139,7 @@ internal class CompiledSourceFile(
         val args = ArrayList<String>()
         args.add(javac)
         args.add("-classpath")
-        args.add(classpath)
+        args.add(classesDir.path + File.pathSeparator + classpath)
         args.add("-d")
         args.add(classesDir.path)
         javaFiles.forEach { args.add(it.path) }
@@ -171,7 +171,7 @@ internal class CompiledSourceFile(
         return Joiner.on(File.pathSeparator).join(jars)
     }
 
-    /** Find jar files in the given project directory */
+    /** Find jar files in the given project directory. */
     private fun findJars(projectDir: File): ArrayList<File> {
         val androidJar = findAndroidJar()
         val jarFilter = FilenameFilter { _: File?, name: String -> name.endsWith(DOT_JAR) }
@@ -184,7 +184,7 @@ internal class CompiledSourceFile(
 
     /**
      * Locates the android.jar file to compile with as the boot class
-     * path
+     * path.
      */
     private fun findAndroidJar(): File {
         val sdkHome = System.getenv("ANDROID_SDK_ROOT")
@@ -265,7 +265,7 @@ internal class CompiledSourceFile(
 
     /**
      * Creates test sources in Kotlin and Java for what this compiled
-     * file should be declared as
+     * file should be declared as.
      */
     private fun describeTestFiles(classesDir: File, target: String): Pair<String, String> {
         val kotlin = StringBuilder("Kotlin:\n")
@@ -393,7 +393,7 @@ internal class CompiledSourceFile(
 
     /**
      * Returns the list of binary test class files currently included in
-     * this compiled source file
+     * this compiled source file.
      */
     val classFiles: List<TestFile>
         get() {

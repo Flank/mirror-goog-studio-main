@@ -25,7 +25,6 @@ import static org.mockito.Mockito.when;
 
 import com.android.ide.common.gradle.model.IdeAndroidArtifact;
 import com.android.ide.common.gradle.model.IdeAndroidLibrary;
-import com.android.ide.common.gradle.model.IdeAndroidProject;
 import com.android.ide.common.gradle.model.IdeDependencies;
 import com.android.ide.common.gradle.model.IdeVariant;
 import com.android.resources.ResourceType;
@@ -69,52 +68,6 @@ public class ResourceVisibilityLookupTest extends TestCase {
 
         assertFalse(visibility.isPrivate(ResourceType.DIMEN, "activity_vertical")); // public
         assertFalse(visibility.isPrivate(ResourceType.DIMEN, "unknown")); // not in this library
-    }
-
-    public void testModelVersions() throws IOException {
-        IdeAndroidLibrary library =
-                createMockLibrary(
-                        "com.android.tools:test-library:1.0.0",
-                        ""
-                                + "int dimen activity_horizontal_margin 0x7f030000\n"
-                                + "int dimen activity_vertical_margin 0x7f030001\n"
-                                + "int id action_settings 0x7f060000\n"
-                                + "int layout activity_main 0x7f020000\n"
-                                + "int menu menu_main 0x7f050000\n"
-                                + "int string action_settings 0x7f040000\n"
-                                + "int string app_name 0x7f040001\n"
-                                + "int string hello_world 0x7f040002",
-                        ""
-                                + ""
-                                + "dimen activity_vertical\n"
-                                + "id action_settings\n"
-                                + "layout activity_main\n");
-
-        IdeAndroidArtifact mockArtifact = createMockArtifact(Collections.singletonList(library));
-        IdeVariant variant = createMockVariant(mockArtifact);
-
-        IdeAndroidProject project;
-
-        project = createMockProject("1.0.1", 0);
-        assertTrue(new ResourceVisibilityLookup.Provider().get(project, variant).isEmpty());
-
-
-        project = createMockProject("1.1", 0);
-        assertTrue(new ResourceVisibilityLookup.Provider().get(project, variant).isEmpty());
-
-        project = createMockProject("1.2", 2);
-        assertTrue(new ResourceVisibilityLookup.Provider().get(project, variant).isEmpty());
-
-        project = createMockProject("1.3.0", 3);
-        assertFalse(new ResourceVisibilityLookup.Provider().get(project, variant).isEmpty());
-
-        project = createMockProject("2.5", 45);
-        assertFalse(new ResourceVisibilityLookup.Provider().get(project, variant).isEmpty());
-
-        ResourceVisibilityLookup visibility =new ResourceVisibilityLookup.Provider().get(project,
-                variant);
-        assertTrue(visibility.isPrivate(ResourceType.DIMEN, "activity_horizontal_margin"));
-        assertFalse(visibility.isPrivate(ResourceType.ID, "action_settings"));
     }
 
     public void testAllPrivate() throws IOException {
@@ -356,14 +309,6 @@ public class ResourceVisibilityLookupTest extends TestCase {
     //    assertSame(symbols, symbols2);
     // }
 
-    public static IdeAndroidProject createMockProject(String modelVersion, int apiVersion) {
-        IdeAndroidProject project = createNiceMock(IdeAndroidProject.class);
-        expect(project.getApiVersion()).andReturn(apiVersion).anyTimes();
-        expect(project.getModelVersion()).andReturn(modelVersion).anyTimes();
-        replay(project);
-
-        return project;
-    }
 
     public static IdeVariant createMockVariant(IdeAndroidArtifact artifact) {
         IdeVariant variant = createNiceMock(IdeVariant.class);

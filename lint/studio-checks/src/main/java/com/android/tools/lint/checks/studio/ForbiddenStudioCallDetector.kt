@@ -28,9 +28,7 @@ import com.intellij.psi.CommonClassNames.JAVA_LANG_STRING
 import com.intellij.psi.PsiMethod
 import org.jetbrains.uast.UCallExpression
 
-/**
- * Flags certain APIs that are forbidden in our codebase.
- */
+/** Flags certain APIs that are forbidden in our codebase. */
 class ForbiddenStudioCallDetector : Detector(), SourceCodeScanner {
 
     companion object Issues {
@@ -43,8 +41,7 @@ class ForbiddenStudioCallDetector : Detector(), SourceCodeScanner {
         val INTERN = Issue.create(
             id = "NoInterning",
             briefDescription = "Do not intern strings",
-            explanation =
-                """
+            explanation = """
                 Strings should not be interned; you are better off managing \
                 your own string cache.
                 """,

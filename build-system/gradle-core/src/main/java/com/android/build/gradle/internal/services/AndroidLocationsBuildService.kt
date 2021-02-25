@@ -54,7 +54,7 @@ abstract class AndroidLocationsBuildService @Inject constructor(
     override val gradleAvdLocation: Path
         get() = androidLocations.gradleAvdLocation
 
-    override val userHomeLocation: Path?
+    override val userHomeLocation: Path
         get() = androidLocations.userHomeLocation
 
     // -----

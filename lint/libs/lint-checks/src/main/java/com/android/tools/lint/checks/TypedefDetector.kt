@@ -249,8 +249,8 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
                 // If it's a constant (static/final) check that it's one of the allowed ones
                 if (resolved.hasModifierProperty(PsiModifier.STATIC) && resolved.hasModifierProperty(
-                    PsiModifier.FINAL
-                )
+                        PsiModifier.FINAL
+                    )
                 ) {
                     checkTypeDefConstant(
                         context, annotation, argument,
@@ -611,13 +611,12 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
         const val ATTR_OPEN = "open"
 
-        /** Passing the wrong constant to an int or String method  */
+        /** Passing the wrong constant to an int or String method. */
         @JvmField
         val TYPE_DEF = Issue.create(
             id = "WrongConstant",
             briefDescription = "Incorrect constant",
-            explanation =
-                """
+            explanation = """
                 Ensures that when parameter in a method only allows a specific set of \
                 constants, calls obey those rules.""",
             category = Category.CORRECTNESS,

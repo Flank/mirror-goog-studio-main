@@ -39,20 +39,22 @@ import java.util.ArrayList
 import java.util.HashMap
 import java.util.Locale
 
-/** Constructs a new [StringCasingDetector] check  */
+/** Constructs a new [StringCasingDetector] check. */
 class StringCasingDetector : ResourceXmlDetector() {
 
     companion object {
         private val IMPLEMENTATION_XML =
             Implementation(StringCasingDetector::class.java, Scope.ALL_RESOURCES_SCOPE)
 
-        /** Whether there are any duplicate strings, including capitalization adjustments.  */
+        /**
+         * Whether there are any duplicate strings, including
+         * capitalization adjustments.
+         */
         @JvmField
         val DUPLICATE_STRINGS = Issue.create(
             id = "DuplicateStrings",
             briefDescription = "Duplicate Strings",
-            explanation =
-                """
+            explanation = """
                 Duplicate strings can make applications larger unnecessarily.
 
                 This lint check looks for duplicate strings, including differences for strings \

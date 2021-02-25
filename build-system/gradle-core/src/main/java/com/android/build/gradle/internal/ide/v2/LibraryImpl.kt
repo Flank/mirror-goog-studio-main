@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.ide.v2
 
 import com.android.builder.model.v2.ide.Library
+import com.android.builder.model.v2.ide.LibraryType
 import java.io.File
 import java.io.Serializable
 
@@ -24,7 +25,7 @@ import java.io.Serializable
  * Implementation of [Library] for serialization via the Tooling API.
  */
 data class LibraryImpl(
-    override val type: Int,
+    override val type: LibraryType,
     override val artifactAddress: String,
     override val artifact: File?,
     override val buildId: String?,

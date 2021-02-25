@@ -129,11 +129,11 @@ class RequiresFeatureDetector : AbstractAnnotationDetector(), SourceCodeScanner 
     }
 
     class EnforcementChecker(
-        /** The name of the feature to check */
+        /** The name of the feature to check. */
         private val featureName: String,
         /**
-         * javadoc-syntax reference to the checker method; the first string
-         * parameter should be the feature name parameter
+         * javadoc-syntax reference to the checker method; the first
+         * string parameter should be the feature name parameter
          */
         enforcement: String
     ) {
@@ -282,9 +282,9 @@ class RequiresFeatureDetector : AbstractAnnotationDetector(), SourceCodeScanner 
                     }
                 } else if (current is UPolyadicExpression && (
                     isAndedWithConditional(
-                        current,
-                        prev
-                    ) || isOredWithConditional(current, prev)
+                            current,
+                            prev
+                        ) || isOredWithConditional(current, prev)
                     )
                 ) {
                     return true
@@ -334,8 +334,8 @@ class RequiresFeatureDetector : AbstractAnnotationDetector(), SourceCodeScanner 
                             val lambdaInvocation = match.get()
                             val newApiLookup = NameLookup(call.valueArguments)
                             if (lambdaInvocation != null && isWithinNameCheckConditional(
-                                evaluator, lambdaInvocation, newApiLookup
-                            )
+                                    evaluator, lambdaInvocation, newApiLookup
+                                )
                             ) {
                                 return true
                             }
@@ -590,13 +590,12 @@ class RequiresFeatureDetector : AbstractAnnotationDetector(), SourceCodeScanner 
             Scope.JAVA_FILE_SCOPE
         )
 
-        /** Method result should be used  */
+        /** Method result should be used. */
         @JvmField
         val REQUIRES_FEATURE = Issue.create(
             id = "RequiresFeature",
             briefDescription = "Requires Feature",
-            explanation =
-                """
+            explanation = """
                 Some APIs require optional features to be present. This check makes sure that \
                 calls to these APIs are surrounded by a check which enforces this.""",
             category = Category.CORRECTNESS,

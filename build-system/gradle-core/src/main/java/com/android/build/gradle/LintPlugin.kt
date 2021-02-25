@@ -39,6 +39,7 @@ import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.profile.AnalyticsUtil
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.ProjectInfo
 import com.android.build.gradle.internal.scope.publishArtifactToConfiguration
 import com.android.build.gradle.internal.services.AndroidLocationsBuildService
 import com.android.build.gradle.internal.services.DslServicesImpl
@@ -58,6 +59,7 @@ import org.gradle.api.component.AdhocComponentWithVariants
 import org.gradle.api.component.ConfigurationVariantDetails
 import org.gradle.api.component.SoftwareComponent
 import org.gradle.api.file.FileCollection
+import org.gradle.api.plugins.BasePluginConvention
 import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.SourceSet
@@ -190,7 +192,14 @@ abstract class LintPlugin : Plugin<Project> {
                     AndroidArtifacts.ArtifactType.LINT_MODEL,
                     AndroidAttributes(category = androidLintCategory)
                 )
-                // We don't want to publish the lint models to repositories. Remove them.
+                publishArtifactToConfiguration(
+                    configuration,
+                    artifacts.get(InternalArtifactType.LINT_PARTIAL_RESULTS),
+                    AndroidArtifacts.ArtifactType.LINT_PARTIAL_RESULTS,
+                    AndroidAttributes(category = androidLintCategory)
+                )
+                // We don't want to publish the lint models or partial results to repositories.
+                // Remove them.
                 project.components.all { component: SoftwareComponent ->
                     if (component.name == "java" && component is AdhocComponentWithVariants) {
                         component.withVariantsFromConfiguration(configuration) { variant: ConfigurationVariantDetails ->
@@ -237,10 +246,11 @@ abstract class LintPlugin : Plugin<Project> {
             SyncIssueReporterImpl(SyncOptions.getModelQueryMode(projectOptions), logger)
         val deprecationReporter =
             DeprecationReporterImpl(syncIssueReporter, projectOptions, projectPath)
+        val projectInfo = ProjectInfo(project)
         projectServices = ProjectServices(
             syncIssueReporter, deprecationReporter, objectFactory, project.logger,
             project.providers, project.layout, projectOptions, project.gradle.sharedServices,
-            maxWorkerCount = project.gradle.startParameter.maxWorkerCount
+            maxWorkerCount = project.gradle.startParameter.maxWorkerCount, projectInfo = projectInfo
         ) { o: Any -> project.file(o) }
         projectOptions
             .allOptions

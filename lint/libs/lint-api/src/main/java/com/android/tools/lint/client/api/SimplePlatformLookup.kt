@@ -41,20 +41,19 @@ import java.util.Properties
 /**
  * Fast lookup of platform metadata.
  *
- * The purpose is to have a much faster implementation (which doesn't look
- * recursively at files or at a lot of other unrelated SDK components), and
- * doesn't have side effects such as writing metadata files into the SDK
- * folder.
+ * The purpose is to have a much faster implementation (which doesn't
+ * look recursively at files or at a lot of other unrelated SDK
+ * components), and doesn't have side effects such as writing metadata
+ * files into the SDK folder.
  *
  * It serves a small subset of the full SDK manager:
  * <ul>
- *     <li> Only supports Android platform components
- *     <li> Only works for platforms 15 and later
- *     <li> Only supports reading some platform metadata and looking up
- *          file locations (like android.jar), not downloading or installing
- *          files.
- *
- * [sdkHome] is the location of the SDK.
+ * <li> Only supports Android platform components
+ * <li> Only works for platforms 15 and later
+ * <li> Only supports reading some platform metadata and looking up file
+ *     locations (like android.jar), not downloading or
+ *     installing files. [sdkHome] is the location of the SDK.
+ * </ul>
  */
 internal class SimplePlatformLookup(private val sdkHome: File) : PlatformLookup {
     /** All platforms discovered in [sdkHome] */
@@ -102,10 +101,10 @@ internal class SimplePlatformLookup(private val sdkHome: File) : PlatformLookup 
     }
 
     /**
-     * Looks up a file for for the platform with the given [compileSdkPrefix], or
-     * null if the platform is unknown. The specific file to be returned is
-     * specified by the given [pathId], which is one of the path constants defined
-     * in [IAndroidTarget]
+     * Looks up a file for for the platform with the given
+     * [compileSdkPrefix], or null if the platform is unknown. The
+     * specific file to be returned is specified by the given [pathId],
+     * which is one of the path constants defined in [IAndroidTarget]
      */
     fun getFile(compileSdkPrefix: String, pathId: Int): File? {
         return getTarget(compileSdkPrefix)?.getPath(pathId)?.toFile()
@@ -113,9 +112,10 @@ internal class SimplePlatformLookup(private val sdkHome: File) : PlatformLookup 
 
     companion object {
         /**
-         * Skim through a platforms folder and adds any platforms found within to the
-         * given list. This only works for directory structures following the standard
-         * layout (the full SDK manager allows more arbitrary renames of top level folders
+         * Skim through a platforms folder and adds any platforms found
+         * within to the given list. This only works for directory
+         * structures following the standard layout (the full SDK
+         * manager allows more arbitrary renames of top level folders
          * etc; that's not supported here.)
          */
         private fun addPlatforms(
@@ -148,7 +148,10 @@ internal class SimplePlatformLookup(private val sdkHome: File) : PlatformLookup 
             }
         }
 
-        /** Read in a [PlatformTarget] for a given SDK manager package.xml file */
+        /**
+         * Read in a [PlatformTarget] for a given SDK manager
+         * package.xml file.
+         */
         private fun platformFromPackageXml(location: File, packageXml: File): IAndroidTarget? {
             var buildTargetHash: String? = null
             var codeName: String? = null
@@ -250,7 +253,10 @@ internal class SimplePlatformLookup(private val sdkHome: File) : PlatformLookup 
             }
         }
 
-        /** Read in a [PlatformTarget] for a given SDK manager (older format) source.properties file */
+        /**
+         * Read in a [PlatformTarget] for a given SDK manager (older
+         * format) source.properties file.
+         */
         private fun platformFromSourceProp(
             location: File,
             sourceProperties: File
@@ -411,13 +417,14 @@ internal class SimplePlatformLookup(private val sdkHome: File) : PlatformLookup 
     }
 
     /**
-     * Represents a single Android platform installed in the SDK folder; the
-     * [location] is the platforms/ folder containing all the platform metadata;
-     * the [buildTargetHash] is the string which corresponds to the compileSdkVersion
-     * as a string (e.g. if you specify 30 it will be interpreted as "android-30",
-     * and if you specify "android-R" it will be used as is). The [version] is the API
-     * level and optionally code name for previews. For normal SDK releases, [platform]
-     * is true, and for add-ons it's false.
+     * Represents a single Android platform installed in the SDK folder;
+     * the [location] is the platforms/ folder containing all the
+     * platform metadata; the [buildTargetHash] is the string which
+     * corresponds to the compileSdkVersion as a string (e.g. if you
+     * specify 30 it will be interpreted as "android-30", and if you
+     * specify "android-R" it will be used as is). The [version] is
+     * the API level and optionally code name for previews. For normal
+     * SDK releases, [platform] is true, and for add-ons it's false.
      */
     private class PlatformTarget(
         val location: File,
@@ -433,8 +440,9 @@ internal class SimplePlatformLookup(private val sdkHome: File) : PlatformLookup 
         override fun getPath(pathId: Int): Path = getFile(pathId).toPath()
 
         /**
-         * Looks up a file for this platform by the given [pathId], which is one of
-         * the path constants defined in [IAndroidTarget]
+         * Looks up a file for this platform by the given
+         * [pathId], which is one of the path constants defined in
+         * [IAndroidTarget]
          */
         fun getFile(pathId: Int): File {
             return when (pathId) {

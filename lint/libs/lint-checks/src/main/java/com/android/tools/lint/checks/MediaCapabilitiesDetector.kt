@@ -46,8 +46,9 @@ import org.objectweb.asm.tree.MethodNode
 import java.util.EnumSet
 
 /**
- * Check which makes sure that an application that uses MediaStore.Video anywhere in code
- * defines its media capabilities in the Manifest to enable transcoding on Android 12+
+ * Check which makes sure that an application that uses MediaStore.Video
+ * anywhere in code defines its media capabilities in the Manifest to
+ * enable transcoding on Android 12+
  */
 class MediaCapabilitiesDetector : Detector(), SourceCodeScanner, ClassScanner, XmlScanner {
 
@@ -120,7 +121,9 @@ class MediaCapabilitiesDetector : Detector(), SourceCodeScanner, ClassScanner, X
 
     private fun checkManifest(context: Context) {
         // Lint check only relevant on Android S/12 +
-        if (context.mainProject.targetSdkVersion.featureLevel < 31) {
+        if (context.mainProject.buildModule
+            ?.gradleVersion?.isAtLeastIncludingPreviews(7, 0, 0) != true
+        ) {
             return
         }
         val mergedManifest = context.mainProject.mergedManifest ?: return
@@ -154,8 +157,7 @@ class MediaCapabilitiesDetector : Detector(), SourceCodeScanner, ClassScanner, X
         val ISSUE = Issue.create(
             id = "MediaCapabilities",
             briefDescription = "Media Capabilities property not specified",
-            explanation =
-                """
+            explanation = """
                 In Android 12 and higher, an app that opens media files should explicitly specify \
                 media formats that it doesn't support, so the OS can provide a transcoded file \
                 instead.

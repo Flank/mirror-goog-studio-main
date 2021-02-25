@@ -23,8 +23,8 @@ import com.android.tools.lint.model.LintModelLintOptions
 import com.android.tools.lint.model.LintModelSeverity
 
 /**
- * Consult the lint.xml file, but override with the suitable flags configured via
- * [LintModelLintOptions].
+ * Consult the lint.xml file, but override with the suitable flags
+ * configured via [LintModelLintOptions].
  */
 open class LintOptionsConfiguration(
     configurations: ConfigurationHierarchy,
@@ -77,7 +77,7 @@ open class LintOptionsConfiguration(
         }
     }
 
-    /** Split a series of strings into categories and issue ids */
+    /** Split a series of strings into categories and issue ids. */
     private fun partition(
         candidates: Collection<String>,
         ids: MutableSet<String>,

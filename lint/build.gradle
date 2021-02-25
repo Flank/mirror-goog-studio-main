@@ -7,10 +7,7 @@ configurations {
 }
 
 dependencies {
-    // There's a newer version, 0.40.0 as of this writing,
-    // but updating now would generate a lot of diffs; deferring until
-    // a quiter period.
-    ktlint "com.pinterest:ktlint:0.37.2"
+    ktlint "com.pinterest:ktlint:0.40.0"
 }
 
 task formatJava(type: Exec) {
@@ -24,10 +21,11 @@ task formatKotlin(type: JavaExec, group: "verification") {
     description = "Format lint Kotlin files"
     classpath = configurations.ktlint
     main = "com.pinterest.ktlint.Main"
-    args "-F", "--disabled_rules=import-ordering", "**/*.kt"
+    args "-F", "**/*.kt"
 }
 
 task formatlint {
     dependsOn formatJava
     dependsOn formatKotlin
+    // TODO: Check in prebuilts for kdoc-formatter and use that here
 }

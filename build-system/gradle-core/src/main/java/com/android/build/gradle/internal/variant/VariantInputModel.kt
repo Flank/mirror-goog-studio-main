@@ -28,7 +28,7 @@ interface VariantInputModel<
         DefaultConfigT : com.android.build.api.dsl.DefaultConfig,
         BuildTypeT : com.android.build.api.dsl.BuildType,
         ProductFlavorT : com.android.build.api.dsl.ProductFlavor,
-        SigningConfigT : com.android.build.api.dsl.SigningConfig> {
+        SigningConfigT : com.android.build.api.dsl.ApkSigningConfig> {
 
     val defaultConfigData: DefaultConfigData<DefaultConfigT>
 

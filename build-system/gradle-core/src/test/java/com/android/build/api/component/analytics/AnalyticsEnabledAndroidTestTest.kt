@@ -78,19 +78,6 @@ class AnalyticsEnabledAndroidTestTest {
     }
 
     @Test
-    fun aaptOptionsAction() {
-        val function = { param : Aapt -> println(param) }
-        proxy.aaptOptions(function)
-
-        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
-        Truth.assertThat(
-            stats.variantApiAccess.variantPropertiesAccessList.first().type
-        ).isEqualTo(VariantPropertiesMethodType.AAPT_OPTIONS_ACTION_VALUE)
-        Mockito.verify(delegate, Mockito.times(1))
-            .aaptOptions(function)
-    }
-
-    @Test
     fun getPackageName() {
         Mockito.`when`(delegate.namespace).thenReturn(FakeGradleProvider("package.name"))
         Truth.assertThat(proxy.namespace.get()).isEqualTo("package.name")
@@ -230,19 +217,6 @@ class AnalyticsEnabledAndroidTestTest {
     }
 
     @Test
-    fun signingConfigAction() {
-        val function = { param : SigningConfig -> println(param) }
-        proxy.signingConfig(function)
-
-        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
-        Truth.assertThat(
-            stats.variantApiAccess.variantPropertiesAccessList.first().type
-        ).isEqualTo(VariantPropertiesMethodType.SIGNING_CONFIG_ACTION_VALUE)
-        Mockito.verify(delegate, Mockito.times(1))
-            .signingConfig(function)
-    }
-
-    @Test
     fun getPackagingOptions() {
         val packagingOptions = Mockito.mock(ApkPackaging::class.java)
         val jniLibsApkPackagingOptions = Mockito.mock(JniLibsApkPackaging::class.java)
@@ -263,33 +237,6 @@ class AnalyticsEnabledAndroidTestTest {
                 VariantPropertiesMethodType.JNI_LIBS_PACKAGING_OPTIONS_VALUE,
                 VariantPropertiesMethodType.PACKAGING_OPTIONS_VALUE,
                 VariantPropertiesMethodType.RESOURCES_PACKAGING_OPTIONS_VALUE
-            )
-        )
-        Mockito.verify(delegate, Mockito.times(1)).packaging
-    }
-
-    @Test
-    fun packagingOptionsActions() {
-        val packagingOptions = Mockito.mock(ApkPackaging::class.java)
-        val jniLibsApkPackagingOptions = Mockito.mock(JniLibsApkPackaging::class.java)
-        val resourcesPackagingOptions = Mockito.mock(ResourcesPackaging::class.java)
-        Mockito.`when`(packagingOptions.jniLibs).thenReturn(jniLibsApkPackagingOptions)
-        Mockito.`when`(packagingOptions.resources).thenReturn(resourcesPackagingOptions)
-        Mockito.`when`(delegate.packaging).thenReturn(packagingOptions)
-        val action: ApkPackaging.() -> Unit = {
-            this.jniLibs {}
-            this.resources {}
-        }
-        proxy.packaging(action)
-
-        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(3)
-        Truth.assertThat(
-            stats.variantApiAccess.variantPropertiesAccessList.map { it.type }
-        ).containsExactlyElementsIn(
-            listOf(
-                VariantPropertiesMethodType.PACKAGING_OPTIONS_ACTION_VALUE,
-                VariantPropertiesMethodType.JNI_LIBS_PACKAGING_OPTIONS_ACTION_VALUE,
-                VariantPropertiesMethodType.RESOURCES_PACKAGING_OPTIONS_ACTION_VALUE
             )
         )
         Mockito.verify(delegate, Mockito.times(1)).packaging

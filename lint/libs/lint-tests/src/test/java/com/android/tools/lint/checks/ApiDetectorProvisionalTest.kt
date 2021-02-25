@@ -82,6 +82,8 @@ class ApiDetectorProvisionalTest : AbstractCheckTest() {
                 <lint>
                     <!-- Normally enabled; disabled while analyzing this module -->
                     <issue id="UseValueOf" severity="hide" />
+                    <!-- Disable here, but *also* in app; that should not be a warning -->
+                    <issue id="UseSparseArrays" severity="hide" />
                 </lint>
                 """
             ).indented()
@@ -106,7 +108,8 @@ class ApiDetectorProvisionalTest : AbstractCheckTest() {
                          reported as definite incidents whereas NewApi is reported
                          provisionally -->
                     <issue id="SdCardPath2" severity="hide" />
-
+                    <!-- Don't complain about issues suppressed in both library and app -->
+                    <issue id="UseSparseArrays" severity="hide" />
                 </lint>
                 """
             ).indented()
@@ -116,6 +119,7 @@ class ApiDetectorProvisionalTest : AbstractCheckTest() {
             .issues(
                 CommentDetector.STOP_SHIP,
                 JavaPerformanceDetector.USE_VALUE_OF,
+                JavaPerformanceDetector.USE_SPARSE_ARRAY,
                 HardcodedValuesDetector.ISSUE,
                 ApiDetector.UNSUPPORTED,
                 SdCardDetector.ISSUE

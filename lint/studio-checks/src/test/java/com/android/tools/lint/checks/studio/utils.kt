@@ -25,16 +25,16 @@ import com.android.tools.lint.checks.infrastructure.TestLintTask
  * source code.
  *
  * TODO: upstream this to lint itself, for test of java-only checks.
- * TODO: Rename the file
+ * TODO: Rename the file.
  */
 internal fun studioLint(): TestLintTask {
     val task = object : TestLintTask() {
 
         /**
-         * Creates a project description for the given files and marks it with
-         * [ProjectDescription.Type.JAVA], which makes
-         * [com.android.tools.lint.checks.infrastructure.TestLintClient.addBootClassPath] use the
-         * current JVM classes.
+         * Creates a project description for the given files and
+         * marks it with [ProjectDescription.Type.JAVA], which makes
+         * [com.android.tools.lint.checks.infrastructure.TestLintClient.addBootClassPath]
+         * use the current JVM classes.
          */
         override fun files(vararg files: TestFile): TestLintTask {
             val description = ProjectDescription(*files).type(ProjectDescription.Type.JAVA)

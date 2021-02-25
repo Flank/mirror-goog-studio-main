@@ -44,10 +44,10 @@ import org.jetbrains.uast.util.isArrayInitializer
 import org.jetbrains.uast.util.isNewArray
 
 /**
- * Detector warning about private inner classes and constructors
- * which require a synthetic accessor to be generated, thereby
- * unnecessarily increasing overhead (methods, extra dispatch).
- * Relevant only in large projects and especially libraries.
+ * Detector warning about private inner classes and constructors which
+ * require a synthetic accessor to be generated, thereby unnecessarily
+ * increasing overhead (methods, extra dispatch). Relevant only in large
+ * projects and especially libraries.
  */
 class SyntheticAccessorDetector : Detector(), SourceCodeScanner {
     companion object {
@@ -56,13 +56,12 @@ class SyntheticAccessorDetector : Detector(), SourceCodeScanner {
             Scope.JAVA_FILE_SCOPE
         )
 
-        /** The main issue discovered by this detector  */
+        /** The main issue discovered by this detector. */
         @JvmField
         val ISSUE = Issue.create(
             id = "SyntheticAccessor",
             briefDescription = "Synthetic Accessor",
-            explanation =
-                """
+            explanation = """
                 A private inner class which is accessed from the outer class will force \
                 the compiler to insert a synthetic accessor; this means that you are \
                 causing extra overhead. This is not important in small projects, but is \

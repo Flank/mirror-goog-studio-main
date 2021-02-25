@@ -59,15 +59,14 @@ import kotlin.text.Charsets.UTF_8
  * Initial focus is on the subset used and supported by GitHub:
  * https://docs.github.com/en/github/finding-security-vulnerabilities-and-errors-in-your-code/sarif-support-for-code-scanning#supported-sarif-output-file-properties
  *
- * If changing the output or updating the unit tests, please make
- * sure to run the output through a SARIF validator such as
- * https://sarifweb.azurewebsites.net/Validation
- * (remember that the unit test golden output replaces $ with ＄;
- * change back before validating if copying output verbatim from
- * unit test output)
+ * If changing the output or updating the unit tests, please
+ * make sure to run the output through a SARIF validator such as
+ * https://sarifweb.azurewebsites.net/Validation (remember that the unit
+ * test golden output replaces $ with ＄; change back before validating
+ * if copying output verbatim from unit test output)
  *
- * **NOTE: This is not a public or final API; if you rely on this be prepared
- * to adjust your code for the next tools release.**
+ * **NOTE: This is not a public or final API; if you rely on this be
+ * prepared to adjust your code for the next tools release.**
  */
 @Beta
 class SarifReporter
@@ -159,8 +158,10 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
         return issues
     }
 
-    /** Returns true if at least one location references paths under the home directory
-     * (*and* that directory is not inside the source root)
+    /**
+     * Returns true if at least one location references paths under the
+     * home directory (*and* that directory is not inside the source
+     * root)
      */
     private fun locationsContainHome(incidents: List<Incident>): Boolean {
         val first = incidents.firstOrNull() ?: return false
@@ -175,8 +176,8 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
     }
 
     /**
-     * Returns true when the given location references a path under the home directory
-     * that is not also under the source root
+     * Returns true when the given location references a path under the
+     * home directory that is not also under the source root.
      */
     private fun locationContainsHome(location: Location, root: File): Boolean {
         val file = location.file
@@ -526,13 +527,16 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
     }
 
     /**
-     * The SARIF format has a way to indicate the "context" around a line error: this is
-     * a few lines above and a few lines below the error segment.
+     * The SARIF format has a way to indicate the "context" around a
+     * line error: this is a few lines above and a few lines below the
+     * error segment.
      *
-     * This CL computes two locations: the location of the start of this snippet, a few lines
-     * above, and the location of the end of this snippet, at the end of the line a few
-     * lines below. (When the error message is near the beginning of the file or the end
-     * of the file the locations are of course clamped to the beginning or end of the file).
+     * This CL computes two locations: the location of the start of this
+     * snippet, a few lines above, and the location of the end of this
+     * snippet, at the end of the line a few lines below. (When the
+     * error message is near the beginning of the file or the end of the
+     * file the locations are of course clamped to the beginning or end
+     * of the file).
      */
     private fun computeContext(
         fileText: CharSequence,
@@ -655,8 +659,8 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
     }
 
     /**
-     * Returns a (by default 1-based line number, or 0-based if you pass 0 into [startLineNumber])
-     * line number
+     * Returns a (by default 1-based line number, or 0-based if you pass
+     * 0 into [startLineNumber]) line number.
      */
     private fun getLineNumber(
         source: String,
@@ -673,7 +677,10 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
         return lineNumber
     }
 
-    /** Returns a 1-based column number for the character [offset] in the given [source] */
+    /**
+     * Returns a 1-based column number for the character [offset] in the
+     * given [source]
+     */
     private fun getColumn(source: String, offset: Int): Int {
         var column = 1
         for (i in offset downTo -1) {
@@ -787,13 +794,16 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
     }
 }
 
-/** Name of uriBaseId for paths under the user directory (typically pointing to maven artifacts) */
+/**
+ * Name of uriBaseId for paths under the user directory (typically
+ * pointing to maven artifacts)
+ */
 private const val USER_HOME_VAR = "USER_HOME"
 
-/** Name of uriBaseId for paths under the source root */
+/** Name of uriBaseId for paths under the source root. */
 private const val SRC_DIR_VAR = "%SRCROOT%"
 
-/** Returns true if the given [file] points to a SARIF file */
+/** Returns true if the given [file] points to a SARIF file. */
 fun isSarifFile(file: File): Boolean {
 // https://docs.oasis-open.org/sarif/sarif/v2.1.0/os/sarif-v2.1.0-os.html#_Toc34317421
 // "The file name of a SARIF log file SHOULD end with the extension ".sarif".

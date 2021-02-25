@@ -35,8 +35,6 @@ import java.io.Serializable
  * Implementation of [AndroidProject] for serialization via the Tooling API.
  */
 data class AndroidProjectImpl(
-    override val modelVersion: String,
-    override val apiVersion: Int,
     override val path: String,
     override val projectType: ProjectType,
     override val groupId: String?,
@@ -44,7 +42,6 @@ data class AndroidProjectImpl(
     override val buildTypes: Collection<BuildTypeContainer>,
     override val productFlavors: Collection<ProductFlavorContainer>,
     override val variants: Collection<Variant>,
-    override val defaultVariant: String?,
     override val flavorDimensions: Collection<String>,
     override val compileTarget: String,
     override val bootClasspath: Collection<File>,

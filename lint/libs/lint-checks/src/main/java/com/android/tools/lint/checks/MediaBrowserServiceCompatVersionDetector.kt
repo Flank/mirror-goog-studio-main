@@ -15,7 +15,7 @@ import com.android.tools.lint.model.LintModelExternalLibrary
 import org.jetbrains.uast.UClass
 
 /**
- * Constructs a new [MediaBrowserServiceCompatVersionDetector] check
+ * Constructs a new [MediaBrowserServiceCompatVersionDetector] check.
  */
 class MediaBrowserServiceCompatVersionDetector : Detector(), SourceCodeScanner {
 
@@ -25,8 +25,7 @@ class MediaBrowserServiceCompatVersionDetector : Detector(), SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "IncompatibleMediaBrowserServiceCompatVersion",
             briefDescription = "Obsolete version of MediaBrowserServiceCompat",
-            explanation =
-                """
+            explanation = """
             `MediaBrowserServiceCompat` from version 23.2.0 to 23.4.0 of the Support v4 Library \
             used private APIs and will not be compatible with future versions of Android beyond Android N. \
             Please upgrade to version 24.0.0 or higher of the Support Library.""",
@@ -41,8 +40,9 @@ class MediaBrowserServiceCompatVersionDetector : Detector(), SourceCodeScanner {
         )
 
         /**
-         * Minimum recommended support library version that has the necessary fixes
-         * to ensure that MediaBrowserServiceCompat is forward compatible with N
+         * Minimum recommended support library version that has the
+         * necessary fixes to ensure that MediaBrowserServiceCompat is
+         * forward compatible with N.
          */
         val MIN_SUPPORT_V4_VERSION: GradleCoordinate = GradleCoordinate.parseVersionOnly("24.0.0")
 
@@ -56,9 +56,9 @@ class MediaBrowserServiceCompatVersionDetector : Detector(), SourceCodeScanner {
 
     override fun visitClass(context: JavaContext, declaration: UClass) {
         if (!context.evaluator.extendsClass(
-            declaration,
-            MEDIA_BROWSER_SERVICE_COMPAT, true
-        )
+                declaration,
+                MEDIA_BROWSER_SERVICE_COMPAT, true
+            )
         ) {
             return
         }

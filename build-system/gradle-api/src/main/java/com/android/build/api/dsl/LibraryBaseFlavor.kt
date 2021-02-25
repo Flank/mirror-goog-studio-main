@@ -19,7 +19,7 @@ package com.android.build.api.dsl
 import org.gradle.api.Incubating
 
 @Incubating
-interface LibraryBaseFlavor<SigningConfigT : SigningConfig> :
+interface LibraryBaseFlavor<SigningConfigT : ApkSigningConfig> :
     BaseFlavor,
     LibraryVariantDimension<SigningConfigT> {
 

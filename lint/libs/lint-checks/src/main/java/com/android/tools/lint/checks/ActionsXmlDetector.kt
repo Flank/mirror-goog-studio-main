@@ -51,9 +51,9 @@ import org.w3c.dom.Document
 import org.w3c.dom.Element
 
 /**
- * Check which makes sure that an actions.xml file is correct.
- * See XmltreeActionsSchemaParser in the dev tools codebase to
- * check behavior enforced in the dev console.
+ * Check which makes sure that an actions.xml file is correct. See
+ * XmltreeActionsSchemaParser in the dev tools codebase to check
+ * behavior enforced in the dev console.
  */
 class ActionsXmlDetector : ResourceXmlDetector() {
     private var foundProblem = false
@@ -236,8 +236,11 @@ class ActionsXmlDetector : ResourceXmlDetector() {
         }
     }
 
-    /** Returns whether the template on this template requires parameters; this
-     * is true if the template has one or more required parameters */
+    /**
+     * Returns whether the template on this template requires
+     * parameters; this is true if the template has one or more required
+     * parameters.
+     */
     private fun templateRequiresParameters(fulfillment: Element): Boolean {
         for (child in fulfillment) {
             if (child.tagName == TAG_PARAMETER_MAPPING) {
@@ -373,8 +376,8 @@ class ActionsXmlDetector : ResourceXmlDetector() {
     }
 
     /**
-     * Returns true if the given action tag defines at least one entity reference in
-     * one of its parameters
+     * Returns true if the given action tag defines at least one entity
+     * reference in one of its parameters.
      */
     private fun hasEntitySetReference(action: Element): Boolean {
         assert(action.tagName == TAG_ACTION)
@@ -391,8 +394,9 @@ class ActionsXmlDetector : ResourceXmlDetector() {
     }
 
     /**
-     * Checks parameter mapping parameter and returns the url parameter name (or null
-     * if not declared or any other validation error was found)
+     * Checks parameter mapping parameter and returns the url parameter
+     * name (or null if not declared or any other validation error was
+     * found)
      */
     private fun checkParameterMapping(
         context: XmlContext,
@@ -570,7 +574,7 @@ class ActionsXmlDetector : ResourceXmlDetector() {
     }
 
     companion object {
-        /** Validation of `<actions>` XML elements */
+        /** Validation of `<actions>` XML elements. */
         @JvmField
         val ISSUE = Issue.create(
             id = "ValidActionsXml",
@@ -622,9 +626,10 @@ class ActionsXmlDetector : ResourceXmlDetector() {
         }
 
         /**
-         * Adds in any variables found in the { } section of the URL template.
-         * This is handling the range from [from] inclusive to [to] inclusive in string [s]
-         * assuming the content is an "expression" according to RFC 6570.
+         * Adds in any variables found in the { } section of the URL
+         * template. This is handling the range from [from] inclusive
+         * to [to] inclusive in string [s] assuming the content is an
+         * "expression" according to RFC 6570.
          */
         private fun addVariables(variables: MutableSet<String>, s: String, from: Int, to: Int) {
             if (from > to - 2) { // empty

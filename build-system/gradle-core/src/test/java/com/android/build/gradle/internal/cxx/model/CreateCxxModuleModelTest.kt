@@ -32,7 +32,8 @@ class CreateCxxModuleModelTest {
         BasicModuleModelMock().let {
             assertThat(
             tryCreateConfigurationParameters(
-                    it.variantImpl
+                it.projectOptions,
+                it.variantImpl
             )
             ).isNull()
         }
@@ -68,6 +69,7 @@ class CreateCxxModuleModelTest {
             PassThroughDeduplicatingLoggingEnvironment().use { logEnvironment ->
                 assertThat(
                     tryCreateConfigurationParameters(
+                            it.projectOptions,
                             it.variantImpl
                     )
                 ).isNull()
@@ -85,6 +87,7 @@ class CreateCxxModuleModelTest {
                     .`when`(it.cmake).buildStagingDirectory
                 val componentModel =
                     tryCreateConfigurationParameters(
+                            it.projectOptions,
                             it.variantImpl
                     )!!
                 val module = createCxxModuleModel(
@@ -106,6 +109,7 @@ class CreateCxxModuleModelTest {
                 doReturn(File(it.project.buildDir, "my-build-staging-directory"))
                     .`when`(it.cmake).buildStagingDirectory
                 val configurationParameters = tryCreateConfigurationParameters(
+                        it.projectOptions,
                         it.variantImpl)!!
                 val module = createCxxModuleModel(
                     it.sdkComponents,

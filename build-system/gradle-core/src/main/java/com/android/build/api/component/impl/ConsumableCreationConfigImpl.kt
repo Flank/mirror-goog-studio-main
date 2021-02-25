@@ -16,14 +16,18 @@
 package com.android.build.api.component.impl
 
 import com.android.build.api.variant.AndroidVersion
+import com.android.build.api.variant.Renderscript
+import com.android.build.api.variant.impl.VariantBuilderImpl
 import com.android.build.api.variant.impl.getFeatureLevel
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.OptionalBooleanOption
+import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.dexing.DexingType
 import com.android.builder.errors.IssueReporter
 import com.android.builder.model.CodeShrinker
@@ -50,6 +54,7 @@ import com.android.builder.model.CodeShrinker
  */
 open class ConsumableCreationConfigImpl(
         open val config: ConsumableCreationConfig,
+        val projectOptions: ProjectOptions,
         val globalScope: GlobalScope,
         val variantDslInfo: VariantDslInfo) {
 
@@ -62,8 +67,8 @@ open class ConsumableCreationConfigImpl(
 
     open fun getCodeShrinker(): CodeShrinker? {
         val codeShrinker: CodeShrinker = variantDslInfo.getPostProcessingOptions().getCodeShrinker() ?: return null
-        var enableR8 = globalScope.projectOptions[OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8]
-        if (variantDslInfo.variantType.isAar && !globalScope.projectOptions[BooleanOption.ENABLE_R8_LIBRARIES]) {
+        var enableR8 = projectOptions[OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8]
+        if (variantDslInfo.variantType.isAar && !projectOptions[BooleanOption.ENABLE_R8_LIBRARIES]) {
                 // R8 is disabled for libraries
                 enableR8 = false
         }
@@ -144,4 +149,15 @@ open class ConsumableCreationConfigImpl(
 
      open val minSdkVersionWithTargetDeviceApi: AndroidVersion
         get() = config.minSdkVersion
+
+    fun renderscript(internalServices: VariantPropertiesApiServices): Renderscript? {
+        return if (config.buildFeatures.renderScript) {
+            internalServices.newInstance(Renderscript::class.java).also {
+                it.renderscriptSupportModeEnabled.set(variantDslInfo.renderscriptSupportModeEnabled)
+                it.renderscriptSupportModeBlasEnabled.set(variantDslInfo.renderscriptSupportModeBlasEnabled)
+                it.renderscriptNdkModeEnabled.set(variantDslInfo.renderscriptNdkModeEnabled)
+                it.renderscriptOptimLevel.set(variantDslInfo.renderscriptOptimLevel)
+            }
+        } else null
+    }
 }

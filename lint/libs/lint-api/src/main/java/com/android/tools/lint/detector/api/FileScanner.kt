@@ -17,32 +17,30 @@ package com.android.tools.lint.detector.api
 
 interface FileScanner {
     /**
-     * Analysis is about to be performed on a specific file, perform any setup
-     * steps.
+     * Analysis is about to be performed on a specific file, perform any
+     * setup steps.
      *
+     * Note: When this method is called at the beginning of checking
+     * an XML file, the context is guaranteed to be an instance of
+     * [XmlContext], and similarly for a Java source file, the context
+     * will be a [JavaContext] and so on.
      *
-     * Note: When this method is called at the beginning of checking an XML
-     * file, the context is guaranteed to be an instance of [XmlContext],
-     * and similarly for a Java source file, the context will be a
-     * [JavaContext] and so on.
-     *
-     * @param context the context for the check referencing the file to be
-     * checked, the project, etc.
+     * @param context the context for the check referencing the file to
+     *     be checked, the project, etc.
      */
     fun beforeCheckFile(context: Context)
 
     /**
-     * Analysis has just been finished for a specific file, perform any cleanup
-     * or report issues found
+     * Analysis has just been finished for a specific file, perform any
+     * cleanup or report issues found
      *
+     * Note: When this method is called at the end of checking an
+     * XML file, the context is guaranteed to be an instance of
+     * [XmlContext], and similarly for a Java source file, the context
+     * will be a [JavaContext] and so on.
      *
-     * Note: When this method is called at the end of checking an XML
-     * file, the context is guaranteed to be an instance of [XmlContext],
-     * and similarly for a Java source file, the context will be a
-     * [JavaContext] and so on.
-     *
-     * @param context the context for the check referencing the file to be
-     * checked, the project, etc.
+     * @param context the context for the check referencing the file to
+     *     be checked, the project, etc.
      */
     fun afterCheckFile(context: Context)
 }

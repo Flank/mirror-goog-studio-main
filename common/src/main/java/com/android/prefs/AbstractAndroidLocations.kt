@@ -17,9 +17,9 @@
 package com.android.prefs
 
 import com.android.io.CancellableFileIo
+import com.android.prefs.AbstractAndroidLocations.Companion.FOLDER_DOT_ANDROID
 import com.android.utils.EnvironmentProvider
 import com.android.utils.ILogger
-import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -39,7 +39,7 @@ abstract class AbstractAndroidLocations protected constructor(
 
     companion object {
         /**
-         * The name of the .android folder returned by [prefsLocation].
+         * The name of the .android folder returned by [prefsLocation], unless [ANDROID_USER_HOME] is used
          */
         @JvmField
         val FOLDER_DOT_ANDROID = ".android"
@@ -64,7 +64,11 @@ abstract class AbstractAndroidLocations protected constructor(
         val FOLDER_GRADLE_AVD = "avd"
 
         @JvmField
+        @Deprecated("Use ANDROID_USER_HOME")
         val ANDROID_PREFS_ROOT = "ANDROID_PREFS_ROOT"
+
+        @JvmStatic
+        val ANDROID_USER_HOME = "ANDROID_USER_HOME"
     }
 
     /**
@@ -74,7 +78,7 @@ abstract class AbstractAndroidLocations protected constructor(
      */
     @get:Throws(AndroidLocationsException::class)
     override val prefsLocation: Path by lazy {
-        rootLocation.resolve(FOLDER_DOT_ANDROID).also {
+        computeAndroidFolder().also {
             if (CancellableFileIo.notExists(it)) {
                 try {
                     Files.createDirectories(it)
@@ -100,7 +104,8 @@ This is the path of preference folder expected by the Android tools."""
     @get:Throws(AndroidLocationsException::class)
     override val avdLocation: Path by lazy {
         // check if the location is overridden, if not use default
-        findValidPath(mutableListOf(), Global.ANDROID_AVD_HOME) ?: prefsLocation.resolve(FOLDER_AVD)
+        PathLocator(environmentProvider).singlePathOf(Global.ANDROID_AVD_HOME)
+                ?: prefsLocation.resolve(FOLDER_AVD)
     }
 
     @get:Throws(AndroidLocationsException::class)
@@ -111,150 +116,290 @@ This is the path of preference folder expected by the Android tools."""
     /**
      * Computes, memoizes in the instance, and returns the location of the home folder.
      */
-    override val userHomeLocation: Path? by lazy {
-        findValidPath(mutableListOf(), Global.TEST_TMPDIR, Global.USER_HOME, Global.HOME)
-    }
-
-    /**
-     * Computes, memoizes in the instance, and returns the root folders where the android folder
-     * will be located
-     *
-     * This is NOT the .android folder. Use [prefsLocation]
-     * To query the AVD Folder, use [avdLocation] as it could be overridden
-     */
-    private val rootLocation: Path by lazy {
-        val visitedVariables = mutableListOf<Pair<String, String>>()
-        findValidPath(
-            visitedVariables,
-            Global.ANDROID_PREFS_ROOT,
+    override val userHomeLocation: Path by lazy {
+        val pathLocator = PathLocator(environmentProvider)
+        pathLocator.firstPathOf(
             Global.TEST_TMPDIR,
             Global.USER_HOME,
             Global.HOME
-        ) ?: throw AndroidLocationsException.createForPrefsRoot(visitedVariables)
+        ) ?: throw AndroidLocationsException.createForHomeLocation(pathLocator.visitedVariables)
     }
 
     /**
-     * Checks a list of system properties and/or system environment variables for validity, and
-     * returns the first one.
+     * Computes, and returns the root folder where the android folder
+     * will be located.
      *
-     * @param environmentProvider Source for getting the system properties/env variables.
-     * @param globalVars The variables to check. Order does matter.
-     * @return the content of the first property/variable that is a valid directory.
+     * This is using the old, deprecated ANDROID_SDK_HOME or ANDROID_PREFS_ROOT as a backup in case
+     * ANDROID_USER_HOME does not exist
+     *
      */
-    private fun findValidPath(
-        accumulator: MutableList<Pair<String, String>>,
-        vararg globalVars: Global
+    private fun computeAndroidFolder(): Path  {
+        val locator = AndroidPathLocator(environmentProvider, if (!silent) logger else null)
+
+        val folder =
+                locator.singlePathOf(
+                    Global.ANDROID_USER_HOME,
+                    Global.ANDROID_PREFS_ROOT,
+                    Global.ANDROID_SDK_HOME
+                )
+
+        if (folder != null) {
+            if (locator.visitedVariables.size > 1) {
+                // even through we get a regular path, we ended up visiting more than one value.
+                // Show a warning
+                if (!silent) {
+                    val message = combineLocationValuesIntoMessage(
+                        values = locator.visitedVariables,
+                        prefix = """
+                            More than one location points to the Android preference location
+                            but only one is valid
+                            """.trimIndent(),
+                        modifier = { value ->
+                            if (value.global.mustExist && !CancellableFileIo.isDirectory(value.path)) {
+                                "does not exist"
+                            } else null
+                        }
+                    )
+
+                    logger.warning(message)
+                }
+            }
+            return folder
+        }
+
+        // don't use userHomeLocation as we want to be able to get the list of queried
+        // paths.
+        // Worst case we query for these variables twice before both userHomeLocation and
+        // prefsLocation are cached.
+        val pathLocator = PathLocator(environmentProvider)
+        return pathLocator.firstPathOf(
+            Global.TEST_TMPDIR,
+            Global.USER_HOME,
+            Global.HOME
+        )?.resolve(FOLDER_DOT_ANDROID)
+                ?: throw AndroidLocationsException(
+                    combineLocationValuesIntoMessage(
+                        values = locator.visitedVariables + pathLocator.visitedVariables,
+                        prefix = """
+                        Unable to find the location for the android preferences.
+                        The following locations have been checked, but they do not exist:
+                        """.trimIndent()
+                    )
+                )
+    }
+}
+
+internal enum class VariableType(val displayName: String) {
+    SYS_PROP("system property"),
+    ENV_VAR("environment variable")
+}
+
+
+private data class QueryResult(
+    val global: Global,
+    val type: VariableType,
+    val path: Path
+): LocationValue {
+
+    override val propertyName: String
+        get() = global.propName
+
+    override val queryType: String
+        get() = type.displayName
+
+    override val value: String
+        get() = path.toString()
+}
+
+private data class VariableValue(
+    override val propertyName: String,
+    val type: VariableType,
+    val path: Path,
+    val correctPath: Path
+): LocationValue {
+
+    override val queryType: String
+        get() = type.displayName
+
+    override val value: String
+        get() = path.toString()
+
+}
+
+private open class PathLocator(
+    private val environmentProvider: EnvironmentProvider,
+) {
+    val visitedVariables = mutableListOf<QueryResult>()
+
+    fun reset() {
+        visitedVariables.clear()
+    }
+
+    /**
+     * Search for a path and return as soon as a path if found.
+     *
+     * This does not detect conflicts between variables (or conflicts within a single variable
+     * used by both env var and sys prop)
+     */
+    fun firstPathOf(
+        vararg globalVars: Global,
     ): Path? {
         for (globalVar in globalVars) {
-            val path = validatePath(globalVar, accumulator)
+            val path = singlePathOf(globalVar)
             if (path != null) {
                 return path
             }
         }
+
         return null
     }
 
-    private fun validatePath(
-        globalVar: Global,
-        accumulator: MutableList<Pair<String, String>>
+    /**
+     * Gathers a single path from a list of variables.
+     *
+     * This method will check all variables and only succeed if a single variable contains a valid
+     * value. This includes checking for both env var and sys prop where applicable.
+     */
+    fun singlePathOf(
+        vararg globalVars: Global
     ): Path? {
+        val values =  globalVars.asSequence()
+            .map { it.gatherPaths() }
+            .flatMap { it.asSequence() }
+            .toList()
 
-        val sysPropPath = if (globalVar.isSysProp) {
-            checkPath(
-                globalVar,
-                environmentProvider::getSystemProperty,
-                "system property",
-                accumulator
-            )
-        } else null
-
-        return sysPropPath
-            ?: if (globalVar.isEnvVar) {
-                checkPath(
-                    globalVar,
-                    environmentProvider::getEnvVariable,
-                    "environment variable",
-                    accumulator
-                )
-            } else null
-    }
-
-    private fun checkPath(
-        globalVar: Global,
-        queryFunction: (String) -> String?,
-        varTypeName: String,
-        accumulator: MutableList<Pair<String, String>>
-    ): Path? {
-        var path = queryFunction(globalVar.propName)
-
-        path?.let {
-            accumulator.add("${globalVar.propName}($varTypeName)" to it)
-        }
-
-        if (globalVar == Global.ANDROID_PREFS_ROOT) {
-            // Special Handling:
-            // If the query is ANDROID_PREFS_ROOT, then also query ANDROID_SDK_HOME and compare
-            // the values. If both values are set, they must match
-            val androidSdkHomePath = queryFunction("ANDROID_SDK_HOME")
-            if (path == null) {
-                if (androidSdkHomePath != null) {
-                    accumulator.add("ANDROID_SDK_HOME($varTypeName)" to androidSdkHomePath)
-                    path = validateAndroidSdkHomeValue(androidSdkHomePath)
+        // check that the values are the same.
+        return when {
+            values.isEmpty() -> null
+            values.size == 1 -> values.single().correctPath
+            else -> {
+                // Build a map of (location, list<Value>)
+                // use the correct path as we want to compare the final path
+                val map = values.groupBy { it.correctPath }
+                // single content, we are done, return the path
+                if (map.size == 1) {
+                    map.keys.single()
                 } else {
-                    // both are null, return
-                    return null
-                }
-            } else { // path != null
-                if (androidSdkHomePath != null) {
-                    accumulator.add("ANDROID_SDK_HOME($varTypeName)" to androidSdkHomePath)
-                    if (path != androidSdkHomePath) {
-                        throw AndroidLocationsException(
-                            """
-Both ANDROID_PREFS_ROOT and ANDROID_SDK_HOME are set to different values
-Support for ANDROID_SDK_HOME is deprecated. Use ANDROID_PREFS_ROOT only.
-Current values:
-ANDROID_SDK_ROOT: $path
-ANDROID_SDK_HOME: $androidSdkHomePath""".trimIndent()
-                        )
-                    }
+                    // if not, fail
+                    val message = combineLocationValuesIntoMessage(
+                        values = values,
+                        prefix = """
+                            Several environment variables and/or system properties contain different paths to the Android Preferences folder.
+                            Please correct and use only one way to inject the preference location.
+                            """.trimIndent(),
+                        suffix = "It is recommended to use ANDROID_USER_HOME as other methods are deprecated"
+                    )
+
+                    throw AndroidLocationsException(message)
                 }
             }
         }
+    }
 
-        if (path == null) {
+    /**
+     * Gather the path(s) from a variable, querying both env var and system property, if applicable.
+     *
+     * If the paths found does not exist, but should, the value will not be included in the result.
+     *
+     * @return a list of value, possibly empty.
+     */
+    private fun Global.gatherPaths(
+    ): List<VariableValue> {
+
+        val sysProp = if (isSysProp) {
+            queryPath(this, VariableType.SYS_PROP)
+        } else null
+
+        val envVar = if (isEnvVar) {
+            queryPath(this, VariableType.ENV_VAR)
+        } else null
+
+        return listOfNotNull(sysProp, envVar)
+    }
+
+    protected open fun handlePath(globalVar: Global, path: Path): Path? {
+        return if (globalVar.mustExist && !CancellableFileIo.isDirectory(path)) {
+            null
+        } else {
+            path
+        }
+    }
+
+    /**
+     * Query a path for a variable, given a specific query mechanism
+     *
+     * this also checks for existence (if applicable), and adds a leaf to the return (if applicable)
+     */
+    private fun queryPath(
+        globalVar: Global,
+        queryType: VariableType
+    ): VariableValue? {
+        val location = when (queryType) {
+            VariableType.SYS_PROP -> environmentProvider.getSystemProperty(globalVar.propName)
+            VariableType.ENV_VAR -> environmentProvider.getEnvVariable(globalVar.propName)
+        } ?: return null
+
+        val path = Paths.get(location)
+        visitedVariables.add(QueryResult(globalVar, queryType, path))
+
+        val correctPath = handlePath(globalVar, path) ?: return null
+
+        return VariableValue(
+            globalVar.propName,
+            queryType,
+            path,
+            correctPath
+        )
+    }
+}
+
+private class AndroidPathLocator(
+    environmentProvider: EnvironmentProvider,
+    private val logger: ILogger? = null
+) : PathLocator(
+    environmentProvider
+) {
+
+    override fun handlePath(globalVar: Global, path: Path): Path? {
+        super.handlePath(globalVar, path) ?: return null
+
+        if (globalVar == Global.ANDROID_SDK_HOME && !validateAndroidSdkHomeValue(path)) {
             return null
         }
 
-        return Paths.get(path).asExistingDirectory()
+        return if (globalVar.androidLeaf != null) {
+            path.resolve(globalVar.androidLeaf)
+        } else {
+            path
+        }
     }
 
-    private fun validateAndroidSdkHomeValue(path: String): String? {
-        val file = Paths.get(path).asExistingDirectory() ?: return null
+    private fun validateAndroidSdkHomeValue(path: Path): Boolean {
+        if (!CancellableFileIo.isDirectory(path)) {
+            return false
+        }
 
-        if (isSdkRootWithoutDotAndroid(file)) {
+        if (isSdkRootWithoutDotAndroid(path)) {
             val message =
-                """ANDROID_SDK_HOME is set to the root of your SDK: $path
-ANDROID_SDK_HOME is meant to be the path of the preference folder expected by the Android tools.
-It should NOT be set to the same as the root of your SDK.
-To set a custom SDK Location, use ANDROID_SDK_ROOT.
-If this is not set we default to: ${
-                    findValidPath(
-                        mutableListOf(),
-                        Global.TEST_TMPDIR,
-                        Global.USER_HOME,
-                        Global.HOME
-                    )
-                }"""
+                    """
+                        ANDROID_SDK_HOME is set to the root of your SDK: $path
+                        ANDROID_SDK_HOME was meant to be the parent path of the preference folder expected by the Android tools.
+                        It is now deprecated.
 
+                        To set a custom preference folder location, use ANDROID_USER_HOME.
 
-            if (silent) {
+                        It should NOT be set to the same directory as the root of your SDK.
+                        To set a custom SDK location, use ANDROID_HOME.
+                        """.trimIndent()
+
+            if (logger != null) {
                 logger.warning(message)
             } else {
                 throw AndroidLocationsException(message)
             }
         }
 
-        return path
+        return true
     }
 
     private fun isSdkRootWithoutDotAndroid(folder: Path): Boolean {
@@ -266,11 +411,33 @@ If this is not set we default to: ${
     private fun Path.hasSubFolder(subFolder: String): Boolean {
         return CancellableFileIo.isDirectory(resolve(subFolder))
     }
-
-    private fun Path.asExistingDirectory(): Path? {
-        return if (CancellableFileIo.isDirectory(this)) this else null
-    }
 }
+
+private fun <T: LocationValue> combineLocationValuesIntoMessage(
+    values: List<T>,
+    prefix: String = "",
+    suffix: String = "",
+    modifier: ((T) -> String?)? = null
+): String {
+
+    val buffer = StringBuffer(prefix)
+
+    if (values.isNotEmpty()) {
+        buffer.append('\n')
+    }
+    for (value in values.sorted()) {
+        // use the path instead of correct since this is what is injected by the user
+        val modifierStr = modifier?.let { it(value)?.let{ "(${it})" } } ?: ""
+        buffer.append("\n- ${value.propertyName}(${value.queryType}): ${value.value}$modifierStr")
+    }
+
+    if (suffix.isNotBlank()) {
+        buffer.append("\n\n$suffix")
+    }
+
+    return buffer.toString()
+}
+
 
 /**
  * Enum describing which variables to check and whether they should be checked via
@@ -279,11 +446,25 @@ If this is not set we default to: ${
 private enum class Global(
     val propName: String,
     val isSysProp: Boolean,
-    val isEnvVar: Boolean
+    val isEnvVar: Boolean,
+    val androidLeaf: String? = FOLDER_DOT_ANDROID,
+    val mustExist: Boolean = true
 ) {
-
+    ANDROID_USER_HOME(
+        propName = AbstractAndroidLocations.ANDROID_USER_HOME,
+        isSysProp = true,
+        isEnvVar = true,
+        androidLeaf = null,
+        mustExist = false
+    ),
     ANDROID_AVD_HOME(
         propName = "ANDROID_AVD_HOME",
+        isSysProp = true,
+        isEnvVar = true,
+        androidLeaf = null
+    ),
+    ANDROID_SDK_HOME(
+        propName = "ANDROID_SDK_HOME",
         isSysProp = true,
         isEnvVar = true
     ),

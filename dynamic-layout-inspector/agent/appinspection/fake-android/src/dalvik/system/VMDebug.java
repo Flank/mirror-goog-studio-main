@@ -16,8 +16,6 @@
 
 package dalvik.system;
 
-// Note: This class is intentionally written in Java, to avoid the compiler generating different
-// static bytecode than the original Java code.
 @SuppressWarnings("unused")
 public final class VMDebug {
     public static <T> void allowHiddenApiReflectionFrom(Class<T> klass) {}

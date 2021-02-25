@@ -82,6 +82,7 @@ import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
+import kotlin.io.FilesKt;
 import org.jetbrains.kotlin.config.ApiVersion;
 import org.jetbrains.kotlin.config.LanguageVersion;
 import org.jetbrains.kotlin.config.LanguageVersionSettings;
@@ -229,6 +230,10 @@ public class Main {
             return ERRNO_USAGE;
         }
 
+        // When debugging build-system invocations, the below is helpful; leaving
+        // here for a while:
+        // logArguments(args, new File("lint-invocation.txt"));
+
         LintClient.setClientName(LintClient.CLIENT_CLI);
 
         ArgumentState argumentState = new ArgumentState();
@@ -256,6 +261,28 @@ public class Main {
         }
 
         return exitCode;
+    }
+
+    // Debugging utility
+    @SuppressWarnings("unused")
+    private void logArguments(String[] args, File log) {
+        File parent = log.getParentFile();
+        if (parent != null) {
+            //noinspection ResultOfMethodCallIgnored
+            parent.mkdirs();
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append(java.util.Calendar.getInstance().getTime().toString()).append("\n");
+        sb.append("pwd=").append(System.getProperty("user.dir")).append("\narguments: ");
+        for (String arg : args) {
+            String s = arg.replace("\"", "\\\"");
+            if (s.contains(" ")) {
+                s = '"' + s + '"';
+            }
+            sb.append(s).append(' ');
+        }
+        sb.append("\n");
+        FilesKt.appendText(log, sb.toString(), Charsets.UTF_8);
     }
 
     private LintCliClient createClient(ArgumentState argumentState) {
@@ -1326,7 +1353,7 @@ public class Main {
         LintRequest lintRequest;
         List<LintModelModule> modules = argumentState.modules;
         if (!modules.isEmpty()) {
-            List<Project> projects = new ArrayList<>();
+            List<LintModelModuleProject> projects = new ArrayList<>();
             for (LintModelModule module : modules) {
                 File dir = module.getDir();
                 LintModelVariant variant = null;
@@ -1344,14 +1371,19 @@ public class Main {
                 if (variant == null) {
                     variant = module.defaultVariant();
                 }
-                assert variant != null; // clear from above if but help inspection machinery out
+                assert variant != null;
                 LintModelModuleProject project =
                         new LintModelModuleProject(client, dir, dir, variant, null);
                 client.registerProject(project.getDir(), project);
                 projects.add(project);
             }
+
+            // Set up lint project dependencies based on the model
+            List<LintModelModuleProject> roots =
+                    LintModelModuleProject.Companion.resolveDependencies(projects);
+
             lintRequest = new LintRequest(client, Collections.emptyList());
-            lintRequest.setProjects(projects);
+            lintRequest.setProjects(roots);
             // TODO: What about dynamic features? See LintGradleProject#configureLintRequest
         } else {
             lintRequest = client.createLintRequest(argumentState.files);

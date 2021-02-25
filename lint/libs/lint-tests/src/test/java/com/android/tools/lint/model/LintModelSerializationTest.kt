@@ -613,10 +613,10 @@ class LintModelSerializationTest {
                             resDirectories="src/release/res"
                             assetsDirectories="src/release/assets"/>
                         <sourceProvider
-                            manifest="src/freeBetaDebug/AndroidManifest.xml"
-                            javaDirectories="src/freeBetaDebug/java:src/freeBetaDebug/kotlin"
-                            resDirectories="src/freeBetaDebug/res"
-                            assetsDirectories="src/freeBetaDebug/assets"/>
+                            manifest="src/paidNormalRelease/AndroidManifest.xml"
+                            javaDirectories="src/paidNormalRelease/java:src/paidNormalRelease/kotlin"
+                            resDirectories="src/paidNormalRelease/res"
+                            assetsDirectories="src/paidNormalRelease/assets"/>
                       </sourceProviders>
                       <testSourceProviders>
                         <sourceProvider
@@ -1018,7 +1018,10 @@ class LintModelSerializationTest {
         }
     }
 
-    /** Check that the relative paths in variants are resolved against the project directory */
+    /**
+     * Check that the relative paths in variants are resolved against
+     * the project directory.
+     */
     @Test
     fun testLintModelSerializationFileAdapterRootHandling() {
         val temp = temporaryFolder.newFolder()
@@ -1138,8 +1141,9 @@ class LintModelSerializationTest {
     }
 
     /**
-     * Check that special references to output files "stderr" and "stdout" are not turned into
-     * actual files. Regression test for https://issuetracker.google.com/174480831.
+     * Check that special references to output files "stderr" and
+     * "stdout" are not turned into actual files. Regression test for
+     * https://issuetracker.google.com/174480831.
      */
     @Test
     fun testSpecialHandlingOfStderrAndStdout() {

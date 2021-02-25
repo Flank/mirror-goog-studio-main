@@ -89,13 +89,12 @@ class SdkIntDetector : Detector(), SourceCodeScanner {
             Scope.JAVA_FILE_SCOPE
         )
 
-        /** SDK_INT without @ChecksSdkIntAtLeast */
+        /** SDK_INT without @ChecksSdkIntAtLeast. */
         @JvmField
         val ISSUE = Issue.create(
             id = "AnnotateVersionCheck",
             briefDescription = "Annotate SDK_INT checks",
-            explanation =
-                """
+            explanation = """
                 Methods which perform `SDK_INT` version checks (or field constants which reflect \
                 the result of a version check) in libraries should be annotated with \
                 `@ChecksSdkIntAtLeast`. This makes it possible for lint to correctly \

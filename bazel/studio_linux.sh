@@ -114,6 +114,16 @@ readonly invocation_id="$(uuidgen)"
 # This has the side effect of running it twice, but as it only takes a few seconds that seems ok.
 readonly bazel_status=$?
 
+# Save bazel worker logs.
+# Common bazel codes fall into the single digit range. If a less common exit
+# code happens, then we copy extra bazel logs.
+if [[ $bazel_status > 9 ]]; then
+  output_base="$(${script_dir}/bazel info output_base)"
+  worker_log_dir="${DIST_DIR:-/tmp/${BUILD_NUMBER}/studio_linux}/bazel_logs"
+  mkdir "${worker_log_dir}"
+  cp "${output_base}/bazel-workers/*.log" "${worker_log_dir}"
+fi
+
 # http://g3doc/wireless/android/build_tools/g3doc/public/buildbot#environment-variables
 if [[ -d "${DIST_DIR}" ]]; then
 

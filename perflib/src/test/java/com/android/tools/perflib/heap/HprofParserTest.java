@@ -16,6 +16,8 @@
 
 package com.android.tools.perflib.heap;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.android.testutils.TestResources;
 import com.android.tools.perflib.captures.MemoryMappedFileBuffer;
 import com.android.tools.perflib.heap.hprof.Hprof;
@@ -98,17 +100,17 @@ public class HprofParserTest extends TestCase {
         ClassObj contextWrapper = application.getSuperClassObj();
         assertNotNull(contextWrapper);
         assertEquals("android.content.ContextWrapper", contextWrapper.getClassName());
-        contextWrapper.getSubclasses().contains(application);
+        assertThat(contextWrapper.getSubclasses()).contains(application);
 
         ClassObj context = contextWrapper.getSuperClassObj();
         assertNotNull(context);
         assertEquals("android.content.Context", context.getClassName());
-        context.getSubclasses().contains(contextWrapper);
+        assertThat(context.getSubclasses()).contains(contextWrapper);
 
         ClassObj object = context.getSuperClassObj();
         assertNotNull(object);
         assertEquals("java.lang.Object", object.getClassName());
-        object.getSubclasses().contains(context);
+        assertThat(object.getSubclasses()).contains(context);
 
         ClassObj none = object.getSuperClassObj();
         assertNull(none);

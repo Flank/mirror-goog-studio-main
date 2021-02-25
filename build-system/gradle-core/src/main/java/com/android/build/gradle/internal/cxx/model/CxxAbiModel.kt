@@ -214,32 +214,32 @@ val CxxAbiModel.compileCommandsJsonFile: File
 /**
  * compile_commands.json.bin file for this ABI. This is equivalent to a compile_commands.json file
  * but more compact.
- * For example, $moduleRootFolder/.cxx/ndkBuild/debug/armeabi-v7a/compile_commands.json.bin
+ * For example, $moduleRootFolder/build/intermediates/cxx/Debug/{hashcode}/meta/armeabi-v7a/compile_commands.json.bin
  */
 val CxxAbiModel.compileCommandsJsonBinFile: File
-    get() = join(cxxBuildFolder, "compile_commands.json.bin")
+    get() = join(modelMetadataFolder, "compile_commands.json.bin")
 
 /**
  * additional_project_files.txt file for this ABI. This file contains a newline separated list of
  * filenames that are known by the build system and considered to be part of the project.
  */
 val CxxAbiModel.additionalProjectFilesIndexFile: File
-    get() = join(cxxBuildFolder, "additional_project_files.txt")
+    get() = join(modelMetadataFolder, "additional_project_files.txt")
 
 /**
  * Text file containing absolute paths to folders containing the generated symbols, one per line.
- * For example, $moduleRootFolder/.cxx/ndkBuild/debug/armeabi-v7a/symbol_folder_index.txt
+ * For example, $moduleRootFolder/build/intermediates/cxx/Debug/{hashcode}/meta/armeabi-v7a/symbol_folder_index.txt
  */
 val CxxAbiModel.symbolFolderIndexFile: File
-    get() = join(cxxBuildFolder, "symbol_folder_index.txt")
+    get() = join(modelMetadataFolder, "symbol_folder_index.txt")
 
 /**
  * Text file containing absolute paths to native build files (For example, CMakeLists.txt for
  * CMake). One per line.
- * For example, $moduleRootFolder/.cxx/ndkBuild/debug/armeabi-v7a/build_file_index.txt
+ * For example, $moduleRootFolder/build/intermediates/cxx/Debug/{hashcode}/meta/armeabi-v7a/build_file_index.txt
  */
 val CxxAbiModel.buildFileIndexFile: File
-    get() = join(cxxBuildFolder, "build_file_index.txt")
+    get() = join(modelMetadataFolder, "build_file_index.txt")
 
 /**
  * The CMake file API query folder.

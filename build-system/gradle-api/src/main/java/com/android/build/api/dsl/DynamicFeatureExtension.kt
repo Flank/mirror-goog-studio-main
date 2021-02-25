@@ -32,7 +32,7 @@ interface DynamicFeatureExtension<
         BuildTypeT : DynamicFeatureBuildType,
         DefaultConfigT : DefaultConfig,
         ProductFlavorT : DynamicFeatureProductFlavor,
-        SigningConfigT : SigningConfig> :
+        SigningConfigT : ApkSigningConfig> :
     CommonExtension<
             AndroidSourceSetT,
             DynamicFeatureBuildFeatures,

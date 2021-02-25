@@ -37,9 +37,7 @@ import org.jetbrains.uast.UReferenceExpression
 import org.w3c.dom.Element
 import java.util.EnumSet
 
-/**
- * Checks for issues that negatively affect battery life
- */
+/** Checks for issues that negatively affect battery life. */
 class BatteryDetector : ResourceXmlDetector(), SourceCodeScanner {
     companion object Issues {
         private val IMPLEMENTATION = Implementation(
@@ -49,13 +47,12 @@ class BatteryDetector : ResourceXmlDetector(), SourceCodeScanner {
             Scope.JAVA_FILE_SCOPE
         )
 
-        /** Issues that negatively affect battery life  */
+        /** Issues that negatively affect battery life. */
         @JvmField
         val ISSUE = Issue.create(
             id = "BatteryLife",
             briefDescription = "Battery Life Issues",
-            explanation =
-                """
+            explanation = """
             This issue flags code that either
             * negatively affects battery life, or
             * uses APIs that have recently changed behavior to prevent background tasks from \

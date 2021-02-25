@@ -35,24 +35,27 @@ import java.util.HashMap
 import java.util.HashSet
 
 /**
- * Registry which provides a list of checks to be performed on an Android project
+ * Registry which provides a list of checks to be performed on an
+ * Android project
  *
- * **NOTE: This is not a public or final API; if you rely on this be prepared
- * to adjust your code for the next tools release.**
+ * **NOTE: This is not a public or final API; if you rely on this be
+ * prepared to adjust your code for the next tools release.**
  */
 @Beta
 abstract class IssueRegistry
 protected constructor() {
     /**
-     * The vendor providing this lint check. For all the built in checks, this
-     * will report the Android Open Source Project, but for checks provided
-     * from libraries, this should point to the library author/vendor. Lint will
-     * include this in lint reports such that bug reports (and compliments!) can
-     * be directed to the right place.
+     * The vendor providing this lint check. For all the built in
+     * checks, this will report the Android Open Source Project, but for
+     * checks provided from libraries, this should point to the library
+     * author/vendor. Lint will include this in lint reports such that
+     * bug reports (and compliments!) can be directed to the right
+     * place.
      *
-     * (This is a val with a default null implementation instead of an abstract
-     * method for backwards compatibility; we don't want to cause class load
-     * errors when loading older registries in newer lint.)
+     * (This is a val with a default null implementation instead of an
+     * abstract method for backwards compatibility; we don't want to
+     * cause class load errors when loading older registries in newer
+     * lint.)
      */
     open val vendor: Vendor? = null
 
@@ -67,9 +70,9 @@ protected constructor() {
     open val api: Int = -1
 
     /**
-     * The minimum API version this issue registry works with. Normally the
-     * same as [api], but if you have tested it with older version and it
-     * works, you can return that level.
+     * The minimum API version this issue registry works with. Normally
+     * the same as [api], but if you have tested it with older version
+     * and it works, you can return that level.
      */
     open val minApi: Int
         get() {
@@ -77,8 +80,8 @@ protected constructor() {
         }
 
     /**
-     * The list of issues that can be found by all known detectors (including those that may be
-     * disabled!)
+     * The list of issues that can be found by all known detectors
+     * (including those that may be disabled!)
      */
     abstract val issues: List<Issue>
 
@@ -98,17 +101,18 @@ protected constructor() {
     open val isUpToDate: Boolean = true
 
     /**
-     * Get an approximate issue count for a given scope. This is just an optimization,
-     * so the number does not have to be accurate.
+     * Get an approximate issue count for a given scope. This is just an
+     * optimization, so the number does not have to be accurate.
      *
      * @param scope the scope set
-     * @return an approximate ceiling of the number of issues expected for a given scope set
+     * @return an approximate ceiling of the number of issues expected
+     *     for a given scope set
      */
     protected open fun getIssueCapacity(scope: EnumSet<Scope>): Int = 20
 
     /**
-     * Returns all available issues of a given scope (regardless of whether
-     * they are actually enabled for a given configuration etc)
+     * Returns all available issues of a given scope (regardless of
+     * whether they are actually enabled for a given configuration etc)
      *
      * @param scope the applicable scope set
      * @return a list of issues
@@ -135,18 +139,18 @@ protected constructor() {
     }
 
     /**
-     * Creates a list of detectors applicable to the given scope, and with the
-     * given configuration.
+     * Creates a list of detectors applicable to the given scope, and
+     * with the given configuration.
      *
      * @param client the client to report errors to
-     * @param configuration the configuration to look up which issues are
-     * enabled etc from
+     * @param configuration the configuration to look up which issues
+     *     are enabled etc from
      * @param platforms the platforms applying to this analysis
-     * @param scope the scope for the analysis, to filter out detectors that
-     * require wider analysis than is currently being performed
-     * @param scopeToDetectors an optional map which (if not null) will be
-     * filled by this method to contain mappings from each scope to
-     * the applicable detectors for that scope
+     * @param scope the scope for the analysis, to filter out detectors
+     *     that require wider analysis than is currently being performed
+     * @param scopeToDetectors an optional map which (if not null) will
+     *     be filled by this method to contain mappings from
+     *     each scope to the applicable detectors for that scope
      * @return a list of new detector instances
      */
     internal fun createDetectors(
@@ -279,7 +283,8 @@ protected constructor() {
     }
 
     /**
-     * Returns the issue for the given id, or null if it's not a valid id
+     * Returns the issue for the given id, or null if it's not a valid
+     * id
      *
      * @param id the id to be checked
      * @return the corresponding issue, or null
@@ -298,8 +303,8 @@ protected constructor() {
     }
 
     /**
-     * Given an issue id for an unknown issue, return any issues that appear to be
-     * spelled similarly.
+     * Given an issue id for an unknown issue, return any issues that
+     * appear to be spelled similarly.
      */
     fun getIdSpellingSuggestions(id: String): List<String> {
         val maxDistance = if (id.length >= 4) 2 else 1
@@ -370,9 +375,9 @@ protected constructor() {
     private var scopeIssues: MutableMap<EnumSet<Scope>, List<Issue>>
 
     /**
-     * Whether this issue registry has state that is cacheable. Issue registries
-     * which include project specific state (such as custom checks for example)
-     * are not.
+     * Whether this issue registry has state that is cacheable. Issue
+     * registries which include project specific state (such as custom
+     * checks for example) are not.
      */
     protected open fun cacheable(): Boolean = false
 
@@ -411,26 +416,25 @@ protected constructor() {
 
         /**
          * Returns true if the given [id] used to be a valid id in lint
-         * but has since been deleted or renamed
+         * but has since been deleted or renamed.
          */
         fun isDeletedIssueId(id: String): Boolean = deletedIds.contains(id)
 
         /**
          * If the given issue has been renamed (which involves deleting
-         * the previous id) return its new name
+         * the previous id) return its new name.
          */
         fun getNewId(id: String): String? = renamedIds[id]
 
         /**
-         * Issue reported by lint (not a specific detector) when it cannot even
-         * parse an XML file prior to analysis
+         * Issue reported by lint (not a specific detector) when it
+         * cannot even parse an XML file prior to analysis.
          */
         @JvmField // temporarily
         val PARSER_ERROR = Issue.create(
             id = "ParserError",
             briefDescription = "Parser Errors",
-            explanation =
-                """
+            explanation = """
                 Lint will ignore any files that contain fatal parsing errors. These may \
                 contain other errors, or contain code which affects issues in other files.""",
             category = Category.LINT,
@@ -440,15 +444,15 @@ protected constructor() {
         )
 
         /**
-         * Issue reported by lint for various other issues which prevents lint from
-         * running normally when it's not necessarily an error in the user's code base.
+         * Issue reported by lint for various other issues which
+         * prevents lint from running normally when it's not necessarily
+         * an error in the user's code base.
          */
         @JvmField // temporarily
         val LINT_ERROR = Issue.create(
             id = "LintError",
             briefDescription = "Lint Failure",
-            explanation =
-                """
+            explanation = """
                 This issue type represents a problem running lint itself. Examples include \
                 failure to find bytecode for source files (which means certain detectors \
                 could not be run), parsing errors in lint configuration files, etc.
@@ -463,17 +467,17 @@ protected constructor() {
         )
 
         /**
-         * Issue reported by lint for various other issues which may prevent lint from
-         * running normally when it's not necessarily an error in the user's code base.
-         * Similar to [LINT_WARNING] but intended for lower severity problems which may
-         * or may not be significant.
+         * Issue reported by lint for various other issues which may
+         * prevent lint from running normally when it's not necessarily
+         * an error in the user's code base. Similar to [LINT_WARNING]
+         * but intended for lower severity problems which may or may not
+         * be significant.
          */
         @JvmField // temporarily
         val LINT_WARNING = Issue.create(
             id = "LintWarning",
             briefDescription = "Lint Failure",
-            explanation =
-                """
+            explanation = """
                 This issue type represents a problem running lint itself. Examples include \
                 unsupported tags in configuration files, etc.
 
@@ -487,14 +491,14 @@ protected constructor() {
         )
 
         /**
-         * Lint is configured with references to an issue id that it does not recognize.
+         * Lint is configured with references to an issue id that it
+         * does not recognize.
          */
         @JvmField
         val UNKNOWN_ISSUE_ID = Issue.create(
             id = "UnknownIssueId",
             briefDescription = "Unknown Lint Issue Id",
-            explanation =
-                """
+            explanation = """
                 Lint will report this issue if it is configured with an issue id it does \
                 not recognize in for example Gradle files or `lint.xml` configuration files.
                 """,
@@ -513,8 +517,7 @@ protected constructor() {
         val CANNOT_ENABLE_HIDDEN = Issue.create(
             id = "CannotEnableHidden",
             briefDescription = "Issue Already Disabled",
-            explanation =
-                """
+            explanation = """
                 Any issues that are specifically disabled in a library cannot be re-enabled \
                 in a dependent project. To fix this you need to also enable the issue in \
                 the library project.
@@ -538,8 +541,7 @@ protected constructor() {
         val BASELINE = Issue.create(
             id = "LintBaseline",
             briefDescription = "Baseline Issues",
-            explanation =
-                """
+            explanation = """
                 Lint can be configured with a "baseline"; a set of current issues found \
                 in a codebase, which future runs of lint will silently ignore. Only new \
                 issues not found in the baseline are reported.
@@ -564,15 +566,14 @@ protected constructor() {
         )
 
         /**
-         * Issue reported by lint when it encounters old lint checks that haven't been
-         * updated to the latest APIs.
+         * Issue reported by lint when it encounters old lint checks
+         * that haven't been updated to the latest APIs.
          */
         @JvmField // temporarily
         val OBSOLETE_LINT_CHECK = Issue.create(
             id = "ObsoleteLintCustomCheck",
             briefDescription = "Obsolete custom lint check",
-            explanation =
-                """
+            explanation = """
                 Lint can be extended with "custom checks": additional checks implemented \
                 by developers and libraries to for example enforce specific API usages \
                 required by a library or a company coding style guideline.
@@ -592,7 +593,7 @@ protected constructor() {
             implementation = EMPTY_IMPLEMENTATION
         )
 
-        /** Vendor used for the built-in lint checks */
+        /** Vendor used for the built-in lint checks. */
         val AOSP_VENDOR = Vendor(
             vendorName = "Android Open Source Project",
             feedbackUrl = "https://issuetracker.google.com/issues/new?component=192708",
@@ -600,7 +601,8 @@ protected constructor() {
         )
 
         /**
-         * Reset the registry such that it recomputes its available issues.
+         * Reset the registry such that it recomputes its available
+         * issues.
          */
         fun reset() {
             synchronized(IssueRegistry::class.java) {

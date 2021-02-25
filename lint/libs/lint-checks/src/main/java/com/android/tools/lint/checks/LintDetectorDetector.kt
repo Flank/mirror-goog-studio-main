@@ -71,32 +71,34 @@ import java.util.Locale
  * A special check which analyzes lint detectors themselves, looking for
  * common problems
  *
- * Additional ideas:
- * Bundle this check with standalone lint!  Or maybe make driver smart enough
- *    to include it if there's a lint dependency in the project!
- * Look for various instanceof PsiSomething where Something is node types
- *   inside methods (Assignment expression etc)
- * Look for binary instead of polyadic checks
- * Searching for UReturn which may not be there (expression bodies)
- * Not using named parameters in issue registrations
- * Not using raw strings for issue explanations? And not doing line continuations with \ ?
- * Calling context.report without a scope node?
- * Pulling out a constant without using the constant evaluator?
- * Look for error messages ending with ".", look for capitalization on
+ * Additional ideas: Bundle this check with standalone lint! Or maybe
+ * make driver smart enough to include it if there's a lint dependency
+ * in the project! Look for various instanceof PsiSomething where
+ * Something is node types inside methods (Assignment expression etc)
+ * Look for binary instead of polyadic checks Searching for UReturn
+ * which may not be there (expression bodies) Not using named parameters
+ * in issue registrations Not using raw strings for issue explanations?
+ * And not doing line continuations with \ ? Calling context.report
+ * without a scope node? Pulling out a constant without using the
+ * constant evaluator? Look for error messages ending with ".", look for
+ * capitalization on
+ *
  *       issue registration (and maximum word length for the summary)
  * Creating a visitor and only overriding visitCallExpression -- should probably
  *       just use getApplicableMethods and visitMethodCall.
  * Calling accept on a UElement with a PSI visitor
- * Try running TextFormat on all messages to see if there are any problems?
- * Warn about unit test files which do not have any Kotlin test cases (if they
- *   analyze JAVA_SCOPE). Maybe look to see if they're particularly needing it:
- *   - manipulating strings (for kotlin check template and raw strings)
- *   - creating a custom UastHandler
- *   - doing anything with equals checks
- *   - looking at UReturn statements or switch statements etc
- * For Issue.create calls in Kotlin companion objects, suggest adding @JvmField
- *   to help issue registrations
- * Look for TODO in issue registration strings, or empty registration strings
+ *
+ * Try running TextFormat on all messages to see if there are any
+ * problems? Warn about unit test files which do not have any Kotlin
+ * test cases (if they analyze JAVA_SCOPE). Maybe look to see if they're
+ * particularly needing it:
+ * - manipulating strings (for kotlin check template and raw strings)
+ * - creating a custom UastHandler
+ * - doing anything with equals checks
+ * - looking at UReturn statements or switch statements etc For
+ *   Issue.create calls in Kotlin companion objects, suggest
+ *   adding @JvmField to help issue registrations Look for TODO
+ *   in issue registration strings, or empty registration strings
  */
 class LintDetectorDetector : Detector(), UastScanner {
     override fun applicableSuperClasses(): List<String> {
@@ -441,9 +443,9 @@ class LintDetectorDetector : Detector(), UastScanner {
                             @Suppress("ControlFlowWithEmptyBody")
                             if (issue is JavaUField &&
                                 evaluator.inheritsFrom(
-                                    issue.getContainingUClass(),
-                                    CLASS_DETECTOR
-                                )
+                                        issue.getContainingUClass(),
+                                        CLASS_DETECTOR
+                                    )
                             ) {
                                 // Don't need to do anything; we'll see this registration
                                 // as part of our regular detector visit
@@ -772,7 +774,7 @@ class LintDetectorDetector : Detector(), UastScanner {
             }
         }
 
-        /** Drops template expressions etc */
+        /** Drops template expressions etc. */
         private fun getString(argument: UExpression): String {
             if (argument is UPolyadicExpression) {
                 val sb = StringBuilder()
@@ -902,7 +904,10 @@ class LintDetectorDetector : Detector(), UastScanner {
                 .build()
         }
 
-        /** Report the typo found at the given offset and suggest the given replacements */
+        /**
+         * Report the typo found at the given offset and suggest the
+         * given replacements.
+         */
         private fun reportTypo(
             argument: UExpression,
             text: String,
@@ -1006,9 +1011,9 @@ class LintDetectorDetector : Detector(), UastScanner {
             if (type is PsiClassType) {
                 val psiClass = type.resolve()
                 if (psiClass != null && context.evaluator.inheritsFrom(
-                    psiClass,
-                    CLASS_PSI_ELEMENT, strict = false
-                )
+                        psiClass,
+                        CLASS_PSI_ELEMENT, strict = false
+                    )
                 ) {
                     if (arg1?.isNullLiteral() == true) { // comparisons with null are ok
                         return
@@ -1055,14 +1060,13 @@ class LintDetectorDetector : Detector(), UastScanner {
                 Scope.JAVA_FILE_SCOPE
             )
 
-        /** Expected lint id format */
+        /** Expected lint id format. */
         @JvmField
         val ID =
             Issue.create(
                 id = "LintImplIdFormat",
                 briefDescription = "Lint ID Format",
-                explanation =
-                    """
+                explanation = """
                     This check looks at lint issue id registrations and makes sure the id \
                     follows the expected conventions: capitalized, camel case, no spaces, \
                     and not too long.
@@ -1090,14 +1094,13 @@ class LintDetectorDetector : Detector(), UastScanner {
                 platforms = JDK_SET
             )
 
-        /** Bad URLs in issue registrations */
+        /** Bad URLs in issue registrations. */
         @JvmField
         val CHECK_URL =
             Issue.create(
                 id = "LintImplBadUrl",
                 briefDescription = "Bad More Info Link",
-                explanation =
-                    """
+                explanation = """
                    More Info URLs let a link check point to additional resources about \
                    the problem and solution it's checking for.
 
@@ -1112,14 +1115,13 @@ class LintDetectorDetector : Detector(), UastScanner {
                 platforms = JDK_SET
             )
 
-        /** Unexpected URL domain */
+        /** Unexpected URL domain. */
         @JvmField
         val UNEXPECTED_DOMAIN =
             Issue.create(
                 id = "LintImplUnexpectedDomain",
                 briefDescription = "Unexpected URL Domain",
-                explanation =
-                    """
+                explanation = """
                     This checks flags URLs to domains that have not been explicitly \
                     allowed for use as a documentation source.
                 """,
@@ -1133,14 +1135,13 @@ class LintDetectorDetector : Detector(), UastScanner {
                 platforms = JDK_SET
             )
 
-        /** Suggestions around lint string formats */
+        /** Suggestions around lint string formats. */
         @JvmField
         val TEXT_FORMAT =
             Issue.create(
                 id = "LintImplTextFormat",
                 briefDescription = "Lint Text Format",
-                explanation =
-                    """
+                explanation = """
                     Lint supports various markdown like formatting directives in all of its \
                     strings (issue explanations, reported error messages, etc).
 
@@ -1162,14 +1163,13 @@ class LintDetectorDetector : Detector(), UastScanner {
                 platforms = JDK_SET
             )
 
-        /** Should reuse existing constants */
+        /** Should reuse existing constants. */
         @JvmField
         val EXISTING_LINT_CONSTANTS =
             Issue.create(
                 id = "LintImplUseExistingConstants",
                 briefDescription = "Use Existing Lint Constants",
-                explanation =
-                    """
+                explanation = """
                     This check looks for opportunities to reuse predefined lint constants.
                 """,
                 category = CUSTOM_LINT_CHECKS,
@@ -1179,14 +1179,15 @@ class LintDetectorDetector : Detector(), UastScanner {
                 platforms = JDK_SET
             )
 
-        /** Calling PSI methods when you should be calling UAST methods */
+        /**
+         * Calling PSI methods when you should be calling UAST methods.
+         */
         @JvmField
         val USE_UAST =
             Issue.create(
                 id = "LintImplUseUast",
                 briefDescription = "Using Wrong UAST Method",
-                explanation =
-                    """
+                explanation = """
                     UAST is a library that sits on top of PSI, and in many cases PSI is \
                     part of the UAST API; for example, UResolvable#resolve returns a \
                     PsiElement.
@@ -1209,14 +1210,13 @@ class LintDetectorDetector : Detector(), UastScanner {
                 platforms = JDK_SET
             )
 
-        /** Comparing PSI elements with equals */
+        /** Comparing PSI elements with equals. */
         @JvmField
         val PSI_COMPARE =
             Issue.create(
                 id = "LintImplPsiEquals",
                 briefDescription = "Comparing PsiElements with Equals",
-                explanation =
-                    """
+                explanation = """
                     You should never compare two PSI elements for equality with `equals`;
                     use `isEquivalentTo(PsiElement)` instead.
                     """,
@@ -1230,14 +1230,13 @@ class LintDetectorDetector : Detector(), UastScanner {
                 enabledByDefault = false
             )
 
-        /** Still writing lint checks in Java */
+        /** Still writing lint checks in Java. */
         @JvmField
         val USE_KOTLIN =
             Issue.create(
                 id = "LintImplUseKotlin",
                 briefDescription = "Non-Kotlin Lint Detectors",
-                explanation =
-                    """
+                explanation = """
                     New lint checks should be written in Kotlin; the Lint API is written in \
                     Kotlin and uses a number of language features that makes it beneficial \
                     to also write the lint checks in Kotlin. Examples include many extension \
@@ -1252,14 +1251,13 @@ class LintDetectorDetector : Detector(), UastScanner {
                 platforms = JDK_SET
             )
 
-        /** IssueRegistry not providing a vendor */
+        /** IssueRegistry not providing a vendor. */
         @JvmField
         val MISSING_VENDOR =
             Issue.create(
                 id = "MissingVendor",
                 briefDescription = "IssueRegistry not providing a vendor",
-                explanation =
-                    """
+                explanation = """
                     Recent versions of lint includes a `vendor` property (or from Java, \
                     `getVendor` and `setVendor` methods) on `IssueRegistry`.
 
@@ -1283,14 +1281,13 @@ class LintDetectorDetector : Detector(), UastScanner {
                 platforms = JDK_SET
             )
 
-        /** Calling .trimIndent() on messages intended for lint */
+        /** Calling .trimIndent() on messages intended for lint. */
         @JvmField
         val TRIM_INDENT =
             Issue.create(
                 id = "LintImplTrimIndent",
                 briefDescription = "Calling `.trimIndent` on Lint Strings",
-                explanation =
-                    """
+                explanation = """
                     Lint implicitly calls `.trimIndent()` (lazily, at the last minute) in \
                     a number of places:
                     * Issue explanations
@@ -1315,15 +1312,17 @@ class LintDetectorDetector : Detector(), UastScanner {
                 platforms = JDK_SET
             )
 
-        /** Using ${"$"} or ${'$'} in Kotlin string literals in lint unit tests */
+        /**
+         * Using ${"$"} or ${'$'} in Kotlin string literals in lint unit
+         * tests.
+         */
         @JvmField
         val DOLLAR_STRINGS =
             Issue.create(
                 id = "LintImplDollarEscapes",
                 briefDescription = "Using Dollar Escapes",
                 //noinspection LintImplDollarEscapes
-                explanation =
-                    """
+                explanation = """
                     Instead of putting ${"$"}{"$"} in your Kotlin raw string literals \
                     you can simply use ＄. This looks like the dollar sign but is instead \
                     the full width dollar sign, U+FF04. And this character does not need \

@@ -80,6 +80,7 @@ import com.android.build.gradle.internal.res.Aapt2FromMaven;
 import com.android.build.gradle.internal.scope.BuildFeatureValues;
 import com.android.build.gradle.internal.scope.DelayedActionsExecutor;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.scope.ProjectInfo;
 import com.android.build.gradle.internal.services.Aapt2DaemonBuildService;
 import com.android.build.gradle.internal.services.Aapt2ThreadPoolBuildService;
 import com.android.build.gradle.internal.services.AndroidLocationsBuildService;
@@ -226,6 +227,7 @@ public abstract class BasePlugin<
             @NonNull
                     List<ComponentInfo<TestComponentBuilderImpl, TestComponentImpl>> testComponents,
             boolean hasFlavors,
+            @NonNull ProjectOptions projectOptions,
             @NonNull GlobalScope globalScope,
             @NonNull BaseExtension extension);
 
@@ -539,6 +541,7 @@ public abstract class BasePlugin<
         registry.register(
                 new com.android.build.gradle.internal.ide.v2.ModelBuilder(
                         globalScope,
+                        projectServices.getProjectOptions(),
                         variantModel,
                         (CommonExtension) extension,
                         projectServices.getIssueReporter(),
@@ -548,7 +551,10 @@ public abstract class BasePlugin<
 
         NativeModelBuilder nativeModelBuilderV2 =
                 new NativeModelBuilder(
-                        projectServices.getIssueReporter(), globalScope, variantModel);
+                        projectServices.getIssueReporter(),
+                        projectServices.getProjectOptions(),
+                        globalScope,
+                        variantModel);
         registry.register(nativeModelBuilderV2);
     }
 
@@ -581,8 +587,10 @@ public abstract class BasePlugin<
                         variantModel,
                         extension,
                         extraModelInfo,
+                        projectServices.getProjectOptions(),
                         projectServices.getIssueReporter(),
-                        getProjectType()));
+                        getProjectType(),
+                        projectServices.getProjectInfo()));
     }
 
     private void createTasks() {
@@ -592,6 +600,7 @@ public abstract class BasePlugin<
                 null,
                 () ->
                         TaskManager.createTasksBeforeEvaluate(
+                                projectServices.getProjectOptions(),
                                 globalScope,
                                 variantFactory.getVariantType(),
                                 extension.getSourceSets()));
@@ -704,13 +713,19 @@ public abstract class BasePlugin<
                         variants,
                         variantManager.getTestComponents(),
                         !variantInputModel.getProductFlavors().isEmpty(),
+                        projectServices.getProjectOptions(),
                         globalScope,
                         extension);
 
         taskManager.createTasks(variantFactory.getVariantType(), createVariantModel());
 
         new DependencyConfigurator(
-                        project, project.getName(), globalScope, variantInputModel, projectServices)
+                        project,
+                        project.getName(),
+                        projectServices.getProjectOptions(),
+                        globalScope,
+                        variantInputModel,
+                        projectServices)
                 .configureDependencySubstitutions()
                 .configureDependencyChecks()
                 .configureGeneralTransforms()
@@ -938,6 +953,7 @@ public abstract class BasePlugin<
                         project.getGradle().getSharedServices(),
                         aapt2FromMaven,
                         project.getGradle().getStartParameter().getMaxWorkerCount(),
+                        new ProjectInfo(project),
                         project::file);
     }
 

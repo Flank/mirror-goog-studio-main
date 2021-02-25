@@ -42,8 +42,8 @@ import com.android.builder.dexing.DexingType
 import com.android.builder.model.CodeShrinker
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import com.android.build.gradle.options.StringOption
-import org.gradle.api.provider.Property
 import javax.inject.Inject
+import org.gradle.api.provider.Property
 
 open class ApplicationVariantImpl @Inject constructor(
         override val variantBuilder: ApplicationVariantBuilderImpl,
@@ -74,9 +74,13 @@ open class ApplicationVariantImpl @Inject constructor(
     internalServices,
     taskCreationServices,
     globalScope
-), ApplicationVariant, ApplicationCreationConfig, HasAndroidTestImpl {
+), ApplicationVariant, ApplicationCreationConfig, HasAndroidTest {
 
-    val delegate by lazy { ApkCreationConfigImpl(this, globalScope, variantDslInfo) }
+    val delegate by lazy { ApkCreationConfigImpl(
+        this,
+        internalServices.projectOptions,
+        globalScope,
+        variantDslInfo) }
 
     // ---------------------------------------------------------------------------------------------
     // PUBLIC API
@@ -96,21 +100,15 @@ open class ApplicationVariantImpl @Inject constructor(
         )
     }
 
-    override fun aaptOptions(action: Aapt.() -> Unit) {
-        action.invoke(aapt)
-    }
-
-    override val signingConfig: SigningConfig by lazy {
-        SigningConfigImpl(
-            variantDslInfo.signingConfig,
-            internalServices,
-            minSdkVersion.apiLevel,
-            globalScope.projectOptions.get(IntegerOption.IDE_TARGET_DEVICE_API)
-        )
-    }
-
-    override fun signingConfig(action: SigningConfig.() -> Unit) {
-        action.invoke(signingConfig)
+    override val signingConfig: SigningConfigImpl? by lazy {
+        variantDslInfo.signingConfig?.let {
+            SigningConfigImpl(
+                it,
+                internalServices,
+                minSdkVersion.apiLevel,
+                internalServices.projectOptions.get(IntegerOption.IDE_TARGET_DEVICE_API)
+            )
+        }
     }
 
     override val packaging: ApkPackaging by lazy {
@@ -119,10 +117,6 @@ open class ApplicationVariantImpl @Inject constructor(
             internalServices,
             minSdkVersion.apiLevel
         )
-    }
-
-    override fun packaging(action: ApkPackaging.() -> Unit) {
-        action.invoke(packaging)
     }
 
     override val minifiedEnabled: Boolean
@@ -135,8 +129,10 @@ open class ApplicationVariantImpl @Inject constructor(
         }
     }
 
-    override fun dexing(action: Dexing.() -> Unit) {
-        action.invoke(dexing)
+    override var androidTest: AndroidTest? = null
+
+    override val renderscript: Renderscript? by lazy {
+        delegate.renderscript(internalServices)
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -172,6 +168,12 @@ open class ApplicationVariantImpl @Inject constructor(
                 )
             return debugSymbolLevelOrNull ?: if (debuggable) DebugSymbolLevel.NONE else DebugSymbolLevel.SYMBOL_TABLE
         }
+
+    /**
+     * DO NOT USE, only present for old variant API.
+     */
+    override val dslSigningConfig: com.android.build.gradle.internal.dsl.SigningConfig? =
+        variantDslInfo.signingConfig
 
     // ---------------------------------------------------------------------------------------------
     // Private stuff
@@ -236,5 +238,4 @@ open class ApplicationVariantImpl @Inject constructor(
     override val packageJacocoRuntime: Boolean
         get() = variantDslInfo.isTestCoverageEnabled
 
-    override var androidTest: AndroidTest? = null
 }

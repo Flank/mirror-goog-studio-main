@@ -53,7 +53,7 @@ import java.io.PrintWriter
 import java.util.regex.Pattern
 import javax.xml.parsers.ParserConfigurationException
 
-/** Support for applying quickfixes directly */
+/** Support for applying quickfixes directly. */
 open class LintFixPerformer constructor(
     val client: LintCliClient,
     private val printStatistics: Boolean = true
@@ -566,7 +566,10 @@ open class LintFixPerformer constructor(
             return incident.location
         }
 
-        /** Not all fixes are eligible for auto-fix; this function checks whether a given fix is. */
+        /**
+         * Not all fixes are eligible for auto-fix; this function checks
+         * whether a given fix is.
+         */
         fun canAutoFix(lintFix: LintFix): Boolean {
             if (lintFix is LintFixGroup) {
                 when (lintFix.type) {

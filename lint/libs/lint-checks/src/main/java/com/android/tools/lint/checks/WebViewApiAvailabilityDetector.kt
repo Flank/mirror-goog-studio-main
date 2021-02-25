@@ -30,9 +30,10 @@ import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UElement
 
 /**
- * Looks for `WebView` method usages that should be replaced by `androidx.webkit` methods.
+ * Looks for `WebView` method usages that should be replaced by
+ * `androidx.webkit` methods.
  */
-/** Constructs a new [WebViewApiAvailabilityDetector]  */
+/** Constructs a new [WebViewApiAvailabilityDetector] */
 class WebViewApiAvailabilityDetector : Detector(), SourceCodeScanner {
     companion object {
         private const val WEBVIEW_CLASS_NAME = "android.webkit.WebView"
@@ -61,7 +62,7 @@ class WebViewApiAvailabilityDetector : Detector(), SourceCodeScanner {
             "isVisibleToUserForAutofill"
         )
 
-        /** Main issue investigated by this detector */
+        /** Main issue investigated by this detector. */
         @JvmField
         val ISSUE = Issue.create(
             id = "WebViewApiAvailability",

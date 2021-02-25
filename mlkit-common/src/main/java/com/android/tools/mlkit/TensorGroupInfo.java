@@ -79,6 +79,7 @@ public class TensorGroupInfo {
         }
     }
 
+    @SuppressWarnings("EqualsHashCode")  // b/180537631
     @Override
     public boolean equals(@Nullable Object o) {
         if (this == o) return true;

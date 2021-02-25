@@ -36,9 +36,7 @@ import org.jetbrains.uast.UReferenceExpression
 import org.jetbrains.uast.USuperExpression
 import org.jetbrains.uast.visitor.AbstractUastVisitor
 
-/**
- * Makes sure that methods call super when overriding methods.
- */
+/** Makes sure that methods call super when overriding methods. */
 class CallSuperDetector : Detector(), SourceCodeScanner {
     companion object Issues {
         const val KEY_METHOD = "method"
@@ -48,13 +46,12 @@ class CallSuperDetector : Detector(), SourceCodeScanner {
             Scope.JAVA_FILE_SCOPE
         )
 
-        /** Missing call to super  */
+        /** Missing call to super. */
         @JvmField
         val ISSUE = Issue.create(
             id = "MissingSuperCall",
             briefDescription = "Missing Super Call",
-            explanation =
-                """
+            explanation = """
             Some methods, such as `View#onDetachedFromWindow`, require that you also call the \
             super implementation as part of your method.
             """,
@@ -97,9 +94,9 @@ class CallSuperDetector : Detector(), SourceCodeScanner {
                 // is updated to supply it once @CallSuper is available in
                 // the support library
                 if (!evaluator.isMemberInSubClassOf(
-                    method,
-                    "android.support.wearable.watchface.WatchFaceService.Engine", false
-                )
+                        method,
+                        "android.support.wearable.watchface.WatchFaceService.Engine", false
+                    )
                 ) {
                     return null
                 }
@@ -160,7 +157,10 @@ class CallSuperDetector : Detector(), SourceCodeScanner {
             }
         }
 
-    /** Visits a method and determines whether the method calls its super method  */
+    /**
+     * Visits a method and determines whether the method calls its super
+     * method.
+     */
     private class SuperCallVisitor constructor(private val targetMethod: PsiMethod) :
         AbstractUastVisitor() {
         val superCalls = mutableListOf<USuperExpression>()

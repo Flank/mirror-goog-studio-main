@@ -73,9 +73,11 @@ interface AndroidArtifact : BaseArtifact, AndroidModel {
      * Returns the absolute path for the listing file that will get updated after each build. The
      * model file will contain deployment related information like applicationId, list of APKs.
      *
+     * This is null for variants that do not generate APKs (libraries).
+     *
      * @return the path to a json file.
      */
-    val assembleTaskOutputListingFile: File
+    val assembleTaskOutputListingFile: File?
 
     /**
      * The test info, if applicable, otherwise null

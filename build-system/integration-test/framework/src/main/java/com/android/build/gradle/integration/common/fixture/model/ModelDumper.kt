@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.common.fixture.model
 
 import com.android.build.gradle.internal.cxx.configure.ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION
+import com.android.builder.core.ToolsRevisionUtils
 import com.android.builder.model.v2.dsl.BaseConfig
 import com.android.builder.model.v2.dsl.BuildType
 import com.android.builder.model.v2.dsl.ProductFlavor
@@ -41,17 +42,14 @@ import com.android.builder.model.v2.models.ndk.NativeVariant
 
 internal fun AndroidProject.writeToBuilder(builder: DumpBuilder) {
     builder.apply {
-        item("modelVersion", "n/a")
-        item("apiVersion", apiVersion)
-        item("projectType", projectType.name)
+        item("projectType", projectType)
         item("path", path)
         item("groupId", groupId)
-        item("defaultVariant", defaultVariant)
         list("flavorDimensions", flavorDimensions.sorted())
         item("compileTarget", compileTarget)
         item("buildFolder", buildFolder)
         item("resourcePrefix", resourcePrefix)
-        item("buildToolsVersion", buildToolsVersion)
+        item("buildToolsVersion", normalizeBuildToolsVersion(buildToolsVersion))
         list("dynamicFeatures", dynamicFeatures)
         multiLineList("bootClasspath", bootClasspath.sorted()) {
             value(it)
@@ -249,7 +247,7 @@ private fun BaseConfig.dumpBaseConfig(builder: DumpBuilder) {
         item("name", name)
         item("applicationIdSuffix", applicationIdSuffix)
         item("versionNameSuffix", versionNameSuffix)
-        multiLineList("buildConfigFields", buildConfigFields.entries.sortedBy { it.key }) {
+        multiLineList("buildConfigFields", buildConfigFields?.entries?.sortedBy { it.key }) {
             struct("field", it.value) { field ->
                 item("name", field.name)
                 item("type", field.type)
@@ -258,7 +256,7 @@ private fun BaseConfig.dumpBaseConfig(builder: DumpBuilder) {
                 list("annotations", field.annotations.sorted())
             }
         }
-        multiLineList("resValues", resValues.entries.sortedBy { it.key }) {
+        multiLineList("resValues", resValues?.entries?.sortedBy { it.key }) {
             struct("value", it.value) { field ->
                 item("name", field.name)
                 item("type", field.type)
@@ -282,6 +280,7 @@ private fun BaseConfig.dumpBaseConfig(builder: DumpBuilder) {
         item("multiDexEnabled", multiDexEnabled)
         item("multiDexKeepFile", multiDexKeepFile)
         item("multiDexKeepProguard", multiDexKeepProguard)
+        item("isDefault", isDefault)
     }
 }
 
@@ -495,4 +494,15 @@ internal fun GlobalLibraryMap.writeToBuilder(builder: DumpBuilder) {
             }
         }
     }
+}
+
+private fun normalizeBuildToolsVersion(version: String): Any {
+    if (version == ToolsRevisionUtils.DEFAULT_BUILD_TOOLS_REVISION.toString()) {
+        return PredefinedModelValues.DEFAULT_BUILD_TOOLS_REVISION
+    }
+    return version
+}
+
+internal enum class PredefinedModelValues {
+    DEFAULT_BUILD_TOOLS_REVISION;
 }

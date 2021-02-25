@@ -16,10 +16,10 @@
 
 package com.android.build.gradle.tasks
 
+import com.android.build.api.variant.Renderscript
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
-import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.process.GradleProcessExecutor
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.RENDERSCRIPT
@@ -84,17 +84,17 @@ abstract class RenderscriptCompile : NdkTask() {
     abstract val targetApi: Property<Int>
 
     @get:Input
-    var isSupportMode: Boolean = false
+    abstract val supportMode: Property<Boolean>
 
     @get:Input
     var useAndroidX: Boolean = false
         private set
 
     @get:Input
-    var optimLevel: Int = 0
+    abstract val optimLevel: Property<Int>
 
     @get:Input
-    var isNdkMode: Boolean = false
+    abstract val ndkMode: Property<Boolean>
 
     @Input
     fun getBuildToolsVersion(): String =
@@ -178,9 +178,9 @@ abstract class RenderscriptCompile : NdkTask() {
             objDestDir,
             libDestDir,
             targetApi.get(),
-            optimLevel,
-            isNdkMode,
-            isSupportMode,
+            optimLevel.get(),
+            ndkMode.get(),
+            supportMode.get(),
             useAndroidX,
             ndkConfig?.abiFilters ?: setOf(),
             LoggedProcessOutputHandler(LoggerWrapper(logger)),
@@ -259,7 +259,8 @@ abstract class RenderscriptCompile : NdkTask() {
     // ----- CreationAction -----
 
     class CreationAction(
-        creationConfig: ConsumableCreationConfig
+        creationConfig: ConsumableCreationConfig,
+        val renderscript: Renderscript
     ) : VariantTaskCreationAction<RenderscriptCompile, ConsumableCreationConfig>(
         creationConfig
     ) {
@@ -294,15 +295,12 @@ abstract class RenderscriptCompile : NdkTask() {
             val variantDslInfo = creationConfig.variantDslInfo
             val variantSources = creationConfig.variantSources
 
-            val ndkMode = variantDslInfo.renderscriptNdkModeEnabled
+            task.targetApi.setDisallowChanges(creationConfig.renderscriptTargetApi)
 
-            task.targetApi.set(creationConfig.renderscriptTargetApi)
-            task.targetApi.disallowChanges()
-
-            task.isSupportMode = variantDslInfo.renderscriptSupportModeEnabled
+            task.supportMode.setDisallowChanges(renderscript.renderscriptSupportModeEnabled)
             task.useAndroidX = creationConfig.services.projectOptions.get(BooleanOption.USE_ANDROID_X)
-            task.isNdkMode = ndkMode
-            task.optimLevel = variantDslInfo.renderscriptOptimLevel
+            task.ndkMode.setDisallowChanges(renderscript.renderscriptNdkModeEnabled)
+            task.optimLevel.setDisallowChanges(renderscript.renderscriptOptimLevel)
 
             task.sourceDirs =
                 creationConfig.services.fileCollection(Callable { variantSources.renderscriptSourceList })

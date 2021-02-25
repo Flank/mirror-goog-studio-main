@@ -1,15 +1,12 @@
 > AndroidProject:
-    - modelVersion      = "n/a"
-    - apiVersion        = 3
-    - projectType       = "APPLICATION"
+    - projectType       = APPLICATION
     - path              = ":"
     - groupId           = ""
-    - defaultVariant    = "debug"
     - flavorDimensions  = []
     - compileTarget     = "30"
     - buildFolder       = {PROJECT}/build{!}
     - resourcePrefix    = (null)
-    - buildToolsVersion = "30.0.2"
+    - buildToolsVersion = DEFAULT_BUILD_TOOLS_REVISION
     - dynamicFeatures   = []
     > bootClasspath:
        * {ANDROID_SDK}/platforms/android-30/android.jar{F}
@@ -50,6 +47,7 @@
           - multiDexEnabled                    = (null)
           - multiDexKeepFile                   = (null)
           - multiDexKeepProguard               = (null)
+          - isDefault                          = (null)
           - dimension                          = (null)
           - applicationId                      = (null)
           - versionCode                        = 12
@@ -208,6 +206,7 @@
              - multiDexEnabled          = (null)
              - multiDexKeepFile         = (null)
              - multiDexKeepProguard     = (null)
+             - isDefault                = false
              - isDebuggable             = true
              - isTestCoverageEnabled    = true
              - isPseudoLocalesEnabled   = false
@@ -333,6 +332,7 @@
              - multiDexEnabled          = (null)
              - multiDexKeepFile         = (null)
              - multiDexKeepProguard     = (null)
+             - isDefault                = false
              - isDebuggable             = false
              - isTestCoverageEnabled    = false
              - isPseudoLocalesEnabled   = false

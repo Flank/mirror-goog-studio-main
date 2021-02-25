@@ -28,23 +28,6 @@ interface IdeAndroidProject : Serializable {
   val modelVersion: String
 
   /**
-   * Returns the model api version.
-   *
-   *
-   * This is different from [.getModelVersion] in a way that new model version might
-   * increment model version but keep existing api. That means that code which was built against
-   * particular 'api version' might be safely re-used for all new model versions as long as they
-   * don't change the api.
-   *
-   *
-   * Every new model version is assumed to return an 'api version' value which is equal or
-   * greater than the value used by the previous model version.
-   *
-   * @return model's api version
-   */
-  val apiVersion: Int
-
-  /**
    * Returns the name of the module.
    *
    * @return the name of the module.

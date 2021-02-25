@@ -203,8 +203,9 @@ class RecyclerViewDetector : Detector(), SourceCodeScanner {
     }
 
     /**
-     * Determines whether a given variable "escapes" either to a field or to a nested runnable. (We
-     * deliberately ignore variables that escape via method calls.)
+     * Determines whether a given variable "escapes" either to a field
+     * or to a nested runnable. (We deliberately ignore variables that
+     * escape via method calls.)
      */
     private class ParameterEscapesVisitor(
         private val bindClass: PsiClass,
@@ -322,8 +323,7 @@ class RecyclerViewDetector : Detector(), SourceCodeScanner {
         val FIXED_POSITION = Issue.create(
             id = "RecyclerView",
             briefDescription = "RecyclerView Problems",
-            explanation =
-                """
+            explanation = """
                 `RecyclerView` will **not** call `onBindViewHolder` again when the position \
                 of the item changes in the data set unless the item itself is invalidated or \
                 the new position cannot be determined.
@@ -346,8 +346,7 @@ class RecyclerViewDetector : Detector(), SourceCodeScanner {
         val DATA_BINDER = Issue.create(
             id = "PendingBindings",
             briefDescription = "Missing Pending Bindings",
-            explanation =
-                """
+            explanation = """
                 When using a `ViewDataBinding` in a `onBindViewHolder` method, you **must** \
                 call `executePendingBindings()` before the method exits; otherwise the data \
                 binding runtime will update the UI in the next animation frame causing a \
@@ -364,8 +363,7 @@ class RecyclerViewDetector : Detector(), SourceCodeScanner {
         val CLEAR_ALL_DATA = Issue.create(
             id = "NotifyDataSetChanged",
             briefDescription = "Invalidating All RecyclerView Data",
-            explanation =
-                """
+            explanation = """
                 The `RecyclerView` adapter's `onNotifyDataSetChanged` method does not specify what \
                 about the data set has changed, forcing any observers to assume that all existing \
                 items and structure may no longer be valid. `LayoutManager`s will be forced to \

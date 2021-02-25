@@ -35,7 +35,8 @@ import org.jetbrains.uast.UMethod
 import java.util.EnumSet
 
 /**
- * It checks that there is a reason defined when using the @Ignored annotation from JUnit.
+ * It checks that there is a reason defined when using the @Ignored
+ * annotation from JUnit.
  */
 class IgnoreWithoutReasonDetector : Detector(), Detector.UastScanner {
     companion object {
@@ -43,8 +44,7 @@ class IgnoreWithoutReasonDetector : Detector(), Detector.UastScanner {
         val ISSUE = Issue.create(
             id = "IgnoreWithoutReason",
             briefDescription = "@Ignore without Reason",
-            explanation =
-                """
+            explanation = """
             Ignoring a test without a reason makes it difficult to figure out the problem later.
             Please define an explicit reason why it is ignored, and when it can be resolved.""",
             category = Category.TESTING,

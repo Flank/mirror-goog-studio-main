@@ -42,7 +42,8 @@ import org.xmlpull.v1.XmlPullParserException
 import java.io.IOException
 
 /**
- * Check to make sure the startDestination attribute on navigation elements is set and valid.
+ * Check to make sure the startDestination attribute on navigation
+ * elements is set and valid.
  */
 class StartDestinationDetector : ResourceXmlDetector() {
     companion object Issues {
@@ -52,8 +53,7 @@ class StartDestinationDetector : ResourceXmlDetector() {
             id = "InvalidNavigation",
             briefDescription = "No start destination specified",
 
-            explanation =
-                """
+            explanation = """
             All `<navigation>` elements must have a start destination specified, and it must \
             be a direct child of that `<navigation>`.
             """,

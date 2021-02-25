@@ -30,7 +30,7 @@ import com.google.common.collect.Lists
 import java.io.File
 import java.io.IOException
 
-/** Lint project wrapping a library */
+/** Lint project wrapping a library. */
 open class LintModelModuleLibraryProject(
     client: LintClient,
     dir: File,

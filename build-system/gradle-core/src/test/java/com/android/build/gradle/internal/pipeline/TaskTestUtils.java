@@ -34,6 +34,7 @@ import com.android.build.gradle.internal.profile.AnalyticsService;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.services.BuildServicesKt;
+import com.android.build.gradle.internal.services.TaskCreationServices;
 import com.android.build.gradle.internal.tasks.factory.TaskFactory;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryImpl;
 import com.android.build.gradle.options.ProjectOptions;
@@ -307,8 +308,9 @@ public class TaskTestUtils {
     @NonNull
     private static VariantCreationConfig getCreationConfig() {
         GlobalScope globalScope = mock(GlobalScope.class);
+        TaskCreationServices taskCreationServices = mock(TaskCreationServices.class);
         when(globalScope.getBuildDir()).thenReturn(new File("build dir"));
-        when(globalScope.getProjectOptions())
+        when(taskCreationServices.getProjectOptions())
                 .thenReturn(
                         new ProjectOptions(
                                 ImmutableMap.of(),
@@ -316,6 +318,7 @@ public class TaskTestUtils {
                                         FakeProviderFactory.getFactory(), ImmutableMap.of())));
 
         VariantCreationConfig creationConfig = mock(VariantCreationConfig.class);
+        when(creationConfig.getServices()).thenReturn(taskCreationServices);
         when(creationConfig.getGlobalScope()).thenReturn(globalScope);
         when(creationConfig.getName()).thenReturn("theVariantName");
         when(creationConfig.getFlavorName()).thenReturn("theFlavorName");

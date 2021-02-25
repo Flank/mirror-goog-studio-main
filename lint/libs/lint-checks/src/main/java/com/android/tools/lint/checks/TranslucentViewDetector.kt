@@ -56,16 +56,17 @@ import java.util.EnumSet
 
 const val ATTR_SCREEN_ORIENTATION = "screenOrientation"
 
-/** Detects potential bugs such as the one described in b/b/33483680 */
+/**
+ * Detects potential bugs such as the one described in b/b/33483680.
+ */
 class TranslucentViewDetector : Detector(), XmlScanner, SourceCodeScanner {
     companion object Issues {
-        /** Mixing Translucency and Orientation  */
+        /** Mixing Translucency and Orientation. */
         @JvmField
         val ISSUE = Issue.create(
             id = "TranslucentOrientation",
             briefDescription = "Mixing screenOrientation and translucency",
-            explanation =
-                """
+            explanation = """
             Specifying a fixed screen orientation with a translucent theme isn't supported \
             on apps with `targetSdkVersion` O or greater since there can be an another activity \
             visible behind your activity with a conflicting request.

@@ -32,9 +32,8 @@ import java.io.Writer
 /**
  * A reporter which emits lint warnings as plain text strings
  *
- *
- * **NOTE: This is not a public or final API; if you rely on this be prepared to adjust your
- * code for the next tools release.**
+ * **NOTE: This is not a public or final API; if you rely on this be
+ * prepared to adjust your code for the next tools release.**
  */
 @Beta
 class TextReporter(
@@ -47,13 +46,11 @@ class TextReporter(
     var format = TextFormat.TEXT
 
     /**
-     * Whether the reporter should convert paths to forward slashes
+     * Whether the reporter should convert paths to forward slashes.
      */
     var isForwardSlashPaths = false
 
-    /**
-     * Whether the report should include secondary line content
-     */
+    /** Whether the report should include secondary line content. */
     var includeSecondaryLineContent = false
 
     private var writeStats = true
@@ -323,7 +320,7 @@ class TextReporter(
         }
     }
 
-    /** Whether the report should include stats. Default is true.  */
+    /** Whether the report should include stats. Default is true. */
     fun setWriteStats(writeStats: Boolean) {
         this.writeStats = writeStats
     }

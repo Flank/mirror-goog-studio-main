@@ -335,7 +335,7 @@ fun getDexingArtifactConfiguration(creationConfig: ApkCreationConfig): DexingArt
         enableDesugaring = creationConfig.getJava8LangSupportType() == VariantScope.Java8LangSupport.D8,
         enableCoreLibraryDesugaring = creationConfig.isCoreLibraryDesugaringEnabled,
         needsShrinkDesugarLibrary = creationConfig.needsShrinkDesugarLibrary,
-        incrementalDexingTransform = creationConfig.globalScope.projectOptions.get(BooleanOption.ENABLE_INCREMENTAL_DEXING_TRANSFORM),
+        incrementalDexingTransform = creationConfig.services.projectOptions.get(BooleanOption.ENABLE_INCREMENTAL_DEXING_TRANSFORM),
         asmTransformedVariant = if (creationConfig.dependenciesClassesAreInstrumented) creationConfig.name else null
     )
 }

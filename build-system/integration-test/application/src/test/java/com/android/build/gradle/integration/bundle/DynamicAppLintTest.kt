@@ -22,7 +22,7 @@ import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
 
-/** TODO(b/146208910) Support the unused resource detector better with dynamic features. */
+/** TODO(b/180672373) Support dynamic features with lint partial analysis  */
 class DynamicAppLintTest {
     @get:Rule
     val project: GradleTestProject =

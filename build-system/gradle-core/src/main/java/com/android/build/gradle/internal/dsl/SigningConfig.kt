@@ -24,7 +24,7 @@ import java.io.Serializable
 import javax.inject.Inject
 
 open class SigningConfig @Inject constructor(name: String) : DefaultSigningConfig(name),
-    Serializable, Named, com.android.build.api.dsl.SigningConfig {
+    Serializable, Named, com.android.build.api.dsl.ApkSigningConfig {
 
     fun initWith(that: DefaultSigningConfig): SigningConfig {
         setStoreFile(that.storeFile)

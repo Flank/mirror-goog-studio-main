@@ -71,6 +71,7 @@ import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.internal.variant.ComponentInfo
 import com.android.build.gradle.internal.variant.VariantInputModel
 import com.android.build.gradle.options.BooleanOption
+import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.options.StringOption
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.model.CodeShrinker
@@ -93,13 +94,14 @@ import org.gradle.api.internal.artifacts.ArtifactAttributes
 class DependencyConfigurator(
     private val project: Project,
     private val projectName: String,
+    private val projectOptions: ProjectOptions,
     private val globalScope: GlobalScope,
     private val variantInputModel: VariantInputModel<DefaultConfig, BuildType, ProductFlavor, SigningConfig>,
     private val projectServices: ProjectServices
 ) {
     fun configureDependencySubstitutions(): DependencyConfigurator {
         // If Jetifier is enabled, replace old support libraries with AndroidX.
-        if (globalScope.projectOptions.get(BooleanOption.ENABLE_JETIFIER)) {
+        if (projectOptions.get(BooleanOption.ENABLE_JETIFIER)) {
             replaceOldSupportLibraries(
                 project,
                 // Inline the property name for a slight memory improvement (so that the JVM doesn't
@@ -130,19 +132,19 @@ class DependencyConfigurator(
         // Arguments passed to an ArtifactTransform must not be null
         @Suppress("DEPRECATION")
         val jetifierIgnoreList =
-            globalScope.projectOptions[StringOption.JETIFIER_IGNORE_LIST]
-                ?: globalScope.projectOptions[StringOption.JETIFIER_BLACKLIST]
+            projectOptions[StringOption.JETIFIER_IGNORE_LIST]
+                ?: projectOptions[StringOption.JETIFIER_BLACKLIST]
                 ?: ""
 
         val autoNamespaceDependencies =
             globalScope.extension.aaptOptions.namespaced &&
-                    globalScope.projectOptions[BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES]
+                    projectOptions[BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES]
         val jetifiedAarOutputType = if (autoNamespaceDependencies) {
             AndroidArtifacts.ArtifactType.MAYBE_NON_NAMESPACED_PROCESSED_AAR
         } else {
             AndroidArtifacts.ArtifactType.PROCESSED_AAR
         }
-        if (globalScope.projectOptions.get(BooleanOption.ENABLE_JETIFIER)) {
+        if (projectOptions.get(BooleanOption.ENABLE_JETIFIER)) {
             registerTransform(
                 JetifyTransform::class.java,
                 AndroidArtifacts.ArtifactType.AAR,
@@ -244,8 +246,7 @@ class DependencyConfigurator(
             params.javaHome.setDisallowChanges(getJavaHome(project))
         }
 
-        val sharedLibSupport = globalScope
-            .projectOptions[BooleanOption.CONSUME_DEPENDENCIES_AS_SHARED_LIBRARIES]
+        val sharedLibSupport = projectOptions[BooleanOption.CONSUME_DEPENDENCIES_AS_SHARED_LIBRARIES]
 
         for (transformTarget in AarTransform.getTransformTargets()) {
             registerTransform(
@@ -257,7 +258,7 @@ class DependencyConfigurator(
                 params.sharedLibSupport.setDisallowChanges(sharedLibSupport)
             }
         }
-        if (globalScope.projectOptions[BooleanOption.PRECOMPILE_DEPENDENCIES_RESOURCES]) {
+        if (projectOptions[BooleanOption.PRECOMPILE_DEPENDENCIES_RESOURCES]) {
             registerTransform(
                 AarResourcesCompilerTransform::class.java,
                 AndroidArtifacts.ArtifactType.EXPLODED_AAR,
@@ -292,7 +293,7 @@ class DependencyConfigurator(
                 params.forCompileUse.set(true)
                 params.generateRClassJar
                     .set(
-                        globalScope.projectOptions.get(
+                        projectOptions.get(
                             BooleanOption.COMPILE_CLASSPATH_LIBRARY_R_CLASSES
                         )
                     )
@@ -326,7 +327,7 @@ class DependencyConfigurator(
                 params.generateRClassJar.set(false)
             }
         }
-        if (globalScope.projectOptions[BooleanOption.ENABLE_PROGUARD_RULES_EXTRACTION]) {
+        if (projectOptions[BooleanOption.ENABLE_PROGUARD_RULES_EXTRACTION]) {
             registerTransform(
                 ExtractProGuardRulesTransform::class.java,
                 AndroidArtifacts.ArtifactType.PROCESSED_JAR,
@@ -592,7 +593,7 @@ class DependencyConfigurator(
             )
         }
 
-        if (globalScope.projectOptions[BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM]) {
+        if (projectOptions[BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM]) {
             for (artifactConfiguration in getDexingArtifactConfigurations(
                 allComponents
             )) {
@@ -601,12 +602,12 @@ class DependencyConfigurator(
                     dependencies,
                     project.files(globalScope.bootClasspath),
                     getDesugarLibConfig(globalScope.project),
-                    SyncOptions.getErrorFormatMode(globalScope.projectOptions),
-                    globalScope.projectOptions.get(BooleanOption.ENABLE_INCREMENTAL_DEXING_TRANSFORM)
+                    SyncOptions.getErrorFormatMode(projectOptions),
+                    projectOptions.get(BooleanOption.ENABLE_INCREMENTAL_DEXING_TRANSFORM)
                 )
             }
         }
-        if (globalScope.projectOptions[BooleanOption.ENABLE_PROGUARD_RULES_EXTRACTION]) {
+        if (projectOptions[BooleanOption.ENABLE_PROGUARD_RULES_EXTRACTION]) {
             val shrinkers: Set<CodeShrinker> = allComponents
                 .asSequence()
                 .filterIsInstance(ConsumableCreationConfig::class.java)
@@ -644,7 +645,7 @@ class DependencyConfigurator(
             }
         }
 
-        if (globalScope.projectOptions[BooleanOption.ENABLE_DUPLICATE_CLASSES_CHECK]) {
+        if (projectOptions[BooleanOption.ENABLE_DUPLICATE_CLASSES_CHECK]) {
             registerTransform(
                 EnumerateClassesTransform::class.java,
                 AndroidArtifacts.ArtifactType.CLASSES_JAR,

@@ -21,8 +21,8 @@ import com.google.common.annotations.Beta
 /**
  * Information about a position in a file/document.
  *
- * **NOTE: This is not a public or final API; if you rely on this be prepared
- * to adjust your code for the next tools release.**
+ * **NOTE: This is not a public or final API; if you rely on this be
+ * prepared to adjust your code for the next tools release.**
  */
 @Beta
 abstract class Position {
@@ -41,14 +41,17 @@ abstract class Position {
     abstract val offset: Int
 
     /**
-     * Returns the column number (where the first character on the line is 0),
-     * or -1 if unknown
+     * Returns the column number (where the first character on the line
+     * is 0), or -1 if unknown
      *
      * @return the 0-based column number
      */
     abstract val column: Int
 
-    /** Returns true if this position is on the same lne as another position */
+    /**
+     * Returns true if this position is on the same lne as another
+     * position.
+     */
     open fun sameLine(end: Position): Boolean {
         return line == end.line
     }

@@ -49,17 +49,17 @@ import java.util.HashSet
 
 /**
  * Context passed to the detectors during an analysis run. It provides
- * information about the file being analyzed, it allows shared properties (so
- * the detectors can share results), etc.
+ * information about the file being analyzed, it allows shared
+ * properties (so the detectors can share results), etc.
  *
- **NOTE: This is not a public or final API; if you rely on this be prepared
- * to adjust your code for the next tools release.**
+ * *NOTE: This is not a public or final API; if you rely on this be
+ * prepared to adjust your code for the next tools release.**
  */
 @Beta
 open class Context(
-    /** The driver running through the checks  */
+    /** The driver running through the checks. */
     val driver: LintDriver,
-    /** The project containing the file being checked  */
+    /** The project containing the file being checked. */
     val project: Project,
     /**
      * The "main" project. For normal projects, this is the same as
@@ -82,27 +82,32 @@ open class Context(
     @JvmField
     val file: File,
 
-    /** The contents of the file  */
+    /** The contents of the file. */
     private var contents: CharSequence? = null
 ) {
 
-    /** The current configuration controlling which checks are enabled etc  */
+    /**
+     * The current configuration controlling which checks are enabled
+     * etc.
+     */
     val configuration: Configuration = client.getConfiguration(file)
         ?: project.getConfiguration(driver)
 
-    /** Whether this file contains any suppress markers (null means not yet determined)  */
+    /**
+     * Whether this file contains any suppress markers (null means not
+     * yet determined)
+     */
     private var containsCommentSuppress: Boolean? = null
 
-    /**
-     * The scope for the lint job
-     */
+    /** The scope for the lint job. */
     val scope: EnumSet<Scope>
         get() = driver.scope
 
     /**
-     * Returns the main project if this project is a library project, or self
-     * if this is not a library project. The main project is the root project
-     * of all library projects, not necessarily the directly including project.
+     * Returns the main project if this project is a library project,
+     * or self if this is not a library project. The main project is
+     * the root project of all library projects, not necessarily the
+     * directly including project.
      *
      * @return the main project, never null
      */
@@ -117,19 +122,18 @@ open class Context(
             return main ?: project
         }
 
-    /**
-     * The lint client requesting the lint check
-     */
+    /** The lint client requesting the lint check. */
     val client: LintClient
         get() = driver.client
 
     /**
-     * Returns the contents of the file. This may not be the contents of the
-     * file on disk, since it delegates to the [LintClient], which in turn
-     * may decide to return the current edited contents of the file open in an
-     * editor.
+     * Returns the contents of the file. This may not be the contents of
+     * the file on disk, since it delegates to the [LintClient], which
+     * in turn may decide to return the current edited contents of the
+     * file open in an editor.
      *
-     * @return the contents of the given file, or null if an error occurs.
+     * @return the contents of the given file, or null if an error
+     *     occurs.
      */
     open fun getContents(): CharSequence? {
         if (contents == null) {
@@ -251,7 +255,7 @@ open class Context(
                         ?: (doc.getUserData(PsiFile::class.java.name) as? PsiFile)?.virtualFile?.let {
                             VfsUtilCore.virtualToIoFile(it)
                         }
-                        ?: return Location.create(project.manifestFiles.firstOrNull() ?: project.dir)
+                        ?: return Location.create(project.getManifestFiles().firstOrNull() ?: project.dir)
                     // We're only calling location methods here so we don't need an accurate
                     // folder type for example
                     XmlContext(driver, project, main, file, null, null, doc)
@@ -319,14 +323,14 @@ open class Context(
             val projects = sequenceOf(project) +
                 project.allLibraries.filter { !it.isExternalLibrary }
             for (p in projects) {
-                for (manifest in project.manifestFiles) {
+                for (manifest in p.getManifestFiles()) {
                     try {
                         val document = client.xmlParser.parseXml(manifest) ?: continue
                         val sourceNode: Node? = matchXmlElement(element, document)
                         if (sourceNode != null && sourceNode !== element) {
                             val doc = node.ownerDocument
                             val xmlContext = XmlContext(
-                                driver, project, main, manifest, null, null, doc
+                                driver, p, main, manifest, null, null, doc
                             )
                             return xmlContext.getLocation(sourceNode, type)
                         }
@@ -335,7 +339,7 @@ open class Context(
                 }
             }
         }
-        return Location.create(project.manifestFiles.firstOrNull() ?: project.dir)
+        return Location.create(project.getManifestFiles().firstOrNull() ?: project.dir)
     }
 
     // ---- Convenience wrappers  ---- (makes the detector code a bit leaner)
@@ -444,7 +448,7 @@ open class Context(
         return client.getPartialResults(project, issue)
     }
 
-    /** Finds the right configuration to use for the given file */
+    /** Finds the right configuration to use for the given file. */
     fun findConfiguration(file: File): Configuration {
         val configurations = driver.client.configurations
         val dir = file.parentFile
@@ -505,7 +509,7 @@ open class Context(
 
     /**
      * Returns the comment marker used in Studio to suppress statements
-     * for language, if any
+     * for language, if any.
      */
     protected open val suppressCommentPrefix: String?
         get() {
@@ -522,7 +526,7 @@ open class Context(
         }
 
     /**
-     * Returns whether this file contains any suppress comment markers
+     * Returns whether this file contains any suppress comment markers.
      */
     fun containsCommentSuppress(): Boolean {
         if (containsCommentSuppress == null) {
@@ -541,7 +545,7 @@ open class Context(
 
     /**
      * Returns true if the given issue is suppressed at the given
-     * character offset in the file's contents
+     * character offset in the file's contents.
      */
     fun isSuppressedWithComment(startOffset: Int, issue: Issue): Boolean {
         val prefix = suppressCommentPrefix ?: return false
@@ -622,9 +626,9 @@ open class Context(
                 val prefixStart = index - STUDIO_ID_PREFIX.length
                 if (index >= STUDIO_ID_PREFIX.length &&
                     line.regionMatches(
-                        prefixStart, STUDIO_ID_PREFIX,
-                        0, STUDIO_ID_PREFIX.length
-                    ) && (prefixStart == 0 || isWordDelimiter(line[prefixStart - 1]))
+                            prefixStart, STUDIO_ID_PREFIX,
+                            0, STUDIO_ID_PREFIX.length
+                        ) && (prefixStart == 0 || isWordDelimiter(line[prefixStart - 1]))
                 ) {
                     return true
                 }
@@ -657,9 +661,9 @@ open class Context(
                 }
 
                 if (c == first && CharSequences.regionMatches(
-                    contents, offset, prefix, 0,
-                    prefix.length
-                )
+                        contents, offset, prefix, 0,
+                        prefix.length
+                    )
                 ) {
                     return offset
                 }
@@ -671,7 +675,7 @@ open class Context(
 
         private var detectorsWarned: MutableSet<String>? = null
 
-        /** Check forbidden access and report issue if necessary */
+        /** Check forbidden access and report issue if necessary. */
         fun checkForbidden(methodName: String, file: File, driver: LintDriver? = null): Boolean {
             val currentDriver = driver ?: LintDriver.currentDrivers.firstOrNull() ?: return true
             if (currentDriver.mode == DriverMode.ANALYSIS_ONLY) {

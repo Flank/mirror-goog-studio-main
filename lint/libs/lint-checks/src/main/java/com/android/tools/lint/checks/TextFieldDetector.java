@@ -16,7 +16,16 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.SdkConstants.*;
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_ID;
+import static com.android.SdkConstants.ATTR_INPUT_METHOD;
+import static com.android.SdkConstants.ATTR_INPUT_TYPE;
+import static com.android.SdkConstants.ATTR_PASSWORD;
+import static com.android.SdkConstants.ATTR_PHONE_NUMBER;
+import static com.android.SdkConstants.ATTR_STYLE;
+import static com.android.SdkConstants.EDIT_TEXT;
+import static com.android.SdkConstants.ID_PREFIX;
+import static com.android.SdkConstants.NEW_ID_PREFIX;
 import static com.android.tools.lint.detector.api.LintFix.TODO;
 
 import com.android.annotations.NonNull;

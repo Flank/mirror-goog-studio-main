@@ -40,8 +40,9 @@ import org.w3c.dom.Element
  * Helps apps transition to using scoped storage, which is described at
  * https://developer.android.com/preview/privacy/storage#scoped-storage.
  *
- * Warns about WRITE_EXTERNAL_STORAGE, which no longer provides write access to files.
- * Warns about MANAGE_EXTERNAL_STORAGE, which is disallowed for most apps.
+ * Warns about WRITE_EXTERNAL_STORAGE, which no longer provides write
+ * access to files. Warns about MANAGE_EXTERNAL_STORAGE, which is
+ * disallowed for most apps.
  */
 class ScopedStorageDetector : Detector(), XmlScanner {
     private var cachedStoragePermissions: StoragePermissions? = null
@@ -138,8 +139,7 @@ class ScopedStorageDetector : Detector(), XmlScanner {
         val ISSUE = Issue.create(
             id = "ScopedStorage",
             briefDescription = "Affected by scoped storage",
-            explanation =
-                """
+            explanation = """
                 Scoped storage is enforced on Android 10+ (or Android 11+ if using \
                 `requestLegacyExternalStorage`). In particular, `WRITE_EXTERNAL_STORAGE` \
                 will no longer provide write access to all files; it will provide the \

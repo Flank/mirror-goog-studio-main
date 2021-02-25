@@ -33,18 +33,17 @@ import org.w3c.dom.Attr
 
 /**
  * Checks for the combination of textAllCaps=true and using markup in
- * the string being formatted
+ * the string being formatted.
  */
-/** Constructs an [AllCapsDetector]  */
+/** Constructs an [AllCapsDetector] */
 class AllCapsDetector : LayoutDetector() {
     companion object Issues {
-        /** Using all caps with markup  */
+        /** Using all caps with markup. */
         @JvmField
         val ISSUE = Issue.create(
             id = "AllCaps",
             briefDescription = "Combining textAllCaps and markup",
-            explanation =
-                """
+            explanation = """
             The textAllCaps text transform will end up calling `toString` on the `CharSequence`, which has \
             the net effect of removing any markup such as `<b>`. This check looks for usages of strings \
             containing markup that also specify `textAllCaps=true`.""",

@@ -36,8 +36,8 @@ import org.jetbrains.uast.ULiteralExpression
 import org.jetbrains.uast.UQualifiedReferenceExpression
 
 /**
- * Ensures that Cipher.getInstance is not called with AES as the parameter.
- * Also flags usages of deprecated BC provider.
+ * Ensures that Cipher.getInstance is not called with AES as the
+ * parameter. Also flags usages of deprecated BC provider.
  */
 class CipherGetInstanceDetector : Detector(), SourceCodeScanner {
 
@@ -147,8 +147,7 @@ class CipherGetInstanceDetector : Detector(), SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "GetInstance",
             briefDescription = "Cipher.getInstance with ECB",
-            explanation =
-                """
+            explanation = """
                 `Cipher#getInstance` should not be called with ECB as the cipher mode or \
                 without setting the cipher mode because the default mode on android is \
                 ECB, which is insecure.""",
@@ -166,8 +165,7 @@ class CipherGetInstanceDetector : Detector(), SourceCodeScanner {
         val DEPRECATED_PROVIDER = Issue.create(
             id = "DeprecatedProvider",
             briefDescription = "Using BC Provider",
-            explanation =
-                """
+            explanation = """
             The `BC` provider has been deprecated and will not be provided when `targetSdkVersion` is P or higher.
             """,
             moreInfo = "https://android-developers.googleblog.com/2018/03/cryptography-changes-in-android-p.html",

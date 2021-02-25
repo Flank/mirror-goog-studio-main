@@ -81,9 +81,10 @@ public abstract class AbstractAppTaskManager<
             @NonNull
                     List<ComponentInfo<TestComponentBuilderImpl, TestComponentImpl>> testComponents,
             boolean hasFlavors,
+            @NonNull ProjectOptions projectOptions,
             @NonNull GlobalScope globalScope,
             @NonNull BaseExtension extension) {
-        super(variants, testComponents, hasFlavors, globalScope, extension);
+        super(variants, testComponents, hasFlavors, projectOptions, globalScope, extension);
     }
 
     protected void createCommonTasks(

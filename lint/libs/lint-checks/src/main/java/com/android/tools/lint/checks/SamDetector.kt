@@ -48,18 +48,15 @@ import org.jetbrains.uast.tryResolve
 import org.jetbrains.uast.util.isAssignment
 import org.jetbrains.uast.visitor.AbstractUastVisitor
 
-/**
- * Looks for bugs around implicit SAM conversions
- */
+/** Looks for bugs around implicit SAM conversions. */
 class SamDetector : Detector(), SourceCodeScanner {
     companion object Issues {
-        /** Improperly handling implicit SAM instances */
+        /** Improperly handling implicit SAM instances. */
         @JvmField
         val ISSUE = Issue.create(
             id = "ImplicitSamInstance",
             briefDescription = "Implicit SAM Instances",
-            explanation =
-                """
+            explanation = """
                 Kotlin's support for SAM (single accessor method) interfaces lets you pass \
                 a lambda to the interface. This will create a new instance on the fly even \
                 though there is no explicit constructor call. If you pass one of these \

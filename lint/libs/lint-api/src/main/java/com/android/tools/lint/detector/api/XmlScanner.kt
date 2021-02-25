@@ -20,7 +20,7 @@ import org.w3c.dom.Attr
 import org.w3c.dom.Document
 import org.w3c.dom.Element
 
-/** Specialized interface for detectors that scan XML files  */
+/** Specialized interface for detectors that scan XML files. */
 interface XmlScanner : FileScanner, XmlScannerConstants {
 
     /**
@@ -36,6 +36,7 @@ interface XmlScanner : FileScanner, XmlScannerConstants {
 
     /**
      * Visit the given element.
+     *
      * @param context information about the document being analyzed
      * @param element the element to examine
      */
@@ -43,6 +44,7 @@ interface XmlScanner : FileScanner, XmlScannerConstants {
 
     /**
      * Visit the given element after its children have been analyzed.
+     *
      * @param context information about the document being analyzed
      * @param element the element to examine
      */
@@ -62,28 +64,30 @@ interface XmlScanner : FileScanner, XmlScannerConstants {
 
     /**
      * Visit the given attribute.
+     *
      * @param context information about the document being analyzed
      * @param attribute the attribute node to examine
      */
     fun visitAttribute(context: XmlContext, attribute: Attr)
 
     /**
-     * Visit the given document. The detector is responsible for its own iteration
-     * through the document.
+     * Visit the given document. The detector is responsible for its own
+     * iteration through the document.
+     *
      * @param context information about the document being analyzed
      * @param document the document to examine
      */
     fun visitDocument(context: XmlContext, document: Document)
 
     /**
-     * Returns whether this detector applies to the given folder type. This
-     * allows the detectors to be pruned from iteration, so for example when we
-     * are analyzing a string value file we don't need to look up detectors
-     * related to layout.
+     * Returns whether this detector applies to the given folder type.
+     * This allows the detectors to be pruned from iteration, so for
+     * example when we are analyzing a string value file we don't need
+     * to look up detectors related to layout.
      *
      * @param folderType the folder type to be visited
-     * @return true if this detector can apply to resources in folders of the
-     * given type
+     * @return true if this detector can apply to resources in folders
+     *     of the given type
      */
     fun appliesTo(folderType: ResourceFolderType): Boolean
 }

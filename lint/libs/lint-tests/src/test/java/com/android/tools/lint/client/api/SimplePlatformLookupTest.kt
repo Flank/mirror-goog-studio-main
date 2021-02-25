@@ -37,9 +37,9 @@ import java.io.File
 /**
  * Test for [SimplePlatformLookup].
  *
- * Idea: run the SDK lookup on the user's real SDK folder
- * too and compare [SimplePlatformLookup] with one backed with [AndroidSdkHandler] as
- * the [testAllPlatforms] test currently does.
+ * Idea: run the SDK lookup on the user's real SDK folder too
+ * and compare [SimplePlatformLookup] with one backed with
+ * [AndroidSdkHandler] as the [testAllPlatforms] test currently does.
  */
 class SimplePlatformLookupTest {
     @get:Rule

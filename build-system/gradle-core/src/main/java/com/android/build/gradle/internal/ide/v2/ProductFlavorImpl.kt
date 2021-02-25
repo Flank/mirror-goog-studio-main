@@ -48,8 +48,8 @@ data class ProductFlavorImpl(
     override val wearAppUnbundled: Boolean?,
     override val applicationIdSuffix: String?,
     override val versionNameSuffix: String?,
-    override val buildConfigFields: Map<String, ClassField>,
-    override val resValues: Map<String, ClassField>,
+    override val buildConfigFields: Map<String, ClassField>?,
+    override val resValues: Map<String, ClassField>?,
     override val proguardFiles: Collection<File>,
     override val consumerProguardFiles: Collection<File>,
     override val testProguardFiles: Collection<File>,
@@ -57,6 +57,7 @@ data class ProductFlavorImpl(
     override val multiDexEnabled: Boolean?,
     override val multiDexKeepFile: File?,
     override val multiDexKeepProguard: File?,
+    override val isDefault: Boolean? = null,
     override val name: String?,
     override val dimension: String?
 ) : ProductFlavor, Serializable {

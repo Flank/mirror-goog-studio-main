@@ -16,12 +16,14 @@
 
 package com.android.build.gradle.internal.dsl
 
+import com.android.build.api.dsl.Installation
 import com.google.common.collect.ImmutableList
 import javax.inject.Inject
 
 /** Options for the adb tool. */
 open class AdbOptions @Inject constructor() : com.android.builder.model.AdbOptions,
-    com.android.build.api.dsl.AdbOptions {
+    com.android.build.api.dsl.AdbOptions,
+    Installation {
 
     override var timeOutInMs: Int = 0
 

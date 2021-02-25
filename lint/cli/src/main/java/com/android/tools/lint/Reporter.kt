@@ -32,7 +32,6 @@ import com.android.tools.lint.checks.CheckResultDetector
 import com.android.tools.lint.checks.ChromeOsDetector
 import com.android.tools.lint.checks.CleanupDetector
 import com.android.tools.lint.checks.CommentDetector
-import com.android.tools.lint.checks.MissingPrefixDetector
 import com.android.tools.lint.checks.DuplicateResourceDetector
 import com.android.tools.lint.checks.EllipsizeMaxLinesDetector
 import com.android.tools.lint.checks.FontDetector
@@ -47,6 +46,7 @@ import com.android.tools.lint.checks.LabelForDetector
 import com.android.tools.lint.checks.ManifestDetector
 import com.android.tools.lint.checks.MissingClassDetector
 import com.android.tools.lint.checks.MissingIdDetector
+import com.android.tools.lint.checks.MissingPrefixDetector
 import com.android.tools.lint.checks.NamespaceDetector
 import com.android.tools.lint.checks.NetworkSecurityConfigDetector
 import com.android.tools.lint.checks.ObjectAnimatorDetector
@@ -93,36 +93,44 @@ import java.net.URLEncoder
 /**
  * A reporter is an output generator for lint warnings
  *
- *
- * **NOTE: This is not a public or final API; if you rely on this be prepared to adjust your
- * code for the next tools release.**
+ * **NOTE: This is not a public or final API; if you rely on this be
+ * prepared to adjust your code for the next tools release.**
  */
 @Beta
 abstract class Reporter protected constructor(
     @JvmField
     protected val client: LintCliClient,
 
-    /** The report file, if any (reporters may write to stdout/stderr too) */
+    /**
+     * The report file, if any (reporters may write to stdout/stderr
+     * too)
+     */
     val output: File?
 ) {
-    /** Whether this reporter is writing to the console */
+    /** Whether this reporter is writing to the console. */
     val isWriteToConsole: Boolean get() = output == null
 
     /** the title of the report */
     @JvmField
     var title = "Lint Report"
 
-    /** Whether this report should display info if no issues were found */
+    /**
+     * Whether this report should display info if no issues were found.
+     */
     var isDisplayEmpty = true
 
-    /** Set mapping of path prefixes to corresponding URLs in the HTML report  */
+    /**
+     * Set mapping of path prefixes to corresponding URLs in the HTML
+     * report.
+     */
     var urlMap: Map<String, String>? = null
 
     /**
      * Write the given warnings into the report
      *
      * @param stats the vital statistics for the lint report
-     * @param incidents the incidents to be reported @throws IOException if an error occurs
+     * @param incidents the incidents to be reported @throws IOException
+     *     if an error occurs
      */
     @Throws(IOException::class)
     abstract fun write(
@@ -188,7 +196,7 @@ abstract class Reporter protected constructor(
         return path
     }
 
-    /** Sets path prefix to strip from displayed file names  */
+    /** Sets path prefix to strip from displayed file names. */
     fun setStripPrefix(prefix: String?) {
         stripPrefix = prefix
     }
@@ -268,7 +276,10 @@ abstract class Reporter protected constructor(
         ): Reporter {
             return SarifReporter(client, output)
         }
-        /** Encodes the given String as a safe URL substring, escaping spaces etc  */
+        /**
+         * Encodes the given String as a safe URL substring, escaping
+         * spaces etc.
+         */
         @JvmStatic
         fun encodeUrl(url: String): String {
             return try {
@@ -288,7 +299,8 @@ abstract class Reporter protected constructor(
          * Returns true if the given issue has an automatic IDE fix.
          *
          * @param issue the issue to be checked
-         * @return true if the given tool is known to have an automatic fix for the given issue
+         * @return true if the given tool is known to have an automatic
+         *     fix for the given issue
          */
         @JvmStatic
         fun hasAutoFix(issue: Issue?): Boolean {
@@ -465,16 +477,18 @@ abstract class Reporter protected constructor(
 }
 
 /**
- * Produces the source line containing this error, as well as a second line showing
- * the error range using ~ characters. Suitable for text output.
+ * Produces the source line containing this error, as well as a second
+ * line showing the error range using ~ characters. Suitable for text
+ * output.
  */
 fun Incident.getErrorLines(textProvider: (File) -> CharSequence?): String? {
     return location.getErrorLines(textProvider)
 }
 
 /**
- * Produces the source line containing this error, as well as a second line showing
- * the error range using ~ characters. Suitable for text output.
+ * Produces the source line containing this error, as well as a second
+ * line showing the error range using ~ characters. Suitable for text
+ * output.
  */
 fun Location.getErrorLines(textProvider: (File) -> CharSequence?): String? {
     val location = this
@@ -531,7 +545,7 @@ fun Location.getErrorLines(textProvider: (File) -> CharSequence?): String? {
     return null
 }
 
-/** Look up the contents of the given line */
+/** Look up the contents of the given line. */
 private fun CharSequence.getLine(line: Int): String? {
     val index = getLineOffset(line)
     return if (index != -1) {
@@ -541,7 +555,7 @@ private fun CharSequence.getLine(line: Int): String? {
     }
 }
 
-/** Returns the line number for the given offset */
+/** Returns the line number for the given offset. */
 private fun CharSequence.getLineOfOffset(offset: Int): String {
     var end = indexOf('\n', offset)
     if (end == -1) {
@@ -552,7 +566,7 @@ private fun CharSequence.getLineOfOffset(offset: Int): String {
     return this.subSequence(offset, if (end != -1) end else this.length).toString()
 }
 
-/** Returns the offset of the given line number */
+/** Returns the offset of the given line number. */
 private fun CharSequence.getLineOffset(line: Int): Int {
     var index = 0
     for (i in 0 until line) {

@@ -275,16 +275,18 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     }
 
     /**
-     * Checks for the following constraints regarding half float annotated shorts:
+     * Checks for the following constraints regarding half float
+     * annotated shorts:
      *
-     * (1) you're not passing literals; this is fraught with danger and there are
-     * a lot of constants available in the android.util.Half class already
+     * (1) you're not passing literals; this is fraught with danger and
+     * there are a lot of constants available in the android.util.Half
+     * class already
      *
-     * (2) you're not performing arithmetic on these operands; there are utility methods
-     * in android.util.Half that should be used instead
+     * (2) you're not performing arithmetic on these operands; there are
+     * utility methods in android.util.Half that should be used instead
      *
-     * (3) when you're operating on Half float variables, none of the operations are
-     * accidentally widening the result to int
+     * (3) when you're operating on Half float variables, none of the
+     * operations are accidentally widening the result to int
      */
     private fun checkHalfFloat(
         context: JavaContext,
@@ -398,19 +400,19 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
         if (actual == null && (
             !UastLintUtils.isNumber(argument) || UastLintUtils.isZero(argument) || UastLintUtils.isMinusOne(
-                argument
-            )
+                    argument
+                )
             )
         ) {
             return
         } else if (actual != null && (
             !Sets.intersection(
-                actual,
-                expectedTypes
-            ).isEmpty() || expectedTypes.contains(DRAWABLE) && (
+                    actual,
+                    expectedTypes
+                ).isEmpty() || expectedTypes.contains(DRAWABLE) && (
                 actual.contains(COLOR) || actual.contains(
-                    MIPMAP
-                )
+                        MIPMAP
+                    )
                 )
             )
         ) {
@@ -420,9 +422,9 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         if (expectedTypes.contains(STYLEABLE) && expectedTypes.size == 1 &&
             calledMethod != null &&
             context.evaluator.isMemberInClass(
-                calledMethod,
-                "android.content.res.TypedArray"
-            )
+                    calledMethod,
+                    "android.content.res.TypedArray"
+                )
         ) {
             val call = argument.getParentOfType<UExpression>(UCallExpression::class.java, false)
             if (call is UCallExpression &&
@@ -460,8 +462,8 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     }
 
     /**
-     * Returns true if the node is pointing to a TypedArray whose value was obtained
-     * from an array literal
+     * Returns true if the node is pointing to a TypedArray whose value
+     * was obtained from an array literal.
      */
     private fun typeArrayFromArrayLiteral(node: UElement?, context: JavaContext): Boolean {
         if (node == null) {
@@ -558,15 +560,12 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             Scope.JAVA_FILE_SCOPE
         )
 
-        /**
-         * Attempting pass the wrong type of resource
-         */
+        /** Attempting pass the wrong type of resource. */
         @JvmField
         val RESOURCE_TYPE = Issue.create(
             id = "ResourceType",
             briefDescription = "Wrong Resource Type",
-            explanation =
-                """
+            explanation = """
                 Ensures that resource id's passed to APIs are of the right type; for \
                 example, calling `Resources.getColor(R.string.name)` is wrong.""",
             category = Category.CORRECTNESS,
@@ -576,13 +575,12 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             implementation = IMPLEMENTATION
         )
 
-        /** Attempting to set a resource id as a color */
+        /** Attempting to set a resource id as a color. */
         @JvmField
         val COLOR_USAGE = Issue.create(
             id = "ResourceAsColor",
             briefDescription = "Should pass resolved color instead of resource id",
-            explanation =
-                """
+            explanation = """
                 Methods that take a color in the form of an integer should be passed an \
                 RGB triple, not the actual color resource id. You must call \
                 `getResources().getColor(resource)` to resolve the actual color value first.
@@ -596,13 +594,12 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             implementation = IMPLEMENTATION
         )
 
-        /** Incorrect usage of half floats */
+        /** Incorrect usage of half floats. */
         @JvmField
         val HALF_FLOAT = Issue.create(
             id = "HalfFloat",
             briefDescription = "Incorrect Half Float",
-            explanation =
-                """
+            explanation = """
                 Half-precision floating point are stored in a short data type, and should be \
                 manipulated using the `android.util.Half` class. This check flags usages \
                 where it appears that these values are used incorrectly.""",

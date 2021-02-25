@@ -32,14 +32,14 @@ import java.io.IOException
  */
 @Beta
 class XmlReporter constructor(
-    /** Client handling IO, path normalization and error reporting */
+    /** Client handling IO, path normalization and error reporting. */
     client: LintCliClient,
-    /** File to write report to */
+    /** File to write report to. */
     output: File,
     /**
      * The type of XML file to create; this is used to control details
      * like whether locations are annotated with the surrounding source
-     * contents
+     * contents.
      */
     var type: XmlFileType
 ) : Reporter(client, output) {
@@ -59,7 +59,7 @@ class XmlReporter constructor(
 
     /**
      * Sets a custom attribute to be written out on the root element of
-     * the report
+     * the report.
      */
     fun setAttribute(name: String, value: String) {
         val attributes = attributes ?: run {

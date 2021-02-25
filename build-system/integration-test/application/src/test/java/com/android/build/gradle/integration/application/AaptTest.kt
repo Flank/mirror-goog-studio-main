@@ -3,7 +3,7 @@ package com.android.build.gradle.integration.application
 import com.android.testutils.truth.PathSubject.assertThat
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
+import com.android.build.gradle.integration.common.fixture.testprojects.prebuilts.createHelloWorldAppGradleProject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.integration.common.utils.TestFileUtils.searchAndReplace
 import com.android.utils.FileUtils
@@ -20,9 +20,7 @@ class AaptTest {
     @get:Rule  var temporaryFolder = TemporaryFolder()
 
     @get:Rule
-    var project = GradleTestProject.builder()
-        .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
-        .create()
+    var project = createHelloWorldAppGradleProject()
 
     @Before
     fun setUp() {

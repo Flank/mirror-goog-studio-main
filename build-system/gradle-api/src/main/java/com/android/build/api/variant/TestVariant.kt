@@ -23,7 +23,7 @@ import org.gradle.api.provider.Provider
  * [Variant] for test-only modules.
  */
 @Incubating
-interface TestVariant: Variant, ProducesDex<Dexing> {
+interface TestVariant: Variant {
     /**
      * Variant's application ID as present in the final manifest file of the APK.
      */
@@ -71,4 +71,10 @@ interface TestVariant: Variant, ProducesDex<Dexing> {
      * Variant's packagingOptions, initialized by the corresponding global DSL element.
      */
     fun packaging(action: ApkPackaging.() -> Unit)
+
+    /**
+     * Variant settings related to transforming bytecodes into dex files initialized from
+     * the corresponding fields in the DSL.
+     */
+    val dexing: Dexing
 }

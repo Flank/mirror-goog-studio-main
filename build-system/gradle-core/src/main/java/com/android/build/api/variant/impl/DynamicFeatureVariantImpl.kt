@@ -27,7 +27,7 @@ import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.ApkPackaging
 import com.android.build.api.variant.Dexing
 import com.android.build.api.variant.DynamicFeatureVariant
-import com.android.build.api.variant.SigningConfig
+import com.android.build.api.variant.Renderscript
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
 import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
@@ -84,9 +84,13 @@ open class DynamicFeatureVariantImpl @Inject constructor(
     internalServices,
     taskCreationServices,
     globalScope
-), DynamicFeatureVariant, DynamicFeatureCreationConfig, HasAndroidTestImpl {
+), DynamicFeatureVariant, DynamicFeatureCreationConfig, HasAndroidTest {
 
-    private val delegate by lazy { ApkCreationConfigImpl(this, globalScope, variantDslInfo) }
+    private val delegate by lazy { ApkCreationConfigImpl(
+        this,
+        internalServices.projectOptions,
+        globalScope,
+        variantDslInfo) }
 
     /*
      * Providers of data coming from the base modules. These are loaded just once and finalized.
@@ -108,10 +112,6 @@ open class DynamicFeatureVariantImpl @Inject constructor(
         )
     }
 
-    override fun aaptOptions(action: Aapt.() -> Unit) {
-        action.invoke(aapt)
-    }
-
     override val minifiedEnabled: Boolean
         get() = variantDslInfo.isMinifyEnabled
 
@@ -123,10 +123,6 @@ open class DynamicFeatureVariantImpl @Inject constructor(
         )
     }
 
-    override fun packaging(action: ApkPackaging.() -> Unit) {
-        action.invoke(packaging)
-    }
-
     override val dexing: Dexing by lazy {
         internalServices.newInstance(Dexing::class.java).also {
             it.multiDexKeepFile.set(variantDslInfo.multiDexKeepFile)
@@ -134,8 +130,10 @@ open class DynamicFeatureVariantImpl @Inject constructor(
         }
     }
 
-    override fun dexing(action: Dexing.() -> Unit) {
-        action.invoke(dexing)
+    override var androidTest: AndroidTest? = null
+
+    override val renderscript: Renderscript? by lazy {
+        delegate.renderscript(internalServices)
     }
 
 // ---------------------------------------------------------------------------------------------
@@ -185,7 +183,12 @@ open class DynamicFeatureVariantImpl @Inject constructor(
             ) ?: emptyList()
         }
 
-    override val signingConfig: SigningConfig? = null
+    override val signingConfig: SigningConfigImpl? = null
+    /**
+     * DO NOT USE, only present for old variant API.
+     */
+    override val dslSigningConfig: com.android.build.gradle.internal.dsl.SigningConfig? =
+        variantDslInfo.signingConfig
 
     // ---------------------------------------------------------------------------------------------
     // Private stuff
@@ -288,6 +291,4 @@ open class DynamicFeatureVariantImpl @Inject constructor(
 
     override val needsShrinkDesugarLibrary: Boolean
         get() = delegate.needsShrinkDesugarLibrary
-
-    override var androidTest: AndroidTest? = null
 }

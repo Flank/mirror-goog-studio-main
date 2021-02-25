@@ -79,6 +79,7 @@ public final class AndroidVersion implements Comparable<AndroidVersion>, Seriali
         public static final int P = 28;
         public static final int Q = 29;
         public static final int R = 30;
+        public static final int S = 31;
     }
 
     private static final long serialVersionUID = 1L;

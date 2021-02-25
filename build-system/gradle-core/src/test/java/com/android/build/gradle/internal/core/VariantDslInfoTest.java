@@ -30,6 +30,7 @@ import com.android.build.gradle.internal.fixtures.FakeProviderFactory;
 import com.android.build.gradle.internal.fixtures.FakeSyncIssueReporter;
 import com.android.build.gradle.internal.fixtures.ProjectFactory;
 import com.android.build.gradle.internal.manifest.LazyManifestParser;
+import com.android.build.gradle.internal.scope.ProjectInfo;
 import com.android.build.gradle.internal.services.DslServices;
 import com.android.build.gradle.internal.services.FakeServices;
 import com.android.build.gradle.internal.services.ProjectServices;
@@ -394,6 +395,7 @@ public class VariantDslInfoTest {
                         ProjectFactory.getProject().getLayout(),
                         projectOptions,
                         ProjectFactory.getProject().getGradle().getSharedServices(),
+                        new ProjectInfo(ProjectFactory.getProject()),
                         it -> new File(it.toString()));
         dslServices = FakeServices.createDslServices(projectServices);
         variantPropertiesApiServices =

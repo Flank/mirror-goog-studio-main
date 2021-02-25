@@ -22,7 +22,10 @@ class CordovaVersionDetectorTest : AbstractCheckTest() {
         return CordovaVersionDetector()
     }
 
-    /** Test to check that a valid version does not cause lint to report an issue. */
+    /**
+     * Test to check that a valid version does not cause lint to report
+     * an issue.
+     */
     fun testValidCordovaVersionInJS() {
         lint().files(
             source(
@@ -36,7 +39,7 @@ class CordovaVersionDetectorTest : AbstractCheckTest() {
         ).run().expectClean()
     }
 
-    /** Check that vulnerable versions in cordova.js are flagged */
+    /** Check that vulnerable versions in cordova.js are flagged. */
     fun testVulnerableCordovaVersionInJS() {
         lint().files(
             source(
@@ -73,7 +76,9 @@ class CordovaVersionDetectorTest : AbstractCheckTest() {
 
     /** Test to ensure that cordova.js.X.X.android is also detected. */
     fun testVulnerableCordovaVersionInJS2() {
-        /** Test to ensure that cordova.js.X.X.android is also detected. */
+        /**
+         * Test to ensure that cordova.js.X.X.android is also detected.
+         */
         lint().files(
             source(
                 "assets/www/cordova.js.4.0.android",
@@ -90,7 +95,10 @@ class CordovaVersionDetectorTest : AbstractCheckTest() {
         )
     }
 
-    /** Check whether the detector picks up the version from the Device class. */
+    /**
+     * Check whether the detector picks up the version from the Device
+     * class.
+     */
     fun testVulnerableCordovaVersionInClasses() {
         lint().files(
             base64gzip(
@@ -114,9 +122,10 @@ class CordovaVersionDetectorTest : AbstractCheckTest() {
     }
 
     /**
-     * In the presence of both a class as well as the js, detecting the version in the .class wins.
-     * In the real world, this won't happen since cordova versions >= 3.x.x have this version
-     * declared only in the JS.
+     * In the presence of both a class as well as the js, detecting the
+     * version in the .class wins. In the real world, this won't happen
+     * since cordova versions >= 3.x.x have this version declared only
+     * in the JS.
      */
     fun testVulnerableVersionInBothJsAndClasses() {
         lint().files(
@@ -148,7 +157,10 @@ class CordovaVersionDetectorTest : AbstractCheckTest() {
         )
     }
 
-    /** Ensure that the version string is read from the CordovaWebView.class. */
+    /**
+     * Ensure that the version string is read from the
+     * CordovaWebView.class.
+     */
     fun testVulnerableVersionInWebView() {
         lint().files(
             base64gzip(

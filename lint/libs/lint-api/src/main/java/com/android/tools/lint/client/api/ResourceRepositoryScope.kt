@@ -28,7 +28,7 @@ enum class ResourceRepositoryScope {
      */
     ANDROID,
 
-    /** Only resources in the current project */
+    /** Only resources in the current project. */
     PROJECT_ONLY,
 
     /**
@@ -47,12 +47,12 @@ enum class ResourceRepositoryScope {
      */
     ALL_DEPENDENCIES;
 
-    /** Whether this scope includes local project dependencies */
+    /** Whether this scope includes local project dependencies. */
     fun includesDependencies(): Boolean {
         return this >= LOCAL_DEPENDENCIES
     }
 
-    /** Whether this scope includes remote/AAR libraries */
+    /** Whether this scope includes remote/AAR libraries. */
     fun includesLibraries(): Boolean {
         return this >= ALL_DEPENDENCIES
     }

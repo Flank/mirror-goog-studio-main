@@ -211,6 +211,7 @@ proto::AgentLiveLiteralUpdateResponse LiveLiteral::Update(
     jni_->ExceptionClear();
     response_.set_status(proto::AgentLiveLiteralUpdateResponse::ERROR);
     response_.set_extra("LiveLiteralKt Not found!");
+    return response_;
   }
 
   if (!InstrumentApplication(jvmti_, jni_, request.package_name(),
@@ -246,11 +247,24 @@ proto::AgentLiveLiteralUpdateResponse LiveLiteral::Update(
       const std::string helper = update.helper_class();
       int offset = update.offset();
       jkey = LookUpKeyByOffSet(helper, offset);
+      if (jkey == nullptr) {
+        response_.set_status(proto::AgentLiveLiteralUpdateResponse::ERROR);
+        std::stringstream stream;
+        stream << "Helper " << helper << " with offset " << std::hex << offset
+               << " not found!";
+        response_.set_extra(stream.str());
+        return response_;
+      }
     } else {
       jkey = jni_->NewStringUTF(key.c_str());
     }
 
-    InstrumentHelper(update.helper_class());
+    std::string ins_error = InstrumentHelper(update.helper_class());
+    if (!ins_error.empty()) {
+      response_.set_status(proto::AgentLiveLiteralUpdateResponse::ERROR);
+      response_.set_extra(ins_error);
+      return response_;
+    }
 
     // TODO: Make the call to updateLiveLiteralValue() part of add()
     // That way there is only one function call here and all the logic will
@@ -363,10 +377,10 @@ proto::AgentLiveLiteralUpdateResponse LiveLiteral::Update(
   return response_;
 }
 
-void LiveLiteral::InstrumentHelper(const std::string& helper) {
-  // First chech if we already instrumented this at least once.
+std::string LiveLiteral::InstrumentHelper(const std::string& helper) {
+  // First check if we already instrumented this at least once.
   if (instrumented_helpers.find(helper) != instrumented_helpers.end()) {
-    return;
+    return "";
   }
   instrumented_helpers.insert(helper);
 
@@ -380,6 +394,10 @@ void LiveLiteral::InstrumentHelper(const std::string& helper) {
   // each callback thread safe since they don't read / write on the same data.
   jclass klass = class_finder_.FindInClassLoader(
       class_finder_.GetApplicationClassLoader(), helper);
+
+  if (klass == nullptr) {
+    return "Live Literal Helper " + helper + " not found";
+  }
 
   jvmtiEventCallbacks callbacks;
   callbacks.ClassFileLoadHook = Agent_LiveLiteralHelperClassFileLoadHook;
@@ -409,6 +427,8 @@ void LiveLiteral::InstrumentHelper(const std::string& helper) {
   CheckJvmti(jvmti_->SetEventCallbacks(nullptr, 0),
              "Error clearing event callbacks after live literal helper "
              "instrumentation");
+
+  return "";
 }
 
 }  // namespace deploy

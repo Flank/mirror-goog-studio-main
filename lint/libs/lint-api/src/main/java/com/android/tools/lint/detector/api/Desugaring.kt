@@ -24,38 +24,38 @@ import java.util.EnumSet
  * lambdas are converted into anonymous inner classes.
  */
 enum class Desugaring(val constant: Int) {
-    /** Lambdas */
+    /** Lambdas. */
     LAMBDAS(DESUGARING_LAMBDAS),
 
-    /** Method references */
+    /** Method references. */
     METHOD_REFERENCES(DESUGARING_METHOD_REFERENCES),
 
-    /** Type annotations and repeated annotations */
+    /** Type annotations and repeated annotations. */
     TYPE_ANNOTATIONS(DESUGARING_TYPE_ANNOTATIONS),
 
-    /** Default and static interface methods */
+    /** Default and static interface methods. */
     INTERFACE_METHODS(DESUGARING_INTERFACE_METHODS),
 
-    /** Try-with-resource statements */
+    /** Try-with-resource statements. */
     TRY_WITH_RESOURCES(DESUGARING_TRY_WITH_RESOURCES),
 
-    /** Inlining Objects.requireNonNull */
+    /** Inlining Objects.requireNonNull. */
     OBJECTS_REQUIRE_NON_NULL(DESUGARING_OBJECTS_REQUIRE_NON_NULL),
 
-    /** Rewriting Long.compare to lcmp */
+    /** Rewriting Long.compare to lcmp. */
     LONG_COMPARE(DESUGARING_LONG_COMPARE),
 
-    /** Rewriting some Java 8 library calls into backport library */
+    /** Rewriting some Java 8 library calls into backport library. */
     JAVA_8_LIBRARY(DESUGARING_LONG_COMPARE);
 
     companion object {
-        /** No desugaring in effect */
+        /** No desugaring in effect. */
         @JvmField
         val NONE: Set<Desugaring> = EnumSet.noneOf(Desugaring::class.java)
 
         /**
-         * Default assumed desugaring (used in all recent versions of Gradle, Bazel, etc);
-         * does not include [JAVA_8_LIBRARY]
+         * Default assumed desugaring (used in all recent versions of
+         * Gradle, Bazel, etc); does not include [JAVA_8_LIBRARY]
          */
         @JvmField
         val DEFAULT: Set<Desugaring> = EnumSet.of(
@@ -63,9 +63,7 @@ enum class Desugaring(val constant: Int) {
             INTERFACE_METHODS, TRY_WITH_RESOURCES, OBJECTS_REQUIRE_NON_NULL, LONG_COMPARE
         )
 
-        /**
-         * Full desugaring
-         */
+        /** Full desugaring. */
         @JvmField
         val FULL: Set<Desugaring> = EnumSet.of(
             LAMBDAS, METHOD_REFERENCES, TYPE_ANNOTATIONS,

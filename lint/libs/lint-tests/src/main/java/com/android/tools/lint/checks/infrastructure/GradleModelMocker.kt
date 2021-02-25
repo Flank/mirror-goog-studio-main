@@ -15,64 +15,39 @@
  */
 package com.android.tools.lint.checks.infrastructure
 
-import com.android.AndroidProjectTypes
-import com.android.AndroidProjectTypes.PROJECT_TYPE_APP
-import com.android.AndroidProjectTypes.PROJECT_TYPE_FEATURE
-import com.android.AndroidProjectTypes.PROJECT_TYPE_INSTANTAPP
-import com.android.AndroidProjectTypes.PROJECT_TYPE_LIBRARY
 import com.android.SdkConstants
-import com.android.build.FilterData
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.LintOptions
-import com.android.ide.common.gradle.model.IdeAaptOptions
-import com.android.ide.common.gradle.model.IdeAndroidArtifactOutput
-import com.android.ide.common.gradle.model.IdeAndroidLibrary
-import com.android.ide.common.gradle.model.IdeApiVersion
-import com.android.ide.common.gradle.model.IdeBuildType
-import com.android.ide.common.gradle.model.IdeClassField
-import com.android.ide.common.gradle.model.IdeDependencies
-import com.android.ide.common.gradle.model.IdeJavaLibrary
-import com.android.ide.common.gradle.model.IdeLibrary
-import com.android.ide.common.gradle.model.IdeModuleLibrary
-import com.android.ide.common.gradle.model.IdeProductFlavor
-import com.android.ide.common.gradle.model.IdeSourceProvider
-import com.android.ide.common.gradle.model.IdeVectorDrawablesOptions
-import com.android.ide.common.gradle.model.impl.IdeAaptOptionsImpl
-import com.android.ide.common.gradle.model.impl.IdeAndroidArtifactImpl
-import com.android.ide.common.gradle.model.impl.IdeAndroidArtifactOutputImpl
-import com.android.ide.common.gradle.model.impl.IdeAndroidGradlePluginProjectFlagsImpl
-import com.android.ide.common.gradle.model.impl.IdeAndroidLibraryCore
-import com.android.ide.common.gradle.model.impl.IdeAndroidLibraryImpl
-import com.android.ide.common.gradle.model.impl.IdeAndroidProjectImpl
-import com.android.ide.common.gradle.model.impl.IdeApiVersionImpl
-import com.android.ide.common.gradle.model.impl.IdeBuildTypeContainerImpl
-import com.android.ide.common.gradle.model.impl.IdeBuildTypeImpl
-import com.android.ide.common.gradle.model.impl.IdeDependenciesImpl
-import com.android.ide.common.gradle.model.impl.IdeJavaArtifactImpl
-import com.android.ide.common.gradle.model.impl.IdeJavaCompileOptionsImpl
-import com.android.ide.common.gradle.model.impl.IdeJavaLibraryCore
-import com.android.ide.common.gradle.model.impl.IdeJavaLibraryImpl
-import com.android.ide.common.gradle.model.impl.IdeLintOptionsImpl
-import com.android.ide.common.gradle.model.impl.IdeModuleLibraryCore
-import com.android.ide.common.gradle.model.impl.IdeModuleLibraryImpl
-import com.android.ide.common.gradle.model.impl.IdeProductFlavorContainerImpl
-import com.android.ide.common.gradle.model.impl.IdeProductFlavorImpl
-import com.android.ide.common.gradle.model.impl.IdeSourceProviderContainerImpl
-import com.android.ide.common.gradle.model.impl.IdeSourceProviderImpl
-import com.android.ide.common.gradle.model.impl.IdeVariantImpl
-import com.android.ide.common.gradle.model.impl.IdeVectorDrawablesOptionsImpl
-import com.android.ide.common.gradle.model.impl.IdeViewBindingOptionsImpl
 import com.android.ide.common.repository.GradleCoordinate
 import com.android.ide.common.repository.GradleVersion
-import com.android.projectmodel.ARTIFACT_NAME_ANDROID_TEST
-import com.android.projectmodel.ARTIFACT_NAME_MAIN
-import com.android.projectmodel.ARTIFACT_NAME_UNIT_TEST
 import com.android.sdklib.AndroidTargetHash
+import com.android.sdklib.AndroidVersion
 import com.android.sdklib.SdkVersionInfo
 import com.android.tools.lint.LintCliFlags
 import com.android.tools.lint.detector.api.Severity
-import com.android.tools.lint.model.LintModelFactory
+import com.android.tools.lint.model.DefaultLintModelDependency
+import com.android.tools.lint.model.DefaultLintModelDependencyGraph
+import com.android.tools.lint.model.DefaultLintModelLibraryResolver
+import com.android.tools.lint.model.LintModelAndroidArtifact
+import com.android.tools.lint.model.LintModelAndroidLibrary
+import com.android.tools.lint.model.LintModelBuildFeatures
+import com.android.tools.lint.model.LintModelDependencies
+import com.android.tools.lint.model.LintModelDependency
+import com.android.tools.lint.model.LintModelDependencyGraph
+import com.android.tools.lint.model.LintModelJavaArtifact
+import com.android.tools.lint.model.LintModelJavaLibrary
+import com.android.tools.lint.model.LintModelLibrary
+import com.android.tools.lint.model.LintModelLibraryResolver
+import com.android.tools.lint.model.LintModelLintOptions
+import com.android.tools.lint.model.LintModelMavenName
 import com.android.tools.lint.model.LintModelModule
+import com.android.tools.lint.model.LintModelModuleLibrary
+import com.android.tools.lint.model.LintModelModuleLoader
+import com.android.tools.lint.model.LintModelModuleType
+import com.android.tools.lint.model.LintModelNamespacingMode
+import com.android.tools.lint.model.LintModelResourceField
+import com.android.tools.lint.model.LintModelSeverity
+import com.android.tools.lint.model.LintModelSourceProvider
 import com.android.tools.lint.model.LintModelVariant
 import com.android.utils.ILogger
 import com.android.utils.appendCamelCase
@@ -81,7 +56,6 @@ import com.google.common.annotations.VisibleForTesting
 import com.google.common.base.Charsets
 import com.google.common.base.Splitter
 import com.google.common.collect.ArrayListMultimap
-import com.google.common.collect.ImmutableList
 import com.google.common.collect.Maps
 import com.google.common.collect.Multimap
 import com.google.common.io.ByteStreams
@@ -103,36 +77,53 @@ import java.util.regex.Pattern
 import java.util.zip.ZipEntry
 
 /**
- * A utility class which builds mocks for the Gradle builder-model API, by loosely interpreting
- * .gradle files and building models based on recognizing common patterns there.
+ * A utility class which builds mocks for the Gradle builder-model API,
+ * by loosely interpreting .gradle files and building models based on
+ * recognizing common patterns there.
  *
- *
- * TODO: Clean way to configure whether build dep cache is enabled TODO: Handle scopes (test
- * dependencies etc)
+ * TODO: Clean way to configure whether build dep cache is enabled
+ * TODO: Handle scopes (test dependencies etc)
  */
 
 class GradleModelMocker @JvmOverloads constructor(
     @field:Language("Groovy") @param:Language("Groovy") private val gradle: String,
     @VisibleForTesting val projectDir: File = File("")
-) {
+) : LintModelLibraryResolver {
 
     private class DepConf {
-        val androidLibraries: MutableSet<IdeAndroidLibrary> = mutableSetOf()
-        val javaLibraries: MutableSet<IdeJavaLibrary> = mutableSetOf()
-        val moduleLibraries: MutableSet<IdeModuleLibrary> = mutableSetOf()
+        val androidLibraries: MutableSet<TestLintModelAndroidLibrary> = mutableSetOf()
+        val javaLibraries: MutableSet<TestLintModelJavaLibrary> = mutableSetOf()
+        val moduleLibraries: MutableSet<TestLintModelModuleLibrary> = mutableSetOf()
     }
 
-    private var project: IdeAndroidProjectImpl = createAndroidProject()
+    private var moduleModel: TestLintModelModule = TestLintModelModule(
+        dir = projectDir,
+        compileTarget = "android-" + SdkVersionInfo.HIGHEST_KNOWN_API,
+        gradleVersion = GradleVersion.parse("2.2.2"),
+        javaSourceLevel = "1.7",
+        modulePath = "test_project"
+    )
+    private var buildFeatures: TestLintModelBuildFeatures = TestLintModelBuildFeatures()
+    private var defaultConfig: TestProductFlavor = TestProductFlavor(
+        name = "defaultConfig",
+        mainSourceProvider = createSourceProvider(projectDir, "main"),
+        unitTestSourceProvider = createSourceProvider(projectDir, "test", isUnitTest = true),
+        instrumentationTestSourceProvider = createSourceProvider(projectDir, "androidTest", isInstrumentationTest = true)
+    )
+    private var flavorDimensions: List<String> = emptyList()
+    private var buildTypes: List<TestBuildType> = emptyList()
+    private var productFlavors: List<TestProductFlavor> = emptyList()
+    private var variants: MutableList<TestLintModelVariant> = mutableListOf()
     private var defaultVariantName: String = ""
 
-    private val variants: MutableList<IdeVariantImpl> = ArrayList()
     private val libraryLintJars: MutableMap<String, String> = HashMap()
     private val libraryPublicResourcesFiles: MutableMap<String, String> = HashMap()
     private val librarySymbolFiles: MutableMap<String, String> = HashMap()
 
-    private val androidLibraryInstances: MutableMap<IdeAndroidLibrary, IdeAndroidLibrary> = HashMap()
-    private val javaLibraryInstances: MutableMap<IdeJavaLibrary, IdeJavaLibrary> = HashMap()
-    private val moduleLibraryInstances: MutableMap<IdeModuleLibrary, IdeModuleLibrary> = HashMap()
+    private val androidLibraryInstances: MutableMap<TestLintModelAndroidLibrary, TestLintModelAndroidLibrary> = mutableMapOf()
+    private val javaLibraryInstances: MutableMap<TestLintModelJavaLibrary, TestLintModelJavaLibrary> = mutableMapOf()
+    private val moduleLibraryInstances: MutableMap<TestLintModelModuleLibrary, TestLintModelModuleLibrary> = mutableMapOf()
+    private val libraryTable: MutableMap<String, LintModelLibrary> = mutableMapOf()
 
     private val main = DepConf()
     private val test = DepConf()
@@ -168,8 +159,8 @@ class GradleModelMocker @JvmOverloads constructor(
     }
 
     fun withLintRuleJar(lintRuleJarPath: String): GradleModelMocker {
-        updateProject {
-            it.copy(lintRuleJars = it.lintRuleJars.orEmpty() + File(lintRuleJarPath))
+        updateModule {
+            it.copy(lintRuleJars = it.lintRuleJars + File(lintRuleJarPath))
         }
         return this
     }
@@ -207,9 +198,11 @@ class GradleModelMocker @JvmOverloads constructor(
     }
 
     /**
-     * If true, model a full/deep dependency graph in [ ]; the default is flat. (This is normally
-     * controlled by sync/model builder flag [ ][AndroidProject.PROPERTY_BUILD_MODEL_FEATURE_FULL_DEPENDENCIES].)
+     * If true, model a full/deep dependency graph in [ ]; the default
+     * is flat. (This is normally controlled by sync/model builder flag
+     * [AndroidProject.PROPERTY_BUILD_MODEL_FEATURE_FULL_DEPENDENCIES].)
      */
+    @Suppress("unused")
     fun withFullDependencies(fullDependencies: Boolean): GradleModelMocker {
         ensureNotInitialized()
         this.fullDependencies = fullDependencies
@@ -247,31 +240,27 @@ class GradleModelMocker @JvmOverloads constructor(
         if (initialized) error("GradleModelMocker has been already initialized.")
     }
 
-    /** Whether the Gradle file applied the java plugin  */
-    fun hasJavaPlugin(): Boolean {
-        ensureInitialized()
-        return project.projectType == PROJECT_TYPE_JAVA
-    }
+    private var hasJavaOrJavaLibraryPlugin: Boolean = false
+    private var _isLibrary: Boolean = false
 
-    /** Whether the Gradle file applied the java-library plugin  */
-    fun hasJavaLibraryPlugin(): Boolean {
+    /**
+     * Whether the Gradle file applied the java or java-library plugin.
+     */
+    fun hasJavaOrJavaLibraryPlugin(): Boolean {
         ensureInitialized()
-        return project.projectType == PROJECT_TYPE_JAVA_LIBRARY
+        return hasJavaOrJavaLibraryPlugin
     }
 
     val isLibrary: Boolean
         get() {
             ensureInitialized()
-            return project.projectType == PROJECT_TYPE_LIBRARY ||
-                project.projectType == PROJECT_TYPE_JAVA_LIBRARY
+            return _isLibrary
         }
 
     val buildTargetHash: String?
         get() {
             ensureInitialized()
-            return project
-                .compileTarget
-                .takeUnless { it.isEmpty() }
+            return moduleModel.compileTarget.takeUnless { it.isEmpty() }
         }
 
     val buildSdk: Int?
@@ -285,15 +274,8 @@ class GradleModelMocker @JvmOverloads constructor(
     val generatedSourceFolders: Collection<File>
         get() {
             ensureInitialized()
-            return variant.mainArtifact.generatedSourceFolders
+            return moduleModel.variants.single { it.name == defaultVariantName }.mainArtifact.generatedSourceFolders
         }
-
-    private val buildTypes get() = project.buildTypes.map { it.buildType as IdeBuildTypeImpl }
-    private val productFlavors get() = project.productFlavors.map { it.productFlavor as IdeProductFlavorImpl }
-    private val flavorDimensions get() = project.flavorDimensions
-
-    private val variant
-        get() = variants.single { it.name == defaultVariantName }
 
     fun syncFlagsTo(to: LintCliFlags) {
         ensureInitialized()
@@ -325,13 +307,13 @@ class GradleModelMocker @JvmOverloads constructor(
 
     fun getLintModule(): LintModelModule {
         ensureInitialized()
-        return LintModelFactory().create(project, variants, projectDir, true)
+        return moduleModel
     }
 
     private fun initialize() {
         // built-in build-types
-        updateBuildType("debug", true) { it }
-        updateBuildType("release", true) { it }
+        updateBuildType("debug", true, { it })
+        updateBuildType("release", true, { it })
 
         addLocalLibs(File(projectDir, "libs"))
 
@@ -340,15 +322,7 @@ class GradleModelMocker @JvmOverloads constructor(
         // Artifacts
         updateDefaultConfig { it.copy(applicationId = it.applicationId ?: "test.pkg") }
 
-        updateProject { it.copy(buildFolder = File(projectDir, "build")) }
-
-        val outputs: MutableList<IdeAndroidArtifactOutput> = mutableListOf()
-        outputs.add(createAndroidArtifactOutput("", ""))
-        for ((key, value) in splits.entries()) {
-            outputs.add(createAndroidArtifactOutput(key, value))
-        }
-        // outputs.add(createAndroidArtifactOutput("DENSITY", "mdpi"));
-        // outputs.add(createAndroidArtifactOutput("DENSITY", "hdpi"));
+        updateModule { it.copy(buildFolder = File(projectDir, "build")) }
 
         val dependencies = createDependencies(main)
         val androidTestDependencies = createDependencies(androidTest)
@@ -356,83 +330,91 @@ class GradleModelMocker @JvmOverloads constructor(
 
         val variantCoordinates = generateVariants()
         defaultVariantName = variantCoordinates.first().let { buildVariantName(it.second, it.first) }
+
         variantCoordinates.forEach { (buildType, productFlavors) ->
             val variantName = buildVariantName(productFlavors, buildType)
-
+            val productFlavorsInConfigOrder = productFlavors.sortedBy { this.productFlavors.indexOf(it) }
+            val sourceProviders: List<TestLintModelSourceProvider> =
+                listOfNotNull(defaultConfig.mainSourceProvider) +
+                    productFlavorsInConfigOrder.mapNotNull { it.mainSourceProvider } +
+                    listOfNotNull(
+                        if (productFlavorsInConfigOrder.size > 1) createSourceProvider(
+                            projectDir,
+                            buildVariantName(productFlavors)
+                        ) else null
+                    ) +
+                    listOfNotNull(buildType.mainSourceProvider) +
+                    listOfNotNull(
+                        if (productFlavorsInConfigOrder.isNotEmpty())
+                            createSourceProvider(projectDir, variantName, isDebugOnly = buildType.isDebuggable)
+                        else null
+                    )
+            val testSourceProviders =
+                listOfNotNull(defaultConfig.instrumentationTestSourceProvider, defaultConfig.unitTestSourceProvider) +
+                    productFlavorsInConfigOrder.flatMap { listOfNotNull(it.instrumentationTestSourceProvider, it.unitTestSourceProvider) } +
+                    listOfNotNull(buildType.instrumentationTestSourceProvider, buildType.unitTestSourceProvider)
             val generated = File(projectDir, "generated")
             val mergedFlavorsAndBuildType = merge(defaultConfig, productFlavors, buildType)
             variants.add(
-                IdeVariantImpl(
+                TestLintModelVariant(
+                    _module = { moduleModel },
                     name = variantName,
-                    displayName = "",
-                    mainArtifact = createAndroidArtifact(ARTIFACT_NAME_MAIN)
-                        .copy(
-                            name = variantName,
-                            applicationId = mergedFlavorsAndBuildType.applicationId!!,
-                            outputs = outputs,
-                            level2Dependencies = dependencies,
-                            classesFolder = File(projectDir, "build/intermediates/javac/$variantName/classes"),
-                            additionalClassesFolders = setOf(File(projectDir, "build/tmp/kotlin-classes/$variantName")),
-                            mutableGeneratedSourceFolders =
-                                listOfNotNull(File(generated, "java").takeIf { it.exists() }).toMutableList(),
-                            generatedResourceFolders =
-                                listOfNotNull(File(generated, "res").takeIf { it.exists() }),
-                            multiFlavorSourceProvider = let {
-                                if (productFlavors.size >= 2)
-                                    createSourceProvider(projectDir, buildVariantName(productFlavors))
-                                else null
-                            },
-                            variantSourceProvider = let {
-                                if (productFlavors.isNotEmpty())
-                                    createSourceProvider(projectDir, defaultVariantName)
-                                else null
-                            },
+                    useSupportLibraryVectorDrawables = mergedFlavorsAndBuildType.useSupportLibrary ?: false,
+                    mainArtifact = TestLintModelAndroidArtifact(
+                        applicationId = mergedFlavorsAndBuildType.applicationId.orEmpty(),
+                        dependencies = dependencies,
+                        generatedSourceFolders =
+                        listOfNotNull(File(generated, "java").takeIf { it.exists() }),
+                        generatedResourceFolders =
+                        listOfNotNull(File(generated, "res").takeIf { it.exists() }),
+                        classOutputs = listOf(
+                            File(projectDir, "build/intermediates/javac/$variantName/classes"),
+                            File(projectDir, "build/tmp/kotlin-classes/$variantName")
                         ),
-                    unitTestArtifact = createJavaArtifact(ARTIFACT_NAME_UNIT_TEST)
-                        .copy(
-                            level2Dependencies = testDependencies,
-                            classesFolder = File(projectDir, "test-classes"),
-                        ),
-                    androidTestArtifact = createAndroidArtifact(ARTIFACT_NAME_ANDROID_TEST)
-                        .copy(
-                            applicationId = mergedFlavorsAndBuildType.applicationId!!,
-                            level2Dependencies = androidTestDependencies,
-                            classesFolder = File(projectDir, "instrumentation-classes"),
-                        ),
-                    buildType = buildType.name,
-                    productFlavors = productFlavors.map { it.name },
+                    ),
+                    testArtifact = TestLintModelJavaArtifact(
+                        dependencies = testDependencies,
+                        classOutputs = listOf(File(projectDir, "test-classes")),
+                    ),
+                    androidTestArtifact = TestLintModelAndroidArtifact(
+                        applicationId = mergedFlavorsAndBuildType.applicationId.orEmpty(),
+                        dependencies = androidTestDependencies,
+                        generatedSourceFolders = emptyList(),
+                        generatedResourceFolders = emptyList(),
+                        classOutputs = listOf(File(projectDir, "instrumentation-classes")),
+                    ),
+                    mergedManifest = null, // Injected elsewhere by the legacy Android Gradle Plugin lint runner
+                    manifestMergeReport = null, // Injected elsewhere by the legacy Android Gradle Plugin lint runner
+                    `package` = null, // Injected elsewhere by the legacy Android Gradle Plugin lint runner
                     minSdkVersion = mergedFlavorsAndBuildType.minSdkVersion,
                     targetSdkVersion = mergedFlavorsAndBuildType.targetSdkVersion,
-                    maxSdkVersion = mergedFlavorsAndBuildType.maxSdkVersion,
-                    instantAppCompatible = false,
-                    vectorDrawablesUseSupportLibrary = mergedFlavorsAndBuildType.vectorDrawables?.useSupportLibrary ?: false,
-                    resourceConfigurations = mergedFlavorsAndBuildType.resourceConfigurations,
                     resValues = mergedFlavorsAndBuildType.resValues,
-                    proguardFiles = mergedFlavorsAndBuildType.proguardFiles,
-                    consumerProguardFiles = mergedFlavorsAndBuildType.consumerProguardFiles,
                     manifestPlaceholders = mergedFlavorsAndBuildType.manifestPlaceholders,
-                    testApplicationId = mergedFlavorsAndBuildType.testApplicationId,
-                    testInstrumentationRunner = mergedFlavorsAndBuildType.testInstrumentationRunner,
-                    testInstrumentationRunnerArguments = mergedFlavorsAndBuildType.testInstrumentationRunnerArguments,
-                    testedTargetVariants = emptyList(),
-                    versionCode = mergedFlavorsAndBuildType.versionCode,
-                    versionNameWithSuffix =
-                        mergedFlavorsAndBuildType.versionName?.let { it + mergedFlavorsAndBuildType.versionNameSuffix.orEmpty() },
-                    versionNameSuffix = mergedFlavorsAndBuildType.versionNameSuffix,
-                    deprecatedPreMergedApplicationId = mergedFlavorsAndBuildType.applicationId
+                    resourceConfigurations = mergedFlavorsAndBuildType.resourceConfigurations,
+                    proguardFiles = emptySet(), // not supported by the mocker.
+                    consumerProguardFiles = emptySet(), // not supported by the mocker.
+                    sourceProviders = sourceProviders,
+                    testSourceProviders = testSourceProviders,
+                    debuggable = buildType.isDebuggable,
+                    shrinkable = buildType.isMinifyEnabled,
+                    buildFeatures = buildFeatures,
+                    libraryResolver = this,
+                    partialResultsDir = null
+
                 )
             )
         }
+        updateModule { it.copy(variants = variants, neverShrinking = variants.none { it.shrinkable }) }
     }
 
-    private fun generateVariants(): List<Pair<IdeBuildTypeImpl, List<IdeProductFlavorImpl>>> {
+    private fun generateVariants(): List<Pair<TestBuildType, List<TestProductFlavor>>> {
         val dimensions = flavorDimensions.takeUnless { it.isEmpty() }?.toList()
             ?: if (productFlavors.isNotEmpty()) listOf(null) else emptyList()
         val dimensionFlavors = dimensions.map { dimensionNameOrNull ->
             productFlavors.filter { it.dimension == dimensionNameOrNull }
         }
         return dimensionFlavors
-            .fold<List<IdeProductFlavorImpl>, Sequence<Pair<IdeBuildTypeImpl, List<IdeProductFlavorImpl>>>>(
+            .fold<List<TestProductFlavor>, Sequence<Pair<TestBuildType, List<TestProductFlavor>>>>(
                 buildTypes.asSequence().map { it to emptyList() }
             ) { acc, dimension ->
                 acc.flatMap { prefix -> dimension.asSequence().map { prefix.first to prefix.second + it } }
@@ -441,8 +423,8 @@ class GradleModelMocker @JvmOverloads constructor(
     }
 
     private fun buildVariantName(
-        productFlavors: List<IdeProductFlavorImpl>,
-        buildType: IdeBuildTypeImpl? = null
+        productFlavors: List<TestProductFlavor>,
+        buildType: TestBuildType? = null
     ): String {
         return buildString {
             productFlavors.forEach { appendCamelCase(it.name) }
@@ -453,15 +435,15 @@ class GradleModelMocker @JvmOverloads constructor(
     }
 
     private fun merge(
-        defaultConfig: IdeProductFlavorImpl,
-        productFlavors: List<IdeProductFlavorImpl>,
-        buildType: IdeBuildTypeImpl
-    ): IdeProductFlavorImpl {
+        defaultConfig: TestProductFlavor,
+        productFlavors: List<TestProductFlavor>,
+        buildType: TestBuildType
+    ): TestProductFlavor {
 
         fun <T> combineValues(
             combine: (T?, T) -> T,
-            f: IdeProductFlavorImpl.() -> T,
-            b: (IdeBuildTypeImpl.() -> T)? = null,
+            f: TestProductFlavor.() -> T,
+            b: (TestBuildType.() -> T)? = null,
             reverseFlavors: Boolean = true
         ): T {
             return combine(
@@ -486,136 +468,73 @@ class GradleModelMocker @JvmOverloads constructor(
         fun <T> combineSets(u: Collection<T>?, v: Collection<T>) = u.orEmpty().toSet() + v
         fun <T> combineMaps(u: Map<String, T>?, v: Map<String, T>) = v + (u ?: emptyMap())
 
-        return IdeProductFlavorImpl(
+        return TestProductFlavor(
             dimension = null,
             name = buildVariantName(productFlavors, buildType),
-            applicationIdSuffix = combineValues(::combineSuffixes, { applicationIdSuffix }, { applicationIdSuffix }, reverseFlavors = false),
-            versionNameSuffix = combineValues(::combineSuffixes, { versionNameSuffix }, { versionNameSuffix }, reverseFlavors = false),
+            applicationIdSuffix = combineValues(::combineSuffixes, { applicationIdSuffix }, { null }, reverseFlavors = false),
+            versionNameSuffix = combineValues(::combineSuffixes, { versionNameSuffix }, { null }, reverseFlavors = false),
             resValues = combineValues(::combineMaps, { resValues }, { resValues }),
-            proguardFiles = combineValues(::combineSets, { proguardFiles }, { proguardFiles }),
-            consumerProguardFiles = combineValues(::combineSets, { consumerProguardFiles }, { consumerProguardFiles }),
             manifestPlaceholders = combineValues(::combineMaps, { manifestPlaceholders }, { manifestPlaceholders }),
-            multiDexEnabled = combineValues(::combineNullables, { multiDexEnabled }, { multiDexEnabled }),
             applicationId = combineValues(::combineNullables, { applicationId }, { null }),
             versionCode = combineValues(::combineNullables, { versionCode }),
             versionName = combineValues(::combineNullables, { versionName }),
             minSdkVersion = combineValues(::combineNullables, { minSdkVersion }),
             targetSdkVersion = combineValues(::combineNullables, { targetSdkVersion }),
-            maxSdkVersion = combineValues(::combineNullables, { maxSdkVersion }),
-            testApplicationId = combineValues(::combineNullables, { testApplicationId }),
-            testInstrumentationRunner = combineValues(::combineNullables, { testInstrumentationRunner }),
-            testInstrumentationRunnerArguments = combineValues(::combineMaps, { testInstrumentationRunnerArguments }),
-            testHandleProfiling = combineValues(::combineNullables, { testHandleProfiling }),
-            testFunctionalTest = combineValues(::combineNullables, { testFunctionalTest }),
             resourceConfigurations = combineValues(::combineSets, { resourceConfigurations }),
-            vectorDrawables = combineValues(::combineNullables, { vectorDrawables }),
+            useSupportLibrary = combineValues(::combineNullables, { useSupportLibrary }),
+            mainSourceProvider = null,
+            unitTestSourceProvider = null,
+            instrumentationTestSourceProvider = null,
         )
     }
 
-    private fun createAndroidProject() = IdeAndroidProjectImpl(
-        modelVersion = "2.2.2",
-        apiVersion = 3,
-        name = "test_project",
-        projectType = 0,
-        defaultConfig =
-            IdeProductFlavorContainerImpl(
-                productFlavor = createProductFlavor("defaultConfig"),
-                sourceProvider = createSourceProvider(projectDir, "main"),
-                extraSourceProviders = listOf(
-                    IdeSourceProviderContainerImpl(
-                        AndroidProject.ARTIFACT_ANDROID_TEST,
-                        createSourceProvider(projectDir, "androidTest")
-                    ),
-                    IdeSourceProviderContainerImpl(
-                        AndroidProject.ARTIFACT_UNIT_TEST,
-                        createSourceProvider(projectDir, "test")
-                    )
-                )
-            ),
-        buildTypes = emptyList(),
-        productFlavors = emptyList(),
-        variantNames = emptyList(),
-        flavorDimensions = emptyList(),
-        compileTarget = "android-" + SdkVersionInfo.HIGHEST_KNOWN_API,
-        bootClasspath = emptyList(),
-        signingConfigs = emptyList(),
-        aaptOptions = IdeAaptOptionsImpl(namespacing = IdeAaptOptions.Namespacing.DISABLED),
-        lintOptions = IdeLintOptionsImpl(),
-        javaCompileOptions = IdeJavaCompileOptionsImpl(
-            encoding = "UTF-8",
-            sourceCompatibility = "1.7",
-            targetCompatibility = "1.7",
-            isCoreLibraryDesugaringEnabled = false
-        ),
-        buildFolder = File(""),
-        resourcePrefix = null,
-        buildToolsVersion = null,
-        ndkVersion = null,
-        isBaseSplit = false,
-        dynamicFeatures = emptyList(),
-        viewBindingOptions = null,
-        dependenciesInfo = null,
-        groupId = null,
-        agpFlags = IdeAndroidGradlePluginProjectFlagsImpl(),
-        variantsBuildInformation = emptyList(),
-        lintRuleJars = emptyList(),
-    )
+    private fun createDependencies(dep: DepConf? = null): TestLintModelDependencies {
 
-    private fun createAndroidArtifact(artifact: String) = IdeAndroidArtifactImpl(
-        name = artifact,
-        compileTaskName = "",
-        assembleTaskName = "",
-        assembleTaskOutputListingFile = "",
-        classesFolder = File(""),
-        additionalClassesFolders = emptyList(),
-        javaResourcesFolder = null,
-        variantSourceProvider = null,
-        multiFlavorSourceProvider = null,
-        ideSetupTaskNames = emptyList(),
-        mutableGeneratedSourceFolders = mutableListOf(),
-        isTestArtifact = false,
-        level2Dependencies = createDependencies(),
-        applicationId = "",
-        signingConfigName = null,
-        outputs = emptyList(),
-        isSigned = false,
-        generatedResourceFolders = emptyList(),
-        additionalRuntimeApks = emptyList(),
-        testOptions = null,
-        abiFilters = emptySet(),
-        bundleTaskName = null,
-        bundleTaskOutputListingFile = null,
-        apkFromBundleTaskName = null,
-        apkFromBundleTaskOutputListingFile = null,
-        codeShrinker = null
-    )
+        fun <T : LintModelLibrary> Collection<T>.resolveConflicts(): Collection<T> {
+            return groupBy { getMavenName(it.artifactAddress).let { it.groupId to it.artifactId } }
+                .mapValues { (_, libs) ->
+                    libs.maxBy { GradleVersion.tryParse(getMavenName(it.artifactAddress).version) ?: GradleVersion(0, 0) }
+                }
+                .values
+                .mapNotNull { it }
+        }
 
-    private fun createJavaArtifact(artifact: String) = IdeJavaArtifactImpl(
-        name = artifact,
-        compileTaskName = "",
-        assembleTaskName = "",
-        assembleTaskOutputListingFile = "",
-        classesFolder = File(""),
-        additionalClassesFolders = emptyList(),
-        javaResourcesFolder = null,
-        variantSourceProvider = null,
-        multiFlavorSourceProvider = null,
-        ideSetupTaskNames = emptyList(),
-        mutableGeneratedSourceFolders = mutableListOf(),
-        isTestArtifact = false,
-        level2Dependencies = createDependencies(),
-        mockablePlatformJar = null,
-    )
+        val deps =
+            listOfNotNull(
+                dep?.androidLibraries?.resolveConflicts()?.map {
+                    DefaultLintModelDependency(
+                        artifactName = getMavenName(it.artifactAddress).let { mavenName -> "${mavenName.groupId}:${mavenName.artifactId}" },
+                        artifactAddress = it.artifactAddress,
+                        requestedCoordinates = null,
+                        dependencies = emptyList(),
+                        this
+                    ) to it.provided
+                },
+                dep?.javaLibraries?.resolveConflicts()?.map {
+                    DefaultLintModelDependency(
+                        artifactName = getMavenName(it.artifactAddress).let { mavenName -> "${mavenName.groupId}:${mavenName.artifactId}" },
+                        artifactAddress = it.artifactAddress,
+                        requestedCoordinates = null,
+                        dependencies = emptyList(),
+                        this
+                    ) to it.provided
+                },
+                dep?.moduleLibraries?.map {
+                    DefaultLintModelDependency(
+                        artifactName = "artifacts:${it.projectPath}",
+                        artifactAddress = it.artifactAddress,
+                        requestedCoordinates = null,
+                        dependencies = emptyList(),
+                        this
+                    ) to it.provided
+                }
+            ).flatten()
 
-    private fun createDependencies(dep: DepConf? = null) =
-        if (dep != null)
-            IdeDependenciesImpl(
-                androidLibraries = dep.androidLibraries,
-                javaLibraries = dep.javaLibraries,
-                moduleDependencies = dep.moduleLibraries,
-                emptyList()
-            )
-        else IdeDependenciesImpl(emptyList(), emptyList(), emptyList(), emptyList())
+        return TestLintModelDependencies(
+            DefaultLintModelDependencyGraph(deps.map { it.first }, this),
+            DefaultLintModelDependencyGraph(deps.filter { !it.second }.map { it.first }, this)
+        ) { this }
+    }
 
     private fun addLocalLibs(libsDir: File) {
         val libs = libsDir.listFiles()
@@ -910,22 +829,56 @@ class GradleModelMocker @JvmOverloads constructor(
             return
         }
 
-        fun updateProjectType(type: Int): Boolean {
-            updateProject { it.copy(projectType = type) }
+        fun updateProjectType(
+            moduleType: LintModelModuleType,
+            hasJavaOrJavaLibraryPlugin: Boolean,
+            isLibrary: Boolean
+        ): Boolean {
+            this.hasJavaOrJavaLibraryPlugin = hasJavaOrJavaLibraryPlugin
+            _isLibrary = isLibrary
+            updateModule { it.copy(type = moduleType) }
             return true
         }
 
         if (when (line) {
-            "apply plugin: 'com.android.library'", "apply plugin: 'android-library'" -> updateProjectType(
-                PROJECT_TYPE_LIBRARY
-            )
-            "apply plugin: 'com.android.application'", "apply plugin: 'android'" -> updateProjectType(
-                PROJECT_TYPE_APP
-            )
-            "apply plugin: 'com.android.feature'" -> updateProjectType(PROJECT_TYPE_FEATURE)
-            "apply plugin: 'com.android.instantapp'" -> updateProjectType(PROJECT_TYPE_INSTANTAPP)
-            "apply plugin: 'java'" -> updateProjectType(PROJECT_TYPE_JAVA)
-            "apply plugin: 'java-library'" -> updateProjectType(PROJECT_TYPE_JAVA_LIBRARY)
+            "apply plugin: 'com.android.library'",
+            "apply plugin: 'android-library'" ->
+                updateProjectType(
+                        LintModelModuleType.LIBRARY,
+                        hasJavaOrJavaLibraryPlugin = false,
+                        isLibrary = true
+                    )
+            "apply plugin: 'com.android.application'",
+            "apply plugin: 'android'" ->
+                updateProjectType(
+                        LintModelModuleType.APP,
+                        hasJavaOrJavaLibraryPlugin = false,
+                        isLibrary = false
+                    )
+            "apply plugin: 'com.android.feature'" ->
+                updateProjectType(
+                        LintModelModuleType.FEATURE,
+                        hasJavaOrJavaLibraryPlugin = false,
+                        isLibrary = false
+                    )
+            "apply plugin: 'com.android.instantapp'" ->
+                updateProjectType(
+                        LintModelModuleType.INSTANT_APP,
+                        hasJavaOrJavaLibraryPlugin = false,
+                        isLibrary = false
+                    )
+            "apply plugin: 'java'" ->
+                updateProjectType(
+                        LintModelModuleType.JAVA_LIBRARY,
+                        hasJavaOrJavaLibraryPlugin = true,
+                        isLibrary = false
+                    )
+            "apply plugin: 'java-library'" ->
+                updateProjectType(
+                        LintModelModuleType.LIBRARY,
+                        hasJavaOrJavaLibraryPlugin = true,
+                        isLibrary = true
+                    )
             else -> when {
                 context == "buildscript.repositories" || context == "allprojects.repositories" -> {
                     // Plugins not modeled in the builder model
@@ -992,10 +945,10 @@ class GradleModelMocker @JvmOverloads constructor(
                 updateFlavorFromContext(context) { it.copy(applicationId = getUnquotedValue(key)) }
             }
             line.startsWith("minSdkVersion ") -> {
-                updateFlavorFromContext(context) { it.copy(minSdkVersion = createApiVersion(key)) }
+                updateFlavorFromContext(context) { it.copy(minSdkVersion = createAndroidVersion(key)) }
             }
             line.startsWith("targetSdkVersion ") -> {
-                updateFlavorFromContext(context) { it.copy(targetSdkVersion = createApiVersion(key)) }
+                updateFlavorFromContext(context) { it.copy(targetSdkVersion = createAndroidVersion(key)) }
             }
             line.startsWith("versionCode ") -> {
                 val value = key.substring(key.indexOf(' ') + 1).trim { it <= ' ' }
@@ -1016,22 +969,20 @@ class GradleModelMocker @JvmOverloads constructor(
                 updateFlavorFromContext(context) { it.copy(applicationIdSuffix = getUnquotedValue(key)) }
             }
             key.startsWith("android.resourcePrefix ") -> {
-                updateProject { it.copy(resourcePrefix = getUnquotedValue(key)) }
+                updateModule { it.copy(resourcePrefix = getUnquotedValue(key)) }
             }
             key.startsWith("group=") -> {
-                updateProject { it.copy(groupId = getUnquotedValue(key)) }
+                updateModuleMavenName { it.copy(groupId = getUnquotedValue(key)) }
             }
             key.startsWith("android.buildToolsVersion ") -> {
-                updateProject { it.copy(buildToolsVersion = getUnquotedValue(key)) }
+                // Not used.
             }
             line.startsWith("minifyEnabled ") && key.startsWith("android.buildTypes.") -> {
-                updateBuildTypeFromContext(context) {
-                    it.copy(isMinifyEnabled = SdkConstants.VALUE_TRUE == getUnquotedValue(line))
-                }
+                updateBuildTypeFromContext(context) { it.copy(isMinifyEnabled = SdkConstants.VALUE_TRUE == getUnquotedValue(line)) }
             }
             key.startsWith("android.compileSdkVersion ") -> {
                 val value = getUnquotedValue(key)
-                updateProject { it.copy(compileTarget = if (Character.isDigit(value[0])) "android-$value" else value) }
+                updateModule { it.copy(compileTarget = if (Character.isDigit(value[0])) "android-$value" else value) }
             }
             line.startsWith("resConfig") -> { // and resConfigs
                 updateFlavorFromContext(context) {
@@ -1047,30 +998,18 @@ class GradleModelMocker @JvmOverloads constructor(
             key.startsWith("android.defaultConfig.vectorDrawables.useSupportLibrary ") -> {
                 val value = getUnquotedValue(key)
                 if (SdkConstants.VALUE_TRUE == value) {
-                    updateVectorDrawableOptions {
-                        it.copy(useSupportLibrary = true)
-                    }
+                    updateVectorDrawableOptionsUseSupportLibrary { true }
                 }
             }
             key.startsWith(
                 "android.compileOptions.sourceCompatibility JavaVersion.VERSION_"
             ) -> {
-                updateCompileOptions {
-                    it.copy(
-                        sourceCompatibility =
-                            key.substring(key.indexOf("VERSION_") + "VERSION_".length).replace('_', '.')
-                    )
-                }
+                updateSourceCompatibility(key.substring(key.indexOf("VERSION_") + "VERSION_".length).replace('_', '.'))
             }
             key.startsWith(
                 "android.compileOptions.targetCompatibility JavaVersion.VERSION_"
             ) -> {
-                updateCompileOptions {
-                    it.copy(
-                        targetCompatibility =
-                            key.substring(key.indexOf("VERSION_") + "VERSION_".length).replace('_', '.')
-                    )
-                }
+                // Not used.
             }
             key.startsWith("buildscript.dependencies.classpath ") -> {
                 if (key.contains("'com.android.tools.build:gradle:")) {
@@ -1118,14 +1057,12 @@ class GradleModelMocker @JvmOverloads constructor(
             }
             key.startsWith("android.flavorDimensions ") -> {
                 val value = key.substring("android.flavorDimensions ".length)
-                updateProject {
-                    it.copy(
-                        flavorDimensions = it.flavorDimensions.toSet() +
-                            Splitter.on(',').omitEmptyStrings()
-                                .trimResults().split(value)
-                                .map { getUnquotedValue(it) }
-                    )
-                }
+                flavorDimensions = (
+                    flavorDimensions.toSet() +
+                        Splitter.on(',').omitEmptyStrings()
+                            .trimResults().split(value)
+                            .map { getUnquotedValue(it) }
+                    ).toList()
             }
             line.startsWith("dimension ") && key.startsWith("android.productFlavors.") -> {
                 val name = key.substring("android.productFlavors.".length, key.indexOf(".dimension"))
@@ -1141,7 +1078,7 @@ class GradleModelMocker @JvmOverloads constructor(
                 val index = key.indexOf(".resValue ")
                 val name = key.substring("android.".length, index)
 
-                fun updateResValues(resValues: MutableMap<String, IdeClassField>) {
+                fun updateResValues(resValues: MutableMap<String, TestLintModelResourceField>) {
                     var fieldName: String? = null
                     var value: String? = null
                     var type: String? = null
@@ -1157,12 +1094,12 @@ class GradleModelMocker @JvmOverloads constructor(
                         }
                         resIndex++
                     }
-                    val field = object : IdeClassField {
-                        override val type: String = type!!
-                        override val name: String = fieldName!!
-                        override val value: String = value!!
-                    }
-                    resValues[fieldName!!] = field
+                    val field = TestLintModelResourceField(
+                        type = type!!,
+                        name = fieldName!!,
+                        value = value!!
+                    )
+                    resValues[fieldName] = field
                 }
 
                 if (name.startsWith("buildTypes.")) {
@@ -1194,13 +1131,11 @@ class GradleModelMocker @JvmOverloads constructor(
             key.startsWith("android.aaptOptions.namespaced ") -> {
                 val value = getUnquotedValue(key)
                 if (SdkConstants.VALUE_TRUE == value) {
-                    updateAaptOptions {
-                        it.copy(namespacing = IdeAaptOptions.Namespacing.REQUIRED)
-                    }
+                    updateNamespacing(LintModelNamespacingMode.REQUIRED)
                 }
             }
             key.startsWith("groupId ") -> {
-                updateProject { it.copy(groupId = getUnquotedValue(key)) }
+                updateModuleMavenName { it.copy(groupId = getUnquotedValue(key)) }
             }
             key.startsWith("android.lintOptions.") -> {
                 key = key.substring("android.lintOptions.".length)
@@ -1279,8 +1214,8 @@ class GradleModelMocker @JvmOverloads constructor(
                 val arg = key.substring(argIndex).trim { it <= ' ' }
                 key = key.substring(0, argIndex)
                 when (key) {
-                    "viewBinding" -> updateProject {
-                        it.copy(viewBindingOptions = IdeViewBindingOptionsImpl(enabled = toBoolean(arg)))
+                    "viewBinding" -> {
+                        updateBuildFeatures { it.copy(viewBinding = toBoolean(arg)) }
                     }
                 }
             }
@@ -1315,27 +1250,37 @@ class GradleModelMocker @JvmOverloads constructor(
             else -> LintOptions.SEVERITY_DEFAULT_ENABLED
         }
         severityOverrides[id] = severityValue
-        updateLintOptions(null, null, severityOverrides, null, null)
+        updateLintOptions(null, null, severityOverrides.toLintSeverityOverrides(), null, null)
+    }
+
+    private fun Map<String, Int>.toLintSeverityOverrides() = mapValues {
+        when (it.value) {
+            LintOptions.SEVERITY_FATAL -> LintModelSeverity.FATAL
+            LintOptions.SEVERITY_ERROR -> LintModelSeverity.ERROR
+            LintOptions.SEVERITY_WARNING -> LintModelSeverity.WARNING
+            LintOptions.SEVERITY_INFORMATIONAL -> LintModelSeverity.INFORMATIONAL
+            LintOptions.SEVERITY_IGNORE -> LintModelSeverity.IGNORE
+            LintOptions.SEVERITY_DEFAULT_ENABLED -> LintModelSeverity.DEFAULT_ENABLED
+            else -> LintModelSeverity.DEFAULT_ENABLED
+        }
     }
 
     private fun updateLintOptions(
         baseline: File?,
         lintConfig: File?,
-        severities: Map<String, Int>?,
+        severities: Map<String, LintModelSeverity>?,
         tests: Boolean?,
         dependencies: Boolean?
     ) {
-        updateProject {
-            val lintOptions = it.lintOptions as IdeLintOptionsImpl
+        updateModule {
             it.copy(
-                // No mocking IdeLintOptions; it's final
-                lintOptions = lintOptions.copy(
-                    baselineFile = baseline ?: lintOptions.baselineFile,
-                    lintConfig = lintConfig ?: lintOptions.lintConfig,
-                    severityOverrides = severities ?: severityOverrides,
-                    isCheckTestSources = tests ?: lintOptions.isCheckTestSources,
-                    isCheckDependencies = dependencies
-                        ?: lintOptions.isCheckDependencies, // TODO: Allow these to be customized by model mocker
+                lintOptions = it.lintOptions.copy(
+                    baselineFile = baseline ?: it.lintOptions.baselineFile,
+                    lintConfig = lintConfig ?: it.lintOptions.lintConfig,
+                    severityOverrides = severities ?: severityOverrides.toLintSeverityOverrides(),
+                    checkTestSources = tests ?: it.lintOptions.checkTestSources,
+                    checkDependencies = dependencies
+                        ?: it.lintOptions.checkDependencies, // TODO: Allow these to be customized by model mocker
                 )
             )
         }
@@ -1349,7 +1294,7 @@ class GradleModelMocker @JvmOverloads constructor(
         return updates
     }
 
-    private fun file(gradle: String, reportError: Boolean): File {
+    private fun file(gradle: String, @Suppress("SameParameterValue") reportError: Boolean): File {
         var gradle = gradle
         if (gradle.startsWith("file(\"") && gradle.endsWith("\")") ||
             gradle.startsWith("file('") && gradle.endsWith("')")
@@ -1367,7 +1312,7 @@ class GradleModelMocker @JvmOverloads constructor(
         return File(gradle)
     }
 
-    private fun stripQuotes(string: String, reportError: Boolean): String {
+    private fun stripQuotes(string: String, @Suppress("SameParameterValue") reportError: Boolean): String {
         if (string.startsWith("'") && string.endsWith("'") && string.length >= 2) {
             return string.substring(1, string.length - 1)
         }
@@ -1380,14 +1325,22 @@ class GradleModelMocker @JvmOverloads constructor(
         return string
     }
 
-    private fun updateProject(f: (IdeAndroidProjectImpl) -> IdeAndroidProjectImpl) {
-        project = f(project)
+    private fun updateModule(f: (TestLintModelModule) -> TestLintModelModule) {
+        moduleModel = f(moduleModel)
+    }
+
+    private fun updateBuildFeatures(f: (TestLintModelBuildFeatures) -> TestLintModelBuildFeatures) {
+        buildFeatures = f(buildFeatures)
+    }
+
+    private fun updateModuleMavenName(f: (TestLintModelMavenName) -> TestLintModelMavenName) {
+        updateModule { it.copy(mavenName = f(it.mavenName ?: TestLintModelMavenName(artifactId = moduleModel.modulePath))) }
     }
 
     private fun updateFlavorFromContext(
         context: String,
         defaultToDefault: Boolean = false,
-        f: (IdeProductFlavorImpl) -> IdeProductFlavorImpl
+        f: (TestProductFlavor) -> TestProductFlavor
     ) {
         when {
             context == "android.defaultConfig" -> {
@@ -1407,44 +1360,33 @@ class GradleModelMocker @JvmOverloads constructor(
         }
     }
 
-    private fun updateVectorDrawableOptions(f: (IdeVectorDrawablesOptionsImpl) -> IdeVectorDrawablesOptions) {
-        updateDefaultConfig {
-            it.copy(
-                vectorDrawables =
-                    f(
-                        (it.vectorDrawables as? IdeVectorDrawablesOptionsImpl)
-                            ?: IdeVectorDrawablesOptionsImpl(useSupportLibrary = null)
-                    )
-            )
-        }
+    private fun updateVectorDrawableOptionsUseSupportLibrary(f: (Boolean?) -> Boolean?) {
+        updateDefaultConfig { it.copy(useSupportLibrary = f(it.useSupportLibrary)) }
     }
 
-    private fun updateBuildType(name: String, create: Boolean, f: (IdeBuildTypeImpl) -> IdeBuildTypeImpl) {
+    private fun updateBuildType(
+        name: String,
+        create: Boolean,
+        f: (TestBuildType) -> TestBuildType
+    ) {
         val index = buildTypes.indexOfFirst { it.name == name }
         if (index >= 0) {
-            updateProject {
-                it.copy(
-                    buildTypes = run {
-                        val list = it.buildTypes.toMutableList()
-                        list[index] = (list[index] as IdeBuildTypeContainerImpl).let { buildType ->
-                            buildType.copy(buildType = f(buildType.buildType as IdeBuildTypeImpl))
-                        }
-                        list
-                    }
-                )
-            }
+            val list = buildTypes.toMutableList()
+            list[index] = f(list[index])
+            buildTypes = list
         }
         if (index < 0) {
             if (create) {
-                updateProject {
-                    it.copy(
-                        buildTypes = it.buildTypes + IdeBuildTypeContainerImpl(
-                            buildType = f(createBuildType(name)),
-                            sourceProvider = createSourceProvider(projectDir, name),
-                            extraSourceProviders = emptyList()
-                        )
+                val isDebuggable = name.startsWith("debug")
+                buildTypes = buildTypes + f(
+                    TestBuildType(
+                        name = name,
+                        isDebuggable = isDebuggable,
+                        mainSourceProvider = createSourceProvider(projectDir, name, isDebugOnly = isDebuggable),
+                        unitTestSourceProvider = null,
+                        instrumentationTestSourceProvider = null
                     )
-                }
+                )
             } else {
                 error("Couldn't find flavor $name")
             }
@@ -1453,7 +1395,7 @@ class GradleModelMocker @JvmOverloads constructor(
 
     private fun updateBuildTypeFromContext(
         context: String,
-        f: (IdeBuildTypeImpl) -> IdeBuildTypeImpl
+        f: (TestBuildType) -> TestBuildType
     ) {
         when {
             context.startsWith("android.buildTypes.") -> {
@@ -1466,47 +1408,19 @@ class GradleModelMocker @JvmOverloads constructor(
         }
     }
 
-    private fun createBuildType(name: String): IdeBuildTypeImpl {
-        return IdeBuildTypeImpl(
-            name = name,
-            applicationIdSuffix = null,
-            versionNameSuffix = null,
-            resValues = emptyMap(),
-            proguardFiles = emptyList(),
-            consumerProguardFiles = emptyList(),
-            manifestPlaceholders = emptyMap(),
-            multiDexEnabled = null,
-            isDebuggable = name.startsWith("debug"),
-            isJniDebuggable = false,
-            isRenderscriptDebuggable = false,
-            renderscriptOptimLevel = 0,
-            isMinifyEnabled = false,
-            isZipAlignEnabled = false
-        )
+    private fun updateSourceCompatibility(level: String) {
+        updateModule { it.copy(javaSourceLevel = level) }
     }
 
-    private fun updateCompileOptions(f: (IdeJavaCompileOptionsImpl) -> IdeJavaCompileOptionsImpl) {
-        updateProject {
-            it.copy(
-                javaCompileOptions = f(it.javaCompileOptions as IdeJavaCompileOptionsImpl)
-            )
-        }
-    }
-
-    private fun updateAaptOptions(f: (IdeAaptOptionsImpl) -> IdeAaptOptionsImpl) {
-        updateProject {
-            it.copy(
-                aaptOptions = f(it.aaptOptions as IdeAaptOptionsImpl)
-            )
+    private fun updateNamespacing(namespacingMode: LintModelNamespacingMode) {
+        updateBuildFeatures {
+            it.copy(namespacingMode = namespacingMode)
         }
     }
 
     private fun updateModelVersion(modelVersion: String) {
-        updateProject {
-            it.copy(
-                modelVersion = modelVersion,
-                apiVersion = if (GradleVersion.parse(modelVersion).major >= 2) 3 else 2
-            )
+        updateModule {
+            it.copy(gradleVersion = GradleVersion.parse(modelVersion))
         }
     }
 
@@ -1516,13 +1430,13 @@ class GradleModelMocker @JvmOverloads constructor(
         context: String
     ) {
         if ("android.productFlavors" == context && productFlavors
-            .none { flavor: IdeProductFlavor -> flavor.name == name }
+            .none { flavor -> flavor.name == name }
         ) {
             // Defining new product flavors
             updateProductFlavor(name, true) { it }
         }
         if ("android.buildTypes" == context && buildTypes
-            .none { buildType: IdeBuildType -> buildType.name == name }
+            .none { buildType -> buildType.name == name }
         ) {
             // Defining new build types
             updateBuildType(name, true) { it }
@@ -1530,107 +1444,51 @@ class GradleModelMocker @JvmOverloads constructor(
         scan(blockBody, if (context.isEmpty()) name else "$context.$name")
     }
 
-    private fun updateProductFlavor(name: String, create: Boolean, f: (IdeProductFlavorImpl) -> IdeProductFlavorImpl) {
+    private fun updateProductFlavor(
+        name: String,
+        create: Boolean,
+        f: (TestProductFlavor) -> TestProductFlavor
+    ) {
         val index = productFlavors.indexOfFirst { it.name == name }
         if (index >= 0) {
-            updateProject {
-                it.copy(
-                    productFlavors = run {
-                        val list = it.productFlavors.toMutableList()
-                        list[index] = (list[index] as IdeProductFlavorContainerImpl).let { productFlavor ->
-                            productFlavor.copy(productFlavor = f(productFlavor.productFlavor as IdeProductFlavorImpl))
-                        }
-                        list
-                    }
-                )
-            }
+            val list = productFlavors.toMutableList()
+            list[index] = f(list[index])
+            productFlavors = list
         }
         if (index < 0 && create) {
-            updateProject {
-                it.copy(
-                    productFlavors = it.productFlavors + IdeProductFlavorContainerImpl(
-                        productFlavor = f(createProductFlavor(name)),
-                        sourceProvider = createSourceProvider(projectDir, name),
-                        extraSourceProviders = listOf(
-                            IdeSourceProviderContainerImpl(
-                                ARTIFACT_NAME_ANDROID_TEST,
-                                createSourceProvider(projectDir, "androidTest".appendCapitalized(name))
-                            ),
-                            IdeSourceProviderContainerImpl(
-                                ARTIFACT_NAME_UNIT_TEST,
-                                createSourceProvider(projectDir, "test".appendCapitalized(name))
-                            ),
-                        )
+            productFlavors = productFlavors + f(
+                TestProductFlavor(
+                    name = name,
+                    mainSourceProvider = createSourceProvider(projectDir, name),
+                    unitTestSourceProvider = createSourceProvider(
+                        projectDir,
+                        "test".appendCapitalized(name),
+                        isUnitTest = true
+                    ),
+                    instrumentationTestSourceProvider = createSourceProvider(
+                        projectDir,
+                        "androidTest".appendCapitalized(name),
+                        isInstrumentationTest = true
                     )
-                )
-            }
-        }
-    }
-
-    private fun updateDefaultConfig(f: (IdeProductFlavorImpl) -> IdeProductFlavorImpl) {
-        updateProject {
-            val flavorContainerImpl = it.defaultConfig as IdeProductFlavorContainerImpl
-            it.copy(
-                defaultConfig = flavorContainerImpl.copy(
-                    productFlavor = f(flavorContainerImpl.productFlavor as IdeProductFlavorImpl)
                 )
             )
         }
     }
 
-    private val defaultConfig get() = project.defaultConfig.productFlavor as IdeProductFlavorImpl
-
-    private fun createProductFlavor(name: String): IdeProductFlavorImpl {
-        return IdeProductFlavorImpl(
-            name = name,
-            applicationIdSuffix = null,
-            versionNameSuffix = null,
-            resValues = emptyMap(),
-            proguardFiles = emptyList(),
-            consumerProguardFiles = emptyList(),
-            manifestPlaceholders = emptyMap(),
-            multiDexEnabled = null,
-            dimension = null,
-            applicationId = null,
-            versionCode = null,
-            versionName = null,
-            minSdkVersion = null,
-            targetSdkVersion = null,
-            maxSdkVersion = null,
-            testApplicationId = null,
-            testInstrumentationRunner = null,
-            testInstrumentationRunnerArguments = emptyMap(),
-            testHandleProfiling = null,
-            testFunctionalTest = null,
-            resourceConfigurations = emptySet(),
-            vectorDrawables = null
-        )
+    private fun updateDefaultConfig(f: (TestProductFlavor) -> TestProductFlavor) {
+        defaultConfig = f(defaultConfig)
     }
 
-    private fun createApiVersion(value: String): IdeApiVersion {
+    private fun createAndroidVersion(value: String): AndroidVersion {
         val s = value.substring(value.indexOf(' ') + 1)
         if (s.startsWith("'")) {
             val codeName = getUnquotedValue(s)
             val sdkVersion = SdkVersionInfo.getVersion(codeName, null)
-            if (sdkVersion != null) {
-                return IdeApiVersionImpl(
-                    codename = sdkVersion.codename,
-                    apiString = sdkVersion.apiString,
-                    apiLevel = sdkVersion.apiLevel,
-                )
-            }
+            if (sdkVersion != null) return sdkVersion
         } else {
-            return IdeApiVersionImpl(
-                apiString = s,
-                codename = null,
-                apiLevel = s.toInt(),
-            )
+            return AndroidVersion(s.toInt(), null)
         }
-        return IdeApiVersionImpl(
-            apiString = "",
-            codename = null,
-            apiLevel = 0,
-        )
+        return AndroidVersion(0, "")
     }
 
     private fun addDependency(declaration: String, artifact: String?, isProvided: Boolean) {
@@ -1641,7 +1499,9 @@ class GradleModelMocker @JvmOverloads constructor(
         // a test project and then run ./gradlew app:dependencies
         val wellKnownLibrary = wellKnownLibraries.firstOrNull { declaration.startsWith(it.groupAndName + ":") }
         if (wellKnownLibrary != null) {
-            val version = declaration.substring(wellKnownLibrary.groupAndName.length + 1)
+            val version = declaration
+                .substring(wellKnownLibrary.groupAndName.length + 1)
+                .substringBefore("@") // @jar/aar is not part of the version and should not be applied to other dependencies.
             addTransitiveLibrary(
                 wellKnownLibrary.dependencies.replace("VERSION", version),
                 artifact
@@ -1687,14 +1547,14 @@ class GradleModelMocker @JvmOverloads constructor(
         val libraries = dep.createLibrary()
         for (library in libraries) {
             when (library) {
-                is IdeAndroidLibrary -> artifactDeps.androidLibraries.add(library)
-                is IdeJavaLibrary -> artifactDeps.javaLibraries.add(library)
-                is IdeModuleLibrary -> artifactDeps.moduleLibraries.add(library)
+                is TestLintModelAndroidLibrary -> artifactDeps.androidLibraries.add(library)
+                is TestLintModelJavaLibrary -> artifactDeps.javaLibraries.add(library)
+                is TestLintModelModuleLibrary -> artifactDeps.moduleLibraries.add(library)
             }
         }
     }
 
-    private fun createAndroidLibrary(coordinateString: String, isProvided: Boolean): IdeAndroidLibrary {
+    private fun createAndroidLibrary(coordinateString: String, isProvided: Boolean): TestLintModelAndroidLibrary {
         return createAndroidLibrary(coordinateString, null, isProvided, null)
     }
 
@@ -1703,7 +1563,7 @@ class GradleModelMocker @JvmOverloads constructor(
         promotedTo: String?,
         isProvided: Boolean,
         jar: File?
-    ): IdeAndroidLibrary {
+    ): TestLintModelAndroidLibrary {
         var jar = jar
         val coordinate = getCoordinate(coordinateString, promotedTo, GradleCoordinate.ArtifactType.AAR)
         val dir = File(
@@ -1716,40 +1576,32 @@ class GradleModelMocker @JvmOverloads constructor(
                 coordinate.revision
         )
         if (jar == null) {
-            jar = File(dir, "jars/" + SdkConstants.FN_CLASSES_JAR)
+            jar = dir.resolve(File("jars/" + SdkConstants.FN_CLASSES_JAR))
         }
         if (!jar.exists()) {
             createEmptyJar(jar)
         }
         return deduplicateLibrary(
-            IdeAndroidLibraryImpl(
-                IdeAndroidLibraryCore(
-                    coordinate.toString(),
-                    dir,
-                    SdkConstants.FN_ANDROID_MANIFEST_XML,
-                    jar.path, // non relative path is fine here too.
-                    jar.path, // non relative path is fine here too.
-                    "res",
-                    null,
-                    "assets", emptyList(),
-                    "jni",
-                    "aidl",
-                    "rs",
-                    "proguard.pro",
-                    libraryLintJars.getOrDefault(coordinateString, "lint.jar"),
-                    SdkConstants.FN_ANNOTATIONS_ZIP,
-                    libraryPublicResourcesFiles.getOrDefault(
-                        coordinateString, "public.txt"
-                    ),
-                    "../lib.aar",
-                    librarySymbolFiles.getOrDefault(coordinateString, "R.txt")
-                ),
-                isProvided
+            TestLintModelAndroidLibrary(
+                artifactAddress = coordinateString.substringBefore("@"),
+                lintJar = dir.resolve(File(libraryLintJars.getOrDefault(coordinateString, "lint.jar"))),
+                jarFiles = listOf(jar),
+                resolvedCoordinates = getMavenName(coordinateString),
+                folder = dir,
+                manifest = dir.resolve(File(SdkConstants.FN_ANDROID_MANIFEST_XML)),
+                resFolder = dir.resolve(File("res")),
+                assetsFolder = dir.resolve(File("assets")),
+                publicResources =
+                dir.resolve(File(libraryPublicResourcesFiles.getOrDefault(coordinateString, "public.txt"))),
+                symbolFile = dir.resolve(File(librarySymbolFiles.getOrDefault(coordinateString, "R.txt"))),
+                proguardRules = dir.resolve(File("proguard.pro")),
+                externalAnnotations = dir.resolve(File(SdkConstants.FN_ANNOTATIONS_ZIP)),
+                provided = isProvided
             )
         )
     }
 
-    private fun createJavaLibrary(coordinateString: String, isProvided: Boolean): IdeJavaLibrary {
+    private fun createJavaLibrary(coordinateString: String, isProvided: Boolean): TestLintModelJavaLibrary {
         return createJavaLibrary(coordinateString, null, isProvided, null)
     }
 
@@ -1758,7 +1610,7 @@ class GradleModelMocker @JvmOverloads constructor(
         promotedTo: String?,
         isProvided: Boolean,
         jar: File?
-    ): IdeJavaLibrary {
+    ): TestLintModelJavaLibrary {
         var jar = jar
         val coordinate = getCoordinate(coordinateString, promotedTo, GradleCoordinate.ArtifactType.JAR)
         if (jar == null) {
@@ -1783,30 +1635,54 @@ class GradleModelMocker @JvmOverloads constructor(
             }
         }
         return deduplicateLibrary(
-            IdeJavaLibraryImpl(
-                IdeJavaLibraryCore(coordinate.toString(), jar), isProvided
+            TestLintModelJavaLibrary(
+                provided = isProvided,
+                artifactAddress = coordinateString.substringBefore("@"),
+                lintJar = null,
+                jarFiles = listOf(jar),
+                resolvedCoordinates = getMavenName(coordinateString)
             )
         )
     }
 
-    private fun createModuleLibrary(name: String): IdeModuleLibrary {
+    private fun createModuleLibrary(name: String): TestLintModelModuleLibrary {
         return deduplicateLibrary(
-            IdeModuleLibraryImpl(
-                IdeModuleLibraryCore(name, "artifacts:$name", null), false
+            TestLintModelModuleLibrary(
+                provided = false,
+                artifactAddress = "artifacts:$name",
+                lintJar = null,
+                projectPath = name
             )
         )
     }
 
-    private fun deduplicateLibrary(library: IdeAndroidLibrary): IdeAndroidLibrary {
-        return androidLibraryInstances.computeIfAbsent(library) { it: IdeAndroidLibrary? -> library }
+    private fun deduplicateLibrary(library: TestLintModelAndroidLibrary): TestLintModelAndroidLibrary {
+        return androidLibraryInstances.computeIfAbsent(library) { it: TestLintModelAndroidLibrary? ->
+            library.also {
+                registerInLibraryTable(it)
+            }
+        }
     }
 
-    private fun deduplicateLibrary(library: IdeJavaLibrary): IdeJavaLibrary {
-        return javaLibraryInstances.computeIfAbsent(library) { it: IdeJavaLibrary? -> library }
+    private fun deduplicateLibrary(library: TestLintModelJavaLibrary): TestLintModelJavaLibrary {
+        return javaLibraryInstances.computeIfAbsent(library) { it: TestLintModelJavaLibrary? ->
+            library.also {
+                registerInLibraryTable(it)
+            }
+        }
     }
 
-    private fun deduplicateLibrary(library: IdeModuleLibrary): IdeModuleLibrary {
-        return moduleLibraryInstances.computeIfAbsent(library) { it: IdeModuleLibrary? -> library }
+    private fun deduplicateLibrary(library: TestLintModelModuleLibrary): TestLintModelModuleLibrary {
+        return moduleLibraryInstances.computeIfAbsent(library) { it: TestLintModelModuleLibrary? ->
+            library.also {
+                registerInLibraryTable(it)
+            }
+        }
+    }
+
+    private fun registerInLibraryTable(it: LintModelLibrary) {
+        // Prefer the first instance as if it is different it may have come from locally pre-configured libraries.
+        libraryTable.getOrPut(it.artifactAddress) { it }
     }
 
     private fun getCoordinate(
@@ -1834,16 +1710,14 @@ class GradleModelMocker @JvmOverloads constructor(
     }
 
     /**
-     * Given a dependency graph, returns a populated [Dependencies] object. You can generate
-     * Gradle dependency graphs by running for example:
-     *
+     * Given a dependency graph, returns a populated [Dependencies]
+     * object. You can generate Gradle dependency graphs by running for
+     * example:
      * <pre>
      * $ ./gradlew :app:dependencies
-     </pre> *
-     *
+     * </pre> *
      *
      * Sample graph:
-     *
      * <pre>
      * \--- com.android.support.test.espresso:espresso-core:2.2.2
      * +--- com.squareup:javawriter:2.1.1
@@ -1861,16 +1735,11 @@ class GradleModelMocker @JvmOverloads constructor(
      * |    \--- org.hamcrest:hamcrest-library:1.3 (*)
      * +--- com.google.code.findbugs:jsr305:2.0.1
      * \--- javax.annotation:javax.annotation-api:1.2
-     </pre> *
+     * </pre> *
      *
      * @param graph the graph
      * @return the corresponding dependencies
      */
-    private fun createDependencies(graph: String): IdeDependencies {
-        val deps = parseDependencyGraph(graph)
-        return createDependencies(deps)
-    }
-
     private fun parseDependencyGraph(graph: String, map: MutableMap<String, Dep> = Maps.newHashMap()): List<Dep> {
         val lines = graph.split("\n").filter { it.isNotBlank() }.toTypedArray()
         // TODO: Check that it's using the expected graph format - e.g. indented to levels
@@ -1912,21 +1781,7 @@ class GradleModelMocker @JvmOverloads constructor(
         return root.children
     }
 
-    private fun createDependencies(deps: List<Dep>): IdeDependencies {
-        val result: MutableCollection<IdeLibrary> = LinkedHashSet()
-        for (dep in deps) {
-            val androidLibrary = dep.createAndroidLibrary()
-            result.addAll(androidLibrary)
-        }
-        return IdeDependenciesImpl(
-            result.filterIsInstance<IdeAndroidLibrary>(),
-            result.filterIsInstance<IdeJavaLibrary>(),
-            result.filterIsInstance<IdeModuleLibrary>(),
-            ImmutableList.of()
-        )
-    }
-
-    /** Dependency graph node  */
+    /** Dependency graph node. */
     inner class Dep(coordinateString: String, depth: Int) {
         val coordinate: GradleCoordinate?
         val coordinateString: String
@@ -1950,7 +1805,7 @@ class GradleModelMocker @JvmOverloads constructor(
         val isProject: Boolean
             get() = coordinate == null && coordinateString.startsWith("project ")
 
-        fun createLibrary(): Collection<IdeLibrary> {
+        fun createLibrary(): Collection<LintModelLibrary> {
             return if (isJavaLibrary) {
                 createJavaLibrary()
             } else {
@@ -1958,8 +1813,8 @@ class GradleModelMocker @JvmOverloads constructor(
             }
         }
 
-        fun createAndroidLibrary(): Collection<IdeLibrary> {
-            val result: MutableCollection<IdeLibrary> = LinkedHashSet()
+        fun createAndroidLibrary(): Collection<LintModelLibrary> {
+            val result: MutableCollection<LintModelLibrary> = LinkedHashSet()
             if (isProject) {
                 val name = coordinateString.substring("project ".length)
                 result.add(createModuleLibrary(name))
@@ -1978,8 +1833,8 @@ class GradleModelMocker @JvmOverloads constructor(
             return result
         }
 
-        private fun createJavaLibrary(): Collection<IdeLibrary> {
-            val result: MutableCollection<IdeLibrary> = LinkedHashSet()
+        private fun createJavaLibrary(): Collection<LintModelLibrary> {
+            val result: MutableCollection<LintModelLibrary> = LinkedHashSet()
             if (isProject) {
                 val name = coordinateString.substring("project ".length)
                 result.add(createModuleLibrary(name))
@@ -2039,11 +1894,6 @@ class GradleModelMocker @JvmOverloads constructor(
     }
 
     companion object {
-        /**
-         * Extension to [AndroidProjectTypes] for non-Android project types, consumed in [ ]
-         */
-        const val PROJECT_TYPE_JAVA_LIBRARY = 999
-        const val PROJECT_TYPE_JAVA = 998
 
         private val configurationPattern = Pattern.compile(
             "^dependencies\\.(|test|androidTest)([Cc]ompile|[Ii]mplementation)[ (].*"
@@ -2093,61 +1943,49 @@ class GradleModelMocker @JvmOverloads constructor(
             throw IllegalArgumentException("String $string should be 'true' or 'false'")
         }
 
-        private fun createAndroidArtifactOutput(
-            filterType: String,
-            identifier: String
-        ): IdeAndroidArtifactOutput {
-            return IdeAndroidArtifactOutputImpl(
-                filters =
-                    if (filterType.isEmpty()) emptyList()
-                    else listOf(
-                        object : FilterData {
-                            override fun getIdentifier() = identifier
-                            override fun getFilterType() = filterType
-                        }
-                    ),
-                versionCode = 0,
-                outputFile = File("")
-            )
-        }
-
         private fun createSourceProvider(
             root: File,
-            name: String
-        ): IdeSourceProvider {
-            return IdeSourceProviderImpl(
-                myName = name,
-                myFolder = root,
-                myManifestFile = File(root, "src/" + name + "/" + SdkConstants.ANDROID_MANIFEST_XML).path,
-                myJavaDirectories = listOf(
-                    File(root, "src/$name/java").path,
-                    File(root, "src/$name/kotlin").path
+            name: String,
+            isUnitTest: Boolean = false,
+            isInstrumentationTest: Boolean = false,
+            isDebugOnly: Boolean = false
+        ): TestLintModelSourceProvider {
+            return TestLintModelSourceProvider(
+                name = name,
+                _isUnitTest = isUnitTest,
+                _isInstrumentationTest = isInstrumentationTest,
+                _isDebugOnly = isDebugOnly,
+                manifestFile = File(root, "src/" + name + "/" + SdkConstants.ANDROID_MANIFEST_XML),
+                javaDirectories = listOf(
+                    File(root, "src/$name/java"),
+                    File(root, "src/$name/kotlin")
                 ),
-                myKotlinDirectories = listOf(
-                    File(root, "src/$name/java").path,
-                    File(root, "src/$name/kotlin").path
+                resDirectories = listOf(
+                    File(root, "src/$name/res")
                 ),
-                myResDirectories = listOf(
-                    File(root, "src/$name/res").path
-                ),
-                myAssetsDirectories = listOf(
-                    File(root, "src/$name/assets").path
-                ),
-                myResourcesDirectories = emptyList(),
-                myAidlDirectories = emptyList(),
-                myRenderscriptDirectories = emptyList(),
-                myJniLibsDirectories = emptyList(),
-                myShadersDirectories = emptyList(),
-                myMlModelsDirectories = emptyList()
+                assetsDirectories = listOf(
+                    File(root, "src/$name/assets")
+                )
             )
         }
 
         /**
-         * Returns whether a library declaration is a plain Java library instead of an Android library.
-         * There is no way to tell from the Gradle description; it involves looking at the actual Maven
-         * artifacts. For mocking purposes we have a hardcoded list.
+         * Returns whether a library declaration is a plain Java library
+         * instead of an Android library. There is no way to tell from
+         * the Gradle description; it involves looking at the actual
+         * Maven artifacts. For mocking purposes we have a hardcoded
+         * list.
          */
         private fun isJavaLibrary(declaration: String): Boolean {
+            return _isJavaLibrary(declaration).also {
+                when (it) {
+                    true -> assert(!declaration.contains("@aar"))
+                    false -> assert(!declaration.contains("@jar"))
+                }
+            }
+        }
+
+        private fun _isJavaLibrary(declaration: String): Boolean {
             if (declaration.startsWith("com.android.support:support-annotations:")) {
                 return true
             } else if (declaration.startsWith("com.android.support:support-v4:") ||
@@ -2164,8 +2002,8 @@ class GradleModelMocker @JvmOverloads constructor(
             } else if (declaration.startsWith("com.google.android.wearable:wearable:")) {
                 return true
             } else if (declaration.startsWith(
-                "com.android.support.constraint:constraint-layout-solver:"
-            )
+                    "com.android.support.constraint:constraint-layout-solver:"
+                )
             ) {
                 return true
             } else if (declaration.startsWith("junit:junit:")) {
@@ -2195,6 +2033,16 @@ class GradleModelMocker @JvmOverloads constructor(
 
     init {
         flags.severityOverrides = HashMap()
+    }
+
+    override fun getAllLibraries(): Collection<LintModelLibrary> {
+        // Join collections instead of using _libraryTable just to maintain the order of libraries in the resolver
+        // as expected by tests (though any order is correct).
+        return androidLibraryInstances.values + javaLibraryInstances.values + moduleLibraryInstances.values
+    }
+
+    override fun getLibrary(artifactAddress: String): LintModelLibrary? {
+        return libraryTable[artifactAddress]
     }
 }
 
@@ -2318,3 +2166,234 @@ private val wellKnownLibraries = listOf(
 |         \--- org.jetbrains.kotlin:kotlin-stdlib:VERSION (*)"""
     ),
 )
+
+private data class TestLintModelModule(
+    override val dir: File = File(""),
+    override val modulePath: String = "",
+    override val type: LintModelModuleType = LintModelModuleType.APP,
+    override val mavenName: TestLintModelMavenName? = null,
+    override val gradleVersion: GradleVersion? = null,
+    override val buildFolder: File = File(""),
+    override val lintOptions: TestLintModelLintOptions = TestLintModelLintOptions(),
+    override val lintRuleJars: List<File> = emptyList(),
+    override val resourcePrefix: String? = null,
+    override val dynamicFeatures: Collection<String> = emptySet(),
+    override val bootClassPath: List<File> = emptyList(),
+    override val javaSourceLevel: String = "",
+    override val compileTarget: String = "",
+    override val variants: List<LintModelVariant> = emptyList(),
+    val neverShrinking: Boolean = false
+) : LintModelModule {
+    override val loader: LintModelModuleLoader get() = TestLintModelModuleLoader
+    override fun neverShrinking(): Boolean = neverShrinking
+}
+
+private object TestLintModelModuleLoader : LintModelModuleLoader
+
+private data class TestLintModelLintOptions(
+    override val disable: Set<String> = emptySet(),
+    override val enable: Set<String> = emptySet(),
+    override val check: Set<String>? = null,
+    override val abortOnError: Boolean = true,
+    override val absolutePaths: Boolean = true,
+    override val noLines: Boolean = false,
+    override val quiet: Boolean = false,
+    override val checkAllWarnings: Boolean = false,
+    override val ignoreWarnings: Boolean = false,
+    override val warningsAsErrors: Boolean = false,
+    override val checkTestSources: Boolean = false,
+    override val ignoreTestSources: Boolean = false,
+    override val checkGeneratedSources: Boolean = false,
+    override val explainIssues: Boolean = true,
+    override val showAll: Boolean = false,
+    override val lintConfig: File? = null,
+    override val textReport: Boolean = false,
+    override val textOutput: File? = null,
+    override val htmlReport: Boolean = true,
+    override val htmlOutput: File? = null,
+    override val xmlReport: Boolean = true,
+    override val xmlOutput: File? = null,
+    override val sarifReport: Boolean = false,
+    override val sarifOutput: File? = null,
+    override val checkReleaseBuilds: Boolean = true,
+    override val checkDependencies: Boolean = false,
+    override val baselineFile: File? = null,
+    override val severityOverrides: Map<String, LintModelSeverity>? = null
+) : LintModelLintOptions
+
+private data class TestLintModelVariant(
+    val _module: () -> LintModelModule,
+    override val name: String,
+    override val useSupportLibraryVectorDrawables: Boolean,
+    override val mainArtifact: LintModelAndroidArtifact,
+    override val testArtifact: LintModelJavaArtifact?,
+    override val androidTestArtifact: LintModelAndroidArtifact?,
+    override val mergedManifest: File?,
+    override val manifestMergeReport: File?,
+    override val `package`: String?,
+    override val minSdkVersion: AndroidVersion?,
+    override val targetSdkVersion: AndroidVersion?,
+    override val resValues: Map<String, LintModelResourceField>,
+    override val manifestPlaceholders: Map<String, String>,
+    override val resourceConfigurations: Collection<String>,
+    override val proguardFiles: Collection<File>,
+    override val consumerProguardFiles: Collection<File>,
+    override val sourceProviders: List<LintModelSourceProvider>,
+    override val testSourceProviders: List<LintModelSourceProvider>,
+    override val debuggable: Boolean,
+    override val shrinkable: Boolean,
+    override val buildFeatures: LintModelBuildFeatures,
+    override val libraryResolver: LintModelLibraryResolver,
+    override val partialResultsDir: File?
+
+) : LintModelVariant {
+    override val module: LintModelModule get() = _module()
+}
+
+private val emptyLibraryResolver = DefaultLintModelLibraryResolver(emptyMap())
+private val emptyLibraryResolverProvider: () -> LintModelLibraryResolver = { emptyLibraryResolver }
+
+private data class TestLintModelAndroidArtifact(
+    override val dependencies: LintModelDependencies = TestLintModelDependencies(libraryResolver = emptyLibraryResolverProvider),
+    override val classOutputs: List<File>,
+    override val applicationId: String,
+    override val generatedResourceFolders: Collection<File>,
+    override val generatedSourceFolders: Collection<File>
+) : LintModelAndroidArtifact
+
+private data class TestLintModelJavaArtifact(
+    override val dependencies: LintModelDependencies = TestLintModelDependencies(libraryResolver = emptyLibraryResolverProvider),
+    override val classOutputs: List<File>
+) : LintModelJavaArtifact
+
+private data class TestLintModelDependencies(
+    override val compileDependencies: LintModelDependencyGraph = EmptyLintModelDependencyGraph,
+    override val packageDependencies: LintModelDependencyGraph = EmptyLintModelDependencyGraph,
+    val libraryResolver: () -> LintModelLibraryResolver,
+) : LintModelDependencies {
+    override fun getLibraryResolver(): LintModelLibraryResolver = libraryResolver()
+}
+
+object EmptyLintModelDependencyGraph : LintModelDependencyGraph {
+    override val roots: List<LintModelDependency> = emptyList()
+    override fun findLibrary(mavenName: String, direct: Boolean): LintModelLibrary? = null
+    override fun getAllGraphItems(): List<LintModelDependency> = emptyList()
+    override fun getAllLibraries(): List<LintModelLibrary> = emptyList()
+}
+
+private data class TestLintModelMavenName(
+    override val groupId: String = "",
+    override val artifactId: String = "",
+    override val version: String = ""
+) : LintModelMavenName {
+    override fun toString(): String = "$groupId:$artifactId:$version"
+}
+
+private data class TestLintModelBuildFeatures(
+    override val viewBinding: Boolean = false,
+    override val coreLibraryDesugaringEnabled: Boolean = false,
+    override val namespacingMode: LintModelNamespacingMode = LintModelNamespacingMode.DISABLED
+) : LintModelBuildFeatures
+
+private data class TestProductFlavor(
+    val name: String,
+    val dimension: String? = null,
+    val applicationId: String? = null,
+    val minSdkVersion: AndroidVersion? = null,
+    val targetSdkVersion: AndroidVersion? = null,
+    val versionCode: Int? = null,
+    val versionName: String? = null,
+    val versionNameSuffix: String? = null,
+    val applicationIdSuffix: String? = null,
+    val resourceConfigurations: Collection<String> = emptySet(),
+    val manifestPlaceholders: Map<String, String> = emptyMap(),
+    val resValues: Map<String, TestLintModelResourceField> = emptyMap(),
+    val useSupportLibrary: Boolean? = null,
+    val mainSourceProvider: TestLintModelSourceProvider?,
+    val unitTestSourceProvider: TestLintModelSourceProvider?,
+    val instrumentationTestSourceProvider: TestLintModelSourceProvider?,
+)
+
+private data class TestBuildType(
+    val name: String,
+    val isDebuggable: Boolean,
+    val isMinifyEnabled: Boolean = false,
+    val manifestPlaceholders: Map<String, String> = emptyMap(),
+    val resValues: Map<String, TestLintModelResourceField> = emptyMap(),
+    val mainSourceProvider: TestLintModelSourceProvider,
+    val unitTestSourceProvider: TestLintModelSourceProvider?,
+    val instrumentationTestSourceProvider: TestLintModelSourceProvider?,
+)
+
+private data class TestLintModelResourceField(
+    override val type: String,
+    override val name: String,
+    override val value: String
+) : LintModelResourceField
+
+private data class TestLintModelSourceProvider(
+    val name: String,
+    val _isUnitTest: Boolean,
+    val _isInstrumentationTest: Boolean,
+    val _isDebugOnly: Boolean,
+    override val manifestFile: File,
+    override val javaDirectories: Collection<File>,
+    override val resDirectories: Collection<File>,
+    override val assetsDirectories: Collection<File>
+) : LintModelSourceProvider {
+    override fun isUnitTest(): Boolean = _isUnitTest
+
+    override fun isInstrumentationTest(): Boolean = _isInstrumentationTest
+
+    override fun isDebugOnly(): Boolean = _isDebugOnly
+}
+
+private data class TestLintModelAndroidLibrary(
+    override val provided: Boolean,
+    override val artifactAddress: String,
+    override val lintJar: File?,
+    override val jarFiles: List<File>,
+    override val resolvedCoordinates: LintModelMavenName,
+    override val folder: File,
+    override val manifest: File,
+    override val resFolder: File,
+    override val assetsFolder: File,
+    override val publicResources: File,
+    override val symbolFile: File,
+    override val externalAnnotations: File,
+    override val proguardRules: File
+) : LintModelAndroidLibrary
+
+private data class TestLintModelJavaLibrary(
+    override val provided: Boolean,
+    override val artifactAddress: String,
+    override val lintJar: File?,
+    override val jarFiles: List<File>,
+    override val resolvedCoordinates: LintModelMavenName
+) : LintModelJavaLibrary
+
+private data class TestLintModelModuleLibrary(
+    override val provided: Boolean,
+    override val artifactAddress: String,
+    override val lintJar: File?,
+    override val projectPath: String
+) : LintModelModuleLibrary
+
+private fun getMavenName(artifactAddress: String): LintModelMavenName {
+    fun Int.nextDelimiterIndex(vararg delimiters: Char): Int {
+        return delimiters.asSequence()
+            .map {
+                val index = artifactAddress.indexOf(it, startIndex = this + 1)
+                if (index == -1) artifactAddress.length else index
+            }.min() ?: artifactAddress.length
+    }
+
+    val lastDelimiterIndex = 0
+        .nextDelimiterIndex(':')
+        .nextDelimiterIndex(':')
+        .nextDelimiterIndex(':', '@')
+
+    // Currently [LintModelMavenName] supports group:name:version format only.
+    return LintModelMavenName.parse(artifactAddress.substring(0, lastDelimiterIndex))
+        ?: error("Cannot parse '$artifactAddress'")
+}

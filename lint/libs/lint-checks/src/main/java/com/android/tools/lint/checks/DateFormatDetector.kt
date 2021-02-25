@@ -33,7 +33,7 @@ import org.jetbrains.uast.UPolyadicExpression
 import org.jetbrains.uast.UastBinaryOperator
 import org.jetbrains.uast.expressions.UInjectionHost
 
-/** Checks for errors related to Date Formats */
+/** Checks for errors related to Date Formats. */
 class DateFormatDetector : Detector(), SourceCodeScanner {
     // ---- implements SourceCodeScanner ----
     override fun getApplicableConstructorTypes(): List<String> {
@@ -144,14 +144,15 @@ class DateFormatDetector : Detector(), SourceCodeScanner {
                 Scope.JAVA_FILE_SCOPE
             )
 
-        /** Constructing SimpleDateFormat without an explicit locale */
+        /**
+         * Constructing SimpleDateFormat without an explicit locale.
+         */
         @JvmField
         val DATE_FORMAT =
             Issue.create(
                 id = "SimpleDateFormat",
                 briefDescription = "Implied locale in date format",
-                explanation =
-                    """
+                explanation = """
                     Almost all callers should use `getDateInstance()`, `getDateTimeInstance()`, \
                     or `getTimeInstance()` to get a ready-made instance of SimpleDateFormat \
                     suitable for the user's locale. The main reason you'd create an instance \
@@ -172,13 +173,12 @@ class DateFormatDetector : Detector(), SourceCodeScanner {
                 implementation = IMPLEMENTATION
             )
 
-        /** Accidentally(?) using week year instead of era year */
+        /** Accidentally(?) using week year instead of era year. */
         @JvmField
         val WEEK_YEAR = Issue.create(
             id = "WeekBasedYear",
             briefDescription = "Week Based Year",
-            explanation =
-                """
+            explanation = """
                 The `DateTimeFormatter` pattern `YYYY` returns the *week* based year, not \
                 the era-based year. This means that 12/29/2019 will format to 2019, but \
                 12/30/2019 will format to 2020!

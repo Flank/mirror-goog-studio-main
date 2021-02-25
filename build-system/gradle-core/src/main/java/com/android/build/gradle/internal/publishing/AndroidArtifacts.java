@@ -81,6 +81,8 @@ public class AndroidArtifacts {
     private static final String TYPE_RENDERSCRIPT = "android-renderscript";
     private static final String TYPE_LINT_JAR = "android-lint";
     private static final String TYPE_LINT_MODEL = "android-lint-variant-dependencies-model";
+    private static final String TYPE_LINT_PARTIAL_RESULTS =
+            "android-lint-variant-dependencies-partial-results";
     private static final String TYPE_LOCAL_AAR_FOR_LINT = "android-lint-local-aar";
     private static final String TYPE_LOCAL_EXPLODED_AAR_FOR_LINT = "android-lint-exploded-aar";
     private static final String TYPE_EXT_ANNOTATIONS = "android-ext-annot";
@@ -376,6 +378,8 @@ public class AndroidArtifacts {
 
         LINT(TYPE_LINT_JAR),
         LINT_MODEL(AndroidArtifacts.TYPE_LINT_MODEL),
+        // The partial results produced by running lint with --analyze-only
+        LINT_PARTIAL_RESULTS(AndroidArtifacts.TYPE_LINT_PARTIAL_RESULTS),
         // An AAR built from a library project for lint to consume.
         LOCAL_AAR_FOR_LINT(TYPE_LOCAL_AAR_FOR_LINT),
         // Exploded AARs from library projects for lint to consume when not run with check

@@ -149,6 +149,7 @@ private fun Any?.toValueString(normalizer: FileNormalizer): String = when (this)
     is File -> normalizer.normalize(this)
     is Collection<*> -> this.toValueStringList(normalizer)
     is String -> "\"$this\""
+    is Enum<*> -> this.name
     else -> toString()
 }
 

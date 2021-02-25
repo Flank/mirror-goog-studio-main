@@ -30,14 +30,16 @@ import java.io.File
 import java.util.HashSet
 
 /**
- * Manages configurations, included nested configurations. This is intended for
- * lint itself (and integrations of lint into tools), not for detector usage.
+ * Manages configurations, included nested configurations. This is
+ * intended for lint itself (and integrations of lint into tools), not
+ * for detector usage.
  */
 open class ConfigurationHierarchy(
     val client: LintClient,
 
     /**
-     * The root folder where lint.xml configuration search should end, or null.
+     * The root folder where lint.xml configuration search should end,
+     * or null.
      */
     var rootDir: File? = defaultRootDir
 ) {
@@ -46,20 +48,24 @@ open class ConfigurationHierarchy(
     private val parentOf: MutableMap<Configuration, Configuration> = HashMap()
 
     /**
-     * The fallback configuration to use (specified via --config or lintConfig);
-     * not implicitly parented from its directory location)
+     * The fallback configuration to use (specified via --config or
+     * lintConfig); not implicitly parented from its directory location)
      */
     var fallback: Configuration? = null
 
-    /** A configuration which overrides everything else (is consulted first) */
+    /**
+     * A configuration which overrides everything else (is consulted
+     * first)
+     */
     var overrides: Configuration? = null
 
     fun getConfigurationForProject(
         project: Project,
         /**
-         * Create a configuration for the given directory. If the configuration parameter
-         * is not null, this corresponds to a LintXmlConfiguration that should be
-         * included in the inheritance chain.
+         * Create a configuration for the given directory. If the
+         * configuration parameter is not null, this corresponds to
+         * a LintXmlConfiguration that should be included in the
+         * inheritance chain.
          */
         create: ((File, Configuration?) -> Configuration?) = lintXmlCreator
     ): Configuration {
@@ -116,9 +122,10 @@ open class ConfigurationHierarchy(
     }
 
     /**
-     * Looks up the configuration to use for a given [dir].
-     * The [default] configuration, if specified, will be returned
-     * as the fallback (including as a parent, if an intermediate configuration file is found.)
+     * Looks up the configuration to use for a given [dir]. The
+     * [default] configuration, if specified, will be returned as the
+     * fallback (including as a parent, if an intermediate configuration
+     * file is found.)
      */
     @Suppress("FileComparisons")
     fun getConfigurationForFolder(
@@ -147,14 +154,18 @@ open class ConfigurationHierarchy(
     }
 
     /**
-     * Looks up the parent configuration folder to check from the given folder.
-     * Normally this is just the parent folder, but this allows clients to
-     * customize the behavior (to for example stop at multiple roots or follow some
-     * scheme that makes sense in the local tool.)
+     * Looks up the parent configuration folder to check from the
+     * given folder. Normally this is just the parent folder, but this
+     * allows clients to customize the behavior (to for example stop
+     * at multiple roots or follow some scheme that makes sense in the
+     * local tool.)
      */
     open fun getParentFolder(folder: File): File? = folder.parentFile
 
-    /** Returns the parent configuration from the given configuration, if any. */
+    /**
+     * Returns the parent configuration from the given configuration, if
+     * any.
+     */
     @Suppress("FileComparisons")
     fun getParentConfiguration(configuration: Configuration): Configuration? {
         val previouslyCreated = parentOf[configuration]
@@ -212,9 +223,11 @@ open class ConfigurationHierarchy(
         }
     }
 
-    /** There can be multiple configurations for a given project directory; given
-     * a start configuration, this method return the last parent in the parent chain
-     * that is referencing the same scope/project/directory.
+    /**
+     * There can be multiple configurations for a given project
+     * directory; given a start configuration, this method return the
+     * last parent in the parent chain that is referencing the same
+     * scope/project/directory.
      */
     fun getScopeLeaf(child: Configuration): Configuration {
         val dir = child.dir
@@ -229,28 +242,34 @@ open class ConfigurationHierarchy(
     }
 
     /**
-     * For a project that has a lint model, create a suitable configuration. This could
-     * require wiring up 3 configurations. First, the [LintOptionsConfiguration] itself,
-     * which is a flag configuration and represents the DSL options like "checkOnly",
+     * For a project that has a lint model, create a suitable
+     * configuration. This could require wiring up 3 configurations.
+     * First, the [LintOptionsConfiguration] itself, which is a flag
+     * configuration and represents the DSL options like "checkOnly",
      * "checkAllWarnings", and so on.
      *
-     * Second, if there is a `lint.xml` file in the project directory, this is the
-     * next configuration in the inheritance chain.
+     * Second, if there is a `lint.xml` file in the project directory,
+     * this is the next configuration in the inheritance chain.
      *
-     * Finally, the DSL may reference another XML file via `android.lintOptions.lintConfig`.
-     * This is the last configuration in the inheritance chain.
+     * Finally, the DSL may reference another XML file via
+     * `android.lintOptions.lintConfig`. This is the last configuration
+     * in the inheritance chain.
      *
-     * The last configuration is then inheriting from the configuration of the parent
-     * directory.
+     * The last configuration is then inheriting from the configuration
+     * of the parent directory.
      *
-     * Note that only one of the three is required (the flag configuration); the others
-     * area optional, and in that case, they are skipped in the parenting chain.
+     * Note that only one of the three is required (the flag
+     * configuration); the others area optional, and in that case, they
+     * are skipped in the parenting chain.
      */
     fun createLintOptionsConfiguration(
         project: Project,
         lintOptions: LintModelLintOptions,
         fatalOnly: Boolean,
-        /** The lint.xml configuration in the project root directory, if any */
+        /**
+         * The lint.xml configuration in the project root directory, if
+         * any.
+         */
         default: Configuration?,
         configFactory: (() -> LintOptionsConfiguration) = {
             LintOptionsConfiguration(this, lintOptions, fatalOnly)
@@ -275,26 +294,31 @@ open class ConfigurationHierarchy(
     }
 
     /**
-     * Creates up to 3 configurations associated with the current project. The
-     * factory method [createFirst] needs to return the first configuration (the
-     * "override"). [createLast] can optionally return the last configuration (the
-     * "fallback"), and if passed in, the [middle] configuration is inserted in
-     * between them. Finally, the last configuration is inheriting from the
-     * parent directory's configuration. Note that only the override configuration
-     * is required; the other two are optional, and are omitted if null.
+     * Creates up to 3 configurations associated with the current
+     * project. The factory method [createFirst] needs to return the
+     * first configuration (the "override"). [createLast] can optionally
+     * return the last configuration (the "fallback"), and if passed in,
+     * the [middle] configuration is inserted in between them. Finally,
+     * the last configuration is inheriting from the parent directory's
+     * configuration. Note that only the override configuration is
+     * required; the other two are optional, and are omitted if null.
      */
     fun createChainedConfigurations(
         project: Project,
-        /** The lint.xml configuration in the project root directory, if any */
+        /**
+         * The lint.xml configuration in the project root directory, if
+         * any.
+         */
         middle: Configuration?,
         /**
-         * Creates the new configuration that should be the primary configuration
-         * for the project
+         * Creates the new configuration that should be the primary
+         * configuration for the project.
          */
         createFirst: (() -> Configuration),
         /**
-         * Optionally creates the new configuration that should be the last/fallback
-         * configuration for the project (also known as the scope leaf; see [getScopeLeaf])
+         * Optionally creates the new configuration that should be the
+         * last/fallback configuration for the project (also known as
+         * the scope leaf; see [getScopeLeaf])
          */
         createLast: (() -> Configuration?) = { null }
     ): Configuration {
@@ -347,7 +371,10 @@ open class ConfigurationHierarchy(
         return primary
     }
 
-    /** Default factory for configurations from file: creates [LintXmlConfiguration] */
+    /**
+     * Default factory for configurations from file: creates
+     * [LintXmlConfiguration]
+     */
     private val lintXmlCreator: ((File, Configuration?) -> Configuration?) = { _, default ->
         default
     }
@@ -404,14 +431,16 @@ open class ConfigurationHierarchy(
     }
 
     /**
-     * Looks up the defined severity (if any) for the given [issue] in the given
-     * [source] configuration or inherited configurations, but do not apply the
-     * override semantics. This is typically needed when an override configuration
-     * needs to know what the severity would have been without the override; for
-     * example, in the [FlagConfiguration], if you specify "--check" or "--enable"
-     * we want to set the severity of the configuration to something other than
-     * [Severity.IGNORE] but we want the severity to be what was configured in
-     * the original severity context (lint.xml etc), not just the default severity.
+     * Looks up the defined severity (if any) for the given [issue] in
+     * the given [source] configuration or inherited configurations, but
+     * do not apply the override semantics. This is typically needed
+     * when an override configuration needs to know what the severity
+     * would have been without the override; for example, in the
+     * [FlagConfiguration], if you specify "--check" or "--enable" we
+     * want to set the severity of the configuration to something other
+     * than [Severity.IGNORE] but we want the severity to be what was
+     * configured in the original severity context (lint.xml etc), not
+     * just the default severity.
      */
     fun getDefinedSeverityWithoutOverride(
         source: Configuration,
@@ -436,12 +465,12 @@ open class ConfigurationHierarchy(
 
         private var ourAlreadyWarned: MutableSet<File>? = null
 
-        /** Return the lint.xml file for the given directory */
+        /** Return the lint.xml file for the given directory. */
         fun File.getLintXmlFile() = File(this, LintXmlConfiguration.CONFIG_FILE_NAME)
 
         /**
-         * Represents absence of a configuration; used in the cache to remember places we've
-         * looked where nothing was found
+         * Represents absence of a configuration; used in the cache to
+         * remember places we've looked where nothing was found.
          */
         private val NONE = object : Configuration(
             ConfigurationHierarchy(object : LintClient() {
@@ -514,29 +543,34 @@ open class ConfigurationHierarchy(
     }
 
     /**
-     * This [ProjectPlaceholderConfiguration] corresponds to a project root which does
-     * not have a lint.xml configuration. If we didn't have these, we'd run into
-     * trouble if for example the user invokes ignore("FlatIcon", File("icon.png"));
-     * this would edit the (presumably shared) lintConfig configuration file.
-     * Similarly, when we have multiple modules, we parent library modules pointing
-     * to the dependent app module. If in the library module we don't have a lint.xml
-     * file, we'll just use the fallback (lintConfig) configuration. And then we'd
-     * end up re-parenting this fallback configuration to point to the app module,
-     * and the app module in turn will point to the same fallback configuration, and
-     * now we have a cycle.
+     * This [ProjectPlaceholderConfiguration] corresponds to a project
+     * root which does not have a lint.xml configuration. If we didn't
+     * have these, we'd run into trouble if for example the user invokes
+     * ignore("FlatIcon", File("icon.png")); this would edit the
+     * (presumably shared) lintConfig configuration file. Similarly,
+     * when we have multiple modules, we parent library modules pointing
+     * to the dependent app module. If in the library module we don't
+     * have a lint.xml file, we'll just use the fallback (lintConfig)
+     * configuration. And then we'd end up re-parenting this fallback
+     * configuration to point to the app module, and the app module in
+     * turn will point to the same fallback configuration, and now we
+     * have a cycle.
      *
-     * Therefore, we have this [ProjectPlaceholderConfiguration], which is just a forwarding
-     * configuration which sits at each project root. In each project, it's this
-     * configuration rather than the fallback configuration which is inherited down
-     * into folders, and when we re-parent the library's configuration to point to the
-     * app's configuration, we're updating each individual [ProjectPlaceholderConfiguration]
-     * instead of touching the shared fallback configuration.
+     * Therefore, we have this [ProjectPlaceholderConfiguration],
+     * which is just a forwarding configuration which sits at each
+     * project root. In each project, it's this configuration rather
+     * than the fallback configuration which is inherited down into
+     * folders, and when we re-parent the library's configuration to
+     * point to the app's configuration, we're updating each individual
+     * [ProjectPlaceholderConfiguration] instead of touching the shared
+     * fallback configuration.
      *
-     * Similarly, if the user invokes an ignore action which writes to the lint.xml
-     * file, we'll intercept that here, and create the lint.xml file on the fly,
-     * and then delegate the updating actions to it. (We do this by parenting the
-     * new configuration to our current parent, and then changing our parent to
-     * the new configuration.)
+     * Similarly, if the user invokes an ignore action which writes
+     * to the lint.xml file, we'll intercept that here, and create
+     * the lint.xml file on the fly, and then delegate the updating
+     * actions to it. (We do this by parenting the new configuration
+     * to our current parent, and then changing our parent to the new
+     * configuration.)
      */
     private inner class ProjectPlaceholderConfiguration(
         configurations: ConfigurationHierarchy,
@@ -593,10 +627,10 @@ open class ConfigurationHierarchy(
         override var fileLevel = false
 
         /**
-         * If the configuration is modified, create the lint.xml file and a new
-         * configuration representing it, insert it into the hierarchy, and then
-         * forward the write action to it. Future read actions will read from our
-         * new parent.
+         * If the configuration is modified, create the lint.xml file
+         * and a new configuration representing it, insert it into the
+         * hierarchy, and then forward the write action to it. Future
+         * read actions will read from our new parent.
          */
         private fun ensureParentIsLocalLintXml() {
             val xmlFile = dir?.getLintXmlFile() ?: return

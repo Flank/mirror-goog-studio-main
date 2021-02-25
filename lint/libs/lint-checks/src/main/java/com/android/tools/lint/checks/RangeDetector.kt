@@ -403,13 +403,12 @@ class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             }
         }
 
-        /** Makes sure values are within the allowed range */
+        /** Makes sure values are within the allowed range. */
         @JvmField
         val RANGE = Issue.create(
             id = "Range",
             briefDescription = "Outside Range",
-            explanation =
-                """
+            explanation = """
                 Some parameters are required to in a particular numerical range; this check \
                 makes sure that arguments passed fall within the range. For arrays, Strings \
                 and collections this refers to the size or length.""",

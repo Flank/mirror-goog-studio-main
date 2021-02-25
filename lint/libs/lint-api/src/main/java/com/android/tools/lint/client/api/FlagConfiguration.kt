@@ -27,8 +27,9 @@ import com.android.tools.lint.detector.api.guessGradleLocationForFile
 import java.io.File
 
 /**
- * Consult the lint.xml file, but override with the --enable and --disable flags supplied on the
- * command line (as well as any other applicable flags)
+ * Consult the lint.xml file, but override with the --enable
+ * and --disable flags supplied on the command line (as well as any
+ * other applicable flags)
  */
 open class FlagConfiguration(configurations: ConfigurationHierarchy) : Configuration(configurations) {
     var associatedLocation: Location? = null
@@ -205,10 +206,11 @@ open class FlagConfiguration(configurations: ConfigurationHierarchy) : Configura
     }
 
     /**
-     * Returns the given severity, but if not visible, use the default. If an override
-     * [severity] is configured (from an inherited override configuration) use it, otherwise
-     * try to compute the severity from the [source] configuration (without applying overrides),
-     * and finally use default severity of the issue.
+     * Returns the given severity, but if not visible, use the default.
+     * If an override [severity] is configured (from an inherited
+     * override configuration) use it, otherwise try to compute the
+     * severity from the [source] configuration (without applying
+     * overrides), and finally use default severity of the issue.
      */
     private fun getVisibleSeverity(
         issue: Issue,
@@ -243,9 +245,10 @@ open class FlagConfiguration(configurations: ConfigurationHierarchy) : Configura
     }
 
     /**
-     * Already validated this issue? We can encounter the same configuration multiple times
-     * when searching up the parent tree. (We can't skip calling the parent because the
-     * parent references can change over time.)
+     * Already validated this issue? We can encounter the same
+     * configuration multiple times when searching up the parent tree.
+     * (We can't skip calling the parent because the parent references
+     * can change over time.)
      */
     private var validated = false
 

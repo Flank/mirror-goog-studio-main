@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.connected.application
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.builder
 import com.android.build.gradle.integration.connected.utils.getEmulator
+import com.android.testutils.truth.PathSubject.assertThat
 import org.junit.Before
 import org.junit.ClassRule
 import org.junit.Rule
@@ -33,6 +34,9 @@ class UtpConnectedTest {
         @ClassRule
         @JvmField
         val EMULATOR = getEmulator()
+
+        const val TEST_REPORT = "build/reports/androidTests/connected/com.example.android.kotlin.html"
+        const val TEST_RESULT_PB = "build/outputs/androidTest-results/connected/test-result.pb"
     }
 
     @get:Rule
@@ -53,11 +57,37 @@ class UtpConnectedTest {
     @Test
     @Throws(Exception::class)
     fun connectedAndroidTest() {
-        project.executor().run("connectedAndroidTest")
+        val testTaskName = ":app:connectedAndroidTest"
+        val testReportPath = "app/$TEST_REPORT"
+        val testResultPbPath = "app/$TEST_RESULT_PB"
+
+        project.executor().run(testTaskName)
+
+        assertThat(project.file(testReportPath)).exists()
+        assertThat(project.file(testResultPbPath)).exists()
 
         // Run the task again after clean. This time the task configuration is
         // restored from the configuration cache. We expect no crashes.
-         project.executor().run("clean")
-         project.executor().run("connectedAndroidTest")
+        project.executor().run("clean")
+
+        assertThat(project.file(testReportPath)).doesNotExist()
+        assertThat(project.file(testResultPbPath)).doesNotExist()
+
+        project.executor().run(testTaskName)
+
+        assertThat(project.file(testReportPath)).exists()
+        assertThat(project.file(testResultPbPath)).exists()
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun connectedAndroidTestWithTestFailures() {
+        val testTaskName = ":appWithTestFailures:connectedAndroidTest"
+        val testReportPath = "appWithTestFailures/$TEST_REPORT"
+        val testResultPbPath = "appWithTestFailures/$TEST_RESULT_PB"
+
+        project.executor().expectFailure().run(testTaskName)
+        assertThat(project.file(testReportPath)).exists()
+        assertThat(project.file(testResultPbPath)).exists()
     }
 }

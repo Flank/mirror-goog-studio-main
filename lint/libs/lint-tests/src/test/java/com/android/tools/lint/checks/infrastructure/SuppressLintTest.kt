@@ -36,8 +36,8 @@ import org.jetbrains.uast.UImportStatement
 import org.junit.Test
 
 /**
- * Checks that some lint checks cannot be suppressed with the normal suppression
- * annotations or mechanisms
+ * Checks that some lint checks cannot be suppressed with the normal
+ * suppression annotations or mechanisms.
  */
 class SuppressLintTest {
 

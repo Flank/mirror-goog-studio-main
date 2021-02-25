@@ -69,17 +69,6 @@ public class DexArchiveBuilderTest {
         JAR
     }
 
-    interface TestStaticAndDefault {
-        default void noBody() {}
-
-        static void staticMethod() {}
-
-        static void staticMethodTwo(TestStaticAndDefault t) {
-            t.noBody();
-            staticMethod();
-        }
-    }
-
     static class ClassWithAssertions {
         public static void foo() {
             assert 1 > System.currentTimeMillis();

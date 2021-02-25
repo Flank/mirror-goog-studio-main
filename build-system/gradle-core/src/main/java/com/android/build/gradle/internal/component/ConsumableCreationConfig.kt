@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.component
 
+import com.android.build.api.variant.Renderscript
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.builder.dexing.DexingType
 import com.android.builder.model.CodeShrinker
@@ -40,4 +41,6 @@ interface ConsumableCreationConfig: VariantCreationConfig {
      * Returns if we need to shrink desugar lib when desugaring Core Library.
      */
     val needsShrinkDesugarLibrary: Boolean
+
+    val renderscript: Renderscript?
 }

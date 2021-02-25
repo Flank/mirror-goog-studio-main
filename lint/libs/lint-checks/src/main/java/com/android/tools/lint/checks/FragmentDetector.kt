@@ -30,8 +30,9 @@ import org.jetbrains.uast.UAnonymousClass
 import org.jetbrains.uast.UClass
 
 /**
- * Checks that Fragment subclasses can be instantiated via Class.newInstance: the
- * class is public, static, and has a public null constructor.
+ * Checks that Fragment subclasses can be instantiated via
+ * Class.newInstance: the class is public, static, and has a public null
+ * constructor.
  *
  * This helps track down issues like
  * http://stackoverflow.com/questions/8058809/fragment-activity-crashes-on-screen-rotate
@@ -44,8 +45,7 @@ class FragmentDetector : Detector(), SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "ValidFragment",
             briefDescription = "Fragment not instantiatable",
-            explanation =
-                """
+            explanation = """
                 From the Fragment documentation:
                 **Every** fragment must have an empty constructor, so it can be instantiated \
                 when restoring its activity's state. It is strongly recommended that subclasses \

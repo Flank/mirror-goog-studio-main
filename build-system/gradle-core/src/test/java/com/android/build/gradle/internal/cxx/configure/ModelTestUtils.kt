@@ -105,7 +105,6 @@ fun createCmakeProjectCxxAbiForTest(projectParentFolder: TemporaryFolder): CxxAb
     Mockito.doReturn(ndkBuild).`when`(externalNativeBuild).ndkBuild
     Mockito.doReturn(join(moduleDir, "src", "CMakeLists.txt")).`when`(cmake).path
     Mockito.doReturn(project).`when`(global).project
-    Mockito.doReturn(projectOptions).`when`(global).projectOptions
     Mockito.doReturn(projectDir).`when`(project).rootDir
     Mockito.doReturn(moduleDir).`when`(project).projectDir
     Mockito.doReturn("app:").`when`(project).path
@@ -142,6 +141,7 @@ fun createCmakeProjectCxxAbiForTest(projectParentFolder: TemporaryFolder): CxxAb
     Mockito.doReturn(setOf<String>()).`when`(mergedNdkConfig).abiFilters
     Mockito.doReturn(minSdkVersion).`when`(variantBuilder).minSdkVersion
     val componentParameters = tryCreateConfigurationParameters(
+            projectOptions,
             variantImpl
     )!!
     val module = createCxxModuleModel(sdkComponents, androidLocationProvider, componentParameters)

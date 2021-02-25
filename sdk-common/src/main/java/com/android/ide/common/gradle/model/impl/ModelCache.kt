@@ -1040,7 +1040,6 @@ private fun modelCacheImpl(buildFolderPaths: BuildFolderPaths): ModelCacheTestin
       ndkVersion = ndkVersionCopy,
       resourcePrefix = project.resourcePrefix,
       groupId = groupId,
-      apiVersion = project.apiVersion,
       projectType = getProjectType(project, parsedModelVersion),
       isBaseSplit = isBaseSplit,
       agpFlags = agpFlags)

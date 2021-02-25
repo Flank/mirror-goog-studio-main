@@ -34,8 +34,10 @@ import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.UVariable
 import org.junit.Test
 
-/** Most of the evaluator is tested indirectly via all the lint unit tests; this covers
- * some additional specific scenarios. */
+/**
+ * Most of the evaluator is tested indirectly via all the lint unit
+ * tests; this covers some additional specific scenarios.
+ */
 class DefaultJavaEvaluatorTest {
     // Regression test for https://groups.google.com/d/msg/lint-dev/BaRimyf40tI/DpkOjMMEAQAJ
     @Test

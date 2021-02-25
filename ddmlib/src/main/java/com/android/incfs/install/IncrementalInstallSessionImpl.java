@@ -17,7 +17,6 @@ package com.android.incfs.install;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.utils.Pair;
 import com.google.common.base.Charsets;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -27,12 +26,15 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
 class IncrementalInstallSessionImpl implements AutoCloseable {
+    private static final int FULL_REQUEST_SIZE = 12;
     private static final int REQUEST_SIZE = 8;
     private static final byte RESPONSE_CHUNK_HEADER_SIZE = 4;
     private static final int RESPONSE_HEADER_SIZE = 10;
+    private static final int DONT_WAIT_TIME_MS = 0;
     private static final int WAIT_TIME_MS = 10;
 
     @NonNull private final IDeviceConnection mConnection;
+    @NonNull private final ILogger mLogger;
     @NonNull private final List<StreamingApk> mApks;
     private final long mResponseTimeoutNs;
 
@@ -53,16 +55,19 @@ class IncrementalInstallSessionImpl implements AutoCloseable {
     IncrementalInstallSessionImpl(
             @NonNull IDeviceConnection device,
             @NonNull List<StreamingApk> apks,
-            long responseTimeout) {
+            long responseTimeout,
+            @NonNull ILogger logger) {
         mConnection = device;
         mApks = apks;
         mResponseTimeoutNs = responseTimeout;
+        mLogger = logger;
     }
 
     void waitForInstallCompleted(long timeout, TimeUnit timeOutUnits)
             throws IOException, InterruptedException {
         waitForCondition(
                 timeOutUnits.toNanos(timeout),
+                WAIT_TIME_MS,
                 () -> {
                     if (mPendingException != null) {
                         throw new RuntimeException(mPendingException);
@@ -77,6 +82,7 @@ class IncrementalInstallSessionImpl implements AutoCloseable {
             throws IOException, InterruptedException {
         waitForCondition(
                 timeOutUnits.toNanos(timeout),
+                WAIT_TIME_MS,
                 () -> {
                     if (mPendingException != null) {
                         throw new RuntimeException(mPendingException);
@@ -97,7 +103,8 @@ class IncrementalInstallSessionImpl implements AutoCloseable {
         RESET_TIMEOUT,
     }
 
-    private void waitForCondition(long timeoutNs, IOSupplier<ConditionResult> condition)
+    private void waitForCondition(
+            long timeoutNs, long waitMs, IOSupplier<ConditionResult> condition)
             throws IOException, InterruptedException {
         long startNs = System.nanoTime();
         while (timeoutNs == 0 || startNs + timeoutNs >= System.nanoTime()) {
@@ -105,7 +112,9 @@ class IncrementalInstallSessionImpl implements AutoCloseable {
             if (result == ConditionResult.FULFILLED) {
                 return;
             }
-            Thread.sleep(WAIT_TIME_MS);
+            if (waitMs > DONT_WAIT_TIME_MS) {
+                Thread.sleep(waitMs);
+            }
             if (result == ConditionResult.RESET_TIMEOUT) {
                 startNs = System.nanoTime();
             }
@@ -166,26 +175,37 @@ class IncrementalInstallSessionImpl implements AutoCloseable {
      */
     private void processDeviceData() throws IOException, InterruptedException {
         final ByteBuffer buffer = ByteBuffer.allocate(16384);
+        // Switch buffer to read mode - this is what underlying code expects the buffer to be in
+        // between operations.
+        buffer.flip();
+
         final MagicMatcher magicMatcher = new MagicMatcher();
         final StringBuilder errorBuilder = new StringBuilder();
 
         // Wait for installation to succeed and streaming to be complete.
         waitForCondition(
                 mResponseTimeoutNs,
+                DONT_WAIT_TIME_MS,
                 () -> {
                     if (mClosed) {
                         return ConditionResult.FULFILLED;
                     }
-                    buffer.compact();
-                    final int count = mConnection.read(buffer);
-                    if (count < 0) {
-                        throw new IOException("EOF");
+
+                    // Read only when there is not enough data for better performance.
+                    if (buffer.remaining() < FULL_REQUEST_SIZE) {
+                        // This allows the connection to write to the buffer and then flips it back
+                        // to the read mode.
+                        buffer.compact();
+                        final int count = mConnection.read(buffer, WAIT_TIME_MS);
+                        buffer.flip();
+                        if (count < 0) {
+                            throw new IOException("EOF");
+                        }
                     }
 
-                    buffer.flip();
                     // Find the next incremental request, install success message, install failure
                     // message magic to know how to interpret the data following the magic.
-                    final MagicMatcher.Magic magic = magicMatcher.findMagic(buffer);
+                    final MagicMatcher.MagicType magic = magicMatcher.findMagic(buffer);
                     if (magic == null) {
                         return ConditionResult.UNFULFILLED;
                     }
@@ -266,6 +286,7 @@ class IncrementalInstallSessionImpl implements AutoCloseable {
     }
 
     private boolean processReadData(ReadRequest request) throws IOException, InterruptedException {
+        mLogger.verbose("Received %s", request.toString());
         switch (request.requestType) {
             case SERVING_COMPLETE:
                 return true;
@@ -339,11 +360,12 @@ class IncrementalInstallSessionImpl implements AutoCloseable {
     private void writeToDevice(final ByteBuffer data) throws IOException, InterruptedException {
         waitForCondition(
                 mResponseTimeoutNs,
+                DONT_WAIT_TIME_MS,
                 () -> {
                     if (!data.hasRemaining()) {
                         return ConditionResult.FULFILLED;
                     }
-                    if (mConnection.write(data) < 0) {
+                    if (mConnection.write(data, WAIT_TIME_MS) < 0) {
                         throw new IOException("channel EOF");
                     }
                     return ConditionResult.UNFULFILLED;
@@ -351,22 +373,35 @@ class IncrementalInstallSessionImpl implements AutoCloseable {
     }
 
     private static class MagicMatcher {
-        private enum Magic {
+        private enum MagicType {
             INCREMENTAL,
             INSTALLATION_FAILURE,
             INSTALLATION_SUCCESS,
         }
 
-        private static final ArrayList<Pair<Magic, byte[]>> MAGICS = new ArrayList<>();
+        private static class Magic {
+            final MagicType type;
+            final byte[] value;
+
+            Magic(MagicType type, byte[] value) {
+                this.type = type;
+                this.value = value;
+            }
+        }
+
+        private static final ArrayList<Magic> MAGICS = new ArrayList<>();
 
         static {
-            MAGICS.add(Pair.of(Magic.INCREMENTAL, "INCR".getBytes(Charsets.UTF_8)));
-            MAGICS.add(Pair.of(Magic.INSTALLATION_FAILURE, "Failure [".getBytes(Charsets.UTF_8)));
-            MAGICS.add(Pair.of(Magic.INSTALLATION_SUCCESS, "Success".getBytes(Charsets.UTF_8)));
+            MAGICS.add(new Magic(MagicType.INCREMENTAL, "INCR".getBytes(Charsets.UTF_8)));
+            MAGICS.add(
+                    new Magic(
+                            MagicType.INSTALLATION_FAILURE, "Failure [".getBytes(Charsets.UTF_8)));
+            MAGICS.add(
+                    new Magic(MagicType.INSTALLATION_SUCCESS, "Success".getBytes(Charsets.UTF_8)));
         }
 
         private final int[] mPositions = new int[MAGICS.size()];
-        private Magic mFoundMatch = null;
+        private MagicType mFoundMatch = null;
 
         /**
          * Move to the end of the next magic. This method continues matching the magics using the
@@ -375,17 +410,17 @@ class IncrementalInstallSessionImpl implements AutoCloseable {
          *
          * @return true if the magic was found; otherwise, false
          */
-        Magic findMagic(ByteBuffer buffer) {
+        MagicType findMagic(ByteBuffer buffer) {
             if (mFoundMatch != null) {
                 return mFoundMatch;
             }
             while (buffer.hasRemaining()) {
                 final byte nextByte = buffer.get();
                 for (int i = 0; i < mPositions.length; i++) {
-                    final byte[] magic = MAGICS.get(i).getSecond();
+                    final byte[] magic = MAGICS.get(i).value;
                     if (nextByte == magic[mPositions[i]]) {
                         if (++mPositions[i] == magic.length) {
-                            mFoundMatch = MAGICS.get(i).getFirst();
+                            mFoundMatch = MAGICS.get(i).type;
                             mPositions[i] = 0;
                             return mFoundMatch;
                         }

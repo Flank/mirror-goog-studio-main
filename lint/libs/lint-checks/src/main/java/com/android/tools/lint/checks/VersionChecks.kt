@@ -62,8 +62,9 @@ import org.jetbrains.uast.visitor.AbstractUastVisitor
 private typealias ApiLevelLookup = (UElement) -> Int
 
 /**
- * Helper for checking whether a given element is surrounded (or preceded!) by an API check
- * using SDK_INT (or other version checking utilities such as BuildCompat#isAtLeastN)
+ * Helper for checking whether a given element is surrounded (or
+ * preceded!) by an API check using SDK_INT (or other version checking
+ * utilities such as BuildCompat#isAtLeastN)
  */
 class VersionChecks(
     private val client: LintClient,
@@ -75,7 +76,7 @@ class VersionChecks(
         const val SDK_INT = "SDK_INT"
         const val CHECKS_SDK_INT_AT_LEAST_ANNOTATION = "androidx.annotation.ChecksSdkIntAtLeast"
 
-        /** SDK int method used by the data binding compiler */
+        /** SDK int method used by the data binding compiler. */
         private const val GET_BUILD_SDK_INT = "getBuildSdkInt"
 
         @JvmStatic
@@ -170,7 +171,7 @@ class VersionChecks(
 
         /**
          * Returns the actual API constraint enforced by the given
-         * SDK_INT comparison
+         * SDK_INT comparison.
          */
         @JvmStatic
         fun getVersionCheckConditional(binary: UBinaryExpression): ApiConstraint? {

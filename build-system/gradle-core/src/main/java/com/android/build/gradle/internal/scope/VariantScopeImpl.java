@@ -49,6 +49,7 @@ import com.android.build.gradle.internal.packaging.JarCreatorType;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType;
 import com.android.build.gradle.internal.publishing.PublishingSpecs;
+import com.android.build.gradle.internal.services.BaseServices;
 import com.android.build.gradle.internal.variant.VariantPathHelper;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.OptionalBooleanOption;
@@ -103,6 +104,7 @@ public class VariantScopeImpl implements VariantScope {
     @NonNull private final Map<Abi, File> ndkDebuggableLibraryFolders = Maps.newHashMap();
 
     @NonNull private final PostProcessingOptions postProcessingOptions;
+    @NonNull private final BaseServices baseServices;
 
     public VariantScopeImpl(
             @NonNull ComponentIdentity componentIdentity,
@@ -110,6 +112,7 @@ public class VariantScopeImpl implements VariantScope {
             @NonNull VariantDependencies variantDependencies,
             @NonNull VariantPathHelper pathHelper,
             @NonNull ArtifactsImpl artifacts,
+            @NonNull BaseServices baseServices,
             @NonNull GlobalScope globalScope,
             @Nullable VariantImpl testedVariantProperties) {
         this.componentIdentity = componentIdentity;
@@ -117,6 +120,7 @@ public class VariantScopeImpl implements VariantScope {
         this.variantDependencies = variantDependencies;
         this.pathHelper = pathHelper;
         this.artifacts = artifacts;
+        this.baseServices = baseServices;
         this.globalScope = globalScope;
         this.variantPublishingSpec =
                 PublishingSpecs.getVariantSpec(variantDslInfo.getVariantType());
@@ -299,7 +303,7 @@ public class VariantScopeImpl implements VariantScope {
      */
     @Override
     public boolean isTestOnly(VariantImpl variant) {
-        ProjectOptions projectOptions = globalScope.getProjectOptions();
+        ProjectOptions projectOptions = baseServices.getProjectOptions();
         Boolean isTestOnlyOverride = projectOptions.get(OptionalBooleanOption.IDE_TEST_ONLY);
 
         if (isTestOnlyOverride != null) {
@@ -469,7 +473,7 @@ public class VariantScopeImpl implements VariantScope {
     @NonNull
     @Override
     public JarCreatorType getJarCreatorType() {
-        if (globalScope.getProjectOptions().get(USE_NEW_JAR_CREATOR)) {
+        if (baseServices.getProjectOptions().get(USE_NEW_JAR_CREATOR)) {
             return JarCreatorType.JAR_FLINGER;
         } else {
             return JarCreatorType.JAR_MERGER;
@@ -479,7 +483,7 @@ public class VariantScopeImpl implements VariantScope {
     @NonNull
     @Override
     public ApkCreatorType getApkCreatorType() {
-        if (globalScope.getProjectOptions().get(USE_NEW_APK_CREATOR)) {
+        if (baseServices.getProjectOptions().get(USE_NEW_APK_CREATOR)) {
             return ApkCreatorType.APK_FLINGER;
         } else {
             return ApkCreatorType.APK_Z_FILE_CREATOR;

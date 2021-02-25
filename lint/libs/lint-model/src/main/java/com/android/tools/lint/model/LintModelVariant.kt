@@ -20,7 +20,7 @@ import com.android.sdklib.AndroidVersion
 import java.io.File
 
 interface LintModelVariant {
-    /** Module containing this variant */
+    /** Module containing this variant. */
     val module: LintModelModule
 
     val name: String
@@ -47,17 +47,21 @@ interface LintModelVariant {
     val debuggable: Boolean
     val shrinkable: Boolean
 
-    /** Build features in effect */
+    /** Build features in effect. */
     val buildFeatures: LintModelBuildFeatures
 
     /**
-     * Lookup from artifact address in a [LintModelDependencyGraph] to a [LintModelLibrary].
-     * The libraries are shared across modules and variants, only the dependency graphs
-     * pointing to the libraries by address are per artifact.
+     * Lookup from artifact address in a [LintModelDependencyGraph] to a
+     * [LintModelLibrary]. The libraries are shared across modules and
+     * variants, only the dependency graphs pointing to the libraries by
+     * address are per artifact.
      */
     val libraryResolver: LintModelLibraryResolver
 
-    /** The location of lint's partial results directory, if doing partial analysis */
+    /**
+     * The location of lint's partial results directory, if doing
+     * partial analysis.
+     */
     val partialResultsDir: File?
 }
 
@@ -76,15 +80,17 @@ class DefaultLintModelVariant(
     override val targetSdkVersion: AndroidVersion?,
 
     /**
-     * Resource fields declared in the DSL. Note that unlike the builder-model,
-     * this map merges all the values from the mergedFlavor (which includes the defaultConfig)
-     * as well as the buildType.
+     * Resource fields declared in the DSL. Note that unlike the
+     * builder-model, this map merges all the values from the
+     * mergedFlavor (which includes the defaultConfig) as well as the
+     * buildType.
      */
     override val resValues: Map<String, LintModelResourceField>,
     /**
-     * Manifest placeholders declared in the DSL. Note that unlike the builder-model,
-     * this map merges all the values from the mergedFlavor (which includes the defaultConfig)
-     * as well as the buildType.
+     * Manifest placeholders declared in the DSL. Note that unlike
+     * the builder-model, this map merges all the values from the
+     * mergedFlavor (which includes the defaultConfig) as well as the
+     * buildType.
      */
     override val manifestPlaceholders: Map<String, String>,
 

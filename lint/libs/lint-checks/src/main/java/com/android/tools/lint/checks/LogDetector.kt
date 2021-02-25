@@ -19,7 +19,6 @@ package com.android.tools.lint.checks
 import com.android.tools.lint.client.api.TYPE_STRING
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.ConstantEvaluator
-import com.android.tools.lint.detector.api.minSdkLessThan
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Incident
@@ -29,6 +28,7 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.UastLintUtils
+import com.android.tools.lint.detector.api.minSdkLessThan
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiVariable
@@ -51,22 +51,19 @@ import org.jetbrains.uast.evaluateString
 import org.jetbrains.uast.tryResolveNamed
 import java.util.Locale
 
-/**
- * Detector for finding inefficiencies and errors in logging calls.
- */
+/** Detector for finding inefficiencies and errors in logging calls. */
 class LogDetector : Detector(), SourceCodeScanner {
     companion object Issues {
         private val IMPLEMENTATION = Implementation(
             LogDetector::class.java, Scope.JAVA_FILE_SCOPE
         )
 
-        /** Log call missing surrounding if  */
+        /** Log call missing surrounding if. */
         @JvmField
         val CONDITIONAL = Issue.create(
             id = "LogConditional",
             briefDescription = "Unconditional Logging Calls",
-            explanation =
-                """
+            explanation = """
             The `BuildConfig` class provides a constant, `DEBUG`, which indicates \
             whether the code is being built in release mode or in debug mode. In release mode, you typically \
             want to strip out all the logging calls. Since the compiler will automatically remove all code \
@@ -82,13 +79,14 @@ class LogDetector : Detector(), SourceCodeScanner {
             implementation = IMPLEMENTATION
         ).setEnabledByDefault(false)
 
-        /** Mismatched tags between isLogging and log calls within it  */
+        /**
+         * Mismatched tags between isLogging and log calls within it.
+         */
         @JvmField
         val WRONG_TAG = Issue.create(
             id = "LogTagMismatch",
             briefDescription = "Mismatched Log Tags",
-            explanation =
-                """
+            explanation = """
             When guarding a `Log.v(tag, ...)` call with `Log.isLoggable(tag)`, the tag passed to both calls \
             should be the same. Similarly, the level passed in to `Log.isLoggable` should typically match \
             the type of `Log` call, e.g. if checking level `Log.DEBUG`, the corresponding `Log` call should \
@@ -100,13 +98,12 @@ class LogDetector : Detector(), SourceCodeScanner {
             implementation = IMPLEMENTATION
         )
 
-        /** Log tag is too long  */
+        /** Log tag is too long. */
         @JvmField
         val LONG_TAG = Issue.create(
             id = "LongLogTag",
             briefDescription = "Too Long Log Tags",
-            explanation =
-                """
+            explanation = """
             Log tags are only allowed to be at most 23 tag characters long.""",
             category = Category.CORRECTNESS,
             priority = 5,
@@ -192,7 +189,10 @@ class LogDetector : Detector(), SourceCodeScanner {
             else -> null
         }
 
-    /** Returns true if the given logging call performs "work" to compute the message  */
+    /**
+     * Returns true if the given logging call performs "work" to compute
+     * the message.
+     */
     private fun performsWork(node: UCallExpression): Boolean {
         val referenceName = node.methodName ?: return false
         val messageArgumentIndex = if (PRINTLN == referenceName) 2 else 1
@@ -285,7 +285,9 @@ class LogDetector : Detector(), SourceCodeScanner {
         return false
     }
 
-    /** Checks that the tag passed to Log.s and Log.isLoggable match  */
+    /**
+     * Checks that the tag passed to Log.s and Log.isLoggable match.
+     */
     private fun checkTagConsistent(
         context: JavaContext,
         logCall: UCallExpression,
@@ -307,15 +309,15 @@ class LogDetector : Detector(), SourceCodeScanner {
 
         if (logTag != null) {
             if (!areLiteralsEqual(isLoggableTag, logTag) && !UastLintUtils.areIdentifiersEqual(
-                isLoggableTag,
-                logTag
-            )
+                    isLoggableTag,
+                    logTag
+                )
             ) {
                 val resolved1 = isLoggableTag.tryResolveNamed()
                 val resolved2 = logTag.tryResolveNamed()
                 if ((resolved1 == null || resolved2 == null || resolved1 != resolved2) && context.isEnabled(
-                    WRONG_TAG
-                )
+                        WRONG_TAG
+                    )
                 ) {
                     val location = context.getLocation(logTag)
                     val alternate = context.getLocation(isLoggableTag)

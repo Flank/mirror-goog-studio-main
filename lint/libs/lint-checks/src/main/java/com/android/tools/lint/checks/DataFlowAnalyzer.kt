@@ -53,22 +53,26 @@ import org.jetbrains.uast.tryResolve
 import org.jetbrains.uast.util.isAssignment
 import org.jetbrains.uast.visitor.AbstractUastVisitor
 
-/** Helper class for analyzing data flow */
+/** Helper class for analyzing data flow. */
 abstract class DataFlowAnalyzer(
     val initial: Collection<UElement>,
     initialReferences: Collection<PsiVariable> = emptyList()
 ) : AbstractUastVisitor() {
 
-    /** The instance being tracked is the receiver for a method call */
+    /**
+     * The instance being tracked is the receiver for a method call.
+     */
     open fun receiver(call: UCallExpression) {}
 
-    /** The instance being tracked is being returned from this block */
+    /**
+     * The instance being tracked is being returned from this block.
+     */
     open fun returns(expression: UReturnExpression) {}
 
-    /** The instance being tracked is being stored into a field */
+    /** The instance being tracked is being stored into a field. */
     open fun field(field: UElement) {}
 
-    /** The instance being tracked is being passed in a method call */
+    /** The instance being tracked is being passed in a method call. */
     open fun argument(
         call: UCallExpression,
         reference: UElement
@@ -371,10 +375,9 @@ abstract class DataFlowAnalyzer(
     }
 
     /**
-     * Tries to guess whether the given method call returns self.
-     * This is intended to be able to tell that in a constructor
-     * call chain foo().bar().baz() is still invoking methods on the
-     * foo instance.
+     * Tries to guess whether the given method call returns self. This
+     * is intended to be able to tell that in a constructor call chain
+     * foo().bar().baz() is still invoking methods on the foo instance.
      */
     open fun returnsSelf(call: UCallExpression): Boolean {
         val resolvedCall = call.resolve() ?: return false
@@ -397,7 +400,9 @@ abstract class DataFlowAnalyzer(
     }
 
     companion object {
-        /** Returns the variable the expression is assigned to, if any  */
+        /**
+         * Returns the variable the expression is assigned to, if any.
+         */
         fun getVariableElement(rhs: UCallExpression): PsiVariable? {
             return getVariableElement(rhs, allowChainedCalls = false, allowFields = false)
         }

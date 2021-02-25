@@ -24,16 +24,27 @@ interface LintModelSourceProvider {
     val resDirectories: Collection<File>
     val assetsDirectories: Collection<File>
 
-    /** Are the sources from this source provider specific to tests (of any type) ? */
+    /**
+     * Are the sources from this source provider specific to tests (of
+     * any type) ?
+     */
     fun isTest(): Boolean = isUnitTest() or isInstrumentationTest()
 
-    /** Are the sources from this source provider specific to unit tests? */
+    /**
+     * Are the sources from this source provider specific to unit tests?
+     */
     fun isUnitTest(): Boolean
 
-    /** Are the sources from this source provider specific to instrumentation tests? */
+    /**
+     * Are the sources from this source provider specific to
+     * instrumentation tests?
+     */
     fun isInstrumentationTest(): Boolean
 
-    /** Are the sources from this source provider in a debug-specific source set? */
+    /**
+     * Are the sources from this source provider in a debug-specific
+     * source set?
+     */
     fun isDebugOnly(): Boolean
 }
 

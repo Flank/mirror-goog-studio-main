@@ -47,13 +47,15 @@ interface BaseConfig: AndroidModel {
 
     /**
      * Map of Build Config Fields where the key is the field name.
+     * If null, buildConfig is disabled in the project.
      */
-    val buildConfigFields: Map<String, ClassField>
+    val buildConfigFields: Map<String, ClassField>?
 
     /**
      * Map of generated res values where the key is the res name.
+     * If null, res values are disabled in the project.
      */
-    val resValues: Map<String, ClassField>
+    val resValues: Map<String, ClassField>?
 
     /**
      * Specifies the ProGuard configuration files that the plugin should use.
@@ -95,4 +97,9 @@ interface BaseConfig: AndroidModel {
 
     val multiDexKeepFile: File?
     val multiDexKeepProguard: File?
+
+    /**
+     * Whether this is marked as a default value in its dimension
+     */
+    val isDefault: Boolean?
 }

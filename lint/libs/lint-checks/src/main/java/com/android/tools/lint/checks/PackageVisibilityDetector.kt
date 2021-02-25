@@ -21,7 +21,6 @@ import com.android.SdkConstants.ATTR_NAME
 import com.android.SdkConstants.TAG_USES_PERMISSION
 import com.android.sdklib.AndroidVersion
 import com.android.tools.lint.detector.api.Category
-import com.android.tools.lint.detector.api.targetSdkAtLeast
 import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
@@ -34,6 +33,7 @@ import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.XmlContext
 import com.android.tools.lint.detector.api.XmlScanner
+import com.android.tools.lint.detector.api.targetSdkAtLeast
 import com.android.utils.iterator
 import com.intellij.psi.PsiMethod
 import org.jetbrains.uast.UCallExpression
@@ -41,9 +41,10 @@ import org.w3c.dom.Element
 import java.util.EnumSet
 
 /**
- * Android 11 introduces new app visibility restrictions: apps must declare extra permissions
- * when they want to inspect other apps on the device. This detector helps increase visibility
- * into the new restrictions.
+ * Android 11 introduces new app visibility restrictions: apps must
+ * declare extra permissions when they want to inspect other apps on
+ * the device. This detector helps increase visibility into the new
+ * restrictions.
  */
 class PackageVisibilityDetector : Detector(), XmlScanner, SourceCodeScanner {
     private var cachedQueryPermissions: QueryPermissions? = null
@@ -178,7 +179,10 @@ class PackageVisibilityDetector : Detector(), XmlScanner, SourceCodeScanner {
     }
 
     companion object {
-        /** The API version in which package visibility restrictions were introduced. */
+        /**
+         * The API version in which package visibility restrictions were
+         * introduced.
+         */
         private const val INITIAL_API = AndroidVersion.VersionCodes.R
 
         private const val KEY_REQ_QUERY_ALL = "queryAll"
@@ -187,8 +191,7 @@ class PackageVisibilityDetector : Detector(), XmlScanner, SourceCodeScanner {
         val QUERY_ALL_PACKAGES_PERMISSION = Issue.create(
             id = "QueryAllPackagesPermission",
             briefDescription = "Using the QUERY_ALL_PACKAGES permission",
-            explanation =
-                """
+            explanation = """
             If you need to query or interact with other installed apps, you should be using a \
             `<queries>` declaration in your manifest. Using the QUERY_ALL_PACKAGES permission in \
             order to see all installed apps is rarely necessary, and most apps on Google Play are \
@@ -209,8 +212,7 @@ class PackageVisibilityDetector : Detector(), XmlScanner, SourceCodeScanner {
         val QUERY_PERMISSIONS_NEEDED = Issue.create(
             id = "QueryPermissionsNeeded",
             briefDescription = "Using APIs affected by query permissions",
-            explanation =
-                """
+            explanation = """
             Apps that target Android 11 cannot query or interact with other installed apps \
             by default. If you need to query or interact with other installed apps, you may need \
             to add a `<queries>` declaration in your manifest.

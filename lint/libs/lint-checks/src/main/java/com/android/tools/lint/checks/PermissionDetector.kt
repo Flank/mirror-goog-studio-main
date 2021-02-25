@@ -394,17 +394,18 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     }
 
     /**
-     * Visitor which looks through a method, up to a given call (the one requiring a
-     * permission) and checks whether it's preceded by a call to checkPermission or
-     * checkCallingPermission or enforcePermission etc.
+     * Visitor which looks through a method, up to a given call (the
+     * one requiring a permission) and checks whether it's preceded
+     * by a call to checkPermission or checkCallingPermission or
+     * enforcePermission etc.
      *
-     *
-     * Currently it only looks for the presence of this check; it does not perform
-     * flow analysis to determine whether the check actually affects program flow
-     * up to the permission call, or whether the check permission is checking for
-     * permissions sufficient to satisfy the permission requirement of the target call,
-     * or whether the check return value (== PERMISSION_GRANTED vs != PERMISSION_GRANTED)
-     * is handled correctly, etc.
+     * Currently it only looks for the presence of this check; it does
+     * not perform flow analysis to determine whether the check actually
+     * affects program flow up to the permission call, or whether
+     * the check permission is checking for permissions sufficient
+     * to satisfy the permission requirement of the target call, or
+     * whether the check return value (== PERMISSION_GRANTED vs !=
+     * PERMISSION_GRANTED) is handled correctly, etc.
      */
     private class CheckPermissionVisitor(private val mTarget: UElement) : AbstractUastVisitor() {
         private var mChecksPermission: Boolean = false
@@ -588,13 +589,12 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
         private const val THINGS_LIBRARY = "com.google.android.things"
 
-        /** Method result should be used  */
+        /** Method result should be used. */
         @JvmField
         val MISSING_PERMISSION = Issue.create(
             id = "MissingPermission",
             briefDescription = "Missing Permissions",
-            explanation =
-                """
+            explanation = """
                 This check scans through your code and libraries and looks at the APIs being \
                 used, and checks this against the set of permissions required to access \
                 those APIs. If the code using those APIs is called at runtime, then the \

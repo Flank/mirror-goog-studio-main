@@ -72,12 +72,15 @@ import org.w3c.dom.Element
 import org.w3c.dom.Node
 import java.util.Locale
 
-/** Checks to ensure that classes referenced in the manifest actually exist and are included */
+/**
+ * Checks to ensure that classes referenced in the manifest actually
+ * exist and are included.
+ */
 class MissingClassDetector : LayoutDetector(), ClassScanner {
     /**
-     * Prevent checking the same class more than once since it can be referenced
-     * repeatedly. The value in the map is true if the class is okay and false if it
-     * is not.
+     * Prevent checking the same class more than once since it can be
+     * referenced repeatedly. The value in the map is true if the class
+     * is okay and false if it is not.
      */
     private var checkedClasses: MutableMap<String, Boolean> = mutableMapOf()
 
@@ -347,7 +350,7 @@ class MissingClassDetector : LayoutDetector(), ClassScanner {
         context.report(INNERCLASS, element, location, message, fix)
     }
 
-    /** Make sure [cls] is instantiatable */
+    /** Make sure [cls] is instantiatable. */
     private fun checkInstantiatable(
         context: XmlContext,
         evaluator: JavaEvaluator,
@@ -466,14 +469,16 @@ class MissingClassDetector : LayoutDetector(), ClassScanner {
             Scope.RESOURCE_FILE_SCOPE
         )
 
-        /** Manifest or layout referenced classes missing from the project or libraries */
+        /**
+         * Manifest or layout referenced classes missing from the
+         * project or libraries.
+         */
         @JvmField
         val MISSING =
             Issue.create(
                 id = "MissingClass",
                 briefDescription = "Missing registered class",
-                explanation =
-                    """
+                explanation = """
                     If a class is referenced in the manifest or in a layout file, it must \
                     also exist in the project (or in one of the libraries included by the \
                     project. This check helps uncover typos in registration names, or \
@@ -488,14 +493,16 @@ class MissingClassDetector : LayoutDetector(), ClassScanner {
                 implementation = IMPLEMENTATION
             ).setAliases(listOf("MissingRegistered"))
 
-        /** Are activity, service, receiver etc subclasses instantiatable? */
+        /**
+         * Are activity, service, receiver etc subclasses
+         * instantiatable?
+         */
         @JvmField
         val INSTANTIATABLE =
             Issue.create(
                 id = "Instantiatable",
                 briefDescription = "Registered class is not instantiatable",
-                explanation =
-                    """
+                explanation = """
                     Activities, services, broadcast receivers etc. registered in the \
                     manifest file (or for custom views, in a layout file) must be \
                     "instantiatable" by the system, which means that the class must \
@@ -514,8 +521,7 @@ class MissingClassDetector : LayoutDetector(), ClassScanner {
             Issue.create(
                 id = "InnerclassSeparator",
                 briefDescription = "Inner classes should use `${"$"}` rather than `.`",
-                explanation =
-                    """
+                explanation = """
                     When you reference an inner class in a manifest file, you must use '$' \
                     instead of '.' as the separator character, i.e. Outer${"$"}Inner instead of \
                     Outer.Inner.

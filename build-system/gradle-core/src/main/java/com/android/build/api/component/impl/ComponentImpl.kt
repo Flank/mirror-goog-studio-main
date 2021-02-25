@@ -238,7 +238,7 @@ abstract class ComponentImpl(
         if (variantType.isForTesting || !variantDslInfo.getPostProcessingOptions().resourcesShrinkingEnabled()) {
             return false
         }
-        val newResourceShrinker = globalScope.projectOptions[BooleanOption.ENABLE_NEW_RESOURCE_SHRINKER]
+        val newResourceShrinker = services.projectOptions[BooleanOption.ENABLE_NEW_RESOURCE_SHRINKER]
         if (variantType.isDynamicFeature) {
             globalScope
                 .dslServices
@@ -307,7 +307,7 @@ abstract class ComponentImpl(
                 String::class.java,
                 outputFileName
                     ?: variantDslInfo.getOutputFileName(
-                        globalScope.projectBaseName,
+                        internalServices.projectInfo.getProjectBaseName(),
                         variantOutputConfiguration.baseName(variantDslInfo)
                     ),
                 "$name::archivesBaseName")
@@ -540,12 +540,7 @@ abstract class ComponentImpl(
             }
             addDataBindingSources(sourceSets)
         }
-        if (!variantDslInfo.renderscriptNdkModeEnabled
-            && taskContainer.renderscriptCompileTask != null
-        ) {
-            val rsFC = artifacts.get(RENDERSCRIPT_SOURCE_OUTPUT_DIR)
-            sourceSets.add(internalServices.fileTree(rsFC).builtBy(rsFC))
-        }
+        addRenderscriptSources(sourceSets)
         if (buildFeatures.mlModelBinding) {
             val mlModelClassSourceOut: Provider<Directory> =
                 artifacts.get(ML_SOURCE_OUT)
@@ -554,6 +549,15 @@ abstract class ComponentImpl(
             )
         }
         sourceSets.build()
+    }
+
+    /**
+     * adds renderscript sources if present.
+     */
+    open fun addRenderscriptSources(
+        sourceSets: ImmutableList.Builder<ConfigurableFileTree>
+    ) {
+        // not active by default, only sub types will have renderscript enabled.
     }
 
     /**

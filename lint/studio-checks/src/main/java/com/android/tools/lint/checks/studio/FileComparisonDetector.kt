@@ -33,10 +33,11 @@ import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.UastBinaryOperator
 
 /**
- * Makes sure we compare files properly to handle cross platform issues like
- * case insensitive file systems
+ * Makes sure we compare files properly to handle cross platform issues
+ * like case insensitive file systems
  *
- * TODO: Check for calling file.toURL or file.toURI.toURL: use our sdk utils instead
+ * TODO: Check for calling file.toURL or file.toURI.toURL: use our sdk
+ *     utils instead.
  */
 class FileComparisonDetector : Detector(), SourceCodeScanner {
 
@@ -50,8 +51,7 @@ class FileComparisonDetector : Detector(), SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "FileComparisons",
             briefDescription = "Invalid File Comparisons",
-            explanation =
-                """
+            explanation = """
                 Never call `equals` (or worse, `==`) on a `java.io.File`:
                 this will not do the right thing on case insensitive file systems.
 

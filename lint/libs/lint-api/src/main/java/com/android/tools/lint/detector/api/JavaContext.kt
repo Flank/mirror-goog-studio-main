@@ -51,12 +51,12 @@ import java.io.File
 /**
  * A [Context] used when checking Java files.
  *
- * @constructor Constructs a [JavaContext] for running lint on the given file, with
- * the given scope, in the given project reporting errors to the given
- * client.
+ * @constructor Constructs a [JavaContext] for running lint on the given
+ *     file, with the given scope, in the given
+ *     project reporting errors to the given client.
  *
- * **NOTE: This is not a public or final API; if you rely on this be prepared
- * to adjust your code for the next tools release.**
+ * **NOTE: This is not a public or final API; if you rely on this be
+ * prepared to adjust your code for the next tools release.**
  */
 open class JavaContext(
     /** the driver running through the checks */
@@ -66,10 +66,10 @@ open class JavaContext(
     project: Project,
 
     /**
-     * The main project if this project is a library project, or
-     * null if this is not a library project. The main project is
-     * the root project of all library projects, not necessarily the
-     * directly including project.
+     * The main project if this project is a library project, or null
+     * if this is not a library project. The main project is the root
+     * project of all library projects, not necessarily the directly
+     * including project.
      */
     main: Project?,
 
@@ -77,34 +77,31 @@ open class JavaContext(
     file: File
 ) : Context(driver, project, main, file) {
 
-    /** The parse tree, when using PSI  */
+    /** The parse tree, when using PSI. */
     var psiFile: PsiFile? = null
         private set
 
-    /** The parse tree, when using UAST  */
+    /** The parse tree, when using UAST. */
     var uastFile: UFile? = null
 
-    /** The parser which produced the parse tree  */
+    /** The parser which produced the parse tree. */
     lateinit var uastParser: UastParser
 
-    /** Whether this context is in a test source folder  */
+    /** Whether this context is in a test source folder. */
     var isTestSource: Boolean = false
 
-    /** Whether this context is in a generated source folder  */
+    /** Whether this context is in a generated source folder. */
     var isGeneratedSource: Boolean = false
 
     /**
-     * Returns a location for the given node range (from the starting offset of the first node to
-     * the ending offset of the second node).
+     * Returns a location for the given node range (from the starting
+     * offset of the first node to the ending offset of the second
+     * node).
      *
      * @param from the AST node to get a starting location from
-     *
      * @param fromDelta Offset delta to apply to the starting offset
-     *
      * @param to the AST node to get a ending location from
-     *
      * @param toDelta Offset delta to apply to the ending offset
-     *
      * @return a location for the given node
      */
     fun getRangeLocation(
@@ -133,15 +130,13 @@ open class JavaContext(
         uastParser.getRangeLocation(this, from as PsiElement, fromDelta, to, toDelta)
 
     /**
-     * Returns a location for the given node range (from the starting offset of the first node to
-     * the ending offset of the second node).
+     * Returns a location for the given node range (from the starting
+     * offset of the first node to the ending offset of the second
+     * node).
      *
      * @param from the AST node to get a starting location from
-     *
      * @param fromDelta Offset delta to apply to the starting offset
-     *
      * @param length The number of characters to add from the delta
-     *
      * @return a location for the given node
      */
     @Suppress("unused", "unused")
@@ -160,13 +155,13 @@ open class JavaContext(
         uastParser.getRangeLocation(this, from, fromDelta, fromDelta + length)
 
     /**
-     * Returns a [Location] for the given element. This attempts to pick a shorter
-     * location range than the entire element; for a class or method for example, it picks
-     * the name element (if found). For statement constructs such as a `switch` statement
-     * it will highlight the keyword, etc.
+     * Returns a [Location] for the given element. This attempts to pick
+     * a shorter location range than the entire element; for a class
+     * or method for example, it picks the name element (if found).
+     * For statement constructs such as a `switch` statement it will
+     * highlight the keyword, etc.
      *
      * @param element the AST element to create a location for
-     *
      * @return a location for the given element
      */
     fun getNameLocation(element: PsiElement): Location {
@@ -180,13 +175,13 @@ open class JavaContext(
     }
 
     /**
-     * Returns a [Location] for the given element. This attempts to pick a shorter
-     * location range than the entire element; for a class or method for example, it picks
-     * the name element (if found). For statement constructs such as a `switch` statement
-     * it will highlight the keyword, etc.
+     * Returns a [Location] for the given element. This attempts to pick
+     * a shorter location range than the entire element; for a class
+     * or method for example, it picks the name element (if found).
+     * For statement constructs such as a `switch` statement it will
+     * highlight the keyword, etc.
      *
      * @param element the AST element to create a location for
-     *
      * @return a location for the given element
      */
     fun getNameLocation(element: UElement): Location {
@@ -198,18 +193,17 @@ open class JavaContext(
     }
 
     /**
-     * Returns a [Location] for the given element. This attempts to pick a shorter
-     * location range than the entire element; for a class or method for example, it picks
-     * the name element (if found). For statement constructs such as a `switch` statement
-     * it will highlight the keyword, etc.
-     *
+     * Returns a [Location] for the given element. This attempts to pick
+     * a shorter location range than the entire element; for a class
+     * or method for example, it picks the name element (if found).
+     * For statement constructs such as a `switch` statement it will
+     * highlight the keyword, etc.
      *
      * [UClass] is both a [PsiElement] and a [UElement] so this method
-     * is here to make calling getNameLocation(UClass) easier without having to make an
-     * explicit cast.
+     * is here to make calling getNameLocation(UClass) easier without
+     * having to make an explicit cast.
      *
      * @param cls the AST class element to create a location for
-     *
      * @return a location for the given element
      */
     fun getNameLocation(cls: UDeclaration): Location = getNameLocation(cls as UElement)
@@ -237,12 +231,10 @@ open class JavaContext(
      * Creates a location for the given call.
      *
      * @param call the call to create a location range for
-     *
-     * @param includeReceiver whether we should include the receiver of the method call if
-     *                         applicable
-     *
-     * @param includeArguments whether we should include the arguments to the call
-     *
+     * @param includeReceiver whether we should include the receiver of
+     *     the method call if applicable
+     * @param includeArguments whether we should include the arguments
+     *     to the call
      * @return a location
      */
     fun getCallLocation(
@@ -275,8 +267,9 @@ open class JavaContext(
         }
 
     /**
-     * Sets the compilation result. Not intended for client usage; the lint infrastructure
-     * will set this when a context has been processed
+     * Sets the compilation result. Not intended for client usage;
+     * the lint infrastructure will set this when a context has been
+     * processed
      *
      * @param javaFile the parse tree
      */
@@ -350,8 +343,8 @@ open class JavaContext(
 
     /**
      * [UClass] is both a [PsiElement] and a [UElement] so this method
-     * is here to make calling report(..., UClass, ...) easier without having to make
-     * an explicit cast.
+     * is here to make calling report(..., UClass, ...) easier without
+     * having to make an explicit cast.
      */
     fun report(
         issue: Issue,
@@ -375,8 +368,8 @@ open class JavaContext(
 
     /**
      * [UMethod] is both a [PsiElement] and a [UElement] so this method
-     * is here to make calling report(..., UMethod, ...) easier without having to make
-     * an explicit cast.
+     * is here to make calling report(..., UMethod, ...) easier without
+     * having to make an explicit cast.
      */
     fun report(
         issue: Issue,
@@ -389,8 +382,8 @@ open class JavaContext(
 
     /**
      * [UField] is both a [PsiElement] and a [UElement] so this method
-     * is here to make calling report(..., UField, ...) easier without having to make
-     * an explicit cast.
+     * is here to make calling report(..., UField, ...) easier without
+     * having to make an explicit cast.
      */
     fun report(
         issue: Issue,
@@ -402,8 +395,8 @@ open class JavaContext(
 
     /**
      * [UField] is both a [PsiElement] and a [UElement] so this method
-     * is here to make calling report(..., UField, ...) easier without having to make
-     * an explicit cast.
+     * is here to make calling report(..., UField, ...) easier without
+     * having to make an explicit cast.
      */
     fun report(
         issue: Issue,
@@ -450,6 +443,7 @@ open class JavaContext(
 
         /**
          * Searches for a name node corresponding to the given node
+         *
          * @return the name node to use, if applicable
          */
         @JvmStatic

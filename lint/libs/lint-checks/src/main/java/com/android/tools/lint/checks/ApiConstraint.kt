@@ -70,7 +70,7 @@ inline class ApiConstraint(val bits: Int) {
         }
     }
 
-    /** Inverts the given constraint, e.g. X < 20 becomes X >= 20 */
+    /** Inverts the given constraint, e.g. X < 20 becomes X >= 20. */
     operator fun not(): ApiConstraint {
         val from = fromInclusive()
         val to = toExclusive()
@@ -141,7 +141,7 @@ inline class ApiConstraint(val bits: Int) {
         }
 
         /**
-         * Create constraint where the API level is in the given range
+         * Create constraint where the API level is in the given range.
          */
         fun range(fromInclusive: Int, toExclusive: Int): ApiConstraint {
             return createConstraint(fromInclusive, toExclusive)
@@ -149,7 +149,7 @@ inline class ApiConstraint(val bits: Int) {
 
         /**
          * Creates an API constraint for API level equals a specific
-         * level
+         * level.
          */
         fun same(apiLevel: Int): ApiConstraint {
             return createConstraint(apiLevel, apiLevel + 1)
@@ -165,7 +165,7 @@ inline class ApiConstraint(val bits: Int) {
 
         /**
          * Deserializes a given string (previously computed by
-         * [serialize] into the corresponding constraint
+         * [serialize] into the corresponding constraint.
          */
         fun deserialize(s: String): ApiConstraint {
             return ApiConstraint(s.toInt(16))

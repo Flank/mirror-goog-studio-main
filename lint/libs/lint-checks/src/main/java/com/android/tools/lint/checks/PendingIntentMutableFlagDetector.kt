@@ -58,8 +58,7 @@ class PendingIntentMutableFlagDetector : Detector(), SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "UnspecifiedImmutableFlag",
             briefDescription = "Missing `PendingIntent` mutability flag",
-            explanation =
-                """
+            explanation = """
                 Apps targeting Android 12 and higher must specify either `FLAG_IMMUTABLE` or \
                 `FLAG_MUTABLE` when constructing a `PendingIntent`.
             """,

@@ -25,7 +25,7 @@ import com.android.build.api.variant.Aapt
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.ApkPackaging
 import com.android.build.api.variant.Dexing
-import com.android.build.api.variant.SigningConfig
+import com.android.build.api.variant.Renderscript
 import com.android.build.api.variant.TestVariant
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
@@ -81,7 +81,11 @@ open class TestVariantImpl @Inject constructor(
     globalScope
 ), TestVariant, TestVariantCreationConfig {
 
-    private val delegate by lazy { TestVariantCreationConfigImpl(this, globalScope, variantDslInfo) }
+    private val delegate by lazy { TestVariantCreationConfigImpl(
+        this,
+        internalServices.projectOptions,
+        globalScope,
+        variantDslInfo) }
 
     // ---------------------------------------------------------------------------------------------
     // PUBLIC API
@@ -137,10 +141,11 @@ open class TestVariantImpl @Inject constructor(
         }
     }
 
-    override fun dexing(action: Dexing.() -> Unit) {
-        action.invoke(dexing)
+    override val renderscript: Renderscript? by lazy {
+        delegate.renderscript(internalServices)
     }
-// ---------------------------------------------------------------------------------------------
+
+    // ---------------------------------------------------------------------------------------------
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------
 
@@ -165,14 +170,22 @@ open class TestVariantImpl @Inject constructor(
     override val shouldPackageProfilerDependencies: Boolean = false
     override val advancedProfilingTransforms: List<String> = emptyList()
 
-    override val signingConfig: SigningConfig by lazy {
-        SigningConfigImpl(
-            variantDslInfo.signingConfig,
-            internalServices,
-            minSdkVersion.apiLevel,
-            globalScope.projectOptions.get(IntegerOption.IDE_TARGET_DEVICE_API)
-        )
+    override val signingConfig: SigningConfigImpl? by lazy {
+        variantDslInfo.signingConfig?.let {
+            SigningConfigImpl(
+                it,
+                internalServices,
+                minSdkVersion.apiLevel,
+                services.projectOptions.get(IntegerOption.IDE_TARGET_DEVICE_API)
+            )
+        }
     }
+
+    /**
+     * DO NOT USE, only present for old variant API.
+     */
+    override val dslSigningConfig: com.android.build.gradle.internal.dsl.SigningConfig? =
+        variantDslInfo.signingConfig
 
     // ---------------------------------------------------------------------------------------------
     // Private stuff

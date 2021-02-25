@@ -18,14 +18,16 @@ package com.android.build.api.component.impl
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.model.CodeShrinker
 
 abstract class AbstractApkTestCreationConfigImpl(
     override val config: ApkCreationConfig,
+    projectOptions: ProjectOptions,
     globalScope: GlobalScope,
     variantDslInfo: VariantDslInfo
 
-) : ApkCreationConfigImpl(config, globalScope, variantDslInfo) {
+) : ApkCreationConfigImpl(config, projectOptions, globalScope, variantDslInfo) {
     override fun getCodeShrinker(): CodeShrinker? {
         config.testedConfig?.apply {
             if (variantType.isAar) return null

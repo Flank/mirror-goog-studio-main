@@ -33,8 +33,8 @@ import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.visitor.AbstractUastVisitor
 
 /**
- * Makes sure that extensions for indexing in the IDE do not
- * break indexing
+ * Makes sure that extensions for indexing in the IDE do not break
+ * indexing.
  */
 class ShortNameCacheDetector : Detector(), SourceCodeScanner {
 
@@ -44,8 +44,7 @@ class ShortNameCacheDetector : Detector(), SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "ShortNamesCache",
             briefDescription = "PsiShortNamesCaches which abort processing",
-            explanation =
-                """
+            explanation = """
                 The various `process` methods in PsiShortNamesCache take a boolean
                 return value. If you return "false" from this method, you're saying
                 that cache processing should not continue. This will break other name caches,

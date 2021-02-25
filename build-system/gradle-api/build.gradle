@@ -101,6 +101,18 @@ def fixedDokkaProvider = tasks.register("fixedDokka", FixedDokka) {
     externalDocumentationLink {
         url = new URL("http://docs.oracle.com/javase/8/docs/api/")
     }
+
+    doLast {
+        // Remove Package Index and packages and package-summary.html
+        def toc = new File(outputDirectory, '_toc.yaml')
+        def text = toc.readLines()
+        text.removeIf {
+             it == '- title: Package Index' ||
+             it == '  path: ' + dacRoot + '/packages.html' ||
+             it.endsWith('/package-summary.html')
+        }
+        toc.text = text.join('\n') + '\n'
+    }
 }
 
 abstract class WriteVersionFile extends DefaultTask {

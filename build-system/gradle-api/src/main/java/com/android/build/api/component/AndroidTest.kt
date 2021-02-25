@@ -19,6 +19,7 @@ package com.android.build.api.component
 import com.android.build.api.variant.Aapt
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.ApkPackaging
+import com.android.build.api.variant.Renderscript
 import com.android.build.api.variant.SigningConfig
 import org.gradle.api.Incubating
 import org.gradle.api.provider.MapProperty
@@ -41,11 +42,6 @@ interface AndroidTest : TestComponent {
      * Variant's aaptOptions, initialized by the corresponding global DSL element.
      */
     val aapt: Aapt
-
-    /**
-     * Variant's aaptOptions, initialized by the corresponding global DSL element.
-     */
-    fun aaptOptions(action: Aapt.() -> Unit)
 
     /**
      * The namespace of the generated R and BuildConfig classes. Also, the namespace used to resolve
@@ -111,13 +107,9 @@ interface AndroidTest : TestComponent {
 
     /**
      * Variant's signingConfig, initialized by the corresponding DSL element.
+     * @return Variant's config or null if the variant is not configured for signing.
      */
-    val signingConfig: SigningConfig
-
-    /**
-     * Variant's signingConfig, initialized by the corresponding DSL element.
-     */
-    fun signingConfig(action: SigningConfig.() -> Unit)
+    val signingConfig: SigningConfig?
 
     /**
      * Variant's packagingOptions, initialized by the corresponding global DSL element.
@@ -125,7 +117,8 @@ interface AndroidTest : TestComponent {
     val packaging: ApkPackaging
 
     /**
-     * Variant's packagingOptions, initialized by the corresponding global DSL element.
+     * Variant specific settings for the renderscript compiler. This will return null when
+     * [com.android.build.api.dsl.BuildFeatures.renderScript] is false.
      */
-    fun packaging(action: ApkPackaging.() -> Unit)
+    val renderscript: Renderscript?
 }

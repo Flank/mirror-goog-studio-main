@@ -16,18 +16,13 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.apksig.ApkSigner
 import com.android.build.api.artifact.ArtifactType
-import com.android.build.api.component.impl.ComponentImpl
-import com.android.build.api.variant.impl.BuiltArtifactImpl
-import com.android.build.api.variant.impl.BuiltArtifactsImpl
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.signing.SigningConfigDataProvider
 import com.android.build.gradle.internal.signing.SigningConfigProviderParams
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.StringOption
 import com.android.builder.internal.packaging.AabFlinger
 import com.android.ide.common.signing.KeystoreHelper
@@ -157,7 +152,7 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            val bundleName = "${creationConfig.globalScope.projectBaseName}-${creationConfig.baseName}.aab"
+            val bundleName = "${creationConfig.services.projectInfo.getProjectBaseName()}-${creationConfig.baseName}.aab"
             val apkLocationOverride = creationConfig.services.projectOptions.get(StringOption.IDE_APK_LOCATION)
             if (apkLocationOverride == null) {
                 creationConfig.artifacts.setInitialProvider(
@@ -188,7 +183,7 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
             // Don't sign debuggable bundles.
             if (!creationConfig.debuggable) {
                 task.signingConfigData =
-                    SigningConfigDataProvider.create(creationConfig as ComponentImpl)
+                    SigningConfigDataProvider.create(creationConfig)
             }
         }
     }

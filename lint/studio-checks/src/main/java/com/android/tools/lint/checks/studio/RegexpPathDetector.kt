@@ -34,8 +34,9 @@ import org.jetbrains.uast.UReferenceExpression
 import org.jetbrains.uast.tryResolve
 
 /**
- * Looks for places where you accidentally pass a path in as a regular expression;
- * this will fail on Windows where the path separator is \, an escape.
+ * Looks for places where you accidentally pass a path in as a regular
+ * expression; this will fail on Windows where the path separator is \,
+ * an escape.
  */
 class RegexpPathDetector : Detector(), SourceCodeScanner {
 
@@ -49,8 +50,7 @@ class RegexpPathDetector : Detector(), SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "RegexPath",
             briefDescription = "Using Path as Regular Expression",
-            explanation =
-                """
+            explanation = """
                 Be careful when passing in a path into a method which expects \
                 a regular expression. Your code may work on Linux or OSX, but on \
                 Windows the file separator is a back slash, which in a regular \

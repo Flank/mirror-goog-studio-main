@@ -21,8 +21,8 @@ import com.google.common.annotations.Beta
 /**
  * A category is a container for related issues.
  *
- * **NOTE: This is not a public or final API; if you rely on this be prepared
- * to adjust your code for the next tools release.**
+ * **NOTE: This is not a public or final API; if you rely on this be
+ * prepared to adjust your code for the next tools release.**
  */
 @Beta
 data class Category
@@ -30,20 +30,16 @@ data class Category
  * Creates a new [Category].
  *
  * @param parent the name of a parent category, or null
- *
  * @param name the name of the category
- *
  * @param priority a sorting priority, with higher being more important
  */
 constructor(
     /**
-     * The parent category, or null if this is a top level category
+     * The parent category, or null if this is a top level category.
      */
     val parent: Category?,
 
-    /**
-     * The name of this category
-     */
+    /** The name of this category. */
     val name: String,
     private val priority: Int
 ) : Comparable<Category> {
@@ -91,64 +87,65 @@ constructor(
         private val categoryMap = mutableMapOf<String, Category>()
 
         /**
-         * Creates a new top level [Category] with the given sorting priority.
+         * Creates a new top level [Category] with the given sorting
+         * priority.
          *
          * @param name the name of the category
-         *
-         * @param priority a sorting priority, with higher being more important
-         *
+         * @param priority a sorting priority, with higher being more
+         *     important
          * @return a new category
          */
         @JvmStatic
         fun create(name: String, priority: Int): Category =
             Category(null, name, priority)
 
-        /** Returns the category associated with the given name, if any */
+        /**
+         * Returns the category associated with the given name, if any.
+         */
         @JvmStatic
         fun getCategory(name: String): Category? {
             return categoryMap[name]
         }
 
         /**
-         * Creates a new top level [Category] with the given sorting priority.
+         * Creates a new top level [Category] with the given sorting
+         * priority.
          *
          * @param parent the name of a parent category, or null
-         *
          * @param name the name of the category
-         *
-         * @param priority a sorting priority, with higher being more important
-         *
+         * @param priority a sorting priority, with higher being more
+         *     important
          * @return a new category
          */
         @JvmStatic
         fun create(parent: Category?, name: String, priority: Int): Category =
             Category(parent, name, priority)
 
-        /** Issues related to running lint itself  */
+        /** Issues related to running lint itself. */
         @JvmField
         val LINT = create("Lint", 110)
 
-        /** Issues related to implementing custom lint checks */
+        /** Issues related to implementing custom lint checks. */
         @JvmField
         val CUSTOM_LINT_CHECKS = create("Lint Implementation Issues", 38)
 
-        /** Issues related to correctness  */
+        /** Issues related to correctness. */
         @JvmField
         val CORRECTNESS = create("Correctness", 100)
 
-        /** Issues related to security  */
+        /** Issues related to security. */
         @JvmField
         val SECURITY = create("Security", 90)
 
-        /** Issues related to legal/compliance  */
+        /** Issues related to legal/compliance. */
         @JvmField
         val COMPLIANCE = create("Compliance", 85)
 
-        /** Issues related to performance  */
+        /** Issues related to performance. */
         @JvmField
         val PERFORMANCE = create("Performance", 80)
 
-        /** Issues related to usability  */
+        /** Issues related to usability. */
         @JvmField
         val USABILITY = create("Usability", 70)
 
@@ -156,53 +153,58 @@ constructor(
         @JvmField
         val PRODUCTIVITY = create("Productivity", 65)
 
-        /** Issues related to accessibility  */
+        /** Issues related to accessibility. */
         @JvmField
         val A11Y = create("Accessibility", 60)
 
-        /** Issues related to internationalization  */
+        /** Issues related to internationalization. */
         @JvmField
         val I18N = create("Internationalization", 50)
 
         // Sub categories
 
-        /** Issues related to icons  */
+        /** Issues related to icons. */
         @JvmField
         val ICONS = create(USABILITY, "Icons", 73)
 
-        /** Issues related to typography  */
+        /** Issues related to typography. */
         @JvmField
         val TYPOGRAPHY = create(USABILITY, "Typography", 76)
 
-        /** Issues related to messages/strings  */
+        /** Issues related to messages/strings. */
         @JvmField
         val MESSAGES = create(CORRECTNESS, "Messages", 95)
 
-        /** Issues around interoperability between Java, Kotlin, etc */
+        /**
+         * Issues around interoperability between Java, Kotlin, etc.
+         */
         @JvmField
         val INTEROPERABILITY = create("Interoperability", 46)
 
-        /** Issues around interoperability calling Java from Kotlin */
+        /** Issues around interoperability calling Java from Kotlin. */
         @JvmField
         val INTEROPERABILITY_KOTLIN = create(INTEROPERABILITY, "Kotlin Interoperability", 44)
 
-        /** Issues around interoperability calling Kotlin from Java */
+        /** Issues around interoperability calling Kotlin from Java. */
         @JvmField
         val INTEROPERABILITY_JAVA = create(INTEROPERABILITY, "Java Interoperability", 42)
 
-        /** Issues related to Chrome OS devices  */
+        /** Issues related to Chrome OS devices. */
         @JvmField
         val CHROME_OS = create(CORRECTNESS, "Chrome OS", 93)
 
-        /** Issues related to right to left and bidirectional text support  */
+        /**
+         * Issues related to right to left and bidirectional text
+         * support.
+         */
         @JvmField
         val RTL = create(I18N, "Bidirectional Text", 49)
 
-        /** Issues related to writing correct tests  */
+        /** Issues related to writing correct tests. */
         @JvmField
         val TESTING = create(null, "Testing", 48)
 
-        /** Issues related to increased application size  */
+        /** Issues related to increased application size. */
         @JvmField
         val APP_SIZE = create(PERFORMANCE, "Application Size", 79)
     }

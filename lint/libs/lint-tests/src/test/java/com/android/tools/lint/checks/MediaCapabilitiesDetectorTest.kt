@@ -24,7 +24,8 @@ class MediaCapabilitiesDetectorTest : AbstractCheckTest() {
 
     fun testCorrect() {
         lint().files(
-            CORRECT_MANIFEST_TARGET_S,
+            GRADLE_VERSION_7_0_0_ALPHA_08,
+            CORRECT_MANIFEST,
             java(
                 """
                 package test.pkg;
@@ -45,7 +46,8 @@ class MediaCapabilitiesDetectorTest : AbstractCheckTest() {
 
     fun testCorrect2() {
         lint().files(
-            WRONG_MANIFEST_TARGET_S,
+            GRADLE_VERSION_7_0_0_ALPHA_08,
+            WRONG_MANIFEST,
             java(
                 """
                 package test.pkg;
@@ -62,16 +64,19 @@ class MediaCapabilitiesDetectorTest : AbstractCheckTest() {
             .expectClean()
     }
 
-    fun testCorrectWhenOlderCompileSdk() {
+    fun testCorrectOldGradle() {
         lint().files(
-            WRONG_MANIFEST_TARGET_30,
+            GRADLE_VERSION_4_2_0,
+            WRONG_MANIFEST,
             java(
                 """
                 package test.pkg;
 
+                import android.provider.MediaStore;
+
                 public class MediaStoreVideoUsage {
                     protected void example() {
-                        Object obj = android.provider.MediaStore.Video.Media.INTERNAL_CONTENT_URI;
+                        Object obj = MediaStore.Video.Media.INTERNAL_CONTENT_URI;
                     }
                 }
                 """
@@ -81,47 +86,10 @@ class MediaCapabilitiesDetectorTest : AbstractCheckTest() {
             .expectClean()
     }
 
-    fun testIncorrectWhenNewerCompileSdk() {
-        lint().files(
-            WRONG_MANIFEST_TARGET_S,
-            java(
-                """
-                package test.pkg;
-
-                public class MediaStoreVideoUsage {
-                    protected void example() {
-                        Object obj = android.provider.MediaStore.Video.Media.INTERNAL_CONTENT_URI;
-                    }
-                }
-                """
-            ).indented()
-        )
-            .run()
-            .expect(EXPECTED_LINT_WARNINGS)
-    }
-
-    fun testIncorrectWhenPreviewCompileSdk() {
-        lint().files(
-            WRONG_MANIFEST_TARGET_S,
-            java(
-                """
-                package test.pkg;
-
-                public class MediaStoreVideoUsage {
-                    protected void example() {
-                        Object obj = android.provider.MediaStore.Video.Media.INTERNAL_CONTENT_URI;
-                    }
-                }
-                """
-            ).indented()
-        )
-            .run()
-            .expect(EXPECTED_LINT_WARNINGS)
-    }
-
     fun testMissingResourceAttr() {
         lint().files(
-            WRONG_MANIFEST2_TARGET_31,
+            GRADLE_VERSION_7_0_0_ALPHA_08,
+            WRONG_MANIFEST2,
             java(
                 """
                 package test.pkg;
@@ -139,7 +107,7 @@ class MediaCapabilitiesDetectorTest : AbstractCheckTest() {
             .run()
             .expect(
                 """
-                AndroidManifest.xml:14: Warning: The android.content.MEDIA_CAPABILITIES <property> tag is missing the android:resource attribute pointing to a valid XML file [MediaCapabilities]
+                src/main/AndroidManifest.xml:14: Warning: The android.content.MEDIA_CAPABILITIES <property> tag is missing the android:resource attribute pointing to a valid XML file [MediaCapabilities]
                         <property android:name="android.content.MEDIA_CAPABILITIES"/>
                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 0 errors, 1 warnings
@@ -149,7 +117,8 @@ class MediaCapabilitiesDetectorTest : AbstractCheckTest() {
 
     fun testMissingJava() {
         lint().files(
-            WRONG_MANIFEST_TARGET_S,
+            GRADLE_VERSION_7_0_0_ALPHA_08,
+            WRONG_MANIFEST,
             java(
                 """
                 package test.pkg;
@@ -170,7 +139,8 @@ class MediaCapabilitiesDetectorTest : AbstractCheckTest() {
 
     fun testMissingJava2() {
         lint().files(
-            WRONG_MANIFEST_TARGET_S,
+            GRADLE_VERSION_7_0_0_ALPHA_08,
+            WRONG_MANIFEST,
             java(
                 """
                 package test.pkg;
@@ -189,7 +159,8 @@ class MediaCapabilitiesDetectorTest : AbstractCheckTest() {
 
     fun testMissingJava3() {
         lint().files(
-            WRONG_MANIFEST_TARGET_S,
+            GRADLE_VERSION_7_0_0_ALPHA_08,
+            WRONG_MANIFEST,
             java(
                 """
                 package test.pkg;
@@ -213,7 +184,8 @@ class MediaCapabilitiesDetectorTest : AbstractCheckTest() {
 
     fun testMissingJava4() {
         lint().files(
-            WRONG_MANIFEST_TARGET_S,
+            GRADLE_VERSION_7_0_0_ALPHA_08,
+            WRONG_MANIFEST,
             java(
                 """
                 package test.pkg;
@@ -238,7 +210,8 @@ class MediaCapabilitiesDetectorTest : AbstractCheckTest() {
 
     fun testMissingJava5() {
         lint().files(
-            WRONG_MANIFEST_TARGET_S,
+            GRADLE_VERSION_7_0_0_ALPHA_08,
+            WRONG_MANIFEST,
             java(
                 """
                 package test.pkg;
@@ -263,7 +236,8 @@ class MediaCapabilitiesDetectorTest : AbstractCheckTest() {
 
     fun testMissingJava6() {
         lint().files(
-            WRONG_MANIFEST_TARGET_S,
+            GRADLE_VERSION_7_0_0_ALPHA_08,
+            WRONG_MANIFEST,
             java(
                 """
                 package test.pkg;
@@ -288,7 +262,8 @@ class MediaCapabilitiesDetectorTest : AbstractCheckTest() {
 
     fun testMissingKotlin() {
         lint().files(
-            WRONG_MANIFEST_TARGET_S,
+            GRADLE_VERSION_7_0_0_ALPHA_08,
+            WRONG_MANIFEST,
             kotlin(
                 """
                 package test.pkg
@@ -308,7 +283,8 @@ class MediaCapabilitiesDetectorTest : AbstractCheckTest() {
 
     fun testMissingKotlin2() {
         lint().files(
-            WRONG_MANIFEST_TARGET_S,
+            GRADLE_VERSION_7_0_0_ALPHA_08,
+            WRONG_MANIFEST,
             kotlin(
                 """
                 package test.pkg
@@ -326,7 +302,8 @@ class MediaCapabilitiesDetectorTest : AbstractCheckTest() {
 
     fun testMissingKotlin3() {
         lint().files(
-            WRONG_MANIFEST_TARGET_S,
+            GRADLE_VERSION_7_0_0_ALPHA_08,
+            WRONG_MANIFEST,
             kotlin(
                 """
                 package test.pkg
@@ -349,7 +326,8 @@ class MediaCapabilitiesDetectorTest : AbstractCheckTest() {
 
     fun testMissingKotlin4() {
         lint().files(
-            WRONG_MANIFEST_TARGET_S,
+            GRADLE_VERSION_7_0_0_ALPHA_08,
+            WRONG_MANIFEST,
             kotlin(
                 """
                 package test.pkg
@@ -374,7 +352,8 @@ class MediaCapabilitiesDetectorTest : AbstractCheckTest() {
 
     fun testMissingKotlin5() {
         lint().files(
-            WRONG_MANIFEST_TARGET_S,
+            GRADLE_VERSION_7_0_0_ALPHA_08,
+            WRONG_MANIFEST,
             kotlin(
                 """
                 package test.pkg
@@ -399,7 +378,8 @@ class MediaCapabilitiesDetectorTest : AbstractCheckTest() {
 
     fun testMissingKotlin6() {
         lint().files(
-            WRONG_MANIFEST_TARGET_S,
+            GRADLE_VERSION_7_0_0_ALPHA_08,
+            WRONG_MANIFEST,
             kotlin(
                 """
                 package test.pkg
@@ -424,7 +404,8 @@ class MediaCapabilitiesDetectorTest : AbstractCheckTest() {
 
     fun testMissingClassFile() {
         lint().files(
-            WRONG_MANIFEST_TARGET_S,
+            GRADLE_VERSION_7_0_0_ALPHA_08,
+            WRONG_MANIFEST,
             base64gzip("libs/mylib.jar", BASE64_JAR_WITH_VIDEO_USAGE)
         )
             .run()
@@ -432,7 +413,7 @@ class MediaCapabilitiesDetectorTest : AbstractCheckTest() {
     }
 
     companion object {
-        private val CORRECT_MANIFEST_TARGET_S = xml(
+        private val CORRECT_MANIFEST = xml(
             "AndroidManifest.xml",
             """
             <manifest xmlns:android="http://schemas.android.com/apk/res/android"
@@ -440,7 +421,8 @@ class MediaCapabilitiesDetectorTest : AbstractCheckTest() {
                 android:versionCode="1"
                 android:versionName="1.0" >
 
-            <uses-sdk android:minSdkVersion="13" android:targetSdkVersion="S" />
+                <uses-sdk android:minSdkVersion="14" />
+
                 <application
                     android:icon="@drawable/ic_launcher"
                     android:label="@string/app_name" >
@@ -454,7 +436,7 @@ class MediaCapabilitiesDetectorTest : AbstractCheckTest() {
             """
         ).indented()
 
-        private val WRONG_MANIFEST_TARGET_S = xml(
+        private val WRONG_MANIFEST = xml(
             "AndroidManifest.xml",
             """
             <manifest xmlns:android="http://schemas.android.com/apk/res/android"
@@ -462,7 +444,7 @@ class MediaCapabilitiesDetectorTest : AbstractCheckTest() {
                 android:versionCode="1"
                 android:versionName="1.0" >
 
-            <uses-sdk android:minSdkVersion="14" android:targetSdkVersion="S" />
+                <uses-sdk android:minSdkVersion="14" />
 
                 <application
                     android:icon="@drawable/ic_launcher"
@@ -476,7 +458,7 @@ class MediaCapabilitiesDetectorTest : AbstractCheckTest() {
             """
         ).indented()
 
-        private val WRONG_MANIFEST_TARGET_30 = xml(
+        private val WRONG_MANIFEST2 = xml(
             "AndroidManifest.xml",
             """
             <manifest xmlns:android="http://schemas.android.com/apk/res/android"
@@ -484,29 +466,7 @@ class MediaCapabilitiesDetectorTest : AbstractCheckTest() {
                 android:versionCode="1"
                 android:versionName="1.0" >
 
-            <uses-sdk android:minSdkVersion="14" android:targetSdkVersion="30" />
-
-                <application
-                    android:icon="@drawable/ic_launcher"
-                    android:label="@string/app_name" >
-                    <service
-                        android:name=".ExampleHostnameVerifier" >
-                    </service>
-                </application>
-
-            </manifest>
-            """
-        ).indented()
-
-        private val WRONG_MANIFEST2_TARGET_31 = xml(
-            "AndroidManifest.xml",
-            """
-            <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                package="test.pkg"
-                android:versionCode="1"
-                android:versionName="1.0" >
-
-                <uses-sdk android:minSdkVersion="14" android:targetSdkVersion="31" />
+                <uses-sdk android:minSdkVersion="14" />
 
                 <application
                     android:icon="@drawable/ic_launcher"
@@ -521,9 +481,35 @@ class MediaCapabilitiesDetectorTest : AbstractCheckTest() {
             """
         ).indented()
 
+        private val GRADLE_VERSION_4_2_0 = gradle(
+            """
+            buildscript {
+                repositories {
+                    jcenter()
+                }
+                dependencies {
+                    classpath 'com.android.tools.build:gradle:4.2.0'
+                }
+            }
+            """
+        ).indented()
+
+        private val GRADLE_VERSION_7_0_0_ALPHA_08 = gradle(
+            """
+            buildscript {
+                repositories {
+                    jcenter()
+                }
+                dependencies {
+                    classpath 'com.android.tools.build:gradle:7.0.0-alpha08'
+                }
+            }
+            """
+        ).indented()
+
         private const val EXPECTED_LINT_WARNINGS =
             "" +
-                "AndroidManifest.xml:8: Warning: The app accesses MediaStore.Video, but is missing a <property> tag with a android.content.MEDIA_CAPABILITIES declaration [MediaCapabilities]\n" +
+                "src/main/AndroidManifest.xml:8: Warning: The app accesses MediaStore.Video, but is missing a <property> tag with a android.content.MEDIA_CAPABILITIES declaration [MediaCapabilities]\n" +
                 "    <application\n" +
                 "     ~~~~~~~~~~~\n" +
                 "0 errors, 1 warnings"

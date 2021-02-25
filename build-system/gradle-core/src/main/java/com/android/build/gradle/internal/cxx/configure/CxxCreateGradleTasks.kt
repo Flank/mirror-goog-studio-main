@@ -44,6 +44,7 @@ import com.android.build.gradle.internal.tasks.PrefabPackageTask
 import com.android.build.gradle.internal.tasks.factory.TaskFactory
 import com.android.build.gradle.internal.tasks.factory.dependsOn
 import com.android.build.gradle.internal.variant.ComponentInfo
+import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.tasks.createCxxConfigureTask
 import com.android.build.gradle.tasks.createRepublishCxxBuildTask
 import com.android.build.gradle.tasks.createVariantCxxCleanTask
@@ -62,12 +63,15 @@ fun <VariantBuilderT : ComponentBuilderImpl, VariantT : VariantImpl> createCxxTa
         sdkComponents: SdkComponentsBuildService,
         issueReporter: IssueReporter,
         taskFactory: TaskFactory,
+        projectOptions: ProjectOptions,
         variants: List<ComponentInfo<VariantBuilderT, VariantT>>) {
     if (variants.isEmpty()) return
     IssueReporterLoggingEnvironment(issueReporter).use {
         PassThroughDeduplicatingLoggingEnvironment().use {
             val configurationParameters = variants
-                    .mapNotNull { tryCreateConfigurationParameters(it.variant) }
+                    .mapNotNull { tryCreateConfigurationParameters(
+                        projectOptions,
+                        it.variant) }
             if (configurationParameters.isEmpty()) return
             val abis = createInitialCxxModel(sdkComponents, androidLocationsProvider, configurationParameters)
             val enableFolding = configurationParameters.first().isConfigurationFoldingEnabled

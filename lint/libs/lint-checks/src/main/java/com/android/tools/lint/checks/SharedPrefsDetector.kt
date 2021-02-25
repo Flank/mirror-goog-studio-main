@@ -30,9 +30,7 @@ import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.getParentOfType
 
-/**
- * Some lint checks around SharedPreferences
- */
+/** Some lint checks around SharedPreferences. */
 class SharedPrefsDetector : Detector(), SourceCodeScanner {
     companion object {
         private val IMPLEMENTATION = Implementation(
@@ -40,13 +38,12 @@ class SharedPrefsDetector : Detector(), SourceCodeScanner {
             Scope.JAVA_FILE_SCOPE
         )
 
-        /** Modifying a string set */
+        /** Modifying a string set. */
         @JvmField
         val ISSUE = Issue.create(
             id = "MutatingSharedPrefs",
             briefDescription = "Mutating an Immutable SharedPrefs Set",
-            explanation =
-                """
+            explanation = """
                 As stated in the docs for `SharedPreferences.getStringSet`, you must \
                 not modify the set returned by `getStringSet`:
 

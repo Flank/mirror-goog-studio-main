@@ -20,8 +20,9 @@ import com.android.annotations.NonNull;
 import com.android.resources.Density;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -29,7 +30,7 @@ public class DensitySplitOptions extends SplitOptions
         implements com.android.build.api.dsl.DensitySplit {
 
     private boolean strict = true;
-    private Set<String> compatibleScreens;
+    private final Set<String> compatibleScreens = new HashSet<>();
 
     @Override
     protected Set<String> getDefaultValues() {
@@ -66,25 +67,19 @@ public class DensitySplitOptions extends SplitOptions
     }
 
     public void setCompatibleScreens(@NonNull List<String> sizes) {
-        compatibleScreens = Sets.newHashSet(sizes);
+        ArrayList newValues = new ArrayList(sizes);
+        compatibleScreens.clear();
+        compatibleScreens.addAll(newValues);
     }
 
     @Override
     public void compatibleScreens(@NonNull String... sizes) {
-        if (compatibleScreens == null) {
-            compatibleScreens = Sets.newHashSet(sizes);
-            return;
-        }
-
         compatibleScreens.addAll(Arrays.asList(sizes));
     }
 
     @Override
     @NonNull
     public Set<String> getCompatibleScreens() {
-        if (compatibleScreens == null) {
-            return Collections.emptySet();
-        }
         return compatibleScreens;
     }
 

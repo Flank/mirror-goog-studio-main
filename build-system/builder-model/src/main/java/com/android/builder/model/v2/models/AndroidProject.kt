@@ -118,28 +118,6 @@ interface AndroidProject: AndroidModel {
     }
 
     /**
-     * Returns the model version. This is a string in the format X.Y.Z
-     *
-     * @return a string containing the model version.
-     */
-    val modelVersion: String
-
-    /**
-     * Returns the model api version.
-     *
-     * This is different from [modelVersion] in a way that new model
-     * version might increment model version but keep existing api. That means that
-     * code which was built against particular 'api version' might be safely re-used for all
-     * new model versions as long as they don't change the api.
-     *
-     * Every new model version is assumed to return an 'api version' value which
-     * is equal or greater than the value used by the previous model version.
-     *
-     * @return model's api version
-     */
-    val apiVersion: Int
-
-    /**
      * The path of the module.
      */
     val path: String
@@ -186,15 +164,6 @@ interface AndroidProject: AndroidModel {
      * @return a list of the variants.
      */
     val variants: Collection<Variant>
-
-    /**
-     * Returns the name of the variant the IDE should use when opening the project for the first
-     * time.
-     *
-     * @return the name of a variant that exists under the presence of the variant filter. Only
-     * returns null if all variants are removed.
-     */
-    val defaultVariant: String?
 
     /**
      * Returns a list of all the flavor dimensions, may be empty.

@@ -16,7 +16,7 @@
 
 package com.android.tools.lint
 
-/** Enum representing the different types of XML files lint uses */
+/** Enum representing the different types of XML files lint uses. */
 enum class XmlFileType(private val typeName: String) {
     /**
      * This report is intended to be used for normal reporting,
@@ -49,7 +49,7 @@ enum class XmlFileType(private val typeName: String) {
     BASELINE("baseline"),
 
     /**
-     * A file recording incidents that were reported unconditionally
+     * A file recording incidents that were reported unconditionally.
      */
     INCIDENTS("definite"),
 
@@ -62,11 +62,11 @@ enum class XmlFileType(private val typeName: String) {
     /**
      * A file recording miscellaneous data used either during analysis
      * of downstream modules depending on this one, or during report
-     * aggregation
+     * aggregation.
      */
     PARTIAL_RESULTS("partial"),
 
-    /** A file recording the set of configured issues */
+    /** A file recording the set of configured issues. */
     CONFIGURED_ISSUES("issues");
 
     /**

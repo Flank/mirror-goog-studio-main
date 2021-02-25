@@ -244,11 +244,6 @@ interface VariantDslInfo {
      */
     fun getResValues(): Map<ResValue.Key, ResValue>
 
-    /** Holds all SigningConfig information from the DSL and/or [ProjectOptions].  */
-    val signingConfig: SigningConfig?
-
-    val isSigningReady: Boolean
-
     val isTestCoverageEnabled: Boolean
 
     /**
@@ -264,15 +259,6 @@ interface VariantDslInfo {
 
     // dynamic features can always be build in native multidex mode
     val dexingType: DexingType?
-
-    /** Returns the renderscript support mode.  */
-    val renderscriptSupportModeEnabled: Boolean
-
-    /** Returns the renderscript BLAS support mode.  */
-    val renderscriptSupportModeBlasEnabled: Boolean
-
-    /** Returns the renderscript NDK mode.  */
-    val renderscriptNdkModeEnabled: Boolean
 
     /** Returns true if the variant output is a bundle.  */
     val isBundled: Boolean
@@ -320,8 +306,6 @@ interface VariantDslInfo {
     val isMinifyEnabled: Boolean
 
     val isRenderscriptDebuggable: Boolean
-
-    val renderscriptOptimLevel: Int
 
     val isJniDebuggable: Boolean
 
@@ -375,4 +359,26 @@ interface VariantDslInfo {
      */
     // DO NOT USE, Use CreationConfig and subtypes methods.
     val instrumentationRunnerArguments: Map<String, String>
+
+    /** Holds all SigningConfig information from the DSL and/or [ProjectOptions].  */
+    // DO NOT USE, Use CreationConfig and subtypes methods.
+    val signingConfig: SigningConfig?
+
+    // DO NOT USE, Use CreationConfig and subtypes methods.
+    val isSigningReady: Boolean
+
+    /** Returns the renderscript support mode.  */
+    // DO NOT USE, Use CreationConfig and subtypes methods.
+    val renderscriptSupportModeEnabled: Boolean
+
+    /** Returns the renderscript BLAS support mode.  */
+    // DO NOT USE, Use CreationConfig and subtypes methods.
+    val renderscriptSupportModeBlasEnabled: Boolean
+
+    /** Returns the renderscript NDK mode.  */
+    // DO NOT USE, Use CreationConfig and subtypes methods.
+    val renderscriptNdkModeEnabled: Boolean
+
+    // DO NOT USE, Use CreationConfig and subtypes methods.
+    val renderscriptOptimLevel: Int
 }

@@ -33,7 +33,10 @@ import com.google.wireless.android.sdk.stats.LintSession
 import java.io.File
 import java.io.IOException
 
-/** Helper for submitting analytics for batch usage of lint (for users who have opted in) */
+/**
+ * Helper for submitting analytics for batch usage of lint (for users
+ * who have opted in)
+ */
 class LintBatchAnalytics {
     fun logSession(
         registry: IssueRegistry,

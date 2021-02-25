@@ -41,7 +41,7 @@ import java.io.File
  * subtle differences in the tests) it flagged 62 tests as duplicates!
  */
 class DuplicateProjectFinder {
-    /** Map from checksum to corresponding test */
+    /** Map from checksum to corresponding test. */
     private val checksums = HashMap<TestMode, HashMap<Long, String>>()
 
     fun recordTestProject(name: String, task: TestLintTask, mode: TestMode, projects: List<File>) {

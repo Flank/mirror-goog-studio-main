@@ -20,13 +20,26 @@ import static com.android.testutils.truth.PathSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
+import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.runner.FilterableParameterized;
+import com.android.build.gradle.options.BooleanOption;
 import java.io.File;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 /** Integration test for lint analyzing Kotlin code from Gradle. */
+@RunWith(FilterableParameterized.class)
 public class LintKotlinTest {
+
+    @Parameterized.Parameters(name = "usePartialAnalysis = {0}")
+    public static Object[] getParameters() {
+        return new Object[] {true, false};
+    }
+
+    @Parameterized.Parameter public boolean usePartialAnalysis;
 
     @Rule
     public final GradleTestProject project =
@@ -37,9 +50,8 @@ public class LintKotlinTest {
 
     @Test
     public void checkFindErrors() throws Exception {
-        project.executor().expectFailure().run(":app:lintDebug");
-        GradleBuildResult result = project.executor().expectFailure().run(":app:lintDebug");
-
+        getExecutor().expectFailure().run(":app:lintDebug");
+        GradleBuildResult result = getExecutor().expectFailure().run(":app:lintDebug");
 
         Throwable exception = result.getException();
         while (exception.getCause() != null && exception.getCause() != exception) {
@@ -57,5 +69,9 @@ public class LintKotlinTest {
 
         File lintResults = project.file("app/build/reports/lint-results.txt");
         assertThat(lintResults).contains("8 errors, 6 warnings");
+    }
+
+    private GradleTaskExecutor getExecutor() {
+        return project.executor().with(BooleanOption.USE_LINT_PARTIAL_ANALYSIS, usePartialAnalysis);
     }
 }

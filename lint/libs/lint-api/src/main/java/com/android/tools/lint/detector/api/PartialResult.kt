@@ -35,7 +35,7 @@ class PartialResult(val issue: Issue, private val data: MutableMap<Project, Lint
     Iterable<Map.Entry<@JvmSuppressWildcards Project, @JvmSuppressWildcards LintMap>> {
     // @JvmSuppressWildcards above: Make it easy to iterate from Java
 
-    /** Returns the [LintMap] for the given project */
+    /** Returns the [LintMap] for the given project. */
     fun mapFor(project: Project): LintMap {
         return data[project] ?: LintMap().also { data[project] = it }
     }
@@ -52,11 +52,11 @@ class PartialResult(val issue: Issue, private val data: MutableMap<Project, Lint
 
     /**
      * Returns all the maps with partial results from the various
-     * analyzed projects
+     * analyzed projects.
      */
     fun maps(): Collection<LintMap> = data.values
 
-    /** Returns all the projects that have partial results */
+    /** Returns all the projects that have partial results. */
     fun projects(): Collection<Project> = data.keys
 
     /** Are there any partial results? */

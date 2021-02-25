@@ -27,13 +27,14 @@ import com.android.build.api.dsl.BuildType
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.DefaultConfig
 import com.android.build.api.dsl.ProductFlavor
-import com.android.build.api.dsl.SigningConfig
+import com.android.build.api.dsl.ApkSigningConfig
 import com.android.build.api.dsl.TestExtension
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
 import com.android.build.api.variant.impl.TestVariantImpl
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.TaskManager
+import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.errors.SyncIssueReporter
@@ -64,6 +65,7 @@ import com.android.build.gradle.internal.tasks.ExtractApksTask
 import com.android.build.gradle.internal.variant.VariantModel
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptionService
+import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.errors.IssueReporter
 import com.android.builder.model.SyncIssue
@@ -101,7 +103,7 @@ class ModelBuilder<
         BuildTypeT : BuildType,
         DefaultConfigT : DefaultConfig,
         ProductFlavorT : ProductFlavor,
-        SigningConfigT : SigningConfig,
+        SigningConfigT : ApkSigningConfig,
         VariantBuilderT : VariantBuilder,
         VariantT : Variant,
         ExtensionT : CommonExtension<
@@ -114,6 +116,7 @@ class ModelBuilder<
                 VariantBuilderT,
                 VariantT>>(
     private val globalScope: GlobalScope,
+    private val projectOptions: ProjectOptions,
     private val variantModel: VariantModel,
     private val extension: ExtensionT,
     private val syncIssueReporter: SyncIssueReporter,
@@ -197,7 +200,7 @@ class ModelBuilder<
         // gather the default config
         val defaultConfigData = variantInputs.defaultConfigData
         val defaultConfig = ProductFlavorContainerImpl(
-            productFlavor = defaultConfigData.defaultConfig.convert(),
+            productFlavor = defaultConfigData.defaultConfig.convert(buildFeatures),
             sourceProvider = defaultConfigData.sourceSet.convert(buildFeatures),
             androidTestSourceProvider = defaultConfigData.getTestSourceSet(VariantTypeImpl.ANDROID_TEST)?.convert(buildFeatures),
             unitTestSourceProvider = defaultConfigData.getTestSourceSet(VariantTypeImpl.UNIT_TEST)?.convert(buildFeatures)
@@ -208,7 +211,7 @@ class ModelBuilder<
         for (buildType in variantInputs.buildTypes.values) {
             buildTypes.add(
                 BuildTypeContainerImpl(
-                    buildType = buildType.buildType.convert(),
+                    buildType = buildType.buildType.convert(buildFeatures),
                     sourceProvider = buildType.sourceSet.convert(buildFeatures),
                     androidTestSourceProvider = buildType.getTestSourceSet(VariantTypeImpl.ANDROID_TEST)?.convert(buildFeatures),
                     unitTestSourceProvider = buildType.getTestSourceSet(VariantTypeImpl.UNIT_TEST)?.convert(buildFeatures)
@@ -221,7 +224,7 @@ class ModelBuilder<
         for (flavor in variantInputs.productFlavors.values) {
             productFlavors.add(
                 ProductFlavorContainerImpl(
-                    productFlavor = flavor.productFlavor.convert(),
+                    productFlavor = flavor.productFlavor.convert(buildFeatures),
                     sourceProvider = flavor.sourceSet.convert(buildFeatures),
                     androidTestSourceProvider = flavor.getTestSourceSet(VariantTypeImpl.ANDROID_TEST)?.convert(buildFeatures),
                     unitTestSourceProvider = flavor.getTestSourceSet(VariantTypeImpl.UNIT_TEST)?.convert(buildFeatures)
@@ -237,9 +240,6 @@ class ModelBuilder<
         val variantList = variants.map { createVariant(it, buildFeatures, instantAppResultMap) }
 
         return AndroidProjectImpl(
-            modelVersion = Version.ANDROID_GRADLE_PLUGIN_VERSION,
-            apiVersion = Version.BUILDER_MODEL_API_VERSION,
-
             path = project.path,
             buildFolder = project.layout.buildDirectory.get().asFile,
 
@@ -254,7 +254,6 @@ class ModelBuilder<
             productFlavors = productFlavors,
 
             variants = variantList,
-            defaultVariant = variantModel.defaultVariant,
 
             compileTarget = extension.compileSdk.toString(), // FIXME
             bootClasspath = bootClasspath,
@@ -432,12 +431,17 @@ class ModelBuilder<
             else -> null
         }
 
+        val signingConfig = if (component is ApkCreationConfig)
+            component.signingConfig else null
+
         return AndroidArtifactImpl(
             variantSourceProvider = sourceProviders.variantSourceProvider?.convert(features),
-            multiFlavorSourceProvider = sourceProviders.multiFlavorSourceProvider?.convert(features),
+            multiFlavorSourceProvider = sourceProviders.multiFlavorSourceProvider?.convert(
+                features
+            ),
 
-            signingConfigName = component.variantDslInfo.signingConfig?.name,
-            isSigned = component.variantDslInfo.signingConfig != null,
+            signingConfigName = signingConfig?.name,
+            isSigned = signingConfig != null,
 
             abiFilters = variantDslInfo.supportedAbis,
             testInfo = testInfo,
@@ -452,7 +456,10 @@ class ModelBuilder<
             generatedSourceFolders = ModelBuilder.getGeneratedSourceFolders(component),
             generatedResourceFolders = ModelBuilder.getGeneratedResourceFolders(component),
             classesFolders = classesFolders,
-            assembleTaskOutputListingFile = component.artifacts.get(APK_IDE_MODEL).get().asFile
+            assembleTaskOutputListingFile = if (component.variantType.isApk)
+                component.artifacts.get(APK_IDE_MODEL).get().asFile
+            else
+                null
         )
     }
 
@@ -476,7 +483,7 @@ class ModelBuilder<
         }
         // The separately compile R class, if applicable.
         if (!globalScope.extension.aaptOptions.namespaced) {
-            classesFolders.add(variantScope.rJarForUnitTests.get().asFile)
+            variantScope.rJarForUnitTests.orNull?.let { classesFolders.add(it.asFile) }
         }
 
         return JavaArtifactImpl(
@@ -527,7 +534,7 @@ class ModelBuilder<
         val flags =
             ImmutableMap.builder<BooleanFlag, Boolean>()
 
-        val finalResIds = !globalScope.projectOptions[BooleanOption.USE_NON_FINAL_RES_IDS]
+        val finalResIds = !projectOptions[BooleanOption.USE_NON_FINAL_RES_IDS]
 
         flags.put(BooleanFlag.APPLICATION_R_CLASS_CONSTANT_IDS, finalResIds)
         flags.put(BooleanFlag.TEST_R_CLASS_CONSTANT_IDS, finalResIds)
@@ -541,7 +548,7 @@ class ModelBuilder<
         )
         flags.put(
             BooleanFlag.TRANSITIVE_R_CLASS,
-            !globalScope.projectOptions[BooleanOption.NON_TRANSITIVE_R_CLASS]
+            !projectOptions[BooleanOption.NON_TRANSITIVE_R_CLASS]
         )
 
         return AndroidGradlePluginProjectFlagsImpl(flags.build())

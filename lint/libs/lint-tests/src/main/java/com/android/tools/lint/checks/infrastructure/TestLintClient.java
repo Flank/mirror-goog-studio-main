@@ -435,9 +435,7 @@ public class TestLintClient extends LintCliClient {
         if (task.overrideConfigFile != null) {
             flags.setOverrideLintConfig(task.overrideConfigFile);
         }
-        if (mocker != null
-                && description != null
-                && (mocker.hasJavaPlugin() || mocker.hasJavaLibraryPlugin())) {
+        if (mocker != null && description != null && (mocker.hasJavaOrJavaLibraryPlugin())) {
             description.type(ProjectDescription.Type.JAVA);
         }
 
@@ -1687,7 +1685,7 @@ public class TestLintClient extends LintCliClient {
 
         @Override
         public boolean isAndroidProject() {
-            if (mocker != null && (mocker.hasJavaPlugin() || mocker.hasJavaLibraryPlugin())) {
+            if (mocker != null && (mocker.hasJavaOrJavaLibraryPlugin())) {
                 return false;
             }
 

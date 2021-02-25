@@ -50,6 +50,7 @@ public class LiteralExpression extends Expression {
         return new LiteralExpression(Token.string(source));
     }
 
+    @SuppressWarnings("EqualsHashCode")  // b/180537631
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof LiteralExpression) {

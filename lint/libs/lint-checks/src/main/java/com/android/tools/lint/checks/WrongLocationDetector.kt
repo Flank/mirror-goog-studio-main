@@ -26,17 +26,18 @@ import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.XmlContext
 import org.w3c.dom.Document
 
-/** Looks for problems with XML files being placed in the wrong folder  */
+/**
+ * Looks for problems with XML files being placed in the wrong folder.
+ */
 class WrongLocationDetector : LayoutDetector() {
     companion object Issues {
-        /** Main issue investigated by this detector  */
+        /** Main issue investigated by this detector. */
         @JvmField
         val ISSUE = Issue.create(
             id = "WrongFolder",
             briefDescription = "Resource file in the wrong `res` folder",
 
-            explanation =
-                """
+            explanation = """
             Resource files are sometimes placed in the wrong folder, and it can lead to subtle bugs that are \
             hard to understand. This check looks for problems in this area, such as attempting to place a \
             layout "alias" file in a `layout/` folder rather than the `values/` folder where it belongs.""",

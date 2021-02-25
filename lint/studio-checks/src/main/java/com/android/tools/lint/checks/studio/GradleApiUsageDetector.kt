@@ -33,8 +33,10 @@ import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.UastCallKind
 
 /**
- * Detect use of Gradle APIs that should not be used in the Android Gradle plugin. Right now, this
- * detects usage of org.gradle.api.Project.exec, but it may contain more things in the future.
+ * Detect use of Gradle APIs that should not be used in the
+ * Android Gradle plugin. Right now, this detects usage of
+ * org.gradle.api.Project.exec, but it may contain more things in the
+ * future.
  */
 class GradleApiUsageDetector : Detector(), SourceCodeScanner {
 
@@ -48,8 +50,7 @@ class GradleApiUsageDetector : Detector(), SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "ProjectExecOperations",
             briefDescription = "Using org.gradle.api.Project.exec",
-            explanation =
-                """
+            explanation = """
                 Using `org.gradle.api.Project.exec` is not compatible with Gradle instant execution.
 
                 Please inject `org.gradle.process.ExecOperations` into task that needs it. This will
@@ -84,10 +85,10 @@ class GradleApiUsageDetector : Detector(), SourceCodeScanner {
     private fun check(context: JavaContext, node: UExpression, psiMethod: PsiMethod) {
         val containingClass = psiMethod.containingClass ?: return
         if (context.evaluator.implementsInterface(
-            containingClass,
-            "org.gradle.api.Project",
-            false
-        )
+                containingClass,
+                "org.gradle.api.Project",
+                false
+            )
         ) {
             context.report(
                 ISSUE, node, context.getNameLocation(node),

@@ -27,9 +27,7 @@ import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.ULambdaExpression
 
-/**
- * Forbid SwingWorker usage
- */
+/** Forbid SwingWorker usage. */
 class SwingWorkerDetector : Detector(), SourceCodeScanner {
 
     companion object Issues {
@@ -42,8 +40,7 @@ class SwingWorkerDetector : Detector(), SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "SwingWorker",
             briefDescription = "Using SwingWorker",
-            explanation =
-                """
+            explanation = """
                 Do not use `javax.swing.SwingWorker`; use
                 `com.intellij.util.concurrency.SwingWorker` instead.
 

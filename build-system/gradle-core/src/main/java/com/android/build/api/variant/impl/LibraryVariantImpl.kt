@@ -24,9 +24,11 @@ import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.InstrumentationParameters
 import com.android.build.api.instrumentation.InstrumentationScope
+import com.android.build.api.variant.AarMetadata
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.LibraryPackaging
 import com.android.build.api.variant.LibraryVariant
+import com.android.build.api.variant.Renderscript
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
 import com.android.build.gradle.internal.component.LibraryCreationConfig
@@ -76,7 +78,7 @@ open class  LibraryVariantImpl @Inject constructor(
     internalServices,
     taskCreationServices,
     globalScope
-), LibraryVariant, LibraryCreationConfig, HasAndroidTestImpl {
+), LibraryVariant, LibraryCreationConfig, HasAndroidTest {
 
     // ---------------------------------------------------------------------------------------------
     // PUBLIC API
@@ -106,15 +108,26 @@ open class  LibraryVariantImpl @Inject constructor(
         LibraryPackagingImpl(globalScope.extension.packagingOptions, internalServices)
     }
 
-    override fun packaging(action: LibraryPackaging.() -> Unit) {
-        action.invoke(packaging)
+    override var androidTest: AndroidTest? = null
+
+    override val renderscript: Renderscript? by lazy {
+        delegate.renderscript(internalServices)
     }
+
+    override val aarMetadata: AarMetadata =
+        internalServices.newInstance(AarMetadata::class.java).also {
+            it.minCompileSdk.set(variantDslInfo.aarMetadata.minCompileSdk ?: 1)
+        }
 
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------
 
-    private val delegate by lazy { ConsumableCreationConfigImpl(this, globalScope, variantDslInfo) }
+    private val delegate by lazy { ConsumableCreationConfigImpl(
+        this,
+        internalServices.projectOptions,
+        globalScope,
+        variantDslInfo) }
 
     override val dexingType: DexingType
         get() = delegate.dexingType
@@ -123,9 +136,9 @@ open class  LibraryVariantImpl @Inject constructor(
         get() = variantDslInfo.isDebuggable
 
     override fun <T : Component> createUserVisibleVariantObject(
-            projectServices: ProjectServices,
-            operationsRegistrar: VariantApiOperationsRegistrar<out VariantBuilder, out Variant>,
-            stats: GradleBuildVariant.Builder?
+        projectServices: ProjectServices,
+        operationsRegistrar: VariantApiOperationsRegistrar<out VariantBuilder, out Variant>,
+        stats: GradleBuildVariant.Builder?
     ): T =
         if (stats == null) {
             this as T
@@ -142,7 +155,8 @@ open class  LibraryVariantImpl @Inject constructor(
 
     override fun getNeedsMergedJavaResStream(): Boolean = delegate.getNeedsMergedJavaResStream()
 
-    override fun getJava8LangSupportType(): VariantScope.Java8LangSupport = delegate.getJava8LangSupportType()
+    override fun getJava8LangSupportType(): VariantScope.Java8LangSupport =
+        delegate.getJava8LangSupportType()
 
     override val needsShrinkDesugarLibrary: Boolean
         get() = delegate.needsShrinkDesugarLibrary
@@ -152,6 +166,4 @@ open class  LibraryVariantImpl @Inject constructor(
 
     override val packageJacocoRuntime: Boolean
         get() = variantDslInfo.isTestCoverageEnabled
-
-    override var androidTest: AndroidTest? = null
 }

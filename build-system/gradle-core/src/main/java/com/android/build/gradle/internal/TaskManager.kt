@@ -164,6 +164,7 @@ import com.android.build.gradle.internal.variant.ApkVariantData
 import com.android.build.gradle.internal.variant.ComponentInfo
 import com.android.build.gradle.internal.variant.VariantModel
 import com.android.build.gradle.options.BooleanOption
+import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.tasks.AidlCompile
 import com.android.build.gradle.tasks.AnalyzeDependenciesTask
 import com.android.build.gradle.tasks.CompatibleScreensManifest
@@ -246,6 +247,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         private val variants: List<ComponentInfo<VariantBuilderT, VariantT>>,
         private val testComponents: List<ComponentInfo<TestComponentBuilderImpl, TestComponentImpl>>,
         private val hasFlavors: Boolean,
+        private val projectOptions: ProjectOptions,
         @JvmField protected val globalScope: GlobalScope,
         @JvmField protected val extension: BaseExtension) {
 
@@ -314,6 +316,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             globalScope.sdkComponents.get(),
             globalScope.dslServices.issueReporter,
             taskFactory,
+            projectOptions,
             variants
         )
     }
@@ -355,7 +358,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             project.dependencies
                     .add(variantDependencies.runtimeClasspath.name, multiDexDependency)
         }
-        if (variantProperties.variantDslInfo.renderscriptSupportModeEnabled) {
+        if (variantProperties.renderscript?.renderscriptSupportModeEnabled?.get() == true) {
             val fileCollection = project.files(
                     globalScope.versionedSdkLoader.flatMap {
                         it.renderScriptSupportJarProvider
@@ -390,7 +393,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         createAssembleTask(testVariant)
         val testedVariant = testVariant.testedVariant
         val variantDependencies = testVariant.variantDependencies
-        if (testedVariant.variantDslInfo.renderscriptSupportModeEnabled) {
+        if (testedVariant.renderscript?.renderscriptSupportModeEnabled?.get() == true) {
             project.dependencies
                     .add(
                             variantDependencies.compileClasspath.name,
@@ -675,14 +678,15 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
 
     fun createRenderscriptTask(creationConfig: ConsumableCreationConfig) {
         if (creationConfig.buildFeatures.renderScript) {
+            val renderscript = creationConfig.renderscript
+                ?: throw RuntimeException(
+                        "Renderscript is enabled but no configuration available, please file a bug.")
             val taskContainer = creationConfig.taskContainer
-            val rsTask = taskFactory.register(RenderscriptCompile.CreationAction(creationConfig))
-            val variantDslInfo = creationConfig.variantDslInfo
+            val rsTask = taskFactory.register(
+                RenderscriptCompile.CreationAction(creationConfig, renderscript))
             taskContainer.resourceGenTask.dependsOn(rsTask)
-            // only put this dependency if rs will generate Java code
-            if (!variantDslInfo.renderscriptNdkModeEnabled) {
-                taskContainer.sourceGenTask.dependsOn(rsTask)
-            }
+            // since rs may generate Java code, always set the dependency.
+            taskContainer.sourceGenTask.dependsOn(rsTask)
         }
     }
 
@@ -793,7 +797,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         taskFactory.register(MergeSourceSetFolders.MergeAppAssetCreationAction(creationConfig))
     }
 
-    fun createMergeJniLibFoldersTasks(creationConfig: VariantCreationConfig) {
+    fun createMergeJniLibFoldersTasks(creationConfig: ConsumableCreationConfig) {
         // merge the source folders together using the proper priority.
         taskFactory.register(
                 MergeSourceSetFolders.MergeJniLibFoldersCreationAction(creationConfig))
@@ -846,7 +850,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
     private fun createApkProcessResTask(
             creationConfig: ComponentCreationConfig,
             packageOutputType: SingleArtifact<Directory>?) {
-        val globalScope = creationConfig.globalScope
+        val projectInfo = creationConfig.services.projectInfo
 
         // Check AAR metadata files
         taskFactory.register(CheckAarMetadataTask.CreationAction(creationConfig))
@@ -856,7 +860,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                 creationConfig,
                 packageOutputType,
                 MergeType.MERGE,
-                globalScope.projectBaseName)
+                projectInfo.getProjectBaseName())
         val projectOptions = creationConfig.services.projectOptions
         val nonTransitiveR = projectOptions[BooleanOption.NON_TRANSITIVE_R_CLASS]
         val namespaced: Boolean = creationConfig.globalScope.extension.aaptOptions.namespaced
@@ -872,7 +876,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                     creationConfig,
                     packageOutputType,
                     MergeType.PACKAGE,
-                    globalScope.projectBaseName)
+                    projectInfo.getProjectBaseName())
         }
     }
 
@@ -1452,7 +1456,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
     }
 
     protected fun createTestDevicesTasks() {
-        if (!shouldEnableUtp(globalScope.projectOptions, extension.testOptions)) {
+        if (!shouldEnableUtp(projectOptions, extension.testOptions)) {
             return
         }
 
@@ -1578,7 +1582,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             }
         }
 
-        if (shouldEnableUtp(globalScope.projectOptions, extension.testOptions)) {
+        if (shouldEnableUtp(projectOptions, extension.testOptions)) {
             // Now for each managed device defined in the dsl
             val managedDevices = mutableListOf<ManagedVirtualDevice>()
             extension
@@ -1962,7 +1966,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
     fun createPackagingTask(creationConfig: ApkCreationConfig) {
         // ApkVariantData variantData = (ApkVariantData) variantScope.getVariantData();
         val taskContainer = creationConfig.taskContainer
-        val signedApk = creationConfig.variantDslInfo.isSigningReady
+        val signedApk = creationConfig.signingConfig?.isSigningReady() ?: false
 
         /*
          * PrePackaging step class that will look if the packaging of the main FULL_APK split is
@@ -2030,8 +2034,8 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         taskFactory.register(InstallVariantTask.CreationAction(creationConfig))
     }
 
-    protected fun createValidateSigningTask(creationConfig: VariantCreationConfig) {
-        if (creationConfig.variantDslInfo.signingConfig == null) {
+    protected fun createValidateSigningTask(creationConfig: ApkCreationConfig) {
+        if (creationConfig.signingConfig?.isSigningReady() != true) {
             return
         }
 
@@ -2372,7 +2376,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             // for base module only.
             return
         }
-        if (globalScope.projectOptions[BooleanOption.ENABLE_NEW_RESOURCE_SHRINKER]) {
+        if (projectOptions[BooleanOption.ENABLE_NEW_RESOURCE_SHRINKER]) {
             // Shrink resources in APK with a new resource shrinker and produce stripped res
             // package.
             taskFactory.register(ShrinkResourcesNewShrinkerTask.CreationAction(creationConfig))
@@ -2399,8 +2403,9 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         }
         val signingReportComponents = allPropertiesList.stream()
                 .filter { component: ComponentCreationConfig ->
-                    (component.variantType.isForTesting || component.variantType.isBaseModule)
+                    component is ApkCreationConfig
                 }
+                .map { component -> component as ApkCreationConfig }
                 .collect(Collectors.toList())
         if (signingReportComponents.isNotEmpty()) {
             taskFactory.register(
@@ -2515,7 +2520,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                 .anyMatch { componentProperties: ComponentCreationConfig -> componentProperties.buildFeatures.viewBinding }
         val dataBindingEnabled = allPropertiesList.stream()
                 .anyMatch { componentProperties: ComponentCreationConfig -> componentProperties.buildFeatures.dataBinding }
-        val projectOptions = globalScope.projectOptions
         val useAndroidX = projectOptions[BooleanOption.USE_ANDROID_X]
         val dataBindingBuilder = globalScope.dataBindingBuilder
         if (viewBindingEnabled) {
@@ -2844,6 +2848,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
          */
         @JvmStatic
         fun createTasksBeforeEvaluate(
+                projectOptions: ProjectOptions,
                 globalScope: GlobalScope,
                 variantType: VariantType,
                 sourceSetContainer: Iterable<AndroidSourceSet?>) {
@@ -2872,7 +2877,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
 
             // Make sure MAIN_PREBUILD runs first:
             taskFactory.register(MAIN_PREBUILD)
-            taskFactory.register(ExtractProguardFiles.CreationAction(globalScope))
+            taskFactory.register(ExtractProguardFiles.CreationAction(projectOptions, globalScope))
                 .configure { it: ExtractProguardFiles -> it.dependsOn(MAIN_PREBUILD) }
             taskFactory.register(SourceSetsTask.CreationAction(sourceSetContainer))
             taskFactory.register(

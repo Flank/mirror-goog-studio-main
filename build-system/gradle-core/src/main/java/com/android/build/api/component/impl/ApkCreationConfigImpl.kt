@@ -21,12 +21,14 @@ import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.options.ProjectOptions
 
 open class ApkCreationConfigImpl(
     override val config: ApkCreationConfig,
+    projectOptions: ProjectOptions,
     globalScope: GlobalScope,
     dslInfo: VariantDslInfo
-): ConsumableCreationConfigImpl(config, globalScope, dslInfo) {
+): ConsumableCreationConfigImpl(config, projectOptions, globalScope, dslInfo) {
 
     val isDebuggable = variantDslInfo.isDebuggable
 

@@ -23,8 +23,8 @@ import com.android.tools.lint.detector.api.Severity
 import kotlin.math.max
 
 /**
- * Value object passed to [Reporter] instances providing statistics to include in the
- * summary
+ * Value object passed to [Reporter] instances providing statistics to
+ * include in the summary.
  */
 class LintStats constructor(
     val errorCount: Int,
@@ -117,8 +117,8 @@ class LintStats constructor(
 }
 
 /**
- * Whether this incident has a fix that can be automatically performed without
- * user intervention
+ * Whether this incident has a fix that can be automatically performed
+ * without user intervention.
  */
 fun Incident.hasAutoFix(): Boolean {
     val fixData = fix ?: return false

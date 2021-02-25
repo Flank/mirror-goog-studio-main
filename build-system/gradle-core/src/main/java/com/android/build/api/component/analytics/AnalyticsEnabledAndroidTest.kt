@@ -20,6 +20,7 @@ import com.android.build.api.component.AndroidTest
 import com.android.build.api.variant.Aapt
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.ApkPackaging
+import com.android.build.api.variant.Renderscript
 import com.android.build.api.variant.SigningConfig
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
@@ -50,12 +51,6 @@ open class AnalyticsEnabledAndroidTest @Inject constructor(
                 VariantPropertiesMethodType.AAPT_OPTIONS_VALUE
             return delegate.aapt
         }
-
-    override fun aaptOptions(action: Aapt.() -> Unit) {
-        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-            VariantPropertiesMethodType.AAPT_OPTIONS_ACTION_VALUE
-        delegate.aaptOptions(action)
-    }
 
     override val namespace: Provider<String>
         get() {
@@ -121,18 +116,12 @@ open class AnalyticsEnabledAndroidTest @Inject constructor(
             return delegate.manifestPlaceholders
         }
 
-    override val signingConfig: SigningConfig
+    override val signingConfig: SigningConfig?
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
                 VariantPropertiesMethodType.SIGNING_CONFIG_VALUE
             return delegate.signingConfig
         }
-
-    override fun signingConfig(action: SigningConfig.() -> Unit) {
-        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-            VariantPropertiesMethodType.SIGNING_CONFIG_ACTION_VALUE
-        delegate.signingConfig(action)
-    }
 
     private val userVisiblePackaging: ApkPackaging by lazy {
         objectFactory.newInstance(
@@ -149,9 +138,20 @@ open class AnalyticsEnabledAndroidTest @Inject constructor(
             return userVisiblePackaging
         }
 
-    override fun packaging(action: ApkPackaging.() -> Unit) {
-        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-            VariantPropertiesMethodType.PACKAGING_OPTIONS_ACTION_VALUE
-        action.invoke(userVisiblePackaging)
+    private val userVisibleRenderscript: Renderscript by lazy {
+        objectFactory.newInstance(
+            AnalyticsEnabledRenderscript::class.java,
+            delegate.renderscript,
+            stats
+        )
     }
+
+    override val renderscript: Renderscript?
+        get() {
+            return if (delegate.renderscript != null) {
+                stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                    VariantPropertiesMethodType.RENDERSCRIPT_VALUE
+                userVisibleRenderscript
+            } else null
+        }
 }

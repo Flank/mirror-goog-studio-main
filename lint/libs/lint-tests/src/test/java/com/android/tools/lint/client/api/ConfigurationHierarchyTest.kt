@@ -98,7 +98,7 @@ class ConfigurationHierarchyTest : AbstractCheckTest() {
         )
     }
 
-    /** Manifest with a number of problems */
+    /** Manifest with a number of problems. */
     private val manifest = manifest(
         """
             <manifest xmlns:android="http://schemas.android.com/apk/res/android"

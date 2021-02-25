@@ -35,9 +35,7 @@ import org.jetbrains.uast.UQualifiedReferenceExpression
 import org.jetbrains.uast.USimpleNameReferenceExpression
 import org.jetbrains.uast.visitor.AbstractUastVisitor
 
-/**
- * Warns about using the wrong canvas size in custom views
- */
+/** Warns about using the wrong canvas size in custom views. */
 class CanvasSizeDetector : Detector(), SourceCodeScanner {
 
     override fun applicableSuperClasses(): List<String> {
@@ -190,13 +188,12 @@ class CanvasSizeDetector : Detector(), SourceCodeScanner {
         private val IMPLEMENTATION =
             Implementation(CanvasSizeDetector::class.java, Scope.JAVA_FILE_SCOPE)
 
-        /** Wrong canvas size lookup  */
+        /** Wrong canvas size lookup. */
         @JvmField
         val ISSUE = Issue.create(
             id = "CanvasSize",
             briefDescription = "Wrong Canvas Size",
-            explanation =
-                """
+            explanation = """
                 In a custom view's draw implementation, you should normally call `getWidth` \
                 and `getHeight` on the custom view itself, not on the `canvas` instance.
 

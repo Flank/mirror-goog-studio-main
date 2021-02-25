@@ -150,35 +150,39 @@ import kotlin.system.measureTimeMillis
 /**
  * Analyzes Android projects and files
  *
- * **NOTE: This is not a public or final API; if you rely on this be prepared
- * to adjust your code for the next tools release.**
+ * **NOTE: This is not a public or final API; if you rely on this be
+ * prepared to adjust your code for the next tools release.**
  */
 @Beta
 class LintDriver(
-    /** The [registry] containing issues to be checked */
+    /** The [registry] containing issues to be checked. */
     var registry: IssueRegistry,
-    /** The tool wrapping the analyzer, such as an IDE or a CLI */
+    /** The tool wrapping the analyzer, such as an IDE or a CLI. */
     client: LintClient,
     /**
-     * The request which points to the original files to be checked,
-     * the original scope, the original [LintClient], as well as the release mode.
+     * The request which points to the original files to be checked, the
+     * original scope, the original [LintClient], as well as the release
+     * mode.
      */
     val request: LintRequest
 ) {
-    /** The original client (not the wrapped one intended to pass to detectors */
+    /**
+     * The original client (not the wrapped one intended to pass to
+     * detectors.
+     */
     private val realClient: LintClient = client
 
     /**
-     * Stashed circular project (we need to report this but can't report it
-     * at the early stage during initialization where this is detected). Cleared
-     * once reported.
+     * Stashed circular project (we need to report this but can't
+     * report it at the early stage during initialization where this is
+     * detected). Cleared once reported.
      */
     private var circularProjectError: CircularDependencyException? = null
 
     /** The associated [LintClient] */
     val client: LintClient = LintClientWrapper(client)
 
-    /** The collection of project roots lint is analyzing */
+    /** The collection of project roots lint is analyzing. */
     val projectRoots: Collection<Project>
 
     init {
@@ -191,16 +195,14 @@ class LintDriver(
             }
     }
 
-    /**
-     * The scope for the lint job
-     */
+    /** The scope for the lint job. */
     var scope: EnumSet<Scope> = request.getScope() ?: Scope.infer(projectRoots)
 
     /**
-     * The relevant platforms lint is to run on. By default,
-     * this is [Platform.ANDROID_SET]. Note that within an
-     * Android project there may be non-Android libraries, but this
-     * flag indicates whether there's any Android sources.
+     * The relevant platforms lint is to run on. By default, this is
+     * [Platform.ANDROID_SET]. Note that within an Android project there
+     * may be non-Android libraries, but this flag indicates whether
+     * there's any Android sources.
      */
     var platforms: EnumSet<Platform> = request.getPlatform() ?: Platform.ANDROID_SET
 
@@ -223,80 +225,95 @@ class LintDriver(
     private var currentProjects: List<Project>? = null
     private var currentProject: Project? = null
 
-    /**
-     * Whether lint should abbreviate output when appropriate.
-     */
+    /** Whether lint should abbreviate output when appropriate. */
     var isAbbreviating = true
 
-    /** Whether to allow suppressing issues with restrictions ([Issue.suppressNames]) */
+    /**
+     * Whether to allow suppressing issues with restrictions
+     * ([Issue.suppressNames])
+     */
     var allowSuppress = false
 
     private var parserErrors: Boolean = false
 
-    /** Whether we should run all normal checks on test sources  */
+    /** Whether we should run all normal checks on test sources. */
     var checkTestSources: Boolean = false
 
     /**
-     * Whether we should run any checks (including tests marked with [Scope.TEST_SOURCES]
-     * on test sources
+     * Whether we should run any checks (including tests marked with
+     * [Scope.TEST_SOURCES] on test sources.
      */
     var ignoreTestSources: Boolean = false
 
-    /** Whether we should include generated sources in the analysis  */
+    /** Whether we should include generated sources in the analysis. */
     var checkGeneratedSources: Boolean = false
 
-    /** Whether we're only analyzing fatal-severity issues  */
+    /** Whether we're only analyzing fatal-severity issues. */
     var fatalOnlyMode: Boolean = false
 
-    /** Baseline to apply to the analysis */
+    /** Baseline to apply to the analysis. */
     var baseline: LintBaseline? = null
 
-    /** Whether dependent projects should be checked */
+    /** Whether dependent projects should be checked. */
     var checkDependencies = true
 
-    /** Time the analysis started */
+    /** Time the analysis started. */
     var analysisStartTime = System.currentTimeMillis()
 
-    /** Count of files the driver has encountered (intended for analytics) */
+    /**
+     * Count of files the driver has encountered (intended for
+     * analytics)
+     */
     var fileCount = 0
 
-    /** Count of modules the driver has encountered (intended for analytics) */
+    /**
+     * Count of modules the driver has encountered (intended for
+     * analytics)
+     */
     var moduleCount = 0
 
-    /** Number of Java sources to encountered in source or test folders */
+    /**
+     * Number of Java sources to encountered in source or test folders.
+     */
     var javaFileCount = 0
 
-    /** Number of Kotlin sources to encountered in source or test folders */
+    /**
+     * Number of Kotlin sources to encountered in source or test
+     * folders.
+     */
     var kotlinFileCount = 0
 
-    /** Number of resource files (XML or bitmaps) encountered in res folders */
+    /**
+     * Number of resource files (XML or bitmaps) encountered in res
+     * folders.
+     */
     var resourceFileCount = 0
 
-    /** Number of source files encountered in test folders */
+    /** Number of source files encountered in test folders. */
     var testSourceCount = 0
 
-    /** Time to initialize the lint project */
+    /** Time to initialize the lint project. */
     var initializeTimeMs = 0L
 
-    /** Time to register custom detectors */
+    /** Time to register custom detectors. */
     var registerCustomDetectorsTimeMs = 0L
 
-    /** Time to compute the applicable detectors */
+    /** Time to compute the applicable detectors. */
     var computeDetectorsTimeMs = 0L
 
-    /** Time to run the first round of checks */
+    /** Time to run the first round of checks. */
     var checkProjectTimeMs = 0L
 
-    /** Time to run any extra phases */
+    /** Time to run any extra phases. */
     var extraPhasesTimeMs = 0L
 
-    /** Time to report baseline issues */
+    /** Time to report baseline issues. */
     var reportBaselineIssuesTimeMs = 0L
 
-    /** Time to dispose projects */
+    /** Time to dispose projects. */
     var disposeProjectsTimeMs = 0L
 
-    /** Time to generate reports */
+    /** Time to generate reports. */
     var reportGenerationTimeMs = 0L
 
     /**
@@ -316,7 +333,7 @@ class LintDriver(
         /**
          * With partial, module independent analysis, the driver is now
          * analyzing one single project and storing the state for later
-         * reporting
+         * reporting.
          */
         ANALYSIS_ONLY,
 
@@ -330,7 +347,7 @@ class LintDriver(
         MERGE
     }
 
-    /** The mode that the driver is currently running in */
+    /** The mode that the driver is currently running in. */
     var mode: DriverMode = DriverMode.GLOBAL
         private set
 
@@ -359,14 +376,15 @@ class LintDriver(
     }
 
     /**
-     * Returns whether lint has encountered any files with fatal parser errors
-     * (e.g. broken source code, or even broken parsers)
+     * Returns whether lint has encountered any files with fatal parser
+     * errors (e.g. broken source code, or even broken parsers)
      *
-     * This is useful for checks that need to make sure they've seen all data in
-     * order to be conclusive (such as an unused resource check).
+     * This is useful for checks that need to make sure they've seen
+     * all data in order to be conclusive (such as an unused resource
+     * check).
      *
-     * @return true if any files were not properly processed because they
-     *         contained parser errors
+     * @return true if any files were not properly processed because
+     *     they contained parser errors
      */
     fun hasParserErrors(): Boolean = parserErrors
 
@@ -432,8 +450,8 @@ class LintDriver(
 
     /**
      * Loads in all the partial results for a set of modules and creates
-     * a single report based on both taking the definite results
-     * as well as conditionally processing the provisional results
+     * a single report based on both taking the definite results as
+     * well as conditionally processing the provisional results.
      */
     fun mergeOnly() {
         mode = DriverMode.MERGE
@@ -618,14 +636,14 @@ class LintDriver(
         }
     }
 
-    /** Add some final checks when merging projects */
+    /** Add some final checks when merging projects. */
     fun processMergedProjects(projectContext: Context) {
         for (detector in applicableDetectors) {
             detector.checkMergedProject(projectContext)
         }
     }
 
-    /** Process the given conditionally reported incidents */
+    /** Process the given conditionally reported incidents. */
     fun mergeConditionalIncidents(
         projectContext: Context,
         provisional: List<Incident>
@@ -832,7 +850,7 @@ class LintDriver(
         validateScopeList()
     }
 
-    /** Development diagnostics only, run with assertions on  */
+    /** Development diagnostics only, run with assertions on. */
     private fun validateScopeList() {
         if (assertionsEnabled()) {
             val resourceFileDetectors = scopeDetectors[Scope.RESOURCE_FILE]
@@ -1503,29 +1521,29 @@ class LintDriver(
     }
 
     /**
-     * Returns the super class for the given class name,
-     * which should be in VM format (e.g. java/lang/Integer, not java.lang.Integer).
-     * If the super class is not known, returns null. This can happen if
-     * the given class is not a known class according to the project or its
-     * libraries, for example because it refers to one of the core libraries which
-     * are not analyzed by lint.
+     * Returns the super class for the given class name, which should be
+     * in VM format (e.g. java/lang/Integer, not java.lang.Integer). If
+     * the super class is not known, returns null. This can happen if
+     * the given class is not a known class according to the project or
+     * its libraries, for example because it refers to one of the core
+     * libraries which are not analyzed by lint.
      *
      * @param name the fully qualified class name
-     *
-     * @return the corresponding super class name (in VM format), or null if not known
+     * @return the corresponding super class name (in VM format), or
+     *     null if not known
      */
     fun getSuperClass(name: String): String? = client.getSuperClass(currentProject!!, name)
 
     /**
-     * Returns true if the given class is a subclass of the given super class.
+     * Returns true if the given class is a subclass of the given super
+     * class.
      *
-     * @param classNode the class to check whether it is a subclass of the given
-     *            super class name
-     *
-     * @param superClassName the fully qualified super class name (in VM format,
-     *            e.g. java/lang/Integer, not java.lang.Integer.
-     *
-     * @return true if the given class is a subclass of the given super class
+     * @param classNode the class to check whether it is a subclass of
+     *     the given super class name
+     * @param superClassName the fully qualified super class name (in VM
+     *     format, e.g. java/lang/Integer, not java.lang.Integer.
+     * @return true if the given class is a subclass of the given super
+     *     class
      */
     fun isSubclassOf(classNode: ClassNode, superClassName: String): Boolean {
         if (superClassName == classNode.superName) {
@@ -1550,7 +1568,10 @@ class LintDriver(
         return false
     }
 
-    /** Check the classes in this project (and if applicable, in any library projects  */
+    /**
+     * Check the classes in this project (and if applicable, in any
+     * library projects.
+     */
     private fun checkClasses(project: Project, main: Project?) {
         val files = project.subset
         if (files != null) {
@@ -1697,11 +1718,11 @@ class LintDriver(
                     oldRootLength = sourceName.length
                 }
                 if (newRootLength != oldRootLength || !sourceName.regionMatches(
-                    0,
-                    newName,
-                    0,
-                    newRootLength
-                )
+                        0,
+                        newName,
+                        0,
+                        newRootLength
+                    )
                 ) {
                     sourceContents = null
                 }
@@ -1737,9 +1758,10 @@ class LintDriver(
         outerClasses = null
     }
 
-    /** Returns the outer class node of the given class node
-     * @param classNode the inner class node
+    /**
+     * Returns the outer class node of the given class node
      *
+     * @param classNode the inner class node
      * @return the outer class node
      */
     fun getOuterClassNode(classNode: ClassNode): ClassNode? {
@@ -1761,15 +1783,14 @@ class LintDriver(
     }
 
     /**
-     * Returns the [ClassNode] corresponding to the given type, if possible, or null
+     * Returns the [ClassNode] corresponding to the given type, if
+     * possible, or null
      *
-     * @param type the fully qualified type, using JVM signatures (/ and $, not . as path
-     *             separators)
-     *
-     * @param flags the ASM flags to pass to the [ClassReader], normally 0 but can
-     *              for example be [ClassReader.SKIP_CODE] and/oor
-     *              [ClassReader.SKIP_DEBUG]
-     *
+     * @param type the fully qualified type, using JVM signatures (/ and
+     *     $, not . as path separators)
+     * @param flags the ASM flags to pass to the [ClassReader], normally
+     *     0 but can for example be [ClassReader.SKIP_CODE]
+     *     and/oor [ClassReader.SKIP_DEBUG]
      * @return the class node for the type, or null
      */
     fun findClass(context: ClassContext, type: String, flags: Int): ClassNode? {
@@ -1915,7 +1936,10 @@ class LintDriver(
         parserErrors = !parser.prepare(allContexts)
     }
 
-    /** The lists of production and test files for Kotlin and Java to parse and process */
+    /**
+     * The lists of production and test files for Kotlin and Java to
+     * parse and process.
+     */
     private class UastSourceList(
         val parser: UastParser,
         val allContexts: List<JavaContext>,
@@ -2220,7 +2244,7 @@ class LintDriver(
         return XmlContext(this, project, main, file, type, contents, document)
     }
 
-    /** Checks individual resources  */
+    /** Checks individual resources. */
     private fun checkIndividualResources(
         project: Project,
         main: Project?,
@@ -2304,7 +2328,9 @@ class LintDriver(
         }
     }
 
-    /** Notifies listeners, if any, that the given event has occurred  */
+    /**
+     * Notifies listeners, if any, that the given event has occurred.
+     */
     private fun fireEvent(
         type: EventType,
         context: Context? = null,
@@ -2325,10 +2351,10 @@ class LintDriver(
      * issues or filtered out warnings.
      *
      * TODO: Extract this out to a top level internal class (with driver
-     * as a member property) since LintDriver is getting really large
-     * and this class also contains quite a bit of filtering code now.
-     * Just not doing it immediately since the current CLs have a lot of
-     * changes here which makes diffing tricky.)
+     *     as a member property) since LintDriver is getting really
+     *     large and this class also contains quite a bit of filtering
+     *     code now. Just not doing it immediately since the current
+     *     CLs have a lot of changes here which makes diffing tricky.)
      */
     private inner class LintClientWrapper(private val delegate: LintClient) :
         LintClient(clientName) {
@@ -2365,7 +2391,7 @@ class LintDriver(
          * Is the given incident suppressed with an annotation, a
          * comment, etc? This only looks at the local context around the
          * incident; it does not check baselines, issue configuration in
-         * lint.xml, etc
+         * lint.xml, etc.
          */
         private fun isSuppressedLocally(context: Context, incident: Incident): Boolean {
             val driver = context.driver
@@ -2795,13 +2821,15 @@ class LintDriver(
     private val runLaterOutsideReadActionList = mutableListOf<Runnable>()
 
     /**
-     * Runs [runnable] later after running file detectors, _without_ holding the PSI read lock.
-     * Useful for network requests, for example, where we want to avoid freezing the UI.
-     * Runnables will be run in the order that they are added here.
+     * Runs [runnable] later after running file detectors, _without_
+     * holding the PSI read lock. Useful for network requests, for
+     * example, where we want to avoid freezing the UI. Runnables will
+     * be run in the order that they are added here.
      *
-     * Important: the [runnable] is responsible for initiating its own read actions using
-     * [LintClient.runReadAction] if it needs to access PSI. Keep in mind that
-     * some Lint methods may access PSI implicitly, such as [Context.report].
+     * Important: the [runnable] is responsible for initiating its own
+     * read actions using [LintClient.runReadAction] if it needs to
+     * access PSI. Keep in mind that some Lint methods may access PSI
+     * implicitly, such as [Context.report].
      */
     fun runLaterOutsideReadAction(runnable: Runnable) {
         runLaterOutsideReadActionList.add(runnable)
@@ -2857,18 +2885,16 @@ class LintDriver(
     // of node (class, method, field) to be checked.
 
     /**
-     * Returns whether the given issue is suppressed in the given method.
+     * Returns whether the given issue is suppressed in the given
+     * method.
      *
-     * @param issue the issue to be checked, or null to just check for "all"
-     *
+     * @param issue the issue to be checked, or null to just check for
+     *     "all"
      * @param classNode the class containing the issue
-     *
      * @param method the method containing the issue
-     *
      * @param instruction the instruction within the method, if any
-     *
-     * @return true if there is a suppress annotation covering the specific
-     *         issue on this method
+     * @return true if there is a suppress annotation covering the
+     *     specific issue on this method
      */
     fun isSuppressed(
         issue: Issue?,
@@ -2951,14 +2977,15 @@ class LintDriver(
     }
 
     /**
-     * Returns whether the given issue is suppressed for the given field.
+     * Returns whether the given issue is suppressed for the given
+     * field.
      *
-     * @param issue the issue to be checked, or null to just check for "all"
-     *
-     * @param field the field potentially annotated with a suppress annotation
-     *
-     * @return true if there is a suppress annotation covering the specific
-     *         issue on this field
+     * @param issue the issue to be checked, or null to just check for
+     *     "all"
+     * @param field the field potentially annotated with a suppress
+     *     annotation
+     * @return true if there is a suppress annotation covering the
+     *     specific issue on this field
      */
     // API; reserve need to require driver state later
     fun isSuppressed(issue: Issue?, field: FieldNode): Boolean {
@@ -2974,12 +3001,11 @@ class LintDriver(
     /**
      * Returns whether the given issue is suppressed in the given class.
      *
-     * @param issue the issue to be checked, or null to just check for "all"
-     *
+     * @param issue the issue to be checked, or null to just check for
+     *     "all"
      * @param classNode the class containing the issue
-     *
-     * @return true if there is a suppress annotation covering the specific
-     *         issue in this class
+     * @return true if there is a suppress annotation covering the
+     *     specific issue in this class
      */
     fun isSuppressed(issue: Issue?, classNode: ClassNode): Boolean {
         if (classNode.invisibleAnnotations != null) {
@@ -3262,14 +3288,14 @@ class LintDriver(
     }
 
     /**
-     * Returns whether the given issue is suppressed in the given XML DOM node.
+     * Returns whether the given issue is suppressed in the given XML
+     * DOM node.
      *
-     * @param issue the issue to be checked, or null to just check for "all"
-     *
+     * @param issue the issue to be checked, or null to just check for
+     *     "all"
      * @param node the DOM node containing the issue
-     *
-     * @return true if there is a suppress annotation covering the specific
-     *         issue in this class
+     * @return true if there is a suppress annotation covering the
+     *     specific issue in this class
      */
     fun isSuppressed(
         context: XmlContext?,
@@ -3319,12 +3345,12 @@ class LintDriver(
     private var cachedFolderVersion = -1
 
     /**
-     * Returns the folder version of the given file. For example, for the file values-v14/foo.xml,
-     * it returns 14.
+     * Returns the folder version of the given file. For example, for
+     * the file values-v14/foo.xml, it returns 14.
      *
      * @param resourceFile the file to be checked
-     *
-     * @return the folder version, or -1 if no specific version was specified
+     * @return the folder version, or -1 if no specific version was
+     *     specified
      */
     fun getResourceFolderVersion(resourceFile: File): Int {
         val parent = resourceFile.parentFile ?: return -1
@@ -3357,14 +3383,17 @@ class LintDriver(
 
         private const val SUPPRESS_LINT_VMSIG = "/$SUPPRESS_LINT;"
 
-        /** Prefix used by the comment suppress mechanism in Studio/IntelliJ  */
+        /**
+         * Prefix used by the comment suppress mechanism in
+         * Studio/IntelliJ.
+         */
         const val STUDIO_ID_PREFIX = "AndroidLint"
 
         private const val SUPPRESS_WARNINGS_FQCN = "java.lang.SuppressWarnings"
 
         const val KEY_THROWABLE = "throwable"
 
-        /** Special key used to store [Constraint]s */
+        /** Special key used to store [Constraint]s. */
         const val KEY_CONDITION = "_condition_"
 
         /**
@@ -3378,7 +3407,7 @@ class LintDriver(
         var crashCount: Int = 0
             private set
 
-        /** Max number of logs to include  */
+        /** Max number of logs to include. */
         private const val MAX_REPORTED_CRASHES = 20
 
         val currentDrivers: MutableList<LintDriver> = ArrayList(2)
@@ -3462,8 +3491,8 @@ class LintDriver(
 
             val throwableMessage = throwable.message
             if (throwableMessage != null && throwableMessage.startsWith(
-                "loader constraint violation: when resolving field \"QUALIFIER_SPLITTER\" the class loader"
-            )
+                    "loader constraint violation: when resolving field \"QUALIFIER_SPLITTER\" the class loader"
+                )
             ) {
                 // Rewrite error message
                 sb.setLength(0)
@@ -3519,8 +3548,8 @@ class LintDriver(
         }
 
         /**
-         * Given a stack trace from a detector crash, returns the issues associated with
-         * the most likely crashing detector
+         * Given a stack trace from a detector crash, returns the issues
+         * associated with the most likely crashing detector.
          */
         fun getAssociatedDetector(
             throwable: Throwable,
@@ -3546,7 +3575,9 @@ class LintDriver(
             return null
         }
 
-        /** Returns the issues associated with the given detector class */
+        /**
+         * Returns the issues associated with the given detector class.
+         */
         fun getDetectorIssues(className: String, driver: LintDriver): List<Issue> {
             val issues = mutableListOf<Issue>()
             for (issue in driver.registry.issues) {
@@ -3591,9 +3622,7 @@ class LintDriver(
             }
         }
 
-        /**
-         * For testing only: clears the crash counter
-         */
+        /** For testing only: clears the crash counter. */
         @JvmStatic
         @VisibleForTesting
         fun clearCrashCount() {
@@ -3672,12 +3701,12 @@ class LintDriver(
                 }
                 if (id.startsWith(STUDIO_ID_PREFIX) &&
                     id.regionMatches(
-                        STUDIO_ID_PREFIX.length,
-                        issueId,
-                        0,
-                        issueId.length,
-                        ignoreCase = true
-                    ) &&
+                            STUDIO_ID_PREFIX.length,
+                            issueId,
+                            0,
+                            issueId.length,
+                            ignoreCase = true
+                        ) &&
                     id.substring(STUDIO_ID_PREFIX.length).equals(issueId, ignoreCase = true)
                 ) {
                     return true
@@ -3707,15 +3736,14 @@ class LintDriver(
         }
 
         /**
-         * Returns true if the given issue is suppressed by the given suppress string; this
-         * is typically the same as the issue id, but is allowed to not match case sensitively,
-         * and is allowed to be a comma separated list, and can be the string "all"
+         * Returns true if the given issue is suppressed by the given
+         * suppress string; this is typically the same as the issue id,
+         * but is allowed to not match case sensitively, and is allowed
+         * to be a comma separated list, and can be the string "all"
          *
          * @param issue the issue id to match
-         *
-         * @param string the suppress string -- typically the id, or "all", or a comma separated list
-         *               of ids
-         *
+         * @param string the suppress string -- typically the id, or
+         *     "all", or a comma separated list of ids
          * @return true if the issue is suppressed by the given string
          */
         private fun isSuppressed(issue: Issue, string: String): Boolean {
@@ -3739,15 +3767,16 @@ class LintDriver(
         }
 
         /**
-         * Returns true if the given AST modifier has a suppress annotation for the
-         * given issue (which can be null to check for the "all" annotation)
+         * Returns true if the given AST modifier has a suppress
+         * annotation for the given issue (which can be null to check
+         * for the "all" annotation)
          *
          * @param issue the issue to be checked
          * @param modifierListOwner the annotated element to check
-         * @param context [JavaContext] for checking external annotations
-         *
-         * @return true if the issue or all issues should be suppressed for this
-         *         modifier
+         * @param context [JavaContext] for checking external
+         *     annotations
+         * @return true if the issue or all issues should be suppressed
+         *     for this modifier
          */
         @JvmStatic
         fun isAnnotatedWithSuppress(
@@ -3815,15 +3844,14 @@ class LintDriver(
         }
 
         /**
-         * Returns true if the given AST modifier has a suppress annotation for the
-         * given issue (which can be null to check for the "all" annotation)
+         * Returns true if the given AST modifier has a suppress
+         * annotation for the given issue (which can be null to check
+         * for the "all" annotation)
          *
          * @param issue the issue to be checked
-         *
          * @param annotated the annotated element
-         *
-         * @return true if the issue or all issues should be suppressed for this
-         *         modifier
+         * @return true if the issue or all issues should be suppressed
+         *     for this modifier
          */
         @JvmStatic
         fun isSuppressed(issue: Issue, annotated: UAnnotated): Boolean {
@@ -3911,14 +3939,14 @@ class LintDriver(
         }
 
         /**
-         * Returns true if the annotation member value, assumed to be specified on a a SuppressWarnings
-         * or SuppressLint annotation, specifies the given id (or "all").
+         * Returns true if the annotation member value, assumed to be
+         * specified on a a SuppressWarnings or SuppressLint annotation,
+         * specifies the given id (or "all").
          *
          * @param issue the issue to be checked
-         *
          * @param value the member value to check
-         *
-         * @return true if the issue or all issues should be suppressed for this modifier
+         * @return true if the issue or all issues should be suppressed
+         *     for this modifier
          */
         @JvmStatic
         fun isSuppressed(
@@ -3957,14 +3985,14 @@ class LintDriver(
         }
 
         /**
-         * Returns true if the annotation member value, assumed to be specified on a a S
-         * uppressWarnings or SuppressLint annotation, specifies the given id (or "all").
+         * Returns true if the annotation member value, assumed to
+         * be specified on a a S uppressWarnings or SuppressLint
+         * annotation, specifies the given id (or "all").
          *
          * @param issue the issue to be checked
-         *
          * @param value the member value to check
-         *
-         * @return true if the issue or all issues should be suppressed for this modifier
+         * @return true if the issue or all issues should be suppressed
+         *     for this modifier
          */
         @JvmStatic
         private fun isSuppressedExpression(issue: Issue, value: UExpression?): Boolean {
@@ -3993,7 +4021,7 @@ class LintDriver(
             return false
         }
 
-        /** Pattern for version qualifiers  */
+        /** Pattern for version qualifiers. */
         private val VERSION_PATTERN = Pattern.compile("^v(\\d+)$")
     }
 }

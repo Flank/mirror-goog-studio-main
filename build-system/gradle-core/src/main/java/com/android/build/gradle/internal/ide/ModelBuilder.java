@@ -37,6 +37,7 @@ import com.android.build.gradle.internal.DefaultConfigData;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.ProductFlavorData;
 import com.android.build.gradle.internal.TaskManager;
+import com.android.build.gradle.internal.component.ApkCreationConfig;
 import com.android.build.gradle.internal.component.ConsumableCreationConfig;
 import com.android.build.gradle.internal.component.VariantCreationConfig;
 import com.android.build.gradle.internal.core.VariantDslInfo;
@@ -63,6 +64,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
+import com.android.build.gradle.internal.scope.ProjectInfo;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.services.BuildServicesKt;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
@@ -154,7 +156,9 @@ public class ModelBuilder<Extension extends BaseExtension>
     @NonNull protected final Extension extension;
     @NonNull private final ExtraModelInfo extraModelInfo;
     @NonNull private final VariantModel variantModel;
+    @NonNull private final ProjectOptions projectOptions;
     @NonNull private final SyncIssueReporter syncIssueReporter;
+    @NonNull private final ProjectInfo projectInfo;
     private final int projectType;
     private int modelLevel = AndroidProject.MODEL_LEVEL_0_ORIGINAL;
     private boolean modelWithFullDependency = false;
@@ -170,14 +174,18 @@ public class ModelBuilder<Extension extends BaseExtension>
             @NonNull VariantModel variantModel,
             @NonNull Extension extension,
             @NonNull ExtraModelInfo extraModelInfo,
+            @NonNull ProjectOptions projectOptions,
             @NonNull SyncIssueReporter syncIssueReporter,
-            int projectType) {
+            int projectType,
+            @NonNull ProjectInfo projectInfo) {
         this.globalScope = globalScope;
         this.extension = extension;
         this.extraModelInfo = extraModelInfo;
         this.variantModel = variantModel;
+        this.projectOptions = projectOptions;
         this.syncIssueReporter = syncIssueReporter;
         this.projectType = projectType;
+        this.projectInfo = projectInfo;
     }
 
     @Override
@@ -459,8 +467,7 @@ public class ModelBuilder<Extension extends BaseExtension>
     private AndroidGradlePluginProjectFlagsImpl getFlags() {
         ImmutableMap.Builder<AndroidGradlePluginProjectFlags.BooleanFlag, Boolean> flags =
                 ImmutableMap.builder();
-        boolean finalResIds =
-                !globalScope.getProjectOptions().get(BooleanOption.USE_NON_FINAL_RES_IDS);
+        boolean finalResIds = !projectOptions.get(BooleanOption.USE_NON_FINAL_RES_IDS);
         flags.put(
                 AndroidGradlePluginProjectFlags.BooleanFlag.APPLICATION_R_CLASS_CONSTANT_IDS,
                 finalResIds);
@@ -481,8 +488,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                                 variantProperties ->
                                         variantProperties.getBuildFeatures().getMlModelBinding()));
 
-        boolean transitiveRClass =
-                !globalScope.getProjectOptions().get(BooleanOption.NON_TRANSITIVE_R_CLASS);
+        boolean transitiveRClass = !projectOptions.get(BooleanOption.NON_TRANSITIVE_R_CLASS);
         flags.put(AndroidGradlePluginProjectFlags.BooleanFlag.TRANSITIVE_R_CLASS, transitiveRClass);
 
         return new AndroidGradlePluginProjectFlagsImpl(flags.build());
@@ -880,7 +886,14 @@ public class ModelBuilder<Extension extends BaseExtension>
         VariantScope variantScope = component.getVariantScope();
         VariantDslInfo variantDslInfo = component.getVariantDslInfo();
 
-        SigningConfig signingConfig = variantDslInfo.getSigningConfig();
+        com.android.build.api.variant.impl.SigningConfigImpl signingConfig = null;
+        boolean isSigningReady = false;
+        if (component instanceof ApkCreationConfig) {
+            signingConfig = ((ApkCreationConfig) component).getSigningConfig();
+            if (signingConfig != null) {
+                isSigningReady = signingConfig.isSigningReady();
+            }
+        }
         String signingConfigName = null;
         if (signingConfig != null) {
             signingConfigName = signingConfig.getName();
@@ -937,10 +950,10 @@ public class ModelBuilder<Extension extends BaseExtension>
 
         return new AndroidArtifactImpl(
                 name,
-                globalScope.getProjectBaseName() + "-" + component.getBaseName(),
+                projectInfo.getProjectBaseName() + "-" + component.getBaseName(),
                 taskContainer.getAssembleTask().getName(),
                 artifacts.get(InternalArtifactType.APK_IDE_MODEL.INSTANCE).getOrNull(),
-                variantDslInfo.isSigningReady() || component.getVariantData().outputsAreSigned,
+                isSigningReady || component.getVariantData().outputsAreSigned,
                 signingConfigName,
                 taskContainer.getSourceGenTask().getName(),
                 taskContainer.getCompileTask().getName(),
@@ -1070,6 +1083,8 @@ public class ModelBuilder<Extension extends BaseExtension>
                 folders.add(maybeBuildConfig.getAsFile());
             }
         }
+        // this is incorrect as it cannot get the final value, we should always add the folder
+        // as a potential source origin and let the IDE deal with it.
         boolean ndkMode = component.getVariantDslInfo().getRenderscriptNdkModeEnabled();
         if (!ndkMode) {
             Directory renderscriptSources =

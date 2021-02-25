@@ -20,7 +20,7 @@ import java.io.File
 import org.gradle.api.Incubating
 
 @Incubating
-interface LibraryVariantDimension<SigningConfigT : SigningConfig> : VariantDimension {
+interface LibraryVariantDimension<SigningConfigT : ApkSigningConfig> : VariantDimension {
     /**
      * Returns whether multi-dex is enabled.
      *

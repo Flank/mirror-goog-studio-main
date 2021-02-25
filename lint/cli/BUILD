@@ -57,7 +57,7 @@ sdk_java_binary(
     name = "lint",
     default_jvm_opts = {
         "linux": "-Xmx1024m -Dcom.android.tools.lint.bindir=$APP_HOME",
-        "win": "-Xmx1024m -Dcom.android.tools.lint.bindir=%~dp0\..",
+        "win": "-Xmx1024m -Dcom.android.tools.lint.bindir=%~dp0\\..",
         "mac": "-Xmx1024m -Dcom.android.tools.lint.bindir=$APP_HOME",
     },
     main_class = "com.android.tools.lint.Main",

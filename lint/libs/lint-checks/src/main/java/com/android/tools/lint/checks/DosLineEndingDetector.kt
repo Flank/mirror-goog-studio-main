@@ -26,19 +26,16 @@ import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.XmlContext
 import org.w3c.dom.Document
 
-/**
- * Checks that the line endings in DOS files are consistent
- */
-/** Constructs a new [DosLineEndingDetector]  */
+/** Checks that the line endings in DOS files are consistent. */
+/** Constructs a new [DosLineEndingDetector] */
 class DosLineEndingDetector : LayoutDetector() {
     companion object Issues {
-        /** Detects mangled DOS line ending documents  */
+        /** Detects mangled DOS line ending documents. */
         @JvmField
         val ISSUE = Issue.create(
             id = "MangledCRLF",
             briefDescription = "Mangled file line endings",
-            explanation =
-                """
+            explanation = """
             On Windows, line endings are typically recorded as carriage return plus newline: \\r\\n.
 
             This detector looks for invalid line endings with repeated carriage return characters \

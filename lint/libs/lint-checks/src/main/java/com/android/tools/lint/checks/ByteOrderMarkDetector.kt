@@ -33,19 +33,16 @@ import com.android.tools.lint.detector.api.XmlContext
 import org.w3c.dom.Document
 import java.util.EnumSet
 
-/**
- * Checks that byte order marks do not appear in resource names
- */
+/** Checks that byte order marks do not appear in resource names. */
 class ByteOrderMarkDetector : ResourceXmlDetector(), SourceCodeScanner, GradleScanner {
     companion object Issues {
 
-        /** Detects BOM characters in the middle of files  */
+        /** Detects BOM characters in the middle of files. */
         @JvmField
         val BOM = Issue.create(
             id = "ByteOrderMark",
             briefDescription = "Byte order mark inside files",
-            explanation =
-                """
+            explanation = """
             Lint will flag any byte-order-mark (BOM) characters it finds in the middle of a file. Since we \
             expect files to be encoded with UTF-8 (see the EnforceUTF8 issue), the BOM characters are not \
             necessary, and they are not handled correctly by all tools. For example, if you have a BOM as \

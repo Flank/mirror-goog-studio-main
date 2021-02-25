@@ -33,7 +33,7 @@ import com.android.utils.XmlUtils.getFirstSubTagByName
 import com.android.utils.XmlUtils.getNextTagByName
 import org.w3c.dom.Element
 
-/** Flags usages of C2DM, which as of P no longer works */
+/** Flags usages of C2DM, which as of P no longer works. */
 class C2dmDetector : Detector(), XmlScanner {
 
     override fun getApplicableElements(): Collection<String> {
@@ -85,8 +85,7 @@ class C2dmDetector : Detector(), XmlScanner {
         val ISSUE = Issue.create(
             id = "UsingC2DM",
             briefDescription = "Using C2DM",
-            explanation =
-                """
+            explanation = """
                 The C2DM library does not work on Android P or newer devices; \
                 you should migrate to Firebase Cloud Messaging to ensure reliable message delivery.
                 """,

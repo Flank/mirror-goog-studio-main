@@ -21,11 +21,6 @@ app_inspection_jar(
     ],
     inspection_resource_strip_prefix = "tools/base/app-inspection/inspectors/network/resources",
     inspection_resources = glob(["resources/META-INF/**"]),
-    jarjar_srcs = [
-        "//prebuilts/tools/common/m2/repository/com/squareup/okhttp/okhttp/2.5.0:jar",
-        "//prebuilts/tools/common/m2/repository/com/squareup/okhttp3/okhttp/3.3.0:jar",
-        "//prebuilts/tools/common/m2/repository/com/squareup/okio/okio/1.6.0:jar",
-    ],
     proto = ":network_inspector_java_proto",
     # do not sort: fake_android must come before latest_jar in the classpath to override small pieces of it
     deps = [

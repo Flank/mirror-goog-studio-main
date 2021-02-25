@@ -23,8 +23,9 @@ import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.Severity
 
 /**
- * Consult the lint.xml file, but override with the --enable and --disable flags supplied on the
- * command line (as well as any other applicable [LintCliFlags])
+ * Consult the lint.xml file, but override with the --enable
+ * and --disable flags supplied on the command line (as well as any
+ * other applicable [LintCliFlags])
  */
 open class CliConfiguration(
     configurations: ConfigurationHierarchy,

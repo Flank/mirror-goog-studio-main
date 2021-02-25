@@ -18,9 +18,7 @@ package com.android.tools.lint.checks
 
 import com.android.tools.lint.detector.api.Detector
 
-/**
- * Tests for [NonConstantResourceIdDetector]
- */
+/** Tests for [NonConstantResourceIdDetector] */
 class NonConstantResourceIdDetectorTest : AbstractCheckTest() {
 
     override fun getDetector(): Detector = NonConstantResourceIdDetector()

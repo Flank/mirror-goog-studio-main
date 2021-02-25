@@ -21,6 +21,7 @@ import com.android.build.api.variant.Aapt
 import com.android.build.api.variant.ApkPackaging
 import com.android.build.api.variant.Dexing
 import com.android.build.api.variant.DynamicFeatureVariant
+import com.android.build.api.variant.Renderscript
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.model.ObjectFactory
@@ -38,12 +39,6 @@ open class AnalyticsEnabledDynamicFeatureVariant @Inject constructor(
             return delegate.aapt
         }
 
-    override fun aaptOptions(action: Aapt.() -> Unit) {
-        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-            VariantPropertiesMethodType.AAPT_OPTIONS_ACTION_VALUE
-        delegate.aaptOptions(action)
-    }
-
     private val userVisiblePackagingOptions: ApkPackaging by lazy {
         objectFactory.newInstance(
             AnalyticsEnabledApkPackaging::class.java,
@@ -58,12 +53,6 @@ open class AnalyticsEnabledDynamicFeatureVariant @Inject constructor(
                 VariantPropertiesMethodType.PACKAGING_OPTIONS_VALUE
             return userVisiblePackagingOptions
         }
-
-    override fun packaging(action: ApkPackaging.() -> Unit) {
-        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-            VariantPropertiesMethodType.PACKAGING_OPTIONS_ACTION_VALUE
-        action.invoke(userVisiblePackagingOptions)
-    }
 
     private val userVisibleAndroidTest: AndroidTest? by lazy {
         delegate.androidTest?.let {
@@ -97,9 +86,21 @@ open class AnalyticsEnabledDynamicFeatureVariant @Inject constructor(
             return userVisibleDexing
         }
 
-    override fun dexing(action: Dexing.() -> Unit) {
-        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-            VariantPropertiesMethodType.DEXING_ACTION_VALUE
-        action.invoke(userVisibleDexing)
+
+    private val userVisibleRenderscript: Renderscript by lazy {
+        objectFactory.newInstance(
+            AnalyticsEnabledRenderscript::class.java,
+            delegate.renderscript,
+            stats
+        )
     }
+
+    override val renderscript: Renderscript?
+        get() {
+            return if (delegate.renderscript != null) {
+                stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                    VariantPropertiesMethodType.RENDERSCRIPT_VALUE
+                userVisibleRenderscript
+            } else null
+        }
 }

@@ -728,7 +728,7 @@ class LintUtilsTest : TestCase() {
          * Given two XML documents and two id's, look up the nodes, then
          * test the matching method ([matchXmlElement]) to make sure
          * that the match for the first id returns the same element as
-         * the one found by id search
+         * the one found by id search.
          */
         fun testMatch(
             sourceDocument: Document,
@@ -742,7 +742,7 @@ class LintUtilsTest : TestCase() {
             assertSame(target, matchXmlElement(source, targetDocument))
         }
 
-        /** Creates an XML DOM document from the given XML */
+        /** Creates an XML DOM document from the given XML. */
         fun xml(@Language("XML") xml: String): Document {
             return XmlUtils.parseDocumentSilently(xml, false)!!
         }

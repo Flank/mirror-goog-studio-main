@@ -25,9 +25,9 @@ import com.android.tools.lint.detector.api.Project
  * which can run on older API levels.
  *
  * When projects are building with this support enabled, they don't want
- * the API detector to flag API calls for calls that are handled by
- * the library rewriter. This file contains calls which looks up whether
- * a given class/member reference is referencing an API that is rewritten.
+ * the API detector to flag API calls for calls that are handled by the
+ * library rewriter. This file contains calls which looks up whether a
+ * given class/member reference is referencing an API that is rewritten.
  */
 fun isApiDesugared(project: Project, cls: String, name: String?): Boolean {
     // The specific set of APIs that are handled are described here:

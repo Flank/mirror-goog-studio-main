@@ -17,8 +17,8 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
+import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
-import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.Aapt2Input
 import com.android.build.gradle.internal.services.getAapt2Executable
@@ -164,8 +164,8 @@ abstract class BundleToStandaloneApkTask : NonIncrementalTask() {
         }
     }
 
-    class CreationAction(creationConfig: VariantCreationConfig) :
-        VariantTaskCreationAction<BundleToStandaloneApkTask, VariantCreationConfig>(
+    class CreationAction(creationConfig: ApkCreationConfig) :
+        VariantTaskCreationAction<BundleToStandaloneApkTask, ApkCreationConfig>(
             creationConfig
         ) {
 
@@ -180,12 +180,13 @@ abstract class BundleToStandaloneApkTask : NonIncrementalTask() {
             super.handleProvider(taskProvider)
             // Mirrors logic in OutputFactory.getOutputFileName, but without splits.
             val suffix =
-                if (creationConfig.variantDslInfo.isSigningReady) SdkConstants.DOT_ANDROID_PACKAGE else "-unsigned.apk"
+
+                if (creationConfig.signingConfig?.isSigningReady() == true) SdkConstants.DOT_ANDROID_PACKAGE else "-unsigned.apk"
             creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 BundleToStandaloneApkTask::outputFile
             )
-                .withName("${creationConfig.globalScope.projectBaseName}-${creationConfig.baseName}-universal$suffix")
+                .withName("${creationConfig.services.projectInfo.getProjectBaseName()}-${creationConfig.baseName}-universal$suffix")
                 .on(InternalArtifactType.UNIVERSAL_APK)
         }
 

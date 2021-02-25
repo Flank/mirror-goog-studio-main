@@ -66,9 +66,8 @@ import com.google.common.annotations.Beta
 /**
  * Default simple implementation of an [SdkInfo]
  *
- *
- * **NOTE: This is not a public or final API; if you rely on this be prepared
- * to adjust your code for the next tools release.**
+ * **NOTE: This is not a public or final API; if you rely on this be
+ * prepared to adjust your code for the next tools release.**
  */
 @Beta
 internal class DefaultSdkInfo : SdkInfo() {
