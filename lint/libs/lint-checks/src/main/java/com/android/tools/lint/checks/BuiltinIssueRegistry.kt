@@ -159,6 +159,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 GradleDetector.HIGH_APP_VERSION_CODE,
                 GradleDetector.IDE_SUPPORT,
                 GradleDetector.JAVA_PLUGIN_LANGUAGE_LEVEL,
+                GradleDetector.JCENTER_REPOSITORY_OBSOLETE,
                 GradleDetector.KTX_EXTENSION_AVAILABLE,
                 GradleDetector.LIFECYCLE_ANNOTATION_PROCESSOR_WITH_JAVA8,
                 GradleDetector.MIN_SDK_TOO_LOW,
@@ -455,7 +456,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 scope.contains(Scope.JAVA_FILE) -> initialSize += 150
                 scope.contains(Scope.CLASS_FILE) -> initialSize += 16
                 scope.contains(Scope.MANIFEST) -> initialSize += 70
-                scope.contains(Scope.GRADLE_FILE) -> initialSize += 23
+                scope.contains(Scope.GRADLE_FILE) -> initialSize += 24
             }
             initialSize
         }

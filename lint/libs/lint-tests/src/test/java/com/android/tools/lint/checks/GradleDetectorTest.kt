@@ -42,6 +42,7 @@ import com.android.tools.lint.checks.GradleDetector.Companion.GRADLE_GETTER
 import com.android.tools.lint.checks.GradleDetector.Companion.GRADLE_PLUGIN_COMPATIBILITY
 import com.android.tools.lint.checks.GradleDetector.Companion.HIGH_APP_VERSION_CODE
 import com.android.tools.lint.checks.GradleDetector.Companion.JAVA_PLUGIN_LANGUAGE_LEVEL
+import com.android.tools.lint.checks.GradleDetector.Companion.JCENTER_REPOSITORY_OBSOLETE
 import com.android.tools.lint.checks.GradleDetector.Companion.KTX_EXTENSION_AVAILABLE
 import com.android.tools.lint.checks.GradleDetector.Companion.LIFECYCLE_ANNOTATION_PROCESSOR_WITH_JAVA8
 import com.android.tools.lint.checks.GradleDetector.Companion.MIN_SDK_TOO_LOW
@@ -402,6 +403,104 @@ class GradleDetectorTest : AbstractCheckTest() {
                     "}\n"
             )
         ).issues(DEPENDENCY).run().expect(expected)
+    }
+
+    fun testWorkManager() {
+        // The AndroidX work manager library plans to have preview versions released at the same
+        // time: 2.6 for normal/stable work manager, and 2.7 for Android S preview work. They don't
+        // want 2.6 preview users to get suggestions to update 2.7, so this is special cased.
+        lint().files(
+            gradle(
+                "" +
+                    "apply plugin: 'com.android.application'\n" +
+                    "\n" +
+                    "android {\n" +
+                    "    compileSdkVersion 30\n" +
+                    "}\n" +
+                    "\n" +
+                    "dependencies {\n" +
+
+                    // Made up versions for the various work manager artifacts
+                    // to make sure we can test the various upgrade scenarios
+                    // separately:
+                    // work-runtime: 2.6.0-alpha06, 2.7.0-alpha06
+                    // work-runtime-ktx: 2.6.0-alpha05, 2.7.0-alpha05
+                    // work-rxjava2: 2.6.0-alpha06, 2.7.0
+                    // work-rxjava3: 2.7.0-alpha06
+                    // work-gcm: 2.7.0-alpha05
+                    // work-testing: 2.8.0-alpha01
+                    // work-multiprocess: 2.7.0-alpha06
+
+                    // Test 2.6.0 alpha05 going up to 2.6.0 alpha6, NOT 2.7 preview
+                    "    implementation \"androidx.work:work-runtime:2.6.0-alpha05\" // expect 2.6.0-alpha06\n" +
+                    // Test 2.6.0 alpha05 (latest available) NOT going up to 2.7 preview
+                    "    implementation \"androidx.work:work-runtime-ktx:2.6.0-alpha05\" // No suggestion\n" +
+                    // Test 2.6.0 alpha05 going up to 2.7.0 (once stable)
+                    "    implementation \"androidx.work:work-rxjava2:2.6.0-alpha05\" // expect 2.7.0\n" +
+                    // Test 2.6.0 NOT going up to 2.7.0 preview
+                    "    implementation \"androidx.work:work-gcm:2.6.0\" // No suggestion\n" +
+                    // Test 2.6.0 alpha05 going up to 2.8 preview
+                    "    androidTestImplementation \"androidx.work:work-testing:2.6.0-alpha05\" // expect 2.8.0-alpha01\n" +
+                    // Test 2.7.0 alpha05 going up to 2.7.0 alpha06
+                    "    implementation \"androidx.work:work-multiprocess:2.7.0-alpha05\" // expect 2.7.0-alpha06\n" +
+                    // Test normal upgrades in 2.7: 2.7.0 alpha05 going up to 2.7.0 alpha6
+                    "    implementation \"androidx.work:work-rxjava3:2.7.0-alpha05\" // expect 2.7.0-alpha06\n" +
+                    // Make sure dynamic versions also work: don't upgrade from < 2.7 to 2.7 previews
+                    "    implementation \"androidx.work:work-rxjava3:2.5.+\" // expect 2.6.0\n" +
+                    // Also update to 2.6, not 2.7, from older stable releases
+                    "    implementation \"androidx.work:work-runtime:2.5.0-alpha05\" // expect 2.6.0-alpha06\n" +
+                    "}\n"
+            )
+        )
+            .issues(DEPENDENCY)
+            .networkData(
+                "https://maven.google.com/master-index.xml",
+                """
+                <?xml version='1.0' encoding='UTF-8'?>
+                <metadata>
+                  <androidx.core/>
+                  <androidx.work/>
+                </metadata>
+                """.trimIndent()
+            )
+            .networkData(
+                "https://maven.google.com/androidx/work/group-index.xml",
+                """
+                <?xml version='1.0' encoding='UTF-8'?>
+                <androidx.work>
+                  <work-runtime versions="2.7.0-alpha06,2.6.0-alpha06"/>
+                  <work-runtime-ktx versions="2.7.0-alpha05,2.6.0-alpha05"/>
+                  <work-rxjava2 versions="2.7.0,2.6.0-alpha06"/>
+                  <work-rxjava3 versions="2.7.0-alpha06"/>
+                  <work-gcm versions="2.7.0-alpha05"/>
+                  <work-testing versions="2.8.0-alpha01"/>
+                  <work-multiprocess versions="2.7.0-alpha06,2.6.0"/>
+                </androidx.work>
+                """.trimIndent()
+            )
+            .run().expect(
+                """
+                build.gradle:8: Warning: A newer version of androidx.work:work-runtime than 2.6.0-alpha05 is available: 2.6.0-alpha06 [GradleDependency]
+                    implementation "androidx.work:work-runtime:2.6.0-alpha05" // expect 2.6.0-alpha06
+                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                build.gradle:10: Warning: A newer version of androidx.work:work-rxjava2 than 2.6.0-alpha05 is available: 2.7.0 [GradleDependency]
+                    implementation "androidx.work:work-rxjava2:2.6.0-alpha05" // expect 2.7.0
+                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                build.gradle:12: Warning: A newer version of androidx.work:work-testing than 2.6.0-alpha05 is available: 2.8.0-alpha01 [GradleDependency]
+                    androidTestImplementation "androidx.work:work-testing:2.6.0-alpha05" // expect 2.8.0-alpha01
+                                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                build.gradle:13: Warning: A newer version of androidx.work:work-multiprocess than 2.7.0-alpha05 is available: 2.7.0-alpha06 [GradleDependency]
+                    implementation "androidx.work:work-multiprocess:2.7.0-alpha05" // expect 2.7.0-alpha06
+                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                build.gradle:14: Warning: A newer version of androidx.work:work-rxjava3 than 2.7.0-alpha05 is available: 2.7.0-alpha06 [GradleDependency]
+                    implementation "androidx.work:work-rxjava3:2.7.0-alpha05" // expect 2.7.0-alpha06
+                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                build.gradle:16: Warning: A newer version of androidx.work:work-runtime than 2.5.0-alpha05 is available: 2.6.0-alpha06 [GradleDependency]
+                    implementation "androidx.work:work-runtime:2.5.0-alpha05" // expect 2.6.0-alpha06
+                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                0 errors, 6 warnings
+                """
+            )
     }
 
     fun testQvsAndroidX() {
@@ -3754,6 +3853,194 @@ class GradleDetectorTest : AbstractCheckTest() {
                     """.trimIndent()
                 )
         }
+    }
+
+    fun testJCenterObsolete() {
+        lint().files(
+            gradle(
+                """
+                    buildscript {
+                        ext {
+                            versions = [kotlin: '1.4.20']
+                        }
+                        repositories {
+                            google()
+                            jcenter()
+                        }
+                    }
+
+                    allprojects {
+                        repositories {
+                            google()
+                            jcenter()
+                        }
+                    }
+                """
+            ).indented()
+        )
+            .issues(JCENTER_REPOSITORY_OBSOLETE)
+            .run()
+            .expect("""
+                build.gradle:7: Warning: JCenter is at end of life [JcenterRepositoryObsolete]
+                        jcenter()
+                        ~~~~~~~~~
+                build.gradle:14: Warning: JCenter is at end of life [JcenterRepositoryObsolete]
+                        jcenter()
+                        ~~~~~~~~~
+                0 errors, 2 warnings
+            """)
+            .expectFixDiffs("""
+                Fix for build.gradle line 7: Replace with mavenCentral:
+                @@ -7 +7
+                -         jcenter()
+                +         mavenCentral()
+                Fix for build.gradle line 7: Delete this repository declaration:
+                @@ -7 +7
+                -         jcenter()
+                Fix for build.gradle line 14: Replace with mavenCentral:
+                @@ -14 +14
+                -         jcenter()
+                +         mavenCentral()
+                Fix for build.gradle line 14: Delete this repository declaration:
+                @@ -14 +14
+                -         jcenter()
+            """)
+    }
+
+    fun testJCenterObsoleteKts() {
+        lint().files(
+            kts(
+                """
+                    buildscript {
+                        val versions by extra("1.4.20")
+                        repositories {
+                            google()
+                            jcenter()
+                        }
+                    }
+
+                    allprojects {
+                        repositories {
+                            google()
+                            jcenter()
+                        }
+                    }
+                """
+            ).indented()
+        )
+            .issues(JCENTER_REPOSITORY_OBSOLETE)
+            .run()
+            .expect("""
+                build.gradle.kts:5: Warning: JCenter is at end of life [JcenterRepositoryObsolete]
+                        jcenter()
+                        ~~~~~~~~~
+                build.gradle.kts:12: Warning: JCenter is at end of life [JcenterRepositoryObsolete]
+                        jcenter()
+                        ~~~~~~~~~
+                0 errors, 2 warnings
+            """)
+            .expectFixDiffs("""
+                Fix for build.gradle.kts line 5: Replace with mavenCentral:
+                @@ -5 +5
+                -         jcenter()
+                +         mavenCentral()
+                Fix for build.gradle.kts line 5: Delete this repository declaration:
+                @@ -5 +5
+                -         jcenter()
+                Fix for build.gradle.kts line 12: Replace with mavenCentral:
+                @@ -12 +12
+                -         jcenter()
+                +         mavenCentral()
+                Fix for build.gradle.kts line 12: Delete this repository declaration:
+                @@ -12 +12
+                -         jcenter()
+            """)
+    }
+
+    fun testJCenterObsoleteContent() {
+        lint().files(
+            gradle(
+                """
+                    repositories {
+                        jcenter {
+                            content {
+                                // exclude artifacts starting with "my.company"
+                                excludeGroupByRegex "^my\\.company.*"
+                            }
+                        }
+                    }
+                """
+            ).indented()
+        )
+            .issues(JCENTER_REPOSITORY_OBSOLETE)
+            .run()
+            .expect(
+                """
+                build.gradle:2: Warning: JCenter is at end of life [JcenterRepositoryObsolete]
+                    jcenter {
+                    ^
+                0 errors, 1 warnings
+                """
+            )
+            .expectFixDiffs(
+                """
+                Fix for build.gradle line 2: Replace with mavenCentral:
+                @@ -2 +2
+                -     jcenter {
+                +     mavenCentral {
+                Fix for build.gradle line 2: Delete this repository declaration:
+                @@ -2 +2
+                -     jcenter {
+                -         content {
+                -             // exclude artifacts starting with "my.company"
+                -             excludeGroupByRegex "^my\\.company.*"
+                -         }
+                -     }
+                """
+            )
+    }
+
+    fun testJCenterObsoleteContentKts() {
+        lint().files(
+            kts(
+                """
+                    repositories {
+                        jcenter {
+                            content {
+                                // exclude artifacts starting with "my.company"
+                                excludeGroupByRegex("^my\\.company.*")
+                            }
+                        }
+                    }
+                """
+            ).indented()
+        )
+            .issues(JCENTER_REPOSITORY_OBSOLETE)
+            .run()
+            .expect(
+                """
+                build.gradle.kts:2: Warning: JCenter is at end of life [JcenterRepositoryObsolete]
+                    jcenter {
+                    ^
+                0 errors, 1 warnings
+                """
+            )
+            .expectFixDiffs(
+                """
+                Fix for build.gradle.kts line 2: Replace with mavenCentral:
+                @@ -2 +2
+                -     jcenter {
+                +     mavenCentral {
+                Fix for build.gradle.kts line 2: Delete this repository declaration:
+                @@ -2 +2
+                -     jcenter {
+                -         content {
+                -             // exclude artifacts starting with "my.company"
+                -             excludeGroupByRegex("^my\\.company.*")
+                -         }
+                -     }
+                """
+            )
     }
 
     // -------------------------------------------------------------------------------------------

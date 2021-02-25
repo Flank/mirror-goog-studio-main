@@ -64,7 +64,7 @@ custom_exec_properties(
     name = "exec_properties",
     constants = {
         "LARGE_MACHINE": create_rbe_exec_properties_dict(
-            pool = "large-machines",
+	    labels = {"machine-size": "large"},
         ),
     },
 )
