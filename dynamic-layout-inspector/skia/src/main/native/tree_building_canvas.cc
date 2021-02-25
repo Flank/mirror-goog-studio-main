@@ -57,6 +57,9 @@ void TreeBuildingCanvas::willSave() {
   printDebug("willSave %i id: %i\n", real_canvas->getSaveCount(),
              views.back().id);
   real_canvas->getTotalMatrix().dump();
+  SkIRect clip = real_canvas->getDeviceClipBounds();
+  printDebug("   clip:  l:%i r:%i t:%i b:%i\n", clip.left(), clip.right(),
+             clip.top(), clip.bottom());
 #endif
 }
 
@@ -90,7 +93,7 @@ void TreeBuildingCanvas::didSetM44(const SkM44& matrix) {
   matrix.dump();
 #endif
 
-  SkM44 scaled = SkM44::Scale(request_scale, request_scale).postConcat(matrix);
+  SkM44 scaled = SkM44::Scale(request_scale, request_scale).preConcat(matrix);
   real_canvas->setMatrix(scaled);
 #ifdef TREEBUILDINGCANVAS_DEBUG
   printDebug("didSetMatrix\n");
@@ -191,7 +194,7 @@ void TreeBuildingCanvas::onDrawImage2(const SkImage* image, SkScalar left,
 #ifdef TREEBUILDINGCANVAS_DEBUG
   std::cerr << "drawImage";
   std::cerr.flush();
-  views.back().canvas->getTotalMatrix().dump();
+  real_canvas->getTotalMatrix().dump();
   std::cerr.flush();
   std::cerr << "top: " << top << " left: " << left << std::endl;
 #endif
@@ -207,8 +210,14 @@ void TreeBuildingCanvas::onDrawImageRect2(const SkImage* image,
                                           SrcRectConstraint constraint) {
   nonHeaderCommand();
 #ifdef TREEBUILDINGCANVAS_DEBUG
-  printDebug("drawImageRect x:%f y:%f w:%f h:%f\n", dst.x(), dst.y(),
-             dst.width(), dst.height());
+  printDebug("drawImageRect\n");
+  printDebug("   src:  x:%f y:%f w:%f h:%f\n", src.x(), src.y(), src.width(),
+             src.height());
+  printDebug("   dst:  x:%f y:%f w:%f h:%f\n", dst.x(), dst.y(), dst.width(),
+             dst.height());
+  SkIRect clip = real_canvas->getDeviceClipBounds();
+  printDebug("   clip:  l:%i r:%i t:%i b:%i\n", clip.left(), clip.right(),
+             clip.top(), clip.bottom());
   real_canvas->getTotalMatrix().dump();
   real_canvas->getTotalMatrix().mapRect(dst).dump();
 #endif
@@ -418,7 +427,7 @@ void TreeBuildingCanvas::nonHeaderCommand() {
 void TreeBuildingCanvas::exitView(bool hasData) {
   View& topView = views.back();
 #ifdef TREEBUILDINGCANVAS_DEBUG
-  printDebug("exitView\n");
+  printDebug("exitView hasData: %d didDraw: %d\n", hasData, topView.didDraw);
 #endif
   if (hasData && topView.didDraw) {
     auto last = views.rbegin() + 1;

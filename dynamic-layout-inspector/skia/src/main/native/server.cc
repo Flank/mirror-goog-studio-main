@@ -15,7 +15,6 @@
  */
 #include "server.h"
 #include <grpc++/grpc++.h>
-#include <future>
 #include <mutex>
 #include <thread>
 #include "skia.grpc.pb.h"
@@ -34,7 +33,8 @@ void SkiaParserServiceImpl::SplitOutImages(
     node->set_image_id(id);
     stream->Write(response);
   }
-  for (::layoutinspector::proto::InspectorView child : node->children()) {
+  for (::layoutinspector::proto::InspectorView& child :
+       *node->mutable_children()) {
     SplitOutImages(&child, stream, id);
   }
 }

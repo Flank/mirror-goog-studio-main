@@ -72,7 +72,6 @@ class SkiaParserServiceImpl final
       service.exit_requested.get_future().wait();
       exit_requested = true;
       service.server->Shutdown(std::chrono::system_clock::now());
-      ;
     });
     service.server->Wait();
     if (!exit_requested) {
