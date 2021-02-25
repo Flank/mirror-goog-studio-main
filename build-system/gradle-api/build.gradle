@@ -87,6 +87,9 @@ def fixedDokkaProvider = tasks.register("fixedDokka", FixedDokka) {
 
     dacRoot = "/reference/tools/gradle-api/" + version.substring(0, version.lastIndexOf("."))
     classpath = configurations.additionalDokkaClasspath.files
+    doFirst {
+        new File(outputDirectory).deleteDir()
+    }
 
     // Root URL of the generated documentation to link with. The trailing slash is required!
     externalDocumentationLink {
