@@ -521,11 +521,14 @@ class CoreLibraryDesugarTest {
             ?: fail("Failed to find the dex with class name $desugarConfigClass")
         DexSubject.assertThat(desugarConfigLibDex).doesNotContainClasses(programClass)
 
+        // Invoke a Android API taking a java.time class as argument. This will
+        // require conversion, a the API will not be able to take a j$.time class.
         TestFileUtils.addMethod(
             FileUtils.join(app.mainSrcDir,"com/example/helloworld/HelloWorld.java"),
             """
-                public static java.util.TimeZone getTimeZone() {
-                    return java.util.TimeZone.getTimeZone(java.time.ZoneId.of("GMT"));
+                public static void useConversion(java.time.ZonedDateTime zonedDateTime) {
+                    android.view.textclassifier.TextClassification.Request.Builder builder = null;
+                    builder.setReferenceTime(zonedDateTime);
                 }
             """.trimIndent())
         executor().run(":app:assembleRelease")

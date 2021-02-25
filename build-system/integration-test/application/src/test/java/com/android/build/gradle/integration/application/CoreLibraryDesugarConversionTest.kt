@@ -74,13 +74,15 @@ class CoreLibraryDesugarConversionTest(val minSdkVersion: Int) {
                 }
             """.trimIndent())
 
-        // add a function with desugar library parameter, which is called from application
-        // regression test for b/150774053, make sure it works when minSdkVersion is 24
+        // Add a function with desugar library parameter (a java.time class in this case), which
+        // is called from application regression test for b/150774053, make sure it works when
+        // minSdkVersion is 24.
         TestFileUtils.addMethod(
             FileUtils.join(project.mainSrcDir,"com/example/helloworld/HelloWorld.java"),
             """
-                public static String getTime() {
-                    return java.util.TimeZone.getTimeZone(java.time.ZoneId.of("GMT")).getID();
+                public static void useConversion(java.time.ZonedDateTime zonedDateTime) {
+                    android.view.textclassifier.TextClassification.Request.Builder builder = null;
+                    builder.setReferenceTime(zonedDateTime);
                 }
             """.trimIndent())
 
@@ -133,7 +135,9 @@ class CoreLibraryDesugarConversionTest(val minSdkVersion: Int) {
         val dex = getDexWithSpecificClass(programClass, apk.allDexes)
             ?: fail("Failed to find the dex with class name $programClass")
         DexClassSubject.assertThat(dex.classes[programClass])
-            .hasMethodThatInvokes("getTime", "Lj$/time/TimeConversions;->convert(Lj$/time/ZoneId;)Ljava/time/ZoneId;")
+            .hasMethodThatInvokes(
+                "useConversion",
+                "Lj$/time/TimeConversions;->convert(Lj$/time/ZonedDateTime;)Ljava/time/ZonedDateTime;")
         // Consumer and IntUnaryOperator are desugared up to 23 so conversion doesn't exist for 24 and above
         Assume.assumeTrue(minSdkVersion < 24)
         DexClassSubject.assertThat(dex.classes[programClass])
