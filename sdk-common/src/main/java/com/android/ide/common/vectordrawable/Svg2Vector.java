@@ -897,12 +897,12 @@ public class Svg2Vector {
         logger.log(Level.FINE, "Rect found" + currentGroupNode.getTextContent());
 
         if (currentGroupNode.getNodeType() == Node.ELEMENT_NODE) {
-            float x = 0;
-            float y = 0;
-            float width = Float.NaN;
-            float height = Float.NaN;
-            float rx = 0;
-            float ry = 0;
+            double x = 0;
+            double y = 0;
+            double width = Double.NaN;
+            double height = Double.NaN;
+            double rx = 0;
+            double ry = 0;
 
             NamedNodeMap a = currentGroupNode.getAttributes();
             int len = a.getLength();
@@ -911,38 +911,43 @@ public class Svg2Vector {
                 Node n = a.item(j);
                 String name = n.getNodeName();
                 String value = n.getNodeValue();
-                if (name.equals(SVG_STYLE)) {
-                    addStyleToPath(child, value);
-                    if (value.contains("opacity:0;")) {
-                        pureTransparent = true;
+                try {
+                    if (name.equals(SVG_STYLE)) {
+                        addStyleToPath(child, value);
+                        if (value.contains("opacity:0;")) {
+                            pureTransparent = true;
+                        }
+                    } else if (presentationMap.containsKey(name)) {
+                        child.fillPresentationAttributes(name, value);
+                    } else if (name.equals(SVG_CLIP_PATH) || name.equals(SVG_MASK)) {
+                        svg.addClipPathAffectedNode(child, currentGroup, value);
+                    } else if (name.equals("x")) {
+                        x = svg.parseXValue(value);
+                    } else if (name.equals("y")) {
+                        y = svg.parseYValue(value);
+                    } else if (name.equals("rx")) {
+                        rx = svg.parseXValue(value);
+                    } else if (name.equals("ry")) {
+                        ry = svg.parseYValue(value);
+                    } else if (name.equals("width")) {
+                        width = svg.parseXValue(value);
+                    } else if (name.equals("height")) {
+                        height = svg.parseYValue(value);
+                    } else if (name.equals("class")) {
+                        svg.addAffectedNodeToStyleClass("rect." + value, child);
+                        svg.addAffectedNodeToStyleClass("." + value, child);
                     }
-                } else if (presentationMap.containsKey(name)) {
-                    child.fillPresentationAttributes(name, value);
-                } else if (name.equals(SVG_CLIP_PATH) || name.equals(SVG_MASK)) {
-                    svg.addClipPathAffectedNode(child, currentGroup, value);
-                } else if (name.equals("x")) {
-                    x = Float.parseFloat(value);
-                } else if (name.equals("y")) {
-                    y = Float.parseFloat(value);
-                } else if (name.equals("rx")) {
-                    rx = Float.parseFloat(value);
-                } else if (name.equals("ry")) {
-                    ry = Float.parseFloat(value);
-                } else if (name.equals("width")) {
-                    width = Float.parseFloat(value);
-                } else if (name.equals("height")) {
-                    height = Float.parseFloat(value);
-                } else if (name.equals("class")) {
-                    svg.addAffectedNodeToStyleClass("rect." + value, child);
-                    svg.addAffectedNodeToStyleClass("." + value, child);
+                } catch (IllegalArgumentException e) {
+                    String msg = String.format("Invalid attribute value: %s=\"%s\"", name, value);
+                    svg.logError(msg, currentGroupNode);
                 }
             }
 
             if (!pureTransparent
-                    && !Float.isNaN(x)
-                    && !Float.isNaN(y)
-                    && !Float.isNaN(width)
-                    && !Float.isNaN(height)) {
+                    && !Double.isNaN(x)
+                    && !Double.isNaN(y)
+                    && !Double.isNaN(width)
+                    && !Double.isNaN(height)) {
                 PathBuilder builder = new PathBuilder();
                 if (rx <= 0 && ry <= 0) {
                     // "M x, y h width v height h -width z"
@@ -1018,7 +1023,6 @@ public class Svg2Vector {
                     svg.addAffectedNodeToStyleClass("circle." + value, child);
                     svg.addAffectedNodeToStyleClass("." + value, child);
                 }
-
             }
 
             if (!pureTransparent && !Float.isNaN(cx) && !Float.isNaN(cy)) {

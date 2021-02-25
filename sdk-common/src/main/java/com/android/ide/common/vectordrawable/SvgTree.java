@@ -256,9 +256,7 @@ class SvgTree {
         return result.toString();
     }
 
-    /**
-     * @return true when there is at least one valid child.
-     */
+    /** Returns true when there is at least one valid child. */
     public boolean getHasLeafNode() {
         return mHasLeafNode;
     }
@@ -333,6 +331,41 @@ class SvgTree {
         }
         if (heightType == SizeType.PERCENTAGE && h > 0) {
             h = viewBox[3] * h / 100;
+        }
+    }
+
+    /**
+     * Parses an X coordinate of a width value that can be an absolute number or percentage of
+     * the viewport size.
+     *
+     * @param value the value to parse
+     * @return the parsed value
+     * @throws IllegalArgumentException if the value is not a valid floating point number or
+     *     percentage
+     */
+    public double parseXValue(@NonNull String value) {
+        return parseCoordinateOrLength(value, getViewportWidth());
+    }
+
+    /**
+     * Parses an Y coordinate of a height value that can be an absolute number or percentage of
+     * the viewport size.
+     *
+     * @param value the value to parse
+     * @return the parsed value
+     * @throws IllegalArgumentException if the value is not a valid floating point number or
+     *     percentage
+     */
+    public double parseYValue(@NonNull String value) {
+        return parseCoordinateOrLength(value, getViewportHeight());
+    }
+
+    private static double parseCoordinateOrLength(@NonNull String value, double percentageBase) {
+        if (value.endsWith("%")) {
+            return Double.parseDouble(value.substring(0, value.length() - 1)) / 100
+                   * percentageBase;
+        } else {
+            return Double.parseDouble(value);
         }
     }
 

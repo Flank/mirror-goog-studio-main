@@ -296,6 +296,10 @@ public class VectorDrawableGeneratorTest extends TestCase {
         checkSvgConversion("test_implicit_lineto_after_moveto");
     }
 
+    public void testRoundRectPercentage() throws Exception {
+        checkSvgConversion("test_round_rect_percentage");
+    }
+
     public void testSvgColorFormats() throws Exception {
         checkSvgConversion("test_color_formats");
     }
