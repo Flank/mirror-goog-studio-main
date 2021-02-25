@@ -27,11 +27,11 @@ internal class TestProjectBuilderImpl: TestProjectBuilder, TestProject {
 
     override var buildFileType: BuildFileType = BuildFileType.GROOVY
 
-    override fun rootProject(action: SubProjectBuilder.() -> Unit) {
+    override fun configureRoot(action: SubProjectBuilder.() -> Unit) {
         action(rootProject)
     }
 
-    override fun subProject(path: String, action: SubProjectBuilder.() -> Unit) {
+    override fun configure(path: String, action: SubProjectBuilder.() -> Unit) {
         if (path == ":") {
             action(rootProject)
         } else {

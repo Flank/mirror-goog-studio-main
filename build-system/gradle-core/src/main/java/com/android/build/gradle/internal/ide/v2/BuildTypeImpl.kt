@@ -47,7 +47,7 @@ data class BuildTypeImpl(
     override val multiDexKeepFile: File?,
     override val multiDexKeepProguard: File?,
     override val isDefault: Boolean? = null,
-    override val name: String
+    override val name: String?
 ) : BuildType, Serializable {
     companion object {
         @JvmStatic

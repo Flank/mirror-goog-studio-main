@@ -8,8 +8,9 @@
     - resourcePrefix    = (null)
     - buildToolsVersion = DEFAULT_BUILD_TOOLS_REVISION
     - dynamicFeatures   = []
-    - bootClasspath:
+    > bootClasspath:
        * {ANDROID_SDK}/platforms/android-30/android.jar{F}
+    < bootClasspath
     > defaultConfig:
        > productFlavor:
           - name                               = "main"
@@ -30,8 +31,8 @@
           - versionCode                        = (null)
           - versionName                        = (null)
           - minSdkVersion:
-             - apiLevel = 14
-             - codename = (null)
+             * apiLevel = 14
+             * codename = (null)
           - targetSdkVersion                   = (null)
           - maxSdkVersion                      = (null)
           - renderscriptTargetApi              = (null)
@@ -47,79 +48,106 @@
           - signingConfig                      = (null)
           - wearAppUnbundled                   = (null)
           - vectorDrawables:
-             - generatedDensities = ["hdpi", "ldpi", "mdpi", "xhdpi", "xxhdpi", "xxxhdpi"]
-             - useSupportLibrary  = false
+             * generatedDensities = ["hdpi", "ldpi", "mdpi", "xhdpi", "xxhdpi", "xxxhdpi"]
+             * useSupportLibrary  = false
        < productFlavor
        > sourceProvider:
           - name                = "main"
           - manifestFile        = {PROJECT}/src/main/AndroidManifest.xml{F}
-          - javaDirectories:
+          > javaDirectories:
              * {PROJECT}/src/main/java{D}
-          - kotlinDirectories:
+          < javaDirectories
+          > kotlinDirectories:
              * {PROJECT}/src/main/java{D}
              * {PROJECT}/src/main/kotlin{!}
-          - resourcesDirectories:
+          < kotlinDirectories
+          > resourcesDirectories:
              * {PROJECT}/src/main/resources{!}
-          - aidlDirectories:
+          < resourcesDirectories
+          > aidlDirectories:
              * {PROJECT}/src/main/aidl{!}
-          - renderscriptDirectories:
+          < aidlDirectories
+          > renderscriptDirectories:
              * {PROJECT}/src/main/rs{!}
-          - resDirectories:
+          < renderscriptDirectories
+          > resDirectories:
              * {PROJECT}/src/main/res{D}
-          - assetsDirectories:
+          < resDirectories
+          > assetsDirectories:
              * {PROJECT}/src/main/assets{!}
-          - jniLibsDirectories:
+          < assetsDirectories
+          > jniLibsDirectories:
              * {PROJECT}/src/main/jniLibs{!}
-          - shadersDirectories:
+          < jniLibsDirectories
+          > shadersDirectories:
              * {PROJECT}/src/main/shaders{!}
+          < shadersDirectories
           - mlModelsDirectories = (null)
        < sourceProvider
        > androidTestSourceProvider:
           - name                = "androidTest"
           - manifestFile        = {PROJECT}/src/androidTest/AndroidManifest.xml{!}
-          - javaDirectories:
+          > javaDirectories:
              * {PROJECT}/src/androidTest/java{!}
-          - kotlinDirectories:
+          < javaDirectories
+          > kotlinDirectories:
              * {PROJECT}/src/androidTest/java{!}
              * {PROJECT}/src/androidTest/kotlin{!}
-          - resourcesDirectories:
+          < kotlinDirectories
+          > resourcesDirectories:
              * {PROJECT}/src/androidTest/resources{!}
-          - aidlDirectories:
+          < resourcesDirectories
+          > aidlDirectories:
              * {PROJECT}/src/androidTest/aidl{!}
-          - renderscriptDirectories:
+          < aidlDirectories
+          > renderscriptDirectories:
              * {PROJECT}/src/androidTest/rs{!}
-          - resDirectories:
+          < renderscriptDirectories
+          > resDirectories:
              * {PROJECT}/src/androidTest/res{!}
-          - assetsDirectories:
+          < resDirectories
+          > assetsDirectories:
              * {PROJECT}/src/androidTest/assets{!}
-          - jniLibsDirectories:
+          < assetsDirectories
+          > jniLibsDirectories:
              * {PROJECT}/src/androidTest/jniLibs{!}
-          - shadersDirectories:
+          < jniLibsDirectories
+          > shadersDirectories:
              * {PROJECT}/src/androidTest/shaders{!}
+          < shadersDirectories
           - mlModelsDirectories = (null)
        < androidTestSourceProvider
        > unitTestSourceProvider:
           - name                = "test"
           - manifestFile        = {PROJECT}/src/test/AndroidManifest.xml{!}
-          - javaDirectories:
+          > javaDirectories:
              * {PROJECT}/src/test/java{!}
-          - kotlinDirectories:
+          < javaDirectories
+          > kotlinDirectories:
              * {PROJECT}/src/test/java{!}
              * {PROJECT}/src/test/kotlin{!}
-          - resourcesDirectories:
+          < kotlinDirectories
+          > resourcesDirectories:
              * {PROJECT}/src/test/resources{!}
-          - aidlDirectories:
+          < resourcesDirectories
+          > aidlDirectories:
              * {PROJECT}/src/test/aidl{!}
-          - renderscriptDirectories:
+          < aidlDirectories
+          > renderscriptDirectories:
              * {PROJECT}/src/test/rs{!}
-          - resDirectories:
+          < renderscriptDirectories
+          > resDirectories:
              * {PROJECT}/src/test/res{!}
-          - assetsDirectories:
+          < resDirectories
+          > assetsDirectories:
              * {PROJECT}/src/test/assets{!}
-          - jniLibsDirectories:
+          < assetsDirectories
+          > jniLibsDirectories:
              * {PROJECT}/src/test/jniLibs{!}
-          - shadersDirectories:
+          < jniLibsDirectories
+          > shadersDirectories:
              * {PROJECT}/src/test/shaders{!}
+          < shadersDirectories
           - mlModelsDirectories = (null)
        < unitTestSourceProvider
     < defaultConfig
@@ -153,73 +181,100 @@
           > sourceProvider:
              - name                = "debug"
              - manifestFile        = {PROJECT}/src/debug/AndroidManifest.xml{!}
-             - javaDirectories:
+             > javaDirectories:
                 * {PROJECT}/src/debug/java{!}
-             - kotlinDirectories:
+             < javaDirectories
+             > kotlinDirectories:
                 * {PROJECT}/src/debug/java{!}
                 * {PROJECT}/src/debug/kotlin{!}
-             - resourcesDirectories:
+             < kotlinDirectories
+             > resourcesDirectories:
                 * {PROJECT}/src/debug/resources{!}
-             - aidlDirectories:
+             < resourcesDirectories
+             > aidlDirectories:
                 * {PROJECT}/src/debug/aidl{!}
-             - renderscriptDirectories:
+             < aidlDirectories
+             > renderscriptDirectories:
                 * {PROJECT}/src/debug/rs{!}
-             - resDirectories:
+             < renderscriptDirectories
+             > resDirectories:
                 * {PROJECT}/src/debug/res{!}
-             - assetsDirectories:
+             < resDirectories
+             > assetsDirectories:
                 * {PROJECT}/src/debug/assets{!}
-             - jniLibsDirectories:
+             < assetsDirectories
+             > jniLibsDirectories:
                 * {PROJECT}/src/debug/jniLibs{!}
-             - shadersDirectories:
+             < jniLibsDirectories
+             > shadersDirectories:
                 * {PROJECT}/src/debug/shaders{!}
+             < shadersDirectories
              - mlModelsDirectories = (null)
           < sourceProvider
           > androidTestSourceProvider:
              - name                = "androidTestDebug"
              - manifestFile        = {PROJECT}/src/androidTestDebug/AndroidManifest.xml{!}
-             - javaDirectories:
+             > javaDirectories:
                 * {PROJECT}/src/androidTestDebug/java{!}
-             - kotlinDirectories:
+             < javaDirectories
+             > kotlinDirectories:
                 * {PROJECT}/src/androidTestDebug/java{!}
                 * {PROJECT}/src/androidTestDebug/kotlin{!}
-             - resourcesDirectories:
+             < kotlinDirectories
+             > resourcesDirectories:
                 * {PROJECT}/src/androidTestDebug/resources{!}
-             - aidlDirectories:
+             < resourcesDirectories
+             > aidlDirectories:
                 * {PROJECT}/src/androidTestDebug/aidl{!}
-             - renderscriptDirectories:
+             < aidlDirectories
+             > renderscriptDirectories:
                 * {PROJECT}/src/androidTestDebug/rs{!}
-             - resDirectories:
+             < renderscriptDirectories
+             > resDirectories:
                 * {PROJECT}/src/androidTestDebug/res{!}
-             - assetsDirectories:
+             < resDirectories
+             > assetsDirectories:
                 * {PROJECT}/src/androidTestDebug/assets{!}
-             - jniLibsDirectories:
+             < assetsDirectories
+             > jniLibsDirectories:
                 * {PROJECT}/src/androidTestDebug/jniLibs{!}
-             - shadersDirectories:
+             < jniLibsDirectories
+             > shadersDirectories:
                 * {PROJECT}/src/androidTestDebug/shaders{!}
+             < shadersDirectories
              - mlModelsDirectories = (null)
           < androidTestSourceProvider
           > unitTestSourceProvider:
              - name                = "testDebug"
              - manifestFile        = {PROJECT}/src/testDebug/AndroidManifest.xml{!}
-             - javaDirectories:
+             > javaDirectories:
                 * {PROJECT}/src/testDebug/java{!}
-             - kotlinDirectories:
+             < javaDirectories
+             > kotlinDirectories:
                 * {PROJECT}/src/testDebug/java{!}
                 * {PROJECT}/src/testDebug/kotlin{!}
-             - resourcesDirectories:
+             < kotlinDirectories
+             > resourcesDirectories:
                 * {PROJECT}/src/testDebug/resources{!}
-             - aidlDirectories:
+             < resourcesDirectories
+             > aidlDirectories:
                 * {PROJECT}/src/testDebug/aidl{!}
-             - renderscriptDirectories:
+             < aidlDirectories
+             > renderscriptDirectories:
                 * {PROJECT}/src/testDebug/rs{!}
-             - resDirectories:
+             < renderscriptDirectories
+             > resDirectories:
                 * {PROJECT}/src/testDebug/res{!}
-             - assetsDirectories:
+             < resDirectories
+             > assetsDirectories:
                 * {PROJECT}/src/testDebug/assets{!}
-             - jniLibsDirectories:
+             < assetsDirectories
+             > jniLibsDirectories:
                 * {PROJECT}/src/testDebug/jniLibs{!}
-             - shadersDirectories:
+             < jniLibsDirectories
+             > shadersDirectories:
                 * {PROJECT}/src/testDebug/shaders{!}
+             < shadersDirectories
              - mlModelsDirectories = (null)
           < unitTestSourceProvider
        < buildTypeContainer(debug)
@@ -252,73 +307,100 @@
           > sourceProvider:
              - name                = "release"
              - manifestFile        = {PROJECT}/src/release/AndroidManifest.xml{!}
-             - javaDirectories:
+             > javaDirectories:
                 * {PROJECT}/src/release/java{!}
-             - kotlinDirectories:
+             < javaDirectories
+             > kotlinDirectories:
                 * {PROJECT}/src/release/java{!}
                 * {PROJECT}/src/release/kotlin{!}
-             - resourcesDirectories:
+             < kotlinDirectories
+             > resourcesDirectories:
                 * {PROJECT}/src/release/resources{!}
-             - aidlDirectories:
+             < resourcesDirectories
+             > aidlDirectories:
                 * {PROJECT}/src/release/aidl{!}
-             - renderscriptDirectories:
+             < aidlDirectories
+             > renderscriptDirectories:
                 * {PROJECT}/src/release/rs{!}
-             - resDirectories:
+             < renderscriptDirectories
+             > resDirectories:
                 * {PROJECT}/src/release/res{!}
-             - assetsDirectories:
+             < resDirectories
+             > assetsDirectories:
                 * {PROJECT}/src/release/assets{!}
-             - jniLibsDirectories:
+             < assetsDirectories
+             > jniLibsDirectories:
                 * {PROJECT}/src/release/jniLibs{!}
-             - shadersDirectories:
+             < jniLibsDirectories
+             > shadersDirectories:
                 * {PROJECT}/src/release/shaders{!}
+             < shadersDirectories
              - mlModelsDirectories = (null)
           < sourceProvider
           > androidTestSourceProvider:
              - name                = "androidTestRelease"
              - manifestFile        = {PROJECT}/src/androidTestRelease/AndroidManifest.xml{!}
-             - javaDirectories:
+             > javaDirectories:
                 * {PROJECT}/src/androidTestRelease/java{!}
-             - kotlinDirectories:
+             < javaDirectories
+             > kotlinDirectories:
                 * {PROJECT}/src/androidTestRelease/java{!}
                 * {PROJECT}/src/androidTestRelease/kotlin{!}
-             - resourcesDirectories:
+             < kotlinDirectories
+             > resourcesDirectories:
                 * {PROJECT}/src/androidTestRelease/resources{!}
-             - aidlDirectories:
+             < resourcesDirectories
+             > aidlDirectories:
                 * {PROJECT}/src/androidTestRelease/aidl{!}
-             - renderscriptDirectories:
+             < aidlDirectories
+             > renderscriptDirectories:
                 * {PROJECT}/src/androidTestRelease/rs{!}
-             - resDirectories:
+             < renderscriptDirectories
+             > resDirectories:
                 * {PROJECT}/src/androidTestRelease/res{!}
-             - assetsDirectories:
+             < resDirectories
+             > assetsDirectories:
                 * {PROJECT}/src/androidTestRelease/assets{!}
-             - jniLibsDirectories:
+             < assetsDirectories
+             > jniLibsDirectories:
                 * {PROJECT}/src/androidTestRelease/jniLibs{!}
-             - shadersDirectories:
+             < jniLibsDirectories
+             > shadersDirectories:
                 * {PROJECT}/src/androidTestRelease/shaders{!}
+             < shadersDirectories
              - mlModelsDirectories = (null)
           < androidTestSourceProvider
           > unitTestSourceProvider:
              - name                = "testRelease"
              - manifestFile        = {PROJECT}/src/testRelease/AndroidManifest.xml{!}
-             - javaDirectories:
+             > javaDirectories:
                 * {PROJECT}/src/testRelease/java{!}
-             - kotlinDirectories:
+             < javaDirectories
+             > kotlinDirectories:
                 * {PROJECT}/src/testRelease/java{!}
                 * {PROJECT}/src/testRelease/kotlin{!}
-             - resourcesDirectories:
+             < kotlinDirectories
+             > resourcesDirectories:
                 * {PROJECT}/src/testRelease/resources{!}
-             - aidlDirectories:
+             < resourcesDirectories
+             > aidlDirectories:
                 * {PROJECT}/src/testRelease/aidl{!}
-             - renderscriptDirectories:
+             < aidlDirectories
+             > renderscriptDirectories:
                 * {PROJECT}/src/testRelease/rs{!}
-             - resDirectories:
+             < renderscriptDirectories
+             > resDirectories:
                 * {PROJECT}/src/testRelease/res{!}
-             - assetsDirectories:
+             < resDirectories
+             > assetsDirectories:
                 * {PROJECT}/src/testRelease/assets{!}
-             - jniLibsDirectories:
+             < assetsDirectories
+             > jniLibsDirectories:
                 * {PROJECT}/src/testRelease/jniLibs{!}
-             - shadersDirectories:
+             < jniLibsDirectories
+             > shadersDirectories:
                 * {PROJECT}/src/testRelease/shaders{!}
+             < shadersDirectories
              - mlModelsDirectories = (null)
           < unitTestSourceProvider
        < buildTypeContainer(release)
@@ -349,15 +431,17 @@
           > mainArtifact:
              - compileTaskName               = "compileDebugSources"
              - assembleTaskName              = "assembleDebug"
-             - classesFolders:
+             > classesFolders:
                 * {PROJECT}/build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/debug/R.jar{!}
                 * {PROJECT}/build/intermediates/javac/debug/classes{!}
+             < classesFolders
              - ideSetupTaskNames             = ["generateDebugSources"]
-             - generatedSourceFolders:
+             > generatedSourceFolders:
                 * {PROJECT}/build/generated/aidl_source_output_dir/debug/out{!}
                 * {PROJECT}/build/generated/ap_generated_sources/debug/out{!}
                 * {PROJECT}/build/generated/renderscript_source_output_dir/debug/out{!}
                 * {PROJECT}/build/generated/source/buildConfig/debug{!}
+             < generatedSourceFolders
              - variantSourceProvider         = (null)
              - multiFlavorSourceProvider     = (null)
              - isSigned                      = true
@@ -368,24 +452,26 @@
              - assembleTaskOutputListingFile = {PROJECT}/build/outputs/apk/debug/output-metadata.json{!}
              - testInfo                      = (null)
              - bundleInfo:
-                - bundleTaskName                     = "bundleDebug"
-                - bundleTaskOutputListingFile        = {PROJECT}/build/intermediates/bundle_ide_model/debug/output-metadata.json{!}
-                - apkFromBundleTaskName              = "extractApksForDebug"
-                - apkFromBundleTaskOutputListingFile = {PROJECT}/build/intermediates/apk_from_bundle_ide_model/debug/output-metadata.json{!}
+                * bundleTaskName                     = "bundleDebug"
+                * bundleTaskOutputListingFile        = {PROJECT}/build/intermediates/bundle_ide_model/debug/output-metadata.json{!}
+                * apkFromBundleTaskName              = "extractApksForDebug"
+                * apkFromBundleTaskOutputListingFile = {PROJECT}/build/intermediates/apk_from_bundle_ide_model/debug/output-metadata.json{!}
              - codeShrinker                  = (null)
           < mainArtifact
           > androidTestArtifact:
              - compileTaskName               = "compileDebugAndroidTestSources"
              - assembleTaskName              = "assembleDebugAndroidTest"
-             - classesFolders:
+             > classesFolders:
                 * {PROJECT}/build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/debugAndroidTest/R.jar{!}
                 * {PROJECT}/build/intermediates/javac/debugAndroidTest/classes{!}
+             < classesFolders
              - ideSetupTaskNames             = ["generateDebugAndroidTestSources"]
-             - generatedSourceFolders:
+             > generatedSourceFolders:
                 * {PROJECT}/build/generated/aidl_source_output_dir/debugAndroidTest/out{!}
                 * {PROJECT}/build/generated/ap_generated_sources/debugAndroidTest/out{!}
                 * {PROJECT}/build/generated/renderscript_source_output_dir/debugAndroidTest/out{!}
                 * {PROJECT}/build/generated/source/buildConfig/androidTest/debug{!}
+             < generatedSourceFolders
              - variantSourceProvider         = (null)
              - multiFlavorSourceProvider     = (null)
              - isSigned                      = true
@@ -395,22 +481,24 @@
              - abiFilters                    = []
              - assembleTaskOutputListingFile = {PROJECT}/build/outputs/apk/androidTest/debug/output-metadata.json{!}
              - testInfo:
-                - animationsDisabled       = false
-                - execution                = HOST
-                - additionalRuntimeApks    = []
-                - instrumentedTestTaskName = "connectedDebugAndroidTest"
+                * animationsDisabled       = false
+                * execution                = HOST
+                * additionalRuntimeApks    = []
+                * instrumentedTestTaskName = "connectedDebugAndroidTest"
              - bundleInfo                    = (null)
              - codeShrinker                  = (null)
           < androidTestArtifact
           > unitTestArtifact:
              - compileTaskName           = "compileDebugUnitTestSources"
              - assembleTaskName          = "assembleDebugUnitTest"
-             - classesFolders:
+             > classesFolders:
                 * {PROJECT}/build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/debug/R.jar{!}
                 * {PROJECT}/build/intermediates/javac/debugUnitTest/classes{!}
+             < classesFolders
              - ideSetupTaskNames         = ["createMockableJar"]
-             - generatedSourceFolders:
+             > generatedSourceFolders:
                 * {PROJECT}/build/generated/ap_generated_sources/debugUnitTest/out{!}
+             < generatedSourceFolders
              - variantSourceProvider     = (null)
              - multiFlavorSourceProvider = (null)
              - mockablePlatformJar       = {GRADLE_CACHE}/{CHECKSUM}/transformed/android.jar{F}
@@ -428,15 +516,17 @@
           > mainArtifact:
              - compileTaskName               = "compileReleaseSources"
              - assembleTaskName              = "assembleRelease"
-             - classesFolders:
+             > classesFolders:
                 * {PROJECT}/build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/release/R.jar{!}
                 * {PROJECT}/build/intermediates/javac/release/classes{!}
+             < classesFolders
              - ideSetupTaskNames             = ["generateReleaseSources"]
-             - generatedSourceFolders:
+             > generatedSourceFolders:
                 * {PROJECT}/build/generated/aidl_source_output_dir/release/out{!}
                 * {PROJECT}/build/generated/ap_generated_sources/release/out{!}
                 * {PROJECT}/build/generated/renderscript_source_output_dir/release/out{!}
                 * {PROJECT}/build/generated/source/buildConfig/release{!}
+             < generatedSourceFolders
              - variantSourceProvider         = (null)
              - multiFlavorSourceProvider     = (null)
              - isSigned                      = false
@@ -447,22 +537,24 @@
              - assembleTaskOutputListingFile = {PROJECT}/build/outputs/apk/release/output-metadata.json{!}
              - testInfo                      = (null)
              - bundleInfo:
-                - bundleTaskName                     = "bundleRelease"
-                - bundleTaskOutputListingFile        = {PROJECT}/build/intermediates/bundle_ide_model/release/output-metadata.json{!}
-                - apkFromBundleTaskName              = "extractApksForRelease"
-                - apkFromBundleTaskOutputListingFile = {PROJECT}/build/intermediates/apk_from_bundle_ide_model/release/output-metadata.json{!}
+                * bundleTaskName                     = "bundleRelease"
+                * bundleTaskOutputListingFile        = {PROJECT}/build/intermediates/bundle_ide_model/release/output-metadata.json{!}
+                * apkFromBundleTaskName              = "extractApksForRelease"
+                * apkFromBundleTaskOutputListingFile = {PROJECT}/build/intermediates/apk_from_bundle_ide_model/release/output-metadata.json{!}
              - codeShrinker                  = (null)
           < mainArtifact
           - androidTestArtifact    = (null)
           > unitTestArtifact:
              - compileTaskName           = "compileReleaseUnitTestSources"
              - assembleTaskName          = "assembleReleaseUnitTest"
-             - classesFolders:
+             > classesFolders:
                 * {PROJECT}/build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/release/R.jar{!}
                 * {PROJECT}/build/intermediates/javac/releaseUnitTest/classes{!}
+             < classesFolders
              - ideSetupTaskNames         = ["createMockableJar"]
-             - generatedSourceFolders:
+             > generatedSourceFolders:
                 * {PROJECT}/build/generated/ap_generated_sources/releaseUnitTest/out{!}
+             < generatedSourceFolders
              - variantSourceProvider     = (null)
              - multiFlavorSourceProvider = (null)
              - mockablePlatformJar       = {GRADLE_CACHE}/{CHECKSUM}/transformed/android.jar{F}
@@ -473,7 +565,7 @@
     < variants
     - lintRuleJars      = []
     - aaptOptions:
-       - namespacing = DISABLED
+       * namespacing = DISABLED
     > lintOptions:
        - disable                 = []
        - enable                  = []
@@ -505,19 +597,20 @@
        - severityOverrides       = (null)
     < lintOptions
     - javaCompileOptions:
-       - encoding                       = "UTF-8"
-       - sourceCompatibility            = "1.8"
-       - targetCompatibility            = "1.8"
-       - isCoreLibraryDesugaringEnabled = false
+       * encoding                       = "UTF-8"
+       * sourceCompatibility            = "1.8"
+       * targetCompatibility            = "1.8"
+       * isCoreLibraryDesugaringEnabled = false
     - viewBindingOptions:
-       - isEnabled = false
+       * isEnabled = false
     - dependenciesInfo:
-       - includeInApk    = true
-       - includeInBundle = true
-    - flags:
-       * "APPLICATION_R_CLASS_CONSTANT_IDS -> true"
-       * "JETPACK_COMPOSE -> false"
-       * "ML_MODEL_BINDING -> false"
-       * "TEST_R_CLASS_CONSTANT_IDS -> true"
-       * "TRANSITIVE_R_CLASS -> true"
+       * includeInApk    = true
+       * includeInBundle = true
+    > flags:
+       * APPLICATION_R_CLASS_CONSTANT_IDS -> true
+       * JETPACK_COMPOSE                  -> false
+       * ML_MODEL_BINDING                 -> false
+       * TEST_R_CLASS_CONSTANT_IDS        -> true
+       * TRANSITIVE_R_CLASS               -> true
+    < flags
 < AndroidProject

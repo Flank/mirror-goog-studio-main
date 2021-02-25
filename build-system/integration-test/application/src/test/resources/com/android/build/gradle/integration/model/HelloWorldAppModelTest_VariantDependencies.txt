@@ -1,30 +1,35 @@
 > VariantDependencies:
     - name = "debug"
-    - mainArtifact:
+    > mainArtifact:
        - compileDependencies = []
        - runtimeDependencies = []
-    - androidTestArtifact:
-       - compileDependencies:
-          - GraphItem:
-             - artifactAddress      = {BUILD_0}@@:::debug
-             - requestedCoordinates = (null)
-             - dependencies         = []
+    < mainArtifact
+    > androidTestArtifact:
+       > compileDependencies:
+          * GraphItem:
+             * artifactAddress      = "{BUILD_1}@@:::debug"
+             * requestedCoordinates = (null)
+             * dependencies         = []
+       < compileDependencies
        - runtimeDependencies = []
-    - unitTestArtifact:
-       - compileDependencies:
-          - GraphItem:
-             - artifactAddress      = {BUILD_0}@@:::debug
-             - requestedCoordinates = (null)
-             - dependencies         = []
+    < androidTestArtifact
+    > unitTestArtifact:
+       > compileDependencies:
+          * GraphItem:
+             * artifactAddress      = "{BUILD_1}@@:::debug"
+             * requestedCoordinates = (null)
+             * dependencies         = []
+       < compileDependencies
        - runtimeDependencies = []
+    < unitTestArtifact
 < VariantDependencies
 > GlobalLibraryMap:
     > libraries:
        > library:
           - type                = PROJECT
-          - artifactAddress     = {BUILD_0}@@:::debug
+          - artifactAddress     = "{BUILD_1}@@:::debug"
           - artifact            = (null)
-          - buildId             = {BUILD_0}
+          - buildId             = "{BUILD_1}"
           - projectPath         = ":"
           - variant             = "debug"
           - compileJarFiles     = (null)

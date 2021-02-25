@@ -302,8 +302,8 @@ fun ModelBuilderV2.FetchResult<ModelContainerV2<NativeModule>>.dump(map:(NativeM
             modelMap.forEach { moduleName, (nativeModule: NativeModule, _) ->
                 sb.appendln("[$moduleName]")
                 sb.appendln(
-                    snapshotModel("NativeModule", normalizer, map(nativeModule.sorted())) {
-                            snapshotNativeModule()
+                        dump(NativeModule::class.java, normalizer) {
+                            map(nativeModule.sorted()).writeToBuilder(this)
                         }
                 )
             }

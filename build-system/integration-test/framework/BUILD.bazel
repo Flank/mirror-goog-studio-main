@@ -54,7 +54,6 @@ kotlin_test(
         "src/test/java/**/*.kt",
         "src/test/java/**/*.java",
     ]),
-    friends = [":framework"],
     jvm_flags = [
         "-Dtest.suite.jar=framework_tests.jar",
     ],

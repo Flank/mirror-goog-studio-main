@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.model
 
-import com.android.build.gradle.integration.common.fixture.model.ReferenceModelComparator
 import com.android.build.gradle.integration.common.fixture.model.ModelComparator
 import com.android.build.gradle.integration.common.fixture.testprojects.PluginType
 import com.android.build.gradle.integration.common.fixture.testprojects.createGradleProject
@@ -29,7 +28,7 @@ class HelloWorldAppModelTest: ModelComparator() {
 
     @get:Rule
     val project = createGradleProject {
-        rootProject {
+        configureRoot {
             plugins.add(PluginType.ANDROID_APP)
             android {
                 setUpHelloWorld()
@@ -62,213 +61,207 @@ class HelloWorldAppModelTest: ModelComparator() {
     }
 }
 
-class ApplicationIdInAppModelTest: ReferenceModelComparator(
-    referenceConfig = {
-        rootProject {
+class ApplicationIdInAppModelTest: ModelComparator() {
+    @get:Rule
+    val project = createGradleProject {
+        configureRoot {
             plugins.add(PluginType.ANDROID_APP)
             android {
                 setUpHelloWorld()
-            }
-        }
-    },
-    deltaConfig = {
-        rootProject {
-            android {
+
                 applicationId = "customized.application.id"
             }
         }
-    },
-    syncOptions = {
-        ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
     }
-) {
 
     @Test
     fun `test AndroidProject model`() {
-        compareAndroidProjectWith(goldenFileSuffix = "AndroidProject")
+        val result = project.modelV2()
+            .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
+            .fetchAndroidProjects()
+
+        with(result).compare(
+            model = result.container.singleModel,
+            goldenFile = "AndroidProject"
+        )
     }
 }
 
-class DisabledAidlInAppModelTest: ReferenceModelComparator(
-    referenceConfig = {
-        rootProject {
+class DisabledAidlInAppModelTest: ModelComparator() {
+    @get:Rule
+    val project = createGradleProject {
+        configureRoot {
             plugins.add(PluginType.ANDROID_APP)
             android {
                 setUpHelloWorld()
-            }
-        }
-    },
-    deltaConfig = {
-        rootProject {
-            android {
+
                 buildFeatures {
                     aidl = false
                 }
             }
         }
-    },
-    syncOptions = {
-        ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
     }
-) {
+
     @Test
     fun `test AndroidProject model`() {
-        compareAndroidProjectWith(goldenFileSuffix = "AndroidProject")
+        val result = project.modelV2()
+            .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
+            .fetchAndroidProjects()
+
+        with(result).compare(
+            model = result.container.singleModel,
+            goldenFile = "AndroidProject"
+        )
     }
 }
-
-class DisabledRenderScriptInAppModelTest: ReferenceModelComparator(
-    referenceConfig = {
-        rootProject {
+class DisabledRenderScriptInAppModelTest: ModelComparator() {
+    @get:Rule
+    val project = createGradleProject {
+        configureRoot {
             plugins.add(PluginType.ANDROID_APP)
             android {
                 setUpHelloWorld()
-            }
-        }
-    },
-    deltaConfig = {
-        rootProject {
-            android {
+
                 buildFeatures {
                     renderScript = false
                 }
             }
         }
-    },
-    syncOptions = {
-        ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
     }
-) {
+
     @Test
     fun `test AndroidProject model`() {
-        compareAndroidProjectWith(goldenFileSuffix = "AndroidProject")
+        val result = project.modelV2()
+            .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
+            .fetchAndroidProjects()
+
+        with(result).compare(
+            model = result.container.singleModel,
+            goldenFile = "AndroidProject"
+        )
     }
 }
 
-class DisabledResValuesInAppModelTest: ReferenceModelComparator(
-    referenceConfig = {
-        rootProject {
+class DisabledResValuesInAppModelTest: ModelComparator() {
+    @get:Rule
+    val project = createGradleProject {
+        configureRoot {
             plugins.add(PluginType.ANDROID_APP)
             android {
                 setUpHelloWorld()
-            }
-        }
-    },
-    deltaConfig = {
-        rootProject {
-            android {
+
                 buildFeatures {
                     resValues = false
                 }
             }
         }
-    },
-    syncOptions = {
-        ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
     }
-) {
+
     @Test
     fun `test AndroidProject model`() {
-        compareAndroidProjectWith(goldenFileSuffix = "AndroidProject")
+        val result = project.modelV2()
+            .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
+            .fetchAndroidProjects()
+
+        with(result).compare(
+            model = result.container.singleModel,
+            goldenFile = "AndroidProject"
+        )
     }
 }
 
-class DisabledShadersInAppModelTest: ReferenceModelComparator(
-    referenceConfig = {
-        rootProject {
+class DisabledShadersInAppModelTest: ModelComparator() {
+    @get:Rule
+    val project = createGradleProject {
+        configureRoot {
             plugins.add(PluginType.ANDROID_APP)
             android {
                 setUpHelloWorld()
-            }
-        }
-    },
-    deltaConfig = {
-        rootProject {
-            android {
+
                 buildFeatures {
                     shaders = false
                 }
             }
         }
-    },
-    syncOptions = {
-        ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
     }
-) {
+
     @Test
     fun `test AndroidProject model`() {
-        compareAndroidProjectWith(goldenFileSuffix = "AndroidProject")
+        val result = project.modelV2()
+            .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
+            .fetchAndroidProjects()
+
+        with(result).compare(
+            model = result.container.singleModel,
+            goldenFile = "AndroidProject"
+        )
     }
 }
 
-class DisabledBuildConfigInAppModelTest: ReferenceModelComparator(
-    referenceConfig = {
-        rootProject {
+class DisabledBuildConfigInAppModelTest: ModelComparator() {
+    @get:Rule
+    val project = createGradleProject {
+        configureRoot {
             plugins.add(PluginType.ANDROID_APP)
             android {
                 setUpHelloWorld()
-            }
-        }
-    },
-    deltaConfig = {
-        rootProject {
-            android {
+
                 buildFeatures {
                     buildConfig = false
                 }
             }
         }
-    },
-    syncOptions = {
-        ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
     }
-) {
+
     @Test
     fun `test AndroidProject model`() {
-        compareAndroidProjectWith(goldenFileSuffix = "AndroidProject")
+        val result = project.modelV2()
+            .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
+            .fetchAndroidProjects()
+
+        with(result).compare(
+            model = result.container.singleModel,
+            goldenFile = "AndroidProject"
+        )
     }
 }
 
-class EnabledMlModelBindingInAppModelTest: ReferenceModelComparator(
-    referenceConfig = {
-        rootProject {
+class EnabledMlModelBindingInAppModelTest: ModelComparator() {
+    @get:Rule
+    val project = createGradleProject {
+        configureRoot {
             plugins.add(PluginType.ANDROID_APP)
             android {
                 setUpHelloWorld()
-            }
-        }
-    },
-    deltaConfig = {
-        rootProject {
-            android {
+
                 buildFeatures {
                     mlModelBinding = true
                 }
             }
         }
-    },
-    syncOptions = {
-        ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
     }
-) {
+
     @Test
     fun `test AndroidProject model`() {
-        compareAndroidProjectWith(goldenFileSuffix = "AndroidProject")
+        val result = project.modelV2()
+            .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
+            .fetchAndroidProjects()
+
+        with(result).compare(
+            model = result.container.singleModel,
+            goldenFile = "AndroidProject"
+        )
     }
 }
 
-class DefaultBuildTypeAppModelTest: ReferenceModelComparator(
-    referenceConfig = {
-        rootProject {
+class DefaultBuildTypeAppModelTest: ModelComparator() {
+    @get:Rule
+    val project = createGradleProject {
+        configureRoot {
             plugins.add(PluginType.ANDROID_APP)
             android {
                 setUpHelloWorld()
-            }
-        }
-    },
-    deltaConfig = {
-        rootProject {
-            android {
+
                 buildTypes {
                     named("debug") {
                         isDefault = true
@@ -276,26 +269,33 @@ class DefaultBuildTypeAppModelTest: ReferenceModelComparator(
                 }
             }
         }
-    },
-    syncOptions = {
-        ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
     }
-) {
+
     @Test
     fun `test AndroidProject model`() {
-        compareAndroidProjectWith(goldenFileSuffix = "AndroidProject")
+        val result = project.modelV2()
+            .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
+            .fetchAndroidProjects()
+
+        with(result).compare(
+            model = result.container.singleModel,
+            goldenFile = "AndroidProject"
+        )
     }
 }
 
-class DefaultFlavorAppModelTest: ReferenceModelComparator(
-    referenceConfig = {
-        rootProject {
+class DefaultFlavorAppModelTest: ModelComparator() {
+    @get:Rule
+    val project = createGradleProject {
+        configureRoot {
             plugins.add(PluginType.ANDROID_APP)
             android {
                 setUpHelloWorld()
+
                 productFlavors {
                     named("flavorA") {
                         dimension = "foo"
+                        isDefault = true
                     }
                     named("flavorB") {
                         dimension = "foo"
@@ -303,24 +303,17 @@ class DefaultFlavorAppModelTest: ReferenceModelComparator(
                 }
             }
         }
-    },
-    deltaConfig = {
-        rootProject {
-            android {
-                productFlavors {
-                    named("flavorA") {
-                        isDefault = true
-                    }
-                }
-            }
-        }
-    },
-    syncOptions = {
-        ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
     }
-) {
+
     @Test
     fun `test AndroidProject model`() {
-        compareAndroidProjectWith(goldenFileSuffix = "AndroidProject")
+        val result = project.modelV2()
+            .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
+            .fetchAndroidProjects()
+
+        with(result).compare(
+            model = result.container.singleModel,
+            goldenFile = "AndroidProject"
+        )
     }
 }

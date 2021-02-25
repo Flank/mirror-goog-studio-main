@@ -46,15 +46,9 @@ enum class BuildFileType(val extension: String) {
 interface TestProjectBuilder {
     var buildFileType: BuildFileType
 
-    /**
-     * Configures the root project
-     */
-    fun rootProject(action: SubProjectBuilder.() -> Unit)
+    fun configureRoot(action: SubProjectBuilder.() -> Unit)
 
-    /**
-     * Configures the subProject, creating it if needed.
-     */
-    fun subProject(path: String, action: SubProjectBuilder.() -> Unit)
+    fun configure(path: String, action: SubProjectBuilder.() -> Unit)
 }
 
 interface SubProjectBuilder {
@@ -71,12 +65,9 @@ interface SubProjectBuilder {
     /**
      * Returns the file at the current location.
      *
-     * This will fail if the file has not been added yet. This is a virtual representation of the
-     * file that does not yet exist on the disk.
+     * This will fail if the file has not been added yet.
      *
      * This should not be used for build files. Use [appendToBuildFile] instead
-     *
-     * @return a [SourceFile] that can be used to tweak the content of the file.
      */
     fun fileAt(relativePath: String): SourceFile
 
