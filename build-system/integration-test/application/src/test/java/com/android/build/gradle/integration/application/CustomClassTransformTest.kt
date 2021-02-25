@@ -19,20 +19,23 @@ package com.android.build.gradle.integration.application
 import com.android.build.gradle.integration.application.testData.TestDependency
 import com.android.build.gradle.integration.application.testData.TestTransform
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
+import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.truth.AabSubject.Companion.assertThat
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
 import com.android.testutils.TestInputsGenerator
+import com.android.utils.FileUtils
 import com.google.common.base.Charsets
 import com.google.common.io.ByteStreams
+import com.google.common.truth.Truth
 import org.junit.Rule
 import org.junit.Test
 import java.io.BufferedInputStream
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.nio.charset.StandardCharsets
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
@@ -44,8 +47,21 @@ class CustomClassTransformTest {
     @Rule
     @JvmField
     val project =
-        GradleTestProject.builder().fromTestApp(MinimalSubProject.app("com.example.test"))
+        GradleTestProject.builder().fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
                 .create()
+
+    private fun assertProjectClassWasTransformed() {
+        val transformedHelloWorldClass = FileUtils.join(
+            project.intermediatesDir,
+            "asm_instrumented_project_classes",
+            "debug",
+            "com",
+            "example",
+            "helloworld",
+            "HelloWorld.class"
+        )
+        Truth.assertThat(transformedHelloWorldClass.readText(StandardCharsets.UTF_8)).endsWith("*")
+    }
 
     @Test
     fun testCustomClassTransform() {
@@ -56,6 +72,7 @@ class CustomClassTransformTest {
             .with(StringOption.IDE_ANDROID_CUSTOM_CLASS_TRANSFORMS, jarFile.absolutePath)
             .with(BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM, true)
             .run("assembleDebug")
+        assertProjectClassWasTransformed()
         val apk = project.getApk(GradleTestProject.ApkType.DEBUG)
         assertThatApk(apk)
             .containsClass(

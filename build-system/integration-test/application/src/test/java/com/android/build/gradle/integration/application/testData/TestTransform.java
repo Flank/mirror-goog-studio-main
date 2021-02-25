@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
 import java.util.function.BiConsumer;
 
 public class TestTransform implements BiConsumer<InputStream, OutputStream> {
@@ -28,6 +29,7 @@ public class TestTransform implements BiConsumer<InputStream, OutputStream> {
     public void accept(InputStream inputStream, OutputStream outputStream) {
         try {
             copy(inputStream, outputStream);
+            outputStream.write("*".getBytes(StandardCharsets.UTF_8));
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
