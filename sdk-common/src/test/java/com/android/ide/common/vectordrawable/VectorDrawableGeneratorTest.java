@@ -229,10 +229,14 @@ public class VectorDrawableGeneratorTest extends TestCase {
         checkSvgConversion("ic_polyline_strokewidth");
     }
 
-    // Preview broken on linux, fine on chrome browser
-    public void testSvgStrokeWidthTransform() throws Exception {
-        checkSvgConversionAndContainsError("ic_strokewidth_transform",
-                "Scaling of the stroke width is ignored");
+    public void testSvgStrokeWidthUniformTransform() throws Exception {
+        checkSvgConversion("ic_strokewidth_uniform_transform");
+    }
+
+    public void testSvgStrokeWidthNonuniformTransform() throws Exception {
+        checkSvgConversionAndContainsError(
+                "ic_strokewidth_nonuniform_transform",
+                "Scaling of the stroke width is approximate");
     }
 
     public void testSvgEmptyAttributes() throws Exception {
