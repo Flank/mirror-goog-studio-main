@@ -91,6 +91,7 @@ def fixedDokkaProvider = tasks.register("fixedDokka", FixedDokka) {
     dacRoot = "/reference/tools/gradle-api/" + version.substring(0, version.lastIndexOf("."))
     additionalDokkaClasspath.from(configurations.additionalDokkaClasspath)
     doFirst {
+        new File(outputDirectory).deleteDir()
         classpath = additionalDokkaClasspath.files
     }
 
