@@ -8,6 +8,16 @@ android {
     defaultConfig {
         minSdkVersion 18
     }
+
+    android {
+        lintOptions {
+            textReport true
+            textOutput file("lint-results.txt")
+            explainIssues false
+            absolutePaths false
+            ignoreTestSources true
+        }
+    }
 }
 
 dependencies {

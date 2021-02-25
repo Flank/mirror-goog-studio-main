@@ -16,25 +16,115 @@
 
 package com.android.build.gradle.integration.lint
 
+import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.runner.FilterableParameterized
+import com.android.build.gradle.options.BooleanOption
+import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth.assertThat
+import org.junit.Assume
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 
-class LintDynamicFeatureTest {
+@RunWith(FilterableParameterized::class)
+class LintDynamicFeatureTest(private val usePartialAnalysis: Boolean) {
+
+    companion object {
+        @Parameterized.Parameters(name = "usePartialAnalysis = {0}")
+        @JvmStatic
+        fun params() = listOf(true, false)
+    }
 
     @get:Rule
     val project: GradleTestProject =
         GradleTestProject.builder().fromTestProject("dynamicApp").create()
 
     @Test
-    fun runLint() {
+    fun testUnusedResourcesInFeatureModules() {
+        // TODO (b/180672373) Support the unused resource detector with lint partial analysis.
+        Assume.assumeFalse(usePartialAnalysis)
+        getExecutor().run("clean", "lint")
+
+        val file = project.file("app/lint-results.txt")
+        assertThat(file).containsAllOf(
+            "The resource R.string.unused_from_feature1 appears to be unused",
+            "The resource R.string.unused_from_app appears to be unused"
+        )
+
+        assertThat(file).doesNotContain(
+            "The resource R.string.used_from_app appears to be unused"
+        )
+        assertThat(file).doesNotContain(
+            "The resource R.string.used_from_feature1 appears to be unused"
+        )
+        assertThat(file).doesNotContain(
+            "The resource R.string.used_from_feature2 appears to be unused"
+        )
+    }
+
+    @Test
+    fun runLintFromDynamicFeatures() {
         // Run twice to catch issues with configuration caching
-        project.execute(":feature1:clean", ":feature1:lint")
-        project.execute(":feature1:clean", ":feature1:lint")
+        getExecutor().run(":feature1:clean", ":feature1:lint")
+        getExecutor().run(":feature1:clean", ":feature1:lint")
         assertThat(project.buildResult.failedTasks).isEmpty()
 
-        project.execute(":feature2:clean", ":feature2:lint")
+        assertThat(project.file("feature1/lint-results.txt")).containsAllOf(
+            "Should explicitly set android:allowBackup to true or false",
+            "Hardcoded string \"Button\", should use @string resource"
+        )
+
+        getExecutor().run(":feature2:clean", ":feature2:lint")
         assertThat(project.buildResult.failedTasks).isEmpty()
+
+        assertThat(project.file("feature2/lint-results.txt")).containsAllOf(
+            "Should explicitly set android:allowBackup to true or false",
+            "Hardcoded string \"Button\", should use @string resource"
+        )
     }
+
+    @Test
+    fun runLintFromApp() {
+        // Run twice to catch issues with configuration caching
+        getExecutor().run(":app:clean", ":app:lint")
+        getExecutor().run(":app:clean", ":app:lint")
+        assertThat(project.buildResult.failedTasks).isEmpty()
+
+        // TODO (b/180672373) Merge issues from dynamic features into app report when using lint
+        //  partial analysis.
+        if (!usePartialAnalysis) {
+            assertThat(project.file("app/lint-results.txt")).containsAllOf(
+                "base_layout.xml:10: Warning: Hardcoded string",
+                "feature_layout.xml:10: Warning: Hardcoded string",
+                "feature2_layout.xml:10: Warning: Hardcoded string"
+            )
+        }
+    }
+
+    @Test
+    fun testLintUpToDate() {
+        getExecutor().run(":app:lintDebug")
+        getExecutor().run(":app:lintDebug")
+        if (usePartialAnalysis) {
+            assertThat(project.buildResult.upToDateTasks).containsAtLeastElementsIn(
+                listOf(
+                    ":app:lintDebug",
+                    ":app:lintAnalyzeDebug",
+                    ":feature1:lintAnalyzeDebug",
+                    ":feature2:lintAnalyzeDebug",
+                )
+            )
+        } else {
+            // The lint task should not be up-to-date if not using partial analysis with dynamic
+            // features because the inputs are not modeled correctly in that case.
+            assertThat(project.buildResult.didWorkTasks).containsAtLeastElementsIn(
+                listOf(":app:lintDebug")
+            )
+        }
+    }
+
+    private fun getExecutor(): GradleTaskExecutor =
+        project.executor().with(BooleanOption.USE_LINT_PARTIAL_ANALYSIS, usePartialAnalysis)
 }
