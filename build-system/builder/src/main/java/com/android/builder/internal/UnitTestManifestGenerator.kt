@@ -23,11 +23,13 @@ class UnitTestManifestGenerator(
     packageName: String,
     minSdkVersion: String?,
     targetSdkVersion: String?,
+    testRunnerName: String?,
 ): TestManifestGenerator(
     outputFile,
     packageName,
     minSdkVersion,
-    targetSdkVersion
+    targetSdkVersion,
+    testRunnerName
 ) {
 
     override val templateResourceName: String =

@@ -25,18 +25,21 @@ abstract class TestManifestGenerator(
     val packageName: String,
     val minSdkVersion: String?,
     val targetSdkVersion: String?,
+    val testRunnerName: String?,
 ) {
 
     companion object {
         private const val PH_PACKAGE = "#PACKAGE#"
         private const val PH_MIN_SDK_VERSION = "#MINSDKVERSION#"
         private const val PH_TARGET_SDK_VERSION = "#TARGETSDKVERSION#"
+        private const val PH_TEST_RUNNER = "#TESTRUNNER#"
     }
 
     open fun populateTemplateParameters(map: MutableMap<String, String?>) {
         map[PH_PACKAGE] = packageName
         map[PH_MIN_SDK_VERSION] = minSdkVersion ?: "1"
         map[PH_TARGET_SDK_VERSION] = targetSdkVersion ?: map[PH_MIN_SDK_VERSION]
+        map[PH_TEST_RUNNER] = testRunnerName
     }
 
     abstract val templateResourceName: String

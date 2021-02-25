@@ -27,6 +27,7 @@ import com.android.build.api.variant.VariantBuilder
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.component.UnitTestCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.core.VariantDslInfoImpl
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
@@ -88,6 +89,13 @@ open class UnitTestImpl @Inject constructor(
     override val applicationId: Provider<String> =
         internalServices.providerOf(String::class.java, variantDslInfo.applicationId)
 
+    /**
+     * Return the default runner as with unit tests, there is no dexing. However aapt2 requires
+     * the instrumentation tag to be present in the merged manifest to process android resources.
+     */
+    override val instrumentationRunner: Provider<out String>
+        get() = services.provider { VariantDslInfoImpl.DEFAULT_TEST_RUNNER }
+
     override val testedApplicationId: Provider<String>
         get() = testedConfig.applicationId
 
@@ -129,4 +137,6 @@ open class UnitTestImpl @Inject constructor(
      */
     override val manifestPlaceholders: MapProperty<String, String> =
             internalServices.mapPropertyOf(String::class.java, String::class.java, mapOf())
+
+
 }

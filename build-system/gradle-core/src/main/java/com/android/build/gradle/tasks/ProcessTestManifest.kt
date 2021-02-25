@@ -113,7 +113,7 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
             minSdkVersion.get(),
             targetSdkVersion.get(),
             testedApplicationId.get(),
-            instrumentationRunner.orNull,
+            instrumentationRunner.get(),
             handleProfiling.orNull,
             functionalTest.orNull,
             testLabel.orNull,
@@ -170,7 +170,7 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
         minSdkVersion: String,
         targetSdkVersion: String,
         testedApplicationId: String,
-        instrumentationRunner: String?,
+        instrumentationRunner: String,
         handleProfiling: Boolean?,
         functionalTest: Boolean?,
         testLabel: String?,
@@ -215,11 +215,7 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
             // we are generating the manifest and if there is an existing one,
             // it will be overlaid with the generated one
             logger.verbose("Generating in %1\$s", generatedTestManifest!!.absolutePath)
-            if (instrumentationRunner != null) {
-                Preconditions.checkNotNull(
-                    handleProfiling,
-                    "handleProfiling cannot be null."
-                )
+            if (handleProfiling != null) {
                 Preconditions.checkNotNull(
                     functionalTest,
                     "functionalTest cannot be null."
@@ -239,7 +235,8 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
                     testApplicationId,
                     minSdkVersion,
                     if (targetSdkVersion == "-1") null else targetSdkVersion,
-                    generatedTestManifest)
+                    generatedTestManifest,
+                    instrumentationRunner)
             }
             if (testManifestFile != null && testManifestFile.exists()) {
                 val intermediateInvoker = ManifestMerger2.newMerger(
@@ -481,8 +478,8 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
             task.testApplicationId.setDisallowChanges(creationConfig.applicationId)
             task.testedApplicationId.setDisallowChanges(creationConfig.testedApplicationId)
 
+            task.instrumentationRunner.setDisallowChanges(creationConfig.instrumentationRunner)
             if (creationConfig is InstrumentedTestCreationConfig) {
-                task.instrumentationRunner.setDisallowChanges(creationConfig.instrumentationRunner)
                 task.handleProfiling.setDisallowChanges(creationConfig.handleProfiling)
                 task.functionalTest.setDisallowChanges(creationConfig.functionalTest)
                 task.testLabel.setDisallowChanges(creationConfig.testLabel)
@@ -558,14 +555,16 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
             testApplicationId: String,
             minSdkVersion: String?,
             targetSdkVersion: String?,
-            outManifestLocation: File
+            outManifestLocation: File,
+            instrumentedRunner: String,
         ) {
             val generator =
                 UnitTestManifestGenerator(
                     outManifestLocation,
                     testApplicationId,
                     minSdkVersion,
-                    targetSdkVersion
+                    targetSdkVersion,
+                    instrumentedRunner,
                 )
             try {
                 generator.generate()
