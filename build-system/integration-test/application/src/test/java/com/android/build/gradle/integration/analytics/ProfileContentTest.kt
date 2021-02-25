@@ -68,6 +68,7 @@ class ProfileContentTest {
             assertThat(profile.osVersion).isNotEmpty()
             assertThat(profile.javaVersion).isNotEmpty()
             assertThat(profile.javaVmVersion).isNotEmpty()
+            assertThat(profile.parallelTaskExecution).isFalse()
             assertThat(profile.maxMemory).isGreaterThan(0)
             assertThat(profile.gradleVersion).isNotEmpty()
             val gbp = profile.getProject(0)
