@@ -26,6 +26,8 @@ import org.gradle.api.provider.Provider
  */
 interface TestCreationConfig: ComponentCreationConfig, Named {
 
+    val instrumentationRunner: Provider<out String>
+
     /**
      * The application of the app under tests
      */

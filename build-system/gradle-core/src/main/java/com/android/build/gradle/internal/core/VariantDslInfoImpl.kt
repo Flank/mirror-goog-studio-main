@@ -1096,7 +1096,7 @@ open class VariantDslInfoImpl internal constructor(
 
     companion object {
 
-        private const val DEFAULT_TEST_RUNNER = "android.test.InstrumentationTestRunner"
+        const val DEFAULT_TEST_RUNNER = "android.test.InstrumentationTestRunner"
         private const val MULTIDEX_TEST_RUNNER =
             "com.android.test.runner.MultiDexTestRunner"
         private const val DEFAULT_HANDLE_PROFILING = false

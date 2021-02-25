@@ -219,7 +219,7 @@ public final class GradleTestProjectBuilder {
 
         @NonNull
         public List<String> getJvmArgs() {
-            return ImmutableList.of("-Xmx" + heap, "-XX:MaxMetaspaceSize=" + metaspace);
+            return ImmutableList.of("-XX:MaxMetaspaceSize=" + metaspace, "-Xmx" + heap);
         }
 
 
