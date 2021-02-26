@@ -111,7 +111,7 @@ public class D8DesugaringTest {
                         + "      multidex {\n"
                         + "        dimension \"whatever\"\n"
                         + "        multiDexEnabled true\n"
-                        + "        multiDexKeepFile file('debug_main_dex_list.txt')\n"
+                        + "        multiDexKeepProguard file('debug_main_dex_rules.txt')\n"
                         + "      }\n"
                         + "      base {\n"
                         + "        dimension \"whatever\"\n"
@@ -168,6 +168,9 @@ public class D8DesugaringTest {
                         + "\n"
                         + "public class StringTool {\n"
                         + "  private InterfaceWithDefault converter;\n"
+                        + "  public StringTool() {\n"
+                        + "    this(new InterfaceWithDefault() { });\n"
+                        + "  }\n"
                         + "  public StringTool(InterfaceWithDefault converter) {\n"
                         + "    this.converter = converter;\n"
                         + "  }\n"
@@ -201,12 +204,12 @@ public class D8DesugaringTest {
                         + "        Context appContext ="
                         + " InstrumentationRegistry.getTargetContext();\n"
                         + "        assertEquals(\"toto-default\", "
-                        + "new StringTool(new InterfaceWithDefault() { }).convert(\"toto\"));\n"
+                        + "new StringTool().convert(\"toto\"));\n"
                         + "    }\n"
                         + "}\n");
-        File debugMainDexList = project.getSubproject(":app").file("debug_main_dex_list.txt");
+        File debugMainDexRules = project.getSubproject(":app").file("debug_main_dex_rules.txt");
         TestFileUtils.appendToFile(
-                debugMainDexList, "com/example/helloworld/InterfaceWithDefault.class");
+                debugMainDexRules, "-keep class com.example.helloworld.StringTool { *; }");
     }
 
     @Test
