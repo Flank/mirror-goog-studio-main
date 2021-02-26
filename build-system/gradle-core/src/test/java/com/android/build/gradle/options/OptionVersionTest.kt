@@ -43,7 +43,6 @@ class OptionVersionTest {
          */
         @Suppress("DEPRECATION")
         private val KNOWN_VIOLATING_DEPRECATED_OPTIONS: List<Option<*>> = listOf(
-                BooleanOption.ENABLE_INCREMENTAL_DEXING_TASK_V2,
                 BooleanOption.ENABLE_INCREMENTAL_DEXING_TRANSFORM,
                 BooleanOption.ENABLE_JVM_RESOURCE_COMPILER,
                 BooleanOption.ENABLE_SYMBOL_TABLE_CACHING,

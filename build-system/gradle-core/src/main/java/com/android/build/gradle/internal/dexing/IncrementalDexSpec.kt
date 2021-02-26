@@ -42,21 +42,15 @@ class IncrementalDexSpec(
     val changedFiles: Set<File>,
 
     /**
-     * The precomputed set of files that are impacted by the changed files, or `null` if it is
-     * intended to be computed later.
-     */
-    val impactedFiles: Set<File>?,
-
-    /**
-     * The file containing the desugaring graph, used to compute the set of impacted files if it was
-     * not precomputed. This file is not `null` iff `impactedFiles == null`.
+     * The file containing the desugaring graph used to compute the set of impacted files, not
+     * `null` iff desugaring is enabled.
      */
     val desugarGraphFile: File?
 
 ) : Serializable {
 
     init {
-        check((impactedFiles == null) xor (desugarGraphFile == null))
+        check(dexParams.withDesugaring xor (desugarGraphFile == null))
     }
 
     companion object {

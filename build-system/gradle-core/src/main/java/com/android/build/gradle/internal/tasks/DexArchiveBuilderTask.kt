@@ -140,9 +140,6 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
     @get:Nested
     abstract val dexParams: DexParameterInputs
 
-    @get:Input
-    abstract val incrementalDexingTaskV2: Property<Boolean>
-
     @get:LocalState
     @get:Optional
     abstract val desugarGraphDir: DirectoryProperty
@@ -247,9 +244,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                 inputChanges,
                 dexParams.desugarClasspath
             ),
-
-            incrementalDexingTaskV2 = incrementalDexingTaskV2.get(),
-            desugarGraphDir = desugarGraphDir.get().asFile.takeIf { incrementalDexingTaskV2.get() },
+            desugarGraphDir = desugarGraphDir.get().asFile.takeIf { dexParams.withDesugaring.get() },
 
             projectVariant = projectVariant.get(),
             inputJarHashesFile = inputJarHashesFile.get().asFile,
@@ -486,11 +481,6 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
             task.projectClasses.from(projectClasses)
             task.subProjectClasses.from(subProjectsClasses)
             task.mixedScopeClasses.from(mixedScopeClasses)
-
-            task.incrementalDexingTaskV2.setDisallowChanges(
-                task.project.providers.provider {
-                    projectOptions.get(BooleanOption.ENABLE_INCREMENTAL_DEXING_TASK_V2)
-                })
 
             val minSdkVersion = creationConfig
                 .minSdkVersionWithTargetDeviceApi

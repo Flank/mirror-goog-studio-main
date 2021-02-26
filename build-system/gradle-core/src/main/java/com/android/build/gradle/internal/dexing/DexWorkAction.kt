@@ -93,10 +93,9 @@ private fun processIncrementally(
             }
         }
 
-        // Compute impacted files based on the changed files and the desugaring graph (if they are
-        // not precomputed)
-        val unchangedButImpactedFiles =
-            impactedFiles ?: desugarGraph!!.getAllDependents(changedFiles)
+        // Compute impacted files based on the changed files and the desugaring graph (if
+        // desugaring is enabled)
+        val unchangedButImpactedFiles = desugarGraph?.getAllDependents(changedFiles) ?: emptySet()
         val changedOrImpactedFiles = changedFiles + unchangedButImpactedFiles
 
         // Remove stale nodes in the desugaring graph (stale dex outputs have been removed earlier

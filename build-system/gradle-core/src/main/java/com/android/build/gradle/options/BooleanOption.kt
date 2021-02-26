@@ -173,9 +173,6 @@ enum class BooleanOption(
      * SOFTLY-ENFORCED FEATURES
      */
 
-    /** Incremental dexing task using D8's new API for desugaring graph computation. */
-    ENABLE_INCREMENTAL_DEXING_TASK_V2("android.enableIncrementalDexingTaskV2", true, FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.VERSION_7_0)),
-
     /** Incremental dexing transform. */
     ENABLE_INCREMENTAL_DEXING_TRANSFORM("android.enableIncrementalDexingTransform", true, FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.VERSION_7_0)),
 
@@ -201,6 +198,7 @@ enum class BooleanOption(
     /* -----------------
      * ENFORCED FEATURES
      */
+
     @Suppress("unused")
     ENABLE_SIDE_BY_SIDE_NDK(
         "android.enableSideBySideNdk",
@@ -381,6 +379,9 @@ enum class BooleanOption(
                     VERSION_7_0,
                     "Non-transitive R classes are now enabled in app modules with the " +
                             "${NON_TRANSITIVE_R_CLASS.propertyName} option.")),
+
+    /** Incremental dexing task using D8's new API for desugaring graph computation. */
+    ENABLE_INCREMENTAL_DEXING_TASK_V2("android.enableIncrementalDexingTaskV2", true, FeatureStage.Enforced(VERSION_7_0)),
 
     /* ----------------
      * REMOVED FEATURES

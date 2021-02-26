@@ -46,24 +46,16 @@ import org.junit.runners.Parameterized;
 @RunWith(FilterableParameterized.class)
 public class D8DesugaringTest {
 
-    @Parameterized.Parameters(
-            name = "withIncrementalDexingTaskV2_{0}, withDexingArtifactTransform_{1}")
-    public static List<Object[]> parameters() {
-        return ImmutableList.of(
-                new Object[] {true, true},
-                new Object[] {true, false},
-                new Object[] {false, true},
-                new Object[] {false, false});
+    @Parameterized.Parameters(name = "withDexingArtifactTransform_{0}")
+    public static List<Object> parameters() {
+        return ImmutableList.of(true, false);
     }
 
-    private final boolean withIncrementalDexingTaskV2;
     private final boolean withDexingArtifactTransform;
     @Rule
     public GradleTestProject project;
 
-    public D8DesugaringTest(
-            boolean withIncrementalDexingTaskV2, boolean withDexingArtifactTransform) {
-        this.withIncrementalDexingTaskV2 = withIncrementalDexingTaskV2;
+    public D8DesugaringTest(boolean withDexingArtifactTransform) {
         this.withDexingArtifactTransform = withDexingArtifactTransform;
         project = GradleTestProject.builder()
                 .fromTestApp(
@@ -73,10 +65,6 @@ public class D8DesugaringTest {
                                         HelloWorldApp.noBuildFile(),
                                         ":lib",
                                         new EmptyAndroidTestApp())))
-                .addGradleProperties(
-                        BooleanOption.ENABLE_INCREMENTAL_DEXING_TASK_V2.getPropertyName()
-                                + "="
-                                + withIncrementalDexingTaskV2)
                 .addGradleProperties(
                         BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM.getPropertyName()
                                 + "="
