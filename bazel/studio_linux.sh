@@ -26,7 +26,7 @@ function copy_bazel_artifacts() {
   cp -a ${1}/tools/adt/idea/updater-ui/sdk-patcher.zip ${artifacts_dir}
   cp -a ${1}/tools/adt/idea/native/installer/android-studio-bundle-data.zip ${artifacts_dir}
 
-  cp -a ${1}/tools/base/dynamic-layout-inspector/skiaparser.zip ${artifacts_dir}
+  cp -a ${1}/tools/base/dynamic-layout-inspector/skia/skiaparser.zip ${artifacts_dir}
   cp -a ${1}/tools/base/sdklib/commandlinetools_*.zip ${artifacts_dir}
   cp -a ${1}/tools/base/profiler/native/trace_processor_daemon/trace_processor_daemon ${artifacts_dir}
   cp -a ${1}/tools/vendor/google/game-tools/packaging/game-tools-linux.tar.gz ${artifacts_dir}

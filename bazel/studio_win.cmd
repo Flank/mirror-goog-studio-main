@@ -81,7 +81,7 @@ echo "<meta http-equiv="refresh" content="0; URL='https://source.cloud.google.co
 @echo studio_win.cmd time: %time%
 
 @rem copy skia parser artifact to dist dir
-copy %BASEDIR%\bazel-bin\tools\base\dynamic-layout-inspector\skiaparser.zip %DISTDIR%
+copy %BASEDIR%\bazel-bin\tools\base\dynamic-layout-inspector\skia\skiaparser.zip %DISTDIR%
 
 @rem copy trace processor daemon artifact to dist dir
 copy %BASEDIR%\bazel-bin\tools\base\profiler\native\trace_processor_daemon\trace_processor_daemon.exe %DISTDIR%
