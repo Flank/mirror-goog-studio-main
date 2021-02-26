@@ -223,7 +223,6 @@ kotlin_library(
         "//prebuilts/tools/common/lint-psi/kotlin-compiler",
         "//prebuilts/tools/common/lint-psi/uast",
         "//tools/base/annotations",
-        "//tools/base/build-system:gradle-api_neverlink",
         "//tools/base/build-system/gradle-api",
         "//tools/base/build-system:tools.manifest-merger",
         "//tools/base/build-system/builder",

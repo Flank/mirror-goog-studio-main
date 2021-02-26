@@ -20,6 +20,7 @@ kotlin_library(
         "//tools/base/layoutlib-api:tools.layoutlib-api",
         "//tools/base/lint:tools.lint-api",
         "//tools/base/lint:tools.lint-checks",
+        "//tools/base/lint:tools.lint-gradle",
         "//tools/base/lint:tools.lint-model",
         "//tools/base/lint/cli",
         "//tools/base/sdk-common:tools.sdk-common",

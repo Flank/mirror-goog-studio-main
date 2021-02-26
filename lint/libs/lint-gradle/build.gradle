@@ -29,13 +29,11 @@ dependencies {
     implementation project(':base:lint-cli')
     implementation project(':base:zipflinger')
     implementation project(':base:repository')
-    compileOnly gradleApi()
 
     implementation libs.groovy
     implementation libs.kotlin_reflect
     implementation libs.kotlin_stdlib
 
-    testImplementation gradleApi()
     testImplementation libs.junit
     testImplementation libs.truth
     testImplementation libs.mockito_core
