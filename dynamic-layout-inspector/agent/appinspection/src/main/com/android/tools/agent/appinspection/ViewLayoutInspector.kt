@@ -141,9 +141,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
     private fun checkRoots(captureNewRoots: Boolean): Boolean {
         val currRoots =
             ThreadUtils.runOnMainThread {
-                getRootViews()
-                    .map { v -> v.uniqueDrawingId to v }
-                    .toMap()
+                getRootViews().associateBy { it.uniqueDrawingId }
             }.get()
 
         val currRootIds = currRoots.keys

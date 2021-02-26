@@ -17,8 +17,11 @@
 package com.android.tools.agent.layoutinspector;
 
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
+import android.view.PixelCopy;
+import android.view.Surface;
 import android.view.View;
 import android.view.inspector.WindowInspector;
 import androidx.annotation.NonNull;
@@ -36,9 +39,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.zip.Deflater;
 
@@ -404,18 +409,37 @@ public class LayoutInspectorService {
     private static Bitmap performViewCapture(final View captureView, float scale) {
         Bitmap bitmap =
                 Bitmap.createBitmap(
-                        (int) (captureView.getWidth() * scale),
-                        (int) (captureView.getHeight() * scale),
+                        Math.round(captureView.getWidth() * scale),
+                        Math.round(captureView.getHeight() * scale),
                         Bitmap.Config.RGB_565);
         try {
-            Canvas canvas = new Canvas(bitmap);
-            canvas.scale(scale, scale);
-            captureView.draw(canvas);
-            return bitmap;
-        } catch (OutOfMemoryError e) {
-            Log.w("LayoutInspectorService", "Out of memory for bitmap");
+            CompletableFuture<Integer> resultFuture = new CompletableFuture<>();
+            Object viewRootImpl =
+                    View.class.getDeclaredMethod("getViewRootImpl").invoke(captureView);
+            Object surface =
+                    Class.forName("android.view.ViewRootImpl")
+                            .getDeclaredField("mSurface")
+                            .get(viewRootImpl);
+            if (Looper.myLooper() == Looper.getMainLooper()) {
+                throw new IllegalStateException(
+                        "takeScreenshot cannot be called on the main thread");
+            }
+            PixelCopy.request(
+                    (Surface) surface,
+                    bitmap,
+                    resultFuture::complete,
+                    new Handler(Looper.getMainLooper()));
+            int resultCode = resultFuture.get(1, TimeUnit.SECONDS);
+            if (resultCode == PixelCopy.SUCCESS) {
+                return bitmap;
+            } else {
+                Log.w("ViewLayoutInspector", "PixelCopy got error code " + resultCode);
+                return null;
+            }
+        } catch (Throwable t) {
+            Log.w("ViewLayoutInspector", "Exception while getting screenshot", t);
+            return null;
         }
-        return null;
     }
 
     /**

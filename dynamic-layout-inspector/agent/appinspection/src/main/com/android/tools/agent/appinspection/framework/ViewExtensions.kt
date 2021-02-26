@@ -18,8 +18,8 @@ package com.android.tools.agent.appinspection.framework
 
 import android.content.res.Resources
 import android.graphics.Bitmap
-import android.graphics.Canvas
 import android.util.Log
+import android.view.PixelCopy
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
@@ -88,21 +88,26 @@ fun View.isSystemView(): Boolean {
 /**
  * Convert this view into a bitmap.
  *
- * This method may return null if the app runs out of memory trying to create it.
+ * This method may return null if the app runs out of memory or has a reflection issue.
  */
 fun View.takeScreenshot(scale: Float): Bitmap? {
+    // We use RGB_565 here since we get significantly better framerate in the inspector with
+    // smaller payloads.
     val bitmap = Bitmap.createBitmap(
         (width * scale).roundToInt(),
         (height * scale).roundToInt(),
         Bitmap.Config.RGB_565
     )
     return try {
-        val canvas = Canvas(bitmap)
-        canvas.scale(scale, scale)
-        ThreadUtils.runOnMainThread { draw(canvas) }.get()
-        bitmap
-    } catch (e: OutOfMemoryError) {
-        Log.w("ViewLayoutInspector", "Out of memory for bitmap")
+        val resultCode = SynchronousPixelCopy().request(viewRootImpl.mSurface, bitmap)
+        if (resultCode == PixelCopy.SUCCESS) {
+            bitmap
+        } else {
+            Log.w("ViewLayoutInspector", "PixelCopy got error code $resultCode")
+            null
+        }
+    } catch (t: Throwable) {
+        Log.w("ViewLayoutInspector", t)
         null
     }
 }

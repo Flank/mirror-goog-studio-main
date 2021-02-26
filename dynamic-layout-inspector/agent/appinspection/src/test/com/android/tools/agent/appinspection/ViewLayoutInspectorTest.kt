@@ -19,8 +19,10 @@ package com.android.tools.agent.appinspection
 import android.content.Context
 import android.content.res.Resources
 import android.graphics.Picture
+import android.view.Surface
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewRootImpl
 import android.view.WindowManagerGlobal
 import android.widget.TextView
 import com.android.tools.agent.appinspection.proto.StringTable
@@ -38,7 +40,6 @@ import layoutinspector.view.inspection.LayoutInspectorViewProtocol.StopFetchComm
 import org.junit.Rule
 import org.junit.Test
 import java.util.concurrent.ArrayBlockingQueue
-import java.util.function.Consumer
 
 class ViewLayoutInspectorTest {
 
@@ -542,11 +543,6 @@ class ViewLayoutInspectorTest {
         val root = ViewGroup(context).apply {
             width = 100
             height = 200
-            drawHandler = Consumer { canvas ->
-                assertThat(canvas.bitmap.width).isEqualTo(width * scale)
-                assertThat(canvas.bitmap.height).isEqualTo(height * scale)
-                fakeBitmapHeader.copyInto(canvas.bitmap.bytes)
-            }
             setAttachInfo(View.AttachInfo())
         }
         WindowManagerGlobal.getInstance().rootViews.addAll(listOf(root))
@@ -582,7 +578,9 @@ class ViewLayoutInspectorTest {
                 val response = Response.parseFrom(bytes)
                 assertThat(response.specializedCase).isEqualTo(Response.SpecializedCase.UPDATE_SCREENSHOT_TYPE_RESPONSE)
             }
-
+            root.viewRootImpl = ViewRootImpl()
+            root.viewRootImpl.mSurface = Surface()
+            root.viewRootImpl.mSurface.bitmapBytes = fakeBitmapHeader
             root.forcePictureCapture(fakePicture1)
             eventQueue.take().let { bytes ->
                 val event = Event.parseFrom(bytes)
