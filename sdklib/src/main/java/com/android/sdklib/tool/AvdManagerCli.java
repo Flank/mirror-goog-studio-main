@@ -884,8 +884,8 @@ class AvdManagerCli extends CommandLineParser {
         map.put(EmulatedProperties.HOST_GPU_MODE_KEY, GpuMode.AUTO.getGpuSetting());
         map.put(HardwareProperties.HW_INITIAL_ORIENTATION, "Portrait");
         map.put(EmulatedProperties.INTERNAL_STORAGE_KEY, EmulatedProperties.DEFAULT_INTERNAL_STORAGE.toString());
-        map.put(EmulatedProperties.NETWORK_LATENCY_KEY, "None");
-        map.put(EmulatedProperties.NETWORK_SPEED_KEY, "Full");
+        map.put(EmulatedProperties.NETWORK_LATENCY_KEY, AvdNetworkLatency.NONE.getAsParameter());
+        map.put(EmulatedProperties.NETWORK_SPEED_KEY, AvdNetworkSpeed.FULL.getAsParameter());
         map.put(EmulatedProperties.SDCARD_SIZE, EmulatedProperties.DEFAULT_SDCARD_SIZE.toString());
         map.put(EmulatedProperties.USE_CHOSEN_SNAPSHOT_BOOT, HardwareProperties.BOOLEAN_NO);
         map.put(EmulatedProperties.USE_COLD_BOOT, HardwareProperties.BOOLEAN_NO);
