@@ -1105,6 +1105,8 @@ public class JarContentsTest {
                 "com/android/resources/",
                 "com/android/sdklib/",
                 "com/android/support/",
+                "com/android/support/migrateToAndroidx/",
+                "com/android/support/migrateToAndroidx/migration.xml",
                 "com/android/tools/",
                 "com/android/tools/proguard/",
                 "com/android/utils/",
@@ -1113,8 +1115,6 @@ public class JarContentsTest {
                 "com/android/utils/reflection/",
                 "com/android/version.properties",
                 "com/android/xml/",
-                "migrateToAndroidx/",
-                "migrateToAndroidx/migration.xml",
                 "META-INF/",
                 "META-INF/MANIFEST.MF",
                 "NOTICE");
