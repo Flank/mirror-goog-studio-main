@@ -56,6 +56,22 @@ class SkiaParserTest {
         assertImagesSimilar(tree, 4, 0, "skiaTest_testBoxes_4.png")
     }
 
+    private external fun generateImage(): ByteArray?
+
+    @Test
+    fun testImage() {
+        val response = SkiaParser.InspectorView.parseFrom(generateImage())
+        val tree = LayoutInspectorUtils.buildTree(response, mapOf(), { false }, mapOf())!!
+        assertTreeIdsEqual(
+            Node(
+                1, listOf(
+                    Node(1),
+                )
+            ), tree
+        )
+        assertImagesSimilar(tree, 1, 0, "skiaTest_testImage.png")
+    }
+
     private external fun generateTransformedViews(): ByteArray?
 
     @Test
@@ -73,6 +89,11 @@ class SkiaParserTest {
                                 3, listOf(
                                     Node(3)
                                 )
+                            ),
+                            Node(
+                                4, listOf(
+                                    Node(4)
+                                )
                             )
                         )
                     ),
@@ -84,6 +105,7 @@ class SkiaParserTest {
         assertImagesSimilar(tree, 1, 0, "skiaTest_testTransformation_1a.png")
         assertImagesSimilar(tree, 2, 0, "skiaTest_testTransformation_2.png")
         assertImagesSimilar(tree, 3, 0, "skiaTest_testTransformation_3.png")
+        assertImagesSimilar(tree, 4, 0, "skiaTest_testTransformation_4.png")
         assertImagesSimilar(tree, 1, 1, "skiaTest_testTransformation_1b.png")
     }
 
