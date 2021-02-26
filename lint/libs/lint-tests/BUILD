@@ -15,7 +15,6 @@ kotlin_library(
         "//prebuilts/tools/common/lint-psi/kotlin-compiler",
         "//prebuilts/tools/common/lint-psi/uast",
         "//tools/base/annotations",
-        "//tools/base/build-system/builder-model",
         "//tools/base/common:tools.common",
         "//tools/base/layoutlib-api:tools.layoutlib-api",
         "//tools/base/lint:tools.lint-api",

@@ -22,7 +22,6 @@ import com.android.SdkConstants.ATTR_NAME
 import com.android.SdkConstants.DOT_JAR
 import com.android.SdkConstants.DOT_JAVA
 import com.android.SdkConstants.DOT_KT
-import com.android.builder.model.ApiVersion
 import com.android.ide.common.repository.GradleVersion
 import com.android.resources.ResourceFolderType
 import com.android.sdklib.IAndroidTarget
@@ -487,23 +486,6 @@ class LintUtilsTest : TestCase() {
         project = mock(Project::class.java)
         assertTrue(isModelOlderThan(project, 0, 0, 0, true))
         assertFalse(isModelOlderThan(project, 0, 0, 0, false))
-    }
-
-    private class DefaultApiVersion(private val mApiLevel: Int, private val mCodename: String?) :
-        ApiVersion {
-
-        override fun getApiLevel(): Int {
-            return mApiLevel
-        }
-
-        override fun getCodename(): String? {
-            return mCodename
-        }
-
-        override fun getApiString(): String {
-            fail("Not needed in this test")
-            return "<invalid>"
-        }
     }
 
     fun testFindSubstring() {
