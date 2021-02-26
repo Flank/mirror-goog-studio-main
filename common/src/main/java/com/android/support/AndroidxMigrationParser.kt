@@ -57,7 +57,7 @@ interface MigrationParserVisitor {
  * Parses the Androidx migration data and calls the given visitor
  */
 fun parseMigrationFile(visitor: MigrationParserVisitor) {
-    val stream = visitor.javaClass.classLoader.getResourceAsStream("migrateToAndroidx/migration.xml")
+    val stream = MigrationParserVisitor::class.java.getResourceAsStream("migrateToAndroidx/migration.xml")!!
     stream.use {
         val document = XmlUtils.parseDocument(InputStreamReader(stream), false)
         val root = document.documentElement
