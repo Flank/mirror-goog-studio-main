@@ -21,7 +21,6 @@ import com.android.annotations.Nullable;
 import com.android.ide.common.gradle.model.IdeAndroidArtifact;
 import com.android.ide.common.gradle.model.IdeAndroidLibrary;
 import com.android.ide.common.gradle.model.IdeLibrary;
-import com.android.ide.common.gradle.model.IdeVariant;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
 import com.google.common.annotations.VisibleForTesting;
@@ -221,11 +220,6 @@ public abstract class ResourceVisibilityLookup {
     private static String getMapKey(@NonNull IdeAndroidArtifact artifact) {
         return artifact.getApplicationId();
     }
-
-    private static String getMapKey(@NonNull IdeVariant variant) {
-        return getMapKey(variant.getMainArtifact()) + '-' + variant.getName();
-    }
-
     /** Searches multiple libraries */
     private static class MultipleLibraryResourceVisibility extends ResourceVisibilityLookup {
 
@@ -312,8 +306,7 @@ public abstract class ResourceVisibilityLookup {
 
         /**
          * We store lookup instances for multiple separate types of keys here: {@link
-         * AndroidLibrary}, {@link com.android.builder.model.AndroidArtifact}, and {@link
-         * com.android.builder.model.Variant}
+         * AndroidLibrary}, {@link com.android.builder.model.AndroidArtifact}
          */
         private final Map<Object, ResourceVisibilityLookup> mInstances = Maps.newHashMap();
 
@@ -374,24 +367,6 @@ public abstract class ResourceVisibilityLookup {
                                 : size == 1
                                         ? list.get(0)
                                         : new MultipleLibraryResourceVisibility(list);
-                mInstances.put(key, visibility);
-            }
-            return visibility;
-        }
-
-        /**
-         * Looks up a (possibly cached) {@link ResourceVisibilityLookup} for the given {@link
-         * IdeAndroidArtifact}
-         *
-         * @return the corresponding {@link ResourceVisibilityLookup}
-         */
-        @NonNull
-        public ResourceVisibilityLookup get(@NonNull IdeVariant variant) {
-            String key = getMapKey(variant);
-            ResourceVisibilityLookup visibility = mInstances.get(key);
-            if (visibility == null) {
-                IdeAndroidArtifact artifact = variant.getMainArtifact();
-                visibility = get(artifact);
                 mInstances.put(key, visibility);
             }
             return visibility;
