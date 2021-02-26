@@ -30,60 +30,64 @@ import java.io.ByteArrayOutputStream;
  */
 public final class ByteBatcher {
     public interface FlushReceiver {
+
         /**
-         * @param bytes the byte array to send to record. Note that not all contents of the array
-         *     are necessarily valid.
+         * @param bytes            the byte array to send to record. Note that not all contents of
+         *                         the array are necessarily valid.
          * @param validBytesLength the length, from index 0, of the valid values within {@code
-         *     bytes} array.
+         *                         bytes} array.
          */
         void receive(byte[] bytes, int validBytesLength);
     }
 
     private static final int DEFAULT_THRESHOLD = 1024;
-    private final int myThreshold;
-    private final DirectAccessByteArrayOutputStream myStream;
-    private final FlushReceiver myReceiver;
+
+    private final int threshold;
+
+    private final DirectAccessByteArrayOutputStream stream;
+
+    private final FlushReceiver receiver;
 
     public ByteBatcher(FlushReceiver flushReceiver) {
         this(flushReceiver, DEFAULT_THRESHOLD);
     }
 
     ByteBatcher(FlushReceiver flushReceiver, int capacity) {
-        myReceiver = flushReceiver;
-        myThreshold = capacity;
-        myStream = new DirectAccessByteArrayOutputStream(capacity);
+        receiver = flushReceiver;
+        threshold = capacity;
+        stream = new DirectAccessByteArrayOutputStream(capacity);
     }
 
     public void addByte(int byteValue) {
-        assert (myStream.size() < myThreshold);
-        myStream.write(byteValue);
+        assert (stream.size() < threshold);
+        stream.write(byteValue);
 
-        if (myStream.size() == myThreshold) {
+        if (stream.size() == threshold) {
             flush();
         }
     }
 
     public void addBytes(byte[] bytes, int offset, int length) {
-        while (myStream.size() + length >= myThreshold) {
-            int currLen = myThreshold - myStream.size();
-            myStream.write(bytes, offset, currLen);
+        while (stream.size() + length >= threshold) {
+            int currLen = threshold - stream.size();
+            stream.write(bytes, offset, currLen);
             offset += currLen;
             length -= currLen;
             flush();
         }
 
         if (length > 0) {
-            myStream.write(bytes, offset, length);
+            stream.write(bytes, offset, length);
         }
-        assert (myStream.size() < myThreshold);
+        assert (stream.size() < threshold);
     }
 
     public void flush() {
-        if (myStream.size() == 0) {
+        if (stream.size() == 0) {
             return;
         }
-        myReceiver.receive(myStream.getBuf(), myStream.size());
-        myStream.reset();
+        receiver.receive(stream.getBuf(), stream.size());
+        stream.reset();
     }
 
     /**

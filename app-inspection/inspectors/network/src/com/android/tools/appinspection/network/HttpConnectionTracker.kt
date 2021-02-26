@@ -13,43 +13,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.tools.appinspection.network;
+package com.android.tools.appinspection.network
 
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.List;
-import java.util.Map;
+import java.io.InputStream
+import java.io.OutputStream
 
 /**
  * HTTP stacks can use this interface to report the key states and data associated with individual
- * requests, to be consumed by the AndroidStudio network profiler.
+ * requests, to be consumed by the AndroidStudio network inspector.
  *
  * The methods in this interface are expected to be called in the following order (the calls marked
  * with question mark are optional)
  *
- * <pre>
- *  trackRequest() --->
- *    trackRequestBody()? --->
- *       trackResponse() --->
- *           trackResponseBody()? --->
- *              disconnect()?
- * </pre>
+ * trackRequest() --->
+ *   trackRequestBody()? --->
+ *     trackResponse() --->
+ *       trackResponseBody()? --->
+ *         disconnect()?
+ *
  *
  * Each method must be called on the thread that initiates the corresponding operation.
  */
-public interface HttpConnectionTracker {
+interface HttpConnectionTracker {
 
     /**
      * Reports an explicit disconnect request
      */
-    void disconnect();
+    fun disconnect()
 
     /**
      * Reports a fatal HTTP exchange failure
      *
      * @param message error message
      */
-    void error(String message);
+    fun error(message: String)
 
     /**
      * Tracks an optional request body (before the request is sent)
@@ -57,7 +54,7 @@ public interface HttpConnectionTracker {
      * @param stream the stream used to write the request body
      * @return an output stream which may wrap the original stream
      */
-    OutputStream trackRequestBody(OutputStream stream);
+    fun trackRequestBody(stream: OutputStream): OutputStream
 
     /**
      * A HTTP request is about to be sent to the wire
@@ -65,7 +62,7 @@ public interface HttpConnectionTracker {
      * @param method HTTP method
      * @param fields HTTP request header fields
      */
-    void trackRequest(String method, Map<String, List<String>> fields);
+    fun trackRequest(method: String, fields: Map<String, List<String>>)
 
     /**
      * Tracks the receiving of a HTTP response
@@ -73,7 +70,7 @@ public interface HttpConnectionTracker {
      * @param response response message
      * @param fields   HTTP response header fields
      */
-    void trackResponse(String response, Map<String, List<String>> fields);
+    fun trackResponse(response: String, fields: Map<String, List<String>>)
 
     /**
      * Tracks an optional response body after the response is received
@@ -81,5 +78,5 @@ public interface HttpConnectionTracker {
      * @param stream the stream used to read the response body
      * @return an input stream which may wrap the original stream
      */
-    InputStream trackResponseBody(InputStream stream);
+    fun trackResponseBody(stream: InputStream): InputStream
 }
