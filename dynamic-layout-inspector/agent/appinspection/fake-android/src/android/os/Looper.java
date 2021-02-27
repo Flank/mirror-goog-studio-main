@@ -18,6 +18,7 @@ package android.os;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.Map;
@@ -126,5 +127,10 @@ public final class Looper {
 
             Thread.sleep(10);
         }
+    }
+
+    @VisibleForTesting
+    public static Map<Thread, Looper> getLoopers() {
+        return sLoopers;
     }
 }

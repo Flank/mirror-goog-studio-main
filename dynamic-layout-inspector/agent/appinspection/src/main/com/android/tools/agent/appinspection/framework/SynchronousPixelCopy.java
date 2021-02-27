@@ -24,23 +24,43 @@ import android.view.PixelCopy.OnPixelCopyFinishedListener;
 import android.view.Surface;
 
 /**
- * Adapted from
- * cts/libs/deviceutillegacy/src/com/android/compatibility/common/util/SynchronousPixelCopy.java
+ * Provides a convenient way to synchronously copy pixels from a surface to a bitmap.
+ *
+ * <p>Adapted from
+ * cts/libs/deviceutillegacy/src/com/android/compatibility/common/util/SynchronousPixelCopy.java.
+ * This differs in that it provides a way to shutdown the Looper it creates nicely.
  */
 public class SynchronousPixelCopy implements OnPixelCopyFinishedListener {
-    private static final Handler sHandler;
+    private static Handler sHandler = null;
+    private static final Object handlerLock = new Object();
 
-    static {
-        HandlerThread thread = new HandlerThread("PixelCopyHelper");
-        thread.start();
-        sHandler = new Handler(thread.getLooper());
+    private static Handler ensureHandlerStarted() {
+        synchronized (handlerLock) {
+            if (sHandler != null) {
+                return sHandler;
+            }
+            HandlerThread thread = new HandlerThread("PixelCopyHelper");
+            thread.start();
+            sHandler = new Handler(thread.getLooper());
+            return sHandler;
+        }
+    }
+
+    public static void stopHandler() {
+        synchronized (handlerLock) {
+            if (sHandler != null) {
+                sHandler.getLooper().quitSafely();
+                sHandler = null;
+            }
+        }
     }
 
     private int mStatus = -1;
 
     public int request(Surface source, Bitmap dest) throws InterruptedException {
         synchronized (this) {
-            PixelCopy.request(source, dest, this, sHandler);
+            Handler handler = ensureHandlerStarted();
+            PixelCopy.request(source, dest, this, handler);
             return getResultLocked();
         }
     }
@@ -49,6 +69,9 @@ public class SynchronousPixelCopy implements OnPixelCopyFinishedListener {
         // The normal amount of time should be much less--around 10ms. However it's possible for
         // other things that are going on at the same time to delay substantially if e.g. an
         // activity is launching.
+        // Note also that PixelCopy doesn't check whether its post() is successful, so it's possible
+        // that the handler was exiting and the request won't even be run, and so we'll time out
+        // here.
         this.wait(1000);
         return mStatus;
     }

@@ -19,12 +19,33 @@ package android.os;
 import androidx.annotation.NonNull;
 
 public class HandlerThread extends Thread {
+    private Looper mLooper;
+
     public HandlerThread(String name) {
+        super(name);
+    }
+
+    @Override
+    public void run() {
         Looper.prepare();
+        synchronized (this) {
+            mLooper = Looper.myLooper();
+            notifyAll();
+        }
+        Looper.loop();
     }
 
     @NonNull
     public Looper getLooper() {
-        return Looper.myLooper();
+        synchronized (this) {
+            if (mLooper == null) {
+                try {
+                    wait();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+        return mLooper;
     }
 }

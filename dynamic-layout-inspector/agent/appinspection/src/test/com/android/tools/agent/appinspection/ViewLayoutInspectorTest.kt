@@ -19,6 +19,7 @@ package com.android.tools.agent.appinspection
 import android.content.Context
 import android.content.res.Resources
 import android.graphics.Picture
+import android.os.Looper
 import android.view.Surface
 import android.view.View
 import android.view.ViewGroup
@@ -40,6 +41,7 @@ import layoutinspector.view.inspection.LayoutInspectorViewProtocol.StopFetchComm
 import org.junit.Rule
 import org.junit.Test
 import java.util.concurrent.ArrayBlockingQueue
+import java.util.concurrent.TimeUnit
 
 class ViewLayoutInspectorTest {
 
@@ -616,7 +618,8 @@ class ViewLayoutInspectorTest {
             )
             responseQueue.take().let { bytes ->
                 val response = Response.parseFrom(bytes)
-                assertThat(response.specializedCase).isEqualTo(Response.SpecializedCase.UPDATE_SCREENSHOT_TYPE_RESPONSE)
+                assertThat(response.specializedCase).isEqualTo(
+                    Response.SpecializedCase.UPDATE_SCREENSHOT_TYPE_RESPONSE)
             }
 
             root.forcePictureCapture(fakePicture2)
@@ -640,7 +643,15 @@ class ViewLayoutInspectorTest {
         val factory = ViewLayoutInspectorFactory()
         val viewInspector =
             factory.createInspector(inspectorRule.connection, inspectorRule.environment)
+
+        // Save away the threads that are running before the test, so we can check there are no
+        // extras after.
+        val initialThreads = Looper.getLoopers().keys.toSet()
+
         block(viewInspector)
         viewInspector.onDispose()
-    }
+
+        Looper.getLoopers().keys
+            .filter { !initialThreads.contains(it) }
+            .forEach { thread -> thread.join(TimeUnit.SECONDS.toMillis(1)) }    }
 }
