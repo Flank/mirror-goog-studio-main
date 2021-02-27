@@ -147,8 +147,9 @@ public class ResourceVisibilityLookupTest extends TestCase {
                         "" + "layout foo\n");
 
         List<IdeAndroidLibrary> androidLibraries = Arrays.asList(library1, library2);
+        ResourceVisibilityLookup.Provider provider = new ResourceVisibilityLookup.Provider();
         ResourceVisibilityLookup visibility =
-                ResourceVisibilityLookup.create(androidLibraries, null);
+                provider.get(createMockArtifact( androidLibraries));
         assertTrue(visibility.isPrivate(ResourceType.DIMEN, "activity_horizontal_margin"));
         assertTrue(visibility.isPrivate(ResourceType.ID, "action_settings"));
         assertTrue(visibility.isPrivate(ResourceType.LAYOUT, "activity_main"));
@@ -183,8 +184,9 @@ public class ResourceVisibilityLookupTest extends TestCase {
                                                  Collections.singletonList(library1)*/); // TODO(b/158836360): Review when the dependency hierarchy is available.
 
         List<IdeAndroidLibrary> androidLibraries = Arrays.asList(library1, library2);
+        ResourceVisibilityLookup.Provider provider = new ResourceVisibilityLookup.Provider();
         ResourceVisibilityLookup visibility =
-                ResourceVisibilityLookup.create(androidLibraries, null);
+                provider.get(createMockArtifact( androidLibraries));
         assertTrue(visibility.isPrivate(ResourceType.DIMEN, "activity_horizontal_margin"));
         assertTrue(visibility.isPrivate(ResourceType.ID, "action_settings"));
         assertTrue(visibility.isPrivate(ResourceType.LAYOUT, "activity_main"));
@@ -266,8 +268,9 @@ public class ResourceVisibilityLookupTest extends TestCase {
                                                                       Arrays.asList(library1, library2)*/); // TODO(b/158836360): Review when the dependency hierarchy is available.
 
         List<IdeAndroidLibrary> androidLibraries = Arrays.asList(library1, library2, library3);
+        ResourceVisibilityLookup.Provider provider = new ResourceVisibilityLookup.Provider();
         ResourceVisibilityLookup visibility =
-                ResourceVisibilityLookup.create(androidLibraries, null);
+                provider.get(createMockArtifact( androidLibraries));
         assertTrue(visibility.isPrivate(ResourceType.DIMEN, "private_library1_resource"));
         assertTrue(visibility.isPrivate(ResourceType.DIMEN, "private_library3_resource"));
         assertFalse(visibility.isPrivate(ResourceType.DIMEN, "public_library1_resource1"));

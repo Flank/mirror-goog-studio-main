@@ -145,37 +145,6 @@ public abstract class ResourceVisibilityLookup {
                 new SymbolProvider());
     }
 
-    /**
-     * Creates a {@link ResourceVisibilityLookup} for the set of libraries.
-     *
-     * <p>NOTE: The {@link Provider} class can be used to share/cache {@link
-     * ResourceVisibilityLookup} instances, e.g. when you have library1 and library2 each
-     * referencing libraryBase, the {@link Provider} will ensure that a the libraryBase data is
-     * shared.
-     *
-     * @param libraries the list of libraries
-     * @param provider an optional manager instance for caching of individual libraries, if any
-     * @return a corresponding {@link ResourceVisibilityLookup}
-     */
-    @NonNull
-    public static ResourceVisibilityLookup create(
-            @NonNull List<IdeAndroidLibrary> libraries, @Nullable Provider provider) {
-        List<ResourceVisibilityLookup> list = Lists.newArrayListWithExpectedSize(libraries.size());
-        for (IdeAndroidLibrary library : libraries) {
-            ResourceVisibilityLookup v =
-                    provider != null
-                            ? provider.get(library)
-                            : create(
-                                    library.getArtifactAddress(),
-                                    new File(library.getSymbolFile()),
-                                    new File(library.getPublicResources()));
-            if (!v.isEmpty()) {
-                list.add(v);
-            }
-        }
-        return new MultipleLibraryResourceVisibility(list);
-    }
-
     public static final ResourceVisibilityLookup NONE = new ResourceVisibilityLookup() {
         @Override
         public boolean isPrivate(@NonNull ResourceType type, @NonNull String name) {
