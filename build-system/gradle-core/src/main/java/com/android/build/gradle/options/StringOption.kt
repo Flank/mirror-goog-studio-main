@@ -92,14 +92,10 @@ enum class StringOption(
 
     // Lint: Allow customization of the heap size of the process started to run lint
     LINT_HEAP_SIZE("android.experimental.lint.heapSize", ApiStage.Experimental),
+
     /* ---------------
      * DEPRECATED APIs
      */
-
-    // Jetifier: List of regular expressions for libraries that should not be jetified
-    @Suppress("WrongTerminology")
-    @Deprecated(message = "Use JETIFIER_IGNORE_LIST instead", replaceWith = ReplaceWith("JETIFIER_IGNORE_LIST"))
-    JETIFIER_BLACKLIST("android.jetifier.blacklist", ApiStage.Deprecated(DeprecationReporter.DeprecationTarget.JETIFIER_IGNORE_LIST)),
 
     /* ------------
      * REMOVED APIs
