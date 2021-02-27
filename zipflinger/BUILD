@@ -31,6 +31,7 @@ java_library(
     name = "test_utils",
     srcs = [
         "test/src/java/com/android/zipflinger/AbstractZipflingerTest.java",
+        "test/src/java/com/android/zipflinger/MockInputStream.java",
     ],
     deps = [
         ":zipflinger",

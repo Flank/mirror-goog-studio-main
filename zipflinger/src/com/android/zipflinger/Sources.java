@@ -24,6 +24,7 @@ import java.nio.file.Path;
 
 public class Sources {
 
+    // The general maximum amount of memory (in bytes) a Source should hold onto.
     public static final int LARGE_LIMIT = 100_000_000;
 
     public static Source from(File file, @NonNull String name, int compressionLevel)
@@ -42,6 +43,11 @@ public class Sources {
 
     public static Source from(InputStream in, String name, int compressionLevel)
             throws IOException {
-        return new StreamSource(in, name, compressionLevel);
+        return from(in, name, compressionLevel, LARGE_LIMIT);
+    }
+
+    public static Source from(InputStream in, String name, int compressionLevel, int largeLimit)
+            throws IOException {
+        return new StreamSource(in, name, compressionLevel, largeLimit);
     }
 }

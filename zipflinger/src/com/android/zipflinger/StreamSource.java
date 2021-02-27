@@ -16,9 +16,12 @@
 package com.android.zipflinger;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -30,70 +33,77 @@ import java.util.zip.DeflaterOutputStream;
 
 class StreamSource extends Source {
 
-    private final Path tmpStore;
+    private static final int TMP_BUFFER_SIZE = 4096;
 
-    // Uses a tmp storage to store the payload then zero-copy it when needed.
-    public StreamSource(@NonNull InputStream src, @NonNull String name, int compressionLevel)
+    @NonNull
+    private final NoCopyByteArrayOutputStream buffer;
+
+    @Nullable
+    private Path tmpStore = null;
+    private long tmpStoreSize = 0;
+
+    // Drain the InputStream until it is empty. Keep up to largeLimit bytes
+    // in memory and use a backing storage if the InputStream is bigger.
+    public StreamSource(@NonNull InputStream src, @NonNull String name, int compressionLevel, int largeLimit)
             throws IOException {
         super(name);
-        tmpStore = LargeFileSource.getTmpStoragePath(name);
+        buffer = new NoCopyByteArrayOutputStream(TMP_BUFFER_SIZE);
 
-        // Make sure we are not going to overwrite another tmp file.
-        if (Files.exists(tmpStore)) {
-            String msg =
-                    String.format("Tmp storage '%s' already exists", tmpStore.toAbsolutePath());
-            throw new IllegalStateException(msg);
-        }
 
-        // Just in case we crash before writeTo is called, attempt to clean up on VM exit.
-        tmpStore.toFile().deleteOnExit();
+        long bytesRead = 0;
+        try (CheckedInputStream in = new CheckedInputStream(src, new CRC32());
+                OutputStream out = getOutput(compressionLevel)) {
+            int read;
+            byte[] bytes = new byte[TMP_BUFFER_SIZE];
+            while ((read = in.read(bytes)) != -1) {
+                out.write(bytes, 0, read);
+                bytesRead += read;
 
-        try (CheckedInputStream in = new CheckedInputStream(src, new CRC32())) {
-            build(in, compressionLevel);
+                if (buffer.getCount() > largeLimit) {
+                    flushBuffer();
+                }
+            }
             crc = Ints.longToUint(in.getChecksum().getValue());
         } finally {
             src.close();
         }
-    }
 
-    private void build(InputStream in, int compressionLevel) throws IOException {
+        compressedSize = buffer.getCount() + tmpStoreSize;
+        uncompressedSize = bytesRead;
         if (compressionLevel == Deflater.NO_COMPRESSION) {
-            buildStored(in);
+            compressionFlag = LocalFileHeader.COMPRESSION_NONE;
         } else {
-            buildDeflated(in, compressionLevel);
+            compressionFlag = LocalFileHeader.COMPRESSION_DEFLATE;
         }
     }
 
-    private void buildDeflated(InputStream in, int compressionLevel) throws IOException {
-        compressionFlag = LocalFileHeader.COMPRESSION_DEFLATE;
-        // Pipe the src into the tmp compressed file.
-        Deflater deflater = Compressor.getDeflater(compressionLevel);
-        try (DeflaterOutputStream out =
-                new DeflaterOutputStream(
-                        Files.newOutputStream(tmpStore, StandardOpenOption.CREATE_NEW), deflater)) {
-            int read;
-            byte[] buffer = new byte[4096];
-            while ((read = in.read(buffer)) != -1) {
-                out.write(buffer, 0, read);
-            }
+    private void flushBuffer() throws IOException {
+        FileChannel fc;
+        if (tmpStore == null) {
+            tmpStore = LargeFileSource.getTmpStoragePath(getName());
+            fc = FileChannel.open(tmpStore, StandardOpenOption.WRITE, StandardOpenOption.CREATE_NEW);
+
+            // Just in case we crash before writeTo is called, attempt to clean up on VM exit.
+            tmpStore.toFile().deleteOnExit();
+        } else {
+            fc = FileChannel.open(tmpStore, StandardOpenOption.APPEND);
         }
-        compressedSize = deflater.getBytesWritten();
-        uncompressedSize = deflater.getBytesRead();
+
+        try(FileChannel channel = fc) {
+            ByteBuffer b = buffer.getByteBuffer();
+            tmpStoreSize += b.remaining();
+            channel.write(b);
+            buffer.reset();
+        }
     }
 
-    private void buildStored(InputStream in) throws IOException {
-        compressionFlag = LocalFileHeader.COMPRESSION_NONE;
-        long inputSize = 0;
-        try (OutputStream out = Files.newOutputStream(tmpStore, StandardOpenOption.CREATE_NEW)) {
-            int read;
-            byte[] buffer = new byte[4096];
-            while ((read = in.read(buffer)) != -1) {
-                inputSize += read;
-                out.write(buffer, 0, read);
-            }
+    private OutputStream getOutput(int compressionLevel) {
+        if (compressionLevel == Deflater.NO_COMPRESSION) {
+            return buffer;
+        } else {
+            Deflater deflater = Compressor.getDeflater(compressionLevel);
+            return new DeflaterOutputStream(buffer, deflater);
         }
-        compressedSize = inputSize;
-        uncompressedSize = inputSize;
     }
 
     @Override
@@ -101,11 +111,15 @@ class StreamSource extends Source {
 
     @Override
     public long writeTo(@NonNull ZipWriter writer) throws IOException {
-        try (FileChannel src = FileChannel.open(tmpStore, StandardOpenOption.READ)) {
-            writer.transferFrom(src, 0, this.compressedSize);
-            return this.compressedSize;
-        } finally {
-            Files.delete(tmpStore);
+        if (tmpStore != null) {
+            try (FileChannel src = FileChannel.open(tmpStore, StandardOpenOption.READ)) {
+                writer.transferFrom(src, 0, tmpStoreSize);
+            } finally {
+                Files.delete(tmpStore);
+            }
         }
+
+        writer.write(buffer.getByteBuffer());
+        return buffer.getCount() + tmpStoreSize;
     }
 }

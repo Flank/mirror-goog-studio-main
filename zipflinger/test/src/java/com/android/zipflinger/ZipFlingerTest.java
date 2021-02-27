@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.zip.Deflater;
+
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -1062,28 +1063,53 @@ public class ZipFlingerTest extends AbstractZipflingerTest {
 
     @Test
     public void testSmallInputStream() throws Exception {
-        byte[] bytes = new byte[500];
-        Random random = new Random(0);
-        random.nextBytes(bytes);
+        int streamSize = 500;
 
         Path a = getTestPath("testSmallInputStreamCompression.zip");
-        runInputStreamSource(a, Deflater.BEST_COMPRESSION, bytes);
+        runInputStreamSource(a, Deflater.BEST_COMPRESSION, streamSize, streamSize);
 
         Path b = getTestPath("testSmallInputStreamNoCompression.zip");
-        runInputStreamSource(b, Deflater.NO_COMPRESSION, bytes);
+        runInputStreamSource(b, Deflater.NO_COMPRESSION, streamSize, streamSize);
     }
 
-    void runInputStreamSource(Path path, int compressionLevel, byte[] bytes) throws IOException {
-        try (ZipArchive archive = new ZipArchive(path);
-                ByteArrayInputStream in = new ByteArrayInputStream(bytes)) {
-            archive.add(Sources.from(in, "foo", compressionLevel));
+    void runInputStreamSource(Path path, int compressionLevel, long streamSize, int large_limit) throws IOException {
+
+        try (ZipArchive archive = new ZipArchive(path); InputStream in = new MockInputStream(streamSize)) {
+            archive.add(Sources.from(in, "foo", compressionLevel, large_limit));
         }
 
         try (ZipRepo zipRepo = new ZipRepo(path)) {
-            ByteBuffer buffer = zipRepo.getContent("foo");
-            Assert.assertEquals("InputStream entry differ", ByteBuffer.wrap(bytes), buffer);
+            InputStream actual = zipRepo.getInputStream("foo");
+            InputStream expected = new MockInputStream(streamSize);
+            Assert.assertTrue("InputStream entry differ",  streamMatch(actual, expected));
         }
 
         verifyArchive(path);
+    }
+
+    private boolean streamMatch(InputStream as, InputStream es) throws IOException {
+        while(true) {
+            int a = as.read();
+            int e = es.read();
+
+            if (a != e) {
+                return false;
+            }
+
+            if (a == -1) {
+                return true;
+            }
+        }
+    }
+
+    @Test
+    public void testLargeInputStream() throws Exception {
+        int streamSize = 20000;
+
+        Path a = getTestPath("testLargeInputStreamCompression.zip");
+        runInputStreamSource(a, Deflater.BEST_COMPRESSION, streamSize, 5000);
+
+        Path b = getTestPath("testLargeInputStreamNoCompression.zip");
+        runInputStreamSource(b, Deflater.NO_COMPRESSION, streamSize, 5000);
     }
 }
