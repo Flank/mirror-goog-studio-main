@@ -285,7 +285,7 @@ abstract class R8Task: ProguardConfigurableTask() {
                 creationConfig.getJava8LangSupportType() == VariantScope.Java8LangSupport.R8
                         && !variantType.isAar)
 
-            task.bootClasspath.from(creationConfig.globalScope.fullBootClasspath)
+            setBootClasspathForCodeShrinker(task)
             task.minSdkVersion
                 .set(creationConfig.minSdkVersionWithTargetDeviceApi.apiLevel)
             task.debuggable
@@ -372,6 +372,19 @@ abstract class R8Task: ProguardConfigurableTask() {
             }
         }
 
+        private fun setBootClasspathForCodeShrinker(task: R8Task) {
+            val javaTarget = creationConfig.globalScope.extension.compileOptions.targetCompatibility
+
+            task.bootClasspath.from(creationConfig.globalScope.fullBootClasspath)
+            when {
+                javaTarget.isJava9Compatible ->
+                    task.bootClasspath.from(creationConfig.globalScope.versionedSdkLoader.flatMap {
+                        it.coreForSystemModulesProvider })
+                javaTarget.isJava8Compatible ->
+                    task.bootClasspath.from(creationConfig.globalScope.versionedSdkLoader.flatMap {
+                        it.coreLambdaStubsProvider })
+            }
+        }
     }
 
     override fun doTaskAction() {
