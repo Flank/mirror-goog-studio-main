@@ -355,6 +355,7 @@ public class SchemaModuleUtil {
         private ProgressIndicator mProgress;
         private boolean mStrict;
         private Map<String, String> mNewToOldMap = Maps.newHashMap();
+        private static boolean mDidShowWarning = false;
 
         public NamespaceFallbackFilter(
                 @NonNull Collection<SchemaModule<?>> possibleModules, boolean strict,
@@ -380,7 +381,17 @@ public class SchemaModuleUtil {
                             // jaxb asserts that the uri is interned.
                             @SuppressWarnings("NoInterning")
                             String oldUri = module.getLatestNamespace().intern();
-                            mProgress.logWarning("Mapping new ns " + uri + " to old ns " + oldUri);
+                            if (!mDidShowWarning) {
+                                mDidShowWarning = true;
+                                mProgress.logWarning(
+                                        "This version only understands SDK XML versions up to "
+                                                + module.getNamespaceVersionMap().size()
+                                                + " but an SDK XML file of version "
+                                                + version
+                                                + " was encountered. This can happen if you use "
+                                                + "versions of Android Studio and the command-line "
+                                                + "tools that were released at different times.");
+                            }
                             mNewToOldMap.put(uri, oldUri);
                             uri = oldUri;
                         }
