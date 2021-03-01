@@ -16,8 +16,9 @@
 
 package com.android.draw9patch.ui;
 
-import com.android.draw9patch.graphics.GraphicsUtilities;
+import static com.intellij.ui.GuiUtils.replaceJSplitPaneWithIDEASplitter;
 
+import com.android.draw9patch.graphics.GraphicsUtilities;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -34,7 +35,6 @@ import java.awt.image.RenderedImage;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-
 import javax.swing.Box;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
@@ -153,7 +153,11 @@ public class ImageEditorPanel extends JPanel {
         splitter.setLeftComponent(scroller);
         splitter.setRightComponent(buildStretchesViewer());
 
-        panel.add(splitter, BorderLayout.CENTER);
+        JPanel splitterPanel = new JPanel();
+        splitterPanel.add(splitter);
+        replaceJSplitPaneWithIDEASplitter(splitter); // splitter parent can only have one child
+
+        panel.add(splitterPanel, BorderLayout.CENTER);
         add(panel);
     }
 
