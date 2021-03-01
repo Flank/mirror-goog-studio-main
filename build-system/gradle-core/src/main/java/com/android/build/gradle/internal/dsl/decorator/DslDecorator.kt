@@ -119,7 +119,7 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType>) {
                 invokeConstructor(generatedClassSuperClass, method)
                 for (property in abstractProperties) {
                     when (val type = property.supportedPropertyType) {
-                        is SupportedPropertyType.Val -> {
+                        is SupportedPropertyType.Collection -> {
                             // field = new ImplType("propertyName")
                             loadThis()
                             newInstance(type.implementationType)
@@ -300,7 +300,7 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType>) {
             putField(generatedClass, LOCK_FIELD_NAME, Type.BOOLEAN_TYPE)
             for (abstractProperty in abstractProperties) {
                 val type = abstractProperty.supportedPropertyType
-                if (type is SupportedPropertyType.Val) {
+                if (type is SupportedPropertyType.Collection) {
                     // this.__managedField.lock();
                     loadThis()
                     getField(generatedClass, abstractProperty.backingFieldName, type.implementationType)
@@ -332,7 +332,7 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType>) {
         lockable: Boolean
     ) {
         when (property.supportedPropertyType) {
-            is SupportedPropertyType.Val -> {
+            is SupportedPropertyType.Collection -> {
                 createGroovyMutatingSetter(classWriter, generatedClass, property)
             }
             is SupportedPropertyType.Var -> {

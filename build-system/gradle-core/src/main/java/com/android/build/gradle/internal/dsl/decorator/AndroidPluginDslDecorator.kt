@@ -19,8 +19,8 @@ package com.android.build.gradle.internal.dsl.decorator
 /** The list of all the supported property types for the production AGP */
 val AGP_SUPPORTED_PROPERTY_TYPES: List<SupportedPropertyType> = listOf(
     SupportedPropertyType.Var.String,
-    SupportedPropertyType.Val.List,
-    SupportedPropertyType.Val.Set,
+    SupportedPropertyType.Collection.List,
+    SupportedPropertyType.Collection.Set,
 )
 
 /**

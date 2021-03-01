@@ -233,7 +233,7 @@ class DslDecoratorUnitTest {
 
     @Test
     fun `check locking propagation`() {
-        val decorated = DslDecorator(listOf(SupportedPropertyType.Val.List))
+        val decorated = DslDecorator(listOf(SupportedPropertyType.Collection.List))
             .decorate(LockableWithList::class)
         val o = decorated.getDeclaredConstructor().newInstance()
         o.foo += "one"
@@ -264,7 +264,7 @@ class DslDecoratorUnitTest {
 
     @Test
     fun `check synthetic methods where interface has more specific type`() {
-        val decorated = DslDecorator(listOf(SupportedPropertyType.Val.List)).decorate(C::class)
+        val decorated = DslDecorator(listOf(SupportedPropertyType.Collection.List)).decorate(C::class)
         val c = decorated.getDeclaredConstructor().newInstance()
         val asA: A = c
         asA.foo.add("a")
@@ -286,7 +286,7 @@ class DslDecoratorUnitTest {
 
     @Test
     fun `check synthetic methods where supertype has more specific type`() {
-        val decorated = DslDecorator(listOf(SupportedPropertyType.Val.List)).decorate(Z::class)
+        val decorated = DslDecorator(listOf(SupportedPropertyType.Collection.List)).decorate(Z::class)
         val z = decorated.getDeclaredConstructor().newInstance()
         val asX: X = z
         asX.foo.add("a")
@@ -325,7 +325,7 @@ class DslDecoratorUnitTest {
 
     @Test
     fun `check groovy setter generation`() {
-        val decorated = DslDecorator(listOf(SupportedPropertyType.Val.List))
+        val decorated = DslDecorator(listOf(SupportedPropertyType.Collection.List))
             .decorate(WithList::class)
         val withList = decorated.getDeclaredConstructor().newInstance()
         Eval.me("withList", withList, "withList.list += ['one', 'two']")
@@ -343,7 +343,7 @@ class DslDecoratorUnitTest {
 
     @Test
     fun `check groovy setter generation for set`() {
-        val decorated = DslDecorator(listOf(SupportedPropertyType.Val.Set))
+        val decorated = DslDecorator(listOf(SupportedPropertyType.Collection.Set))
             .decorate(WithSet::class)
         val withSet = decorated.getDeclaredConstructor().newInstance()
         assertThat(withSet.set::class.java).isEqualTo(LockableSet::class.java)

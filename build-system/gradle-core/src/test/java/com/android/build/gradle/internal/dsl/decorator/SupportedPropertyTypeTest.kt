@@ -27,7 +27,7 @@ class SupportedPropertyTypeTest {
 
     @Test
     fun checkValTypes() {
-        val objects = SupportedPropertyType.Val::class.sealedSubclasses.mapNotNull { it.objectInstance }
+        val objects = SupportedPropertyType.Collection::class.sealedSubclasses.mapNotNull { it.objectInstance }
         objects.forEach { propertyType ->
                 // Check type hierarchy
                 val type = load(propertyType.type)
