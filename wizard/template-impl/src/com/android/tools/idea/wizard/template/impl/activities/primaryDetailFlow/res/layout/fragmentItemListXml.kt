@@ -34,7 +34,9 @@ fun fragmentItemListXml(
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/${itemListLayout}_container"
     android:layout_width="match_parent"
-    android:layout_height="match_parent" >
+    android:layout_height="match_parent"
+    android:layout_marginStart="@dimen/container_horizontal_margin"
+    android:layout_marginEnd="@dimen/container_horizontal_margin">
 
     <${getMaterialComponentName("android.support.v7.widget.RecyclerView", useAndroidX)}
         android:id="@+id/${itemListLayout}"

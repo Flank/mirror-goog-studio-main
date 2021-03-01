@@ -34,6 +34,8 @@ import com.android.tools.idea.wizard.template.impl.activities.primaryDetailFlow.
 import com.android.tools.idea.wizard.template.impl.activities.primaryDetailFlow.res.layout.fragmentItemListXml
 import com.android.tools.idea.wizard.template.impl.activities.primaryDetailFlow.res.layout.itemListContentXml
 import com.android.tools.idea.wizard.template.impl.activities.primaryDetailFlow.res.values.dimensXml
+import com.android.tools.idea.wizard.template.impl.activities.primaryDetailFlow.res.values_land.dimensXml as dimensXmlLand
+import com.android.tools.idea.wizard.template.impl.activities.primaryDetailFlow.res.values_w600dp.dimensXml as dimensXmlW600dp
 import com.android.tools.idea.wizard.template.impl.activities.primaryDetailFlow.res.values.stringsXml
 import com.android.tools.idea.wizard.template.impl.activities.primaryDetailFlow.src.app_package.contentDetailFragmentJava
 import com.android.tools.idea.wizard.template.impl.activities.primaryDetailFlow.src.app_package.contentDetailFragmentKt
@@ -103,6 +105,8 @@ fun RecipeExecutor.primaryDetailFlowRecipe(
   }
 
   mergeXml(dimensXml(), resOut.resolve("values/dimens.xml"))
+  mergeXml(dimensXmlLand(), resOut.resolve("values-land/dimens.xml"))
+  mergeXml(dimensXmlW600dp(), resOut.resolve("values-w600dp/dimens.xml"))
   generateNoActionBarStyles(moduleData.baseFeature?.resDir, resOut, moduleData.themesData)
 
   // navHostFragmentId needs to be unique, thus appending detailNameLayout since it's

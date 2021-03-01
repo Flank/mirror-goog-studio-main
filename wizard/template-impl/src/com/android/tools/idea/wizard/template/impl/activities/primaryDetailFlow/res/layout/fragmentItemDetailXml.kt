@@ -71,7 +71,10 @@ fun fragmentItemDetailXml(
             style="?android:attr/textAppearanceLarge"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:padding="16dp"
+            android:paddingTop="16dp"
+            android:paddingBottom="16dp"
+            android:paddingStart="@dimen/container_horizontal_margin"
+            android:paddingEnd="@dimen/container_horizontal_margin"
             android:textIsSelectable="true"
             tools:context="${packageName}.${detailName}Fragment" />
 
@@ -82,7 +85,8 @@ fun fragmentItemDetailXml(
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical|start"
-        android:layout_margin="@dimen/fab_margin"
+        android:layout_marginBottom="16dp"
+        android:layout_marginEnd="@dimen/fab_margin"
         app:srcCompat="@android:drawable/stat_notify_chat"
         app:layout_anchor="@+id/${detailNameLayout}_scroll_view"
         app:layout_anchorGravity="top|end" />

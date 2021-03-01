@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 The Android Open Source Project
+ * Copyright (C) 2021 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,17 +14,13 @@
  * limitations under the License.
  */
 
-package com.android.tools.idea.wizard.template.impl.activities.primaryDetailFlow.res.values
+package com.android.tools.idea.wizard.template.impl.activities.primaryDetailFlow.res.values_w600dp
 
 
 fun dimensXml() = """
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <dimen name="fab_margin">16dp</dimen>
-    <dimen name="item_width">200dp</dimen>
-    <dimen name="app_bar_height">200dp</dimen>
-    <dimen name="text_margin">16dp</dimen>
-    <dimen name="container_margin">8dp</dimen>
-    <dimen name="container_horizontal_margin">16dp</dimen>
+    <dimen name="fab_margin">48dp</dimen>
+    <dimen name="container_horizontal_margin">48dp</dimen>
 </resources>
 """
