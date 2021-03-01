@@ -27,8 +27,10 @@ import com.android.tools.idea.wizard.template.impl.activities.common.addViewBind
 import com.android.tools.idea.wizard.template.impl.activities.common.generateManifestStrings
 import com.android.tools.idea.wizard.template.impl.activities.common.generateThemeStyles
 import com.android.tools.idea.wizard.template.impl.activities.loginActivity.res.layout.activityLoginXml
+import com.android.tools.idea.wizard.template.impl.activities.loginActivity.res.layout_w936dp.activityLoginXml as activityLoginXmlW936dp
 import com.android.tools.idea.wizard.template.impl.activities.loginActivity.res.values.dimensXml
 import com.android.tools.idea.wizard.template.impl.activities.loginActivity.res.values.stringsXml
+import com.android.tools.idea.wizard.template.impl.activities.loginActivity.res.values.dimensXmlHorizontalMargin
 import com.android.tools.idea.wizard.template.impl.activities.loginActivity.src.app_package.data.loginDataSourceJava
 import com.android.tools.idea.wizard.template.impl.activities.loginActivity.src.app_package.data.loginDataSourceKt
 import com.android.tools.idea.wizard.template.impl.activities.loginActivity.src.app_package.data.loginRepositoryJava
@@ -79,8 +81,14 @@ fun RecipeExecutor.loginActivityRecipe(
                               isLauncher = moduleData.isNewModule, isLibrary = moduleData.isLibrary, isNewModule = moduleData.isNewModule),
            manifestOut.resolve("AndroidManifest.xml"))
   mergeXml(dimensXml(), resOut.resolve("values/dimens.xml"))
+  mergeXml(dimensXmlHorizontalMargin(48), resOut.resolve("values-land/dimens.xml"))
+  mergeXml(dimensXmlHorizontalMargin(48), resOut.resolve("values-w600dp/dimens.xml"))
+  mergeXml(dimensXmlHorizontalMargin(200), resOut.resolve("values-w1240dp/dimens.xml"))
   mergeXml(stringsXml(simpleName, activityClass, moduleData.isNewModule), resOut.resolve("values/strings.xml"))
   save(activityLoginXml(activityClass, packageName, useAndroidX, apis.minApi.api), resOut.resolve("layout/${layoutName}.xml"))
+  // We can use the same layout in the layout and layout-w1240dp directories
+  save(activityLoginXml(activityClass, packageName, useAndroidX, apis.minApi.api), resOut.resolve("layout-w1240dp/${layoutName}.xml"))
+  save(activityLoginXmlW936dp(activityClass, packageName, useAndroidX, apis.minApi.api), resOut.resolve("layout-w936dp/${layoutName}.xml"))
 
   val isViewBindingSupported = moduleData.viewBindingSupport.isViewBindingSupported()
   val loginActivity = when (projectData.language) {

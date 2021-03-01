@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 The Android Open Source Project
+ * Copyright (C) 2021 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package com.android.tools.idea.wizard.template.impl.activities.loginActivity.res.layout
+package com.android.tools.idea.wizard.template.impl.activities.loginActivity.res.layout_w936dp
 
 import com.android.tools.idea.wizard.template.getMaterialComponentName
+import com.android.tools.idea.wizard.template.impl.activities.loginActivity.res.layout.activityLoginXmlContent
 
 fun activityLoginXml(
   activityClass: String,
@@ -38,7 +39,14 @@ fun activityLoginXml(
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="${packageName}.ui.login.${activityClass}">
 
-    ${activityLoginXmlContent(minApiLevel)}
+    <${getMaterialComponentName("android.support.constraint.ConstraintLayout", useAndroidX)}
+        android:layout_width="840dp"
+        android:layout_height="match_parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        ${activityLoginXmlContent(minApiLevel)}
+    </${getMaterialComponentName("android.support.constraint.ConstraintLayout", useAndroidX)}>
 </${getMaterialComponentName("android.support.constraint.ConstraintLayout", useAndroidX)}>
 """
 }
