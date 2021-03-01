@@ -50,6 +50,33 @@ class BooleanOptionTest {
     }
 
     @Test
+    fun `check features are not in SUPPORTED stage`() {
+        // Ignore working-as-intended options (or those that we postpone fixing)
+        val ignoreList = listOf(
+            BooleanOption.ENABLE_SDK_DOWNLOAD,
+            BooleanOption.ENFORCE_UNIQUE_PACKAGE_NAMES,
+            BooleanOption.FORCE_JACOCO_OUT_OF_PROCESS,
+            BooleanOption.ENABLE_R8_LIBRARIES,
+            BooleanOption.ENABLE_UNCOMPRESSED_NATIVE_LIBS_IN_BUNDLE,
+            BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM,
+            BooleanOption.USE_RELATIVE_PATH_IN_TEST_CONFIG,
+            BooleanOption.ENABLE_INCREMENTAL_DATA_BINDING,
+            BooleanOption.PRECOMPILE_DEPENDENCIES_RESOURCES,
+            BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS,
+            BooleanOption.ENABLE_LEGACY_API
+        )
+
+        val violatingOptions = BooleanOption.values().filter {
+            it.stage is FeatureStage.Supported
+        }
+        checkViolatingProjectOptions(
+            violatingOptions = violatingOptions,
+            ignoreList = ignoreList,
+            requirement = "Features should not be in `FeatureStage.Supported` stage."
+        )
+    }
+
+    @Test
     fun `check softly-enforced, enforced features have default value 'true'`() {
         val violatingOptions = BooleanOption.values().filter {
             (it.stage is FeatureStage.SoftlyEnforced || it.stage is FeatureStage.Enforced)

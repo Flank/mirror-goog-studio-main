@@ -101,7 +101,11 @@ sealed class FeatureStage(status: Option.Status) : Stage(status) {
      * be enabled by default in a future release.
      *
      * Eventually, the feature will likely be enforced (see stage [SoftlyEnforced] and [Enforced]).
-     * In some rare cases, it may be removed (see stage [Deprecated] and [Removed]).
+     * In some cases, it may be removed (see stage [Deprecated] and [Removed]).
+     *
+     * DISCOURAGED USAGE: The use of this stage is actually discouraged as it doesn't specify a
+     * clear timeline and features may stay in this stage for too long, thus increasing maintenance
+     * cost to AGP and users. Consider using [SoftlyEnforced] or [Deprecated] instead.
      */
     object Supported : FeatureStage(Option.Status.STABLE)
 
