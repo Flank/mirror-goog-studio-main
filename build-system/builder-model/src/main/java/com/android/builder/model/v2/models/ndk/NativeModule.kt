@@ -44,8 +44,9 @@ interface NativeModule : AndroidModel {
     val ndkVersion: String
 
     /**
-     * The default NDK version used by the Android Gradle Plugin if user has not overridden it. For
-     * example "21.1.6352462".
+     * The NDK version used by this Android Gradle Plugin if the build author has not specified
+     * a different version in [ndkVersion]. For example "21.1.6352462".
+     * This is constant for any particular Android Gradle Plugin Version.
      */
     val defaultNdkVersion: String
 
