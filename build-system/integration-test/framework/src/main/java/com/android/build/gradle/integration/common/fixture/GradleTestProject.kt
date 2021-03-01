@@ -663,6 +663,10 @@ allprojects { proj ->
     val mainJniLibsDir: File
         get() = FileUtils.join(projectDir, "src", "main", "jniLibs")
 
+    /** Return the path to the default main res dir.  */
+    val mainResDir: File
+        get() = FileUtils.join(projectDir, "src", "main", "res")
+
     /** Return the settings.gradle of the test project.  */
     val settingsFile: File
         get() = File(projectDir, "settings.gradle")
