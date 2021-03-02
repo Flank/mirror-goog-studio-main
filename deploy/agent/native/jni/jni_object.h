@@ -37,6 +37,7 @@ class JniObject {
   JniObject& operator=(JniObject&&) = default;
 
   std::string ToString();
+  jclass GetClass() { return class_; }
 
   jboolean CallBooleanMethod(const char* name, const char* signature, ...);
   jbyte CallByteMethod(const char* name, const char* signature, ...);

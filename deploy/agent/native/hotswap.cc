@@ -75,8 +75,9 @@ SwapResult HotSwap::DoHotSwap(const proto::SwapRequest& swap_request) const {
   jobject reloader = swap_request.restart_activity()
                          ? nullptr
                          : recompose.GetComposeHotReload();
+  jobject state = nullptr;
   if (reloader != nullptr) {
-    recompose.SaveStateAndDispose(reloader);
+    state = recompose.SaveStateAndDispose(reloader);
   }
 
   // Define new classes before redefining existing classes.
@@ -207,7 +208,7 @@ SwapResult HotSwap::DoHotSwap(const proto::SwapRequest& swap_request) const {
   delete[] def;
 
   if (reloader != nullptr) {
-    recompose.LoadStateAndCompose(reloader);
+    recompose.LoadStateAndCompose(reloader, state);
   }
 
   return result;

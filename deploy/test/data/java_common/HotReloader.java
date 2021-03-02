@@ -21,12 +21,13 @@ public class HotReloader {
     public static Companion Companion = new Companion();
 
     public static class Companion {
-        public void saveStateAndDispose(Object c) {
+        public Object saveStateAndDispose(Object c) {
             state += " saveStateAndDispose()";
+            return " loadStateAndCompose()";
         }
 
         public void loadStateAndCompose(Object c) {
-            state += " loadStateAndCompose()";
+            state += c;
         }
     }
 }
