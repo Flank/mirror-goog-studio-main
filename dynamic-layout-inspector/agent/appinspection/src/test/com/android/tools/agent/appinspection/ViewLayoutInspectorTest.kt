@@ -25,6 +25,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.ViewRootImpl
 import android.view.WindowManagerGlobal
+import android.webkit.WebView
 import android.widget.TextView
 import com.android.tools.agent.appinspection.proto.StringTable
 import com.android.tools.agent.appinspection.testutils.FrameworkStateRule
@@ -516,6 +517,56 @@ class ViewLayoutInspectorTest {
                     assertThat(propertyGroup.viewId).isEqualTo(textChild.uniqueDrawingId)
                     assertThat(propertyGroup.propertyList.map { strings[it.name] }).containsExactly(
                         "text", "visibility", "layout_width", "layout_height"
+                    )
+                }
+            }
+        }
+    }
+
+    // WebView trampolines onto a different thread when reading properties, so just make sure things
+    // continue to work in that case.
+    @Test
+    fun canFetchPropertiesForWebView() = createViewInspector { viewInspector ->
+        val responseQueue = ArrayBlockingQueue<ByteArray>(1)
+        inspectorRule.commandCallback.replyListeners.add { bytes ->
+            responseQueue.add(bytes)
+        }
+
+        val resourceNames = mutableMapOf<Int, String>()
+        val resources = Resources(resourceNames)
+        val context = Context("view.inspector.test", resources)
+        val root = ViewGroup(context).apply {
+            setAttachInfo(View.AttachInfo())
+            addView(View(context))
+            addView(WebView(context))
+            addView(View(context))
+        }
+
+        WindowManagerGlobal.getInstance().rootViews.addAll(listOf(root))
+
+        run { // Search for properties for WebView
+            val viewChild = root.getChildAt(1)
+
+            val getPropertiesCommand = Command.newBuilder().apply {
+                getPropertiesCommandBuilder.apply {
+                    rootViewId = root.uniqueDrawingId
+                    viewId = viewChild.uniqueDrawingId
+                }
+            }.build()
+            viewInspector.onReceiveCommand(
+                getPropertiesCommand.toByteArray(),
+                inspectorRule.commandCallback
+            )
+
+            responseQueue.take().let { bytes ->
+                val response = Response.parseFrom(bytes)
+                assertThat(response.specializedCase).isEqualTo(Response.SpecializedCase.GET_PROPERTIES_RESPONSE)
+                response.getPropertiesResponse.let { propertiesResponse ->
+                    val strings = StringTable.fromStringEntries(propertiesResponse.stringsList)
+                    val propertyGroup = propertiesResponse.propertyGroup
+                    assertThat(propertyGroup.viewId).isEqualTo(viewChild.uniqueDrawingId)
+                    assertThat(propertyGroup.propertyList.map { strings[it.name] }).containsExactly(
+                        "visibility", "layout_width", "layout_height"
                     )
                 }
             }

@@ -23,6 +23,7 @@ import android.os.Build
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
+import android.webkit.WebView
 import com.android.tools.agent.appinspection.framework.getChildren
 import com.android.tools.agent.appinspection.framework.getTextValue
 import com.android.tools.agent.appinspection.framework.isSystemView
@@ -204,9 +205,19 @@ fun View.createGetPropertiesResponse(): GetPropertiesResponse {
 }
 
 fun View.createPropertyGroup(stringTable: StringTable): PropertyGroup {
-    // TODO(b/177573802): WebView is a special case and should happen on the UI thread
+    // In general, run off the main thread so we don't block the app doing expensive work.
     ThreadUtils.assertOffMainThread()
+    return if (this !is WebView) {
+        createPropertyGroupImpl(stringTable)
+    }
+    else {
+        // WebView uniquely throws exceptions if you try to read its properties off the main thread,
+        // so we have no choice in this case.
+        ThreadUtils.runOnMainThread { createPropertyGroupImpl(stringTable) }.get()
+    }
+}
 
+private fun View.createPropertyGroupImpl(stringTable: StringTable): PropertyGroup {
     val viewCacheMap = PropertyCache.createViewCache()
     val layoutCacheMap = PropertyCache.createLayoutParamsCache()
 
