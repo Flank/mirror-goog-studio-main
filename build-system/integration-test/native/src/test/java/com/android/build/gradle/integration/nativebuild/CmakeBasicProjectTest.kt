@@ -20,6 +20,7 @@ import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_NDK_SIDE_BY_SIDE_VERSION
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
+import com.android.build.gradle.integration.common.fixture.model.assertToString
 import com.android.build.gradle.integration.common.fixture.model.cartesianOf
 import com.android.build.gradle.integration.common.fixture.model.dump
 import com.android.build.gradle.integration.common.fixture.model.findAbiSegment
@@ -242,7 +243,7 @@ class CmakeBasicProjectTest(
         val json = abi.jsonFile
         assertThat(json).isFile()
 
-        val config = AndroidBuildGradleJsons.getNativeBuildMiniConfig(json, null)
+        val config = AndroidBuildGradleJsons.getNativeBuildMiniConfig(abi, null)
         val library = config
                 .libraries
                 .asSequence()
@@ -359,7 +360,7 @@ class CmakeBasicProjectTest(
             "F"
         }
         // note that only build files for the requested variant and ABI exists.
-        Truth.assertThat(fetchResult.dump()).isEqualTo(
+        fetchResult.dump().assertToString(
           """[:]
 > NativeModule:
     - name                    = "project"

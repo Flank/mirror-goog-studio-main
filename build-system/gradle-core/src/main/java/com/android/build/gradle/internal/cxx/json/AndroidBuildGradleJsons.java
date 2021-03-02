@@ -16,8 +16,12 @@
 
 package com.android.build.gradle.internal.cxx.json;
 
+import static com.android.build.gradle.internal.cxx.model.CxxAbiModelKt.getJsonFile;
+import static com.android.build.gradle.internal.cxx.model.CxxAbiModelKt.getMiniConfigFile;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.internal.cxx.model.CxxAbiModel;
 import com.android.build.gradle.tasks.ExternalNativeBuildTaskUtils;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
@@ -88,29 +92,31 @@ public class AndroidBuildGradleJsons {
      * Json file is not read into memory at once.
      */
     public static List<NativeBuildConfigValueMini> getNativeBuildMiniConfigs(
-            @NonNull List<File> jsons, @Nullable GradleBuildVariant.Builder stats)
+            @NonNull List<CxxAbiModel> abis, @Nullable GradleBuildVariant.Builder stats)
             throws IOException {
         List<NativeBuildConfigValueMini> miniConfigs = Lists.newArrayList();
 
-        for (File json : jsons) {
-            miniConfigs.add(getNativeBuildMiniConfig(json, stats));
+        for (CxxAbiModel abi : abis) {
+            miniConfigs.add(getNativeBuildMiniConfig(abi, stats));
         }
         return miniConfigs;
     }
 
     /**
-     * Given a File that contains an android_build_gradle structure produce a small random access
-     * structure called {@link NativeBuildConfigValueMini}
+     * Return a {@link NativeBuildConfigValueMini} for this {@link CxxAbiModel}. Generate if missing
+     * or out of date with respect to corresponding android_gradle_build.json.
      *
-     * @param json the Json reader
+     * @param abi the ABI to get mini config fore.
      * @param stats the stats to update
      * @return the mini config
      * @throws IOException if there was an IO problem reading the Json.
      */
     @NonNull
     public static NativeBuildConfigValueMini getNativeBuildMiniConfig(
-            @NonNull File json, @Nullable GradleBuildVariant.Builder stats) throws IOException {
-        File persistedMiniConfig = ExternalNativeBuildTaskUtils.getJsonMiniConfigFile(json);
+            @NonNull CxxAbiModel abi, @Nullable GradleBuildVariant.Builder stats)
+            throws IOException {
+        File persistedMiniConfig = getMiniConfigFile(abi);
+        File json = getJsonFile(abi);
         if (ExternalNativeBuildTaskUtils.fileIsUpToDate(json, persistedMiniConfig)) {
             // The mini json has already been created for us. Just read it instead of parsing
             // again.
@@ -163,6 +169,7 @@ public class AndroidBuildGradleJsons {
                         .setPrettyPrinting()
                         .create()
                         .toJson(miniConfig);
+        outputJson.getParentFile().mkdirs();
         Files.write(outputJson.toPath(), actualResult.getBytes(Charsets.UTF_8));
     }
 

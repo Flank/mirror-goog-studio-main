@@ -71,7 +71,7 @@ abstract class ExternalNativeCleanTask @Inject constructor(private val ops: Exec
                 }
             }
             val configValueList = getNativeBuildMiniConfigs(
-                    existingJsonAbis.map { it.jsonFile },
+                    existingJsonAbis,
                     null)
             val cleanCommands = mutableListOf<List<String>>()
             val targetNames = mutableListOf<String>()

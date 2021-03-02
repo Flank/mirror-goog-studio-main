@@ -178,6 +178,6 @@ class CmakeSettingsTest(private val cmakeVersionInDsl: String) {
         return project.recoverExistingCxxAbiModels()
                 .filter { it.abi == Abi.X86_64 || it.abi == Abi.ARMEABI_V7A}
                 .filter { it.variant.variantName == "debug" }
-                .map { getNativeBuildMiniConfig(it.jsonFile, null) }
+                .map { getNativeBuildMiniConfig(it, null) }
     }
 }

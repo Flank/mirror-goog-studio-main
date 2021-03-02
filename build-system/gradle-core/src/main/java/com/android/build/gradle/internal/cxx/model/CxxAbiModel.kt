@@ -22,9 +22,11 @@ import com.android.build.gradle.internal.cxx.settings.BuildSettingsConfiguration
 import com.android.build.gradle.internal.ndk.AbiInfo
 import com.android.build.gradle.tasks.NativeBuildSystem.CMAKE
 import com.android.build.gradle.tasks.NativeBuildSystem.NDK_BUILD
+import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils.join
 import com.android.utils.tokenizeCommandLineToEscaped
 import java.io.File
+import kotlin.math.max
 
 /**
  * Holds immutable ABI-level information for C/C++ build and sync, see README.md
@@ -116,6 +118,35 @@ data class CxxAbiModel(
  */
 val CxxAbiModel.jsonFile: File
     get() = join(cxxBuildFolder, "android_gradle_build.json")
+
+/**
+ * The json mini-config file contains a subset of the regular json file that is much smaller and
+ * less memory-intensive to read.
+ */
+val CxxAbiModel.miniConfigFile: File
+    get() = join(modelMetadataFolder, "android_gradle_build_mini.json")
+
+/**
+ * Pull up the app's minSdkVersion to be within the bounds for the ABI and NDK.
+ */
+val CxxAbiModel.minSdkVersion : Int get() {
+    val ndkVersion = variant.module.ndkVersion.major
+    val metaPlatforms = variant.module.ndkMetaPlatforms
+    val minVersionForAbi = when {
+        abi.supports64Bits() -> AndroidVersion.SUPPORTS_64_BIT.apiLevel
+        else -> 1
+    }
+    val minVersionForNdk = when {
+        // Newer NDKs expose the minimum supported version via meta/platforms.json
+        metaPlatforms != null -> metaPlatforms.min
+        // Older NDKs did not expose this, but the information is in the change logs
+        ndkVersion < 12 -> 1
+        ndkVersion < 15 -> 9
+        ndkVersion < 18 -> 14
+        else -> 16
+    }
+    return max(abiPlatformVersion, max(minVersionForAbi, minVersionForNdk))
+}
 
 /**
  * The ninja log file

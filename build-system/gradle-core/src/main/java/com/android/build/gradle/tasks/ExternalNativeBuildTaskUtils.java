@@ -29,9 +29,6 @@ import java.util.List;
  * Shared utility methods for dealing with external native build tasks.
  */
 public class ExternalNativeBuildTaskUtils {
-    // Forked CMake version is the one we get when we execute "cmake --version" command.
-    public static final String CUSTOM_FORK_CMAKE_VERSION = "3.6.0-rc2";
-
     /**
      * File 'derived' is consider to depend on the contents of file 'source' this function return
      * true if source is more recent than derived.
@@ -57,24 +54,5 @@ public class ExternalNativeBuildTaskUtils {
         long sourceTimestamp = Files.getLastModifiedTime(source.toPath()).toMillis();
         long derivedTimestamp = Files.getLastModifiedTime(derived.toPath()).toMillis();
         return sourceTimestamp <= derivedTimestamp;
-    }
-
-    /**
-     * The json mini-config file contains a subset of the regular json file that is much smaller and
-     * less memory-intensive to read.
-     */
-    @NonNull
-    public static File getJsonMiniConfigFile(@NonNull File originalJson) {
-        return new File(originalJson.getParent(), "android_gradle_build_mini.json");
-    }
-
-    @NonNull
-    public static List<File> getOutputJsons(@NonNull File jsonFolder,
-            @NonNull Collection<String> abis) {
-        List<File> outputs = Lists.newArrayList();
-        for (String abi : abis) {
-            outputs.add(new File(new File(jsonFolder, abi), "android_gradle_build.json"));
-        }
-        return outputs;
     }
 }

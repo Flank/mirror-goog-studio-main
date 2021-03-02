@@ -37,7 +37,7 @@ class CxxRepublishBuilder(val model: CxxConfigurationModel) : CxxBuilder {
         infoln("link or copy build outputs to republish point")
         val variant = model.variant
         val abis = model.activeAbis
-        val miniConfigs = getNativeBuildMiniConfigs(abis.map { it.jsonFile }, null)
+        val miniConfigs = getNativeBuildMiniConfigs(abis, null)
         for (config in miniConfigs) {
             for (library in config.libraries.values) {
                 val output = library.output ?: continue

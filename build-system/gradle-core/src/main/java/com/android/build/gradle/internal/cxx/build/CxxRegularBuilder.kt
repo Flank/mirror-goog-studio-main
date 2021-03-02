@@ -66,7 +66,7 @@ class CxxRegularBuilder(val configurationModel: CxxConfigurationModel) : CxxBuil
      * @return the mini configs
      */
     private val nativeBuildConfigValueMinis: List<NativeBuildConfigValueMini>
-        get() = AndroidBuildGradleJsons.getNativeBuildMiniConfigs(abis.map { it.jsonFile }, null)
+        get() = AndroidBuildGradleJsons.getNativeBuildMiniConfigs(abis, null)
 
     /** Represents a single build step that, when executed, builds one or more libraries.  */
     private class BuildStep(

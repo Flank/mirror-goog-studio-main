@@ -83,16 +83,16 @@ abstract class ExternalNativeJsonGenerator internal constructor(
     // TODO(153964094) Reconcile this with jsonGenerationDependencyFiles
     // They do the same work but one is for single abi and one is for all abis.
     @Throws(IOException::class)
-    private fun getDependentBuildFiles(json: File): List<File> {
+    private fun getDependentBuildFiles(abi: CxxAbiModel): List<File> {
         val result: MutableList<File> =
             Lists.newArrayList()
-        if (!json.exists()) {
+        if (!abi.jsonFile.exists()) {
             return result
         }
 
         // Now check whether the JSON is out-of-date with respect to the build files it declares.
         val config = AndroidBuildGradleJsons
-            .getNativeBuildMiniConfig(json, variantBuilder)
+            .getNativeBuildMiniConfig(abi, variantBuilder)
 
         // If anything in the prefab package changes, re-run. Note that this also depends on the
         // directories, so added/removed files will also trigger a re-run.
@@ -183,7 +183,7 @@ abstract class ExternalNativeJsonGenerator internal constructor(
                         abi.buildCommandFile,
                         currentBuildCommand,
                         getFileContent(abi.buildCommandFile),
-                        getDependentBuildFiles(abi.jsonFile),
+                        getDependentBuildFiles(abi),
                         prefabState,
                         previousPrefabState
                     )
@@ -247,7 +247,7 @@ abstract class ExternalNativeJsonGenerator internal constructor(
                             removeUnexpectedSoFiles(
                                 abi.soFolder,
                                 AndroidBuildGradleJsons.getNativeBuildMiniConfig(
-                                    abi.jsonFile, it
+                                    abi, it
                                 )
                             )
                         }
@@ -276,9 +276,9 @@ abstract class ExternalNativeJsonGenerator internal constructor(
                     infoln("JSON '%s' was up-to-date", abi.jsonFile)
                     variantStats.outcome = GenerationOutcome.SUCCESS_UP_TO_DATE
                 }
-                abi.generateSymbolFolderIndexFile()
-                abi.generateBuildFilesIndex(variantBuilder)
-                abi.generateCompileCommandsJsonBin()
+                generateSymbolFolderIndexFile(abi)
+                generateBuildFilesIndex(abi, variantBuilder)
+                generateCompileCommandsJsonBin(abi)
                 infoln("JSON generation completed without problems")
             } catch (e: GradleException) {
                 variantStats.outcome = GenerationOutcome.FAILED
@@ -311,26 +311,26 @@ abstract class ExternalNativeJsonGenerator internal constructor(
         }
     }
 
-    private fun CxxAbiModel.generateSymbolFolderIndexFile() {
-        symbolFolderIndexFile.parentFile.mkdirs()
-        symbolFolderIndexFile.writeText(
-            soFolder.absolutePath,
+    private fun generateSymbolFolderIndexFile(abi : CxxAbiModel) {
+        abi.symbolFolderIndexFile.parentFile.mkdirs()
+        abi.symbolFolderIndexFile.writeText(
+            abi.soFolder.absolutePath,
             StandardCharsets.UTF_8
         )
     }
 
-    private fun CxxAbiModel.generateBuildFilesIndex(variantBuilder: GradleBuildVariant.Builder?) {
-        buildFileIndexFile.parentFile.mkdirs()
-        buildFileIndexFile.writeText(
+    private fun generateBuildFilesIndex(abi : CxxAbiModel, variantBuilder: GradleBuildVariant.Builder?) {
+        abi.buildFileIndexFile.parentFile.mkdirs()
+        abi.buildFileIndexFile.writeText(
             AndroidBuildGradleJsons.getNativeBuildMiniConfig(
-                jsonFile,
+                abi,
                 variantBuilder
             ).buildFiles.joinToString(System.lineSeparator()),
             StandardCharsets.UTF_8
         )
     }
 
-    private fun CxxAbiModel.generateCompileCommandsJsonBin() {
+    private fun generateCompileCommandsJsonBin(abi : CxxAbiModel) {
         val interner =
             TokenizedCommandLineMap<Pair<String, List<String>>>(raw = false) { tokens, sourceFile ->
                 tokens.removeTokenGroup(sourceFile, 0)
@@ -344,14 +344,14 @@ abstract class ExternalNativeJsonGenerator internal constructor(
                     tokens.removeTokenGroup(flag, 0)
                 }
             }
-        if (!compileCommandsJsonFile.exists()
-            || (compileCommandsJsonBinFile.exists()
-                    && compileCommandsJsonBinFile.lastModified() >= compileCommandsJsonFile.lastModified())
+        if (!abi.compileCommandsJsonFile.exists()
+            || (abi.compileCommandsJsonBinFile.exists()
+                    && abi.compileCommandsJsonBinFile.lastModified() >= abi.compileCommandsJsonFile.lastModified())
         ) {
             return
         }
-        JsonReader(compileCommandsJsonFile.reader(StandardCharsets.UTF_8)).use { reader ->
-            CompileCommandsEncoder(compileCommandsJsonBinFile).use { encoder ->
+        JsonReader(abi.compileCommandsJsonFile.reader(StandardCharsets.UTF_8)).use { reader ->
+            CompileCommandsEncoder(abi.compileCommandsJsonBinFile).use { encoder ->
                 reader.beginArray()
                 while (reader.hasNext()) {
                     reader.beginObject()
