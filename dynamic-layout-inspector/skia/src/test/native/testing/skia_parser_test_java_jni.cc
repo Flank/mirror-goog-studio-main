@@ -216,4 +216,27 @@ Java_com_android_tools_layoutinspector_SkiaParserTest_generateTransformedViews(
 
   return build_tree(picture, request, 0.7, env);
 }
+
+JNIEXPORT jbyteArray JNICALL
+Java_com_android_tools_layoutinspector_SkiaParserTest_generateRealWorldExample(
+    JNIEnv *env, jobject instance, jstring filenameStr) {
+  const char *filenameChars = env->GetStringUTFChars(filenameStr, nullptr);
+  std::cout << filenameChars << std::endl;
+  sk_sp<SkData> data = SkData::MakeFromFileName(filenameChars);
+  env->ReleaseStringUTFChars(filenameStr, filenameChars);
+  sk_sp<SkPicture> picture = SkPicture::MakeFromData(data.get());
+
+  ::layoutinspector::proto::GetViewTreeRequest request;
+  add_requested_node(request, 0, 0, 1023, 240, 82);
+  add_requested_node(request, 9, 0, 264, 213, 83);
+  add_requested_node(request, 891, 162, 175, 59, 84);
+  add_requested_node(request, 0, 0, 1001, 234, 81);
+  add_requested_node(request, 32, 266, 937, 3404, 86);
+  add_requested_node(request, 0, 234, 1001, 670, 85);
+  add_requested_node(request, 872, 837, 112, 112, 87);
+  add_requested_node(request, 0, 0, 1000, 904, 80);
+  add_requested_node(request, 0, 0, 1000, 1000, 73);
+
+  return build_tree(picture, request, 0.7, env);
+}
 }

@@ -18,6 +18,7 @@ package com.android.tools.layoutinspector
 import com.android.testutils.ImageDiffUtil
 import com.android.testutils.TestUtils
 import com.android.tools.idea.layoutinspector.proto.SkiaParser
+import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 import java.awt.image.BufferedImage
 import java.util.concurrent.atomic.AtomicInteger
@@ -107,6 +108,34 @@ class SkiaParserTest {
         assertImagesSimilar(tree, 3, 0, "skiaTest_testTransformation_3.png")
         assertImagesSimilar(tree, 4, 0, "skiaTest_testTransformation_4.png")
         assertImagesSimilar(tree, 1, 1, "skiaTest_testTransformation_1b.png")
+    }
+
+    private external fun generateRealWorldExample(filename: String): ByteArray?
+
+    // Unlike the previous tests, this one uses a pre-serialized SKP that came from Android.
+    // This lets us test a more realistic scenario (notably including text: our build of skia
+    // doesn't include the ability to load fonts other than as serialized within SKPs, so we can't
+    // generate text in tests ourselves), at the cost of having to regenerate the sample (and
+    // probably the golden images etc.) whenever we update the skia version such that the serialized
+    // SKP is no longer supported.
+    // The current SKP comes from the "Motion Layout / Constraint Layout" sample project,
+    // "Complex Motion Example (3/4)".
+    @Test
+    fun testRealWorld() {
+        val response = SkiaParser.InspectorView.parseFrom(generateRealWorldExample(
+            TestUtils.getWorkspaceRoot().resolve("$TEST_DATA_PATH/realWorldExample.skp")
+                .toString()))
+        val tree = LayoutInspectorUtils.buildTree(response, mapOf(), { false }, mapOf())!!
+
+        assertImagesSimilar(tree, 82, 0, "skiaTest_testRealWorld_82.png")
+        assertImagesSimilar(tree, 83, 0, "skiaTest_testRealWorld_83.png")
+        assertImagesSimilar(tree, 84, 0, "skiaTest_testRealWorld_84.png")
+        assertImagesSimilar(tree, 81, 0, "skiaTest_testRealWorld_81.png")
+        assertImagesSimilar(tree, 86, 0, "skiaTest_testRealWorld_86.png")
+        assertThat(findImage(85, AtomicInteger(0), tree)).isNull()
+        assertImagesSimilar(tree, 87, 0, "skiaTest_testRealWorld_87.png")
+        assertImagesSimilar(tree, 80, 0, "skiaTest_testRealWorld_80.png")
+        assertImagesSimilar(tree, 73, 0, "skiaTest_testRealWorld_73.png")
     }
 
     private fun assertImagesSimilar(root: SkiaViewNode, id: Long, instance: Int, fileName: String) {
