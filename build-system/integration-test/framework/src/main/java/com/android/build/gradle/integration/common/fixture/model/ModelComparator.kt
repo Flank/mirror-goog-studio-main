@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 The Android Open Source Project
+ * Copyright (C) 2021 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package com.android.build.gradle.integration.common.fixture.model
 
 import com.android.build.gradle.integration.common.fixture.ModelBuilderV2
 import com.android.build.gradle.integration.common.fixture.ModelContainerV2
-import com.android.builder.model.v2.ide.Variant
 import com.android.builder.model.v2.models.AndroidProject
 import com.android.builder.model.v2.models.GlobalLibraryMap
 import com.android.builder.model.v2.models.VariantDependencies
@@ -30,161 +29,184 @@ import com.google.common.truth.Truth
 import java.io.File
 
 /**
+ * Base interface for classes using [Comparator]
+ */
+interface BaseModelComparator
+
+/**
  * Compare models to golden files.
  * Also allows recreating the golden files when passing a special properties
+ *
+ * This is meant to be used as a base class for tests running sync.
  */
-open class ModelComparator {
+open class ModelComparator: BaseModelComparator {
 
-    fun <T> with(result: ModelBuilderV2.FetchResult<ModelContainerV2<T>>): Comparator<T> {
-        return Comparator(this, result)
+    open fun <T> with(
+        result: ModelBuilderV2.FetchResult<ModelContainerV2<T>>,
+        referenceResult: ModelBuilderV2.FetchResult<ModelContainerV2<T>>? = null): Comparator<T> {
+        return Comparator(this, result, referenceResult)
     }
+}
 
-    class Comparator<T>(
-        private val testClass: ModelComparator,
-        private val result: ModelBuilderV2.FetchResult<ModelContainerV2<T>>
+class Comparator<T>(
+    private val testClass: BaseModelComparator,
+    private val result: ModelBuilderV2.FetchResult<ModelContainerV2<T>>,
+    private val referenceResult: ModelBuilderV2.FetchResult<ModelContainerV2<T>>?
+) {
+    fun compare(
+        model: AndroidProject,
+        referenceModel: AndroidProject? = null,
+        goldenFile: String
     ) {
-        fun compare(
-            model: AndroidProject,
-            goldenFile: String
+        val content = snapshotModel(
+            modelName = "AndroidProject",
+            normalizer = result.normalizer,
+            model = model,
+            referenceModel = referenceModel,
+            referenceNormalizer = referenceResult?.normalizer,
         ) {
-            val content = dump(AndroidProject::class.java, result.normalizer) {
-                model.writeToBuilder(this)
-            }.also {
-                generateStdoutHeader()
-                println(it)
-            }
-
-            runComparison("AndroidProject", content, goldenFile)
-        }
-
-        fun compare(
-            model: VariantDependencies,
-            goldenFile: String,
-            dumpGlobalLibrary: Boolean = true
-        ) {
-            val content = dump(
-                VariantDependencies::class.java,
-                result.normalizer,
-                result.container.infoMaps.keys.map { it.rootDir.absolutePath }.sorted()
-            ) {
-                model.writeToBuilder(this)
-            }
-
-            val finalString = if (dumpGlobalLibrary) {
-                content + dump(
-                    GlobalLibraryMap::class.java,
-                    result.normalizer,
-                    result.container.infoMaps.keys.map { it.rootDir.absolutePath }.sorted()
-                ) {
-                    result.container.globalLibraryMap?.writeToBuilder(this)
-                }
-            } else {
-                content
-            }
-
+            snapshotAndroidProject()
+        }.also {
             generateStdoutHeader()
-            println(finalString)
-
-            runComparison("VariantDependencies", finalString, goldenFile)
+            println(it)
         }
 
-        /**
-         * Entry point to dump a [GlobalLibraryMap]
-         */
-        fun compare(
-            model: GlobalLibraryMap,
-            goldenFile: String
-        ) {
-            val content = dump(
-                GlobalLibraryMap::class.java,
-                result.normalizer,
-                result.container.infoMaps.keys.map { it.rootDir.absolutePath }.sorted()
-            ) {
-                model.writeToBuilder(this)
-            }.also {
-                generateStdoutHeader()
-                println(it)
-            }
-
-            runComparison("GlobalLibraryMap", content, goldenFile)
-        }
-
-        fun compare(
-            model: Variant,
-            goldenFile: String
-        ) {
-            val content = dump(Variant::class.java, result.normalizer) {
-                model.writeToBuilder(this)
-            }.also {
-                generateStdoutHeader()
-                println(it)
-            }
-
-            runComparison("Variant", content, goldenFile)
-        }
-
-        fun compare(
-            model: NativeModule,
-            goldenFile: String
-        ) {
-            val content = dump(NativeModule::class.java, result.normalizer) {
-                model.writeToBuilder(this)
-            }.also {
-                generateStdoutHeader()
-                println(it)
-            }
-
-            runComparison("NativeModule", content, goldenFile)
-        }
-
-        /**
-         * Runs the comparison
-         *
-         * @param name a display name for the dump model class
-         * @param actualContent the result of the model dump
-         * @param goldenFile the test specific portion of the golden file name.
-         */
-        private fun runComparison(
-            name: String,
-            actualContent: String,
-            goldenFile: String
-        ) {
-            if (System.getenv("GENERATE_MODEL_GOLDEN_FILES").isNullOrEmpty()) {
-                Truth.assertWithMessage("Dumped $name (full version in stdout)")
-                    .that(actualContent)
-                    .isEqualTo(loadGoldenFile(goldenFile))
-            } else {
-                val file = findGoldenFileLocation(goldenFile)
-                file.writeText(actualContent)
-            }
-        }
-
-        private fun generateStdoutHeader() {
-            println("--------------------------------------------------")
-            println("To regenerate the golden files use:")
-            println("$ GENERATE_MODEL_GOLDEN_FILES=true ./gradlew ...")
-            println("--------------------------------------------------")
-            println(result.normalizer)
-            println("--------------------------------------------------")
-        }
-
-        private fun findGoldenFileLocation(name: String): File {
-            val sep = File.separatorChar
-            val path = testClass.javaClass.name.replace('.', sep)
-            val root = System.getenv("PROJECT_ROOT")
-
-            val fullPath = "$root${sep}src${sep}test${sep}resources${sep}${path}_$name.txt"
-
-            return File(fullPath).also {
-                FileUtils.mkdirs(it.parentFile)
-            }
-        }
-
-        private fun loadGoldenFile(name: String) = Resources.toString(
-            Resources.getResource(
-                testClass.javaClass,
-                "${testClass.javaClass.simpleName}_${name}.txt"
-            ), Charsets.UTF_8
-        )
+        runComparison("AndroidProject", content, goldenFile)
     }
+
+    fun compare(
+        model: VariantDependencies,
+        referenceModel: VariantDependencies? = null,
+        goldenFile: String,
+        dumpGlobalLibrary: Boolean = true
+    ) {
+        val content = snapshotModel(
+            modelName = "VariantDependencies",
+            normalizer = result.normalizer,
+            model = model,
+            referenceModel = referenceModel,
+            referenceNormalizer = referenceResult?.normalizer,
+            includedBuilds = result.container.infoMaps.keys.map { it.rootDir.absolutePath }.sorted()
+        ) {
+            snapshotVariantDependencies()
+        }
+
+        val finalString = if (dumpGlobalLibrary) {
+            result.container.globalLibraryMap?.let { libraryMap ->
+                content + snapshotModel(
+                    modelName = "GlobalLibraryMap",
+                    normalizer = result.normalizer,
+                    model = libraryMap,
+                    referenceModel = referenceResult?.container?.globalLibraryMap,
+                    referenceNormalizer = referenceResult?.normalizer,
+                    includedBuilds = result.container.infoMaps.keys.map { it.rootDir.absolutePath }.sorted()
+                ) {
+                    snapshotGlobalLibraryMap()
+                }
+            } ?: content
+        } else {
+            content
+        }
+
+        generateStdoutHeader()
+        println(finalString)
+
+        runComparison("VariantDependencies", finalString, goldenFile)
+    }
+
+    /**
+     * Entry point to dump a [GlobalLibraryMap]
+     */
+    fun compare(
+        model: GlobalLibraryMap,
+        goldenFile: String
+    ) {
+        val content = snapshotModel(
+            modelName = "GlobalLibraryMap",
+            normalizer = result.normalizer,
+            model = model,
+            referenceModel = referenceResult?.container?.globalLibraryMap,
+            referenceNormalizer = referenceResult?.normalizer,
+            includedBuilds = result.container.infoMaps.keys.map { it.rootDir.absolutePath }.sorted()
+        ) {
+            snapshotGlobalLibraryMap()
+        }.also {
+            generateStdoutHeader()
+            println(it)
+        }
+
+        runComparison("GlobalLibraryMap", content, goldenFile)
+    }
+
+    fun compare(
+        model: NativeModule,
+        referenceModel: NativeModule? = null,
+        goldenFile: String
+    ) {
+        val content = snapshotModel(
+            modelName = "NativeModule",
+            normalizer = result.normalizer,
+            model = model,
+            referenceModel = referenceModel,
+            referenceNormalizer = referenceResult?.normalizer,
+            includedBuilds = result.container.infoMaps.keys.map { it.rootDir.absolutePath }.sorted()
+        ) {
+            snapshotNativeModule()
+        }.also {
+            generateStdoutHeader()
+            println(it)
+        }
+
+        runComparison("NativeModule", content, goldenFile)
+    }
+
+    /**
+     * Runs the comparison
+     *
+     * @param name a display name for the dump model class
+     * @param actualContent the result of the model dump
+     * @param goldenFile the test specific portion of the golden file name.
+     */
+    private fun runComparison(
+        name: String,
+        actualContent: String,
+        goldenFile: String
+    ) {
+        if (System.getenv("GENERATE_MODEL_GOLDEN_FILES").isNullOrEmpty()) {
+            Truth.assertWithMessage("Dumped $name (full version in stdout)")
+                .that(actualContent)
+                .isEqualTo(loadGoldenFile(goldenFile))
+        } else {
+            val file = findGoldenFileLocation(goldenFile)
+            file.writeText(actualContent)
+        }
+    }
+
+    private fun generateStdoutHeader() {
+        println("--------------------------------------------------")
+        println("To regenerate the golden files use:")
+        println("$ GENERATE_MODEL_GOLDEN_FILES=true ./gradlew ...")
+        println("--------------------------------------------------")
+        println(result.normalizer)
+        println("--------------------------------------------------")
+    }
+
+    private fun findGoldenFileLocation(name: String): File {
+        val sep = File.separatorChar
+        val path = testClass.javaClass.name.replace('.', sep)
+        val root = System.getenv("PROJECT_ROOT")
+
+        val fullPath = "$root${sep}src${sep}test${sep}resources${sep}${path}_$name.txt"
+
+        return File(fullPath).also {
+            FileUtils.mkdirs(it.parentFile)
+        }
+    }
+
+    private fun loadGoldenFile(name: String) = Resources.toString(
+        Resources.getResource(
+            testClass.javaClass,
+            "${testClass.javaClass.simpleName}_${name}.txt"
+        ), Charsets.UTF_8
+    )
 }

@@ -294,7 +294,7 @@ class FileNormalizerImpl(
     androidPrefsDir: File?,
     androidNdkSxSRoot: File?,
     localRepos: List<Path>,
-    private val defaultNdkSideBySideVersion: String
+    defaultNdkSideBySideVersion: String
 ) : FileNormalizer {
 
     private data class RootData(
@@ -389,35 +389,6 @@ class FileNormalizerImpl(
         return sb.toString()
     }
 
-    private fun File.relativeToOrNull(
-        root: File,
-        varName: String,
-        action: ((String) -> String)? = null
-    ): String? {
-        // check first that the file is inside the root, otherwise relativeToOrNull can still
-        // return something that starts with a bunch of ../
-        if (startsWith(root)) {
-            val relativeFile = relativeToOrNull(root)
-            if (relativeFile != null) {
-                val osNormalizedString = if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS) {
-                    relativeFile.toString().replace("\\", "/")
-                } else {
-                    relativeFile.toString()
-                }
-
-                val finalString = if (action != null) {
-                    action(osNormalizedString)
-                } else {
-                    osNormalizedString
-                }
-
-                return "{$varName}/$finalString"
-            }
-        }
-
-        return null
-    }
-
     override fun normalize(value: JsonElement): JsonElement = when (value) {
         is JsonNull -> value
         is JsonPrimitive -> when {
@@ -449,4 +420,33 @@ class FileNormalizerImpl(
         }
         return s
     }
+}
+
+fun File.relativeToOrNull(
+    root: File,
+    varName: String,
+    action: ((String) -> String)? = null
+): String? {
+    // check first that the file is inside the root, otherwise relativeToOrNull can still
+    // return something that starts with a bunch of ../
+    if (startsWith(root)) {
+        val relativeFile = relativeToOrNull(root)
+        if (relativeFile != null) {
+            val osNormalizedString = if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS) {
+                relativeFile.toString().replace("\\", "/")
+            } else {
+                relativeFile.toString()
+            }
+
+            val finalString = if (action != null) {
+                action(osNormalizedString)
+            } else {
+                osNormalizedString
+            }
+
+            return "{$varName}/$finalString"
+        }
+    }
+
+    return null
 }
