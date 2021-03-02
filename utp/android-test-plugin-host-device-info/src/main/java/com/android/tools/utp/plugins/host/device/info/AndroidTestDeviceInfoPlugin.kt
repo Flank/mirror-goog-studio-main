@@ -164,6 +164,8 @@ class AndroidTestDeviceInfoPlugin : HostPlugin {
     ): TestSuiteResult = testSuiteResult
 
     override fun canRun(): Boolean = true
+
+    override fun cancel(): Boolean = false
 }
 
 private fun Double.fromKilobytesToLong() = (this * 1000L).toLong()

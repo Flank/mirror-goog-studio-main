@@ -90,7 +90,10 @@ class GradleAndroidTestResultListener(
         requestObserver = grpcServiceStub.recordTestResultEvent(responseObserver)
     }
 
-    override fun onTestSuiteStarted() {
+    override fun onBeforeTestSuite() {
+    }
+
+    override fun onTestSuiteStarted(testSuiteMetaData: TestSuiteResultProto.TestSuiteMetaData?) {
         val event = TestResultEvent.newBuilder().apply {
             testSuiteStarted = TestSuiteStarted.getDefaultInstance()
         }.build()

@@ -25,6 +25,7 @@ import com.google.protobuf.Any
 import com.google.testing.platform.api.config.ProtoConfig
 import com.google.testing.platform.proto.api.core.ExtensionProto
 import com.google.testing.platform.proto.api.core.TestResultProto.TestResult
+import com.google.testing.platform.proto.api.core.TestSuiteResultProto
 import com.google.testing.platform.proto.api.core.TestSuiteResultProto.TestSuiteResult
 import io.grpc.inprocess.InProcessChannelBuilder
 import io.grpc.inprocess.InProcessServerBuilder
@@ -112,7 +113,8 @@ class GradleAndroidTestResultListenerTest {
         assertThat(capturedPortNumber).isEqualTo(1234)
 
         testListener.apply {
-            onTestSuiteStarted()
+            onBeforeTestSuite()
+            onTestSuiteStarted(TestSuiteResultProto.TestSuiteMetaData.getDefaultInstance())
             beforeTest(null)
             onTestResult(TestResult.getDefaultInstance())
             onTestSuiteResult(TestSuiteResult.getDefaultInstance())

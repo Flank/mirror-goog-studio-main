@@ -106,13 +106,6 @@ class IceboxPlugin @VisibleForTesting constructor(
                 iceboxPluginConfig.emulatorGrpcToken,
                 CoroutineScope(Dispatchers.Default)
         )
-    }
-
-    /** Starts Icebox. */
-    override fun beforeEach(
-            testCase: TestCaseProto.TestCase?,
-            deviceController: DeviceController
-    ) {
         failureSnapshotId = 0
         iceboxCaller.runIcebox(
                 deviceController,
@@ -122,6 +115,12 @@ class IceboxPlugin @VisibleForTesting constructor(
                 androidStudioDdmlibPort
         )
     }
+
+    /** Starts Icebox. */
+    override fun beforeEach(
+            testCase: TestCaseProto.TestCase?,
+            deviceController: DeviceController
+    ) = Unit
 
     /** Finishes the icebox snapshot and saves it on [testResult]. */
     override fun afterEach(
@@ -199,4 +198,6 @@ class IceboxPlugin @VisibleForTesting constructor(
     }
 
     override fun canRun(): Boolean = true
+
+    override fun cancel(): Boolean = false
 }

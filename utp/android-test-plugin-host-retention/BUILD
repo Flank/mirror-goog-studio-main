@@ -46,7 +46,7 @@ kotlin_test(
     deps = [
         # Don't change dependency order or the test fails. This launcher jar
         # should be loaded first.
-        "//prebuilts/tools/common/m2/repository/com/google/testing/platform/launcher/0.0.8-alpha01:jar",
+        "//prebuilts/tools/common/m2/repository/com/google/testing/platform/launcher/0.0.8-alpha02:jar",
 
         # Test dependencies.
         ":android-test-plugin-host-retention",

@@ -58,4 +58,6 @@ class GradleManagedAndroidDeviceProvider : AndroidDeviceProvider, Configurable {
     override fun releaseDevice() {
         managedGradleDeviceLauncher.releaseDevice()
     }
+
+    override fun cancel(): Boolean = false
 }
