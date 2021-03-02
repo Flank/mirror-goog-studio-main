@@ -117,6 +117,7 @@ abstract class AnalyticsConfiguratorService : BuildService<BuildServiceParameter
             project.gradle.taskGraph.whenReady {
                 resourcesManager.recordGlobalProperties(project)
                 resourcesManager.collectTaskMetadata(it)
+                resourcesManager.recordTaskNames(it)
                 resourcesManager.configureAnalyticsService(serviceRegistration.parameters)
                 instantiateAnalyticsService(project)
                 registry.onTaskCompletion(
