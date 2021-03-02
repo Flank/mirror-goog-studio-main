@@ -52,7 +52,8 @@ public class PayloadInputStream extends InputStream {
         }
         byte[] buffer = new byte[1];
         read(buffer);
-        return buffer[0];
+        // Convert from [-128, 127] to [0-255] according to InputStream requirements.
+        return buffer[0] & 0xFF;
     }
 
     @Override
