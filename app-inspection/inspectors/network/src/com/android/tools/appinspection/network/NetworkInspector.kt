@@ -23,15 +23,20 @@ import androidx.inspection.Connection
 import androidx.inspection.Inspector
 import androidx.inspection.InspectorEnvironment
 import com.android.tools.appinspection.network.httpurl.wrapURLConnection
+import com.android.tools.appinspection.network.okhttp.OkHttp2Interceptor
+import com.android.tools.appinspection.network.okhttp.OkHttp3Interceptor
+import com.squareup.okhttp.Interceptor
+import com.squareup.okhttp.OkHttpClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import studio.network.inspection.NetworkInspectorProtocol
 import java.net.URL
 import java.net.URLConnection
-import java.util.concurrent.CancellationException
+import java.util.List
 
 private const val POLL_INTERVAL_MS = 500L
 private const val MULTIPLIER_FACTOR = 1000 / POLL_INTERVAL_MS
@@ -41,12 +46,13 @@ class NetworkInspector(
     private val environment: InspectorEnvironment
 ) : Inspector(connection) {
 
-    private val supervisorJob = SupervisorJob()
     private val scope =
-        CoroutineScope(supervisorJob + environment.executors().primary().asCoroutineDispatcher())
+        CoroutineScope(SupervisorJob() + environment.executors().primary().asCoroutineDispatcher())
 
     private val trackerService = HttpTrackerFactory(connection)
     private var isStarted = false
+
+    private var okHttp2Interceptors: List<Interceptor>? = null
 
     override fun onReceiveCommand(data: ByteArray, callback: CommandCallback) {
         // Network inspector only supports the start inspector command.
@@ -108,11 +114,53 @@ class NetworkInspector(
                 wrapURLConnection(urlConnection, trackerService)
             }
         )
+
+        try {
+            /*
+             * Modifies a list of okhttp2 Interceptor in place, adding our own
+             * interceptor into it if not already present, and then returning the list again.
+             *
+             * In okhttp2 (unlike okhttp3), networkInterceptors() returns direct access to an
+             * OkHttpClient list of interceptors and uses that as the API for a user to add more.
+             *
+             * Therefore, we have to modify the list in place, whenever it is first accessed (either
+             * by the user to add their own interceptor, or by OkHttp internally to iterate through
+             * all interceptors).
+             */
+            environment.artTooling().registerExitHook(
+                OkHttpClient::class.java,
+                "networkInterceptors()Ljava/util/List;",
+                ArtTooling.ExitHook<List<Interceptor>> { list ->
+                    if (list.none { it is OkHttp2Interceptor }) {
+                        okHttp2Interceptors = list
+                        list.add(0, OkHttp2Interceptor(trackerService))
+                    }
+                    list
+                }
+            )
+        } catch (e: NoClassDefFoundError) {
+            // Ignore. App may not depend on OkHttp.
+        }
+
+        try {
+            environment.artTooling().registerExitHook(
+                okhttp3.OkHttpClient::class.java,
+                "networkInterceptors()Ljava/util/List;",
+                ArtTooling.ExitHook<List<okhttp3.Interceptor>> { list ->
+                    val interceptors = java.util.ArrayList<okhttp3.Interceptor>()
+                    interceptors.add(OkHttp3Interceptor(trackerService))
+                    interceptors.addAll(list)
+                    interceptors as List<okhttp3.Interceptor>
+                }
+            )
+        } catch (e: NoClassDefFoundError) {
+            // Ignore. App may not depend on OkHttp.
+        }
+
     }
 
     override fun onDispose() {
-        if (!supervisorJob.isCancelled) {
-            supervisorJob.cancel(CancellationException("Network Inspector has been disposed."))
-        }
+        okHttp2Interceptors?.removeIf { it is OkHttp2Interceptor }
+        scope.cancel("Network Inspector has been disposed.")
     }
 }
