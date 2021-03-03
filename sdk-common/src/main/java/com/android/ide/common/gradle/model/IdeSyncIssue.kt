@@ -250,11 +250,14 @@ interface IdeSyncIssue {
         /** The user or a plugin has tried to mutate a DSL value after it has been locked.  */
         const val TYPE_EDIT_LOCKED_DSL_VALUE = 43
 
+        /** Indicates that a manifest is missing  */
+        const val TYPE_MISSING_ANDROID_MANIFEST = 44
+
+        /** JCenter Maven is deprecated and it should not be used in build scripts. */
+        const val TYPE_JCENTER_IS_DEPRECATED = 45
+
         // NOTE: When adding a new type here, increment the index by 1. This index may not be consistent
         // with the corresponding value in studio_stats.proto (e.g., it could be lower by 1), because of
         // an indexing issue in the past (see http://issuetracker.google.com/138278313).
-
-        /** Indicates that a manifest is missing  */
-        const val TYPE_MISSING_ANDROID_MANIFEST = 44
     }
 }
