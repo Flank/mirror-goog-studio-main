@@ -15,7 +15,6 @@
  */
 package com.android.ide.common.repository;
 
-
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.resources.ResourceType;
@@ -26,7 +25,6 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.io.Files;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -61,9 +59,7 @@ public abstract class ResourceVisibilityLookup {
      */
     public abstract boolean isPublic(@NonNull ResourceType type, @NonNull String name);
 
-    protected abstract boolean isKnown(
-            @NonNull ResourceType type,
-            @NonNull String name);
+    protected abstract boolean isKnown(@NonNull ResourceType type, @NonNull String name);
 
     /**
      * Returns true if the given resource is private
@@ -127,8 +123,9 @@ public abstract class ResourceVisibilityLookup {
         }
     }
 
+    @VisibleForTesting
     @NonNull
-    public static AndroidLibraryResourceVisibility create(
+    static AndroidLibraryResourceVisibility create(
             @NonNull String libraryArtifactAddress,
             @NonNull File librarySymbolFile,
             @NonNull File libraryPublicResources) {
