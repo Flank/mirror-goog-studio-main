@@ -390,7 +390,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         override val checkDependencies: Boolean
             get() = creationConfig.globalScope.extension.lintOptions.isCheckDependencies
         override val reportOnly: Boolean
-            get() = false
+            get() = creationConfig.services.projectOptions.get(USE_LINT_PARTIAL_ANALYSIS)
 
         override fun configureOutputSettings(task: AndroidLintTask) {
             task.textReportToStdOut.setDisallowChanges(true)
