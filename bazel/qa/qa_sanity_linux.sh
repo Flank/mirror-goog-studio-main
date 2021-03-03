@@ -19,7 +19,7 @@ readonly crostini_timestamp_file="/buildbot/lastrun.out"
 if [[ $lsb_release == "crostini" ]]; then
   # don't use any remote cached items, some items built on Linux may not be compatible. b/172365127
   config_options="--config=cloud_resultstore --noremote_accept_cached"
-  target_filters=qa_sanity,ui_psq,-qa_unreliable,-no_linux,-no_test_linux,-requires_emulator,-no_crostini
+  target_filters=qa_sanity,ui_test,-qa_unreliable,-no_linux,-no_test_linux,-requires_emulator,-no_crostini
 
   current_time=$(date +"%s")
 
@@ -104,7 +104,7 @@ else #Executes normally on linux as before
   # options.
 
   # Run Bazel tests - no emulator tests should run here
-  target_filters=qa_sanity,ui_psq,-qa_unreliable,-no_linux,-no_test_linux,-requires_emulator
+  target_filters=qa_sanity,ui_test,-qa_unreliable,-no_linux,-no_test_linux,-requires_emulator
   "${script_dir}/../bazel" \
     --max_idle_secs=60 \
     test \
