@@ -56,12 +56,14 @@ if [[ $lsb_release == "crostini" ]]; then
   readonly test_invocation_id="$(uuidgen)"
 
   # Run the tests one at a time after all dependencies get built
+  # Also limit # of jobs running, this should be based in available resources
   "${script_dir}/../bazel" \
     --max_idle_secs=60 \
     test \
     --keep_going \
     ${config_options} \
     --test_strategy=exclusive \
+    --jobs=8 \
     --invocation_id=${test_invocation_id} \
     --define=meta_android_build_number=${build_number} \
     --build_event_binary_file="${dist_dir:-/tmp}/bazel-${build_number}.bes" \
