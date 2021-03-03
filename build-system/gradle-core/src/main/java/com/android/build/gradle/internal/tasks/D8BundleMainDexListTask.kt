@@ -221,6 +221,5 @@ internal fun getPlatformRules(): List<String> = listOf(
             + "  void attachBaseContext(android.content.Context);\n"
             + "}",
     "-keep public class * extends android.app.backup.BackupAgent { <init>(); }",
-    "-keep public class * implements java.lang.annotation.Annotation { *;}",
     "-keep public class * extends android.test.InstrumentationTestCase { <init>(); }"
 )
