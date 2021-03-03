@@ -36,6 +36,8 @@ import com.android.build.gradle.internal.cxx.model.createCxxAbiModel
 import com.android.build.gradle.internal.cxx.model.createCxxModuleModel
 import com.android.build.gradle.internal.cxx.model.createCxxVariantModel
 import com.android.build.gradle.internal.cxx.settings.calculateConfigurationArguments
+import com.android.build.gradle.internal.cxx.timing.TimingEnvironment
+import com.android.build.gradle.internal.cxx.timing.time
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JNI
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
@@ -54,6 +56,7 @@ import com.android.prefs.AndroidLocationsProvider
 import com.android.utils.appendCapitalized
 import org.gradle.api.Task
 import org.gradle.api.tasks.TaskProvider
+import java.io.File
 
 /**
  * Construct gradle tasks for C/C++ configuration and build.
@@ -67,13 +70,19 @@ fun <VariantBuilderT : ComponentBuilderImpl, VariantT : VariantImpl> createCxxTa
         variants: List<ComponentInfo<VariantBuilderT, VariantT>>) {
     if (variants.isEmpty()) return
     IssueReporterLoggingEnvironment(issueReporter).use {
-        PassThroughDeduplicatingLoggingEnvironment().use {
-            val configurationParameters = variants
-                    .mapNotNull { tryCreateConfigurationParameters(
-                        projectOptions,
-                        it.variant) }
-            if (configurationParameters.isEmpty()) return
-            val abis = createInitialCxxModel(sdkComponents, androidLocationsProvider, configurationParameters)
+        val configurationParameters = variants
+                .mapNotNull { tryCreateConfigurationParameters(
+                    projectOptions,
+                    it.variant) }
+        if (configurationParameters.isEmpty()) return
+            TimingEnvironment(
+                configurationParameters.first().intermediatesFolder.resolve("cxx"),
+                "create-cxx-tasks").use {
+            val abis = time("create-initial-cxx-model") {
+                createInitialCxxModel(sdkComponents,
+                        androidLocationsProvider,
+                        configurationParameters)
+            }
             val enableFolding = configurationParameters.first().isConfigurationFoldingEnabled
             val taskModel =
                     if (enableFolding) createFoldedCxxTaskDependencyModel(abis)
@@ -85,8 +94,8 @@ fun <VariantBuilderT : ComponentBuilderImpl, VariantT : VariantImpl> createCxxTa
             fun anchor(name: String) = anchors.computeIfAbsent(name) { taskFactory.register(name) }
 
             val variantMap = variants.map { it.variant.name to it.variant }.toMap()
-            for((name, task) in taskModel.tasks) {
-                when(task) {
+            for ((name, task) in taskModel.tasks) {
+                when (task) {
                     is Configure -> {
                         taskFactory.register(createCxxConfigureTask(
                                 global,
@@ -104,9 +113,13 @@ fun <VariantBuilderT : ComponentBuilderImpl, VariantT : VariantImpl> createCxxTa
                         val configuration = task.representatives.toConfigurationModel()
                         val task =
                                 if (task.isRepublishOnly) {
-                                    createRepublishCxxBuildTask(task.representatives.toConfigurationModel(), variant, name)
+                                    createRepublishCxxBuildTask(task.representatives.toConfigurationModel(),
+                                            variant,
+                                            name)
                                 } else {
-                                    createWorkingCxxBuildTask(global, task.representatives.toConfigurationModel(), name)
+                                    createWorkingCxxBuildTask(global,
+                                            task.representatives.toConfigurationModel(),
+                                            name)
                                 }
                         val buildTask = taskFactory.register(task)
                         variant.taskContainer.cxxConfigurationModel = configuration
@@ -241,11 +254,17 @@ fun createInitialCxxModel(
     configurationParameters: List<CxxConfigurationParameters>
 ) : List<CxxAbiModel> {
     return configurationParameters.flatMap { parameters ->
-        val module = createCxxModuleModel(sdkComponents, androidLocationsProvider, parameters)
-        val variant = createCxxVariantModel(parameters, module)
+        val module = time("create-module-model") {
+            createCxxModuleModel(sdkComponents, androidLocationsProvider, parameters)
+        }
+        val variant = time("create-variant-model") {
+            createCxxVariantModel(parameters, module)
+        }
         Abi.getDefaultValues().map { abi ->
-            createCxxAbiModel(sdkComponents, parameters, variant, abi)
-                    .calculateConfigurationArguments()
+            time("create-$abi-model") {
+                createCxxAbiModel(sdkComponents, parameters, variant, abi)
+                        .calculateConfigurationArguments()
+            }
         }
     }
 }
