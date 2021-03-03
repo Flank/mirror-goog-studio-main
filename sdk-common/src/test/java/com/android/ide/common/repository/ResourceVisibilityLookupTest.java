@@ -149,7 +149,9 @@ public class ResourceVisibilityLookupTest extends TestCase {
         List<IdeAndroidLibrary> androidLibraries = Arrays.asList(library1, library2);
         ResourceVisibilityLookup.Provider provider = new ResourceVisibilityLookup.Provider();
         ResourceVisibilityLookup visibility =
-                provider.get(createMockArtifact( androidLibraries));
+                ResourceVisibilityLookup.Provider.createFrom(
+                        createMockArtifact(androidLibraries),
+                        new ResourceVisibilityLookup.SymbolProvider());
         assertTrue(visibility.isPrivate(ResourceType.DIMEN, "activity_horizontal_margin"));
         assertTrue(visibility.isPrivate(ResourceType.ID, "action_settings"));
         assertTrue(visibility.isPrivate(ResourceType.LAYOUT, "activity_main"));
@@ -186,7 +188,9 @@ public class ResourceVisibilityLookupTest extends TestCase {
         List<IdeAndroidLibrary> androidLibraries = Arrays.asList(library1, library2);
         ResourceVisibilityLookup.Provider provider = new ResourceVisibilityLookup.Provider();
         ResourceVisibilityLookup visibility =
-                provider.get(createMockArtifact( androidLibraries));
+                ResourceVisibilityLookup.Provider.createFrom(
+                        createMockArtifact(androidLibraries),
+                        new ResourceVisibilityLookup.SymbolProvider());
         assertTrue(visibility.isPrivate(ResourceType.DIMEN, "activity_horizontal_margin"));
         assertTrue(visibility.isPrivate(ResourceType.ID, "action_settings"));
         assertTrue(visibility.isPrivate(ResourceType.LAYOUT, "activity_main"));
@@ -212,14 +216,16 @@ public class ResourceVisibilityLookupTest extends TestCase {
                                 + "int string hello_world 0x7f040002",
                         "");
         ResourceVisibilityLookup.Provider provider = new ResourceVisibilityLookup.Provider();
-        assertSame(provider.get(library), provider.get(library));
         assertTrue(
-                provider.get(library).isPrivate(ResourceType.DIMEN, "activity_horizontal_margin"));
+                ResourceVisibilityLookup.Provider.createFrom(
+                                library, new ResourceVisibilityLookup.SymbolProvider())
+                        .isPrivate(ResourceType.DIMEN, "activity_horizontal_margin"));
 
         IdeAndroidArtifact artifact = createMockArtifact(Collections.singletonList(library));
-        assertSame(provider.get(artifact), provider.get(artifact));
         assertTrue(
-                provider.get(artifact).isPrivate(ResourceType.DIMEN, "activity_horizontal_margin"));
+                ResourceVisibilityLookup.Provider.createFrom(
+                                artifact, new ResourceVisibilityLookup.SymbolProvider())
+                        .isPrivate(ResourceType.DIMEN, "activity_horizontal_margin"));
     }
 
     public void testImportedResources() throws IOException {
@@ -270,7 +276,9 @@ public class ResourceVisibilityLookupTest extends TestCase {
         List<IdeAndroidLibrary> androidLibraries = Arrays.asList(library1, library2, library3);
         ResourceVisibilityLookup.Provider provider = new ResourceVisibilityLookup.Provider();
         ResourceVisibilityLookup visibility =
-                provider.get(createMockArtifact( androidLibraries));
+                ResourceVisibilityLookup.Provider.createFrom(
+                        createMockArtifact(androidLibraries),
+                        new ResourceVisibilityLookup.SymbolProvider());
         assertTrue(visibility.isPrivate(ResourceType.DIMEN, "private_library1_resource"));
         assertTrue(visibility.isPrivate(ResourceType.DIMEN, "private_library3_resource"));
         assertFalse(visibility.isPrivate(ResourceType.DIMEN, "public_library1_resource1"));
