@@ -31,9 +31,16 @@ open class AnalyticsEnabledDynamicFeatureVariantBuilder @Inject constructor(
     DynamicFeatureVariantBuilder {
 
     override var androidTestEnabled: Boolean
-        get() = delegate.androidTestEnabled
+        get() = delegate.enableAndroidTest
         set(value) {
             stats.variantApiAccessBuilder.addVariantAccessBuilder().type = VariantMethodType.ANDROID_TEST_ENABLED_VALUE
-            delegate.androidTestEnabled = value
+            delegate.enableAndroidTest = value
+        }
+
+    override var enableAndroidTest: Boolean
+        get() = delegate.enableAndroidTest
+        set(value) {
+            stats.variantApiAccessBuilder.addVariantAccessBuilder().type = VariantMethodType.ANDROID_TEST_ENABLED_VALUE
+            delegate.enableAndroidTest = value
         }
 }

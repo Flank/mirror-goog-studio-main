@@ -29,5 +29,11 @@ interface ComponentBuilder: ComponentIdentity,
     /**
      * Set to `true` if the variant is active and should be configured, false otherwise.
      */
+    @Deprecated("Replaced by enable", ReplaceWith("enable"))
     var enabled: Boolean
+
+    /**
+     * Set to `true` if the variant is active and should be configured, false otherwise.
+     */
+    var enable: Boolean
 }

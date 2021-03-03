@@ -36,8 +36,14 @@ open class UnitTestBuilderImpl @Inject constructor(
 ), UnitTestBuilder {
 
     override var enabled: Boolean
-        get() = testedComponent.unitTestEnabled
+        get() = testedComponent.enableUnitTest
         set(value) {
-            testedComponent.unitTestEnabled = value
+            testedComponent.enableUnitTest = value
+        }
+
+    override var enable: Boolean
+        get() = testedComponent.enableUnitTest
+        set(value) {
+            testedComponent.enableUnitTest = value
         }
 }

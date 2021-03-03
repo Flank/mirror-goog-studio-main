@@ -262,7 +262,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
 
         // execute the Variant API
         variantApiOperationsRegistrar.variantBuilderOperations.executeOperations(userVisibleVariantBuilder)
-        if (!variantBuilder.enabled) {
+        if (!variantBuilder.enable) {
             return null
         }
 
@@ -445,7 +445,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
             // run actions registered at the extension level.
             testedComponentInfo.variantApiOperationsRegistrar.androidTestBuilderOperations
                     .executeOperations(androidTestVariantBuilder)
-            if (!testedComponentInfo.variantBuilder.androidTestEnabled) {
+            if (!testedComponentInfo.variantBuilder.enableAndroidTest) {
                 return null
             }
             androidTestVariantBuilder
@@ -462,7 +462,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
             testedComponentInfo.variantApiOperationsRegistrar.unitTestBuilderOperations
                     .executeOperations(unitTestVariantBuilder)
 
-            if (!testedComponentInfo.variantBuilder.unitTestEnabled) {
+            if (!testedComponentInfo.variantBuilder.enableUnitTest) {
                 return null
             }
             unitTestVariantBuilder

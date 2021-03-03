@@ -71,7 +71,9 @@ com.android.build.api.component.Component.getArtifacts: com.android.build.api.ar
 com.android.build.api.component.Component.setAsmFramesComputationMode: void (com.android.build.api.instrumentation.FramesComputationMode)
 com.android.build.api.component.Component.transformClassesWith: void (java.lang.Class<? extends com.android.build.api.instrumentation.AsmClassVisitorFactory<ParamT>>, com.android.build.api.instrumentation.InstrumentationScope, kotlin.jvm.functions.Function1<? super ParamT, kotlin.Unit>)
 com.android.build.api.component.ComponentBuilder implements com.android.build.api.component.ComponentIdentity, com.android.build.api.component.ActionableComponentObject
+com.android.build.api.component.ComponentBuilder.getEnable: boolean ()
 com.android.build.api.component.ComponentBuilder.getEnabled: boolean ()
+com.android.build.api.component.ComponentBuilder.setEnable: void (boolean)
 com.android.build.api.component.ComponentBuilder.setEnabled: void (boolean)
 com.android.build.api.component.ComponentIdentity implements org.gradle.api.Named
 com.android.build.api.component.ComponentIdentity.getBuildType: java.lang.String ()
@@ -931,7 +933,9 @@ com.android.build.api.variant.FilterConfiguration.hashCode: int ()
 com.android.build.api.variant.FilterConfiguration.toString: java.lang.String ()
 com.android.build.api.variant.HasAndroidTestBuilder
 com.android.build.api.variant.HasAndroidTestBuilder.getAndroidTestEnabled: boolean ()
+com.android.build.api.variant.HasAndroidTestBuilder.getEnableAndroidTest: boolean ()
 com.android.build.api.variant.HasAndroidTestBuilder.setAndroidTestEnabled: void (boolean)
+com.android.build.api.variant.HasAndroidTestBuilder.setEnableAndroidTest: void (boolean)
 com.android.build.api.variant.JniLibsApkPackaging implements com.android.build.api.variant.JniLibsPackaging
 com.android.build.api.variant.JniLibsApkPackaging.getUseLegacyPackaging: org.gradle.api.provider.Property<java.lang.Boolean> ()
 com.android.build.api.variant.JniLibsPackaging
@@ -992,12 +996,14 @@ com.android.build.api.variant.Variant.getNamespace: org.gradle.api.provider.Prov
 com.android.build.api.variant.Variant.getPackaging: com.android.build.api.variant.Packaging ()
 com.android.build.api.variant.Variant.getUnitTest: com.android.build.api.component.UnitTest ()
 com.android.build.api.variant.VariantBuilder implements com.android.build.api.component.ComponentBuilder, com.android.build.api.component.ActionableComponentObject
+com.android.build.api.variant.VariantBuilder.getEnableUnitTest: boolean ()
 com.android.build.api.variant.VariantBuilder.getMaxSdkVersion: java.lang.Integer ()
 com.android.build.api.variant.VariantBuilder.getMinSdkVersion: com.android.build.api.variant.AndroidVersion ()
 com.android.build.api.variant.VariantBuilder.getRenderscriptTargetApi: int ()
 com.android.build.api.variant.VariantBuilder.getTargetSdkVersion: com.android.build.api.variant.AndroidVersion ()
 com.android.build.api.variant.VariantBuilder.getUnitTestEnabled: boolean ()
 com.android.build.api.variant.VariantBuilder.registerExtension: void (java.lang.Class<? extends T>, T)
+com.android.build.api.variant.VariantBuilder.setEnableUnitTest: void (boolean)
 com.android.build.api.variant.VariantBuilder.setMaxSdkVersion: void (java.lang.Integer)
 com.android.build.api.variant.VariantBuilder.setMinSdkVersion: void (com.android.build.api.variant.AndroidVersion)
 com.android.build.api.variant.VariantBuilder.setRenderscriptTargetApi: void (int)
@@ -1011,6 +1017,7 @@ com.android.build.api.variant.VariantInfo.getFullVariantName: java.lang.String (
 com.android.build.api.variant.VariantInfo.isDebuggable: boolean ()
 com.android.build.api.variant.VariantInfo.isTest: boolean ()
 com.android.build.api.variant.VariantOutput implements com.android.build.api.variant.VariantOutputConfiguration
+com.android.build.api.variant.VariantOutput.getEnable: org.gradle.api.provider.Property<java.lang.Boolean> ()
 com.android.build.api.variant.VariantOutput.getEnabled: org.gradle.api.provider.Property<java.lang.Boolean> ()
 com.android.build.api.variant.VariantOutput.getVersionCode: org.gradle.api.provider.Property<java.lang.Integer> ()
 com.android.build.api.variant.VariantOutput.getVersionName: org.gradle.api.provider.Property<java.lang.String> ()

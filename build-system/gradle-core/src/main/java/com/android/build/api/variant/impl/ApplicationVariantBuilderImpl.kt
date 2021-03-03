@@ -42,7 +42,13 @@ open class ApplicationVariantBuilderImpl @Inject constructor(
     override val debuggable: Boolean
         get() = variantDslInfo.isDebuggable
 
-    override var androidTestEnabled: Boolean = true
+    override var androidTestEnabled: Boolean
+        get() = enableAndroidTest
+        set(value) {
+            enableAndroidTest = value
+        }
+
+    override var enableAndroidTest: Boolean = true
 
     // only instantiate this if this is needed. This allows non-built variant to not do too much work.
     override val dependenciesInfo: DependenciesInfo by lazy {
