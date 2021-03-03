@@ -68,6 +68,7 @@ if [[ $lsb_release == "crostini" ]]; then
     --build_tag_filters=${target_filters} \
     --test_tag_filters=${target_filters} \
     --tool_tag=${script_name} \
+    --flaky_test_attempts=//tools/adt/idea/android-uitests:.*@2
     -- \
     //tools/adt/idea/android-uitests/...
 
@@ -112,6 +113,7 @@ else #Executes normally on linux as before
     --build_tag_filters=${target_filters} \
     --test_tag_filters=${target_filters} \
     --tool_tag=${script_name} \
+    --flaky_test_attempts=//tools/adt/idea/android-uitests:.*@2
     -- \
     //tools/adt/idea/android-uitests/...
 
