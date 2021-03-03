@@ -29,6 +29,7 @@ import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
 import com.android.build.gradle.internal.cxx.configure.ndkMetaAbisFile
 import com.android.build.gradle.internal.cxx.configure.trySymlinkNdk
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationParameters
+import com.android.build.gradle.internal.cxx.timing.time
 import com.android.build.gradle.internal.services.AndroidLocationsBuildService
 import com.android.build.gradle.tasks.NativeBuildSystem.CMAKE
 import com.android.prefs.AndroidLocationsProvider
@@ -92,41 +93,46 @@ fun createCxxModuleModel(
         configurationParameters.intermediatesFolder
     }
 
+    val project = time("create-project-model") { createCxxProjectModel(sdkComponents, configurationParameters) }
+    val ndkMetaAbiList = time("create-ndk-meta-abi-list") { NdkAbiFile(ndkMetaAbisFile(ndkFolder)).abiInfoList }
+    val cmake = time("create-cmake-model") {
+        if (configurationParameters.buildSystem == CMAKE) {
+            val exe = if (CURRENT_PLATFORM == PLATFORM_WINDOWS) ".exe" else ""
+            val cmakeFolder =
+                    cmakeLocator.findCmakePath(
+                            configurationParameters.cmakeVersion,
+                            localPropertyFile(CMAKE_DIR_PROPERTY),
+                            androidLocationProvider,
+                            sdkComponents.sdkDirectoryProvider.get().asFile
+                    ) { sdkComponents.installCmake(it) }
+            val cmakeExe =
+                    if (cmakeFolder == null) null
+                    else join(cmakeFolder, "bin", "cmake$exe")
+            val ninjaExe =
+                    cmakeExe?.parentFile?.resolve("ninja$exe")
+                            ?.takeIf { it.exists() }
+            CxxCmakeModuleModel(
+                    minimumCmakeVersion =
+                    CmakeVersionRequirements(configurationParameters.cmakeVersion).effectiveRequestVersion,
+                    isValidCmakeAvailable = cmakeFolder != null,
+                    cmakeExe = cmakeExe,
+                    ninjaExe = ninjaExe,
+                    isPreferCmakeFileApiEnabled = configurationParameters.isPreferCmakeFileApiEnabled
+            )
+
+        } else {
+            null
+        }
+    }
+
     return CxxModuleModel(
         moduleBuildFile = configurationParameters.buildFile,
         cxxFolder = cxxFolder,
-        project = createCxxProjectModel(sdkComponents, configurationParameters),
+        project = project,
         ndkMetaPlatforms = ndkMetaPlatforms,
-        ndkMetaAbiList = NdkAbiFile(ndkMetaAbisFile(ndkFolder)).abiInfoList,
+        ndkMetaAbiList = ndkMetaAbiList,
         cmakeToolchainFile = join(ndkFolder, "build", "cmake", "android.toolchain.cmake"),
-        cmake =
-                if (configurationParameters.buildSystem == CMAKE) {
-                    val exe = if (CURRENT_PLATFORM == PLATFORM_WINDOWS) ".exe" else ""
-                    val cmakeFolder =
-                        cmakeLocator.findCmakePath(
-                                configurationParameters.cmakeVersion,
-                                localPropertyFile(CMAKE_DIR_PROPERTY),
-                                androidLocationProvider,
-                                sdkComponents.sdkDirectoryProvider.get().asFile
-                        ) { sdkComponents.installCmake(it) }
-                    val cmakeExe =
-                            if (cmakeFolder == null) null
-                            else join(cmakeFolder, "bin", "cmake$exe")
-                    val ninjaExe =
-                            cmakeExe?.parentFile?.resolve("ninja$exe")
-                            ?.takeIf { it.exists() }
-                    CxxCmakeModuleModel(
-                        minimumCmakeVersion =
-                            CmakeVersionRequirements(configurationParameters.cmakeVersion).effectiveRequestVersion,
-                        isValidCmakeAvailable = cmakeFolder != null,
-                        cmakeExe = cmakeExe,
-                        ninjaExe = ninjaExe,
-                        isPreferCmakeFileApiEnabled = configurationParameters.isPreferCmakeFileApiEnabled
-                    )
-
-                } else {
-                    null
-                },
+        cmake = cmake,
         ndkFolder = ndkFolder,
         ndkVersion = ndk.revision,
         ndkSupportedAbiList = ndk.supportedAbis,
