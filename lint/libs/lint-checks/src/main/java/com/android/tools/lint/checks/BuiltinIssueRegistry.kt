@@ -368,6 +368,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 SharedPrefsDetector.ISSUE,
                 SignatureOrSystemDetector.ISSUE,
                 SliceDetector.ISSUE,
+                SplashScreenDetector.ISSUE,
                 SQLiteDetector.ISSUE,
                 SslCertificateSocketFactoryDetector.CREATE_SOCKET,
                 SslCertificateSocketFactoryDetector.GET_INSECURE,
