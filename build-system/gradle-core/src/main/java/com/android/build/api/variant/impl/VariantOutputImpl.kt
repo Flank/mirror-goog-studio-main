@@ -21,6 +21,7 @@ import com.android.build.api.variant.VariantOutput
 import com.android.build.api.variant.VariantOutputConfiguration
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import java.io.File
 import java.io.Serializable
@@ -33,7 +34,7 @@ data class VariantOutputImpl(
     @get:Optional
     override val versionName: Property<String?>,
     @get:Input
-    override val enabled: Property<Boolean>,
+    override val enable: Property<Boolean>,
 
     @get:Input
     val variantOutputConfiguration: VariantOutputConfigurationImpl,
@@ -46,6 +47,9 @@ data class VariantOutputImpl(
     @get:Input
     val outputFileName: Property<String>
 ) : VariantOutput, VariantOutputConfiguration by variantOutputConfiguration {
+
+    @get:Internal
+    override val enabled = enable
 
     data class SerializedForm(
         @get:Input
