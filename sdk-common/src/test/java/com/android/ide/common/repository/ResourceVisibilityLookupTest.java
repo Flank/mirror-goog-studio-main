@@ -23,21 +23,25 @@ import static org.easymock.EasyMock.replay;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.android.annotations.NonNull;
 import com.android.ide.common.gradle.model.IdeAndroidArtifact;
 import com.android.ide.common.gradle.model.IdeAndroidLibrary;
 import com.android.ide.common.gradle.model.IdeDependencies;
-import com.android.ide.common.gradle.model.IdeVariant;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
 import com.android.testutils.TestUtils;
 import com.google.common.base.Charsets;
+import com.google.common.collect.Lists;
 import com.google.common.io.Files;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+
 import junit.framework.TestCase;
+import org.jetbrains.annotations.TestOnly;
 
 public class ResourceVisibilityLookupTest extends TestCase {
 
@@ -147,11 +151,8 @@ public class ResourceVisibilityLookupTest extends TestCase {
                         "" + "layout foo\n");
 
         List<IdeAndroidLibrary> androidLibraries = Arrays.asList(library1, library2);
-        ResourceVisibilityLookup.Provider provider = new ResourceVisibilityLookup.Provider();
         ResourceVisibilityLookup visibility =
-                ResourceVisibilityLookup.Provider.createFrom(
-                        createMockArtifact(androidLibraries),
-                        new ResourceVisibilityLookup.SymbolProvider());
+                createFrom(createMockArtifact(androidLibraries));
         assertTrue(visibility.isPrivate(ResourceType.DIMEN, "activity_horizontal_margin"));
         assertTrue(visibility.isPrivate(ResourceType.ID, "action_settings"));
         assertTrue(visibility.isPrivate(ResourceType.LAYOUT, "activity_main"));
@@ -182,15 +183,12 @@ public class ResourceVisibilityLookupTest extends TestCase {
                         "com.android.tools:test-library2:1.0.0",
                         "" + "int layout foo 0x7f030001\n" + "int layout bar 0x7f060000\n",
                         ""
-                                + "layout foo\n" /*,
+                        + "layout foo\n" /*,
                                                  Collections.singletonList(library1)*/); // TODO(b/158836360): Review when the dependency hierarchy is available.
 
         List<IdeAndroidLibrary> androidLibraries = Arrays.asList(library1, library2);
-        ResourceVisibilityLookup.Provider provider = new ResourceVisibilityLookup.Provider();
         ResourceVisibilityLookup visibility =
-                ResourceVisibilityLookup.Provider.createFrom(
-                        createMockArtifact(androidLibraries),
-                        new ResourceVisibilityLookup.SymbolProvider());
+                createFrom(createMockArtifact(androidLibraries));
         assertTrue(visibility.isPrivate(ResourceType.DIMEN, "activity_horizontal_margin"));
         assertTrue(visibility.isPrivate(ResourceType.ID, "action_settings"));
         assertTrue(visibility.isPrivate(ResourceType.LAYOUT, "activity_main"));
@@ -215,16 +213,13 @@ public class ResourceVisibilityLookupTest extends TestCase {
                                 + "int string app_name 0x7f040001\n"
                                 + "int string hello_world 0x7f040002",
                         "");
-        ResourceVisibilityLookup.Provider provider = new ResourceVisibilityLookup.Provider();
         assertTrue(
-                ResourceVisibilityLookup.Provider.createFrom(
-                                library, new ResourceVisibilityLookup.SymbolProvider())
+                createFrom(library)
                         .isPrivate(ResourceType.DIMEN, "activity_horizontal_margin"));
 
         IdeAndroidArtifact artifact = createMockArtifact(Collections.singletonList(library));
         assertTrue(
-                ResourceVisibilityLookup.Provider.createFrom(
-                                artifact, new ResourceVisibilityLookup.SymbolProvider())
+                createFrom(artifact)
                         .isPrivate(ResourceType.DIMEN, "activity_horizontal_margin"));
     }
 
@@ -274,11 +269,8 @@ public class ResourceVisibilityLookupTest extends TestCase {
                                                                       Arrays.asList(library1, library2)*/); // TODO(b/158836360): Review when the dependency hierarchy is available.
 
         List<IdeAndroidLibrary> androidLibraries = Arrays.asList(library1, library2, library3);
-        ResourceVisibilityLookup.Provider provider = new ResourceVisibilityLookup.Provider();
         ResourceVisibilityLookup visibility =
-                ResourceVisibilityLookup.Provider.createFrom(
-                        createMockArtifact(androidLibraries),
-                        new ResourceVisibilityLookup.SymbolProvider());
+                createFrom(createMockArtifact(androidLibraries));
         assertTrue(visibility.isPrivate(ResourceType.DIMEN, "private_library1_resource"));
         assertTrue(visibility.isPrivate(ResourceType.DIMEN, "private_library3_resource"));
         assertFalse(visibility.isPrivate(ResourceType.DIMEN, "public_library1_resource1"));
@@ -334,13 +326,6 @@ public class ResourceVisibilityLookupTest extends TestCase {
     // }
 
 
-    public static IdeVariant createMockVariant(IdeAndroidArtifact artifact) {
-        IdeVariant variant = createNiceMock(IdeVariant.class);
-        expect(variant.getMainArtifact()).andReturn(artifact).anyTimes();
-        replay(variant);
-        return variant;
-    }
-
     public static IdeAndroidArtifact createMockArtifact(List<IdeAndroidLibrary> libraries) {
         IdeDependencies dependencies = createNiceMock(IdeDependencies.class);
         expect(dependencies.getAndroidLibraries()).andReturn(libraries).anyTimes();
@@ -385,5 +370,40 @@ public class ResourceVisibilityLookupTest extends TestCase {
                                         + name));
 
         return library;
+    }
+
+    @NonNull
+    private static ResourceVisibilityLookup createFrom(
+            @NonNull IdeAndroidLibrary library) {
+        ResourceVisibilityLookup visibility =
+                ResourceVisibilityLookup.create(
+                        library.getArtifactAddress(),
+                        new File(library.getSymbolFile()),
+                        new File(library.getPublicResources())
+                );
+        if (visibility.isEmpty()) {
+            visibility = ResourceVisibilityLookup.NONE;
+        }
+        return visibility;
+    }
+
+    @NonNull
+    private static ResourceVisibilityLookup createFrom(
+            @NonNull IdeAndroidArtifact artifact) {
+        List<ResourceVisibilityLookup> list =
+                Lists.newArrayListWithExpectedSize(
+                        artifact.getLevel2Dependencies().getAndroidLibraries().size() + 1);
+        for (IdeAndroidLibrary d : artifact.getLevel2Dependencies().getAndroidLibraries()) {
+            ResourceVisibilityLookup v = createFrom(d);
+            if (!v.isEmpty()) {
+                list.add(v);
+            }
+        }
+        int size = list.size();
+        return size == 0
+               ? ResourceVisibilityLookup.NONE
+               : size == 1
+                 ? list.get(0)
+                 : new ResourceVisibilityLookup.MultipleLibraryResourceVisibility(list);
     }
 }

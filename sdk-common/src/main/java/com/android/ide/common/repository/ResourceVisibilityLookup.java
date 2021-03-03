@@ -18,23 +18,20 @@ package com.android.ide.common.repository;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.ide.common.gradle.model.IdeAndroidArtifact;
-import com.android.ide.common.gradle.model.IdeAndroidLibrary;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableListMultimap;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.io.Files;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import org.jetbrains.annotations.TestOnly;
 
 /**
  * Class which provides information about whether Android resources for a given library are public
@@ -174,10 +171,11 @@ public abstract class ResourceVisibilityLookup {
     };
 
     /** Searches multiple libraries */
-    private static class MultipleLibraryResourceVisibility extends ResourceVisibilityLookup {
+    public static class MultipleLibraryResourceVisibility extends ResourceVisibilityLookup {
 
         private final List<ResourceVisibilityLookup> mRepositories;
 
+        @VisibleForTesting
         public MultipleLibraryResourceVisibility(List<ResourceVisibilityLookup> repositories) {
             mRepositories = repositories;
         }
@@ -248,57 +246,6 @@ public abstract class ResourceVisibilityLookup {
         @Override
         public String toString() {
             return mRepositories.toString();
-        }
-    }
-
-    /**
-     * Provider which keeps a set of {@link ResourceVisibilityLookup} instances around for repeated
-     * queries, including from different libraries that may share dependencies
-     */
-    public static class Provider {
-
-        /**
-         * We store lookup instances for multiple separate types of keys here: {@link
-         * AndroidLibrary}, {@link com.android.builder.model.AndroidArtifact}
-         */
-        private final Map<Object, ResourceVisibilityLookup> mInstances = Maps.newHashMap();
-
-        /** R.txt lookup */
-        private final SymbolProvider mSymbols = new SymbolProvider();
-
-        @NonNull
-        @TestOnly
-        public static ResourceVisibilityLookup createFrom(
-                @NonNull IdeAndroidLibrary library, SymbolProvider symbolProvider) {
-            ResourceVisibilityLookup visibility =
-                    new AndroidLibraryResourceVisibility(
-                            library.getArtifactAddress(),
-                            new File(library.getSymbolFile()),
-                            new File(library.getPublicResources()),
-                            symbolProvider);
-            if (visibility.isEmpty()) {
-                visibility = NONE;
-            }
-            return visibility;
-        }
-
-        @NonNull
-        @TestOnly
-        public static ResourceVisibilityLookup createFrom(
-                @NonNull IdeAndroidArtifact artifact, SymbolProvider symbolProvider) {
-            List<ResourceVisibilityLookup> list =
-                    Lists.newArrayListWithExpectedSize(
-                            artifact.getLevel2Dependencies().getAndroidLibraries().size() + 1);
-            for (IdeAndroidLibrary d : artifact.getLevel2Dependencies().getAndroidLibraries()) {
-                ResourceVisibilityLookup v = createFrom(d, symbolProvider);
-                if (!v.isEmpty()) {
-                    list.add(v);
-                }
-            }
-            int size = list.size();
-            return size == 0
-                    ? NONE
-                    : size == 1 ? list.get(0) : new MultipleLibraryResourceVisibility(list);
         }
     }
 
@@ -453,7 +400,7 @@ public abstract class ResourceVisibilityLookup {
     }
 
     /** Visibility data for a single library */
-    private static class AndroidLibraryResourceVisibility extends LibraryResourceVisibility {
+    public static class AndroidLibraryResourceVisibility extends LibraryResourceVisibility {
 
         @NonNull private final String mLibraryArtifactAddress;
 
