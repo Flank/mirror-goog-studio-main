@@ -13,110 +13,99 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.build.gradle.integration.common.utils
 
-package com.android.build.gradle.integration.common.utils;
+import com.android.builder.model.ProductFlavor
+import com.google.common.truth.Truth
 
-import static org.junit.Assert.assertEquals;
-
-import com.android.annotations.NonNull;
-import com.android.builder.model.ApiVersion;
-import com.android.builder.model.ProductFlavor;
-
-public final class ProductFlavorHelper {
-    @NonNull
-    private final ProductFlavor productFlavor;
-    @NonNull private final String name;
-
-    private String applicationId = null;
-    private Integer versionCode = null;
-    private String versionName = null;
-    private ApiVersion minSdkVersion = null;
-    private ApiVersion targetSdkVersion = null;
-    private Integer renderscriptTargetApi = null;
-    private String testApplicationId = null;
-    private String testInstrumentationRunner = null;
-    private Boolean testHandleProfiling = null;
-    private Boolean testFunctionalTest = null;
-
-    public ProductFlavorHelper(@NonNull ProductFlavor productFlavor, @NonNull String name) {
-        this.productFlavor = productFlavor;
-        this.name = name;
+class ProductFlavorHelper(private val productFlavor: ProductFlavor, private val name: String) {
+    private var applicationId: String? = null
+    private var versionCode: Int? = null
+    private var versionName: String? = null
+    private var minSdkVersion: FakeApiVersion? = null
+    private var targetSdkVersion: FakeApiVersion? = null
+    private var renderscriptTargetApi: Int? = null
+    private var testApplicationId: String? = null
+    private var testInstrumentationRunner: String? = null
+    private var testHandleProfiling: Boolean? = null
+    private var testFunctionalTest: Boolean? = null
+    fun setApplicationId(applicationId: String?): ProductFlavorHelper {
+        this.applicationId = applicationId
+        return this
     }
 
-    @NonNull
-    public ProductFlavorHelper setApplicationId(String applicationId) {
-        this.applicationId = applicationId;
-        return this;
+    fun setVersionCode(versionCode: Int?): ProductFlavorHelper {
+        this.versionCode = versionCode
+        return this
     }
 
-    @NonNull
-    public ProductFlavorHelper setVersionCode(Integer versionCode) {
-        this.versionCode = versionCode;
-        return this;
+    fun setVersionName(versionName: String?): ProductFlavorHelper {
+        this.versionName = versionName
+        return this
     }
 
-    @NonNull
-    public ProductFlavorHelper setVersionName(String versionName) {
-        this.versionName = versionName;
-        return this;
+    fun setMinSdkVersion(minSdkVersion: Int): ProductFlavorHelper {
+        this.minSdkVersion = FakeApiVersion(minSdkVersion)
+        return this
     }
 
-    @NonNull
-    public ProductFlavorHelper setMinSdkVersion(int minSdkVersion) {
-        this.minSdkVersion = new FakeApiVersion(minSdkVersion);
-        return this;
+    fun setTargetSdkVersion(targetSdkVersion: Int): ProductFlavorHelper {
+        this.targetSdkVersion = FakeApiVersion(targetSdkVersion)
+        return this
     }
 
-    @NonNull
-    public ProductFlavorHelper setTargetSdkVersion(int targetSdkVersion) {
-        this.targetSdkVersion = new FakeApiVersion(targetSdkVersion);
-        return this;
+    fun setRenderscriptTargetApi(renderscriptTargetApi: Int?): ProductFlavorHelper {
+        this.renderscriptTargetApi = renderscriptTargetApi
+        return this
     }
 
-    @NonNull
-    public ProductFlavorHelper setRenderscriptTargetApi(Integer renderscriptTargetApi) {
-        this.renderscriptTargetApi = renderscriptTargetApi;
-        return this;
+    fun setTestApplicationId(testApplicationId: String?): ProductFlavorHelper {
+        this.testApplicationId = testApplicationId
+        return this
     }
 
-    @NonNull
-    public ProductFlavorHelper setTestApplicationId(String testApplicationId) {
-        this.testApplicationId = testApplicationId;
-        return this;
+    fun setTestInstrumentationRunner(testInstrumentationRunner: String?): ProductFlavorHelper {
+        this.testInstrumentationRunner = testInstrumentationRunner
+        return this
     }
 
-    @NonNull
-    public ProductFlavorHelper setTestInstrumentationRunner(String testInstrumentationRunner) {
-        this.testInstrumentationRunner = testInstrumentationRunner;
-        return this;
+    fun setTestHandleProfiling(testHandleProfiling: Boolean?): ProductFlavorHelper {
+        this.testHandleProfiling = testHandleProfiling
+        return this
     }
 
-    @NonNull
-    public ProductFlavorHelper setTestHandleProfiling(Boolean testHandleProfiling) {
-        this.testHandleProfiling = testHandleProfiling;
-        return this;
+    fun setTestFunctionalTest(testFunctionalTest: Boolean?): ProductFlavorHelper {
+        this.testFunctionalTest = testFunctionalTest
+        return this
     }
 
-    @NonNull
-    public ProductFlavorHelper setTestFunctionalTest(Boolean testFunctionalTest) {
-        this.testFunctionalTest = testFunctionalTest;
-        return this;
-    }
-
-    public void test() {
-        assertEquals(name + ":VersionCode", versionCode, productFlavor.getVersionCode());
-        assertEquals(name + ":VersionName", versionName, productFlavor.getVersionName());
-        assertEquals(name + ":minSdkVersion", minSdkVersion, productFlavor.getMinSdkVersion());
-        assertEquals(name + ":targetSdkVersion", targetSdkVersion, productFlavor.getTargetSdkVersion());
-        assertEquals(name + ":renderscriptTargetApi",
-                renderscriptTargetApi, productFlavor.getRenderscriptTargetApi());
-        assertEquals(name + ":testApplicationId",
-                testApplicationId, productFlavor.getTestApplicationId());
-        assertEquals(name + ":testInstrumentationRunner",
-                testInstrumentationRunner, productFlavor.getTestInstrumentationRunner());
-        assertEquals(name + ":testHandleProfiling",
-                testHandleProfiling, productFlavor.getTestHandleProfiling());
-        assertEquals(name + ":testFunctionalTest",
-                testFunctionalTest, productFlavor.getTestFunctionalTest());
+    fun test() {
+        Truth.assertWithMessage("$name:VersionCode")
+            .that(versionCode)
+            .isEqualTo(productFlavor.versionCode)
+        Truth.assertWithMessage("$name:VersionName")
+            .that(versionName)
+            .isEqualTo(productFlavor.versionName)
+        Truth.assertWithMessage("$name:minSdkVersion")
+            .that(minSdkVersion)
+            .isEqualTo(productFlavor.minSdkVersion)
+        Truth.assertWithMessage("$name:targetSdkVersion")
+            .that(targetSdkVersion)
+            .isEqualTo(productFlavor.targetSdkVersion)
+        Truth.assertWithMessage("$name:renderscriptTargetApi")
+            .that(renderscriptTargetApi)
+            .isEqualTo(productFlavor.renderscriptTargetApi)
+        Truth.assertWithMessage("$name:testApplicationId")
+            .that(testApplicationId)
+            .isEqualTo(productFlavor.testApplicationId)
+        Truth.assertWithMessage("$name:testInstrumentationRunner")
+            .that(testInstrumentationRunner)
+            .isEqualTo(productFlavor.testInstrumentationRunner)
+        Truth.assertWithMessage("$name:testHandleProfiling")
+            .that(testHandleProfiling)
+            .isEqualTo(productFlavor.testHandleProfiling)
+        Truth.assertWithMessage("$name:testFunctionalTest")
+            .that(testFunctionalTest)
+            .isEqualTo(productFlavor.testFunctionalTest)
     }
 }
