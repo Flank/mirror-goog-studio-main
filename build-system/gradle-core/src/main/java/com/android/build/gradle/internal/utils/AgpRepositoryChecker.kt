@@ -20,9 +20,12 @@ import com.android.build.gradle.internal.errors.SyncIssueReporterImpl
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.builder.errors.IssueReporter
 import org.gradle.api.Project
+import org.gradle.api.artifacts.dsl.RepositoryHandler
 import org.gradle.api.artifacts.repositories.ArtifactRepository
 import org.gradle.api.artifacts.repositories.FlatDirectoryArtifactRepository
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
+import org.gradle.api.internal.GradleInternal
+import org.gradle.util.GradleVersion
 
 object AgpRepositoryChecker {
 
@@ -41,20 +44,40 @@ object AgpRepositoryChecker {
             val flatDirReposToUsages = mutableMapOf<String, MutableSet<String>>()
             val projectsUsingJCenter = mutableSetOf<String>()
 
-            fun checkSingleRepo(project: Project, repo: ArtifactRepository) {
+            fun checkSingleRepo(displayName: String, repo: ArtifactRepository) {
                 if (repo is FlatDirectoryArtifactRepository) {
                     val projectPaths = flatDirReposToUsages[repo.name] ?: mutableSetOf()
-                    projectPaths.add(project.displayName)
+                    projectPaths.add(displayName)
                     flatDirReposToUsages[repo.name] = projectPaths
                 }
                 if (repo is MavenArtifactRepository && repo.url.toString()==JCENTER_URL) {
-                    projectsUsingJCenter.add(project.displayName)
+                    projectsUsingJCenter.add(displayName)
                 }
             }
 
             gradle.allprojects { p ->
-                p.buildscript.repositories.all { checkSingleRepo(p, it) }
-                p.repositories.all { checkSingleRepo(p, it) }
+                p.buildscript.repositories.all { checkSingleRepo(p.displayName, it) }
+                p.repositories.all { checkSingleRepo(p.displayName, it) }
+            }
+
+            try {
+                (gradle as GradleInternal).settings.pluginManagement.repositories.all {
+                    checkSingleRepo("Gradle Settings", it)
+                }
+                if (GradleVersion.current() >= GradleVersion.version("6.8")) {
+                    // We need to use reflection, as AGP compiles against older Gradle version.
+                    val dependencyResolutionManagement =
+                            gradle.settings::class.java.getMethod("getDependencyResolutionManagement")
+                                    .invoke(gradle.settings)
+                    val repositories =
+                            dependencyResolutionManagement.javaClass.getMethod("getRepositories")
+                                    .invoke(dependencyResolutionManagement) as RepositoryHandler
+                    repositories.all {
+                        checkSingleRepo("Gradle Settings", it)
+                    }
+                }
+            } catch (ignored: Throwable) {
+                // this is using private Gradle APIs, so it may break in the future Gradle versions
             }
 
             val globalIssues = getBuildService(project.gradle.sharedServices,
@@ -63,7 +86,7 @@ object AgpRepositoryChecker {
             if (flatDirReposToUsages.isNotEmpty()) {
                 val reposWithProjects =
                         flatDirReposToUsages.entries.joinToString(separator = System.lineSeparator()) {
-                            "- repository ${it.key} used in projects: " + it.value.joinToString(
+                            "- repository ${it.key} used in: " + it.value.joinToString(
                                     limit = maxProjectsToShow)
                         }
                 globalIssues.reportWarning(
