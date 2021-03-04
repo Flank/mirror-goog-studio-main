@@ -62,6 +62,8 @@ public interface IDevice extends IShellEnabledDevice {
     int CHANGE_CLIENT_LIST = 0x0002;
     /** Device change bit mask: build info change. */
     int CHANGE_BUILD_INFO = 0x0004;
+    /** Device change bit mask: {@link ProfileableClient} list change. */
+    int CHANGE_PROFILEABLE_CLIENT_LIST = 0x0008;
 
     /** Device level software features. */
     enum Feature {
@@ -309,6 +311,11 @@ public interface IDevice extends IShellEnabledDevice {
      * @return the <code>Client</code> object or <code>null</code> if no match was found.
      */
     Client getClient(String applicationName);
+
+    /** Returns the array of profileable clients. */
+    default ProfileableClient[] getProfileableClients() {
+        return new ProfileableClient[0]; // Returns an empty array by default
+    }
 
     /**
      * Force stop an application by its application name. This removes all pending alarms and queued

@@ -30,6 +30,7 @@ iml_module(
         "//tools/adt/idea/.idea/libraries:truth[test]",
         "//tools/base/fakeadbserver:studio.android.sdktools.fakeadbserver[module, test]",
         "//tools/adt/idea/.idea/libraries:libam-instrumentation-data-proto",
+        "//tools/adt/idea/.idea/libraries:libapp-processes-proto",
     ],
 )
 
@@ -43,6 +44,7 @@ kotlin_library(
     ]),
     bundled_deps = [
         ":am-instrumentation-data-proto",
+        ":app-processes-proto",
     ],
     pom = ":pom",
     resource_strip_prefix = "tools/base/ddmlib",
@@ -92,7 +94,14 @@ avd(name = "avd")
 
 java_proto_library(
     name = "am-instrumentation-data-proto",
-    srcs = glob(["src/main/proto/**/*.proto"]),
+    srcs = glob(["src/main/proto/instrumentation-data.proto"]),
+    protoc_version = "3.4.0",
+    visibility = ["//visibility:public"],
+)
+
+java_proto_library(
+    name = "app-processes-proto",
+    srcs = glob(["src/main/proto/app_processes.proto"]),
     protoc_version = "3.4.0",
     visibility = ["//visibility:public"],
 )

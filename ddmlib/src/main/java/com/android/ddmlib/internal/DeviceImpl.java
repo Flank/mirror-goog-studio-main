@@ -59,6 +59,7 @@ import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -102,6 +103,9 @@ public final class DeviceImpl implements IDevice {
 
     /** Maps pid's of clients in {@link #mClients} to their package name. */
     private final Map<Integer, String> mClientInfo = new ConcurrentHashMap<>();
+
+    @GuardedBy("mProfileableClients")
+    private final List<ProfileableClientImpl> mProfileableClients = new ArrayList<>();
 
     private final ClientTracker mClientTracer;
 
@@ -849,6 +853,13 @@ public final class DeviceImpl implements IDevice {
     }
 
     @Override
+    public ProfileableClientImpl[] getProfileableClients() {
+        synchronized (mProfileableClients) {
+            return mProfileableClients.toArray(new ProfileableClientImpl[0]);
+        }
+    }
+
+    @Override
     public void forceStop(String applicationName) {
         try {
             // Force stop the app, even in case it's in the crashed state.
@@ -910,6 +921,24 @@ public final class DeviceImpl implements IDevice {
         }
 
         removeClientInfo(client);
+    }
+
+    void updateProfileableClientList(@NonNull List<ProfileableClientImpl> newClientList) {
+        synchronized (mProfileableClients) {
+            mProfileableClients.clear();
+            mProfileableClients.addAll(newClientList);
+            // TODO(shukang): Retrieve package names asynchronously if needed. For example,
+            // track-app service doesn't provide package names.
+            Collections.sort(
+                    mProfileableClients,
+                    Comparator.comparingInt(c -> c.getProfileableClientData().getPid()));
+        }
+    }
+
+    void clearProfileableClientList() {
+        synchronized (mProfileableClients) {
+            mProfileableClients.clear();
+        }
     }
 
     /** Sets the socket channel on which a track-jdwp command for this device has been sent. */
