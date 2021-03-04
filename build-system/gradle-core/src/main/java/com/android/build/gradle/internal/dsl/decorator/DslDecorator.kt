@@ -83,20 +83,22 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType>) {
             // Define the class
         }
 
-        val lockable = Lockable::class.java.isAssignableFrom(dslClass)
-
         val classWriter =
             ClassWriter(ClassWriter.COMPUTE_MAXS or ClassWriter.COMPUTE_FRAMES)
 
         val isInterface = dslClass.isInterface
-        val generatedClassSuperClass = if(isInterface) OBJECT_TYPE else dslClassType
+        val generatedClassSuperClass = if (isInterface) OBJECT_TYPE else dslClassType
 
+        val interfaces = when {
+            isInterface -> arrayOf(dslClassType.internalName, LOCKABLE_TYPE.internalName)
+            else -> arrayOf(LOCKABLE_TYPE.internalName)
+        }
         classWriter.visit(
             Opcodes.V1_8, Opcodes.ACC_PUBLIC,
             generatedClass.internalName,
             null,
             generatedClassSuperClass.internalName,
-            if (isInterface) arrayOf(dslClassType.internalName) else arrayOf()
+            interfaces
         )
 
         val abstractProperties = findAbstractProperties(dslClass)
@@ -112,7 +114,7 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType>) {
             // Replace any zero-argument constructor with a single-argument constructor that
             // takes the DSL services type - to support generation from interfaces.
             val methodToGenerate =
-                if(method.argumentTypes.isEmpty()) {
+                if (method.argumentTypes.isEmpty()) {
                     Method(method.name, method.returnType, arrayOf(DSL_SERVICES_TYPE))
                 } else {
                     method
@@ -122,7 +124,13 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType>) {
                 "Cannot generate implementation for $dslClassType" +
                         "@Inject marked constructor $method for does not include $DSL_SERVICES_TYPE argument"
             }
-            GeneratorAdapter(constructor.modifiers, methodToGenerate, null, null, classWriter).apply {
+            GeneratorAdapter(
+                constructor.modifiers,
+                methodToGenerate,
+                null,
+                null,
+                classWriter
+            ).apply {
                 // Always mark the generated constructor with @Inject
                 visitAnnotation(INJECT_TYPE, true).visitEnd()
                 // super(...args...)
@@ -153,21 +161,17 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType>) {
                 endMethod()
             }
         }
-        if (lockable) {
-            createLockField(classWriter)
-        }
+        createLockField(classWriter)
         for (field in abstractProperties) {
             createField(classWriter, field)
         }
 
         for (field in abstractProperties) {
             createFieldBackedGetters(classWriter, generatedClass, field)
-            createFieldBackedSetters(classWriter, generatedClass, field, lockable)
+            createFieldBackedSetters(classWriter, generatedClass, field)
         }
 
-        if (lockable) {
-            createLockMethod(classWriter, generatedClass, abstractProperties)
-        }
+        createLockMethod(classWriter, generatedClass, abstractProperties)
 
         classWriter.visitEnd()
 
@@ -341,8 +345,7 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType>) {
     private fun createFieldBackedSetters(
         classWriter: ClassWriter,
         generatedClass: Type,
-        property: ManagedProperty,
-        lockable: Boolean
+        property: ManagedProperty
     ) {
         when (property.supportedPropertyType) {
             is SupportedPropertyType.Collection -> {
@@ -354,7 +357,6 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType>) {
                         classWriter,
                         generatedClass,
                         property,
-                        lockable,
                         setter
                     )
                 }
@@ -366,7 +368,6 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType>) {
         classWriter: ClassWriter,
         generatedClass: Type,
         property: ManagedProperty,
-        lockable: Boolean,
         setter: Method
     ) {
         val type = property.supportedPropertyType
@@ -377,22 +378,20 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType>) {
         val access = if(type.type == setter.argumentTypes[0]) property.access else property.access.or(Opcodes.ACC_SYNTHETIC)
         GeneratorAdapter(access, setter, null, null, classWriter).apply {
             loadThis()
-            if (lockable) {
-                // if (this.__locked__) { throw new AgpDslLockedExtension("...") }
-                newLabel().also { actuallySet ->
-                    getField(generatedClass, LOCK_FIELD_NAME, Type.BOOLEAN_TYPE)
-                    visitJumpInsn(Opcodes.IFEQ, actuallySet)
-                    // TODO: Share the base string between methods/classes?
-                    // TODO: URL
-                    throwException(
-                        LOCKED_EXCEPTION,
-                        "It is too late to set ${property.name}\n" +
-                                "It has already been read to configure this project.\n" +
-                                "Consider either moving this call to be during evaluation,\n" +
-                                "or using the variant API."
-                    )
-                    visitLabel(actuallySet)
-                }
+            // if (this.__locked__) { throw new AgpDslLockedExtension("...") }
+            newLabel().also { actuallySet ->
+                getField(generatedClass, LOCK_FIELD_NAME, Type.BOOLEAN_TYPE)
+                visitJumpInsn(Opcodes.IFEQ, actuallySet)
+                // TODO: Share the base string between methods/classes?
+                // TODO: URL
+                throwException(
+                    LOCKED_EXCEPTION,
+                    "It is too late to set ${property.name}\n" +
+                            "It has already been read to configure this project.\n" +
+                            "Consider either moving this call to be during evaluation,\n" +
+                            "or using the variant API."
+                )
+                visitLabel(actuallySet)
             }
             // this.__managedField = argument;
             loadThis()
@@ -484,6 +483,7 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType>) {
         private fun notAbstract(modifiers: Int): Int = modifiers and Modifier.ABSTRACT.inv()
         private val OBJECT_TYPE = Type.getType(Any::class.java)
         private val INJECT_TYPE = Type.getDescriptor(Inject::class.java)
+        private val LOCKABLE_TYPE = Type.getType(Lockable::class.java)
         private val LOCKABLE_CONSTRUCTOR =
             Method("<init>", Type.VOID_TYPE, arrayOf(Type.getType(String::class.java)))
         private val LOCK_METHOD = Method("lock", Type.VOID_TYPE, arrayOf())

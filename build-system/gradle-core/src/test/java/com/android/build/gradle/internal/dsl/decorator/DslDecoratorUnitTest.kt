@@ -118,17 +118,13 @@ class DslDecoratorUnitTest {
 
     }
 
-    interface WithManagedStringLockable : Lockable {
-        abstract var managedString: String
-    }
-
     @Test
     fun `check locking works for managed var properties`() {
         val decorator = DslDecorator(listOf(SupportedPropertyType.Var.String))
-        val decorated = decorator.decorate(WithManagedStringLockable::class)
+        val decorated = decorator.decorate(WithManagedString::class)
         val o = decorated.getDeclaredConstructor(DslServices::class.java).newInstance(dslServices)
          o.managedString = "a"
-        o.lock()
+        (o as Lockable).lock()
         val failure = assertFailsWith<AgpDslLockedException> {
             o.managedString = "b"
         }
