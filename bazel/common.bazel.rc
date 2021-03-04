@@ -72,41 +72,49 @@ build:release -c opt
 build:release --strip=always
 build:release --define release=true
 
-# Set flags for uploading to ResultStore
-build:cloud_resultstore --bes_backend=buildeventservice.googleapis.com
-build:cloud_resultstore --bes_results_url=https://source.cloud.google.com/results/invocations/
-build:cloud_resultstore --bes_timeout=60s
-build:cloud_resultstore --auth_scope=https://www.googleapis.com/auth/cloud-source-tools
-build:cloud_resultstore --project_id=908081808034
-build:cloud_resultstore --auth_credentials=tools/vendor/adt_infra_internal/rbe/data/studio-alphasource-credentials.json
-build:cloud_resultstore --remote_cache=remotebuildexecution.googleapis.com
-build:cloud_resultstore --remote_instance_name=projects/google.com:android-studio-alphasource/instances/default_instance
+## Base RBE configuration
+build:_remote_base --bes_backend=buildeventservice.googleapis.com
+build:_remote_base --bes_results_url=https://source.cloud.google.com/results/invocations/
+build:_remote_base --bes_timeout=60s
+build:_remote_base --auth_scope=https://www.googleapis.com/auth/cloud-source-tools
+build:_remote_base --project_id=908081808034
+build:_remote_base --auth_credentials=tools/vendor/adt_infra_internal/rbe/data/studio-alphasource-credentials.json
+build:_remote_base --remote_cache=remotebuildexecution.googleapis.com
+build:_remote_base --remote_instance_name=projects/google.com:android-studio-alphasource/instances/default_instance
+# Building runfile trees is unnecessary, unless executing binaries in bazel-bin/ manually (use 'bazel run' instead)
+# See: https://github.com/bazelbuild/bazel/commit/03246077f948f2790a83520e7dccc2625650e6df
+build:_remote_base --nobuild_runfile_links
 
-# Disable writing to the remote cache by default. This allows test results to still be written, but
-# writing to the action cache will be disabled.
-build:cloud_resultstore --remote_upload_local_results=false
+## Enables ResultStore, but does not use the remote cache.
+## This is useful for sharing bazel invocations using the ResultStore link.
+build:resultstore --config=_remote_base
+build:resultstore --noremote_upload_local_results
+build:resultstore --noremote_accept_cached
 
-build:remote_common --config=cloud_resultstore
+## Enables the remote cache (and ResultStore) for local builds.
+## This avoids building things which were already built by CI.
+build:rcache --config=_remote_base
+build:rcache --config=release
+build:rcache --noremote_upload_local_results
+# Include some of the expanded flags of --remote_download_toplevel to
+# optimize cache hits. We want the local cache to be populated from the
+# remote cache, so we keep --remote_download_outputs=all (default value).
+build:rcache --experimental_inmemory_dotd_files
+build:rcache --experimental_inmemory_jdeps_files
 
-# Enable uploading to the remote cache so all remote action results can be shared
-build:remote_common --remote_upload_local_results=true
-build:remote_common --remote_timeout=3600
-
+## Enables remote execution so actions are performed on the remote systems.
+build:remote --remote_executor=remotebuildexecution.googleapis.com
+build:remote --config=_remote_base
 # Mimics the release config to report accurate performance numbers in tests.
-build:remote_common --config=release
-
-build:remote --config=remote_common
-build:remote --nobuild_runfile_links
+build:remote --config=release
+build:remote --remote_timeout=3600
 build:remote --strategy=CppCompile=remote
 build:remote --strategy=CppLink=remote
 build:remote --show_timestamps
-
-# Enable remote execution so actions are performed on the remote systems.
-build:remote --remote_executor=remotebuildexecution.googleapis.com
-
 # Stop downloading of build outputs to the local machine and
 # removes a possibility of network/disk bottlenecks when using RBE.
-build:remote --remote_download_toplevel
+build:_remote_base --remote_download_toplevel
+
 
 # Persistent workers
 build --worker_verbose  # Increases visibility in case there are issues.
