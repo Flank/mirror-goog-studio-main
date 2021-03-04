@@ -104,9 +104,6 @@ build:remote --show_timestamps
 # Enable remote execution so actions are performed on the remote systems.
 build:remote --remote_executor=remotebuildexecution.googleapis.com
 
-# Enable jvmopt used for Foundry testing
-test:remote --jvmopt='-Dandroid.remote.run=true'
-
 # Stop downloading of build outputs to the local machine and
 # removes a possibility of network/disk bottlenecks when using RBE.
 build:remote --remote_download_toplevel

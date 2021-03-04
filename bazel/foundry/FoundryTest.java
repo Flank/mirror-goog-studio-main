@@ -18,59 +18,44 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+/** Validates conditions expected to be present in the remote execution environment. */
 @RunWith(JUnit4.class)
 public final class FoundryTest {
 
-    private static final Boolean REMOTE_PROP =
-            Boolean.valueOf(System.getProperty("android.remote.run"));
-
     @Test
     public void testAapt2() throws Exception {
-        if (REMOTE_PROP) {
-            File testLocalDir = new File(".");
-            String osName = System.getProperty("os.name").toLowerCase();
+        File testLocalDir = new File(".");
+        String osName = System.getProperty("os.name").toLowerCase();
 
-            if (osName.equalsIgnoreCase("Linux")) {
-                execute("prebuilts/tools/common/aapt/" + osName + "/aapt2 -h", null, 1);
-            } else {
-                execute(
-                        "prebuilts/tools/common/aapt/"
-                                + osName
-                                + "/aapt2 -h".replace('/', File.separatorChar),
-                        null,
-                        1);
-            }
+        if (osName.equalsIgnoreCase("Linux")) {
+            execute("prebuilts/tools/common/aapt/" + osName + "/aapt2 -h", null, 1);
+        } else {
+            execute(
+                    "prebuilts/tools/common/aapt/"
+                            + osName
+                            + "/aapt2 -h".replace('/', File.separatorChar),
+                    null,
+                    1);
         }
     }
 
     @Test
     public void testCA() throws Exception {
-        if (REMOTE_PROP) {
-            TrustManagerFactory factory =
-                    TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-            factory.init((KeyStore) null);
-            for (TrustManager manager : factory.getTrustManagers()) {
-                if (manager instanceof X509TrustManager) {
-                    X509Certificate[] issurers = ((X509TrustManager) manager).getAcceptedIssuers();
-                    for (X509Certificate c : issurers) {
-                        System.out.println(c);
-                    }
-                    if (issurers.length != 0) {
-                        return;
-                    }
+        TrustManagerFactory factory =
+                TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+        factory.init((KeyStore) null);
+        for (TrustManager manager : factory.getTrustManagers()) {
+            if (manager instanceof X509TrustManager) {
+                X509Certificate[] issurers = ((X509TrustManager) manager).getAcceptedIssuers();
+                for (X509Certificate c : issurers) {
+                    System.out.println(c);
+                }
+                if (issurers.length != 0) {
+                    return;
                 }
             }
-            throw new AssertionError("No issurers found");
         }
-    }
-
-    @Test
-    public void testCustomDockerImage() throws Exception {
-        if (REMOTE_PROP) {
-            String studioImageEnv = System.getenv("STUDIO_IMAGE");
-            String expectedStudioImageEnv = "true";
-            assertEquals(expectedStudioImageEnv, studioImageEnv);
-        }
+        throw new AssertionError("No issurers found");
     }
 
     @Test
@@ -80,20 +65,18 @@ public final class FoundryTest {
 
     @Test
     public void testCreateFile() {
-        if (REMOTE_PROP) {
-            File tempDir = new File("/tmp");
-            String filename = "你所有的基地都属于我们.txt";
-            System.out.println("locale info: " + Locale.getDefault());
-            System.out.println("defaultCharset: " + Charset.defaultCharset());
-            try {
-                File file = new File(tempDir, filename);
-                file.createNewFile();
-                System.out.println("File created.");
-                System.out.println("tempDir.list(): " + Arrays.toString(tempDir.list()));
-                assertTrue(Arrays.asList(tempDir.list()).contains(filename));
-            } catch (IOException e) {
-                fail("File with non-ascii name failed to be created.");
-            }
+        File tempDir = new File("/tmp");
+        String filename = "你所有的基地都属于我们.txt";
+        System.out.println("locale info: " + Locale.getDefault());
+        System.out.println("defaultCharset: " + Charset.defaultCharset());
+        try {
+            File file = new File(tempDir, filename);
+            file.createNewFile();
+            System.out.println("File created.");
+            System.out.println("tempDir.list(): " + Arrays.toString(tempDir.list()));
+            assertTrue(Arrays.asList(tempDir.list()).contains(filename));
+        } catch (IOException e) {
+            fail("File with non-ascii name failed to be created.");
         }
     }
 
