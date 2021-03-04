@@ -118,8 +118,8 @@ import java.util.function.Consumer
 /**
  * This is the version of fork CMake.
  */
-private const val FORK_CMAKE_SDK_VERSION = "3.6.4111459"
-private val forkCmakeSdkVersionRevision = Revision.parseRevision(FORK_CMAKE_SDK_VERSION)
+internal const val FORK_CMAKE_SDK_VERSION = "3.6.4111459"
+internal val forkCmakeSdkVersionRevision = Revision.parseRevision(FORK_CMAKE_SDK_VERSION)
 
 /**
  *  This is the base version that forked CMake (which has SDK version 3.6.4111459) reports
@@ -130,7 +130,8 @@ private val forkCmakeSdkVersionRevision = Revision.parseRevision(FORK_CMAKE_SDK_
  *  version to avoid giving the impression that fork CMake is not a shipping version in Android
  *  Studio.
  */
-val forkCmakeReportedVersion = Revision.parseRevision("3.6.0")
+internal const val FORK_CMAKE_REPORTED_VERSION = "3.6.0"
+internal val forkCmakeReportedVersion = Revision.parseRevision(FORK_CMAKE_REPORTED_VERSION)
 
 /**
  * This is the default version of CMake to use for this Android Gradle Plugin if there was no
@@ -235,11 +236,16 @@ data class CmakeVersionRequirements(val cmakeVersionFromDsl : String?) {
      * @return true if [version] satisfies [effectiveRequestVersion].
      */
     fun isSatisfiedBy(version:Revision) : Boolean {
+        val effectiveCompareVersion =
+            if (version.compareTo(
+                        forkCmakeSdkVersionRevision, Revision.PreviewComparison.IGNORE) == 0) {
+                forkCmakeReportedVersion
+            } else version
         return when {
             dslVersionHasPlus ->
-                version.compareTo(effectiveRequestVersion, Revision.PreviewComparison.IGNORE) >= 0
+                effectiveCompareVersion.compareTo(effectiveRequestVersion, Revision.PreviewComparison.IGNORE) >= 0
             else ->
-                version.compareTo(effectiveRequestVersion, Revision.PreviewComparison.IGNORE) == 0
+                effectiveCompareVersion.compareTo(effectiveRequestVersion, Revision.PreviewComparison.IGNORE) == 0
         }
     }
 
@@ -348,24 +354,6 @@ fun findCmakePathLogic(
         cmakePaths.add(environmentPath.path)
     }
 
-    if (cmakePaths.isEmpty()) {
-        // Gather acceptable SDK package paths
-        for (localPackage in repositoryPackages()) {
-            val packagePath = localPackage.location.resolve("bin")
-            if (cmakePaths.contains(packagePath.toString())) continue
-            val version = if (localPackage.version == forkCmakeSdkVersionRevision) {
-                forkCmakeReportedVersion
-            } else {
-                localPackage.version
-            }
-            if (!dsl.isSatisfiedBy(version)) {
-                nonsatisfiers += "'$version' found in SDK"
-                continue
-            }
-            cmakePaths.add(packagePath.toString())
-        }
-    }
-
     // This is a fallback case for backward compatibility. In the past,
     // we've recommended people manually symlink or copy CMake (and
     // other tools) into SDK folder. Our own integration tests rely on
@@ -384,6 +372,25 @@ fun findCmakePathLogic(
             } ?: versionGetter(sdkFolder) ?: continue
             if (!dsl.isSatisfiedBy(version)) continue
             cmakePaths.add(sdkFolder.path)
+        }
+    }
+
+
+    if (cmakePaths.isEmpty()) {
+        // Gather acceptable SDK package paths
+        for (localPackage in repositoryPackages()) {
+            val packagePath = localPackage.location.resolve("bin")
+            if (cmakePaths.contains(packagePath.toString())) continue
+            val version = if (localPackage.version == forkCmakeSdkVersionRevision) {
+                forkCmakeReportedVersion
+            } else {
+                localPackage.version
+            }
+            if (!dsl.isSatisfiedBy(version)) {
+                nonsatisfiers += "'$version' found in SDK"
+                continue
+            }
+            cmakePaths.add(packagePath.toString())
         }
     }
 
