@@ -58,6 +58,7 @@ TEST_DATA = [
     "//tools/base/build-system/aapt2:aapt2_for_tests",
     "//tools/base/build-system/integration-test:test-projects/BasicRenderScript",
     "//tools/base/build-system/integration-test:test-projects/additionalTestOutput",
+    "//tools/base/build-system/integration-test:test-projects/additionalTestOutputOverride",
     "//tools/base/build-system/integration-test:test-projects/androidManifestInTest",
     "//tools/base/build-system/integration-test:test-projects/androidTestLibDep",
     "//tools/base/build-system/integration-test:test-projects/api",

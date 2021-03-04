@@ -170,7 +170,10 @@ public class SimpleTestRunnable implements WorkerExecutorFacade.WorkAction {
             }
 
             if (additionalTestOutputEnabled && device.getApiLevel() >= 16) {
-                additionalTestOutputDir = queryAdditionalTestOutputLocation();
+                String defaultDir = queryAdditionalTestOutputLocation();
+                additionalTestOutputDir =
+                        testData.getInstrumentationRunnerArguments()
+                                .getOrDefault("additionalTestOutputDir", defaultDir);
 
                 MultiLineReceiver receiver = getOutputReceiver();
                 String mkdirp = "mkdir -p " + additionalTestOutputDir;
