@@ -217,8 +217,7 @@ coverage_report(
         "//tools/adt/idea/compose-designer:intellij.android.compose-designer.tests_tests",
         "//tools/adt/idea/designer:intellij.android.designer.tests_tests",
         "//tools/adt/idea/layout-inspector:intellij.android.layout-inspector.tests_tests",
-        #TODO(b/175459453)
-        #"//tools/adt/idea/layout-ui:intellij.android.layout-ui_tests",
+        "//tools/adt/idea/layout-ui:intellij.android.layout-ui_tests",
         "//tools/adt/idea/layoutlib-loader:intellij.android.layoutlib-loader.tests_tests",
         "//tools/adt/idea/nav/editor:intellij.android.nav.editor.tests_tests",
         "//tools/base/layoutlib-api:studio.android.sdktools.layoutlib-api_tests",
@@ -268,8 +267,7 @@ coverage_report(
         "//tools/adt/idea/android-templates:intellij.android.templates.tests_tests",
         "//tools/adt/idea/compose-designer:intellij.android.compose-designer.tests_tests",
         "//tools/adt/idea/designer:intellij.android.designer.tests_tests",
-        #TODO(b/175459453)
-        #"//tools/adt/idea/layout-ui:intellij.android.layout-ui_tests",
+        "//tools/adt/idea/layout-ui:intellij.android.layout-ui_tests",
         "//tools/adt/idea/layoutlib-loader:intellij.android.layoutlib-loader.tests_tests",
         "//tools/base/layoutlib-api:studio.android.sdktools.layoutlib-api_tests",
         "//tools/base/layoutlib-api:tools.tests",
@@ -647,8 +645,7 @@ coverage_report(
         "//tools/adt/idea/gradle-dsl:intellij.android.gradle.dsl.tests_tests",
         "//tools/adt/idea/kotlin-integration:kotlin-integration-tests_tests",
         "//tools/adt/idea/layout-inspector:intellij.android.layout-inspector.tests_tests",
-        #TODO(b/175459453)
-        #"//tools/adt/idea/layout-ui:intellij.android.layout-ui_tests",
+        "//tools/adt/idea/layout-ui:intellij.android.layout-ui_tests",
         "//tools/adt/idea/layoutlib-loader:intellij.android.layoutlib-loader.tests_tests",
         "//tools/adt/idea/mlkit:intellij.android.mlkit.tests_tests",
         "//tools/adt/idea/native-symbolizer:native-symbolizer_tests",
