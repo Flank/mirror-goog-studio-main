@@ -273,7 +273,7 @@ class UtpConfigFactoryTest {
               }
               config {
                 type_url: "type.googleapis.com/com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidTestResultListenerConfig"
-                value: "\b\322\t\022 mockResultListenerClientCertPath\032&mockResultListenerClientPrivateKeyPath\"\033mockTrustCertCollectionPath"
+                value: "\b\322\t\022 mockResultListenerClientCertPath\032&mockResultListenerClientPrivateKeyPath\"\033mockTrustCertCollectionPath*\026mockDeviceSerialNumber"
               }
             }
             single_device_executor {
@@ -423,7 +423,7 @@ class UtpConfigFactoryTest {
               }
               config {
                 type_url: "type.googleapis.com/com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidTestResultListenerConfig"
-                value: "\b\322\t\022 mockResultListenerClientCertPath\032&mockResultListenerClientPrivateKeyPath\"\033mockTrustCertCollectionPath"
+                value: "\b\322\t\022 mockResultListenerClientCertPath\032&mockResultListenerClientPrivateKeyPath\"\033mockTrustCertCollectionPath*\026mockDeviceSerialNumber"
               }
             }
             single_device_executor {
@@ -589,7 +589,7 @@ class UtpConfigFactoryTest {
               }
               config {
                 type_url: "type.googleapis.com/com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidTestResultListenerConfig"
-                value: "\b\322\t\022 mockResultListenerClientCertPath\032&mockResultListenerClientPrivateKeyPath\"\033mockTrustCertCollectionPath"
+                value: "\b\322\t\022 mockResultListenerClientCertPath\032&mockResultListenerClientPrivateKeyPath\"\033mockTrustCertCollectionPath*\026mockDeviceSerialNumber"
               }
             }
             single_device_executor {
@@ -757,7 +757,7 @@ class UtpConfigFactoryTest {
               }
               config {
                 type_url: "type.googleapis.com/com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidTestResultListenerConfig"
-                value: "\b\322\t\022 mockResultListenerClientCertPath\032&mockResultListenerClientPrivateKeyPath\"\033mockTrustCertCollectionPath"
+                value: "\b\322\t\022 mockResultListenerClientCertPath\032&mockResultListenerClientPrivateKeyPath\"\033mockTrustCertCollectionPath*\026mockDeviceSerialNumber"
               }
             }
             single_device_executor {
@@ -910,7 +910,7 @@ class UtpConfigFactoryTest {
               }
               config {
                 type_url: "type.googleapis.com/com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidTestResultListenerConfig"
-                value: "\b\322\t\022 mockResultListenerClientCertPath\032&mockResultListenerClientPrivateKeyPath\"\033mockTrustCertCollectionPath"
+                value: "\b\322\t\022 mockResultListenerClientCertPath\032&mockResultListenerClientPrivateKeyPath\"\033mockTrustCertCollectionPath*\026mockDeviceSerialNumber"
               }
             }
             single_device_executor {

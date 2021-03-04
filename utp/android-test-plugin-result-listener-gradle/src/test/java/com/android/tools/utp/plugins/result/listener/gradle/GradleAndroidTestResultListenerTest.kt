@@ -97,6 +97,7 @@ class GradleAndroidTestResultListenerTest {
 
         val config = Any.pack(GradleAndroidTestResultListenerConfig.newBuilder().apply {
             resultListenerServerPort = 1234
+            deviceId = "deviceIdString"
         }.build())
         val protoConfig = object: ProtoConfig {
             override val configProto: Any
@@ -123,15 +124,19 @@ class GradleAndroidTestResultListenerTest {
 
         assertThat(capturedRequests).containsExactly(
                 TestResultEvent.newBuilder().apply {
+                    deviceId = "deviceIdString"
                     testSuiteStarted = TestResultEvent.TestSuiteStarted.getDefaultInstance()
                 }.build(),
                 TestResultEvent.newBuilder().apply {
+                    deviceId = "deviceIdString"
                     testCaseStarted = TestResultEvent.TestCaseStarted.getDefaultInstance()
                 }.build(),
                 TestResultEvent.newBuilder().apply {
+                    deviceId = "deviceIdString"
                     testCaseFinished = TestResultEvent.TestCaseFinished.getDefaultInstance()
                 }.build(),
                 TestResultEvent.newBuilder().apply {
+                    deviceId = "deviceIdString"
                     testSuiteFinished = TestResultEvent.TestSuiteFinished.getDefaultInstance()
                 }.build()
         ).inOrder()
