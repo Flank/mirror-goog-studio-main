@@ -136,6 +136,53 @@ class DslDecoratorUnitTest {
         assertThat(o.managedString).isEqualTo("a")
     }
 
+    interface WithManagedBoolean {
+        var managedBoolean: Boolean
+    }
+
+    @Test
+    fun `check managed boolean properties`() {
+        val decorator = DslDecorator(listOf(SupportedPropertyType.Var.Boolean))
+        val decorated = decorator.decorate(WithManagedBoolean::class.java)
+        val o = decorated.getDeclaredConstructor(DslServices::class.java).newInstance(dslServices)
+
+        assertThat(o.managedBoolean).isFalse()
+        o.managedBoolean = true
+        assertThat(o.managedBoolean).isTrue()
+    }
+
+
+    interface WithManagedNullableBoolean {
+        var managedBoolean: Boolean?
+    }
+
+    @Test
+    fun `check managed nullable boolean properties`() {
+        val decorator = DslDecorator(listOf(SupportedPropertyType.Var.NullableBoolean))
+        val decorated = decorator.decorate(WithManagedNullableBoolean::class.java)
+        val o = decorated.getDeclaredConstructor(DslServices::class.java).newInstance(dslServices)
+
+        assertThat(o.managedBoolean).isNull()
+        o.managedBoolean = true
+        assertThat(o.managedBoolean).isTrue()
+        o.managedBoolean = false
+        assertThat(o.managedBoolean).isFalse()
+    }
+
+    interface WithManagedInteger {
+        var managedInteger: Int
+    }
+
+    @Test
+    fun `check managed integer properties`() {
+        val decorator = DslDecorator(listOf(SupportedPropertyType.Var.Int))
+        val decorated = decorator.decorate(WithManagedInteger::class.java)
+        val o = decorated.getDeclaredConstructor(DslServices::class.java).newInstance(dslServices)
+
+        assertThat(o.managedInteger).isEqualTo(0)
+        o.managedInteger = -3
+        assertThat(o.managedInteger).isEqualTo(-3)
+    }
 
     abstract class WithExtraSetter {
         abstract var managedString: String

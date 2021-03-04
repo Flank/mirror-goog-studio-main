@@ -517,7 +517,9 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType>) {
         GeneratorAdapter(access, getter, null, null, classWriter).apply {
             loadThis()
             getField(generatedClass, property.backingFieldName, type.implementationType)
-            checkCast(getter.returnType)
+            if (type.implementationType != getter.returnType) {
+                checkCast(getter.returnType)
+            }
             returnValue()
             endMethod()
         }

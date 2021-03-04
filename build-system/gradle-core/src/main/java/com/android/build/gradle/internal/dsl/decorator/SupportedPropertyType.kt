@@ -34,6 +34,9 @@ sealed class SupportedPropertyType {
     sealed class Var(override val type: Type) : SupportedPropertyType() {
         override val implementationType get() = type
         object String : Var(Type.getType(kotlin.String::class.java))
+        object Boolean: Var(Type.BOOLEAN_TYPE)
+        object NullableBoolean : Var(Type.getType(java.lang.Boolean::class.java))
+        object Int : Var(Type.INT_TYPE)
     }
 
     sealed class Collection(
