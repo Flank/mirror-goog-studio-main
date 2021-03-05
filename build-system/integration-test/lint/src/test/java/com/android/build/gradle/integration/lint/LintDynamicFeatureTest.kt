@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.lint
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
+import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth.assertThat
@@ -122,6 +123,56 @@ class LintDynamicFeatureTest(private val usePartialAnalysis: Boolean) {
             assertThat(project.buildResult.didWorkTasks).containsAtLeastElementsIn(
                 listOf(":app:lintDebug")
             )
+        }
+    }
+
+    @Test
+    fun testLintWithIncrementalChanges() {
+        getExecutor().run(":app:lintDebug")
+        TestFileUtils.searchAndReplace(
+            project.file("feature2/src/main/res/layout/feature2_layout.xml"),
+            "\"Button\"",
+            "\"AAAAAAAAAAA\""
+        )
+        getExecutor().run(":app:lintDebug")
+        if (usePartialAnalysis) {
+            assertThat(project.buildResult.upToDateTasks).containsAtLeastElementsIn(
+                listOf(
+                    ":app:lintAnalyzeDebug",
+                    ":feature1:lintAnalyzeDebug",
+                )
+            )
+            assertThat(project.buildResult.didWorkTasks).containsAtLeastElementsIn(
+                listOf(
+                    ":app:lintDebug",
+                    ":feature2:lintAnalyzeDebug",
+                )
+            )
+        } else {
+            // The lint task should not be up-to-date if not using partial analysis with dynamic
+            // features because the inputs are not modeled correctly in that case.
+            assertThat(project.buildResult.didWorkTasks).containsAtLeastElementsIn(
+                listOf(":app:lintDebug")
+            )
+        }
+    }
+
+
+    @Test
+    fun testLintVital() {
+        getExecutor().run(":app:lintVitalRelease")
+        getExecutor().run(":app:lintVitalRelease")
+
+        assertThat(project.buildResult.upToDateTasks).contains(":app:lintVitalRelease")
+
+        // Dynamic Feature Modules are not analyzed by the main module's lintVital task
+        assertThat(project.buildResult.tasks).doesNotContain(":feature1:lintVitalRelease")
+        assertThat(project.buildResult.tasks).doesNotContain(":feature1:lintVitalAnalyzeRelease")
+        assertThat(project.buildResult.tasks).doesNotContain(":feature2:lintVitalRelease")
+        assertThat(project.buildResult.tasks).doesNotContain(":feature2:lintVitalAnalyzeRelease")
+
+        if (usePartialAnalysis) {
+            assertThat(project.buildResult.upToDateTasks).contains(":app:lintVitalAnalyzeRelease")
         }
     }
 

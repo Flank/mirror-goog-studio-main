@@ -460,8 +460,9 @@ abstract class AndroidLintTask : NonIncrementalTask() {
             })
             task.projectInputs.initialize(variant)
             // ignore dynamic features for lintVital and lintFix
+            val hasDynamicFeatures = creationConfig.globalScope.hasDynamicFeatures()
             val includeDynamicFeatureSourceProviders =
-                !fatalOnly && !autoFix && !reportOnly && creationConfig.globalScope.hasDynamicFeatures()
+                !fatalOnly && !autoFix && !reportOnly && hasDynamicFeatures
             task.variantInputs.initialize(
                 variant,
                 checkDependencies,
@@ -475,7 +476,8 @@ abstract class AndroidLintTask : NonIncrementalTask() {
                     creationConfig.artifacts.get(InternalArtifactType.LINT_PARTIAL_RESULTS)
                 }
                 task.partialResults.set(partialResults)
-                if (creationConfig.globalScope.hasDynamicFeatures()) {
+                // lintVital and lintFix do not currently examine dynamic feature modules. See b/180672373
+                if (!fatalOnly && !autoFix && hasDynamicFeatures) {
                     task.dynamicFeatureLintModels.from(
                         creationConfig.variantDependencies.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
