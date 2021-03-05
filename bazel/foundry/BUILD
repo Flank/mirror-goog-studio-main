@@ -6,7 +6,7 @@ load(
 package(default_visibility = ["//visibility:public"])
 
 platform(
-    name = "rbe_ubuntu18",
+    name = "linux",
     constraint_values = [
         "@platforms//cpu:x86_64",
         "@platforms//os:linux",
@@ -26,7 +26,7 @@ platform(
 )
 
 platform(
-    name = "rbe_windows2019_as",
+    name = "windows",
     constraint_values = [
         "@platforms//cpu:x86_64",
         "@platforms//os:windows",

@@ -6,10 +6,8 @@ import %workspace%/tools/base/bazel/common.bazel.rc
 # for a remote machine to execute them.
 build:remote --jobs=250
 
-build:remote --extra_toolchains=@native_toolchain//:cc-toolchain-x64_linux
-build:remote --extra_execution_platforms=//tools/base/bazel/foundry:rbe_ubuntu18
-build:remote --host_platform=//tools/base/bazel/foundry:rbe_ubuntu18
-build:remote --platforms=//tools/base/bazel/foundry:rbe_ubuntu18
+build --host_platform=//tools/base/bazel/foundry:linux
+build --platforms=//tools/base/bazel/foundry:linux
 
 build:release --copt=-fdata-sections
 build:release --cxxopt=-fdata-sections
