@@ -1,4 +1,4 @@
-import %workspace%/tools/base/bazel/common.bazel.rc
+import %workspace%/tools/base/bazel/common.bazelrc
 
 # Depending on how many machines are in the remote execution instance, setting
 # this higher can make builds faster by allowing more jobs to run in parallel.

@@ -1,4 +1,4 @@
-import %workspace%/tools/base/bazel/common.bazel.rc
+import %workspace%/tools/base/bazel/common.bazelrc
 
 # Enables the use of native symlinks in worker sandboxes,
 # required for dynamic scheduling.

@@ -1,4 +1,4 @@
-import %workspace%/tools/base/bazel/common.bazel.rc
+import %workspace%/tools/base/bazel/common.bazelrc
 
 build --action_env=BAZEL_USE_CPP_ONLY_TOOLCHAIN=1
 build --host_linkopt="-L/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib"
