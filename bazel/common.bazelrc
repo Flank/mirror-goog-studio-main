@@ -113,7 +113,7 @@ build:remote --strategy=CppLink=remote
 build:remote --show_timestamps
 # Stop downloading of build outputs to the local machine and
 # removes a possibility of network/disk bottlenecks when using RBE.
-build:_remote_base --remote_download_toplevel
+build:remote --remote_download_toplevel
 
 
 # Persistent workers
