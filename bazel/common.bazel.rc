@@ -139,3 +139,6 @@ build:dynamic --worker_quit_after_build
 # Disables verbose failures to avoid triggering --materialize_param_files, see
 # b/160150358#comment30
 build:dynamic --noverbose_failures
+# Multiplex workers are not sandboxed, and are not ready to be used with
+# dynamic scheduling.
+build:dynamic --noexperimental_worker_multiplex
