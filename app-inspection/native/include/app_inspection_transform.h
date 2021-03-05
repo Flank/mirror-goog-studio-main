@@ -16,6 +16,7 @@
 #ifndef APP_INSPECTION_TRANSFORM_H
 #define APP_INSPECTION_TRANSFORM_H
 
+#include "array_params_entry_hook.h"
 #include "slicer/dex_ir.h"
 #include "slicer/dex_ir_builder.h"
 #include "slicer/instrumentation.h"
@@ -37,11 +38,9 @@ class AppInspectionTransform {
     for (auto transform : transforms) {
       slicer::MethodInstrumenter mi(dex_ir);
       if (transform.isEntry()) {
-        mi.AddTransformation<slicer::EntryHook>(
-            ir::MethodId(
-                "Lcom/android/tools/agent/app/inspection/AppInspectionService;",
-                "onEntry"),
-            slicer::EntryHook::Tweak::ArrayParams);
+        mi.AddTransformation<ArrayParamsEntryHook>(ir::MethodId(
+            "Lcom/android/tools/agent/app/inspection/AppInspectionService;",
+            "onEntry"));
       } else {
         auto tweak = transform.HasPrimitiveOrVoidReturnType()
                          ? slicer::ExitHook::Tweak::None
