@@ -115,14 +115,9 @@ build:remote --show_timestamps
 # removes a possibility of network/disk bottlenecks when using RBE.
 build:remote --remote_download_toplevel
 
-
-# Persistent workers
-build --worker_verbose  # Increases visibility in case there are issues.
-
+## Enables dynamic scheduling. This will run some actions locally
+## as well as remotely, choosing whichever finishes first.
 build:dynamic --config=remote
-
-# Enable dynamic scheduling. This will run some actions locally
-# # as well as remotely, choosing whichever finishes first.
 build:dynamic --internal_spawn_scheduler
 build:dynamic --strategy=Javac=dynamic
 build:dynamic --strategy=kotlinc=dynamic
@@ -141,6 +136,8 @@ build:dynamic --strategy=stamper=dynamic
 build:dynamic --strategy=PythonZipper=dynamic
 # We want to use persistent workers, if supported (Javac, kotlinc, formc)
 build:dynamic --dynamic_local_strategy=worker,sandboxed,local
+# Increase worker visibility in case there are issues.
+build:dynamic --worker_verbose
 # Prevents b/156952249. Android Build (buildbot) kills bazel between builds,
 # so there is no need to keep workers alive after the build.
 build:dynamic --worker_quit_after_build
