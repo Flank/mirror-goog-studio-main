@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.plugins;
 
+import static com.android.build.gradle.internal.dependency.JdkImageTransformKt.CONFIG_NAME_ANDROID_JDK_IMAGE;
 import static com.android.build.gradle.internal.ManagedDeviceUtilsKt.getManagedDeviceAvdFolder;
 import static com.google.common.base.Preconditions.checkState;
 
@@ -456,6 +457,8 @@ public abstract class BasePlugin<
         gradle.projectsEvaluated(action -> DeprecationReporterImpl.Companion.clean());
 
         createLintClasspathConfiguration(project);
+
+        createAndroidJdkImageConfiguration(project);
     }
 
     /** Creates a lint class path Configuration for the given project */
@@ -468,6 +471,14 @@ public abstract class BasePlugin<
 
         project.getDependencies().add(config.getName(), "com.android.tools.lint:lint-gradle:" +
                 Version.ANDROID_TOOLS_BASE_VERSION);
+    }
+
+    /** Creates the androidJdkImage configuration */
+    public static void createAndroidJdkImageConfiguration(@NonNull Project project) {
+        Configuration config = project.getConfigurations().create(CONFIG_NAME_ANDROID_JDK_IMAGE);
+        config.setVisible(false);
+        config.setCanBeConsumed(false);
+        config.setDescription("Configuration providing JDK image for compiling Java 9+ sources");
     }
 
     private void configureExtension() {

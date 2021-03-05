@@ -74,7 +74,15 @@ fun JavaCompile.configureProperties(creationConfig: ComponentCreationConfig, tas
 
     if (compileOptions.sourceCompatibility.isJava9Compatible) {
         checkSdkCompatibility(globalScope.extension.compileSdkVersion!!, creationConfig.services.issueReporter)
-        addAndroidJdkImageDependency(task, globalScope)
+        checkNotNull(task.project.configurations.findByName(CONFIG_NAME_ANDROID_JDK_IMAGE)) {
+            "The $CONFIG_NAME_ANDROID_JDK_IMAGE configuration must exist for Java 9+ sources."
+        }
+        task.project.dependencies.add(
+            CONFIG_NAME_ANDROID_JDK_IMAGE,
+            task.project.files(
+                globalScope.versionedSdkLoader.flatMap { it.coreForSystemModulesProvider }
+            )
+        )
         val jdkImage = getJdkImageFromTransform(globalScope.project)
 
         this.options.compilerArgumentProviders.add(JdkImageInput(jdkImage))
@@ -286,21 +294,6 @@ fun recordAnnotationProcessorsForAnalytics(
         variant?.addAnnotationProcessors(builder)
     }
     variant?.isAnnotationProcessingIncremental = !processors.values.contains(false)
-}
-
-private fun addAndroidJdkImageDependency(task: JavaCompile, globalScope: GlobalScope) {
-    task.project.configurations.findByName(CONFIG_NAME_ANDROID_JDK_IMAGE)
-        ?: with(task.project.configurations.maybeCreate(CONFIG_NAME_ANDROID_JDK_IMAGE)) {
-            description = "Configuration providing JDK image for compiling Java 9+ sources"
-            isCanBeConsumed = false
-            isVisible = false
-            task.project.dependencies.add(
-                CONFIG_NAME_ANDROID_JDK_IMAGE,
-                task.project.files(
-                        globalScope.versionedSdkLoader.flatMap { it.coreForSystemModulesProvider }
-                )
-            )
-        }
 }
 
 private fun checkSdkCompatibility(compileSdkVersion: String, issueReporter: IssueReporter) {
