@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.common.fixture.model
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.ModelBuilderV2
+import com.android.build.gradle.integration.common.fixture.ModelBuilderV2.NativeModuleParams
 import com.android.build.gradle.integration.common.fixture.ModelContainerV2
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
@@ -78,7 +79,7 @@ fun File.dumpCompileCommandsJsonBin(normalizer: FileNormalizer): String =
  * Return a report of build outputs (*.so, *.o, *.a).
  */
 fun GradleTestProject.goldenBuildProducts() : String {
-    val fetchResult = modelV2().fetchNativeModules(listOf(), listOf())
+    val fetchResult = modelV2().fetchNativeModules(NativeModuleParams(listOf(), listOf()))
     val hashToKey = fetchResult.cxxFileVariantSegmentTranslator()
     val projectFolder = recoverExistingCxxAbiModels().first().variant.module.project.rootBuildGradleFolder
     return projectFolder.walk()
@@ -95,7 +96,7 @@ fun GradleTestProject.goldenBuildProducts() : String {
  */
 fun GradleTestProject.goldenConfigurationFlags(abi: Abi) : String {
     val fetchResult =
-            modelV2().fetchNativeModules(listOf("debug"), listOf(abi.tag))
+            modelV2().fetchNativeModules(NativeModuleParams(listOf("debug"), listOf(abi.tag)))
     val recoveredAbiModel = recoverExistingCxxAbiModels().single { it.abi == abi }
     val hashToKey = fetchResult.cxxFileVariantSegmentTranslator()
     return hashToKey(recoveredAbiModel.goldenConfigurationFlags())
@@ -194,10 +195,11 @@ fun Any?.assertToString(expected : String) {
  *      cmake/debug ==> {DEBUG}
  *      cmake/release ==> {RELEASE}
  */
-private fun ModelBuilderV2.FetchResult<ModelContainerV2<NativeModule>>.hashEquivalents() : List<Pair<String, String>> {
+private fun ModelBuilderV2.FetchResult<ModelContainerV2>.hashEquivalents() : List<Pair<String, String>> {
     val abis = container.infoMaps.values
             .flatMap { it.values }
-            .flatMap { it.model.variants }
+            .mapNotNull { it.nativeModule }
+            .flatMap { it.variants }
             .flatMap { it.abis.map { abi -> it to abi } }
     val segments = abis.map { (variant, abi) ->
         val segment = findConfigurationSegment(abi.sourceFlagsFile)
@@ -259,7 +261,7 @@ private fun List<Pair<String, String>>.toTranslateFunction() = run {
  * to .cxx/{DEBUG}/x86 so that baselines can be compared even with "stuff" changes (as it is for
  * configuration folding).
  */
-fun ModelBuilderV2.FetchResult<ModelContainerV2<NativeModule>>.cxxFileVariantSegmentTranslator() =
+fun ModelBuilderV2.FetchResult<ModelContainerV2>.cxxFileVariantSegmentTranslator() =
         hashEquivalents().toTranslateFunction()
 
 /**
@@ -295,17 +297,19 @@ fun NativeModule.sorted() : NativeModule {
  * makes test easier to write since these directories generally change across platforms and test
  * runs. The normalization is done by [FileNormalizer].
  */
-fun ModelBuilderV2.FetchResult<ModelContainerV2<NativeModule>>.dump(map:(NativeModule)->NativeModule): String {
+fun ModelBuilderV2.FetchResult<ModelContainerV2>.dump(map:(NativeModule)->NativeModule): String {
     val sb = StringBuilder()
     withCxxFileNormalizer().apply {
         container.infoMaps.forEach { (_, modelMap) ->
-            modelMap.forEach { moduleName, (nativeModule: NativeModule, _) ->
+            modelMap.forEach { (moduleName, modelInfo) ->
                 sb.appendln("[$moduleName]")
-                sb.appendln(
-                        dump(NativeModule::class.java, normalizer) {
-                            map(nativeModule.sorted()).writeToBuilder(this)
+                modelInfo.nativeModule?.let {
+                    sb.appendln(
+                        snapshotModel("NativeModule", normalizer, map(it.sorted())) {
+                            snapshotNativeModule()
                         }
-                )
+                    )
+                }
             }
         }
     }
@@ -315,8 +319,8 @@ fun ModelBuilderV2.FetchResult<ModelContainerV2<NativeModule>>.dump(map:(NativeM
 /**
  * Add a C/C++ path normalizer to this [ModelBuilderV2.FetchResult]
  */
-fun ModelBuilderV2.FetchResult<ModelContainerV2<NativeModule>>.withCxxFileNormalizer()
-        : ModelBuilderV2.FetchResult<ModelContainerV2<NativeModule>> {
+fun ModelBuilderV2.FetchResult<ModelContainerV2>.withCxxFileNormalizer()
+        : ModelBuilderV2.FetchResult<ModelContainerV2> {
     val cxxSegmentTranslator = cxxFileVariantSegmentTranslator()
     val normalizer = object : FileNormalizer by normalizer {
         override fun normalize(file: File) =
@@ -325,7 +329,7 @@ fun ModelBuilderV2.FetchResult<ModelContainerV2<NativeModule>>.withCxxFileNormal
     return copy(normalizer = normalizer)
 }
 
-fun ModelBuilderV2.FetchResult<ModelContainerV2<NativeModule>>.dump() = dump { it }
+fun ModelBuilderV2.FetchResult<ModelContainerV2>.dump() = dump { it }
 
 fun filterByVariantName(vararg names: String) : (NativeModule) -> NativeModule = { nativeModule:NativeModule ->
     object : NativeModule by nativeModule {

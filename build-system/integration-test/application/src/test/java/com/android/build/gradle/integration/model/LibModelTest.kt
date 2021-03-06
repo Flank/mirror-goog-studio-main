@@ -17,11 +17,11 @@
 package com.android.build.gradle.integration.model
 
 import com.android.build.gradle.integration.common.fixture.model.ModelComparator
+import com.android.build.gradle.integration.common.fixture.model.ReferenceModelComparator
 import com.android.build.gradle.integration.common.fixture.testprojects.PluginType
 import com.android.build.gradle.integration.common.fixture.testprojects.createGradleProject
 import com.android.build.gradle.integration.common.fixture.testprojects.prebuilts.setUpHelloWorld
 import com.android.builder.model.v2.ide.SyncIssue
-import org.gradle.api.JavaVersion
 import org.junit.Rule
 import org.junit.Test
 
@@ -29,7 +29,7 @@ class HelloWorldLibModelTest: ModelComparator() {
 
     @get:Rule
     val project = createGradleProject {
-        configureRoot {
+        rootProject {
             plugins.add(PluginType.ANDROID_LIB)
             android {
                 setUpHelloWorld()
@@ -38,55 +38,52 @@ class HelloWorldLibModelTest: ModelComparator() {
     }
 
     @Test
-    fun `test AndroidProject model`() {
+    fun `test models`() {
         val result = project.modelV2()
             .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
-            .fetchAndroidProjects()
+            .fetchModels(variantName = "debug")
 
         with(result).compare(
-            model = result.container.singleModel,
+            model = result.container.singleVersions,
+            goldenFile = "ModelVersions"
+        )
+
+        with(result).compare(
+            model = result.container.singleAndroidProject,
             goldenFile = "AndroidProject"
         )
-    }
-
-    @Test
-    fun `test VariantDependencies model`() {
-        val result = project.modelV2()
-            .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
-            .fetchVariantDependencies("debug")
 
         with(result).compare(
-            model = result.container.singleModel,
+            model = result.container.singleVariantDependencies,
             goldenFile = "VariantDependencies"
         )
     }
 }
 
-class DisabledAndroidResourcesInLibModelTest: ModelComparator() {
-
-    @get:Rule
-    val project = createGradleProject {
-        configureRoot {
+class DisabledAndroidResourcesInLibModelTest: ReferenceModelComparator(
+    referenceConfig = {
+        rootProject {
             plugins.add(PluginType.ANDROID_LIB)
             android {
                 setUpHelloWorld()
-
+            }
+        }
+    },
+    deltaConfig = {
+        rootProject {
+            android {
                 buildFeatures {
                     androidResources = false
                 }
             }
         }
+    },
+    syncOptions = {
+        ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
     }
-
+) {
     @Test
     fun `test AndroidProject model`() {
-        val result = project.modelV2()
-            .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
-            .fetchAndroidProjects()
-
-        with(result).compare(
-            model = result.container.singleModel,
-            goldenFile = "AndroidProject"
-        )
+        compareAndroidProjectWith(goldenFileSuffix = "AndroidProject")
     }
 }

@@ -63,7 +63,7 @@ abstract class CommonExtensionImpl<
 
     // This is exposed only to support AndroidConfig.libraryRequests
     // TODO: Make private when AndroidConfig is removed
-    val libraryRequests: MutableList<LibraryRequest> = mutableListOf()
+    abstract val libraryRequests: MutableList<LibraryRequest>
 
     override val sdkComponents: SdkComponents by lazy {
         dslServices.newInstance(
@@ -262,12 +262,6 @@ abstract class CommonExtensionImpl<
         action.invoke(testOptions)
     }
 
-    override var resourcePrefix: String? = null
-
-    override var ndkVersion: String? = null
-
-    override var ndkPath: String? = null
-
     override var buildToolsVersion: String
         get() = buildToolsRevision.toString()
         set(version) {
@@ -284,6 +278,4 @@ abstract class CommonExtensionImpl<
     override fun useLibrary(name: String, required: Boolean) {
         libraryRequests.add(LibraryRequest(name, required))
     }
-
-    override var namespace: String? = null
 }

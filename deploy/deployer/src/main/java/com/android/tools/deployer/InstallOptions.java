@@ -55,6 +55,12 @@ public final class InstallOptions {
             return this;
         }
 
+        // Allows the package to be visible from other packages.
+        public Builder setForceQueryable() {
+            flags.add("--force-queryable");
+            return this;
+        }
+
         // Installs application as non-ephemeral full app.
         public Builder setInstallFullApk() {
             flags.add("--full");

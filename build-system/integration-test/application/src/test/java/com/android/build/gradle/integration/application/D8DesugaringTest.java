@@ -46,24 +46,16 @@ import org.junit.runners.Parameterized;
 @RunWith(FilterableParameterized.class)
 public class D8DesugaringTest {
 
-    @Parameterized.Parameters(
-            name = "withIncrementalDexingTaskV2_{0}, withDexingArtifactTransform_{1}")
-    public static List<Object[]> parameters() {
-        return ImmutableList.of(
-                new Object[] {true, true},
-                new Object[] {true, false},
-                new Object[] {false, true},
-                new Object[] {false, false});
+    @Parameterized.Parameters(name = "withDexingArtifactTransform_{0}")
+    public static List<Object> parameters() {
+        return ImmutableList.of(true, false);
     }
 
-    private final boolean withIncrementalDexingTaskV2;
     private final boolean withDexingArtifactTransform;
     @Rule
     public GradleTestProject project;
 
-    public D8DesugaringTest(
-            boolean withIncrementalDexingTaskV2, boolean withDexingArtifactTransform) {
-        this.withIncrementalDexingTaskV2 = withIncrementalDexingTaskV2;
+    public D8DesugaringTest(boolean withDexingArtifactTransform) {
         this.withDexingArtifactTransform = withDexingArtifactTransform;
         project = GradleTestProject.builder()
                 .fromTestApp(
@@ -73,10 +65,6 @@ public class D8DesugaringTest {
                                         HelloWorldApp.noBuildFile(),
                                         ":lib",
                                         new EmptyAndroidTestApp())))
-                .addGradleProperties(
-                        BooleanOption.ENABLE_INCREMENTAL_DEXING_TASK_V2.getPropertyName()
-                                + "="
-                                + withIncrementalDexingTaskV2)
                 .addGradleProperties(
                         BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM.getPropertyName()
                                 + "="
@@ -111,7 +99,7 @@ public class D8DesugaringTest {
                         + "      multidex {\n"
                         + "        dimension \"whatever\"\n"
                         + "        multiDexEnabled true\n"
-                        + "        multiDexKeepFile file('debug_main_dex_list.txt')\n"
+                        + "        multiDexKeepProguard file('debug_main_dex_rules.txt')\n"
                         + "      }\n"
                         + "      base {\n"
                         + "        dimension \"whatever\"\n"
@@ -168,6 +156,9 @@ public class D8DesugaringTest {
                         + "\n"
                         + "public class StringTool {\n"
                         + "  private InterfaceWithDefault converter;\n"
+                        + "  public StringTool() {\n"
+                        + "    this(new InterfaceWithDefault() { });\n"
+                        + "  }\n"
                         + "  public StringTool(InterfaceWithDefault converter) {\n"
                         + "    this.converter = converter;\n"
                         + "  }\n"
@@ -201,12 +192,12 @@ public class D8DesugaringTest {
                         + "        Context appContext ="
                         + " InstrumentationRegistry.getTargetContext();\n"
                         + "        assertEquals(\"toto-default\", "
-                        + "new StringTool(new InterfaceWithDefault() { }).convert(\"toto\"));\n"
+                        + "new StringTool().convert(\"toto\"));\n"
                         + "    }\n"
                         + "}\n");
-        File debugMainDexList = project.getSubproject(":app").file("debug_main_dex_list.txt");
+        File debugMainDexRules = project.getSubproject(":app").file("debug_main_dex_rules.txt");
         TestFileUtils.appendToFile(
-                debugMainDexList, "com/example/helloworld/InterfaceWithDefault.class");
+                debugMainDexRules, "-keep class com.example.helloworld.StringTool { *; }");
     }
 
     @Test

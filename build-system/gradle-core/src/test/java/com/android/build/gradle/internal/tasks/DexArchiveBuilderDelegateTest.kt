@@ -45,7 +45,6 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import java.io.File
 import java.io.ObjectOutputStream
@@ -58,10 +57,7 @@ import java.util.zip.ZipOutputStream
 import kotlin.test.fail
 
 /** Testing the [DexArchiveBuilderTaskDelegate].  */
-@RunWith(Parameterized::class)
-class DexArchiveBuilderDelegateTest(
-    private val withIncrementalDexingTaskV2: Boolean
-) {
+class DexArchiveBuilderDelegateTest {
 
     private lateinit var out: Path
 
@@ -442,8 +438,7 @@ class DexArchiveBuilderDelegateTest(
             mixedScopeOutputKeepRules = null,
             inputJarHashesFile = inputJarHashesFile,
             desugarClasspathChangedClasses = emptySet(),
-            incrementalDexingTaskV2 = withIncrementalDexingTaskV2,
-            desugarGraphDir =  tmpDir.newFolder().takeIf{ withIncrementalDexingTaskV2 },
+            desugarGraphDir =  tmpDir.newFolder().takeIf { java8Desugaring == VariantScope.Java8LangSupport.D8 },
             projectVariant = "myVariant",
             numberOfBuckets = numberOfBuckets,
             workerExecutor = workerExecutor,

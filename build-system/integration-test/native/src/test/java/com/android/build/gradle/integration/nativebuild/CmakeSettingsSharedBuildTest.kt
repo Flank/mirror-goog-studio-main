@@ -19,6 +19,8 @@ package com.android.build.gradle.integration.nativebuild
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_NDK_SIDE_BY_SIDE_VERSION
+import com.android.build.gradle.integration.common.fixture.ModelBuilderV2
+import com.android.build.gradle.integration.common.fixture.ModelBuilderV2.NativeModuleParams
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
 import com.android.build.gradle.integration.common.fixture.model.dump
 import com.android.build.gradle.integration.common.fixture.model.filterByVariantName
@@ -121,7 +123,7 @@ class CmakeSettingsSharedBuildTest(cmakeVersionInDsl: String) {
     @Test
     fun checkBuildFoldersRedirected() {
         val result =
-          project.modelV2().fetchNativeModules(listOf("debug", "release"), listOf("x86_64"))
+          project.modelV2().fetchNativeModules(NativeModuleParams(listOf("debug", "release"), listOf("x86_64")))
         // There are a lot of variants, just peek at the first several lines
         val severalLines = result.dump(filterByVariantName("debug", "release"))
                 .lines().take(40).joinToString("\n")
@@ -129,41 +131,41 @@ class CmakeSettingsSharedBuildTest(cmakeVersionInDsl: String) {
 > NativeModule:
     - name                    = "project"
     > variants:
-       * NativeVariant:
-          * name = "debug"
+       > debug:
           > abis:
-             * NativeAbi:
-                * name                            = "armeabi-v7a"
-                * sourceFlagsFile                 = {PROJECT}/build/intermediates/{DEBUG}/meta/armeabi-v7a/compile_commands.json.bin{!}
-                * symbolFolderIndexFile           = {PROJECT}/build/intermediates/{DEBUG}/meta/armeabi-v7a/symbol_folder_index.txt{!}
-                * buildFileIndexFile              = {PROJECT}/build/intermediates/{DEBUG}/meta/armeabi-v7a/build_file_index.txt{!}
-                * additionalProjectFilesIndexFile = {PROJECT}/build/intermediates/{DEBUG}/meta/armeabi-v7a/additional_project_files.txt{!}
-             * NativeAbi:
-                * name                            = "arm64-v8a"
-                * sourceFlagsFile                 = {PROJECT}/build/intermediates/{DEBUG}/meta/arm64-v8a/compile_commands.json.bin{!}
-                * symbolFolderIndexFile           = {PROJECT}/build/intermediates/{DEBUG}/meta/arm64-v8a/symbol_folder_index.txt{!}
-                * buildFileIndexFile              = {PROJECT}/build/intermediates/{DEBUG}/meta/arm64-v8a/build_file_index.txt{!}
-                * additionalProjectFilesIndexFile = {PROJECT}/build/intermediates/{DEBUG}/meta/arm64-v8a/additional_project_files.txt{!}
-             * NativeAbi:
-                * name                            = "x86"
-                * sourceFlagsFile                 = {PROJECT}/build/intermediates/{DEBUG}/meta/x86/compile_commands.json.bin{!}
-                * symbolFolderIndexFile           = {PROJECT}/build/intermediates/{DEBUG}/meta/x86/symbol_folder_index.txt{!}
-                * buildFileIndexFile              = {PROJECT}/build/intermediates/{DEBUG}/meta/x86/build_file_index.txt{!}
-                * additionalProjectFilesIndexFile = {PROJECT}/build/intermediates/{DEBUG}/meta/x86/additional_project_files.txt{!}
-             * NativeAbi:
-                * name                            = "x86_64"
-                * sourceFlagsFile                 = {PROJECT}/build/intermediates/{DEBUG}/meta/x86_64/compile_commands.json.bin{F}
-                * symbolFolderIndexFile           = {PROJECT}/build/intermediates/{DEBUG}/meta/x86_64/symbol_folder_index.txt{F}
-                * buildFileIndexFile              = {PROJECT}/build/intermediates/{DEBUG}/meta/x86_64/build_file_index.txt{F}
-                * additionalProjectFilesIndexFile = {PROJECT}/build/intermediates/{DEBUG}/meta/x86_64/additional_project_files.txt{F}
+             - arm64-v8a:
+                - sourceFlagsFile                 = {PROJECT}/build/intermediates/{DEBUG}/meta/arm64-v8a/compile_commands.json.bin{!}
+                - symbolFolderIndexFile           = {PROJECT}/build/intermediates/{DEBUG}/meta/arm64-v8a/symbol_folder_index.txt{!}
+                - buildFileIndexFile              = {PROJECT}/build/intermediates/{DEBUG}/meta/arm64-v8a/build_file_index.txt{!}
+                - additionalProjectFilesIndexFile = {PROJECT}/build/intermediates/{DEBUG}/meta/arm64-v8a/additional_project_files.txt{!}
+             - armeabi-v7a:
+                - sourceFlagsFile                 = {PROJECT}/build/intermediates/{DEBUG}/meta/armeabi-v7a/compile_commands.json.bin{!}
+                - symbolFolderIndexFile           = {PROJECT}/build/intermediates/{DEBUG}/meta/armeabi-v7a/symbol_folder_index.txt{!}
+                - buildFileIndexFile              = {PROJECT}/build/intermediates/{DEBUG}/meta/armeabi-v7a/build_file_index.txt{!}
+                - additionalProjectFilesIndexFile = {PROJECT}/build/intermediates/{DEBUG}/meta/armeabi-v7a/additional_project_files.txt{!}
+             - x86:
+                - sourceFlagsFile                 = {PROJECT}/build/intermediates/{DEBUG}/meta/x86/compile_commands.json.bin{!}
+                - symbolFolderIndexFile           = {PROJECT}/build/intermediates/{DEBUG}/meta/x86/symbol_folder_index.txt{!}
+                - buildFileIndexFile              = {PROJECT}/build/intermediates/{DEBUG}/meta/x86/build_file_index.txt{!}
+                - additionalProjectFilesIndexFile = {PROJECT}/build/intermediates/{DEBUG}/meta/x86/additional_project_files.txt{!}
+             - x86_64:
+                - sourceFlagsFile                 = {PROJECT}/build/intermediates/{DEBUG}/meta/x86_64/compile_commands.json.bin{F}
+                - symbolFolderIndexFile           = {PROJECT}/build/intermediates/{DEBUG}/meta/x86_64/symbol_folder_index.txt{F}
+                - buildFileIndexFile              = {PROJECT}/build/intermediates/{DEBUG}/meta/x86_64/build_file_index.txt{F}
+                - additionalProjectFilesIndexFile = {PROJECT}/build/intermediates/{DEBUG}/meta/x86_64/additional_project_files.txt{F}
           < abis
-       * NativeVariant:
-          * name = "release"
+       < debug
+       > release:
           > abis:
-             * NativeAbi:
-                * name                            = "armeabi-v7a"
-                * sourceFlagsFile                 = {PROJECT}/build/intermediates/{RELEASE}/meta/armeabi-v7a/compile_commands.json.bin{!}
-                * symbolFolderIndexFile           = {PROJECT}/build/intermediates/{RELEASE}/meta/armeabi-v7a/symbol_folder_index.txt{!}
-                * buildFileIndexFile              = {PROJECT}/build/intermediates/{RELEASE}/meta/armeabi-v7a/build_file_index.txt{!}""")
+             - arm64-v8a:
+                - sourceFlagsFile                 = {PROJECT}/build/intermediates/{RELEASE}/meta/arm64-v8a/compile_commands.json.bin{!}
+                - symbolFolderIndexFile           = {PROJECT}/build/intermediates/{RELEASE}/meta/arm64-v8a/symbol_folder_index.txt{!}
+                - buildFileIndexFile              = {PROJECT}/build/intermediates/{RELEASE}/meta/arm64-v8a/build_file_index.txt{!}
+                - additionalProjectFilesIndexFile = {PROJECT}/build/intermediates/{RELEASE}/meta/arm64-v8a/additional_project_files.txt{!}
+             - armeabi-v7a:
+                - sourceFlagsFile                 = {PROJECT}/build/intermediates/{RELEASE}/meta/armeabi-v7a/compile_commands.json.bin{!}
+                - symbolFolderIndexFile           = {PROJECT}/build/intermediates/{RELEASE}/meta/armeabi-v7a/symbol_folder_index.txt{!}
+                - buildFileIndexFile              = {PROJECT}/build/intermediates/{RELEASE}/meta/armeabi-v7a/build_file_index.txt{!}
+                - additionalProjectFilesIndexFile = {PROJECT}/build/intermediates/{RELEASE}/meta/armeabi-v7a/additional_project_files.txt{!}""")
     }
 }

@@ -15,15 +15,26 @@
  */
 package com.android.build.gradle.integration.lint
 
+import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.options.BooleanOption
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 
 /** Integration test that runs lint with analytics enabled. Regression test for b/178904638  */
-class LintWithAnalyticsEnabledTest {
+@RunWith(FilterableParameterized::class)
+class LintWithAnalyticsEnabledTest(private val usePartialAnalysis: Boolean) {
+
+    companion object {
+        @Parameterized.Parameters(name = "usePartialAnalysis = {0}")
+        @JvmStatic
+        fun params() = listOf(true, false)
+    }
 
     @get:Rule
     val project: GradleTestProject =
@@ -40,22 +51,23 @@ class LintWithAnalyticsEnabledTest {
 
     @Test
     fun testLint() {
-        project.executor().with(BooleanOption.ENABLE_PROFILE_JSON, true).run("lint")
+        getExecutor().run("lint")
     }
 
     @Test
     fun testLintFix() {
-        val result =
-            project.executor()
-                .expectFailure()
-                .with(BooleanOption.ENABLE_PROFILE_JSON, true)
-                .run("lintFix")
+        val result = getExecutor().expectFailure().run("lintFix")
         ScannerSubject.assertThat(result.stderr)
             .contains("Aborting build since sources were modified to apply quickfixes")
     }
 
     @Test
     fun testBuild() {
-        project.executor().with(BooleanOption.ENABLE_PROFILE_JSON, true).run("build")
+        getExecutor().run("build")
     }
+
+    private fun getExecutor(): GradleTaskExecutor =
+        project.executor()
+            .with(BooleanOption.USE_LINT_PARTIAL_ANALYSIS, usePartialAnalysis)
+            .with(BooleanOption.ENABLE_PROFILE_JSON, true)
 }

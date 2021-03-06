@@ -83,7 +83,7 @@ TEST(PerfettoManagerTest, ValidateConfig) {
   const int buffer_size_kb = 32000;
   perfetto::protos::TraceConfig config =
       PerfettoManager::BuildFtraceConfig(app_name, buffer_size_kb);
-  EXPECT_EQ(config.data_sources().size(), 3);
+  EXPECT_EQ(config.data_sources().size(), 4);
   // Assume the format of the config, perfetto doesn't care about the order but
   // for the test we assume its order so we don't need to search for data.
 
@@ -103,12 +103,15 @@ TEST(PerfettoManagerTest, ValidateConfig) {
     }
   }
   EXPECT_EQ(categories_found, categories_size);
-  EXPECT_EQ(config.buffers()[0].size_kb(), buffer_size_kb);
+  EXPECT_EQ(config.buffers().size(), 2);
+  EXPECT_EQ(config.buffers()[0].size_kb(), 256);
+  EXPECT_EQ(config.buffers()[1].size_kb(), buffer_size_kb);
 
   // Process stats
   EXPECT_EQ(config.data_sources()[1].config().name(), "linux.process_stats");
+  EXPECT_EQ(config.data_sources()[2].config().name(), "linux.process_stats");
   // CPU information
-  EXPECT_EQ(config.data_sources()[2].config().name(), "linux.system_info");
+  EXPECT_EQ(config.data_sources()[3].config().name(), "linux.system_info");
 }
 
 TEST(PerfettoManagerTest, ValidateShutdownErrors) {
@@ -185,6 +188,7 @@ TEST(PerfettoManagerTest, ValidateHeapprofdConfig) {
       app_name, sample_bytes, dump_interval, shmem_size);
   // Validate we write to file at some interval.
   EXPECT_TRUE(config.write_into_file());
+  EXPECT_GT(config.flush_period_ms(), 0);
   EXPECT_GT(config.file_write_period_ms(), 0);
   // Validate we have 1 buffer.
   EXPECT_EQ(config.buffers().size(), 1);

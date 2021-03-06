@@ -20,12 +20,15 @@ import static com.android.ide.common.vectordrawable.Svg2Vector.SVG_FILL_OPACITY;
 import static com.android.ide.common.vectordrawable.Svg2Vector.SVG_OPACITY;
 import static com.android.ide.common.vectordrawable.Svg2Vector.SVG_STROKE;
 import static com.android.ide.common.vectordrawable.Svg2Vector.SVG_STROKE_OPACITY;
+import static com.android.ide.common.vectordrawable.Svg2Vector.SVG_STROKE_WIDTH;
 import static com.android.ide.common.vectordrawable.Svg2Vector.presentationMap;
+import static com.android.utils.XmlUtils.formatFloatValue;
+import static java.lang.Math.abs;
+import static java.lang.Math.sqrt;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.vectordrawable.PathParser.ParseMode;
-import com.android.utils.XmlUtils;
 import java.awt.geom.AffineTransform;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -150,7 +153,7 @@ class SvgLeafNode extends SvgNode {
     }
 
     private void putOpacityValueToMap(@NonNull String attributeName, double opacity) {
-        String attributeValue = XmlUtils.formatFloatValue(opacity);
+        String attributeValue = formatFloatValue(opacity);
         if (attributeValue.equals("1")) {
             mVdAttributesMap.remove(attributeName);
         } else {
@@ -203,9 +206,27 @@ class SvgLeafNode extends SvgNode {
         mStackedTransform.setTransform(transform);
         mStackedTransform.concatenate(mLocalTransform);
 
-        if (mVdAttributesMap.containsKey(Svg2Vector.SVG_STROKE_WIDTH)
-                && ((mStackedTransform.getType() & AffineTransform.TYPE_MASK_SCALE) != 0)) {
-            logWarning("Scaling of the stroke width is ignored");
+        if (!"non-scaling-stroke".equals(mVdAttributesMap.get("vector-effect"))
+                && (mStackedTransform.getType() & AffineTransform.TYPE_MASK_SCALE) != 0) {
+            String strokeWidth = mVdAttributesMap.get(SVG_STROKE_WIDTH);
+            if (strokeWidth != null) {
+                try {
+                    // Unlike SVG, vector drawable is not capable of applying transformations
+                    // to stroke outline. To compensate for that we apply scaling transformation
+                    // to the stroke width, which produces accurate results for uniform and
+                    // approximate results for nonuniform scaling transformation.
+                    double width = Double.parseDouble(strokeWidth);
+                    double determinant = mStackedTransform.getDeterminant();
+                    if (determinant != 0) {
+                        width *= sqrt(abs(determinant));
+                        mVdAttributesMap.put(SVG_STROKE_WIDTH, formatFloatValue(width));
+                    }
+                    if ((mStackedTransform.getType() & AffineTransform.TYPE_GENERAL_SCALE) != 0) {
+                        logWarning("Scaling of the stroke width is approximate");
+                    }
+                } catch (NumberFormatException ignore) {
+                }
+            }
         }
     }
 
@@ -238,7 +259,7 @@ class SvgLeafNode extends SvgNode {
             writer.write(System.lineSeparator());
         }
         if (!emptyStroke
-                && !mVdAttributesMap.containsKey(Svg2Vector.SVG_STROKE_WIDTH)
+                && !mVdAttributesMap.containsKey(SVG_STROKE_WIDTH)
                 && mStrokeGradientNode == null) {
             logger.log(Level.FINE, "Adding default stroke width");
             writer.write(indent);

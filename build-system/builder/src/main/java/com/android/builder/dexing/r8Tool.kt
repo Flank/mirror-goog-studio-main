@@ -23,6 +23,7 @@ import com.android.SdkConstants.DOT_JAR
 import com.android.SdkConstants.PROGUARD_RULES_FOLDER
 import com.android.SdkConstants.TOOLS_CONFIGURATION_FOLDER
 import com.android.builder.dexing.r8.ClassFileProviderFactory
+import com.android.builder.dexing.r8.R8DiagnosticsHandler
 import com.android.ide.common.blame.MessageReceiver
 import com.android.tools.r8.ArchiveProgramResourceProvider
 import com.android.tools.r8.AssertionsConfiguration
@@ -102,7 +103,12 @@ fun runR8(
         logger.fine("Classpath classes: $classpath")
         outputKeepRules?.let{ logger.fine("Keep rules for shrinking desugar lib: $it") }
     }
-    val r8CommandBuilder = CompatProguardCommandBuilder(!useFullR8, D8DiagnosticsHandler(messageReceiver, "R8"))
+    val r8CommandBuilder =
+            CompatProguardCommandBuilder(!useFullR8,
+                    R8DiagnosticsHandler(
+                            proguardConfig.proguardOutputFiles.missingKeepRules,
+                            messageReceiver,
+                            "R8"))
 
     if (toolConfig.r8OutputType == R8OutputType.DEX) {
         r8CommandBuilder.minApiLevel = toolConfig.minSdkVersion
@@ -151,6 +157,7 @@ fun runR8(
     Files.deleteIfExists(proguardOutputFiles.proguardSeedsOutput)
     Files.deleteIfExists(proguardOutputFiles.proguardUsageOutput)
     Files.deleteIfExists(proguardOutputFiles.proguardConfigurationOutput)
+    Files.deleteIfExists(proguardOutputFiles.missingKeepRules)
 
     Files.createDirectories(proguardOutputFiles.proguardMapOutput.parent)
     r8CommandBuilder.setProguardMapOutputPath(proguardOutputFiles.proguardMapOutput)
@@ -328,7 +335,8 @@ data class ProguardOutputFiles(
     val proguardMapOutput: Path,
     val proguardSeedsOutput: Path,
     val proguardUsageOutput: Path,
-    val proguardConfigurationOutput: Path
+    val proguardConfigurationOutput: Path,
+    val missingKeepRules: Path
 )
 
 /** Configuration parameters for the R8 tool. */
@@ -338,7 +346,7 @@ data class ToolConfig(
     val disableTreeShaking: Boolean,
     val disableDesugaring: Boolean,
     val disableMinification: Boolean,
-    val r8OutputType: R8OutputType
+    val r8OutputType: R8OutputType,
 )
 
 private class ProGuardRulesFilteringVisitor(

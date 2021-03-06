@@ -66,10 +66,10 @@ class ApplicationVariantData(
     }
 
     override val description: String
-        get() = if (variantDslInfo.hasFlavors()) {
+        get() = if (componentIdentity.productFlavors.isNotEmpty()) {
             val sb = StringBuilder(50)
-            variantDslInfo.componentIdentity.buildType?.let { sb.appendCapitalized(it) }
-            sb.appendCapitalized(variantDslInfo.componentIdentity.name)
+            componentIdentity.buildType?.let { sb.appendCapitalized(it) }
+            sb.appendCapitalized(componentIdentity.name)
             sb.append(" build")
             sb.toString()
         } else {

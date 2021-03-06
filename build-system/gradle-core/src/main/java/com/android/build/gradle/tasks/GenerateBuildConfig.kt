@@ -258,15 +258,13 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
 
             // no need to memoize, variant configuration does that already.
             task.flavorName.setDisallowChanges(
-                    project.provider { variantDslInfo.componentIdentity.flavorName })
+                    project.provider { creationConfig.flavorName })
 
             task.flavorNamesWithDimensionNames.setDisallowChanges(project.provider {
                 variantDslInfo.flavorNamesWithDimensionNames
             })
 
-            if (creationConfig is VariantCreationConfig) {
-                task.items.set(creationConfig.buildConfigFields)
-            }
+            task.items.set(creationConfig.buildConfigFields)
 
             if (creationConfig.variantType.isTestComponent) {
                 creationConfig.artifacts.setTaskInputToFinalProduct(

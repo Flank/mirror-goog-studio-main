@@ -333,6 +333,7 @@ InternalArtifactType<T : FileSystemLocation>(
     // with the --analyze-only flag. These partial results are merged into a final report
     // downstream.
     object LINT_PARTIAL_RESULTS: InternalArtifactType<Directory>(DIRECTORY)
+    object LINT_VITAL_PARTIAL_RESULTS: InternalArtifactType<Directory>(DIRECTORY)
 
     // the zip file output of the extract annotation class.
     object ANNOTATIONS_ZIP: InternalArtifactType<RegularFile>(FILE), Replaceable

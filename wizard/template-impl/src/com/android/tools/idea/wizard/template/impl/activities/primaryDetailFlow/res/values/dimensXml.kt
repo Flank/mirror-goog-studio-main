@@ -25,5 +25,6 @@ fun dimensXml() = """
     <dimen name="app_bar_height">200dp</dimen>
     <dimen name="text_margin">16dp</dimen>
     <dimen name="container_margin">8dp</dimen>
+    <dimen name="container_horizontal_margin">16dp</dimen>
 </resources>
 """

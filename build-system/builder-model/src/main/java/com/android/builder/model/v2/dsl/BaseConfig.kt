@@ -31,7 +31,7 @@ interface BaseConfig: AndroidModel {
     /**
      * The name
      */
-    val name: String?
+    val name: String
 
     /**
      * The application id suffix applied to this base config.

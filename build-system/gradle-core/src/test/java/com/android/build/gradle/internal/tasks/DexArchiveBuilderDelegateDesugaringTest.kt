@@ -42,29 +42,19 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.regex.Pattern
 
-@RunWith(Parameterized::class)
-class DexArchiveBuilderDelegateDesugaringTest(private val withIncrementalDexingTaskV2: Boolean) {
-
-    companion object {
-
-        @Parameterized.Parameters(name = "incrementalDexingTaskV2_{0}")
-        @JvmStatic
-        fun parameters() = arrayOf(true, false)
-    }
+class DexArchiveBuilderDelegateDesugaringTest {
 
     @Rule
     @JvmField
     var tmpDir = TemporaryFolder()
 
     private lateinit var out: Path
-    private var desugarGraphDir: Path? = null
+    private lateinit var desugarGraphDir: Path
     private lateinit var workerExecutor: WorkerExecutor
 
     /** The files to track changes. */
@@ -105,11 +95,7 @@ class DexArchiveBuilderDelegateDesugaringTest(private val withIncrementalDexingT
             workerExecutor = FakeGradleWorkExecutor(objects, tmpDir.newFolder())
         }
 
-        desugarGraphDir = if (withIncrementalDexingTaskV2) {
-            tmpDir.root.toPath().resolve("desugarGraphDir")
-        } else {
-            null
-        }
+        desugarGraphDir = tmpDir.root.toPath().resolve("desugarGraphDir")
     }
 
 
@@ -287,15 +273,10 @@ class DexArchiveBuilderDelegateDesugaringTest(private val withIncrementalDexingT
                 isIncremental = true,
                 inputJarHashes = inputJarHashes
         ).doProcess()
-        if (withIncrementalDexingTaskV2) {
-            // The dependency graph produced by D8 saves us from re-dexing Tiger unnecessarily,
-            // see bug 167562221#comment13.
-            assertThat(getChangedFiles()).containsExactlyElementsIn(
-                    getDexFiles(Cat::class.java, Toy::class.java))
-        } else {
-            assertThat(getChangedFiles()).containsExactlyElementsIn(
-                    getDexFiles(Tiger::class.java, Cat::class.java, Toy::class.java))
-        }
+        // The dependency graph produced by D8 saves us from re-dexing Tiger unnecessarily,
+        // see bug 167562221#comment13.
+        assertThat(getChangedFiles()).containsExactlyElementsIn(
+                getDexFiles(Cat::class.java, Toy::class.java))
     }
 
     @Test
@@ -510,8 +491,7 @@ class DexArchiveBuilderDelegateDesugaringTest(private val withIncrementalDexingT
                 errorFormatMode = SyncOptions.ErrorFormatMode.HUMAN_READABLE
             ),
             desugarClasspathChangedClasses = emptySet(),
-            incrementalDexingTaskV2 = withIncrementalDexingTaskV2,
-            desugarGraphDir =  desugarGraphDir?.toFile(),
+            desugarGraphDir =  desugarGraphDir.toFile(),
             projectVariant = "myVariant",
             inputJarHashesFile = inputJarHashes,
             numberOfBuckets = 2,

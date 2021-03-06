@@ -96,7 +96,13 @@ class DataBindingCachingTest(private val withKotlin: Boolean) {
     ).plus(
             if (BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP.defaultValue) {
                 mapOf(":mapDebugSourceSetPaths" to FROM_CACHE)
-            }else {
+            } else {
+                emptyMap()
+            }
+    ).plus(
+            if (BooleanOption.GENERATE_MANIFEST_CLASS.defaultValue) {
+                mapOf(":generateDebugManifestClass" to FROM_CACHE)
+            } else {
                 emptyMap()
             }
     )

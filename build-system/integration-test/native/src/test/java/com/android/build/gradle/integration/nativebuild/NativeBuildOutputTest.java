@@ -26,11 +26,11 @@ import static com.android.testutils.truth.PathSubject.assertThat;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelBuilderV2;
+import com.android.build.gradle.integration.common.fixture.ModelBuilderV2.NativeModuleParams;
 import com.android.build.gradle.integration.common.fixture.ModelContainerV2;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.truth.ScannerSubject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.builder.model.v2.models.ndk.NativeModule;
 import com.android.testutils.apk.Apk;
 import com.android.utils.FileUtils;
 import com.google.common.base.Throwables;
@@ -368,11 +368,13 @@ public class NativeBuildOutputTest {
                 ImmutableList.of("void main() {}"),
                 StandardCharsets.UTF_8);
 
-        ModelBuilderV2.FetchResult<ModelContainerV2<NativeModule>> result =
-                project.modelV2().fetchNativeModules(ImmutableList.of(), ImmutableList.of());
-        for (Map<String, ModelContainerV2.ModelInfo<NativeModule>> map :
+        ModelBuilderV2.FetchResult<ModelContainerV2> result =
+                project.modelV2()
+                        .fetchNativeModules(
+                                new NativeModuleParams(ImmutableList.of(), ImmutableList.of()));
+        for (Map<String, ModelContainerV2.ModelInfo> map :
                 result.getContainer().getInfoMaps().values()) {
-            for (ModelContainerV2.ModelInfo<NativeModule> modelInfo : map.values()) {
+            for (ModelContainerV2.ModelInfo modelInfo : map.values()) {
                 assertThat(modelInfo.getIssues().getSyncIssues()).isEmpty();
             }
         }
@@ -382,26 +384,20 @@ public class NativeBuildOutputTest {
                                 + "> NativeModule:\n"
                                 + "    - name                    = \"project\"\n"
                                 + "    > variants:\n"
-                                + "       * NativeVariant:\n"
-                                + "          * name = \"debug\"\n"
-                                + "          > abis:\n"
-                                + "             * NativeAbi:\n"
-                                + "                * name                            = \"x86_64\"\n"
-                                + "                * sourceFlagsFile                 = {PROJECT}/build/intermediates/{DEBUG}/meta/x86_64/compile_commands.json.bin{!}\n"
-                                + "                * symbolFolderIndexFile           = {PROJECT}/build/intermediates/{DEBUG}/meta/x86_64/symbol_folder_index.txt{!}\n"
-                                + "                * buildFileIndexFile              = {PROJECT}/build/intermediates/{DEBUG}/meta/x86_64/build_file_index.txt{!}\n"
-                                + "                * additionalProjectFilesIndexFile = {PROJECT}/build/intermediates/{DEBUG}/meta/x86_64/additional_project_files.txt{!}\n"
-                                + "          < abis\n"
-                                + "       * NativeVariant:\n"
-                                + "          * name = \"release\"\n"
-                                + "          > abis:\n"
-                                + "             * NativeAbi:\n"
-                                + "                * name                            = \"x86_64\"\n"
-                                + "                * sourceFlagsFile                 = {PROJECT}/build/intermediates/{RELEASE}/meta/x86_64/compile_commands.json.bin{!}\n"
-                                + "                * symbolFolderIndexFile           = {PROJECT}/build/intermediates/{RELEASE}/meta/x86_64/symbol_folder_index.txt{!}\n"
-                                + "                * buildFileIndexFile              = {PROJECT}/build/intermediates/{RELEASE}/meta/x86_64/build_file_index.txt{!}\n"
-                                + "                * additionalProjectFilesIndexFile = {PROJECT}/build/intermediates/{RELEASE}/meta/x86_64/additional_project_files.txt{!}\n"
-                                + "          < abis\n"
+                                + "       - debug:\n"
+                                + "          - abis:\n"
+                                + "             - x86_64:\n"
+                                + "                - sourceFlagsFile                 = {PROJECT}/build/intermediates/{DEBUG}/meta/x86_64/compile_commands.json.bin{!}\n"
+                                + "                - symbolFolderIndexFile           = {PROJECT}/build/intermediates/{DEBUG}/meta/x86_64/symbol_folder_index.txt{!}\n"
+                                + "                - buildFileIndexFile              = {PROJECT}/build/intermediates/{DEBUG}/meta/x86_64/build_file_index.txt{!}\n"
+                                + "                - additionalProjectFilesIndexFile = {PROJECT}/build/intermediates/{DEBUG}/meta/x86_64/additional_project_files.txt{!}\n"
+                                + "       - release:\n"
+                                + "          - abis:\n"
+                                + "             - x86_64:\n"
+                                + "                - sourceFlagsFile                 = {PROJECT}/build/intermediates/{RELEASE}/meta/x86_64/compile_commands.json.bin{!}\n"
+                                + "                - symbolFolderIndexFile           = {PROJECT}/build/intermediates/{RELEASE}/meta/x86_64/symbol_folder_index.txt{!}\n"
+                                + "                - buildFileIndexFile              = {PROJECT}/build/intermediates/{RELEASE}/meta/x86_64/build_file_index.txt{!}\n"
+                                + "                - additionalProjectFilesIndexFile = {PROJECT}/build/intermediates/{RELEASE}/meta/x86_64/additional_project_files.txt{!}\n"
                                 + "    < variants\n"
                                 + "    - nativeBuildSystem       = CMAKE\n"
                                 + "    - ndkVersion              = \"{DEFAULT_NDK_VERSION}\"\n"

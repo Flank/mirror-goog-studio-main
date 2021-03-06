@@ -18,6 +18,8 @@ package com.android.build.gradle.internal.dsl.decorator
 
 import com.android.build.gradle.internal.dsl.AgpDslLockedException
 import com.android.build.gradle.internal.dsl.Lockable
+import com.android.build.gradle.internal.services.DslServices
+import com.android.utils.usLocaleCapitalize
 import com.android.utils.usLocaleDecapitalize
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.base.Stopwatch
@@ -42,7 +44,7 @@ import kotlin.reflect.KClass
  * Given an abstract class, calling [decorate] will return a generated subclass which has
  * anything that was abstract and is included in the [supportedPropertyTypes] implemented.
  */
-class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType> = AGP_SUPPORTED_PROPERTY_TYPES) {
+class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType>) {
 
     private val supportedPropertyTypes: Map<Type, SupportedPropertyType> = supportedPropertyTypes.associateBy { it.type }
 
@@ -107,18 +109,30 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType> = AGP_SUP
                 // Gradle only looks at constructors with arguments if they are marked with @Inject.
                 continue
             }
-            GeneratorAdapter(constructor.modifiers, method, null, null, classWriter).apply {
-                if (inject) {
-                    visitAnnotation(INJECT_TYPE, true).visitEnd()
+            // Replace any zero-argument constructor with a single-argument constructor that
+            // takes the DSL services type - to support generation from interfaces.
+            val methodToGenerate =
+                if(method.argumentTypes.isEmpty()) {
+                    Method(method.name, method.returnType, arrayOf(DSL_SERVICES_TYPE))
+                } else {
+                    method
                 }
+            val dslServicesArgumentIndex = methodToGenerate.argumentTypes.indexOf(DSL_SERVICES_TYPE)
+            check(dslServicesArgumentIndex != -1) {
+                "Cannot generate implementation for $dslClassType" +
+                        "@Inject marked constructor $method for does not include $DSL_SERVICES_TYPE argument"
+            }
+            GeneratorAdapter(constructor.modifiers, methodToGenerate, null, null, classWriter).apply {
+                // Always mark the generated constructor with @Inject
+                visitAnnotation(INJECT_TYPE, true).visitEnd()
                 // super(...args...)
                 visitCode()
                 loadThis()
-                loadArgs()
+                loadArgs(0, method.argumentTypes.size)
                 invokeConstructor(generatedClassSuperClass, method)
                 for (property in abstractProperties) {
                     when (val type = property.supportedPropertyType) {
-                        is SupportedPropertyType.Val -> {
+                        is SupportedPropertyType.Collection -> {
                             // field = new ImplType("propertyName")
                             loadThis()
                             newInstance(type.implementationType)
@@ -148,9 +162,7 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType> = AGP_SUP
 
         for (field in abstractProperties) {
             createFieldBackedGetters(classWriter, generatedClass, field)
-            if (field.settersToGenerate.isNotEmpty()) {
-                createFieldBackedSetters(classWriter, generatedClass, field, lockable)
-            }
+            createFieldBackedSetters(classWriter, generatedClass, field, lockable)
         }
 
         if (lockable) {
@@ -301,7 +313,7 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType> = AGP_SUP
             putField(generatedClass, LOCK_FIELD_NAME, Type.BOOLEAN_TYPE)
             for (abstractProperty in abstractProperties) {
                 val type = abstractProperty.supportedPropertyType
-                if (type is SupportedPropertyType.Val) {
+                if (type is SupportedPropertyType.Collection) {
                     // this.__managedField.lock();
                     loadThis()
                     getField(generatedClass, abstractProperty.backingFieldName, type.implementationType)
@@ -332,14 +344,21 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType> = AGP_SUP
         property: ManagedProperty,
         lockable: Boolean
     ) {
-        for (setter in property.settersToGenerate) {
-            createFieldBackedSetter(
-                classWriter,
-                generatedClass,
-                property,
-                lockable,
-                setter
-            )
+        when (property.supportedPropertyType) {
+            is SupportedPropertyType.Collection -> {
+                createGroovyMutatingSetter(classWriter, generatedClass, property)
+            }
+            is SupportedPropertyType.Var -> {
+                for (setter in property.settersToGenerate) {
+                    createFieldBackedSetter(
+                        classWriter,
+                        generatedClass,
+                        property,
+                        lockable,
+                        setter
+                    )
+                }
+            }
         }
     }
 
@@ -353,7 +372,6 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType> = AGP_SUP
         val type = property.supportedPropertyType
         check(type.implementationType == setter.argumentTypes[0]) {
             "Currently only setters that use the same type are supported."
-            // TODO(b/140406102): Support setters for groovy +=
         }
         // Mark bridge methods as synthetic.
         val access = if(type.type == setter.argumentTypes[0]) property.access else property.access.or(Opcodes.ACC_SYNTHETIC)
@@ -380,6 +398,52 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType> = AGP_SUP
             loadThis()
             loadArg(0)
             putField(generatedClass, property.backingFieldName, type.implementationType)
+            returnValue()
+            endMethod()
+        }
+    }
+
+    /**
+     * To allow groovy field += bar, we need to generate a set(...) method.
+     *
+     * Mutability is not controlled here, it depends on the underlying lockable collection type.
+     */
+    private fun createGroovyMutatingSetter(
+        classWriter: ClassWriter,
+        generatedClass: Type,
+        property: ManagedProperty
+    ) {
+        val extraSetter = Method(
+            "set${property.name.usLocaleCapitalize()}",
+            Type.VOID_TYPE,
+            arrayOf(property.supportedPropertyType.type)
+        )
+        GeneratorAdapter(Opcodes.ACC_PUBLIC.or(Opcodes.ACC_SYNTHETIC), extraSetter, null, null, classWriter).apply {
+            // val newList = ArrayList(argument) // Take a copy so e.g. field = field doesn't clear the field!
+            // __backingField.clear()
+            // __backingField.addAll(newList)
+            newInstance(ARRAY_LIST)
+            dup()
+            loadArg(0)
+            checkCast(COLLECTION)
+            invokeConstructor(
+                ARRAY_LIST,
+                ARRAY_LIST_COPY_CONSTRUCTOR
+            )
+            loadThis()
+            getField(generatedClass, property.backingFieldName,
+                property.supportedPropertyType.implementationType
+            )
+            dup()
+            invokeVirtual(
+                property.supportedPropertyType.implementationType,
+                CLEAR
+            )
+            swap()
+            invokeVirtual(
+                property.supportedPropertyType.implementationType,
+                ADD_ALL
+            )
             returnValue()
             endMethod()
         }
@@ -424,6 +488,13 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType> = AGP_SUP
             Method("<init>", Type.VOID_TYPE, arrayOf(Type.getType(String::class.java)))
         private val LOCK_METHOD = Method("lock", Type.VOID_TYPE, arrayOf())
         private val LOCKED_EXCEPTION = Type.getType(AgpDslLockedException::class.java)
+        private val DSL_SERVICES_TYPE = Type.getType(DslServices::class.java)
+
+        private val COLLECTION = Type.getType(Collection::class.java)
+        private val ARRAY_LIST = Type.getType(ArrayList::class.java)
+        private val ARRAY_LIST_COPY_CONSTRUCTOR = Method("<init>", Type.VOID_TYPE, arrayOf(COLLECTION))
+        private val CLEAR = Method("clear", Type.VOID_TYPE, arrayOf())
+        private val ADD_ALL = Method("addAll", Type.BOOLEAN_TYPE, arrayOf(COLLECTION))
 
         // Use reflection to avoid needing to compile against java11 APIs yet.
         private val privateLookupInMethod by lazy(LazyThreadSafetyMode.PUBLICATION) {

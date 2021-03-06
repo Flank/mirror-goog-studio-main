@@ -23,9 +23,8 @@ import com.android.tools.build.apkzlib.sign.SigningOptions
 import com.android.tools.build.apkzlib.zfile.ApkCreator
 import com.android.tools.build.apkzlib.zfile.ApkCreatorFactory
 import com.android.tools.build.apkzlib.zfile.NativeLibrariesPackagingMode
-import com.android.zipflinger.BytesSource
-import com.android.zipflinger.LargeFileSource
 import com.android.zipflinger.Source
+import com.android.zipflinger.Sources
 import com.android.zipflinger.StableArchive
 import com.android.zipflinger.SynchronizedArchive
 import com.android.zipflinger.Zip64
@@ -196,19 +195,7 @@ class ApkFlinger(
             forkJoinPool.submit(
                 Callable<Unit> {
                     val mayCompress = !noCompressPredicate.apply(apkPath)
-                    val source = if (inputFile.length() < LARGE_FILE_SIZE) {
-                        BytesSource(
-                                Files.readAllBytes(inputFile.toPath()),
-                                apkPath,
-                                if (mayCompress) compressionLevel else Deflater.NO_COMPRESSION
-                        )
-                    } else {
-                        LargeFileSource(
-                                inputFile.toPath(),
-                                apkPath,
-                                if (mayCompress) compressionLevel else Deflater.NO_COMPRESSION
-                        )
-                    }
+                    val source = Sources.from(inputFile, apkPath, if (mayCompress) compressionLevel else Deflater.NO_COMPRESSION)
                     if (!mayCompress) {
                         if (pageAlignPredicate.apply(apkPath)) {
                             source.align(PAGE_ALIGNMENT)
@@ -260,7 +247,3 @@ private const val DEFAULT_ALIGNMENT = 4L
 private const val PAGE_ALIGNMENT = 4096L
 
 private const val DEFAULT_CREATED_BY = "Generated-by-ADT"
-
-// LARGE_FILE_SIZE is the minimum file size (in bytes) for which we use LargeFileSource instead of
-// ByteSource
-const val LARGE_FILE_SIZE = 100_000_000

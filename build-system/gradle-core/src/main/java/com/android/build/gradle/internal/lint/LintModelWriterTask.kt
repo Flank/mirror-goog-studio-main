@@ -97,7 +97,8 @@ abstract class LintModelWriterTask : NonIncrementalTask() {
     }
 
     class CreationAction(
-        creationConfig: ConsumableCreationConfig
+        creationConfig: ConsumableCreationConfig,
+        private val checkDependencies: Boolean = true
     ) : VariantTaskCreationAction<LintModelWriterTask, ConsumableCreationConfig>(
         creationConfig
     ) {
@@ -119,8 +120,7 @@ abstract class LintModelWriterTask : NonIncrementalTask() {
             task.projectInputs.initialize(variantWithoutTests)
             task.variantInputs.initialize(
                 variantWithoutTests,
-                // The artifact produced is only used by lint tasks with checkDependencies=true
-                checkDependencies = true,
+                checkDependencies = checkDependencies,
                 warnIfProjectTreatedAsExternalDependency = false
             )
             task.partialResultsDir =

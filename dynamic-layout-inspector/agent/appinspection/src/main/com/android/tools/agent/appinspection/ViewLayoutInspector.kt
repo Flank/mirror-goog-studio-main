@@ -24,6 +24,7 @@ import androidx.inspection.Inspector
 import androidx.inspection.InspectorEnvironment
 import androidx.inspection.InspectorFactory
 import com.android.tools.agent.appinspection.framework.SkiaQWorkaround
+import com.android.tools.agent.appinspection.framework.SynchronousPixelCopy
 import com.android.tools.agent.appinspection.framework.flatten
 import com.android.tools.agent.appinspection.framework.takeScreenshot
 import com.android.tools.agent.appinspection.framework.toByteArray
@@ -126,6 +127,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
 
     override fun onDispose() {
         forceStopAllCaptures()
+        SynchronousPixelCopy.stopHandler();
     }
 
     /**
@@ -141,9 +143,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
     private fun checkRoots(captureNewRoots: Boolean): Boolean {
         val currRoots =
             ThreadUtils.runOnMainThread {
-                getRootViews()
-                    .map { v -> v.uniqueDrawingId to v }
-                    .toMap()
+                getRootViews().associateBy { it.uniqueDrawingId }
             }.get()
 
         val currRootIds = currRoots.keys

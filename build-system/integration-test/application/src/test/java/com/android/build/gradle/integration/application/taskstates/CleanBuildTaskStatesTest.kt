@@ -72,6 +72,12 @@ class CleanBuildTaskStatesTest {
                     } else {
                         emptySet()
                     }
+            ).plus(
+                if (BooleanOption.GENERATE_MANIFEST_CLASS.defaultValue) {
+                    setOf(":app:generateDebugManifestClass")
+                } else {
+                    emptySet()
+                }
             ),
             UP_TO_DATE to setOf(
                 ":app:clean",

@@ -18,9 +18,10 @@ package com.android.builder.packaging;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.utils.PathUtils;
-import com.android.zipflinger.BytesSource;
 import com.android.zipflinger.Entry;
 import com.android.zipflinger.NoCopyByteArrayOutputStream;
+import com.android.zipflinger.Source;
+import com.android.zipflinger.Sources;
 import com.android.zipflinger.ZipArchive;
 import com.android.zipflinger.ZipSource;
 import com.google.common.collect.ImmutableSortedMap;
@@ -105,13 +106,12 @@ public class JarFlinger implements JarCreator {
                         new BufferedInputStream(Files.newInputStream(entry.getValue()))) {
                     @Nullable InputStream is2 = transformer.filter(entryPath, is);
                     if (is2 != null) {
-                        BytesSource source = new BytesSource(is2, entryPath, compressionLevel);
+                        Source source = Sources.from(is2, entryPath, compressionLevel);
                         zipArchive.add(source);
                     }
                 }
                 } else {
-                BytesSource source =
-                        new BytesSource(entry.getValue(), entryPath, compressionLevel);
+                Source source = Sources.from(entry.getValue(), entryPath, compressionLevel);
                     zipArchive.add(source);
                 }
         }
@@ -151,13 +151,13 @@ public class JarFlinger implements JarCreator {
 
     @Override
     public void addFile(@NonNull String entryPath, @NonNull Path path) throws IOException {
-        BytesSource source = new BytesSource(path, entryPath, compressionLevel);
+        Source source = Sources.from(path, entryPath, compressionLevel);
         zipArchive.add(source);
     }
 
     @Override
     public void addEntry(@NonNull String entryPath, @NonNull InputStream input) throws IOException {
-        BytesSource source = new BytesSource(input, entryPath, compressionLevel);
+        Source source = Sources.from(input, entryPath, compressionLevel);
         zipArchive.add(source);
     }
 
@@ -184,7 +184,7 @@ public class JarFlinger implements JarCreator {
         manifest.write(os);
 
         ByteArrayInputStream is = new ByteArrayInputStream(os.buf(), 0, os.getCount());
-        BytesSource source = new BytesSource(is, JarFile.MANIFEST_NAME, Deflater.NO_COMPRESSION);
+        Source source = Sources.from(is, JarFile.MANIFEST_NAME, Deflater.NO_COMPRESSION);
         zipArchive.add(source);
     }
 }

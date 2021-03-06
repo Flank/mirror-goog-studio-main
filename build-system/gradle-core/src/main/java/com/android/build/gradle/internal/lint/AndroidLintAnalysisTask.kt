@@ -216,6 +216,32 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
         }
     }
 
+    /**
+     * CreationAction for the lintVitalAnalyzeVariant task. Does not use the variant with tests
+     */
+    class LintVitalCreationAction(variant: VariantWithTests) : VariantCreationAction(variant) {
+        override val name = creationConfig.computeTaskName("lintVitalAnalyze")
+        override val fatalOnly = true
+        override val description =
+            "Run lint analysis with only the fatal issues enabled on the ${creationConfig.name} variant"
+
+        override fun handleProvider(taskProvider: TaskProvider<AndroidLintAnalysisTask>) {
+            registerOutputArtifacts(taskProvider, creationConfig.artifacts)
+        }
+
+        companion object {
+            fun registerOutputArtifacts(
+                taskProvider: TaskProvider<AndroidLintAnalysisTask>,
+                artifacts: ArtifactsImpl
+            ) {
+                artifacts
+                    .setInitialProvider(taskProvider, AndroidLintAnalysisTask::partialResultsDirectory)
+                    .withName(PARTIAL_RESULTS_DIR_NAME)
+                    .on(InternalArtifactType.LINT_VITAL_PARTIAL_RESULTS)
+            }
+        }
+    }
+
     abstract class VariantCreationAction(val variant: VariantWithTests) :
             VariantTaskCreationAction<AndroidLintAnalysisTask,
                     ComponentCreationConfig>(variant.main)

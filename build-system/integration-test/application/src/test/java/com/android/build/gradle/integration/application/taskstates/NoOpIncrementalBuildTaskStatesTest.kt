@@ -82,6 +82,12 @@ class NoOpIncrementalBuildTaskStatesTest {
                     } else {
                         emptySet()
                     }
+            ).plus(
+                if (BooleanOption.GENERATE_MANIFEST_CLASS.defaultValue) {
+                    setOf(":app:generateDebugManifestClass")
+                } else {
+                    emptySet()
+                }
             ),
             SKIPPED to setOf(
                 ":app:compileDebugAidl",

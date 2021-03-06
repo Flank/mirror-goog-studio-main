@@ -40,14 +40,6 @@ class LeanbackWifiUsageDetector : Detector(), XmlScanner {
         var wifiPermissionsNode: Element? = null
 
         // Only applies if manifest has <uses-feature> which includes android.software.leanback
-        val leanBack = document.iterator().asSequence().any { element ->
-            element.tagName == TAG_USES_FEATURE &&
-                element.getAttributeNS(ANDROID_URI, ATTR_NAME) == LEANBACK_ATTR_NAME
-        }
-        if (!leanBack) {
-            return
-        }
-
         var hasLeanBack = false
         for (element in document) {
             when (element.tagName) {

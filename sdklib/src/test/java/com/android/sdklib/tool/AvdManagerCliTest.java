@@ -145,6 +145,8 @@ public class AvdManagerCliTest {
         Map<String, String> config =
                 AvdManager.parseIniFile(new PathFileWrapper(avdConfigFile), null);
         assertEquals("123", config.get("integerPropName"));
+        assertEquals("none", config.get("runtime.network.latency"));
+        assertEquals("full", config.get("runtime.network.speed"));
         assertEquals(new Storage(1536, Storage.Unit.MiB), Storage.getStorageFromString(config.get("hw.ramSize")));
         assertEquals(new Storage(512, Storage.Unit.MiB), Storage.getStorageFromString(config.get("sdcard.size")));
         assertEquals(new Storage(384, Storage.Unit.MiB), Storage.getStorageFromString(config.get("vm.heapSize")));

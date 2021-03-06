@@ -35,7 +35,7 @@ sealed class SupportedPropertyType(
         object String : Var(Type.getType(kotlin.String::class.java))
     }
 
-    sealed class Val(
+    sealed class Collection(
         type: Type,
         /**
          * The type to instantiate in the constructor
@@ -49,14 +49,22 @@ sealed class SupportedPropertyType(
          *
          * e.g. a property of type `List` might allow `Collection`
          */
-        val bridgeTypes: Collection<Type>,
+        val bridgeTypes: kotlin.collections.Collection<Type>,
     ) : SupportedPropertyType(type, implementationType) {
 
-        object List : Val(
+        object List : Collection(
             Type.getType(kotlin.collections.List::class.java),
             implementationType = Type.getType(LockableList::class.java),
             bridgeTypes = listOf(
-                Type.getType(Collection::class.java),
+                Type.getType(kotlin.collections.Collection::class.java),
+                Type.getType(Iterable::class.java),
+            ),
+        )
+        object Set : Collection(
+            Type.getType(kotlin.collections.Set::class.java),
+            implementationType = Type.getType(LockableSet::class.java),
+            bridgeTypes = listOf(
+                Type.getType(kotlin.collections.Collection::class.java),
                 Type.getType(Iterable::class.java),
             ),
         )

@@ -18,11 +18,16 @@ package com.android.build.gradle.integration.lint;
 
 import static com.android.testutils.truth.PathSubject.assertThat;
 
+import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.runner.FilterableParameterized;
+import com.android.build.gradle.options.BooleanOption;
 import java.io.File;
 import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 /**
  * Assemble tests for lintLibrarySkipDeps.
@@ -34,7 +39,15 @@ import org.junit.Test;
  *     $ ./gradlew :base:build-system:integration-test:lint:test --tests=LintSkipDependenciesTest
  * </pre>
  */
+@RunWith(FilterableParameterized.class)
 public class LintSkipDependenciesTest {
+
+    @Parameterized.Parameters(name = "usePartialAnalysis = {0}")
+    public static Object[] getParameters() {
+        return new Object[] {true, false};
+    }
+
+    @Parameterized.Parameter public boolean usePartialAnalysis;
 
     @Rule
     public final GradleTestProject project =
@@ -43,10 +56,14 @@ public class LintSkipDependenciesTest {
     @Test
     public void checkLintDependenciesSkipped() throws IOException, InterruptedException {
         // Run twice to catch issues with configuration caching
-        project.executor().run(":app:cleanLintDebug", ":app:lintDebug");
-        project.executor().run(":app:cleanLintDebug", ":app:lintDebug");
+        getExecutor().run(":app:cleanLintDebug", ":app:lintDebug");
+        getExecutor().run(":app:cleanLintDebug", ":app:lintDebug");
         File file = new File(project.getSubproject("app").getProjectDir(), "lint-results.txt");
         assertThat(file).exists();
         assertThat(file).contentWithUnixLineSeparatorsIsExactly("No issues found.");
+    }
+
+    private GradleTaskExecutor getExecutor() {
+        return project.executor().with(BooleanOption.USE_LINT_PARTIAL_ANALYSIS, usePartialAnalysis);
     }
 }

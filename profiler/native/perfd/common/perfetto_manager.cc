@@ -85,14 +85,13 @@ void PerfettoManager::Shutdown() {
 perfetto::protos::TraceConfig PerfettoManager::BuildCommonTraceConfig() {
   perfetto::protos::TraceConfig config;
   config.set_write_into_file(true);
-  // The intervals are somewhat arbitrary. We want to write to file
-  // at an interval that isn't going to be super noticable for users
-  // at the same time we don't want to fill our in memory buffers.
-  // We do not need to set the flush period since we are not doing
-  // realtime streaming of data. Setting the flush period foces all
-  // probes to flush any in memory data to disk. This can cause
-  // significant latency and have a negative impact on the data
-  // and the users app.
+  // This interval controls how often Perfetto flushes all data sources to the
+  // central ring buffer. This is required when |write_into_file| is set.
+  config.set_flush_period_ms(1000);
+  // This interval controls how often Perfetto flushes the central ring buffer
+  // to disk.
+  // Individual data sources can push data much more frequently (e.g. ftrace
+  // sched events if the system is under load) so this is set to 250 ms.
   config.set_file_write_period_ms(250);
   return config;
 }
@@ -129,15 +128,27 @@ perfetto::protos::TraceConfig PerfettoManager::BuildFtraceConfig(
   // of approximately 50% CPU time on a little core. This means there is a
   // total performance overhead of ~6%.
   perfetto::protos::TraceConfig config = BuildCommonTraceConfig();
-  auto* buffer = config.add_buffers();
-  buffer->set_size_kb(buffer_size_in_kb);
+
+  // Keep two buffers separate to avoid process scan data being overwritten by
+  // ftrace data.
+  // Buffer 0: for process and thread scan. Based on sample traces we collected,
+  // this takes around 100 KB at max, so 256 KB should be sufficient.
+  config.add_buffers()->set_size_kb(256);
+  // Buffer 1: for ftrace and /proc/stat etc. Uses user-configured buffer size.
+  config.add_buffers()->set_size_kb(buffer_size_in_kb);
+
+  // Add config to get ftrace data.
   auto* source = config.add_data_sources();
   auto* data_config = source->mutable_config();
   data_config->set_name("linux.ftrace");
+  data_config->set_target_buffer(1);
   auto* ftrace_config = data_config->mutable_ftrace_config();
-  ftrace_config->set_buffer_size_kb(buffer_size_in_kb);
   // Drain ftrace every 10frames @ 60fps
   ftrace_config->set_drain_period_ms(170);
+  // Enable "compact sched", which significantly reduces the bandwidth taken by
+  // sched events by proto encoding in a more efficient way. Supported on R+.
+  // No effect on Q-.
+  ftrace_config->mutable_compact_sched()->set_enabled(true);
   // Enable more counters
   ftrace_config->add_ftrace_events("thermal/thermal_temperature");
   ftrace_config->add_ftrace_events("perf_trace_counters/perf_trace_user");
@@ -201,10 +212,19 @@ perfetto::protos::TraceConfig PerfettoManager::BuildFtraceConfig(
   source = config.add_data_sources();
   data_config = source->mutable_config();
   data_config->set_name("linux.process_stats");
+  data_config->set_target_buffer(0);
   auto* proc = data_config->mutable_process_stats_config();
   proc->set_scan_all_processes_on_start(true);
   proc->set_record_thread_names(true);
+  // Split process/thread scan and /proc/stat so that they don't share the same
+  // buffer.
+  source = config.add_data_sources();
+  data_config = source->mutable_config();
+  data_config->set_name("linux.process_stats");
+  data_config->set_target_buffer(1);
+  proc = data_config->mutable_process_stats_config();
   proc->set_proc_stats_poll_ms(1000);
+  proc->add_quirks(perfetto::protos::ProcessStatsConfig::DISABLE_ON_DEMAND);
 
   // Add config to get CPU information from procfs and sysfs.
   source = config.add_data_sources();

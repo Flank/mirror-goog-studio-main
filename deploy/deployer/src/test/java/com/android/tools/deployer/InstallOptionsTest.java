@@ -42,6 +42,15 @@ public class InstallOptionsTest {
     }
 
     @Test
+    public void testForceQueryable() {
+        InstallOptions.Builder optionsBuilder = InstallOptions.builder();
+        optionsBuilder.setForceQueryable();
+        List<String> options = optionsBuilder.build().getFlags();
+        assertTrue(options.contains("--force-queryable"));
+        assertTrue(options.size() == 1);
+    }
+
+    @Test
     public void testDebuggable() {
         InstallOptions.Builder optionsBuilder = InstallOptions.builder();
         optionsBuilder.setAllowDebuggable();

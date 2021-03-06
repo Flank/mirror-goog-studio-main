@@ -19,7 +19,7 @@ readonly crostini_timestamp_file="/buildbot/lastrun.out"
 if [[ $lsb_release == "crostini" ]]; then
   # don't use any remote cached items, some items built on Linux may not be compatible. b/172365127
   config_options="--config=cloud_resultstore --noremote_accept_cached"
-  target_filters=qa_sanity,ui_psq,-qa_unreliable,-no_linux,-no_test_linux,-requires_emulator,-no_crostini
+  target_filters=qa_sanity,ui_test,-qa_unreliable,-no_linux,-no_test_linux,-requires_emulator,-no_crostini
 
   current_time=$(date +"%s")
 
@@ -56,18 +56,21 @@ if [[ $lsb_release == "crostini" ]]; then
   readonly test_invocation_id="$(uuidgen)"
 
   # Run the tests one at a time after all dependencies get built
+  # Also limit # of jobs running, this should be based in available resources
   "${script_dir}/../bazel" \
     --max_idle_secs=60 \
     test \
     --keep_going \
     ${config_options} \
     --test_strategy=exclusive \
+    --jobs=8 \
     --invocation_id=${test_invocation_id} \
     --define=meta_android_build_number=${build_number} \
     --build_event_binary_file="${dist_dir:-/tmp}/bazel-${build_number}.bes" \
     --build_tag_filters=${target_filters} \
     --test_tag_filters=${target_filters} \
     --tool_tag=${script_name} \
+    --flaky_test_attempts=//tools/adt/idea/android-uitests:.*@2 \
     -- \
     //tools/adt/idea/android-uitests/...
 
@@ -101,7 +104,7 @@ else #Executes normally on linux as before
   # options.
 
   # Run Bazel tests - no emulator tests should run here
-  target_filters=qa_sanity,ui_psq,-qa_unreliable,-no_linux,-no_test_linux,-requires_emulator
+  target_filters=qa_sanity,ui_test,-qa_unreliable,-no_linux,-no_test_linux,-requires_emulator
   "${script_dir}/../bazel" \
     --max_idle_secs=60 \
     test \
@@ -112,6 +115,7 @@ else #Executes normally on linux as before
     --build_tag_filters=${target_filters} \
     --test_tag_filters=${target_filters} \
     --tool_tag=${script_name} \
+    --flaky_test_attempts=//tools/adt/idea/android-uitests:.*@2 \
     -- \
     //tools/adt/idea/android-uitests/...
 

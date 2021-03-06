@@ -234,8 +234,8 @@ proto::AgentLiveLiteralUpdateResponse LiveLiteral::Update(
     if (reloader == nullptr) {
       ErrEvent("GetComposeHotReload was not found.");
     }
-    recompose.SaveStateAndDispose(reloader);
-    recompose.LoadStateAndCompose(reloader);
+    jobject state = recompose.SaveStateAndDispose(reloader);
+    recompose.LoadStateAndCompose(reloader, state);
   }
 
   JniClass live_literal_kt(jni_, klass);

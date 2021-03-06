@@ -64,19 +64,19 @@ class TestVariantData(
                 "unit tests"
             }
 
-            return if (variantDslInfo.hasFlavors()) {
+            return if (componentIdentity.productFlavors.isNotEmpty()) {
                 val sb = StringBuilder(50)
                 sb.append(prefix)
                 sb.append(" for the ")
-                sb.appendCapitalized(variantDslInfo.componentIdentity.flavorName)
-                variantDslInfo.componentIdentity.buildType?.let { sb.appendCapitalized(it) }
+                sb.appendCapitalized(componentIdentity.flavorName)
+                componentIdentity.buildType?.let { sb.appendCapitalized(it) }
                 sb.append(" build")
                 sb.toString()
             } else {
                 val sb = StringBuilder(50)
                 sb.append(prefix)
                 sb.append(" for the ")
-                sb.appendCapitalized(variantDslInfo.componentIdentity.buildType!!)
+                sb.appendCapitalized(componentIdentity.buildType!!)
                 sb.append(" build")
                 sb.toString()
             }

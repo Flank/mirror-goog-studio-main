@@ -127,6 +127,14 @@ class CacheabilityTest {
                         TaskInfo(DID_WORK,"process", "Resources", listOf("Debug", "Release"))
                 )
             }
+    ).plus(
+        if (BooleanOption.GENERATE_MANIFEST_CLASS.defaultValue) {
+            listOf(
+                TaskInfo(FROM_CACHE, "generate", "ManifestClass", listOf("Debug", "Release"))
+            )
+        } else {
+            emptyList()
+        }
     )
 
     @get:Rule

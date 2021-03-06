@@ -20,8 +20,6 @@ android {
     }
 
     lintOptions {
-        // *only* check unused resources
-        checkOnly "UnusedResources"
         htmlReport true
         htmlOutput file("lint-report.html")
         textReport true

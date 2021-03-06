@@ -38,6 +38,12 @@ def sdk_java_binary(name, command_name = None, main_class = None, runtime_deps =
         javacopts = ["--release", "8"],
         visibility = visibility,
     )
+    native.java_binary(
+        # Convenience for running through bazel during testing. Not used in release.
+        name = command_name + "_binary",
+        runtime_deps = [":" + command_name],
+        main_class = main_class,
+    )
     classpath_jar = command_name + "-classpath.jar"
     generate_classpath_jar(java_binary = command_name, name = command_name + "-classpath", classpath_jar = classpath_jar, visibility = ["//visibility:public"])
     for platform in platforms:

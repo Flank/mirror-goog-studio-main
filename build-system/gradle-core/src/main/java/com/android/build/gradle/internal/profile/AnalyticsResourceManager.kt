@@ -299,6 +299,7 @@ class AnalyticsResourceManager constructor(
         if (configCachingEnabled != null) {
             profileBuilder.configurationCachingEnabled = configCachingEnabled
         }
+        profileBuilder.parallelTaskExecution = project.gradle.startParameter.isParallelProjectExecutionEnabled
 
         // Use 'platform independent' path to match AS behaviour.
         rootProjectPath = project.rootProject.projectDir.absolutePath.replace('\\', '/')

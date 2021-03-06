@@ -16,7 +16,6 @@
 package com.android.build.gradle.integration.common.fixture
 
 import com.android.SdkConstants
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor.runBuild
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_NDK_SIDE_BY_SIDE_VERSION
 import com.android.build.gradle.integration.common.fixture.ModelBuilderV2.FetchResult
 import com.android.build.gradle.integration.common.fixture.ModelContainerV2.ModelInfo
@@ -25,9 +24,7 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.Option
 import com.android.builder.model.v2.ide.SyncIssue
 import com.android.builder.model.v2.models.AndroidProject
-import com.android.builder.model.v2.models.ModelBuilderParameter
 import com.android.builder.model.v2.models.VariantDependencies
-import com.android.builder.model.v2.models.ndk.NativeModelBuilderParameter
 import com.android.builder.model.v2.models.ndk.NativeModule
 import com.google.common.collect.Sets
 import com.google.gson.JsonArray
@@ -47,6 +44,7 @@ import org.junit.Assert
 import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
+import java.io.Serializable
 import java.nio.file.Path
 import java.util.function.Consumer
 
@@ -62,7 +60,7 @@ class ModelBuilderV2 internal constructor(
     project,
     project.location,
     projectConnection,
-    Consumer<GradleBuildResult> { lastBuildResult: GradleBuildResult? ->
+    Consumer{ lastBuildResult: GradleBuildResult? ->
         project.setLastBuildResult(lastBuildResult!!)
     },
     project.getProfileDirectory(),
@@ -76,6 +74,22 @@ class ModelBuilderV2 internal constructor(
         val container: T,
         val normalizer: FileNormalizer
     )
+
+    data class NativeModuleParams(
+        /**
+         * Names of the variants to sync for the given modules. Use null to sync all variants
+         */
+        val nativeVariants: List<String>? = null,
+        /**
+         * Names of the ABIs to sync for the given modules and variants. Use null to sync all ABIs.
+         */
+        val nativeAbis: List<String>? = null
+    ): Serializable {
+        companion object {
+            @JvmStatic
+            private val serialVersionUID: Long = 1L
+        }
+    }
 
     /**
      * Do not fail if there are sync issues.
@@ -94,18 +108,23 @@ class ModelBuilderV2 internal constructor(
     }
 
     /**
-     * Fetches the [AndroidProject] and [ProjectSyncIssues] for each project and return them as a
-     * [ModelContainer]
+     * Fetches the model for each project and return them as a [ModelContainer]
+     * @param variantName the name of the variant for which to return [VariantDependencies]
+     * @param nativeParams the [NativeModuleParams] to configure the native model query
      */
-    fun fetchAndroidProjects(): FetchResult<ModelContainerV2<AndroidProject>> {
+    fun fetchModels(
+        variantName: String? = null,
+        nativeParams: NativeModuleParams? = null
+    ): FetchResult<ModelContainerV2> {
         val container =
-            assertNoSyncIssues(
-                buildModelV2(
-                    GetAndroidModelV2Action<AndroidProject, Unit>(
-                        AndroidProject::class.java
+                assertNoSyncIssues(
+                    buildModelV2(
+                        GetAndroidModelV2Action(
+                            variantName,
+                            nativeParams
+                        )
                     )
                 )
-            )
 
         return FetchResult(
             container,
@@ -114,51 +133,23 @@ class ModelBuilderV2 internal constructor(
     }
 
     /**
-     * Fetches the [AndroidProject] and [ProjectSyncIssues] for each project and return them as a
-     * [ModelContainer]
-     */
-    fun fetchVariantDependencies(variantName: String): FetchResult<ModelContainerV2<VariantDependencies>> {
-        val container = buildModelV2(
-            GetAndroidModelV2Action(
-                VariantDependencies::class.java,
-                ModelBuilderParameter::class.java
-            ) { param -> param.variantName = variantName }
-        )
-
-        return FetchResult(
-            container,
-            normalizer = getFileNormalizer(container.rootBuildId)
-        )
-    }
-
-    /**
-     * Fetches the [NativeModule] for each project and return them as a [ModuleContainer]
+     * Fetches the [AndroidProject], [VariantDependencies] and [ProjectSyncIssues] for each project
+     * and return them as a [ModelContainer]
      *
-     * @param variantsToGen names of the variants to sync for the given modules. Use null to sync
-     * all variants
-     * @param abisToGen names of the ABIs to sync for the given modules and variants. Use null to
-     * sync all ABIs.
+     * @param variantName the name of the variant for which to return [VariantDependencies]
+     */
+    fun fetchVariantDependencies(variantName: String): FetchResult<ModelContainerV2> =
+            fetchModels(variantName = variantName, nativeParams = null)
+
+    /**
+     * Fetches the [AndroidProject], [NativeModule] and [ProjectSyncIssues] for each project and
+     * return them as a [ModelContainer]
+
+     * @param nativeParams the [NativeModuleParams] to configure the native model query
      * @return modules whose build information are generated
      */
-    fun fetchNativeModules(
-        variantsToGen: List<String>?,
-        abisToGen: List<String>?
-    ): FetchResult<ModelContainerV2<NativeModule>> {
-        val container = buildModelV2(
-            GetAndroidModelV2Action(
-                NativeModule::class.java,
-                NativeModelBuilderParameter::class.java
-            ) { param ->
-                param.variantsToGenerateBuildInformation = variantsToGen
-                param.abisToGenerateBuildInformation = abisToGen
-            }
-        )
-
-        return FetchResult(
-            container,
-            normalizer = getFileNormalizer(container.rootBuildId)
-        )
-    }
+    fun fetchNativeModules(nativeParams: NativeModuleParams): FetchResult<ModelContainerV2> =
+            fetchModels(variantName = null, nativeParams = nativeParams)
 
     private fun getFileNormalizer(buildIdentifier: BuildIdentifier): FileNormalizerImpl {
         return FileNormalizerImpl(
@@ -237,8 +228,8 @@ class ModelBuilderV2 internal constructor(
     }
 
     private fun assertNoSyncIssues(
-        container: ModelContainerV2<AndroidProject>
-    ): ModelContainerV2<AndroidProject> {
+        container: ModelContainerV2
+    ): ModelContainerV2 {
         val allowedOptions: Set<String> =
             Sets.union(
                 explicitlyAllowedOptions,
@@ -247,12 +238,12 @@ class ModelBuilderV2 internal constructor(
         val errors = container.infoMaps
             .entries
             .asSequence()
-            .flatMap { buildEntry: Map.Entry<BuildIdentifier, Map<String, ModelInfo<AndroidProject>>> ->
+            .flatMap { buildEntry: Map.Entry<BuildIdentifier, Map<String, ModelInfo>> ->
                 buildEntry
                     .value
                     .entries
                     .asSequence()
-                    .map { projectEntry: Map.Entry<String, ModelInfo<AndroidProject>> ->
+                    .map { projectEntry: Map.Entry<String, ModelInfo> ->
                         "${buildEntry.key.rootDir}@@${projectEntry.key}" to removeAllowedIssues(projectEntry.value.issues.syncIssues, allowedOptions)
                     }
             }
@@ -294,7 +285,7 @@ class FileNormalizerImpl(
     androidPrefsDir: File?,
     androidNdkSxSRoot: File?,
     localRepos: List<Path>,
-    private val defaultNdkSideBySideVersion: String
+    defaultNdkSideBySideVersion: String
 ) : FileNormalizer {
 
     private data class RootData(
@@ -389,35 +380,6 @@ class FileNormalizerImpl(
         return sb.toString()
     }
 
-    private fun File.relativeToOrNull(
-        root: File,
-        varName: String,
-        action: ((String) -> String)? = null
-    ): String? {
-        // check first that the file is inside the root, otherwise relativeToOrNull can still
-        // return something that starts with a bunch of ../
-        if (startsWith(root)) {
-            val relativeFile = relativeToOrNull(root)
-            if (relativeFile != null) {
-                val osNormalizedString = if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS) {
-                    relativeFile.toString().replace("\\", "/")
-                } else {
-                    relativeFile.toString()
-                }
-
-                val finalString = if (action != null) {
-                    action(osNormalizedString)
-                } else {
-                    osNormalizedString
-                }
-
-                return "{$varName}/$finalString"
-            }
-        }
-
-        return null
-    }
-
     override fun normalize(value: JsonElement): JsonElement = when (value) {
         is JsonNull -> value
         is JsonPrimitive -> when {
@@ -449,4 +411,33 @@ class FileNormalizerImpl(
         }
         return s
     }
+}
+
+fun File.relativeToOrNull(
+    root: File,
+    varName: String,
+    action: ((String) -> String)? = null
+): String? {
+    // check first that the file is inside the root, otherwise relativeToOrNull can still
+    // return something that starts with a bunch of ../
+    if (startsWith(root)) {
+        val relativeFile = relativeToOrNull(root)
+        if (relativeFile != null) {
+            val osNormalizedString = if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS) {
+                relativeFile.toString().replace("\\", "/")
+            } else {
+                relativeFile.toString()
+            }
+
+            val finalString = if (action != null) {
+                action(osNormalizedString)
+            } else {
+                osNormalizedString
+            }
+
+            return "{$varName}/$finalString"
+        }
+    }
+
+    return null
 }

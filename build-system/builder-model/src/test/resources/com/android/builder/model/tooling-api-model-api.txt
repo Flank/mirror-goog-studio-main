@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-c199b84cffa853ec53c1c244f1dbddc93f19d8d3d337e79c9513dcac75497ac8
+449acf1d7f133e75d029ec7aac83c12d1e6d00a19bdb36d875eda6a3721d118a
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -749,6 +749,13 @@ com.android.builder.model.v2.models.GlobalLibraryMap.getLibraries: java.util.Map
 com.android.builder.model.v2.models.ModelBuilderParameter
 com.android.builder.model.v2.models.ModelBuilderParameter.getVariantName: java.lang.String ()
 com.android.builder.model.v2.models.ModelBuilderParameter.setVariantName: void (java.lang.String)
+com.android.builder.model.v2.models.ModelVersions implements com.android.builder.model.v2.AndroidModel
+com.android.builder.model.v2.models.ModelVersions$Version
+com.android.builder.model.v2.models.ModelVersions$Version.getMajor: int ()
+com.android.builder.model.v2.models.ModelVersions$Version.getMinor: int ()
+com.android.builder.model.v2.models.ModelVersions.getAndroidProject: com.android.builder.model.v2.models.ModelVersions$Version ()
+com.android.builder.model.v2.models.ModelVersions.getNativeModule: com.android.builder.model.v2.models.ModelVersions$Version ()
+com.android.builder.model.v2.models.ModelVersions.getVariantDependencies: com.android.builder.model.v2.models.ModelVersions$Version ()
 com.android.builder.model.v2.models.ProjectSyncIssues implements com.android.builder.model.v2.AndroidModel
 com.android.builder.model.v2.models.ProjectSyncIssues.getSyncIssues: java.util.Collection<com.android.builder.model.v2.ide.SyncIssue> ()
 com.android.builder.model.v2.models.VariantDependencies implements com.android.builder.model.v2.AndroidModel

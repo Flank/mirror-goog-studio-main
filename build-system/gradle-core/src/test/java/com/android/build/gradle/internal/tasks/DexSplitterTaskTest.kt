@@ -199,7 +199,8 @@ class DexSplitterTaskTest {
                     tmp.newFile("mapping.txt").toPath(),
                     tmp.newFile("seeds.txt").toPath(),
                     tmp.newFile("usage.txt").toPath(),
-                    tmp.newFile("configuration.txt").toPath()
+                    tmp.newFile("configuration.txt").toPath(),
+                    tmp.newFile("missing_rules.txt").toPath(),
                 ),
             output = shrunkDexDir,
             outputResources = tmp.newFile("shrunkResources.jar"),

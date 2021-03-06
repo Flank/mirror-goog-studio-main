@@ -19,6 +19,8 @@ package com.android.build.gradle.integration.nativebuild
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_NDK_SIDE_BY_SIDE_VERSION
+import com.android.build.gradle.integration.common.fixture.ModelBuilderV2
+import com.android.build.gradle.integration.common.fixture.ModelBuilderV2.NativeModuleParams
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
 import com.android.build.gradle.integration.common.fixture.model.readAsFileIndex
 import com.android.build.gradle.integration.common.fixture.model.recoverExistingCxxAbiModels
@@ -131,8 +133,13 @@ class CmakeSettingsTest(private val cmakeVersionInDsl: String) {
         project.execute("clean", "assemble")
         val abis = 2
         val buildTypes = 4
-        val model = project.modelV2().fetchNativeModules(emptyList(), emptyList())
-        val allBuildOutputs = model.container.singleModel.variants.flatMap { variant ->
+        val model = project.modelV2().fetchNativeModules(
+            NativeModuleParams(
+                emptyList(),
+                emptyList()
+            )
+        )
+        val allBuildOutputs = model.container.singleNativeModule.variants.flatMap { variant ->
             variant.abis.flatMap { abi ->
                 abi.symbolFolderIndexFile.readAsFileIndex().flatMap {
                     it.list()!!.toList()
@@ -178,6 +185,6 @@ class CmakeSettingsTest(private val cmakeVersionInDsl: String) {
         return project.recoverExistingCxxAbiModels()
                 .filter { it.abi == Abi.X86_64 || it.abi == Abi.ARMEABI_V7A}
                 .filter { it.variant.variantName == "debug" }
-                .map { getNativeBuildMiniConfig(it.jsonFile, null) }
+                .map { getNativeBuildMiniConfig(it, null) }
     }
 }

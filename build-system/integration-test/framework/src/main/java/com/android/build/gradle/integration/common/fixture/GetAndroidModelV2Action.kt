@@ -16,11 +16,14 @@
 package com.android.build.gradle.integration.common.fixture
 
 import com.android.build.gradle.integration.common.fixture.ModelContainerV2.ModelInfo
-import com.android.builder.model.v2.AndroidModel
 import com.android.builder.model.v2.models.AndroidProject
 import com.android.builder.model.v2.models.GlobalLibraryMap
+import com.android.builder.model.v2.models.ModelBuilderParameter
+import com.android.builder.model.v2.models.ModelVersions
 import com.android.builder.model.v2.models.ProjectSyncIssues
 import com.android.builder.model.v2.models.VariantDependencies
+import com.android.builder.model.v2.models.ndk.NativeModelBuilderParameter
+import com.android.builder.model.v2.models.ndk.NativeModule
 import org.gradle.tooling.BuildAction
 import org.gradle.tooling.BuildController
 import org.gradle.tooling.model.BuildIdentifier
@@ -32,19 +35,12 @@ import org.gradle.tooling.model.gradle.BasicGradleProject
  *
  * This is returned as a [ModelContainer]
  */
-class GetAndroidModelV2Action<ModelT : AndroidModel, ParamT> private constructor(
-    private val modelClass: Class<ModelT>,
-    private val paramClassAndModifier: Pair<Class<ParamT>, ((ParamT) -> Unit)>?
-) : BuildAction<ModelContainerV2<ModelT>> {
+class GetAndroidModelV2Action(
+    private val variantName: String? = null,
+    private val nativeParams: ModelBuilderV2.NativeModuleParams? = null
+) : BuildAction<ModelContainerV2> {
 
-    constructor(modelClass: Class<ModelT>) : this(modelClass, null)
-    constructor(
-        modelClass: Class<ModelT>,
-        paramClass: Class<ParamT>,
-        paramModifier: (ParamT) -> Unit
-    ) : this(modelClass, paramClass to paramModifier)
-
-    override fun execute(buildController: BuildController): ModelContainerV2<ModelT> {
+    override fun execute(buildController: BuildController): ModelContainerV2 {
         val t1 = System.currentTimeMillis()
 
         // accumulate pairs of (build Id, project) to query.
@@ -68,8 +64,8 @@ class GetAndroidModelV2Action<ModelT : AndroidModel, ParamT> private constructor
 
         val modelMap = getAndroidProjectMap(projects, buildController)
 
-        // if the queried model was the dependencies, then get the library map
-        val libraryMap = if (modelClass == VariantDependencies::class.java) {
+        // if we queried variant dependencies, include global library map
+        val libraryMap = if (variantName != null) {
             projects.firstOrNull()?.let { (_, project) ->
                 buildController.findModel(project, GlobalLibraryMap::class.java)
             }
@@ -91,26 +87,46 @@ class GetAndroidModelV2Action<ModelT : AndroidModel, ParamT> private constructor
     private fun getAndroidProjectMap(
         projects: List<Pair<BuildIdentifier, BasicGradleProject>>,
         buildController: BuildController
-    ): Map<BuildIdentifier, MutableMap<String, ModelInfo<ModelT>>> {
-        val models = mutableMapOf<BuildIdentifier, MutableMap<String, ModelInfo<ModelT>>>()
+    ): Map<BuildIdentifier, Map<String, ModelInfo>> {
+        val models = mutableMapOf<BuildIdentifier, MutableMap<String, ModelInfo>>()
 
         for ((buildId, project) in projects) {
-            val model = if (paramClassAndModifier == null) {
-                buildController.findModel(project, modelClass)
-            } else {
+            // if we don't find ModelVersions, then it's not an AndroidProject, move on.
+            val modelVersions = buildController.findModel(project, ModelVersions::class.java) ?: continue
+            val androidProject = buildController.findModel(project, AndroidProject::class.java)
+
+            val variantDependencies = if (variantName != null) {
                 buildController.findModel(
                     project,
-                    modelClass,
-                    paramClassAndModifier.first,
-                    paramClassAndModifier.second
-                )
-            } ?: continue
+                    VariantDependencies::class.java,
+                    ModelBuilderParameter::class.java
+                ) { it.variantName = variantName }
+            } else null
+
+            val nativeModule = if (nativeParams != null) {
+                buildController.findModel(
+                    project,
+                    NativeModule::class.java,
+                    NativeModelBuilderParameter::class.java
+                ) {
+                    it.variantsToGenerateBuildInformation = nativeParams.nativeVariants
+                    it.abisToGenerateBuildInformation = nativeParams.nativeAbis
+                }
+            } else null
 
             val issues =
-                buildController.findModel(project, ProjectSyncIssues::class.java) ?: continue
+                buildController.findModel(project, ProjectSyncIssues::class.java)
+                        ?: throw RuntimeException("No ProjectSyncIssue for ${project.path}")
 
             val map = models.computeIfAbsent(buildId) { mutableMapOf() }
-            map[project.path] = ModelInfo(model, issues)
+            map[project.path] =
+                    ModelInfo(
+                        modelVersions,
+                        androidProject,
+                        variantDependencies,
+                        nativeModule,
+                        issues
+                    )
         }
 
         return models

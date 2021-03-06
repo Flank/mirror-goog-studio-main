@@ -62,6 +62,7 @@ import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask
 import com.android.build.gradle.internal.tasks.ExtractApksTask
+import com.android.build.gradle.internal.utils.toImmutableSet
 import com.android.build.gradle.internal.variant.VariantModel
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptionService
@@ -81,6 +82,7 @@ import com.android.builder.model.v2.ide.TestedTargetVariant
 import com.android.builder.model.v2.models.AndroidProject
 import com.android.builder.model.v2.models.GlobalLibraryMap
 import com.android.builder.model.v2.models.ModelBuilderParameter
+import com.android.builder.model.v2.models.ModelVersions
 import com.android.builder.model.v2.models.ProjectSyncIssues
 import com.android.builder.model.v2.models.VariantDependencies
 import com.google.common.collect.ImmutableList
@@ -128,7 +130,8 @@ class ModelBuilder<
     }
 
     override fun canBuild(className: String): Boolean {
-        return className == AndroidProject::class.java.name
+        return className == ModelVersions::class.java.name
+                || className == AndroidProject::class.java.name
                 || className == GlobalLibraryMap::class.java.name
                 || className == VariantDependencies::class.java.name
                 || className == ProjectSyncIssues::class.java.name
@@ -138,6 +141,7 @@ class ModelBuilder<
      * Non-parameterized model query. Valid for all but the VariantDependencies model
      */
     override fun buildAll(className: String, project: Project): Any = when (className) {
+        ModelVersions::class.java.name -> buildModelVersions(project)
         AndroidProject::class.java.name -> buildAndroidProjectModel(project)
         GlobalLibraryMap::class.java.name -> buildGlobalLibraryMapModel(project)
         ProjectSyncIssues::class.java.name -> buildProjectSyncIssueModel(project)
@@ -156,12 +160,21 @@ class ModelBuilder<
         project: Project
     ): Any? = when (className) {
         VariantDependencies::class.java.name -> buildVariantDependenciesModel(project, parameter)
+        ModelVersions::class.java.name,
         AndroidProject::class.java.name,
         GlobalLibraryMap::class.java.name,
         ProjectSyncIssues::class.java.name -> throw RuntimeException(
             "Please use non-parameterized Tooling API to obtain $className model."
         )
         else -> throw RuntimeException("Does not support model '$className'")
+    }
+
+    private fun buildModelVersions(project: Project): ModelVersions {
+        return ModelVersionsImpl(
+            androidProject = VersionImpl(1, 0),
+            variantDependencies = VersionImpl(1, 0),
+            nativeModule = VersionImpl(1, 0)
+        )
     }
 
     private fun buildAndroidProjectModel(project: Project): AndroidProject {
@@ -263,7 +276,7 @@ class ModelBuilder<
             lintOptions = extension.lintOptions.convert(),
             javaCompileOptions = extension.compileOptions.convert(),
             resourcePrefix = extension.resourcePrefix,
-            dynamicFeatures = (extension as? BaseAppModuleExtension)?.dynamicFeatures,
+            dynamicFeatures = (extension as? BaseAppModuleExtension)?.dynamicFeatures?.toImmutableSet(),
             viewBindingOptions = ViewBindingOptionsImpl(
                 variantModel.variants.any { it.buildFeatures.viewBinding }
             ),

@@ -46,7 +46,7 @@ class LibraryProfileContentTest {
         val capturer = ProfileCapturer(project)
 
         val cleanBuild = Iterables.getOnlyElement(
-            capturer.capture { project.execute("assembleDebug") })
+            capturer.capture { project.executor().withArguments(listOf("--parallel", "--max-workers=1")).run("assembleDebug") })
 
         // Check that the generate library R file task records its worker spans.
         val generateLibraryTask = cleanBuild.spanList.first() {
@@ -56,5 +56,6 @@ class LibraryProfileContentTest {
         assertThat(generateLibraryTaskChildren).hasSize(3)
         val workerSpan = generateLibraryTaskChildren.first() { it.type == GradleBuildProfileSpan.ExecutionType.WORKER_EXECUTION }
         assertWithMessage("Worker span is positive").that(workerSpan.durationInMs).isGreaterThan(0)
+        assertThat(cleanBuild.parallelTaskExecution).isTrue()
     }
 }

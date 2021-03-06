@@ -72,13 +72,13 @@ cc_library(
         "src/ports/SkGlobalInitialization_default.cpp",
         "src/ports/SkMemory_malloc.cpp",
         "src/ports/SkOSFile_stdio.cpp",
+        "src/ports/SkFontMgr_custom_empty_factory.cpp",
     ] + select({
         "windows": [
             "src/ports/SkOSFile_win.cpp",
             "src/ports/SkOSLibrary_win.cpp",
             "src/ports/SkTLS_win.cpp",
             "src/ports/SkDebug_win.cpp",
-            "src/ports/SkFontMgr_custom_empty_factory.cpp",
         ],
         "mac": [
             "src/ports/SkOSFile_posix.cpp",
@@ -91,7 +91,6 @@ cc_library(
             "src/ports/SkTLS_pthread.cpp",
             "src/ports/SkDebug_stdio.cpp",
             "src/ports/SkOSLibrary_posix.cpp",
-            "src/ports/SkFontMgr_custom_empty_factory.cpp",
         ],
     }),
     hdrs = glob(["include/**/*.h"]),

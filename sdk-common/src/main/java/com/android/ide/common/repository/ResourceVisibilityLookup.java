@@ -15,64 +15,51 @@
  */
 package com.android.ide.common.repository;
 
-
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.ide.common.gradle.model.IdeAndroidArtifact;
-import com.android.ide.common.gradle.model.IdeAndroidLibrary;
-import com.android.ide.common.gradle.model.IdeLibrary;
-import com.android.ide.common.gradle.model.IdeVariant;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableListMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 /**
- * Class which provides information about whether Android resources for a given library are
- * public or private.
+ * Class which provides information about whether Android resources for a given library are public
+ * or private.
  */
 public abstract class ResourceVisibilityLookup {
+
     /**
-     * Returns true if the given resource is private.
-     * Note that {@link #isPublic} is normally the opposite of {@link #isPrivate},
-     * except for unknown resources - they will both return false in that case.
+     * Returns true if the given resource is private. Note that {@link #isPublic} is normally the
+     * opposite of {@link #isPrivate}, except for unknown resources - they will both return false in
+     * that case.
      *
      * @param type the type of the resource
-     * @param name the resource field name of the resource (in other words, for
-     *             style Theme:Variant.Cls the name would be Theme_Variant_Cls
+     * @param name the resource field name of the resource (in other words, for style
+     *             Theme:Variant.Cls the name would be Theme_Variant_Cls
      * @return true if the given resource is private
      */
-    public abstract boolean isPrivate(
-            @NonNull ResourceType type,
-            @NonNull String name);
+    public abstract boolean isPrivate(@NonNull ResourceType type, @NonNull String name);
 
     /**
-     * Returns true if the given resource is public.
-     * Note that {@link #isPublic} is normally the opposite of {@link #isPrivate},
-     * except for unknown resources - they will both return false in that case.
+     * Returns true if the given resource is public. Note that {@link #isPublic} is normally the
+     * opposite of {@link #isPrivate}, except for unknown resources - they will both return false in
+     * that case.
      *
      * @param type the type of the resource
-     * @param name the resource field name of the resource (in other words, for
-     *             style Theme:Variant.Cls the name would be Theme_Variant_Cls
+     * @param name the resource field name of the resource (in other words, for style
+     *             Theme:Variant.Cls the name would be Theme_Variant_Cls
      * @return true if the given resource is public
      */
-    public abstract boolean isPublic(
-            @NonNull ResourceType type,
-            @NonNull String name);
+    public abstract boolean isPublic(@NonNull ResourceType type, @NonNull String name);
 
-    protected abstract boolean isKnown(
-            @NonNull ResourceType type,
-            @NonNull String name);
+    protected abstract boolean isKnown(@NonNull ResourceType type, @NonNull String name);
 
     /**
      * Returns true if the given resource is private
@@ -86,8 +73,7 @@ public abstract class ResourceVisibilityLookup {
     }
 
     /**
-     * For a private resource, return the library that the resource was defined as
-     * private in
+     * For a private resource, return the library that the resource was defined as private in
      *
      * @param type the type of the resource
      * @param name the name of the resource
@@ -104,14 +90,12 @@ public abstract class ResourceVisibilityLookup {
      * identifier as well as public and all resource files (and the public resource file may not
      * exist.)
      *
-     * <p>NOTE: The {@link Provider} class can be used to share/cache {@link
      * ResourceVisibilityLookup} instances, e.g. when you have library1 and library2 each
-     * referencing libraryBase, the {@link Provider} will ensure that a the libraryBase data is
-     * shared.
+     * referencing libraryBase.
      *
      * @param publicResources the file listing the public resources
-     * @param allResources the file listing all resources
-     * @param mapKey a unique identifier for this library
+     * @param allResources    the file listing all resources
+     * @param mapKey          a unique identifier for this library
      * @return a corresponding {@link ResourceVisibilityLookup}
      */
     @NonNull
@@ -133,53 +117,24 @@ public abstract class ResourceVisibilityLookup {
             @NonNull List<ResourceVisibilityLookup> libraries) {
         if (libraries.size() == 1) {
             return libraries.get(0);
-        } else {
+        }
+        else {
             return new MultipleLibraryResourceVisibility(libraries);
         }
     }
 
-    /**
-     * Creates a {@link ResourceVisibilityLookup} for a given library.
-     *
-     * <p>NOTE: The {@link Provider} class can be used to share/cache {@link
-     * ResourceVisibilityLookup} instances, e.g. when you have library1 and library2 each
-     * referencing libraryBase, the {@link Provider} will ensure that a the libraryBase data is
-     * shared.
-     *
-     * @param library the library
-     * @return a corresponding {@link ResourceVisibilityLookup}
-     */
+    @VisibleForTesting
     @NonNull
-    public static ResourceVisibilityLookup create(@NonNull IdeAndroidLibrary library) {
-        return new AndroidLibraryResourceVisibility(library, new SymbolProvider());
-    }
-
-    /**
-     * Creates a {@link ResourceVisibilityLookup} for the set of libraries.
-     *
-     * <p>NOTE: The {@link Provider} class can be used to share/cache {@link
-     * ResourceVisibilityLookup} instances, e.g. when you have library1 and library2 each
-     * referencing libraryBase, the {@link Provider} will ensure that a the libraryBase data is
-     * shared.
-     *
-     * @param libraries the list of libraries
-     * @param provider an optional manager instance for caching of individual libraries, if any
-     * @return a corresponding {@link ResourceVisibilityLookup}
-     */
-    @NonNull
-    public static ResourceVisibilityLookup create(
-            @NonNull List<IdeAndroidLibrary> libraries, @Nullable Provider provider) {
-        List<ResourceVisibilityLookup> list = Lists.newArrayListWithExpectedSize(libraries.size());
-        for (IdeAndroidLibrary library : libraries) {
-            ResourceVisibilityLookup v =
-                    provider != null
-                            ? provider.get(library)
-                            : new AndroidLibraryResourceVisibility(library, new SymbolProvider());
-            if (!v.isEmpty()) {
-                list.add(v);
-            }
-        }
-        return new MultipleLibraryResourceVisibility(list);
+    static AndroidLibraryResourceVisibility create(
+            @NonNull String libraryArtifactAddress,
+            @NonNull File librarySymbolFile,
+            @NonNull File libraryPublicResources) {
+        Multimap<String, ResourceType> publicResources
+                = LibraryResourceVisibility.computeVisibilityMap(libraryPublicResources);
+        return new AndroidLibraryResourceVisibility(
+                libraryArtifactAddress,
+                publicResources,
+                publicResources != null ? getSymbols(librarySymbolFile) : null);
     }
 
     public static final ResourceVisibilityLookup NONE = new ResourceVisibilityLookup() {
@@ -210,32 +165,12 @@ public abstract class ResourceVisibilityLookup {
         }
     };
 
-    /**
-     * Create a key that can be used to identify a library for a specific version. We can't use
-     * {@link AndroidLibrary} directly, because (due to a lot of magic in the Gradle model) we end
-     * up with separate instances of {@link AndroidLibrary} when a single library appears more than
-     * once, such as a downstream dependency reachable from multiple upstream libraries.
-     *
-     * @param library the library to produce a map key for
-     * @return a suitable key to use with {@link Map}
-     */
-    private static String getMapKey(@NonNull IdeLibrary library) {
-        return library.getArtifactAddress();
-    }
-
-    private static String getMapKey(@NonNull IdeAndroidArtifact artifact) {
-        return artifact.getApplicationId();
-    }
-
-    private static String getMapKey(@NonNull IdeVariant variant) {
-        return getMapKey(variant.getMainArtifact()) + '-' + variant.getName();
-    }
-
     /** Searches multiple libraries */
-    private static class MultipleLibraryResourceVisibility extends ResourceVisibilityLookup {
+    public static class MultipleLibraryResourceVisibility extends ResourceVisibilityLookup {
 
         private final List<ResourceVisibilityLookup> mRepositories;
 
+        @VisibleForTesting
         public MultipleLibraryResourceVisibility(List<ResourceVisibilityLookup> repositories) {
             mRepositories = repositories;
         }
@@ -309,99 +244,15 @@ public abstract class ResourceVisibilityLookup {
         }
     }
 
-    /**
-     * Provider which keeps a set of {@link ResourceVisibilityLookup} instances around for
-     * repeated queries, including from different libraries that may share dependencies
-     */
-    public static class Provider {
-        /**
-         * We store lookup instances for multiple separate types of keys here:
-         * {@link AndroidLibrary},
-         * {@link com.android.builder.model.AndroidArtifact}, and
-         * {@link com.android.builder.model.Variant}
-         */
-        private final Map<Object, ResourceVisibilityLookup> mInstances = Maps.newHashMap();
-
-        /** R.txt lookup */
-        private final SymbolProvider mSymbols = new SymbolProvider();
-
-        /**
-         * Looks up a (possibly cached) {@link ResourceVisibilityLookup} for the given {@link
-         * AndroidLibrary}
-         *
-         * @param library the library
-         * @return the corresponding {@link ResourceVisibilityLookup}
-         */
-        @NonNull
-        public ResourceVisibilityLookup get(@NonNull IdeAndroidLibrary library) {
-            String key = getMapKey(library);
-            ResourceVisibilityLookup visibility = mInstances.get(key);
-            if (visibility == null) {
-                visibility = new AndroidLibraryResourceVisibility(library, mSymbols);
-                if (visibility.isEmpty()) {
-                    visibility = NONE;
-                }
-                mInstances.put(key, visibility);
-            }
-            return visibility;
-        }
-
-        /**
-         * Looks up a (possibly cached) {@link ResourceVisibilityLookup} for the given {@link
-         * AndroidArtifact}
-         *
-         * @param artifact the artifact
-         * @return the corresponding {@link ResourceVisibilityLookup}
-         */
-        @NonNull
-        public ResourceVisibilityLookup get(@NonNull IdeAndroidArtifact artifact) {
-            String key = getMapKey(artifact);
-            ResourceVisibilityLookup visibility = mInstances.get(key);
-            if (visibility == null) {
-                List<ResourceVisibilityLookup> list =
-                        Lists.newArrayListWithExpectedSize(
-                                artifact.getLevel2Dependencies().getAndroidLibraries().size() + 1);
-                for (IdeAndroidLibrary d : artifact.getLevel2Dependencies().getAndroidLibraries()) {
-                    ResourceVisibilityLookup v = get(d);
-                    if (!v.isEmpty()) {
-                        list.add(v);
-                    }
-                }
-                int size = list.size();
-                visibility = size == 0 ? NONE : size == 1 ? list.get(0) : new MultipleLibraryResourceVisibility(list);
-                mInstances.put(key, visibility);
-            }
-            return visibility;
-        }
-
-        /**
-         * Looks up a (possibly cached) {@link ResourceVisibilityLookup} for the given {@link
-         * IdeAndroidArtifact}
-         *
-         * @return the corresponding {@link ResourceVisibilityLookup}
-         */
-        @NonNull
-        public ResourceVisibilityLookup get(@NonNull IdeVariant variant) {
-            String key = getMapKey(variant);
-            ResourceVisibilityLookup visibility = mInstances.get(key);
-            if (visibility == null) {
-                IdeAndroidArtifact artifact = variant.getMainArtifact();
-                visibility = get(artifact);
-                mInstances.put(key, visibility);
-            }
-            return visibility;
-        }
-
-    }
-
     /** Visibility data for a single library */
     private static class LibraryResourceVisibility extends ResourceVisibilityLookup {
-        private final String mMapKey;
+
+        protected final String mMapKey;
 
         /**
-         * A map from name to resource types for all resources known to this library. This
-         * is used to make sure that when the {@link #isPrivate(ResourceType, String)} query method
-         * is called, it can tell the difference between a resource implicitly private by not being
+         * A map from name to resource types for all resources known to this library. This is used
+         * to make sure that when the {@link #isPrivate(ResourceType, String)} query method is
+         * called, it can tell the difference between a resource implicitly private by not being
          * declared as public and a resource unknown to this library (e.g. defined by a different
          * library or the user's own project resources.)
          */
@@ -429,7 +280,8 @@ public abstract class ResourceVisibilityLookup {
             if (mPublic != null) {
                 try {
                     all = readSymbolFile(allResources);
-                } catch (IOException ignore) {
+                }
+                catch (IOException ignore) {
                 }
             }
             mAll = all;
@@ -450,7 +302,7 @@ public abstract class ResourceVisibilityLookup {
         @Override
         public String getPrivateIn(@NonNull ResourceType type, @NonNull String name) {
             if (isPrivate(type, name)) {
-                 return getLibraryName();
+                return getLibraryName();
             }
 
             return null;
@@ -507,7 +359,8 @@ public abstract class ResourceVisibilityLookup {
                     result.put(name, type);
                 }
                 return result;
-            } catch (IOException ignore) {
+            }
+            catch (IOException ignore) {
             }
             return null;
         }
@@ -544,89 +397,57 @@ public abstract class ResourceVisibilityLookup {
     }
 
     /** Visibility data for a single library */
-    private static class AndroidLibraryResourceVisibility extends LibraryResourceVisibility {
-        @NonNull private final IdeLibrary mLibrary;
+    public static class AndroidLibraryResourceVisibility extends LibraryResourceVisibility {
+
+        @NonNull private final String mLibraryArtifactAddress;
 
         private AndroidLibraryResourceVisibility(
-                @NonNull IdeAndroidLibrary library,
+                @NonNull String libraryArtifactAddress,
                 @Nullable Multimap<String, ResourceType> publicResources,
-                @NonNull SymbolProvider symbols) {
+                Multimap<String, ResourceType> allResources) {
             //noinspection VariableNotUsedInsideIf
-            super(publicResources, publicResources != null ? symbols.getSymbols(library) : null,
-                    getMapKey(library));
-            mLibrary = library;
-        }
-
-        private AndroidLibraryResourceVisibility(
-                @NonNull IdeAndroidLibrary library, @NonNull SymbolProvider symbols) {
-            this(library, computeVisibilityMap(new File(library.getPublicResources())), symbols);
+            super(publicResources,
+                  allResources,
+                  libraryArtifactAddress);
+            mLibraryArtifactAddress = libraryArtifactAddress;
         }
 
         @Override
         public String toString() {
-            return getMapKey(mLibrary);
+            return mMapKey;
         }
 
         @Nullable
         @Override
         protected String getLibraryName() {
-            return mLibrary.getArtifactAddress();
+            return mLibraryArtifactAddress;
         }
     }
 
-    /**
-     * Class which provides resource symbols (from R.txt) for a given library, while
-     * (a) caching across multiple lookups, and (b) removing symbols from upstream
-     * dependencies.
-     * <p>
-     * These are referred to as "symbols" to map the Gradle plugin terminology,
-     * e.g. "LibraryBundle#getSymbolFile", the SymbolLoader processor, etc.
-     */
-    @VisibleForTesting
-    static class SymbolProvider {
-        /** Cache from library map keys to corresponding name-to-resource type maps */
-        private final Map<String, Multimap<String, ResourceType>> mCache = Maps.newHashMap();
+    @NonNull
+    private static Multimap<String, ResourceType> getSymbols(
+            @NonNull File symbolFile) {
 
-        /**
-         * Returns a map from name to resource types for all resources known to this library.
-         *
-         * @return a map from name to resource type for all resources in this library
-         */
-        @VisibleForTesting
-        @NonNull
-        Multimap<String, ResourceType> getSymbols(@NonNull IdeAndroidLibrary library) {
-            String mapKey = getMapKey(library);
-            Multimap<String, ResourceType> map = mCache.get(mapKey);
-            if (map != null) {
-                return map;
-            }
+        // getSymbolFile is marked @NonNull but b/157590682 shows that it can
+        // be null in some scenarios, possibly from loader older cached models
+        if (!symbolFile.exists()) {
+            return ImmutableListMultimap.of();
+        }
 
-            File symbolFile = new File(library.getSymbolFile());
-            // getSymbolFile is marked @NonNull but b/157590682 shows that it can
-            // be null in some scenarios, possibly from loader older cached models
-            if (!symbolFile.exists()) {
-                Multimap<String, ResourceType> empty = ImmutableListMultimap.of();
-                mCache.put(mapKey, empty);
-                return empty;
-            }
+        try {
 
-            try {
-                Multimap<String, ResourceType> result = readSymbolFile(symbolFile);
-
-                mCache.put(mapKey, result);
-                return result;
-            } catch (IOException ignore) {
-                Multimap<String, ResourceType> empty = ImmutableListMultimap.of();
-                mCache.put(mapKey, empty);
-                return empty;
-            }
+            return readSymbolFile(symbolFile);
+        }
+        catch (IOException ignore) {
+            return ImmutableListMultimap.of();
         }
     }
 
     @NonNull
     private static Multimap<String, ResourceType> readSymbolFile(File symbolFile)
             throws IOException {
-        List<String> lines = Files.readLines(symbolFile, Charsets.UTF_8); // TODO: Switch to iterator
+        List<String> lines =
+                Files.readLines(symbolFile, Charsets.UTF_8); // TODO: Switch to iterator
         Multimap<String, ResourceType> result = ArrayListMultimap.create(lines.size(), 2);
 
         ResourceType previousType = null;
@@ -647,7 +468,8 @@ public abstract class ResourceVisibilityLookup {
                 ResourceType type;
                 if (typeString.equals(previousTypeString)) {
                     type = previousType;
-                } else {
+                }
+                else {
                     type = ResourceType.fromClassName(typeString);
                     previousTypeString = typeString;
                     previousType = type;

@@ -35,10 +35,10 @@ class Recompose {
       : jvmti_(jvmti), jni_(jni), class_finder_(jvmti_, jni_) {}
 
   // Save state for Jetpack Compose before activity restart.
-  void SaveStateAndDispose(jobject reloader) const;
+  jobject SaveStateAndDispose(jobject reloader) const;
 
   // Load state for Jetpack Compose after activity restart.
-  void LoadStateAndCompose(jobject reloader) const;
+  void LoadStateAndCompose(jobject reloader, jobject state) const;
 
   // Create ComposeHotReload object if needed.
   jobject GetComposeHotReload() const;

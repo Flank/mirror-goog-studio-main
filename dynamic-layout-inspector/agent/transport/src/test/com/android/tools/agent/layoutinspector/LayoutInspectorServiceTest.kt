@@ -139,45 +139,6 @@ class LayoutInspectorServiceTest {
             .isEqualTo(pictureBytes)
     }
 
-    @Test
-    fun testUseScreenshotMode() {
-        val bitmap = mock(Bitmap::class.java)
-        Bitmap.INSTANCE = bitmap
-        val bitmapBytes = (1 .. 1_000_000).map { (it % 256).toByte() }.toByteArray()
-        `when`(bitmap.byteCount).thenReturn(1_000_000)
-        `when`(bitmap.copyPixelsToBuffer(any()))
-            .then { invocation ->
-                invocation.getArgument<ByteBuffer>(0).put(bitmapBytes)
-                true
-            }
-        val (service, callback) = setUpInspectorService()
-
-        service.onUseScreenshotModeCommand(true)
-
-        val event = onPictureCaptured(callback, Picture())
-        assertThat(event.groupId).isEqualTo(1101)
-        assertThat(event.kind).isEqualTo(Common.Event.Kind.LAYOUT_INSPECTOR)
-        val tree = event.layoutInspectorEvent.tree
-        assertThat(tree.payloadType)
-            .isEqualTo(LayoutInspectorProto.ComponentTreeEvent.PayloadType.BITMAP_AS_REQUESTED)
-        val payload = agentRule.payloads[event.layoutInspectorEvent.tree.payloadId]
-        val inf = Inflater().also { it.setInput(payload) }
-        val baos = ByteArrayOutputStream()
-        val buffer = ByteArray(4096)
-        var total = 0
-        while (!inf.finished()) {
-            val count = inf.inflate(buffer)
-            if (count <= 0) {
-                break
-            }
-            baos.write(buffer, 0, count)
-            total += count
-        }
-
-        assertThat(total).isEqualTo(1_000_000)
-        assertThat(baos.toByteArray()).isEqualTo(bitmapBytes)
-    }
-
     private fun setUpInspectorService()
             : Pair<LayoutInspectorService, HardwareRenderer.PictureCapturedCallback> {
         val handler = mock(Handler::class.java)

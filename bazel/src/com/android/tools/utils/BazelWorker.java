@@ -28,10 +28,8 @@ import java.util.List;
 
 /**
  * Implements support for running programs as persistent Bazel workers, which can improve build
- * times by reducing JVM and JIT startup overhead.
- *
- * <p>Documentation on the Bazel worker protocol is somewhat scarce, but there are a few helpful
- * links in https://github.com/bazelbuild/bazel/issues/7997
+ * times by reducing JVM and JIT startup overhead. For details see
+ * https://docs.bazel.build/versions/master/persistent-workers.html
  *
  * <p>Future work: we might be able to take advantage of Multiplex workers someday. See
  * https://docs.bazel.build/versions/master/multiplex-worker.html
@@ -92,7 +90,6 @@ public class BazelWorker {
             System.setOut(fakeStdOut);
             System.setErr(fakeStdOut);
 
-            //noinspection InfiniteLoopStatement
             while (true) {
                 WorkRequest request = WorkRequest.parseDelimitedFrom(realStdIn);
                 if (request == null) {
@@ -100,12 +97,15 @@ public class BazelWorker {
                 }
                 List<String> args = request.getArgumentsList();
                 int exitCode;
+                boolean destroyWorker = false;
                 try {
                     exitCode = program.run(args);
                 } catch (Throwable e) {
                     // The program could be in a bad state. Shut down the worker.
-                    realStdErr.print(fakeStdOutBuffer);
-                    throw e;
+                    e.printStackTrace(fakeStdOut); // For the WorkResponse.
+                    e.printStackTrace(realStdErr); // For the local worker log.
+                    exitCode = 1;
+                    destroyWorker = true;
                 }
 
                 WorkResponse.newBuilder()
@@ -114,8 +114,11 @@ public class BazelWorker {
                         .build()
                         .writeDelimitedTo(realStdOut);
                 realStdOut.flush();
-
                 fakeStdOutBuffer.reset();
+
+                if (destroyWorker) {
+                    System.exit(1);
+                }
             }
         } finally {
             System.setIn(realStdIn);

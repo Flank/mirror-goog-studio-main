@@ -76,6 +76,9 @@ enum class BooleanOption(
 
     DEBUG_OBSOLETE_API("android.debug.obsoleteApi", false, ApiStage.Stable),
 
+    // Disabled by default due to low usage.
+    GENERATE_MANIFEST_CLASS("android.generateManifestClass", false, ApiStage.Stable),
+
     /* ------------------
      * SUPPORTED FEATURES
      */
@@ -118,6 +121,7 @@ enum class BooleanOption(
     ENABLE_RESOURCE_NAMESPACING_DEFAULT("android.enableResourceNamespacingDefault", false, FeatureStage.Experimental),
     NON_TRANSITIVE_R_CLASS("android.nonTransitiveRClass", false, FeatureStage.Experimental),
     FULL_R8("android.enableR8.fullMode", false, FeatureStage.Experimental),
+    R8_FAIL_ON_MISSING_CLASSES("android.r8.failOnMissingClasses", false, FeatureStage.Experimental),
     CONDITIONAL_KEEP_RULES("android.useConditionalKeepRules", false, FeatureStage.Experimental),
     KEEP_SERVICES_BETWEEN_BUILDS("android.keepWorkerActionServicesBetweenBuilds", false, FeatureStage.Experimental),
     USE_NON_FINAL_RES_IDS("android.nonFinalResIds", false, FeatureStage.Experimental),
@@ -125,7 +129,6 @@ enum class BooleanOption(
     ENABLE_PARTIAL_R_INCREMENTAL_BUILDS("android.enablePartialRIncrementalBuilds", false, FeatureStage.Experimental),
     ENABLE_NEW_RESOURCE_SHRINKER("android.experimental.enableNewResourceShrinker", false, FeatureStage.Experimental),
     ENABLE_NEW_RESOURCE_SHRINKER_PRECISE("android.experimental.enableNewResourceShrinker.preciseShrinking", false, FeatureStage.Experimental),
-    GENERATE_MANIFEST_CLASS("android.generateManifestClass", false, FeatureStage.Experimental),
     ENABLE_LOCAL_TESTING("android.bundletool.enableLocalTesting", false, FeatureStage.Experimental),
 
     /** When set R classes are treated as compilation classpath in libraries, rather than runtime classpath, with values set to 0. */
@@ -172,9 +175,6 @@ enum class BooleanOption(
      * SOFTLY-ENFORCED FEATURES
      */
 
-    /** Incremental dexing task using D8's new API for desugaring graph computation. */
-    ENABLE_INCREMENTAL_DEXING_TASK_V2("android.enableIncrementalDexingTaskV2", true, FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.VERSION_7_0)),
-
     /** Incremental dexing transform. */
     ENABLE_INCREMENTAL_DEXING_TRANSFORM("android.enableIncrementalDexingTransform", true, FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.VERSION_7_0)),
 
@@ -200,6 +200,7 @@ enum class BooleanOption(
     /* -----------------
      * ENFORCED FEATURES
      */
+
     @Suppress("unused")
     ENABLE_SIDE_BY_SIDE_NDK(
         "android.enableSideBySideNdk",
@@ -380,6 +381,9 @@ enum class BooleanOption(
                     VERSION_7_0,
                     "Non-transitive R classes are now enabled in app modules with the " +
                             "${NON_TRANSITIVE_R_CLASS.propertyName} option.")),
+
+    /** Incremental dexing task using D8's new API for desugaring graph computation. */
+    ENABLE_INCREMENTAL_DEXING_TASK_V2("android.enableIncrementalDexingTaskV2", true, FeatureStage.Enforced(VERSION_7_0)),
 
     /* ----------------
      * REMOVED FEATURES

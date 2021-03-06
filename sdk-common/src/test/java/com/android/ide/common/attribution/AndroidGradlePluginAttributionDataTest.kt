@@ -17,6 +17,7 @@
 package com.android.ide.common.attribution
 
 import com.android.SdkConstants
+import com.android.ide.common.attribution.AndroidGradlePluginAttributionData.JavaInfo
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
@@ -33,11 +34,16 @@ class AndroidGradlePluginAttributionDataTest {
         tasksSharingOutput = mapOf("e" to listOf("f", "g")),
         garbageCollectionData = mapOf("gc" to 100L),
         buildSrcPlugins = setOf("h", "i"),
-        javaInfo = AndroidGradlePluginAttributionData.JavaInfo(
-            version = "11.0.8",
-            vendor = "JetBrains s.r.o",
-            home = "/tmp/test/java/home",
-            vmArguments = listOf("-Xmx8G", "-XX:+UseSerialGC")
+        javaInfo = JavaInfo(
+                version = "11.0.8",
+                vendor = "JetBrains s.r.o",
+                home = "/tmp/test/java/home",
+                vmArguments = listOf("-Xmx8G", "-XX:+UseSerialGC")
+        ),
+        buildscriptDependenciesInfo = setOf(
+                "a.a:a:1.0",
+                "b.b:b:1.0",
+                "c.c:c:1.0"
         )
     )
 
@@ -62,7 +68,12 @@ class AndroidGradlePluginAttributionDataTest {
     |"javaVendor":"JetBrains s.r.o",
     |"javaHome":"/tmp/test/java/home",
     |"vmArguments":["-Xmx8G","-XX:+UseSerialGC"]
-|}
+|},
+|"buildscriptDependencies":[
+    |"a.a:a:1.0",
+    |"b.b:b:1.0",
+    |"c.c:c:1.0"
+|]
 |}
 """.trimMargin().replace("\n", "")
         )
@@ -123,7 +134,12 @@ class AndroidGradlePluginAttributionDataTest {
     |"javaHome":"/tmp/test/java/home",
     |"vmArguments":["-Xmx8G","-XX:+UseSerialGC"]
 |},
-|"newerUndefinedData":{"temp":"test"}
+|"newerUndefinedData":{"temp":"test"},
+|"buildscriptDependencies":[
+    |"a.a:a:1.0",
+    |"b.b:b:1.0",
+    |"c.c:c:1.0"
+|]
 |}
 """.trimMargin().replace("\n", "")
         )

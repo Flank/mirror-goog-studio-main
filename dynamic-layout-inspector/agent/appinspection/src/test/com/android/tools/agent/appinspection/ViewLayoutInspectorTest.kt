@@ -19,9 +19,13 @@ package com.android.tools.agent.appinspection
 import android.content.Context
 import android.content.res.Resources
 import android.graphics.Picture
+import android.os.Looper
+import android.view.Surface
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewRootImpl
 import android.view.WindowManagerGlobal
+import android.webkit.WebView
 import android.widget.TextView
 import com.android.tools.agent.appinspection.proto.StringTable
 import com.android.tools.agent.appinspection.testutils.FrameworkStateRule
@@ -38,7 +42,7 @@ import layoutinspector.view.inspection.LayoutInspectorViewProtocol.StopFetchComm
 import org.junit.Rule
 import org.junit.Test
 import java.util.concurrent.ArrayBlockingQueue
-import java.util.function.Consumer
+import java.util.concurrent.TimeUnit
 
 class ViewLayoutInspectorTest {
 
@@ -519,6 +523,56 @@ class ViewLayoutInspectorTest {
         }
     }
 
+    // WebView trampolines onto a different thread when reading properties, so just make sure things
+    // continue to work in that case.
+    @Test
+    fun canFetchPropertiesForWebView() = createViewInspector { viewInspector ->
+        val responseQueue = ArrayBlockingQueue<ByteArray>(1)
+        inspectorRule.commandCallback.replyListeners.add { bytes ->
+            responseQueue.add(bytes)
+        }
+
+        val resourceNames = mutableMapOf<Int, String>()
+        val resources = Resources(resourceNames)
+        val context = Context("view.inspector.test", resources)
+        val root = ViewGroup(context).apply {
+            setAttachInfo(View.AttachInfo())
+            addView(View(context))
+            addView(WebView(context))
+            addView(View(context))
+        }
+
+        WindowManagerGlobal.getInstance().rootViews.addAll(listOf(root))
+
+        run { // Search for properties for WebView
+            val viewChild = root.getChildAt(1)
+
+            val getPropertiesCommand = Command.newBuilder().apply {
+                getPropertiesCommandBuilder.apply {
+                    rootViewId = root.uniqueDrawingId
+                    viewId = viewChild.uniqueDrawingId
+                }
+            }.build()
+            viewInspector.onReceiveCommand(
+                getPropertiesCommand.toByteArray(),
+                inspectorRule.commandCallback
+            )
+
+            responseQueue.take().let { bytes ->
+                val response = Response.parseFrom(bytes)
+                assertThat(response.specializedCase).isEqualTo(Response.SpecializedCase.GET_PROPERTIES_RESPONSE)
+                response.getPropertiesResponse.let { propertiesResponse ->
+                    val strings = StringTable.fromStringEntries(propertiesResponse.stringsList)
+                    val propertyGroup = propertiesResponse.propertyGroup
+                    assertThat(propertyGroup.viewId).isEqualTo(viewChild.uniqueDrawingId)
+                    assertThat(propertyGroup.propertyList.map { strings[it.name] }).containsExactly(
+                        "visibility", "layout_width", "layout_height"
+                    )
+                }
+            }
+        }
+    }
+
     @Test
     fun settingScreenshotTypeAffectsCaptureOutput() = createViewInspector { viewInspector ->
         val responseQueue = ArrayBlockingQueue<ByteArray>(1)
@@ -542,11 +596,6 @@ class ViewLayoutInspectorTest {
         val root = ViewGroup(context).apply {
             width = 100
             height = 200
-            drawHandler = Consumer { canvas ->
-                assertThat(canvas.bitmap.width).isEqualTo(width * scale)
-                assertThat(canvas.bitmap.height).isEqualTo(height * scale)
-                fakeBitmapHeader.copyInto(canvas.bitmap.bytes)
-            }
             setAttachInfo(View.AttachInfo())
         }
         WindowManagerGlobal.getInstance().rootViews.addAll(listOf(root))
@@ -582,7 +631,9 @@ class ViewLayoutInspectorTest {
                 val response = Response.parseFrom(bytes)
                 assertThat(response.specializedCase).isEqualTo(Response.SpecializedCase.UPDATE_SCREENSHOT_TYPE_RESPONSE)
             }
-
+            root.viewRootImpl = ViewRootImpl()
+            root.viewRootImpl.mSurface = Surface()
+            root.viewRootImpl.mSurface.bitmapBytes = fakeBitmapHeader
             root.forcePictureCapture(fakePicture1)
             eventQueue.take().let { bytes ->
                 val event = Event.parseFrom(bytes)
@@ -618,7 +669,8 @@ class ViewLayoutInspectorTest {
             )
             responseQueue.take().let { bytes ->
                 val response = Response.parseFrom(bytes)
-                assertThat(response.specializedCase).isEqualTo(Response.SpecializedCase.UPDATE_SCREENSHOT_TYPE_RESPONSE)
+                assertThat(response.specializedCase).isEqualTo(
+                    Response.SpecializedCase.UPDATE_SCREENSHOT_TYPE_RESPONSE)
             }
 
             root.forcePictureCapture(fakePicture2)
@@ -642,7 +694,15 @@ class ViewLayoutInspectorTest {
         val factory = ViewLayoutInspectorFactory()
         val viewInspector =
             factory.createInspector(inspectorRule.connection, inspectorRule.environment)
+
+        // Save away the threads that are running before the test, so we can check there are no
+        // extras after.
+        val initialThreads = Looper.getLoopers().keys.toSet()
+
         block(viewInspector)
         viewInspector.onDispose()
-    }
+
+        Looper.getLoopers().keys
+            .filter { !initialThreads.contains(it) }
+            .forEach { thread -> thread.join(TimeUnit.SECONDS.toMillis(1)) }    }
 }

@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.ExtraModelInfo
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.dsl.decorator.DslDecorator
+import com.android.build.gradle.internal.dsl.decorator.androidPluginDslDecorator
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.fixtures.ProjectFactory
 import com.android.build.gradle.internal.plugins.DslContainerProvider
@@ -60,7 +61,7 @@ class BaseAppModuleExtensionTest {
             )
         )
 
-        val extension = DslDecorator().decorate(ApplicationExtensionImpl::class)
+        val extension = androidPluginDslDecorator.decorate(ApplicationExtensionImpl::class)
             .getDeclaredConstructor(DslServices::class.java, DslContainerProvider::class.java)
             .newInstance(dslServices, variantInputModel)
 

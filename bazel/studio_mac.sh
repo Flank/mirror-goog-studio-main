@@ -53,7 +53,7 @@ if [[ -d "${dist_dir}" ]]; then
   # affect info, so we need to pass only --config=release here in order to fetch the proper
   # binaries
   readonly bin_dir="$("${script_dir}"/bazel info --config=release bazel-bin)"
-  cp -a ${bin_dir}/tools/base/dynamic-layout-inspector/skiaparser.zip ${dist_dir}
+  cp -a ${bin_dir}/tools/base/dynamic-layout-inspector/skia/skiaparser.zip ${dist_dir}
   cp -a ${bin_dir}/tools/base/profiler/native/trace_processor_daemon/trace_processor_daemon ${dist_dir}
   echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${invocation_id}'\" />" > "${dist_dir}"/upsalite_test_results.html
 

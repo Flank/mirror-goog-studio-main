@@ -16,8 +16,6 @@
 package com.android.tools.lint.checks.infrastructure
 
 import com.android.SdkConstants
-import com.android.builder.model.AndroidProject
-import com.android.builder.model.LintOptions
 import com.android.ide.common.repository.GradleCoordinate
 import com.android.ide.common.repository.GradleVersion
 import com.android.sdklib.AndroidTargetHash
@@ -129,7 +127,7 @@ class GradleModelMocker @JvmOverloads constructor(
     private val test = DepConf()
     private val androidTest = DepConf()
 
-    private val severityOverrides = HashMap<String, Int>()
+    private val severityOverrides = HashMap<String, LintModelSeverity>()
     private val flags = LintCliFlags()
     var primary = true
 
@@ -200,7 +198,7 @@ class GradleModelMocker @JvmOverloads constructor(
     /**
      * If true, model a full/deep dependency graph in [ ]; the default
      * is flat. (This is normally controlled by sync/model builder flag
-     * [AndroidProject.PROPERTY_BUILD_MODEL_FEATURE_FULL_DEPENDENCIES].)
+     * `AndroidProject.PROPERTY_BUILD_MODEL_FEATURE_FULL_DEPENDENCIES`.)
      */
     @Suppress("unused")
     fun withFullDependencies(fullDependencies: Boolean): GradleModelMocker {
@@ -1240,29 +1238,16 @@ class GradleModelMocker @JvmOverloads constructor(
 
     private fun setLintSeverity(id: String, severity: Severity) {
         flags.severityOverrides[id] = severity
-        val severityValue: Int
-        severityValue = when (severity) {
-            Severity.FATAL -> LintOptions.SEVERITY_FATAL
-            Severity.ERROR -> LintOptions.SEVERITY_ERROR
-            Severity.WARNING -> LintOptions.SEVERITY_WARNING
-            Severity.INFORMATIONAL -> LintOptions.SEVERITY_INFORMATIONAL
-            Severity.IGNORE -> LintOptions.SEVERITY_IGNORE
-            else -> LintOptions.SEVERITY_DEFAULT_ENABLED
-        }
-        severityOverrides[id] = severityValue
-        updateLintOptions(null, null, severityOverrides.toLintSeverityOverrides(), null, null)
-    }
-
-    private fun Map<String, Int>.toLintSeverityOverrides() = mapValues {
-        when (it.value) {
-            LintOptions.SEVERITY_FATAL -> LintModelSeverity.FATAL
-            LintOptions.SEVERITY_ERROR -> LintModelSeverity.ERROR
-            LintOptions.SEVERITY_WARNING -> LintModelSeverity.WARNING
-            LintOptions.SEVERITY_INFORMATIONAL -> LintModelSeverity.INFORMATIONAL
-            LintOptions.SEVERITY_IGNORE -> LintModelSeverity.IGNORE
-            LintOptions.SEVERITY_DEFAULT_ENABLED -> LintModelSeverity.DEFAULT_ENABLED
+        val severityValue: LintModelSeverity = when (severity) {
+            Severity.FATAL -> LintModelSeverity.FATAL
+            Severity.ERROR -> LintModelSeverity.ERROR
+            Severity.WARNING -> LintModelSeverity.WARNING
+            Severity.INFORMATIONAL -> LintModelSeverity.INFORMATIONAL
+            Severity.IGNORE -> LintModelSeverity.IGNORE
             else -> LintModelSeverity.DEFAULT_ENABLED
         }
+        severityOverrides[id] = severityValue
+        updateLintOptions(null, null, severityOverrides, null, null)
     }
 
     private fun updateLintOptions(
@@ -1277,7 +1262,7 @@ class GradleModelMocker @JvmOverloads constructor(
                 lintOptions = it.lintOptions.copy(
                     baselineFile = baseline ?: it.lintOptions.baselineFile,
                     lintConfig = lintConfig ?: it.lintOptions.lintConfig,
-                    severityOverrides = severities ?: severityOverrides.toLintSeverityOverrides(),
+                    severityOverrides = severities ?: severityOverrides,
                     checkTestSources = tests ?: it.lintOptions.checkTestSources,
                     checkDependencies = dependencies
                         ?: it.lintOptions.checkDependencies, // TODO: Allow these to be customized by model mocker

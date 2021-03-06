@@ -8,6 +8,7 @@ version = rootProject.ext.baseVersion
 
 dependencies {
     implementation project(':base:lint-cli')
+    implementation project(':base:lint-gradle')
     implementation project(':base:intellij-core')
     implementation project(':base:kotlin-compiler')
     implementation project(':base:uast')
@@ -15,7 +16,6 @@ dependencies {
     implementation project(':base:sdk-common')
     implementation project(':base:common')
     implementation project(':base:sdklib')
-    implementation project(':base:builder-model')
     implementation libs.junit
     implementation libs.asm
     implementation libs.asm_tree

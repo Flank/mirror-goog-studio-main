@@ -224,6 +224,7 @@ import org.gradle.api.plugins.BasePlugin
 import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
@@ -484,8 +485,9 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
 
     // This is for config attribute debugging
     open class ConfigAttrTask : DefaultTask() {
-
+        @get:Internal
         var consumable = false
+        @get:Internal
         var resolvable = false
         @TaskAction
         fun run() {

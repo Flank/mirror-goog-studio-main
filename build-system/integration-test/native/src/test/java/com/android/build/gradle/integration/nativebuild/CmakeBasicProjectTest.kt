@@ -19,7 +19,10 @@ package com.android.build.gradle.integration.nativebuild
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_NDK_SIDE_BY_SIDE_VERSION
+import com.android.build.gradle.integration.common.fixture.ModelBuilderV2
+import com.android.build.gradle.integration.common.fixture.ModelBuilderV2.NativeModuleParams
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
+import com.android.build.gradle.integration.common.fixture.model.assertToString
 import com.android.build.gradle.integration.common.fixture.model.cartesianOf
 import com.android.build.gradle.integration.common.fixture.model.dump
 import com.android.build.gradle.integration.common.fixture.model.findAbiSegment
@@ -242,7 +245,7 @@ class CmakeBasicProjectTest(
         val json = abi.jsonFile
         assertThat(json).isFile()
 
-        val config = AndroidBuildGradleJsons.getNativeBuildMiniConfig(json, null)
+        val config = AndroidBuildGradleJsons.getNativeBuildMiniConfig(abi, null)
         val library = config
                 .libraries
                 .asSequence()
@@ -350,7 +353,7 @@ class CmakeBasicProjectTest(
     fun checkModelSingleVariant() {
         // Request build details for debug-x86_64
         val fetchResult =
-          project.modelV2().fetchNativeModules(listOf("debug"), listOf("x86_64"))
+          project.modelV2().fetchNativeModules(NativeModuleParams(listOf("debug"), listOf("x86_64")))
 
         val additionalProjectFileStatus = if (cmakeVersionInDsl == "3.6.0") {
           // CMake 3.6 does not populate additional files known by it.
@@ -359,43 +362,39 @@ class CmakeBasicProjectTest(
             "F"
         }
         // note that only build files for the requested variant and ABI exists.
-        Truth.assertThat(fetchResult.dump()).isEqualTo(
+        fetchResult.dump().assertToString(
           """[:]
 > NativeModule:
     - name                    = "project"
     > variants:
-       * NativeVariant:
-          * name = "debug"
+       > debug:
           > abis:
-             * NativeAbi:
-                * name                            = "armeabi-v7a"
-                * sourceFlagsFile                 = {PROJECT}/build/intermediates/{DEBUG}/meta/armeabi-v7a/compile_commands.json.bin{!}
-                * symbolFolderIndexFile           = {PROJECT}/build/intermediates/{DEBUG}/meta/armeabi-v7a/symbol_folder_index.txt{!}
-                * buildFileIndexFile              = {PROJECT}/build/intermediates/{DEBUG}/meta/armeabi-v7a/build_file_index.txt{!}
-                * additionalProjectFilesIndexFile = {PROJECT}/build/intermediates/{DEBUG}/meta/armeabi-v7a/additional_project_files.txt{!}
-             * NativeAbi:
-                * name                            = "x86_64"
-                * sourceFlagsFile                 = {PROJECT}/build/intermediates/{DEBUG}/meta/x86_64/compile_commands.json.bin{F}
-                * symbolFolderIndexFile           = {PROJECT}/build/intermediates/{DEBUG}/meta/x86_64/symbol_folder_index.txt{F}
-                * buildFileIndexFile              = {PROJECT}/build/intermediates/{DEBUG}/meta/x86_64/build_file_index.txt{F}
-                * additionalProjectFilesIndexFile = {PROJECT}/build/intermediates/{DEBUG}/meta/x86_64/additional_project_files.txt{$additionalProjectFileStatus}
+             - armeabi-v7a:
+                - sourceFlagsFile                 = {PROJECT}/build/intermediates/{DEBUG}/meta/armeabi-v7a/compile_commands.json.bin{!}
+                - symbolFolderIndexFile           = {PROJECT}/build/intermediates/{DEBUG}/meta/armeabi-v7a/symbol_folder_index.txt{!}
+                - buildFileIndexFile              = {PROJECT}/build/intermediates/{DEBUG}/meta/armeabi-v7a/build_file_index.txt{!}
+                - additionalProjectFilesIndexFile = {PROJECT}/build/intermediates/{DEBUG}/meta/armeabi-v7a/additional_project_files.txt{!}
+             - x86_64:
+                - sourceFlagsFile                 = {PROJECT}/build/intermediates/{DEBUG}/meta/x86_64/compile_commands.json.bin{F}
+                - symbolFolderIndexFile           = {PROJECT}/build/intermediates/{DEBUG}/meta/x86_64/symbol_folder_index.txt{F}
+                - buildFileIndexFile              = {PROJECT}/build/intermediates/{DEBUG}/meta/x86_64/build_file_index.txt{F}
+                - additionalProjectFilesIndexFile = {PROJECT}/build/intermediates/{DEBUG}/meta/x86_64/additional_project_files.txt{$additionalProjectFileStatus}
           < abis
-       * NativeVariant:
-          * name = "release"
+       < debug
+       > release:
           > abis:
-             * NativeAbi:
-                * name                            = "armeabi-v7a"
-                * sourceFlagsFile                 = {PROJECT}/build/intermediates/{RELEASE}/meta/armeabi-v7a/compile_commands.json.bin{!}
-                * symbolFolderIndexFile           = {PROJECT}/build/intermediates/{RELEASE}/meta/armeabi-v7a/symbol_folder_index.txt{!}
-                * buildFileIndexFile              = {PROJECT}/build/intermediates/{RELEASE}/meta/armeabi-v7a/build_file_index.txt{!}
-                * additionalProjectFilesIndexFile = {PROJECT}/build/intermediates/{RELEASE}/meta/armeabi-v7a/additional_project_files.txt{!}
-             * NativeAbi:
-                * name                            = "x86_64"
-                * sourceFlagsFile                 = {PROJECT}/build/intermediates/{RELEASE}/meta/x86_64/compile_commands.json.bin{!}
-                * symbolFolderIndexFile           = {PROJECT}/build/intermediates/{RELEASE}/meta/x86_64/symbol_folder_index.txt{!}
-                * buildFileIndexFile              = {PROJECT}/build/intermediates/{RELEASE}/meta/x86_64/build_file_index.txt{!}
-                * additionalProjectFilesIndexFile = {PROJECT}/build/intermediates/{RELEASE}/meta/x86_64/additional_project_files.txt{!}
+             - armeabi-v7a:
+                - sourceFlagsFile                 = {PROJECT}/build/intermediates/{RELEASE}/meta/armeabi-v7a/compile_commands.json.bin{!}
+                - symbolFolderIndexFile           = {PROJECT}/build/intermediates/{RELEASE}/meta/armeabi-v7a/symbol_folder_index.txt{!}
+                - buildFileIndexFile              = {PROJECT}/build/intermediates/{RELEASE}/meta/armeabi-v7a/build_file_index.txt{!}
+                - additionalProjectFilesIndexFile = {PROJECT}/build/intermediates/{RELEASE}/meta/armeabi-v7a/additional_project_files.txt{!}
+             - x86_64:
+                - sourceFlagsFile                 = {PROJECT}/build/intermediates/{RELEASE}/meta/x86_64/compile_commands.json.bin{!}
+                - symbolFolderIndexFile           = {PROJECT}/build/intermediates/{RELEASE}/meta/x86_64/symbol_folder_index.txt{!}
+                - buildFileIndexFile              = {PROJECT}/build/intermediates/{RELEASE}/meta/x86_64/build_file_index.txt{!}
+                - additionalProjectFilesIndexFile = {PROJECT}/build/intermediates/{RELEASE}/meta/x86_64/additional_project_files.txt{!}
           < abis
+       < release
     < variants
     - nativeBuildSystem       = CMAKE
     - ndkVersion              = "{DEFAULT_NDK_VERSION}"
@@ -407,44 +406,40 @@ class CmakeBasicProjectTest(
 
     @Test
     fun checkModel() {
-        val fetchResult = project.modelV2().fetchNativeModules(emptyList(), emptyList())
+        val fetchResult = project.modelV2().fetchNativeModules(NativeModuleParams(emptyList(), emptyList()))
         Truth.assertThat(fetchResult.dump()).isEqualTo(
           """[:]
 > NativeModule:
     - name                    = "project"
     > variants:
-       * NativeVariant:
-          * name = "debug"
+       > debug:
           > abis:
-             * NativeAbi:
-                * name                            = "armeabi-v7a"
-                * sourceFlagsFile                 = {PROJECT}/build/intermediates/{DEBUG}/meta/armeabi-v7a/compile_commands.json.bin{!}
-                * symbolFolderIndexFile           = {PROJECT}/build/intermediates/{DEBUG}/meta/armeabi-v7a/symbol_folder_index.txt{!}
-                * buildFileIndexFile              = {PROJECT}/build/intermediates/{DEBUG}/meta/armeabi-v7a/build_file_index.txt{!}
-                * additionalProjectFilesIndexFile = {PROJECT}/build/intermediates/{DEBUG}/meta/armeabi-v7a/additional_project_files.txt{!}
-             * NativeAbi:
-                * name                            = "x86_64"
-                * sourceFlagsFile                 = {PROJECT}/build/intermediates/{DEBUG}/meta/x86_64/compile_commands.json.bin{!}
-                * symbolFolderIndexFile           = {PROJECT}/build/intermediates/{DEBUG}/meta/x86_64/symbol_folder_index.txt{!}
-                * buildFileIndexFile              = {PROJECT}/build/intermediates/{DEBUG}/meta/x86_64/build_file_index.txt{!}
-                * additionalProjectFilesIndexFile = {PROJECT}/build/intermediates/{DEBUG}/meta/x86_64/additional_project_files.txt{!}
+             - armeabi-v7a:
+                - sourceFlagsFile                 = {PROJECT}/build/intermediates/{DEBUG}/meta/armeabi-v7a/compile_commands.json.bin{!}
+                - symbolFolderIndexFile           = {PROJECT}/build/intermediates/{DEBUG}/meta/armeabi-v7a/symbol_folder_index.txt{!}
+                - buildFileIndexFile              = {PROJECT}/build/intermediates/{DEBUG}/meta/armeabi-v7a/build_file_index.txt{!}
+                - additionalProjectFilesIndexFile = {PROJECT}/build/intermediates/{DEBUG}/meta/armeabi-v7a/additional_project_files.txt{!}
+             - x86_64:
+                - sourceFlagsFile                 = {PROJECT}/build/intermediates/{DEBUG}/meta/x86_64/compile_commands.json.bin{!}
+                - symbolFolderIndexFile           = {PROJECT}/build/intermediates/{DEBUG}/meta/x86_64/symbol_folder_index.txt{!}
+                - buildFileIndexFile              = {PROJECT}/build/intermediates/{DEBUG}/meta/x86_64/build_file_index.txt{!}
+                - additionalProjectFilesIndexFile = {PROJECT}/build/intermediates/{DEBUG}/meta/x86_64/additional_project_files.txt{!}
           < abis
-       * NativeVariant:
-          * name = "release"
+       < debug
+       > release:
           > abis:
-             * NativeAbi:
-                * name                            = "armeabi-v7a"
-                * sourceFlagsFile                 = {PROJECT}/build/intermediates/{RELEASE}/meta/armeabi-v7a/compile_commands.json.bin{!}
-                * symbolFolderIndexFile           = {PROJECT}/build/intermediates/{RELEASE}/meta/armeabi-v7a/symbol_folder_index.txt{!}
-                * buildFileIndexFile              = {PROJECT}/build/intermediates/{RELEASE}/meta/armeabi-v7a/build_file_index.txt{!}
-                * additionalProjectFilesIndexFile = {PROJECT}/build/intermediates/{RELEASE}/meta/armeabi-v7a/additional_project_files.txt{!}
-             * NativeAbi:
-                * name                            = "x86_64"
-                * sourceFlagsFile                 = {PROJECT}/build/intermediates/{RELEASE}/meta/x86_64/compile_commands.json.bin{!}
-                * symbolFolderIndexFile           = {PROJECT}/build/intermediates/{RELEASE}/meta/x86_64/symbol_folder_index.txt{!}
-                * buildFileIndexFile              = {PROJECT}/build/intermediates/{RELEASE}/meta/x86_64/build_file_index.txt{!}
-                * additionalProjectFilesIndexFile = {PROJECT}/build/intermediates/{RELEASE}/meta/x86_64/additional_project_files.txt{!}
+             - armeabi-v7a:
+                - sourceFlagsFile                 = {PROJECT}/build/intermediates/{RELEASE}/meta/armeabi-v7a/compile_commands.json.bin{!}
+                - symbolFolderIndexFile           = {PROJECT}/build/intermediates/{RELEASE}/meta/armeabi-v7a/symbol_folder_index.txt{!}
+                - buildFileIndexFile              = {PROJECT}/build/intermediates/{RELEASE}/meta/armeabi-v7a/build_file_index.txt{!}
+                - additionalProjectFilesIndexFile = {PROJECT}/build/intermediates/{RELEASE}/meta/armeabi-v7a/additional_project_files.txt{!}
+             - x86_64:
+                - sourceFlagsFile                 = {PROJECT}/build/intermediates/{RELEASE}/meta/x86_64/compile_commands.json.bin{!}
+                - symbolFolderIndexFile           = {PROJECT}/build/intermediates/{RELEASE}/meta/x86_64/symbol_folder_index.txt{!}
+                - buildFileIndexFile              = {PROJECT}/build/intermediates/{RELEASE}/meta/x86_64/build_file_index.txt{!}
+                - additionalProjectFilesIndexFile = {PROJECT}/build/intermediates/{RELEASE}/meta/x86_64/additional_project_files.txt{!}
           < abis
+       < release
     < variants
     - nativeBuildSystem       = CMAKE
     - ndkVersion              = "{DEFAULT_NDK_VERSION}"
@@ -461,7 +456,7 @@ class CmakeBasicProjectTest(
         project.execute("clean", "assembleDebug", "assembleRelease")
 
         // We specify to not generate the build information for any variants or ABIs here.
-        val result = project.modelV2().fetchNativeModules(emptyList(), emptyList())
+        val result = project.modelV2().fetchNativeModules(NativeModuleParams(emptyList(), emptyList()))
 
         // TODO(tgeng): Update this when CMake server supports populating additional project files.
         val additionalProjectFileStatus = if (cmakeVersionInDsl == "3.6.0") {
@@ -476,38 +471,34 @@ class CmakeBasicProjectTest(
 > NativeModule:
     - name                    = "project"
     > variants:
-       * NativeVariant:
-          * name = "debug"
+       > debug:
           > abis:
-             * NativeAbi:
-                * name                            = "armeabi-v7a"
-                * sourceFlagsFile                 = {PROJECT}/build/intermediates/{DEBUG}/meta/armeabi-v7a/compile_commands.json.bin{F}
-                * symbolFolderIndexFile           = {PROJECT}/build/intermediates/{DEBUG}/meta/armeabi-v7a/symbol_folder_index.txt{F}
-                * buildFileIndexFile              = {PROJECT}/build/intermediates/{DEBUG}/meta/armeabi-v7a/build_file_index.txt{F}
-                * additionalProjectFilesIndexFile = {PROJECT}/build/intermediates/{DEBUG}/meta/armeabi-v7a/additional_project_files.txt{$additionalProjectFileStatus}
-             * NativeAbi:
-                * name                            = "x86_64"
-                * sourceFlagsFile                 = {PROJECT}/build/intermediates/{DEBUG}/meta/x86_64/compile_commands.json.bin{F}
-                * symbolFolderIndexFile           = {PROJECT}/build/intermediates/{DEBUG}/meta/x86_64/symbol_folder_index.txt{F}
-                * buildFileIndexFile              = {PROJECT}/build/intermediates/{DEBUG}/meta/x86_64/build_file_index.txt{F}
-                * additionalProjectFilesIndexFile = {PROJECT}/build/intermediates/{DEBUG}/meta/x86_64/additional_project_files.txt{$additionalProjectFileStatus}
+             - armeabi-v7a:
+                - sourceFlagsFile                 = {PROJECT}/build/intermediates/{DEBUG}/meta/armeabi-v7a/compile_commands.json.bin{F}
+                - symbolFolderIndexFile           = {PROJECT}/build/intermediates/{DEBUG}/meta/armeabi-v7a/symbol_folder_index.txt{F}
+                - buildFileIndexFile              = {PROJECT}/build/intermediates/{DEBUG}/meta/armeabi-v7a/build_file_index.txt{F}
+                - additionalProjectFilesIndexFile = {PROJECT}/build/intermediates/{DEBUG}/meta/armeabi-v7a/additional_project_files.txt{$additionalProjectFileStatus}
+             - x86_64:
+                - sourceFlagsFile                 = {PROJECT}/build/intermediates/{DEBUG}/meta/x86_64/compile_commands.json.bin{F}
+                - symbolFolderIndexFile           = {PROJECT}/build/intermediates/{DEBUG}/meta/x86_64/symbol_folder_index.txt{F}
+                - buildFileIndexFile              = {PROJECT}/build/intermediates/{DEBUG}/meta/x86_64/build_file_index.txt{F}
+                - additionalProjectFilesIndexFile = {PROJECT}/build/intermediates/{DEBUG}/meta/x86_64/additional_project_files.txt{$additionalProjectFileStatus}
           < abis
-       * NativeVariant:
-          * name = "release"
+       < debug
+       > release:
           > abis:
-             * NativeAbi:
-                * name                            = "armeabi-v7a"
-                * sourceFlagsFile                 = {PROJECT}/build/intermediates/{RELEASE}/meta/armeabi-v7a/compile_commands.json.bin{F}
-                * symbolFolderIndexFile           = {PROJECT}/build/intermediates/{RELEASE}/meta/armeabi-v7a/symbol_folder_index.txt{F}
-                * buildFileIndexFile              = {PROJECT}/build/intermediates/{RELEASE}/meta/armeabi-v7a/build_file_index.txt{F}
-                * additionalProjectFilesIndexFile = {PROJECT}/build/intermediates/{RELEASE}/meta/armeabi-v7a/additional_project_files.txt{$additionalProjectFileStatus}
-             * NativeAbi:
-                * name                            = "x86_64"
-                * sourceFlagsFile                 = {PROJECT}/build/intermediates/{RELEASE}/meta/x86_64/compile_commands.json.bin{F}
-                * symbolFolderIndexFile           = {PROJECT}/build/intermediates/{RELEASE}/meta/x86_64/symbol_folder_index.txt{F}
-                * buildFileIndexFile              = {PROJECT}/build/intermediates/{RELEASE}/meta/x86_64/build_file_index.txt{F}
-                * additionalProjectFilesIndexFile = {PROJECT}/build/intermediates/{RELEASE}/meta/x86_64/additional_project_files.txt{$additionalProjectFileStatus}
+             - armeabi-v7a:
+                - sourceFlagsFile                 = {PROJECT}/build/intermediates/{RELEASE}/meta/armeabi-v7a/compile_commands.json.bin{F}
+                - symbolFolderIndexFile           = {PROJECT}/build/intermediates/{RELEASE}/meta/armeabi-v7a/symbol_folder_index.txt{F}
+                - buildFileIndexFile              = {PROJECT}/build/intermediates/{RELEASE}/meta/armeabi-v7a/build_file_index.txt{F}
+                - additionalProjectFilesIndexFile = {PROJECT}/build/intermediates/{RELEASE}/meta/armeabi-v7a/additional_project_files.txt{$additionalProjectFileStatus}
+             - x86_64:
+                - sourceFlagsFile                 = {PROJECT}/build/intermediates/{RELEASE}/meta/x86_64/compile_commands.json.bin{F}
+                - symbolFolderIndexFile           = {PROJECT}/build/intermediates/{RELEASE}/meta/x86_64/symbol_folder_index.txt{F}
+                - buildFileIndexFile              = {PROJECT}/build/intermediates/{RELEASE}/meta/x86_64/build_file_index.txt{F}
+                - additionalProjectFilesIndexFile = {PROJECT}/build/intermediates/{RELEASE}/meta/x86_64/additional_project_files.txt{$additionalProjectFileStatus}
           < abis
+       < release
     < variants
     - nativeBuildSystem       = CMAKE
     - ndkVersion              = "{DEFAULT_NDK_VERSION}"
@@ -515,7 +506,7 @@ class CmakeBasicProjectTest(
     - externalNativeBuildFile = {PROJECT}/CMakeLists.txt{F}
 < NativeModule"""
         )
-        modelV2 = result.container.singleModel
+        modelV2 = result.container.singleNativeModule
         val outputFiles = modelV2.variants.flatMap { variant ->
             variant.abis.flatMap { abi ->
                 abi.symbolFolderIndexFile.readAsFileIndex().flatMap {
@@ -536,8 +527,8 @@ class CmakeBasicProjectTest(
     fun checkCleanAfterAbiSubset() {
         project.execute("clean", "assembleDebug", "assembleRelease")
         val buildOutputs = run {
-            val result = project.modelV2().fetchNativeModules(emptyList(), emptyList())
-            val nativeModule = result.container.singleModel
+            val result = project.modelV2().fetchNativeModules(NativeModuleParams(emptyList(), emptyList()))
+            val nativeModule = result.container.singleNativeModule
             val buildOutputFolders = nativeModule.variants.flatMap { variant ->
                 variant.abis.flatMap { abi ->
                     abi.symbolFolderIndexFile.readAsFileIndex()
@@ -617,8 +608,8 @@ apply plugin: 'com.android.application'
 
     @Test
     fun `ensure compile_commands json bin is created for each native ABI in model`() {
-        val nativeModules = project.modelV2().fetchNativeModules(null, null)
-        val nativeModule = nativeModules.container.singleModel
+        val nativeModules = project.modelV2().fetchNativeModules(NativeModuleParams())
+        val nativeModule = nativeModules.container.singleNativeModule
         for (variant in nativeModule.variants) {
             for (abi in variant.abis) {
                 Truth.assertThat(abi.sourceFlagsFile.readCompileCommandsJsonBin(nativeModules.normalizer))

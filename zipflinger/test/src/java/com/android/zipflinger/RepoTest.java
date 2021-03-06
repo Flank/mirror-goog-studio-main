@@ -94,4 +94,21 @@ public class RepoTest extends AbstractZipflingerTest {
         Assert.assertEquals("Content size differ", content.length, extracted.length);
         Assert.assertArrayEquals("Content differs", content, extracted);
     }
+
+    @Test
+    // Test that Ziprepo InputStream is compliant (returns bytes as [0-255] instead of [-128, 127])
+    public void testInputStream() throws IOException {
+        Path f = getTestPath("testRepoInputStream.zip");
+        try (ZipArchive archive = new ZipArchive(f)) {
+            byte[] bytes = new byte[1];
+            bytes[0] = -1;
+            BytesSource s = new BytesSource(bytes, "foo", Deflater.NO_COMPRESSION);
+            archive.add(s);
+        }
+
+        try (ZipRepo repo = new ZipRepo(f)) {
+            InputStream in = repo.getInputStream("foo");
+            Assert.assertEquals("ZipRepo read() compliance", 255, in.read());
+        }
+    }
 }

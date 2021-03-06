@@ -18,12 +18,15 @@ package com.android.build.gradle.internal.attribution
 
 import com.android.build.gradle.internal.services.ServiceRegistrationAction
 import com.android.build.gradle.internal.services.getBuildServiceName
+import com.android.build.gradle.internal.utils.getBuildscriptDependencies
 import com.android.build.gradle.internal.utils.getBuildSrcPlugins
 import com.android.ide.common.attribution.AndroidGradlePluginAttributionData
+import com.android.ide.common.attribution.AndroidGradlePluginAttributionData.JavaInfo
 import com.android.tools.analytics.HostData
 import org.gradle.api.Project
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.SetProperty
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
 import org.gradle.api.services.BuildServiceRegistration
@@ -71,13 +74,16 @@ abstract class BuildAttributionService : BuildService<BuildAttributionService.Pa
                     }
                 }
 
+                val buildscriptDependenciesInfo = getBuildscriptDependencies(project.rootProject)
+                        .map { "${it.group}:${it.module}:${it.version}" }
+
                 serviceRegistration.parameters.attributionFileLocation.set(attributionFileLocation)
                 serviceRegistration.parameters.taskNameToClassNameMap.set(taskNameToClassNameMap)
                 serviceRegistration.parameters.tasksSharingOutputs.set(
                         outputFileToTasksMap.filter { it.value.size > 1 }
                 )
                 serviceRegistration.parameters.javaInfo.set(
-                    AndroidGradlePluginAttributionData.JavaInfo(
+                    JavaInfo(
                         version = project.providers.systemProperty("java.version")
                             .forUseAtConfigurationTime().getOrElse(""),
                         vendor = project.providers.systemProperty("java.vendor")
@@ -87,6 +93,8 @@ abstract class BuildAttributionService : BuildService<BuildAttributionService.Pa
                         vmArguments = HostData.runtimeBean?.inputArguments ?: emptyList()
                     )
                 )
+                serviceRegistration.parameters.buildscriptDependenciesInfo.set(buildscriptDependenciesInfo)
+
 
                 listenersRegistry.onTaskCompletion(serviceRegistration.service)
             }
@@ -122,7 +130,8 @@ abstract class BuildAttributionService : BuildService<BuildAttributionService.Pa
                 tasksSharingOutput = parameters.tasksSharingOutputs.get(),
                 garbageCollectionData = gcData,
                 buildSrcPlugins = getBuildSrcPlugins(this.javaClass.classLoader),
-                javaInfo = parameters.javaInfo.get()
+                javaInfo = parameters.javaInfo.get(),
+                buildscriptDependenciesInfo = parameters.buildscriptDependenciesInfo.get()
             )
         )
     }
@@ -141,7 +150,9 @@ abstract class BuildAttributionService : BuildService<BuildAttributionService.Pa
 
         val taskNameToClassNameMap: MapProperty<String, String>
 
-        val javaInfo: Property<AndroidGradlePluginAttributionData.JavaInfo>
+        val javaInfo: Property<JavaInfo>
+
+        val buildscriptDependenciesInfo: SetProperty<String>
     }
 
     class RegistrationAction(project: Project)

@@ -16,8 +16,11 @@
 package com.android.build.gradle.integration.lint
 
 import com.android.Version
+import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.gradle_project.ProjectLocation
+import com.android.build.gradle.integration.common.runner.FilterableParameterized
+import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.TestUtils
 import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.io.Resources
@@ -25,15 +28,23 @@ import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 import java.io.File
-import java.lang.AssertionError
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.util.Collections
 import java.util.stream.Collectors
 
 /** Integration test for the new lint models.  */
-class LintModelIntegrationTest {
+@RunWith(FilterableParameterized::class)
+class LintModelIntegrationTest(private val usePartialAnalysis: Boolean) {
+
+    companion object {
+        @Parameterized.Parameters(name = "usePartialAnalysis = {0}")
+        @JvmStatic
+        fun params() = listOf(true, false)
+    }
 
     @get:Rule
     val project: GradleTestProject =
@@ -49,8 +60,8 @@ class LintModelIntegrationTest {
     @Test
     fun checkLintModels() {
         // Check lint runs correctly before asserting about the model.
-        project.executor().expectFailure().run(":app:cleanLintDebug", ":app:lintDebug")
-        project.executor().expectFailure().run(":app:cleanLintDebug", ":app:lintDebug")
+        getExecutor().expectFailure().run(":app:cleanLintDebug", ":app:lintDebug")
+        getExecutor().expectFailure().run(":app:cleanLintDebug", ":app:lintDebug")
         val lintResults = project.file("app/build/reports/lint-results.txt")
         assertThat(lintResults).contains("8 errors, 6 warnings")
 
@@ -75,7 +86,7 @@ class LintModelIntegrationTest {
         val replacements = createReplacements(project.location)
         for (model in models) {
             val actual = Files.readAllLines(model).map { applyReplacements(it, replacements) }
-            val expected = getExpectedModel(model.fileName.toString())
+            val expected = getExpectedModel(model.fileName.toString(), usePartialAnalysis)
             if (actual != expected){
                 val diff: String = TestUtils.getDiff(
                     expected.toTypedArray(),
@@ -86,7 +97,7 @@ class LintModelIntegrationTest {
                                 "Run with env var GENERATE_MODEL_GOLDEN_FILES=true to regenerate\n" +
                                 diff
                 } else {
-                    val fileToUpdate = TestUtils.resolveWorkspacePath("tools/base/build-system/integration-test/lint/src/test/resources/com/android/build/gradle/integration/lint/kotlinmodel/lintDebug/${model.fileName}")
+                    val fileToUpdate = TestUtils.resolveWorkspacePath("tools/base/build-system/integration-test/lint/src/test/resources/com/android/build/gradle/integration/lint/kotlinmodel/lintDebug/usePartialAnalysis_$usePartialAnalysis/${model.fileName}")
                     Files.write(fileToUpdate, actual)
                     errors += "Updated ${model.fileName} with \n$diff"
                 }
@@ -126,9 +137,15 @@ class LintModelIntegrationTest {
     }
 
 
-    private fun getExpectedModel(name: String): List<String> {
-        val resource = Resources.getResource(this::class.java, "kotlinmodel/lintDebug/$name")
+    private fun getExpectedModel(name: String, usePartialAnalysis: Boolean): List<String> {
+        val resource =
+            Resources.getResource(
+                this::class.java,
+                "kotlinmodel/lintDebug/usePartialAnalysis_$usePartialAnalysis/$name"
+            )
         return Resources.readLines(resource, StandardCharsets.UTF_8)
     }
 
+    private fun getExecutor(): GradleTaskExecutor =
+        project.executor().with(BooleanOption.USE_LINT_PARTIAL_ANALYSIS, usePartialAnalysis)
 }

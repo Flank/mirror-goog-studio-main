@@ -91,6 +91,12 @@ class MinifyCacheabilityTest (val shrinker: CodeShrinker) {
                     ":minifyMinifiedWithProguard"
                 )
             }
+        ).plus(
+            if (BooleanOption.GENERATE_MANIFEST_CLASS.defaultValue) {
+                setOf(":generateMinifiedManifestClass")
+            } else {
+                emptySet()
+            }
         ),
         DID_WORK to setOf(
             ":createMinifiedCompatibleScreenManifests",

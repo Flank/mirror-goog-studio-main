@@ -44,7 +44,6 @@ import com.android.tools.lint.checks.infrastructure.TestFile.PropertyTestFile;
 import com.android.tools.lint.client.api.CircularDependencyException;
 import com.android.tools.lint.client.api.Configuration;
 import com.android.tools.lint.client.api.ConfigurationHierarchy;
-import com.android.tools.lint.client.api.GradleVisitor;
 import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.LintRequest;
@@ -885,12 +884,6 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
                     return file;
                 }
             };
-        }
-
-        @NonNull
-        @Override
-        public GradleVisitor getGradleVisitor() {
-            return new GroovyGradleVisitor();
         }
 
         @Override

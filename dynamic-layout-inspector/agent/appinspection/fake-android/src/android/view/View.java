@@ -68,6 +68,8 @@ public class View {
     private int mScrollY = 0;
     private final ViewGroup.LayoutParams mLayoutParams = new ViewGroup.LayoutParams();
 
+    private ViewRootImpl mViewRootImpl;
+
     @VisibleForTesting public final Point locationInSurface = new Point();
 
     @VisibleForTesting public final Point locationOnScreen = new Point();
@@ -214,6 +216,15 @@ public class View {
 
     public void transformMatrixToGlobal(Matrix matrix) {
         matrix.transformedPoints = mTransformedPoints;
+    }
+
+    @VisibleForTesting
+    public void setViewRootImpl(ViewRootImpl viewRootImpl) {
+        mViewRootImpl = viewRootImpl;
+    }
+
+    public ViewRootImpl getViewRootImpl() {
+        return mViewRootImpl;
     }
 
     // Only works with views where setAttachInfo was called on them

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1 Tiny//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11-tiny.dtd">
+<svg version="1.1" baseProfile="tiny" id="Layer_1"
+	 xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="64px" height ="64px" viewBox="0 0 64 64"
+	 xml:space="preserve">
+<polyline fill="none" stroke="#88EEFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="5"
+     points="14,10 14,14 14,14.7 16.9,16.5 " transform="scale(2, 2)" vector-effect="non-scaling-stroke"/>
+</svg>

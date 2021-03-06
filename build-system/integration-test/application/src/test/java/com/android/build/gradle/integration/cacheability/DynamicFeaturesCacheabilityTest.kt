@@ -155,6 +155,16 @@ class DynamicFeaturesCacheabilityTest {
                         } else {
                             emptySet()
                         }
+                ).plus(
+                    if (BooleanOption.GENERATE_MANIFEST_CLASS.defaultValue) {
+                        setOf(
+                            ":app:generateDebugManifestClass",
+                            ":feature1:generateDebugManifestClass",
+                            ":feature2:generateDebugManifestClass"
+                        )
+                    } else {
+                        emptySet()
+                    }
                 ),
                 /*
                  * Tasks that should be cacheable but are not yet cacheable.

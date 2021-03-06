@@ -862,12 +862,6 @@ public class TestLintClient extends LintCliClient {
         };
     }
 
-    @NonNull
-    @Override
-    public GradleVisitor getGradleVisitor() {
-        return new GroovyGradleVisitor();
-    }
-
     @Override
     public void runReadAction(@NonNull Runnable runnable) {
         boolean prev = insideReadAction;
