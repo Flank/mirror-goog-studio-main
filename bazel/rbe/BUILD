@@ -1,8 +1,9 @@
-# This test is run explicitly on the foundry bot as will not pass on
-# a standard linux machine, because validates a very custom /dev/random condition.
+# Relies on remote execution (RBE) to test the docker container specified
+# in the exec_properties of //tools/base/bazel/platforms:linux. This test is
+# not guaranteed to pass on a regular linux machine.
 java_test(
-    name = "test",
-    srcs = ["FoundryTest.java"],
+    name = "docker-image-test",
+    srcs = ["DockerImageTest.java"],
     data = [
         "//prebuilts/studio/jdk:jdk_runtime",
         "//prebuilts/studio/sdk:build-tools/latest",
@@ -13,23 +14,23 @@ java_test(
         "no_test_mac",
         "no_test_windows",
     ],
-    test_class = "FoundryTest",
+    test_class = "DockerImageTest",
     deps = [
         "//tools/base/third_party:junit_junit",
     ],
 )
 
-# CPU, disk and memory benchmark baseline tests to measure go/adt-perfgate
-# foundry remote build execution pool.
+# CPU, disk and memory benchmark baseline tests to measure performace of RBE
+# machines. See go/adt-perfgate.
 java_test(
     name = "perfgate-baseline-tests",
-    srcs = ["FoundryPerfgateMetrics.java"],
+    srcs = ["PerfgateMetrics.java"],
     # The memory test stresses memory usage, thus the jvm memory arg.
     jvm_flags = [
         "-Xms10000M",
         "-Xmx10000M",
     ],
-    test_class = "FoundryPerfgateMetrics",
+    test_class = "PerfgateMetrics",
     deps = [
         "//tools/base/perf-logger:studio.perf-logger_testlib",
         "//tools/base/third_party:junit_junit",

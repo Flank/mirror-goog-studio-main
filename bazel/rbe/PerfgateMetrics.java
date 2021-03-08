@@ -12,9 +12,11 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+/** Collects baseline performance metrics from the RBE machine environment. */
 @RunWith(JUnit4.class)
-public final class FoundryPerfgateMetrics {
+public final class PerfgateMetrics {
 
+    // 'Foundry' is kept in the benchmark name to avoid losing historical data.
     private static Benchmark benchmark = new Benchmark.Builder("Foundry Baseline Tests").build();
 
     @Test

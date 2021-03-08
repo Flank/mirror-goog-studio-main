@@ -18,10 +18,19 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/** Validates conditions expected to be present in the remote execution environment. */
+/**
+ * Validates conditions expected to be present in the RBE docker image.
+ *
+ * <p> This test may assert conditions that are present in the docker image,
+ * but not on the host machine. Currently this is not the case, and the
+ * docker image is only validated when this test is run on RBE.
+ * If this were to change, this test should still pass locally by checking
+ * image-specific state such as the environment variable 'STUDIO_IMAGE'.
+ */
 @RunWith(JUnit4.class)
-public final class FoundryTest {
+public final class DockerImageTest {
 
+    /** Tests for the presence of required 32bit libraries, such as lib32z1. */
     @Test
     public void testAapt2() throws Exception {
         File testLocalDir = new File(".");
@@ -39,6 +48,7 @@ public final class FoundryTest {
         }
     }
 
+    /** Tests CA certs are available from java, required by IJ integration tests. */
     @Test
     public void testCA() throws Exception {
         TrustManagerFactory factory =
