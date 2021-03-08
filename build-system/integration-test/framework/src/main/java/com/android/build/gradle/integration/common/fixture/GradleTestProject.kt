@@ -137,7 +137,7 @@ class GradleTestProject @JvmOverloads internal constructor(
         const val DEFAULT_NDK_SIDE_BY_SIDE_VERSION: String = ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION
         @JvmField
         val APPLY_DEVICEPOOL_PLUGIN = System.getenv("APPLY_DEVICEPOOL_PLUGIN")?.toBoolean() ?: false
-        val USE_LATEST_NIGHTLY_GRADLE_VERSION = System.getenv("USE_GRADLE_NIGHTLY")?.toBoolean() ?: false
+        private val USE_LATEST_NIGHTLY_GRADLE_VERSION = System.getenv("USE_GRADLE_NIGHTLY")?.toBoolean() ?: false
         @JvmField
         val GRADLE_TEST_VERSION: String
         private val ANDROID_GRADLE_PLUGIN_VERSION: String?
@@ -304,9 +304,7 @@ class GradleTestProject @JvmOverloads internal constructor(
             try {
                 GRADLE_TEST_VERSION = if (USE_LATEST_NIGHTLY_GRADLE_VERSION) {
                     computeLatestGradleCheckedIn() ?: error("Failed to find latest nightly version.")
-                } else {
-                    VersionCheckPlugin.GRADLE_MIN_VERSION.toString()
-                }
+                } else VersionCheckPlugin.GRADLE_MIN_VERSION.toString()
 
                 // These are some properties that we use in the integration test projects, when generating
                 // build.gradle files. In case you would like to change any of the parameters, for instance
@@ -381,8 +379,7 @@ class GradleTestProject @JvmOverloads internal constructor(
                 TimeUnit.SECONDS
             )
         val distributionName = String.format("gradle-%s-bin.zip", targetGradleVersion)
-        val distributionZip =
-            File(gradleDistributionDirectory, distributionName)
+        val distributionZip = File(gradleDistributionDirectory, distributionName)
         assertThat(distributionZip).isFile()
         val connection = connector
             .useDistribution(distributionZip.toURI())
