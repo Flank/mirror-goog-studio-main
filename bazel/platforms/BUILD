@@ -37,3 +37,11 @@ platform(
         os_family = "Windows",
     ),
 )
+
+platform(
+    name = "macos",
+    constraint_values = [
+        "@platforms//cpu:x86_64",
+        "@platforms//os:macos",
+    ],
+)
