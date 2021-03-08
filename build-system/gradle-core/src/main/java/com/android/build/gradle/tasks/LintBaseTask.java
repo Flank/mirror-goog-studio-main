@@ -38,8 +38,7 @@ import com.android.build.gradle.AppExtension;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.LibraryExtension;
 import com.android.build.gradle.api.BaseVariant;
-import com.android.build.gradle.internal.LoggerWrapper;
-import com.android.build.gradle.internal.SdkComponentsKt;
+import com.android.build.gradle.internal.SdkComponentsBuildService;
 import com.android.build.gradle.internal.StartParameterUtils;
 import com.android.build.gradle.internal.dsl.LintOptions;
 import com.android.build.gradle.internal.ide.dependencies.ArtifactCollections;
@@ -50,7 +49,6 @@ import com.android.build.gradle.internal.tasks.NonIncrementalGlobalTask;
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationAction;
 import com.android.build.gradle.internal.utils.HasConfigurableValuesKt;
 import com.android.builder.core.VariantType;
-import com.android.builder.errors.DefaultIssueReporter;
 import com.android.repository.Revision;
 import com.android.tools.lint.gradle.api.ReflectiveLintRunner;
 import com.android.tools.lint.model.LintModelFactory;
@@ -70,6 +68,7 @@ import org.gradle.api.DomainObjectSet;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileSystemLocation;
 import org.gradle.api.file.RegularFile;
@@ -102,7 +101,10 @@ public abstract class LintBaseTask extends NonIncrementalGlobalTask {
     }
 
     @Nullable protected transient LintOptions lintOptions;
-    protected File sdkHome;
+
+    @Internal
+    public abstract DirectoryProperty getSdkHome();
+
     protected ToolingModelBuilderRegistry toolingRegistry;
     @Nullable protected File reportsDir;
 
@@ -142,7 +144,7 @@ public abstract class LintBaseTask extends NonIncrementalGlobalTask {
         @Override
         @NonNull
         public File getSdkHome() {
-            return sdkHome;
+            return LintBaseTask.this.getSdkHome().get().getAsFile();
         }
 
         @NonNull
@@ -438,10 +440,12 @@ public abstract class LintBaseTask extends NonIncrementalGlobalTask {
 
             lintTask.setGroup(JavaBasePlugin.VERIFICATION_GROUP);
             lintTask.lintOptions = globalScope.getExtension().getLintOptions();
-            lintTask.sdkHome =
-                    SdkComponentsKt.getSdkDir(
-                            lintTask.getProject().getRootDir(),
-                            new DefaultIssueReporter(LoggerWrapper.getLogger(LintBaseTask.class)));
+            HasConfigurableValuesKt.setDisallowChanges(
+                    lintTask.getSdkHome(),
+                    globalScope
+                            .getSdkComponents()
+                            .flatMap(SdkComponentsBuildService::getSdkDirectoryProvider));
+
             lintTask.toolingRegistry = globalScope.getToolingRegistry();
             lintTask.reportsDir = globalScope.getReportsDir();
             HasConfigurableValuesKt.setDisallowChanges(
