@@ -77,7 +77,7 @@ fun <VariantBuilderT : ComponentBuilderImpl, VariantT : VariantImpl> createCxxTa
         if (configurationParameters.isEmpty()) return
             TimingEnvironment(
                 configurationParameters.first().intermediatesFolder.resolve("cxx"),
-                "create-cxx-tasks").use {
+                "create_cxx_tasks").use {
             val abis = time("create-initial-cxx-model") {
                 createInitialCxxModel(sdkComponents,
                         androidLocationsProvider,

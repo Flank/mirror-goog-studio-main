@@ -222,6 +222,12 @@ val CxxAbiModel.metadataGenerationStderrFile: File
     get() = join(modelMetadataFolder, "metadata_generation_stderr.txt")
 
 /**
+ * Folder used to hold metadata generation performance timings.
+ */
+val CxxAbiModel.metadataGenerationTimingFolder: File
+    get() = modelMetadataFolder
+
+/**
  * When CMake server is used, this is the log of the interaction with it.
  *   ex, $moduleRootFolder/build/intermediates/cxx/Debug/{hashcode}/meta/x86_64/cmake_server_log.txt
  */

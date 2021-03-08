@@ -36,6 +36,7 @@ import com.android.build.gradle.internal.cxx.model.compileCommandsJsonFile
 import com.android.build.gradle.internal.cxx.model.getBuildCommandArguments
 import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.cxx.model.jsonGenerationLoggingRecordFile
+import com.android.build.gradle.internal.cxx.model.metadataGenerationTimingFolder
 import com.android.build.gradle.internal.cxx.model.modelOutputFile
 import com.android.build.gradle.internal.cxx.model.prefabClassPath
 import com.android.build.gradle.internal.cxx.model.prefabConfigFile
@@ -43,6 +44,8 @@ import com.android.build.gradle.internal.cxx.model.prefabPackageDirectoryList
 import com.android.build.gradle.internal.cxx.model.shouldGeneratePrefabPackages
 import com.android.build.gradle.internal.cxx.model.symbolFolderIndexFile
 import com.android.build.gradle.internal.cxx.model.writeJsonToFile
+import com.android.build.gradle.internal.cxx.timing.TimingEnvironment
+import com.android.build.gradle.internal.cxx.timing.time
 import com.android.build.gradle.internal.profile.AnalyticsUtil
 import com.android.ide.common.process.ProcessException
 import com.android.ide.common.process.ProcessInfoBuilder
@@ -146,167 +149,176 @@ abstract class ExternalNativeJsonGenerator internal constructor(
             abi.variant.module.makeFile,
             abi.variant.variantName + "|" + abi.abi.tag
         ).use { recorder ->
+            TimingEnvironment(
+                    abi.metadataGenerationTimingFolder,
+                    "generate_cxx_metadata").use {
+                val variantStats =
+                        NativeBuildConfigInfo.newBuilder()
+                variantStats.abi = AnalyticsUtil.getAbi(abi.abi.tag)
+                variantStats.debuggable = variant.isDebuggableEnabled
+                val startTime = System.currentTimeMillis()
+                variantStats.generationStartMs = startTime
+                try {
+                    infoln(
+                            "Start JSON generation. Platform version: %s min SDK version: %s",
+                            abi.abiPlatformVersion,
+                            abi.abi.tag,
+                            abi.abiPlatformVersion
+                    )
 
-            val variantStats =
-                NativeBuildConfigInfo.newBuilder()
-            variantStats.abi = AnalyticsUtil.getAbi(abi.abi.tag)
-            variantStats.debuggable = variant.isDebuggableEnabled
-            val startTime = System.currentTimeMillis()
-            variantStats.generationStartMs = startTime
-            try {
-                infoln(
-                    "Start JSON generation. Platform version: %s min SDK version: %s",
-                    abi.abiPlatformVersion,
-                    abi.abi.tag,
-                    abi.abiPlatformVersion
-                )
+                    val processBuilder = getProcessBuilder(abi)
 
-                val processBuilder = getProcessBuilder(abi)
-
-                // See whether the current build command matches a previously written build command.
-                val currentBuildCommand = """
+                    // See whether the current build command matches a previously written build command.
+                    val currentBuildCommand = """
                     $processBuilder
                     Build command args: ${abi.getBuildCommandArguments()}
                     Version: $ANDROID_GRADLE_BUILD_VERSION
                     """.trimIndent()
-                val prefabState = PrefabConfigurationState(
-                    abi.variant.module.project.isPrefabEnabled,
-                    abi.variant.prefabClassPath,
-                    variant.prefabPackageDirectoryList
-                )
-                val previousPrefabState =
-                    getPreviousPrefabConfigurationState(abi.prefabConfigFile)
-                val invalidationState =
-                    JsonGenerationInvalidationState(
-                        forceJsonGeneration,
-                        abi.jsonFile,
-                        abi.buildCommandFile,
-                        currentBuildCommand,
-                        getFileContent(abi.buildCommandFile),
-                        getDependentBuildFiles(abi),
-                        prefabState,
-                        previousPrefabState
+                    val prefabState = PrefabConfigurationState(
+                            abi.variant.module.project.isPrefabEnabled,
+                            abi.variant.prefabClassPath,
+                            variant.prefabPackageDirectoryList
                     )
-                if (invalidationState.rebuild) {
-                    infoln("rebuilding JSON %s due to:", abi.jsonFile)
-                    for (reason in invalidationState.rebuildReasons) {
-                        infoln(reason)
-                    }
-                    if (abi.shouldGeneratePrefabPackages()) {
-                        checkPrefabConfig()
-                        generatePrefabPackages(
-                            ops,
-                            abi
+                    val previousPrefabState =
+                            getPreviousPrefabConfigurationState(abi.prefabConfigFile)
+                    val invalidationState = time("create-invalidation-state") {
+                        JsonGenerationInvalidationState(
+                                forceJsonGeneration,
+                                abi.jsonFile,
+                                abi.buildCommandFile,
+                                currentBuildCommand,
+                                getFileContent(abi.buildCommandFile),
+                                getDependentBuildFiles(abi),
+                                prefabState,
+                                previousPrefabState
                         )
                     }
-
-                    // Related to https://issuetracker.google.com/69408798
-                    // Something has changed so we need to clean up some build intermediates and
-                    // outputs.
-                    // - If only a build file has changed then we try to keep .o files and,
-                    // in the case of CMake, the generated Ninja project. In this case we must
-                    // remove .so files because they are automatically packaged in the APK on a
-                    // *.so basis.
-                    // - If there is some other cause to recreate the JSon, such as command-line
-                    // changed then wipe out the whole JSon folder.
-                    if (abi.cxxBuildFolder.parentFile.exists()) {
-                        if (invalidationState.softRegeneration) {
-                            infoln(
-                                "keeping json folder '%s' but regenerating project",
-                                abi.cxxBuildFolder
-                            )
-                        } else {
-                            infoln("removing stale contents from '%s'", abi.cxxBuildFolder)
-                            FileUtils.deletePath(abi.cxxBuildFolder)
+                    if (invalidationState.rebuild) {
+                        infoln("rebuilding JSON %s due to:", abi.jsonFile)
+                        for (reason in invalidationState.rebuildReasons) {
+                            infoln(reason)
                         }
-                    }
-                    if (abi.cxxBuildFolder.mkdirs()) {
-                        infoln("created folder '%s'", abi.cxxBuildFolder)
-                    }
+                        if (abi.shouldGeneratePrefabPackages()) {
+                            time("generate-prefab-packages") {
+                                checkPrefabConfig()
+                                generatePrefabPackages(
+                                        ops,
+                                        abi
+                                )
+                            }
+                        }
 
-                    infoln("executing %s %s", variant.module.buildSystem.tag, processBuilder)
-                    executeProcess(ops, abi)
-                    infoln("done executing %s", variant.module.buildSystem.tag)
+                        // Related to https://issuetracker.google.com/69408798
+                        // Something has changed so we need to clean up some build intermediates and
+                        // outputs.
+                        // - If only a build file has changed then we try to keep .o files and,
+                        // in the case of CMake, the generated Ninja project. In this case we must
+                        // remove .so files because they are automatically packaged in the APK on a
+                        // *.so basis.
+                        // - If there is some other cause to recreate the JSon, such as command-line
+                        // changed then wipe out the whole JSon folder.
+                        if (abi.cxxBuildFolder.parentFile.exists()) {
+                            if (invalidationState.softRegeneration) {
+                                infoln(
+                                        "keeping json folder '%s' but regenerating project",
+                                        abi.cxxBuildFolder
+                                )
+                            } else {
+                                infoln("removing stale contents from '%s'", abi.cxxBuildFolder)
+                                FileUtils.deletePath(abi.cxxBuildFolder)
+                            }
+                        }
+                        if (abi.cxxBuildFolder.mkdirs()) {
+                            infoln("created folder '%s'", abi.cxxBuildFolder)
+                        }
 
-                    if (!abi.jsonFile.exists()) {
-                        throw GradleException(
-                            String.format(
-                                "Expected json generation to create '%s' but it didn't",
-                                abi.jsonFile
+                        infoln("executing %s %s", variant.module.buildSystem.tag, processBuilder)
+                        time("execute-generate-process") { executeProcess(ops, abi) }
+                        infoln("done executing %s", variant.module.buildSystem.tag)
+
+                        if (!abi.jsonFile.exists()) {
+                            throw GradleException(
+                                    String.format(
+                                            "Expected json generation to create '%s' but it didn't",
+                                            abi.jsonFile
+                                    )
                             )
-                        )
-                    }
+                        }
 
+                        variantBuilder?.let {
+                            synchronized(it) {
+                                // Related to https://issuetracker.google.com/69408798
+                                // Targets may have been removed or there could be other orphaned extra
+                                // .so files. Remove these and rely on the build step to replace them
+                                // if they are legitimate. This is to prevent unexpected .so files from
+                                // being packaged in the APK.
+                                time("remove-unexpected-so-files") {
+                                    removeUnexpectedSoFiles(
+                                            abi.soFolder,
+                                            AndroidBuildGradleJsons.getNativeBuildMiniConfig(
+                                                    abi, it
+                                            )
+                                    )
+                                }
+                            }
+                        }
+
+                        // Write the ProcessInfo to a file, this has all the flags used to generate the
+                        // JSON. If any of these change later the JSON will be regenerated.
+                        infoln("write command file %s", abi.buildCommandFile.absolutePath)
+                        abi.buildCommandFile.parentFile.mkdirs()
+                        Files.write(
+                                abi.buildCommandFile.toPath(),
+                                currentBuildCommand.toByteArray(Charsets.UTF_8)
+                        )
+
+                        // Persist the prefab configuration as well.
+                        Files.write(
+                                abi.prefabConfigFile.toPath(),
+                                prefabState.toJsonString()
+                                        .toByteArray(Charsets.UTF_8)
+                        )
+
+                        // Record the outcome. JSON was built.
+                        variantStats.outcome = GenerationOutcome.SUCCESS_BUILT
+                    } else {
+                        infoln("JSON '%s' was up-to-date", abi.jsonFile)
+                        variantStats.outcome = GenerationOutcome.SUCCESS_UP_TO_DATE
+                    }
+                    time("generate-extra-metadata-files") {
+                        generateSymbolFolderIndexFile(abi)
+                        generateBuildFilesIndex(abi, variantBuilder)
+                        generateCompileCommandsJsonBin(abi)
+                    }
+                    infoln("JSON generation completed without problems")
+                } catch (e: GradleException) {
+                    variantStats.outcome = GenerationOutcome.FAILED
+                    infoln("JSON generation completed with problem. Exception: $e")
+                    throw e
+                } catch (e: IOException) {
+                    variantStats.outcome = GenerationOutcome.FAILED
+                    infoln("JSON generation completed with problem. Exception: $e")
+                    throw e
+                } catch (e: ProcessException) {
+                    variantStats.outcome = GenerationOutcome.FAILED
+                    infoln("JSON generation completed with problem. Exception: $e")
+                    throw e
+                } finally {
+                    variantStats.generationDurationMs = System.currentTimeMillis() - startTime
                     variantBuilder?.let {
                         synchronized(it) {
-                            // Related to https://issuetracker.google.com/69408798
-                            // Targets may have been removed or there could be other orphaned extra
-                            // .so files. Remove these and rely on the build step to replace them
-                            // if they are legitimate. This is to prevent unexpected .so files from
-                            // being packaged in the APK.
-                            removeUnexpectedSoFiles(
-                                abi.soFolder,
-                                AndroidBuildGradleJsons.getNativeBuildMiniConfig(
-                                    abi, it
-                                )
-                            )
+                            it.addNativeBuildConfig(variantStats)
                         }
                     }
-
-
-                    // Write the ProcessInfo to a file, this has all the flags used to generate the
-                    // JSON. If any of these change later the JSON will be regenerated.
-                    infoln("write command file %s", abi.buildCommandFile.absolutePath)
-                    abi.buildCommandFile.parentFile.mkdirs()
+                    abi.jsonGenerationLoggingRecordFile.parentFile.mkdirs()
                     Files.write(
-                        abi.buildCommandFile.toPath(),
-                        currentBuildCommand.toByteArray(Charsets.UTF_8)
+                            abi.jsonGenerationLoggingRecordFile.toPath(),
+                            recorder.record.toJsonString()
+                                    .toByteArray(Charsets.UTF_8)
                     )
-
-                    // Persist the prefab configuration as well.
-                    Files.write(
-                        abi.prefabConfigFile.toPath(),
-                        prefabState.toJsonString()
-                            .toByteArray(Charsets.UTF_8)
-                    )
-
-                    // Record the outcome. JSON was built.
-                    variantStats.outcome = GenerationOutcome.SUCCESS_BUILT
-                } else {
-                    infoln("JSON '%s' was up-to-date", abi.jsonFile)
-                    variantStats.outcome = GenerationOutcome.SUCCESS_UP_TO_DATE
+                    infoln("Writing build model to ${abi.modelOutputFile}")
+                    time("write-metadata-json-to-file") { abi.writeJsonToFile() }
                 }
-                generateSymbolFolderIndexFile(abi)
-                generateBuildFilesIndex(abi, variantBuilder)
-                generateCompileCommandsJsonBin(abi)
-                infoln("JSON generation completed without problems")
-            } catch (e: GradleException) {
-                variantStats.outcome = GenerationOutcome.FAILED
-                infoln("JSON generation completed with problem. Exception: $e")
-                throw e
-            } catch (e: IOException) {
-                variantStats.outcome = GenerationOutcome.FAILED
-                infoln("JSON generation completed with problem. Exception: $e")
-                throw e
-            } catch (e: ProcessException) {
-                variantStats.outcome = GenerationOutcome.FAILED
-                infoln("JSON generation completed with problem. Exception: $e")
-                throw e
-            } finally {
-                variantStats.generationDurationMs = System.currentTimeMillis() - startTime
-                variantBuilder?.let {
-                    synchronized(it) {
-                        it.addNativeBuildConfig(variantStats)
-                    }
-                }
-                abi.jsonGenerationLoggingRecordFile.parentFile.mkdirs()
-                Files.write(
-                    abi.jsonGenerationLoggingRecordFile.toPath(),
-                    recorder.record.toJsonString()
-                        .toByteArray(Charsets.UTF_8)
-                )
-                infoln("Writing build model to ${abi.modelOutputFile}")
-                abi.writeJsonToFile()
             }
         }
     }
