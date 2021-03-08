@@ -90,8 +90,8 @@ public class MinifyLibAndAppWithJavaResTest {
             assertThat(releaseApk).contains("com/android/tests/b/resources.properties");
             assertThat(releaseApk).contains("com/android/tests/a/resources.properties");
         } else {
-            assertThat(releaseApk).contains("a/a/a/b/resources.properties");
-            assertThat(releaseApk).contains("a/a/a/a/resources.properties");
+            assertThat(releaseApk).contains("b/resources.properties");
+            assertThat(releaseApk).contains("c/resources.properties");
         }
     }
 }

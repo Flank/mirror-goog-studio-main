@@ -137,7 +137,8 @@ class MinifyFeaturesTest(
                     }""")
             .withFile(
                 "proguard-rules.pro",
-                """-keep public class com.example.lib1.EmptyClassToKeep""")
+                """-keep public class com.example.lib1.EmptyClassToKeep
+                   -keeppackagenames com.example.lib1**""")
 
     private val lib2 =
         MinimalSubProject.lib("com.example.lib2")
@@ -206,7 +207,8 @@ class MinifyFeaturesTest(
                     }""")
             .withFile(
                 "proguard-rules.pro",
-                """-keep public class com.example.lib2.EmptyClassToKeep""")
+                """-keep public class com.example.lib2.EmptyClassToKeep
+                   -keeppackagenames com.example.lib2**""")
 
     private val lib3 =
         MinimalSubProject.lib("com.example.lib3")
@@ -339,7 +341,8 @@ class MinifyFeaturesTest(
                 }""")
         .withFile(
             "proguard-rules.pro",
-            """-keep public class com.example.baseModule.EmptyClassToKeep""")
+            """-keep public class com.example.baseModule.EmptyClassToKeep
+               -keeppackagenames com.example.baseModule**""")
 
     private val otherFeature1 = MinimalSubProject.dynamicFeature("com.example.otherFeature1")
         .appendToBuild(
@@ -455,7 +458,8 @@ class MinifyFeaturesTest(
                 }""")
         .withFile(
         "proguard-rules.pro",
-        """-keep public class com.example.otherFeature1.EmptyClassToKeep""")
+        """-keep public class com.example.otherFeature1.EmptyClassToKeep
+           -keeppackagenames com.example.otherFeature1**""")
 
     private val otherFeature2 = MinimalSubProject.dynamicFeature("com.example.otherFeature2")
 
@@ -909,4 +913,3 @@ class MinifyFeaturesTest(
         APK_FLINGER -> "${BooleanOption.USE_NEW_APK_CREATOR.propertyName}=true"
     }
 }
-
