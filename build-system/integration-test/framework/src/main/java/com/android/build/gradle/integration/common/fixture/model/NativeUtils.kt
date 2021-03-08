@@ -22,8 +22,8 @@ import com.android.build.gradle.integration.common.fixture.ModelBuilderV2.Native
 import com.android.build.gradle.integration.common.fixture.ModelContainerV2
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
-import com.android.build.gradle.internal.cxx.model.buildCommandFile
 import com.android.build.gradle.internal.cxx.model.createCxxAbiModelFromJson
+import com.android.build.gradle.internal.cxx.model.metadataGenerationCommandFile
 import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.builder.model.v2.models.ndk.NativeModule
 import com.android.builder.model.v2.models.ndk.NativeVariant
@@ -105,7 +105,7 @@ fun GradleTestProject.goldenConfigurationFlags(abi: Abi) : String {
 private fun CxxAbiModel.goldenConfigurationFlags() : String {
     fun String.slash() : String = replace("\\", "/")
     fun File.slash() : String = toString().slash()
-    return buildCommandFile.readText()
+    return metadataGenerationCommandFile.readText()
             .slash()
             .replace(variant.module.project.rootBuildGradleFolder.slash(), "{PROJECT}")
             .replace(variant.module.ndkFolder.slash(), "{NDK}")

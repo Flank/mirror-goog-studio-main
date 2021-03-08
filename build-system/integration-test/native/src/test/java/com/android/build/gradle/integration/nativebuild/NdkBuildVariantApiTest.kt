@@ -23,7 +23,7 @@ import com.android.build.gradle.integration.common.fixture.model.getSoFolderFor
 import com.android.build.gradle.integration.common.fixture.model.recoverExistingCxxAbiModels
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.internal.core.Abi
-import com.android.build.gradle.internal.cxx.model.buildCommandFile
+import com.android.build.gradle.internal.cxx.model.metadataGenerationCommandFile
 import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth
 import org.junit.Rule
@@ -81,7 +81,7 @@ class NdkBuildVariantApiTest {
         assertThat(project.getSoFolderFor(Abi.X86_64)).exists()
 
         project.recoverExistingCxxAbiModels().forEach { abi ->
-            val buildCommandFile = abi.buildCommandFile
+            val buildCommandFile = abi.metadataGenerationCommandFile
             assertThat(buildCommandFile).exists()
             val buildCommand = buildCommandFile.readText()
 
@@ -134,7 +134,7 @@ class NdkBuildVariantApiTest {
         assertThat(project.getSoFolderFor(Abi.X86_64)).exists()
 
         project.recoverExistingCxxAbiModels().forEach { abi ->
-            val buildCommandFile = abi.buildCommandFile
+            val buildCommandFile = abi.metadataGenerationCommandFile
             assertThat(buildCommandFile).exists()
             val buildCommand = buildCommandFile.readText()
 
@@ -189,7 +189,7 @@ class NdkBuildVariantApiTest {
         assertThat(project.getSoFolderFor(Abi.X86_64)).exists()
 
         project.recoverExistingCxxAbiModels().forEach { abi ->
-            val buildCommandFile = abi.buildCommandFile
+            val buildCommandFile = abi.metadataGenerationCommandFile
             assertThat(buildCommandFile).exists()
             val buildCommand = buildCommandFile.readText()
             Truth.assertThat(buildCommand).contains("NDK_MODULE_PATH+=./third_party/modules")

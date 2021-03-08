@@ -23,7 +23,7 @@ import com.android.build.gradle.integration.common.fixture.model.recoverExisting
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
-import com.android.build.gradle.internal.cxx.model.buildCommandFile
+import com.android.build.gradle.internal.cxx.model.metadataGenerationCommandFile
 import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth
@@ -113,7 +113,7 @@ class PrefabTest(private val buildSystem: NativeBuildSystem, val cmakeVersion: S
                 }
             }
 
-            val buildCommand = abi.buildCommandFile.readText()
+            val buildCommand = abi.metadataGenerationCommandFile.readText()
             when (buildSystem) {
                 NativeBuildSystem.CMAKE -> verifyCMakeArgs(buildCommand, abiDir)
                 NativeBuildSystem.NDK_BUILD -> verifyNdkBuildArgs(buildCommand, abiDir)

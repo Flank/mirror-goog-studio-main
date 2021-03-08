@@ -29,13 +29,13 @@ import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel
 import com.android.build.gradle.internal.cxx.model.PrefabConfigurationState
 import com.android.build.gradle.internal.cxx.model.PrefabConfigurationState.Companion.fromJson
-import com.android.build.gradle.internal.cxx.model.buildCommandFile
 import com.android.build.gradle.internal.cxx.model.buildFileIndexFile
 import com.android.build.gradle.internal.cxx.model.compileCommandsJsonBinFile
 import com.android.build.gradle.internal.cxx.model.compileCommandsJsonFile
 import com.android.build.gradle.internal.cxx.model.getBuildCommandArguments
 import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.cxx.model.jsonGenerationLoggingRecordFile
+import com.android.build.gradle.internal.cxx.model.metadataGenerationCommandFile
 import com.android.build.gradle.internal.cxx.model.metadataGenerationTimingFolder
 import com.android.build.gradle.internal.cxx.model.modelOutputFile
 import com.android.build.gradle.internal.cxx.model.prefabClassPath
@@ -185,9 +185,9 @@ abstract class ExternalNativeJsonGenerator internal constructor(
                         JsonGenerationInvalidationState(
                                 forceJsonGeneration,
                                 abi.jsonFile,
-                                abi.buildCommandFile,
+                                abi.metadataGenerationCommandFile,
                                 currentBuildCommand,
-                                getFileContent(abi.buildCommandFile),
+                                getFileContent(abi.metadataGenerationCommandFile),
                                 getDependentBuildFiles(abi),
                                 prefabState,
                                 previousPrefabState
@@ -265,11 +265,11 @@ abstract class ExternalNativeJsonGenerator internal constructor(
 
                         // Write the ProcessInfo to a file, this has all the flags used to generate the
                         // JSON. If any of these change later the JSON will be regenerated.
-                        infoln("write command file %s", abi.buildCommandFile.absolutePath)
-                        abi.buildCommandFile.parentFile.mkdirs()
+                        infoln("write command file %s", abi.metadataGenerationCommandFile.absolutePath)
+                        abi.metadataGenerationCommandFile.parentFile.mkdirs()
                         Files.write(
-                                abi.buildCommandFile.toPath(),
-                                currentBuildCommand.toByteArray(Charsets.UTF_8)
+                            abi.metadataGenerationCommandFile.toPath(),
+                            currentBuildCommand.toByteArray(Charsets.UTF_8)
                         )
 
                         // Persist the prefab configuration as well.
