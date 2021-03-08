@@ -6,8 +6,8 @@ import %workspace%/tools/base/bazel/common.bazelrc
 # for a remote machine to execute them.
 build:remote --jobs=250
 
-build --host_platform=//tools/base/bazel/foundry:linux
-build --platforms=//tools/base/bazel/foundry:linux
+build --host_platform=//tools/base/bazel/platforms:linux
+build --platforms=//tools/base/bazel/platforms:linux
 
 build:release --copt=-fdata-sections
 build:release --cxxopt=-fdata-sections

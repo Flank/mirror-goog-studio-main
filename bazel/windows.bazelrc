@@ -11,8 +11,8 @@ build:remote --jobs=250
 
 build --extra_toolchains=@native_toolchain//:cc-toolchain-x64_windows-clang-cl
 
-build --host_platform=//tools/base/bazel/foundry:windows
-build --platforms=//tools/base/bazel/foundry:windows
+build --host_platform=//tools/base/bazel/platforms:windows
+build --platforms=//tools/base/bazel/platforms:windows
 
 build --compiler=clang-cl
 
