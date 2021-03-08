@@ -10,6 +10,7 @@ java_test(
     ],
     jvm_flags = ["-Djava.security.debug=all"],
     tags = [
+        "no_test_mac",
         "no_test_windows",
     ],
     test_class = "FoundryTest",
