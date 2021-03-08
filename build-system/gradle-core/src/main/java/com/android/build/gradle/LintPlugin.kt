@@ -142,7 +142,10 @@ open class LintPlugin : Plugin<Project> {
         val projectOptions = ProjectOptionService.RegistrationAction(project).execute().get()
             .projectOptions
         val syncIssueReporter =
-            SyncIssueReporterImpl(SyncOptions.getModelQueryMode(projectOptions), logger)
+                SyncIssueReporterImpl(
+                        SyncOptions.getModelQueryMode(projectOptions),
+                        SyncOptions.getErrorFormatMode(projectOptions),
+                        logger)
         this.syncIssueReporter = syncIssueReporter
         val deprecationReporter =
             DeprecationReporterImpl(syncIssueReporter, projectOptions, projectPath)

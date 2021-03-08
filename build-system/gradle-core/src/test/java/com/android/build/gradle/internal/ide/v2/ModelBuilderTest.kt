@@ -75,7 +75,7 @@ class ModelBuilderTest {
 
     private lateinit var project: Project
     private val projectServices: ProjectServices = createProjectServices(
-        issueReporter = SyncIssueReporterImpl(SyncOptions.EvaluationMode.IDE, FakeLogger())
+        issueReporter = SyncIssueReporterImpl(SyncOptions.EvaluationMode.IDE, SyncOptions.ErrorFormatMode.HUMAN_READABLE, FakeLogger())
     )
 
     @Before
@@ -218,7 +218,7 @@ class ModelBuilderTest {
 
         // make sure the global issue reporter is registered
         SyncIssueReporterImpl.GlobalSyncIssueService.RegistrationAction(
-            project, SyncOptions.EvaluationMode.IDE
+            project, SyncOptions.EvaluationMode.IDE, SyncOptions.ErrorFormatMode.MACHINE_PARSABLE
         ).execute()
 
         return ModelBuilder(
