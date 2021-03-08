@@ -42,7 +42,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Serializable;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -171,7 +170,7 @@ public class SimpleTestRunnable implements WorkerExecutorFacade.WorkAction {
             }
 
             if (additionalTestOutputEnabled && device.getApiLevel() >= 16) {
-                additionalTestOutputDir = queryAdditionalTestOutputLocation().toString();
+                additionalTestOutputDir = queryAdditionalTestOutputLocation();
 
                 MultiLineReceiver receiver = getOutputReceiver();
                 String mkdirp = "mkdir -p " + additionalTestOutputDir;
@@ -313,12 +312,22 @@ public class SimpleTestRunnable implements WorkerExecutorFacade.WorkAction {
         return String.format("if [ -d %s ]; then rm -rf %s; fi && mkdir -p %s", path, path, path);
     }
 
-    private Path queryAdditionalTestOutputLocation()
+    private String queryAdditionalTestOutputLocation()
             throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
                     IOException, InstallException {
         if (device.getApiLevel() < 16) {
             throw new InstallException(
                     "additionalTestOutput is not supported on devices running API level < 16");
+        }
+
+        if (device.getApiLevel() >= 29) {
+            // sdcard/Android/media/<package_name> is the only special-cased storage dir, which
+            // allows separate shell processes and instrumented tests to both have read/write access
+            // without needing to apply external legacy storage flags (which were removed in API 30)
+            // or --no-isolated-storage.
+            return "/sdcard/Android/media/"
+                    + testData.getTestedApplicationId()
+                    + "/additional_test_output";
         }
 
         final String[] result = new String[1];
@@ -349,7 +358,7 @@ public class SimpleTestRunnable implements WorkerExecutorFacade.WorkAction {
 
         receiver.flush();
 
-        return Paths.get(result[0], "data", testData.getTestedApplicationId(), "files/test_data");
+        return result[0] + "/data/" + testData.getTestedApplicationId() + "/files/test_data";
     }
 
     private void setUpDirectories(@NonNull String userCoverageDir)

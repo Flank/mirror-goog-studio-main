@@ -239,6 +239,69 @@ public class SimpleTestRunnableTest {
     }
 
     @Test
+    public void checkAdditionalTestOutputWith29() throws Exception {
+        testedApplicationId = "com.example.app.test";
+
+        when(deviceConnector.getApiLevel()).thenReturn(29);
+        when(deviceConnector.getName()).thenReturn("FakeDevice");
+
+        Answer<Void> lsAnswer =
+                invocation -> {
+                    MultiLineReceiver receiver = invocation.getArgument(1);
+                    receiver.processNewLines(
+                            new String[] {testedApplicationId + "-benchmarkData.json"});
+                    receiver.flush();
+                    return null;
+                };
+        doAnswer(lsAnswer)
+                .when(deviceConnector)
+                .executeShellCommand(startsWith("ls"), any(), anyLong(), any());
+
+        File prodApks = temporaryFolder.newFolder();
+        testedApks = new ArrayList<>();
+        testedApks.add(new File(prodApks, "app" + 1 + ".apk"));
+        File buddyApk = new File(temporaryFolder.newFolder(), "buddy.apk");
+        File resultsDir = temporaryFolder.newFile();
+        File additionalTestOutputDir = temporaryFolder.newFolder();
+        File coverageDir = temporaryFolder.newFile();
+        SimpleTestRunnable runnable =
+                getSimpleTestRunnable(
+                        buddyApk,
+                        resultsDir,
+                        true,
+                        additionalTestOutputDir,
+                        coverageDir,
+                        ImmutableList.of());
+
+        Answer<Void> verifyPullFileAnswer =
+                invocation -> {
+                    String remote = invocation.getArgument(0);
+                    String expectedRemote =
+                            Paths.get(
+                                            "/sdcard/Android/media/com.example.app.test/additional_test_output/com.example.app.test-benchmarkData.json")
+                                    .toString();
+                    assertThat(remote).isEqualTo(expectedRemote);
+
+                    String local = invocation.getArgument(1);
+                    String expectedLocal =
+                            Paths.get(
+                                            additionalTestOutputDir.getAbsolutePath(),
+                                            "FakeDevice/com.example.app.test-benchmarkData.json")
+                                    .toString();
+                    assertThat(local).isEqualTo(expectedLocal);
+                    return null;
+                };
+        doAnswer(verifyPullFileAnswer).when(deviceConnector).pullFile(anyString(), anyString());
+
+        runnable.run();
+
+        verify(deviceConnector, times(0))
+                .executeShellCommand(startsWith("content query"), any(), anyLong(), any());
+        verify(deviceConnector, times(1))
+                .executeShellCommand(startsWith("ls"), any(), anyLong(), any());
+    }
+
+    @Test
     public void instrumentationArgsCanOverridesCoverageFile() throws Exception {
         String customCoverageFilePath = "path/to/custom/coverage/" + FILE_COVERAGE_EC;
         instrumentationRunnerArguments =

@@ -28,12 +28,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import org.junit.Before;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExternalResource;
 
-@Ignore("b/174865909")
 public class AdditionalTestOutputConnectedTest {
 
     @Rule
