@@ -16,8 +16,8 @@
 
 package com.android.build.gradle.internal.plugins;
 
-import static com.android.build.gradle.internal.dependency.JdkImageTransformKt.CONFIG_NAME_ANDROID_JDK_IMAGE;
 import static com.android.build.gradle.internal.ManagedDeviceUtilsKt.getManagedDeviceAvdFolder;
+import static com.android.build.gradle.internal.dependency.JdkImageTransformKt.CONFIG_NAME_ANDROID_JDK_IMAGE;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.android.SdkConstants;
@@ -377,7 +377,9 @@ public abstract class BasePlugin<
         new Aapt2ThreadPoolBuildService.RegistrationAction(project, projectOptions).execute();
         new Aapt2DaemonBuildService.RegistrationAction(project, projectOptions).execute();
         new SyncIssueReporterImpl.GlobalSyncIssueService.RegistrationAction(
-                        project, SyncOptions.getModelQueryMode(projectOptions))
+                        project,
+                        SyncOptions.getModelQueryMode(projectOptions),
+                        SyncOptions.getErrorFormatMode(projectOptions))
                 .execute();
         Provider<SdkComponentsBuildService> sdkComponentsBuildService =
                 new SdkComponentsBuildService.RegistrationAction(project, projectOptions).execute();
@@ -945,7 +947,10 @@ public abstract class BasePlugin<
         ProjectOptions projectOptions = optionService.getProjectOptions();
 
         syncIssueReporter =
-                new SyncIssueReporterImpl(SyncOptions.getModelQueryMode(projectOptions), logger);
+                new SyncIssueReporterImpl(
+                        SyncOptions.getModelQueryMode(projectOptions),
+                        SyncOptions.getErrorFormatMode(projectOptions),
+                        logger);
 
         DeprecationReporterImpl deprecationReporter =
                 new DeprecationReporterImpl(syncIssueReporter, projectOptions, projectPath);
