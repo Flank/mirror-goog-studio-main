@@ -109,7 +109,7 @@ grpc::Status TraceProcessorServiceImpl::LoadTrace(
       ::perfetto::profiling::GetFileSize(llvm_path_) != 0) {
     FILE* output_file_fd = nullptr;
     if (!request->symbolized_output_path().empty()) {
-      output_file_fd = fopen(request->symbolized_output_path().c_str(), "w+");
+      output_file_fd = fopen(request->symbolized_output_path().c_str(), "wb+");
     }
     std::unique_ptr<BinaryFinder> finder(new LocalBinaryFinder(symbol_paths));
     std::unique_ptr<Symbolizer> symbolizer(
@@ -126,7 +126,7 @@ grpc::Status TraceProcessorServiceImpl::LoadTrace(
             return;
           }
           if (output_file_fd != nullptr) {
-            fputs(trace_proto.c_str(), output_file_fd);
+            fwrite(trace_proto.data(), 1, trace_proto.size(), output_file_fd);
           }
         });
     if (output_file_fd != nullptr) {
