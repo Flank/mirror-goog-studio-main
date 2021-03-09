@@ -93,12 +93,6 @@ public final class IdeNativeArtifactImpl implements IdeNativeArtifact, Serializa
 
     @Override
     @NonNull
-    public String getAssembleTaskName() {
-        throw new UnusedModelMethodException("getAssembleTaskName");
-    }
-
-    @Override
-    @NonNull
     public Collection<IdeNativeFile> getSourceFiles() {
         return mySourceFiles;
     }
@@ -125,12 +119,6 @@ public final class IdeNativeArtifactImpl implements IdeNativeArtifact, Serializa
     @Nullable
     public File getOutputFile() {
         return myOutputFile;
-    }
-
-    @Override
-    @NonNull
-    public Collection<File> getRuntimeFiles() {
-        throw new UnusedModelMethodException("getRuntimeFiles");
     }
 
     @Override
