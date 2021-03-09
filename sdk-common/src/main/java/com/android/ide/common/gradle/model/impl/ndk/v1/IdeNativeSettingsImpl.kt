@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.ide.common.gradle.model;
+package com.android.ide.common.gradle.model.impl.ndk.v1
 
-import com.android.annotations.NonNull;
+import com.android.ide.common.gradle.model.ndk.v1.IdeNativeSettings
+import java.io.Serializable
 
-public class UnusedModelMethodException extends RuntimeException {
-    public UnusedModelMethodException(@NonNull String methodName) {
-        super("Method '" + methodName + "' is not used by the IDE");
-    }
-}
+data class IdeNativeSettingsImpl(
+  override val name: String,
+  override val compilerFlags: List<String>
+) : IdeNativeSettings, Serializable

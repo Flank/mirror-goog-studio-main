@@ -140,7 +140,7 @@ class IdeLibraryFactoryTest {
       }
     }
     val buildFoldersPath = BuildFolderPaths()
-    buildFoldersPath.setRootBuildId("project")
+    buildFoldersPath.rootBuildId = "project"
     buildFoldersPath.addBuildFolderMapping(
       "project", ":aarModule", File("/ProjectRoot/aarModule/build/")
     )
@@ -218,7 +218,7 @@ class IdeLibraryFactoryTest {
       }
     }
     val buildFolderPaths = BuildFolderPaths()
-    buildFolderPaths.setRootBuildId("Project")
+    buildFolderPaths.rootBuildId = "Project"
     buildFolderPaths.addBuildFolderMapping(
       "Project", ":aarModule", File("/Project/aarModule/build/")
     )

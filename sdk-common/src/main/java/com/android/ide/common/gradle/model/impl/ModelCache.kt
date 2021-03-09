@@ -823,27 +823,31 @@ private fun modelCacheImpl(buildFolderPaths: BuildFolderPaths): ModelCacheTestin
   }
 
   fun nativeFileFrom(file: NativeFile): IdeNativeFileImpl {
-    return IdeNativeFileImpl(file.filePath, file.settingsName, file.workingDirectory)
+    return IdeNativeFileImpl(
+        filePath = file.filePath,
+        settingsName = file.settingsName,
+        workingDirectory = file.workingDirectory
+    )
   }
 
   fun nativeArtifactFrom(artifact: NativeArtifact): IdeNativeArtifactImpl {
     return IdeNativeArtifactImpl(
-      artifact.name,
-      artifact.toolChain,
-      artifact.groupName,
-      copy(artifact::getSourceFiles, ::nativeFileFrom),
-      copy(artifact::getExportedHeaders, ::deduplicateFile),
-      copyNewProperty(artifact::getAbi, ""),
-      copyNewProperty(artifact::getTargetName, ""),
-      artifact.outputFile
+      name = artifact.name,
+      toolChain = artifact.toolChain,
+      groupName = artifact.groupName,
+      sourceFiles = copy(artifact::getSourceFiles, ::nativeFileFrom),
+      exportedHeaders = copy(artifact::getExportedHeaders, ::deduplicateFile),
+      abi = copyNewProperty(artifact::getAbi, ""),
+      targetName = copyNewProperty(artifact::getTargetName, ""),
+      outputFile = artifact.outputFile
     )
   }
 
   fun nativeToolchainFrom(toolchain: NativeToolchain): IdeNativeToolchainImpl {
     return IdeNativeToolchainImpl(
-      toolchain.name,
-      toolchain.cCompilerExecutable,
-      toolchain.cppCompilerExecutable
+        name = toolchain.name,
+        cCompilerExecutable = toolchain.cCompilerExecutable,
+        cppCompilerExecutable = toolchain.cppCompilerExecutable
     )
   }
 
@@ -856,36 +860,36 @@ private fun modelCacheImpl(buildFolderPaths: BuildFolderPaths): ModelCacheTestin
 
   fun nativeSettingsFrom(settings: NativeSettings): IdeNativeSettingsImpl {
     return IdeNativeSettingsImpl(
-      settings.name,
-      copy(settings::getCompilerFlags, ::deduplicateString)
+        name = settings.name,
+        compilerFlags = copy(settings::getCompilerFlags, ::deduplicateString)
     )
   }
 
   fun nativeAndroidProjectFrom(project: NativeAndroidProject): IdeNativeAndroidProjectImpl {
     return IdeNativeAndroidProjectImpl(
-      project.modelVersion,
-      project.apiVersion,
-      project.name,
-      copy(project::getBuildFiles, ::deduplicateFile),
-      copy(project::getVariantInfos, ::nativeVariantFrom),
-      copy(project::getArtifacts, ::nativeArtifactFrom),
-      copy(project::getToolChains, ::nativeToolchainFrom),
-      copy(project::getSettings, ::nativeSettingsFrom),
-      copy(project::getFileExtensions, ::deduplicateString),
-      copyNewProperty(project::getDefaultNdkVersion, ""),
-      copy(project::getBuildSystems, ::deduplicateString)
+      modelVersion = project.modelVersion,
+      apiVersion = project.apiVersion,
+      name = project.name,
+      buildFiles = copy(project::getBuildFiles, ::deduplicateFile),
+      variantInfos = copy(project::getVariantInfos, ::nativeVariantFrom),
+      artifacts = copy(project::getArtifacts, ::nativeArtifactFrom),
+      toolChains = copy(project::getToolChains, ::nativeToolchainFrom),
+      settings = copy(project::getSettings, ::nativeSettingsFrom),
+      fileExtensions = copy(project::getFileExtensions, ::deduplicateString),
+      defaultNdkVersion = copyNewProperty(project::getDefaultNdkVersion, ""),
+      buildSystems = copy(project::getBuildSystems, ::deduplicateString)
     )
   }
 
   fun nativeVariantAbiFrom(variantAbi: NativeVariantAbi): IdeNativeVariantAbiImpl {
     return IdeNativeVariantAbiImpl(
-      copy(variantAbi::getBuildFiles, ::deduplicateFile),
-      copy(variantAbi::getArtifacts, ::nativeArtifactFrom),
-      copy(variantAbi::getToolChains, ::nativeToolchainFrom),
-      copy(variantAbi::getSettings, ::nativeSettingsFrom),
-      copy(variantAbi::getFileExtensions, ::deduplicateString),
-      variantAbi.variantName,
-      variantAbi.abi
+        buildFiles = copy(variantAbi::getBuildFiles, ::deduplicateFile),
+        artifacts = copy(variantAbi::getArtifacts, ::nativeArtifactFrom),
+        toolChains = copy(variantAbi::getToolChains, ::nativeToolchainFrom),
+        settings = copy(variantAbi::getSettings, ::nativeSettingsFrom),
+        fileExtensions = copy(variantAbi::getFileExtensions, ::deduplicateString),
+        variantName = variantAbi.variantName,
+        abi = variantAbi.abi
     )
   }
 
