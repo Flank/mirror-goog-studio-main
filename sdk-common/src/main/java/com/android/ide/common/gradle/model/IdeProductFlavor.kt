@@ -15,11 +15,6 @@
  */
 package com.android.ide.common.gradle.model
 
-import com.android.builder.model.AndroidArtifact
-import com.android.builder.model.AndroidProject
-import com.android.builder.model.BuildType
-import com.android.builder.model.Variant
-
 interface IdeProductFlavor : IdeBaseConfig {
     /**
      * To learn more about configuring flavor dimensions, read
@@ -29,7 +24,6 @@ interface IdeProductFlavor : IdeBaseConfig {
 
     /**
      * The name of the product flavor. This is only the value set on this product flavor.
-     * To get the final application id name, use [AndroidArtifact.getApplicationId].
      */
     val applicationId: String?
 
@@ -41,8 +35,6 @@ interface IdeProductFlavor : IdeBaseConfig {
     val versionCode: Int?
 
     /** The version name. This is only the value set on this product flavor.
-     * To get the final value, use [Variant.getMergedFlavor] with
-     * [.getVersionNameSuffix] and [BuildType.getVersionNameSuffix].
      */
     val versionName: String?
 
@@ -57,9 +49,6 @@ interface IdeProductFlavor : IdeBaseConfig {
 
     /**
      * The test application id. This is only the value set on this product flavor.
-     * To get the final value, use [Variant.getExtraAndroidArtifacts] with
-     * [AndroidProject.ARTIFACT_ANDROID_TEST] and then
-     * [AndroidArtifact.getApplicationId]
      */
     val testApplicationId: String?
 
