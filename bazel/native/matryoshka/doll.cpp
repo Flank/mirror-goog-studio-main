@@ -35,7 +35,7 @@ static inline void ReadBack(ifstream& self, unsigned char* content, int size) {
 }
 
 namespace {
-bool Open(std::vector<std::unique_ptr<Doll> >& dolls, std::string* target) {
+bool Open(std::vector<std::unique_ptr<Doll> >& dolls, const std::string* target) {
 
 #ifdef __APPLE__
   char path[1024];
@@ -91,7 +91,7 @@ bool Open(std::vector<std::unique_ptr<Doll> >& dolls) {
   return Open(dolls, nullptr);
 }
 
-Doll* OpenByName(std::string name) {
+Doll* OpenByName(const std::string& name) {
   std::vector<std::unique_ptr<Doll>> dolls;
   if (Open(dolls, &name) && !dolls.empty()) {
     return dolls.front().release();
@@ -100,7 +100,7 @@ Doll* OpenByName(std::string name) {
   }
 }
 
-Doll* FindByName(vector<unique_ptr<Doll> >& dolls, std::string name) {
+Doll* FindByName(vector<unique_ptr<Doll> >& dolls, const std::string& name) {
   for (auto const& doll: dolls) {
     if (doll->name.compare(name) == 0) {
       return doll.get();
