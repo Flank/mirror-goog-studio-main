@@ -18,6 +18,7 @@ package com.android.ide.common.gradle.model.impl
 import com.android.ide.common.gradle.model.IdeAaptOptions
 import com.android.ide.common.gradle.model.IdeAndroidGradlePluginProjectFlags
 import com.android.ide.common.gradle.model.IdeAndroidProject
+import com.android.ide.common.gradle.model.IdeAndroidProjectType
 import com.android.ide.common.gradle.model.IdeBuildTypeContainer
 import com.android.ide.common.gradle.model.IdeDependenciesInfo
 import com.android.ide.common.gradle.model.IdeJavaCompileOptions
@@ -32,7 +33,7 @@ import java.io.Serializable
 data class IdeAndroidProjectImpl(
   override val modelVersion: String,
   override val name: String,
-  override val projectType: Int,
+  override val projectType: IdeAndroidProjectType,
   override val defaultConfig: IdeProductFlavorContainer,
   override val buildTypes: Collection<IdeBuildTypeContainer>,
   override val productFlavors: Collection<IdeProductFlavorContainer>,
