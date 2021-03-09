@@ -20,13 +20,11 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
-import com.android.builder.testing.api.DeviceConfigProvider;
 import com.android.ide.common.gradle.model.IdeAndroidArtifactOutput;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import java.io.File;
-import java.util.ArrayList;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -35,35 +33,6 @@ import java.util.List;
  * Helper class to help with installation of multi-output variants.
  */
 public class SplitOutputMatcher {
-
-    /**
-     * Determines and return the list of APKs to use based on given device abis.
-     *
-     * @param deviceConfigProvider the device configuration.
-     * @param outputs the tested variant outpts.
-     * @param variantAbiFilters a list of abi filters applied to the variant. This is used in place
-     *     of the outputs, if there is a single output with no abi filters. If the list is null or
-     *     empty, then the variant does not restrict ABI packaging.
-     * @return the list of APK files to install.
-     */
-    @NonNull
-    public static List<File> computeBestOutputs(
-            @NonNull DeviceConfigProvider deviceConfigProvider,
-            @NonNull Collection<IdeAndroidArtifactOutput> outputs,
-            @Nullable Collection<String> variantAbiFilters) {
-
-        List<File> apkFiles = new ArrayList<>();
-
-        // now look for a matching output file
-        List<IdeAndroidArtifactOutput> outputFiles =
-                SplitOutputMatcher.computeBestOutput(
-                        outputs, variantAbiFilters, deviceConfigProvider.getAbis());
-        for (IdeAndroidArtifactOutput outputFile : outputFiles) {
-            apkFiles.add(outputFile.getOutputFile());
-        }
-        return apkFiles;
-
-    }
 
     /**
      * Determines and return the list of APKs to use based on given device abis.

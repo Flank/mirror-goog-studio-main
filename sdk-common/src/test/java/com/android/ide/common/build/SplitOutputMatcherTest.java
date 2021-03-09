@@ -15,49 +15,54 @@
  */
 package com.android.ide.common.build;
 
-import static org.mockito.Mockito.when;
-
 import com.android.annotations.NonNull;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
-import com.android.builder.testing.api.DeviceConfigProvider;
 import com.android.ide.common.gradle.model.IdeAndroidArtifactOutput;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
+import junit.framework.TestCase;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-import junit.framework.TestCase;
-import org.mockito.Mockito;
+import java.util.stream.Collectors;
 
 public class SplitOutputMatcherTest extends TestCase {
 
     /** Helper to run InstallHelper.computeMatchingOutput with variable ABI list. */
     private static List<File> computeBestOutput(
             @NonNull List<IdeAndroidArtifactOutput> outputs, @NonNull String... deviceAbis) {
-        DeviceConfigProvider deviceConfigProvider = Mockito.mock(DeviceConfigProvider.class);
-        when(deviceConfigProvider.getAbis()).thenReturn(Arrays.asList(deviceAbis));
-        return SplitOutputMatcher.computeBestOutputs(
-                deviceConfigProvider, outputs, null /* variantAbiFilters */);
+        return SplitOutputMatcher.computeBestOutput(outputs,
+                                                    null /* variantAbiFilters */,
+                                                    Arrays.asList(deviceAbis))
+                .stream()
+                .map(it -> it.getOutputFile())
+                .collect(Collectors.toList());
     }
 
     private static List<File> computeBestOutput(
             @NonNull List<IdeAndroidArtifactOutput> outputs,
             @NonNull Set<String> deviceAbis,
             @NonNull String... variantAbiFilters) {
-        DeviceConfigProvider deviceConfigProvider = Mockito.mock(DeviceConfigProvider.class);
-        when(deviceConfigProvider.getAbis()).thenReturn(new ArrayList<String>(deviceAbis));
-        return SplitOutputMatcher.computeBestOutputs(
-                deviceConfigProvider, outputs, Arrays.asList(variantAbiFilters));
+        return SplitOutputMatcher.computeBestOutput(outputs,
+                                                    Arrays.asList(variantAbiFilters),
+                                                    new ArrayList<>(deviceAbis))
+                .stream()
+                .map(it -> it.getOutputFile())
+                .collect(Collectors.toList());
     }
 
     /** Fake implementation of FilteredOutput */
     private static final class FakeSplitOutput implements IdeAndroidArtifactOutput {
+
         private final String abiFilter;
+
         private final File file;
+
         private final int versionCode;
 
         FakeSplitOutput(String abiFilter, int versionCode) {
@@ -101,7 +106,9 @@ public class SplitOutputMatcherTest extends TestCase {
     }
 
     private static final class FakeFilterData implements FilterData {
+
         private final String filterType;
+
         private final String identifier;
 
         FakeFilterData(String filterType, String identifier) {
@@ -122,6 +129,7 @@ public class SplitOutputMatcherTest extends TestCase {
         }
 
         public static class Builder {
+
             public static FilterData build(final String filterType, final String identifier) {
                 return new FakeFilterData(filterType, identifier);
             }
