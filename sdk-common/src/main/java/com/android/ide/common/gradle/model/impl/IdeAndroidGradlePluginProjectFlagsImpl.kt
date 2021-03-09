@@ -16,7 +16,6 @@
 
 package com.android.ide.common.gradle.model.impl
 
-import com.android.builder.model.AndroidGradlePluginProjectFlags.BooleanFlag
 import com.android.ide.common.gradle.model.IdeAndroidGradlePluginProjectFlags
 import java.io.Serializable
 
@@ -55,24 +54,4 @@ data class IdeAndroidGradlePluginProjectFlagsImpl(
 
   /** Whether the ML model binding feature is enabled for this project. */
   override val mlModelBindingEnabled: Boolean
-) : Serializable, IdeAndroidGradlePluginProjectFlags {
-
-  constructor(booleanFlagMap: Map<BooleanFlag, Boolean>) : this(
-    applicationRClassConstantIds = booleanFlagMap.getBooleanFlag(BooleanFlag.APPLICATION_R_CLASS_CONSTANT_IDS),
-    testRClassConstantIds = booleanFlagMap.getBooleanFlag(BooleanFlag.TEST_R_CLASS_CONSTANT_IDS),
-    transitiveRClasses = booleanFlagMap.getBooleanFlag(BooleanFlag.TRANSITIVE_R_CLASS),
-    usesCompose = booleanFlagMap.getBooleanFlag(BooleanFlag.JETPACK_COMPOSE),
-    mlModelBindingEnabled = booleanFlagMap.getBooleanFlag(BooleanFlag.ML_MODEL_BINDING)
-  )
-
-  /**
-   * Create an empty set of flags for older AGPs and for studio serialization.
-   */
-  constructor() : this(booleanFlagMap = emptyMap())
-
-  companion object {
-    private fun Map<BooleanFlag, Boolean>.getBooleanFlag(flag: BooleanFlag): Boolean {
-      return this[flag] ?: flag.legacyDefault
-    }
-  }
-}
+) : Serializable, IdeAndroidGradlePluginProjectFlags
