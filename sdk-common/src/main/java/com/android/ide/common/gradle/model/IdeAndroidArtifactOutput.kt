@@ -15,7 +15,6 @@
  */
 package com.android.ide.common.gradle.model
 
-import com.android.build.FilterData
 import java.io.File
 
 interface IdeAndroidArtifactOutput {
@@ -61,7 +60,7 @@ interface IdeAndroidArtifactOutput {
   }
 
   /** Returns all the split information used to create the APK.  */
-  val filters: Collection<FilterData?>
+  val filters: Collection<IdeFilterData?>
 
   /**
    * Returns the version code for this output.
@@ -77,7 +76,7 @@ interface IdeAndroidArtifactOutput {
   /**
    * Returns the output file for this artifact's output.
    * Depending on whether the project is an app or a library project, this could be an apk or
-   * an aar file. If this [com.android.build.OutputFile] has filters, this is a split
+   * an aar file. If this output file has filters, this is a split
    * APK.
    *
    * For test artifact for a library project, this would also be an apk.

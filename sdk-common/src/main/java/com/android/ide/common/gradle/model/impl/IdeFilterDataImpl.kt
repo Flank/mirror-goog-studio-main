@@ -15,10 +15,10 @@
  */
 package com.android.ide.common.gradle.model.impl
 
-import com.android.build.FilterData
+import com.android.ide.common.gradle.model.IdeFilterData
 import java.io.Serializable
 
-data class IdeFilterDataImpl(private val _identifier: String, private val _filterType: String) : FilterData, Serializable {
-  override fun getIdentifier(): String = _identifier
-  override fun getFilterType(): String = _filterType
-}
+data class IdeFilterDataImpl(
+    override val identifier: String,
+    override val filterType: String
+) : IdeFilterData, Serializable
