@@ -79,8 +79,6 @@ build:release --strip=always
 build:release --define release=true
 
 ## Base RBE configuration
-build:_remote_base --bes_backend=buildeventservice.googleapis.com
-build:_remote_base --bes_results_url=https://source.cloud.google.com/results/invocations/
 build:_remote_base --bes_timeout=60s
 build:_remote_base --auth_scope=https://www.googleapis.com/auth/cloud-source-tools
 build:_remote_base --project_id=908081808034
@@ -91,22 +89,37 @@ build:_remote_base --remote_instance_name=projects/google.com:android-studio-alp
 # See: https://github.com/bazelbuild/bazel/commit/03246077f948f2790a83520e7dccc2625650e6df
 build:_remote_base --nobuild_runfile_links
 
+## Base config to upload build results to ResultStore.
+build:_resultstore --bes_backend=buildeventservice.googleapis.com
+build:_resultstore --bes_results_url=https://source.cloud.google.com/results/invocations/
+
 ## Enables ResultStore, but does not use the remote cache.
 ## This is useful for sharing bazel invocations using the ResultStore link.
 build:resultstore --config=_remote_base
+build:resultstore --config=_resultstore
 build:resultstore --noremote_upload_local_results
 build:resultstore --noremote_accept_cached
 
-## Enables the remote cache (and ResultStore) for local builds.
+## Base config for using the remote cache.
 ## This avoids building things which were already built by CI.
-build:rcache --config=_remote_base
-build:rcache --config=release
-build:rcache --noremote_upload_local_results
+build:_rcache --config=_remote_base
+build:_rcache --config=release
+build:_rcache --noremote_upload_local_results
 # Include some of the expanded flags of --remote_download_toplevel to
 # optimize cache hits. We want the local cache to be populated from the
 # remote cache, so we keep --remote_download_outputs=all (default value).
-build:rcache --experimental_inmemory_dotd_files
-build:rcache --experimental_inmemory_jdeps_files
+build:_rcache --experimental_inmemory_dotd_files
+build:_rcache --experimental_inmemory_jdeps_files
+
+## Enables the remote cache, and uploading results to ResultStore.
+## This config should be commonly used to avoid building outputs that
+## already exist in the cache. Uploading to ResultStore is important
+## because it lets build results be easily shared in case of failure.
+build:rcache --config=_rcache
+build:rcache --config=_resultstore
+
+## Enables the remote cache, but without ResultStore.
+build:rcache_no_resultstore --config=_rcache
 
 ## Enables remote execution so actions are performed on the remote systems.
 build:remote --remote_executor=remotebuildexecution.googleapis.com
