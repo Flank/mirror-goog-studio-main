@@ -245,6 +245,8 @@ class PublishingSpecs {
                     ArtifactType.LOCAL_AAR_FOR_LINT)
             }
 
+            variantSpec(VariantTypeImpl.TEST_FIXTURES)
+
             // Publishing will be done manually from the lint standalone plugin for now.
             // Eventually we should just unify the infrastructure to declare the publications here.
             variantSpec(VariantTypeImpl.JAVA_LIBRARY)

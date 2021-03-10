@@ -67,6 +67,11 @@ interface VariantType {
     val isTestComponent: Boolean
 
     /**
+     * Returns true if this is a test fixtures component of the module.
+     */
+    val isTestFixturesComponent: Boolean
+
+    /**
      * Returns true if this is a separate test module.
      */
     val isSeparateTestProject: Boolean
@@ -127,6 +132,8 @@ interface VariantType {
         const val ANDROID_TEST_SUFFIX = "AndroidTest"
         const val UNIT_TEST_PREFIX = "test"
         const val UNIT_TEST_SUFFIX = "UnitTest"
+        const val TEST_FIXTURES_PREFIX = "testFixtures"
+        const val TEST_FIXTURES_SUFFIX = "TestFixtures"
 
         val testComponents: ImmutableList<VariantType>
             get() {
@@ -150,6 +157,7 @@ enum class VariantTypeImpl(
     override val publishToMetadata: Boolean = false,
     override val publishToRepository: Boolean = false,
     override val publishToOtherModules: Boolean = false,
+    override val isTestFixturesComponent: Boolean = false,
     override val isForTesting: Boolean = false,
     override val isSeparateTestProject: Boolean = false,
     override val prefix: String,
@@ -226,14 +234,25 @@ enum class VariantTypeImpl(
         isSingleBuildType = true,
         artifactName = AndroidProject.ARTIFACT_UNIT_TEST,
         artifactType = ArtifactMetaData.TYPE_JAVA,
-        analyticsVariantType = GradleBuildVariant.VariantType.UNIT_TEST);
+        analyticsVariantType = GradleBuildVariant.VariantType.UNIT_TEST),
+    TEST_FIXTURES(
+        isAar = true,
+        prefix = VariantType.TEST_FIXTURES_PREFIX,
+        suffix = VariantType.TEST_FIXTURES_SUFFIX,
+        isTestFixturesComponent = true,
+        publishToOtherModules = true,
+        publishToRepository = true,
+        artifactName = "_test_fixtures_",
+        artifactType = ArtifactMetaData.TYPE_ANDROID,
+        analyticsVariantType = GradleBuildVariant.VariantType.TEST_FIXTURES
+    );
 
     override val isTestComponent: Boolean
         get() = isForTesting && this != TEST_APK
 
     override val hasTestComponents: Boolean
-        get() = !isForTesting
+        get() = !isForTesting && !isTestFixturesComponent
 
     override val requiresManifest: Boolean
-        get() = !isForTesting
+        get() = !isForTesting && !isTestFixturesComponent
 }
