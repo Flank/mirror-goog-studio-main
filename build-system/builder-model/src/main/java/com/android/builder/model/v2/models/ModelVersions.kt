@@ -30,6 +30,7 @@ interface ModelVersions: AndroidModel {
     }
 
     val androidProject: Version
+    val androidDsl: Version
     val variantDependencies: Version
     val nativeModule: Version
 }

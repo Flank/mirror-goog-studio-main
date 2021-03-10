@@ -22,6 +22,7 @@ import java.io.Serializable
 
 data class ModelVersionsImpl(
     override val androidProject: Version,
+    override val androidDsl: Version,
     override val variantDependencies: Version,
     override val nativeModule: Version
 

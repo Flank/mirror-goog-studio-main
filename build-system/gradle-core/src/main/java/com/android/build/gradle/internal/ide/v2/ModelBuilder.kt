@@ -173,6 +173,7 @@ class ModelBuilder<
     private fun buildModelVersions(project: Project): ModelVersions {
         return ModelVersionsImpl(
             androidProject = VersionImpl(1, 0),
+            androidDsl = VersionImpl(1, 0),
             variantDependencies = VersionImpl(1, 0),
             nativeModule = VersionImpl(1, 0)
         )

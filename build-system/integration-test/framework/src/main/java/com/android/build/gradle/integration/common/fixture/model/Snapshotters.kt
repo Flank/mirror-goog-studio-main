@@ -56,6 +56,11 @@ import com.android.builder.model.v2.models.ndk.NativeVariant
 // snapshot fixtures specific to each model class
 
 internal fun ModelSnapshotter<ModelVersions>.snapshotVersions() {
+    dataObject("AndroidDsl", ModelVersions::androidDsl) {
+        item("major", Version::major)
+        item("minor", Version::minor)
+    }
+
     dataObject("AndroidProject", ModelVersions::androidProject) {
         item("major", Version::major)
         item("minor", Version::minor)

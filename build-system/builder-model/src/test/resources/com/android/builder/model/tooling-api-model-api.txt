@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-1ce86133f2c272fbff1081cadc22b4eb72a13641567f7e6309f15663b372c0a4
+33ac188ae4c95bda40f0f46d9e0d7e287f7ddb0e52c51797280a011785adf8c2
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -751,6 +751,7 @@ com.android.builder.model.v2.models.ModelVersions implements com.android.builder
 com.android.builder.model.v2.models.ModelVersions$Version
 com.android.builder.model.v2.models.ModelVersions$Version.getMajor: int ()
 com.android.builder.model.v2.models.ModelVersions$Version.getMinor: int ()
+com.android.builder.model.v2.models.ModelVersions.getAndroidDsl: com.android.builder.model.v2.models.ModelVersions$Version ()
 com.android.builder.model.v2.models.ModelVersions.getAndroidProject: com.android.builder.model.v2.models.ModelVersions$Version ()
 com.android.builder.model.v2.models.ModelVersions.getNativeModule: com.android.builder.model.v2.models.ModelVersions$Version ()
 com.android.builder.model.v2.models.ModelVersions.getVariantDependencies: com.android.builder.model.v2.models.ModelVersions$Version ()
