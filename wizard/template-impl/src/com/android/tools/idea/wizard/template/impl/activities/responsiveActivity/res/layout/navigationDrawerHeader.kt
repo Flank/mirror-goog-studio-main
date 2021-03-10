@@ -1,0 +1,67 @@
+/*
+ * Copyright (C) 2019 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.android.tools.idea.wizard.template.impl.activities.responsiveActivity.res.layout
+
+import com.android.tools.idea.wizard.template.renderIf
+
+fun navigationDrawerHeaderXml(
+  appCompatVersion: Int,
+  targetApi: Int,
+  isLibraryProject: Boolean = false
+): String {
+  val launcherIcon = renderIf(appCompatVersion >= 25 && targetApi >= 25) {
+    "@mipmap/ic_launcher_round"
+  }
+  val applicationProjectBlock = renderIf(!isLibraryProject) {
+    """
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingTop="8dp"
+        app:srcCompat="$launcherIcon"
+        android:contentDescription="@string/nav_header_desc"
+        android:id="@+id/imageView" />
+    """
+  }
+
+  return """
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="176dp"
+    android:background="@drawable/side_nav_bar"
+    android:padding="16dp"
+    android:orientation="vertical"
+    android:gravity="bottom">
+
+    $applicationProjectBlock
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="8dp"
+        android:text="@string/nav_header_title" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/nav_header_subtitle"
+        android:id="@+id/textView" />
+</LinearLayout>
+"""
+}
