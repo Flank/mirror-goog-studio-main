@@ -30,6 +30,7 @@ import static org.gradle.api.attributes.Bundling.BUNDLING_ATTRIBUTE;
 import static org.gradle.api.attributes.Bundling.EXTERNAL;
 import static org.gradle.api.attributes.Category.CATEGORY_ATTRIBUTE;
 import static org.gradle.api.attributes.LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE;
+import static org.gradle.internal.component.external.model.TestFixturesSupport.TEST_FIXTURES_FEATURE_NAME;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -60,6 +61,7 @@ import java.util.Set;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ConfigurationContainer;
+import org.gradle.api.artifacts.ProjectDependency;
 import org.gradle.api.artifacts.ResolutionStrategy;
 import org.gradle.api.artifacts.dsl.DependencyHandler;
 import org.gradle.api.attributes.Attribute;
@@ -68,8 +70,11 @@ import org.gradle.api.attributes.Bundling;
 import org.gradle.api.attributes.Category;
 import org.gradle.api.attributes.LibraryElements;
 import org.gradle.api.attributes.Usage;
+import org.gradle.api.capabilities.Capability;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.Provider;
+import org.gradle.internal.component.external.model.ProjectDerivedCapability;
+import org.gradle.internal.component.external.model.ProjectTestFixtures;
 
 /**
  * Object that represents the dependencies of variant.
@@ -108,6 +113,8 @@ public class VariantDependenciesBuilder {
     private final Set<Configuration> annotationConfigs = Sets.newLinkedHashSet();
     private final Set<Configuration> wearAppConfigs = Sets.newLinkedHashSet();
     private VariantImpl testedVariant;
+    private String overrideVariantNameAttribute = null;
+    private boolean testFixturesEnabled;
 
     @Nullable private Set<String> featureList;
 
@@ -135,6 +142,16 @@ public class VariantDependenciesBuilder {
         for (DefaultAndroidSourceSet sourceSet : sourceSets) {
             addSourceSet(sourceSet);
         }
+        return this;
+    }
+
+    public VariantDependenciesBuilder setTestFixturesEnabled(boolean testFixturesEnabled) {
+        this.testFixturesEnabled = testFixturesEnabled;
+        return this;
+    }
+
+    public VariantDependenciesBuilder overrideVariantNameAttribute(String name) {
+        this.overrideVariantNameAttribute = name;
         return this;
     }
 
@@ -195,6 +212,7 @@ public class VariantDependenciesBuilder {
                 getFlavorAttributes(flavorSelection);
 
         final ConfigurationContainer configurations = project.getConfigurations();
+        final DependencyHandler dependencies = project.getDependencies();
 
         final String compileClasspathName = variantName + "CompileClasspath";
         Configuration compileClasspath = configurations.maybeCreate(compileClasspathName);
@@ -210,7 +228,22 @@ public class VariantDependenciesBuilder {
                 compileClasspath.extendsFrom(configuration);
             }
 
-            compileClasspath.getDependencies().add(project.getDependencies().create(project));
+            if (testFixturesEnabled) {
+                ProjectDependency dependency =
+                        (ProjectDependency)
+                                dependencies.add(
+                                        compileClasspath.getName(), dependencies.create(project));
+                dependency.capabilities(new ProjectTestFixtures(project));
+            }
+
+            compileClasspath.getDependencies().add(dependencies.create(project));
+        }
+
+        if (variantType.isTestFixturesComponent()) {
+            // equivalent to dependencies { testFixturesApi project("$currentProject") }
+            apiClasspaths.forEach(
+                    apiConfiguration ->
+                            apiConfiguration.getDependencies().add(dependencies.create(project)));
         }
         compileClasspath.setCanBeConsumed(false);
         compileClasspath
@@ -240,9 +273,16 @@ public class VariantDependenciesBuilder {
                 "Resolved configuration for runtime for variant: " + variantName);
         runtimeClasspath.setExtendsFrom(runtimeClasspaths);
         if (testedVariant != null) {
+            if (testFixturesEnabled) {
+                ProjectDependency dependency =
+                        (ProjectDependency)
+                                dependencies.add(
+                                        runtimeClasspath.getName(), dependencies.create(project));
+                dependency.capabilities(new ProjectTestFixtures(project));
+            }
             if (testedVariant.getVariantDslInfo().getVariantType().isAar()
                     || !variantDslInfo.getVariantType().isApk()) {
-                runtimeClasspath.getDependencies().add(project.getDependencies().create(project));
+                runtimeClasspath.getDependencies().add(dependencies.create(project));
             }
         }
         runtimeClasspath.setCanBeConsumed(false);
@@ -261,10 +301,7 @@ public class VariantDependenciesBuilder {
                     .getIncoming()
                     .beforeResolve(
                             new ConstraintHandler(
-                                    runtimeClasspath,
-                                    project.getDependencies(),
-                                    false,
-                                    stringCachingService));
+                                    runtimeClasspath, dependencies, false, stringCachingService));
 
             // if this is a test App, then also synchronize the 2 runtime classpaths
             if (variantType.isApk() && testedVariant != null) {
@@ -275,7 +312,7 @@ public class VariantDependenciesBuilder {
                         .beforeResolve(
                                 new ConstraintHandler(
                                         testedRuntimeClasspath,
-                                        project.getDependencies(),
+                                        dependencies,
                                         true,
                                         stringCachingService));
             }
@@ -321,7 +358,12 @@ public class VariantDependenciesBuilder {
             wearAttributes.attribute(Usage.USAGE_ATTRIBUTE, runtimeUsage);
         }
 
-        VariantAttr variantNameAttr = factory.named(VariantAttr.class, variantName);
+        VariantAttr variantNameAttr =
+                factory.named(
+                        VariantAttr.class,
+                        overrideVariantNameAttribute != null
+                                ? overrideVariantNameAttribute
+                                : variantName);
 
         Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> publicationFlavorMap =
                 getFlavorAttributes(null);
@@ -478,13 +520,12 @@ public class VariantDependenciesBuilder {
             reverseMetadataValues = configurations.maybeCreate(reverseMetadataValuesName);
 
             if (featureList != null) {
-                DependencyHandler depHandler = project.getDependencies();
                 List<String> notFound = new ArrayList<>();
 
                 for (String feature : featureList) {
                     Project p = project.findProject(feature);
                     if (p != null) {
-                        depHandler.add(reverseMetadataValuesName, p);
+                        dependencies.add(reverseMetadataValuesName, p);
                     } else {
                         notFound.add(feature);
                     }
@@ -513,6 +554,14 @@ public class VariantDependenciesBuilder {
         checkOldConfigurations(configurations, "_" + variantName + "Compile", compileClasspathName);
         checkOldConfigurations(configurations, "_" + variantName + "Apk", runtimeClasspathName);
         checkOldConfigurations(configurations, "_" + variantName + "Publish", runtimeClasspathName);
+
+        if (variantType.isTestFixturesComponent()) {
+            Capability capability =
+                    new ProjectDerivedCapability(project, TEST_FIXTURES_FEATURE_NAME);
+            elements.forEach(
+                    (publishedConfigType, configuration) ->
+                            configuration.getOutgoing().capability(capability));
+        }
 
         return new VariantDependencies(
                 variantName,
