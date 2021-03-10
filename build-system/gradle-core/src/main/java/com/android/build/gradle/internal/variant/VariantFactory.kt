@@ -15,37 +15,43 @@
  */
 package com.android.build.gradle.internal.variant
 
-import com.android.build.api.artifact.impl.ArtifactsImpl;
+import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.ComponentBuilder
-import com.android.build.api.component.ComponentIdentity;
-import com.android.build.api.component.impl.*
-import com.android.build.api.dsl.BuildFeatures;
+import com.android.build.api.component.ComponentIdentity
+import com.android.build.api.component.impl.AndroidTestBuilderImpl
+import com.android.build.api.component.impl.AndroidTestImpl
+import com.android.build.api.component.impl.ComponentImpl
+import com.android.build.api.component.impl.TestFixturesComponentBuilderImpl
+import com.android.build.api.component.impl.TestFixturesComponentImpl
+import com.android.build.api.component.impl.UnitTestBuilderImpl
+import com.android.build.api.component.impl.UnitTestImpl
+import com.android.build.api.dsl.BuildFeatures
 import com.android.build.api.variant.HasAndroidTestBuilder
-import com.android.build.api.variant.impl.VariantBuilderImpl;
-import com.android.build.api.variant.impl.VariantImpl;
-import com.android.build.gradle.internal.api.BaseVariantImpl;
-import com.android.build.gradle.internal.api.ReadOnlyObjectProvider;
-import com.android.build.gradle.internal.core.VariantDslInfo;
-import com.android.build.gradle.internal.core.VariantSources;
-import com.android.build.gradle.internal.dependency.VariantDependencies;
-import com.android.build.gradle.internal.dsl.BuildType;
-import com.android.build.gradle.internal.dsl.DataBindingOptions;
-import com.android.build.gradle.internal.dsl.DefaultConfig;
-import com.android.build.gradle.internal.dsl.ProductFlavor;
-import com.android.build.gradle.internal.dsl.SigningConfig;
-import com.android.build.gradle.internal.pipeline.TransformManager;
-import com.android.build.gradle.internal.plugins.DslContainerProvider;
-import com.android.build.gradle.internal.scope.BuildFeatureValues;
-import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.scope.MutableTaskContainer;
-import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.services.BaseServices;
-import com.android.build.gradle.internal.services.TaskCreationServices;
-import com.android.build.gradle.internal.services.VariantApiServices;
-import com.android.build.gradle.internal.services.VariantPropertiesApiServices;
-import com.android.build.gradle.options.ProjectOptions;
-import com.android.builder.core.VariantType;
-import org.gradle.api.Project;
+import com.android.build.api.variant.impl.VariantBuilderImpl
+import com.android.build.api.variant.impl.VariantImpl
+import com.android.build.gradle.internal.api.BaseVariantImpl
+import com.android.build.gradle.internal.api.ReadOnlyObjectProvider
+import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.core.VariantSources
+import com.android.build.gradle.internal.dependency.VariantDependencies
+import com.android.build.gradle.internal.dsl.BuildType
+import com.android.build.gradle.internal.dsl.DataBindingOptions
+import com.android.build.gradle.internal.dsl.DefaultConfig
+import com.android.build.gradle.internal.dsl.ProductFlavor
+import com.android.build.gradle.internal.dsl.SigningConfig
+import com.android.build.gradle.internal.pipeline.TransformManager
+import com.android.build.gradle.internal.plugins.DslContainerProvider
+import com.android.build.gradle.internal.scope.BuildFeatureValues
+import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.scope.MutableTaskContainer
+import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.services.BaseServices
+import com.android.build.gradle.internal.services.TaskCreationServices
+import com.android.build.gradle.internal.services.VariantApiServices
+import com.android.build.gradle.internal.services.VariantPropertiesApiServices
+import com.android.build.gradle.options.ProjectOptions
+import com.android.builder.core.VariantType
+import org.gradle.api.Project
 
 /**
  * Interface for Variant Factory.
@@ -73,6 +79,12 @@ interface VariantFactory<VariantBuilderT : VariantBuilderImpl, VariantT : Varian
             testedComponent: HasAndroidTestBuilder,
             variantApiServices: VariantApiServices): AndroidTestBuilderImpl
 
+    fun createTestFixturesBuilder(
+        componentIdentity: ComponentIdentity,
+        variantDslInfo: VariantDslInfo,
+        variantApiServices: VariantApiServices
+    ): TestFixturesComponentBuilderImpl
+
     fun createVariant(
             variantBuilder: VariantBuilderT,
             componentIdentity: ComponentIdentity,
@@ -87,6 +99,21 @@ interface VariantFactory<VariantBuilderT : VariantBuilderImpl, VariantT : Varian
             transformManager: TransformManager,
             variantPropertiesApiServices: VariantPropertiesApiServices,
             taskCreationServices: TaskCreationServices): VariantT
+
+    fun createTestFixtures(
+        testFixturesComponentBuilderImpl: TestFixturesComponentBuilderImpl,
+        buildFeatures: BuildFeatureValues,
+        variantDslInfo: VariantDslInfo,
+        variantDependencies: VariantDependencies,
+        variantSources: VariantSources,
+        paths: VariantPathHelper,
+        artifacts: ArtifactsImpl,
+        variantScope: VariantScope,
+        variantData: TestFixturesVariantData,
+        mainVariant: VariantImpl,
+        transformManager: TransformManager,
+        variantPropertiesApiServices: VariantPropertiesApiServices,
+        taskCreationServices: TaskCreationServices): TestFixturesComponentImpl
 
     fun createUnitTest(
             unitTestBuilder: UnitTestBuilderImpl,
