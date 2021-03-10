@@ -47,6 +47,7 @@ class UtpTestRunner @JvmOverloads constructor(
         private val versionedSdkLoader: SdkComponentsBuildService.VersionedSdkLoader,
         private val retentionConfig: RetentionConfig,
         private val useOrchestrator: Boolean,
+        private val utpTestResultListener: UtpTestResultListener?,
         private val configFactory: UtpConfigFactory = UtpConfigFactory())
     : BaseTestRunner(splitSelectExec, processExecutor, executor) {
 
@@ -63,7 +64,7 @@ class UtpTestRunner @JvmOverloads constructor(
             additionalTestOutputDir: File?,
             coverageDir: File,
             logger: ILogger): MutableList<TestResult> {
-        return UtpTestResultListenerServerRunner().use { resultListenerServerRunner ->
+        return UtpTestResultListenerServerRunner(utpTestResultListener).use { resultListenerServerRunner ->
             val resultListenerServerMetadata = resultListenerServerRunner.metadata
             apksForDevice.map { (deviceConnector, apks) ->
                 val utpOutputDir = resultsDir

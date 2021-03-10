@@ -36,9 +36,11 @@ import java.io.IOException
  * A GRPC server to receive test progress and results in realtime from UTP.
  *
  * @param port a port number to start and bind the gRPC server
+ * @param listener a listener to receive test result events
  */
 class UtpTestResultListenerServer private constructor(
         val port: Int,
+        listener: UtpTestResultListener?,
         serverFactory: (Int) -> ServerBuilder<*>) : Closeable {
     companion object {
         private val logger = Logging.getLogger(UtpTestResultListenerServer::class.java)
@@ -55,6 +57,7 @@ class UtpTestResultListenerServer private constructor(
                 certChainFile: File,
                 privateKeyFile: File,
                 trustCertCollectionFile: File,
+                listener: UtpTestResultListener?,
                 defaultPort: Int = DEFAULT_GRPC_SERVER_PORT,
                 maxRetryAttempt: Int = DEFAULT_MAX_RETRY_ATTEMPT,
                 serverFactory: (Int) -> ServerBuilder<*> = { port ->
@@ -64,7 +67,7 @@ class UtpTestResultListenerServer private constructor(
             for (attempt in 0 until maxRetryAttempt) {
                 val port = defaultPort + attempt
                 try {
-                    return UtpTestResultListenerServer(port, serverFactory)
+                    return UtpTestResultListenerServer(port, listener, serverFactory)
                 } catch (exception: IOException) {
                     logger.info("Failed to bind and start the gRPC server." +
                             " Retrying with a different port number.")
@@ -90,30 +93,37 @@ class UtpTestResultListenerServer private constructor(
 
     @VisibleForTesting
     val server: Server = serverFactory(port)
-            .addService(GradleAndroidTestResultListenerService())
+            .addService(GradleAndroidTestResultListenerService(listener))
             .build()
             .start()
 
     override fun close() {
         server.shutdownNow().awaitTermination()
     }
+}
 
-    private class GradleAndroidTestResultListenerService : GradleAndroidTestResultListenerServiceImplBase() {
-        override fun recordTestResultEvent(responseObserver: StreamObserver<RecordTestResultEventResponse>): StreamObserver<TestResultEvent> {
-            return object: StreamObserver<TestResultEvent> {
-                override fun onNext(testResultEvent: TestResultEvent) {
-                }
+private class GradleAndroidTestResultListenerService(val listener: UtpTestResultListener?)
+    : GradleAndroidTestResultListenerServiceImplBase() {
+    companion object {
+        private val logger = Logging.getLogger(GradleAndroidTestResultListenerService::class.java)
+    }
+    override fun recordTestResultEvent(
+            responseObserver: StreamObserver<RecordTestResultEventResponse>): StreamObserver<TestResultEvent> {
+        return object: StreamObserver<TestResultEvent> {
+            override fun onNext(testResultEvent: TestResultEvent) {
+                listener?.onTestResultEvent(testResultEvent)
+            }
 
-                override fun onError(error: Throwable) {
-                    logger.error("Could not receive test results from the test executor.", error)
-                }
+            override fun onError(error: Throwable) {
+                logger.error("Could not receive test results from the test executor.", error)
+                listener?.onError()
+            }
 
-                override fun onCompleted() {
-                    responseObserver.onNext(RecordTestResultEventResponse.getDefaultInstance())
-                    responseObserver.onCompleted()
-                }
+            override fun onCompleted() {
+                responseObserver.onNext(RecordTestResultEventResponse.getDefaultInstance())
+                responseObserver.onCompleted()
+                listener?.onCompleted()
             }
         }
     }
 }
-

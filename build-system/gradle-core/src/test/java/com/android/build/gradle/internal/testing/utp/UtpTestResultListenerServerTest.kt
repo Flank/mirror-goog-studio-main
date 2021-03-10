@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.testing.utp
 
+import com.android.testutils.MockitoKt.eq
 import com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidTestResultListenerProto.RecordTestResultEventResponse
 import com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidTestResultListenerProto.TestResultEvent
 import com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidTestResultListenerProto.TestResultEvent.TestSuiteStarted
@@ -28,6 +29,7 @@ import io.grpc.testing.GrpcCleanupRule
 import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mock
+import org.mockito.Mockito.inOrder
 import org.mockito.junit.MockitoJUnit
 import org.mockito.junit.MockitoRule
 import java.io.File
@@ -50,6 +52,8 @@ class UtpTestResultListenerServerTest {
     lateinit var mockResultListenerClientPrivateKey: File
     @Mock
     lateinit var mockTrustCertCollection: File
+    @Mock
+    lateinit var mockTestResultListener: UtpTestResultListener
 
     @Test
     fun startServer() {
@@ -61,6 +65,7 @@ class UtpTestResultListenerServerTest {
                 mockTrustCertCollection,
                 mockResultListenerClientPrivateKey,
                 mockTrustCertCollection,
+                mockTestResultListener,
                 defaultPort = 1234,
                 maxRetryAttempt = 1
         ) { port ->
@@ -82,6 +87,7 @@ class UtpTestResultListenerServerTest {
                 mockTrustCertCollection,
                 mockResultListenerClientPrivateKey,
                 mockTrustCertCollection,
+                mockTestResultListener,
                 defaultPort = 1234,
                 maxRetryAttempt = 1
         ) { port ->
@@ -101,6 +107,7 @@ class UtpTestResultListenerServerTest {
                 mockTrustCertCollection,
                 mockResultListenerClientPrivateKey,
                 mockTrustCertCollection,
+                mockTestResultListener,
                 defaultPort = 1234,
                 maxRetryAttempt = 2
         ) { port ->
@@ -127,6 +134,7 @@ class UtpTestResultListenerServerTest {
                 mockTrustCertCollection,
                 mockResultListenerClientPrivateKey,
                 mockTrustCertCollection,
+                mockTestResultListener,
                 defaultPort = 1234,
                 maxRetryAttempt = 1
         ) {
@@ -167,6 +175,14 @@ class UtpTestResultListenerServerTest {
 
         assertThat(completed).isTrue()
         assertThat(response).isEqualTo(RecordTestResultEventResponse.getDefaultInstance())
+
+        inOrder(mockTestResultListener).apply {
+            verify(mockTestResultListener).onTestResultEvent(
+                    eq(TestResultEvent.newBuilder().apply {
+                        testSuiteStarted = TestSuiteStarted.getDefaultInstance()
+                    }.build()))
+            verify(mockTestResultListener).onCompleted()
+        }
 
         server.close()
     }
