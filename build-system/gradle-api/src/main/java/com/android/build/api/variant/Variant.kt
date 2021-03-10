@@ -18,6 +18,8 @@ package com.android.build.api.variant
 import com.android.build.api.component.Component
 import com.android.build.api.component.UnitTest
 import org.gradle.api.Incubating
+import org.gradle.api.file.RegularFile
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
@@ -123,4 +125,11 @@ interface Variant : Component {
      * Variant's is pseudo locales enabled, initialized by the corresponding DSL elements.
      */
     val isPseudoLocalesEnabled: Property<Boolean>
+
+    /**
+     * List of proguard configuration files for this variant. The list is initialized from the
+     * corresponding DSL element, and cannot be queried at configuration time. At configuration time,
+     * you can only add new elements to the list.
+     */
+    val proguardFiles: ListProperty<RegularFile>
 }

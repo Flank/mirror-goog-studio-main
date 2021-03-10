@@ -24,6 +24,7 @@ import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.*
 import com.android.build.api.variant.impl.*
 import com.android.build.api.variant.impl.initializeAaptOptionsFromDsl
+import com.android.build.gradle.internal.ProguardFileType
 import com.android.build.gradle.internal.component.AndroidTestCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
@@ -41,6 +42,8 @@ import com.android.build.gradle.options.IntegerOption
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import com.android.builder.dexing.DexingType
 import com.android.builder.model.CodeShrinker
+import org.gradle.api.file.RegularFile
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
@@ -196,6 +199,14 @@ open class AndroidTestImpl @Inject constructor(
 
     override val renderscript: Renderscript? by lazy {
         delegate.renderscript(internalServices)
+    }
+
+    override val proguardFiles: ListProperty<RegularFile> by lazy {
+        variantPropertiesApiServices.projectInfo.getProject().objects
+            .listProperty(RegularFile::class.java).also {
+                variantDslInfo.gatherProguardFiles(ProguardFileType.TEST, it)
+                it.finalizeValueOnRead()
+            }
     }
 
     // ---------------------------------------------------------------------------------------------

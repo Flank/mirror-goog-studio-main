@@ -46,6 +46,8 @@ import com.android.builder.core.VariantType
 import com.google.common.collect.ImmutableList
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.file.ConfigurableFileTree
+import org.gradle.api.file.RegularFile
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
@@ -161,6 +163,14 @@ abstract class VariantImpl(
 
     override fun <T> getExtension(type: Class<T>): T? =
         type.cast(externalExtensions?.get(type))
+
+    override val proguardFiles: ListProperty<RegularFile> by lazy {
+        variantPropertiesApiServices.projectInfo.getProject().objects
+            .listProperty(RegularFile::class.java).also {
+                variantDslInfo.getProguardFiles(it)
+                it.finalizeValueOnRead()
+            }
+    }
 
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API

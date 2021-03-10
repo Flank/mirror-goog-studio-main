@@ -81,6 +81,7 @@ import org.gradle.api.artifacts.SelfResolvingDependency;
 import org.gradle.api.attributes.LibraryElements;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.RegularFile;
+import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Provider;
 
 /** A scope containing data for a specific variant. */
@@ -229,26 +230,6 @@ public class VariantScopeImpl implements VariantScope {
 
     @NonNull
     @Override
-    public List<File> getProguardFiles() {
-        List<File> result = getExplicitProguardFiles();
-
-        // For backwards compatibility, we keep the old behavior: if there are no files
-        // specified, use a default one.
-        if (result.isEmpty()) {
-            return postProcessingOptions.getDefaultProguardFiles();
-        }
-
-        return result;
-    }
-
-    @NonNull
-    @Override
-    public List<File> getExplicitProguardFiles() {
-        return gatherProguardFiles(ProguardFileType.EXPLICIT);
-    }
-
-    @NonNull
-    @Override
     public List<File> getTestProguardFiles() {
         return gatherProguardFiles(ProguardFileType.TEST);
     }
@@ -266,7 +247,7 @@ public class VariantScopeImpl implements VariantScope {
         final boolean includeProguardFiles = variantDslInfo.getVariantType().isDynamicFeature();
         final Collection<File> consumerProguardFiles = getConsumerProguardFiles();
         if (includeProguardFiles) {
-            consumerProguardFiles.addAll(getExplicitProguardFiles());
+            consumerProguardFiles.addAll(gatherProguardFiles(ProguardFileType.EXPLICIT));
         }
 
         return ImmutableList.copyOf(consumerProguardFiles);
@@ -274,10 +255,14 @@ public class VariantScopeImpl implements VariantScope {
 
     @NonNull
     private List<File> gatherProguardFiles(ProguardFileType type) {
-        List<File> result = variantDslInfo.gatherProguardFiles(type);
-        result.addAll(postProcessingOptions.getProguardFiles(type));
-
-        return result;
+        ListProperty<RegularFile> regularFiles =
+                baseServices
+                        .getProjectInfo()
+                        .getProject()
+                        .getObjects()
+                        .listProperty(RegularFile.class);
+        variantDslInfo.gatherProguardFiles(type, regularFiles);
+        return regularFiles.get().stream().map(RegularFile::getAsFile).collect(Collectors.toList());
     }
 
     @Override

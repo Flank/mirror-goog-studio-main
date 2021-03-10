@@ -57,6 +57,8 @@ import com.google.common.collect.Lists
 import com.google.common.collect.Maps
 import com.google.common.collect.Sets
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.RegularFile
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import java.io.File
@@ -896,11 +898,31 @@ open class VariantDslInfoImpl internal constructor(
     override val supportedAbis: Set<String>
         get() = if (variantType.isDynamicFeature) setOf() else mergedNdkConfig.abiFilters
 
-    override fun gatherProguardFiles(type: ProguardFileType): List<File> {
+    override fun getProguardFiles(into: ListProperty<RegularFile>) {
+        val result: MutableList<File> = ArrayList(mergedProguardFiles(ProguardFileType.EXPLICIT))
+        if (result.isEmpty()) {
+            result.addAll(_postProcessingOptions.getDefaultProguardFiles())
+        }
+
+        val projectDir = services.projectInfo.getProject().layout.projectDirectory
+        result.forEach { file ->
+            into.add(projectDir.file(file.absolutePath))
+        }
+    }
+
+    override fun gatherProguardFiles(type: ProguardFileType, into: ListProperty<RegularFile>) {
+        val projectDir = services.projectInfo.getProject().layout.projectDirectory
+        mergedProguardFiles(type).forEach {
+            into.add(projectDir.file(it.absolutePath))
+        }
+    }
+
+    private fun mergedProguardFiles(type: ProguardFileType): Collection<File> {
         val result: MutableList<File> = ArrayList(defaultConfig.getProguardFiles(type))
         for (flavor in productFlavorList) {
             result.addAll(flavor.getProguardFiles(type))
         }
+        result.addAll(_postProcessingOptions.getProguardFiles(type))
         return result
     }
 

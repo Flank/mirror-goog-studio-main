@@ -21,11 +21,9 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.SdkConstants;
 import com.android.Version;
-import com.android.build.api.component.impl.ComponentImpl;
-import com.android.build.api.component.impl.TestComponentBuilderImpl;
-import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.variant.impl.ApplicationVariantBuilderImpl;
 import com.android.build.api.variant.impl.ApplicationVariantImpl;
+import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.gradle.api.TestVariant;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
@@ -59,6 +57,7 @@ import java.util.TreeMap;
 import java.util.stream.Collectors;
 import org.gradle.api.JavaVersion;
 import org.gradle.api.Project;
+import org.gradle.api.file.RegularFile;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.junit.Assert;
 import org.junit.Before;
@@ -282,7 +281,7 @@ public class PluginDslTest {
         checker.checkTestedVariant("f2FbDebug", "f2FbDebugAndroidTest", variants, testVariants);
         checker.checkTestedVariant("f2FcDebug", "f2FcDebugAndroidTest", variants, testVariants);
 
-        Map<String, ComponentImpl> componentMap = getComponentMap();
+        Map<String, VariantImpl> componentMap = getComponentMap();
 
         for (String dim1 : ImmutableList.of("f1", "f2")) {
             for (String dim2 : ImmutableList.of("fa", "fb", "fc")) {
@@ -531,8 +530,8 @@ public class PluginDslTest {
         android.setCompileSdkVersion(
                 "Google Inc.:Google APIs:" + TestConstants.COMPILE_SDK_VERSION_WITH_GOOGLE_APIS);
         plugin.createAndroidTasks();
-        Map<String, ComponentImpl> componentMap = getComponentMap();
-        Map.Entry<String, ComponentImpl> vsentry = componentMap.entrySet().iterator().next();
+        Map<String, VariantImpl> componentMap = getComponentMap();
+        Map.Entry<String, VariantImpl> vsentry = componentMap.entrySet().iterator().next();
         File mockableJarFile =
                 vsentry.getValue().getGlobalScope().getMockableJarArtifact().getSingleFile();
         assertThat(mockableJarFile).isNotNull();
@@ -602,7 +601,7 @@ public class PluginDslTest {
                         + "}\n");
         plugin.createAndroidTasks();
 
-        Map<String, ComponentImpl> componentMap = getComponentMap();
+        Map<String, VariantImpl> componentMap = getComponentMap();
 
         Map<String, Map<String, String>> expected =
                 ImmutableMap.of(
@@ -703,15 +702,12 @@ public class PluginDslTest {
     }
 
     public void checkProguardFiles(Map<String, List<String>> expected) {
-        Map<String, ComponentImpl> componentMap = getComponentMap();
+        Map<String, VariantImpl> componentMap = getComponentMap();
         for (Map.Entry<String, List<String>> entry : expected.entrySet()) {
             String variantName = entry.getKey();
             Set<File> proguardFiles =
-                    componentMap
-                            .get(variantName)
-                            .getVariantScope()
-                            .getProguardFiles()
-                            .stream()
+                    componentMap.get(variantName).getProguardFiles().get().stream()
+                            .map(RegularFile::getAsFile)
                             .map(File::getAbsoluteFile)
                             .collect(Collectors.toSet());
             Set<File> expectedFiles =
@@ -722,18 +718,12 @@ public class PluginDslTest {
         }
     }
 
-    public Map<String, ComponentImpl> getComponentMap() {
-        Map<String, ComponentImpl> result = new HashMap<>();
+    public Map<String, VariantImpl> getComponentMap() {
+        Map<String, VariantImpl> result = new HashMap<>();
         for (ComponentInfo<ApplicationVariantBuilderImpl, ApplicationVariantImpl> variant :
                 plugin.getVariantManager().getMainComponents()) {
             result.put(variant.getVariant().getName(), variant.getVariant());
         }
-
-        for (ComponentInfo<TestComponentBuilderImpl, TestComponentImpl> testComponent :
-                plugin.getVariantManager().getTestComponents()) {
-            result.put(testComponent.getVariant().getName(), testComponent.getVariant());
-        }
-
         return result;
     }
 }
