@@ -773,6 +773,12 @@ public abstract class BasePlugin<
             component.getVariant().publishBuildArtifacts();
         }
 
+        // now publish all testFixtures components artifacts.
+        for (TestFixturesComponentImpl testFixturesComponent :
+                variantManager.getTestFixturesComponents()) {
+            testFixturesComponent.publishBuildArtifacts();
+        }
+
         checkSplitConfiguration();
         variantManager.setHasCreatedTasks(true);
         for (ComponentInfo<VariantBuilderT, VariantT> variant : variants) {

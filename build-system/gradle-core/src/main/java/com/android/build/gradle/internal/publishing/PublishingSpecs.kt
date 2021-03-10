@@ -249,7 +249,38 @@ class PublishingSpecs {
                     ArtifactType.LOCAL_AAR_FOR_LINT)
             }
 
-            variantSpec(VariantTypeImpl.TEST_FIXTURES)
+            variantSpec(VariantTypeImpl.TEST_FIXTURES) {
+                publish(com.android.build.api.artifact.SingleArtifact.AAR, ArtifactType.AAR)
+
+                api(COMPILE_LIBRARY_CLASSES_JAR, ArtifactType.CLASSES_JAR)
+
+                // manifest is published to both to compare and detect provided-only library
+                // dependencies.
+                output(MERGED_MANIFEST, ArtifactType.MANIFEST)
+                output(RES_STATIC_LIBRARY, ArtifactType.RES_STATIC_LIBRARY)
+                output(DATA_BINDING_ARTIFACT, ArtifactType.DATA_BINDING_ARTIFACT)
+                output(DATA_BINDING_BASE_CLASS_LOG_ARTIFACT,
+                    ArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT)
+                output(FULL_JAR, ArtifactType.JAR)
+                /** Published to both api and runtime as consumption behavior depends on
+                 * [com.android.build.gradle.options.BooleanOption.COMPILE_CLASSPATH_LIBRARY_R_CLASSES] */
+                output(SYMBOL_LIST_WITH_PACKAGE_NAME, ArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME)
+
+                runtime(RUNTIME_LIBRARY_CLASSES_JAR, ArtifactType.CLASSES_JAR)
+
+                // Publish the CLASSES_DIR artifact type with a LibraryElements.CLASSES attribute to
+                // match the behavior of the Java library plugin. The LibraryElements attribute will
+                // be used for incremental dexing of test fixtures.
+                runtime(RUNTIME_LIBRARY_CLASSES_DIR, ArtifactType.CLASSES_DIR, LibraryElements.CLASSES)
+
+                runtime(LIBRARY_ASSETS, ArtifactType.ASSETS)
+                runtime(PACKAGED_RES, ArtifactType.ANDROID_RES)
+                runtime(PUBLIC_RES, ArtifactType.PUBLIC_RES)
+                runtime(COMPILE_SYMBOL_LIST, ArtifactType.COMPILE_SYMBOL_LIST)
+                runtime(LIBRARY_JAVA_RES, ArtifactType.JAVA_RES)
+                runtime(NAVIGATION_JSON, ArtifactType.NAVIGATION_JSON)
+                runtime(COMPILED_LOCAL_RESOURCES, ArtifactType.COMPILED_DEPENDENCIES_RESOURCES)
+            }
 
             // Publishing will be done manually from the lint standalone plugin for now.
             // Eventually we should just unify the infrastructure to declare the publications here.
@@ -294,6 +325,7 @@ class PublishingSpecs {
             when (variantType) {
                 VariantTypeImpl.BASE_APK -> AppVariantSpecBuilder(variantType)
                 VariantTypeImpl.LIBRARY -> LibraryVariantSpecBuilder(variantType)
+                VariantTypeImpl.TEST_FIXTURES -> TestFixturesVariantSpecBuilder(variantType)
                 else -> VariantSpecBuilderImpl(variantType)
             }
     }
@@ -408,6 +440,14 @@ private open class VariantSpecBuilderImpl (
                 variantType,
                 parentSpec,
                 outputs.toImmutableSet())
+    }
+}
+
+private class TestFixturesVariantSpecBuilder(variantType: VariantType):
+    VariantSpecBuilderImpl(variantType) {
+
+    override fun publish(taskOutputType: Artifact.Single<*>, artifactType: ArtifactType) {
+        outputs.add(OutputSpecImpl(taskOutputType, artifactType, API_AND_RUNTIME_PUBLICATION))
     }
 }
 
