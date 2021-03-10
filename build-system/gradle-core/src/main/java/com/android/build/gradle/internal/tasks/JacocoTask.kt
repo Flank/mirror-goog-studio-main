@@ -18,12 +18,8 @@ package com.android.build.gradle.internal.tasks
 import com.android.SdkConstants
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.component.ComponentCreationConfig
-import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.coverage.JacocoConfigurations
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.tasks.JacocoTask
-import com.android.build.gradle.internal.tasks.JacocoTask.InstrumentDirAction
-import com.android.build.gradle.internal.tasks.JacocoTask.InstrumentJarAction
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.tasks.toSerializable
@@ -325,8 +321,8 @@ abstract class JacocoTask : NewIncrementalTask() {
         }
     }
 
-    class CreationAction(creationConfig: VariantCreationConfig) :
-        VariantTaskCreationAction<JacocoTask, VariantCreationConfig>(creationConfig) {
+    class CreationAction(creationConfig: ComponentCreationConfig) :
+        VariantTaskCreationAction<JacocoTask, ComponentCreationConfig>(creationConfig) {
         override val name: String
             get() = computeTaskName("jacoco")
         override val type: Class<JacocoTask>

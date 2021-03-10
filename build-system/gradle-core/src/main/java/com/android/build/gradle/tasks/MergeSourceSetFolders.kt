@@ -406,7 +406,7 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
             get() = computeTaskName("merge", "Assets")
     }
 
-    class LibraryAssetCreationAction(creationConfig: VariantCreationConfig) :
+    class LibraryAssetCreationAction(creationConfig: ComponentCreationConfig) :
         MergeAssetBaseCreationAction(
             creationConfig,
             InternalArtifactType.LIBRARY_ASSETS,
@@ -486,7 +486,7 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
         }
     }
 
-    class MergeMlModelsSourceFoldersCreationAction(creationConfig: VariantCreationConfig) :
+    class MergeMlModelsSourceFoldersCreationAction(creationConfig: ComponentCreationConfig) :
         CreationAction(creationConfig) {
 
         override val name: String

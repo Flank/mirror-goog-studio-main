@@ -54,7 +54,7 @@ open class TestFixturesComponentImpl @Inject constructor(
     artifacts: ArtifactsImpl,
     variantScope: VariantScope,
     variantData: TestFixturesVariantData,
-    private val mainVariant: VariantImpl,
+    val mainVariant: VariantImpl,
     transformManager: TransformManager,
     variantPropertiesApiServices: VariantPropertiesApiServices,
     taskCreationServices: TaskCreationServices,

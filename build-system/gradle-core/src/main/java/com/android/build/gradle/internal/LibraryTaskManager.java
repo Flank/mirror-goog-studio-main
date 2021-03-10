@@ -72,7 +72,6 @@ import com.android.build.gradle.tasks.ExtractDeepLinksTask;
 import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.MergeSourceSetFolders;
 import com.android.build.gradle.tasks.ProcessLibraryManifest;
-import com.android.build.gradle.tasks.VerifyLibraryResourcesTask;
 import com.android.build.gradle.tasks.ZipMergingTask;
 import com.android.builder.errors.IssueReporter;
 import com.android.builder.errors.IssueReporter.Type;
@@ -84,7 +83,6 @@ import java.util.Set;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.component.AdhocComponentWithVariants;
 import org.gradle.api.file.ConfigurableFileCollection;
-import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.jetbrains.annotations.NotNull;
@@ -147,7 +145,12 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
         // Add a task to check the manifest
         taskFactory.register(new CheckManifest.CreationAction(libraryVariant));
 
-        taskFactory.register(new ProcessLibraryManifest.CreationAction(libraryVariant));
+        taskFactory.register(
+                new ProcessLibraryManifest.CreationAction(
+                        libraryVariant,
+                        libraryVariant.getTargetSdkVersion(),
+                        libraryVariant.getMaxSdkVersion(),
+                        libraryVariant.getManifestPlaceholders()));
 
         createRenderscriptTask(libraryVariant);
 
@@ -319,7 +322,9 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
         // into the main and secondary jar files that goes in the AAR.
         // This is used for building the AAR.
 
-        taskFactory.register(new LibraryAarJarsTask.CreationAction(libraryVariant));
+        taskFactory.register(
+                new LibraryAarJarsTask.CreationAction(
+                        libraryVariant, libraryVariant.getCodeShrinker()));
 
         // now add a task that will take all the native libs and package
         // them into the libs folder of the bundle. This processes both the PROJECT
@@ -334,25 +339,8 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
         createBundleTask(libraryVariant);
     }
 
-    private void registerLibraryRClassTransformStream(@NonNull VariantImpl variant) {
-        if (!variant.getBuildFeatures().getAndroidResources()) {
-            return;
-        }
-        FileCollection compileRClass =
-                project.files(
-                        variant.getArtifacts()
-                                .get(InternalArtifactType.COMPILE_R_CLASS_JAR.INSTANCE));
-        variant.getTransformManager()
-                .addStream(
-                        OriginalStream.builder("compile-only-r-class")
-                                .addContentTypes(TransformManager.CONTENT_CLASS)
-                                .addScope(Scope.PROVIDED_ONLY)
-                                .setFileCollection(compileRClass)
-                                .build());
-    }
-
     private void createBundleTask(@NonNull VariantImpl variant) {
-        taskFactory.register(new BundleAar.CreationAction(variant));
+        taskFactory.register(new BundleAar.LibraryCreationAction(variant));
 
         variant.getTaskContainer()
                 .getAssembleTask()
@@ -502,22 +490,6 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
     @Override
     protected boolean isLibrary() {
         return true;
-    }
-
-    public void createVerifyLibraryResTask(@NonNull VariantImpl variant) {
-        TaskProvider<VerifyLibraryResourcesTask> verifyLibraryResources =
-                taskFactory.register(new VerifyLibraryResourcesTask.CreationAction(variant));
-
-        variant.getTaskContainer()
-                .getAssembleTask()
-                .configure(
-                        task -> {
-                            task.dependsOn(
-                                    variant.getArtifacts()
-                                            .get(
-                                                    InternalArtifactType.VERIFIED_LIBRARY_RESOURCES
-                                                            .INSTANCE));
-                        });
     }
 
     @Override

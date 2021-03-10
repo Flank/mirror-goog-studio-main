@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.res
 
 import com.android.SdkConstants
-import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -59,8 +59,8 @@ abstract class GenerateEmptyResourceFilesTask : NonIncrementalTask() {
         FileUtils.mkdirs(emptyMergedResources.asFile.get())
     }
 
-    class CreateAction(creationConfig: VariantCreationConfig) :
-        VariantTaskCreationAction<GenerateEmptyResourceFilesTask, VariantCreationConfig>(
+    class CreateAction(creationConfig: ComponentCreationConfig) :
+        VariantTaskCreationAction<GenerateEmptyResourceFilesTask, ComponentCreationConfig>(
             creationConfig
         ) {
 

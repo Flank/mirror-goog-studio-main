@@ -47,6 +47,7 @@ import com.android.build.gradle.internal.coverage.JacocoReportTask
 import com.android.build.gradle.internal.cxx.configure.createCxxTasks
 import com.android.build.gradle.internal.dependency.AndroidAttributes
 import com.android.build.gradle.internal.dependency.AndroidXDependencySubstitution.androidXMappings
+import com.android.build.gradle.internal.dependency.ConfigurationVariantMapping
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.dsl.AnnotationProcessorOptions
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
@@ -62,6 +63,8 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType
+import com.android.build.gradle.internal.res.GenerateApiPublicTxtTask
+import com.android.build.gradle.internal.res.GenerateEmptyResourceFilesTask
 import com.android.build.gradle.internal.res.GenerateLibraryRFileTask
 import com.android.build.gradle.internal.res.GenerateLibraryRFileTask.TestRuntimeStubRClassCreationAction
 import com.android.build.gradle.internal.res.LinkAndroidResForBundleTask
@@ -92,6 +95,9 @@ import com.android.build.gradle.internal.services.AndroidLocationsBuildService
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.AndroidReportTask
 import com.android.build.gradle.internal.tasks.AndroidVariantTask
+import com.android.build.gradle.internal.tasks.BundleLibraryClassesDir
+import com.android.build.gradle.internal.tasks.BundleLibraryClassesJar
+import com.android.build.gradle.internal.tasks.BundleLibraryJavaRes
 import com.android.build.gradle.internal.tasks.CheckAarMetadataTask
 import com.android.build.gradle.internal.tasks.CheckDuplicateClassesTask
 import com.android.build.gradle.internal.tasks.CheckProguardFiles
@@ -111,6 +117,7 @@ import com.android.build.gradle.internal.tasks.GenerateLibraryProguardRulesTask
 import com.android.build.gradle.internal.tasks.InstallVariantTask
 import com.android.build.gradle.internal.tasks.JacocoTask
 import com.android.build.gradle.internal.tasks.L8DexDesugarLibTask
+import com.android.build.gradle.internal.tasks.LibraryAarJarsTask
 import com.android.build.gradle.internal.tasks.LintCompile
 import com.android.build.gradle.internal.tasks.ManagedDeviceCleanTask
 import com.android.build.gradle.internal.tasks.ManagedDeviceInstrumentationTestTask
@@ -168,7 +175,11 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.tasks.AidlCompile
 import com.android.build.gradle.tasks.AnalyzeDependenciesTask
+import com.android.build.gradle.tasks.BundleAar
 import com.android.build.gradle.tasks.CompatibleScreensManifest
+import com.android.build.gradle.tasks.CompileLibraryResourcesTask
+import com.android.build.gradle.tasks.ExtractAnnotations
+import com.android.build.gradle.tasks.ExtractDeepLinksTask
 import com.android.build.gradle.tasks.GenerateBuildConfig
 import com.android.build.gradle.tasks.GenerateManifestJarTask
 import com.android.build.gradle.tasks.GenerateResValues
@@ -180,10 +191,12 @@ import com.android.build.gradle.tasks.ManifestProcessorTask
 import com.android.build.gradle.tasks.MapSourceSetPathsTask
 import com.android.build.gradle.tasks.MergeResources
 import com.android.build.gradle.tasks.MergeSourceSetFolders
+import com.android.build.gradle.tasks.MergeSourceSetFolders.LibraryAssetCreationAction
 import com.android.build.gradle.tasks.MergeSourceSetFolders.MergeMlModelsSourceFoldersCreationAction
 import com.android.build.gradle.tasks.MergeSourceSetFolders.MergeShaderSourceFoldersCreationAction
 import com.android.build.gradle.tasks.PackageApplication
 import com.android.build.gradle.tasks.ProcessApplicationManifest
+import com.android.build.gradle.tasks.ProcessLibraryManifest
 import com.android.build.gradle.tasks.ProcessManifestForBundleTask
 import com.android.build.gradle.tasks.ProcessManifestForInstantAppTask
 import com.android.build.gradle.tasks.ProcessManifestForMetadataFeatureTask
@@ -193,6 +206,8 @@ import com.android.build.gradle.tasks.ProcessTestManifest
 import com.android.build.gradle.tasks.RenderscriptCompile
 import com.android.build.gradle.tasks.ShaderCompile
 import com.android.build.gradle.tasks.TransformClassesWithAsmTask
+import com.android.build.gradle.tasks.VerifyLibraryResourcesTask
+import com.android.build.gradle.tasks.ZipMergingTask
 import com.android.build.gradle.tasks.factory.AndroidUnitTest
 import com.android.build.gradle.tasks.registerDataBindingOutputs
 import com.android.builder.core.BuilderConstants
@@ -208,6 +223,7 @@ import com.google.common.base.Strings
 import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.ImmutableSet
 import com.google.common.collect.ListMultimap
+import com.google.common.collect.Sets
 import org.gradle.api.Action
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
@@ -216,9 +232,11 @@ import org.gradle.api.UnknownTaskException
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.Dependency
 import org.gradle.api.artifacts.ResolutionStrategy
+import org.gradle.api.component.AdhocComponentWithVariants
 import org.gradle.api.execution.TaskExecutionGraph
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.RegularFile
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import org.gradle.api.plugins.BasePlugin
@@ -267,7 +285,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
     protected val variantPropertiesList: List<VariantT> =
             variants.map(ComponentInfo<VariantBuilderT, VariantT>::variant)
     private val allPropertiesList: List<ComponentCreationConfig> =
-            variantPropertiesList + testComponents
+            variantPropertiesList + testComponents + testFixturesComponents
 
 
     /**
@@ -393,8 +411,244 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             allVariants: List<ComponentInfo<VariantBuilderT, VariantT>>)
 
     /** Create tasks for the specified test fixtures component.  */
-    private fun createTasksForTestFixtures(testFixturesComponentInfo: TestFixturesComponentImpl) {
+    private fun createTasksForTestFixtures(testFixturesComponent: TestFixturesComponentImpl) {
+        createAssembleTask(testFixturesComponent)
+        createAnchorTasks(testFixturesComponent)
 
+        // Create all current streams (dependencies mostly at this point)
+        createDependencyStreams(testFixturesComponent)
+
+        // java resources tasks
+        createProcessJavaResTask(testFixturesComponent)
+
+        // android resources tasks
+        if (testFixturesComponent.buildFeatures.androidResources) {
+            taskFactory.register(ExtractDeepLinksTask.CreationAction(testFixturesComponent))
+
+            createGenerateResValuesTask(testFixturesComponent)
+
+            val flags: ImmutableSet<MergeResources.Flag?> =
+                if (globalScope.extension.aaptOptions.namespaced) {
+                    Sets.immutableEnumSet(
+                        MergeResources.Flag.REMOVE_RESOURCE_NAMESPACES,
+                        MergeResources.Flag.PROCESS_VECTOR_DRAWABLES
+                    )
+                } else {
+                    Sets.immutableEnumSet(MergeResources.Flag.PROCESS_VECTOR_DRAWABLES)
+                }
+            // Create a merge task to only merge the resources from this library and not
+            // the dependencies. This is what gets packaged in the aar.
+            basicCreateMergeResourcesTask(
+                testFixturesComponent,
+                MergeType.PACKAGE,
+                testFixturesComponent.paths.getIntermediateDir(PACKAGED_RES),
+                includeDependencies = false,
+                processResources = false,
+                alsoOutputNotCompiledResources = false,
+                flags = flags,
+                taskProviderCallback = object: TaskProviderCallback<MergeResources> {
+                    override fun handleProvider(taskProvider: TaskProvider<MergeResources>) {
+                        testFixturesComponent.artifacts
+                            .setInitialProvider<RegularFile, MergeResources>(taskProvider)
+                            { obj: MergeResources -> obj.publicFile }
+                            .withName(SdkConstants.FN_PUBLIC_TXT)
+                            .on(InternalArtifactType.PUBLIC_RES)
+                    }
+                },
+                isLibrary = true
+            )
+
+            // This task merges all the resources, including the dependencies of this library.
+            // This should be unused, except that external libraries might consume it.
+            // Also used by the VerifyLibraryResourcesTask (only ran in release builds).
+            createMergeResourcesTask(
+                testFixturesComponent,
+                processResources = false,
+                flags = ImmutableSet.of()
+            )
+
+            // Task to generate the public.txt for the API that always exists
+            // Unlike the internal one which is packaged in the AAR which only exists if the
+            // developer has explicitly marked resources as public.
+            taskFactory.register(GenerateApiPublicTxtTask.CreationAction(testFixturesComponent))
+
+            taskFactory.register(CompileLibraryResourcesTask.CreationAction(testFixturesComponent))
+
+            // Add a task to generate resource source files, directing the location
+            // of the r.txt file to be directly in the bundle.
+            createProcessResTask(
+                testFixturesComponent,
+                null,
+                MergeType.PACKAGE,
+                testFixturesComponent.services.projectInfo.getProjectBaseName()
+            )
+
+            // Only verify resources if in Release and not namespaced.
+            if (!testFixturesComponent.debuggable &&
+                !globalScope.extension.aaptOptions.namespaced) {
+                createVerifyLibraryResTask(testFixturesComponent)
+            }
+
+            registerLibraryRClassTransformStream(testFixturesComponent)
+        } else {
+            // Create a task to generate empty/mock required resource artifacts.
+            taskFactory.register(GenerateEmptyResourceFilesTask.CreateAction(testFixturesComponent))
+        }
+
+        // Add a task to merge or generate the manifest
+        taskFactory.register(
+            ProcessLibraryManifest.CreationAction(
+                testFixturesComponent,
+                targetSdkVersion = null,
+                maxSdkVersion = null,
+                manifestPlaceholders = null
+            )
+        )
+
+        // Add tasks to merge the assets folders
+        createMergeAssetsTask(testFixturesComponent)
+        taskFactory.register(LibraryAssetCreationAction(testFixturesComponent))
+
+        // compilation tasks
+
+        // Add data binding tasks if enabled
+        createDataBindingTasksIfNecessary(testFixturesComponent)
+
+        // Add a task to auto-generate classes for ML model files.
+        createMlkitTask(testFixturesComponent)
+
+        val javacTask = createJavacTask(testFixturesComponent)
+        addJavacClassesStream(testFixturesComponent)
+        setJavaCompilerTask(javacTask, testFixturesComponent)
+
+        // Some versions of retrolambda remove the actions from the extract annotations task.
+        // TODO: remove this hack once tests are moved to a version that doesn't do this
+        // b/37564303
+        if (testFixturesComponent
+                .services
+                .projectOptions
+                .get(BooleanOption.ENABLE_EXTRACT_ANNOTATIONS)) {
+            taskFactory.register(ExtractAnnotations.CreationAction(testFixturesComponent))
+        }
+
+        val instrumented: Boolean = testFixturesComponent.variantDslInfo.isTestCoverageEnabled
+
+        if (instrumented) {
+            createJacocoTask(testFixturesComponent)
+        }
+
+        maybeCreateTransformClassesWithAsmTask(testFixturesComponent, instrumented)
+
+        // packaging tasks
+
+        // Create jar with library classes used for publishing to runtime elements.
+        taskFactory.register(
+            BundleLibraryClassesJar.CreationAction(
+                testFixturesComponent, PublishedConfigType.RUNTIME_ELEMENTS
+            )
+        )
+
+        // Also create a directory containing the same classes for incremental dexing
+        taskFactory.register(BundleLibraryClassesDir.CreationAction(testFixturesComponent))
+
+        taskFactory.register(BundleLibraryJavaRes.CreationAction(testFixturesComponent))
+
+        // Create a jar with both classes and java resources.  This artifact is not
+        // used by the Android application plugin and the task usually don't need to
+        // be executed.  The artifact is useful for other Gradle users who needs the
+        // 'jar' artifact as API dependency.
+        taskFactory.register(ZipMergingTask.CreationAction(testFixturesComponent))
+
+        // now add a task that will take all the classes and java resources and package them
+        // into the main and secondary jar files that goes in the AAR.
+        // This is used for building the AAR.
+        taskFactory.register(
+            LibraryAarJarsTask.CreationAction(
+                testFixturesComponent,
+                codeShrinker = null
+            )
+        )
+
+        createBundleTaskForTestFixtures(testFixturesComponent)
+
+        // This hides the assemble test fixtures task from the task list.
+        testFixturesComponent.taskContainer.assembleTask.configure { task: Task ->
+            task.group = null
+        }
+    }
+
+    private fun createBundleTaskForTestFixtures(testFixturesComponent: TestFixturesComponentImpl) {
+        // publish testFixtures for libraries only for now
+        if (this !is LibraryTaskManager) {
+            return
+        }
+        taskFactory.register(BundleAar.TestFixturesCreationAction(testFixturesComponent))
+        testFixturesComponent.taskContainer
+            .assembleTask
+            .configure { task: Task ->
+                task.dependsOn(
+                    testFixturesComponent.artifacts.get(
+                        SingleArtifact.AAR
+                    )
+                )
+            }
+        val variantDependencies = testFixturesComponent.variantDependencies
+        // attach the testFixtures variants to the main variant component
+        val component = project.components.getByName(testFixturesComponent.mainVariant.name)
+                as AdhocComponentWithVariants
+        val apiPub = variantDependencies.getElements(PublishedConfigType.API_PUBLICATION)
+        val runtimePub = variantDependencies.getElements(PublishedConfigType.RUNTIME_PUBLICATION)
+        component.addVariantsFromConfiguration(
+            apiPub, ConfigurationVariantMapping("compile", false)
+        )
+        component.addVariantsFromConfiguration(
+            runtimePub, ConfigurationVariantMapping("runtime", false)
+        )
+        var allVariants = project.components.findByName("all") as AdhocComponentWithVariants?
+        if (allVariants == null) {
+            allVariants = globalScope.componentFactory.adhoc("all")
+            project.components.add(allVariants)
+        }
+        val allApiPub = variantDependencies.getElements(PublishedConfigType.ALL_API_PUBLICATION)
+        allVariants!!.addVariantsFromConfiguration(
+            allApiPub, ConfigurationVariantMapping("compile", true)
+        )
+        val allRuntimePub =
+            variantDependencies.getElements(PublishedConfigType.ALL_RUNTIME_PUBLICATION)
+        allVariants.addVariantsFromConfiguration(
+            allRuntimePub, ConfigurationVariantMapping("runtime", true)
+        )
+    }
+
+    protected fun createVerifyLibraryResTask(component: ComponentCreationConfig) {
+        taskFactory.register(VerifyLibraryResourcesTask.CreationAction(component))
+        component.taskContainer
+            .assembleTask
+            .configure { task: Task ->
+                task.dependsOn(
+                    component.artifacts.get(
+                        InternalArtifactType.VERIFIED_LIBRARY_RESOURCES
+                    )
+                )
+            }
+    }
+
+    protected fun registerLibraryRClassTransformStream(component: ComponentCreationConfig) {
+        if (!component.buildFeatures.androidResources) {
+            return
+        }
+        val compileRClass: FileCollection = project.files(
+            component.artifacts
+                .get(InternalArtifactType.COMPILE_R_CLASS_JAR)
+        )
+        component.transformManager
+            .addStream(
+                OriginalStream.builder("compile-only-r-class")
+                    .addContentTypes(TransformManager.CONTENT_CLASS)
+                    .addScope(QualifiedContent.Scope.PROVIDED_ONLY)
+                    .setFileCollection(compileRClass)
+                    .build()
+            )
     }
 
     /** Create tasks for the specified variant.  */
@@ -751,6 +1005,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         abstract val outputType: Single<Directory>
     }
 
+    @JvmOverloads
     fun basicCreateMergeResourcesTask(
             creationConfig: ComponentCreationConfig,
             mergeType: MergeType,
@@ -759,7 +1014,9 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             processResources: Boolean,
             alsoOutputNotCompiledResources: Boolean,
             flags: ImmutableSet<MergeResources.Flag?>,
-            taskProviderCallback: TaskProviderCallback<MergeResources>?): TaskProvider<MergeResources> {
+            taskProviderCallback: TaskProviderCallback<MergeResources>?,
+            isLibrary: Boolean = this.isLibrary
+    ): TaskProvider<MergeResources> {
         val taskNamePrefix = mergeType.name.toLowerCase(Locale.ENGLISH)
         val mergedNotCompiledDir = if (alsoOutputNotCompiledResources) File(
                 globalScope.intermediatesDir
@@ -836,7 +1093,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         }
     }
 
-    fun createMlkitTask(creationConfig: VariantCreationConfig) {
+    fun createMlkitTask(creationConfig: ComponentCreationConfig) {
         if (creationConfig.buildFeatures.mlModelBinding) {
             taskFactory.register(
                     MergeMlModelsSourceFoldersCreationAction(
@@ -1914,7 +2171,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         }
     }
 
-    fun createJacocoTask(creationConfig: VariantCreationConfig) {
+    fun createJacocoTask(creationConfig: ComponentCreationConfig) {
         creationConfig
                 .transformManager
                 .consumeStreams(

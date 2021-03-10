@@ -194,7 +194,7 @@ open class VariantDslInfoImpl internal constructor(
     override val directorySegments: Collection<String?> by lazy {
         val builder =
             ImmutableList.builder<String>()
-        if (variantType.isTestComponent) {
+        if (variantType.isTestComponent || variantType.isTestFixturesComponent) {
             builder.add(variantType.prefix)
         }
         if (productFlavorList.isNotEmpty()) {
