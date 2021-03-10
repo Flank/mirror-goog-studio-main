@@ -23,7 +23,6 @@ import com.android.build.api.artifact.impl.ArtifactsImpl;
 import com.android.build.api.component.ComponentIdentity;
 import com.android.build.api.component.impl.AndroidTestImpl;
 import com.android.build.api.component.impl.ComponentImpl;
-import com.android.build.api.component.impl.TestFixturesComponentBuilderImpl;
 import com.android.build.api.component.impl.TestFixturesComponentImpl;
 import com.android.build.api.component.impl.UnitTestImpl;
 import com.android.build.api.variant.impl.VariantBuilderImpl;
@@ -48,7 +47,6 @@ import com.android.build.gradle.internal.services.BaseServices;
 import com.android.build.gradle.internal.services.BaseServicesImpl;
 import com.android.build.gradle.internal.services.ProjectServices;
 import com.android.build.gradle.internal.services.TaskCreationServices;
-import com.android.build.gradle.internal.services.VariantApiServices;
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.core.BuilderConstants;
@@ -77,23 +75,8 @@ public abstract class BaseVariantFactory<
 
     @NonNull
     @Override
-    public TestFixturesComponentBuilderImpl createTestFixturesBuilder(
-            @NonNull ComponentIdentity componentIdentity,
-            @NonNull VariantDslInfo variantDslInfo,
-            @NonNull VariantApiServices variantApiServices) {
-        return projectServices
-                .getObjectFactory()
-                .newInstance(
-                        TestFixturesComponentBuilderImpl.class,
-                        variantDslInfo,
-                        componentIdentity,
-                        variantApiServices);
-    }
-
-    @NonNull
-    @Override
     public TestFixturesComponentImpl createTestFixtures(
-            @NonNull TestFixturesComponentBuilderImpl testFixturesComponentBuilderImpl,
+            @NonNull ComponentIdentity componentIdentity,
             @NonNull BuildFeatureValues buildFeatures,
             @NonNull VariantDslInfo variantDslInfo,
             @NonNull VariantDependencies variantDependencies,
@@ -111,7 +94,7 @@ public abstract class BaseVariantFactory<
                         .getObjectFactory()
                         .newInstance(
                                 TestFixturesComponentImpl.class,
-                                testFixturesComponentBuilderImpl,
+                                componentIdentity,
                                 buildFeatures,
                                 variantDslInfo,
                                 variantDependencies,

@@ -19,7 +19,6 @@ import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.impl.AndroidTestImpl
 import com.android.build.api.component.impl.ComponentImpl
-import com.android.build.api.component.impl.TestFixturesComponentBuilderImpl
 import com.android.build.api.component.impl.TestFixturesComponentImpl
 import com.android.build.api.component.impl.UnitTestImpl
 import com.android.build.api.dsl.BuildFeatures
@@ -62,11 +61,6 @@ interface VariantFactory<VariantBuilderT : VariantBuilderImpl, VariantT : Varian
             componentIdentity: ComponentIdentity,
             variantDslInfo: VariantDslInfo,
             variantApiServices: VariantApiServices): VariantBuilderT
-    fun createTestFixturesBuilder(
-        componentIdentity: ComponentIdentity,
-        variantDslInfo: VariantDslInfo,
-        variantApiServices: VariantApiServices
-    ): TestFixturesComponentBuilderImpl
 
     fun createVariant(
             variantBuilder: VariantBuilderT,
@@ -84,7 +78,7 @@ interface VariantFactory<VariantBuilderT : VariantBuilderImpl, VariantT : Varian
             taskCreationServices: TaskCreationServices): VariantT
 
     fun createTestFixtures(
-        testFixturesComponentBuilderImpl: TestFixturesComponentBuilderImpl,
+        componentIdentity: ComponentIdentity,
         buildFeatures: BuildFeatureValues,
         variantDslInfo: VariantDslInfo,
         variantDependencies: VariantDependencies,

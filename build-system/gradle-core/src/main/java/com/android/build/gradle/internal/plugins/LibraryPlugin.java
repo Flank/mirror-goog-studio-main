@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.plugins;
 import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
 import com.android.build.api.component.impl.TestComponentImpl;
+import com.android.build.api.component.impl.TestFixturesComponentImpl;
 import com.android.build.api.dsl.SdkComponents;
 import com.android.build.api.extension.LibraryAndroidComponentsExtension;
 import com.android.build.api.extension.impl.LibraryAndroidComponentsExtensionImpl;
@@ -165,6 +166,7 @@ public class LibraryPlugin
     protected LibraryTaskManager createTaskManager(
             @NonNull List<ComponentInfo<LibraryVariantBuilderImpl, LibraryVariantImpl>> variants,
             @NonNull List<TestComponentImpl> testComponents,
+            @NonNull List<TestFixturesComponentImpl> testFixturesComponents,
             boolean hasFlavors,
             @NonNull ProjectOptions projectOptions,
             @NonNull GlobalScope globalScope,
@@ -173,6 +175,7 @@ public class LibraryPlugin
         return new LibraryTaskManager(
                 variants,
                 testComponents,
+                testFixturesComponents,
                 hasFlavors,
                 projectOptions,
                 globalScope,

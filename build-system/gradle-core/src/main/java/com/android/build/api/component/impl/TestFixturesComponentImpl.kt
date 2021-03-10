@@ -18,6 +18,7 @@ package com.android.build.api.component.impl
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.Component
+import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.TestFixturesComponent
 import com.android.build.api.component.analytics.AnalyticsEnabledTestFixturesComponent
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
@@ -44,7 +45,7 @@ import org.gradle.api.provider.Provider
 import javax.inject.Inject
 
 open class TestFixturesComponentImpl @Inject constructor(
-    componentIdentity: TestFixturesComponentBuilderImpl,
+    componentIdentity: ComponentIdentity,
     buildFeatureValues: BuildFeatureValues,
     variantDslInfo: VariantDslInfo,
     variantDependencies: VariantDependencies,

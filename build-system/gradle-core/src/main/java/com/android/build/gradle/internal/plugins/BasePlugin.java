@@ -26,6 +26,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.component.ComponentBuilder;
 import com.android.build.api.component.impl.TestComponentImpl;
+import com.android.build.api.component.impl.TestFixturesComponentImpl;
 import com.android.build.api.dsl.CommonExtension;
 import com.android.build.api.dsl.TestedExtension;
 import com.android.build.api.extension.AndroidComponentsExtension;
@@ -225,6 +226,7 @@ public abstract class BasePlugin<
     protected abstract TaskManager<VariantBuilderT, VariantT> createTaskManager(
             @NonNull List<ComponentInfo<VariantBuilderT, VariantT>> variants,
             @NonNull List<TestComponentImpl> testComponents,
+            @NonNull List<TestFixturesComponentImpl> testFixturesComponents,
             boolean hasFlavors,
             @NonNull ProjectOptions projectOptions,
             @NonNull GlobalScope globalScope,
@@ -724,6 +726,7 @@ public abstract class BasePlugin<
                 createTaskManager(
                         variants,
                         variantManager.getTestComponents(),
+                        variantManager.getTestFixturesComponents(),
                         !variantInputModel.getProductFlavors().isEmpty(),
                         projectServices.getProjectOptions(),
                         globalScope,

@@ -24,6 +24,7 @@ import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.component.impl.AndroidTestImpl
 import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.api.component.impl.TestComponentImpl
+import com.android.build.api.component.impl.TestFixturesComponentImpl
 import com.android.build.api.component.impl.UnitTestImpl
 import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.api.transform.QualifiedContent
@@ -248,6 +249,7 @@ import java.util.stream.Collectors
 abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImpl>(
         private val variants: List<ComponentInfo<VariantBuilderT, VariantT>>,
         private val testComponents: List<TestComponentImpl>,
+        private val testFixturesComponents: List<TestFixturesComponentImpl>,
         private val hasFlavors: Boolean,
         private val projectOptions: ProjectOptions,
         @JvmField protected val globalScope: GlobalScope,
@@ -293,9 +295,12 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         // Create tasks to manage test devices.
         createTestDevicesTasks()
 
-        // Create tasks for all variants (main and tests)
+        // Create tasks for all variants (main, testFixtures and tests)
         for (variant in variants) {
             createTasksForVariant(variant, variants)
+        }
+        for (testFixturesComponent in testFixturesComponents) {
+            createTasksForTestFixtures(testFixturesComponent)
         }
         for (testComponent in testComponents) {
             createTasksForTest(testComponent)
@@ -386,6 +391,11 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
     protected abstract fun doCreateTasksForVariant(
             variantInfo: ComponentInfo<VariantBuilderT, VariantT>,
             allVariants: List<ComponentInfo<VariantBuilderT, VariantT>>)
+
+    /** Create tasks for the specified test fixtures component.  */
+    private fun createTasksForTestFixtures(testFixturesComponentInfo: TestFixturesComponentImpl) {
+
+    }
 
     /** Create tasks for the specified variant.  */
     private fun createTasksForTest(testVariant: TestComponentImpl) {
