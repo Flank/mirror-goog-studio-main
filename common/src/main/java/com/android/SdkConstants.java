@@ -1492,6 +1492,7 @@ public final class SdkConstants {
     public static final String ATTR_HEIGHT = "height"; //$NON-NLS-1$
     public static final String ATTR_NAV_GRAPH = "navGraph";
     public static final String ATTR_USE_TAG = "useTag";
+    public static final String ATTR_IGNORE_A11Y_LINTS = "ignoreA11yLints";
 
     // ConstraintLayout Flow
     public static final String ATTR_FLOW_WRAP_MODE = "flow_wrapMode";  //$NON-NLS-1$
