@@ -27,6 +27,7 @@ import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.google.common.cache.LoadingCache
 import org.gradle.api.Action
+import org.gradle.api.JavaVersion
 import org.gradle.api.logging.Logging
 import org.objectweb.asm.ClassWriter
 import org.objectweb.asm.Opcodes
@@ -193,7 +194,7 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType>) {
 
         classWriter.visitEnd()
 
-        return lookupDefineClass(dslClass, classWriter.toByteArray())
+        return defineClass(dslClass, classWriter.toByteArray())
     }
 
     private inline fun GeneratorAdapter.visitArrayOf(item: GeneratorAdapter.() -> Unit) {
@@ -332,10 +333,40 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType>) {
         }
     }
 
+    private fun <T> defineClass(
+        originalClass: Class<T>,
+        bytes: ByteArray
+    ): Class<out T> {
+        return if (JavaVersion.current().isJava9Compatible) {
+            lookupDefineClass(originalClass, bytes)
+        } else {
+            legacyDefineClass(originalClass, bytes)
+        }
+    }
 
     private fun <T> lookupDefineClass(originalClass: Class<T>, bytes: ByteArray): Class<out T> {
-        val lookup = privateLookupInMethod.invoke(null, originalClass, MethodHandles.lookup()) as MethodHandles.Lookup
-        @Suppress("UNCHECKED_CAST") return lookupDefineClassMethod.invoke(lookup, bytes) as Class<out T>
+        val lookup =
+            privateLookupInMethod.invoke(
+                null,
+                originalClass,
+                MethodHandles.lookup()
+            ) as MethodHandles.Lookup
+        @Suppress("UNCHECKED_CAST") return lookupDefineClassMethod.invoke(
+            lookup,
+            bytes
+        ) as Class<out T>
+    }
+
+    // Define the class on JDKs before 9. AGP 7.0 Doesn't support running on JDKs before 11, but
+    // we want configuration to work with JDK 8 so we can provide a helpful error message.
+    private fun <T> legacyDefineClass(
+        originalClass: Class<T>,
+        bytes: ByteArray
+    ): Class<out T> {
+        @Suppress("UNCHECKED_CAST")
+        return classLoaderDefineClass.invoke(
+            originalClass.classLoader, null, bytes, 0, bytes.size
+        ) as Class<T>
     }
 
     private fun createLockField(classWriter: ClassWriter) {
@@ -604,6 +635,16 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType>) {
         }
         private val lookupDefineClassMethod by lazy(LazyThreadSafetyMode.PUBLICATION) {
             MethodHandles.Lookup::class.java.getDeclaredMethod("defineClass", ByteArray::class.java)
+        }
+        // And for Java 8 support, so AGP can give a sync error rather than throwing.
+        private val classLoaderDefineClass by lazy(LazyThreadSafetyMode.PUBLICATION) {
+           ClassLoader::class.java.getDeclaredMethod(
+                "defineClass",
+                String::class.java,
+                ByteArray::class.java,
+                Int::class.javaPrimitiveType,
+                Int::class.javaPrimitiveType
+            ).also { it.isAccessible = true }
         }
     }
 
