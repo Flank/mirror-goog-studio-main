@@ -103,18 +103,25 @@ public class DynamicFeaturePlugin
                 dslServices.newDecoratedInstance(
                         DynamicFeatureExtensionImpl.class, dslServices, dslContainers);
         if (projectServices.getProjectOptions().get(BooleanOption.USE_NEW_DSL_INTERFACES)) {
-            return (BaseExtension)
-                    project.getExtensions()
-                            .create(
-                                    com.android.build.api.dsl.DynamicFeatureExtension.class,
-                                    "android",
-                                    DynamicFeatureExtension.class,
-                                    dslServices,
-                                    globalScope,
-                                    buildOutputs,
-                                    dslContainers.getSourceSetManager(),
-                                    extraModelInfo,
-                                    dynamicFeatureExtension);
+            DynamicFeatureExtension android =
+                    (DynamicFeatureExtension)
+                            project.getExtensions()
+                                    .create(
+                                            com.android.build.api.dsl.DynamicFeatureExtension.class,
+                                            "android",
+                                            DynamicFeatureExtension.class,
+                                            dslServices,
+                                            globalScope,
+                                            buildOutputs,
+                                            dslContainers.getSourceSetManager(),
+                                            extraModelInfo,
+                                            dynamicFeatureExtension);
+            project.getExtensions()
+                    .add(
+                            DynamicFeatureExtension.class,
+                            "_internal_legacy_android_extension",
+                            android);
+            return android;
         }
 
         return project.getExtensions()

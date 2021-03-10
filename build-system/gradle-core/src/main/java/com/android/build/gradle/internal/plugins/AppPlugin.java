@@ -105,18 +105,25 @@ public class AppPlugin
         ApplicationExtensionImpl applicationExtension =
                 dslServices.newDecoratedInstance(ApplicationExtensionImpl.class, dslServices, dslContainers);
         if (projectServices.getProjectOptions().get(BooleanOption.USE_NEW_DSL_INTERFACES)) {
-            return (BaseExtension)
-                    project.getExtensions()
-                            .create(
-                                    ApplicationExtension.class,
-                                    "android",
-                                    BaseAppModuleExtension.class,
-                                    dslServices,
-                                    globalScope,
-                                    buildOutputs,
-                                    dslContainers.getSourceSetManager(),
-                                    extraModelInfo,
-                                    applicationExtension);
+            BaseAppModuleExtension android =
+                    (BaseAppModuleExtension)
+                            project.getExtensions()
+                                    .create(
+                                            ApplicationExtension.class,
+                                            "android",
+                                            BaseAppModuleExtension.class,
+                                            dslServices,
+                                            globalScope,
+                                            buildOutputs,
+                                            dslContainers.getSourceSetManager(),
+                                            extraModelInfo,
+                                            applicationExtension);
+            project.getExtensions()
+                    .add(
+                            BaseAppModuleExtension.class,
+                            "_internal_legacy_android_extension",
+                            android);
+            return android;
         }
 
         return project.getExtensions()

@@ -90,18 +90,22 @@ public class TestPlugin
                 dslServices.newDecoratedInstance(
                         TestExtensionImpl.class, dslServices, dslContainers);
         if (projectServices.getProjectOptions().get(BooleanOption.USE_NEW_DSL_INTERFACES)) {
-            return (BaseExtension)
-                    project.getExtensions()
-                            .create(
-                                    com.android.build.api.dsl.TestExtension.class,
-                                    "android",
-                                    TestExtension.class,
-                                    dslServices,
-                                    globalScope,
-                                    buildOutputs,
-                                    dslContainers.getSourceSetManager(),
-                                    extraModelInfo,
-                                    testExtension);
+            TestExtension android =
+                    (TestExtension)
+                            project.getExtensions()
+                                    .create(
+                                            com.android.build.api.dsl.TestExtension.class,
+                                            "android",
+                                            TestExtension.class,
+                                            dslServices,
+                                            globalScope,
+                                            buildOutputs,
+                                            dslContainers.getSourceSetManager(),
+                                            extraModelInfo,
+                                            testExtension);
+            project.getExtensions()
+                    .add(TestExtension.class, "_internal_legacy_android_extension", android);
+            return android;
         }
 
         return project.getExtensions()

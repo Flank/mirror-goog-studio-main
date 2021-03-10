@@ -80,18 +80,22 @@ public class LibraryPlugin
                 dslServices.newDecoratedInstance(
                         LibraryExtensionImpl.class, dslServices, dslContainers);
         if (projectServices.getProjectOptions().get(BooleanOption.USE_NEW_DSL_INTERFACES)) {
-            return (BaseExtension)
-                    project.getExtensions()
-                            .create(
-                                    com.android.build.api.dsl.LibraryExtension.class,
-                                    "android",
-                                    LibraryExtension.class,
-                                    dslServices,
-                                    globalScope,
-                                    buildOutputs,
-                                    dslContainers.getSourceSetManager(),
-                                    extraModelInfo,
-                                    libraryExtension);
+            LibraryExtension android =
+                    (LibraryExtension)
+                            project.getExtensions()
+                                    .create(
+                                            com.android.build.api.dsl.LibraryExtension.class,
+                                            "android",
+                                            LibraryExtension.class,
+                                            dslServices,
+                                            globalScope,
+                                            buildOutputs,
+                                            dslContainers.getSourceSetManager(),
+                                            extraModelInfo,
+                                            libraryExtension);
+            project.getExtensions()
+                    .add(LibraryExtension.class, "_internal_legacy_android_extension", android);
+            return android;
         }
 
         return project.getExtensions()
