@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
 class BuildTypeData<BuildTypeT : BuildType>(
     val buildType: BuildTypeT,
     sourceSet: DefaultAndroidSourceSet,
+    testFixturesSourceSet: DefaultAndroidSourceSet?,
     androidTestSourceSet: DefaultAndroidSourceSet?,
     unitTestSourceSet: DefaultAndroidSourceSet?
-) : VariantDimensionData(sourceSet, androidTestSourceSet, unitTestSourceSet)
+) : VariantDimensionData(sourceSet, testFixturesSourceSet, androidTestSourceSet, unitTestSourceSet)

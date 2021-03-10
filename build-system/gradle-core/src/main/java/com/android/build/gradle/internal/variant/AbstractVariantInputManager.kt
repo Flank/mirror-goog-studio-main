@@ -23,6 +23,8 @@ import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.plugins.DslContainerProvider
+import com.android.build.gradle.internal.services.DslServices
+import com.android.build.gradle.options.BooleanOption
 import com.android.builder.core.BuilderConstants
 import com.android.builder.core.VariantType
 import com.android.builder.core.VariantTypeImpl
@@ -49,6 +51,7 @@ abstract class AbstractVariantInputManager<
         BuildTypeT : com.android.build.api.dsl.BuildType,
         ProductFlavorT : com.android.build.api.dsl.ProductFlavor,
         SigningConfigT : com.android.build.api.dsl.ApkSigningConfig>(
+            private val dslServices: DslServices,
             private val variantType: VariantType,
             override val sourceSetManager: SourceSetManager
         ) : VariantInputModel<DefaultConfigT, BuildTypeT, ProductFlavorT, SigningConfigT>,
@@ -107,11 +110,21 @@ abstract class AbstractVariantInputManager<
             ) as DefaultAndroidSourceSet
         } else null
 
-        buildTypes[name] = BuildTypeData<BuildTypeT>(
-            buildType,
-            sourceSetManager.setUpSourceSet(buildType.name) as DefaultAndroidSourceSet,
-            androidTestSourceSet,
-            unitTestSourceSet
+        val testFixturesSourceSet =
+            if (dslServices.projectOptions[BooleanOption.ENABLE_TEST_FIXTURES]) {
+                sourceSetManager.setUpSourceSet(
+                    computeSourceSetName(
+                        buildType.name, VariantTypeImpl.TEST_FIXTURES
+                    )
+                ) as DefaultAndroidSourceSet
+            } else null
+
+        buildTypes[name] = BuildTypeData(
+            buildType = buildType,
+            sourceSet = sourceSetManager.setUpSourceSet(buildType.name) as DefaultAndroidSourceSet,
+            testFixturesSourceSet = testFixturesSourceSet,
+            androidTestSourceSet = androidTestSourceSet,
+            unitTestSourceSet = unitTestSourceSet
         )
     }
 
@@ -129,6 +142,7 @@ abstract class AbstractVariantInputManager<
         }
         val mainSourceSet =
             sourceSetManager.setUpSourceSet(productFlavor.name) as DefaultAndroidSourceSet
+        var testFixturesSourceSet: DefaultAndroidSourceSet? = null
         var androidTestSourceSet: DefaultAndroidSourceSet? = null
         var unitTestSourceSet: DefaultAndroidSourceSet? = null
         if (variantType.hasTestComponents) {
@@ -143,9 +157,20 @@ abstract class AbstractVariantInputManager<
                 )
             ) as DefaultAndroidSourceSet
         }
+        if (dslServices.projectOptions[BooleanOption.ENABLE_TEST_FIXTURES]) {
+            testFixturesSourceSet = sourceSetManager.setUpSourceSet(
+                computeSourceSetName(
+                    productFlavor.name, VariantTypeImpl.TEST_FIXTURES
+                )
+            ) as DefaultAndroidSourceSet
+        }
         val productFlavorData =
             ProductFlavorData(
-                productFlavor, mainSourceSet, androidTestSourceSet, unitTestSourceSet
+                productFlavor = productFlavor,
+                sourceSet = mainSourceSet,
+                testFixturesSourceSet = testFixturesSourceSet,
+                androidTestSourceSet = androidTestSourceSet,
+                unitTestSourceSet = unitTestSourceSet
             )
         productFlavors[productFlavor.name] = productFlavorData
     }
