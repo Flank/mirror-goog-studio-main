@@ -82,6 +82,8 @@ com.android.build.api.component.ComponentIdentity.getProductFlavors: java.util.L
 com.android.build.api.component.TestComponent implements com.android.build.api.component.Component
 com.android.build.api.component.TestComponent.getTestedVariant: com.android.build.api.variant.Variant ()
 com.android.build.api.component.TestComponentBuilder implements com.android.build.api.component.ComponentBuilder
+com.android.build.api.component.TestFixturesComponent implements com.android.build.api.component.Component
+com.android.build.api.component.TestFixturesComponentBuilder implements com.android.build.api.component.ComponentBuilder
 com.android.build.api.component.UnitTestBuilder implements com.android.build.api.component.TestComponentBuilder
 com.android.build.api.dsl.AaptOptions implements com.android.build.api.dsl.AndroidResources
 com.android.build.api.dsl.AarMetadata
