@@ -17,5 +17,6 @@
     <orderEntry type="library" name="network_inspector_java_proto" level="project" />
     <orderEntry type="library" name="kotlinx-coroutines" level="project" />
     <orderEntry type="library" name="okhttp" level="project" />
+    <orderEntry type="module" module-name="app-inspection.inspectors.common" />
   </component>
 </module>

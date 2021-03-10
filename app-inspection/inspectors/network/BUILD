@@ -37,6 +37,7 @@ app_inspection_jar(
         "//prebuilts/tools/common/m2/repository/com/squareup/okhttp/okhttp/2.5.0:jar",
         "//prebuilts/tools/common/m2/repository/com/squareup/okhttp3/okhttp/3.3.0:jar",
         "//prebuilts/tools/common/m2/repository/com/squareup/okio/okio/1.6.0:jar",
+        "//tools/base/app-inspection/inspectors/common:app-inspection.inspectors.common",
     ],
 )
 
