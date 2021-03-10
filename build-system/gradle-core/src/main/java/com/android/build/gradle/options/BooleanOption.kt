@@ -171,6 +171,8 @@ enum class BooleanOption(
 
     USE_NEW_DSL_INTERFACES("android.experimental.newDslInterfaces", false, FeatureStage.Experimental),
 
+    ENABLE_TEST_FIXTURES("android.experimental.enableTestFixtures", false, FeatureStage.Experimental),
+
     /* ------------------------
      * SOFTLY-ENFORCED FEATURES
      */
