@@ -48,6 +48,7 @@ import java.io.File;
 import java.util.List;
 import kotlin.Pair;
 import org.gradle.api.file.DirectoryProperty;
+import org.gradle.api.provider.Provider;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -61,7 +62,7 @@ public class VariantDslInfoTest {
     private BuildType buildType;
     private DslServices dslServices;
     private VariantPropertiesApiServices variantPropertiesApiServices;
-    private String namespace;
+    private Provider<String> namespace;
     private String testNamespace;
 
     @Before
@@ -288,7 +289,7 @@ public class VariantDslInfoTest {
     public void testNamespace() {
         initNoDeviceApiInjection();
 
-        namespace = "com.example.myNamespace";
+        namespace = FakeProviderFactory.getFactory().provider(() -> "com.example.myNamespace");
 
         VariantDslInfo variant = getVariant();
 
@@ -310,7 +311,7 @@ public class VariantDslInfoTest {
     public void testDefaultTestNamespace() {
         initNoDeviceApiInjection();
 
-        namespace = "com.example.myNamespace";
+        namespace = FakeProviderFactory.getFactory().provider(() -> "com.example.myNamespace");
 
         VariantDslInfo variant = getVariant();
 

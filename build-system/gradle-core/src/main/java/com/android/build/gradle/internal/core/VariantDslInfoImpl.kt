@@ -42,7 +42,6 @@ import com.android.builder.core.VariantType
 import com.android.builder.dexing.DexingType
 import com.android.builder.dexing.isLegacyMultiDexMode
 import com.android.builder.errors.IssueReporter
-import com.android.builder.internal.ClassFieldImpl
 import com.android.builder.model.ApiVersion
 import com.android.builder.model.BaseConfig
 import com.android.builder.model.ClassField
@@ -89,7 +88,7 @@ open class VariantDslInfoImpl internal constructor(
     private val dslServices: DslServices,
     private val services: VariantPropertiesApiServices,
     private val buildDirectory: DirectoryProperty,
-    private val dslNamespace: String?,
+    private val dslNamespaceProvider: Provider<String>?,
     private val dslTestNamespace: String?
 ): VariantDslInfo, DimensionCombination {
 
@@ -286,8 +285,8 @@ open class VariantDslInfoImpl internal constructor(
             // TODO(b/170945282, b/172361895) Remove this special case - users should use namespace
             //  DSL instead of testApplicationId DSL for this.
             variantType.isSeparateTestProject -> {
-                if (dslNamespace != null) {
-                    services.provider { dslNamespace }
+                if (dslNamespaceProvider != null) {
+                    dslNamespaceProvider
                 } else {
                     val testAppIdFromFlavors =
                             productFlavorList.asSequence().map { it.testApplicationId }
@@ -313,19 +312,16 @@ open class VariantDslInfoImpl internal constructor(
     // The namespace as specified by the user, either via the DSL or the `package` attribute of the
     // source AndroidManifest.xml
     private val dslOrManifestNamespace: Provider<String> by lazy {
-        if (dslNamespace != null) {
-            services.provider { dslNamespace }
-        } else {
-            dataProvider.manifestData.map {
+        dslNamespaceProvider
+            ?: dataProvider.manifestData.map {
                 it.packageName
-                        ?: throw RuntimeException(
-                                "Package Name not found in ${dataProvider.manifestLocation}"
-                        )
+                    ?: throw RuntimeException(
+                        "Package Name not found in ${dataProvider.manifestLocation}"
+                    )
             }
-        }
     }
 
-    override val testNamespace: String? = dslTestNamespace ?: dslNamespace?.let { "$it.test" }
+    override val testNamespace: String? = dslTestNamespace ?: dslNamespaceProvider?.let { "${it.get()}.test" }
 
     /**
      * Returns the application ID for this variant. This could be coming from the manifest or could

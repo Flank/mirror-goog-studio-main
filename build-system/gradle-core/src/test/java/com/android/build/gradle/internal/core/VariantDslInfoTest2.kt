@@ -20,6 +20,7 @@ import com.android.build.api.component.ComponentIdentity
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.ProductFlavor
+import com.android.build.gradle.internal.fixtures.FakeProviderFactory
 import com.android.build.gradle.internal.manifest.ManifestData
 import com.android.build.gradle.internal.manifest.ManifestDataProvider
 import com.android.build.gradle.internal.services.DslServices
@@ -603,7 +604,9 @@ class VariantDslInfoTest2 :
                 packageName = "com.example.fromManifest"
             }
 
-            namespace = "com.example.fromDsl"
+            namespace = FakeProviderFactory.factory.provider {
+                "com.example.fromDsl"
+            }
         }
 
         expect {
@@ -656,7 +659,7 @@ class VariantDslInfoTest2 :
             dslServices = dslServices,
             services = services,
             buildDirectory = buildDirectory,
-            dslNamespace = given.namespace,
+            dslNamespaceProvider = given.namespace,
             dslTestNamespace = given.testNamespace
         )
 
@@ -718,7 +721,7 @@ class VariantDslInfoTest2 :
 
         var dexingType = DexingType.NATIVE_MULTIDEX
 
-        var namespace: String? = null
+        var namespace: Provider<String>? = null
 
         var testNamespace: String? = null
 
