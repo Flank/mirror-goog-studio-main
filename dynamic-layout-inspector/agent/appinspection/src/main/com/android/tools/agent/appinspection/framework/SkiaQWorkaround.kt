@@ -59,7 +59,8 @@ object SkiaQWorkaround {
     fun startRenderingCommandsCapture(
         tree: View,
         executor: Executor,
-        callback: Callable<OutputStream?>
+        callback: Callable<OutputStream?>,
+        shouldSerialize: () -> Boolean
     ): AutoCloseable? {
         VMDebug.allowHiddenApiReflectionFrom(SkiaQWorkaround::class.java)
         val attachInfo = getFieldValue(tree, "mAttachInfo")
@@ -71,7 +72,7 @@ object SkiaQWorkaround {
         }
         val renderer = getFieldValue(attachInfo, "mThreadedRenderer") ?: return null
         val streamingPictureCallbackHandler = StreamingPictureCallbackHelper.createCallback(
-            renderer, callback, executor)
+            renderer, callback, executor, shouldSerialize)
         VMDebug.allowHiddenApiReflectionFrom(streamingPictureCallbackHandler.javaClass)
         VMDebug.allowHiddenApiReflectionFrom(StreamingPictureCallbackHelper::class.java)
         StreamingPictureCallbackHelper.setPictureCaptureCallback(
@@ -98,15 +99,16 @@ object SkiaQWorkaround {
         }
 
         fun createCallback(
-            renderer: Any, callback: Callable<OutputStream?>, executor: Executor
+            renderer: Any, callback: Callable<OutputStream?>, executor: Executor, shouldSerialize: () -> Boolean
         ): Any {
-            return StreamingPictureCallbackHandler(renderer, callback, executor)
+            return StreamingPictureCallbackHandler(renderer, callback, executor, shouldSerialize)
         }
 
         private class StreamingPictureCallbackHandler(
             private val mRenderer: Any,
             private val mCallback: Callable<OutputStream?>,
-            private val mExecutor: Executor
+            private val mExecutor: Executor,
+            private val shouldSerialize: () -> Boolean
         ) : AutoCloseable, HardwareRenderer.PictureCapturedCallback, Runnable {
             private val mLock = ReentrantLock(false)
             private val mQueue = ArrayDeque<ByteArray>(3)
@@ -135,15 +137,17 @@ object SkiaQWorkaround {
                     mQueue.removeLast()
                     needsInvoke = false
                 }
-                try {
-                    Picture::class.java
-                        .getDeclaredMethod("writeToStream", OutputStream::class.java)
-                        .invoke(picture, mByteStream)
-                } catch (e: Exception) {
-                    // shouldn't happen
+                if (shouldSerialize()) {
+                    try {
+                        Picture::class.java
+                            .getDeclaredMethod("writeToStream", OutputStream::class.java)
+                            .invoke(picture, mByteStream)
+                    } catch (e: Exception) {
+                        // shouldn't happen
+                    }
+                    mQueue.add(mByteStream.toByteArray())
+                    mByteStream.reset()
                 }
-                mQueue.add(mByteStream.toByteArray())
-                mByteStream.reset()
                 mLock.unlock()
                 if (needsInvoke) {
                     mExecutor.execute(this)
@@ -162,7 +166,7 @@ object SkiaQWorkaround {
                                 + "invokes asynchronously"
                     )
                 }
-                if (isStopped) {
+                if (isStopped || !shouldSerialize()) {
                     return
                 }
                 var stream: OutputStream? = null

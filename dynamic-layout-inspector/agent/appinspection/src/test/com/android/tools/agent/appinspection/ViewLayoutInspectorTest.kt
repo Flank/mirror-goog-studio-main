@@ -114,6 +114,15 @@ class ViewLayoutInspectorTest {
             startFetchCommand.toByteArray(),
             inspectorRule.commandCallback
         )
+        val updateScreenshotTypeCommand = Command.newBuilder().apply {
+            updateScreenshotTypeCommandBuilder.apply {
+                type = Screenshot.Type.SKP
+            }
+        }.build()
+        viewInspector.onReceiveCommand(
+            updateScreenshotTypeCommand.toByteArray(),
+            inspectorRule.commandCallback
+        )
 
         ThreadUtils.runOnMainThread { }.get() // Wait for startCommand to finish initializing
 
@@ -337,6 +346,15 @@ class ViewLayoutInspectorTest {
         }.build()
         viewInspector.onReceiveCommand(
             startFetchCommand.toByteArray(),
+            inspectorRule.commandCallback
+        )
+        val updateScreenshotTypeCommand = Command.newBuilder().apply {
+            updateScreenshotTypeCommandBuilder.apply {
+                type = Screenshot.Type.SKP
+            }
+        }.build()
+        viewInspector.onReceiveCommand(
+            updateScreenshotTypeCommand.toByteArray(),
             inspectorRule.commandCallback
         )
 
