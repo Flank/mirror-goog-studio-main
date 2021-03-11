@@ -537,7 +537,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
             task.unitTestDependencyLintModels.disallowChanges()
             task.dependencyPartialResults.disallowChanges()
             task.lintTool.initialize(creationConfig.services.projectInfo.getProject(), creationConfig.services.projectOptions)
-            if (checkDependencies) {
+            if (checkDependencies && !reportOnly) {
                 task.outputs.upToDateWhen {
                     it.logger.debug("Lint with checkDependencies does not model all of its inputs yet.")
                     false

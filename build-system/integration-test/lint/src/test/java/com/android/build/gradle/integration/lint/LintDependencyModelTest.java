@@ -16,15 +16,19 @@
 
 package com.android.build.gradle.integration.lint;
 
+import static com.android.build.gradle.integration.common.truth.GradleTaskSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.options.BooleanOption;
+import com.google.common.collect.ImmutableList;
 import java.io.File;
 import kotlin.io.FilesKt;
 import kotlin.text.Charsets;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -61,11 +65,7 @@ public class LintDependencyModelTest {
         getExecutor().run(":app:cleanLintDebug", ":app:lintDebug");
         getExecutor().run(":app:cleanLintDebug", ":app:lintDebug");
 
-        File textReportFile = project.file("app/lint-report.txt");
-        String textReport =
-                FilesKt.readText(textReportFile, Charsets.UTF_8)
-                        // Allow searching for substrings in Windows file reports as well
-                        .replace("\\", "/");
+        String textReport = readTextReportToString();
 
         // Library dependency graph:
         //        ----------app----------
@@ -93,6 +93,50 @@ public class LintDependencyModelTest {
         // its sibling
         assertThat(textReport).contains("javalib2/src/main/java/com/example2/MyClass.java:5: Warning: Use Boolean.valueOf(false)");
         assertThat(textReport).doesNotContain("javalib/src/main/java/com/example/MyClass.java:5: Warning: Use Boolean.valueOf(false)");
+    }
+
+    @Test
+    public void checkLintUpToDate() throws Exception {
+        if (usePartialAnalysis) {
+            ImmutableList<String> tasks =
+                    ImmutableList.of(
+                            ":app:lintDebug",
+                            ":app:lintAnalyzeDebug",
+                            ":androidlib:lintAnalyzeDebug",
+                            ":javalib:lintAnalyze",
+                            ":javalib2:lintAnalyze",
+                            ":indirectlib:lintAnalyze",
+                            ":indirectlib2:lintAnalyze");
+
+            GradleBuildResult firstResult = getExecutor().run(":app:lintDebug");
+            tasks.forEach(taskName -> assertThat(firstResult.findTask(taskName)).didWork());
+            String textReport = readTextReportToString();
+            assertThat(textReport).contains("0 errors, 7 warnings");
+
+            GradleBuildResult secondResult = getExecutor().run(":app:lintDebug");
+            tasks.forEach(taskName -> assertThat(secondResult.findTask(taskName)).wasUpToDate());
+
+        } else {
+            GradleBuildResult firstResult = getExecutor().run(":app:lintDebug");
+            assertThat(firstResult.findTask(":app:lintDebug")).didWork();
+            String textReport = readTextReportToString();
+            assertThat(textReport).contains("0 errors, 5 warnings");
+
+            // The lint task should not be up-to-date if not using partial analysis with
+            // checkDependencies because the inputs are not modeled correctly in that case.
+            GradleBuildResult secondResult = getExecutor().run(":app:lintDebug");
+            assertThat(secondResult.findTask(":app:lintDebug")).didWork();
+        }
+    }
+
+    @NotNull
+    private String readTextReportToString() {
+        File textReportFile = project.file("app/lint-report.txt");
+        String textReport =
+                FilesKt.readText(textReportFile, Charsets.UTF_8)
+                        // Allow searching for substrings in Windows file reports as well
+                        .replace("\\", "/");
+        return textReport;
     }
 
     private GradleTaskExecutor getExecutor() {
