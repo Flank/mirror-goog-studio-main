@@ -39,12 +39,14 @@ fun fullscreenActivityKt(
 
   return """package ${escapeKotlinIdentifier(packageName)}
 
-import ${superClassFqcn}
+import $superClassFqcn
 import android.annotation.SuppressLint
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.view.MotionEvent
 import android.view.View
+import android.view.WindowInsets
 ${renderIf(!isViewBindingSupported) {"""import android.widget.Button"""}}
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -55,7 +57,7 @@ $applicationPackageBlock
  * An example full-screen activity that shows and hides the system UI (i.e.
  * status bar and navigation/system bar) with user interaction.
  */
-class ${activityClass} : AppCompatActivity() {
+class $activityClass : AppCompatActivity() {
 
 ${renderIf(isViewBindingSupported) {"""
     private lateinit var binding: ${layoutToViewBindingClass(layoutName)}
@@ -66,17 +68,20 @@ ${renderIf(isViewBindingSupported) {"""
     @SuppressLint("InlinedApi")
     private val hidePart2Runnable = Runnable {
         // Delayed removal of status and navigation bar
-
-        // Note that some of these constants are new as of API 16 (Jelly Bean)
-        // and API 19 (KitKat). It is safe to use them, as they are inlined
-        // at compile-time and do nothing on earlier devices.
-        fullscreenContent.systemUiVisibility =
+        if (Build.VERSION.SDK_INT >= 30) {
+            fullscreenContent.windowInsetsController?.hide(WindowInsets.Type.statusBars() or WindowInsets.Type.navigationBars())
+        } else {
+            // Note that some of these constants are new as of API 16 (Jelly Bean)
+            // and API 19 (KitKat). It is safe to use them, as they are inlined
+            // at compile-time and do nothing on earlier devices.
+            fullscreenContent.systemUiVisibility =
                 View.SYSTEM_UI_FLAG_LOW_PROFILE or
-                View.SYSTEM_UI_FLAG_FULLSCREEN or
-                View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
-                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
-                View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
-                View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                        View.SYSTEM_UI_FLAG_FULLSCREEN or
+                        View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
+                        View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
+                        View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
+                        View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+        }
     }
     private val showPart2Runnable = Runnable {
         // Delayed display of UI elements
@@ -164,9 +169,13 @@ ${renderIf(isViewBindingSupported) {"""
 
     private fun show() {
         // Show the system bar
-        fullscreenContent.systemUiVisibility =
+        if (Build.VERSION.SDK_INT >= 30) {
+            fullscreenContent.windowInsetsController?.show(WindowInsets.Type.statusBars() or WindowInsets.Type.navigationBars())
+        } else {
+            fullscreenContent.systemUiVisibility =
                 View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
                         View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+        }
         isFullscreen = true
 
         // Schedule a runnable to display UI elements after a delay
