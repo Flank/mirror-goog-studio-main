@@ -16,6 +16,9 @@ app_inspection_jar(
     ],
     inspection_resource_strip_prefix = "tools/base/dynamic-layout-inspector/agent/appinspection/resources",
     inspection_resources = glob(["resources/META-INF/**"]),
+    jarjar_srcs = [
+        "//tools/base/dynamic-layout-inspector/common:studio.dynamic-layout-inspector.common.jar",
+    ],
     proto = "//tools/base/dynamic-layout-inspector/agent/appinspection/proto:layout_inspector_view_java_proto",
     # do not sort: fake_android must come before latest_runtime_jar in the classpath to override small pieces of it
     deps = [
@@ -24,6 +27,7 @@ app_inspection_jar(
         "//prebuilts/tools/common/m2/repository/androidx/annotation/annotation/1.1.0:jar",
         "//prebuilts/tools/common/m2/repository/androidx/inspection/inspection/1.0.0-SNAPSHOT:jar",
         "//tools/base/bazel:studio-proto",
+        "//tools/base/dynamic-layout-inspector/common:studio.dynamic-layout-inspector.common",
         "//tools/base/dynamic-layout-inspector/agent/appinspection/proto:layout_inspector_view_java_proto",
     ],
 )

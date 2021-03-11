@@ -704,5 +704,6 @@ class ViewLayoutInspectorTest {
 
         Looper.getLoopers().keys
             .filter { !initialThreads.contains(it) }
-            .forEach { thread -> thread.join(TimeUnit.SECONDS.toMillis(1)) }    }
+            .forEach { thread -> thread.join(TimeUnit.SECONDS.toMillis(1)) }
+    }
 }
