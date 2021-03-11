@@ -130,6 +130,10 @@ interface Variant : Component {
      * List of proguard configuration files for this variant. The list is initialized from the
      * corresponding DSL element, and cannot be queried at configuration time. At configuration time,
      * you can only add new elements to the list.
+     *
+     * This list will be initialized from [com.android.build.api.dsl.VariantDimension#proguardFile]
+     * for non test related variants and from
+     * [com.android.build.api.dsl.VariantDimension.testProguardFiles] for test related variants.
      */
     val proguardFiles: ListProperty<RegularFile>
 }

@@ -32,7 +32,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.function.Predicate;
 import org.gradle.api.attributes.LibraryElements;
-import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.provider.Provider;
@@ -48,9 +47,6 @@ public interface VariantScope {
             @NonNull ArtifactType artifactType,
             @NonNull Collection<AndroidArtifacts.PublishedConfigType> configTypes,
             @Nullable LibraryElements libraryElements);
-
-    @NonNull
-    List<File> getTestProguardFiles();
 
     @NonNull
     List<File> getConsumerProguardFiles();

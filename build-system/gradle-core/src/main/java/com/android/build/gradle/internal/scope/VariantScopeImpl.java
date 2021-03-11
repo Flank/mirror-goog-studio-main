@@ -230,12 +230,6 @@ public class VariantScopeImpl implements VariantScope {
 
     @NonNull
     @Override
-    public List<File> getTestProguardFiles() {
-        return gatherProguardFiles(ProguardFileType.TEST);
-    }
-
-    @NonNull
-    @Override
     public List<File> getConsumerProguardFiles() {
         return gatherProguardFiles(ProguardFileType.CONSUMER);
     }

@@ -311,7 +311,7 @@ abstract class ProguardConfigurableTask(
 
                     // All -dontwarn rules for test dependencies should go in here:
                     val configurationFiles = task.project.files(
-                        Callable<Collection<File>> { testedConfig.variantScope.testProguardFiles },
+                        creationConfig.proguardFiles,
                         creationConfig.variantDependencies.getArtifactFileCollection(
                             RUNTIME_CLASSPATH,
                             ALL,
@@ -327,7 +327,7 @@ abstract class ProguardConfigurableTask(
 
                     // All -dontwarn rules for test dependencies should go in here:
                     val configurationFiles = task.project.files(
-                        Callable<Collection<File>> { creationConfig.variantScope.testProguardFiles },
+                        creationConfig.proguardFiles,
                         creationConfig.variantDependencies.getArtifactFileCollection(
                             RUNTIME_CLASSPATH,
                             ALL,
