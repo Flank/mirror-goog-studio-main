@@ -124,6 +124,7 @@ build:rcache_no_resultstore --config=_rcache
 ## Enables remote execution so actions are performed on the remote systems.
 build:remote --remote_executor=remotebuildexecution.googleapis.com
 build:remote --config=_remote_base
+build:remote --config=_resultstore
 # Mimics the release config to report accurate performance numbers in tests.
 build:remote --config=release
 build:remote --remote_timeout=3600
