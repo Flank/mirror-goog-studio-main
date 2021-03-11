@@ -198,6 +198,10 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
     abstract fun getReportsDir(): DirectoryProperty
 
     override fun doTaskAction() {
+        val emulatorProvider = avdComponents.get().emulatorDirectory
+        Preconditions.checkArgument(
+                emulatorProvider.isPresent(),
+                "The emulator is missing. Download the emulator in order to use managed devices.")
         val managedDevice = UtpManagedDevice(
                 deviceName.get(),
                 avdName.get(),
@@ -205,8 +209,7 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
                 abi.get(),
                 avdComponents.get().avdFolder.get().asFile.absolutePath,
                 path,
-                avdComponents.get()
-                    .emulatorDirectory.get().asFile.resolve(FN_EMULATOR).absolutePath,
+                emulatorProvider.get().asFile.resolve(FN_EMULATOR).absolutePath,
                 enableEmulatorDisplay.get())
 
         DeviceProviderInstrumentTestTask.checkForNonApks(buddyApks.files)
