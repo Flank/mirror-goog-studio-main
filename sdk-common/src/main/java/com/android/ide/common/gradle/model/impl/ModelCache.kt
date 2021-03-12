@@ -92,7 +92,6 @@ import com.android.ide.common.gradle.model.impl.ndk.v2.IdeNativeModuleImpl
 import com.android.ide.common.gradle.model.impl.ndk.v2.IdeNativeVariantImpl
 import com.android.ide.common.gradle.model.ndk.v2.NativeBuildSystem
 import com.android.ide.common.repository.GradleVersion
-import com.android.utils.FileUtils
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
@@ -170,6 +169,8 @@ interface ModelCacheTesting : ModelCache {
   fun isLocalAarModule(androidLibrary: AndroidLibrary): Boolean
   fun mavenCoordinatesFrom(coordinates: MavenCoordinates): IdeMavenCoordinatesImpl
 }
+
+private val MODEL_VERSION_3_2_0 = GradleVersion.parse("3.2.0")
 
 private fun modelCacheImpl(buildFolderPaths: BuildFolderPaths): ModelCacheTesting {
 
@@ -965,7 +966,11 @@ private fun modelCacheImpl(buildFolderPaths: BuildFolderPaths): ModelCacheTestin
     val defaultConfigCopy: IdeProductFlavorContainer = copyModel(project.defaultConfig, ::productFlavorContainerFrom)
     val buildTypesCopy: Collection<IdeBuildTypeContainer> = copy(project::getBuildTypes, ::buildTypeContainerFrom)
     val productFlavorCopy: Collection<IdeProductFlavorContainer> = copy(project::getProductFlavors, ::productFlavorContainerFrom)
-    val variantNamesCopy: Collection<String> = copy(project::getVariantNames, ::deduplicateString)
+    val variantNamesCopy: Collection<String> =
+            if (parsedModelVersion != null && parsedModelVersion < MODEL_VERSION_3_2_0)
+                copy(fun(): Collection<String> = project.variants.map { it.name }, ::deduplicateString)
+            else
+                copy(project::getVariantNames, ::deduplicateString)
     val flavorDimensionCopy: Collection<String> = copy(project::getFlavorDimensions, ::deduplicateString)
     val bootClasspathCopy: Collection<String> = ImmutableList.copyOf(project.bootClasspath)
     val signingConfigsCopy: Collection<IdeSigningConfig> = copy(project::getSigningConfigs, ::signingConfigFrom)
