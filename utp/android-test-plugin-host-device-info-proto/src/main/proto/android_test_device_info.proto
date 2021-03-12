@@ -47,4 +47,6 @@ message AndroidTestDeviceInfo {
      *  otherwise.
      */
     string gradle_dsl_device_name = 9;
+    /** Model name of the device.*/
+    string model = 10;
 }

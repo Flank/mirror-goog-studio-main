@@ -94,6 +94,7 @@ class AndroidTestDeviceInfoPlugin : HostPlugin {
         val deviceProcessors = deviceCpuInfo.getDeviceProcessors()
         val deviceAbis = deviceProperties.map["ro.product.cpu.abilist"]?.split(',')
         val deviceManufacturer = deviceProperties.map["ro.product.manufacturer"] ?: ""
+        val deviceModel = deviceProperties.map["ro.product.model"] ?: ""
 
         val androidTestDeviceInfo = AndroidTestDeviceInfo.newBuilder()
                 .setName(deviceName)
@@ -105,7 +106,7 @@ class AndroidTestDeviceInfoPlugin : HostPlugin {
                 .setSerial(deviceSerial)
                 .setAvdName(deviceAvdName)
                 .setGradleDslDeviceName(dslName)
-
+                .setModel(deviceModel)
                 .build()
         FileOutputStream(deviceInfoFile).use {
             androidTestDeviceInfo.writeTo(it)
