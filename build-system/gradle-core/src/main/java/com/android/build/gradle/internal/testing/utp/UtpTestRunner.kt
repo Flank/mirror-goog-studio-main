@@ -98,7 +98,8 @@ class UtpTestRunner @JvmOverloads constructor(
                         javaProcessExecutor,
                         logger)
 
-                resultsProto.writeTo(File(utpOutputDir, "test-result.pb").outputStream())
+                val testResultPbFile = File(utpOutputDir, "test-result.pb")
+                resultsProto.writeTo(testResultPbFile.outputStream())
 
                 try {
                     FileUtils.deleteRecursivelyIfExists(utpOutputDir.resolve(TEST_LOG_DIR))
@@ -117,6 +118,9 @@ class UtpTestRunner @JvmOverloads constructor(
                 if (resultsProto.hasPlatformError()) {
                     logger.error(null, "Platform error occurred when running the UTP test suite")
                 }
+                logger.quiet("\nTest results saved as ${testResultPbFile.toURI()}. " +
+                        "Inspect these results in Android Studio by selecting Run > Import Tests " +
+                        "From File from the menu bar and importing test-result.pb.")
                 val testFailed = resultsProto.hasPlatformError() ||
                         resultsProto.testResultList.any { testCaseResult ->
                             testCaseResult.testStatus == TestStatusProto.TestStatus.FAILED
