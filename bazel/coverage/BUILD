@@ -704,6 +704,7 @@ coverage_report(
         "//tools/adt/idea/dagger:intellij.android.dagger.tests_tests",
         "//tools/adt/idea/compose-ide-plugin:intellij.android.compose-ide-plugin.tests_tests",
         "//tools/adt/idea/databinding:intellij.android.databinding.tests_tests",
+        "//tools/adt/idea/debuggers:intellij.android.debuggers.tests_tests",
         "//tools/adt/idea/deploy:intellij.android.deploy_tests",
         "//tools/adt/idea/designer:intellij.android.designer.tests_tests",
         "//tools/adt/idea/designer/customview:intellij.android.designer.customview.tests_tests",
