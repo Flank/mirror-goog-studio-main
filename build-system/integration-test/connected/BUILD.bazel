@@ -644,7 +644,10 @@ gradle_connected_test(
 gradle_connected_test(
     name = "UtpConnectedTest",
     srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
-    data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/utp"],
+    data = TEST_DATA + [
+        "//tools/adt/idea/utp:addGradleAndroidTestListener",
+        "//tools/base/build-system/integration-test:test-projects/utp",
+    ],
     flaky = True,  # b/148626301 flaky emulator connectivity
     maven_repos = TEST_MAVEN_REPOS,
     deps = TEST_DEPS,
