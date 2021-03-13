@@ -16,15 +16,10 @@
 
 package com.android.build.gradle.internal.ide.v2
 
-import com.android.builder.model.v2.dsl.DependenciesInfo
-import com.android.builder.model.v2.dsl.SigningConfig
-import com.android.builder.model.v2.ide.AaptOptions
 import com.android.builder.model.v2.ide.AndroidGradlePluginProjectFlags
-import com.android.builder.model.v2.ide.BuildTypeContainer
 import com.android.builder.model.v2.ide.JavaCompileOptions
-import com.android.builder.model.v2.ide.LintOptions
-import com.android.builder.model.v2.ide.ProductFlavorContainer
 import com.android.builder.model.v2.ide.ProjectType
+import com.android.builder.model.v2.ide.SourceSetContainer
 import com.android.builder.model.v2.ide.Variant
 import com.android.builder.model.v2.ide.ViewBindingOptions
 import com.android.builder.model.v2.models.AndroidProject
@@ -37,24 +32,16 @@ import java.io.Serializable
 data class AndroidProjectImpl(
     override val path: String,
     override val projectType: ProjectType,
-    override val groupId: String?,
-    override val defaultConfig: ProductFlavorContainer,
-    override val buildTypes: Collection<BuildTypeContainer>,
-    override val productFlavors: Collection<ProductFlavorContainer>,
+    override val mainSourceSet: SourceSetContainer,
+    override val buildTypeSourceSets: Collection<SourceSetContainer>,
+    override val productFlavorSourceSets: Collection<SourceSetContainer>,
     override val variants: Collection<Variant>,
-    override val flavorDimensions: Collection<String>,
-    override val compileTarget: String,
     override val bootClasspath: Collection<File>,
-    override val signingConfigs: Collection<SigningConfig>,
-    override val aaptOptions: AaptOptions,
-    override val lintOptions: LintOptions,
     override val javaCompileOptions: JavaCompileOptions,
     override val buildFolder: File,
     override val resourcePrefix: String?,
-    override val buildToolsVersion: String,
     override val dynamicFeatures: Collection<String>?,
     override val viewBindingOptions: ViewBindingOptions?,
-    override val dependenciesInfo: DependenciesInfo?,
     override val flags: AndroidGradlePluginProjectFlags,
     override val lintRuleJars: List<File>
 ) : AndroidProject, Serializable {

@@ -21,6 +21,7 @@ import com.android.tools.lint.checks.HardcodedValuesDetector
 import com.android.tools.lint.checks.ManifestDetector
 import com.android.tools.lint.checks.PxUsageDetector
 import com.android.tools.lint.checks.RangeDetector
+import com.android.tools.lint.checks.ScopedStorageDetector
 import com.android.tools.lint.checks.infrastructure.TestLintClient
 import com.android.tools.lint.client.api.LintBaseline.Companion.isSamePathSuffix
 import com.android.tools.lint.client.api.LintBaseline.Companion.stringsEquivalent
@@ -288,6 +289,18 @@ There are quickfixes to automatically extract this hardcoded string into a resou
         assertTrue(stringsEquivalent("abcd http://some.url1, ok", "abcd http://other.url2"))
         assertTrue(stringsEquivalent("abcd http://some.url1", "abcd http://other.url2, ok"))
         assertFalse(stringsEquivalent("abcd http://some.url1 different", "abcd http://other.url2, words"))
+    }
+
+    @Test
+    fun tolerateScopedStorageChanges() {
+        val baseline = LintBaseline(null, File(""))
+        assertTrue(
+            baseline.sameMessage(
+                ScopedStorageDetector.ISSUE,
+                "The Google Play store has a policy that limits usage of MANAGE_EXTERNAL_STORAGE",
+                "Most apps are not allowed to use MANAGE_EXTERNAL_STORAGE"
+            )
+        )
     }
 
     @Test

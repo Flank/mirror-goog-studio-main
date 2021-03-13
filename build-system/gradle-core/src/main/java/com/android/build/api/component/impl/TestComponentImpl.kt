@@ -32,6 +32,7 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
+import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import javax.inject.Inject
 
@@ -78,4 +79,7 @@ abstract class TestComponentImpl @Inject constructor(
     override val namespaceForR: Provider<String> =
         variantDslInfo.testedVariant?.testNamespace?.let { internalServices.provider { it } }
             ?: internalServices.providerOf(String::class.java, variantDslInfo.applicationId)
+
+    override val isPseudoLocalesEnabled: Property<Boolean> =
+            internalServices.newPropertyBackingDeprecatedApi(Boolean::class.java, variantDslInfo.isPseudoLocalesEnabled)
 }

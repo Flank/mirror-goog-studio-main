@@ -36,7 +36,13 @@ open class LibraryVariantBuilderImpl @Inject constructor(
     variantApiServices
 ), LibraryVariantBuilder {
 
-    override var androidTestEnabled: Boolean = true
+    override var androidTestEnabled: Boolean
+        get() = enableAndroidTest
+        set(value) {
+            enableAndroidTest = value
+        }
+
+    override var enableAndroidTest: Boolean = true
 
     override fun <T : VariantBuilder> createUserVisibleVariantObject(
             projectServices: ProjectServices,

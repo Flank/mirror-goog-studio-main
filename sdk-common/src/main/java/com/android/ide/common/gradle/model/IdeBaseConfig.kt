@@ -15,7 +15,6 @@
  */
 package com.android.ide.common.gradle.model
 
-import com.android.builder.model.AndroidArtifact
 import java.io.File
 
 interface IdeBaseConfig {
@@ -23,7 +22,6 @@ interface IdeBaseConfig {
 
     /**
      * The application id suffix applied to this base config.
-     * To get the final application id, use [AndroidArtifact.getApplicationId].
      */
     val applicationIdSuffix: String?
 

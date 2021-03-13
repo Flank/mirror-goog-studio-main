@@ -1,45 +1,45 @@
 > AndroidProject:
-    - defaultConfig:
-       - sourceProvider:
-          - renderscriptDirectories = (null)
-       - androidTestSourceProvider:
-          - renderscriptDirectories = (null)
-       - unitTestSourceProvider:
-          - renderscriptDirectories = (null)
-    > buildTypes:
-       - buildTypeContainer(debug):
-          - sourceProvider:
-             - renderscriptDirectories = (null)
-          - androidTestSourceProvider:
-             - renderscriptDirectories = (null)
-          - unitTestSourceProvider:
-             - renderscriptDirectories = (null)
-       - buildTypeContainer(release):
-          - sourceProvider:
-             - renderscriptDirectories = (null)
-          - androidTestSourceProvider:
-             - renderscriptDirectories = (null)
-          - unitTestSourceProvider:
-             - renderscriptDirectories = (null)
-    < buildTypes
-    > variants:
-       > variant(debug):
-          - mainArtifact:
-             - generatedSourceFolders:
-                * {PROJECT}/build/generated/aidl_source_output_dir/debug/out{!}
-                * {PROJECT}/build/generated/ap_generated_sources/debug/out{!}
-                * {PROJECT}/build/generated/source/buildConfig/debug{!}
-          - androidTestArtifact:
-             - generatedSourceFolders:
-                * {PROJECT}/build/generated/aidl_source_output_dir/debugAndroidTest/out{!}
-                * {PROJECT}/build/generated/ap_generated_sources/debugAndroidTest/out{!}
-                * {PROJECT}/build/generated/source/buildConfig/androidTest/debug{!}
-       < variant(debug)
-       - variant(release):
-          - mainArtifact:
-             - generatedSourceFolders:
-                * {PROJECT}/build/generated/aidl_source_output_dir/release/out{!}
-                * {PROJECT}/build/generated/ap_generated_sources/release/out{!}
-                * {PROJECT}/build/generated/source/buildConfig/release{!}
-    < variants
+   - defaultConfig:
+      - sourceProvider:
+         - renderscriptDirectories = (null)
+      - androidTestSourceProvider:
+         - renderscriptDirectories = (null)
+      - unitTestSourceProvider:
+         - renderscriptDirectories = (null)
+   > buildTypes:
+      - debug:
+         - sourceProvider:
+            - renderscriptDirectories = (null)
+         - androidTestSourceProvider:
+            - renderscriptDirectories = (null)
+         - unitTestSourceProvider:
+            - renderscriptDirectories = (null)
+      - release:
+         - sourceProvider:
+            - renderscriptDirectories = (null)
+         - androidTestSourceProvider:
+            - renderscriptDirectories = (null)
+         - unitTestSourceProvider:
+            - renderscriptDirectories = (null)
+   < buildTypes
+   > variants:
+      > variant(debug):
+         - mainArtifact:
+            - generatedSourceFolders:
+               * {PROJECT}/build/generated/aidl_source_output_dir/debug/out{!}
+               * {PROJECT}/build/generated/ap_generated_sources/debug/out{!}
+               * {PROJECT}/build/generated/source/buildConfig/debug{!}
+         - androidTestArtifact:
+            - generatedSourceFolders:
+               * {PROJECT}/build/generated/aidl_source_output_dir/debugAndroidTest/out{!}
+               * {PROJECT}/build/generated/ap_generated_sources/debugAndroidTest/out{!}
+               * {PROJECT}/build/generated/source/buildConfig/androidTest/debug{!}
+      < variant(debug)
+      - variant(release):
+         - mainArtifact:
+            - generatedSourceFolders:
+               * {PROJECT}/build/generated/aidl_source_output_dir/release/out{!}
+               * {PROJECT}/build/generated/ap_generated_sources/release/out{!}
+               * {PROJECT}/build/generated/source/buildConfig/release{!}
+   < variants
 < AndroidProject

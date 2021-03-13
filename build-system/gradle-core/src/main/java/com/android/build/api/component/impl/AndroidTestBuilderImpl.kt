@@ -35,8 +35,14 @@ open class AndroidTestBuilderImpl @Inject constructor(
 ), AndroidTestBuilder {
 
     override var enabled: Boolean
-        get() = testedComponent.androidTestEnabled
+        get() = testedComponent.enableAndroidTest
         set(value) {
-            testedComponent.androidTestEnabled = value
+            testedComponent.enableAndroidTest = value
+        }
+
+    override var enable: Boolean
+        get() = testedComponent.enableAndroidTest
+        set(value) {
+            testedComponent.enableAndroidTest = value
         }
 }

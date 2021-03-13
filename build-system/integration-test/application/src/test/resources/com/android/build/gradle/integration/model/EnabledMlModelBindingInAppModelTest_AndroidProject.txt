@@ -1,43 +1,43 @@
 > AndroidProject:
-    > defaultConfig:
-       - sourceProvider:
-          - mlModelsDirectories:
-             * {PROJECT}/src/main/ml{!}
-       - androidTestSourceProvider:
-          - mlModelsDirectories:
-             * {PROJECT}/src/androidTest/ml{!}
-       - unitTestSourceProvider:
-          - mlModelsDirectories:
-             * {PROJECT}/src/test/ml{!}
-    < defaultConfig
-    > buildTypes:
-       > buildTypeContainer(debug):
-          - sourceProvider:
-             - mlModelsDirectories:
-                * {PROJECT}/src/debug/ml{!}
-          - androidTestSourceProvider:
-             - mlModelsDirectories:
-                * {PROJECT}/src/androidTestDebug/ml{!}
-          - unitTestSourceProvider:
-             - mlModelsDirectories:
-                * {PROJECT}/src/testDebug/ml{!}
-       < buildTypeContainer(debug)
-       > buildTypeContainer(release):
-          - sourceProvider:
-             - mlModelsDirectories:
-                * {PROJECT}/src/release/ml{!}
-          - androidTestSourceProvider:
-             - mlModelsDirectories:
-                * {PROJECT}/src/androidTestRelease/ml{!}
-          - unitTestSourceProvider:
-             - mlModelsDirectories:
-                * {PROJECT}/src/testRelease/ml{!}
-       < buildTypeContainer(release)
-    < buildTypes
-    - flags:
-       * "APPLICATION_R_CLASS_CONSTANT_IDS -> true"
-       * "JETPACK_COMPOSE -> false"
-       * "ML_MODEL_BINDING -> true"
-       * "TEST_R_CLASS_CONSTANT_IDS -> true"
-       * "TRANSITIVE_R_CLASS -> true"
+   > defaultConfig:
+      - sourceProvider:
+         - mlModelsDirectories:
+            * {PROJECT}/src/main/ml{!}
+      - androidTestSourceProvider:
+         - mlModelsDirectories:
+            * {PROJECT}/src/androidTest/ml{!}
+      - unitTestSourceProvider:
+         - mlModelsDirectories:
+            * {PROJECT}/src/test/ml{!}
+   < defaultConfig
+   > buildTypes:
+      > debug:
+         - sourceProvider:
+            - mlModelsDirectories:
+               * {PROJECT}/src/debug/ml{!}
+         - androidTestSourceProvider:
+            - mlModelsDirectories:
+               * {PROJECT}/src/androidTestDebug/ml{!}
+         - unitTestSourceProvider:
+            - mlModelsDirectories:
+               * {PROJECT}/src/testDebug/ml{!}
+      < debug
+      > release:
+         - sourceProvider:
+            - mlModelsDirectories:
+               * {PROJECT}/src/release/ml{!}
+         - androidTestSourceProvider:
+            - mlModelsDirectories:
+               * {PROJECT}/src/androidTestRelease/ml{!}
+         - unitTestSourceProvider:
+            - mlModelsDirectories:
+               * {PROJECT}/src/testRelease/ml{!}
+      < release
+   < buildTypes
+   - flags:
+      * "APPLICATION_R_CLASS_CONSTANT_IDS -> true"
+      * "JETPACK_COMPOSE -> false"
+      * "ML_MODEL_BINDING -> true"
+      * "TEST_R_CLASS_CONSTANT_IDS -> true"
+      * "TRANSITIVE_R_CLASS -> true"
 < AndroidProject

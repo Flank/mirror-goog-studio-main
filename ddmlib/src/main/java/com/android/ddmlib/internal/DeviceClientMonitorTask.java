@@ -26,12 +26,14 @@ import com.android.ddmlib.IDevice;
 import com.android.ddmlib.Log;
 import com.android.ddmlib.TimeoutException;
 import com.android.ddmlib.internal.jdwp.chunkhandler.HandleHello;
+import com.android.sdklib.AndroidVersion;
+import com.android.server.adb.protos.AppProcessesProto;
+import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.Uninterruptibles;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
@@ -40,6 +42,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -59,6 +62,7 @@ import java.util.concurrent.TimeUnit;
  */
 class DeviceClientMonitorTask implements Runnable {
     private static final String ADB_TRACK_JDWP_COMMAND = "track-jdwp";
+    private static final String ADB_TRACK_APP_COMMAND = "track-app";
     private volatile boolean mQuit;
     @NonNull private final Selector mSelector;
     // Note that mChannelsToRegister is not synchronized other than through the compute* interface.
@@ -237,7 +241,11 @@ class DeviceClientMonitorTask implements Runnable {
 
                 try {
                     int length = AdbSocketUtils.readLength(socket, lengthBuffer);
-                    processIncomingJdwpData(device, socket, length);
+                    if (isDeviceVersionAtLeastS(device)) {
+                        processIncomingTrackAppData(device, socket, length);
+                    } else {
+                        processIncomingTrackJdwpData(device, socket, length);
+                    }
                 } catch (IOException ioe) {
                     Log.d(
                             "DeviceClientMonitorTask",
@@ -265,7 +273,11 @@ class DeviceClientMonitorTask implements Runnable {
 
         try {
             AdbHelper.setDevice(socket, device);
-            AdbHelper.write(socket, AdbHelper.formAdbRequest(ADB_TRACK_JDWP_COMMAND));
+            String command =
+                    isDeviceVersionAtLeastS(device)
+                            ? ADB_TRACK_APP_COMMAND
+                            : ADB_TRACK_JDWP_COMMAND;
+            AdbHelper.write(socket, AdbHelper.formAdbRequest(command));
             AdbHelper.AdbResponse resp = AdbHelper.readAdbResponse(socket, false);
 
             if (!resp.okay) {
@@ -283,7 +295,45 @@ class DeviceClientMonitorTask implements Runnable {
         }
     }
 
-    private void processIncomingJdwpData(
+    private void processIncomingTrackAppData(
+            @NonNull DeviceImpl device, @NonNull SocketChannel monitorSocket, int length)
+            throws IOException {
+        if (length < 0) {
+            return;
+        }
+
+        ByteBuffer buffer = AdbSocketUtils.read(monitorSocket, length);
+        AppProcessesProto.AppProcesses processes = AppProcessesProto.AppProcesses.parseFrom(buffer);
+        Set<Integer> newJdwpPids = new HashSet<Integer>();
+        List<ProfileableClientImpl> newProfileableList = new LinkedList<>();
+        for (AppProcessesProto.ProcessEntry process : processes.getProcessList()) {
+            if (process.getDebuggable()) {
+                newJdwpPids.add(Integer.valueOf((int) process.getPid()));
+            }
+            // A debuggable process must be profileable.
+            if (process.getProfileable() || process.getDebuggable()) {
+                ProfileableClientImpl client =
+                        new ProfileableClientImpl(
+                                (int) process.getPid(), process.getArchitecture());
+                newProfileableList.add(client);
+            }
+        }
+
+        updateJdwpClients(device, newJdwpPids);
+
+        List<ProfileableClientImpl> existingList =
+                Lists.newArrayList(device.getProfileableClients());
+        List<ProfileableClientImpl> addList = Lists.newLinkedList(newProfileableList);
+        addList.removeAll(existingList);
+        List<ProfileableClientImpl> deleteList = Lists.newLinkedList(existingList);
+        deleteList.removeAll(newProfileableList);
+        if (!addList.isEmpty() || !deleteList.isEmpty()) {
+            device.updateProfileableClientList(newProfileableList);
+            AndroidDebugBridge.deviceChanged(device, IDevice.CHANGE_PROFILEABLE_CLIENT_LIST);
+        }
+    }
+
+    private void processIncomingTrackJdwpData(
             @NonNull DeviceImpl device, @NonNull SocketChannel monitorSocket, int length)
             throws IOException {
 
@@ -313,37 +363,40 @@ class DeviceClientMonitorTask implements Runnable {
                     }
                 }
             }
+            updateJdwpClients(device, newPids);
+        }
+    }
 
-            MonitorThread monitorThread = MonitorThread.getInstance();
+    private void updateJdwpClients(@NonNull DeviceImpl device, @NonNull Set<Integer> newPids) {
+        MonitorThread monitorThread = MonitorThread.getInstance();
 
-            List<ClientImpl> clients = device.getClientList();
-            Map<Integer, ClientImpl> existingClients = new HashMap<>();
+        List<ClientImpl> clients = device.getClientList();
+        Map<Integer, ClientImpl> existingClients = new HashMap<>();
 
-            synchronized (clients) {
-                for (ClientImpl c : clients) {
-                    existingClients.put(c.getClientData().getPid(), c);
-                }
+        synchronized (clients) {
+            for (ClientImpl c : clients) {
+                existingClients.put(c.getClientData().getPid(), c);
             }
+        }
 
-            Set<ClientImpl> clientsToRemove = new HashSet<>();
-            for (Integer pid : existingClients.keySet()) {
-                if (!newPids.contains(pid)) {
-                    clientsToRemove.add(existingClients.get(pid));
-                }
+        Set<ClientImpl> clientsToRemove = new HashSet<>();
+        for (Integer pid : existingClients.keySet()) {
+            if (!newPids.contains(pid)) {
+                clientsToRemove.add(existingClients.get(pid));
             }
+        }
 
-            Set<Integer> pidsToAdd = new HashSet<Integer>(newPids);
-            pidsToAdd.removeAll(existingClients.keySet());
-            monitorThread.dropClients(clientsToRemove, false);
+        Set<Integer> pidsToAdd = new HashSet<Integer>(newPids);
+        pidsToAdd.removeAll(existingClients.keySet());
+        monitorThread.dropClients(clientsToRemove, false);
 
-            // at this point whatever pid is left in the list needs to be converted into Clients.
-            for (int newPid : pidsToAdd) {
-                openClient(device, newPid, monitorThread);
-            }
+        // at this point whatever pid is left in the list needs to be converted into Clients.
+        for (int newPid : pidsToAdd) {
+            openClient(device, newPid, monitorThread);
+        }
 
-            if (!pidsToAdd.isEmpty() || !clientsToRemove.isEmpty()) {
-                AndroidDebugBridge.deviceChanged(device, IDevice.CHANGE_CLIENT_LIST);
-            }
+        if (!pidsToAdd.isEmpty() || !clientsToRemove.isEmpty()) {
+            AndroidDebugBridge.deviceChanged(device, IDevice.CHANGE_CLIENT_LIST);
         }
     }
 
@@ -439,5 +492,9 @@ class DeviceClientMonitorTask implements Runnable {
             device.addClient(client);
             monitorThread.addClient(client);
         }
+    }
+
+    private static boolean isDeviceVersionAtLeastS(@NonNull DeviceImpl device) {
+        return device.getVersion().getFeatureLevel() >= AndroidVersion.VersionCodes.S;
     }
 }

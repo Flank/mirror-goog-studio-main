@@ -15,6 +15,7 @@
  */
 package com.android.build.gradle.integration.common.fixture
 
+import com.android.builder.model.v2.models.AndroidDsl
 import com.android.builder.model.v2.models.AndroidProject
 import com.android.builder.model.v2.models.GlobalLibraryMap
 import com.android.builder.model.v2.models.ModelVersions
@@ -43,6 +44,7 @@ class ModelContainerV2(
     data class ModelInfo(
         val versions: ModelVersions,
         val androidProject: AndroidProject?,
+        val androidDsl: AndroidDsl?,
         val variantDependencies: VariantDependencies?,
         val nativeModule: NativeModule?,
         val issues: ProjectSyncIssues
@@ -65,6 +67,13 @@ class ModelContainerV2(
     val singleAndroidProject: AndroidProject
         get() = singleInfo.androidProject
                 ?: throw RuntimeException("No AndroidProject model for project '${singleInfoPath}'")
+
+    /**
+     * Returns the only [AndroidDsl] when there is no composite builds and a single sub-project.
+     */
+    val singleAndroidDsl: AndroidDsl
+        get() = singleInfo.androidDsl
+                ?: throw RuntimeException("No AndroidDsl model for project '${singleInfoPath}'")
 
     /**
      * Returns the only [VariantDependencies] when there is no composite builds and a single sub-project.

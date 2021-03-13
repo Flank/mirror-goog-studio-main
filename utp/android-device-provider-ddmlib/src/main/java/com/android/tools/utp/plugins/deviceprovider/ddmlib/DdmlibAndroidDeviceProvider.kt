@@ -102,4 +102,6 @@ class DdmlibAndroidDeviceProvider() : AndroidDeviceProvider {
     override fun releaseDevice() {
         // No need to release the local device after usage since we didn't start it.
     }
+
+    override fun cancel(): Boolean = false
 }

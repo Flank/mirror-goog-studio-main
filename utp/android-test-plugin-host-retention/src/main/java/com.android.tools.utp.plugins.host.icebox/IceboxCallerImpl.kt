@@ -30,6 +30,7 @@ import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
 import io.grpc.Metadata
 import io.grpc.Status
+import io.grpc.StatusRuntimeException
 import java.io.File
 import java.io.OutputStream
 import java.net.ConnectException
@@ -124,7 +125,8 @@ class IceboxCallerImpl public constructor(
                     .withCallCredentials(credentials)
             }
         } catch (e: Throwable) {
-            logger.warning("icebox grpc failed: $e")
+            logger.severe("icebox grpc failed: $e. Please try to update the emulator to the latest"
+                + " version, or append the flag \"-grpc 8554\" when booting the emulator.")
             shutdownGrpc()
         }
     }
@@ -144,8 +146,11 @@ class IceboxCallerImpl public constructor(
                 )
             } catch (e: CancellationException) {
                 // No-op
+            } catch (e: StatusRuntimeException) {
+                logger.severe("icebox failed: $e. Please try to update the emulator to the latest"
+                    + " version, or append the flag \"-grpc 8554\" when booting the emulator.")
             } catch (e: Throwable) {
-                logger.warning("icebox failed: $e")
+                logger.severe("icebox failed: $e")
             }
         }
     }

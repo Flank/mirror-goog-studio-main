@@ -1,0 +1,168 @@
+# Options applied to all Bazel invocations in the workspace.
+# This file is imported by the os-specific rc files.
+# Those are included by the bazel wrapper scripts (bazel and bazel.cmd)
+
+# Remote Build Execution requires a strong hash function, such as SHA256.
+startup --host_jvm_args=-Dbazel.DigestFunction=SHA256
+
+# For now we require python 2
+build --host_force_python=PY2
+
+# Enforces UTF-8 encoding in bazel tests.
+test --test_env='LC_ALL=en_US.UTF-8'
+test --jvmopt='-Dsun.jnu.encoding=UTF-8'
+test --jvmopt='-Dfile.encoding=UTF-8'
+test --jvmopt='-Xmx4G'
+test --jvmopt='-XX:+UseConcMarkSweepGC'
+test --verbose_failures
+
+# Local runs require longer timeouts.
+test:local --test_timeout=120,600,1800,7200
+
+# Don't use JUnit from Bazel.
+test --explicit_java_test_deps
+
+# Tests depend on not having a real user name, but bazel now returns the
+# real one. This flag keeps the old behavior of not having a home directory.
+test --sandbox_fake_username
+
+test --sandbox_tmpfs_path=/tmp
+
+test:ignored --jvmopt=-Dignored.tests.only=true
+
+# Attach aspects for validation of targets
+test --aspects=tools/base/bazel/validations/timeout.bzl%no_eternal_tests
+test --aspects=tools/base/bazel/validations/flaky.bzl%limit_flaky_tests
+
+build --incompatible_strict_action_env # Ensures actions don't pick up env changes
+build --sandbox_tmpfs_path=/tmp
+build --javacopt="-g:source,lines,vars"  # Keep debug info
+# TODO (b/141269926): this generates a warning on windows when building for host,
+# but is required when building for android.
+build --copt=-fvisibility=hidden
+
+build --define=grpc_no_ares=true
+
+# Forwards the system $SHELL environment variable so remote execution of bazel
+# finds make in the ndk-build script (see b/72179674).
+build --test_env=SHELL
+
+# Use prebuilt JDK when doing local bazel build/test
+build --host_javabase=//prebuilts/studio/jdk:jdk11_runtime
+build --javabase=//prebuilts/studio/jdk:jdk11_runtime
+build --host_java_toolchain=@bazel_tools//tools/jdk:legacy_toolchain
+build --java_toolchain=@bazel_tools//tools/jdk:legacy_toolchain
+
+# Use prebuilt native toolchain
+build --crosstool_top=@native_toolchain//:toolchain
+
+# cpp sandbox is very slow on mac and linux
+build --strategy=CppCompile=standalone
+build --strategy=CppLink=standalone
+build --strategy=CcStrip=standalone
+build --stripopt=--strip-unneeded
+
+# Do not register auto-generated cpp toolchains
+build --action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
+
+# default android native abis
+build --fat_apk_cpu=x86,x86_64,armeabi-v7a,arm64-v8a
+
+## Options to make bazel less memory/cpu intensive.
+## Recommended to use with rcache config to avoid building outputs already
+## present in the remote cache.
+build:nice --worker_max_instances=1
+build:nice --jobs=HOST_CPUS*.5
+
+build:release -c opt
+build:release --strip=always
+build:release --define release=true
+
+## Base RBE configuration
+build:_remote_base --bes_timeout=60s
+build:_remote_base --auth_scope=https://www.googleapis.com/auth/cloud-source-tools
+build:_remote_base --project_id=908081808034
+build:_remote_base --auth_credentials=tools/vendor/adt_infra_internal/rbe/data/studio-alphasource-credentials.json
+build:_remote_base --remote_cache=remotebuildexecution.googleapis.com
+build:_remote_base --remote_instance_name=projects/google.com:android-studio-alphasource/instances/default_instance
+# Building runfile trees is unnecessary, unless executing binaries in bazel-bin/ manually (use 'bazel run' instead)
+# See: https://github.com/bazelbuild/bazel/commit/03246077f948f2790a83520e7dccc2625650e6df
+build:_remote_base --nobuild_runfile_links
+
+## Base config to upload build results to ResultStore.
+build:_resultstore --bes_backend=buildeventservice.googleapis.com
+build:_resultstore --bes_results_url=https://source.cloud.google.com/results/invocations/
+
+## Enables ResultStore, but does not use the remote cache.
+## This is useful for sharing bazel invocations using the ResultStore link.
+build:resultstore --config=_remote_base
+build:resultstore --config=_resultstore
+build:resultstore --noremote_upload_local_results
+build:resultstore --noremote_accept_cached
+
+## Base config for using the remote cache.
+## This avoids building things which were already built by CI.
+build:_rcache --config=_remote_base
+build:_rcache --config=release
+build:_rcache --noremote_upload_local_results
+# Include some of the expanded flags of --remote_download_toplevel to
+# optimize cache hits. We want the local cache to be populated from the
+# remote cache, so we keep --remote_download_outputs=all (default value).
+build:_rcache --experimental_inmemory_dotd_files
+build:_rcache --experimental_inmemory_jdeps_files
+
+## Enables the remote cache, and uploading results to ResultStore.
+## This config should be commonly used to avoid building outputs that
+## already exist in the cache. Uploading to ResultStore is important
+## because it lets build results be easily shared in case of failure.
+build:rcache --config=_rcache
+build:rcache --config=_resultstore
+
+## Enables the remote cache, but without ResultStore.
+build:rcache_no_resultstore --config=_rcache
+
+## Enables remote execution so actions are performed on the remote systems.
+build:remote --remote_executor=remotebuildexecution.googleapis.com
+build:remote --config=_remote_base
+# Mimics the release config to report accurate performance numbers in tests.
+build:remote --config=release
+build:remote --remote_timeout=3600
+build:remote --strategy=CppCompile=remote
+build:remote --strategy=CppLink=remote
+build:remote --show_timestamps
+# Stop downloading of build outputs to the local machine and
+# removes a possibility of network/disk bottlenecks when using RBE.
+build:remote --remote_download_toplevel
+
+## Enables dynamic scheduling. This will run some actions locally
+## as well as remotely, choosing whichever finishes first.
+build:dynamic --config=remote
+build:dynamic --internal_spawn_scheduler
+build:dynamic --strategy=Javac=dynamic
+build:dynamic --strategy=kotlinc=dynamic
+build:dynamic --strategy=formc=dynamic
+build:dynamic --strategy=singlejar=dynamic
+# Configure auxiliary java mnemonics to run dynamically
+build:dynamic --strategy=JavaIjar=dynamic
+build:dynamic --strategy=JavaDeployJar=dynamic
+build:dynamic --strategy=JavaSourceJar=dynamic
+build:dynamic --strategy=Turbine=dynamic
+# Studio build actions, see b/171900265 for details
+build:dynamic --strategy=zipper=dynamic
+build:dynamic --strategy=zipmerger=dynamic
+build:dynamic --strategy=chkplugin=dynamic
+build:dynamic --strategy=stamper=dynamic
+build:dynamic --strategy=PythonZipper=dynamic
+# We want to use persistent workers, if supported (Javac, kotlinc, formc)
+build:dynamic --dynamic_local_strategy=worker,sandboxed,local
+# Increase worker visibility in case there are issues.
+build:dynamic --worker_verbose
+# Prevents b/156952249. Android Build (buildbot) kills bazel between builds,
+# so there is no need to keep workers alive after the build.
+build:dynamic --worker_quit_after_build
+# Disables verbose failures to avoid triggering --materialize_param_files, see
+# b/160150358#comment30
+build:dynamic --noverbose_failures
+# Multiplex workers are not sandboxed, and are not ready to be used with
+# dynamic scheduling.
+build:dynamic --noexperimental_worker_multiplex

@@ -30,9 +30,45 @@ iml_module(
         "//tools/adt/idea/.idea/libraries:truth[test]",
         "//tools/base/fakeadbserver:studio.android.sdktools.fakeadbserver[module, test]",
         "//tools/adt/idea/.idea/libraries:libam-instrumentation-data-proto",
+        "//tools/adt/idea/.idea/libraries:libapp-processes-proto",
     ],
 )
 
+# Compile ddmlib without any add-ons to ensure it builds on it's own. Once the AGP - ddmlib
+# dependency is reworked, we can move the code around to properly represent the separation.
+java_library(
+    name = "ddmlib-base",
+    srcs = glob(["src/main/java/com/android/ddmlib/**/*.java"]),
+    resource_strip_prefix = "tools/base/ddmlib",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":am-instrumentation-data-proto",
+        ":app-processes-proto",
+        "//tools/base/annotations",
+        "//tools/base/common:tools.common",
+        "//tools/base/third_party:com.google.guava_guava",
+        "//tools/base/third_party:com.google.protobuf_protobuf-java",
+        "//tools/base/third_party:net.sf.kxml_kxml2",
+    ],
+)
+
+# Incremental library in ddmlib is standalone
+java_library(
+    name = "incfs",
+    srcs = glob(["src/main/java/com/android/incfs/**/*.java"]),
+    resource_strip_prefix = "tools/base/ddmlib",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":ddmlib-base",
+        "//tools/base/annotations",
+        "//tools/base/common:tools.common",
+        "//tools/base/third_party:com.google.guava_guava",
+    ],
+)
+
+# For now instead of combining ddmlib-base and its add-ons, we recompile all together
+# until we sort out the AGP - ddmlib dependency. This matches what is done in build.gradle.
+# Note that this target is released via go/ab studio_linux, for its usage in the platform.
 # Kotlin is not enabled in ddmlib module but here we use kotlin_library rule
 # for bundled_deps support.
 kotlin_library(
@@ -43,6 +79,7 @@ kotlin_library(
     ]),
     bundled_deps = [
         ":am-instrumentation-data-proto",
+        ":app-processes-proto",
     ],
     pom = ":pom",
     resource_strip_prefix = "tools/base/ddmlib",
@@ -92,7 +129,14 @@ avd(name = "avd")
 
 java_proto_library(
     name = "am-instrumentation-data-proto",
-    srcs = glob(["src/main/proto/**/*.proto"]),
+    srcs = glob(["src/main/proto/instrumentation-data.proto"]),
+    protoc_version = "3.4.0",
+    visibility = ["//visibility:public"],
+)
+
+java_proto_library(
+    name = "app-processes-proto",
+    srcs = glob(["src/main/proto/app_processes.proto"]),
     protoc_version = "3.4.0",
     visibility = ["//visibility:public"],
 )

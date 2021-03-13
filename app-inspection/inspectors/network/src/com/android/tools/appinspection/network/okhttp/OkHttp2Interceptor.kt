@@ -17,7 +17,7 @@ package com.android.tools.appinspection.network.okhttp
 
 import com.android.tools.appinspection.network.HttpTrackerFactory
 import com.android.tools.appinspection.network.trackers.HttpConnectionTracker
-import com.android.tools.appinspection.network.utils.StudioLog
+import com.android.tools.appinspection.network.utils.logError
 import com.squareup.okhttp.Interceptor
 import com.squareup.okhttp.Request
 import com.squareup.okhttp.Response
@@ -33,9 +33,9 @@ class OkHttp2Interceptor(private val trackerFactory: HttpTrackerFactory) : Inter
         try {
             tracker = trackRequest(request)
         } catch (ex: Exception) {
-            StudioLog.e("Could not track an OkHttp2 request", ex)
+            logError("Could not track an OkHttp2 request", ex)
         } catch (error: NoSuchMethodError) {
-            StudioLog.e(
+            logError(
                 "Could not track an OkHttp2 request due to a missing method, which could"
                         + " happen if your project uses proguard to remove unused code",
                 error
@@ -53,9 +53,9 @@ class OkHttp2Interceptor(private val trackerFactory: HttpTrackerFactory) : Inter
                 response = trackResponse(tracker, response)
             }
         } catch (ex: Exception) {
-            StudioLog.e("Could not track an OkHttp2 response", ex)
+            logError("Could not track an OkHttp2 response", ex)
         } catch (error: NoSuchMethodError) {
-            StudioLog.e(
+            logError(
                 "Could not track an OkHttp2 response due to a missing method, which could"
                         + " happen if your project uses proguard to remove unused code",
                 error

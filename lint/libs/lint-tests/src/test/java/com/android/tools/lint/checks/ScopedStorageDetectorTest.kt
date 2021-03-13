@@ -60,7 +60,7 @@ class ScopedStorageDetectorTest : AbstractCheckTest() {
             .run()
             .expect(
                 """
-                    AndroidManifest.xml:4: Warning: Most apps are not allowed to use MANAGE_EXTERNAL_STORAGE [ScopedStorage]
+                    AndroidManifest.xml:4: Warning: The Google Play store has a policy that limits usage of MANAGE_EXTERNAL_STORAGE [ScopedStorage]
                         <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"/><!-- ERROR -->
                                                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                     0 errors, 1 warnings

@@ -54,7 +54,15 @@ interface VariantBuilder: ComponentBuilder, ActionableComponentObject {
      * Set to `true` if the variant's has any unit tests, false otherwise. Value is [Boolean#True]
      * by default.
      */
+    @get:Deprecated("Use enableUnitTest", replaceWith=ReplaceWith("enableUnitTest"))
     var unitTestEnabled: Boolean
+
+    /**
+     * Set to `true` if the variant's has any unit tests, false otherwise. Value is [Boolean#True]
+     * by default.
+     */
+    var enableUnitTest: Boolean
+
 
     /**
      * Registers an extension object to the variant object. Extension objects can be looked up

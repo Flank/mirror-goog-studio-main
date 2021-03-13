@@ -403,7 +403,7 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
 
             task.getLintTool()
                     .initialize(
-                            globalScope.getProject(),
+                            creationConfig.getServices().getProjectInfo().getProject(),
                             creationConfig.getServices().getProjectOptions());
             task.sourcesFileTree =
                     task.getProject()

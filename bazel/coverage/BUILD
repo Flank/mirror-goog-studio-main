@@ -159,10 +159,10 @@ coverage_report(
 coverage_report(
     name = "database-inspector",
     srcpath_include = [
-        "tools/adt/idea/android-debuggers",
+        "tools/adt/idea/app-inspection/inspectors/database",
     ],
     tests = [
-        "//tools/adt/idea/android-debuggers:intellij.android.debuggers.tests_tests",
+        "//tools/adt/idea/app-inspection/inspectors/database:intellij.android.app-inspection.inspectors.database.tests_tests",
     ],
 )
 
@@ -616,7 +616,6 @@ coverage_report(
         "//tools/adt/idea/android:intellij.android.core.tests_tests",
         "//tools/adt/idea/android-adb:intellij.android.adb.tests_tests",
         "//tools/adt/idea/android-common:intellij.android.common_tests",
-        "//tools/adt/idea/android-debuggers:intellij.android.debuggers.tests_tests",
         #TODO(b/155257347) too flaky for coverage runs
         #"//tools/adt/idea/android-kotlin:intellij.android.kotlin.tests_tests",
         "//tools/adt/idea/android-lang:intellij.android.lang.tests_tests",
@@ -628,6 +627,7 @@ coverage_report(
         "//tools/adt/idea/apkanalyzer:intellij.android.apkanalyzer_tests",
         "//tools/adt/idea/app-inspection/api:intellij.android.app-inspection.api_tests",
         "//tools/adt/idea/app-inspection/ide:intellij.android.app-inspection.ide.tests_tests",
+        "//tools/adt/idea/app-inspection/inspectors/database:intellij.android.app-inspection.inspectors.database.tests_tests",
         "//tools/adt/idea/app-inspection/inspectors/workmanager/model:intellij.android.app-inspection.inspectors.workmanager.model_tests",
         "//tools/adt/idea/app-inspection/inspectors/workmanager/view:intellij.android.app-inspection.inspectors.workmanager.view.tests_tests",
         "//tools/adt/idea/assistant:assistant-test_tests",

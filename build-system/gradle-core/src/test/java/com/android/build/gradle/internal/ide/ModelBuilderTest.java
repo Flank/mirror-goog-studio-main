@@ -105,16 +105,21 @@ public class ModelBuilderTest {
 
         project = ProjectFactory.getProject();
 
-        when(globalScope.getProject()).thenReturn(project);
+        when(projectInfo.getProject()).thenReturn(project);
 
         syncIssueReporter =
-                new SyncIssueReporterImpl(SyncOptions.EvaluationMode.IDE, new FakeLogger());
+                new SyncIssueReporterImpl(
+                        SyncOptions.EvaluationMode.IDE,
+                        SyncOptions.ErrorFormatMode.HUMAN_READABLE,
+                        new FakeLogger());
 
         DslServices dslServices = FakeServices.createDslServices();
         when(globalScope.getDslServices()).thenReturn(dslServices);
 
         new SyncIssueReporterImpl.GlobalSyncIssueService.RegistrationAction(
-                        project, SyncOptions.EvaluationMode.IDE)
+                        project,
+                        SyncOptions.EvaluationMode.IDE,
+                        SyncOptions.ErrorFormatMode.HUMAN_READABLE)
                 .execute();
         new AnalyticsConfiguratorService.RegistrationAction(project).execute();
 

@@ -304,7 +304,7 @@ abstract class PrefabPackageTask : NonIncrementalTask() {
             super.configure(task)
             task.description = "Creates a Prefab package for inclusion in an AAR"
 
-            val project = creationConfig.globalScope.project
+            val project = creationConfig.services.projectInfo.getProject()
             task.packageName = project.name
             task.packageVersion = project.version.toString()
             task.modules = modules

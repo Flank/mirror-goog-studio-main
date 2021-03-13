@@ -18,12 +18,16 @@ package com.android.build.gradle.internal.dsl.decorator
 
 import com.android.build.gradle.internal.dsl.AgpDslLockedException
 import com.android.build.gradle.internal.dsl.Lockable
+import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.build.gradle.internal.services.DslServices
+import com.android.testutils.MockitoKt.any
 import com.google.common.truth.Truth.assertThat
 import com.google.common.truth.Truth.assertWithMessage
 import groovy.util.Eval
+import org.gradle.api.Action
 import org.gradle.api.provider.Property
 import org.junit.Test
+import org.mockito.Mockito
 import org.mockito.Mockito.mock
 import java.lang.reflect.Modifier
 import javax.inject.Inject
@@ -118,17 +122,13 @@ class DslDecoratorUnitTest {
 
     }
 
-    interface WithManagedStringLockable : Lockable {
-        abstract var managedString: String
-    }
-
     @Test
     fun `check locking works for managed var properties`() {
         val decorator = DslDecorator(listOf(SupportedPropertyType.Var.String))
-        val decorated = decorator.decorate(WithManagedStringLockable::class)
+        val decorated = decorator.decorate(WithManagedString::class)
         val o = decorated.getDeclaredConstructor(DslServices::class.java).newInstance(dslServices)
          o.managedString = "a"
-        o.lock()
+        (o as Lockable).lock()
         val failure = assertFailsWith<AgpDslLockedException> {
             o.managedString = "b"
         }
@@ -136,6 +136,53 @@ class DslDecoratorUnitTest {
         assertThat(o.managedString).isEqualTo("a")
     }
 
+    interface WithManagedBoolean {
+        var managedBoolean: Boolean
+    }
+
+    @Test
+    fun `check managed boolean properties`() {
+        val decorator = DslDecorator(listOf(SupportedPropertyType.Var.Boolean))
+        val decorated = decorator.decorate(WithManagedBoolean::class.java)
+        val o = decorated.getDeclaredConstructor(DslServices::class.java).newInstance(dslServices)
+
+        assertThat(o.managedBoolean).isFalse()
+        o.managedBoolean = true
+        assertThat(o.managedBoolean).isTrue()
+    }
+
+
+    interface WithManagedNullableBoolean {
+        var managedBoolean: Boolean?
+    }
+
+    @Test
+    fun `check managed nullable boolean properties`() {
+        val decorator = DslDecorator(listOf(SupportedPropertyType.Var.NullableBoolean))
+        val decorated = decorator.decorate(WithManagedNullableBoolean::class.java)
+        val o = decorated.getDeclaredConstructor(DslServices::class.java).newInstance(dslServices)
+
+        assertThat(o.managedBoolean).isNull()
+        o.managedBoolean = true
+        assertThat(o.managedBoolean).isTrue()
+        o.managedBoolean = false
+        assertThat(o.managedBoolean).isFalse()
+    }
+
+    interface WithManagedInteger {
+        var managedInteger: Int
+    }
+
+    @Test
+    fun `check managed integer properties`() {
+        val decorator = DslDecorator(listOf(SupportedPropertyType.Var.Int))
+        val decorated = decorator.decorate(WithManagedInteger::class.java)
+        val o = decorated.getDeclaredConstructor(DslServices::class.java).newInstance(dslServices)
+
+        assertThat(o.managedInteger).isEqualTo(0)
+        o.managedInteger = -3
+        assertThat(o.managedInteger).isEqualTo(-3)
+    }
 
     abstract class WithExtraSetter {
         abstract var managedString: String
@@ -353,6 +400,117 @@ class DslDecoratorUnitTest {
         assertThat(withSet.set).containsExactly("one", "two", "three").inOrder()
     }
 
+    interface SubBlock {
+        var string: String
+    }
+
+    interface WithSubBlock {
+        val subBlock: SubBlock
+        fun subBlock(action: SubBlock.() -> Unit)
+    }
+
+    /** The new sub blocks require no explicit implementation  */
+    @Test
+    fun `check green-field sub-block instantiation`() {
+        val subBlockPropertyType = SupportedPropertyType.Block(SubBlock::class.java)
+        val decorator = DslDecorator(listOf(subBlockPropertyType, SupportedPropertyType.Var.String))
+        registerTestDecorator(decorator)
+
+        val decorated = decorator.decorate(WithSubBlock::class)
+        val withSubBlock: WithSubBlock = FakeObjectFactory.factory.newInstance(decorated, dslServices)
+
+        withSubBlock.subBlock.string = "one"
+        assertThat(withSubBlock.subBlock.string).isEqualTo("one")
+        withSubBlock.subBlock {
+            string = "two"
+        }
+        assertThat(withSubBlock.subBlock.string).isEqualTo("two")
+
+        // Check action method (used by Gradle to generate the groovy closure method)
+        val action = Action<SubBlock> { it.string = "three" }
+        decorated.getDeclaredMethod("subBlock", Action::class.java)
+            .invoke(withSubBlock, action)
+        assertThat(withSubBlock.subBlock.string).isEqualTo("three")
+
+        // Check Groovy use
+        Eval.me("withSubBlock", withSubBlock, """
+            withSubBlock.subBlock {
+                string = "four"
+            }
+        """.trimIndent())
+
+        assertThat(withSubBlock.subBlock.string).isEqualTo("four")
+    }
+
+    abstract class SubBlockImpl: SubBlock {
+        fun implMethod(): Int { return 3 }
+    }
+
+    abstract class WithSubBlockImpl @Inject constructor(dslServices: DslServices): WithSubBlock {
+        abstract override val subBlock: SubBlockImpl
+    }
+
+    @Test
+    fun `check existing sub-block instantiation`() {
+        val subBlockPropertyType = SupportedPropertyType.Block(
+            type = SubBlock::class.java,
+            implementationType = SubBlockImpl::class.java
+        )
+        val decorator = DslDecorator(listOf(subBlockPropertyType, SupportedPropertyType.Var.String))
+        registerTestDecorator(decorator)
+
+        val decorated = decorator.decorate(WithSubBlockImpl::class)
+        val withSubBlockImpl: WithSubBlockImpl = FakeObjectFactory.factory.newInstance(decorated, dslServices)
+        val withSubBlock: WithSubBlock = withSubBlockImpl
+
+        // Check that we return the implementation type
+        withSubBlockImpl.subBlock.implMethod()
+        withSubBlockImpl.subBlock.string = "zero"
+        assertThat(withSubBlock.subBlock.string).isEqualTo("zero")
+
+        withSubBlock.subBlock.string = "one"
+        assertThat(withSubBlock.subBlock.string).isEqualTo("one")
+        withSubBlock.subBlock {
+            string = "two"
+        }
+        assertThat(withSubBlock.subBlock.string).isEqualTo("two")
+        Eval.me("withSubBlock", withSubBlock, """
+            withSubBlock.subBlock {
+                string = "three"
+            }
+        """.trimIndent())
+
+        assertThat(withSubBlock.subBlock.string).isEqualTo("three")
+
+    }
+
+    @Test
+    fun `check locking works for subBlocks`() {
+        val subBlockPropertyType = SupportedPropertyType.Block(SubBlock::class.java)
+        val decorator = DslDecorator(listOf(subBlockPropertyType, SupportedPropertyType.Var.String))
+        registerTestDecorator(decorator)
+
+        val decorated = decorator.decorate(WithSubBlock::class)
+        val withSubBlock: WithSubBlock = FakeObjectFactory.factory.newInstance(decorated, dslServices)
+        withSubBlock.subBlock.string= "a"
+        (withSubBlock as Lockable).lock()
+        val failure = assertFailsWith<AgpDslLockedException> {
+            withSubBlock.subBlock.string = "b"
+        }
+        assertThat(failure).hasMessageThat().contains("It is too late to set string")
+        assertThat(withSubBlock.subBlock.string).isEqualTo("a")
+    }
+
     private val dslServices: DslServices = mock(DslServices::class.java)
 
+    private fun registerTestDecorator(decorator: DslDecorator) {
+        Mockito.`when`(
+            dslServices.newDecoratedInstance(any(Class::class.java), any(DslServices::class.java))
+        ).then { invocation ->
+            val toDecorate = invocation.getArgument<Class<*>>(0)
+            val dslServices = invocation.getArgument<DslServices>(1)
+            val decorated = decorator.decorate(toDecorate)
+            FakeObjectFactory.factory.newInstance(decorated, dslServices)
+        }
+    }
 }

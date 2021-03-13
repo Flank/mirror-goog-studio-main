@@ -15,7 +15,7 @@
  */
 package com.android.ide.common.gradle.model.impl
 
-import com.android.builder.model.CodeShrinker
+import com.android.ide.common.gradle.model.CodeShrinker
 import com.android.ide.common.gradle.model.IdeAndroidArtifact
 import com.android.ide.common.gradle.model.IdeAndroidArtifactOutput
 import com.android.ide.common.gradle.model.IdeClassField

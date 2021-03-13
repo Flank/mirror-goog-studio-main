@@ -60,6 +60,7 @@ class GradleAndroidTestResultListener(
         private val logger = getLogger()
     }
 
+    private lateinit var deviceId: String
     private lateinit var channel: ManagedChannel
     private lateinit var grpcServiceStub: GradleAndroidTestResultListenerServiceStub
     private lateinit var requestObserver: StreamObserver<TestResultEvent>
@@ -69,6 +70,7 @@ class GradleAndroidTestResultListener(
         val pluginConfig = GradleAndroidTestResultListenerConfig.parseFrom(
                 (config as ProtoConfig).configProto!!.value)
 
+        deviceId = pluginConfig.deviceId
         channel = channelFactory(pluginConfig)
         grpcServiceStub = GradleAndroidTestResultListenerServiceGrpc.newStub(channel)
 
@@ -90,29 +92,32 @@ class GradleAndroidTestResultListener(
         requestObserver = grpcServiceStub.recordTestResultEvent(responseObserver)
     }
 
-    override fun onTestSuiteStarted() {
-        val event = TestResultEvent.newBuilder().apply {
+    override fun onBeforeTestSuite() {
+    }
+
+    override fun onTestSuiteStarted(testSuiteMetaData: TestSuiteResultProto.TestSuiteMetaData?) {
+        val event = createTestResultEvent().apply {
             testSuiteStarted = TestSuiteStarted.getDefaultInstance()
         }.build()
         requestObserver.onNext(event)
     }
 
     override fun beforeTest(testCase: TestCaseProto.TestCase?) {
-        val event = TestResultEvent.newBuilder().apply {
+        val event = createTestResultEvent().apply {
             testCaseStarted = TestResultEvent.TestCaseStarted.getDefaultInstance()
         }.build()
         requestObserver.onNext(event)
     }
 
     override fun onTestResult(testResult: TestResultProto.TestResult) {
-        val event = TestResultEvent.newBuilder().apply {
+        val event = createTestResultEvent().apply {
             testCaseFinished = TestResultEvent.TestCaseFinished.getDefaultInstance()
         }.build()
         requestObserver.onNext(event)
     }
 
     override fun onTestSuiteResult(testSuiteResult: TestSuiteResultProto.TestSuiteResult) {
-        val event = TestResultEvent.newBuilder().apply {
+        val event = createTestResultEvent().apply {
             testSuiteFinished = TestResultEvent.TestSuiteFinished.getDefaultInstance()
         }.build()
         requestObserver.onNext(event)
@@ -123,5 +128,11 @@ class GradleAndroidTestResultListener(
         finishLatch.await()
 
         channel.shutdownNow().awaitTermination(1, TimeUnit.MINUTES)
+    }
+
+    private fun createTestResultEvent(): TestResultEvent.Builder {
+        return TestResultEvent.newBuilder().apply {
+            deviceId = this@GradleAndroidTestResultListener.deviceId
+        }
     }
 }

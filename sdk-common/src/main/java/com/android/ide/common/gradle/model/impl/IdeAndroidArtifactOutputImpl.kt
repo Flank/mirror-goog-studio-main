@@ -15,13 +15,13 @@
  */
 package com.android.ide.common.gradle.model.impl
 
-import com.android.build.FilterData
 import com.android.ide.common.gradle.model.IdeAndroidArtifactOutput
+import com.android.ide.common.gradle.model.IdeFilterData
 import java.io.File
 import java.io.Serializable
 
 data class IdeAndroidArtifactOutputImpl(
-  override val filters: Collection<FilterData>,
+  override val filters: Collection<IdeFilterData>,
   override val versionCode: Int,
   override val outputFile: File
 ) : IdeAndroidArtifactOutput, Serializable

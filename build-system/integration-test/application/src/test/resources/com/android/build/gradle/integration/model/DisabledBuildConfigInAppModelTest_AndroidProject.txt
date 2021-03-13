@@ -1,32 +1,22 @@
 > AndroidProject:
-    - defaultConfig:
-       - productFlavor:
-          - buildConfigFields = (null)
-    - buildTypes:
-       - buildTypeContainer(debug):
-          - buildType:
-             - buildConfigFields = (null)
-       - buildTypeContainer(release):
-          - buildType:
-             - buildConfigFields = (null)
-    > variants:
-       > variant(debug):
-          - mainArtifact:
-             - generatedSourceFolders:
-                * {PROJECT}/build/generated/aidl_source_output_dir/debug/out{!}
-                * {PROJECT}/build/generated/ap_generated_sources/debug/out{!}
-                * {PROJECT}/build/generated/renderscript_source_output_dir/debug/out{!}
-          - androidTestArtifact:
-             - generatedSourceFolders:
-                * {PROJECT}/build/generated/aidl_source_output_dir/debugAndroidTest/out{!}
-                * {PROJECT}/build/generated/ap_generated_sources/debugAndroidTest/out{!}
-                * {PROJECT}/build/generated/renderscript_source_output_dir/debugAndroidTest/out{!}
-       < variant(debug)
-       - variant(release):
-          - mainArtifact:
-             - generatedSourceFolders:
-                * {PROJECT}/build/generated/aidl_source_output_dir/release/out{!}
-                * {PROJECT}/build/generated/ap_generated_sources/release/out{!}
-                * {PROJECT}/build/generated/renderscript_source_output_dir/release/out{!}
-    < variants
+   > variants:
+      > variant(debug):
+         - mainArtifact:
+            - generatedSourceFolders:
+               * {PROJECT}/build/generated/aidl_source_output_dir/debug/out{!}
+               * {PROJECT}/build/generated/ap_generated_sources/debug/out{!}
+               * {PROJECT}/build/generated/renderscript_source_output_dir/debug/out{!}
+         - androidTestArtifact:
+            - generatedSourceFolders:
+               * {PROJECT}/build/generated/aidl_source_output_dir/debugAndroidTest/out{!}
+               * {PROJECT}/build/generated/ap_generated_sources/debugAndroidTest/out{!}
+               * {PROJECT}/build/generated/renderscript_source_output_dir/debugAndroidTest/out{!}
+      < variant(debug)
+      - variant(release):
+         - mainArtifact:
+            - generatedSourceFolders:
+               * {PROJECT}/build/generated/aidl_source_output_dir/release/out{!}
+               * {PROJECT}/build/generated/ap_generated_sources/release/out{!}
+               * {PROJECT}/build/generated/renderscript_source_output_dir/release/out{!}
+   < variants
 < AndroidProject

@@ -1,5 +1,0 @@
-- AndroidProject:
-    - productFlavors:
-       - productFlavorContainer(flavorA):
-          - productFlavor:
-             - isDefault = true

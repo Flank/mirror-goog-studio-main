@@ -119,7 +119,8 @@ class UtpConfigFactory {
                             testResultListenerServerPort,
                             resultListenerClientCert,
                             resultListenerClientPrivateKey,
-                            trustCertCollection))
+                            trustCertCollection,
+                            device.serialNumber))
         }.build()
     }
 
@@ -128,12 +129,14 @@ class UtpConfigFactory {
             testResultListenerServerPort: Int,
             resultListenerClientCert: File,
             resultListenerClientPrivateKey: File,
-            trustCertCollection: File): ExtensionProto.Extension {
+            trustCertCollection: File,
+            deviceId: String): ExtensionProto.Extension {
         val config = Any.pack(GradleAndroidTestResultListenerConfig.newBuilder().apply {
             resultListenerServerPort = testResultListenerServerPort
             resultListenerClientCertFilePath = resultListenerClientCert.absolutePath
             resultListenerClientPrivateKeyFilePath = resultListenerClientPrivateKey.absolutePath
             trustCertCollectionFilePath = trustCertCollection.absolutePath
+            this.deviceId = deviceId
         }.build())
         return ANDROID_TEST_PLUGIN_RESULT_LISTENER_GRADLE.toExtensionProto(utpDependencies, config)
     }

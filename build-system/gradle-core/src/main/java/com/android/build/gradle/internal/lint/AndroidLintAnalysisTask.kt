@@ -258,7 +258,7 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
             task.group = JavaBasePlugin.VERIFICATION_GROUP
             task.description = description
 
-            task.initializeGlobalInputs(creationConfig.globalScope)
+            task.initializeGlobalInputs(creationConfig.globalScope, task.project)
             task.lintModelDirectory.set(variant.main.paths.getIncrementalDir(task.name))
             task.lintRulesJar.from(creationConfig.globalScope.localCustomLintChecks)
             task.lintRulesJar.from(
@@ -285,14 +285,14 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
             )
             task.lintTool
                 .initialize(
-                    creationConfig.globalScope.project,
+                    creationConfig.services.projectInfo.getProject(),
                     creationConfig.services.projectOptions
                 )
         }
     }
 
-    private fun initializeGlobalInputs(globalScope: GlobalScope) {
-        initializeGlobalInputs(project = globalScope.project, isAndroid = true)
+    private fun initializeGlobalInputs(globalScope: GlobalScope, project: Project) {
+        initializeGlobalInputs(project, isAndroid = true)
     }
 
     private fun initializeGlobalInputs(

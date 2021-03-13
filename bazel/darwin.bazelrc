@@ -1,0 +1,20 @@
+import %workspace%/tools/base/bazel/common.bazelrc
+
+build --action_env=BAZEL_USE_CPP_ONLY_TOOLCHAIN=1
+build --host_linkopt="-L/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib"
+build --host_linkopt="-F/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks"
+build --linkopt="-L/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib"
+build --linkopt="-F/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks"
+
+build --host_platform=//tools/base/bazel/platforms:macos
+build --platforms=//tools/base/bazel/platforms:macos
+
+build:release --copt=-fdata-sections
+build:release --cxxopt=-fdata-sections
+build:release --copt=-fno-exceptions
+build:release --cxxopt=-fno-exceptions
+build:release --copt=-ffunction-sections
+build:release --cxxopt=-ffunction-sections
+# Disable Clang diagnostics for release builds, to reduce the amount of noise
+# in the output in continuous builds and --config=remote runs.
+build:release --copt=-w

@@ -85,6 +85,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.PACKAGED_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.PROCESSED_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_R_CLASS_CLASSES
 import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
+import com.android.build.gradle.internal.scope.ProjectInfo
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.scope.publishArtifactToConfiguration
 import com.android.build.gradle.internal.services.AndroidLocationsBuildService
@@ -250,15 +251,16 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         private val hasFlavors: Boolean,
         private val projectOptions: ProjectOptions,
         @JvmField protected val globalScope: GlobalScope,
-        @JvmField protected val extension: BaseExtension) {
+        @JvmField protected val extension: BaseExtension,
+        private val projectInfo: ProjectInfo) {
 
     @JvmField
-    protected val project = globalScope.project
+    protected val project = projectInfo.getProject()
     protected val logger: Logger = Logging.getLogger(this.javaClass)
 
     @JvmField
     protected val taskFactory: TaskFactory = TaskFactoryImpl(project.tasks)
-    protected val lintTaskManager: LintTaskManager = LintTaskManager(globalScope, taskFactory)
+    protected val lintTaskManager: LintTaskManager = LintTaskManager(globalScope, taskFactory, projectInfo)
     @JvmField
     protected val variantPropertiesList: List<VariantT> =
             variants.map(ComponentInfo<VariantBuilderT, VariantT>::variant)
@@ -440,7 +442,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                 .any { componentProperties: ComponentCreationConfig ->
                     componentProperties.buildFeatures.compose }
         recordIrBackendForAnalytics(
-                allPropertiesList, extension, globalScope.project, composeIsEnabled)
+                allPropertiesList, extension, project, composeIsEnabled)
         if (!composeIsEnabled) {
             return
         }
@@ -471,7 +473,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         // add compose args to all kotlin compile tasks
         for (creationConfig in allPropertiesList) {
             try {
-                val compileKotlin = getKotlinCompile(globalScope.project, creationConfig)
+                val compileKotlin = getKotlinCompile(project, creationConfig)
 
                 compileKotlin.configure {
                     addComposeArgsToKotlinCompile(
@@ -1208,7 +1210,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                         "Tested variant "
                                 + testedVariant.name
                                 + " in "
-                                + globalScope.project.path
+                                + project.path
                                 + " must be a library or an application to have unit tests.")
             }
             val generateTestConfig = taskFactory.register(
@@ -1385,7 +1387,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             connectedAndroidTestTask = taskFactory.register(
                     AndroidReportTask.CreationAction(
                             globalScope,
-                            AndroidReportTask.CreationAction.TaskKind.CONNECTED))
+                            AndroidReportTask.CreationAction.TaskKind.CONNECTED, projectInfo))
             reportTasks.add(connectedAndroidTestTask.name)
         } else {
             connectedAndroidTestTask = taskFactory.register(
@@ -1406,7 +1408,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             deviceAndroidTestTask = taskFactory.register(
                     AndroidReportTask.CreationAction(
                             globalScope,
-                            AndroidReportTask.CreationAction.TaskKind.DEVICE_PROVIDER))
+                            AndroidReportTask.CreationAction.TaskKind.DEVICE_PROVIDER, projectInfo))
             reportTasks.add(deviceAndroidTestTask.name)
         } else {
             deviceAndroidTestTask = taskFactory.register(
@@ -1525,7 +1527,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                     androidTestProperties,
                     androidTestProperties,
                     androidTestProperties.artifacts.get(ArtifactType.APK),
-                    getFeatureName(globalScope.project.path),
+                    getFeatureName(project.path),
                     testedVariant
                             .variantDependencies
                             .getArtifactFileCollection(ConsumedConfigType.RUNTIME_CLASSPATH,
@@ -2349,7 +2351,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                         + "VariantType: "
                         + creationConfig.variantType)
         val artifact = creationConfig.artifacts.get(internalArtifactType)
-        val artifactDirectory = creationConfig.globalScope.project.objects.directoryProperty()
+        val artifactDirectory = project.objects.directoryProperty()
         artifactDirectory.set(artifact)
         for (modulePath in modulePaths) {
             val file = artifactDirectory.file(getFeatureFileName(modulePath, fileExtension))
@@ -2698,8 +2700,8 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
 
     private fun configureKaptTaskInScopeForDataBinding(
             creationConfig: ComponentCreationConfig, kaptTask: Task) {
-        val dataBindingArtifactDir = creationConfig.globalScope.project.objects.directoryProperty()
-        val exportClassListFile = creationConfig.globalScope.project.objects.fileProperty()
+        val dataBindingArtifactDir = creationConfig.services.projectInfo.getProject().objects.directoryProperty()
+        val exportClassListFile = creationConfig.services.projectInfo.getProject().objects.fileProperty()
         val kaptTaskProvider = taskFactory.named(kaptTask.name)
 
         // Register data binding artifacts as outputs
@@ -2853,8 +2855,9 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                 projectOptions: ProjectOptions,
                 globalScope: GlobalScope,
                 variantType: VariantType,
-                sourceSetContainer: Iterable<AndroidSourceSet?>) {
-            val project = globalScope.project
+                sourceSetContainer: Iterable<AndroidSourceSet?>,
+                projectInfo: ProjectInfo) {
+            val project = projectInfo.getProject()
             val taskFactory = TaskFactoryImpl(project.tasks)
             taskFactory.register(
                     UNINSTALL_ALL
@@ -2879,7 +2882,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
 
             // Make sure MAIN_PREBUILD runs first:
             taskFactory.register(MAIN_PREBUILD)
-            taskFactory.register(ExtractProguardFiles.CreationAction(projectOptions, globalScope))
+            taskFactory.register(ExtractProguardFiles.CreationAction(projectOptions, globalScope, projectInfo))
                 .configure { it: ExtractProguardFiles -> it.dependsOn(MAIN_PREBUILD) }
             taskFactory.register(SourceSetsTask.CreationAction(sourceSetContainer))
             taskFactory.register(
@@ -2890,7 +2893,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             }
             taskFactory.register(LintCompile.CreationAction(globalScope))
             if (!variantType.isForTesting) {
-                LintTaskManager(globalScope, taskFactory).createBeforeEvaluateLintTasks()
+                LintTaskManager(globalScope, taskFactory, projectInfo).createBeforeEvaluateLintTasks()
             }
 
             // create a single configuration to point to a project or a local file that contains

@@ -30,7 +30,8 @@ class SnapshotItemRegistrarImpl(
 
     fun isNotEmpty(): Boolean = _items.isNotEmpty()
 
-    fun computeKeySpacing() = _items.filterIsInstance<KeyValueItem>().map { it.keyLen }.max() ?: 0
+    fun computeKeySpacing(): Int =
+            _items.filterIsInstance<KeyValueItem>().map { it.keyLen }.max()?.let { it + 1 } ?: 0
 
     /**
      * Adds a property and its value
@@ -127,16 +128,16 @@ class SnapshotItemRegistrarImpl(
         if (list.isNullOrEmpty()) {
             _items.add(KeyValueItem(name, list?.toString() ?: NULL_STRING))
         } else {
-            val subHolder = SnapshotItemRegistrarImpl(
+            SnapshotItemRegistrarImpl(
                 buildIdMap = buildIdMap,
                 name = name
-            )
+            ).also {
+                it.action(list)
 
-            subHolder.action(list)
-
-            // validate that items were added to the new builder.
-            if (subHolder.isNotEmpty()) {
-                _items.add(subHolder)
+                // validate that items were added to the new builder.
+                if (it.isNotEmpty()) {
+                    _items.add(it)
+                }
             }
         }
     }
@@ -159,15 +160,15 @@ class SnapshotItemRegistrarImpl(
         if (obj == null) {
             _items.add(KeyValueItem(name, NULL_STRING))
         } else {
-            val subHolder = SnapshotItemRegistrarImpl(
+            SnapshotItemRegistrarImpl(
                 buildIdMap = buildIdMap,
                 name = name
-            )
+            ).also {
+                obj.action(it)
 
-            obj.action(subHolder)
-
-            if (subHolder.isNotEmpty()) {
-                _items.add(subHolder)
+                if (it.isNotEmpty()) {
+                    _items.add(it)
+                }
             }
         }
     }

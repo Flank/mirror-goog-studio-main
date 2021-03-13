@@ -30,6 +30,7 @@ import com.android.build.gradle.internal.cxx.model.symbolFolderIndexFile
 import com.android.build.gradle.internal.errors.SyncIssueReporter
 import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.scope.ProjectInfo
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.variant.VariantModel
 import com.android.build.gradle.options.BooleanOption
@@ -50,14 +51,15 @@ class NativeModelBuilder(
     private val issueReporter: SyncIssueReporter,
     private val projectOptions: ProjectOptions,
     private val globalScope: GlobalScope,
-    private val variantModel: VariantModel
+    private val variantModel: VariantModel,
+    private val projectInfo: ProjectInfo
 ) : ParameterizedToolingModelBuilder<NativeModelBuilderParameter> {
     private val ops = object : ExecOperations {
         override fun exec(action: Action<in ExecSpec>) =
-            globalScope.project.exec(action)
+            projectInfo.getProject().exec(action)
 
         override fun javaexec(action: Action<in JavaExecSpec>) =
-            globalScope.project.javaexec(action)
+                projectInfo.getProject().javaexec(action)
     }
     private val ideRefreshExternalNativeModel
         get() =
@@ -75,7 +77,7 @@ class NativeModelBuilder(
     fun createGenerator(model: CxxConfigurationModel) : CxxMetadataGenerator {
         return generators.computeIfAbsent(model) { model ->
             val analyticsService =
-                getBuildService<AnalyticsService>(globalScope.project.gradle.sharedServices).get()
+                getBuildService<AnalyticsService>(projectInfo.getProject().gradle.sharedServices).get()
             IssueReporterLoggingEnvironment(issueReporter, analyticsService, model).use {
                 createCxxMetadataGenerator(
                     model,
@@ -100,7 +102,7 @@ class NativeModelBuilder(
     ): NativeModule? {
         if (configurationModels.isEmpty()) return null
         val analyticsService =
-            getBuildService<AnalyticsService>(globalScope.project.gradle.sharedServices).get()
+            getBuildService<AnalyticsService>(project.gradle.sharedServices).get()
         val configurationModel = configurationModels.first().second
         return IssueReporterLoggingEnvironment(
             issueReporter,

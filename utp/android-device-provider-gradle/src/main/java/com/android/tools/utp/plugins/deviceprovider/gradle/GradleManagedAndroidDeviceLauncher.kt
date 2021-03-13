@@ -203,4 +203,6 @@ class GradleManagedAndroidDeviceLauncher @VisibleForTesting constructor(
     override fun releaseDevice() {
         emulatorHandle.closeInstance()
     }
+
+    override fun cancel(): Boolean = false
 }

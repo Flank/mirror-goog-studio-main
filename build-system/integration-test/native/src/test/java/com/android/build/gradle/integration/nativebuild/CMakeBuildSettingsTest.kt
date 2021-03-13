@@ -27,10 +27,8 @@ import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_VERSION
 import com.android.build.gradle.internal.cxx.configure.OFF_STAGE_CMAKE_VERSION
 import com.android.build.gradle.internal.cxx.settings.BuildSettingsConfiguration
 import com.android.build.gradle.internal.cxx.settings.EnvironmentVariable
-import com.android.testutils.truth.PathSubject.assertThat
-import com.android.utils.FileUtils
 import com.android.build.gradle.options.BooleanOption
-import com.android.testutils.truth.PathSubject
+import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils.join
 import org.junit.Before
 import org.junit.Rule

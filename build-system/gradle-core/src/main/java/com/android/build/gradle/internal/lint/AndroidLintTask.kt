@@ -390,7 +390,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         override val checkDependencies: Boolean
             get() = creationConfig.globalScope.extension.lintOptions.isCheckDependencies
         override val reportOnly: Boolean
-            get() = false
+            get() = creationConfig.services.projectOptions.get(USE_LINT_PARTIAL_ANALYSIS)
 
         override fun configureOutputSettings(task: AndroidLintTask) {
             task.textReportToStdOut.setDisallowChanges(true)
@@ -434,7 +434,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
             task.group = JavaBasePlugin.VERIFICATION_GROUP
             task.description = description
 
-            task.initializeGlobalInputs(creationConfig.globalScope)
+            task.initializeGlobalInputs(creationConfig.globalScope, creationConfig.services.projectInfo.getProject())
             task.lintModelDirectory.set(variant.main.paths.getIncrementalDir(task.name))
             task.lintRulesJar.from(creationConfig.globalScope.localCustomLintChecks)
             task.lintRulesJar.from(
@@ -460,8 +460,9 @@ abstract class AndroidLintTask : NonIncrementalTask() {
             })
             task.projectInputs.initialize(variant)
             // ignore dynamic features for lintVital and lintFix
+            val hasDynamicFeatures = creationConfig.globalScope.hasDynamicFeatures()
             val includeDynamicFeatureSourceProviders =
-                !fatalOnly && !autoFix && !reportOnly && creationConfig.globalScope.hasDynamicFeatures()
+                !fatalOnly && !autoFix && !reportOnly && hasDynamicFeatures
             task.variantInputs.initialize(
                 variant,
                 checkDependencies,
@@ -475,7 +476,8 @@ abstract class AndroidLintTask : NonIncrementalTask() {
                     creationConfig.artifacts.get(InternalArtifactType.LINT_PARTIAL_RESULTS)
                 }
                 task.partialResults.set(partialResults)
-                if (creationConfig.globalScope.hasDynamicFeatures()) {
+                // lintVital and lintFix do not currently examine dynamic feature modules. See b/180672373
+                if (!fatalOnly && !autoFix && hasDynamicFeatures) {
                     task.dynamicFeatureLintModels.from(
                         creationConfig.variantDependencies.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
@@ -534,7 +536,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
             task.androidTestDependencyLintModels.disallowChanges()
             task.unitTestDependencyLintModels.disallowChanges()
             task.dependencyPartialResults.disallowChanges()
-            task.lintTool.initialize(creationConfig.globalScope.project, creationConfig.services.projectOptions)
+            task.lintTool.initialize(creationConfig.services.projectInfo.getProject(), creationConfig.services.projectOptions)
             if (checkDependencies) {
                 task.outputs.upToDateWhen {
                     it.logger.debug("Lint with checkDependencies does not model all of its inputs yet.")
@@ -579,9 +581,9 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         textReportToStderr.disallowChanges()
     }
 
-    private fun initializeGlobalInputs(globalScope: GlobalScope) {
+    private fun initializeGlobalInputs(globalScope: GlobalScope, project: Project) {
         initializeGlobalInputs(
-            project = globalScope.project,
+            project = project,
             isAndroid = true
         )
     }

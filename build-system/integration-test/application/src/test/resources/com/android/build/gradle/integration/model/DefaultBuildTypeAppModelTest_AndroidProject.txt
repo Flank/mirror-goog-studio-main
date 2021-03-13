@@ -1,5 +1,0 @@
-- AndroidProject:
-    - buildTypes:
-       - buildTypeContainer(debug):
-          - buildType:
-             - isDefault = true

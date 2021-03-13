@@ -138,22 +138,13 @@ class IceboxPluginTest {
     @Test
     fun beforeAll_ok() {
         assertThat(iceboxCallerCreated).isFalse()
-        iceboxPlugin.configure(config = config)
-        iceboxPlugin.beforeAll(mockDeviceController)
-        assertThat(iceboxCallerCreated).isTrue()
-    }
 
-    @Test
-    fun beforeEach_ok() {
         iceboxPlugin.configure(config = config)
         iceboxPlugin.beforeAll(mockDeviceController)
-        verify(mockIceboxCaller, times(0)).runIcebox(
+
+        assertThat(iceboxCallerCreated).isTrue()
+        verify(mockIceboxCaller).runIcebox(
                 any(), anyString(), anyString(), anyInt(),
-                anyInt()
-        )
-        iceboxPlugin.beforeEach(TestCaseProto.TestCase.getDefaultInstance(), mockDeviceController)
-        verify(mockIceboxCaller, times(1)).runIcebox(
-                any(), anyString(), anyString(), eq(Int.MAX_VALUE),
                 anyInt()
         )
     }
@@ -166,14 +157,11 @@ class IceboxPluginTest {
                 IceboxPluginProto.Compression.NONE
         )
         val localConfig = buildConfig(localIceboxPluginConfig)
+
         iceboxPlugin.configure(config = localConfig)
         iceboxPlugin.beforeAll(mockDeviceController)
-        verify(mockIceboxCaller, times(0)).runIcebox(
-                any(), anyString(), anyString(), anyInt(),
-                anyInt()
-        )
-        iceboxPlugin.beforeEach(TestCaseProto.TestCase.getDefaultInstance(), mockDeviceController)
-        verify(mockIceboxCaller, times(1)).runIcebox(
+
+        verify(mockIceboxCaller).runIcebox(
                 any(), anyString(), anyString(), eq(0),
                 anyInt()
         )
@@ -250,40 +238,6 @@ class IceboxPluginTest {
         val newResult = iceboxPlugin.afterEach(failingTestResult, mockDeviceController)
         assertThat(newResult.outputArtifactCount).isEqualTo(2)
         assertThat(snapshotFileCompressed.exists()).isTrue()
-        iceboxPlugin.afterAll(testSuiteResult, mockDeviceController)
-        verify(mockIceboxCaller, times(1)).shutdownGrpc()
-    }
-
-    @Test
-    fun skipSecondSnapshot() {
-        `when`(
-                mockIceboxCaller.fetchSnapshot(any(), any(), any())
-        ).thenAnswer { invocation ->
-            val file = invocation.getArgument(0, File::class.java)
-            file.outputStream().use {
-                it.write(1)
-            }
-            Unit
-        }
-        val localIceboxPluginConfig = buildIceboxPluginConfig(
-                false, 1,
-                IceboxPluginProto.Compression.NONE
-        )
-        val localConfig = buildConfig(localIceboxPluginConfig)
-        iceboxPlugin.configure(config = localConfig)
-        iceboxPlugin.beforeAll(mockDeviceController)
-        iceboxPlugin.beforeEach(TestCaseProto.TestCase.getDefaultInstance(), mockDeviceController)
-        verify(mockIceboxCaller, times(1)).runIcebox(
-                any(), anyString(), anyString(), eq(1),
-                anyInt()
-        )
-        iceboxPlugin.afterEach(failingTestResult, mockDeviceController)
-        iceboxPlugin.beforeEach(TestCaseProto.TestCase.getDefaultInstance(), mockDeviceController)
-        verify(mockIceboxCaller, times(1)).runIcebox(
-                any(), anyString(), anyString(), eq(0),
-                anyInt()
-        )
-        iceboxPlugin.afterEach(failingTestResult, mockDeviceController)
         iceboxPlugin.afterAll(testSuiteResult, mockDeviceController)
         verify(mockIceboxCaller, times(1)).shutdownGrpc()
     }

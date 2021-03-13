@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.common.fixture.model
 
 import com.android.build.gradle.integration.common.fixture.ModelBuilderV2
 import com.android.build.gradle.integration.common.fixture.ModelContainerV2
+import com.android.builder.model.v2.models.AndroidDsl
 import com.android.builder.model.v2.models.AndroidProject
 import com.android.builder.model.v2.models.GlobalLibraryMap
 import com.android.builder.model.v2.models.ModelVersions
@@ -27,6 +28,7 @@ import com.android.utils.FileUtils
 import com.google.common.base.Charsets
 import com.google.common.io.Resources
 import com.google.common.truth.Truth
+import junit.framework.Assert.fail
 import java.io.File
 
 /**
@@ -73,7 +75,7 @@ class Comparator(
             println(it)
         }
 
-        runComparison("AndroidProject", content, goldenFile)
+        runComparison("ModelVersions", content, goldenFile)
     }
 
     fun compare(
@@ -95,6 +97,67 @@ class Comparator(
         }
 
         runComparison("AndroidProject", content, goldenFile)
+    }
+
+    fun ensureIsEmpty(
+        model: AndroidProject,
+        referenceModel: AndroidProject? = null,
+    ) {
+        checkEmptyDelta(
+            modelName = "AndroidProject",
+            normalizer = result.normalizer,
+            model = model,
+            referenceModel = referenceModel,
+            referenceNormalizer = referenceResult?.normalizer,
+            action = { snapshotAndroidProject() },
+            failureAction =  {
+                generateStdoutHeader()
+                println(SnapshotItemWriter().write(it))
+
+                fail("Expected no different between model. See stdout for details")
+            }
+        )
+    }
+
+    fun compare(
+        model: AndroidDsl,
+        referenceModel: AndroidDsl? = null,
+        goldenFile: String
+    ) {
+        val content = snapshotModel(
+            modelName = "AndroidDsl",
+            normalizer = result.normalizer,
+            model = model,
+            referenceModel = referenceModel,
+            referenceNormalizer = referenceResult?.normalizer,
+        ) {
+            snapshotAndroidDsl()
+        }.also {
+            generateStdoutHeader()
+            println(it)
+        }
+
+        runComparison("AndroidDsl", content, goldenFile)
+    }
+
+    fun ensureIsEmpty(
+        model: AndroidDsl,
+        referenceModel: AndroidDsl? = null,
+    ) {
+        checkEmptyDelta(
+            modelName = "AndroidDsl",
+            normalizer = result.normalizer,
+            model = model,
+            referenceModel = referenceModel,
+            referenceNormalizer = referenceResult?.normalizer,
+            action = { snapshotAndroidDsl() },
+            failureAction =  {
+                generateStdoutHeader()
+                println(SnapshotItemWriter().write(it))
+
+                fail("Expected no different between model. See stdout for details")
+            }
+        )
     }
 
     fun compare(

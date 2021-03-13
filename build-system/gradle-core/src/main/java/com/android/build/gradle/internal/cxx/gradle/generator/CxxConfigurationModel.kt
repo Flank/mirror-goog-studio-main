@@ -176,6 +176,7 @@ fun tryCreateConfigurationParameters(
     projectOptions: ProjectOptions,
     variant: VariantImpl) : CxxConfigurationParameters? {
     val global = variant.globalScope
+    val project = variant.services.projectInfo.getProject()
 
     val (buildSystem, makeFile, buildStagingFolder) =
         getProjectPath(global.extension.externalNativeBuild)
@@ -183,9 +184,9 @@ fun tryCreateConfigurationParameters(
 
     val cxxFolder = findCxxFolder(
         buildSystem,
-        global.project.projectDir,
+        project.projectDir,
         buildStagingFolder,
-        global.project.buildDir
+        project.buildDir
     )
     val cxxCacheFolder = join(global.intermediatesDir, "cxx")
     fun option(option: BooleanOption) = variant.services.projectOptions.get(option)
@@ -215,7 +216,7 @@ fun tryCreateConfigurationParameters(
      */
     val enableProfileJson = option(ENABLE_PROFILE_JSON)
     val chromeTraceJsonFolder = if (enableProfileJson) {
-        val gradle = global.project.gradle
+        val gradle = project.gradle
         val profileDir = option(PROFILE_OUTPUT_DIR)
             ?.let { gradle.rootProject.file(it) }
             ?: gradle.rootProject.buildDir.resolve(PROFILE_DIRECTORY)
@@ -244,7 +245,7 @@ fun tryCreateConfigurationParameters(
     val prefabClassPath = if (variant.buildFeatures.prefab) {
         getPrefabFromMaven(
             projectOptions,
-            variant.globalScope.project)
+            variant.services.projectInfo.getProject())
     } else {
         null
     }
@@ -255,10 +256,10 @@ fun tryCreateConfigurationParameters(
         buildSystem = buildSystem,
         makeFile = makeFile,
         buildStagingFolder = buildStagingFolder,
-        moduleRootFolder = global.project.projectDir,
-        buildDir = global.project.buildDir,
-        rootDir = global.project.rootDir,
-        buildFile = global.project.buildFile,
+        moduleRootFolder = project.projectDir,
+        buildDir = project.buildDir,
+        rootDir = project.rootDir,
+        buildFile = project.buildFile,
         isDebuggable = variant.debuggable,
         minSdkVersion = variant.variantBuilder.minSdkVersion.toSharedAndroidVersion(),
         compileSdkVersion = global.extension.compileSdkVersion ?:
@@ -268,7 +269,7 @@ fun tryCreateConfigurationParameters(
         cmakeVersion = global.extension.externalNativeBuild.cmake.version,
         splitsAbiFilterSet = global.extension.splits.abiFilters,
         intermediatesFolder = global.intermediatesDir,
-        gradleModulePathName = global.project.path,
+        gradleModulePathName = project.path,
         isConfigurationFoldingEnabled = option(ENABLE_NATIVE_CONFIGURATION_FOLDING),
         isBuildOnlyTargetAbiEnabled = option(BUILD_ONLY_TARGET_ABI),
         ideBuildTargetAbi = option(IDE_BUILD_TARGET_ABI),

@@ -38,6 +38,7 @@ import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SdkComponentsImpl;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.scope.ProjectInfo;
 import com.android.build.gradle.internal.services.DslServices;
 import com.android.build.gradle.internal.services.ProjectServices;
 import com.android.build.gradle.internal.tasks.ApplicationTaskManager;
@@ -170,9 +171,16 @@ public class AppPlugin
             boolean hasFlavors,
             @NonNull ProjectOptions projectOptions,
             @NonNull GlobalScope globalScope,
-            @NonNull BaseExtension extension) {
+            @NonNull BaseExtension extension,
+            @NonNull ProjectInfo projectInfo) {
         return new ApplicationTaskManager(
-                variants, testComponents, hasFlavors, projectOptions, globalScope, extension);
+                variants,
+                testComponents,
+                hasFlavors,
+                projectOptions,
+                globalScope,
+                extension,
+                projectInfo);
     }
 
     @NonNull

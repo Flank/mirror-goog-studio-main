@@ -18,7 +18,7 @@ readonly crostini_timestamp_file="/buildbot/lastrun.out"
 #Have crostini tests run locally and one at a time
 if [[ $lsb_release == "crostini" ]]; then
   # don't use any remote cached items, some items built on Linux may not be compatible. b/172365127
-  config_options="--config=cloud_resultstore --noremote_accept_cached"
+  config_options="--config=resultstore"
   target_filters=qa_sanity,ui_test,-qa_unreliable,-no_linux,-no_test_linux,-requires_emulator,-no_crostini
 
   current_time=$(date +"%s")
@@ -34,10 +34,16 @@ if [[ $lsb_release == "crostini" ]]; then
   fi
   echo $current_time > $crostini_timestamp_file
 
-  # Temp debugging for b/159371003
-  # Check running processes, output `ps -ef` in build log, helps avoid trips to the office
+  # Temp workaround for b/159371003
+  # Check running processes
   ps -ef
   readonly counter="$(ps -ef | grep -c 'at-spi-bus-launcher')"
+  # these accessibiluty daemons keep on accumulating with each test execution
+  # and ultimately cause OOM failures https://paste.googleplex.com/4715109898256384
+  # manually kill them off for now
+  ps -ef | grep "at-spi-bus-launcher" | awk '{print $2}' | xargs kill -9
+  ps -ef | grep "at-spi2/accessibility.conf" | awk '{print $2}' | xargs kill -9
+  ps -ef | grep "/usr/bin/dbus-daemon --syslog-only" | awk '{print $2}' | xargs kill -9
 
   # Generate a UUID for use as the bazel invocation id
   readonly logs_collector_invocation_id="$(uuidgen)"

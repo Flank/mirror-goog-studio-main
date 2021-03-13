@@ -51,12 +51,13 @@ class JavaCompileCreationAction(
 ) : TaskCreationAction<JavaCompile>() {
 
     private val globalScope = creationConfig.globalScope
+    private val project = creationConfig.services.projectInfo.getProject()
 
-    private val classesOutputDirectory = globalScope.project.objects.directoryProperty()
-    private val annotationProcessorOutputDirectory = globalScope.project.objects.directoryProperty()
+    private val classesOutputDirectory = project.objects.directoryProperty()
+    private val annotationProcessorOutputDirectory = project.objects.directoryProperty()
 
-    private val dataBindingArtifactDir = globalScope.project.objects.directoryProperty()
-    private val dataBindingExportClassListFile = globalScope.project.objects.fileProperty()
+    private val dataBindingArtifactDir = project.objects.directoryProperty()
+    private val dataBindingExportClassListFile = project.objects.fileProperty()
 
     override val name: String
         get() = creationConfig.computeTaskName("compile", "JavaWithJavac")

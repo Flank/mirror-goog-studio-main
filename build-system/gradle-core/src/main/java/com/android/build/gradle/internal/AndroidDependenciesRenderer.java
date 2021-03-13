@@ -74,7 +74,7 @@ public class AndroidDependenciesRenderer extends TextReportRenderer {
     public void render(@NonNull ComponentImpl component) {
         ImmutableMap<String, String> buildMapping =
                 BuildMappingUtils.computeBuildMapping(
-                        component.getGlobalScope().getProject().getGradle());
+                        component.getServices().getProjectInfo().getProject().getGradle());
 
         Set<ResolvedArtifact> compileArtifacts =
                 ArtifactUtils.getAllArtifacts(

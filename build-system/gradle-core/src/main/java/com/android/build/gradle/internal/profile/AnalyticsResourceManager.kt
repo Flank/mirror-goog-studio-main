@@ -366,6 +366,12 @@ class AnalyticsResourceManager constructor(
         }
     }
 
+    fun recordTaskNames(graph: TaskExecutionGraph) {
+        for (task in graph.allTasks) {
+            getProjectBuilder(task.project.path).addTaskNames(task.javaClass.name)
+        }
+    }
+
     private fun getTaskExecutionType(taskName: String): GradleTaskExecutionType {
         return try {
             GradleTaskExecutionType.valueOf(taskName)

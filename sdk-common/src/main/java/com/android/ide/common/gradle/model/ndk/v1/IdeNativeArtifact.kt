@@ -35,11 +35,6 @@ interface IdeNativeArtifact {
   val groupName: String
 
   /**
-   * Returns the name of the task used to generate the artifact output.
-   */
-  val assembleTaskName: String
-
-  /**
    * Returns the source files.
    */
   val sourceFiles: Collection<IdeNativeFile>
@@ -61,10 +56,4 @@ interface IdeNativeArtifact {
 
   /** Returns the output file with debug symbols unstripped.  */
   val outputFile: File?
-
-  /**
-   * Returns the files that needs to be deployed with getOutputFile to be executed on device.
-   */
-  val runtimeFiles: Collection<File>
-
 }

@@ -69,7 +69,13 @@ abstract class VariantBuilderImpl(
             return if (targetApi > minSdk) targetApi else minSdk
         }
 
-    override var unitTestEnabled: Boolean = true
+    override var enableUnitTest: Boolean = true
+
+    override var unitTestEnabled: Boolean
+        get() = enableUnitTest
+        set(value) {
+            enableUnitTest = value
+        }
 
     private val registeredExtensionDelegate= lazy {
         mutableMapOf<Class<out Any>, Any>()

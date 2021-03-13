@@ -29,20 +29,20 @@ import com.android.builder.model.v2.ide.AndroidArtifact
 import com.android.builder.model.v2.ide.ApiVersion
 import com.android.builder.model.v2.ide.ArtifactDependencies
 import com.android.builder.model.v2.ide.BaseArtifact
-import com.android.builder.model.v2.ide.BuildTypeContainer
 import com.android.builder.model.v2.ide.BundleInfo
 import com.android.builder.model.v2.ide.GraphItem
 import com.android.builder.model.v2.ide.JavaArtifact
 import com.android.builder.model.v2.ide.JavaCompileOptions
 import com.android.builder.model.v2.ide.Library
 import com.android.builder.model.v2.ide.LintOptions
-import com.android.builder.model.v2.ide.ProductFlavorContainer
 import com.android.builder.model.v2.ide.SourceProvider
+import com.android.builder.model.v2.ide.SourceSetContainer
 import com.android.builder.model.v2.ide.TestInfo
 import com.android.builder.model.v2.ide.TestedTargetVariant
 import com.android.builder.model.v2.ide.Variant
 import com.android.builder.model.v2.ide.VectorDrawablesOptions
 import com.android.builder.model.v2.ide.ViewBindingOptions
+import com.android.builder.model.v2.models.AndroidDsl
 import com.android.builder.model.v2.models.AndroidProject
 import com.android.builder.model.v2.models.GlobalLibraryMap
 import com.android.builder.model.v2.models.ModelVersions
@@ -75,40 +75,93 @@ internal fun ModelSnapshotter<ModelVersions>.snapshotVersions() {
 internal fun ModelSnapshotter<AndroidProject>.snapshotAndroidProject() {
     item("projectType", AndroidProject::projectType)
     item("path", AndroidProject::path)
-    item("groupId", AndroidProject::groupId)
-    item("flavorDimensions", AndroidProject::flavorDimensions)
-    item("compileTarget", AndroidProject::compileTarget)
     item("buildFolder", AndroidProject::buildFolder)
     item("resourcePrefix", AndroidProject::resourcePrefix)
-    item("buildToolsVersion", AndroidProject::buildToolsVersion) { version ->
-        version?.let { normalizeBuildToolsVersion(it) }
-    }
     item("dynamicFeatures", AndroidProject::dynamicFeatures)
     valueList("bootClasspath", AndroidProject::bootClasspath)
-    dataObject("defaultConfig", AndroidProject::defaultConfig) {
-        snapshotProductFlavorContainer()
+    dataObject("defaultConfig", AndroidProject::mainSourceSet) {
+        snapshotSourceSetContainer()
     }
     objectList(
         name = "buildTypes",
-        propertyAction = AndroidProject::buildTypes,
-        nameAction = { "buildTypeContainer(${buildType.name})" },
-        idAction = { buildType.name },
-        sortAction = { collection -> collection?.sortedBy { it.buildType.name } }
+        propertyAction = AndroidProject::buildTypeSourceSets,
+        nameAction = { sourceProvider.name },
+        idAction = { sourceProvider.name },
+        sortAction = { collection -> collection?.sortedBy { it.sourceProvider.name } }
     ) {
-        snapshotBuildTypeContainer()
+        snapshotSourceSetContainer()
     }
     objectList(
         name = "productFlavors",
-        propertyAction = AndroidProject::productFlavors,
-        nameAction = { "productFlavorContainer(${productFlavor.name})" },
-        idAction = { productFlavor.name },
-        sortAction = { collection -> collection?.sortedBy { it.productFlavor.name } }
+        propertyAction = AndroidProject::productFlavorSourceSets,
+        nameAction = { sourceProvider.name },
+        idAction = { sourceProvider.name },
+        sortAction = { collection -> collection?.sortedBy { it.sourceProvider.name } }
     ) {
-        snapshotProductFlavorContainer()
+        snapshotSourceSetContainer()
+    }
+    objectList(
+        name = "variants",
+        propertyAction = AndroidProject::variants,
+        nameAction = { "variant(${name})" },
+        idAction = { name },
+        sortAction = { collection -> collection?.sortedBy { it.name } }
+    ) {
+        snapshotVariant()
+    }
+    valueList("lintRuleJars", AndroidProject::lintRuleJars) { it?.sorted() }
+    dataObject("javaCompileOptions", AndroidProject::javaCompileOptions) {
+        item("encoding", JavaCompileOptions::encoding)
+        item("sourceCompatibility", JavaCompileOptions::sourceCompatibility)
+        item("targetCompatibility", JavaCompileOptions::targetCompatibility)
+        item(
+            "isCoreLibraryDesugaringEnabled",
+            JavaCompileOptions::isCoreLibraryDesugaringEnabled
+        )
+    }
+    dataObject("viewBindingOptions", AndroidProject::viewBindingOptions) {
+        item("isEnabled", ViewBindingOptions::isEnabled)
+    }
+    valueList(
+        name = "flags",
+        propertyAction = { flags.booleanFlagMap?.entries },
+        formatAction = { "${key.name} -> $value" }
+    ) { collection ->
+        collection?.sortedBy { it.key.name }
+    }
+}
+
+internal fun ModelSnapshotter<AndroidDsl>.snapshotAndroidDsl() {
+    item("groupId", AndroidDsl::groupId)
+    item("compileTarget", AndroidDsl::compileTarget)
+    item("buildToolsVersion", AndroidDsl::buildToolsVersion) { version ->
+        version?.let { normalizeBuildToolsVersion(it) }
+    }
+    dataObject("defaultConfig", AndroidDsl::defaultConfig) {
+        snapshotProductFlavor()
+    }
+    objectList(
+        name = "buildTypes",
+        propertyAction = AndroidDsl::buildTypes,
+        nameAction = { name },
+        idAction = { name },
+        sortAction = { collection -> collection?.sortedBy { it.name } }
+    ) {
+        snapshotBuildType()
+    }
+    item("flavorDimensions", AndroidDsl::flavorDimensions)
+    objectList(
+        name = "productFlavors",
+        propertyAction = AndroidDsl::productFlavors,
+        nameAction = { name },
+        idAction = { name },
+        sortAction = { collection -> collection?.sortedBy { it.name } }
+    ) {
+        snapshotProductFlavor()
     }
     objectList(
         name = "signingConfigs",
-        propertyAction = AndroidProject::signingConfigs,
+        propertyAction = AndroidDsl::signingConfigs,
         nameAction = { "signingConfig($name)" },
         idAction = { name },
         sortAction = { collection -> collection?.sortedBy { it.name } }
@@ -124,45 +177,15 @@ internal fun ModelSnapshotter<AndroidProject>.snapshotAndroidProject() {
         item("enableV4Signing", SigningConfig::enableV4Signing)
         item("isSigningReady", SigningConfig::isSigningReady)
     }
-    objectList(
-        name = "variants",
-        propertyAction = AndroidProject::variants,
-        nameAction = { "variant(${name})" },
-        idAction = { name },
-        sortAction = { collection -> collection?.sortedBy { it.name } }
-    ) {
-        snapshotVariant()
-    }
-    valueList("lintRuleJars", AndroidProject::lintRuleJars) { it?.sorted() }
-    dataObject("aaptOptions", AndroidProject::aaptOptions) {
+    dataObject("aaptOptions", AndroidDsl::aaptOptions) {
         item("namespacing", AaptOptions::namespacing)
     }
-    dataObject("lintOptions", AndroidProject::lintOptions) {
+    dataObject("lintOptions", AndroidDsl::lintOptions) {
         snapshotLintOptions()
     }
-    dataObject("javaCompileOptions", AndroidProject::javaCompileOptions) {
-        item("encoding", JavaCompileOptions::encoding)
-        item("sourceCompatibility", JavaCompileOptions::sourceCompatibility)
-        item("targetCompatibility", JavaCompileOptions::targetCompatibility)
-        item(
-            "isCoreLibraryDesugaringEnabled",
-            JavaCompileOptions::isCoreLibraryDesugaringEnabled
-        )
-    }
-    dataObject("viewBindingOptions", AndroidProject::viewBindingOptions) {
-        item("isEnabled", ViewBindingOptions::isEnabled)
-    }
-    dataObject("dependenciesInfo", AndroidProject::dependenciesInfo) {
+    dataObject("dependenciesInfo", AndroidDsl::dependenciesInfo) {
         item("includeInApk", DependenciesInfo::includeInApk)
         item("includeInBundle", DependenciesInfo::includeInBundle)
-    }
-
-    valueList(
-        name = "flags",
-        propertyAction = { flags.booleanFlagMap?.entries },
-        formatAction = { "${key.name} -> $value" }
-    ) { collection ->
-        collection?.sortedBy { it.key.name }
     }
 }
 
@@ -206,17 +229,14 @@ private fun ModelSnapshotter<NativeAbi>.snapshotNativeAbi() {
     item("additionalProjectFilesIndexFile", NativeAbi::additionalProjectFilesIndexFile)
 }
 
-private fun ModelSnapshotter<ProductFlavorContainer>.snapshotProductFlavorContainer() {
-    dataObject("productFlavor", ProductFlavorContainer::productFlavor) {
-        snapshotProductFlavor()
-    }
-    dataObject("sourceProvider", ProductFlavorContainer::sourceProvider) {
+private fun ModelSnapshotter<SourceSetContainer>.snapshotSourceSetContainer() {
+    dataObject("sourceProvider", SourceSetContainer::sourceProvider) {
         snapshotSourceProvider()
     }
-    dataObject("androidTestSourceProvider", ProductFlavorContainer::androidTestSourceProvider) {
+    dataObject("androidTestSourceProvider", SourceSetContainer::androidTestSourceProvider) {
         snapshotSourceProvider()
     }
-    dataObject("unitTestSourceProvider", ProductFlavorContainer::unitTestSourceProvider) {
+    dataObject("unitTestSourceProvider", SourceSetContainer::unitTestSourceProvider) {
         snapshotSourceProvider()
     }
 }
@@ -261,21 +281,6 @@ private fun ModelSnapshotter<ProductFlavor>.snapshotProductFlavor() {
     dataObject("vectorDrawables", ProductFlavor::vectorDrawables) {
         item("generatedDensities", VectorDrawablesOptions::generatedDensities) { it?.sorted() }
         item("useSupportLibrary", VectorDrawablesOptions::useSupportLibrary)
-    }
-}
-
-private fun ModelSnapshotter<BuildTypeContainer>.snapshotBuildTypeContainer() {
-    dataObject("buildType", BuildTypeContainer::buildType) {
-        snapshotBuildType()
-    }
-    dataObject("sourceProvider", BuildTypeContainer::sourceProvider) {
-        snapshotSourceProvider()
-    }
-    dataObject("androidTestSourceProvider", BuildTypeContainer::androidTestSourceProvider) {
-        snapshotSourceProvider()
-    }
-    dataObject("unitTestSourceProvider", BuildTypeContainer::unitTestSourceProvider) {
-        snapshotSourceProvider()
     }
 }
 

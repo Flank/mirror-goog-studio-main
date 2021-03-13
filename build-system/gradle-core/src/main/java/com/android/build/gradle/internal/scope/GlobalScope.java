@@ -50,7 +50,6 @@ import org.gradle.api.attributes.AttributeContainer;
 import org.gradle.api.component.SoftwareComponentFactory;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.RegularFile;
-import org.gradle.api.plugins.BasePluginConvention;
 import org.gradle.api.provider.Provider;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
@@ -114,11 +113,6 @@ public class GlobalScope {
 
     public void setExtension(@NonNull BaseExtension extension) {
         this.extension = checkNotNull(extension);
-    }
-
-    @NonNull
-    public Project getProject() {
-        return project;
     }
 
     @NonNull

@@ -161,34 +161,6 @@ fun findConfigurationSegment(file: File) : String? {
 }
 
 /**
- * Convert [Any] to string and compare it to the expect result.
- * If there is a difference, show the first line where the difference occurred.
- */
-fun Any?.assertToString(expected : String) {
-    if (this == null) return "null".assertToString(expected)
-    val actual = toString().trim('\n', ' ')
-    val expectedTrimmed = expected.trim('\n', ' ')
-    if (actual != expectedTrimmed) {
-        val actualSplit = actual.split('\n')
-        val expectedSplit = expectedTrimmed.split('\n')
-        (actualSplit zip expectedSplit).withIndex().forEach {
-            val (actualLine, expectedLine) = it.value
-            if (actualLine != expectedLine) {
-                val updownArrow = String(Character.toChars(0x2195))
-                val firstDifference = (actualLine zip expectedLine).indexOfFirst { (ac, ec) -> ac != ec }
-                println("actual:   '$actualLine'")
-                println(updownArrow.padStart(firstDifference + 12))
-                println("expected: '$expectedLine'")
-                error("unexpected on line ${it.index}")
-            }
-        }
-        assert(actual == expectedTrimmed) {
-            "actual:   [$actual]\nexpected: [$expectedTrimmed]"
-        }
-    }
-}
-
-/**
  * Discover and build a map (list of pair) from output file subsegment to a human readable name
  * that can be used in tests. For example,
  *

@@ -51,8 +51,8 @@ class ModelSnapshotterTest {
 
         Truth.assertThat(snapshot).isEqualTo("""
             - SmallObject:
-                - property1 = "a"
-                - property2 = ["b", "c"]
+               - property1 = "a"
+               - property2 = ["b", "c"]
 
         """.trimIndent())
     }
@@ -65,8 +65,8 @@ class ModelSnapshotterTest {
 
         Truth.assertThat(snapshot).isEqualTo("""
             - SmallObject:
-                - property1 = "a"
-                - property2 = []
+               - property1 = "a"
+               - property2 = []
 
         """.trimIndent())
     }
@@ -79,8 +79,8 @@ class ModelSnapshotterTest {
 
         Truth.assertThat(snapshot).isEqualTo("""
             - SmallObject:
-                - property1 = "a"
-                - property2 = (null)
+               - property1 = "a"
+               - property2 = (null)
 
         """.trimIndent())
     }
@@ -98,8 +98,8 @@ class ModelSnapshotterTest {
 
         Truth.assertThat(snapshot).isEqualTo("""
             - SmallObject:
-                - property1 = "a"
-                - property2 = "bc"
+               - property1 = "a"
+               - property2 = "bc"
 
         """.trimIndent())
     }
@@ -113,8 +113,8 @@ class ModelSnapshotterTest {
 
         Truth.assertThat(snapshot).isEqualTo("""
             - SmallObject:
-                - property1 = "a"
-                - property2 = ["a"]
+               - property1 = "a"
+               - property2 = ["a"]
 
         """.trimIndent())
     }
@@ -141,8 +141,8 @@ class ModelSnapshotterTest {
 
         Truth.assertThat(snapshot).isEqualTo("""
             - SmallObject:
-                - property1 = "a"
-                - property2 = ["a"]
+               - property1 = "a"
+               - property2 = ["a"]
 
         """.trimIndent())
     }
@@ -156,8 +156,8 @@ class ModelSnapshotterTest {
 
         Truth.assertThat(snapshot).isEqualTo("""
             - SmallObject:
-                - property1 = (null)
-                - property2 = (null)
+               - property1 = (null)
+               - property2 = (null)
 
         """.trimIndent())
     }
@@ -189,7 +189,7 @@ class ModelSnapshotterTest {
 
         Truth.assertThat(snapshot).isEqualTo("""
             - SmallObject:
-                - property2 = ["b"]
+               - property2 = ["b"]
 
         """.trimIndent())
     }
@@ -203,7 +203,7 @@ class ModelSnapshotterTest {
 
         Truth.assertThat(snapshot).isEqualTo("""
             - SmallObject:
-                - property2 = []
+               - property2 = []
 
         """.trimIndent())
     }
@@ -229,16 +229,16 @@ class ModelSnapshotterTest {
 
         Truth.assertThat(snapshot).isEqualTo("""
             > LargeObject:
-                - property1  = "a"
-                - property2  = 12
-                - property3  = $notImportantPath
-                - property4  = ENUM_1
-                - property5  = 1.2
-                - property6  = true
-                - property7  = ["string1", "string2"]
-                - property8  = [100, 101]
-                - property9  = {IMPORTANT_PATH1}/with/some/leaf
-                - property10 = [{IMPORTANT_PATH2}/, {IMPORTANT_PATH2}/with/a/leaf]
+               - property1  = "a"
+               - property2  = 12
+               - property3  = $notImportantPath
+               - property4  = ENUM_1
+               - property5  = 1.2
+               - property6  = true
+               - property7  = ["string1", "string2"]
+               - property8  = [100, 101]
+               - property9  = {IMPORTANT_PATH1}/with/some/leaf
+               - property10 = [{IMPORTANT_PATH2}/, {IMPORTANT_PATH2}/with/a/leaf]
             < LargeObject
 
         """.trimIndent())
@@ -252,10 +252,10 @@ class ModelSnapshotterTest {
 
         Truth.assertThat(snapshot).isEqualTo("""
             - SmallObject:
-                - property1 = "a"
-                - property2:
-                   * "b"
-                   * "c"
+               - property1 = "a"
+               - property2:
+                  * "b"
+                  * "c"
 
         """.trimIndent())
     }
@@ -268,8 +268,8 @@ class ModelSnapshotterTest {
 
         Truth.assertThat(snapshot).isEqualTo("""
             - SmallObject:
-                - property1 = "a"
-                - property2 = []
+               - property1 = "a"
+               - property2 = []
 
         """.trimIndent())
     }
@@ -282,8 +282,8 @@ class ModelSnapshotterTest {
 
         Truth.assertThat(snapshot).isEqualTo("""
             - SmallObject:
-                - property1 = "a"
-                - property2 = (null)
+               - property1 = "a"
+               - property2 = (null)
 
         """.trimIndent())
     }
@@ -299,10 +299,10 @@ class ModelSnapshotterTest {
 
         Truth.assertThat(snapshot).isEqualTo("""
             - SmallObject:
-                - property1 = "a"
-                - property2:
-                   * "item(b)"
-                   * "item(c)"
+               - property1 = "a"
+               - property2:
+                  * "item(b)"
+                  * "item(c)"
 
         """.trimIndent())
     }
@@ -316,10 +316,10 @@ class ModelSnapshotterTest {
 
         Truth.assertThat(snapshot).isEqualTo("""
             - SmallObject:
-                - property1 = "a"
-                - property2:
-                   * "b"
-                   * "c"
+               - property1 = "a"
+               - property2:
+                  * "b"
+                  * "c"
 
         """.trimIndent())
     }
@@ -346,9 +346,9 @@ class ModelSnapshotterTest {
 
         Truth.assertThat(snapshot).isEqualTo("""
             - SmallObject:
-                - property1 = "a"
-                - property2:
-                   * "a"
+               - property1 = "a"
+               - property2:
+                  * "a"
 
         """.trimIndent())
     }
@@ -362,8 +362,8 @@ class ModelSnapshotterTest {
 
         Truth.assertThat(snapshot).isEqualTo("""
             - SmallObject:
-                - property1 = (null)
-                - property2 = (null)
+               - property1 = (null)
+               - property2 = (null)
 
         """.trimIndent())
     }
@@ -396,8 +396,8 @@ class ModelSnapshotterTest {
 
         Truth.assertThat(snapshot).isEqualTo("""
             - SmallObject:
-                - property2:
-                   * "b"
+               - property2:
+                  * "b"
 
         """.trimIndent())
     }
@@ -411,7 +411,7 @@ class ModelSnapshotterTest {
 
         Truth.assertThat(snapshot).isEqualTo("""
             - SmallObject:
-                - property2 = []
+               - property2 = []
 
         """.trimIndent())
     }
@@ -431,7 +431,7 @@ class ModelSnapshotterTest {
 
         Truth.assertThat(snapshot).isEqualTo("""
             - SmallObject:
-                - property1 -> "a"
+               - property1 -> "a"
 
         """.trimIndent())
     }
@@ -458,21 +458,21 @@ class ModelSnapshotterTest {
 
         Truth.assertThat(snapshot).isEqualTo("""
             > EnclosingObject:
-                - property1:
-                   - property1 = "a"
-                   - property2 = []
-                > property2:
-                   - property1  = "a"
-                   - property2  = 12
-                   - property3  = $notImportantPath
-                   - property4  = ENUM_1
-                   - property5  = 1.2
-                   - property6  = true
-                   - property7  = ["string1", "string2"]
-                   - property8  = [100, 101]
-                   - property9  = {IMPORTANT_PATH1}/with/some/leaf
-                   - property10 = [{IMPORTANT_PATH2}/, {IMPORTANT_PATH2}/with/a/leaf]
-                < property2
+               - property1:
+                  - property1 = "a"
+                  - property2 = []
+               > property2:
+                  - property1  = "a"
+                  - property2  = 12
+                  - property3  = $notImportantPath
+                  - property4  = ENUM_1
+                  - property5  = 1.2
+                  - property6  = true
+                  - property7  = ["string1", "string2"]
+                  - property8  = [100, 101]
+                  - property9  = {IMPORTANT_PATH1}/with/some/leaf
+                  - property10 = [{IMPORTANT_PATH2}/, {IMPORTANT_PATH2}/with/a/leaf]
+               < property2
             < EnclosingObject
 
         """.trimIndent())
@@ -489,10 +489,10 @@ class ModelSnapshotterTest {
 
         Truth.assertThat(snapshot).isEqualTo("""
             - EnclosingObject:
-                - property1:
-                   - property1 = "a"
-                   - property2 = []
-                - property2 = (null)
+               - property1:
+                  - property1 = "a"
+                  - property2 = []
+               - property2 = (null)
 
         """.trimIndent())
     }
@@ -537,15 +537,15 @@ class ModelSnapshotterTest {
 
         Truth.assertThat(snapshot).isEqualTo("""
             > EnclosingObject:
-                - property1:
-                   - property1 = "a"
-                - property2:
-                   - property2 = 12
-                   - property4 = ENUM_1
-                   - property5 = 1.2
-                   - property6 = true
-                   - property7 = ["string1", "string2"]
-                   - property8 = [100, 101]
+               - property1:
+                  - property1 = "a"
+               - property2:
+                  - property2 = 12
+                  - property4 = ENUM_1
+                  - property5 = 1.2
+                  - property6 = true
+                  - property7 = ["string1", "string2"]
+                  - property8 = [100, 101]
             < EnclosingObject
 
         """.trimIndent())
@@ -562,13 +562,13 @@ class ModelSnapshotterTest {
 
         Truth.assertThat(snapshot).isEqualTo("""
             - ObjectWithMap:
-                - map:
-                   - object(1):
-                      - property1 = "1"
-                      - property2 = ["a"]
-                   - object(2):
-                      - property1 = "2"
-                      - property2 = ["b"]
+               - map:
+                  - object(1):
+                     - property1 = "1"
+                     - property2 = ["a"]
+                  - object(2):
+                     - property1 = "2"
+                     - property2 = ["b"]
 
         """.trimIndent())
     }
@@ -579,7 +579,7 @@ class ModelSnapshotterTest {
 
         Truth.assertThat(snapshot).isEqualTo("""
             - ObjectWithMap:
-                - map = []
+               - map = []
 
         """.trimIndent())
     }
@@ -590,7 +590,7 @@ class ModelSnapshotterTest {
 
         Truth.assertThat(snapshot).isEqualTo("""
             - ObjectWithMap:
-                - map = (null)
+               - map = (null)
 
         """.trimIndent())
     }
@@ -631,11 +631,11 @@ class ModelSnapshotterTest {
 
         Truth.assertThat(snapshot).isEqualTo("""
             - ObjectWithMap:
-                - map:
-                   - object(1):
-                      - property2 = ["a"]
-                   - object(2):
-                      - property2 = []
+               - map:
+                  - object(1):
+                     - property2 = ["a"]
+                  - object(2):
+                     - property2 = []
 
         """.trimIndent())
     }
@@ -656,11 +656,11 @@ class ModelSnapshotterTest {
 
         Truth.assertThat(snapshot).isEqualTo("""
             - ObjectWithMap:
-                - map:
-                   - object(1):
-                      - property2 = ["a"]
-                   - object(2):
-                      - property2 = (null)
+               - map:
+                  - object(1):
+                     - property2 = ["a"]
+                  - object(2):
+                     - property2 = (null)
 
         """.trimIndent())
     }

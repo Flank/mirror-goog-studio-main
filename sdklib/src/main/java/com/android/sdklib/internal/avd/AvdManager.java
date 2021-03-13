@@ -51,9 +51,6 @@ import com.android.utils.GrabProcessOutput.Wait;
 import com.android.utils.ILogger;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
-import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Table;
 import com.google.common.io.Closeables;
 import java.io.BufferedReader;
 import java.io.File;
@@ -73,6 +70,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -396,11 +394,46 @@ public class AvdManager {
 
     private class AvdMgrException extends Exception { };
 
-    // A map where the keys are the locations of the SDK and the values are the corresponding
-    // AvdManagers. This prevents us from creating multiple AvdManagers for the same SDK and having
-    // them get out of sync.
-    private static final Table<String, FileOp, WeakReference<AvdManager>> mManagers =
-        HashBasedTable.create();
+    /** A key containing all the values that will make an AvdManager unique. */
+    protected static final class AvdManagerCacheKey {
+        /**
+         * The location of the user's Android SDK. Something like /home/user/Android/Sdk on Linux.
+         */
+        @NonNull private final Path mSdkLocation;
+        /**
+         * The location of the user's AVD folder. Something like /home/user/.android/avd on Linux.
+         */
+        @NonNull private final Path mAvdHomeFolder;
+
+        protected AvdManagerCacheKey(@NonNull Path sdkLocation, @NonNull Path avdHomeFolder) {
+            mSdkLocation = sdkLocation;
+            mAvdHomeFolder = avdHomeFolder;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(mSdkLocation, mAvdHomeFolder);
+        }
+
+        @Override
+        public boolean equals(@Nullable Object other) {
+            if (!(other instanceof AvdManagerCacheKey)) {
+                return false;
+            }
+
+            AvdManagerCacheKey otherKey = (AvdManagerCacheKey) other;
+            return mSdkLocation.equals(otherKey.mSdkLocation)
+                    && mAvdHomeFolder.equals(otherKey.mAvdHomeFolder);
+        }
+    }
+
+    /**
+     * A map for caching AvdManagers based on the AvdHomeFolder and SdkHandler. This prevents us
+     * from creating multiple AvdManagers for the same SDK and AVD which could have them get out of
+     * sync.
+     */
+    private static final Map<AvdManagerCacheKey, WeakReference<AvdManager>> mManagers =
+            new HashMap<>();
 
     private final ArrayList<AvdInfo> mAllAvdList = new ArrayList<>();
     private AvdInfo[] mValidAvdList;
@@ -445,7 +478,7 @@ public class AvdManager {
     @Nullable
     public static AvdManager getInstance(
             @NonNull AndroidSdkHandler sdkHandler,
-            @NonNull File baseAvdFolder,
+            @NonNull File avdHomeFolder,
             @NonNull ILogger log)
             throws AndroidLocationsException {
         if (sdkHandler.getLocation() == null) {
@@ -454,20 +487,22 @@ public class AvdManager {
         synchronized(mManagers) {
             AvdManager manager;
             FileOp fop = sdkHandler.getFileOp();
-            WeakReference<AvdManager> ref = mManagers.get(sdkHandler.getLocation().toString(), fop);
+            AvdManagerCacheKey key =
+                    new AvdManagerCacheKey(
+                            sdkHandler.getLocation(), avdHomeFolder.toPath().toAbsolutePath());
+            WeakReference<AvdManager> ref = mManagers.get(key);
             if (ref != null && (manager = ref.get()) != null) {
                 return manager;
             }
             try {
-                manager = new AvdManager(sdkHandler, baseAvdFolder, log, fop);
+                manager = new AvdManager(sdkHandler, avdHomeFolder, log, fop);
             } catch (AndroidLocationsException e) {
                 throw e;
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 log.warning("Exception during AvdManager initialization: %1$s", e);
                 return null;
             }
-            mManagers.put(sdkHandler.getLocation().toString(), fop, new WeakReference<>(manager));
+            mManagers.put(key, new WeakReference<>(manager));
             return manager;
         }
     }
@@ -1537,7 +1572,7 @@ public class AvdManager {
         }
 
         if (properties == null) {
-            properties = Maps.newHashMap();
+            properties = new HashMap<>();
         }
 
         if (!properties.containsKey(AVD_INI_ANDROID_API) &&

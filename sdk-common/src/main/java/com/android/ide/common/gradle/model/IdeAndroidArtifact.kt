@@ -15,8 +15,6 @@
  */
 package com.android.ide.common.gradle.model
 
-import com.android.builder.model.CodeShrinker
-import com.android.builder.model.SigningConfig
 import java.io.File
 import java.io.Serializable
 
@@ -25,7 +23,7 @@ interface IdeAndroidArtifact : Serializable, IdeBaseArtifact {
   val applicationId: String
 
   /**
-   * Returns the name of the [SigningConfig] used for the signing. If none are setup or if
+   * Returns the name of the [IdeSigningConfig] used for the signing. If none are setup or if
    * this is not the main artifact of an application project, then this is null.
    */
   val signingConfigName: String?

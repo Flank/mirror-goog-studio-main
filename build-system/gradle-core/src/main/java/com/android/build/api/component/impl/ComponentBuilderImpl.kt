@@ -28,5 +28,11 @@ abstract class ComponentBuilderImpl(
 ) :
     ComponentBuilder, ComponentIdentity by variantConfiguration {
 
-    override var enabled: Boolean = true
-    }
+    override var enabled: Boolean
+        get() = enable
+        set(value) {
+            enable = value
+        }
+
+    override var enable: Boolean = true
+}

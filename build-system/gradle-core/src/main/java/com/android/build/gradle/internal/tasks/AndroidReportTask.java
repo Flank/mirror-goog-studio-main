@@ -24,6 +24,7 @@ import static com.android.builder.core.BuilderConstants.FD_FLAVORS_ALL;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.scope.ProjectInfo;
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.build.gradle.internal.test.report.CompositeTestResults;
 import com.android.build.gradle.internal.test.report.ReportType;
@@ -161,9 +162,15 @@ public abstract class AndroidReportTask extends DefaultTask implements AndroidTe
 
         private final TaskKind taskKind;
 
-        public CreationAction(@NonNull GlobalScope scope, @NonNull TaskKind taskKind) {
+        private final ProjectInfo projectInfo;
+
+        public CreationAction(
+                @NonNull GlobalScope scope,
+                @NonNull TaskKind taskKind,
+                @NonNull ProjectInfo projectInfo) {
             this.scope = scope;
             this.taskKind = taskKind;
+            this.projectInfo = projectInfo;
         }
 
         @NonNull
@@ -210,7 +217,8 @@ public abstract class AndroidReportTask extends DefaultTask implements AndroidTe
                                                 dir != null && !dir.isEmpty()
                                                         ? dir
                                                         : defaultResultsDir;
-                                        return scope.getProject()
+                                        return projectInfo
+                                                .getProject()
                                                 .getLayout()
                                                 .getProjectDirectory()
                                                 .dir(rootLocation + subfolderName + FD_FLAVORS_ALL);
@@ -229,7 +237,8 @@ public abstract class AndroidReportTask extends DefaultTask implements AndroidTe
                                                 dir != null && !dir.isEmpty()
                                                         ? dir
                                                         : defaultReportsDir;
-                                        return scope.getProject()
+                                        return projectInfo
+                                                .getProject()
                                                 .getLayout()
                                                 .getProjectDirectory()
                                                 .dir(rootLocation + subfolderName + FD_FLAVORS_ALL);

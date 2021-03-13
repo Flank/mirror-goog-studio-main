@@ -1,0 +1,4 @@
+- AndroidDsl:
+   - productFlavors:
+      - flavorA:
+         - isDefault = true

@@ -4,6 +4,12 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 setup_external_repositories()
 
+register_toolchains(
+  "@native_toolchain//:cc-toolchain-x64_linux",
+  "@native_toolchain//:cc-toolchain-darwin",
+  "@native_toolchain//:cc-toolchain-x64_windows-clang-cl",
+)
+
 local_repository(
     name = "blaze",
     path = "tools/vendor/google3/blaze",

@@ -217,6 +217,7 @@ class LintDetectorDetectorTest {
                                 .addMoreInfo("https://issuetracker.google.com/issues/373354878") // OK - including digit
                                 .addMoreInfo("http://issuetracker.google.com/issues/37335487") // ERROR - http instead of https
                                 .addMoreInfo("https://b.corp.google.com/issues/139153781") // ERROR - don't point to buganizer with internal link
+                                .addMoreInfo("https://goo.gle/policy-storage-help") // OK - regression test for goo.gle
                         }
                     }
                     """

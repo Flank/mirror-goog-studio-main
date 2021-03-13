@@ -85,8 +85,8 @@ public class ClientImpl extends JdwpAgent implements Client {
      * is only used for data generated within Client.
      */
     private static final int INITIAL_BUF_SIZE = 2 * 1024;
-    private static final int MAX_BUF_SIZE = 800 * 1024 * 1024;
     private ByteBuffer mReadBuffer;
+    private final int mMaxPacketSize = DdmPreferences.getJdwpMaxPacketSize();
 
     private DeviceImpl mDevice;
 
@@ -112,7 +112,6 @@ public class ClientImpl extends JdwpAgent implements Client {
         super(new JdwpProtocol());
         mDevice = device;
         mChan = chan;
-
         mReadBuffer = ByteBuffer.allocate(INITIAL_BUF_SIZE);
 
         mConnState = ST_INIT;
@@ -610,7 +609,7 @@ public class ClientImpl extends JdwpAgent implements Client {
         int count;
 
         if (mReadBuffer.position() == mReadBuffer.capacity()) {
-            if (mReadBuffer.capacity() * 2 > MAX_BUF_SIZE) {
+            if (mReadBuffer.capacity() * 2 > mMaxPacketSize) {
                 Log.e("ddms", "Exceeded MAX_BUF_SIZE!");
                 throw new BufferOverflowException();
             }

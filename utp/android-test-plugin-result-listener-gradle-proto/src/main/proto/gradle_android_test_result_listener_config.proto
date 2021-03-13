@@ -37,4 +37,7 @@ message GradleAndroidTestResultListenerConfig {
 
     // A file path to the trusted cert chain.
     string trustCertCollectionFilePath = 4;
+
+    // A device ID to listen to for test results.
+    string deviceId = 5;
 }

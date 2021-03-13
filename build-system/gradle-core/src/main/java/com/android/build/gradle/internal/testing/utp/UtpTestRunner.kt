@@ -23,7 +23,6 @@ import com.android.builder.testing.api.DeviceConnector
 import com.android.ide.common.process.JavaProcessExecutor
 import com.android.ide.common.process.ProcessExecutor
 import com.android.ide.common.workers.ExecutorServiceAdapter
-import com.android.prefs.AndroidLocationsSingleton
 import com.android.utils.FileUtils
 import com.android.utils.ILogger
 import com.google.common.collect.ImmutableList
@@ -64,87 +63,72 @@ class UtpTestRunner @JvmOverloads constructor(
             additionalTestOutputDir: File?,
             coverageDir: File,
             logger: ILogger): MutableList<TestResult> {
-        return apksForDevice.map { (deviceConnector, apks) ->
-            val utpRsaKeysDir = File(AndroidLocationsSingleton.prefsLocation.toFile(), "utp")
-            if (!utpRsaKeysDir.exists()) {
-                utpRsaKeysDir.mkdirs()
-            }
-            val resultListenerServerCert = File.createTempFile("resultListenerServerCert", ".pem", utpRsaKeysDir)
-            val resultListenerServerPrivateKey = File.createTempFile("resultListenerServer", ".key", utpRsaKeysDir)
-            val resultListenerClientCert = File.createTempFile("resultListenerClientCert", ".pem", utpRsaKeysDir)
-            val resultListenerClientPrivateKey = File.createTempFile("resultListenerClient", ".key", utpRsaKeysDir)
-            generateRsaKeyPair(resultListenerServerCert, resultListenerServerPrivateKey)
-            generateRsaKeyPair(resultListenerClientCert, resultListenerClientPrivateKey)
-            val testResultListenerServer = requireNotNull(
-                    UtpTestResultListenerServer.startServer(
-                            resultListenerServerCert,
-                            resultListenerServerPrivateKey,
-                            resultListenerClientCert)) {
-                "Unable to start the UTP test results listener gRPC server."
-            }
+        return UtpTestResultListenerServerRunner().use { resultListenerServerRunner ->
+            val resultListenerServerMetadata = resultListenerServerRunner.metadata
+            apksForDevice.map { (deviceConnector, apks) ->
+                val utpOutputDir = resultsDir
+                val utpTmpDir = Files.createTempDir()
+                val utpTestRunLogDir = Files.createTempDir()
+                val runnerConfigProtoFile =
+                        File.createTempFile("runnerConfig", ".pb").also { file ->
+                            FileOutputStream(file).use { writer ->
+                                configFactory.createRunnerConfigProtoForLocalDevice(
+                                        deviceConnector,
+                                        testData,
+                                        apks.union(helperApks) + testData.testApk,
+                                        utpDependencies,
+                                        versionedSdkLoader,
+                                        utpOutputDir,
+                                        utpTmpDir,
+                                        retentionConfig,
+                                        useOrchestrator,
+                                        resultListenerServerMetadata.serverPort,
+                                        resultListenerServerMetadata.clientCert,
+                                        resultListenerServerMetadata.clientPrivateKey,
+                                        resultListenerServerMetadata.serverCert).writeTo(writer)
+                            }
+                        }
 
-            val utpOutputDir = resultsDir
-            val utpTmpDir = Files.createTempDir()
-            val utpTestRunLogDir = Files.createTempDir()
-            val runnerConfigProtoFile = File.createTempFile("runnerConfig", ".pb").also { file ->
-                FileOutputStream(file).use { writer ->
-                    configFactory.createRunnerConfigProtoForLocalDevice(
-                            deviceConnector,
-                            testData,
-                            apks.union(helperApks) + testData.testApk,
-                            utpDependencies,
-                            versionedSdkLoader,
-                            utpOutputDir,
-                            utpTmpDir,
-                            retentionConfig,
-                            useOrchestrator,
-                            testResultListenerServer.port,
-                            resultListenerClientCert,
-                            resultListenerClientPrivateKey,
-                            resultListenerServerCert).writeTo(writer)
-                }
-            }
-
-            val resultsProto = testResultListenerServer.use {
-                runUtpTestSuite(
+                val resultsProto = runUtpTestSuite(
                         runnerConfigProtoFile,
                         utpOutputDir,
                         configFactory,
                         utpDependencies,
                         javaProcessExecutor,
                         logger)
-            }
 
-            resultsProto.writeTo(File(utpOutputDir, "test-result.pb").outputStream())
+                resultsProto.writeTo(File(utpOutputDir, "test-result.pb").outputStream())
 
-            try {
-                FileUtils.deleteIfExists(resultListenerServerCert)
-                FileUtils.deleteIfExists(resultListenerServerPrivateKey)
-                FileUtils.deleteIfExists(resultListenerClientCert)
-                FileUtils.deleteIfExists(resultListenerClientPrivateKey)
-                FileUtils.deleteRecursivelyIfExists(utpOutputDir.resolve(TEST_LOG_DIR))
-                FileUtils.deleteRecursivelyIfExists(utpTestRunLogDir)
-                FileUtils.deleteRecursivelyIfExists(utpTmpDir)
-            } catch (e: IOException) {
-                logger.warning("Failed to cleanup temporary directories: $e")
-            }
-
-            createTestReportXml(resultsProto, deviceConnector.name, projectName, variantName, logger, resultsDir)
-            if (resultsProto.hasPlatformError()) {
-                logger.error(null, "Platform error occurred when running the UTP test suite")
-            }
-            val testFailed = resultsProto.hasPlatformError() ||
-                    resultsProto.testResultList.any { testCaseResult ->
-                        testCaseResult.testStatus == TestStatusProto.TestStatus.FAILED
-                                || testCaseResult.testStatus == TestStatusProto.TestStatus.ERROR
-                    }
-            TestResult().apply {
-                testResult = if (testFailed) {
-                    TestResult.Result.FAILED
-                } else {
-                    TestResult.Result.SUCCEEDED
+                try {
+                    FileUtils.deleteRecursivelyIfExists(utpOutputDir.resolve(TEST_LOG_DIR))
+                    FileUtils.deleteRecursivelyIfExists(utpTestRunLogDir)
+                    FileUtils.deleteRecursivelyIfExists(utpTmpDir)
+                } catch (e: IOException) {
+                    logger.warning("Failed to cleanup temporary directories: $e")
                 }
-            }
-        }.toMutableList()
+
+                createTestReportXml(resultsProto,
+                        deviceConnector.name,
+                        projectName,
+                        variantName,
+                        logger,
+                        resultsDir)
+                if (resultsProto.hasPlatformError()) {
+                    logger.error(null, "Platform error occurred when running the UTP test suite")
+                }
+                val testFailed = resultsProto.hasPlatformError() ||
+                        resultsProto.testResultList.any { testCaseResult ->
+                            testCaseResult.testStatus == TestStatusProto.TestStatus.FAILED
+                                    || testCaseResult.testStatus == TestStatusProto.TestStatus.ERROR
+                        }
+                TestResult().apply {
+                    testResult = if (testFailed) {
+                        TestResult.Result.FAILED
+                    } else {
+                        TestResult.Result.SUCCEEDED
+                    }
+                }
+            }.toMutableList()
+        }
     }
 }

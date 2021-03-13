@@ -77,7 +77,23 @@ public final class TodoInspector extends TestInspector {
                     }
                 });
 
-        ExitHook<Object> hook =
+        artTooling.registerEntryHook(
+                classActivity,
+                "newGroup(" + SIGNATURE_STRING + ")" + SIGNATURE_TODO_GROUP,
+                new EntryHook() {
+                    @Override
+                    public void onEntry(@Nullable Object self, @NonNull List<Object> params) {
+                        getConnection()
+                                .sendEvent(
+                                        TodoInspectorApi.Event.TODO_NAMED_GROUP_CREATING
+                                                .toByteArrayWithArg(
+                                                        ((String) params.get(0)).getBytes()));
+                    }
+                });
+
+        artTooling.registerExitHook(
+                classActivity,
+                "newGroup()" + SIGNATURE_TODO_GROUP,
                 new ExitHook<Object>() {
                     @Override
                     public Object onExit(Object returnValue) {
@@ -85,12 +101,21 @@ public final class TodoInspector extends TestInspector {
                                 .sendEvent(TodoInspectorApi.Event.TODO_GROUP_CREATED.toByteArray());
                         return returnValue;
                     }
-                };
-
-        artTooling.registerExitHook(classActivity, "newGroup()" + SIGNATURE_TODO_GROUP, hook);
+                });
 
         artTooling.registerExitHook(
-                classActivity, "newGroup(" + SIGNATURE_STRING + ")" + SIGNATURE_TODO_GROUP, hook);
+                classActivity,
+                "newGroup(" + SIGNATURE_STRING + ")" + SIGNATURE_TODO_GROUP,
+                new ExitHook<Object>() {
+                    @Override
+                    public Object onExit(Object returnValue) {
+                        getConnection()
+                                .sendEvent(
+                                        TodoInspectorApi.Event.TODO_NAMED_GROUP_CREATED
+                                                .toByteArray());
+                        return returnValue;
+                    }
+                });
 
         artTooling.registerEntryHook(
                 classActivity,
@@ -271,7 +296,7 @@ public final class TodoInspector extends TestInspector {
 
         artTooling.registerEntryHook(
                 classActivity,
-                "prefillItems()V",
+                "prefillItems()I",
                 new EntryHook() {
                     @Override
                     public void onEntry(@Nullable Object self, @NonNull List<Object> params) {
@@ -281,17 +306,33 @@ public final class TodoInspector extends TestInspector {
                     }
                 });
 
+        artTooling.registerExitHook(
+                classActivity,
+                "prefillItems()I",
+                new ExitHook<Integer>() {
+                    @Override
+                    public Integer onExit(@NonNull Integer returnValue) {
+                        getConnection()
+                                .sendEvent(
+                                        TodoInspectorApi.Event.TODO_ITEMS_PREFILLED
+                                                .toByteArrayWithArg(returnValue.byteValue()));
+                        return returnValue;
+                    }
+                });
+
         artTooling.registerEntryHook(
                 classActivity,
                 "logItem(I" + SIGNATURE_STRING + SIGNATURE_TODO_ITEM + ")V",
                 new EntryHook() {
                     @Override
                     public void onEntry(@Nullable Object self, @NonNull List<Object> params) {
+                        byte s = self == null ? (byte) 1 : (byte) 0;
                         Integer severity = (Integer) params.get(0);
+                        byte[] args = new byte[] {s, severity.byteValue()};
                         getConnection()
                                 .sendEvent(
                                         TodoInspectorApi.Event.TODO_LOGGING_ITEM.toByteArrayWithArg(
-                                                severity.byteValue()));
+                                                args));
                     }
                 });
 
@@ -351,6 +392,17 @@ public final class TodoInspector extends TestInspector {
                         }
                     });
         }
+
+        artTooling.registerExitHook(
+                classActivity,
+                "echo(J)J",
+                new ExitHook<Long>() {
+                    @Override
+                    public Long onExit(Long result) {
+                        getConnection().sendEvent(TodoInspectorApi.Event.TODO_ECHOED.toByteArray());
+                        return result;
+                    }
+                });
     }
 
     @NonNull

@@ -17,6 +17,9 @@ package com.android.build.gradle.tasks;
 
 import static com.android.SdkConstants.FD_RES_VALUES;
 import static com.android.build.gradle.internal.TaskManager.MergeType.MERGE;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ANDROID_RES;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_LAYOUT_INFO_TYPE_MERGE;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_LAYOUT_INFO_TYPE_PACKAGE;
 import static com.android.ide.common.resources.AndroidAaptIgnoreKt.ANDROID_AAPT_IGNORE;
@@ -28,6 +31,7 @@ import android.databinding.tool.writer.JavaFileWriter;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.internal.DependencyResourcesComputer;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.aapt.WorkerExecutorResourceCompilationService;
@@ -42,6 +46,7 @@ import com.android.build.gradle.internal.services.Aapt2Input;
 import com.android.build.gradle.internal.services.Aapt2ThreadPoolBuildService;
 import com.android.build.gradle.internal.services.BuildServicesKt;
 import com.android.build.gradle.internal.tasks.Blocks;
+import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.utils.HasConfigurableValuesKt;
@@ -103,7 +108,7 @@ import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskProvider;
 
 @CacheableTask
-public abstract class MergeResources extends ResourceAwareTask {
+public abstract class MergeResources extends IncrementalTask {
     // ----- PUBLIC TASK API -----
 
     /** Directory to write the merged resources to */
@@ -132,11 +137,11 @@ public abstract class MergeResources extends ResourceAwareTask {
 
     @Nullable private File mergedNotCompiledResourcesOutputDirectory;
 
-    private boolean pseudoLocalesEnabled;
-
     private boolean precompileDependenciesResources;
 
     private ImmutableSet<Flag> flags;
+
+    DependencyResourcesComputer resourcesComputer;
 
     @Input
     public abstract Property<Boolean> getDataBindingEnabled();
@@ -151,6 +156,9 @@ public abstract class MergeResources extends ResourceAwareTask {
     @Input
     @Optional
     public abstract Property<Boolean> getUseAndroidX();
+
+    @Nested
+    public abstract SourceSetInputs getSourceSetInputs();
 
     /**
      * Set of absolute paths to resource directories that are located outside of the root project
@@ -167,6 +175,9 @@ public abstract class MergeResources extends ResourceAwareTask {
 
     @Input
     public abstract Property<Boolean> getRelativePathsEnabled();
+
+    @Input
+    public abstract Property<Boolean> getPseudoLocalesEnabled();
 
     @Internal
     public abstract Property<Aapt2ThreadPoolBuildService> getAapt2ThreadPoolBuildService();
@@ -287,7 +298,7 @@ public abstract class MergeResources extends ResourceAwareTask {
                                     getIncrementalFolder(),
                                     dataBindingLayoutProcessor,
                                     mergedNotCompiledResourcesOutputDirectory,
-                                    pseudoLocalesEnabled,
+                                    getPseudoLocalesEnabled().get(),
                                     getCrunchPng(),
                                     sourceSetPaths));
 
@@ -333,12 +344,12 @@ public abstract class MergeResources extends ResourceAwareTask {
      * resources task, if it is then it should be ignored.
      */
     private boolean isFilteredOutLibraryResource(File changedFile) {
-        ArtifactCollection localLibraryResources = getResourcesComputer().getLibraries();
+        FileCollection localLibraryResources = getSourceSetInputs().getLibrarySourceSets();
         File parentFile = changedFile.getParentFile();
-        if (localLibraryResources == null || parentFile.getName().startsWith(FD_RES_VALUES)) {
+        if (parentFile.getName().startsWith(FD_RES_VALUES)) {
             return false;
         }
-        for (File resDir : localLibraryResources.getArtifactFiles()) {
+        for (File resDir : localLibraryResources.getFiles()) {
             if (parentFile.getAbsolutePath().startsWith(resDir.getAbsolutePath())) {
                 return true;
             }
@@ -451,7 +462,7 @@ public abstract class MergeResources extends ResourceAwareTask {
                                         getIncrementalFolder(),
                                         dataBindingLayoutProcessor,
                                         mergedNotCompiledResourcesOutputDirectory,
-                                        pseudoLocalesEnabled,
+                                        getPseudoLocalesEnabled().get(),
                                         getCrunchPng(),
                                         sourceSetPaths));
 
@@ -488,7 +499,9 @@ public abstract class MergeResources extends ResourceAwareTask {
         for (ResourceSet sourceSet : resourceSets) {
             sourceSets.addAll(sourceSet.getSourceFiles());
         }
-        sourceSets.add(getGeneratedPngsOutputDir().get().getAsFile());
+        if (getGeneratedPngsOutputDir().isPresent()) {
+            sourceSets.add(getGeneratedPngsOutputDir().get().getAsFile());
+        }
         sourceSets.add(destinationDir);
         if (getIncremental()) {
             sourceSets.add(FileUtils.join(getIncrementalFolder(), SdkConstants.FD_MERGED_DOT_DIR));
@@ -686,8 +699,7 @@ public abstract class MergeResources extends ResourceAwareTask {
         // back to full task run. Because the cached ResourceList is modified we don't want
         // to recompute this twice (plus, why recompute it twice anyway?)
         if (processedInputs == null) {
-            processedInputs =
-                    getResourcesComputer().compute(precompileDependenciesResources, aaptEnv);
+            processedInputs = resourcesComputer.compute(precompileDependenciesResources, aaptEnv);
             List<ResourceSet> generatedSets = new ArrayList<>(processedInputs.size());
 
             for (ResourceSet resourceSet : processedInputs) {
@@ -747,7 +759,7 @@ public abstract class MergeResources extends ResourceAwareTask {
     // Synthetic input: the validation flag is set on the resource sets in CreationAction.execute.
     @Input
     public boolean isValidateEnabled() {
-        return getResourcesComputer().getValidateEnabled();
+        return resourcesComputer.getValidateEnabled();
     }
 
     // the optional blame output folder for the case where the task generates it.
@@ -772,11 +784,6 @@ public abstract class MergeResources extends ResourceAwareTask {
     @OutputDirectory
     @Optional
     public abstract DirectoryProperty getMergedNotCompiledResourcesOutputDirectory();
-
-    @Input
-    public boolean isPseudoLocalesEnabled() {
-        return pseudoLocalesEnabled;
-    }
 
     @Input
     public String getFlags() {
@@ -857,6 +864,12 @@ public abstract class MergeResources extends ResourceAwareTask {
                         .withName("out")
                         .on(InternalArtifactType.MERGED_RES_BLAME_FOLDER.INSTANCE);
             }
+
+            VariantPathHelper paths = creationConfig.getPaths();
+            creationConfig
+                    .getArtifacts()
+                    .setInitialProvider(taskProvider, MergeResources::getGeneratedPngsOutputDir)
+                    .atLocation(mergeResources -> paths.getGeneratedPngsOutputDir());
         }
 
         @Override
@@ -895,11 +908,27 @@ public abstract class MergeResources extends ResourceAwareTask {
             task.vectorSupportLibraryIsUsed =
                     Boolean.TRUE.equals(vectorDrawablesOptions.getUseSupportLibrary());
 
-            task.getResourcesComputer().initFromVariantScope(creationConfig, includeDependencies);
-
+            task.resourcesComputer = new DependencyResourcesComputer();
             if (!task.disableVectorDrawables) {
                 task.getGeneratedPngsOutputDir().set(paths.getGeneratedPngsOutputDir());
             }
+            ArtifactCollection libraryArtifacts =
+                    includeDependencies
+                            ? creationConfig
+                                    .getVariantDependencies()
+                                    .getArtifactCollection(RUNTIME_CLASSPATH, ALL, ANDROID_RES)
+                            : null;
+
+            FileCollection microApk =
+                    creationConfig
+                            .getServices()
+                            .fileCollection(
+                                    creationConfig
+                                            .getArtifacts()
+                                            .get(InternalArtifactType.MICRO_APK_RES.INSTANCE));
+            task.getSourceSetInputs().initialise(creationConfig, task, includeDependencies);
+            task.resourcesComputer.initFromVariantScope(
+                    creationConfig, task.getSourceSetInputs(), microApk, libraryArtifacts);
 
             final BuildFeatureValues features = creationConfig.getBuildFeatures();
             final boolean isDataBindingEnabled = features.getDataBinding();
@@ -921,7 +950,8 @@ public abstract class MergeResources extends ResourceAwareTask {
 
             task.mergedNotCompiledResourcesOutputDirectory = mergedNotCompiledOutputDirectory;
 
-            task.pseudoLocalesEnabled = creationConfig.getVariantDslInfo().isPseudoLocalesEnabled();
+            task.getPseudoLocalesEnabled().set(creationConfig.isPseudoLocalesEnabled());
+            task.getPseudoLocalesEnabled().disallowChanges();
             task.flags = flags;
 
             task.errorFormatMode =
@@ -951,7 +981,7 @@ public abstract class MergeResources extends ResourceAwareTask {
             // path sensitivity (e.g. big merge in app). Otherwise just using the relative path
             // sensitivity is enough (e.g. merges in libraries).
             task.getInputs()
-                    .files(task.getLocalResources())
+                    .files(task.getSourceSetInputs().getResourceSourceSets())
                     .withPathSensitivity(
                             processResources ? PathSensitivity.ABSOLUTE : PathSensitivity.RELATIVE)
                     .withPropertyName("rawLocalResources");
@@ -997,11 +1027,9 @@ public abstract class MergeResources extends ResourceAwareTask {
             // resource sets that are outside of the root project directory, so we need to collect
             // the latter set.
             File rootProjectDir = task.getProject().getRootDir();
-            for (FileCollection resDirs : task.getLocalResources()) {
-                for (File resDir : resDirs.getFiles()) {
-                    if (!FileUtils.isFileInDirectory(resDir, rootProjectDir)) {
-                        resourceDirsOutsideRootProjectDir.add(resDir.getCanonicalPath());
-                    }
+            for (File resDir : task.getSourceSetInputs().getResourceSourceSets().getFiles()) {
+                if (!FileUtils.isFileInDirectory(resDir, rootProjectDir)) {
+                    resourceDirsOutsideRootProjectDir.add(resDir.getCanonicalPath());
                 }
             }
             return resourceDirsOutsideRootProjectDir;

@@ -86,6 +86,9 @@ public class JarContentsTest {
                 "com/android/incfs/install/",
                 "com/android/incfs/install/adb/",
                 "com/android/incfs/install/adb/ddmlib/",
+                "com/android/server/",
+                "com/android/server/adb/",
+                "com/android/server/adb/protos/",
                 "META-INF/",
                 "META-INF/MANIFEST.MF",
                 "NOTICE");
@@ -332,6 +335,7 @@ public class JarContentsTest {
                 "com/android/build/gradle/internal/cxx/process/",
                 "com/android/build/gradle/internal/cxx/settings/",
                 "com/android/build/gradle/internal/cxx/stripping/",
+                "com/android/build/gradle/internal/cxx/timing/",
                 "com/android/build/gradle/internal/databinding/",
                 "com/android/build/gradle/internal/dependency/",
                 "com/android/build/gradle/internal/dexing/",

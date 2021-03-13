@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.common.fixture.model
 
 import com.android.build.gradle.integration.common.fixture.model.SnapshotItemWriter.Companion.NULL_STRING
+import junit.framework.Assert.fail
 import java.io.File
 
 
@@ -59,6 +60,34 @@ internal fun <T> snapshotModel(
 
     val writer = SnapshotItemWriter()
     return writer.write(registrar)
+}
+
+internal fun <T> checkEmptyDelta(
+    modelName: String,
+    normalizer: FileNormalizer,
+    model: T,
+    referenceModel: T? = null,
+    referenceNormalizer: FileNormalizer? = null,
+    includedBuilds: List<String>? = null,
+    action: ModelSnapshotter<T>.() -> Unit,
+    failureAction: (SnapshotItemRegistrarImpl) -> Unit
+) {
+
+    val map = mutableMapOf<String, String>()
+    if (includedBuilds != null) {
+        var index = 1
+        for (includedBuild in includedBuilds) {
+            map[includedBuild] = "BUILD_${index++}"
+        }
+    }
+
+    val registrar = SnapshotItemRegistrarImpl(modelName, map)
+
+    action(ModelSnapshotter(registrar, model, normalizer, referenceModel, referenceNormalizer))
+
+    if (registrar.isNotEmpty()) {
+        failureAction(registrar)
+    }
 }
 
 /**

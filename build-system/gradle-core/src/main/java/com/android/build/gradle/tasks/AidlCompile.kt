@@ -180,7 +180,7 @@ abstract class AidlCompile : NonIncrementalTask() {
         ) {
             super.configure(task)
             val globalScope = creationConfig.globalScope
-            val project = globalScope.project
+            val project = creationConfig.services.projectInfo.getProject()
 
             val variantSources = creationConfig.variantSources
 

@@ -1,0 +1,3 @@
+- AndroidDsl:
+   - defaultConfig:
+      - applicationId = "customized.application.id"

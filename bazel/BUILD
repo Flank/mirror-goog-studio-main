@@ -441,12 +441,6 @@ config_setting(
 )
 
 config_setting(
-    name = "android_cpu_armeabi",
-    values = {"cpu": "armeabi"},
-    visibility = ["//visibility:public"],
-)
-
-config_setting(
     name = "release",
     values = {"define": "release=true"},
     visibility = ["//visibility:public"],

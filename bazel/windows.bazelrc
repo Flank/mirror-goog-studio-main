@@ -1,0 +1,23 @@
+import %workspace%/tools/base/bazel/common.bazelrc
+
+# Enables the use of native symlinks in worker sandboxes,
+# required for dynamic scheduling.
+startup --windows_enable_symlinks
+
+build --enable_runfiles
+
+build:remote --python_path="C:/Python27/python.exe"
+build:remote --jobs=250
+
+build --extra_toolchains=@native_toolchain//:cc-toolchain-x64_windows-clang-cl
+
+build --host_platform=//tools/base/bazel/platforms:windows
+build --platforms=//tools/base/bazel/platforms:windows
+
+build --compiler=clang-cl
+
+# Static link native artifacts
+build --features=static_link_msvcrt
+
+# Windows does not have support for the sandboxed strategy
+build:dynamic --dynamic_local_strategy=worker,local

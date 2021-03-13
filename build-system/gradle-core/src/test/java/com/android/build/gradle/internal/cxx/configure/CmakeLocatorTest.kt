@@ -770,4 +770,13 @@ class CmakeLocatorTest {
         val version = CmakeVersionRequirements("3.5.0+").effectiveRequestVersion
         assertThat(version.isCmakeForkVersion()).isFalse()
     }
+
+    @Test
+    fun `special cases for fork CMake version`() {
+        // Fork CMake version 3.6.0 and 3.6.4111459 are treated interchangeably as a special case
+        CmakeVersionRequirements(FORK_CMAKE_REPORTED_VERSION)
+                .isSatisfiedBy(forkCmakeSdkVersionRevision)
+        CmakeVersionRequirements(FORK_CMAKE_SDK_VERSION)
+                .isSatisfiedBy(forkCmakeReportedVersion)
+    }
 }

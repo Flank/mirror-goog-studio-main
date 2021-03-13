@@ -18,6 +18,7 @@ package com.android.build.gradle.internal
 
 import com.android.SdkConstants
 import com.android.prefs.AndroidLocationsProvider
+import com.android.sdklib.ISystemImage
 import com.android.sdklib.PathFileWrapper
 import com.android.sdklib.devices.DeviceManager
 import com.android.sdklib.internal.avd.AvdCamera
@@ -32,6 +33,12 @@ import com.android.utils.StdLogger
 import org.gradle.api.file.Directory
 import org.gradle.api.provider.Provider
 import java.io.File
+import java.nio.file.Path
+import kotlin.math.min
+
+private const val MAX_SYSTEM_IMAGE_RETRIES = 4;
+private const val BASE_RETRY_DELAY_SECONDS = 2L;
+private const val MAX_RETRY_DELAY_SECONDS = 10L;
 
 /**
  * Manages AVDs for the Avd build service inside the Android Gradle Plugin.
@@ -80,10 +87,7 @@ class AvdManager(
 
         val fileOp = sdkHandler.fileOp
         val imageLocation = fileOp.toPath(imageProvider.get().asFile)
-        val systemImage = sdkHandler.getSystemImageManager(
-            LoggerProgressIndicatorWrapper(StdLogger(StdLogger.Level.VERBOSE))
-        ).getImageAt(imageLocation)
-
+        val systemImage = retrieveSystemImage(sdkHandler, imageLocation)
         systemImage?: error("System image does not exist at $imageLocation")
 
         val device = deviceManager.getDevices(DeviceManager.ALL_DEVICES).find {
@@ -178,6 +182,37 @@ class AvdManager(
         }
 
         return hwConfigMap
+    }
+
+    /**
+     * Retrieves the system image from the system image manager.
+     *
+     * This attempts to retrieve the system image from the file system. The retries are required to
+     * mitigate an issue on Windows where the download of the system image has occurred, but the
+     * file system has yet to be updated.
+     */
+    private fun retrieveSystemImage(
+        sdkHandler: AndroidSdkHandler,
+        imageLocation: Path
+    ): com.android.sdklib.ISystemImage? {
+        var delay = BASE_RETRY_DELAY_SECONDS
+        for (retry in 0..MAX_SYSTEM_IMAGE_RETRIES) {
+            val systemImage = sdkHandler.getSystemImageManager(
+                LoggerProgressIndicatorWrapper(StdLogger(StdLogger.Level.VERBOSE))
+            ).getImageAt(imageLocation)
+
+            if (systemImage != null) {
+                return systemImage
+            }
+
+            if (retry != MAX_SYSTEM_IMAGE_RETRIES) {
+                logger.warning("Failed to to retrieve system image at: $imageLocation " +
+                        "Retrying in $delay seconds")
+                Thread.sleep(delay * 1000)
+                delay = min(delay * BASE_RETRY_DELAY_SECONDS, MAX_RETRY_DELAY_SECONDS)
+            }
+        }
+        return null
     }
 
     // TODO(b/166641485): Move to a utilites class. Map is pulled from AvdManagerCli

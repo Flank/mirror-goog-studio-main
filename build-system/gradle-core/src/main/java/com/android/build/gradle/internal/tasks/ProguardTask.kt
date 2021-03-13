@@ -146,7 +146,7 @@ abstract class ProguardTask : ProguardConfigurableTask() {
             // Publish the Proguarded classes and resources back to a Stream
             val shrunkClassesAndResourcesProvider = creationConfig.artifacts
                 .get(InternalArtifactType.SHRUNK_JAR)
-            val project = creationConfig.globalScope.project
+            val project = creationConfig.services.projectInfo.getProject()
             creationConfig.transformManager.addStream(
                 OriginalStream.builder("shrunk_classes_and_resources")
                     .addContentTypes(TransformManager.CONTENT_JARS)

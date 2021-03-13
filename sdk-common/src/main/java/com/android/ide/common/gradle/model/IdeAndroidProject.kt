@@ -36,11 +36,8 @@ interface IdeAndroidProject : Serializable {
 
   /**
    * Returns the type of project: Android application, library, feature, instantApp.
-   *
-   * @return the type of project.
-   * @since 2.3
    */
-  val projectType: Int
+  val projectType: IdeAndroidProjectType
 
   /**
    * Returns the [IdeProductFlavorContainer] for the 'main' default config.
@@ -186,13 +183,6 @@ interface IdeAndroidProject : Serializable {
   val lintRuleJars: List<File>?
 
   companion object {
-    const val PROJECT_TYPE_APP = 0
-    const val PROJECT_TYPE_LIBRARY = 1
-    const val PROJECT_TYPE_TEST = 2
-    const val PROJECT_TYPE_ATOM = 3
-    const val PROJECT_TYPE_INSTANTAPP = 4 // Instant App Bundle
-    const val PROJECT_TYPE_FEATURE = 5 // com.android.feature module
-    const val PROJECT_TYPE_DYNAMIC_FEATURE = 6 // com.android.dynamic-feature module
     const val ARTIFACT_MAIN = AndroidProject.ARTIFACT_MAIN
     const val ARTIFACT_ANDROID_TEST = AndroidProject.ARTIFACT_ANDROID_TEST
     const val ARTIFACT_UNIT_TEST = AndroidProject.ARTIFACT_UNIT_TEST

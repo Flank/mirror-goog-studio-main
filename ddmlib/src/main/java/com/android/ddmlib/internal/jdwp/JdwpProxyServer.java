@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.net.BindException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
@@ -291,8 +292,11 @@ public class JdwpProxyServer implements Runnable {
                     JdwpSocketHandler handler = (JdwpSocketHandler)key.attachment();
                     try {
                         handler.read();
-                    }
-                    catch (TimeoutException | IOException ex) {
+                    } catch (TimeoutException | IOException | BufferOverflowException ex) {
+                        // BufferOverflowExceptions are thrown when the proxy fails to parse a
+                        // jdwp packet properly, or attempts to parse a packet larger than the
+                        // maximum supported size. When this happens the proxy mirrors the behavior
+                        // of studio and will shutdown the client app.
                         handler.shutdown();
                     }
                 }

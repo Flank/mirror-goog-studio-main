@@ -32,14 +32,14 @@ class SnapshotItemWriter {
     fun write(registrar: SnapshotItemRegistrarImpl): String {
         precomputeSizeOfRegistrars(registrar)
         val sb = StringBuilder()
-        registrar.write(sb, 0)
+        registrar.write(sb)
         return sb.toString()
     }
 
     private fun write(
         item: SnapshotItem,
         sb: StringBuilder,
-        indent: Int,
+        indent: String,
         keySpacing: Int,
     ) {
         when (item) {
@@ -50,15 +50,12 @@ class SnapshotItemWriter {
         }
     }
 
-    private fun KeyValueItem.write(sb: StringBuilder, indent: Int, keySpacing: Int) {
-        if (indent > 0) for (i in 0..indent) sb.append(' ')
-
-        sb.append("- ").append(name)
+    private fun KeyValueItem.write(sb: StringBuilder, indent: String, keySpacing: Int) {
+        sb.append(indent).append("- ").append(name)
 
         if (keySpacing > 0) {
             val spaceLen = keySpacing - name.length
-            for (i in 0..spaceLen) sb.append(' ')
-
+            sb.append(" ".repeat(spaceLen))
         } else {
             sb.append(' ')
         }
@@ -66,21 +63,20 @@ class SnapshotItemWriter {
         sb.append(separator).append(' ').append(value).append("\n")
     }
 
-    private fun ValueOnlyItem.write(sb: StringBuilder, indent: Int) {
-        if (indent > 0) for (i in 0..indent) sb.append(' ')
-
-        sb.append("* ").append(value).append("\n")
+    private fun ValueOnlyItem.write(sb: StringBuilder, indent: String) {
+        sb.append(indent).append("* ").append(value).append("\n")
     }
 
-    private fun SnapshotItemRegistrarImpl.write(sb: StringBuilder, indent: Int) {
+    private fun SnapshotItemRegistrarImpl.write(sb: StringBuilder, indent: String = "") {
         val keySpacing = computeKeySpacing()
 
         val withFooter = sizeOf(this) >= MAX_STRUCT_SIZE
 
         writeHeader(name, sb, indent, withFooter)
 
+        val newIndent = indent + " ".repeat(INDENT_STEP2)
         for (item in items) {
-            this@SnapshotItemWriter.write(item, sb, indent + INDENT_STEP2, keySpacing)
+            this@SnapshotItemWriter.write(item, sb, newIndent, keySpacing)
         }
 
         if (withFooter) {
@@ -88,17 +84,12 @@ class SnapshotItemWriter {
         }
     }
 
-    private fun writeHeader(name: String, sb: StringBuilder, indent: Int, withFooter: Boolean) {
-        if (indent > 0) for (i in 0..indent) sb.append(' ')
-
-        val prefix = if (withFooter) "> " else "- "
-
-        sb.append(prefix).append(name).append(":\n")
+    private fun writeHeader(name: String, sb: StringBuilder, indent: String, withFooter: Boolean) {
+        sb.append(indent).append(if (withFooter) "> " else "- ").append(name).append(":\n")
     }
 
-    private fun writeFooter(name: String, sb: StringBuilder, indent: Int) {
-        if (indent > 0) for (i in 0..indent) sb.append(' ')
-        sb.append("< ").append(name).append("\n")
+    private fun writeFooter(name: String, sb: StringBuilder, indent: String) {
+        sb.append(indent).append("< ").append(name).append("\n")
     }
 
     private fun precomputeSizeOfRegistrars(rootRegistrar: SnapshotItemRegistrarImpl) {

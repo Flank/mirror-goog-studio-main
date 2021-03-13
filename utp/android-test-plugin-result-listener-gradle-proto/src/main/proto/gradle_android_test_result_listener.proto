@@ -63,6 +63,9 @@ message TestResultEvent {
         // Message must be google.testing.platform.proto.api.core.TestSuiteResult.
         google.protobuf.Any test_suite_result = 1;
     }
+
+    // A device ID of which the test has executed on.
+    string deviceId = 5;
 }
 
 // Information about the result of the record test result rpc call.

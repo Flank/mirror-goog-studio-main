@@ -88,7 +88,7 @@ def main():
 
   bazelrc_arg = '--bazelrc=%s' % os.path.join(workspace, 'tools',
                                               'base', 'bazel',
-                                              config + '.bazel.rc')
+                                              config + '.bazelrc')
   sys.exit(subprocess.call([bazel, bazelrc_arg] + args, env=env))
 
 

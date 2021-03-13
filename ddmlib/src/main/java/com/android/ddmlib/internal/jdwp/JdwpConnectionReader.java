@@ -20,11 +20,13 @@ import static com.android.ddmlib.internal.jdwp.chunkhandler.ChunkHandler.DDMS_CM
 import static com.android.ddmlib.internal.jdwp.chunkhandler.ChunkHandler.DDMS_CMD_SET;
 
 import com.android.ddmlib.AdbHelper;
+import com.android.ddmlib.DdmPreferences;
 import com.android.ddmlib.JdwpHandshake;
 import com.android.ddmlib.internal.jdwp.chunkhandler.HandleAppName;
 import com.android.ddmlib.internal.jdwp.chunkhandler.JdwpPacket;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.IOException;
+import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 
@@ -125,6 +127,11 @@ public class JdwpConnectionReader {
         int packetLength = JdwpPacket.getPacketLength(mReadBuffer);
         if (packetLength <= 0) {
             return null;
+        }
+
+        if (packetLength > DdmPreferences.getJdwpMaxPacketSize()) {
+            JdwpLoggingUtils.logPacketError("Packet size exceeds expected max", mReadBuffer);
+            throw new BufferOverflowException();
         }
 
         // resize buffer so we can fit whole packet in memory

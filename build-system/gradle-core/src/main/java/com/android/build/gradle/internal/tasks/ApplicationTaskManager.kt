@@ -29,6 +29,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.ProjectInfo
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeatureNamespacesTask
 import com.android.build.gradle.internal.tasks.factory.dependsOn
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadataWriterTask
@@ -52,14 +53,16 @@ class ApplicationTaskManager(
     hasFlavors: Boolean,
     projectOptions: ProjectOptions,
     globalScope: GlobalScope,
-    extension: BaseExtension
+    extension: BaseExtension,
+    projectInfo: ProjectInfo
 ) : AbstractAppTaskManager<ApplicationVariantBuilderImpl, ApplicationVariantImpl>(
     variants,
     testComponents,
     hasFlavors,
     projectOptions,
     globalScope,
-    extension
+    extension,
+    projectInfo
 ) {
 
     override fun doCreateTasksForVariant(

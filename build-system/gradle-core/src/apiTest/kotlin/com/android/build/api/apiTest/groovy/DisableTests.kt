@@ -39,7 +39,7 @@ class DisableTests: VariantApiBaseTest(TestType.Script, ScriptingLanguage.Groovy
 
             androidComponents {
                 beforeVariants(selector().all(), { variantBuilder ->
-                    variantBuilder.unitTestEnabled = false
+                    variantBuilder.enableUnitTest = false
                 })
                 onVariants(selector().withName("debug"), { variant ->
                     if (variant.unitTest != null) {
@@ -91,7 +91,7 @@ It shows the location of the apk for the all variants.
 
             androidComponents {
                 beforeVariants(selector().withName("debug"), { variantBuilder ->
-                    variantBuilder.androidTestEnabled = false
+                    variantBuilder.enableAndroidTest = false
                 })
                 onVariants(selector().withName("debug"), { variant ->
                     if (variant.unitTest == null) {

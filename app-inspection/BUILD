@@ -34,10 +34,12 @@ cc_library(
     srcs = [
         "native/src/app_inspection_java_jni.cc",
         "native/src/app_inspection_service.cc",
+        "native/src/array_params_entry_hook.cc",
     ],
     hdrs = [
         "native/include/app_inspection_service.h",
         "native/include/app_inspection_transform.h",
+        "native/include/array_params_entry_hook.h",
     ],
     copts = ANDROID_COPTS + [
         "-Itools/base/app-inspection/native/include",

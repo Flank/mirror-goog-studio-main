@@ -143,6 +143,7 @@ gradle_build(
         "//prebuilts/studio/sdk:platform-tools",
         "//prebuilts/studio/sdk:platforms/latest",
     ],
+    gradle_version = "6.5",  # AGP 3.5 is not supported by Gradle 7.0+
     output_file = "3.5.0.aar",
     output_file_source = "outputs/aar/3.5.0-release.aar",
     repos = [

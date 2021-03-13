@@ -14,6 +14,8 @@ fi
 declare -a conditional_flags
 if [[ $IS_POST_SUBMIT ]]; then
   conditional_flags+=(--nocache_test_results)
+  # Let CI builds populate the remote cache for mac builds.
+  conditional_flags+=(--remote_upload_local_results=true)
 fi
 
 readonly script_dir="$(dirname "$0")"
@@ -22,7 +24,7 @@ readonly script_name="$(basename "$0")"
 # Invocation ID must be lower case in Upsalite URL
 readonly invocation_id=$(uuidgen | tr A-F a-f)
 
-readonly config_options="--config=local --config=release --config=cloud_resultstore"
+readonly config_options="--config=local --config=rcache"
 
 "${script_dir}/bazel" \
         --max_idle_secs=60 \
@@ -49,7 +51,7 @@ readonly config_options="--config=local --config=release --config=cloud_resultst
 readonly bazel_status=$?
 
 if [[ -d "${dist_dir}" ]]; then
-  # info breaks if we pass --config=local or --config=cloud_resultstore because they don't
+  # info breaks if we pass --config=local or --config=rcache because they don't
   # affect info, so we need to pass only --config=release here in order to fetch the proper
   # binaries
   readonly bin_dir="$("${script_dir}"/bazel info --config=release bazel-bin)"

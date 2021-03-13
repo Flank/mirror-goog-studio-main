@@ -45,7 +45,6 @@ import com.android.build.gradle.internal.services.AndroidLocationsBuildService
 import com.android.build.gradle.internal.services.DslServicesImpl
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.StringCachingBuildService
-import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.options.Option
 import com.android.build.gradle.options.ProjectOptionService
 import com.android.build.gradle.options.SyncOptions
@@ -59,7 +58,6 @@ import org.gradle.api.component.AdhocComponentWithVariants
 import org.gradle.api.component.ConfigurationVariantDetails
 import org.gradle.api.component.SoftwareComponent
 import org.gradle.api.file.FileCollection
-import org.gradle.api.plugins.BasePluginConvention
 import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.SourceSet
@@ -243,7 +241,10 @@ abstract class LintPlugin : Plugin<Project> {
         val projectOptions = ProjectOptionService.RegistrationAction(project).execute().get()
             .projectOptions
         val syncIssueReporter =
-            SyncIssueReporterImpl(SyncOptions.getModelQueryMode(projectOptions), logger)
+                SyncIssueReporterImpl(
+                        SyncOptions.getModelQueryMode(projectOptions),
+                        SyncOptions.getErrorFormatMode(projectOptions),
+                        logger)
         val deprecationReporter =
             DeprecationReporterImpl(syncIssueReporter, projectOptions, projectPath)
         val projectInfo = ProjectInfo(project)
@@ -284,8 +285,9 @@ abstract class LintPlugin : Plugin<Project> {
             .execute()
 
         SyncIssueReporterImpl.GlobalSyncIssueService.RegistrationAction(
-            project,
-            SyncOptions.getModelQueryMode(projectServices.projectOptions)
+                project,
+                SyncOptions.getModelQueryMode(projectServices.projectOptions),
+                SyncOptions.getErrorFormatMode(projectServices.projectOptions)
         ).execute()
 
         AndroidLocationsBuildService.RegistrationAction(project).execute()

@@ -20,6 +20,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.truth.ScannerSubject
+import com.android.build.gradle.options.BooleanOption
 import org.junit.Rule
 import org.junit.Test
 
@@ -51,9 +52,17 @@ class AgpRepositoryCheckerTest {
         """.trimIndent()
         )
 
-        //
-        val result = project.executor().run("help")
+        // Gradle 7.0 also warns on the use of jcenter(), so we need to set failOnWarning=false in
+        // order to check the warning from AGP.
+        val result = project.executor().withFailOnWarning(false).run("help")
         ScannerSubject.assertThat(result.stdout)
-                .contains(" Please remove usages of `jcenter()` Maven repository from your build scripts and migrate your build to other Maven repositories.")
+                .contains("Please remove usages of `jcenter()` Maven repository from your build scripts and migrate your build to other Maven repositories.")
+
+        val withIdeOutputFormat = project.executor()
+                .withFailOnWarning(false)
+                .with(BooleanOption.IDE_INVOKED_FROM_IDE, true)
+                .run("help")
+        ScannerSubject.assertThat(withIdeOutputFormat.stdout)
+                .contains("AGPBI: {\"kind\":\"warning\",\"text\":\"Please remove usages of `jcenter()` Maven repository")
     }
 }

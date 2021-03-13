@@ -93,6 +93,8 @@ class ProfileContentTest {
         for (profile in listOf(cleanBuild, noOpBuild)) {
             assertThat(HashSet(profile.rawProjectIdList))
                 .containsExactly("com.example.helloworld")
+            val gbp = profile.getProject(0)
+            assertThat(gbp.taskNamesList).contains("com.android.build.gradle.internal.tasks.AnalyticsRecordingTask_Decorated")
         }
     }
 }

@@ -1,4 +1,0 @@
-- AndroidProject:
-    - defaultConfig:
-       - productFlavor:
-          - applicationId = "customized.application.id"

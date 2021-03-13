@@ -129,13 +129,6 @@ class DependencyConfigurator(
 
         // The aars/jars may need to be processed (e.g., jetified to AndroidX) before they can be
         // used
-        // Arguments passed to an ArtifactTransform must not be null
-        @Suppress("DEPRECATION")
-        val jetifierIgnoreList =
-            projectOptions[StringOption.JETIFIER_IGNORE_LIST]
-                ?: projectOptions[StringOption.JETIFIER_BLACKLIST]
-                ?: ""
-
         val autoNamespaceDependencies =
             globalScope.extension.aaptOptions.namespaced &&
                     projectOptions[BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES]
@@ -144,6 +137,8 @@ class DependencyConfigurator(
         } else {
             AndroidArtifacts.ArtifactType.PROCESSED_AAR
         }
+        // Arguments passed to an ArtifactTransform must not be null
+        val jetifierIgnoreList = projectOptions[StringOption.JETIFIER_IGNORE_LIST] ?: ""
         if (projectOptions.get(BooleanOption.ENABLE_JETIFIER)) {
             registerTransform(
                 JetifyTransform::class.java,
@@ -581,13 +576,13 @@ class DependencyConfigurator(
 
         for (component in allComponents) {
             registerAsmTransformForComponent(
-                globalScope.project.name,
+                projectServices.projectInfo.getProject().name,
                 dependencies,
                 component
             )
 
             registerRecalculateStackFramesTransformForComponent(
-                globalScope.project.name,
+                projectServices.projectInfo.getProject().name,
                 dependencies,
                 component
             )
@@ -598,10 +593,10 @@ class DependencyConfigurator(
                 allComponents
             )) {
                 artifactConfiguration.registerTransform(
-                    globalScope.project.name,
+                    projectServices.projectInfo.getProject().name,
                     dependencies,
                     project.files(globalScope.bootClasspath),
-                    getDesugarLibConfig(globalScope.project),
+                    getDesugarLibConfig(projectServices.projectInfo.getProject()),
                     SyncOptions.getErrorFormatMode(projectOptions),
                     projectOptions.get(BooleanOption.ENABLE_INCREMENTAL_DEXING_TRANSFORM)
                 )

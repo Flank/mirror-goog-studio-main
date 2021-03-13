@@ -24,6 +24,34 @@ import java.nio.channels.SocketChannel;
 public class AdbSocketUtils {
 
     /**
+     * Fills a ByteBuffer by reading data from a socket.
+     *
+     * @throws IOException if there was not enough data to fill the buffer
+     */
+    static void read(@NonNull SocketChannel socket, @NonNull ByteBuffer buf) throws IOException {
+        while (buf.remaining() > 0) {
+            int count = socket.read(buf);
+            if (count < 0) {
+                throw new IOException("EOF");
+            }
+        }
+    }
+
+    /**
+     * Reads data of given length from a socket.
+     *
+     * @return the content in a ByteBuffer, with the position at the beginning.
+     * @throws IOException if there was not enough data to fill the buffer
+     */
+    @NonNull
+    static ByteBuffer read(@NonNull SocketChannel socket, int length) throws IOException {
+        ByteBuffer buf = ByteBuffer.allocate(length);
+        read(socket, buf);
+        buf.position(0);
+        return buf;
+    }
+
+    /**
      * Fills a buffer by reading data from a socket.
      *
      * @return the content of the buffer as a string, or null if it failed to convert the buffer.
@@ -32,16 +60,7 @@ public class AdbSocketUtils {
     @NonNull
     static String read(@NonNull SocketChannel socket, @NonNull byte[] buffer) throws IOException {
         ByteBuffer buf = ByteBuffer.wrap(buffer, 0, buffer.length);
-
-        while (buf.position() != buf.limit()) {
-            int count;
-
-            count = socket.read(buf);
-            if (count < 0) {
-                throw new IOException("EOF");
-            }
-        }
-
+        read(socket, buf);
         return new String(buffer, 0, buf.position(), AdbHelper.DEFAULT_CHARSET);
     }
 

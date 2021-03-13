@@ -97,7 +97,7 @@ open class ConsumableCreationConfigImpl(
                         .isJava8Compatible()) {
             return VariantScope.Java8LangSupport.UNUSED
         }
-        if (globalScope.project.plugins.hasPlugin("me.tatarka.retrolambda")) {
+        if (config.services.projectInfo.getProject().plugins.hasPlugin("me.tatarka.retrolambda")) {
             return VariantScope.Java8LangSupport.RETROLAMBDA
         }
         val shrinker = getCodeShrinker()

@@ -47,5 +47,13 @@ interface VariantOutput: VariantOutputConfiguration {
      *
      * @return a [Property] to enable or disable this output.
      */
+    @Deprecated("Replaced by enable", ReplaceWith("enable"))
     val enabled: Property<Boolean>
+
+    /**
+     * Returns a modifiable [Property] to enable or disable the production of this [VariantOutput]
+     *
+     * @return a [Property] to enable or disable this output.
+     */
+    val enable: Property<Boolean>
 }

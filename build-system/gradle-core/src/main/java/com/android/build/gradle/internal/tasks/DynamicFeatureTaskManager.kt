@@ -24,6 +24,7 @@ import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.AbstractAppTaskManager
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.scope.ProjectInfo
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeatureInfoTask
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureNameWriterTask
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclarationWriterTask
@@ -36,14 +37,16 @@ internal class DynamicFeatureTaskManager(
         hasFlavors: Boolean,
         projectOptions: ProjectOptions,
         globalScope: GlobalScope,
-        extension: BaseExtension
+        extension: BaseExtension,
+        projectInfo: ProjectInfo
 ) : AbstractAppTaskManager<DynamicFeatureVariantBuilderImpl, DynamicFeatureVariantImpl>(
     variants,
     testComponents,
     hasFlavors,
     projectOptions,
     globalScope,
-    extension
+    extension,
+    projectInfo
 ) {
 
     override fun doCreateTasksForVariant(

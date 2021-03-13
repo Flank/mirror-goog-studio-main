@@ -124,7 +124,7 @@ abstract class MergeClassesTask : NonIncrementalTask() {
             ).withName(if (creationConfig.variantType.isBaseModule) {
                 "base.jar"
             } else {
-                TaskManager.getFeatureFileName(creationConfig.globalScope.project.path, DOT_JAR)
+                TaskManager.getFeatureFileName(creationConfig.services.projectInfo.getProject().path, DOT_JAR)
             }).on(InternalArtifactType.MODULE_AND_RUNTIME_DEPS_CLASSES)
         }
 

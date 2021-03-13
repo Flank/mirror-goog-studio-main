@@ -167,8 +167,8 @@ abstract class GenerateTestConfig @Inject constructor(objectFactory: ObjectFacto
             packageNameOfFinalRClass = testedVariant.namespace
             buildDirectoryPath = FileUtils.toSystemIndependentPath(
                 FileUtils.relativePossiblyNonExistingPath(
-                    creationConfig.globalScope.project.buildDir,
-                    creationConfig.globalScope.project.projectDir)
+                    creationConfig.services.projectInfo.getProject().buildDir,
+                        creationConfig.services.projectInfo.getProject().projectDir)
             )
         }
 

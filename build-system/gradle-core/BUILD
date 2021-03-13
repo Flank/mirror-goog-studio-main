@@ -174,8 +174,8 @@ kotlin_test(
     # Specify gradle-api jar first, as kotlin-daemon-client contains older net.rubygrapefruit.platform classes
     deps = ["//tools/base/build-system:gradle-api"] + [
         ":gradle-core",
-        "//prebuilts/tools/common/m2/repository/com/android/tools/desugar_jdk_libs/1.0.9:jar",
-        "//prebuilts/tools/common/m2/repository/com/android/tools/desugar_jdk_libs_configuration/1.0.9:jar",
+        "//prebuilts/tools/common/m2/repository/com/android/tools/desugar_jdk_libs/1.1.5:jar",
+        "//prebuilts/tools/common/m2/repository/com/android/tools/desugar_jdk_libs_configuration/1.1.5:jar",
         "//tools/analytics-library/protos/src/main/proto",
         "//tools/analytics-library/shared:tools.analytics-shared",
         "//tools/apkzlib",
