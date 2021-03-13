@@ -42,7 +42,8 @@ public class AndroidArtifactStub extends BaseArtifactStub implements AndroidArti
     @Nullable private final CodeShrinker myCodeShrinker;
     private final boolean mySigned;
 
-    public AndroidArtifactStub() {
+    public AndroidArtifactStub(@NonNull String name) {
+        super(name);
         myOutputs = Lists.newArrayList(new AndroidArtifactOutputStub());
         myApplicationId = "applicationId";
         mySourceGenTaskName = "sourceGenTaskName";
@@ -153,7 +154,7 @@ public class AndroidArtifactStub extends BaseArtifactStub implements AndroidArti
     public Map<String, ClassField> getResValues() {
         return Collections.emptyMap();
     }
-    
+
     @Override
     @NonNull
     public InstantRun getInstantRun() {

@@ -183,9 +183,6 @@ interface IdeAndroidProject : Serializable {
   val lintRuleJars: List<File>?
 
   companion object {
-    const val ARTIFACT_MAIN = AndroidProject.ARTIFACT_MAIN
-    const val ARTIFACT_ANDROID_TEST = AndroidProject.ARTIFACT_ANDROID_TEST
-    const val ARTIFACT_UNIT_TEST = AndroidProject.ARTIFACT_UNIT_TEST
     const val FD_GENERATED = AndroidProject.FD_GENERATED
     const val FD_INTERMEDIATES = AndroidProject.FD_INTERMEDIATES
     const val MODEL_LEVEL_3_VARIANT_OUTPUT_POST_BUILD = AndroidProject.MODEL_LEVEL_3_VARIANT_OUTPUT_POST_BUILD

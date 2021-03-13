@@ -17,6 +17,7 @@ package com.android.ide.common.gradle.model.stubs;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaArtifact;
 import com.android.builder.model.SourceProvider;
@@ -34,6 +35,7 @@ public final class JavaArtifactStub extends BaseArtifactStub implements JavaArti
     }
 
     public JavaArtifactStub(@Nullable File mockablePlatformJar) {
+        super(AndroidProject.ARTIFACT_UNIT_TEST);
         myMockablePlatformJar = mockablePlatformJar;
     }
 
