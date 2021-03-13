@@ -22,6 +22,7 @@ import com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidT
 import com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidTestResultListenerProto.TestResultEvent.TestSuiteStarted
 import com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidTestResultListenerServiceGrpc
 import com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidTestResultListenerServiceGrpc.GradleAndroidTestResultListenerServiceStub
+import com.google.protobuf.Any
 import com.google.testing.platform.api.config.Config
 import com.google.testing.platform.api.config.Configurable
 import com.google.testing.platform.api.config.ProtoConfig
@@ -95,30 +96,46 @@ class GradleAndroidTestResultListener(
     override fun onBeforeTestSuite() {
     }
 
-    override fun onTestSuiteStarted(testSuiteMetaData: TestSuiteResultProto.TestSuiteMetaData?) {
+    override fun onTestSuiteStarted(testSuite: TestSuiteResultProto.TestSuiteMetaData?) {
+        val suiteStarted = TestSuiteStarted.newBuilder().apply {
+            if (testSuite != null) {
+                this.testSuiteMetadata = Any.pack(testSuite)
+            }
+        }.build()
         val event = createTestResultEvent().apply {
-            testSuiteStarted = TestSuiteStarted.getDefaultInstance()
+            testSuiteStarted = suiteStarted
         }.build()
         requestObserver.onNext(event)
     }
 
     override fun beforeTest(testCase: TestCaseProto.TestCase?) {
+        val testCaseStarted = TestResultEvent.TestCaseStarted.newBuilder().apply {
+            if (testCase != null) {
+                this.testCase = Any.pack(testCase)
+            }
+        }.build()
         val event = createTestResultEvent().apply {
-            testCaseStarted = TestResultEvent.TestCaseStarted.getDefaultInstance()
+            this.testCaseStarted = testCaseStarted
         }.build()
         requestObserver.onNext(event)
     }
 
     override fun onTestResult(testResult: TestResultProto.TestResult) {
+        val testCaseFinished = TestResultEvent.TestCaseFinished.newBuilder().apply {
+            testCaseResult = Any.pack(testResult)
+        }.build()
         val event = createTestResultEvent().apply {
-            testCaseFinished = TestResultEvent.TestCaseFinished.getDefaultInstance()
+            this.testCaseFinished = testCaseFinished
         }.build()
         requestObserver.onNext(event)
     }
 
     override fun onTestSuiteResult(testSuiteResult: TestSuiteResultProto.TestSuiteResult) {
+        val testSuiteFinished = TestResultEvent.TestSuiteFinished.newBuilder().apply {
+            this.testSuiteResult = Any.pack(testSuiteResult)
+        }.build()
         val event = createTestResultEvent().apply {
-            testSuiteFinished = TestResultEvent.TestSuiteFinished.getDefaultInstance()
+            this.testSuiteFinished = testSuiteFinished
         }.build()
         requestObserver.onNext(event)
     }
