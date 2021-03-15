@@ -25,15 +25,14 @@ class InstrumentedTestManifestGenerator(
     packageName: String,
     minSdkVersion: String?,
     targetSdkVersion: String?,
-    private val testedPackageName: String,
+    testedPackageName: String,
     testRunnerName: String,
     private val handleProfiling: Boolean,
     private val functionalTest: Boolean
-): TestManifestGenerator(outputFile, packageName, minSdkVersion, targetSdkVersion, testRunnerName) {
+): TestManifestGenerator(outputFile, packageName, minSdkVersion, targetSdkVersion, testedPackageName, testRunnerName) {
 
     override fun populateTemplateParameters(map: MutableMap<String, String?>) {
         super.populateTemplateParameters(map)
-        map[PH_TESTED_PACKAGE] = testedPackageName
         map[PH_HANDLE_PROFILING] = java.lang.Boolean.toString(handleProfiling)
         map[PH_FUNCTIONAL_TEST] = java.lang.Boolean.toString(functionalTest)
     }
@@ -42,7 +41,6 @@ class InstrumentedTestManifestGenerator(
 
     companion object {
         private const val TEMPLATE = "AndroidManifest.template"
-        private const val PH_TESTED_PACKAGE = "#TESTEDPACKAGE#"
         private const val PH_HANDLE_PROFILING = "#HANDLEPROFILING#"
         private const val PH_FUNCTIONAL_TEST = "#FUNCTIONALTEST#"
     }

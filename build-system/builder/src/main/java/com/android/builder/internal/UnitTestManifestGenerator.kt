@@ -23,12 +23,14 @@ class UnitTestManifestGenerator(
     packageName: String,
     minSdkVersion: String?,
     targetSdkVersion: String?,
+    testedPackageName: String,
     testRunnerName: String?,
 ): TestManifestGenerator(
     outputFile,
     packageName,
     minSdkVersion,
     targetSdkVersion,
+    testedPackageName,
     testRunnerName
 ) {
 

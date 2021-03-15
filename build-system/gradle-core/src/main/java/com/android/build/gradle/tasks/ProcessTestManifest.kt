@@ -236,6 +236,7 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
                     minSdkVersion,
                     if (targetSdkVersion == "-1") null else targetSdkVersion,
                     generatedTestManifest,
+                    testApplicationId,
                     instrumentationRunner)
             }
             if (testManifestFile != null && testManifestFile.exists()) {
@@ -556,6 +557,7 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
             minSdkVersion: String?,
             targetSdkVersion: String?,
             outManifestLocation: File,
+            testedApplicationId: String,
             instrumentedRunner: String,
         ) {
             val generator =
@@ -564,6 +566,7 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
                     testApplicationId,
                     minSdkVersion,
                     targetSdkVersion,
+                    testedApplicationId,
                     instrumentedRunner,
                 )
             try {
