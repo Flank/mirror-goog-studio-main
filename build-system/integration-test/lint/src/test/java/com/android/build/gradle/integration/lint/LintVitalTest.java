@@ -25,6 +25,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TestVersions;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
+import com.android.build.gradle.integration.common.truth.TaskStateList;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.BooleanOption;
@@ -87,8 +88,12 @@ public class LintVitalTest {
     @Test
     public void runningLintSkipsLintVital() throws Exception {
         GradleBuildResult result = getExecutor().expectFailure().run("lintVitalRelease", "lint");
-        TruthHelper.assertThat(result.getTask(":lintVitalRelease")).wasSkipped();
-
+        TaskStateList.TaskInfo task = result.findTask(":lintVitalRelease");
+        if (task != null) {
+            // Sometimes the task is missing completely, not SKIPPED
+            // This was causing test flakes: see b/182285100
+            TruthHelper.assertThat(task).wasSkipped();
+        }
         // We make this assertion to ensure that lint is actually run and runs as expected. Without
         // this, it's possible that we break the execution in some other way and the test still
         // passes.
