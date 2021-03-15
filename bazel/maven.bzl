@@ -325,41 +325,47 @@ def maven_aar(name, aar, pom, visibility = None):
         source = pom,
     )
 
-def _maven_repo_impl(ctx):
-    include_sources = ctx.attr.include_sources
+def _collect_pom_provider(pom, jars, clsjars):
+    collected = [(pom, None)]
+    collected += [(jar, None) for jar in jars.to_list()]
+    for classifier, jars in clsjars.items():
+        collected += [(jar, classifier) for jar in jars.to_list()]
+    return collected
 
+# Collects all parent and dependency artifacts for a given list of artifacts.
+# Each artifact is represented as a tuple (artifact, classifier), with classifier = None is there is no classifier.
+def _collect_artifacts(artifacts, include_sources):
     seen = {}
-    inputs = []
-    args = []
-    for artifact in ctx.attr.artifacts:
+    collected = []
+
+    for artifact in artifacts:
         if not seen.get(artifact.maven.pom):
             for pom in artifact.maven.parent.poms.to_list():
+                if seen.get(pom):
+                    continue
                 jars = artifact.maven.parent.jars[pom]
-                if not seen.get(pom):
-                    inputs += [pom] + jars.to_list()
-                    args += [pom.path] + [jar.path for jar in jars.to_list()]
-                    clsjars = artifact.maven.parent.clsjars[pom]
-                    for classifier in clsjars:
-                        inputs += clsjars[classifier].to_list()
-                        args += [jar.path + ":" + classifier for jar in clsjars[classifier].to_list()]
-                    seen[pom] = True
-            inputs += [artifact.maven.pom] + artifact.maven.jars.to_list()
-            args += [artifact.maven.pom.path] + [jar.path for jar in artifact.maven.jars.to_list()]
-            for classifier in artifact.maven.clsjars:
-                inputs += artifact.maven.clsjars[classifier].to_list()
-                args += [jar.path + ":" + classifier for jar in artifact.maven.clsjars[classifier].to_list()]
+                clsjars = artifact.maven.parent.clsjars[pom]
+                collected += _collect_pom_provider(pom, jars, clsjars)
+                seen[pom] = True
 
+            collected += _collect_pom_provider(artifact.maven.pom, artifact.maven.jars, artifact.maven.clsjars)
             seen[artifact.maven.pom] = True
+
             for pom in artifact.maven.deps.poms.to_list():
+                if seen.get(pom):
+                    continue
                 jars = artifact.maven.deps.jars[pom]
-                if not seen.get(pom):
-                    inputs += [pom] + jars.to_list()
-                    args += [pom.path] + [jar.path for jar in jars.to_list()]
-                    if include_sources:
-                        clsjars = artifact.maven.deps.clsjars[pom]
-                        inputs += clsjars[classifier].to_list()
-                        args += [jar.path + ":" + classifier for jar in clsjars[classifier].to_list()]
-                    seen[pom] = True
+                clsjars = artifact.maven.deps.clsjars[pom] if include_sources else {}
+                collected += _collect_pom_provider(pom, jars, clsjars)
+                seen[pom] = True
+
+    return collected
+
+# TODO: (b/148081564) Remove the zip artifact once migration to RepoLinker is complete.
+def _maven_repo_impl(ctx):
+    artifacts = _collect_artifacts(ctx.attr.artifacts, ctx.attr.include_sources)
+    inputs = [artifact for artifact, _ in artifacts]
+    args = [artifact.path + ":" + classifier if classifier else artifact.path for artifact, classifier in artifacts]
 
     # Execute the command
     option_file = create_option_file(
@@ -392,6 +398,35 @@ _maven_repo = rule(
     implementation = _maven_repo_impl,
 )
 
+def _maven_repo_list_impl(ctx):
+    artifacts = _collect_artifacts(ctx.attr.artifacts, ctx.attr.include_sources)
+    inputs = [artifact for artifact, _ in artifacts]
+    args = [artifact.short_path + "," + classifier if classifier else artifact.short_path for artifact, classifier in artifacts]
+
+    # Generate unpacked artifact list.
+    # This artifact list contains every artifact in the repository, separated by newlines. The order
+    # of artifacts is [pom1, artifact1, pom2, artifact2, pom3, artifact3, etc].
+    # Classifiers for artifacts are on the same line, delimited by commas (path/to/artifact,classifier).
+    # For example:
+    # p/t/c/m2/repository/com/google/guava/guava/20.0/jar_maven.pom (POM file for the Guava artifact)
+    # p/t/c/m2/repository/com/google/guara/guava/20.0/guava-20.0.jar (Guava JAR file)
+    # p/t/c/m2/repository/com/google/guara/guava/20.0/guava-20.0-sources.jar,sources (Guava sources with classifier "sources")
+    ctx.actions.write(ctx.outputs.manifest, "\n".join(args))
+
+    runfiles = ctx.runfiles(files = [ctx.outputs.manifest] + inputs)
+    return [DefaultInfo(runfiles = runfiles)]
+
+_maven_repo_list = rule(
+    attrs = {
+        "artifacts": attr.label_list(),
+        "include_sources": attr.bool(),
+    },
+    outputs = {
+        "manifest": "%{name}.csv",
+    },
+    implementation = _maven_repo_list_impl,
+)
+
 # Creates a maven repo with the given artifacts and all their transitive
 # dependencies.
 #
@@ -400,9 +435,13 @@ _maven_repo = rule(
 #     name = The name of the rule. The output of the rule will be ${name}.zip.
 #     artifacts = A list of all maven_java_libraries to add to the repo.
 #     include_sources = Add source jars to the repo as well (useful for tests).
+#     use_zip = If true, the entire Maven repository is packaged as a zip. Otherwise, a manifest file
+#               with details about the contents of the repository is generated, and all artifacts are
+#               included as runfiles of the rule.
 # )
-def maven_repo(artifacts = [], include_sources = False, **kwargs):
-    _maven_repo(
+def maven_repo(artifacts = [], include_sources = False, use_zip = True, **kwargs):
+    repo_rule = _maven_repo if use_zip else _maven_repo_list
+    repo_rule(
         artifacts = [explicit_target(artifact) + "_maven" for artifact in artifacts],
         include_sources = include_sources,
         **kwargs
