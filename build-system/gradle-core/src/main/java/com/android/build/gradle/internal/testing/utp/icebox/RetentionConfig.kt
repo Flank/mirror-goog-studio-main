@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.testing.utp
 
-import com.android.build.gradle.internal.dsl.FailureRetention
+import com.android.build.gradle.internal.dsl.EmulatorSnapshots
 import com.android.build.gradle.options.IntegerOption
 import com.android.build.gradle.options.OptionalBooleanOption
 import com.android.build.gradle.options.ProjectOptions
@@ -24,7 +24,7 @@ import com.google.common.base.Preconditions
 import java.io.Serializable
 
 /**
- * A data class to hold the vaules from android.testOptions.failureRetention, as documented here:
+ * A data class to hold the vaules from android.testOptions.emulatorSnapshots, as documented here:
  * https://docs.google.com/document/d/1IjPjvWK-qVC4U5XmYcTthL_OXidH2nm2GXANLhiuf9E/edit?usp=sharing
  */
 data class RetentionConfig(
@@ -36,11 +36,11 @@ data class RetentionConfig(
 
 fun createRetentionConfig(
     projectOptions: ProjectOptions,
-    failureRetention: FailureRetention
+    emulatorSnapshots: EmulatorSnapshots
 ): RetentionConfig {
-    var enableFailureRetention = failureRetention.enable
-    var retainAll = failureRetention.getRetainAll()
-    var maxSnapshots = failureRetention.maxSnapshots
+    var enableFailureRetention = emulatorSnapshots.enableForTestFailures
+    var retainAll = emulatorSnapshots.getRetainAll()
+    var maxSnapshots = emulatorSnapshots.maxSnapshotsForTestFailures
     // Overriding failure retention configs by the retention flag.
     projectOptions.get(IntegerOption.TEST_FAILURE_RETENTION)?.let { failureRetentionValue ->
         if (failureRetentionValue > 0) {
@@ -56,11 +56,11 @@ fun createRetentionConfig(
     }
     Preconditions.checkArgument(
         !enableFailureRetention || retainAll || maxSnapshots > 0,
-        "android.testOptions.maxSnapshots should be >0, actual value "
-                + failureRetention.maxSnapshots
+        "android.emulatorSnapshots.maxSnapshotsForTestFailures should be >0, actual value "
+                + emulatorSnapshots.maxSnapshotsForTestFailures
     )
     val compressSnapshots = projectOptions.get(
         OptionalBooleanOption.ENABLE_TEST_FAILURE_RETENTION_COMPRESS_SNAPSHOT
-    ) ?: failureRetention.compressSnapshots
+    ) ?: emulatorSnapshots.compressSnapshots
     return RetentionConfig(enableFailureRetention, retainAll, compressSnapshots, maxSnapshots)
 }

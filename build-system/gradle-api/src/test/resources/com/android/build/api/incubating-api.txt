@@ -425,6 +425,14 @@ com.android.build.api.dsl.DynamicFeatureDefaultConfig implements com.android.bui
 com.android.build.api.dsl.DynamicFeatureExtension implements com.android.build.api.dsl.CommonExtension, com.android.build.api.dsl.ApkExtension, com.android.build.api.dsl.TestedExtension
 com.android.build.api.dsl.DynamicFeatureProductFlavor implements com.android.build.api.dsl.DynamicFeatureBaseFlavor, com.android.build.api.dsl.ProductFlavor
 com.android.build.api.dsl.DynamicFeatureVariantDimension implements com.android.build.api.dsl.VariantDimension
+com.android.build.api.dsl.EmulatorSnapshots
+com.android.build.api.dsl.EmulatorSnapshots.getCompressSnapshots: boolean ()
+com.android.build.api.dsl.EmulatorSnapshots.getEnableForTestFailures: boolean ()
+com.android.build.api.dsl.EmulatorSnapshots.getMaxSnapshotsForTestFailures: int ()
+com.android.build.api.dsl.EmulatorSnapshots.retainAll: void ()
+com.android.build.api.dsl.EmulatorSnapshots.setCompressSnapshots: void (boolean)
+com.android.build.api.dsl.EmulatorSnapshots.setEnableForTestFailures: void (boolean)
+com.android.build.api.dsl.EmulatorSnapshots.setMaxSnapshotsForTestFailures: void (int)
 com.android.build.api.dsl.ExternalNativeBuild
 com.android.build.api.dsl.ExternalNativeBuild.cmake: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.Cmake, kotlin.Unit>)
 com.android.build.api.dsl.ExternalNativeBuild.getCmake: com.android.build.api.dsl.Cmake ()
@@ -457,12 +465,9 @@ com.android.build.api.dsl.ExternalNativeNdkBuildOptions.getCFlags: java.util.Lis
 com.android.build.api.dsl.ExternalNativeNdkBuildOptions.getCppFlags: java.util.List<java.lang.String> ()
 com.android.build.api.dsl.ExternalNativeNdkBuildOptions.getTargets: java.util.Set<java.lang.String> ()
 com.android.build.api.dsl.ExternalNativeNdkBuildOptions.targets: void (java.lang.String[])
-com.android.build.api.dsl.FailureRetention
-com.android.build.api.dsl.FailureRetention.getCompressSnapshots: boolean ()
+com.android.build.api.dsl.FailureRetention implements com.android.build.api.dsl.EmulatorSnapshots
 com.android.build.api.dsl.FailureRetention.getEnable: boolean ()
 com.android.build.api.dsl.FailureRetention.getMaxSnapshots: int ()
-com.android.build.api.dsl.FailureRetention.retainAll: void ()
-com.android.build.api.dsl.FailureRetention.setCompressSnapshots: void (boolean)
 com.android.build.api.dsl.FailureRetention.setEnable: void (boolean)
 com.android.build.api.dsl.FailureRetention.setMaxSnapshots: void (int)
 com.android.build.api.dsl.Installation
@@ -702,10 +707,12 @@ com.android.build.api.dsl.TestExtension implements com.android.build.api.dsl.Com
 com.android.build.api.dsl.TestExtension.getTargetProjectPath: java.lang.String ()
 com.android.build.api.dsl.TestExtension.setTargetProjectPath: void (java.lang.String)
 com.android.build.api.dsl.TestOptions
+com.android.build.api.dsl.TestOptions.emulatorSnapshots: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.EmulatorSnapshots, kotlin.Unit>)
 com.android.build.api.dsl.TestOptions.failureRetention: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.FailureRetention, kotlin.Unit>)
 com.android.build.api.dsl.TestOptions.getAnimationsDisabled: boolean ()
 com.android.build.api.dsl.TestOptions.getDeviceGroups: org.gradle.api.NamedDomainObjectContainer<com.android.build.api.dsl.DeviceGroup> ()
 com.android.build.api.dsl.TestOptions.getDevices: org.gradle.api.ExtensiblePolymorphicDomainObjectContainer<com.android.build.api.dsl.Device> ()
+com.android.build.api.dsl.TestOptions.getEmulatorSnapshots: com.android.build.api.dsl.EmulatorSnapshots ()
 com.android.build.api.dsl.TestOptions.getExecution: java.lang.String ()
 com.android.build.api.dsl.TestOptions.getFailureRetention: com.android.build.api.dsl.FailureRetention ()
 com.android.build.api.dsl.TestOptions.getReportDir: java.lang.String ()

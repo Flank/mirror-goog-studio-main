@@ -448,17 +448,17 @@ public class AppPluginDslTest {
     }
 
     @Test
-    public void testFailureRetention() throws Exception {
+    public void testEmulatorSnapshots() throws Exception {
         Eval.me(
                 "project",
                 project,
                 "\n"
                         + "project.android {\n"
                         + "    testOptions {\n"
-                        + "        failureRetention {\n"
-                        + "          enable true\n"
+                        + "        emulatorSnapshots {\n"
+                        + "          enableForTestFailures true\n"
                         + "          retainAll()\n"
-                        + "          maxSnapshots 2\n"
+                        + "          maxSnapshotsForTestFailures 2\n"
                         + "          compressSnapshots true\n"
                         + "        }\n"
                         + "    }\n"

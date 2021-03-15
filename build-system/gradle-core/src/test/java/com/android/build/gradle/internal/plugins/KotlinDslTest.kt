@@ -360,12 +360,12 @@ class KotlinDslTest {
     @Test
     fun `test options failure retention`() {
         android.testOptions {
-            failureRetention {
-                assertThat(enable).isFalse()
-                enable = true
-                assertThat(enable).isTrue()
-                maxSnapshots = 2
-                assertThat(maxSnapshots).isEqualTo(2)
+            emulatorSnapshots {
+                assertThat(enableForTestFailures).isFalse()
+                enableForTestFailures = true
+                assertThat(enableForTestFailures).isTrue()
+                maxSnapshotsForTestFailures = 2
+                assertThat(maxSnapshotsForTestFailures).isEqualTo(2)
                 assertThat(compressSnapshots).isFalse()
                 compressSnapshots = true
                 assertThat(compressSnapshots).isTrue()

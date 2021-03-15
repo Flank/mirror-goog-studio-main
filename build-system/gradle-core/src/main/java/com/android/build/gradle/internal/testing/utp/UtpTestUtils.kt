@@ -142,5 +142,5 @@ fun shouldEnableUtp(
     testOptions: TestOptions?
 ): Boolean {
     return (projectOptions[BooleanOption.ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM]
-            || (testOptions != null && testOptions.failureRetention.enable))
+            || (testOptions != null && testOptions.emulatorSnapshots.enableForTestFailures))
 }

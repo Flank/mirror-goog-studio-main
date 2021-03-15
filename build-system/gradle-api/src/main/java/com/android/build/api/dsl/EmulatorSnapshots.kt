@@ -24,11 +24,22 @@ import org.gradle.api.Incubating
  * When enabled, Android Test Retention automatically takes emulator snapshots on test failures.
  */
 @Incubating
-@Deprecated("Renamed to EmulatorSnapshots", replaceWith = ReplaceWith("EmulatorSnapshots"))
-interface FailureRetention : EmulatorSnapshots {
-    @Deprecated("Renamed to enableForTestFailures", replaceWith = ReplaceWith("enableForTestFailures"))
-    var enable: Boolean
+interface EmulatorSnapshots {
+    /** Enables automated test failure snapshots. Default to false. */
+    var enableForTestFailures: Boolean
 
-    @Deprecated("Renamed to maxSnapshotsForTestFailures", replaceWith = ReplaceWith("maxSnapshotsForTestFailures"))
-    var maxSnapshots: Int
+    /**
+     * Call this function to take unlimited number of test failure snapshots (will ignore
+     * maxSnapshots setting)
+     */
+    fun retainAll()
+
+    /**
+     *  Maximum number of failures that would be snapshotted. Any failures after the first
+     *  $maxSnapshots will not have snapshots. Default to 2. Must be >0
+     */
+    var maxSnapshotsForTestFailures: Int
+
+    /** Enables snapshot compression. Default to false. */
+    var compressSnapshots: Boolean
 }
