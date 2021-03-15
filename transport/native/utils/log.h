@@ -51,6 +51,7 @@ class Log {
     static constexpr const char *const APPINSPECT = "AppInspection";
     static constexpr const char *const LAYOUT_INSPECT = "LayoutInspector";
     static constexpr const char *const DDMLIB = "Ddmlib";
+    static constexpr const char *const COROUTINE_DEBUGGER = "CoroutineDebugger";
   };
 };
 
