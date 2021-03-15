@@ -18,6 +18,7 @@
 
 package com.android.build.gradle.internal.lint
 
+import com.android.SdkConstants.DOT_JAR
 import com.android.Version
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.gradle.internal.SdkComponentsBuildService
@@ -29,6 +30,7 @@ import com.android.build.gradle.internal.lint.LintTaskManager.Companion.isLintSt
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.services.AndroidLocationsBuildService
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -69,6 +71,7 @@ import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.util.Collections
 import javax.inject.Inject
+import org.gradle.api.file.ConfigurableFileTree
 
 /** Task to invoke lint in a process isolated worker passing in the new lint models. */
 abstract class AndroidLintTask : NonIncrementalTask() {
@@ -150,6 +153,9 @@ abstract class AndroidLintTask : NonIncrementalTask() {
 
     @get:Classpath
     abstract val lintRulesJar: ConfigurableFileCollection
+
+    @get:Classpath
+    abstract val globalRuleJars: ConfigurableFileCollection
 
     @get:Nested
     abstract val projectInputs: ProjectInputs
@@ -653,6 +659,16 @@ abstract class AndroidLintTask : NonIncrementalTask() {
                 AndroidProject.FD_INTERMEDIATES
             ).dir("lint-cache")
         )
+
+        val locationBuildService = getBuildService<AndroidLocationsBuildService>(buildServiceRegistry)
+
+        val globalLintJarsInPrefsDir: ConfigurableFileTree =
+            project.fileTree(locationBuildService.map {
+                it.prefsLocation.resolve("lint")
+            }).also { it.include("*$DOT_JAR") }
+        this.globalRuleJars.from(globalLintJarsInPrefsDir)
+
+        this.globalRuleJars.disallowChanges()
         if (project.gradle.startParameter.showStacktrace != ShowStacktrace.INTERNAL_EXCEPTIONS) {
             printStackTrace.setDisallowChanges(true)
         } else {
