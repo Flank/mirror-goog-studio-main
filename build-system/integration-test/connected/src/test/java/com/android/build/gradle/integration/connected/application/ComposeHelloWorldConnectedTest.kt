@@ -34,7 +34,7 @@ class ComposeHelloWorldConnectedTest {
     @JvmField
     @Rule
     val project = GradleTestProject.builder().fromTestProject("composeHelloWorld")
-        .withKotlinVersion("1.4.30")
+        .withKotlinVersion("1.4.31")
         .create()
 
     @Before
