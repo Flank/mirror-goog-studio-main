@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-@file:JvmName("InstrumentationTestAnalytics")
+@file:JvmName("TestsAnalytics")
 
 package com.android.build.gradle.internal.test
 
@@ -30,7 +30,7 @@ import com.google.wireless.android.sdk.stats.TestRun
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 
-fun recordOkTestRun(
+fun recordOkInstrumentedTestRun(
     dependencies: ArtifactCollection,
     execution: TestOptions.Execution,
     coverageEnabled: Boolean,
@@ -42,12 +42,30 @@ fun recordOkTestRun(
         execution = execution,
         coverageEnabled = coverageEnabled,
         testCount = testCount,
+        TestRun.TestKind.INSTRUMENTATION_TEST,
         infrastructureCrashed = false,
         analyticsService = analyticsService
     )
 }
 
-fun recordCrashedTestRun(
+fun recordOkUnitTestRun(
+    dependencies: ArtifactCollection,
+    coverageEnabled: Boolean,
+    testCount: Int,
+    analyticsService: AnalyticsService
+) {
+    recordTestRun(
+        dependencies = dependencies,
+        execution = null,
+        coverageEnabled = coverageEnabled,
+        testCount = testCount,
+        TestRun.TestKind.UNIT_TEST,
+        infrastructureCrashed = false,
+        analyticsService = analyticsService
+    )
+}
+
+fun recordCrashedInstrumentedTestRun(
     dependencies: ArtifactCollection,
     execution: TestOptions.Execution,
     coverageEnabled: Boolean,
@@ -58,6 +76,23 @@ fun recordCrashedTestRun(
         execution = execution,
         coverageEnabled = coverageEnabled,
         testCount = 0,
+        TestRun.TestKind.INSTRUMENTATION_TEST,
+        infrastructureCrashed = true,
+        analyticsService = analyticsService
+    )
+}
+
+fun recordCrashedUnitTestRun(
+    dependencies: ArtifactCollection,
+    coverageEnabled: Boolean,
+    analyticsService: AnalyticsService
+) {
+    recordTestRun(
+        dependencies = dependencies,
+        execution = null,
+        coverageEnabled = coverageEnabled,
+        testCount = 0,
+        TestRun.TestKind.UNIT_TEST,
         infrastructureCrashed = true,
         analyticsService = analyticsService
     )
@@ -65,21 +100,22 @@ fun recordCrashedTestRun(
 
 private fun recordTestRun(
     dependencies: ArtifactCollection,
-    execution: TestOptions.Execution,
+    execution: TestOptions.Execution?,
     coverageEnabled: Boolean,
     testCount: Int,
+    testType: TestRun.TestKind,
     infrastructureCrashed: Boolean,
     analyticsService: AnalyticsService
 ) {
     val run = TestRun.newBuilder().apply {
         testInvocationType = TestRun.TestInvocationType.GRADLE_TEST
         numberOfTestsExecuted = testCount
-        testKind = TestRun.TestKind.INSTRUMENTATION_TEST
+        testKind = testType
         crashed = infrastructureCrashed
         gradleVersion = Version.ANDROID_GRADLE_PLUGIN_VERSION
         codeCoverageEnabled = coverageEnabled
         testLibraries = gatherTestLibraries(dependencies)
-        testExecution = AnalyticsUtil.toProto(execution)
+        if (execution != null) testExecution = AnalyticsUtil.toProto(execution)
     }.build()
 
     analyticsService.recordEvent(

@@ -47,7 +47,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.services.BuildServicesKt;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.test.AbstractTestDataImpl;
-import com.android.build.gradle.internal.test.InstrumentationTestAnalytics;
+import com.android.build.gradle.internal.test.TestsAnalytics;
 import com.android.build.gradle.internal.test.report.CompositeTestResults;
 import com.android.build.gradle.internal.test.report.ReportType;
 import com.android.build.gradle.internal.test.report.TestReport;
@@ -351,7 +351,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                                             coverageOutDir,
                                             new LoggerWrapper(getLogger()));
                                 } catch (Exception e) {
-                                    InstrumentationTestAnalytics.recordCrashedTestRun(
+                                    TestsAnalytics.recordCrashedInstrumentedTestRun(
                                             dependencies,
                                             getTestRunnerFactory().getExecutionEnum().get(),
                                             getCodeCoverageEnabled().get(),
@@ -368,7 +368,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
         TestReport report = new TestReport(ReportType.SINGLE_FLAVOR, resultsOutDir, reportOutDir);
         CompositeTestResults results = report.generateReport();
 
-        InstrumentationTestAnalytics.recordOkTestRun(
+        TestsAnalytics.recordOkInstrumentedTestRun(
                 dependencies,
                 getTestRunnerFactory().getExecutionEnum().get(),
                 getCodeCoverageEnabled().get(),
