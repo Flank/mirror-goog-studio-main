@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.ide.v2
 
 import com.android.builder.model.v2.ide.AndroidArtifact
+import com.android.builder.model.v2.ide.ApiVersion
 import com.android.builder.model.v2.ide.BundleInfo
 import com.android.builder.model.v2.ide.CodeShrinker
 import com.android.builder.model.v2.ide.SourceProvider
@@ -28,6 +29,9 @@ import java.io.Serializable
  * Implementation of [AndroidArtifact] for serialization via the Tooling API.
  */
 data class AndroidArtifactImpl(
+    override val minSdkVersion: ApiVersion,
+    override val targetSdkVersion: ApiVersion,
+    override val maxSdkVersion: Int?,
     override val variantSourceProvider: SourceProvider?,
     override val multiFlavorSourceProvider: SourceProvider?,
 
@@ -47,7 +51,7 @@ data class AndroidArtifactImpl(
     override val generatedSourceFolders: Collection<File>,
     override val generatedResourceFolders: Collection<File>,
     override val classesFolders: Set<File>,
-    override val assembleTaskOutputListingFile: File?
+    override val assembleTaskOutputListingFile: File?,
 ) : AndroidArtifact, Serializable {
     companion object {
         @JvmStatic

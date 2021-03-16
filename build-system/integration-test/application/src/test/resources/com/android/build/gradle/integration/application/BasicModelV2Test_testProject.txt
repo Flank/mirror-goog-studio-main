@@ -253,6 +253,13 @@
                * {PROJECT}/build/generated/source/buildConfig/debug{!}
             - variantSourceProvider         = (null)
             - multiFlavorSourceProvider     = (null)
+            - minSdkVersion:
+               - apiLevel = 16
+               - codename = (null)
+            - targetSdkVersion:
+               - apiLevel = 16
+               - codename = (null)
+            - maxSdkVersion                 = (null)
             - isSigned                      = true
             - signingConfigName             = "debug"
             - sourceGenTaskName             = "generateDebugSources"
@@ -281,6 +288,13 @@
                * {PROJECT}/build/generated/source/buildConfig/androidTest/debug{!}
             - variantSourceProvider         = (null)
             - multiFlavorSourceProvider     = (null)
+            - minSdkVersion:
+               - apiLevel = 16
+               - codename = (null)
+            - targetSdkVersion:
+               - apiLevel = 16
+               - codename = (null)
+            - maxSdkVersion                 = (null)
             - isSigned                      = true
             - signingConfigName             = "debug"
             - sourceGenTaskName             = "generateDebugAndroidTestSources"
@@ -332,6 +346,13 @@
                * {PROJECT}/build/generated/source/buildConfig/release{!}
             - variantSourceProvider         = (null)
             - multiFlavorSourceProvider     = (null)
+            - minSdkVersion:
+               - apiLevel = 16
+               - codename = (null)
+            - targetSdkVersion:
+               - apiLevel = 16
+               - codename = (null)
+            - maxSdkVersion                 = (null)
             - isSigned                      = false
             - signingConfigName             = (null)
             - sourceGenTaskName             = "generateReleaseSources"

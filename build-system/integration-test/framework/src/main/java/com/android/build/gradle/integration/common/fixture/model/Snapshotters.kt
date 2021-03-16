@@ -391,6 +391,15 @@ private fun ModelSnapshotter<Variant>.snapshotVariant() {
 
 private fun ModelSnapshotter<AndroidArtifact>.snapshotAndroidArtifact() {
     snapshotBaseArtifact()
+    dataObject("minSdkVersion", AndroidArtifact::minSdkVersion) {
+        item("apiLevel", ApiVersion::apiLevel)
+        item("codename", ApiVersion::codename)
+    }
+    dataObject("targetSdkVersion", AndroidArtifact::targetSdkVersion) {
+        item("apiLevel", ApiVersion::apiLevel)
+        item("codename", ApiVersion::codename)
+    }
+    item("maxSdkVersion", AndroidArtifact::maxSdkVersion)
     item("isSigned", AndroidArtifact::isSigned)
     item("signingConfigName", AndroidArtifact::signingConfigName)
     item("sourceGenTaskName", AndroidArtifact::sourceGenTaskName)

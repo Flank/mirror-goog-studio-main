@@ -28,6 +28,22 @@ import java.io.File
  * @since 4.2
  */
 interface AndroidArtifact : BaseArtifact, AndroidModel {
+
+    /**
+     * The min SDK version of this artifact
+     */
+    val minSdkVersion: ApiVersion
+
+    /**
+     * The target SDK version of this artifact
+     */
+    val targetSdkVersion: ApiVersion
+
+    /**
+     * The max SDK version of this artifact, or null if not set
+     */
+    val maxSdkVersion: Int?
+
     /**
      * Returns whether the output file is signed. This can only be true for the main apk of an
      * application project.
