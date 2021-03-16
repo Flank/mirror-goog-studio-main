@@ -22,6 +22,7 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.getOutputDir
 import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.TestClassesGenerator
 import com.android.testutils.truth.PathSubject.assertThat
@@ -109,5 +110,23 @@ class R8TaskTest {
             ScannerSubject.assertThat(it)
                     .contains("Missing classes detected while running R8.")
         }
+    }
+
+    @Test
+    fun testOutputMainDexList() {
+        TestFileUtils.appendToFile(project.buildFile,
+            """
+                android {
+                    defaultConfig {
+                       multiDexEnabled true
+                    }
+                }
+            """.trimIndent()
+        )
+        project.executor().run(":assembleDebug")
+        val mainDexListFile = InternalArtifactType.LEGACY_MULTIDEX_MAIN_DEX_LIST
+            .getOutputDir(project.buildDir)
+            .resolve("debug/mainDexList.txt")
+        assertThat(mainDexListFile).exists()
     }
 }

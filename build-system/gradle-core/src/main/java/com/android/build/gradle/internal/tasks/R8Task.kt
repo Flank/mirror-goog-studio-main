@@ -270,11 +270,23 @@ abstract class R8Task: ProguardConfigurableTask() {
                 R8Task::outputResources
             ).withName("shrunkJavaRes.jar").on(InternalArtifactType.SHRUNK_JAVA_RES)
 
-            if (creationConfig is ApkCreationConfig && creationConfig.needsMainDexListForBundle) {
-                creationConfig.artifacts.setInitialProvider(
-                        taskProvider,
-                        R8Task::mainDexListOutput
-                ).withName("mainDexList.txt").on(InternalArtifactType.MAIN_DEX_LIST_FOR_BUNDLE)
+            if (creationConfig is ApkCreationConfig) {
+                when {
+                    creationConfig.needsMainDexListForBundle -> {
+                        creationConfig.artifacts.setInitialProvider(
+                            taskProvider,
+                            R8Task::mainDexListOutput
+                        ).withName("mainDexList.txt")
+                            .on(InternalArtifactType.MAIN_DEX_LIST_FOR_BUNDLE)
+                    }
+                    creationConfig.dexingType.needsMainDexList -> {
+                        creationConfig.artifacts.setInitialProvider(
+                            taskProvider,
+                            R8Task::mainDexListOutput
+                        ).withName("mainDexList.txt")
+                            .on(InternalArtifactType.LEGACY_MULTIDEX_MAIN_DEX_LIST)
+                    }
+                }
             }
         }
 
