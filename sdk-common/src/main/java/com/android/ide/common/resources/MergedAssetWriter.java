@@ -19,6 +19,7 @@ package com.android.ide.common.resources;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.workers.WorkerExecutorFacade;
+import com.android.utils.FileUtils;
 import com.google.common.base.Preconditions;
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -91,7 +92,7 @@ public class MergedAssetWriter
                         Files.copy(gzipInputStream, toFile, StandardCopyOption.REPLACE_EXISTING);
                     }
                 } else {
-                    Files.copy(fromFile, toFile, StandardCopyOption.REPLACE_EXISTING);
+                    FileUtils.copyFile(fromFile, toFile);
                 }
             } catch (IOException e) {
                 throw new RuntimeException(e);

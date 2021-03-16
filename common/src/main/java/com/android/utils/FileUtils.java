@@ -105,14 +105,43 @@ public final class FileUtils {
 
     /**
      * Copies a regular file from one path to another, preserving file attributes. If the
-     * destination file exists, it gets overwritten.
+     * destination file exists, it gets overwritten. If the [from] file is read-only on windows, the
+     * [to] file will be left read-write so that it can be overwritten the next time this function
+     * is called.
      */
     public static void copyFile(@NonNull File from, @NonNull File to) throws IOException {
+        copyFile(from.toPath(), to.toPath());
+    }
+
+    /**
+     * Copies a regular file from one path to another, preserving file attributes. If the
+     * destination file exists, it gets overwritten. If the [from] file is read-only on windows, the
+     * [to] file will be left read-write so that it can be overwritten the next time this function
+     * is called.
+     */
+    public static void copyFile(@NonNull Path from, @NonNull Path to) throws IOException {
         java.nio.file.Files.copy(
-                from.toPath(),
-                to.toPath(),
-                StandardCopyOption.COPY_ATTRIBUTES,
-                StandardCopyOption.REPLACE_EXISTING);
+                from, to, StandardCopyOption.COPY_ATTRIBUTES, StandardCopyOption.REPLACE_EXISTING);
+
+        /*
+         * Some source-control systems on Windows use the read-only bit to signify that the
+         * file has not been checked out. If we're copying one of these files then we don't
+         * want to propagate that bit because a followup call to [copyFile] would not be
+         * able to overwrite the file a second time.
+         *
+         * Special note: JimFS doesn't support converting to File from Path and Path doesn't
+         * support checking or setting the Windows readonly bit. We have to catch this case
+         * and skip the setting writable=true.
+         */
+        File fileOrNull;
+        try {
+            fileOrNull = to.toFile();
+        } catch (UnsupportedOperationException e) {
+            fileOrNull = null;
+        }
+        if (fileOrNull != null && !fileOrNull.canWrite()) {
+            fileOrNull.setWritable(true);
+        }
     }
 
     /**
