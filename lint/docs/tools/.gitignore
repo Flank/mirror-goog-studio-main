@@ -1,0 +1,4 @@
+*.class
+META-INF
+web-docs/node_modules/
+web-docs/package-lock.json
