@@ -89,7 +89,8 @@ fun RecipeExecutor.generateResponsiveActivity(
     packageName = packageName,
     isLauncher = isLauncher,
     hasNoActionBar = true,
-    generateActivityTitle = true
+    generateActivityTitle = true,
+    isResizeable = true
   )
   generateNoActionBarStyles(
     baseFeatureResOut = moduleTemplateData.baseFeature?.resDir,

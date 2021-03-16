@@ -27,7 +27,8 @@ fun androidManifestXml(
   isLauncher: Boolean,
   isLibraryProject: Boolean,
   hasNoActionBarTheme: ThemeData,
-  generateActivityTitle: Boolean = true
+  generateActivityTitle: Boolean = true,
+  isResizeable: Boolean = false
 ): String {
   val appName = if (isNewModule) "app_name" else "title_" + activityToLayout(activityClass)
 
@@ -38,13 +39,23 @@ fun androidManifestXml(
     else -> ""
   }
 
+  val isResizeableBlock = renderIf(isResizeable) {
+    """android:resizeableActivity="true"
+     tools:targetApi="24"
+    """
+  }
+
+  val toolsNameSpace = renderIf(isResizeable) {"xmlns:tools=\"http://schemas.android.com/tools\""}
+
   return """
-    <manifest xmlns:android ="http://schemas.android.com/apk/res/android">
+    <manifest xmlns:android ="http://schemas.android.com/apk/res/android"
+    $toolsNameSpace>
     <application>
     <activity android:name ="${packageName}.${activityClass}"
     android:exported="true"
     $generateActivityTitleBlock
-    $hasActionBarBlock>
+    $hasActionBarBlock
+    $isResizeableBlock>
     ${commonActivityBody(isLauncher || isNewModule, isLibraryProject)}
     </activity>
     </application>
