@@ -23,7 +23,7 @@ import kotlin.test.assertFailsWith
 
 class StudioVersionsTest {
 
-    private val oldVersion = MajorMinorVersion(1, 1)
+    private val oldVersion = MajorMinorVersion(majorVersion = 1, minorVersion = 1)
 
     @Test
     fun testNotInjected() {
@@ -40,22 +40,24 @@ class StudioVersionsTest {
 
     @Test
     fun testNewerStudio() {
-        verifyIDEIsNotOld("3.3.1.6", MajorMinorVersion(3, 2))
+        verifyIDEIsNotOld("3.3.1.6", MajorMinorVersion(majorVersion = 3, minorVersion = 2))
         // The IDE will always send the version in the form 10.x.y as of 4.0.
         // See StudioVersions.parseVersion
-        verifyIDEIsNotOld("10.3.3.1 Beta 3", MajorMinorVersion(3, 1))
+        verifyIDEIsNotOld("10.3.3.1 Beta 3", MajorMinorVersion(majorVersion = 3, minorVersion = 1))
+        verifyIDEIsNotOld("2020.3.1", MajorMinorVersion(2020, 3, 1))
     }
 
     @Test
     fun testMatchingVersion() {
-        verifyIDEIsNotOld("3.2.1.6", MajorMinorVersion(3, 2))
-        verifyIDEIsNotOld("10.4.7.3", MajorMinorVersion(4, 7))
+        verifyIDEIsNotOld("3.2.1.6", MajorMinorVersion(majorVersion = 3, minorVersion = 2))
+        verifyIDEIsNotOld("10.4.7.3", MajorMinorVersion(majorVersion = 4, minorVersion = 7))
+        verifyIDEIsNotOld("2020.3.1.10", MajorMinorVersion(2020, 3, 1))
     }
 
     @Test
     fun testTooOldStudioVersion() {
         val exception = assertFailsWith<RuntimeException> {
-            verifyIDEIsNotOld("10.3.1.3.6", MajorMinorVersion(3, 2))
+            verifyIDEIsNotOld("10.3.1.3.6", MajorMinorVersion(majorVersion = 3, minorVersion = 2))
         }
 
         assertThat(exception)
@@ -63,7 +65,7 @@ class StudioVersionsTest {
             .contains("please retry with version 3.2 or newer.")
 
         val secondException = assertFailsWith<RuntimeException> {
-            verifyIDEIsNotOld("3.1.3.6", MajorMinorVersion(3, 2))
+            verifyIDEIsNotOld("3.1.3.6", MajorMinorVersion(majorVersion = 3, minorVersion = 2))
         }
 
         assertThat(secondException)
@@ -74,10 +76,10 @@ class StudioVersionsTest {
     @Test
     fun checkMajorMinorVersionOrdering() {
         val versionsInOrder = listOf<MajorMinorVersion>(
-            MajorMinorVersion(1, 2),
-            MajorMinorVersion(1, 3),
-            MajorMinorVersion(2, 2),
-            MajorMinorVersion(2, 3)
+            MajorMinorVersion(majorVersion = 1, minorVersion = 2),
+            MajorMinorVersion(majorVersion = 1, minorVersion = 3),
+            MajorMinorVersion(majorVersion = 2, minorVersion = 2),
+            MajorMinorVersion(majorVersion = 2, minorVersion = 3)
         )
 
         for (version in versionsInOrder) {
@@ -90,9 +92,9 @@ class StudioVersionsTest {
 
     @Test
     fun checkValidVersionParsing() {
-        assertThat(parseVersion("3.3.0.6")).isEqualTo(MajorMinorVersion(3, 3))
-        assertThat(parseVersion("3.3.0-beta1")).isEqualTo(MajorMinorVersion(3, 3))
-        assertThat(parseVersion("10.4.1 RC 3")).isEqualTo(MajorMinorVersion(4, 1))
+        assertThat(parseVersion("3.3.0.6")).isEqualTo(MajorMinorVersion(majorVersion = 3, minorVersion = 3))
+        assertThat(parseVersion("3.3.0-beta1")).isEqualTo(MajorMinorVersion(majorVersion = 3, minorVersion = 3))
+        assertThat(parseVersion("10.4.1 RC 3")).isEqualTo(MajorMinorVersion(majorVersion = 4, minorVersion = 1))
     }
 
     @Test

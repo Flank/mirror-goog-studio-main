@@ -51,7 +51,17 @@ internal fun verifyIDEIsNotOld(
     val parsedInjected = parseVersion(injectedVersion)
         ?: throw InvalidUserDataException("Invalid injected android support version '$injectedVersion', expected to be of the form 'w.x.y.z'")
 
-    if (parsedInjected < androidGradlePluginVersion) {
+    // for AGP 7.0 and above, the minimum version of Studio that is required to open
+    // the project is different from the plugin version itself.
+    // For now, maintain a table, but this will be changed in the future.
+    val minRequiredVersion = when (androidGradlePluginVersion) {
+        MajorMinorVersion(majorVersion = 7, minorVersion = 0) -> MajorMinorVersion(2020, 3, 1)
+        else -> androidGradlePluginVersion
+    }
+
+    // the injected version is something like 203.7148.57.2031.SNAPSHOT in the tests, which is not the case
+    // in product. so just ignore it.
+    if (parsedInjected < minRequiredVersion && !injectedVersion.endsWith("SNAPSHOT")) {
         throw RuntimeException(
             "This version of the Android Support plugin for IntelliJ IDEA (or Android Studio) cannot open this project, please retry with version $androidGradlePluginVersion or newer."
         )
@@ -69,6 +79,10 @@ internal fun verifyIDEIsNotOld(
  * be the same between Android Studio and Intellij IDEA. This will be in the form 10.x.y.* where
  * x and y are the major and minor versions respectively.
  *
+ * On and after 4.3, Android Studio moved to a year-based system that is more closely aligned with
+ * IntelliJ IDEA, so the new format is YYYY.x.y where YYYY is the year, x and y are the major and
+ * minor versions respectively
+ *
  * This is also called with the raw version of AGP and also need to handle that case. This will
  * be in the form x.y.*.
  *
@@ -79,11 +93,13 @@ internal fun parseVersion(version: String): MajorMinorVersion? {
     if (!segments.hasNext()) {
         return null
     }
+    var yearVersion = 0
     var majorVersion = segments.next().toIntOrNull() ?: return null
-    if (majorVersion == 10) {
+    if (majorVersion == 10 || majorVersion > 2000) {
         if (!segments.hasNext()) {
             return null
         }
+        yearVersion = majorVersion
         majorVersion = segments.next().toIntOrNull() ?: return null
     }
 
@@ -94,16 +110,24 @@ internal fun parseVersion(version: String): MajorMinorVersion? {
     if (majorVersion < 0 || minorVersion < 0) {
         return null
     }
-    return MajorMinorVersion(majorVersion, minorVersion)
+    if (yearVersion > 2000) {
+        return MajorMinorVersion(yearVersion, majorVersion, minorVersion)
+    }
+    return MajorMinorVersion(majorVersion = majorVersion, minorVersion = minorVersion)
 }
 
 @VisibleForTesting
 internal data class MajorMinorVersion(
+    val yearVersion: Int = 0,
     val majorVersion: Int,
     val minorVersion: Int
 ) : Comparable<MajorMinorVersion> {
     override fun compareTo(other: MajorMinorVersion): Int {
-        val diff = this.majorVersion - other.majorVersion
+        var diff = this.yearVersion - other.yearVersion
+        if (diff != 0) {
+            return diff
+        }
+        diff = this.majorVersion - other.majorVersion
         if (diff != 0) {
             return diff
         }
@@ -111,7 +135,10 @@ internal data class MajorMinorVersion(
     }
 
     override fun toString(): String {
-        return "$majorVersion.$minorVersion"
+        if (yearVersion == 0) {
+            return "$majorVersion.$minorVersion"
+        }
+        return "$yearVersion.$majorVersion.$minorVersion"
     }
 }
 
