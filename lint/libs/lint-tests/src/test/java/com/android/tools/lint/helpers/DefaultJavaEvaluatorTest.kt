@@ -17,7 +17,7 @@
 package com.android.tools.lint.helpers
 
 import com.android.testutils.TestUtils
-import com.android.tools.lint.checks.AbstractCheckTest
+import com.android.tools.lint.checks.infrastructure.TestFiles.java
 import com.android.tools.lint.checks.infrastructure.TestLintTask.lint
 import com.android.tools.lint.client.api.UElementHandler
 import com.android.tools.lint.detector.api.Category
@@ -43,7 +43,7 @@ class DefaultJavaEvaluatorTest {
     @Test
     fun lookUpAnnotationsOnUastModifierLists() {
         lint().files(
-            AbstractCheckTest.java(
+            java(
                 """
                     package foo;
                     @SuppressWarnings("ClassNameDiffersFromFileName")

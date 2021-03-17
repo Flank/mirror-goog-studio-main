@@ -310,6 +310,10 @@ class JavaEvaluator {
         return hasModifier(owner, KtTokens.INLINE_KEYWORD)
     }
 
+    open fun isNoInline(owner: PsiModifierListOwner?): Boolean {
+        return hasModifier(owner, KtTokens.NOINLINE_KEYWORD)
+    }
+
     open fun isOperator(owner: PsiModifierListOwner?): Boolean {
         return hasModifier(owner, KtTokens.OPERATOR_KEYWORD)
     }
@@ -318,9 +322,51 @@ class JavaEvaluator {
         return hasModifier(owner, KtTokens.INFIX_KEYWORD)
     }
 
+    open fun isOpen(owner: PsiModifierListOwner?): Boolean {
+        return hasModifier(owner, KtTokens.OPEN_KEYWORD)
+    }
+
+    open fun isCompanion(owner: PsiClass?): Boolean {
+        return hasModifier(owner, KtTokens.COMPANION_KEYWORD)
+    }
+
+    open fun isVararg(owner: PsiParameter?): Boolean {
+        return hasModifier(owner, KtTokens.VARARG_KEYWORD)
+    }
+
+    open fun isTailRec(owner: PsiMethod?): Boolean {
+        return hasModifier(owner, KtTokens.TAILREC_KEYWORD)
+    }
+
+    open fun isExternal(owner: PsiModifierListOwner?): Boolean {
+        return hasModifier(owner, KtTokens.EXTERNAL_KEYWORD)
+    }
+
+    open fun isCrossInline(owner: PsiParameter?): Boolean {
+        return hasModifier(owner, KtTokens.CROSSINLINE_KEYWORD)
+    }
+
+    open fun isConst(owner: PsiModifierListOwner?): Boolean {
+        return hasModifier(owner, KtTokens.CONST_KEYWORD)
+    }
+
+    open fun isExpect(owner: PsiModifierListOwner?): Boolean {
+        return hasModifier(owner, KtTokens.EXPECT_KEYWORD)
+    }
+
+    open fun isActual(owner: PsiModifierListOwner?): Boolean {
+        return hasModifier(owner, KtTokens.ACTUAL_KEYWORD)
+    }
+
     open fun isSuspend(owner: PsiModifierListOwner?): Boolean {
         return hasModifier(owner, KtTokens.SUSPEND_KEYWORD)
     }
+
+    // We're missing some type variable lookup methods here,
+    // for reified, in and out -- unfortunately we can't access
+    // this from the light classes yet. See UastTest for an
+    // implementation which works outside the IDE (e.g. with
+    // our forked kotlin-compiler).
 
     open fun hasModifier(owner: PsiModifierListOwner?, keyword: KtModifierKeywordToken): Boolean {
         if (owner != null) {
