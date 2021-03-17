@@ -17,6 +17,7 @@
 package com.android.tools.idea.wizard.template.impl.activities.fullscreenActivity
 
 import com.android.tools.idea.wizard.template.impl.activities.common.commonActivityBody
+import com.android.tools.idea.wizard.template.impl.activities.common.collapseEmptyActivityTags
 import com.android.tools.idea.wizard.template.impl.activities.fullscreenActivity.res.values.getFullscreenTheme
 
 fun androidManifestXml(
@@ -44,5 +45,5 @@ fun androidManifestXml(
     </application>
 
 </manifest>
-"""
+""".collapseEmptyActivityTags()
 }
