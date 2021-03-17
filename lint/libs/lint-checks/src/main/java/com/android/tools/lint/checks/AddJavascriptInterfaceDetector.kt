@@ -81,6 +81,10 @@ class AddJavascriptInterfaceDetector : Detector(), SourceCodeScanner {
             return
         }
 
+        if (ApiDetector.getTargetApi(node) >= 17) {
+            return
+        }
+
         val message = "`WebView.addJavascriptInterface` should not be called with " +
             "minSdkVersion < 17 for security reasons: JavaScript can use reflection " +
             "to manipulate application"
