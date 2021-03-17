@@ -20,6 +20,10 @@ import com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidT
 import com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidTestResultListenerProto.TestResultEvent
 import com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidTestResultListenerServiceGrpc.GradleAndroidTestResultListenerServiceImplBase
 import com.google.common.annotations.VisibleForTesting
+import com.google.protobuf.Any
+import com.google.testing.platform.proto.api.core.TestStatusProto
+import com.google.testing.platform.proto.api.core.TestSuiteResultProto
+import com.google.testing.platform.proto.api.core.TestSuiteResultProto.TestSuiteResult
 import io.grpc.Server
 import io.grpc.ServerBuilder
 import io.grpc.netty.GrpcSslContexts
@@ -110,19 +114,35 @@ private class GradleAndroidTestResultListenerService(val listener: UtpTestResult
     override fun recordTestResultEvent(
             responseObserver: StreamObserver<RecordTestResultEventResponse>): StreamObserver<TestResultEvent> {
         return object: StreamObserver<TestResultEvent> {
+            /**
+             * A device ID that this stream observer receives test results from.
+             * This ID is initialized when it receives a test result event.
+             */
+            var targetDeviceId: String = ""
+
             override fun onNext(testResultEvent: TestResultEvent) {
+                targetDeviceId = testResultEvent.deviceId
                 listener?.onTestResultEvent(testResultEvent)
             }
 
             override fun onError(error: Throwable) {
                 logger.error("Could not receive test results from the test executor.", error)
-                listener?.onError()
+
+                val grpcErrorEvent = TestResultEvent.newBuilder().apply {
+                    deviceId = targetDeviceId
+                    testSuiteFinishedBuilder.apply {
+                        testSuiteResult = Any.pack(TestSuiteResult.newBuilder().apply {
+                            testStatus = TestStatusProto.TestStatus.ERROR
+                        }.build())
+                    }
+                }.build()
+
+                listener?.onTestResultEvent(grpcErrorEvent)
             }
 
             override fun onCompleted() {
                 responseObserver.onNext(RecordTestResultEventResponse.getDefaultInstance())
                 responseObserver.onCompleted()
-                listener?.onCompleted()
             }
         }
     }

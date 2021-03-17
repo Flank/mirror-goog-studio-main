@@ -168,7 +168,9 @@ class UtpTestResultListenerServerTest {
 
         requestObserver.onNext(
                 TestResultEvent.newBuilder().apply {
-                    testSuiteStarted = TestSuiteStarted.getDefaultInstance()
+                    testSuiteStarted = TestSuiteStarted.newBuilder().apply {
+                        deviceId = "testDeviceId"
+                    }.build()
                 }.build()
         )
         requestObserver.onCompleted()
@@ -179,9 +181,10 @@ class UtpTestResultListenerServerTest {
         inOrder(mockTestResultListener).apply {
             verify(mockTestResultListener).onTestResultEvent(
                     eq(TestResultEvent.newBuilder().apply {
-                        testSuiteStarted = TestSuiteStarted.getDefaultInstance()
+                        testSuiteStarted = TestSuiteStarted.newBuilder().apply {
+                            deviceId = "testDeviceId"
+                        }.build()
                     }.build()))
-            verify(mockTestResultListener).onCompleted()
         }
 
         server.close()
