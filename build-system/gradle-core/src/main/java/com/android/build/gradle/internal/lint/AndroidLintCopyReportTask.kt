@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.UnsafeOutputsTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.utils.FileUtils
 import com.android.utils.PathUtils
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logging
@@ -78,7 +79,7 @@ abstract class AndroidLintCopyReportTask : UnsafeOutputsTask("The lintOptions DS
         Logging.getLogger(AndroidLintCopyReportTask::class.java)
             .lifecycle("Copying lint $displayName report to $toPath")
         Files.createDirectories(toPath.parent)
-        Files.copy(inputPath, toPath, StandardCopyOption.REPLACE_EXISTING)
+        FileUtils.copyFile(inputPath, toPath)
     }
 
     class CreationAction(variant: VariantCreationConfig) : VariantTaskCreationAction<AndroidLintCopyReportTask, VariantCreationConfig>(variant) {
