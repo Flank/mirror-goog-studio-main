@@ -32,7 +32,7 @@ const val DEFAULT_THRESHOLD = 1024
  * records the payload that is sent/received in a temporary buffer
  * before reporting it to Studio.
  */
-abstract class StreamReporter(
+sealed class StreamReporter(
     private val connection: Connection,
     threadReporter: ThreadReporter,
     private val connectionId: Long
@@ -58,13 +58,6 @@ abstract class StreamReporter(
         if (!isClosed) {
             isClosed = true
             onClosed(buffer.toByteString())
-            sendHttpConnectionEvent(
-                NetworkInspectorProtocol.HttpConnectionEvent.newBuilder()
-                    .setHttpClosed(
-                        NetworkInspectorProtocol.HttpConnectionEvent.Closed.newBuilder()
-                            .setCompleted(true)
-                    )
-            )
         }
     }
 
@@ -93,6 +86,13 @@ class InputStreamReporterImpl(
             NetworkInspectorProtocol.HttpConnectionEvent.newBuilder()
                 .setHttpResponseCompleted(
                     NetworkInspectorProtocol.HttpConnectionEvent.ResponseCompleted.getDefaultInstance()
+                )
+        )
+        sendHttpConnectionEvent(
+            NetworkInspectorProtocol.HttpConnectionEvent.newBuilder()
+                .setHttpClosed(
+                    NetworkInspectorProtocol.HttpConnectionEvent.Closed.newBuilder()
+                        .setCompleted(true)
                 )
         )
     }

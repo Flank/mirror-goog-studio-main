@@ -9,7 +9,7 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="app-inspection.inspectors.network.fake-android" scope="PROVIDED" />
+    <orderEntry type="module" module-name="app-inspection.inspectors.network.fake-android" scope="TEST" />
     <orderEntry type="library" scope="PROVIDED" name="android" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="androidx-inspection" level="project" />
     <orderEntry type="library" name="kotlin-stdlib-jdk8" level="project" />
@@ -18,5 +18,8 @@
     <orderEntry type="library" name="kotlinx-coroutines" level="project" />
     <orderEntry type="library" name="okhttp" level="project" />
     <orderEntry type="module" module-name="app-inspection.inspectors.common" />
+    <orderEntry type="library" scope="TEST" name="JUnit4" level="project" />
+    <orderEntry type="library" scope="TEST" name="truth" level="project" />
+    <orderEntry type="library" scope="TEST" name="Guava" level="project" />
   </component>
 </module>

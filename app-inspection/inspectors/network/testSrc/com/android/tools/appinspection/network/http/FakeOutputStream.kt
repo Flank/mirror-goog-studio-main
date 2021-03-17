@@ -14,9 +14,32 @@
  * limitations under the License.
  */
 
-package android.app.usage;
+package com.android.tools.appinspection.network.http
 
-public class NetworkStatsManager {
-    public void setPollForce(boolean pollForce) {
+import java.io.ByteArrayOutputStream
+import java.io.OutputStream
+
+class FakeOutputStream : OutputStream() {
+
+    private val stream = ByteArrayOutputStream()
+
+    override fun close() {
+        stream.close()
+    }
+
+    override fun flush() {
+        stream.flush()
+    }
+
+    override fun write(b: Int) {
+        stream.write(b)
+    }
+
+    override fun write(b: ByteArray) {
+        stream.write(b)
+    }
+
+    override fun write(b: ByteArray, off: Int, len: Int) {
+        stream.write(b, off, len)
     }
 }

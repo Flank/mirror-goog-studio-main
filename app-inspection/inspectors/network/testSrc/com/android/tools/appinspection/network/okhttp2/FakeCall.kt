@@ -14,17 +14,23 @@
  * limitations under the License.
  */
 
-package com.android.tools.appinspection.network.utils
+package com.android.tools.appinspection.network.okhttp2
 
-import androidx.annotation.VisibleForTesting
-import java.util.concurrent.atomic.AtomicLong
+import com.squareup.okhttp.Call
+import com.squareup.okhttp.Request
+import com.squareup.okhttp.Response
 
-sealed class IdGenerator {
+class FakeCall(
+    private val client: FakeOkHttp2Client,
+    private val request: Request,
+    private val response: Response
+) : Call(client, request) {
 
-    @VisibleForTesting
-    val id = AtomicLong()
+    override fun execute(): Response {
+        return client.triggerInterceptor(request, response)
+    }
 
-    fun nextId() = id.getAndIncrement()
+    fun executeThenBlowUp(): Response {
+        return client.triggerInterceptor(request, response, true)
+    }
 }
-
-object ConnectionIdGenerator : IdGenerator()

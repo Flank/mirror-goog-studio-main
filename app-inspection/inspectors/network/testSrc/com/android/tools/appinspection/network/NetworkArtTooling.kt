@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-package com.android.tools.appinspection.network.utils
+package com.android.tools.appinspection.network
 
-import androidx.annotation.VisibleForTesting
-import java.util.concurrent.atomic.AtomicLong
+import android.app.Application
+import com.android.tools.appinspection.common.FakeArtTooling
 
-sealed class IdGenerator {
-
-    @VisibleForTesting
-    val id = AtomicLong()
-
-    fun nextId() = id.getAndIncrement()
+class NetworkArtTooling : FakeArtTooling() {
+    override fun <T> findInstances(clazz: Class<T>): List<T> {
+        if (clazz.name == Application::class.java.name) {
+            return listOf(Application()) as List<T>
+        } else {
+            throw UnsupportedOperationException()
+        }
+    }
 }
-
-object ConnectionIdGenerator : IdGenerator()

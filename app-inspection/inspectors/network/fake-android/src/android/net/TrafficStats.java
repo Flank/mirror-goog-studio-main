@@ -14,17 +14,15 @@
  * limitations under the License.
  */
 
-package com.android.tools.appinspection.network.utils
+package android.net;
 
-import androidx.annotation.VisibleForTesting
-import java.util.concurrent.atomic.AtomicLong
+public class TrafficStats {
 
-sealed class IdGenerator {
+    public static long getUidTxBytes(int uid) {
+        return 5L;
+    }
 
-    @VisibleForTesting
-    val id = AtomicLong()
-
-    fun nextId() = id.getAndIncrement()
+    public static long getUidRxBytes(int uid) {
+        return 5L;
+    }
 }
-
-object ConnectionIdGenerator : IdGenerator()

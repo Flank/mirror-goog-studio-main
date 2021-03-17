@@ -14,17 +14,9 @@
  * limitations under the License.
  */
 
-package com.android.tools.appinspection.network.utils
+package android.content.pm;
 
-import androidx.annotation.VisibleForTesting
-import java.util.concurrent.atomic.AtomicLong
+public class ApplicationInfo {
 
-sealed class IdGenerator {
-
-    @VisibleForTesting
-    val id = AtomicLong()
-
-    fun nextId() = id.getAndIncrement()
+    public int uid = 0;
 }
-
-object ConnectionIdGenerator : IdGenerator()
