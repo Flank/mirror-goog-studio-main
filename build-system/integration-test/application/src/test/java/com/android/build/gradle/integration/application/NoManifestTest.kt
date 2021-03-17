@@ -16,33 +16,36 @@
 
 package com.android.build.gradle.integration.application
 
+import com.android.build.api.artifact.ArtifactType
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.build.gradle.internal.scope.getOutputDir
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.model.SyncIssue
 import com.google.common.truth.Truth
 import org.junit.Rule
 import org.junit.Test
+import com.android.testutils.truth.PathSubject.assertThat
+import com.android.utils.FileUtils
 
 class NoManifestTest {
 
     val app = MinimalSubProject.app("com.example.app")
+    val lib = MinimalSubProject.lib("com.example.lib")
     init {
         app.removeFileByName("AndroidManifest.xml")
+        lib.removeFileByName("AndroidManifest.xml")
     }
-    private val testApp = MultiModuleTestProject.builder().subproject(":app", app).build()
-    @get:Rule val project = GradleTestProject.builder().fromTestApp(testApp).create()
+    private val testAppAndLib = MultiModuleTestProject.builder().subproject(":app", app).subproject(":lib", lib).build()
+    @get:Rule val project = GradleTestProject.builder().fromTestApp(testAppAndLib).create()
 
     @Test
     fun noManifestConfigurationPassesTest() {
-        project.executor()
-            // org.gradle.api.tasks.diagnostics.TaskReportTask is incompatible
-            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-            .with(BooleanOption.DISABLE_EARLY_MANIFEST_PARSING, true).run("tasks")
+        project.executor().run("tasks")
         // we should be able to create task list, without a valid manifest.
     }
 
@@ -71,6 +74,12 @@ class NoManifestTest {
                 }
             """.trimIndent()
         )
+        TestFileUtils.appendToFile(
+                project.getSubproject(":lib").buildFile,
+                """
+                    android.namespace "com.example.lib"
+                    """.trimIndent()
+        )
         val issues = project.model().with(BooleanOption.DISABLE_EARLY_MANIFEST_PARSING, true).ignoreSyncIssues().fetchAndroidProjects().onlyModelSyncIssues
 
         Truth.assertThat(issues).named("full issues list").hasSize(1)
@@ -87,6 +96,12 @@ class NoManifestTest {
                     android.namespace "com.example.app"
                     """.trimIndent()
         )
+        TestFileUtils.appendToFile(
+                project.getSubproject(":lib").buildFile,
+                """
+                    android.namespace "com.example.lib"
+                    """.trimIndent()
+        )
         val issues =
                 project.model()
                         .with(BooleanOption.DISABLE_EARLY_MANIFEST_PARSING, true)
@@ -97,5 +112,28 @@ class NoManifestTest {
         val issue = issues.first()
         assertThat(issue).hasType(SyncIssue.TYPE_UNSUPPORTED_PROJECT_OPTION_USE)
         assertThat(issue).hasSeverity(SyncIssue.SEVERITY_WARNING)
+    }
+
+    @Test
+    fun noManifestInLibraryModuleTest() {
+        TestFileUtils.appendToFile(
+                project.getSubproject(":lib").buildFile,
+                """
+                    android.namespace "com.example.lib"
+                    """.trimIndent()
+        )
+        project.executor().run(":lib:build", ":lib:assembleAndroidTest")
+
+        assertThat(project.buildResult.failedTasks).isEmpty()
+        val fileOutput =
+                FileUtils.join(
+                        ArtifactType.MERGED_MANIFEST.getOutputDir(
+                                project.getSubproject(":lib").buildDir
+                        ),
+                        "debug",
+                        "AndroidManifest.xml"
+                )
+        assertThat(fileOutput.isFile).isTrue()
+        assertThat(fileOutput).contains("package=\"com.example.lib\"")
     }
 }
