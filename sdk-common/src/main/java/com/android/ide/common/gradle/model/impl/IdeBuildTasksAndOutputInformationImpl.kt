@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 The Android Open Source Project
+ * Copyright (C) 2021 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,13 @@
 package com.android.ide.common.gradle.model.impl
 
 import com.android.ide.common.gradle.model.IdeBuildTasksAndOutputInformation
-import com.android.ide.common.gradle.model.IdeVariantBuildInformation
 import java.io.Serializable
 
-data class IdeVariantBuildInformationImpl(
-  override val variantName: String,
-  override val buildInformation: IdeBuildTasksAndOutputInformation
-) : IdeVariantBuildInformation, Serializable
-
+data class IdeBuildTasksAndOutputInformationImpl(
+  override val assembleTaskName: String,
+  override val assembleTaskOutputListingFile: String?,
+  override val bundleTaskName: String?,
+  override val bundleTaskOutputListingFile: String?,
+  override val apkFromBundleTaskName: String?,
+  override val apkFromBundleTaskOutputListingFile: String?
+) : IdeBuildTasksAndOutputInformation, Serializable
