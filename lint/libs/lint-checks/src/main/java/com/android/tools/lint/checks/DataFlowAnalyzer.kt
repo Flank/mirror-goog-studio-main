@@ -21,6 +21,7 @@ import com.android.tools.lint.detector.api.skipParentheses
 import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiField
 import com.intellij.psi.PsiLocalVariable
+import com.intellij.psi.PsiPrimitiveType
 import com.intellij.psi.PsiVariable
 import org.jetbrains.uast.UBinaryExpression
 import org.jetbrains.uast.UBlockExpression
@@ -381,8 +382,12 @@ abstract class DataFlowAnalyzer(
      */
     open fun returnsSelf(call: UCallExpression): Boolean {
         val resolvedCall = call.resolve() ?: return false
-        val containingClass = resolvedCall.containingClass
-        if ((call.returnType as? PsiClassType)?.resolve() == containingClass) {
+        if (call.returnType is PsiPrimitiveType) {
+            return false
+        }
+        val containingClass = resolvedCall.containingClass ?: return false
+        val returnTypeClass = (call.returnType as? PsiClassType)?.resolve()
+        if (returnTypeClass == containingClass) {
             return true
         }
 
@@ -391,7 +396,14 @@ abstract class DataFlowAnalyzer(
         val name = call.methodName
         if ((name == "also" || name == "apply") &&
             // See libraries/stdlib/jvm/build/stdlib-declarations.json
-            containingClass?.qualifiedName == "kotlin.StandardKt__StandardKt"
+            containingClass.qualifiedName == "kotlin.StandardKt__StandardKt"
+        ) {
+            return true
+        }
+
+        // Return a subtype is also likely self; see for example Snackbar
+        if (returnTypeClass != null && returnTypeClass.isInheritor(containingClass, true) &&
+            containingClass.name != "Object"
         ) {
             return true
         }

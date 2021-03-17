@@ -265,12 +265,36 @@ class ToastDetectorTest : AbstractCheckTest() {
         )
     }
 
+    fun testSnackbarAnchor() {
+        // Regression test for b/182452136
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+                import android.view.View
+                import com.google.android.material.snackbar.Snackbar
+                fun testSnackbar(coordinatorLayout: View, resId: Int, anchorView: View) {
+                    Snackbar.make(coordinatorLayout, resId, Snackbar.LENGTH_SHORT)
+                        .setAnchorView(anchorView)
+                        .show()
+                }
+                """
+            ).indented(),
+            *snackbarStubs
+        ).run().expectClean()
+    }
+
     val snackbarStubs = arrayOf(
         java(
             """
             package com.google.android.material.snackbar;
-            public abstract class BaseTransientBottomBar {
-              public void show() { }
+            import android.view.View;
+            public abstract class BaseTransientBottomBar<B extends BaseTransientBottomBar<B>> {
+                public void show() { }
+                public B setAnchorView(View anchorView) {
+                    //noinspection unchecked
+                    return (B) this;
+                }
             }
             """
         ).indented(),
@@ -278,7 +302,7 @@ class ToastDetectorTest : AbstractCheckTest() {
             """
             package com.google.android.material.snackbar;
             import android.view.View;
-            public class Snackbar extends BaseTransientBottomBar {
+            public class Snackbar extends BaseTransientBottomBar<Snackbar> {
                 public void show() { }
                 public static final int LENGTH_INDEFINITE = -2;
                 public static final int LENGTH_SHORT = -1;
