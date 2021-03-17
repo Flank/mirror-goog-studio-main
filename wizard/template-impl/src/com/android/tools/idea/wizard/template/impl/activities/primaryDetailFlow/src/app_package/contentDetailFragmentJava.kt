@@ -43,7 +43,9 @@ fun contentDetailFragmentJava(
   return """
 package ${packageName};
 
+import android.content.ClipData;
 import android.os.Bundle;
+import android.view.DragEvent;
 
 import ${getMaterialComponentName("android.support.v4.app.Fragment", useAndroidX)};
 
@@ -74,6 +76,17 @@ public class ${collection}DetailFragment extends Fragment {
      * The placeholder content this fragment is presenting.
      */
     private PlaceholderContent.PlaceholderItem mItem;
+    private CollapsingToolbarLayout mToolbarLayout;
+    private TextView mTextView;
+
+    private final View.OnDragListener dragListener = (v, event) -> {
+        if (event.getAction() == DragEvent.ACTION_DROP) {
+            ClipData.Item clipDataItem = event.getClipData().getItemAt(0);
+            mItem = PlaceholderContent.ITEM_MAP.get(clipDataItem.getText().toString());
+            updateContent();
+        }
+        return true;
+    };
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -102,20 +115,15 @@ ${renderIf(isViewBindingSupported) {"""
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         $onCreateViewBlock
-        CollapsingToolbarLayout toolbarLayout = rootView.findViewById(R.id.toolbar_layout);
+        mToolbarLayout = rootView.findViewById(R.id.toolbar_layout);
+        mTextView = ${findViewById(
+            Language.Java,
+            isViewBindingSupported = isViewBindingSupported,
+            id = detailNameLayout)};
 
         // Show the placeholder content as text in a TextView & in the toolbar if available.
-        if (mItem != null) {
-            TextView textView = ${findViewById(
-              Language.Java,
-              isViewBindingSupported = isViewBindingSupported,
-              id = detailNameLayout)};
-            textView.setText(mItem.details);
-            if (toolbarLayout != null) {
-                toolbarLayout.setTitle(mItem.content);
-            }
-        }
-
+        updateContent();
+        rootView.setOnDragListener(dragListener);
         return rootView;
     }
 ${renderIf(isViewBindingSupported) {"""
@@ -125,6 +133,15 @@ ${renderIf(isViewBindingSupported) {"""
         binding = null;
     }
 """}}
+
+    private void updateContent() {
+        if (mItem != null) {
+            mTextView.setText(mItem.details);
+            if (mToolbarLayout != null) {
+                mToolbarLayout.setTitle(mItem.content);
+            }
+        }
+    }
 }
 """
 }

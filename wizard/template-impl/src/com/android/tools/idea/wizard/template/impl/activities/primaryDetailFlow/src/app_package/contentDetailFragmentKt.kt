@@ -43,7 +43,9 @@ fun contentDetailFragmentKt(
   return """
 package ${escapeKotlinIdentifier(packageName)}
 
+import android.content.ClipData
 import android.os.Bundle
+import android.view.DragEvent
 import ${getMaterialComponentName("android.support.v4.app.Fragment", useAndroidX)}
 import ${getMaterialComponentName("android.support.design.widget.CollapsingToolbarLayout", true)}
 import android.view.LayoutInflater
@@ -55,7 +57,7 @@ import ${packageName}.placeholder.PlaceholderContent
 ${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Kotlin)}
 
 /**
- * A fragment representing a single ${objectKind} detail screen.
+ * A fragment representing a single $objectKind detail screen.
  * This fragment is either contained in a [${collectionName}Fragment]
  * in two-pane mode (on larger screen devices) or self-contained
  * on handsets.
@@ -68,6 +70,7 @@ class ${detailName}Fragment : Fragment() {
     private var item: PlaceholderContent.PlaceholderItem? = null
 
     lateinit var itemDetailTextView: TextView
+    private var toolbarLayout: CollapsingToolbarLayout? = null
 
 ${renderIf(isViewBindingSupported) {"""
     private var _binding: ${layoutToViewBindingClass(layoutName)}? = null
@@ -75,6 +78,16 @@ ${renderIf(isViewBindingSupported) {"""
     // onDestroyView.
     private val binding get() = _binding!!
 """}}
+
+    private val dragListener = View.OnDragListener { v, event ->
+        if (event.action == DragEvent.ACTION_DROP) {
+            val clipDataItem: ClipData.Item = event.clipData.getItemAt(0)
+            val dragData = clipDataItem.text
+            item = PlaceholderContent.ITEM_MAP[dragData]
+            updateContent()
+        }
+        true
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -95,25 +108,33 @@ ${renderIf(isViewBindingSupported) {"""
     ): View? {
         $onCreateViewBlock
 
-        ${findViewById(
+        toolbarLayout = ${findViewById(
            Language.Kotlin,
            isViewBindingSupported = isViewBindingSupported,
            id = "toolbar_layout",
            parentView = "rootView",
-           className = "CollapsingToolbarLayout")}?.title = item?.content
-
+           className = "CollapsingToolbarLayout")}
         itemDetailTextView = ${findViewById(
           Language.Kotlin,
           isViewBindingSupported = isViewBindingSupported,
           id = detailNameLayout,
           parentView = "rootView")}
+
+        updateContent()
+        rootView.setOnDragListener(dragListener)
+
+        return rootView
+    }
+
+    private fun updateContent() {
+        toolbarLayout?.title = item?.content
+
         // Show the placeholder content as text in a TextView.
         item?.let {
             itemDetailTextView.text = it.details
         }
-
-        return rootView
     }
+
 
     companion object {
         /**

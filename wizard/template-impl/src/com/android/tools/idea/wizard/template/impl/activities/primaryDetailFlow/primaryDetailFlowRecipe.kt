@@ -86,7 +86,8 @@ fun RecipeExecutor.primaryDetailFlowRecipe(
     packageName,
     isLauncher,
     hasNoActionBar = false,
-    generateActivityTitle = true
+    generateActivityTitle = true,
+    isResizeable = true
   )
 
   navigationDependencies(generateKotlin, useAndroidX, moduleData.apis.appCompatVersion)
