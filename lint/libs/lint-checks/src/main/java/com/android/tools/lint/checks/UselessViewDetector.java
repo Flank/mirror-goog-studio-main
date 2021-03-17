@@ -67,7 +67,7 @@ public class UselessViewDetector extends LayoutDetector {
     public static final Issue USELESS_PARENT =
             Issue.create(
                     "UselessParent",
-                    "Useless parent layout",
+                    "Unnecessary parent layout",
                     "A layout with children that has no siblings, is not a scrollview or "
                             + "a root layout, and does not have a background, can be removed and have "
                             + "its children moved directly into the parent for a flatter and more "
@@ -81,7 +81,7 @@ public class UselessViewDetector extends LayoutDetector {
     public static final Issue USELESS_LEAF =
             Issue.create(
                     "UselessLeaf",
-                    "Useless leaf layout",
+                    "Unnecessary leaf layout",
                     "A layout that has no children or no background can often be removed (since it "
                             + "is invisible) for a flatter and more efficient layout hierarchy.",
                     Category.PERFORMANCE,
@@ -221,9 +221,9 @@ public class UselessViewDetector extends LayoutDetector {
         String tag = element.getTagName();
         String format;
         if (hasId) {
-            format = "This `%1$s` layout or its `%2$s` parent is possibly useless";
+            format = "This `%1$s` layout or its `%2$s` parent is possibly unnecessary";
         } else {
-            format = "This `%1$s` layout or its `%2$s` parent is useless";
+            format = "This `%1$s` layout or its `%2$s` parent is unnecessary";
         }
         if (nodeHasBackground || parentHasBackground) {
             format += "; transfer the `background` attribute to the other view";
@@ -288,7 +288,7 @@ public class UselessViewDetector extends LayoutDetector {
         String tag = element.getTagName();
         String message =
                 String.format(
-                        "This `%1$s` view is useless (no children, no `background`, no `id`, no `style`)",
+                        "This `%1$s` view is unnecessary (no children, no `background`, no `id`, no `style`)",
                         tag);
         context.report(USELESS_LEAF, element, location, message);
     }

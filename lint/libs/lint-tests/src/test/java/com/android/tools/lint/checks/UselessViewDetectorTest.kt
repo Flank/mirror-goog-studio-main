@@ -25,16 +25,16 @@ class UselessViewDetectorTest : AbstractCheckTest() {
     fun testUseless() {
         val expected =
             """
-            res/layout/useless.xml:85: Warning: This FrameLayout view is useless (no children, no background, no id, no style) [UselessLeaf]
+            res/layout/useless.xml:85: Warning: This FrameLayout view is unnecessary (no children, no background, no id, no style) [UselessLeaf]
                 <FrameLayout
                  ~~~~~~~~~~~
-            res/layout/useless.xml:13: Warning: This LinearLayout layout or its FrameLayout parent is useless [UselessParent]
+            res/layout/useless.xml:13: Warning: This LinearLayout layout or its FrameLayout parent is unnecessary [UselessParent]
                     <LinearLayout
                      ~~~~~~~~~~~~
-            res/layout/useless.xml:47: Warning: This LinearLayout layout or its FrameLayout parent is useless; transfer the background attribute to the other view [UselessParent]
+            res/layout/useless.xml:47: Warning: This LinearLayout layout or its FrameLayout parent is unnecessary; transfer the background attribute to the other view [UselessParent]
                     <LinearLayout
                      ~~~~~~~~~~~~
-            res/layout/useless.xml:65: Warning: This LinearLayout layout or its FrameLayout parent is useless; transfer the background attribute to the other view [UselessParent]
+            res/layout/useless.xml:65: Warning: This LinearLayout layout or its FrameLayout parent is unnecessary; transfer the background attribute to the other view [UselessParent]
                     <LinearLayout
                      ~~~~~~~~~~~~
             0 errors, 4 warnings
@@ -234,7 +234,7 @@ class UselessViewDetectorTest : AbstractCheckTest() {
         // https://code.google.com/p/android/issues/detail?id=205250
         val expected =
             """
-            res/layout/useless5.xml:5: Warning: This RelativeLayout layout or its FrameLayout parent is useless [UselessParent]
+            res/layout/useless5.xml:5: Warning: This RelativeLayout layout or its FrameLayout parent is unnecessary [UselessParent]
                 <RelativeLayout
                  ~~~~~~~~~~~~~~
             0 errors, 1 warnings
