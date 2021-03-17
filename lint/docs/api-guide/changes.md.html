@@ -72,4 +72,27 @@ information about user visible changes to lint, see
 
 * API documentation is now available.
 
+* Certain Kotlin PSI elements have new implementations known as
+  _ultra light classes_. Ultra light classes improve performance
+  by answering PSI queries "directly from source" rather than
+  delegating to the Kotlin compiler backend. You may see ultra
+  light classes when accessing the `UElement.javaPsi` property of a
+  Kotlin UAST element. They can also appear when resolving references.
+  For example, resolving a Kotlin field reference to its declaration
+  may result in an instance of `KtUltraLightFieldForSourceDeclaration`.
+  As a reminder, Kotlin light classes represent the "Java view" of an
+  underlying Kotlin PSI element. To access the underlying Kotlin PSI
+  element you should use `UElement.sourcePsi` (preferred)
+  or otherwise the extension property `PsiElement.unwrapped` (declared
+  in `org.jetbrains.kotlin.asJava`).
+
+* There is a new bug where calling `getNameIdentifier()` on Kotlin
+  fields may return `null`
+  ([KT-45629](https://youtrack.jetbrains.com/issue/KT-45629)).
+  As a workaround you can use `JavaContext.findNameElement()` instead.
+
+* Kotlin references to Java methods now trigger both the
+  `visitMethodCall()` callback _and_ the `visitReference()` callback.
+  Previously only `visitMethodCall()` was triggered.
+
 <!-- Markdeep: --><style class="fallback">body{visibility:hidden;white-space:pre;font-family:monospace}</style><script src="markdeep.min.js" charset="utf-8"></script><script src="https://morgan3d.github.io/markdeep/latest/markdeep.min.js" charset="utf-8"></script><script>window.alreadyProcessedMarkdeep||(document.body.style.visibility="visible")</script>

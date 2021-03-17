@@ -27,8 +27,11 @@ import com.intellij.psi.PsiRecursiveElementVisitor
 import com.intellij.psi.PsiTypeParameter
 import junit.framework.TestCase
 import org.jetbrains.kotlin.asJava.elements.KotlinLightTypeParameterBuilder
-import org.jetbrains.kotlin.asJava.elements.KtLightTypeParameter
+import org.jetbrains.kotlin.asJava.unwrapped
 import org.jetbrains.kotlin.config.LanguageVersionSettings
+import org.jetbrains.kotlin.lexer.KtModifierKeywordToken
+import org.jetbrains.kotlin.lexer.KtTokens
+import org.jetbrains.kotlin.psi.KtTypeParameter
 import org.jetbrains.uast.UBinaryExpression
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UClass
@@ -383,12 +386,12 @@ class UastTest : TestCase() {
                             UMethod (name = getUlong) [public static final fun getUlong() : long = UastEmptyExpression]
                             UMethod (name = getUbyte) [public static final fun getUbyte() : byte = UastEmptyExpression]
                         UClass (name = FooInterface) [public abstract interface FooInterface {...}]
+                            UField (name = Companion) [@null public static final var Companion: test.pkg.FooInterface.Companion]
+                                UAnnotation (fqName = null) [@null]
                             UField (name = answer) [@org.jetbrains.annotations.NotNull @kotlin.jvm.JvmField public static final var answer: int = 42]
                                 UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]
                                 UAnnotation (fqName = kotlin.jvm.JvmField) [@kotlin.jvm.JvmField]
                                 ULiteralExpression (value = 42) [42] : PsiType:int
-                            UField (name = Companion) [@null public static final var Companion: test.pkg.FooInterface.Companion]
-                                UAnnotation (fqName = null) [@null]
                             UMethod (name = sayHello) [@kotlin.jvm.JvmStatic...}]
                                 UAnnotation (fqName = kotlin.jvm.JvmStatic) [@kotlin.jvm.JvmStatic]
                                 UBlockExpression [{...}] : PsiType:void
@@ -434,33 +437,7 @@ class UastTest : TestCase() {
                                 UMethod (name = getBar) [public final fun getBar() : int = UastEmptyExpression]
                                 UMethod (name = Companion) [private fun Companion() = UastEmptyExpression]
                         UClass (name = Name) [public final class Name {...}]
-                            UField (name = s) [@org.jetbrains.annotations.NotNull private final var s: java.lang.String]
-                                UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]
                             UMethod (name = getS) [public final fun getS() : java.lang.String = UastEmptyExpression]
-                            UMethod (name = constructor-impl) [public static fun constructor-impl(@org.jetbrains.annotations.NotNull s: java.lang.String) : java.lang.String = UastEmptyExpression]
-                                UParameter (name = s) [@org.jetbrains.annotations.NotNull var s: java.lang.String]
-                                    UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]
-                            UMethod (name = toString-impl) [public static fun toString-impl(@null p: java.lang.String) : java.lang.String = UastEmptyExpression]
-                                UParameter (name = p) [@null var p: java.lang.String]
-                                    UAnnotation (fqName = null) [@null]
-                            UMethod (name = hashCode-impl) [public static fun hashCode-impl(@null p: java.lang.String) : int = UastEmptyExpression]
-                                UParameter (name = p) [@null var p: java.lang.String]
-                                    UAnnotation (fqName = null) [@null]
-                            UMethod (name = equals-impl) [public static fun equals-impl(@null p: java.lang.String, @null p1: java.lang.Object) : boolean = UastEmptyExpression]
-                                UParameter (name = p) [@null var p: java.lang.String]
-                                    UAnnotation (fqName = null) [@null]
-                                UParameter (name = p1) [@null var p1: java.lang.Object]
-                                    UAnnotation (fqName = null) [@null]
-                            UMethod (name = equals-impl0) [public static final fun equals-impl0(@null p1: java.lang.String, @null p2: java.lang.String) : boolean = UastEmptyExpression]
-                                UParameter (name = p1) [@null var p1: java.lang.String]
-                                    UAnnotation (fqName = null) [@null]
-                                UParameter (name = p2) [@null var p2: java.lang.String]
-                                    UAnnotation (fqName = null) [@null]
-                            UMethod (name = toString) [public fun toString() : java.lang.String = UastEmptyExpression]
-                            UMethod (name = hashCode) [public fun hashCode() : int = UastEmptyExpression]
-                            UMethod (name = equals) [public fun equals(@null p: java.lang.Object) : boolean = UastEmptyExpression]
-                                UParameter (name = p) [@null var p: java.lang.Object]
-                                    UAnnotation (fqName = null) [@null]
                         UClass (name = FooInterface2) [public abstract interface FooInterface2 {...}]
                             UMethod (name = foo) [@kotlin.jvm.JvmDefault...}]
                                 UAnnotation (fqName = kotlin.jvm.JvmDefault) [@kotlin.jvm.JvmDefault]
@@ -647,8 +624,8 @@ class UastTest : TestCase() {
 
                 // Multiplatform stuff
                 external fun fromElsewhere()
-                expect fun randomUUID(): String
                 actual fun randomUUID() = "not random"
+                expect fun randomUUID(): String
 
                 companion object NamedCompanion { }
             }
@@ -668,32 +645,26 @@ class UastTest : TestCase() {
 
             // type parameter lookup methods; these would ideally go in JavaEvaluator
             // but can't yet because they're relying on some patches only available
-            // in the kotlin-compiler fork:
+            // in the kotlin-compiler fork (i.e. KotlinLightTypeParameterBuilder).
 
-            fun hasTypeParameterKeyword(element: PsiTypeParameter?, keyword: String): Boolean {
-                element ?: return false
-                if (element is KtLightTypeParameter &&
-                    element.kotlinOrigin.text.startsWith("$keyword ")
-                ) {
-                    return true
-                } else if (element is KotlinLightTypeParameterBuilder) {
-                    if (element.sourcePsi.text.startsWith("$keyword ")) {
-                        return true
-                    }
+            fun hasTypeParameterKeyword(element: PsiTypeParameter?, keyword: KtModifierKeywordToken): Boolean {
+                val ktOrigin = when (element) {
+                    is KotlinLightTypeParameterBuilder -> element.sourcePsi
+                    else -> element?.unwrapped as? KtTypeParameter ?: return false
                 }
-                return false
+                return ktOrigin.hasModifier(keyword)
             }
 
             fun isReified(element: PsiTypeParameter?): Boolean {
-                return hasTypeParameterKeyword(element, "reified")
+                return hasTypeParameterKeyword(element, KtTokens.REIFIED_KEYWORD)
             }
 
-            fun isIn(element: PsiTypeParameter?): Boolean {
-                return hasTypeParameterKeyword(element, "in")
+            fun isInVariance(element: PsiTypeParameter?): Boolean {
+                return hasTypeParameterKeyword(element, KtTokens.IN_KEYWORD)
             }
 
-            fun isOut(element: PsiTypeParameter?): Boolean {
-                return hasTypeParameterKeyword(element, "out")
+            fun isOutVariance(element: PsiTypeParameter?): Boolean {
+                return hasTypeParameterKeyword(element, KtTokens.OUT_KEYWORD)
             }
 
             val evaluator = DefaultJavaEvaluator(null, null)
@@ -722,10 +693,10 @@ class UastTest : TestCase() {
                 }
                 for (typeParameter in cls.typeParameters) {
                     sb.append(" ")
-                    if (isOut(typeParameter)) {
+                    if (isOutVariance(typeParameter)) {
                         sb.append("out ")
                     }
-                    if (isIn(typeParameter)) {
+                    if (isInVariance(typeParameter)) {
                         sb.append("in ")
                     }
                     val parameterName = typeParameter.name ?: "arg"
@@ -803,10 +774,10 @@ class UastTest : TestCase() {
                         if (isReified(typeParam)) {
                             sb.append(" reified")
                         }
-                        if (isOut(typeParam)) {
+                        if (isOutVariance(typeParam)) {
                             sb.append(" out")
                         }
-                        if (isIn(typeParam)) {
+                        if (isInVariance(typeParam)) {
                             sb.append(" in")
                         }
                         sb.append(" ")
@@ -843,15 +814,15 @@ class UastTest : TestCase() {
                     method fromElsewhere(): external
                     method function1(t): inline T
                     method function2(t): inline T
-                    method function3(t): reified T
-                    method function4(t): reified T
-                    method function5(t): reified T
-                    method function6(＄this＄function6,t): reified T
-                    method function7(t): reified T
-                    method function8(t): reified T
-                    method function9(t): reified T
-                    method functionA(t): reified T
-                    method functionB(＄this＄functionB,t): reified T
+                    method function3(t): inline reified T
+                    method function4(t): inline reified T
+                    method function5(t): inline reified T
+                    method function6(＄this＄function6,t): inline reified T
+                    method function7(t): inline reified T
+                    method function8(t): inline reified T
+                    method function9(t): inline internal reified T
+                    method functionA(t): inline reified T
+                    method functionB(＄this＄functionB,t): inline reified T
                     method functionC(t): reified T
                     method get(index): operator
                     method isOpen(): open
@@ -859,9 +830,9 @@ class UastTest : TestCase() {
                     method multiarg(vararg arg):
                     method myInternal＄lint_module(): internal
                     method notInlined(): noinline
-                    method randomUUID(): expect
                     method randomUUID(): actual
-                    method suspendMethod(p): suspend
+                    method randomUUID(): expect
+                    method suspendMethod(＄completion): suspend
                     field NamedCompanion:
                     field constant: const
                     field delayed: lateinit
@@ -895,19 +866,10 @@ class UastTest : TestCase() {
                 package test.pkg
 
                 public final class GraphVariables {
-                    @org.jetbrains.annotations.NotNull private final var set: java.util.Set<test.pkg.GraphVariable<?>>
                     public final fun getSet() : java.util.Set<test.pkg.GraphVariable<?>> = UastEmptyExpression
-                    public static final fun variable-impl(@org.jetbrains.annotations.NotNull ${"$"}this: java.util.Set<test.pkg.GraphVariable<?>>, @org.jetbrains.annotations.NotNull name: java.lang.String, @org.jetbrains.annotations.Nullable graphType: java.lang.String, @null value: T) : void {
+                    fun variable(@org.jetbrains.annotations.NotNull name: java.lang.String, @org.jetbrains.annotations.NotNull graphType: java.lang.String, @org.jetbrains.annotations.Nullable value: T) : void {
                         this.set.add(<init>(name, graphType, value))
                     }
-                    public static fun constructor-impl(@org.jetbrains.annotations.NotNull set: java.util.Set<test.pkg.GraphVariable<?>>) : java.util.Set = UastEmptyExpression
-                    public static fun toString-impl(@null p: java.util.Set) : java.lang.String = UastEmptyExpression
-                    public static fun hashCode-impl(@null p: java.util.Set) : int = UastEmptyExpression
-                    public static fun equals-impl(@null p: java.util.Set, @null p1: java.lang.Object) : boolean = UastEmptyExpression
-                    public static final fun equals-impl0(@null p1: java.util.Set, @null p2: java.util.Set) : boolean = UastEmptyExpression
-                    public fun toString() : java.lang.String = UastEmptyExpression
-                    public fun hashCode() : int = UastEmptyExpression
-                    public fun equals(@null p: java.lang.Object) : boolean = UastEmptyExpression
                 }
 
                 public final class GraphVariable {
@@ -1208,7 +1170,7 @@ class UastTest : TestCase() {
                 public final class SimpleClass {
                     @org.jetbrains.annotations.NotNull private var foo: int
                     public final fun getFoo() : int = UastEmptyExpression
-                    public final fun setFoo(@null p: int) : void = UastEmptyExpression
+                    public final fun setFoo(@null foo: int) : void = UastEmptyExpression
                     public fun SimpleClass() {
                         {
                             foo = android.R.layout.activity_list_item
@@ -1332,5 +1294,46 @@ class UastTest : TestCase() {
                 })
             }
         )
+    }
+
+    fun testKt45676() {
+        // Regression test for https://youtrack.jetbrains.com/issue/KT-45676,
+        // in which backing field annotations were missing their attribute values.
+        val source = kotlin(
+            """
+            @Target(AnnotationTarget.FIELD)
+            annotation class MyFieldAnnotation(val value: String)
+
+            @MyFieldAnnotation("SomeStringValue")
+            var myProperty = 0
+            """
+        ).indented()
+
+        check(source) { file ->
+            assertEquals(
+                """
+                UFile (package = ) [public final class MyFieldAnnotationKt {...]
+                  UClass (name = MyFieldAnnotationKt) [public final class MyFieldAnnotationKt {...}]
+                    UField (name = myProperty) [@org.jetbrains.annotations.NotNull @MyFieldAnnotation(value = "SomeStringValue") private static var myProperty: int = 0]
+                      UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]
+                      UAnnotation (fqName = MyFieldAnnotation) [@MyFieldAnnotation(value = "SomeStringValue")]
+                        UNamedExpression (name = value) [value = "SomeStringValue"]
+                          ULiteralExpression (value = "SomeStringValue") ["SomeStringValue"] : PsiType:String
+                      ULiteralExpression (value = 0) [0] : PsiType:int
+                    UMethod (name = getMyProperty) [public static final fun getMyProperty() : int = UastEmptyExpression]
+                    UMethod (name = setMyProperty) [public static final fun setMyProperty(@null myProperty: int) : void = UastEmptyExpression]
+                      UParameter (name = myProperty) [@null var myProperty: int]
+                        UAnnotation (fqName = null) [@null]
+                  UClass (name = MyFieldAnnotation) [public abstract annotation MyFieldAnnotation {...}]
+                    UAnnotation (fqName = kotlin.annotation.Target) [@kotlin.annotation.Target(allowedTargets = AnnotationTarget.FIELD)]
+                      UNamedExpression (name = allowedTargets) [allowedTargets = AnnotationTarget.FIELD]
+                        UQualifiedReferenceExpression [AnnotationTarget.FIELD] : PsiType:AnnotationTarget
+                          USimpleNameReferenceExpression (identifier = AnnotationTarget) [AnnotationTarget]
+                          USimpleNameReferenceExpression (identifier = FIELD) [FIELD] : PsiType:AnnotationTarget
+                    UAnnotationMethod (name = value) [public abstract fun value() : java.lang.String = UastEmptyExpression]
+                """.trimIndent(),
+                file.asLogTypes(indent = "  ").trim()
+            )
+        }
     }
 }

@@ -34,6 +34,7 @@ import com.intellij.psi.PsiNameIdentifierOwner
 import com.intellij.psi.PsiNewExpression
 import com.intellij.psi.PsiReferenceExpression
 import com.intellij.psi.PsiSwitchStatement
+import org.jetbrains.kotlin.asJava.elements.KtLightFieldForSourceDeclarationSupport
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UClass
@@ -449,6 +450,12 @@ open class JavaContext(
         @JvmStatic
         fun findNameElement(element: PsiElement): PsiElement? {
             when (element) {
+                is KtLightFieldForSourceDeclarationSupport -> {
+                    // Workaround for https://youtrack.jetbrains.com/issue/KT-45629.
+                    @Suppress("SENSELESS_COMPARISON")
+                    assert(element.nameIdentifier == null) { "It appears this workaround can be removed" }
+                    return (element.kotlinOrigin as? PsiNameIdentifierOwner)?.nameIdentifier
+                }
                 is PsiNameIdentifierOwner -> return element.nameIdentifier
                 is PsiClass -> {
                     if (element is PsiAnonymousClass) {

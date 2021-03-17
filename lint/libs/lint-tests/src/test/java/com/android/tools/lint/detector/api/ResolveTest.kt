@@ -235,13 +235,13 @@ class ResolveTest : TestCase() {
                         UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull] => <FAILED>
                         ULiteralExpression (value = 0) [0]
                     UMethod (name = getMyField) [public final fun getMyField() : int = UastEmptyExpression]
-                    UMethod (name = setMyField) [public final fun setMyField(@null p: int) : void = UastEmptyExpression]
-                        UParameter (name = p) [@null var p: int]
+                    UMethod (name = setMyField) [public final fun setMyField(@null myField: int) : void = UastEmptyExpression]
+                        UParameter (name = myField) [@null var myField: int]
                             UAnnotation (fqName = null) [@null] => <FAILED>
                     UMethod (name = mutate) [public final fun mutate() : void {...}]
                         UBlockExpression [{...}]
                             UBinaryExpression (operator = =) [myField = 42]
-                                USimpleNameReferenceExpression (identifier = myField) [myField] => KtLightMethodImpl:setMyField
+                                USimpleNameReferenceExpression (identifier = myField) [myField] => KtUltraLightMethodForSourceDeclaration:setMyField
                                 ULiteralExpression (value = 42) [42]
                     UMethod (name = A) [public fun A() = UastEmptyExpression]
             """.trimIndent().trim(),

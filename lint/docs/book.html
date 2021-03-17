@@ -4266,7 +4266,39 @@ information about user visible changes to lint, see
 <p></p><p>
 
 </p></li>
-<li class="asterisk">API documentation is now available.</li></ul>
+<li class="asterisk">API documentation is now available.
+
+<p></p><p>
+
+</p></li>
+<li class="asterisk">Certain Kotlin PSI elements have new implementations known as
+  <em class="underscore">ultra light classes</em>. Ultra light classes improve performance
+  by answering PSI queries “directly from source” rather than
+  delegating to the Kotlin compiler backend. You may see ultra
+  light classes when accessing the <code>UElement.javaPsi</code> property of a
+  Kotlin UAST element. They can also appear when resolving references.
+  For example, resolving a Kotlin field reference to its declaration
+  may result in an instance of <code>KtUltraLightFieldForSourceDeclaration</code>.
+  As a reminder, Kotlin light classes represent the “Java view” of an
+  underlying Kotlin PSI element. To access the underlying Kotlin PSI
+  element you should use <code>UElement.sourcePsi</code> (preferred)
+  or otherwise the extension property <code>PsiElement.unwrapped</code> (declared
+  in <code>org.jetbrains.kotlin.asJava</code>).
+
+<p></p><p>
+
+</p></li>
+<li class="asterisk">There is a new bug where calling <code>getNameIdentifier()</code> on Kotlin
+  fields may return <code>null</code>
+  (<a href="https://youtrack.jetbrains.com/issue/KT-45629">KT-45629</a>).
+  As a workaround you can use <code>JavaContext.findNameElement()</code> instead.
+
+<p></p><p>
+
+</p></li>
+<li class="asterisk">Kotlin references to Java methods now trigger both the
+  <code>visitMethodCall()</code> callback <em class="underscore">and</em> the <code>visitReference()</code> callback.
+  Previously only <code>visitMethodCall()</code> was triggered.</li></ul>
 
 <p></p>
 <a class="target" name="appendix:environmentvariablesandsystemproperties">&nbsp;</a><a class="target" name="appendix:environmentvariablesandsystemproperties">&nbsp;</a><a class="target" name="toc10">&nbsp;</a><h1>Appendix: Environment Variables and System Properties</h1>
