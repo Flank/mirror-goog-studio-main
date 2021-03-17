@@ -18,7 +18,9 @@ package com.android.ide.common.attribution
 
 import com.android.SdkConstants
 import com.android.utils.FileUtils
+import com.google.gson.GsonBuilder
 import com.google.gson.TypeAdapter
+import com.google.gson.reflect.TypeToken
 import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonWriter
 import java.io.BufferedReader
@@ -67,7 +69,9 @@ data class AndroidGradlePluginAttributionData(
      * Buildscript classpath dependencies list.
      * Dependency is encoded by a string in "group:name:version" format.
      */
-    val buildscriptDependenciesInfo: Set<String> = emptySet()
+    val buildscriptDependenciesInfo: Set<String> = emptySet(),
+
+    val buildInfo: BuildInfo? = null
 ) : Serializable {
 
     /**
@@ -79,6 +83,11 @@ data class AndroidGradlePluginAttributionData(
         val vendor: String = "",
         val home: String = "",
         val vmArguments: List<String> = emptyList()
+    ) : Serializable
+
+    data class BuildInfo(
+        val agpVersion: String?,
+        val configurationCacheIsOn: Boolean?
     ) : Serializable
 
     companion object {
@@ -237,6 +246,28 @@ data class AndroidGradlePluginAttributionData(
             return JavaInfo(version, vendor, home, vmArguments)
         }
 
+        private fun JsonWriter.writeBuildInfo(info: BuildInfo?) {
+            if (info == null) return
+            name("buildInfo").beginObject()
+            info.agpVersion?.let { name("agpVersion").value(it) }
+            info.configurationCacheIsOn?.let{ name("configurationCacheIsOn").value(it) }
+            endObject()
+        }
+
+        private fun JsonReader.readBuildInfo(): BuildInfo {
+            beginObject()
+            var agpVersion: String? = null
+            var configurationCacheIsOn: Boolean? = null
+            while (hasNext()) {
+                when (nextName()) {
+                    "agpVersion" -> agpVersion = nextString()
+                    "configurationCacheIsOn" -> configurationCacheIsOn = nextBoolean()
+                }
+            }
+            endObject()
+            return BuildInfo(agpVersion, configurationCacheIsOn)
+        }
+
         override fun write(writer: JsonWriter, data: AndroidGradlePluginAttributionData) {
             writer.beginObject()
 
@@ -262,6 +293,8 @@ data class AndroidGradlePluginAttributionData(
                 writer.value(it)
             }
 
+            writer.writeBuildInfo(data.buildInfo)
+
             writer.endObject()
         }
 
@@ -272,6 +305,7 @@ data class AndroidGradlePluginAttributionData(
             val buildSrcPlugins = HashSet<String>()
             var javaInfo = JavaInfo()
             val buildscriptDependenciesInfo = HashSet<String>()
+            var buildInfo: BuildInfo? = null
 
             reader.beginObject()
 
@@ -297,6 +331,8 @@ data class AndroidGradlePluginAttributionData(
                             reader.readList { reader.nextString() }
                     )
 
+                    "buildInfo" -> buildInfo = reader.readBuildInfo()
+
                     else -> {
                         reader.skipValue()
                     }
@@ -311,7 +347,8 @@ data class AndroidGradlePluginAttributionData(
                 garbageCollectionData = garbageCollectionData,
                 buildSrcPlugins = buildSrcPlugins,
                 javaInfo = javaInfo,
-                buildscriptDependenciesInfo = buildscriptDependenciesInfo
+                buildscriptDependenciesInfo = buildscriptDependenciesInfo,
+                buildInfo = buildInfo
             )
         }
     }

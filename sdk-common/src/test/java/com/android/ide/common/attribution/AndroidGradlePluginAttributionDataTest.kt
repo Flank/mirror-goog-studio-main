@@ -17,12 +17,14 @@
 package com.android.ide.common.attribution
 
 import com.android.SdkConstants
+import com.android.ide.common.attribution.AndroidGradlePluginAttributionData.BuildInfo
 import com.android.ide.common.attribution.AndroidGradlePluginAttributionData.JavaInfo
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import java.io.StringReader
 
 class AndroidGradlePluginAttributionDataTest {
 
@@ -44,6 +46,10 @@ class AndroidGradlePluginAttributionDataTest {
                 "a.a:a:1.0",
                 "b.b:b:1.0",
                 "c.c:c:1.0"
+        ),
+        buildInfo = BuildInfo(
+                agpVersion = "7.0.0",
+                configurationCacheIsOn = true
         )
     )
 
@@ -73,7 +79,11 @@ class AndroidGradlePluginAttributionDataTest {
     |"a.a:a:1.0",
     |"b.b:b:1.0",
     |"c.c:c:1.0"
-|]
+|],
+|"buildInfo":{
+    |"agpVersion":"7.0.0",
+    |"configurationCacheIsOn":true
+|}
 |}
 """.trimMargin().replace("\n", "")
         )
@@ -139,11 +149,26 @@ class AndroidGradlePluginAttributionDataTest {
     |"a.a:a:1.0",
     |"b.b:b:1.0",
     |"c.c:c:1.0"
-|]
+|],
+|"buildInfo":{
+    |"agpVersion":"7.0.0",
+    |"configurationCacheIsOn":true
+|}
 |}
 """.trimMargin().replace("\n", "")
         )
 
+        val deserializedData = AndroidGradlePluginAttributionData.load(outputDir)!!
+
+        assertThat(deserializedData).isEqualTo(data)
+    }
+
+    @Test
+    fun testEmptyBuildInfo() {
+        val outputDir = temporaryFolder.newFolder()
+        val data = AndroidGradlePluginAttributionData(buildInfo = BuildInfo(null, null))
+
+        AndroidGradlePluginAttributionData.save(outputDir, data)
         val deserializedData = AndroidGradlePluginAttributionData.load(outputDir)!!
 
         assertThat(deserializedData).isEqualTo(data)
