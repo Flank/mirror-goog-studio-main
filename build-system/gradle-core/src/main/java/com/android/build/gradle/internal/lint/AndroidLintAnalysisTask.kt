@@ -35,6 +35,7 @@ import com.android.tools.lint.model.LintModelSerialization
 import com.android.utils.FileUtils
 import org.gradle.api.Project
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.logging.configuration.ShowStacktrace
@@ -200,19 +201,11 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
         override val description = "Run lint analysis on the ${creationConfig.name} variant"
 
         override fun handleProvider(taskProvider: TaskProvider<AndroidLintAnalysisTask>) {
-            registerOutputArtifacts(taskProvider, creationConfig.artifacts)
-        }
-
-        companion object {
-            fun registerOutputArtifacts(
-                taskProvider: TaskProvider<AndroidLintAnalysisTask>,
-                artifacts: ArtifactsImpl
-            ) {
-                artifacts
-                    .setInitialProvider(taskProvider, AndroidLintAnalysisTask::partialResultsDirectory)
-                    .withName(PARTIAL_RESULTS_DIR_NAME)
-                    .on(InternalArtifactType.LINT_PARTIAL_RESULTS)
-            }
+            registerOutputArtifacts(
+                taskProvider,
+                InternalArtifactType.LINT_PARTIAL_RESULTS,
+                creationConfig.artifacts
+            )
         }
     }
 
@@ -226,19 +219,11 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
             "Run lint analysis with only the fatal issues enabled on the ${creationConfig.name} variant"
 
         override fun handleProvider(taskProvider: TaskProvider<AndroidLintAnalysisTask>) {
-            registerOutputArtifacts(taskProvider, creationConfig.artifacts)
-        }
-
-        companion object {
-            fun registerOutputArtifacts(
-                taskProvider: TaskProvider<AndroidLintAnalysisTask>,
-                artifacts: ArtifactsImpl
-            ) {
-                artifacts
-                    .setInitialProvider(taskProvider, AndroidLintAnalysisTask::partialResultsDirectory)
-                    .withName(PARTIAL_RESULTS_DIR_NAME)
-                    .on(InternalArtifactType.LINT_VITAL_PARTIAL_RESULTS)
-            }
+            registerOutputArtifacts(
+                taskProvider,
+                InternalArtifactType.LINT_VITAL_PARTIAL_RESULTS,
+                creationConfig.artifacts
+            )
         }
     }
 
@@ -358,5 +343,16 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
     companion object {
         private const val LINT_PRINT_STACKTRACE_ENVIRONMENT_VARIABLE = "LINT_PRINT_STACKTRACE"
         const val PARTIAL_RESULTS_DIR_NAME = "out"
+
+        fun registerOutputArtifacts(
+            taskProvider: TaskProvider<AndroidLintAnalysisTask>,
+            internalArtifactType: InternalArtifactType<Directory>,
+            artifacts: ArtifactsImpl
+        ) {
+            artifacts
+                .setInitialProvider(taskProvider, AndroidLintAnalysisTask::partialResultsDirectory)
+                .withName(PARTIAL_RESULTS_DIR_NAME)
+                .on(internalArtifactType)
+        }
     }
 }
