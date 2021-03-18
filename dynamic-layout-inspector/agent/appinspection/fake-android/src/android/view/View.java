@@ -208,7 +208,16 @@ public class View {
         return new int[0];
     }
 
-    public void invalidate() {}
+    private int mInvalidateCount = 0;
+
+    public void invalidate() {
+        mInvalidateCount++;
+    }
+
+    @VisibleForTesting
+    public int getInvalidateCount() {
+        return mInvalidateCount;
+    }
 
     public void draw(Canvas canvas) {
         drawHandler.accept(canvas);

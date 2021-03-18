@@ -341,13 +341,24 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
         updateScreenshotTypeCommand: UpdateScreenshotTypeCommand,
         callback: CommandCallback
     ) {
+        var changed = false
         synchronized(stateLock) {
             state.screenshotSettings = ScreenshotSettings(
                 updateScreenshotTypeCommand.type.let {
-                    if (it == Screenshot.Type.UNKNOWN) state.screenshotSettings.type else it
+                    if (it == Screenshot.Type.UNKNOWN || it == state.screenshotSettings.type) {
+                        state.screenshotSettings.type
+                    } else {
+                        changed = true
+                        it
+                    }
                 },
                 updateScreenshotTypeCommand.scale.let {
-                    if (it <= 0f) state.screenshotSettings.scale else it
+                    if (it <= 0f || it == state.screenshotSettings.scale) {
+                        state.screenshotSettings.scale
+                    } else {
+                        changed = true
+                        it
+                    }
                 }
             )
         }
@@ -355,9 +366,11 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
             updateScreenshotTypeResponse = UpdateScreenshotTypeResponse.getDefaultInstance()
         }
 
-        ThreadUtils.runOnMainThread {
-            for (rootView in getRootViews()) {
-                rootView.invalidate()
+        if (changed) {
+            ThreadUtils.runOnMainThread {
+                for (rootView in getRootViews()) {
+                    rootView.invalidate()
+                }
             }
         }
     }
