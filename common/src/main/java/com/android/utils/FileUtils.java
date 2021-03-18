@@ -119,6 +119,9 @@ public final class FileUtils {
      * [to] file will be left read-write so that it can be overwritten the next time this function
      * is called.
      */
+    // Suppress because this is the sanctioned use of Files.copy.
+    // See https://issuetracker.google.com/182063560
+    @SuppressWarnings("NoNioFilesCopy")
     public static void copyFile(@NonNull Path from, @NonNull Path to) throws IOException {
         java.nio.file.Files.copy(
                 from, to, StandardCopyOption.COPY_ATTRIBUTES, StandardCopyOption.REPLACE_EXISTING);
