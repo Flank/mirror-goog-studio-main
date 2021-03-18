@@ -92,7 +92,7 @@ public class InstantAppBundleArchive extends AbstractArchive {
 
         @Override
         public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-            Files.copy(file, destination.resolve(source.relativize(file).toString()));
+            FileUtils.copyFile(file, destination.resolve(source.relativize(file).toString()));
             return FileVisitResult.CONTINUE;
         }
 

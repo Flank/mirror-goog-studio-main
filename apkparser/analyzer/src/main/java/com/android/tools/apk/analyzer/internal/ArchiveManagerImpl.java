@@ -92,7 +92,7 @@ public class ArchiveManagerImpl implements ArchiveManager {
                 file -> {
                     logger.info(String.format("Extracting inner archive \"%s\"", file));
                     Files.createDirectories(file.getParent());
-                    Files.copy(childPath, file);
+                    FileUtils.copyFile(childPath, file);
                     try {
                         return openInnerArchiveWorker(file);
                     } catch (IOException | ZipError e) {
