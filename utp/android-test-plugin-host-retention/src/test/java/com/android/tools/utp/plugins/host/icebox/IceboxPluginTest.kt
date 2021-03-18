@@ -21,6 +21,7 @@ import com.android.tools.utp.plugins.host.icebox.proto.IceboxPluginProto
 import com.android.tools.utp.plugins.host.icebox.proto.IceboxOutputProto.IceboxOutput
 import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.Any
+import com.google.testing.platform.api.device.Device
 import com.google.testing.platform.api.device.DeviceController
 import com.google.testing.platform.api.plugins.PluginConfigImpl
 import com.google.testing.platform.proto.api.config.AndroidSdkProto
@@ -30,6 +31,8 @@ import com.google.testing.platform.proto.api.core.TestCaseProto
 import com.google.testing.platform.proto.api.core.TestResultProto.TestResult
 import com.google.testing.platform.proto.api.core.TestStatusProto.TestStatus
 import com.google.testing.platform.proto.api.core.TestSuiteResultProto.TestSuiteResult
+import com.google.testing.platform.runtime.android.device.AndroidDevice
+import com.google.testing.platform.runtime.android.device.AndroidDeviceProperties
 import java.io.File
 import org.junit.Before
 import org.junit.Rule
@@ -42,6 +45,7 @@ import org.mockito.Mockito.`when`
 import org.mockito.Mockito.anyInt
 import org.mockito.Mockito.anyString
 import org.mockito.Mockito.eq
+import org.mockito.Mockito.never
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.MockitoAnnotations.initMocks
@@ -61,6 +65,10 @@ class IceboxPluginTest {
 
     @Mock
     private lateinit var mockIceboxCaller: IceboxCaller
+
+    @Mock
+    private lateinit var mockGrpcInfoFinder: GrpcInfoFinder
+
     private lateinit var iceboxPlugin: IceboxPlugin
     private lateinit var iceboxPluginConfig: IceboxPluginProto.IceboxPlugin
     private lateinit var config: PluginConfigImpl
@@ -77,13 +85,14 @@ class IceboxPluginTest {
     private fun buildIceboxPluginConfig(
             skipSnapshot: Boolean,
             maxSnapshotNumber: Int,
-            snapshotCompression: IceboxPluginProto.Compression
+            snapshotCompression: IceboxPluginProto.Compression,
+            configGrpcPort: Int = grpcPort
     ):
             IceboxPluginProto.IceboxPlugin {
         return IceboxPluginProto.IceboxPlugin.newBuilder().apply {
             appPackage = this@IceboxPluginTest.appPackage
             emulatorGrpcAddress = grpcAddress
-            emulatorGrpcPort = grpcPort
+            emulatorGrpcPort = configGrpcPort
             this.skipSnapshot = skipSnapshot
             this.maxSnapshotNumber = maxSnapshotNumber
             this.snapshotCompression = snapshotCompression
@@ -104,6 +113,17 @@ class IceboxPluginTest {
     @Before
     fun setup() {
         initMocks(this)
+        `when`(mockDeviceController.getDevice()).thenReturn(
+                AndroidDevice(
+                        serial = "emulator-5554",
+                        type = Device.DeviceType.VIRTUAL,
+                        port = 5555,
+                        emulatorPort = 5554,
+                        serverPort = 5037,
+                        properties = AndroidDeviceProperties()
+                )
+        )
+        `when`(mockGrpcInfoFinder.findInfo(anyString())).thenReturn(DEFAULT_EMULATOR_GRPC_INFO)
         iceboxPluginConfig = buildIceboxPluginConfig(false, 0, IceboxPluginProto.Compression.NONE)
         config = buildConfig(iceboxPluginConfig)
         testResult = TestResult.getDefaultInstance()
@@ -122,10 +142,13 @@ class IceboxPluginTest {
                 "snapshot-$testClass-$testMethod-failure0.tar.gz"
         )
         iceboxCallerCreated = false
-        iceboxPlugin = IceboxPlugin { _, _, _ ->
-            iceboxCallerCreated = true
-            mockIceboxCaller
-        }
+        iceboxPlugin = IceboxPlugin (
+            { _, _, _ ->
+                iceboxCallerCreated = true
+                mockIceboxCaller
+            },
+            mockGrpcInfoFinder
+        )
     }
 
     @Test
@@ -147,6 +170,24 @@ class IceboxPluginTest {
                 any(), anyString(), anyString(), anyInt(),
                 anyInt()
         )
+
+        verify(mockGrpcInfoFinder, never()).findInfo(anyString())
+    }
+
+    @Test
+    fun beforeAll_grpcFinderCall() {
+        val localIceboxPluginConfig = buildIceboxPluginConfig(
+                true,
+                2,
+                IceboxPluginProto.Compression.NONE,
+                0
+        )
+        val localConfig = buildConfig(localIceboxPluginConfig)
+
+        iceboxPlugin.configure(config = localConfig)
+        iceboxPlugin.beforeAll(mockDeviceController)
+
+        verify(mockGrpcInfoFinder).findInfo(anyString())
     }
 
     @Test

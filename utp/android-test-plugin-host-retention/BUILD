@@ -14,6 +14,7 @@ kotlin_library(
         "//tools/base/common:tools.common",
         "//tools/base/emulator/proto",
         "//tools/base/third_party:com.google.guava_guava",
+        "//tools/base/third_party:commons-io_commons-io",
         "//tools/base/third_party:io.grpc_grpc-all",
         "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
         "//tools/base/third_party:org.jetbrains.kotlinx_kotlinx-coroutines-core",

@@ -251,6 +251,12 @@ class UtpConfigFactory {
         return ANDROID_DEVICE_PROVIDER_GRADLE.toExtensionProto(utpDependencies, config)
     }
 
+    /**
+     * Creates the test fixture proto for the device to be run against.
+     *
+     * @param grpcPort the grpc port to communicate between UTP and the Android emulator. If null,
+     * then the Icebox plugin will attempt to determine it (if enabled by the retentionConfig).
+     */
     private fun createTestFixture(
         grpcPort: Int?,
         grpcToken: String?,
@@ -283,7 +289,7 @@ class UtpConfigFactory {
                 versionedSdkLoader
             )
 
-            if (retentionConfig.enabled && grpcPort != null) {
+            if (retentionConfig.enabled) {
                 val retentionTestData = testData.copy(
                     instrumentationRunnerArguments = testData.instrumentationRunnerArguments
                         .toMutableMap()
@@ -298,13 +304,6 @@ class UtpConfigFactory {
                     )
                 )
             } else {
-                if (retentionConfig.enabled) {
-                    if (grpcPort == null) {
-                        logger.error(
-                            "GRPC port of the emulator not set. Disabling Android Test Retention."
-                        );
-                    }
-                }
                 testDriver = createTestDriver(testData, utpDependencies, useOrchestrator)
             }
             addHostPlugin(createAndroidTestPlugin(utpDependencies))
@@ -313,7 +312,7 @@ class UtpConfigFactory {
     }
 
     private fun createIceboxPlugin(
-            grpcPort: Int,
+            grpcPort: Int?,
             grpcToken: String?,
             testData: StaticTestData,
             utpDependencies: UtpDependencies,
@@ -322,9 +321,8 @@ class UtpConfigFactory {
     ): ExtensionProto.Extension {
         val config = Any.pack(IceboxPlugin.newBuilder().apply {
             appPackage = testData.testedApplicationId
-            // TODO(155308548): query device for the following fields
             emulatorGrpcAddress = DEFAULT_EMULATOR_GRPC_ADDRESS
-            emulatorGrpcPort = grpcPort
+            emulatorGrpcPort = grpcPort?:0
             emulatorGrpcToken = grpcToken?:""
             snapshotCompression = if (retentionConfig.compressSnapshots) {
                 IceboxPluginProto.Compression.TARGZ
