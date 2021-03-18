@@ -30,12 +30,10 @@
       generatedResourceFolders="build/generated/res/rs/debug:build/generated/res/resValues/debug">
   </mainArtifact>
   <androidTestArtifact
-      classOutputs="build/intermediates/javac/debugAndroidTest/classes:build/tmp/kotlin-classes/debugAndroidTest:build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/debugAndroidTest/R.jar"
       applicationId="com.example.android.lint.kotlin.test"
       generatedSourceFolders="build/generated/ap_generated_sources/debugAndroidTest/out:build/generated/aidl_source_output_dir/debugAndroidTest/out:build/generated/source/buildConfig/androidTest/debug:build/generated/renderscript_source_output_dir/debugAndroidTest/out"
       generatedResourceFolders="build/generated/res/rs/androidTest/debug:build/generated/res/resValues/androidTest/debug">
   </androidTestArtifact>
-  <testArtifact
-      classOutputs="build/intermediates/javac/debugUnitTest/classes:build/tmp/kotlin-classes/debugUnitTest:build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/debug/R.jar">
+  <testArtifact>
   </testArtifact>
 </variant>
