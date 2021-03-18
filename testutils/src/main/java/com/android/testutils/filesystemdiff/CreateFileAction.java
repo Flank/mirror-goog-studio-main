@@ -15,9 +15,9 @@
  */
 package com.android.testutils.filesystemdiff;
 
+import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import java.io.IOException;
-import java.nio.file.Files;
 
 public class CreateFileAction extends Action {
     private FileEntry mSource;
@@ -36,7 +36,7 @@ public class CreateFileAction extends Action {
     @Override
     public void execute(ILogger logger) {
         try {
-            Files.copy(mSource.getPath(), mDestination.getPath());
+            FileUtils.copyFile(mSource.getPath(), mDestination.getPath());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

@@ -19,6 +19,7 @@ package com.android.testutils.apk;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
+import com.android.utils.FileUtils;
 import com.google.common.base.Preconditions;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
@@ -29,7 +30,6 @@ import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -125,7 +125,7 @@ public class Zip implements AutoCloseable {
             Path zipPath = getEntry(name);
             Preconditions.checkNotNull(zipPath, "Entry %s should exist ", name);
             Path temp = Files.createTempFile(file.getFileName().toString(), "_inner_zip.zip");
-            Files.copy(zipPath, temp, StandardCopyOption.REPLACE_EXISTING);
+            FileUtils.copyFile(zipPath, temp);
             temp.toFile().deleteOnExit();
             Zip created = new Zip(temp, displayName + ":" + name);
 
