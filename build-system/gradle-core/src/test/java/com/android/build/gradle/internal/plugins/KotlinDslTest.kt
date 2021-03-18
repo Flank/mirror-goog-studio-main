@@ -372,4 +372,12 @@ class KotlinDslTest {
             }
         }
     }
+
+    @Test
+    fun `compatibility for compile sdk`() {
+        android.apply {
+            compileSdkVersion(TestConstants.COMPILE_SDK_VERSION)
+            compileSdkVersion("android-${TestConstants.COMPILE_SDK_VERSION}")
+        }
+    }
 }

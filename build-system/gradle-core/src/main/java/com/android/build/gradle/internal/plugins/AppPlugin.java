@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.plugins;
 import com.android.annotations.NonNull;
 import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.component.impl.TestFixturesComponentImpl;
-import com.android.build.api.dsl.ApplicationExtension;
+import com.android.build.api.dsl.CommonExtension;
 import com.android.build.api.dsl.SdkComponents;
 import com.android.build.api.extension.ApplicationAndroidComponentsExtension;
 import com.android.build.api.extension.impl.ApplicationAndroidComponentsExtensionImpl;
@@ -53,6 +53,7 @@ import javax.inject.Inject;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.component.SoftwareComponentFactory;
+import org.gradle.api.reflect.TypeOf;
 import org.gradle.build.event.BuildEventsListenerRegistry;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
@@ -110,7 +111,7 @@ public class AppPlugin
                     (BaseAppModuleExtension)
                             project.getExtensions()
                                     .create(
-                                            ApplicationExtension.class,
+                                            TypeOf.typeOf(CommonExtension.class),
                                             "android",
                                             BaseAppModuleExtension.class,
                                             dslServices,

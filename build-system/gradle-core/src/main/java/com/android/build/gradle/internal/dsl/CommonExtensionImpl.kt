@@ -148,6 +148,14 @@ abstract class CommonExtensionImpl<
         compileSdkVersion = "$vendor:$name:$version"
     }
 
+    override fun compileSdkVersion(apiLevel: Int) {
+        compileSdk = apiLevel
+    }
+
+    override fun compileSdkVersion(version: String) {
+        compileSdkPreview = version
+    }
+
     override val composeOptions: ComposeOptionsImpl =
         dslServices.newInstance(ComposeOptionsImpl::class.java, dslServices)
 

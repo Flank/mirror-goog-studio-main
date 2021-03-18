@@ -334,6 +334,8 @@ com.android.build.api.dsl.CommonExtension.aaptOptions: void (kotlin.jvm.function
 com.android.build.api.dsl.CommonExtension.adbOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.AdbOptions, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.buildFeatures: void (kotlin.jvm.functions.Function1<? super BuildFeaturesT, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.buildTypes: void (kotlin.jvm.functions.Function1<? super org.gradle.api.NamedDomainObjectContainer<BuildTypeT>, kotlin.Unit>)
+com.android.build.api.dsl.CommonExtension.compileSdkVersion: void (int)
+com.android.build.api.dsl.CommonExtension.compileSdkVersion: void (java.lang.String)
 com.android.build.api.dsl.CommonExtension.composeOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.ComposeOptions, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.debug: void (org.gradle.api.NamedDomainObjectContainer<BuildTypeT>, kotlin.jvm.functions.Function1<? super BuildTypeT, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.defaultConfig: void (org.gradle.api.Action<DefaultConfigT>)

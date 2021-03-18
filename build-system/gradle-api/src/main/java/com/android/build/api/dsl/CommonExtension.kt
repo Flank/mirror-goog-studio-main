@@ -21,6 +21,7 @@ import com.android.build.api.variant.Variant
 import org.gradle.api.Action
 import org.gradle.api.Incubating
 import org.gradle.api.NamedDomainObjectContainer
+import org.gradle.api.plugins.ExtensionAware
 
 /**
  * Common extension properties for the Android Application. Library and Dynamic Feature Plugins.
@@ -791,6 +792,14 @@ interface CommonExtension<
     var compileSdkPreview: String?
 
     fun compileSdkAddon(vendor: String, name: String, version: Int)
+
+    @Incubating
+    @Deprecated("Replaced by compileSdk")
+    fun compileSdkVersion(apiLevel: Int)
+
+    @Incubating
+    @Deprecated("Replaced by compileSdk")
+    fun compileSdkVersion(version: String)
 
     /**
      * The namespace of the generated R and BuildConfig classes. Also, the namespace used to resolve
