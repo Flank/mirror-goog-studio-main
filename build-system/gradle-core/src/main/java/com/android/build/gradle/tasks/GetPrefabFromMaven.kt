@@ -47,7 +47,7 @@ import org.gradle.api.internal.artifacts.ArtifactAttributes
  * 4. Update the "prebuilts" maven_repo target in
  *    //tools/base/build-system/integration-test/BUILD.bazel with the new version number.
  */
-private const val DEFAULT_PREFAB_VERSION = "1.1.2"
+private const val DEFAULT_PREFAB_VERSION = "1.1.3"
 private const val PREFAB_CONFIG_NAME = "_internal_prefab_binary"
 
 private fun getPrefabArtifact(configuration: Configuration): FileCollection =
