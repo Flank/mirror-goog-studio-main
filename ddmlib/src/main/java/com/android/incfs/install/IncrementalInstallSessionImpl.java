@@ -34,6 +34,7 @@ class IncrementalInstallSessionImpl implements AutoCloseable {
     private static final int WAIT_TIME_MS = 10;
 
     @NonNull private final IDeviceConnection mConnection;
+    @NonNull private final IBlockTransformer mTransformer;
     @NonNull private final ILogger mLogger;
     @NonNull private final List<StreamingApk> mApks;
     private final long mResponseTimeoutNs;
@@ -56,10 +57,12 @@ class IncrementalInstallSessionImpl implements AutoCloseable {
             @NonNull IDeviceConnection device,
             @NonNull List<StreamingApk> apks,
             long responseTimeout,
+            @NonNull IBlockTransformer transformer,
             @NonNull ILogger logger) {
         mConnection = device;
         mApks = apks;
         mResponseTimeoutNs = responseTimeout;
+        mTransformer = transformer;
         mLogger = logger;
     }
 
@@ -323,14 +326,15 @@ class IncrementalInstallSessionImpl implements AutoCloseable {
      * Builds the response to the device containing the page data of all the provided pending
      * blocks.
      */
-    private static ByteBuffer buildResponseChunk(short apkId, @NonNull List<PendingBlock> blocks)
+    private ByteBuffer buildResponseChunk(short apkId, @NonNull List<PendingBlock> blocks)
             throws IOException {
         if (blocks.isEmpty()) {
             return ByteBuffer.allocate(0);
         }
-        final byte TYPE_DATA = 0;
-        final byte TYPE_TREE = 1;
-        final byte COMPRESSION_NONE = 0;
+        final byte BLOCK_KIND_DATA = 0;
+        final byte BLOCK_KIND_HASH = 1;
+        final byte COMPRESSION_KIND_NONE = 0;
+        final byte COMPRESSION_KIND_LZ4 = 1;
         final int maxSize =
                 RESPONSE_CHUNK_HEADER_SIZE
                         + (StreamingApk.INCFS_BLOCK_SIZE + RESPONSE_HEADER_SIZE) * blocks.size();
@@ -338,10 +342,17 @@ class IncrementalInstallSessionImpl implements AutoCloseable {
         buffer.position(RESPONSE_CHUNK_HEADER_SIZE);
 
         int totalSize = 0;
-        for (final PendingBlock block : blocks) {
+        for (PendingBlock block : blocks) {
+            block = mTransformer.transform(block);
             buffer.putShort(apkId);
-            buffer.put(block.getType() == PendingBlock.Type.APK_DATA ? TYPE_DATA : TYPE_TREE);
-            buffer.put(COMPRESSION_NONE);
+            buffer.put(
+                    block.getType() == PendingBlock.Type.APK_DATA
+                            ? BLOCK_KIND_DATA
+                            : BLOCK_KIND_HASH);
+            buffer.put(
+                    block.getCompression() == PendingBlock.Compression.NONE
+                            ? COMPRESSION_KIND_NONE
+                            : COMPRESSION_KIND_LZ4);
             buffer.putInt(block.getBlockIndex());
             buffer.putShort(block.getBlockSize());
             block.readBlockData(buffer);

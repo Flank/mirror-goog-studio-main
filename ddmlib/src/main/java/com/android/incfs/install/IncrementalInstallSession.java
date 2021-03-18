@@ -66,6 +66,7 @@ public class IncrementalInstallSession implements AutoCloseable {
         private final List<Path> mSignatures = new ArrayList<>();
         private final List<String> mArgs = new ArrayList<>();
         private IBlockFilter mFilter = (PendingBlock) -> true;
+        private IBlockTransformer mTransformer = (PendingBlock block) -> block;
         private ILogger mLogger = new NullLogger();
         private long mResponseTimeoutNs = 0L;
         private boolean mReinstall;
@@ -114,6 +115,16 @@ public class IncrementalInstallSession implements AutoCloseable {
          */
         public Builder setBlockFilter(@NonNull IBlockFilter filter) {
             mFilter = filter;
+            return this;
+        }
+
+        /**
+         * Sets the callback used to transform the block of data before sending.
+         *
+         * @param transformer the callback
+         */
+        public Builder setBlockTransformer(@NonNull IBlockTransformer transformer) {
+            mTransformer = transformer;
             return this;
         }
 
@@ -184,6 +195,7 @@ public class IncrementalInstallSession implements AutoCloseable {
                     commandBuilder.toArray(new String[0]),
                     apkArguments,
                     mResponseTimeoutNs,
+                    mTransformer,
                     mLogger);
         }
     }
@@ -192,6 +204,7 @@ public class IncrementalInstallSession implements AutoCloseable {
     @NonNull private final ArrayList<StreamingApk> mApks;
     private final long mResponseTimeoutNs;
 
+    @NonNull private final IBlockTransformer mTransformer;
     @NonNull private final ILogger mLogger;
 
     private IncrementalInstallSessionImpl mImpl;
@@ -200,10 +213,12 @@ public class IncrementalInstallSession implements AutoCloseable {
             @NonNull String[] commandArgs,
             @NonNull ArrayList<StreamingApk> apks,
             long responseTimeoutNs,
+            @NonNull IBlockTransformer transformer,
             @NonNull ILogger logger) {
         mCommandArgs = commandArgs;
         mApks = apks;
         mResponseTimeoutNs = responseTimeoutNs;
+        mTransformer = transformer;
         mLogger = logger;
     }
 
@@ -222,7 +237,9 @@ public class IncrementalInstallSession implements AutoCloseable {
         }
 
         final IDeviceConnection con = conFactory.connectToService("package", mCommandArgs);
-        mImpl = new IncrementalInstallSessionImpl(con, mApks, mResponseTimeoutNs, mLogger);
+        mImpl =
+                new IncrementalInstallSessionImpl(
+                        con, mApks, mResponseTimeoutNs, mTransformer, mLogger);
         mImpl.execute(executor);
         return this;
     }
