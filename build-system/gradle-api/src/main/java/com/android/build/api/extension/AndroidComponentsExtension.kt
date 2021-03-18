@@ -65,23 +65,23 @@ interface AndroidComponentsExtension<
      * programmatically access the DSL objects before the [VariantBuilderT] object is built.
      *
      * Example without selection:
-     * '''kotlin
+     * ```kotlin
      *  androidComponents {
      *      beforeVariants {
      *          println("Called with variant : ${'$'}name")
      *      }
      *  }
-     * '''
+     * ```
      *
      * Example with selection:
-     * '''kotlin
+     * ```kotlin
      *  androidComponents {
      *      val debug = selector().withBuildType("debug")
      *      beforeVariants(debug) {
      *          println("Called with variant : ${'$'}name")
      *      }
      *  }
-     * '''
+     * ```
      *
      * @param selector [VariantSelector] instance to select which instance of [VariantBuilderT] are
      * of interest. By default, all instances are of interest.

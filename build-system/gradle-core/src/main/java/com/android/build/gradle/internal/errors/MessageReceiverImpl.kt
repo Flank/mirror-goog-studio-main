@@ -73,6 +73,8 @@ class MessageReceiverImpl constructor(
 
 fun humanReadableMessage(message: Message): String {
     val errorStringBuilder = StringBuilder()
+    errorStringBuilder.append(message.kind.name)
+    errorStringBuilder.append(":")
     val positions = message.sourceFilePositions
     if (positions.size != 1 || SourceFilePosition.UNKNOWN != Iterables.getOnlyElement(positions)) {
         errorStringBuilder.append(Joiner.on(' ').join(positions))

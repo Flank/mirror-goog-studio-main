@@ -169,7 +169,7 @@ class AndroidComponentsExtensionTest {
         }
 
         appExtension.beforeVariants(fooVariant) {
-                    it.enabled = false
+                    it.enable = false
         }
     }
 

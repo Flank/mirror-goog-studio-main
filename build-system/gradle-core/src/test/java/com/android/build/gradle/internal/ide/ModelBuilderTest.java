@@ -119,12 +119,17 @@ public class ModelBuilderTest {
         when(startParameter.getTaskRequests()).thenReturn(ImmutableList.of(taskRequest));
 
         syncIssueReporter =
-                new SyncIssueReporterImpl(SyncOptions.EvaluationMode.IDE, new FakeLogger());
+                new SyncIssueReporterImpl(
+                        SyncOptions.EvaluationMode.IDE,
+                        SyncOptions.ErrorFormatMode.HUMAN_READABLE,
+                        new FakeLogger());
 
         ProjectServices projectServices = FakeServices.createProjectServices(syncIssueReporter);
         when(gradle.getSharedServices()).thenReturn(projectServices.getBuildServiceRegistry());
         new SyncIssueReporterImpl.GlobalSyncIssueService.RegistrationAction(
-                        project, SyncOptions.EvaluationMode.IDE)
+                        project,
+                        SyncOptions.EvaluationMode.IDE,
+                        SyncOptions.ErrorFormatMode.HUMAN_READABLE)
                 .execute();
 
         new AnalyticsConfiguratorService.RegistrationAction(project).execute();

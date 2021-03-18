@@ -244,7 +244,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
 
         // execute the Variant API
         variantApiOperationsRegistrar.variantBuilderOperations.executeOperations(userVisibleVariantBuilder)
-        if (!variantBuilder.enabled) {
+        if (!variantBuilder.enable) {
             return null
         }
 
@@ -442,7 +442,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                     .executeOperations(unitTestVariantBuilder)
             unitTestVariantBuilder
         }
-        if (!component.enabled) {
+        if (!component.enable) {
             return null
         }
 

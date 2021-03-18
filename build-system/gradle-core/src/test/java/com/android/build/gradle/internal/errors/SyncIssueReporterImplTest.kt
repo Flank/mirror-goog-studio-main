@@ -32,6 +32,8 @@ class SyncIssueReporterImplTest {
             return object : Parameters {
                 override val mode: Property<SyncOptions.EvaluationMode>
                     get() = FakeGradleProperty(SyncOptions.EvaluationMode.IDE)
+                override val errorFormatMode: Property<SyncOptions.ErrorFormatMode>
+                    get() = FakeGradleProperty(SyncOptions.ErrorFormatMode.HUMAN_READABLE)
             }
         }
     }

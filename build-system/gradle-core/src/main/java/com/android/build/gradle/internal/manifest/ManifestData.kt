@@ -296,7 +296,7 @@ fun parseManifest(
     return data
 }
 
-private val PARSER_FACTORY = SAXParserFactory.newInstance().also {
+private val PARSER_FACTORY = SAXParserFactory.newInstance(XmlUtils.SAX_PARSER_FACTORY, null).also {
     XmlUtils.configureSaxFactory(it, true, false)
 }
 
