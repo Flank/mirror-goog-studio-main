@@ -78,8 +78,6 @@ fun humanReadableMessage(message: Message): String {
     val positions = message.sourceFilePositions
     if (positions.size != 1 || SourceFilePosition.UNKNOWN != Iterables.getOnlyElement(positions)) {
         errorStringBuilder.append(Joiner.on(' ').join(positions))
-    }
-    if (errorStringBuilder.isNotEmpty()) {
         errorStringBuilder.append(": ")
     }
     if (message.toolName != null) {

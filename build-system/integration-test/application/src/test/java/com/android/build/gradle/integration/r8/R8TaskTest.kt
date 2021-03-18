@@ -114,6 +114,35 @@ class R8TaskTest {
 
     @Test
     fun testOutputMainDexList() {
+        enableMultiDex()
+        project.executor().run(":assembleDebug")
+        val mainDexListFile = InternalArtifactType.LEGACY_MULTIDEX_MAIN_DEX_LIST
+            .getOutputDir(project.buildDir)
+            .resolve("debug/mainDexList.txt")
+        assertThat(mainDexListFile).exists()
+    }
+
+    @Test
+    fun testMultiDexKeepFileDeprecation() {
+        enableMultiDex()
+
+        project.buildFile.resolveSibling("multidex-keep-file.txt").createNewFile()
+        TestFileUtils.appendToFile(
+            project.buildFile,
+            """
+                android.buildTypes.debug.multiDexKeepFile file('multidex-keep-file.txt')
+            """.trimIndent()
+        )
+
+        val result = project.executor().run(":assembleDebug")
+        result.stdout.use { scanner ->
+            ScannerSubject.assertThat(scanner).contains(
+                "WARNING:Using multiDexKeepFile property with R8 is deprecated and will be fully " +
+                        "removed in AGP 8.0. Please migrate to use multiDexKeepProguard instead.")
+        }
+    }
+
+    private fun enableMultiDex() {
         TestFileUtils.appendToFile(project.buildFile,
             """
                 android {
@@ -123,10 +152,5 @@ class R8TaskTest {
                 }
             """.trimIndent()
         )
-        project.executor().run(":assembleDebug")
-        val mainDexListFile = InternalArtifactType.LEGACY_MULTIDEX_MAIN_DEX_LIST
-            .getOutputDir(project.buildDir)
-            .resolve("debug/mainDexList.txt")
-        assertThat(mainDexListFile).exists()
     }
 }
