@@ -159,6 +159,10 @@ abstract class CommonExtensionImpl<
         action.execute(buildTypes)
     }
 
+    override fun buildTypes(action: NamedDomainObjectContainer<BuildTypeT>.() -> Unit) {
+        action.invoke(buildTypes)
+    }
+
     override fun NamedDomainObjectContainer<BuildTypeT>.debug(action: BuildTypeT.() -> Unit) {
         getByName("debug", action)
     }
@@ -224,6 +228,10 @@ abstract class CommonExtensionImpl<
 
     override fun productFlavors(action: Action<NamedDomainObjectContainer<ProductFlavorT>>) {
         action.execute(productFlavors)
+    }
+
+    override fun productFlavors(action: NamedDomainObjectContainer<ProductFlavorT>.() -> Unit) {
+        action.invoke(productFlavors)
     }
 
     override fun signingConfigs(action: Action<NamedDomainObjectContainer<SigningConfig>>) {

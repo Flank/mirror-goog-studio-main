@@ -20,6 +20,8 @@ import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.variant.VariantBuilder
 import com.android.build.api.variant.Variant
 import com.android.build.gradle.api.AndroidSourceSet
+import org.gradle.api.Action
+import org.gradle.api.NamedDomainObjectContainer
 import com.android.build.gradle.internal.CompileOptions as CompileOptionsImpl
 import com.android.build.gradle.internal.coverage.JacocoOptions as JacocoOptionsImpl
 import com.android.build.gradle.internal.dsl.AaptOptions as AaptOptionsImpl
@@ -65,4 +67,7 @@ interface InternalCommonExtension<
     override val externalNativeBuild: ExternalNativeBuildImpl
     override val testOptions: TestOptionsImpl
     override val splits: SplitsImpl
+
+    fun buildTypes(action: Action<in NamedDomainObjectContainer<BuildTypeT>>)
+    fun productFlavors(action: Action<NamedDomainObjectContainer<ProductFlavorT>>)
 }

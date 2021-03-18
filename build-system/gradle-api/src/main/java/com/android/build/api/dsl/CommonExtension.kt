@@ -166,7 +166,7 @@ interface CommonExtension<
      * For more information about the properties you can configure in this block, see [BuildType]
      */
     @Incubating
-    fun buildTypes(action: Action<in NamedDomainObjectContainer<BuildTypeT>>)
+    fun buildTypes(action: NamedDomainObjectContainer<BuildTypeT>.() -> Unit)
 
     /**
      * Shortcut extension method to allow easy access to the predefined `debug` [BuildType]
@@ -371,7 +371,7 @@ interface CommonExtension<
      * see [ProductFlavor]
      */
     @Incubating
-    fun productFlavors(action: Action<NamedDomainObjectContainer<ProductFlavorT>>)
+    fun productFlavors(action: NamedDomainObjectContainer<ProductFlavorT>.() -> Unit)
 
 
     /**
