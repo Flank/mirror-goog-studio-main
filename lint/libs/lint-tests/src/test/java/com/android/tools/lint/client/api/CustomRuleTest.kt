@@ -22,11 +22,8 @@ import com.android.tools.lint.checks.infrastructure.TestFiles.gradle
 import com.android.tools.lint.checks.infrastructure.TestFiles.java
 import com.android.tools.lint.checks.infrastructure.TestFiles.manifest
 import com.android.tools.lint.checks.infrastructure.TestFiles.xml
-import com.android.tools.lint.checks.infrastructure.TestLintClient
 import com.android.tools.lint.checks.infrastructure.TestLintTask
 import com.android.tools.lint.checks.infrastructure.TestMode
-import com.android.tools.lint.checks.infrastructure.TestResultChecker
-import com.android.tools.lint.detector.api.Project
 import com.google.common.truth.Truth.assertThat
 import org.junit.ClassRule
 import org.junit.Test
@@ -48,13 +45,11 @@ class CustomRuleTest {
             appCompatTestClass
         )
             .allowObsoleteLintChecks(false)
-            .clientFactory({
-                object : TestLintClient() {
-                    override fun findGlobalRuleJars(): List<File> = emptyList()
-
-                    override fun findRuleJars(project: Project): List<File> = listOf(lintJar)
-                }
-            }).customRules(lintJar).allowMissingSdk().run().expect(expected)
+            .clientFactory { createProjectLintJarClient(lintJar) }
+            .customRules(lintJar)
+            .allowMissingSdk()
+            .run()
+            .expect(expected)
     }
 
     @Test
@@ -70,15 +65,8 @@ class CustomRuleTest {
             appCompatTestClass
         )
             .allowObsoleteLintChecks(false)
-            .clientFactory({
-                object : TestLintClient() {
-                    override fun findGlobalRuleJars(): List<File> = emptyList()
-
-                    override fun findRuleJars(project: Project): List<File> = listOf(
-                        lintJarWithServiceRegistry
-                    )
-                }
-            }).customRules(lintJarWithServiceRegistry).allowMissingSdk().run().expect(expected)
+            .clientFactory { createProjectLintJarClient(lintJarWithServiceRegistry) }
+            .customRules(lintJarWithServiceRegistry).allowMissingSdk().run().expect(expected)
     }
 
     @Test
@@ -169,13 +157,8 @@ class CustomRuleTest {
         lint()
             .allowObsoleteLintChecks(false)
             .files(classpath(), manifest().minSdk(1), appCompatTestSource, appCompatTestClass)
-            .clientFactory({
-                object : TestLintClient() {
-                    override fun findGlobalRuleJars(): List<File> = listOf(lintJar)
-
-                    override fun findRuleJars(project: Project): List<File> = emptyList()
-                }
-            }).customRules(lintJar).allowMissingSdk().run().expect(expected)
+            .clientFactory { createGlobalLintJarClient(lintJar) }
+            .customRules(lintJar).allowMissingSdk().run().expect(expected)
     }
 
     @Test
@@ -194,13 +177,7 @@ class CustomRuleTest {
                     "}"
             )
         )
-            .clientFactory({
-                object : TestLintClient() {
-                    override fun findGlobalRuleJars(): List<File> = listOf(oldLintJar)
-
-                    override fun findRuleJars(project: Project): List<File> = emptyList()
-                }
-            })
+            .clientFactory { createGlobalLintJarClient(oldLintJar) }
             .issueIds("MyId")
             .allowMissingSdk()
             .allowObsoleteLintChecks(false)
@@ -210,7 +187,7 @@ class CustomRuleTest {
             .skipTestModes(TestMode.PARTIAL)
             .run()
             .check(
-                TestResultChecker {
+                {
                     assertThat(it).contains(
                         "lint2.jar: Warning: Lint found one or more custom " +
                             "checks that could not be loaded."
@@ -250,13 +227,7 @@ class CustomRuleTest {
                     "}"
             )
         )
-            .clientFactory({
-                object : TestLintClient() {
-                    override fun findGlobalRuleJars(): List<File> = listOf(psiLintJar)
-
-                    override fun findRuleJars(project: Project): List<File> = emptyList()
-                }
-            })
+            .clientFactory { createGlobalLintJarClient(psiLintJar) }
             .issueIds("MainActivityDetector")
             .allowMissingSdk()
             .allowCompilationErrors()
@@ -266,7 +237,7 @@ class CustomRuleTest {
             .skipTestModes(TestMode.PARTIAL)
             .run()
             .check(
-                TestResultChecker {
+                {
                     assertThat(it).contains(
                         "lint3.jar: Warning: Lint found one or more custom " +
                             "checks that could not be loaded."
@@ -291,7 +262,7 @@ class CustomRuleTest {
     }
 
     @Test
-    fun testOlderLintApi() {
+    fun testOlderLintApiOk() {
         lint().files(
             classpath(),
             manifest().minSdk(1),
@@ -301,33 +272,13 @@ class CustomRuleTest {
                     "}"
             )
         )
-            .clientFactory({
-                object : TestLintClient() {
-                    override fun findGlobalRuleJars(): List<File> = listOf(lintApiLevel0)
-
-                    override fun findRuleJars(project: Project): List<File> = emptyList()
-                }
-            })
+            .clientFactory { createGlobalLintJarClient(lintApiLevel0) }
             .issueIds("MainActivityDetector")
             .allowMissingSdk()
             .allowCompilationErrors()
             .allowObsoleteLintChecks(false)
             .run()
-            .check(
-                TestResultChecker {
-                    assertThat(it).contains(
-                        "lint5.jar: Warning: Lint found an issue registry " +
-                            "(com.example.google.lint.MyIssueRegistry) which is older than the " +
-                            "current API level; these checks may not work correctly."
-                    )
-                    assertThat(it).contains(
-                        "Recompile the checks against the latest version. " +
-                            "Custom check API version is 0 (3.0 and older), current lint API " +
-                            "level is "
-                    )
-                    assertThat(it).contains("0 errors, 1 warnings")
-                }
-            )
+            .expectClean()
     }
 
     @Test
@@ -341,14 +292,7 @@ class CustomRuleTest {
                     "}"
             )
         )
-            .clientFactory({
-                object : TestLintClient() {
-                    override fun findGlobalRuleJars(): List<File> =
-                        listOf(lintApiLevel1000.canonicalFile)
-
-                    override fun findRuleJars(project: Project): List<File> = emptyList()
-                }
-            })
+            .clientFactory { createGlobalLintJarClient(lintApiLevel1000.canonicalFile) }
             .issueIds("MainActivityDetector")
             .allowMissingSdk()
             .allowCompilationErrors()
@@ -362,7 +306,7 @@ class CustomRuleTest {
                 "../../lint6.jar: Warning: Lint found an issue registry " +
                     "(com.example.google.lint.MyIssueRegistry) which requires a newer API " +
                     "level. That means that the custom lint checks are intended for a" +
-                    " newer lint version; please upgrade [ObsoleteLintCustomCheck]\n" +
+                    " newer lint version; please upgrade. [ObsoleteLintCustomCheck]\n" +
                     "0 errors, 1 warnings"
             )
     }
@@ -379,13 +323,7 @@ class CustomRuleTest {
                     "}"
             )
         )
-            .clientFactory({
-                object : TestLintClient() {
-                    override fun findGlobalRuleJars(): List<File> = listOf(lintApiLevel1000min1)
-
-                    override fun findRuleJars(project: Project): List<File> = emptyList()
-                }
-            })
+            .clientFactory { createGlobalLintJarClient(lintApiLevel1000min1) }
             .issueIds("MainActivityDetector")
             .allowMissingSdk()
             .allowCompilationErrors()
@@ -416,19 +354,14 @@ class CustomRuleTest {
                     "</resources>"
             )
         )
-            .clientFactory({
-                object : TestLintClient() {
-                    override fun findGlobalRuleJars(): List<File> = listOf(lintXmlScannerAll30)
-                    override fun findRuleJars(project: Project): List<File> = emptyList()
-                }
-            })
+            .clientFactory { createGlobalLintJarClient(lintXmlScannerAll30) }
             .issueIds("ShortUniqueId")
             .allowMissingSdk()
             .allowCompilationErrors()
             .allowObsoleteLintChecks(false)
             .run()
             .check(
-                TestResultChecker {
+                {
                     assertThat(it).contains("res/values/strings.xml:2: Warning: All tags are now flagged: string [ShortUniqueId from com.example.lint.checks.sample]")
                 }
             )
@@ -501,8 +434,7 @@ class CustomRuleTest {
 
     companion object {
 
-        @JvmField
-        val LINT_JAR_BASE64_GZIP = "" +
+        const val LINT_JAR_BASE64_GZIP = "" +
             "" +
             "H4sIAAAAAAAAAJ1XeTTUbRse+/Lal8hWiAYzZJkyxtK8tjTW0XgTKo1RY2Jk" +
             "KWvZIrLEWEeEERHZl8RERHZibBlZssVYC9n6fMt73urr7Xznu895/vidc13X" +
@@ -578,8 +510,7 @@ class CustomRuleTest {
             "r1g837GGf9Knv2Lzf8dmo/tpl/9KQPg7Ac2fC/xrTH5U+dEB/VU8j1+o/I0f" +
             "+lH8x9n9S1zot/9vks0RTMz//kusANV/vp7zn1//AOTe4kZJDwAA"
 
-        @JvmField
-        val LINT_JAR_SERVICE_REGISTRY_BASE64_GZIP = "" +
+        private const val LINT_JAR_SERVICE_REGISTRY_BASE64_GZIP = "" +
             "H4sIAAAAAAAAAJ1XBzSc2xYevVy9RBkkCBE1WoLR5mqR0WVcgiQyZmIMRgyJ" +
             "GjWE6IwySvQWYnQRhBCiS3TRRQujJoiW565337qJm1jvvfOvs/71/+v7vn3O" +
             "XnvvtbcBhISUGgCgpAQAVDUggONFDPj3ojreuhrXwWLaepoSJACDH4Cl3sSr" +
@@ -658,7 +589,7 @@ class CustomRuleTest {
             "KX6yqv0tPkb9/9W405zA9IMT3tD8LFVO8k8m198n3Pkp/39MNQMIGfmfctTH" +
             "z8zxOSdp//z6F5mTOorXEAAA"
 
-        private val LOMBOK_LINT_JAR_BASE64_GZIP = "" +
+        private const val LOMBOK_LINT_JAR_BASE64_GZIP = "" +
             "H4sIAAAAAAAAAI1WezgTeh+fy2xTaJp6c0m5TDQjIYWGMYYxM5dJHMZEzV0R" +
             "vee4tCG3yK0sl6hXCLnrOl1cNsQ0iYiG5DK3UHR6nafnfU7pPe97Pr/n+8fv" +
             "eT6f7/f7x/eGtxISFgUAwGDAuJklFrAJQcA3QDYNZ0Y0VsfaYDSEAPgfiI0x" +
@@ -707,7 +638,7 @@ class CustomRuleTest {
             "i3Ph7we+/n1l/S+Z+A+y1p8Kcqt26yXwZ9If/+9dsNXX1lb405eRyN9qDLwV" +
             "UOQPgcjmS9h0BAX/8fs37IxfaLAJAAA="
 
-        private val PSI_LINT_JAR_BASE64_GZIP = "" +
+        private const val PSI_LINT_JAR_BASE64_GZIP = "" +
             "H4sIAAAAAAAAAJVVd1DT6RYNVRCwANJVwCggSehkBUKRpSUUaZHqiiGGCCaU" +
             "wEpRiAgCg4AgoS6wUkSy4BIF8RkjBCPFaDAQ3VAkGlpWUIqCBWRx1jdKnjLz" +
             "7m++P77fnHO+O3fuvecQQkx8MwAgJQX4E+UBB6yFKODfkF47bg4+dmAXd0cD" +
@@ -754,7 +685,7 @@ class CustomRuleTest {
             "7dNZk2Ns+nz7B9ep+6YCCgAA"
 
         // LintStandaloneCustomRuleTest compiled with API_CURRENT == 0:
-        private val LINT5_JAR = "" +
+        private const val LINT5_JAR = "" +
             "H4sIAAAAAAAAAJVWCTTU+x4fa/JGWUZckot0UUYvublKMpYyY8Y2V7qWMWam" +
             "aZjFMhhbVGi5cW1jSeiKbCFrE/KmN4kYYxslyhrCM0i6Qtxxbu+USd673//5" +
             "nt/5n/P5fL/f3+98N1uYiKgkACAhAcDfOQcD8EUY8Jds5yvcAmmqa4Ww1BMB" +
@@ -802,7 +733,7 @@ class CustomRuleTest {
             "AAA="
 
         // LintStandaloneCustomRuleTest compiled with api == 1000
-        private val LINT6_JAR = "" +
+        private const val LINT6_JAR = "" +
             "H4sIAAAAAAAAAJVWCzjTex8fcynvlGukg9elkpMRlY4mMVY2m+uLzqlY246U" +
             "bRg2FIVczomEGUYiueXyul/bq7MjDruQxQq5pVDuhZDOPKf3Kau87/n+n+/z" +
             "e/7P8/l8v9/f7/ne7BBAMSkAYMsWQHHheQRAIKKAv2SrQJFWTuZ61iiYPhBg" +
@@ -849,7 +780,7 @@ class CustomRuleTest {
             "5NdyVpgvnOWfQsv4Kv9v5rwdQlxi3ZyU4GMJ4tTesv73Jy+EF4AGCwAA"
 
         // LintStandaloneCustomRuleTest compiled with api == 1000 and minApi=1
-        private val LINT7_JAR = "" +
+        private const val LINT7_JAR = "" +
             "H4sIAAAAAAAAAJVWCzSU+xYfr5Q7DjLldZBn6BjyiKNwmEyZMRhccfKaZibJ" +
             "jJHxmPGIKFKRZ6M8Q56hhCQm586V1xivkXFQHkdC3o8UhzvW6a4yyb1nf2uv" +
             "b31r/X6/vf/f2v+9tzWch1cAANi7F6BSfAEOYBs34C/bx3aEmZ2JurklVIMH" +
@@ -898,7 +829,7 @@ class CustomRuleTest {
 
         // A lint check compatible with 3.0 which references XmlScanner.ALL
         // (which moved in 3.1)
-        private val LINT_XML_SCANNER_ALL_30 = "" +
+        private const val LINT_XML_SCANNER_ALL_30 = "" +
             "H4sIAAAAAAAAAJ1XeTTUexsfjWjGkt3YkhhZh7FMQsLYxzD2XbbJvhMyqYTs" +
             "GqRrS2QvO2UsJXtZxpIrYZCism9FmN7Ovb3nlnvznvs+5zz//M7n8/k+5/t7" +
             "nud8PxgUkBIMABw7BrCR8UQBvsURwJ8B+pZodWMVcW09DQkgAPMTcDvapU3/" +

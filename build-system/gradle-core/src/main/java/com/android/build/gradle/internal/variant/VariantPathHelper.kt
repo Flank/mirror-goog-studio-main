@@ -24,9 +24,7 @@ import com.android.build.gradle.options.StringOption
 import com.android.builder.core.BuilderConstants
 import com.android.builder.core.VariantType
 import com.android.builder.model.AndroidProject
-import com.android.utils.FileUtils
 import com.android.utils.toStrings
-import org.gradle.api.Project
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Provider

@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-1ce86133f2c272fbff1081cadc22b4eb72a13641567f7e6309f15663b372c0a4
+a4860f6afa3cc5087112f7c484f3f9a28dcbeeeea26f652acb8333d5f1603d73
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -562,8 +562,11 @@ com.android.builder.model.v2.ide.AndroidArtifact.getAssembleTaskOutputListingFil
 com.android.builder.model.v2.ide.AndroidArtifact.getBundleInfo: com.android.builder.model.v2.ide.BundleInfo ()
 com.android.builder.model.v2.ide.AndroidArtifact.getCodeShrinker: com.android.builder.model.v2.ide.CodeShrinker ()
 com.android.builder.model.v2.ide.AndroidArtifact.getGeneratedResourceFolders: java.util.Collection<java.io.File> ()
+com.android.builder.model.v2.ide.AndroidArtifact.getMaxSdkVersion: java.lang.Integer ()
+com.android.builder.model.v2.ide.AndroidArtifact.getMinSdkVersion: com.android.builder.model.v2.ide.ApiVersion ()
 com.android.builder.model.v2.ide.AndroidArtifact.getSigningConfigName: java.lang.String ()
 com.android.builder.model.v2.ide.AndroidArtifact.getSourceGenTaskName: java.lang.String ()
+com.android.builder.model.v2.ide.AndroidArtifact.getTargetSdkVersion: com.android.builder.model.v2.ide.ApiVersion ()
 com.android.builder.model.v2.ide.AndroidArtifact.getTestInfo: com.android.builder.model.v2.ide.TestInfo ()
 com.android.builder.model.v2.ide.AndroidArtifact.isSigned: boolean ()
 com.android.builder.model.v2.ide.AndroidGradlePluginProjectFlags
@@ -751,6 +754,7 @@ com.android.builder.model.v2.models.ModelVersions implements com.android.builder
 com.android.builder.model.v2.models.ModelVersions$Version
 com.android.builder.model.v2.models.ModelVersions$Version.getMajor: int ()
 com.android.builder.model.v2.models.ModelVersions$Version.getMinor: int ()
+com.android.builder.model.v2.models.ModelVersions.getAndroidDsl: com.android.builder.model.v2.models.ModelVersions$Version ()
 com.android.builder.model.v2.models.ModelVersions.getAndroidProject: com.android.builder.model.v2.models.ModelVersions$Version ()
 com.android.builder.model.v2.models.ModelVersions.getNativeModule: com.android.builder.model.v2.models.ModelVersions$Version ()
 com.android.builder.model.v2.models.ModelVersions.getVariantDependencies: com.android.builder.model.v2.models.ModelVersions$Version ()

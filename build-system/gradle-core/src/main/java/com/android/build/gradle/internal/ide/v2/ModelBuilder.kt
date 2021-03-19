@@ -35,6 +35,7 @@ import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.errors.SyncIssueReporter
 import com.android.build.gradle.internal.errors.SyncIssueReporterImpl.GlobalSyncIssueService
@@ -173,6 +174,7 @@ class ModelBuilder<
     private fun buildModelVersions(project: Project): ModelVersions {
         return ModelVersionsImpl(
             androidProject = VersionImpl(1, 0),
+            androidDsl = VersionImpl(1, 0),
             variantDependencies = VersionImpl(1, 0),
             nativeModule = VersionImpl(1, 0)
         )
@@ -435,7 +437,6 @@ class ModelBuilder<
         val variantData = component.variantData
         val sourceProviders = component.variantSources
         val variantDslInfo = component.variantDslInfo
-        val variantScope = component.variantScope
         // FIXME need to find a better way for this.
         val taskContainer: MutableTaskContainer = component.taskContainer
 
@@ -478,7 +479,20 @@ class ModelBuilder<
         val signingConfig = if (component is ApkCreationConfig)
             component.signingConfig else null
 
+        val minSdkVersion =
+                ApiVersionImpl(component.minSdkVersion.apiLevel, component.minSdkVersion.codename)
+        val targetSdkVersion =
+                if (component is VariantCreationConfig) ApiVersionImpl(
+                    component.targetSdkVersion.apiLevel,
+                    component.targetSdkVersion.codename
+                ) else ApiVersionImpl(1, null)
+        val maxSdkVersion = if (component is VariantCreationConfig) component.maxSdkVersion else null
+
         return AndroidArtifactImpl(
+            minSdkVersion = minSdkVersion,
+            targetSdkVersion = targetSdkVersion,
+            maxSdkVersion = maxSdkVersion,
+
             variantSourceProvider = sourceProviders.variantSourceProvider?.convert(features),
             multiFlavorSourceProvider = sourceProviders.multiFlavorSourceProvider?.convert(
                 features

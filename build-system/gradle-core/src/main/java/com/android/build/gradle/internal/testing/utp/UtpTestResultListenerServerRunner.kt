@@ -30,14 +30,18 @@ import java.io.IOException
  * Those generated TLS certifications are used to be establish gRPC connection locally to
  * implement inter-process communication between UTP and AGP. Generated certs are deleted
  * after use by [close] method.
+ *
+ * @param listener a listener to receive test result events
  */
 class UtpTestResultListenerServerRunner(
+        listener: UtpTestResultListener?,
         startServerFunc: (File, File, File) -> UtpTestResultListenerServer? =
                 { certChainFile, privateKeyFile, trustCertCollectionFile ->
                     UtpTestResultListenerServer.startServer(
                             certChainFile,
                             privateKeyFile,
-                            trustCertCollectionFile)
+                            trustCertCollectionFile,
+                            listener)
                 }
 ): Closeable {
 

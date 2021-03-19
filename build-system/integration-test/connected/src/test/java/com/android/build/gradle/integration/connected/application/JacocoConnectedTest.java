@@ -31,6 +31,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.regex.Pattern;
+
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Ignore;
@@ -65,10 +66,10 @@ public class JacocoConnectedTest {
     @Test
     public void connectedCheck() throws Exception {
         project.executor().run("connectedCheck");
-        assertThat(project.file("build/reports/coverage/debug/index.html")).exists();
+        assertThat(project.file("build/reports/coverage/androidTest/debug/index.html")).exists();
         assertThat(
                         project.file(
-                                "build/reports/coverage/debug/com.example.helloworld/HelloWorld.html"))
+                                "build/reports/coverage/androidTest/debug/com.example.helloworld/HelloWorldTest.html"))
                 .exists();
     }
 
@@ -82,7 +83,7 @@ public class JacocoConnectedTest {
 
         assertThat(
                         project.file(
-                                "build/reports/coverage/debug/com.example.helloworld/HelloWorld.html"))
+                                "build/reports/coverage/androidTest/debug/com.example.helloworld/HelloWorld.html"))
                 .exists();
     }
 
@@ -107,7 +108,7 @@ public class JacocoConnectedTest {
                         + "android.defaultConfig.testInstrumentationRunnerArguments package: 'com.example.helloworld'\n"
                         + (enableClearPackageDataOption
                                 ? "android.defaultConfig.testInstrumentationRunnerArguments clearPackageData: 'true'\n"
-                                        + "android.defaultConfig.testInstrumentationRunnerArguments coverageFilePath: '/storage/emulated/0/coverage/'\n"
+                                        +"android.defaultConfig.testInstrumentationRunnerArguments coverageFilePath: '/storage/emulated/0/coverage/'\n"
                                 : "")
                         + "android.testOptions.execution 'ANDROIDX_TEST_ORCHESTRATOR'\n"
                         // Orchestrator requires some setup time and it usually takes
@@ -180,7 +181,7 @@ public class JacocoConnectedTest {
         Truth.assertThat(files.size()).isAtLeast(2);
         assertThat(
                         project.file(
-                                "build/reports/coverage/debug/com.example.helloworld/HelloWorld.html"))
+                                "build/reports/coverage/androidTest/debug/com.example.helloworld/index.html"))
                 .exists();
     }
 
@@ -199,7 +200,7 @@ public class JacocoConnectedTest {
         project.executor().run("connectedCheck");
         assertThat(
                         project.file(
-                                "build/reports/coverage/debug/com.example.helloworld/HelloWorld.html"))
+                                "build/reports/coverage/androidTest/debug/com.example.helloworld/HelloWorldTest.html"))
                 .exists();
     }
 }

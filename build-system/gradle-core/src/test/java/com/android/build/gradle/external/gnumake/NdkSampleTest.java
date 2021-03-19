@@ -15,6 +15,7 @@
  */
 package com.android.build.gradle.external.gnumake;
 
+import static com.android.build.gradle.external.gnumake.NdkSampleTestUtilKt.checkAllCommandsRecognized;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.truth.Truth.assertAbout;
 import static com.google.common.truth.Truth.assertThat;
@@ -33,8 +34,6 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -44,7 +43,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -221,7 +219,7 @@ public class NdkSampleTest {
                     variantBuildOutputText);
 
             // Add extra command classifiers that are supposed to match all commands in the test.
-            // The checks below well see whether there are extra commands we don't know about.
+            // The checks below will see whether there are extra commands we don't know about.
             // If there are unknown commands we need to evaluate whether they should be understood
             // by the parser or just ignored (added to extraTestClassifiers)
             List<CommandClassifier.BuildTool> testClassifiers = Lists.newArrayList();
@@ -389,31 +387,6 @@ public class NdkSampleTest {
                         String.format(
                                 "Library output %s had an unexpected extension", library.output));
             }
-        }
-    }
-
-    private static void checkAllCommandsRecognized(
-            @NonNull List<CommandLine> commandLines,
-            @NonNull List<BuildStepInfo> recognizedBuildSteps) {
-
-        // Check that outputs occur only once
-        Map<String, BuildStepInfo> outputs = Maps.newHashMap();
-        for (BuildStepInfo recognizedBuildStep : recognizedBuildSteps) {
-            for (String output : recognizedBuildStep.getOutputs()) {
-                // Check for duplicate names
-                assertThat(outputs.keySet()).doesNotContain(output);
-                outputs.put(output, recognizedBuildStep);
-            }
-        }
-
-        if (commandLines.size() != recognizedBuildSteps.size()) {
-            // Build a set of executable commands that were classified.
-            Set<String> recognizedCommandLines = Sets.newHashSet();
-            for (BuildStepInfo recognizedBuildStep : recognizedBuildSteps) {
-                recognizedCommandLines.add(recognizedBuildStep.getCommand().getExecutable());
-            }
-
-            assertThat(recognizedCommandLines).containsAllIn(commandLines);
         }
     }
 
@@ -669,9 +642,16 @@ public class NdkSampleTest {
         checkJson("samples/san-angeles", SdkConstants.PLATFORM_LINUX);
     }
 
+    // Related to issuetracker.google.com/175718909
     @Test
-    public void ndk22StaticLibraryExample() throws IOException {
+    public void ndk22StaticLibraryExampleLinux() throws IOException {
         checkJson("samples/r22", SdkConstants.PLATFORM_LINUX);
+    }
+
+    // Related to issuetracker.google.com/175718909
+    @Test
+    public void ndk22StaticLibraryExampleWindows() throws IOException {
+        checkJson("samples/r22", SdkConstants.PLATFORM_WINDOWS);
     }
 
     @Test

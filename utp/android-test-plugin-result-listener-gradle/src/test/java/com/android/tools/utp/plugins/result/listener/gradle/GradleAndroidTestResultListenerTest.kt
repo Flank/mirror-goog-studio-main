@@ -125,7 +125,10 @@ class GradleAndroidTestResultListenerTest {
         assertThat(capturedRequests).containsExactly(
                 TestResultEvent.newBuilder().apply {
                     deviceId = "deviceIdString"
-                    testSuiteStarted = TestResultEvent.TestSuiteStarted.getDefaultInstance()
+                    testSuiteStartedBuilder.apply {
+                        testSuiteMetadata = Any.pack(
+                                TestSuiteResultProto.TestSuiteMetaData.getDefaultInstance())
+                    }
                 }.build(),
                 TestResultEvent.newBuilder().apply {
                     deviceId = "deviceIdString"
@@ -133,11 +136,15 @@ class GradleAndroidTestResultListenerTest {
                 }.build(),
                 TestResultEvent.newBuilder().apply {
                     deviceId = "deviceIdString"
-                    testCaseFinished = TestResultEvent.TestCaseFinished.getDefaultInstance()
+                    testCaseFinishedBuilder.apply {
+                        testCaseResult = Any.pack(TestResult.getDefaultInstance())
+                    }
                 }.build(),
                 TestResultEvent.newBuilder().apply {
                     deviceId = "deviceIdString"
-                    testSuiteFinished = TestResultEvent.TestSuiteFinished.getDefaultInstance()
+                    testSuiteFinishedBuilder.apply {
+                        testSuiteResult = Any.pack(TestSuiteResult.getDefaultInstance())
+                    }
                 }.build()
         ).inOrder()
         assertThat(requestCompleted).isTrue()

@@ -73,10 +73,28 @@ protected constructor() {
      * The minimum API version this issue registry works with. Normally
      * the same as [api], but if you have tested it with older version
      * and it works, you can return that level.
+     *
+     * See [com.android.tools.lint.detector.api.describeApi] for API
+     * level to version mappings.
      */
     open val minApi: Int
         get() {
             return api
+        }
+
+    /**
+     * The maximum API level that this lint check works for. This allows
+     * an issue registry to provide issues for older versions of lint
+     * than a certain version (and then presumably provide a second
+     * issue registry with [minApi] set to the next API level with
+     * an alternative implementation that works on newer versions).
+     *
+     * See [com.android.tools.lint.detector.api.describeApi] for API
+     * level to version mappings.
+     */
+    open val maxApi: Int
+        get() {
+            return Integer.MAX_VALUE
         }
 
     /**

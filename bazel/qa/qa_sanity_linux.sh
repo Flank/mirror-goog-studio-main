@@ -70,6 +70,7 @@ if [[ $lsb_release == "crostini" ]]; then
     ${config_options} \
     --test_strategy=exclusive \
     --jobs=8 \
+    --worker_verbose=true \
     --invocation_id=${test_invocation_id} \
     --define=meta_android_build_number=${build_number} \
     --build_event_binary_file="${dist_dir:-/tmp}/bazel-${build_number}.bes" \

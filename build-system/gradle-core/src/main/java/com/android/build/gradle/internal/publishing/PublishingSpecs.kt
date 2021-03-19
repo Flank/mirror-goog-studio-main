@@ -155,6 +155,11 @@ class PublishingSpecs {
                 api(BASE_MODULE_METADATA, ArtifactType.BASE_MODULE_METADATA)
                 api(SIGNING_CONFIG_DATA, ArtifactType.FEATURE_SIGNING_CONFIG_DATA)
                 api(SIGNING_CONFIG_VERSIONS, ArtifactType.FEATURE_SIGNING_CONFIG_VERSIONS)
+                runtime(LINT_MODEL, ArtifactType.LINT_MODEL)
+                // publish the LINT_MODEL again as BASE_MODULE_LINT_MODEL for consumption by dynamic
+                // features when writing their lint models to be published back to the app.
+                runtime(LINT_MODEL, ArtifactType.BASE_MODULE_LINT_MODEL)
+                runtime(LINT_PARTIAL_RESULTS, ArtifactType.LINT_PARTIAL_RESULTS)
             }
 
             variantSpec(VariantTypeImpl.OPTIONAL_APK) {
@@ -244,6 +249,8 @@ class PublishingSpecs {
                     com.android.build.api.artifact.ArtifactType.AAR,
                     ArtifactType.LOCAL_AAR_FOR_LINT)
             }
+
+            variantSpec(VariantTypeImpl.TEST_FIXTURES)
 
             // Publishing will be done manually from the lint standalone plugin for now.
             // Eventually we should just unify the infrastructure to declare the publications here.

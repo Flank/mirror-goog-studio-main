@@ -108,11 +108,6 @@ class TaskMethodModifiersAndAnnotationsTest {
 
         val currentPublicSetters =
             listOf(
-                "com.android.build.gradle.internal.coverage.JacocoReportTask::setCoverageFile",
-                "com.android.build.gradle.internal.coverage.JacocoReportTask::setJacocoClasspath",
-                "com.android.build.gradle.internal.coverage.JacocoReportTask::setReportDir",
-                "com.android.build.gradle.internal.coverage.JacocoReportTask::setReportName",
-                "com.android.build.gradle.internal.coverage.JacocoReportTask::setTabWidth",
                 "com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask::setType",
                 "com.android.build.gradle.internal.tasks.AndroidReportTask::setIgnoreFailures",
                 "com.android.build.gradle.internal.tasks.AndroidReportTask::setReportType",
@@ -121,6 +116,7 @@ class TaskMethodModifiersAndAnnotationsTest {
                 "com.android.build.gradle.internal.tasks.DependencyReportTask::setTestComponents",
                 "com.android.build.gradle.internal.tasks.DependencyReportTask::setVariants",
                 "com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask::setIgnoreFailures",
+                "com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask::setUtpTestResultListener",
                 "com.android.build.gradle.internal.tasks.IncrementalTask::setIncrementalFolder",
                 "com.android.build.gradle.internal.tasks.InstallVariantTask::setInstallOptions",
                 "com.android.build.gradle.internal.tasks.InstallVariantTask::setTimeOutInMs",

@@ -16,6 +16,9 @@
 
 package com.android.build.gradle.internal.dsl.decorator
 
+import com.android.build.api.dsl.AndroidResources
+import com.android.build.gradle.internal.dsl.AaptOptions
+
 /** The list of all the supported property types for the production AGP */
 val AGP_SUPPORTED_PROPERTY_TYPES: List<SupportedPropertyType> = listOf(
     SupportedPropertyType.Var.String,
@@ -24,6 +27,7 @@ val AGP_SUPPORTED_PROPERTY_TYPES: List<SupportedPropertyType> = listOf(
     SupportedPropertyType.Var.Int,
     SupportedPropertyType.Collection.List,
     SupportedPropertyType.Collection.Set,
+    SupportedPropertyType.Block(AndroidResources::class.java, AaptOptions::class.java)
 )
 
 /**

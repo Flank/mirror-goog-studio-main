@@ -123,11 +123,20 @@ public class MinifyTest {
                                                     && !c.equals("Lcom/vladium/emma/rt/RT;"))
                             .collect(Collectors.toSet()));
         }
-        assertThat(allClasses)
-                .containsExactly(
-                        "Lcom/android/tests/basic/a;",
-                        "Lcom/android/tests/basic/Main;",
-                        "Lcom/android/tests/basic/IndirectlyReferencedClass;");
+
+        if (codeShrinker == CodeShrinker.R8) {
+            assertThat(allClasses)
+                    .containsExactly(
+                            "La/a;",
+                            "Lcom/android/tests/basic/Main;",
+                            "Lcom/android/tests/basic/IndirectlyReferencedClass;");
+        } else {
+            assertThat(allClasses)
+                    .containsExactly(
+                            "Lcom/android/tests/basic/a;",
+                            "Lcom/android/tests/basic/Main;",
+                            "Lcom/android/tests/basic/IndirectlyReferencedClass;");
+        }
 
         File defaultProguardFile =
                 project.file(
@@ -299,10 +308,17 @@ public class MinifyTest {
                 .containsClass("Lcom/android/tests/basic/UsedTestClass;");
         assertThat(apk).containsClass("Lcom/android/tests/basic/test/R;");
 
-        assertThat(apk)
-                .hasClass("Lcom/android/tests/basic/MainTest;")
-                .that()
-                .hasFieldWithType("stringProvider", "Lcom/android/tests/basic/a;");
+        if (codeShrinker == CodeShrinker.R8) {
+            assertThat(apk)
+                    .hasClass("Lcom/android/tests/basic/MainTest;")
+                    .that()
+                    .hasFieldWithType("stringProvider", "La/a;");
+        } else {
+            assertThat(apk)
+                    .hasClass("Lcom/android/tests/basic/MainTest;")
+                    .that()
+                    .hasFieldWithType("stringProvider", "Lcom/android/tests/basic/a;");
+        }
     }
 
     @Test

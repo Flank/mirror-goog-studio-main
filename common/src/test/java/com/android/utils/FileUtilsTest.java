@@ -39,6 +39,16 @@ public class FileUtilsTest {
     public TemporaryFolder mTemporaryFolder = new TemporaryFolder();
 
     @Test
+    public void testCopyFilesDoesNotCopyReadonlyBit() throws IOException {
+        File fileIn = new File(mTemporaryFolder.getRoot(), "fileIn.txt");
+        File fileOut = new File(mTemporaryFolder.getRoot(), "fileOut.txt");
+        fileIn.createNewFile();
+        fileIn.setWritable(true);
+        FileUtils.copyFile(fileIn, fileOut);
+        assertThat(fileOut.canWrite()).isTrue();
+    }
+
+    @Test
     public void testMkdirs() throws IOException {
         File directory = new File(mTemporaryFolder.getRoot(), "foo");
         FileUtils.mkdirs(directory);

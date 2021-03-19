@@ -36,8 +36,31 @@ class AddJavascriptInterfaceDetectorTest : AbstractCheckTest() {
     }
 
     fun testNoWarningWhenMinSdkAt17() {
-
         lint().files(manifest().minSdk(17), testFile).run().expectClean()
+    }
+
+    fun testNoWarningWithTargetApi17() {
+        var source = testFile.getContents()!!
+        source = source.replace(
+            "public class ",
+            "@android.annotation.TargetApi(17)\npublic class "
+        )
+        val file = java(source)
+        lint().files(manifest().minSdk(10), file).run().expectClean()
+    }
+
+    fun testNoWarningWithRequiresApi17() {
+        var source = testFile.getContents()!!
+        source = source.replace(
+            "public class ",
+            "@android.support.annotation.RequiresApi(17)\npublic class "
+        )
+        val file = java(source)
+        lint().files(
+            manifest().minSdk(10),
+            file,
+            base64gzip("libs/support-annotations.jar", AnnotationDetectorTest.SUPPORT_ANNOTATIONS_JAR_BASE64_GZIP)
+        ).run().expectClean()
     }
 
     private val testFile = java(

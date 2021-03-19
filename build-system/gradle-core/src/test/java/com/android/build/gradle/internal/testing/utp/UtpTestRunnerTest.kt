@@ -72,6 +72,7 @@ class UtpTestRunnerTest {
     @Mock lateinit var mockLogger: ILogger
     @Mock lateinit var mockUtpConfigFactory: UtpConfigFactory
     @Mock lateinit var mockRetentionConfig: RetentionConfig
+    @Mock lateinit var mockTestResultListener: UtpTestResultListener
 
     private val utpDependencies = object: UtpDependencies() {
         override val launcher = FakeConfigurableFileCollection(File("/pathToLAUNCHER.jar"))
@@ -161,6 +162,7 @@ class UtpTestRunnerTest {
                 mockVersionedSdkLoader,
                 mockRetentionConfig,
                 useOrchestrator = false,
+                mockTestResultListener,
                 mockUtpConfigFactory)
 
         runner.runTests(

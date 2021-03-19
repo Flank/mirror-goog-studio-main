@@ -20,7 +20,7 @@ import java.io.Serializable
 
 interface IdeBaseArtifact : Serializable {
   /** Name of the artifact. This should match [ArtifactMetaData.getName].  */
-  val name: String
+  val name: IdeArtifactName
 
   /** @return the name of the task used to compile the code.
    */

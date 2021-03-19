@@ -60,6 +60,7 @@ import com.android.build.gradle.internal.testing.TestRunner;
 import com.android.build.gradle.internal.testing.utp.RetentionConfig;
 import com.android.build.gradle.internal.testing.utp.UtpDependencies;
 import com.android.build.gradle.internal.testing.utp.UtpDependencyUtilsKt;
+import com.android.build.gradle.internal.testing.utp.UtpTestResultListener;
 import com.android.build.gradle.internal.testing.utp.UtpTestRunner;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
@@ -147,7 +148,9 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
         @Nested
         public abstract BuildToolsExecutableInput getBuildTools();
 
-        TestRunner createTestRunner(ExecutorServiceAdapter executorServiceAdapter) {
+        TestRunner createTestRunner(
+                ExecutorServiceAdapter executorServiceAdapter,
+                @Nullable UtpTestResultListener utpTestResultListener) {
             GradleProcessExecutor gradleProcessExecutor =
                     new GradleProcessExecutor(getExecOperations()::exec);
             JavaProcessExecutor javaProcessExecutor =
@@ -169,7 +172,8 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                                         getBuildTools().getCompileSdkVersion(),
                                         getBuildTools().getBuildToolsRevision()),
                         getRetentionConfig().get(),
-                        useOrchestrator);
+                        useOrchestrator,
+                        utpTestResultListener);
             } else {
                 switch (getExecutionEnum().get()) {
                     case ANDROID_TEST_ORCHESTRATOR:
@@ -230,6 +234,12 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
     // For analytics only
     private ArtifactCollection dependencies;
 
+    @Nullable private UtpTestResultListener utpTestResultListener;
+
+    public void setUtpTestResultListener(@Nullable UtpTestResultListener utpTestResultListener) {
+        this.utpTestResultListener = utpTestResultListener;
+    }
+
     /**
      * The workers object is of type ExecutorServiceAdapter instead of WorkerExecutorFacade to
      * assert that the object returned is of type ExecutorServiceAdapter as Gradle workers can not
@@ -285,10 +295,12 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                             () -> {
                                 TestRunner testRunner =
                                         getTestRunnerFactory()
-                                                .createTestRunner(getExecutorServiceAdapter());
+                                                .createTestRunner(
+                                                        getExecutorServiceAdapter(),
+                                                        utpTestResultListener);
                                 Collection<String> extraArgs =
                                         getInstallOptions().getOrElse(ImmutableList.of());
-                                ;
+
                                 try {
                                     return testRunner.runTests(
                                             getProjectName(),

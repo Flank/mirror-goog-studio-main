@@ -43,6 +43,9 @@ class UtpTestResultListenerServerRunnerTest {
     @Mock
     lateinit var mockServer: UtpTestResultListenerServer
 
+    @Mock
+    lateinit var mockTestResultListener: UtpTestResultListener
+
     @Before
     fun setUp() {
         `when`(mockServer.port).thenReturn(1234)
@@ -54,7 +57,7 @@ class UtpTestResultListenerServerRunnerTest {
         lateinit var privateKeyFile: File
         lateinit var trustCertCollectionFile: File
 
-        val runner = UtpTestResultListenerServerRunner {
+        val runner = UtpTestResultListenerServerRunner(mockTestResultListener) {
             cert, privateKey, trustCertCollection ->
             certChainFile = cert
             privateKeyFile = privateKey
@@ -84,7 +87,7 @@ class UtpTestResultListenerServerRunnerTest {
     @Test
     fun startServerFailed() {
         val exception = assertThrows(IllegalArgumentException::class.java) {
-            UtpTestResultListenerServerRunner { _, _, _ -> null }
+            UtpTestResultListenerServerRunner(null) { _, _, _ -> null }
         }
 
         assertThat(exception.message)

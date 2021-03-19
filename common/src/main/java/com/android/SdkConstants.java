@@ -1492,6 +1492,7 @@ public final class SdkConstants {
     public static final String ATTR_HEIGHT = "height"; //$NON-NLS-1$
     public static final String ATTR_NAV_GRAPH = "navGraph";
     public static final String ATTR_USE_TAG = "useTag";
+    public static final String ATTR_IGNORE_A11Y_LINTS = "ignoreA11yLints";
 
     // ConstraintLayout Flow
     public static final String ATTR_FLOW_WRAP_MODE = "flow_wrapMode";  //$NON-NLS-1$
@@ -2159,6 +2160,7 @@ public final class SdkConstants {
     public static final String DOT_TTF = ".ttf"; //$NON-NLS-1$
     public static final String DOT_TTC = ".ttc"; //$NON-NLS-1$
     public static final String DOT_OTF = ".otf"; //$NON-NLS-1$
+    public static final String DOT_EXEC = ".exec"; // $NON-NLS-1$
 
     /** Extension of the Application package Files, i.e. "apk". */
     public static final String EXT_ANDROID_PACKAGE = "apk"; //$NON-NLS-1$

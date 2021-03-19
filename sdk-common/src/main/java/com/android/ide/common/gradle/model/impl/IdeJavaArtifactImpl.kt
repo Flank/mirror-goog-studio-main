@@ -15,13 +15,14 @@
  */
 package com.android.ide.common.gradle.model.impl
 
+import com.android.ide.common.gradle.model.IdeArtifactName
 import com.android.ide.common.gradle.model.IdeDependencies
 import com.android.ide.common.gradle.model.IdeJavaArtifact
 import com.android.ide.common.gradle.model.IdeSourceProvider
 import java.io.File
 
 data class IdeJavaArtifactImpl(
-  override val name: String,
+  override val name: IdeArtifactName,
   override val compileTaskName: String,
   override val assembleTaskName: String,
   override val assembleTaskOutputListingFile: String,

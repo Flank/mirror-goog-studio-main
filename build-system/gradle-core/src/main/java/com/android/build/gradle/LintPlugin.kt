@@ -113,36 +113,50 @@ abstract class LintPlugin : Plugin<Project> {
         // expect it to be present during evaluation
         val lintTask =
             project.tasks.register("lint", AndroidLintTask::class.java) { task ->
-                task.description = "Run Android Lint analysis on project `${project.name}`"
+                task.description = "Generates the lint report for project `${project.name}`"
             }
         project.tasks.named(JavaBasePlugin.CHECK_TASK_NAME).configure { t: Task -> t.dependsOn(lintTask) }
 
         // Avoid reading the lintOptions DSL and build directory before the build author can customize them
         project.afterEvaluate {
             lintTask.configure { task ->
-                task.configureForStandalone(project, projectServices.projectOptions, javaConvention, customLintChecks, lintOptions!!)
+                task.configureForStandalone(
+                    project,
+                    projectServices.projectOptions,
+                    javaConvention,
+                    customLintChecks,
+                    lintOptions!!,
+                    artifacts.get(InternalArtifactType.LINT_PARTIAL_RESULTS)
+                )
             }
 
-            if (lintOptions!!.isCheckReleaseBuilds) {
-                project.tasks.register("lintVital", AndroidLintTask::class.java) { task ->
-                    task.description =
-                        "Runs lint on just the fatal issues in the project  `${project.name}`"
-                    task.configureForStandalone(
-                        project,
-                        projectServices.projectOptions,
-                        javaConvention,
-                        customLintChecks,
-                        lintOptions!!,
-                        fatalOnly = true
-                    )
-                }
+            project.tasks.register("lintVital", AndroidLintTask::class.java) { task ->
+                task.description =
+                    "Generates the lint report for just the fatal issues for project  `${project.name}`"
+                task.configureForStandalone(
+                    project,
+                    projectServices.projectOptions,
+                    javaConvention,
+                    customLintChecks,
+                    lintOptions!!,
+                    artifacts.get(InternalArtifactType.LINT_VITAL_PARTIAL_RESULTS),
+                    fatalOnly = true
+                )
             }
             project.tasks.register("lintFix", AndroidLintTask::class.java) { task ->
-                task.description = "Runs lint on `${project.name}` and applies any safe suggestions to the source code."
-                task.configureForStandalone(project, projectServices.projectOptions, javaConvention, customLintChecks, lintOptions!!, autoFix = true)
+                task.description = "Generates the lint report for project `${project.name}` and applies any safe suggestions to the source code."
+                task.configureForStandalone(
+                    project,
+                    projectServices.projectOptions,
+                    javaConvention,
+                    customLintChecks,
+                    lintOptions!!,
+                    artifacts.get(InternalArtifactType.LINT_PARTIAL_RESULTS),
+                    autoFix = true
+                )
             }
             val lintAnalysisTask = project.tasks.register("lintAnalyze", AndroidLintAnalysisTask::class.java) { task ->
-                task.description = "Run lint analysis on project `${project.name}`"
+                task.description = "Runs lint analysis for project `${project.name}`"
                 task.configureForStandalone(
                     project,
                     projectServices.projectOptions,
@@ -151,8 +165,26 @@ abstract class LintPlugin : Plugin<Project> {
                     lintOptions!!
                 )
             }
-            AndroidLintAnalysisTask.SingleVariantCreationAction.registerOutputArtifacts(
+            AndroidLintAnalysisTask.registerOutputArtifacts(
                 lintAnalysisTask,
+                InternalArtifactType.LINT_PARTIAL_RESULTS,
+                artifacts
+            )
+            val lintVitalAnalysisTask = project.tasks.register("lintVitalAnalyze", AndroidLintAnalysisTask::class.java) { task ->
+                task.description =
+                    "Runs lint analysis on just the fatal issues for project `${project.name}`"
+                task.configureForStandalone(
+                    project,
+                    projectServices.projectOptions,
+                    javaConvention,
+                    customLintChecks,
+                    lintOptions!!,
+                    fatalOnly = true
+                )
+            }
+            AndroidLintAnalysisTask.registerOutputArtifacts(
+                lintVitalAnalysisTask,
+                InternalArtifactType.LINT_VITAL_PARTIAL_RESULTS,
                 artifacts
             )
             val lintModelWriterTask = project.tasks.register("generateLintModel", LintModelWriterTask::class.java) { task ->

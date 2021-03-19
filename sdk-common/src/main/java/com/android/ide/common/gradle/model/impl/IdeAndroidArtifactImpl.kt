@@ -18,6 +18,7 @@ package com.android.ide.common.gradle.model.impl
 import com.android.ide.common.gradle.model.CodeShrinker
 import com.android.ide.common.gradle.model.IdeAndroidArtifact
 import com.android.ide.common.gradle.model.IdeAndroidArtifactOutput
+import com.android.ide.common.gradle.model.IdeArtifactName
 import com.android.ide.common.gradle.model.IdeClassField
 import com.android.ide.common.gradle.model.IdeDependencies
 import com.android.ide.common.gradle.model.IdeSourceProvider
@@ -25,7 +26,7 @@ import com.android.ide.common.gradle.model.IdeTestOptions
 import java.io.File
 
 data class IdeAndroidArtifactImpl(
-  override val name: String,
+  override val name: IdeArtifactName,
   override val compileTaskName: String,
   override val assembleTaskName: String,
   override val assembleTaskOutputListingFile: String,

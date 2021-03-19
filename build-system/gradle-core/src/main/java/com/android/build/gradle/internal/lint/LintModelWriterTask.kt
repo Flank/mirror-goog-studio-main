@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.lint
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
+import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
 import com.android.build.gradle.internal.dsl.LintOptions
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.getBuildService
@@ -121,7 +122,8 @@ abstract class LintModelWriterTask : NonIncrementalTask() {
             task.variantInputs.initialize(
                 variantWithoutTests,
                 checkDependencies = checkDependencies,
-                warnIfProjectTreatedAsExternalDependency = false
+                warnIfProjectTreatedAsExternalDependency = false,
+                addBaseModuleLintModel = creationConfig is DynamicFeatureCreationConfig
             )
             task.partialResultsDir =
                 creationConfig.artifacts.getOutputPath(

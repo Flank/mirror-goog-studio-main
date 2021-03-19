@@ -8,8 +8,8 @@
         <uses-library android:name="android.test.runner" />
     </application>
 
-    <instrumentation android:name="#TESTRUNNER#"/>
+    <instrumentation android:name="#TESTRUNNER#"
+                     android:targetPackage="#TESTEDPACKAGE#"
+                     android:label="Tests for #TESTEDPACKAGE#"/>
 
 </manifest>
-
-

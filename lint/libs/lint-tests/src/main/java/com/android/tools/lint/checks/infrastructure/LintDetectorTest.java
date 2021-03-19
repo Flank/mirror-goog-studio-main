@@ -555,8 +555,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
      */
     public static CompiledSourceFile bytecode(
             @NonNull String into, @NonNull TestFile source, @NonNull String... encoded) {
-
-        return new CompiledSourceFile(into, CompiledSourceFile.Type.BYTECODE_ONLY, source, encoded);
+        return TestFiles.bytecode(into, source, encoded);
     }
 
     /**
@@ -578,8 +577,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
      */
     public static CompiledSourceFile compiled(
             @NonNull String into, @NonNull TestFile source, @NonNull String... encoded) {
-        return new CompiledSourceFile(
-                into, CompiledSourceFile.Type.SOURCE_AND_BYTECODE, source, encoded);
+        return TestFiles.compiled(into, source, encoded);
     }
 
     @NonNull

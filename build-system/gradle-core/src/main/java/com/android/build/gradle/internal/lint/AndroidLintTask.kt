@@ -41,6 +41,7 @@ import com.android.builder.model.AndroidProject
 import com.android.tools.lint.model.LintModelSerialization
 import org.gradle.api.Project
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
@@ -50,6 +51,7 @@ import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
@@ -537,7 +539,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
             task.unitTestDependencyLintModels.disallowChanges()
             task.dependencyPartialResults.disallowChanges()
             task.lintTool.initialize(creationConfig.services.projectInfo.getProject(), creationConfig.services.projectOptions)
-            if (checkDependencies) {
+            if (checkDependencies && !reportOnly) {
                 task.outputs.upToDateWhen {
                     it.logger.debug("Lint with checkDependencies does not model all of its inputs yet.")
                     false
@@ -621,6 +623,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         javaPluginConvention: JavaPluginConvention,
         customLintChecksConfig: FileCollection,
         lintOptions: LintOptions,
+        partialResults: Provider<Directory>,
         fatalOnly: Boolean = false,
         autoFix: Boolean = false,
     ) {
@@ -637,7 +640,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         }
         this.lintFixBuildService.disallowChanges()
         this.checkDependencies.setDisallowChanges(false)
-        this.reportOnly.setDisallowChanges(false)
+        this.reportOnly.setDisallowChanges(true)
         this.checkOnly.setDisallowChanges(lintOptions.checkOnly)
         this.lintTool.initialize(project, projectOptions)
         this.projectInputs.initializeForStandalone(project, javaPluginConvention, lintOptions)
@@ -645,6 +648,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         this.variantInputs.initializeForStandalone(project, javaPluginConvention, projectOptions, checkDependencies=false)
         this.lintRulesJar.fromDisallowChanges(customLintChecksConfig)
         this.lintModelDirectory.setDisallowChanges(project.layout.buildDirectory.dir("intermediates/android-lint-model"))
+        this.partialResults.setDisallowChanges(partialResults)
         this.initializeOutputTypesConvention()
         when {
             fatalOnly -> {

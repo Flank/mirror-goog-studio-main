@@ -18,16 +18,20 @@ package com.android.build.gradle.integration.lint
 
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
+import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.truth.PathSubject.assertThat
+import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
 import org.junit.Assume
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
+import java.io.File
 
 @RunWith(FilterableParameterized::class)
 class LintDynamicFeatureTest(private val usePartialAnalysis: Boolean) {
@@ -42,11 +46,34 @@ class LintDynamicFeatureTest(private val usePartialAnalysis: Boolean) {
     val project: GradleTestProject =
         GradleTestProject.builder().fromTestProject("dynamicApp").create()
 
+    private val app =
+        MinimalSubProject.app("com.example.test")
+            .appendToBuild("android.dynamicFeatures = [':feature']")
+    private val feature = MinimalSubProject.dynamicFeature("com.example.test")
+    private val lib1 = MinimalSubProject.lib("com.example.lib1")
+    private val lib2 = MinimalSubProject.lib("com.example.lib2")
+
+    @get:Rule
+    val projectWithLibs: GradleTestProject =
+        GradleTestProject.builder()
+            .fromTestApp(
+                MultiModuleTestProject.builder()
+                    .subproject(":app", app)
+                    .subproject(":feature", feature)
+                    .subproject(":lib1", lib1)
+                    .subproject(":lib2", lib2)
+                    .dependency(feature, app)
+                    .dependency(feature, lib1)
+                    .dependency("api", app, lib2)
+                    .build()
+            )
+            .create()
+
     @Test
     fun testUnusedResourcesInFeatureModules() {
         // TODO (b/180672373) Support the unused resource detector with lint partial analysis.
         Assume.assumeFalse(usePartialAnalysis)
-        getExecutor().run("clean", "lint")
+        project.getExecutor().run("clean", "lint")
 
         val file = project.file("app/lint-results.txt")
         assertThat(file).containsAllOf(
@@ -68,8 +95,8 @@ class LintDynamicFeatureTest(private val usePartialAnalysis: Boolean) {
     @Test
     fun runLintFromDynamicFeatures() {
         // Run twice to catch issues with configuration caching
-        getExecutor().run(":feature1:clean", ":feature1:lint")
-        getExecutor().run(":feature1:clean", ":feature1:lint")
+        project.getExecutor().run(":feature1:clean", ":feature1:lint")
+        project.getExecutor().run(":feature1:clean", ":feature1:lint")
         assertThat(project.buildResult.failedTasks).isEmpty()
 
         assertThat(project.file("feature1/lint-results.txt")).containsAllOf(
@@ -77,7 +104,7 @@ class LintDynamicFeatureTest(private val usePartialAnalysis: Boolean) {
             "Hardcoded string \"Button\", should use @string resource"
         )
 
-        getExecutor().run(":feature2:clean", ":feature2:lint")
+        project.getExecutor().run(":feature2:clean", ":feature2:lint")
         assertThat(project.buildResult.failedTasks).isEmpty()
 
         assertThat(project.file("feature2/lint-results.txt")).containsAllOf(
@@ -87,10 +114,56 @@ class LintDynamicFeatureTest(private val usePartialAnalysis: Boolean) {
     }
 
     @Test
+    fun runLintFromDynamicFeatureWithCheckDependencies() {
+        TestFileUtils.appendToFile(
+            projectWithLibs.getSubproject(":feature").buildFile,
+            """
+                android {
+                    lintOptions {
+                        checkDependencies true
+                        abortOnError false
+                        textOutput file("lint-results.txt")
+                    }
+                }
+                """.trimIndent()
+        )
+
+        // Add hard-coded resource to each module
+        FileUtils.writeToFile(
+            File(projectWithLibs.getSubproject(":app").mainResDir, "layout/app_layout.xml"),
+            layout_text
+        )
+        FileUtils.writeToFile(
+            File(projectWithLibs.getSubproject(":feature").mainResDir, "layout/feature_layout.xml"),
+            layout_text
+        )
+        FileUtils.writeToFile(
+            File(projectWithLibs.getSubproject(":lib1").mainResDir, "layout/lib1_layout.xml"),
+            layout_text
+        )
+        FileUtils.writeToFile(
+            File(projectWithLibs.getSubproject(":lib2").mainResDir, "layout/lib2_layout.xml"),
+            layout_text
+        )
+
+        // Run twice to catch issues with configuration caching
+        projectWithLibs.getExecutor().run("clean", ":feature:lint")
+        projectWithLibs.getExecutor().run("clean", ":feature:lint")
+        assertThat(projectWithLibs.buildResult.failedTasks).isEmpty()
+
+        assertThat(projectWithLibs.file("feature/lint-results.txt")).containsAllOf(
+            "app_layout.xml:10: Warning: Hardcoded string",
+            "feature_layout.xml:10: Warning: Hardcoded string",
+            "lib1_layout.xml:10: Warning: Hardcoded string",
+            "lib2_layout.xml:10: Warning: Hardcoded string"
+        )
+    }
+
+    @Test
     fun runLintFromApp() {
         // Run twice to catch issues with configuration caching
-        getExecutor().run(":app:clean", ":app:lint")
-        getExecutor().run(":app:clean", ":app:lint")
+        project.getExecutor().run(":app:clean", ":app:lint")
+        project.getExecutor().run(":app:clean", ":app:lint")
         assertThat(project.buildResult.failedTasks).isEmpty()
 
         // TODO (b/180672373) Merge issues from dynamic features into app report when using lint
@@ -106,8 +179,8 @@ class LintDynamicFeatureTest(private val usePartialAnalysis: Boolean) {
 
     @Test
     fun testLintUpToDate() {
-        getExecutor().run(":app:lintDebug")
-        getExecutor().run(":app:lintDebug")
+        project.getExecutor().run(":app:lintDebug")
+        project.getExecutor().run(":app:lintDebug")
         if (usePartialAnalysis) {
             assertThat(project.buildResult.upToDateTasks).containsAtLeastElementsIn(
                 listOf(
@@ -128,13 +201,13 @@ class LintDynamicFeatureTest(private val usePartialAnalysis: Boolean) {
 
     @Test
     fun testLintWithIncrementalChanges() {
-        getExecutor().run(":app:lintDebug")
+        project.getExecutor().run(":app:lintDebug")
         TestFileUtils.searchAndReplace(
             project.file("feature2/src/main/res/layout/feature2_layout.xml"),
             "\"Button\"",
             "\"AAAAAAAAAAA\""
         )
-        getExecutor().run(":app:lintDebug")
+        project.getExecutor().run(":app:lintDebug")
         if (usePartialAnalysis) {
             assertThat(project.buildResult.upToDateTasks).containsAtLeastElementsIn(
                 listOf(
@@ -160,8 +233,8 @@ class LintDynamicFeatureTest(private val usePartialAnalysis: Boolean) {
 
     @Test
     fun testLintVital() {
-        getExecutor().run(":app:lintVitalRelease")
-        getExecutor().run(":app:lintVitalRelease")
+        project.getExecutor().run(":app:lintVitalRelease")
+        project.getExecutor().run(":app:lintVitalRelease")
 
         assertThat(project.buildResult.upToDateTasks).contains(":app:lintVitalRelease")
 
@@ -176,6 +249,21 @@ class LintDynamicFeatureTest(private val usePartialAnalysis: Boolean) {
         }
     }
 
-    private fun getExecutor(): GradleTaskExecutor =
-        project.executor().with(BooleanOption.USE_LINT_PARTIAL_ANALYSIS, usePartialAnalysis)
+    private fun GradleTestProject.getExecutor(): GradleTaskExecutor =
+        this.executor().with(BooleanOption.USE_LINT_PARTIAL_ANALYSIS, usePartialAnalysis)
 }
+
+private val layout_text =
+    """
+        <?xml version="1.0" encoding="utf-8"?>
+        <android.support.constraint.ConstraintLayout xmlns:app="http://schemas.android.com/apk/res-auto"
+            android:layout_height="match_parent"
+            xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent">
+
+            <Button
+                android:id="@+id/button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Button" />
+        </android.support.constraint.ConstraintLayout>
+        """.trimIndent()

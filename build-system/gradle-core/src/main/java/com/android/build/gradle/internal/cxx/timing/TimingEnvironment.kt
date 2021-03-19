@@ -52,11 +52,17 @@ private const val CXX_TIMING_MIN_REPORT_THRESHOLD_MS = 10
  *
  * Timing environments can be nested and the inner-most timing environment
  * determines where the result of 'time()' calls goes.
+ *
+ * @param timingFolder is the output folder for the timings file.
+ * @param outerTimingOperation is the opening timing scope inside the timings file and also
+ *   the prefix used for the timings file name.
+ * @param currentTimeMillis is a lambda used to return the current time in milliseconds. It's
+ *   a lambda so that tests can replace it with deterministic values.
  */
 internal class TimingEnvironment(
     private val timingFolder : File,
-    private val timingOperation : String,
-    private val supplyCurrentTime : () -> Long = { System.currentTimeMillis() }
+    private val outerTimingOperation : String,
+    private val currentTimeMillis : () -> Long = { System.currentTimeMillis() }
 ) : AutoCloseable {
 
     /**
@@ -87,7 +93,7 @@ internal class TimingEnvironment(
         timingFile.appendText("# C/C++ build system timings")
 
         // Push a timer for this scope
-        openTimingScope(timingOperation) // Matched by closeTimingScope in close()
+        openTimingScope(outerTimingOperation) // Matched by closeTimingScope in close()
     }
 
     /**
@@ -108,7 +114,7 @@ internal class TimingEnvironment(
      */
     internal fun getTimingFile() =
             timingFolder.resolve(
-                    "$timingOperation-${Thread.currentThread().id}-timing.txt")
+                    "${outerTimingOperation}_${Thread.currentThread().id}_timing.txt")
 
     /**
      * When a time() { } call is first made, we shouldn't yet output the name of the operation
@@ -177,7 +183,7 @@ internal class TimingEnvironment(
         internal fun openTimingScope(operation : String) {
             val environment = stack.get()?.environment ?: return
             environment.timingScopeList.add(0,
-                    TimingScope(operation, environment.supplyCurrentTime()))
+                    TimingScope(operation, environment.currentTimeMillis()))
         }
 
         /**
@@ -187,7 +193,7 @@ internal class TimingEnvironment(
             val environment = stack.get()?.environment ?: return
             val timing = environment.timingScopeList.first()
             val timingFile = environment.getTimingFile()
-            val end = environment.supplyCurrentTime()
+            val end = environment.currentTimeMillis()
             val elapsed = end - timing.start
             val indent = " ".repeat((timerStackDepth - 1) * 2)
             val parent = environment.timingScopeList.drop(1).firstOrNull()

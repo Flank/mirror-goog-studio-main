@@ -17,7 +17,9 @@
 package com.android.build.gradle.integration.connected.application
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.builder
+import com.android.build.gradle.integration.common.truth.ScannerSubject.Companion.assertThat
 import com.android.build.gradle.integration.connected.utils.getEmulator
+import com.android.testutils.TestUtils
 import com.android.testutils.truth.PathSubject.assertThat
 import org.junit.Before
 import org.junit.ClassRule
@@ -87,6 +89,51 @@ class UtpConnectedTest {
         val testResultPbPath = "appWithTestFailures/$TEST_RESULT_PB"
 
         project.executor().expectFailure().run(testTaskName)
+        assertThat(project.file(testReportPath)).exists()
+        assertThat(project.file(testResultPbPath)).exists()
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun connectedAndroidTestWithUtpTestResultListener() {
+        val initScriptPath = TestUtils.resolveWorkspacePath(
+                "tools/adt/idea/utp/addGradleAndroidTestListener.gradle")
+        val testTaskName = ":app:connectedAndroidTest"
+        val testReportPath = "app/$TEST_REPORT"
+        val testResultPbPath = "app/$TEST_RESULT_PB"
+
+        val result = project.executor()
+                .withArgument("--init-script")
+                .withArgument(initScriptPath.toString())
+                .run(testTaskName)
+
+        result.stdout.use {
+            assertThat(it).contains("<UTP_TEST_RESULT_ON_TEST_RESULT_EVENT>")
+            assertThat(it).contains("</UTP_TEST_RESULT_ON_TEST_RESULT_EVENT>")
+            assertThat(it).contains("<UTP_TEST_RESULT_ON_COMPLETED />")
+            assertThat(it).doesNotContain("<UTP_TEST_RESULT_ON_ERROR />")
+        }
+        assertThat(project.file(testReportPath)).exists()
+        assertThat(project.file(testResultPbPath)).exists()
+
+        // Run the task again after clean. This time the task configuration is
+        // restored from the configuration cache. We expect no crashes.
+        project.executor().run("clean")
+
+        assertThat(project.file(testReportPath)).doesNotExist()
+        assertThat(project.file(testResultPbPath)).doesNotExist()
+
+        val resultWithConfigCache = project.executor()
+                .withArgument("--init-script")
+                .withArgument(initScriptPath.toString())
+                .run(testTaskName)
+
+        resultWithConfigCache.stdout.use {
+            assertThat(it).contains("<UTP_TEST_RESULT_ON_TEST_RESULT_EVENT>")
+            assertThat(it).contains("</UTP_TEST_RESULT_ON_TEST_RESULT_EVENT>")
+            assertThat(it).contains("<UTP_TEST_RESULT_ON_COMPLETED />")
+            assertThat(it).doesNotContain("<UTP_TEST_RESULT_ON_ERROR />")
+        }
         assertThat(project.file(testReportPath)).exists()
         assertThat(project.file(testResultPbPath)).exists()
     }

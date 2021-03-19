@@ -44,7 +44,10 @@ message TestResultEvent {
     }
 
     // A detailed information about the started test suite.
-    message TestSuiteStarted {}
+    message TestSuiteStarted {
+        // Message must be google.testing.platform.proto.api.core.TestSuiteMetaData.
+        google.protobuf.Any test_suite_metadata = 1;
+    }
 
     // A detailed information about the started test case.
     message TestCaseStarted {

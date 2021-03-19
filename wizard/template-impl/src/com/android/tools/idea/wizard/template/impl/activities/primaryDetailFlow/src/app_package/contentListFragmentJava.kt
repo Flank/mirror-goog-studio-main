@@ -68,6 +68,8 @@ fun contentListFragmentJava(
   return """
 package ${packageName};
 
+import android.content.ClipData;
+import android.content.ClipDescription;
 import android.os.Build;
 import android.os.Bundle;
 
@@ -228,6 +230,33 @@ ${renderIf(isViewBindingSupported) {"""
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 holder.itemView.setOnContextClickListener(mOnContextClickListener);
             }
+            holder.itemView.setOnLongClickListener(v -> {
+                // Setting the item id as the clip data so that the drop target is able to
+                // identify the id of the content
+                ClipData.Item clipItem = new ClipData.Item(mValues.get(position).id);
+                ClipData dragData = new ClipData(
+                        ((PlaceholderContent.PlaceholderItem) v.getTag()).content,
+                        new String[]{ClipDescription.MIMETYPE_TEXT_PLAIN},
+                        clipItem
+                );
+
+                if (Build.VERSION.SDK_INT >= 24) {
+                    v.startDragAndDrop(
+                            dragData,
+                            new View.DragShadowBuilder(v),
+                            null,
+                            0
+                    );
+                } else {
+                    v.startDrag(
+                            dragData,
+                            new View.DragShadowBuilder(v),
+                            null,
+                            0
+                    );
+                }
+                return true;
+            });
         }
 
         @Override

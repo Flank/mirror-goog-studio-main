@@ -32,6 +32,7 @@ import com.android.tools.idea.wizard.template.impl.activities.googleMapsWearActi
 import com.android.tools.idea.wizard.template.impl.activities.loginActivity.loginActivityTemplate
 import com.android.tools.idea.wizard.template.impl.activities.navigationDrawerActivity.navigationDrawerActivityTemplate
 import com.android.tools.idea.wizard.template.impl.activities.primaryDetailFlow.primaryDetailFlowTemplate
+import com.android.tools.idea.wizard.template.impl.activities.responsiveActivity.responsiveActivityTemplate
 import com.android.tools.idea.wizard.template.impl.activities.scrollActivity.scrollActivityTemplate
 import com.android.tools.idea.wizard.template.impl.activities.settingsActivity.settingsActivityTemplate
 import com.android.tools.idea.wizard.template.impl.activities.tabbedActivity.tabbedActivityTemplate
@@ -81,6 +82,7 @@ class WizardTemplateProviderImpl : WizardTemplateProvider() {
     loginActivityTemplate,
     primaryDetailFlowTemplate,
     navigationDrawerActivityTemplate,
+    responsiveActivityTemplate,
     settingsActivityTemplate,
     scrollActivityTemplate,
     tabbedActivityTemplate,

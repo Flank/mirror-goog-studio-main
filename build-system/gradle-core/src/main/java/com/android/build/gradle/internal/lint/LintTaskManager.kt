@@ -58,11 +58,11 @@ class LintTaskManager constructor(private val globalScope: GlobalScope, private 
             if (variantType.isAar) {
                 // We need the library lint models if checkDependencies is true
                 taskFactory.register(LintModelWriterTask.CreationAction(variantWithTests.main))
-            } else if (variantType.isDynamicFeature) {
-                // TODO (b/180672373) consider also publishing dynamic feature lint models with
-                //  checkDependencies = true if that's necessary to properly run lint from an app
-                //  module with dynamic features with library dependencies that aren't dependencies
-                //  of the app.
+            } else {
+                // We need app and dynamic feature models if there are dynamic features.
+                // TODO (b/180672373) consider also publishing dynamic feature and app lint models
+                //  with checkDependencies = true if that's necessary to properly run lint from an
+                //  app or dynamic feature module with checkDependencies = true.
                 taskFactory.register(
                     LintModelWriterTask.CreationAction(
                         variantWithTests.main,

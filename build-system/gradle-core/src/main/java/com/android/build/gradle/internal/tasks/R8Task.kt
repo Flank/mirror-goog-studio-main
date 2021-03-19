@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.PostprocessingFeatures
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
+import com.android.build.gradle.internal.errors.MessageReceiverImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.DUPLICATE_CLASSES_CHECK
@@ -29,6 +30,7 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.utils.getDesugarLibConfig
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
+import com.android.build.gradle.options.SyncOptions
 import com.android.builder.core.VariantType
 import com.android.builder.dexing.DexingType
 import com.android.builder.dexing.MainDexListConfig
@@ -53,6 +55,7 @@ import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
@@ -97,7 +100,8 @@ abstract class R8Task: ProguardConfigurableTask() {
     @get:Classpath
     abstract val bootClasspath: ConfigurableFileCollection
 
-    private lateinit var messageReceiver: MessageReceiver
+    @get:Internal
+    abstract val errorFormatMode: Property<SyncOptions.ErrorFormatMode>
 
     @get:Input
     abstract val minSdkVersion: Property<Int>
@@ -266,11 +270,23 @@ abstract class R8Task: ProguardConfigurableTask() {
                 R8Task::outputResources
             ).withName("shrunkJavaRes.jar").on(InternalArtifactType.SHRUNK_JAVA_RES)
 
-            if (creationConfig is ApkCreationConfig && creationConfig.needsMainDexListForBundle) {
-                creationConfig.artifacts.setInitialProvider(
-                        taskProvider,
-                        R8Task::mainDexListOutput
-                ).withName("mainDexList.txt").on(InternalArtifactType.MAIN_DEX_LIST_FOR_BUNDLE)
+            if (creationConfig is ApkCreationConfig) {
+                when {
+                    creationConfig.needsMainDexListForBundle -> {
+                        creationConfig.artifacts.setInitialProvider(
+                            taskProvider,
+                            R8Task::mainDexListOutput
+                        ).withName("mainDexList.txt")
+                            .on(InternalArtifactType.MAIN_DEX_LIST_FOR_BUNDLE)
+                    }
+                    creationConfig.dexingType.needsMainDexList -> {
+                        creationConfig.artifacts.setInitialProvider(
+                            taskProvider,
+                            R8Task::mainDexListOutput
+                        ).withName("mainDexList.txt")
+                            .on(InternalArtifactType.LEGACY_MULTIDEX_MAIN_DEX_LIST)
+                    }
+                }
             }
         }
 
@@ -292,7 +308,7 @@ abstract class R8Task: ProguardConfigurableTask() {
                 .setDisallowChanges(creationConfig.debuggable)
             task.disableTreeShaking.set(disableTreeShaking)
             task.disableMinification.set(disableMinification)
-            task.messageReceiver = creationConfig.globalScope.messageReceiver
+            task.errorFormatMode.set(SyncOptions.getErrorFormatMode(creationConfig.services.projectOptions))
             task.dexingType = creationConfig.dexingType
             task.useFullR8.setDisallowChanges(creationConfig.services.projectOptions[BooleanOption.FULL_R8])
 
@@ -446,7 +462,7 @@ abstract class R8Task: ProguardConfigurableTask() {
             proguardConfigurationFiles = configurationFiles.toList(),
             proguardConfigurations = proguardConfigurations,
             variantType = variantType.orNull,
-            messageReceiver = messageReceiver,
+            messageReceiver = MessageReceiverImpl(errorFormatMode.get(), logger),
             dexingType = dexingType,
             useFullR8 = useFullR8.get(),
             referencedInputs = (referencedClasses + referencedResources).toList(),

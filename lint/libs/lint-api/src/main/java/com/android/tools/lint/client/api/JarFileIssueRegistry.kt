@@ -206,6 +206,23 @@ private constructor(
         }
 
         /**
+         * Verifies that the given issue jar [jarFile] is compatible, and
+         * if so returns null, otherwise returns the description of at
+         * least one invalid symbol.
+         */
+        private fun verify(client: LintClient, jarFile: File): String? {
+            val verifier = LintJarVerifier()
+            try {
+                if (!verifier.isCompatible(jarFile)) {
+                    return verifier.describeFirstIncompatibleReference()
+                }
+            } catch (verifierBug: Throwable) {
+                client.log(verifierBug, "Error verifying bytecode in $jarFile")
+            }
+            return null
+        }
+
+        /**
          * Given a jar file, create a class loader for it and
          * instantiate the named issue registry.
          *
@@ -248,21 +265,49 @@ private constructor(
                 }
 
                 try {
+                    if (registry.maxApi < CURRENT_API) {
+                        // IssueRegistry intended for older versions of lint
+                        return null
+                    }
+
                     val apiField = registryClass.getDeclaredMethod("getApi")
                     val api = apiField.invoke(registry) as Int
                     if (api < CURRENT_API) {
-                        val message = "Lint found an issue registry (`$className`) which is " +
-                            "older than the current API level; these checks may not work " +
-                            "correctly.\n" +
-                            "\n" +
-                            "Recompile the checks against the latest version. " +
-                            "Custom check API version is $api (${describeApi(api)}), " +
-                            "current lint API level is $CURRENT_API " +
-                            "(${describeApi(CURRENT_API)})"
-                        LintClient.report(
-                            client = client, issue = OBSOLETE_LINT_CHECK,
-                            message = message, file = jarFile, project = currentProject
-                        )
+                        // Don't warn if the registry is older if binary verification doesn't
+                        // yield any problems. This is helpful because lint releases often (3+ times
+                        // a year) and for libraries bundled with AAR files this means that by the
+                        // time the library is stable lint will start warning about the lint check
+                        // needing to be updated -- and in 99.9% of cases the lint check is only
+                        // doing simple things which is unaffected by lint changes.
+                        val verifierError = verify(client, jarFile)
+                        if (verifierError != null) {
+                            val message =
+"""
+Library lint checks out of date.
+
+Lint found an issue registry (`$className`)
+which was compiled against an older version of lint
+than this one.
+
+This often works just fine, but some basic verification
+shows that the lint check jar references (for example)
+the following API which is no longer valid in this
+version of lint:
+$verifierError
+
+Recompile the checks against the latest version, or if
+this is a check bundled with a third-party library, see
+if there is a more recent version available.
+
+Version of Lint API this lint check is using is $api.
+The Lint API version currently running is $CURRENT_API (${describeApi(CURRENT_API)}).
+""".trim()
+                            LintClient.report(
+                                client = client, issue = OBSOLETE_LINT_CHECK,
+                                message = message, file = jarFile, project = currentProject
+                            )
+                            return null
+                        }
                         // Not returning here: try to run the checks
                     } else {
                         try {
@@ -271,23 +316,53 @@ private constructor(
                                 val message = "Lint found an issue registry (`$className`) which " +
                                     "requires a newer API level. That means that the custom " +
                                     "lint checks are intended for a newer lint version; please " +
-                                    "upgrade"
+                                    "upgrade."
                                 LintClient.report(
                                     client = client, issue = OBSOLETE_LINT_CHECK,
                                     message = message, file = jarFile, project = currentProject
                                 )
                                 return null
+                            } else if (api >= CURRENT_API) {
+                                val verifierError = verify(client, jarFile)
+                                if (verifierError != null) {
+                                    val message =
+"""
+Requires newer lint.
+
+Lint found an issue registry (`$className`)
+which was compiled against a newer version of lint
+than this one.
+
+This often works just fine, but some basic verification
+shows that the lint check jar references (for example)
+the following API which is not valid in the version of
+lint which is running:
+$verifierError
+
+To use this lint check, upgrade to a more recent version
+of lint.
+
+Version of Lint API this lint check is using is $api.
+The Lint API version currently running is $CURRENT_API (${describeApi(CURRENT_API)}).
+""".trim()
+                                    LintClient.report(
+                                        client = client, issue = OBSOLETE_LINT_CHECK,
+                                        message = message, file = jarFile, project = currentProject
+                                    )
+                                    return null
+                                }
                             }
-                        } catch (ignore: Throwable) {
+                        } catch (e: Throwable) {
+                            client.log(e, null)
                         }
                     }
                 } catch (e: Throwable) {
-                    var message = "Lint found an issue registry (`$className`) which did not " +
-                        "specify the Lint API version it was compiled with.\n" +
+                    var message = "Lint found an issue registry (`$className`)\n" +
+                        "which did not specify the Lint API version it was compiled with.\n" +
                         "\n" +
                         "**This means that the lint checks are likely not compatible.**\n" +
                         "\n" +
-                        "If you are the author of this lint check, make your lint " +
+                        "If you are the author of this lint check, make your lint\n" +
                         "`IssueRegistry` class contain\n" +
                         "\u00a0\u00a0override val api: Int = com.android.tools.lint.detector.api.CURRENT_API\n" +
                         "or from Java,\n" +
@@ -298,8 +373,8 @@ private constructor(
                         message += (
                             "\n" +
                                 "\n" +
-                                "If you are just using lint checks from a third party library " +
-                                "you have no control over, you can disable these lint checks (if " +
+                                "If you are just using lint checks from a third party library\n" +
+                                "you have no control over, you can disable these lint checks (if\n" +
                                 "they misbehave) like this:\n" +
                                 "\n" +
                                 "    android {\n" +
@@ -423,8 +498,8 @@ private constructor(
                         if (services != null) {
                             file.getInputStream(services).use {
                                 val reader = InputStreamReader(it, Charsets.UTF_8)
-                                reader.useLines {
-                                    for (line in it) {
+                                reader.useLines { lines ->
+                                    for (line in lines) {
                                         val comment = line.indexOf("#")
                                         val className = if (comment >= 0) {
                                             line.substring(0, comment).trim()

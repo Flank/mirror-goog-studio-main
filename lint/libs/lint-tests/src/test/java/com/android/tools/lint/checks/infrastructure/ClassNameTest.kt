@@ -17,6 +17,7 @@
 package com.android.tools.lint.checks.infrastructure
 
 import junit.framework.TestCase.assertEquals
+import org.intellij.lang.annotations.Language
 import org.junit.Assert.assertNull
 import org.junit.Test
 
@@ -157,5 +158,17 @@ class ClassNameTest {
             )
                 .trimIndent().trim()
         )
+    }
+
+    @Test
+    fun testGetEnumClass() {
+        @Language("kotlin")
+        val source =
+            """
+            package com.android.tools.lint.detector.api
+            enum class Severity { FATAL, ERROR, WARNING, INFORMATIONAL, IGNORE }
+            """.trimIndent()
+        assertEquals("com.android.tools.lint.detector.api", ClassName(source).packageName)
+        assertEquals("Severity", ClassName(source).className)
     }
 }

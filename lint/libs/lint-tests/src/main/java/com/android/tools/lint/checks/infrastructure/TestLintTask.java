@@ -703,7 +703,7 @@ public class TestLintTask {
     /**
      * Configures lint to run with a custom lint client instead of the default one. This is a
      * factory method instead of a method which takes an instance because during testing, lint may
-     * need to run multiple times (see for example {@link #testModes()}), and we want to make sure
+     * need to run multiple times (see for example {@link #testModes}), and we want to make sure
      * there's no leaking of instance state between these separate runs.
      *
      * @param factory the factor which creates custom clients to use

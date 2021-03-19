@@ -15,30 +15,38 @@
  */
 package com.android.build.gradle.internal.coverage
 
+import com.android.SdkConstants
 import com.android.Version
 import com.android.build.api.component.impl.TestComponentImpl
+import com.android.build.gradle.internal.component.TestComponentCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.utils.usLocaleCapitalize
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.collect.ImmutableList
 import com.google.common.io.Closeables
 import org.gradle.api.artifacts.Configuration
-import org.gradle.api.file.ConfigurableFileTree
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.file.FileCollection
+import org.gradle.api.file.RegularFile
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logging
+import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.provider.Property
-import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.workers.ClassLoaderWorkerSpec
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.jacoco.core.analysis.Analyzer
@@ -57,87 +65,78 @@ import java.io.IOException
 import java.io.InputStream
 import java.io.UncheckedIOException
 import java.util.Locale
-import java.util.concurrent.Callable
-import java.util.stream.Collectors
-import javax.inject.Inject
 
-/** Simple Jacoco report task that calls the Ant version.  */
+/**
+ * For generating unit test coverage reports using jacoco. Provides separate CreateActions for
+ * generating unit test and connected test reports.
+ */
 abstract class JacocoReportTask : NonIncrementalTask() {
-    private var jacocoClasspath: FileCollection? = null
-
-    @get:Classpath
-    var classFileCollection: FileCollection? = null
-        private set
-
-    @get:PathSensitive(PathSensitivity.RELATIVE)
-    @get:InputFiles
-    var sourceFolders: FileCollection? = null
-        private set
-
-    @get:OutputDirectory
-    var reportDir: File? = null
-
-    @get:Input
-    var reportName: String? = null
-
-    @get:Input
-    var tabWidth = 4
-    @Deprecated("")
-    fun setCoverageFile(coverageFile: File?) {
-        logger.info("JacocoReportTask.setCoverageDir is deprecated and has no effect.")
-    }
 
     // PathSensitivity.NONE since only the contents of the files under the directory matter as input
-    @get:Optional
-    @get:PathSensitive(PathSensitivity.NONE)
     @get:InputDirectory
-    abstract val coverageDirectories: DirectoryProperty
-    @Classpath
-    fun getJacocoClasspath(): FileCollection? {
-        return jacocoClasspath
-    }
+    @get:PathSensitive(PathSensitivity.NONE)
+    @get:Optional
+    abstract val jacocoConnectedTestsCoverageDir: DirectoryProperty
 
-    fun setJacocoClasspath(jacocoClasspath: FileCollection?) {
-        this.jacocoClasspath = jacocoClasspath
-    }
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:Optional
+    abstract val jacocoUnitTestCoverageFile: RegularFileProperty
 
-    @kotlin.jvm.Throws(IOException::class)
+    @get:Input
+    abstract val reportName: Property<String>
+
+    @get:Classpath
+    abstract val classFileCollection: ConfigurableFileCollection
+
+    @get:Classpath
+    abstract val jacocoClasspath: ConfigurableFileCollection
+
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val sourceFolders: ConfigurableFileCollection
+
+    @get:Internal
+    abstract val tabWidth: Property<Int>
+
+    @get:OutputDirectory
+    abstract val outputReportDir: DirectoryProperty
+
     override fun doTaskAction() {
-        val coverageFiles = coverageDirectories
-            .get()
-            .asFileTree
-            .files
-            .stream()
-            .filter { obj: File -> obj.isFile }
-            .collect(Collectors.toSet())
-        if (coverageFiles.isEmpty()) {
-            throw IOException(
-                String.format(
-                    "No coverage data to process in directories [%1\$s]",
-                    coverageDirectories.get().asFile.absolutePath
-                )
-            )
-        }
-        workerExecutor
-            .classLoaderIsolation {
-                it.classpath.from(jacocoClasspath?.files)
+        val coverageFiles: Set<File> = if (jacocoUnitTestCoverageFile.isPresent) {
+            // Unit test coverage:
+            setOf(jacocoUnitTestCoverageFile.get().asFile)
+        } else {
+            // Connected android test coverage:
+            val connectedTestJacocoFiles =
+                jacocoConnectedTestsCoverageDir.get().asFileTree.files.filter(File::isFile)
+            if (connectedTestJacocoFiles.none()) {
+                val path = jacocoConnectedTestsCoverageDir.get().asFile.absolutePath
+                throw IOException("No coverage data to process in directories [$path]")
             }
-            .submit(
-                JacocoReportWorkerAction::class.java
-            ) {
-                it?.coverageFiles?.set(coverageFiles)
-                it?.getReportDir()?.set(reportDir)
-                it?.classFolders?.set(classFileCollection!!.files)
-                it?.getSourceFolders()?.set(sourceFolders!!.files)
-                it?.getTabWidth()?.set(tabWidth)
-                it?.getReportName()?.set(reportName)
+            connectedTestJacocoFiles.toSet()
+        }
+
+        workerExecutor
+            .classLoaderIsolation { classpath: ClassLoaderWorkerSpec ->
+                classpath.classpath.from(jacocoClasspath.files)
+            }
+            .submit(JacocoReportWorkerAction::class.java) {
+                it.coverageFiles.setFrom(coverageFiles)
+                it.reportDir.set(outputReportDir)
+                it.classFolders.setFrom(classFileCollection)
+                it.sourceFolders.setFrom(sourceFolders)
+                it.tabWidth.set(tabWidth)
+                it.reportName.set(reportName)
             }
     }
 
-    class CreationAction(
-        testComponentProperties: TestComponentImpl,
-        private val jacocoAntConfiguration: Configuration
-    ) : VariantTaskCreationAction<JacocoReportTask, TestComponentImpl>(testComponentProperties) {
+    abstract class BaseCreationAction(
+        testComponentProperties: TestComponentCreationConfig,
+    protected open val jacocoAntConfiguration: Configuration? = null
+    ) : VariantTaskCreationAction<JacocoReportTask, TestComponentCreationConfig>
+    (testComponentProperties) {
+
         override val name: String
             get() = computeTaskName("create", "CoverageReport")
         override val type: Class<JacocoReportTask>
@@ -150,63 +149,90 @@ abstract class JacocoReportTask : NonIncrementalTask() {
 
         override fun configure(task: JacocoReportTask) {
             super.configure(task)
-            task.description = ("Creates JaCoCo test coverage report from data gathered on the "
-                    + "device.")
-            task.reportName = creationConfig.name
-            val testedVariant = creationConfig.testedVariant
-            task.jacocoClasspath = jacocoAntConfiguration
+            task.classFileCollection.setFrom(creationConfig.artifacts.getAllClasses())
+            task.jacocoClasspath.setFrom(jacocoAntConfiguration)
+            task.outputReportDir.set(creationConfig.paths.coverageReportDir)
+            task.outputReportDir.disallowChanges()
+            task.reportName.setDisallowChanges(creationConfig.testedConfig.name)
+            task.sourceFolders.setFrom(
+                creationConfig.services.fileCollection(creationConfig.testedConfig.javaSources))
+            task.tabWidth.setDisallowChanges(4)
+        }
+    }
+
+    internal class CreateActionUnitTest(
+        testComponentProperties: TestComponentCreationConfig,
+        override val jacocoAntConfiguration: Configuration? = null
+    ) : BaseCreationAction(testComponentProperties, jacocoAntConfiguration) {
+
+        override fun configure(task: JacocoReportTask) {
+            super.configure(task)
+            task.description = "Generates a Jacoco code coverage report from unit tests."
+            creationConfig.artifacts.setTaskInputToFinalProduct(
+                InternalArtifactType.UNIT_TEST_CODE_COVERAGE, task.jacocoUnitTestCoverageFile)
+            /** Jacoco coverage files are generated from [AndroidUnitTest] */
+            task.dependsOn(JavaPlugin.TEST_TASK_NAME)
+        }
+    }
+
+    class CreationActionConnectedTest(
+        testComponentProperties: TestComponentImpl,
+        override val jacocoAntConfiguration: Configuration
+    ) : BaseCreationAction(testComponentProperties, jacocoAntConfiguration) {
+
+        override fun configure(task: JacocoReportTask) {
+            super.configure(task)
+            task.description =
+                "Creates JaCoCo test coverage report from data gathered on the device."
             creationConfig
                 .artifacts
                 .setTaskInputToFinalProduct(
                     InternalArtifactType.CODE_COVERAGE,
-                    task.coverageDirectories
+                    task.jacocoConnectedTestsCoverageDir
                 )
-            task.classFileCollection = testedVariant.artifacts.getAllClasses()
-            task.sourceFolders = creationConfig
-                .services.fileCollection(testedVariant::javaSources)
-            task.reportDir = testedVariant.paths.coverageReportDir.get().asFile
+
         }
     }
 
-    internal interface JacocoWorkParameters : WorkParameters {
-        val coverageFiles: SetProperty<File>
-        fun getReportDir(): DirectoryProperty
-        val classFolders: SetProperty<File>
-        fun getSourceFolders(): SetProperty<File>
-        fun getTabWidth(): Property<Int>
-        fun getReportName(): Property<String>
+    interface JacocoWorkParameters : WorkParameters {
+        val coverageFiles: ConfigurableFileCollection
+        val reportDir: DirectoryProperty
+        val classFolders: ConfigurableFileCollection
+        val sourceFolders: ConfigurableFileCollection
+        val tabWidth: Property<Int>
+        val reportName: Property<String>
     }
 
-    internal abstract class JacocoReportWorkerAction @Inject constructor() :
-        WorkAction<JacocoWorkParameters> {
+    abstract class JacocoReportWorkerAction : WorkAction<JacocoWorkParameters> {
+
         override fun execute() {
             try {
                 generateReport(
-                    parameters.coverageFiles.get(),
-                    parameters.getReportDir().asFile.get(),
-                    parameters.classFolders.get(),
-                    parameters.getSourceFolders().get(),
-                    parameters.getTabWidth().get(),
-                    parameters.getReportName().get()
+                    parameters.coverageFiles.files,
+                    parameters.reportDir.asFile.get(),
+                    parameters.classFolders.files,
+                    parameters.sourceFolders.files,
+                    parameters.tabWidth.get(),
+                    parameters.reportName.get()
                 )
             } catch (e: IOException) {
                 throw UncheckedIOException("Unable to generate Jacoco report", e)
             }
         }
-
         companion object {
-            private val logger = Logging.getLogger(
+
+            val logger = Logging.getLogger(
                 JacocoReportWorkerAction::class.java
             )
 
-            @JvmStatic
             @VisibleForTesting
-            @kotlin.jvm.Throws(IOException::class)
+            @JvmStatic
+            @Throws(IOException::class)
             fun generateReport(
                 coverageFiles: Collection<File>,
                 reportDir: File,
                 classFolders: Collection<File>,
-                sourceFolders: Collection<File?>,
+                sourceFolders: Collection<File>,
                 tabWidth: Int,
                 reportName: String
             ) {
@@ -255,7 +281,6 @@ abstract class JacocoReportTask : NonIncrementalTask() {
                     }
                 }
             }
-
             @Throws(IOException::class)
             private fun analyzeAll(
                 analyzer: Analyzer, classFolders: Collection<File>
@@ -264,7 +289,6 @@ abstract class JacocoReportTask : NonIncrementalTask() {
                     analyze(analyzer, folder, classFolders)
                 }
             }
-
             /**
              * Analyzes code coverage on file if it's a class file, or recursively analyzes descendants
              * if file is a folder.
@@ -295,7 +319,7 @@ abstract class JacocoReportTask : NonIncrementalTask() {
                     }
                 } else {
                     val name = file.name
-                    if (!name.endsWith(".class")
+                    if (! name.endsWith(".class")
                         || name == "R.class" || name.startsWith("R$")
                         || name == "Manifest.class" || name.startsWith("Manifest$")
                         || name == "BuildConfig.class"

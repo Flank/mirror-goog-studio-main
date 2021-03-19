@@ -17,6 +17,7 @@ package com.android.ide.common.gradle.model.stubs;
 
 import com.android.annotations.NonNull;
 import com.android.builder.model.AndroidArtifact;
+import com.android.builder.model.AndroidProject;
 import com.android.builder.model.JavaArtifact;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.TestedTargetVariant;
@@ -46,8 +47,8 @@ public class VariantStub extends BaseStub implements Variant {
         this(
                 "name",
                 "displayName",
-                new AndroidArtifactStub(),
-                Lists.newArrayList(new AndroidArtifactStub()),
+                new AndroidArtifactStub(AndroidProject.ARTIFACT_MAIN),
+                Lists.newArrayList(new AndroidArtifactStub(AndroidProject.ARTIFACT_ANDROID_TEST)),
                 Lists.newArrayList(new JavaArtifactStub()),
                 "buildType",
                 Lists.newArrayList("flavor"),
@@ -61,8 +62,8 @@ public class VariantStub extends BaseStub implements Variant {
         this(
                 name,
                 "display" + StringHelper.usLocaleCapitalize(name),
-                new AndroidArtifactStub(),
-                Lists.newArrayList(new AndroidArtifactStub()),
+                new AndroidArtifactStub(AndroidProject.ARTIFACT_MAIN),
+                Lists.newArrayList(new AndroidArtifactStub(AndroidProject.ARTIFACT_ANDROID_TEST)),
                 Lists.newArrayList(new JavaArtifactStub()),
                 buildType,
                 ImmutableList.copyOf(flavors),

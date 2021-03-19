@@ -622,7 +622,7 @@ com.android.build.gradle.api.ViewBindingOptions
 com.android.build.gradle.api.ViewBindingOptions.isEnabled: boolean ()
 com.android.build.gradle.api.ViewBindingOptions.setEnabled: void (boolean)
 com.android.build.gradle.internal.dsl.AaptOptions implements com.android.build.api.dsl.AaptOptions, com.android.build.api.dsl.AndroidResources
-com.android.build.gradle.internal.dsl.AaptOptions.<init>: com.android.build.gradle.internal.dsl.AaptOptions (boolean)
+com.android.build.gradle.internal.dsl.AaptOptions.<init>: com.android.build.gradle.internal.dsl.AaptOptions (com.android.build.gradle.internal.services.DslServices)
 com.android.build.gradle.internal.dsl.AaptOptions.additionalParameters: void (java.lang.String)
 com.android.build.gradle.internal.dsl.AaptOptions.additionalParameters: void (java.lang.String[])
 com.android.build.gradle.internal.dsl.AaptOptions.failOnMissingConfigEntry: void (boolean)

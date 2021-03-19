@@ -232,11 +232,12 @@ abstract class GenerateApkDataTask : NonIncrementalTask() {
                 "manifests",
                 "microapk",
                 creationConfig.variantDslInfo.dirName
-            ).get().file(SdkConstants.FN_ANDROID_MANIFEST_XML).asFile
+            ).get().asFile
 
             creationConfig.artifacts
                     .setInitialProvider(taskProvider, GenerateApkDataTask::manifestFile)
                     .atLocation(manifestLocation.absolutePath)
+                    .withName(SdkConstants.FN_ANDROID_MANIFEST_XML)
                     .on(InternalArtifactType.MICRO_APK_MANIFEST_FILE)
 
             val microApkResDirectory =

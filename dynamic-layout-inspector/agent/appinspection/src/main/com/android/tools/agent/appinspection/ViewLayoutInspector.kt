@@ -90,7 +90,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
         /**
          * Settings that determine the format of screenshots taken when doing a layout capture.
          */
-        var screenshotSettings = ScreenshotSettings(Screenshot.Type.SKP)
+        var screenshotSettings = ScreenshotSettings(Screenshot.Type.BITMAP)
     }
 
     private val stateLock = Any()
@@ -127,7 +127,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
 
     override fun onDispose() {
         forceStopAllCaptures()
-        SynchronousPixelCopy.stopHandler();
+        SynchronousPixelCopy.stopHandler()
     }
 
     /**
@@ -295,7 +295,11 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
         try {
             synchronized(stateLock) {
                 val handle =
-                    SkiaQWorkaround.startRenderingCommandsCapture(root, captureExecutor) { os }
+                    SkiaQWorkaround.startRenderingCommandsCapture(
+                        root,
+                        captureExecutor,
+                        callback = { os },
+                        shouldSerialize = { state.screenshotSettings.type == Screenshot.Type.SKP })
                 if (handle != null) {
                     state.contextMap[root.uniqueDrawingId] =
                         CaptureContext(handle, isLastCapture = (!continuous))
@@ -339,7 +343,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
     ) {
         synchronized(stateLock) {
             state.screenshotSettings = ScreenshotSettings(
-                updateScreenshotTypeCommand.type,
+                updateScreenshotTypeCommand.type.let { if (it == Screenshot.Type.UNKNOWN) state.screenshotSettings.type else it},
                 updateScreenshotTypeCommand.scale
             )
         }

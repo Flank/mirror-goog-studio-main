@@ -42,11 +42,11 @@ public class BaseArtifactStub extends BaseStub implements BaseArtifact {
     @NonNull private final Collection<File> myGeneratedSourceFolders;
     @Nullable private final SourceProvider myVariantSourceProvider;
     @Nullable private final SourceProvider myMultiFlavorSourceProvider;
-    @NonNull private final Set<File> myAdditionalClassesFolders;;
+    @NonNull private final Set<File> myAdditionalClassesFolders;
 
-    public BaseArtifactStub() {
+    public BaseArtifactStub(@NonNull String name) {
         this(
-                "name",
+                name,
                 "compile",
                 "assemble",
                 new File("postAssembleModel"),

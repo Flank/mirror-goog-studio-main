@@ -60,7 +60,6 @@ import com.android.tools.lint.TextReporter;
 import com.android.tools.lint.client.api.CircularDependencyException;
 import com.android.tools.lint.client.api.Configuration;
 import com.android.tools.lint.client.api.ConfigurationHierarchy;
-import com.android.tools.lint.client.api.GradleVisitor;
 import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.client.api.LintDriver;

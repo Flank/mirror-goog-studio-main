@@ -17,12 +17,15 @@
 package com.android.tools.agent.appinspection.framework
 
 import android.graphics.Bitmap
+import com.android.tools.layoutinspector.toBytes
 import java.nio.ByteBuffer
 
 fun Bitmap.toByteArray(): ByteArray {
-    val bytes = ByteArray(this.byteCount)
-    val buf = ByteBuffer.wrap(bytes)
-    this.copyPixelsToBuffer(buf)
+    val bytes = ByteArray(byteCount + 8)
 
+    width.toBytes(bytes, 0)
+    height.toBytes(bytes, 4)
+    val buf = ByteBuffer.wrap(bytes, 8, byteCount)
+    this.copyPixelsToBuffer(buf)
     return bytes
 }

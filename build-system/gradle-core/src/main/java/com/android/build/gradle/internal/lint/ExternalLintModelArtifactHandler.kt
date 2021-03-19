@@ -25,6 +25,8 @@ import com.android.ide.common.caching.CreatingCache
 import com.android.tools.lint.model.DefaultLintModelAndroidLibrary
 import com.android.tools.lint.model.DefaultLintModelJavaLibrary
 import com.android.tools.lint.model.DefaultLintModelMavenName
+import com.android.tools.lint.model.DefaultLintModelModuleLibrary
+import com.android.tools.lint.model.LintModelExternalLibrary
 import com.android.tools.lint.model.LintModelLibrary
 import com.android.tools.lint.model.LintModelMavenName
 import com.android.utils.FileUtils
@@ -38,12 +40,17 @@ import java.util.Collections
  * This means that lint does not need to parse dependency sources when checkLibrary is disabled,
  * and the lint integration need not handle local projects that are not analyzed but are needed
  * to resolve symbols.
+ *
+ * Note: If [baseModuleModelFileMap] contains the appropriate entry, any corresponding base module
+ * project dependency will be handled as a [DefaultLintModelModuleLibrary] instead of a
+ * [LintModelExternalLibrary]
  */
 class ExternalLintModelArtifactHandler private constructor(
     private val localJarCache: CreatingCache<File, List<File>>,
     mavenCoordinatesCache: CreatingCache<ResolvedArtifact, MavenCoordinates>,
     private val projectExplodedAarsMap: Map<ProjectKey, File>,
-    private val projectJarsMap: Map<ProjectKey, File>
+    private val projectJarsMap: Map<ProjectKey, File>,
+    private val baseModuleModelFileMap: Map<ProjectKey, File>
 ) : ArtifactHandler<LintModelLibrary>(localJarCache, mavenCoordinatesCache) {
 
     override fun handleAndroidLibrary(
@@ -133,6 +140,14 @@ class ExternalLintModelArtifactHandler private constructor(
     ): LintModelLibrary {
         val artifactAddress = addressSupplier()
         val key = ProjectKey(buildId, projectPath, variantName)
+        if (key in baseModuleModelFileMap) {
+            return DefaultLintModelModuleLibrary(
+                artifactAddress = addressSupplier(),
+                projectPath = projectPath,
+                lintJar = null,
+                provided = false
+            )
+        }
         val jar = getProjectJar(key)
         return DefaultLintModelJavaLibrary(
             artifactAddress = artifactAddress,
@@ -162,6 +177,7 @@ class ExternalLintModelArtifactHandler private constructor(
             testedProjectExplodedAars: ArtifactCollection?,
             compileProjectJars: ArtifactCollection,
             runtimeProjectJars: ArtifactCollection,
+            baseModuleModelFile: ArtifactCollection?,
             buildMapping: BuildMapping
         ): ExternalLintModelArtifactHandler {
             var projectExplodedAarsMap =
@@ -171,11 +187,14 @@ class ExternalLintModelArtifactHandler private constructor(
             }
             val projectJarsMap =
                 compileProjectJars.asProjectKeyedMap(buildMapping) + runtimeProjectJars.asProjectKeyedMap(buildMapping)
+            val baseModuleModelFileMap =
+                baseModuleModelFile?.asProjectKeyedMap(buildMapping) ?: emptyMap()
             return ExternalLintModelArtifactHandler(
                 dependencyCaches.localJarCache,
                 dependencyCaches.mavenCoordinatesCache,
                 Collections.unmodifiableMap(projectExplodedAarsMap),
-                Collections.unmodifiableMap(projectJarsMap)
+                Collections.unmodifiableMap(projectJarsMap),
+                Collections.unmodifiableMap(baseModuleModelFileMap)
             )
 
         }

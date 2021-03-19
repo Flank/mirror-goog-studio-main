@@ -92,7 +92,7 @@ class Incident(
     /**
      * Secondary constructor which mirrors the old {@link
      * Context#report} signature parameter orders to make it easy to
-     * migrate code: just put new Indent() around argument list.
+     * migrate code: just put new Incident() around argument list.
      */
     constructor(issue: Issue, location: Location, message: String) :
         this(issue, message, location, null, null)
@@ -100,7 +100,7 @@ class Incident(
     /**
      * Secondary constructor which mirrors the old {@link
      * Context#report} signature parameter orders to make it easy to
-     * migrate code: just put new Indent() around argument list.
+     * migrate code: just put new Incident() around argument list.
      */
     constructor(issue: Issue, location: Location, message: String, fix: LintFix?) :
         this(issue, message, location, null, fix)
@@ -108,7 +108,7 @@ class Incident(
     /**
      * Secondary constructor which mirrors the old {@link
      * Context#report} signature parameter orders to make it easy to
-     * migrate code: just put new Indent() around argument list.
+     * migrate code: just put new Incident() around argument list.
      */
     constructor(issue: Issue, scope: Any, location: Location, message: String) :
         this(issue, message, location, scope, null)
@@ -116,7 +116,7 @@ class Incident(
     /**
      * Secondary constructor which mirrors the old {@link
      * Context#report} signature parameter orders to make it easy to
-     * migrate code: just put new Indent() around argument list.
+     * migrate code: just put new Incident() around argument list.
      */
     constructor(issue: Issue, scope: Any, location: Location, message: String, fix: LintFix?) :
         this(issue, message, location, scope, fix)

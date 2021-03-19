@@ -20,6 +20,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.artifact.impl.ArtifactsImpl;
@@ -44,6 +45,9 @@ import java.util.Collections;
 import java.util.concurrent.Callable;
 import org.gradle.api.Task;
 import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.file.DirectoryProperty;
+import org.gradle.api.file.FileSystemLocation;
+import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.reporting.ConfigurableReport;
 import org.gradle.api.specs.Spec;
@@ -51,10 +55,13 @@ import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.Optional;
+import org.gradle.api.tasks.OutputDirectory;
+import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.testing.Test;
 import org.gradle.api.tasks.testing.TestTaskReports;
 import org.gradle.testing.jacoco.plugins.JacocoPlugin;
 import org.gradle.testing.jacoco.plugins.JacocoTaskExtension;
+import org.jetbrains.annotations.NotNull;
 
 /** Patched version of {@link Test} that we need to use for local unit tests support. */
 @CacheableTask
@@ -82,6 +89,9 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
         return testConfigInputs;
     }
 
+    @Internal
+    abstract RegularFileProperty getJacocoCoverageOutputFile();
+
     public static class CreationAction
             extends VariantTaskCreationAction<AndroidUnitTest, ComponentCreationConfig> {
 
@@ -105,13 +115,25 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
         }
 
         @Override
+        public void handleProvider(@NotNull TaskProvider<AndroidUnitTest> taskProvider) {
+            super.handleProvider(taskProvider);
+            if (unitTestCreationConfig.getVariantDslInfo().isTestCoverageEnabled()) {
+                unitTestCreationConfig
+                        .getArtifacts()
+                        .setInitialProvider(taskProvider,
+                                AndroidUnitTest::getJacocoCoverageOutputFile)
+                        .withName(taskProvider.getName() + SdkConstants.DOT_EXEC)
+                        .on(InternalArtifactType.UNIT_TEST_CODE_COVERAGE.INSTANCE);
+            }
+        }
+
+        @Override
         public void configure(@NonNull AndroidUnitTest task) {
             super.configure(task);
 
             unitTestCreationConfig.onTestedConfig(
                     testedConfig -> {
-                        if (testedConfig.getVariantType().isAar()
-                                && testedConfig.getVariantDslInfo().isTestCoverageEnabled()) {
+                        if (testedConfig.getVariantDslInfo().isTestCoverageEnabled()) {
                             // Library project runtime classes are instrumented offline and
                             // published like such, so we need to exclude all classes from being
                             // re-instrumented by the Jacoco jvm agent.
@@ -124,8 +146,13 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
                                                         task.getExtensions()
                                                                 .findByType(
                                                                         JacocoTaskExtension.class);
-                                                jacocoTaskExtension.setExcludes(
-                                                        Collections.singletonList("*"));
+                                                if (testedConfig.getVariantType().isAar()) {
+                                                    jacocoTaskExtension.setExcludes(
+                                                            Collections.singletonList("*"));
+                                                }
+                                                jacocoTaskExtension.setDestinationFile(
+                                                        task.getJacocoCoverageOutputFile()
+                                                                .getAsFile());
                                             });
                         }
                         return null;

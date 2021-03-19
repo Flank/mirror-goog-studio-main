@@ -52,7 +52,7 @@ public class MainTest {
         final Main a = rule.getActivity();
         StringProvider sp = a.getStringProvider();
         assertEquals("42", sp.getString(42));
-        assertEquals("com.android.tests.basic.a", StringProvider.class.getName());
+        assertFalse(StringProvider.class.getName().contains("StringProvider"));
     }
 
     @Test

@@ -56,6 +56,11 @@ import com.android.builder.model.v2.models.ndk.NativeVariant
 // snapshot fixtures specific to each model class
 
 internal fun ModelSnapshotter<ModelVersions>.snapshotVersions() {
+    dataObject("AndroidDsl", ModelVersions::androidDsl) {
+        item("major", Version::major)
+        item("minor", Version::minor)
+    }
+
     dataObject("AndroidProject", ModelVersions::androidProject) {
         item("major", Version::major)
         item("minor", Version::minor)
@@ -386,6 +391,15 @@ private fun ModelSnapshotter<Variant>.snapshotVariant() {
 
 private fun ModelSnapshotter<AndroidArtifact>.snapshotAndroidArtifact() {
     snapshotBaseArtifact()
+    dataObject("minSdkVersion", AndroidArtifact::minSdkVersion) {
+        item("apiLevel", ApiVersion::apiLevel)
+        item("codename", ApiVersion::codename)
+    }
+    dataObject("targetSdkVersion", AndroidArtifact::targetSdkVersion) {
+        item("apiLevel", ApiVersion::apiLevel)
+        item("codename", ApiVersion::codename)
+    }
+    item("maxSdkVersion", AndroidArtifact::maxSdkVersion)
     item("isSigned", AndroidArtifact::isSigned)
     item("signingConfigName", AndroidArtifact::signingConfigName)
     item("sourceGenTaskName", AndroidArtifact::sourceGenTaskName)

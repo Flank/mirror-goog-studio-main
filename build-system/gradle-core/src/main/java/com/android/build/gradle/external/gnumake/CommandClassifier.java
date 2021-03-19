@@ -15,6 +15,7 @@
  */
 package com.android.build.gradle.external.gnumake;
 
+import static com.android.build.gradle.external.gnumake.CommandClassifierUtilsKt.endsWithExecutableName;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -153,10 +154,10 @@ class CommandClassifier {
 
         @Override
         public boolean isMatch(@NonNull CommandLine command) {
-            return command.getExecutable().endsWith("gcc-ar")
-                    || command.getExecutable().endsWith("android-ar")
-                    || command.getExecutable().endsWith("llvm-ar")
-                    || command.getExecutable().endsWith("androideabi-ar");
+            return endsWithExecutableName(command, "gcc-ar")
+                    || endsWithExecutableName(command, "android-ar")
+                    || endsWithExecutableName(command, "llvm-ar")
+                    || endsWithExecutableName(command, "androideabi-ar");
         }
     }
 
@@ -178,8 +179,7 @@ class CommandClassifier {
 
         @Override
         public boolean isMatch(@NonNull CommandLine command) {
-            String executable = new File(command.getExecutable()).getName();
-            if (executable.endsWith("ccache")) {
+            if (endsWithExecutableName(command, "ccache")) {
                 CommandLine translated = translateToCompilerCommandLine(command);
                 return sNativeCompilerBuildTool.isMatch(translated);
             }
@@ -265,14 +265,12 @@ class CommandClassifier {
         @Override
         public boolean isMatch(@NonNull CommandLine command) {
             String executable = new File(command.getExecutable()).getName();
-            return executable.endsWith("gcc")
-                    || executable.endsWith("g++")
-                    || executable.endsWith("clang")
-                    || executable.endsWith("clang++")
-                    || executable.endsWith("clang.exe")
-                    || executable.endsWith("clang++.exe")
-                    || (executable.contains("-gcc-") && !executable.endsWith("-ar"))
-                    || (executable.contains("-g++-") && !executable.endsWith("-ar"));
+            return endsWithExecutableName(command, "gcc")
+                    || endsWithExecutableName(command, "g++")
+                    || endsWithExecutableName(command, "clang")
+                    || endsWithExecutableName(command, "clang++")
+                    || (executable.contains("-gcc-") && !endsWithExecutableName(command, "-ar"))
+                    || (executable.contains("-g++-") && !endsWithExecutableName(command, "-ar"));
         }
     }
 }

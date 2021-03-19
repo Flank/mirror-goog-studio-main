@@ -21,11 +21,12 @@ import java.io.IOException
 import java.util.HashMap
 
 abstract class TestManifestGenerator(
-    val outputFile: File,
-    val packageName: String,
-    val minSdkVersion: String?,
-    val targetSdkVersion: String?,
-    val testRunnerName: String?,
+    private val outputFile: File,
+    private val packageName: String,
+    private val minSdkVersion: String?,
+    private val targetSdkVersion: String?,
+    private val testedPackageName: String,
+    private val testRunnerName: String?,
 ) {
 
     companion object {
@@ -33,6 +34,7 @@ abstract class TestManifestGenerator(
         private const val PH_MIN_SDK_VERSION = "#MINSDKVERSION#"
         private const val PH_TARGET_SDK_VERSION = "#TARGETSDKVERSION#"
         private const val PH_TEST_RUNNER = "#TESTRUNNER#"
+        private const val PH_TESTED_PACKAGE = "#TESTEDPACKAGE#"
     }
 
     open fun populateTemplateParameters(map: MutableMap<String, String?>) {
@@ -40,6 +42,7 @@ abstract class TestManifestGenerator(
         map[PH_MIN_SDK_VERSION] = minSdkVersion ?: "1"
         map[PH_TARGET_SDK_VERSION] = targetSdkVersion ?: map[PH_MIN_SDK_VERSION]
         map[PH_TEST_RUNNER] = testRunnerName
+        map[PH_TESTED_PACKAGE] = testedPackageName
     }
 
     abstract val templateResourceName: String

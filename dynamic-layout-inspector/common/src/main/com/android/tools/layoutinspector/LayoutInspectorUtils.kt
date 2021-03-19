@@ -86,7 +86,17 @@ object LayoutInspectorUtils {
             .setHeight(height)
             .build()
     }
+}
 
+/**
+ * Convert `this` to bytes using little-endian order. Optionally will populate the given [bytes]
+ * at the given [offset].
+ */
+fun Int.toBytes(bytes: ByteArray = ByteArray(4), offset: Int = 0): ByteArray {
+    for (i in 0..3) {
+        bytes[offset + i] = (ushr(i * 8) and 0xFF).toByte()
+    }
+    return bytes
 }
 
 /**

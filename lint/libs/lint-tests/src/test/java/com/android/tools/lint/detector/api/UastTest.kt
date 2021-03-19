@@ -19,14 +19,19 @@ package com.android.tools.lint.detector.api
 import com.android.tools.lint.checks.infrastructure.TestFile
 import com.android.tools.lint.checks.infrastructure.TestFiles.java
 import com.android.tools.lint.checks.infrastructure.TestFiles.kotlin
+import com.android.tools.lint.helpers.DefaultJavaEvaluator
 import com.intellij.openapi.util.Disposer
 import com.intellij.pom.java.LanguageLevel
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiRecursiveElementVisitor
+import com.intellij.psi.PsiTypeParameter
 import junit.framework.TestCase
+import org.jetbrains.kotlin.asJava.elements.KotlinLightTypeParameterBuilder
+import org.jetbrains.kotlin.asJava.elements.KtLightTypeParameter
 import org.jetbrains.kotlin.config.LanguageVersionSettings
 import org.jetbrains.uast.UBinaryExpression
 import org.jetbrains.uast.UCallExpression
+import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UFile
 import org.jetbrains.uast.ULocalVariable
 import org.jetbrains.uast.toUElement
@@ -89,26 +94,25 @@ class UastTest : TestCase() {
         ).indented()
 
         check(
-            source,
-            { file ->
-                assertEquals(
-                    "" +
-                        "public final class TestKt {\n" +
-                        "    @org.jetbrains.annotations.NotNull private static final var variable: java.lang.Object = <init>()\n" +
-                        "    public static final fun foo1() : void {\n" +
-                        // Using plain string literal such that we can have our trailing space
-                        // here without IntelliJ removing it every time we save this file:
-                        "        foo2({ \n" +
-                        "            return variable.hashCode()\n" +
-                        "        })\n" +
-                        "    }\n" +
-                        "    public static final fun foo2(@org.jetbrains.annotations.NotNull function: kotlin.jvm.functions.Function0<java.lang.Integer>) : void {\n" +
-                        "    }\n" +
-                        "}",
-                    file.asSourceString().trim()
-                )
-            }
-        )
+            source
+        ) { file ->
+            assertEquals(
+                "" +
+                    "public final class TestKt {\n" +
+                    "    @org.jetbrains.annotations.NotNull private static final var variable: java.lang.Object = <init>()\n" +
+                    "    public static final fun foo1() : void {\n" +
+                    // Using plain string literal such that we can have our trailing space
+                    // here without IntelliJ removing it every time we save this file:
+                    "        foo2({ \n" +
+                    "            return variable.hashCode()\n" +
+                    "        })\n" +
+                    "    }\n" +
+                    "    public static final fun foo2(@org.jetbrains.annotations.NotNull function: kotlin.jvm.functions.Function0<java.lang.Integer>) : void {\n" +
+                    "    }\n" +
+                    "}",
+                file.asSourceString().trim()
+            )
+        }
     }
 
     fun testKt25298() {
@@ -140,44 +144,43 @@ class UastTest : TestCase() {
         ).indented()
 
         check(
-            source,
-            { file ->
-                assertEquals(
-                    "" +
-                        "UFile (package = test.pkg) [package test.pkg...]\n" +
-                        "    UImportStatement (isOnDemand = false) [import java.util.concurrent.Executors]\n" +
-                        "    UImportStatement (isOnDemand = false) [import java.util.concurrent.ScheduledExecutorService]\n" +
-                        "    UImportStatement (isOnDemand = false) [import java.util.concurrent.TimeUnit]\n" +
-                        "    UClass (name = MyTestCase) [public class MyTestCase {...}]\n" +
-                        "        UField (name = mExecutorService) [private final var mExecutorService: java.util.concurrent.ScheduledExecutorService]\n" +
-                        "        UMethod (name = MyTestCase) [public fun MyTestCase() {...}]\n" +
-                        "            UBlockExpression [{...}]\n" +
-                        "                UBinaryExpression (operator = =) [mExecutorService = Executors.newSingleThreadScheduledExecutor()] : PsiType:ScheduledExecutorService\n" +
-                        "                    USimpleNameReferenceExpression (identifier = mExecutorService) [mExecutorService] : PsiType:ScheduledExecutorService\n" +
-                        "                    UQualifiedReferenceExpression [Executors.newSingleThreadScheduledExecutor()] : PsiType:ScheduledExecutorService\n" +
-                        "                        USimpleNameReferenceExpression (identifier = Executors) [Executors]\n" +
-                        "                        UCallExpression (kind = UastCallKind(name='method_call'), argCount = 0)) [newSingleThreadScheduledExecutor()] : PsiType:ScheduledExecutorService\n" +
-                        "                            UIdentifier (Identifier (newSingleThreadScheduledExecutor)) [UIdentifier (Identifier (newSingleThreadScheduledExecutor))]\n" +
-                        "        UMethod (name = foo) [public fun foo() : void {...}]\n" +
-                        "            UBlockExpression [{...}]\n" +
-                        "                UQualifiedReferenceExpression [mExecutorService.schedule(this::initBar, 10, TimeUnit.SECONDS)]\n" +
-                        "                    USimpleNameReferenceExpression (identifier = mExecutorService) [mExecutorService] : PsiType:ScheduledExecutorService\n" +
-                        "                    UCallExpression (kind = UastCallKind(name='method_call'), argCount = 3)) [schedule(this::initBar, 10, TimeUnit.SECONDS)]\n" +
-                        "                        UIdentifier (Identifier (schedule)) [UIdentifier (Identifier (schedule))]\n" +
-                        "                        UCallableReferenceExpression (name = initBar) [this::initBar] : PsiType:<method reference>\n" +
-                        "                            UThisExpression (label = null) [this] : PsiType:MyTestCase\n" +
-                        "                        ULiteralExpression (value = 10) [10] : PsiType:int\n" +
-                        "                        UQualifiedReferenceExpression [TimeUnit.SECONDS] : PsiType:TimeUnit\n" +
-                        "                            USimpleNameReferenceExpression (identifier = TimeUnit) [TimeUnit]\n" +
-                        "                            USimpleNameReferenceExpression (identifier = SECONDS) [SECONDS]\n" +
-                        "        UMethod (name = initBar) [private fun initBar() : boolean {...}]\n" +
-                        "            UBlockExpression [{...}]\n" +
-                        "                UReturnExpression [return true]\n" +
-                        "                    ULiteralExpression (value = true) [true] : PsiType:boolean\n",
-                    file.asLogTypes()
-                )
-            }
-        )
+            source
+        ) { file ->
+            assertEquals(
+                "" +
+                    "UFile (package = test.pkg) [package test.pkg...]\n" +
+                    "    UImportStatement (isOnDemand = false) [import java.util.concurrent.Executors]\n" +
+                    "    UImportStatement (isOnDemand = false) [import java.util.concurrent.ScheduledExecutorService]\n" +
+                    "    UImportStatement (isOnDemand = false) [import java.util.concurrent.TimeUnit]\n" +
+                    "    UClass (name = MyTestCase) [public class MyTestCase {...}]\n" +
+                    "        UField (name = mExecutorService) [private final var mExecutorService: java.util.concurrent.ScheduledExecutorService]\n" +
+                    "        UMethod (name = MyTestCase) [public fun MyTestCase() {...}]\n" +
+                    "            UBlockExpression [{...}]\n" +
+                    "                UBinaryExpression (operator = =) [mExecutorService = Executors.newSingleThreadScheduledExecutor()] : PsiType:ScheduledExecutorService\n" +
+                    "                    USimpleNameReferenceExpression (identifier = mExecutorService) [mExecutorService] : PsiType:ScheduledExecutorService\n" +
+                    "                    UQualifiedReferenceExpression [Executors.newSingleThreadScheduledExecutor()] : PsiType:ScheduledExecutorService\n" +
+                    "                        USimpleNameReferenceExpression (identifier = Executors) [Executors]\n" +
+                    "                        UCallExpression (kind = UastCallKind(name='method_call'), argCount = 0)) [newSingleThreadScheduledExecutor()] : PsiType:ScheduledExecutorService\n" +
+                    "                            UIdentifier (Identifier (newSingleThreadScheduledExecutor)) [UIdentifier (Identifier (newSingleThreadScheduledExecutor))]\n" +
+                    "        UMethod (name = foo) [public fun foo() : void {...}]\n" +
+                    "            UBlockExpression [{...}]\n" +
+                    "                UQualifiedReferenceExpression [mExecutorService.schedule(this::initBar, 10, TimeUnit.SECONDS)]\n" +
+                    "                    USimpleNameReferenceExpression (identifier = mExecutorService) [mExecutorService] : PsiType:ScheduledExecutorService\n" +
+                    "                    UCallExpression (kind = UastCallKind(name='method_call'), argCount = 3)) [schedule(this::initBar, 10, TimeUnit.SECONDS)]\n" +
+                    "                        UIdentifier (Identifier (schedule)) [UIdentifier (Identifier (schedule))]\n" +
+                    "                        UCallableReferenceExpression (name = initBar) [this::initBar] : PsiType:<method reference>\n" +
+                    "                            UThisExpression (label = null) [this] : PsiType:MyTestCase\n" +
+                    "                        ULiteralExpression (value = 10) [10] : PsiType:int\n" +
+                    "                        UQualifiedReferenceExpression [TimeUnit.SECONDS] : PsiType:TimeUnit\n" +
+                    "                            USimpleNameReferenceExpression (identifier = TimeUnit) [TimeUnit]\n" +
+                    "                            USimpleNameReferenceExpression (identifier = SECONDS) [SECONDS]\n" +
+                    "        UMethod (name = initBar) [private fun initBar() : boolean {...}]\n" +
+                    "            UBlockExpression [{...}]\n" +
+                    "                UReturnExpression [return true]\n" +
+                    "                    ULiteralExpression (value = true) [true] : PsiType:boolean\n",
+                file.asLogTypes()
+            )
+        }
     }
 
     fun test123923544() {
@@ -203,10 +206,10 @@ class UastTest : TestCase() {
         ).indented()
 
         check(
-            source,
-            { file ->
-                assertEquals(
-                    """
+            source
+        ) { file ->
+            assertEquals(
+                """
                 public final class BaseKt {
                     public static final fun createBase(@org.jetbrains.annotations.NotNull i: int) : Base {
                         return <init>(i)
@@ -230,12 +233,12 @@ class UastTest : TestCase() {
                     public fun Derived(@org.jetbrains.annotations.NotNull b: Base) = UastEmptyExpression
                 }
 
-                    """.trimIndent(),
-                    file.asSourceString()
-                )
+                """.trimIndent(),
+                file.asSourceString()
+            )
 
-                assertEquals(
-                    """
+            assertEquals(
+                """
                 UFile (package = ) [public final class BaseKt {...]
                     UClass (name = BaseKt) [public final class BaseKt {...}]
                         UMethod (name = createBase) [public static final fun createBase(@org.jetbrains.annotations.NotNull i: int) : Base {...}]
@@ -273,11 +276,10 @@ class UastTest : TestCase() {
                             UParameter (name = b) [@org.jetbrains.annotations.NotNull var b: Base]
                                 UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]
 
-                    """.trimIndent(),
-                    file.asLogTypes()
-                )
-            }
-        )
+                """.trimIndent(),
+                file.asLogTypes()
+            )
+        }
     }
 
     fun test13Features() {
@@ -334,10 +336,10 @@ class UastTest : TestCase() {
                     fun foo(): Int = 42
                 }
                 """
-            ).indented(),
-            { file ->
-                assertEquals(
-                    """
+            ).indented()
+        ) { file ->
+            assertEquals(
+                """
                     UFile (package = test.pkg) [package test.pkg...]
                         UClass (name = FooInterfaceKt) [public final class FooInterfaceKt {...}]
                             UField (name = uint) [@org.jetbrains.annotations.NotNull private static final var uint: int = 42]
@@ -466,11 +468,10 @@ class UastTest : TestCase() {
                                     UReturnExpression [return 42]
                                         ULiteralExpression (value = 42) [42] : PsiType:int
 
-                    """.trimIndent(),
-                    file.asLogTypes()
-                )
-            }
-        )
+                """.trimIndent(),
+                file.asLogTypes()
+            )
+        }
     }
 
     fun testSuspend() {
@@ -490,10 +491,10 @@ class UastTest : TestCase() {
         ).indented()
 
         check(
-            source,
-            { file ->
-                assertEquals(
-                    """
+            source
+        ) { file ->
+            assertEquals(
+                """
                 package test.pkg
 
                 import android.widget.TextView
@@ -505,12 +506,12 @@ class UastTest : TestCase() {
                     }
                 }
 
-                    """.trimIndent(),
-                    file.asSourceString()
-                )
+                """.trimIndent(),
+                file.asSourceString()
+            )
 
-                assertEquals(
-                    """
+            assertEquals(
+                """
                 UFile (package = test.pkg) [package test.pkg...]
                     UImportStatement (isOnDemand = false) [import android.widget.TextView]
                     UClass (name = Test) [public final class Test : android.app.Activity {...}]
@@ -527,11 +528,10 @@ class UastTest : TestCase() {
                                             USimpleNameReferenceExpression (identifier = x) [x] : PsiType:int
                                             USimpleNameReferenceExpression (identifier = y) [y] : PsiType:int
 
-                    """.trimIndent(),
-                    file.asLogTypes()
-                )
-            }
-        )
+                """.trimIndent(),
+                file.asLogTypes()
+            )
+        }
     }
 
     fun testReifiedTypes() {
@@ -553,14 +553,15 @@ class UastTest : TestCase() {
             internal inline fun <reified T> function9(t: T): T = t
             public inline fun <reified T> function10(t: T): T = t
             inline fun <reified T> T.function11(t: T): T = t
+            fun <reified T> function12(t: T) { }
             """
         ).indented()
 
         check(
-            source,
-            { file ->
-                assertEquals(
-                    """
+            source
+        ) { file ->
+            assertEquals(
+                """
                 package test.pkg
 
                 public final class TestKt {
@@ -595,13 +596,279 @@ class UastTest : TestCase() {
                     static fun function11(@org.jetbrains.annotations.Nullable ${"$"}this${"$"}function11: T, @org.jetbrains.annotations.Nullable t: T) : T {
                         return t
                     }
+                    static fun function12(@org.jetbrains.annotations.Nullable t: T) : void {
+                    }
                 }
 
-                    """.trimIndent(),
-                    file.asSourceString()
-                )
+                """.trimIndent(),
+                file.asSourceString()
+            )
+        }
+    }
+
+    fun testModifiers() {
+        // Regression test for
+        // https://youtrack.jetbrains.com/issue/KT-35610:
+        // UAST: Some reified methods nave null returnType
+        val source = kotlin(
+            """
+            @file:Suppress("all")
+            package test.pkg
+            class Test {
+                inline fun <T> function1(t: T) { }                  // return type void (PsiPrimitiveType)
+                inline fun <T> function2(t: T): T = t               // return type T (PsiClassReferenceType)
+                inline fun <reified T> function3(t: T) { }          // return type null
+                inline fun <reified T> function4(t: T): T = t       // return type null
+                inline fun <reified T> function5(t: T): Int = 42    // return type null
+                // Other variations that also have a null return type
+                inline fun <reified T : Activity> T.function6(t: T): T = t
+                inline fun <reified T> function7(t: T): T = t
+                private inline fun <reified T> function8(t: T): T = t
+                internal inline fun <reified T> function9(t: T): T = t
+                public inline fun <reified T> functionA(t: T): T = t
+                inline fun <reified T> T.functionB(t: T): T = t
+                fun <reified T> functionC(t: T) { }
+
+                suspend fun suspendMethod() { }
+                infix fun combine(a: Int): Int { return 0 }
+                internal fun myInternal() { }
+                operator fun get(index: Int): Int = 0
+                @JvmField lateinit var delayed: String
+                const val constant = 42
+                open fun isOpen() { }
+                noinline fun notInlined() { }
+                tailrec fun me() { me() }
+                inline fun f(crossinline body: () -> Unit) {
+                    val f = object: Runnable {
+                        override fun run() = body()
+                    }
+                }
+                fun multiarg(vararg arg: String) { }
+
+                // Multiplatform stuff
+                external fun fromElsewhere()
+                expect fun randomUUID(): String
+                actual fun randomUUID() = "not random"
+
+                companion object NamedCompanion { }
             }
-        )
+            sealed class Sealed
+            data class Data(val prop: String)
+
+            interface List<out E> : Collection<E>
+            interface Comparator<in T> {
+                fun compare(e1: T, e2: T): Int = 0
+            }
+            """
+        ).indented()
+
+        check(
+            source
+        ) { file ->
+
+            // type parameter lookup methods; these would ideally go in JavaEvaluator
+            // but can't yet because they're relying on some patches only available
+            // in the kotlin-compiler fork:
+
+            fun hasTypeParameterKeyword(element: PsiTypeParameter?, keyword: String): Boolean {
+                element ?: return false
+                if (element is KtLightTypeParameter &&
+                    element.kotlinOrigin.text.startsWith("$keyword ")
+                ) {
+                    return true
+                } else if (element is KotlinLightTypeParameterBuilder) {
+                    if (element.sourcePsi.text.startsWith("$keyword ")) {
+                        return true
+                    }
+                }
+                return false
+            }
+
+            fun isReified(element: PsiTypeParameter?): Boolean {
+                return hasTypeParameterKeyword(element, "reified")
+            }
+
+            fun isIn(element: PsiTypeParameter?): Boolean {
+                return hasTypeParameterKeyword(element, "in")
+            }
+
+            fun isOut(element: PsiTypeParameter?): Boolean {
+                return hasTypeParameterKeyword(element, "out")
+            }
+
+            val evaluator = DefaultJavaEvaluator(null, null)
+            val sb = StringBuilder()
+            for (cls in file.classes.sortedBy { it.name }) {
+                for (declaration in cls.uastDeclarations) {
+                    if (declaration is UClass) {
+                        sb.append("nested class ")
+                        sb.append(declaration.name).append(":")
+                        if (evaluator.isCompanion(declaration)) {
+                            sb.append(" companion")
+                        }
+                        sb.append("\n")
+                    }
+                }
+                sb.append("class ")
+                sb.append(cls.name).append(":")
+                if (evaluator.isData(cls)) {
+                    sb.append(" data")
+                }
+                if (evaluator.isSealed(cls)) {
+                    sb.append(" sealed")
+                }
+                if (evaluator.isCompanion(cls)) {
+                    sb.append(" companion")
+                }
+                for (typeParameter in cls.typeParameters) {
+                    sb.append(" ")
+                    if (isOut(typeParameter)) {
+                        sb.append("out ")
+                    }
+                    if (isIn(typeParameter)) {
+                        sb.append("in ")
+                    }
+                    val parameterName = typeParameter.name ?: "arg"
+                    sb.append(parameterName.replace('$', '＄'))
+                }
+                sb.append("\n")
+                if (evaluator.isData(cls)) {
+                    continue
+                }
+                for (method in cls.methods.sortedBy { it.name }) {
+                    if (method.isConstructor) {
+                        continue
+                    }
+                    val methodName = method.name.replace('$', '＄')
+                    sb.append("    method ").append(methodName)
+                    sb.append("(")
+                    var first = true
+                    for (parameter in method.uastParameters) {
+                        if (first) {
+                            first = false
+                        } else {
+                            sb.append(",")
+                        }
+                        if (evaluator.isCrossInline(parameter)) {
+                            sb.append("crossinline ")
+                        }
+                        if (evaluator.isVararg(parameter)) {
+                            sb.append("vararg ")
+                        }
+                        sb.append(parameter.name.replace('$', '＄'))
+                    }
+                    sb.append(")")
+                    sb.append(":")
+                    if (evaluator.isInline(method)) {
+                        sb.append(" inline")
+                    }
+                    if (evaluator.isNoInline(method)) {
+                        sb.append(" noinline")
+                    }
+                    if (evaluator.isTailRec(method)) {
+                        sb.append(" tailrec")
+                    }
+                    if (evaluator.isSuspend(method)) {
+                        sb.append(" suspend")
+                    }
+                    if (evaluator.isInfix(method)) {
+                        sb.append(" infix")
+                    }
+                    if (evaluator.isInternal(method)) {
+                        sb.append(" internal")
+                    }
+                    if (evaluator.isOperator(method)) {
+                        sb.append(" operator")
+                    }
+                    if (evaluator.isOpen(method)) {
+                        sb.append(" open")
+                    }
+                    if (evaluator.isExpect(method)) {
+                        sb.append(" expect")
+                    }
+                    if (evaluator.isActual(method)) {
+                        sb.append(" actual")
+                    }
+                    if (evaluator.isExternal(method)) {
+                        sb.append(" external")
+                    }
+                    first = true
+                    for (typeParam in method.typeParameters) {
+                        if (first) {
+                            first = false
+                        } else {
+                            sb.append(",")
+                        }
+
+                        if (isReified(typeParam)) {
+                            sb.append(" reified")
+                        }
+                        if (isOut(typeParam)) {
+                            sb.append(" out")
+                        }
+                        if (isIn(typeParam)) {
+                            sb.append(" in")
+                        }
+                        sb.append(" ")
+                        sb.append(typeParam.name)
+                    }
+
+                    sb.append("\n")
+                }
+                for (method in cls.fields.sortedBy { it.name }) {
+                    sb.append("    field ").append(method.name).append(":")
+                    if (evaluator.isLateInit(method)) {
+                        sb.append(" lateinit")
+                    }
+                    if (evaluator.isConst(method)) {
+                        sb.append(" const")
+                    }
+                    sb.append("\n")
+                }
+            }
+
+            // function1 and function2 do not have reified types;
+            // the rest do
+            assertEquals(
+                """
+                class Comparator: in T
+                    method compare(e1,e2):
+                class Data: data
+                class List: out E
+                class Sealed: sealed
+                nested class NamedCompanion: companion
+                class Test:
+                    method combine(a): infix
+                    method f(crossinline body): inline
+                    method fromElsewhere(): external
+                    method function1(t): inline T
+                    method function2(t): inline T
+                    method function3(t): reified T
+                    method function4(t): reified T
+                    method function5(t): reified T
+                    method function6(＄this＄function6,t): reified T
+                    method function7(t): reified T
+                    method function8(t): reified T
+                    method function9(t): reified T
+                    method functionA(t): reified T
+                    method functionB(＄this＄functionB,t): reified T
+                    method functionC(t): reified T
+                    method get(index): operator
+                    method isOpen(): open
+                    method me(): tailrec
+                    method multiarg(vararg arg):
+                    method myInternal＄lint_module(): internal
+                    method notInlined(): noinline
+                    method randomUUID(): expect
+                    method randomUUID(): actual
+                    method suspendMethod(p): suspend
+                    field NamedCompanion:
+                    field constant: const
+                    field delayed: lateinit
+                """.trimIndent().trim(),
+                sb.toString().trim()
+            )
+        }
     }
 
     fun testKtParameters() {
@@ -621,10 +888,10 @@ class UastTest : TestCase() {
         ).indented()
 
         check(
-            source,
-            { file ->
-                assertEquals(
-                    """
+            source
+        ) { file ->
+            assertEquals(
+                """
                 package test.pkg
 
                 public final class GraphVariables {
@@ -647,11 +914,10 @@ class UastTest : TestCase() {
                     public fun GraphVariable(@org.jetbrains.annotations.NotNull name: java.lang.String, @org.jetbrains.annotations.NotNull graphType: java.lang.String, @org.jetbrains.annotations.Nullable value: T) = UastEmptyExpression
                 }
 
-                    """.trimIndent(),
-                    file.asSourceString()
-                )
-            }
-        )
+                """.trimIndent(),
+                file.asSourceString()
+            )
+        }
     }
 
     fun testCatchClausesKotlin() {
@@ -678,10 +944,10 @@ class UastTest : TestCase() {
         ).indented()
 
         check(
-            source,
-            { file ->
-                assertEquals(
-                    """
+            source
+        ) { file ->
+            assertEquals(
+                """
                 package test.pkg
 
                 public final class TryCatchKotlin {
@@ -697,11 +963,10 @@ class UastTest : TestCase() {
                     }
                     public fun TryCatchKotlin() = UastEmptyExpression
                 }
-                    """.trimIndent().trim(),
-                    file.asSourceString().trim().replace("\n        \n", "\n")
-                )
-            }
-        )
+                """.trimIndent().trim(),
+                file.asSourceString().trim().replace("\n        \n", "\n")
+            )
+        }
 
         // Java is OK:
         val javaSource = java(
@@ -721,14 +986,14 @@ class UastTest : TestCase() {
         ).indented()
 
         check(
-            javaSource,
-            { file ->
-                assertEquals(
-                    // The annotations work in Java, as checked by
-                    // ApiDetectorTest#testConditionalAroundExceptionSuppress
-                    // However, in pretty printing catch clause parameters are not
-                    // visited, as described in https://youtrack.jetbrains.com/issue/KT-35803
-                    """
+            javaSource
+        ) { file ->
+            assertEquals(
+                // The annotations work in Java, as checked by
+                // ApiDetectorTest#testConditionalAroundExceptionSuppress
+                // However, in pretty printing catch clause parameters are not
+                // visited, as described in https://youtrack.jetbrains.com/issue/KT-35803
+                """
                 public class TryCatchJava {
                     @java.lang.SuppressWarnings(null = "Something")
                     public fun test() : void {
@@ -741,11 +1006,10 @@ class UastTest : TestCase() {
                     public fun canThrow() : void {
                     }
                 }
-                    """.trimIndent().trim(),
-                    file.asSourceString().trim().replace("\n        \n", "\n")
-                )
-            }
-        )
+                """.trimIndent().trim(),
+                file.asSourceString().trim().replace("\n        \n", "\n")
+            )
+        }
     }
 
     fun testSamAst() { // See KT-28272
@@ -766,10 +1030,10 @@ class UastTest : TestCase() {
         ).indented()
 
         check(
-            source,
-            { file ->
-                assertEquals(
-                    """
+            source
+        ) { file ->
+            assertEquals(
+                """
                 UFile (package = test.pkg) [package test.pkg...]
                   UClass (name = TestKt) [public final class TestKt {...}]
                     UMethod (name = test1) [public static final fun test1() : void {...}]
@@ -801,29 +1065,28 @@ class UastTest : TestCase() {
                                       UIdentifier (Identifier (println)) [UIdentifier (Identifier (println))]
                                       USimpleNameReferenceExpression (identifier = println, resolvesTo = null) [println] : PsiType:void
                                       ULiteralExpression (value = "hello") ["hello"] : PsiType:String
-                    """.trimIndent(),
-                    file.asLogTypes(indent = "  ").trim()
-                )
+                """.trimIndent(),
+                file.asLogTypes(indent = "  ").trim()
+            )
 
-                try {
-                    file.accept(object : AbstractUastVisitor() {
-                        override fun visitCallExpression(node: UCallExpression): Boolean {
-                            val resolved = node.resolve()
-                            if (resolved == null) {
-                                throw IllegalStateException("Could not resolve this call: ${node.asSourceString()}")
-                            }
-                            return super.visitCallExpression(node)
+            try {
+                file.accept(object : AbstractUastVisitor() {
+                    override fun visitCallExpression(node: UCallExpression): Boolean {
+                        val resolved = node.resolve()
+                        if (resolved == null) {
+                            throw IllegalStateException("Could not resolve this call: ${node.asSourceString()}")
                         }
-                    })
-                    fail("Expected unresolved error: see KT-28272")
-                } catch (failure: IllegalStateException) {
-                    assertEquals(
-                        "Could not resolve this call: Runnable({ \n    println(\"hello\")\n})",
-                        failure.message
-                    )
-                }
+                        return super.visitCallExpression(node)
+                    }
+                })
+                fail("Expected unresolved error: see KT-28272")
+            } catch (failure: IllegalStateException) {
+                assertEquals(
+                    "Could not resolve this call: Runnable({ \n    println(\"hello\")\n})",
+                    failure.message
+                )
             }
-        )
+        }
     }
 
     fun testJava11() {
