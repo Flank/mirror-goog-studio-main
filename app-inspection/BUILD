@@ -35,11 +35,13 @@ cc_library(
         "native/src/app_inspection_java_jni.cc",
         "native/src/app_inspection_service.cc",
         "native/src/array_params_entry_hook.cc",
+        "native/src/hidden_api_silencer.cc",
     ],
     hdrs = [
         "native/include/app_inspection_service.h",
         "native/include/app_inspection_transform.h",
         "native/include/array_params_entry_hook.h",
+        "native/include/hidden_api_silencer.h",
     ],
     copts = ANDROID_COPTS + [
         "-Itools/base/app-inspection/native/include",
