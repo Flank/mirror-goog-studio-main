@@ -21,6 +21,30 @@
         assetsDirectories="src/debug/assets"/>
   </sourceProviders>
   <testSourceProviders>
+    <sourceProvider
+        manifest="src/test/AndroidManifest.xml"
+        javaDirectories="src/test/java:src/test/kotlin"
+        resDirectories="src/test/res"
+        assetsDirectories="src/test/assets"
+        unitTest="true"/>
+    <sourceProvider
+        manifest="src/testDebug/AndroidManifest.xml"
+        javaDirectories="src/testDebug/java:src/testDebug/kotlin"
+        resDirectories="src/testDebug/res"
+        assetsDirectories="src/testDebug/assets"
+        unitTest="true"/>
+    <sourceProvider
+        manifest="src/androidTest/AndroidManifest.xml"
+        javaDirectories="src/androidTest/java:src/androidTest/kotlin"
+        resDirectories="src/androidTest/res"
+        assetsDirectories="src/androidTest/assets"
+        androidTest="true"/>
+    <sourceProvider
+        manifest="src/androidTestDebug/AndroidManifest.xml"
+        javaDirectories="src/androidTestDebug/java:src/androidTestDebug/kotlin"
+        resDirectories="src/androidTestDebug/res"
+        assetsDirectories="src/androidTestDebug/assets"
+        androidTest="true"/>
   </testSourceProviders>
   <mainArtifact
       classOutputs="build/intermediates/javac/debug/classes:build/tmp/kotlin-classes/debug:build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/debug/R.jar"

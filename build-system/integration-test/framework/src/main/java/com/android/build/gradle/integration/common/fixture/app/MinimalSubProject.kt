@@ -38,13 +38,13 @@ class MinimalSubProject private constructor(
     GradleProject(path) {
 
     init {
-        var buildScript = "apply plugin: '$plugin'"
+        var buildScript = "apply plugin: '$plugin'\n"
         if (addCompileAndSdkVersionToBuildFile) {
-            buildScript += "\n\nandroid.compileSdkVersion ${GradleTestProject.DEFAULT_COMPILE_SDK_VERSION}" +
-                    "\nandroid.defaultConfig.minSdkVersion $SUPPORT_LIB_MIN_SDK"
+            buildScript += "\nandroid.compileSdkVersion ${GradleTestProject.DEFAULT_COMPILE_SDK_VERSION}" +
+                    "\nandroid.defaultConfig.minSdkVersion $SUPPORT_LIB_MIN_SDK\n"
         }
         if (addVersionCodeToBuildFile) {
-            buildScript += "\n\nandroid.defaultConfig.versionCode 1"
+            buildScript += "\nandroid.defaultConfig.versionCode 1\n"
         }
         addFile(TestSourceFile("build.gradle", buildScript))
 

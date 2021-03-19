@@ -578,7 +578,26 @@ abstract class VariantInputs {
         // FIXME proguardFiles
         // FIXME consumerProguardFiles
 
-        // FIXME testSourceProviders
+        val testSourceProviderList: MutableList<SourceProviderInput> = mutableListOf()
+        variantWithTests.unitTest?.let { unitTestCreationConfig ->
+            testSourceProviderList.addAll(
+                unitTestCreationConfig.variantSources.sortedSourceProviders.map { sourceProvider ->
+                    creationConfig.services
+                        .newInstance(SourceProviderInput::class.java)
+                        .initialize(sourceProvider, unitTestOnly = true)
+                }
+            )
+        }
+        variantWithTests.androidTest?.let { androidTestCreationConfig ->
+            testSourceProviderList.addAll(
+                androidTestCreationConfig.variantSources.sortedSourceProviders.map { sourceProvider ->
+                    creationConfig.services
+                        .newInstance(SourceProviderInput::class.java)
+                        .initialize(sourceProvider, instrumentationTestOnly = true)
+                }
+            )
+        }
+        testSourceProviders.setDisallowChanges(testSourceProviderList.toList())
         debuggable.setDisallowChanges(
             if (creationConfig is ApkCreationConfig) {
                 creationConfig.debuggable
@@ -631,7 +650,7 @@ abstract class VariantInputs {
         ))
         testSourceProviders.setDisallowChanges(listOf(
             project.objects.newInstance(SourceProviderInput::class.java)
-                .initializeForStandalone(project, testSourceSet, unitTestOnly = false)
+                .initializeForStandalone(project, testSourceSet, unitTestOnly = true)
         ))
         buildFeatures.initializeForStandalone()
         libraryDependencyCacheBuildService.setDisallowChanges(getBuildService(project.gradle.sharedServices))
@@ -666,7 +685,7 @@ abstract class VariantInputs {
             proguardFiles = proguardFiles.get().map { it.asFile },
             consumerProguardFiles = consumerProguardFiles.get(),
             sourceProviders = sourceProviders.get().map { it.toLintModel() } + dynamicFeatureSourceProviders,
-            testSourceProviders = listOf(), //FIXME
+            testSourceProviders = testSourceProviders.get().map { it.toLintModel() },
             debuggable = debuggable.get(),
             shrinkable = false, //FIXME
             buildFeatures = buildFeatures.toLintModel(),
@@ -739,15 +758,19 @@ abstract class SourceProviderInput {
     @get:Input
     abstract val instrumentationTestOnly: Property<Boolean>
 
-    internal fun initialize(sourceProvider: SourceProvider): SourceProviderInput {
+    internal fun initialize(
+        sourceProvider: SourceProvider,
+        unitTestOnly: Boolean = false,
+        instrumentationTestOnly: Boolean = false
+    ): SourceProviderInput {
         this.manifestFile.set(sourceProvider.manifestFile)
         val javaDirectories = sourceProvider.javaDirectories + sourceProvider.kotlinDirectories
         this.javaDirectories.fromDisallowChanges(javaDirectories)
         this.resDirectories.fromDisallowChanges(sourceProvider.resDirectories)
         this.assetsDirectories.fromDisallowChanges(sourceProvider.assetsDirectories)
         this.debugOnly.setDisallowChanges(false) //TODO
-        this.unitTestOnly.setDisallowChanges(false) //TODO
-        this.instrumentationTestOnly.setDisallowChanges(false) //TODO
+        this.unitTestOnly.setDisallowChanges(unitTestOnly)
+        this.instrumentationTestOnly.setDisallowChanges(instrumentationTestOnly)
         return this
     }
 
