@@ -38,7 +38,7 @@ android {
     testOptions {
         emulatorSnapshots {
             enableForTestFailures = true
-            maxSnapshotsForTestFailures = 1
+            maxSnapshotsForTestFailures = 2
         }
     }
 }

@@ -19,11 +19,15 @@ package com.android.build.gradle.integration.connected.application
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.builder
 import com.android.build.gradle.integration.connected.utils.getEmulator
+import com.android.testutils.truth.PathSubject.assertThat
 import org.junit.Before
 import org.junit.ClassRule
 import org.junit.Rule
 import org.junit.Test
 import java.io.IOException
+import java.nio.charset.Charset
+import kotlin.test.assertFailsWith
+import org.gradle.tooling.BuildException
 
 /**
  * Connected tests for Android Test Failure Retention.
@@ -58,7 +62,58 @@ class FailureRetentionConnectedTest {
     @Throws(Exception::class)
     fun connectedAndroidTest() {
         project.executor()
-            .withArgument("-Dandroid.emulator.home=${System.getProperty("user.dir")}/.android")
+            .withArguments(
+                listOf(
+                    "-Dandroid.emulator.home=${System.getProperty("user.dir")}/.android",
+                    "-Pandroid.testInstrumentationRunnerArguments.class=" +
+                            "com.example.android.kotlin.ExampleInstrumentedTest#useAppContext"
+                )
+            )
             .run("connectedAndroidTest")
+        val connectedDir = project.projectDir
+            .resolve("app/build/outputs/androidTest-results/connected")
+        assertThat(connectedDir.resolve("test-result.pb")).exists()
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun connectedAndroidTestWithFailures() {
+        assertFailsWith<BuildException> {
+            project.executor()
+                .withArguments(
+                    listOf(
+                        "-Dandroid.emulator.home=${System.getProperty("user.dir")}/.android"
+                    )
+                )
+                .run("connectedAndroidTest")
+        }
+        val connectedDir =
+            project.projectDir.resolve("app/build/outputs/androidTest-results/connected")
+        connectedDir.listFiles().forEach {
+            System.err.println("$it")
+        }
+        assertThat(connectedDir.resolve("test-result.pb")).exists()
+        connectedDir
+            .resolve("test-result.textproto")
+            .readLines(charset = Charset.defaultCharset())
+            .forEach {
+                System.err.println("$it")
+            }
+        assertThat(
+            connectedDir
+                .resolve("snapshot-ExampleInstrumentedTest-failingTest0-failure0.tar")
+        ).exists()
+        assertThat(
+            connectedDir
+                .resolve("icebox-info-ExampleInstrumentedTest-failingTest0-failure0.pb")
+        ).exists()
+        assertThat(
+            connectedDir
+                .resolve("snapshot-ExampleInstrumentedTest-failingTest1-failure1.tar")
+        ).exists()
+        assertThat(
+            connectedDir
+                .resolve("icebox-info-ExampleInstrumentedTest-failingTest1-failure1.pb")
+        ).exists()
     }
 }

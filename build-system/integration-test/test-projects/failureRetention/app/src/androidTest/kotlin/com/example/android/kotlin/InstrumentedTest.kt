@@ -30,4 +30,16 @@ class ExampleInstrumentedTest {
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
         assertEquals("com.example.android.kotlin", appContext.packageName)
     }
+
+    @Test
+    fun failingTest0() {
+        val appContext = InstrumentationRegistry.getInstrumentation().targetContext
+        assertEquals("wrong package name", appContext.packageName)
+    }
+
+    @Test
+    fun failingTest1() {
+        assert(false)
+    }
+
 }
