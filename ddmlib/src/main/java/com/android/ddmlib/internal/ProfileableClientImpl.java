@@ -29,9 +29,8 @@ public class ProfileableClientImpl implements ProfileableClient {
     private ProfileableClientData mClientData;
 
     /** Create an object for a new profileable client. */
-    ProfileableClientImpl(int pid, @NonNull String abi) {
-        mClientData = new ProfileableClientData(pid, DeviceImpl.UNKNOWN_PACKAGE, abi);
-        // TODO: Find out the package name.
+    ProfileableClientImpl(int pid, @NonNull String processName, @NonNull String abi) {
+        mClientData = new ProfileableClientData(pid, processName, abi);
     }
 
     /** Returns the {@link ProfileableClientData} object containing this client information. */

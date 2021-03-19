@@ -17,11 +17,16 @@ package com.android.ddmlib.internal;
 
 import com.android.annotations.NonNull;
 import com.android.ddmlib.AdbHelper;
+import com.google.common.io.ByteArrayDataOutput;
+import com.google.common.io.ByteStreams;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
+import java.nio.charset.Charset;
 
 public class AdbSocketUtils {
+
+    private static final String EOF_MESSAGE = "EOF";
 
     /**
      * Fills a ByteBuffer by reading data from a socket.
@@ -32,7 +37,7 @@ public class AdbSocketUtils {
         while (buf.remaining() > 0) {
             int count = socket.read(buf);
             if (count < 0) {
-                throw new IOException("EOF");
+                throw new IOException(EOF_MESSAGE);
             }
         }
     }
@@ -47,7 +52,7 @@ public class AdbSocketUtils {
     static ByteBuffer read(@NonNull SocketChannel socket, int length) throws IOException {
         ByteBuffer buf = ByteBuffer.allocate(length);
         read(socket, buf);
-        buf.position(0);
+        buf.rewind();
         return buf;
     }
 
@@ -85,5 +90,40 @@ public class AdbSocketUtils {
 
         // we receive something we can't read. It's better to reset the connection at this point.
         throw new IOException("Unable to read length");
+    }
+
+    @NonNull
+    static String readNullTerminatedString(@NonNull SocketChannel socket) throws IOException {
+        return readNullTerminatedString(socket, AdbHelper.DEFAULT_CHARSET);
+    }
+
+    @NonNull
+    static String readNullTerminatedString(@NonNull SocketChannel socket, @NonNull Charset charset)
+            throws IOException {
+        byte[] buffer = new byte[64];
+        ByteBuffer buf = ByteBuffer.wrap(buffer, 0, buffer.length);
+        ByteArrayDataOutput output = ByteStreams.newDataOutput(64);
+        boolean end = false;
+        while (!end) {
+            buf.rewind();
+            try {
+                read(socket, buf);
+            } catch (IOException e) {
+                if (e.getMessage().equals(EOF_MESSAGE)) {
+                    end = true;
+                } else {
+                    throw e;
+                }
+            }
+            int nullPosition = 0;
+            for (; nullPosition < buf.position(); nullPosition++) {
+                if (buffer[nullPosition] == 0) {
+                    end = true;
+                    break;
+                }
+            }
+            output.write(buffer, 0, nullPosition);
+        }
+        return new String(output.toByteArray(), charset);
     }
 }

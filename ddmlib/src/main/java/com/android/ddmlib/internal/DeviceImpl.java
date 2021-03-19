@@ -925,11 +925,20 @@ public final class DeviceImpl implements IDevice {
         synchronized (mProfileableClients) {
             mProfileableClients.clear();
             mProfileableClients.addAll(newClientList);
-            // TODO(shukang): Retrieve package names asynchronously if needed. For example,
-            // track-app service doesn't provide package names.
             Collections.sort(
                     mProfileableClients,
                     Comparator.comparingInt(c -> c.getProfileableClientData().getPid()));
+        }
+    }
+
+    void updateProfileableClientName(int pid, @NonNull String name) {
+        synchronized (mProfileableClients) {
+            for (ProfileableClientImpl client : mProfileableClients) {
+                if (client.getProfileableClientData().getPid() == pid) {
+                    client.getProfileableClientData().setProcessName(name);
+                    break;
+                }
+            }
         }
     }
 
