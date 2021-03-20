@@ -18,8 +18,6 @@ package com.android.tools.lint.checks
 
 import com.android.sdklib.AndroidVersion.VersionCodes.R
 import com.android.sdklib.AndroidVersion.VersionCodes.S
-import com.android.tools.lint.checks.infrastructure.LintDetectorTest
-import com.android.tools.lint.detector.api.Detector
 
 class SplashScreenDetectorTest : AbstractCheckTest() {
     override fun getDetector() = SplashScreenDetector()

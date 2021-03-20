@@ -206,9 +206,9 @@ private constructor(
         }
 
         /**
-         * Verifies that the given issue jar [jarFile] is compatible, and
-         * if so returns null, otherwise returns the description of at
-         * least one invalid symbol.
+         * Verifies that the given issue jar [jarFile] is compatible,
+         * and if so returns null, otherwise returns the description of
+         * at least one invalid symbol.
          */
         private fun verify(client: LintClient, jarFile: File): String? {
             val verifier = LintJarVerifier()

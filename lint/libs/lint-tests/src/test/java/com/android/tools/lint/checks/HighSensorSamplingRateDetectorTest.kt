@@ -16,14 +16,13 @@
 
 package com.android.tools.lint.checks
 
-import com.android.tools.lint.detector.api.Detector
-
 class HighSensorSamplingRateDetectorTest : AbstractCheckTest() {
     override fun getDetector() = HighSensorSamplingRateDetector()
 
     fun testHighSamplingRate() {
         lint().files(
-            manifest("""
+            manifest(
+                """
                 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
                     package="test.pkg">
 
@@ -38,19 +37,22 @@ class HighSensorSamplingRateDetectorTest : AbstractCheckTest() {
                         </receiver>
                     </application>
                 </manifest>
-            """).indented()
+            """
+            ).indented()
         ).run().expect(
             """
             AndroidManifest.xml:4: Warning: Most apps don't need access to high sensor sampling rate. [HighSamplingRate]
                 <uses-permission android:name="android.permission.HIGH_SAMPLING_RATE_SENSORS"/>
                                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             0 errors, 1 warnings
-        """.trimIndent())
+            """.trimIndent()
+        )
     }
 
     fun testNoHighSamplingRate() {
         lint().files(
-            manifest("""
+            manifest(
+                """
                 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
                     package="test.pkg">
 
@@ -61,7 +63,8 @@ class HighSensorSamplingRateDetectorTest : AbstractCheckTest() {
                         </receiver>
                     </application>
                 </manifest>
-            """).indented()
+            """
+            ).indented()
         ).run().expectClean()
     }
 }

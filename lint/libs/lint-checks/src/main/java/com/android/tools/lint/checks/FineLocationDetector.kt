@@ -29,7 +29,6 @@ import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.XmlScanner
-import com.android.tools.lint.detector.api.targetSdkAtLeast
 import com.android.utils.iterator
 import org.w3c.dom.Element
 
@@ -52,7 +51,7 @@ class FineLocationDetector : Detector(), XmlScanner {
                     ISSUE,
                     context.getLocation(fineElement),
                     "If you need access to FINE location, you must request both " +
-                            "`ACCESS_FINE_LOCATION` and `ACCESS_COARSE_LOCATION`"
+                        "`ACCESS_FINE_LOCATION` and `ACCESS_COARSE_LOCATION`"
                 )
             )
         }

@@ -210,6 +210,7 @@ class X509TrustManagerDetectorTest : AbstractCheckTest() {
                     trustManagerExample = new TrustManager[]{new X509TrustManager() {
                                                                  ~~~~~~~~~~~~~~~~
             0 errors, 1 warnings
-            """)
+            """
+        )
     }
 }
