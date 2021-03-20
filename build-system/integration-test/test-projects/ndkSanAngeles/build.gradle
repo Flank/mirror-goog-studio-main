@@ -35,6 +35,7 @@ android {
             enable true
             reset()
             include 'x86', 'armeabi-v7a'
+            universalApk true
         }
     }
 }
@@ -47,8 +48,14 @@ android.applicationVariants.all { variant ->
     variant.outputs.all { output ->
         // set the versionCode on the output.
         println("Customizing " + output)
-        output.versionCodeOverride = project.ext.versionCodes.get(
-                output.getFilter(com.android.build.OutputFile.ABI)) * 1000000 + android.defaultConfig.versionCode
+        def value
+        if (output.getFilter(com.android.build.OutputFile.ABI)== null) {
+            value = 3
+        } else {
+            value = project.ext.versionCodes.get(
+                    output.getFilter(com.android.build.OutputFile.ABI))
+        }
+        output.versionCodeOverride = variant.versionCode + (value * 1000000)
     }
 }
 

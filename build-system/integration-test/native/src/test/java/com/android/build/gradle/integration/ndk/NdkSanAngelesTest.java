@@ -75,14 +75,24 @@ public class NdkSanAngelesTest {
 
         // get the outputs.
         BuiltArtifactsImpl builtArtifacts = ProjectBuildOutputUtils.getBuiltArtifacts(debugOutput);
-        assertEquals(2, builtArtifacts.getElements().size());
+        assertEquals(3, builtArtifacts.getElements().size());
 
         // build a map of expected outputs and their versionCode
         Map<String, Integer> expected = Maps.newHashMapWithExpectedSize(2);
         expected.put("armeabi-v7a", 1000123);
         expected.put("x86", 2000123);
+        expected.put(null, 3000123);
 
         for (BuiltArtifact builtArtifact : builtArtifacts.getElements()) {
+            if (builtArtifact.getFilters().isEmpty()) {
+                // universal apk
+                Integer value = expected.get(null);
+                // this checks we're not getting an unexpected builtArtifact.
+                assertNotNull("Check Valid builtArtifact: " + null, value);
+
+                Truth.assertThat(builtArtifact.getVersionCode()).isEqualTo(value);
+                expected.remove(null);
+            }
             for (FilterConfiguration filter : builtArtifact.getFilters()) {
                 if (filter.getFilterType().equals(FilterConfiguration.FilterType.ABI)) {
                     String abiFilter = filter.getIdentifier();
