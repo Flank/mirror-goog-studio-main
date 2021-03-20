@@ -82,6 +82,7 @@ message QueryParameters {
     AllocationDataRequest memory_request = 104;
     ProcessCountersParameters process_counters_request = 105;
     CpuCoreCountersParameters cpu_core_counters_request = 106;
+    AndroidFrameEventsParameters android_frame_events_request = 107;
   }
 
   // Returns metadata information for a process of the provided id.
@@ -122,6 +123,15 @@ message QueryParameters {
   // Returns data from all CPU cores, e.g. frequency counters.
   // See https://perfetto.dev/docs/analysis/sql-tables#cpu_counter_track.
   message CpuCoreCountersParameters {}
+
+  // Returns data from the Perfetto data source: android.surfaceflinger.frame.
+  // See https://perfetto.dev/docs/analysis/sql-tables#frame_slice.
+  // Only avaialbe from Android R.
+  message AndroidFrameEventsParameters {
+    // String hint to filter frame_slices by layer name. For apps, use the
+    // process name. If empty, the response will not return any events.
+    string layer_name_hint = 1;
+  }
 }
 
 message QueryResult {
@@ -149,6 +159,7 @@ message QueryResult {
     NativeAllocationContext memory_events = 104;
     ProcessCountersResult process_counters_result = 105;
     CpuCoreCountersResult cpu_core_counters_result = 106;
+    AndroidFrameEventsResult android_frame_events_result = 107;
   }
 
   enum QueryFailureReason {
@@ -282,4 +293,34 @@ message Counter {
 message CounterValue {
   int64 timestamp_nanoseconds = 1;
   double value = 2;
+}
+
+message AndroidFrameEventsResult {
+  // List of Android Layers, the unit of composition in SurfaceFlinger.
+  repeated Layer layer = 1;
+
+  message Layer {
+    // Full layer name, e.g. com.example.app/MainActivity#0.
+    string layer_name = 2;
+    // List of phases in the graphics pipeline, e.g. application, wait for GPU.
+    repeated Phase phase = 1;
+  }
+
+  message Phase {
+    // Frame lifecycle phase name, e.g. APP, SF.
+    string phase_name = 3;
+    // List of events in the frame lifecycle.
+    repeated FrameEvent frame_event = 1;
+  }
+
+  message FrameEvent {
+    // Unique event ID, using frame_slice.id.
+    int64 id = 1;
+    // Event timestamp in nanoseconds.
+    int64 timestamp_nanoseconds = 2;
+    // Event duration in nanoseconds.
+    int64 duration_nanoseconds = 3;
+    // A number to associate events of various phases to the same frame.
+    int32 frame_number = 4;
+  }
 }

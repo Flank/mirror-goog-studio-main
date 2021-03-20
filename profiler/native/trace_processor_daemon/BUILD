@@ -23,6 +23,7 @@ cc_library(
         "memory/memory_request_handler.cc",
         "process_metadata/process_metadata_request_handler.cc",
         "scheduling/scheduling_request_handler.cc",
+        "trace_events/android_frame_events_request_handler.cc",
         "trace_events/trace_events_request_handler.cc",
         "trace_processor_service.cc",
     ],
@@ -31,6 +32,7 @@ cc_library(
         "memory/memory_request_handler.h",
         "process_metadata/process_metadata_request_handler.h",
         "scheduling/scheduling_request_handler.h",
+        "trace_events/android_frame_events_request_handler.h",
         "trace_events/trace_events_request_handler.h",
         "trace_processor_service.h",
     ],
@@ -40,8 +42,8 @@ cc_library(
     deps = [
         "//tools/base/profiler/native/trace_processor_daemon/proto:cc_trace_processor_service_proto",
         "@com_google_absl//absl/strings",
-        "@perfetto//:trace_processor",
         "@perfetto//:libpprofbuilder",
+        "@perfetto//:trace_processor",
     ],
 )
 

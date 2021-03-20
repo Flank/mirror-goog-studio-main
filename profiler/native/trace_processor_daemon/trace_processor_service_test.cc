@@ -138,13 +138,17 @@ TEST(TraceProcessorServiceImplTest, BatchQuery) {
   auto cpu_core_params = batch_request.add_query();
   cpu_core_params->set_trace_id(7468186607525719778L);
   cpu_core_params->mutable_cpu_core_counters_request();
+  auto frame_events_params = batch_request.add_query();
+  frame_events_params->set_trace_id(7468186607525719778L);
+  frame_events_params->mutable_android_frame_events_request()
+      ->set_layer_name_hint("foobar");
 
   proto::QueryBatchResponse batch_response;
   const grpc::Status rs =
       svc.QueryBatch(nullptr, &batch_request, &batch_response);
   EXPECT_TRUE(rs.ok());
 
-  EXPECT_EQ(batch_response.result_size(), 2);
+  EXPECT_EQ(batch_response.result_size(), 3);
 
   // Result from the first query.
   auto process_metadata_result = batch_response.result(0);
@@ -164,6 +168,14 @@ TEST(TraceProcessorServiceImplTest, BatchQuery) {
   EXPECT_EQ(cpu_core_counters_result.error(), "");
   EXPECT_TRUE(cpu_core_counters_result.has_cpu_core_counters_result());
   EXPECT_EQ(cpu_core_counters_result.cpu_core_counters_result().num_cores(), 8);
+
+  // Result from the third query.
+  auto android_frame_events_result = batch_response.result(2);
+  EXPECT_TRUE(android_frame_events_result.ok());
+  EXPECT_EQ(android_frame_events_result.failure_reason(),
+            proto::QueryResult::NONE);
+  EXPECT_EQ(android_frame_events_result.error(), "");
+  EXPECT_TRUE(android_frame_events_result.has_android_frame_events_result());
 }
 
 TEST(TraceProcessorServiceImplTest, BatchQueryEmpty) {
