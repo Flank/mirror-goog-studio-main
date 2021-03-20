@@ -33,6 +33,7 @@ import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
+import org.gradle.work.Incremental
 import java.io.File
 
 /**
@@ -42,8 +43,7 @@ import java.io.File
  */
 abstract class SourceSetInputs {
 
-    @get:InputFiles
-    @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:Internal
     abstract val extraGeneratedResDir: ConfigurableFileCollection
 
     @get:Internal
@@ -61,13 +61,10 @@ abstract class SourceSetInputs {
     @get:Internal
     abstract val localResources: MapProperty<String, FileCollection>
 
-    @get:InputFiles
-    @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:Internal
     abstract val resourceSourceSets: ConfigurableFileCollection
 
-    @get:InputFiles
-    @get:Optional
-    @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:Internal
     abstract val librarySourceSets : ConfigurableFileCollection
 
     fun initialise(
@@ -97,10 +94,8 @@ abstract class SourceSetInputs {
             mergeResourcesOutputDir
                 .setDisallowChanges(paths.defaultMergeResourcesOutputDir.absolutePath)
         }
-        if (mergeResourcesTask.incremental) {
-            mergeResourcesTask.incrementalFolder?.let {
-                incrementalMergedDir.setDisallowChanges(it.absolutePath)
-            }
+        mergeResourcesTask.incrementalFolder.get().asFile.let {
+            incrementalMergedDir.setDisallowChanges(it.absolutePath)
         }
     }
 
