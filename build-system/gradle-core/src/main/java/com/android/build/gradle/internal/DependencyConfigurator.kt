@@ -598,7 +598,6 @@ class DependencyConfigurator(
                     project.files(globalScope.bootClasspath),
                     getDesugarLibConfig(projectServices.projectInfo.getProject()),
                     SyncOptions.getErrorFormatMode(projectOptions),
-                    projectOptions.get(BooleanOption.ENABLE_INCREMENTAL_DEXING_TRANSFORM)
                 )
             }
         }

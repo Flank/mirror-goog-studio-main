@@ -176,9 +176,6 @@ enum class BooleanOption(
      * SOFTLY-ENFORCED FEATURES
      */
 
-    /** Incremental dexing transform. */
-    ENABLE_INCREMENTAL_DEXING_TRANSFORM("android.enableIncrementalDexingTransform", true, FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.VERSION_7_0)),
-
     ENABLE_JVM_RESOURCE_COMPILER("android.enableJvmResourceCompiler", true, FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.VERSION_7_0)),
 
     ENABLE_SYMBOL_TABLE_CACHING("android.enableSymbolTableCaching", true, FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.VERSION_7_0)),
@@ -389,6 +386,9 @@ enum class BooleanOption(
 
     /** Incremental dexing task using D8's new API for desugaring graph computation. */
     ENABLE_INCREMENTAL_DEXING_TASK_V2("android.enableIncrementalDexingTaskV2", true, FeatureStage.Enforced(VERSION_7_0)),
+
+    /** Incremental dexing transform. */
+    ENABLE_INCREMENTAL_DEXING_TRANSFORM("android.enableIncrementalDexingTransform", true, FeatureStage.Enforced(VERSION_7_0)),
 
     /* ----------------
      * REMOVED FEATURES

@@ -549,8 +549,6 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                     this.enableDesugaring.set(task.dexParams.withDesugaring)
                     this.libConfiguration.set(task.dexParams.coreLibDesugarConfig)
                     this.errorFormat.set(task.dexParams.errorFormatMode)
-                    // External libraries do not require incremental support
-                    this.incrementalDexingTransform.set(false)
                 }
 
                 // Until Gradle provides a better way to run artifact transforms for arbitrary

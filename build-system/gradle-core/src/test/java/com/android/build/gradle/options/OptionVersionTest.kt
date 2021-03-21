@@ -41,9 +41,7 @@ class OptionVersionTest {
          *  - Tracking bug for AGP 7.1: TBD
          *  - Tracking bug for AGP 7.0: 171996591
          */
-        @Suppress("DEPRECATION")
         private val KNOWN_VIOLATING_DEPRECATED_OPTIONS: List<Option<*>> = listOf(
-                BooleanOption.ENABLE_INCREMENTAL_DEXING_TRANSFORM,
                 BooleanOption.ENABLE_JVM_RESOURCE_COMPILER,
                 BooleanOption.ENABLE_SYMBOL_TABLE_CACHING,
                 BooleanOption.ENABLE_RESOURCE_OPTIMIZATIONS,
