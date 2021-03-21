@@ -23,6 +23,7 @@ import com.android.build.gradle.options.Version.VERSION_4_0
 import com.android.build.gradle.options.Version.VERSION_4_1
 import com.android.build.gradle.options.Version.VERSION_4_2
 import com.android.build.gradle.options.Version.VERSION_7_0
+import com.android.build.gradle.internal.errors.DeprecationReporter.DeprecationTarget.VERSION_8_0
 import com.android.build.gradle.options.Version.VERSION_BEFORE_4_0
 import com.android.builder.model.AndroidProject
 
@@ -94,8 +95,6 @@ enum class BooleanOption(
     ENABLE_R8_LIBRARIES("android.enableR8.libraries", true, FeatureStage.Supported),
     ENABLE_UNCOMPRESSED_NATIVE_LIBS_IN_BUNDLE("android.bundle.enableUncompressedNativeLibs", true, FeatureStage.Supported),
     ENABLE_DEXING_ARTIFACT_TRANSFORM("android.enableDexingArtifactTransform", true, FeatureStage.Supported),
-    USE_RELATIVE_PATH_IN_TEST_CONFIG("android.testConfig.useRelativePath", true, FeatureStage.Supported),
-    ENABLE_INCREMENTAL_DATA_BINDING("android.databinding.incremental", true, FeatureStage.Supported),
     PRECOMPILE_DEPENDENCIES_RESOURCES("android.precompileDependenciesResources", true, FeatureStage.Supported),
 
     INCLUDE_DEPENDENCY_INFO_IN_APKS("android.includeDependencyInfoInApks", true, FeatureStage.Supported),
@@ -190,9 +189,13 @@ enum class BooleanOption(
 
     ENABLE_NATIVE_CONFIGURATION_FOLDING("android.enableNativeConfigurationFolding", true, FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.VERSION_7_0)),
 
-    USE_NEW_JAR_CREATOR("android.useNewJarCreator", true, FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.VERSION_8_0)),
+    USE_NEW_JAR_CREATOR("android.useNewJarCreator", true, FeatureStage.SoftlyEnforced(VERSION_8_0)),
 
-    USE_NEW_APK_CREATOR("android.useNewApkCreator", true, FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.VERSION_8_0)),
+    USE_NEW_APK_CREATOR("android.useNewApkCreator", true, FeatureStage.SoftlyEnforced(VERSION_8_0)),
+
+    USE_RELATIVE_PATH_IN_TEST_CONFIG("android.testConfig.useRelativePath", true, FeatureStage.SoftlyEnforced(VERSION_8_0)),
+
+    ENABLE_INCREMENTAL_DATA_BINDING("android.databinding.incremental", true, FeatureStage.SoftlyEnforced(VERSION_8_0)),
 
     /* -------------------
      * DEPRECATED FEATURES

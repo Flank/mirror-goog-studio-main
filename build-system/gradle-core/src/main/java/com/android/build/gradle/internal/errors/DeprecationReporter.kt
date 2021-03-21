@@ -65,17 +65,9 @@ interface DeprecationReporter {
 
         ENABLE_R8(Version.VERSION_7_0, "You will no longer be able to disable R8"),
 
-        // Deprecation of disabling Desugar
-        DESUGAR_TOOL(ENABLE_R8.removalTarget),
-
         USE_PROPERTIES(
             Version.VERSION_7_0,
             "Gradle Properties must be used to change Variant information."
-        ),
-
-        AGP_BUILD_CACHE(
-            Version.VERSION_7_0,
-            "It does not do anything and AGP is now using Gradle caching."
         ),
 
         LINT_CHECK_ONLY(
@@ -83,11 +75,6 @@ interface DeprecationReporter {
             "`check` has been renamed to `checkOnly` to make it clear that it " +
                     "will turn off all other checks than those explicitly listed. If that is " +
                     "what you actually intended, use `checkOnly`; otherwise switch to `enable`."
-        ),
-
-        JETIFIER_IGNORE_LIST(
-            Version.VERSION_7_0,
-            "Use android.jetifier.ignorelist instead."
         ),
 
         ;

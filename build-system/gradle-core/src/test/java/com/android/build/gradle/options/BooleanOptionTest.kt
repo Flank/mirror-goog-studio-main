@@ -59,8 +59,6 @@ class BooleanOptionTest {
             BooleanOption.ENABLE_R8_LIBRARIES,
             BooleanOption.ENABLE_UNCOMPRESSED_NATIVE_LIBS_IN_BUNDLE,
             BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM,
-            BooleanOption.USE_RELATIVE_PATH_IN_TEST_CONFIG,
-            BooleanOption.ENABLE_INCREMENTAL_DATA_BINDING,
             BooleanOption.PRECOMPILE_DEPENDENCIES_RESOURCES,
             BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS,
             BooleanOption.ENABLE_LEGACY_API
