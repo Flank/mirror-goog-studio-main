@@ -69,7 +69,6 @@ class LintCheckTestSourcesTest(private val usePartialAnalysis: Boolean) {
                         testBuildType "release"
                         lintOptions {
                             abortOnError false
-                            checkTestSources true
                             error 'StopShip'
                             textOutput file("lint-results.txt")
                             checkDependencies true
@@ -85,7 +84,6 @@ class LintCheckTestSourcesTest(private val usePartialAnalysis: Boolean) {
                     android {
                         testBuildType "release"
                         lintOptions {
-                            checkTestSources true
                             error 'StopShip'
                         }
                     }
@@ -99,11 +97,23 @@ class LintCheckTestSourcesTest(private val usePartialAnalysis: Boolean) {
                     apply plugin: 'com.android.lint'
 
                     lintOptions {
-                        checkTestSources true
                         error 'StopShip'
                     }
                 """.trimIndent()
             )
+
+        // Add a resource which is only used by tests - this should cause a lint warning only if
+        // ignoreTestSources is true.
+        val appStringsSourceFile =
+            project.getSubproject(":app").file("src/main/res/values/strings.xml")
+        appStringsSourceFile.parentFile.mkdirs()
+        appStringsSourceFile.writeText(
+            """
+                <resources>
+                    <string name="foo">Foo</string>
+                </resources>
+            """.trimIndent()
+        )
 
         val appUnitTestSourceFile =
             project.getSubproject(":app").file("src/test/java/com/example/foo/AppUnitTest.java")
@@ -114,6 +124,7 @@ class LintCheckTestSourcesTest(private val usePartialAnalysis: Boolean) {
 
                 public class AppUnitTest {
                     // STOPSHIP
+                    int foo = R.string.foo;
                 }
             """.trimIndent()
         )
@@ -176,8 +187,22 @@ class LintCheckTestSourcesTest(private val usePartialAnalysis: Boolean) {
 
     @Test
     fun testCheckTestSources() {
+        // check that there are no errors before adding "checkTestSources true"
         getExecutor().run(":app:lintRelease")
         val reportFile = File(project.getSubproject("app").projectDir, "lint-results.txt")
+        assertThat(reportFile).exists()
+        assertThat(reportFile).doesNotContain("Error: STOPSHIP")
+        // Add "checkTestSources true" to all build files, and then check for errors.
+        project.getSubproject(":app")
+            .buildFile
+            .appendText("\nandroid.lintOptions.checkTestSources true\n")
+        project.getSubproject(":lib")
+            .buildFile
+            .appendText("\nandroid.lintOptions.checkTestSources true\n")
+        project.getSubproject(":javaLib")
+            .buildFile
+            .appendText("\nlintOptions.checkTestSources true\n")
+        getExecutor().run(":app:lintRelease")
         assertThat(reportFile).exists()
         assertThat(reportFile).containsAllOf(
             "AppUnitTest.java:4: Error: STOPSHIP comment found",
@@ -194,6 +219,24 @@ class LintCheckTestSourcesTest(private val usePartialAnalysis: Boolean) {
                 "LibAndroidTest.java:4: Error: STOPSHIP comment found",
             )
         }
+    }
+
+    @Test
+    fun testIgnoreTestSources() {
+        // check that there are no unused resource warnings before adding "ignoreTestSources true"
+        getExecutor().run(":app:lintRelease")
+        val reportFile = File(project.getSubproject("app").projectDir, "lint-results.txt")
+        assertThat(reportFile).exists()
+        assertThat(reportFile).doesNotContain(
+            "Warning: The resource R.string.foo appears to be unused"
+        )
+        // Add "ignoreTestSources true" to the app build file, and then check for the warning.
+        project.getSubproject(":app")
+            .buildFile
+            .appendText("\nandroid.lintOptions.ignoreTestSources true\n")
+        getExecutor().run(":app:lintRelease")
+        assertThat(reportFile).exists()
+        assertThat(reportFile).contains("Warning: The resource R.string.foo appears to be unused")
     }
 
     private fun getExecutor(): GradleTaskExecutor =
