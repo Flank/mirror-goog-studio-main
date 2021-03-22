@@ -92,7 +92,6 @@ enum class BooleanOption(
     // Flag added to work around b/130596259.
     FORCE_JACOCO_OUT_OF_PROCESS("android.forceJacocoOutOfProcess", false, FeatureStage.Supported),
 
-    ENABLE_R8_LIBRARIES("android.enableR8.libraries", true, FeatureStage.Supported),
     ENABLE_UNCOMPRESSED_NATIVE_LIBS_IN_BUNDLE("android.bundle.enableUncompressedNativeLibs", true, FeatureStage.Supported),
     ENABLE_DEXING_ARTIFACT_TRANSFORM("android.enableDexingArtifactTransform", true, FeatureStage.Supported),
     PRECOMPILE_DEPENDENCIES_RESOURCES("android.precompileDependenciesResources", true, FeatureStage.Supported),
@@ -395,6 +394,8 @@ enum class BooleanOption(
     ENABLE_INCREMENTAL_DEXING_TRANSFORM("android.enableIncrementalDexingTransform", true, FeatureStage.Enforced(VERSION_7_0)),
 
     ENABLE_RESOURCE_OPTIMIZATIONS("android.enableResourceOptimizations", true, FeatureStage.Enforced(VERSION_7_0)),
+
+    ENABLE_R8_LIBRARIES("android.enableR8.libraries", true, FeatureStage.Enforced(VERSION_7_0)),
 
     /* ----------------
      * REMOVED FEATURES
