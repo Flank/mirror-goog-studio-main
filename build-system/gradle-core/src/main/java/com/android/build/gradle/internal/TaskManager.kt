@@ -995,9 +995,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                                 project.files(
                                         artifacts.get(
                                                 COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR)))
-                if (!creationConfig.debuggable &&
-                        !creationConfig.variantType.isForTesting &&
-                         projectOptions[BooleanOption.ENABLE_RESOURCE_OPTIMIZATIONS]) {
+                if (!creationConfig.debuggable && !creationConfig.variantType.isForTesting) {
                     taskFactory.register(OptimizeResourcesTask.CreateAction(creationConfig))
                 }
             }

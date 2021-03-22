@@ -68,7 +68,6 @@ class ShrinkResourcesNewShrinkerTest {
         project.executor()
             .with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, useR8)
             .with(BooleanOption.ENABLE_NEW_RESOURCE_SHRINKER, true)
-            .with(BooleanOption.ENABLE_RESOURCE_OPTIMIZATIONS, false)
             .run("clean", "assembleDebug", "assembleRelease")
 
         val debugApk = project.getApk(DEBUG)
@@ -139,19 +138,17 @@ class ShrinkResourcesNewShrinkerTest {
             "res/raw/keep.xml"
         )
 
-        assertThat(
-                diffFiles(
-                        debugApk.file.toFile(),
-                        releaseApk.file.toFile(),
-                        setOf("META-INF/CERT.RSA", "META-INF/CERT.SF", "META-INF/MANIFEST.MF")
-                )
-        ).containsExactlyElementsIn(
-                replacedFiles + listOf(
-                        "AndroidManifest.xml",
-                        "resources.arsc",
-                        "classes.dex"
-                )
-        )
+        val debugResourcePaths = getZipPaths(debugApk.file.toFile())
+        val releaseResourcePaths = getZipPaths(releaseApk.file.toFile())
+
+        val numberOfDebugApkEntries = 119
+        val debugMetaFiles =
+            listOf("META-INF/CERT.RSA", "META-INF/CERT.SF", "META-INF/MANIFEST.MF")
+        assertThat(debugResourcePaths.size)
+            .isEqualTo(numberOfDebugApkEntries)
+        assertThat(debugResourcePaths).containsAtLeastElementsIn(debugMetaFiles)
+        assertThat(releaseResourcePaths.size)
+            .isEqualTo(numberOfDebugApkEntries - debugMetaFiles.size)
 
         assertThat(diffFiles(project.getOriginalResources(), project.getShrunkResources()))
             .containsExactlyElementsIn(replacedFiles)
@@ -170,9 +167,9 @@ class ShrinkResourcesNewShrinkerTest {
         )
         // Check that replaced files has proper dummy content.
         assertThat(project.getSubproject("webview").getApk(RELEASE).file.toFile()) {
-            it.containsFileWithContent("res/raw/unused_icon.png", TINY_PNG)
-            it.containsFileWithContent("res/raw/unused_index.html", "")
-            it.containsFileWithContent("res/xml/my_xml.xml", TINY_PROTO_CONVERTED_TO_BINARY_XML)
+            it.containsFileWithContent("res/h1.png", TINY_PNG)
+            it.containsFileWithContent("res/5P.html", "")
+            it.containsFileWithContent("res/n9.xml", TINY_PROTO_CONVERTED_TO_BINARY_XML)
         }
         // Check that zip entities have proper methods.
         assertThat(getZipPathsWithMethod(
@@ -234,7 +231,6 @@ class ShrinkResourcesNewShrinkerTest {
         project.executor()
             .with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, true)
             .with(BooleanOption.ENABLE_NEW_RESOURCE_SHRINKER, true)
-            .with(BooleanOption.ENABLE_RESOURCE_OPTIMIZATIONS, true)
             .run(":webview:assembleRelease")
 
         val releaseApk = project.getSubproject("webview").getApk(RELEASE).file.toFile()

@@ -180,8 +180,6 @@ enum class BooleanOption(
 
     ENABLE_SYMBOL_TABLE_CACHING("android.enableSymbolTableCaching", true, FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.VERSION_7_0)),
 
-    ENABLE_RESOURCE_OPTIMIZATIONS("android.enableResourceOptimizations", true, FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.VERSION_7_0)),
-
     PREFER_CMAKE_FILE_API("android.preferCmakeFileApi", true, FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.VERSION_7_0)),
 
     ENABLE_NATIVE_CONFIGURATION_FOLDING("android.enableNativeConfigurationFolding", true, FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.VERSION_7_0)),
@@ -389,6 +387,8 @@ enum class BooleanOption(
 
     /** Incremental dexing transform. */
     ENABLE_INCREMENTAL_DEXING_TRANSFORM("android.enableIncrementalDexingTransform", true, FeatureStage.Enforced(VERSION_7_0)),
+
+    ENABLE_RESOURCE_OPTIMIZATIONS("android.enableResourceOptimizations", true, FeatureStage.Enforced(VERSION_7_0)),
 
     /* ----------------
      * REMOVED FEATURES
