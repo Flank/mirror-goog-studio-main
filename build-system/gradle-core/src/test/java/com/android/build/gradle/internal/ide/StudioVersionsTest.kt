@@ -40,10 +40,10 @@ class StudioVersionsTest {
 
     @Test
     fun testNewerStudio() {
-        verifyIDEIsNotOld("3.3.1.6", MajorMinorVersion(majorVersion = 3, minorVersion = 2))
-        // The IDE will always send the version in the form 10.x.y as of 4.0.
+        verifyIDEIsNotOld("3.3.1.6", MajorMinorVersion(majorVersion = 3, minorVersion = 3))
+        // The IDE will send the version in the form 10.x.y for versions 4.0, 4.1 and 4.2
         // See StudioVersions.parseVersion
-        verifyIDEIsNotOld("10.3.3.1 Beta 3", MajorMinorVersion(majorVersion = 3, minorVersion = 1))
+        verifyIDEIsNotOld("10.4.3.1 Beta 3", MajorMinorVersion(majorVersion = 4, minorVersion = 3))
         verifyIDEIsNotOld("2020.3.1", MajorMinorVersion(2020, 3, 1))
     }
 
@@ -56,21 +56,30 @@ class StudioVersionsTest {
 
     @Test
     fun testTooOldStudioVersion() {
-        val exception = assertFailsWith<RuntimeException> {
-            verifyIDEIsNotOld("10.3.1.3.6", MajorMinorVersion(majorVersion = 3, minorVersion = 2))
-        }
-
-        assertThat(exception)
-            .hasMessageThat()
-            .contains("please retry with version 3.2 or newer.")
-
-        val secondException = assertFailsWith<RuntimeException> {
+        assertFailsWith<RuntimeException> {
             verifyIDEIsNotOld("3.1.3.6", MajorMinorVersion(majorVersion = 3, minorVersion = 2))
+        }.also { exception ->
+            assertThat(exception)
+                .hasMessageThat()
+                .contains("please retry with version 3.2 or newer.")
         }
 
-        assertThat(secondException)
-            .hasMessageThat()
-            .contains("please retry with version 3.2 or newer.")
+        assertFailsWith<RuntimeException> {
+            verifyIDEIsNotOld("10.4.1.3.6", MajorMinorVersion(majorVersion = 4, minorVersion = 2))
+        }.also { exception ->
+            assertThat(exception)
+                .hasMessageThat()
+                .contains("please retry with version 4.2 or newer.")
+        }
+
+        assertFailsWith<RuntimeException> {
+            verifyIDEIsNotOld("2020.1.1 Beta 5", MajorMinorVersion(yearVersion = 2020, majorVersion = 1, minorVersion = 2))
+        }.also { exception ->
+            assertThat(exception)
+                .hasMessageThat()
+                .contains("please retry with version 2020.1.2 or newer.")
+        }
+
     }
 
     @Test
@@ -79,7 +88,12 @@ class StudioVersionsTest {
             MajorMinorVersion(majorVersion = 1, minorVersion = 2),
             MajorMinorVersion(majorVersion = 1, minorVersion = 3),
             MajorMinorVersion(majorVersion = 2, minorVersion = 2),
-            MajorMinorVersion(majorVersion = 2, minorVersion = 3)
+            MajorMinorVersion(majorVersion = 2, minorVersion = 3),
+            MajorMinorVersion(yearVersion = 2020, majorVersion = 1, minorVersion = 1),
+            MajorMinorVersion(yearVersion = 2020, majorVersion = 1, minorVersion = 2),
+            MajorMinorVersion(yearVersion = 2020, majorVersion = 2, minorVersion = 1),
+            MajorMinorVersion(yearVersion = 2020, majorVersion = 2, minorVersion = 2),
+            MajorMinorVersion(yearVersion = 2021, majorVersion = 1, minorVersion = 1),
         )
 
         for (version in versionsInOrder) {
@@ -93,8 +107,16 @@ class StudioVersionsTest {
     @Test
     fun checkValidVersionParsing() {
         assertThat(parseVersion("3.3.0.6")).isEqualTo(MajorMinorVersion(majorVersion = 3, minorVersion = 3))
+
         assertThat(parseVersion("3.3.0-beta1")).isEqualTo(MajorMinorVersion(majorVersion = 3, minorVersion = 3))
         assertThat(parseVersion("10.4.1 RC 3")).isEqualTo(MajorMinorVersion(majorVersion = 4, minorVersion = 1))
+
+        // As injected by earlier canaries of Android Studio Arctic Fox 2020.3
+        assertThat(parseVersion("10.2020.3 Canary 11")).isEqualTo(MajorMinorVersion(yearVersion=2020, majorVersion = 3, minorVersion = 1))
+
+        assertThat(parseVersion("2020.3.1 Canary 12")).isEqualTo(MajorMinorVersion(yearVersion=2020, majorVersion = 3, minorVersion = 1))
+        assertThat(parseVersion("2020.3.2 Canary 12")).isEqualTo(MajorMinorVersion(yearVersion=2020, majorVersion = 3, minorVersion = 2))
+
     }
 
     @Test
@@ -107,5 +129,11 @@ class StudioVersionsTest {
         assertThat(parseVersion("-1.2")).isNull()
         assertThat(parseVersion("1.B")).isNull()
         assertThat(parseVersion("1.-2")).isNull()
+        assertThat(parseVersion("10")).isNull()
+        assertThat(parseVersion("10.1")).isNull()
+        assertThat(parseVersion("2020")).isNull()
+        assertThat(parseVersion("2020.1")).isNull()
+        assertThat(parseVersion("2020.1 ?")).isNull()
+        assertThat(parseVersion("10.2021.1 Canary")).isNull()
     }
 }
