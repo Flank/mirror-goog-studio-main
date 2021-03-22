@@ -52,7 +52,6 @@ class ManagedDeviceTestRunner(
         val testedApks = getTestedApks(testData, managedDevice, logger)
         val utpOutputDir = outputDirectory
         val utpTmpDir = Files.createTempDir()
-        val utpTestRunLogDir = Files.createTempDir()
         val runnerConfigProtoFile = File.createTempFile("runnerConfig", ".pb").also { file ->
             FileOutputStream(file).use { writer ->
                 configFactory.createRunnerConfigProtoForManagedDevice(
@@ -78,7 +77,6 @@ class ManagedDeviceTestRunner(
 
         try {
             FileUtils.deleteRecursivelyIfExists(utpOutputDir.resolve(TEST_LOG_DIR))
-            FileUtils.deleteRecursivelyIfExists(utpTestRunLogDir)
             FileUtils.deleteRecursivelyIfExists(utpTmpDir)
         } catch (e: IOException) {
             logger.warning("Failed to cleanup temporary directories: $e")

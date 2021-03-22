@@ -69,7 +69,6 @@ class UtpTestRunner @JvmOverloads constructor(
             apksForDevice.map { (deviceConnector, apks) ->
                 val utpOutputDir = resultsDir
                 val utpTmpDir = Files.createTempDir()
-                val utpTestRunLogDir = Files.createTempDir()
                 val runnerConfigProtoFile =
                         File.createTempFile("runnerConfig", ".pb").also { file ->
                             FileOutputStream(file).use { writer ->
@@ -103,7 +102,6 @@ class UtpTestRunner @JvmOverloads constructor(
 
                 try {
                     FileUtils.deleteRecursivelyIfExists(utpOutputDir.resolve(TEST_LOG_DIR))
-                    FileUtils.deleteRecursivelyIfExists(utpTestRunLogDir)
                     FileUtils.deleteRecursivelyIfExists(utpTmpDir)
                 } catch (e: IOException) {
                     logger.warning("Failed to cleanup temporary directories: $e")
