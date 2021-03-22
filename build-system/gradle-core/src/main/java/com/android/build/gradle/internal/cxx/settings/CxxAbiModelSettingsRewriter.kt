@@ -367,7 +367,6 @@ fun CxxAbiModel.rewrite(rewrite : (property: KProperty1<*, *>, value: String) ->
 
 // Rewriter for CxxProjectModel
 private fun CxxProjectModel.rewrite(rewrite : (property: KProperty1<*, *>, value: String) -> String) = copy(
-        isConfigurationFoldingEnabled = rewrite(CxxProjectModel::isConfigurationFoldingEnabled, isConfigurationFoldingEnabled.toString()).toBoolean(),
         rootBuildGradleFolder = rewrite(CxxProjectModel::rootBuildGradleFolder, rootBuildGradleFolder.path).toFile(),
         sdkFolder = rewrite(CxxProjectModel::sdkFolder, sdkFolder.path).toFile()
 )

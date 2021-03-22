@@ -51,11 +51,6 @@ data class CxxProjectModel(
     val isCmakeBuildCohabitationEnabled: Boolean = false,
 
     /**
-     * When true, C/C++ configuration folding is enabled.
-     */
-    val isConfigurationFoldingEnabled: Boolean = false,
-
-    /**
      * Directory containing all build attribution file in Chrome trace format. See
      * [com.android.builder.profile.ChromeTracingProfileConverter.EXTRA_CHROME_TRACE_DIRECTORY].
      * If null, it means user has not requested generation of build attribution file.

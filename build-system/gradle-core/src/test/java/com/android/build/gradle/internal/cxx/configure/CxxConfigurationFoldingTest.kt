@@ -26,7 +26,7 @@ class CxxConfigurationFoldingTest {
     @Test
     fun `CMake variants that fold`() {
         BasicCmakeMock().apply {
-            val configurationParameters = configurationParameters.copy(isConfigurationFoldingEnabled = true)
+            val configurationParameters = configurationParameters.copy()
             val config1 = configurationParameters.copy(variantName = "debug")
             val config2 = configurationParameters.copy(variantName = "debug2")
             val allAbis = createInitialCxxModel(
@@ -43,7 +43,7 @@ class CxxConfigurationFoldingTest {
     @Test
     fun `Dependency model CMake variants that fold`() {
         BasicCmakeMock().apply {
-            val configurationParameters = configurationParameters.copy(isConfigurationFoldingEnabled = true)
+            val configurationParameters = configurationParameters.copy()
             val config1 = configurationParameters.copy(variantName = "debug")
             val config2 = configurationParameters.copy(variantName = "debug2")
             val allAbis = createInitialCxxModel(
@@ -63,7 +63,7 @@ class CxxConfigurationFoldingTest {
     @Test
     fun `ndk-build variants that fold`() {
         BasicCmakeMock().apply {
-            val configurationParameters = configurationParameters.copy(isConfigurationFoldingEnabled = true)
+            val configurationParameters = configurationParameters.copy()
             val config1 = configurationParameters.copy(
                     variantName = "debug",
                     buildSystem = NativeBuildSystem.NDK_BUILD)
@@ -83,7 +83,7 @@ class CxxConfigurationFoldingTest {
     @Test
     fun `ndk-build variants that don't fold`() {
         BasicCmakeMock().apply {
-            val configurationParameters = configurationParameters.copy(isConfigurationFoldingEnabled = true)
+            val configurationParameters = configurationParameters.copy()
             val config1 = configurationParameters.copy(
                     variantName = "debug",
                     buildSystem = NativeBuildSystem.NDK_BUILD)
@@ -105,7 +105,7 @@ class CxxConfigurationFoldingTest {
     @Test
     fun `CMake variants that don't fold`() {
         BasicCmakeMock().apply {
-            val configurationParameters = configurationParameters.copy(isConfigurationFoldingEnabled = true)
+            val configurationParameters = configurationParameters.copy()
             val config1 = configurationParameters.copy(variantName = "debug")
             val config2 = configurationParameters.copy(variantName = "release")
             val allAbis = createInitialCxxModel(
@@ -123,7 +123,7 @@ class CxxConfigurationFoldingTest {
     @Test
     fun `CMake variants that differ only by build targets`() {
         BasicCmakeMock().apply {
-            val configurationParameters = configurationParameters.copy(isConfigurationFoldingEnabled = true)
+            val configurationParameters = configurationParameters.copy()
             val config1 = configurationParameters.copy(
                     variantName = "debug",
                     nativeVariantConfig = configurationParameters.nativeVariantConfig.copy(
@@ -151,7 +151,7 @@ class CxxConfigurationFoldingTest {
     @Test
     fun `CMake variants with targets having illegal Gradle characters`() {
         BasicCmakeMock().apply {
-            val configurationParameters = configurationParameters.copy(isConfigurationFoldingEnabled = true)
+            val configurationParameters = configurationParameters.copy()
             val config1 = configurationParameters.copy(
                     variantName = "debug",
                     nativeVariantConfig = configurationParameters.nativeVariantConfig.copy(
@@ -179,7 +179,7 @@ class CxxConfigurationFoldingTest {
     @Test
     fun `CMake variants that differ only by two build targets each`() {
         BasicCmakeMock().apply {
-            val configurationParameters = configurationParameters.copy(isConfigurationFoldingEnabled = true)
+            val configurationParameters = configurationParameters.copy()
             val config1 = configurationParameters.copy(
                     variantName = "debug",
                     nativeVariantConfig = configurationParameters.nativeVariantConfig.copy(
@@ -207,7 +207,7 @@ class CxxConfigurationFoldingTest {
     @Test
     fun `CMake variants that differ with more than two targets each`() {
         BasicCmakeMock().apply {
-            val configurationParameters = configurationParameters.copy(isConfigurationFoldingEnabled = true)
+            val configurationParameters = configurationParameters.copy()
             val config1 = configurationParameters.copy(
                     variantName = "debug",
                     nativeVariantConfig = configurationParameters.nativeVariantConfig.copy(
@@ -235,7 +235,7 @@ class CxxConfigurationFoldingTest {
     @Test
     fun `CMake equivalent variants with different ABIs fold`() {
         BasicCmakeMock().apply {
-            val configurationParameters = configurationParameters.copy(isConfigurationFoldingEnabled = true)
+            val configurationParameters = configurationParameters.copy()
             val config1 = configurationParameters.copy(
                     variantName = "debug",
                     nativeVariantConfig = configurationParameters.nativeVariantConfig.copy(
@@ -262,7 +262,7 @@ class CxxConfigurationFoldingTest {
     @Test
     fun `CMake equivalent variants with different ABIs that don't fold`() {
         BasicCmakeMock().apply {
-            val configurationParameters = configurationParameters.copy(isConfigurationFoldingEnabled = true)
+            val configurationParameters = configurationParameters.copy()
             val config1 = configurationParameters.copy(
                     variantName = "debug",
                     nativeVariantConfig = configurationParameters.nativeVariantConfig.copy(
@@ -290,9 +290,9 @@ class CxxConfigurationFoldingTest {
     }
 
     @Test
-    fun `CMake equivalent variants with different ABIs that would fold except they have diferrent targets`() {
+    fun `CMake equivalent variants with different ABIs that would fold except they have different targets`() {
         BasicCmakeMock().apply {
-            val configurationParameters = configurationParameters.copy(isConfigurationFoldingEnabled = true)
+            val configurationParameters = configurationParameters.copy()
             val config1 = configurationParameters.copy(
                     variantName = "debug",
                     nativeVariantConfig = configurationParameters.nativeVariantConfig.copy(

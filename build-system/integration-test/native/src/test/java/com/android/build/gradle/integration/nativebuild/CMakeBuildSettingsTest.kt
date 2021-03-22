@@ -27,7 +27,6 @@ import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_VERSION
 import com.android.build.gradle.internal.cxx.configure.OFF_STAGE_CMAKE_VERSION
 import com.android.build.gradle.internal.cxx.settings.BuildSettingsConfiguration
 import com.android.build.gradle.internal.cxx.settings.EnvironmentVariable
-import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils.join
 import org.junit.Before
@@ -40,8 +39,7 @@ import java.io.File
 @RunWith(Parameterized::class)
 class CMakeBuildSettingsTest(
     private val cmakeVersionInDsl: String,
-    private val hasFoldableVariants: Boolean,
-    enableConfigurationFolding: Boolean
+    private val hasFoldableVariants: Boolean
 ) {
     @Rule
     @JvmField
@@ -50,16 +48,14 @@ class CMakeBuildSettingsTest(
             HelloWorldJniApp.builder().withNativeDir("cxx").withCmake().build()
         )
         .setSideBySideNdkVersion(GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
-        .addGradleProperties("${BooleanOption.ENABLE_NATIVE_CONFIGURATION_FOLDING.propertyName}=$enableConfigurationFolding")
         .create()
 
     companion object {
-        @Parameterized.Parameters(name = "version={0} hasFoldableVariants={1} enableConfigurationFolding={2}")
+        @Parameterized.Parameters(name = "version={0} hasFoldableVariants={1}")
         @JvmStatic
         fun data() =
                 cartesianOf(
                         arrayOf("3.6.0", OFF_STAGE_CMAKE_VERSION, DEFAULT_CMAKE_VERSION),
-                        arrayOf(true, false),
                         arrayOf(true, false)
                 )
     }

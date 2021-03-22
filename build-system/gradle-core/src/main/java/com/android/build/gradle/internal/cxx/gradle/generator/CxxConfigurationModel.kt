@@ -37,7 +37,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.BooleanOption.BUILD_ONLY_TARGET_ABI
 import com.android.build.gradle.options.BooleanOption.ENABLE_CMAKE_BUILD_COHABITATION
-import com.android.build.gradle.options.BooleanOption.ENABLE_NATIVE_CONFIGURATION_FOLDING
 import com.android.build.gradle.options.BooleanOption.ENABLE_PROFILE_JSON
 import com.android.build.gradle.options.BooleanOption.PREFER_CMAKE_FILE_API
 import com.android.build.gradle.options.ProjectOptions
@@ -117,7 +116,6 @@ data class CxxConfigurationParameters(
     val isBuildOnlyTargetAbiEnabled: Boolean,
     val ideBuildTargetAbi: String?,
     val isCmakeBuildCohabitationEnabled: Boolean,
-    val isConfigurationFoldingEnabled: Boolean,
     val chromeTraceJsonFolder: File?,
     val isPrefabEnabled: Boolean,
     val prefabClassPath: FileCollection?,
@@ -270,7 +268,6 @@ fun tryCreateConfigurationParameters(
         splitsAbiFilterSet = global.extension.splits.abiFilters,
         intermediatesFolder = global.intermediatesDir,
         gradleModulePathName = project.path,
-        isConfigurationFoldingEnabled = option(ENABLE_NATIVE_CONFIGURATION_FOLDING),
         isBuildOnlyTargetAbiEnabled = option(BUILD_ONLY_TARGET_ABI),
         ideBuildTargetAbi = option(IDE_BUILD_TARGET_ABI),
         isCmakeBuildCohabitationEnabled = option(ENABLE_CMAKE_BUILD_COHABITATION),

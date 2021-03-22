@@ -87,11 +87,7 @@ fun createCxxModuleModel(
     // and we risk colliding with a variant named "Debug" in that folder.
     //
     val intermediatesBaseFolder = configurationParameters.intermediatesFolder
-    val intermediatesFolder = if (configurationParameters.isConfigurationFoldingEnabled) {
-        join(configurationParameters.intermediatesFolder, "cxx")
-    } else {
-        configurationParameters.intermediatesFolder
-    }
+    val intermediatesFolder = join(configurationParameters.intermediatesFolder, "cxx")
 
     val project = time("create-project-model") { createCxxProjectModel(sdkComponents, configurationParameters) }
     val ndkMetaAbiList = time("create-ndk-meta-abi-list") { NdkAbiFile(ndkMetaAbisFile(ndkFolder)).abiInfoList }

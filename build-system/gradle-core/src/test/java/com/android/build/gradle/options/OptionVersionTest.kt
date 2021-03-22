@@ -45,7 +45,6 @@ class OptionVersionTest {
                 BooleanOption.ENABLE_JVM_RESOURCE_COMPILER,
                 BooleanOption.ENABLE_SYMBOL_TABLE_CACHING,
                 BooleanOption.PREFER_CMAKE_FILE_API,
-                BooleanOption.ENABLE_NATIVE_CONFIGURATION_FOLDING,
                 OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8
         )
 
