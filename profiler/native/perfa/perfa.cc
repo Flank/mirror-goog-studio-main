@@ -18,9 +18,9 @@
 #include <unordered_map>
 
 #include "agent/agent.h"
-#include "agent/jvmti_helper.h"
-#include "agent/scoped_local_ref.h"
 #include "jvmti.h"
+#include "jvmti/jvmti_helper.h"
+#include "jvmti/scoped_local_ref.h"
 #include "memory/memory_tracking_env.h"
 #include "proto/transport.grpc.pb.h"
 #include "slicer/reader.h"

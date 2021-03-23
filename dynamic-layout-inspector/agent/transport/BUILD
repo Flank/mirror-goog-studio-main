@@ -72,7 +72,7 @@ cc_library(
     deps = [
         "//prebuilts/studio/jdk:jni_headers",
         "//tools/base/transport/native/agent",
-        "//tools/base/transport/native/agent:jvmti_helper",
+        "//tools/base/transport/native/jvmti",
         "//tools/base/transport/proto:cc_proto",
     ],
     alwayslink = 1,
@@ -99,7 +99,7 @@ cc_library(
         "//prebuilts/studio/jdk:jni_headers",
         "//tools/base/transport/native/agent",
         "//tools/base/transport/native/agent:jni_wrappers",
-        "//tools/base/transport/native/agent:jvmti_helper",
+        "//tools/base/transport/native/jvmti",
         "//tools/base/transport/native/utils",
         "//tools/base/transport/proto:cc_proto",
     ],
@@ -122,7 +122,7 @@ cc_library(
     deps = [
         "//prebuilts/studio/jdk:jni_headers",
         "//tools/base/dynamic-layout-inspector/skia/proto:layout_inspector_skia_cc_proto",
-        "//tools/base/transport/native/agent:jvmti_helper",
+        "//tools/base/transport/native/jvmti",
         "//tools/base/transport/proto:cc_proto",
         "//tools/base/transport/test-framework:native_test_support",
     ],

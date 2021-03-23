@@ -3,7 +3,7 @@
 
 #include <jvmti.h>
 
-namespace app_inspection {
+namespace profiler {
 
 class HiddenApiSilencer {
  public:
@@ -24,5 +24,5 @@ class HiddenApiSilencer {
   void Free(void* obj);
 };
 
-}  // namespace app_inspection
+}  // namespace profiler
 #endif

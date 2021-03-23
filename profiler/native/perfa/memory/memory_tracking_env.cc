@@ -22,8 +22,8 @@
 #include <vector>
 
 #include "agent/agent.h"
-#include "agent/jvmti_helper.h"
-#include "agent/scoped_local_ref.h"
+#include "jvmti/jvmti_helper.h"
+#include "jvmti/scoped_local_ref.h"
 #include "support/memory_stats_logger.h"
 #include "utils/clock.h"
 #include "utils/log.h"

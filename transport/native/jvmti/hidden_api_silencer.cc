@@ -3,7 +3,7 @@
 #include <cstring>
 #include <string>
 
-namespace app_inspection {
+namespace profiler {
 
 HiddenApiSilencer::HiddenApiSilencer(jvmtiEnv* jvmti) : jvmti_(jvmti) {
   supported_ = Setup();
@@ -68,4 +68,4 @@ bool HiddenApiSilencer::Setup() {
          DisableHiddenApiEnforcementPolicy;
 }
 
-}  // namespace app_inspection
+}  // namespace profiler

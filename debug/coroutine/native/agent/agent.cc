@@ -9,7 +9,7 @@
 #include <fstream>
 #include <sstream>
 
-#include "agent/jvmti_helper.h"
+#include "jvmti/jvmti_helper.h"
 #include "utils/log.h"
 
 using namespace profiler;

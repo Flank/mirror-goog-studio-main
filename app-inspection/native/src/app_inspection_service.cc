@@ -18,10 +18,9 @@
 #include <functional>
 #include <unordered_map>
 
-#include "agent/jvmti_helper.h"
-#include "app_inspection_common.h"
 #include "app_inspection_transform.h"
-#include "hidden_api_silencer.h"
+#include "jvmti/hidden_api_silencer.h"
+#include "jvmti/jvmti_helper.h"
 #include "slicer/reader.h"
 #include "slicer/writer.h"
 #include "utils/device_info.h"
