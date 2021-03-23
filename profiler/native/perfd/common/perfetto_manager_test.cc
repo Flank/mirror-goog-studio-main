@@ -104,8 +104,8 @@ TEST(PerfettoManagerTest, ValidateConfig) {
   }
   EXPECT_EQ(categories_found, categories_size);
   EXPECT_EQ(config.buffers().size(), 2);
-  EXPECT_EQ(config.buffers()[0].size_kb(), 256);
-  EXPECT_EQ(config.buffers()[1].size_kb(), buffer_size_kb);
+  EXPECT_EQ(config.buffers()[0].size_kb(), buffer_size_kb);
+  EXPECT_EQ(config.buffers()[1].size_kb(), 256);
 
   // Process stats
   EXPECT_EQ(config.data_sources()[1].config().name(), "linux.process_stats");

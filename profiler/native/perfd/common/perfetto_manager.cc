@@ -131,17 +131,17 @@ perfetto::protos::TraceConfig PerfettoManager::BuildFtraceConfig(
 
   // Keep two buffers separate to avoid process scan data being overwritten by
   // ftrace data.
-  // Buffer 0: for process and thread scan. Based on sample traces we collected,
+  // Buffer 0: for ftrace and /proc/stat etc. Uses user-configured buffer size.
+  config.add_buffers()->set_size_kb(buffer_size_in_kb);
+  // Buffer 1: for process and thread scan. Based on sample traces we collected,
   // this takes around 100 KB at max, so 256 KB should be sufficient.
   config.add_buffers()->set_size_kb(256);
-  // Buffer 1: for ftrace and /proc/stat etc. Uses user-configured buffer size.
-  config.add_buffers()->set_size_kb(buffer_size_in_kb);
 
   // Add config to get ftrace data.
   auto* source = config.add_data_sources();
   auto* data_config = source->mutable_config();
   data_config->set_name("linux.ftrace");
-  data_config->set_target_buffer(1);
+  data_config->set_target_buffer(0);
   auto* ftrace_config = data_config->mutable_ftrace_config();
   // Drain ftrace every 10frames @ 60fps
   ftrace_config->set_drain_period_ms(170);
@@ -212,7 +212,7 @@ perfetto::protos::TraceConfig PerfettoManager::BuildFtraceConfig(
   source = config.add_data_sources();
   data_config = source->mutable_config();
   data_config->set_name("linux.process_stats");
-  data_config->set_target_buffer(0);
+  data_config->set_target_buffer(1);
   auto* proc = data_config->mutable_process_stats_config();
   proc->set_scan_all_processes_on_start(true);
   proc->set_record_thread_names(true);
@@ -221,7 +221,7 @@ perfetto::protos::TraceConfig PerfettoManager::BuildFtraceConfig(
   source = config.add_data_sources();
   data_config = source->mutable_config();
   data_config->set_name("linux.process_stats");
-  data_config->set_target_buffer(1);
+  data_config->set_target_buffer(0);
   proc = data_config->mutable_process_stats_config();
   proc->set_proc_stats_poll_ms(1000);
   proc->add_quirks(perfetto::protos::ProcessStatsConfig::DISABLE_ON_DEMAND);
