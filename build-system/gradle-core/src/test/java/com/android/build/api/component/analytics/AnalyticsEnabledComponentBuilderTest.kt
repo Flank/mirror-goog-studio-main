@@ -46,12 +46,12 @@ class AnalyticsEnabledComponentBuilderTest {
     }
 
     @Test
-    fun setEnable() {
-        proxy.enable = false
+    fun setEnabled() {
+        proxy.enabled = false
         Truth.assertThat(stats.variantApiAccess.variantAccessCount).isEqualTo(1)
         Truth.assertThat(
             stats.variantApiAccess.variantAccessList.first().type
         ).isEqualTo(VariantMethodType.ENABLED_VALUE)
-        Mockito.verify(delegate, times(1)).enable = false
+        Mockito.verify(delegate, times(1)).enabled = false
     }
 }

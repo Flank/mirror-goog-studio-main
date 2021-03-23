@@ -305,7 +305,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
 
         // execute the Variant API
         variantApiOperationsRegistrar.variantBuilderOperations.executeOperations(userVisibleVariantBuilder)
-        if (!variantBuilder.enable) {
+        if (!variantBuilder.enabled) {
             return null
         }
 

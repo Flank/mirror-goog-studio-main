@@ -65,7 +65,7 @@ class ProcessLibraryManifestTest {
             VariantOutputImpl(
                 versionCode = project.objects.property(Int::class.java).also { it.set(1) },
                 versionName = project.objects.property(String::class.java).also { it.set("version_name")},
-                enable = project.objects.property(Boolean::class.java).also { it.set(true) },
+                enabled = project.objects.property(Boolean::class.java).also { it.set(true) },
                 variantOutputConfiguration = VariantOutputConfigurationImpl(),
                 baseName = "base_name",
                 fullName = "fooRelease",
