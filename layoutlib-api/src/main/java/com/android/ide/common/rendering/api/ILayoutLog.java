@@ -115,6 +115,9 @@ public interface ILayoutLog {
      */
     String TAG_INFO = "info";
 
+    /** Tag for reporting the creation of an instance of Thread in the preview. */
+    String TAG_THREAD_CREATION = "thread-creation";
+
     /**
      * Logs a warning.
      *
