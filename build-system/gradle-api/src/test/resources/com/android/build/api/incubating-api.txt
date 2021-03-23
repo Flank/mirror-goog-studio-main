@@ -64,13 +64,12 @@ com.android.build.api.artifact.TaskBasedOperation.wiredWith: com.android.build.a
 com.android.build.api.artifact.TaskBasedOperation.wiredWith: com.android.build.api.artifact.OutOperationRequest<FileTypeT> (kotlin.jvm.functions.Function1<? super TaskT, ? extends org.gradle.api.file.FileSystemLocationProperty<FileTypeT>>)
 com.android.build.api.artifact.TaskBasedOperation.wiredWithDirectories: com.android.build.api.artifact.InAndOutDirectoryOperationRequest<TaskT> (kotlin.jvm.functions.Function1<? super TaskT, ? extends org.gradle.api.file.DirectoryProperty>, kotlin.jvm.functions.Function1<? super TaskT, ? extends org.gradle.api.file.DirectoryProperty>)
 com.android.build.api.artifact.TaskBasedOperation.wiredWithFiles: com.android.build.api.artifact.InAndOutFileOperationRequest (kotlin.jvm.functions.Function1<? super TaskT, ? extends org.gradle.api.file.RegularFileProperty>, kotlin.jvm.functions.Function1<? super TaskT, ? extends org.gradle.api.file.RegularFileProperty>)
-com.android.build.api.component.ActionableComponentObject
 com.android.build.api.component.AndroidTestBuilder implements com.android.build.api.component.TestComponentBuilder
-com.android.build.api.component.Component implements com.android.build.api.component.ComponentIdentity, com.android.build.api.component.ActionableComponentObject
+com.android.build.api.component.Component implements com.android.build.api.component.ComponentIdentity
 com.android.build.api.component.Component.getArtifacts: com.android.build.api.artifact.Artifacts ()
 com.android.build.api.component.Component.setAsmFramesComputationMode: void (com.android.build.api.instrumentation.FramesComputationMode)
 com.android.build.api.component.Component.transformClassesWith: void (java.lang.Class<? extends com.android.build.api.instrumentation.AsmClassVisitorFactory<ParamT>>, com.android.build.api.instrumentation.InstrumentationScope, kotlin.jvm.functions.Function1<? super ParamT, kotlin.Unit>)
-com.android.build.api.component.ComponentBuilder implements com.android.build.api.component.ComponentIdentity, com.android.build.api.component.ActionableComponentObject
+com.android.build.api.component.ComponentBuilder implements com.android.build.api.component.ComponentIdentity
 com.android.build.api.component.ComponentBuilder.getEnable: boolean ()
 com.android.build.api.component.ComponentBuilder.getEnabled: boolean ()
 com.android.build.api.component.ComponentBuilder.setEnable: void (boolean)
@@ -1006,7 +1005,7 @@ com.android.build.api.variant.Variant.getPackaging: com.android.build.api.varian
 com.android.build.api.variant.Variant.getProguardFiles: org.gradle.api.provider.ListProperty<org.gradle.api.file.RegularFile> ()
 com.android.build.api.variant.Variant.getUnitTest: com.android.build.api.component.UnitTest ()
 com.android.build.api.variant.Variant.isPseudoLocalesEnabled: org.gradle.api.provider.Property<java.lang.Boolean> ()
-com.android.build.api.variant.VariantBuilder implements com.android.build.api.component.ComponentBuilder, com.android.build.api.component.ActionableComponentObject
+com.android.build.api.variant.VariantBuilder implements com.android.build.api.component.ComponentBuilder
 com.android.build.api.variant.VariantBuilder.getEnableUnitTest: boolean ()
 com.android.build.api.variant.VariantBuilder.getMaxSdkVersion: java.lang.Integer ()
 com.android.build.api.variant.VariantBuilder.getMinSdkVersion: com.android.build.api.variant.AndroidVersion ()
