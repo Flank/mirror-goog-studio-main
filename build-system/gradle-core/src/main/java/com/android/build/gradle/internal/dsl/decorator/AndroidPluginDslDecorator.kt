@@ -17,6 +17,10 @@
 package com.android.build.gradle.internal.dsl.decorator
 
 import com.android.build.api.dsl.AndroidResources
+import com.android.build.api.dsl.AssetPackBundleExtension
+import com.android.build.api.dsl.BundleDeviceTier
+import com.android.build.api.dsl.BundleTexture
+import com.android.build.api.dsl.SigningConfig
 import com.android.build.gradle.internal.dsl.AaptOptions
 
 /** The list of all the supported property types for the production AGP */
@@ -27,7 +31,11 @@ val AGP_SUPPORTED_PROPERTY_TYPES: List<SupportedPropertyType> = listOf(
     SupportedPropertyType.Var.Int,
     SupportedPropertyType.Collection.List,
     SupportedPropertyType.Collection.Set,
-    SupportedPropertyType.Block(AndroidResources::class.java, AaptOptions::class.java)
+    SupportedPropertyType.Block(AndroidResources::class.java, AaptOptions::class.java),
+    SupportedPropertyType.Block(AssetPackBundleExtension::class.java),
+    SupportedPropertyType.Block(BundleTexture::class.java),
+    SupportedPropertyType.Block(BundleDeviceTier::class.java),
+    SupportedPropertyType.Block(SigningConfig::class.java)
 )
 
 /**

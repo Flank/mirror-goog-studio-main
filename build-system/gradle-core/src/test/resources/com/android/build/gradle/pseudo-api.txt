@@ -52,6 +52,12 @@ com.android.build.gradle.AppPlugin.apply: void (java.lang.Object)
 com.android.build.gradle.AppPlugin.apply: void (org.gradle.api.Project)
 com.android.build.gradle.AppPluginKt
 com.android.build.gradle.AppPluginKt.access$getINTERNAL_PLUGIN_ID$p: java.util.Map ()
+com.android.build.gradle.AssetPackBundlePlugin implements org.gradle.api.Plugin
+com.android.build.gradle.AssetPackBundlePlugin.<init>: com.android.build.gradle.AssetPackBundlePlugin ()
+com.android.build.gradle.AssetPackBundlePlugin.apply: void (java.lang.Object)
+com.android.build.gradle.AssetPackBundlePlugin.apply: void (org.gradle.api.Project)
+com.android.build.gradle.AssetPackBundlePluginKt
+com.android.build.gradle.AssetPackBundlePluginKt.access$getINTERNAL_PLUGIN_ID$p: java.util.Map ()
 com.android.build.gradle.AssetPackPlugin implements org.gradle.api.Plugin
 com.android.build.gradle.AssetPackPlugin.<init>: com.android.build.gradle.AssetPackPlugin ()
 com.android.build.gradle.AssetPackPlugin.apply: void (java.lang.Object)

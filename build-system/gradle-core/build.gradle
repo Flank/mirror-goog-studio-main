@@ -99,6 +99,10 @@ gradlePlugin {
             id = "com.android.asset-pack"
             implementationClass = "com.android.build.gradle.AssetPackPlugin"
         }
+        comAndroidAssetOnlyBundle {
+            id = "com.android.asset-pack-bundle"
+            implementationClass = "com.android.build.gradle.AssetPackBundlePlugin"
+        }
         comAndroidLint {
             id = "com.android.lint"
             implementationClass = "com.android.build.gradle.LintPlugin"
