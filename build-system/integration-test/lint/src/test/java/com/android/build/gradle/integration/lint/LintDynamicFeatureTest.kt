@@ -24,14 +24,11 @@ import com.android.build.gradle.integration.common.runner.FilterableParameterize
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.truth.PathSubject.assertThat
-import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
-import org.junit.Assume
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
-import java.io.File
 
 @RunWith(FilterableParameterized::class)
 class LintDynamicFeatureTest(private val usePartialAnalysis: Boolean) {
@@ -71,8 +68,6 @@ class LintDynamicFeatureTest(private val usePartialAnalysis: Boolean) {
 
     @Test
     fun testUnusedResourcesInFeatureModules() {
-        // TODO (b/180672373) Support the unused resource detector with lint partial analysis.
-        Assume.assumeFalse(usePartialAnalysis)
         project.getExecutor().run("clean", "lint")
 
         val file = project.file("app/lint-results.txt")
@@ -114,67 +109,17 @@ class LintDynamicFeatureTest(private val usePartialAnalysis: Boolean) {
     }
 
     @Test
-    fun runLintFromDynamicFeatureWithCheckDependencies() {
-        TestFileUtils.appendToFile(
-            projectWithLibs.getSubproject(":feature").buildFile,
-            """
-                android {
-                    lintOptions {
-                        checkDependencies true
-                        abortOnError false
-                        textOutput file("lint-results.txt")
-                    }
-                }
-                """.trimIndent()
-        )
-
-        // Add hard-coded resource to each module
-        FileUtils.writeToFile(
-            File(projectWithLibs.getSubproject(":app").mainResDir, "layout/app_layout.xml"),
-            layout_text
-        )
-        FileUtils.writeToFile(
-            File(projectWithLibs.getSubproject(":feature").mainResDir, "layout/feature_layout.xml"),
-            layout_text
-        )
-        FileUtils.writeToFile(
-            File(projectWithLibs.getSubproject(":lib1").mainResDir, "layout/lib1_layout.xml"),
-            layout_text
-        )
-        FileUtils.writeToFile(
-            File(projectWithLibs.getSubproject(":lib2").mainResDir, "layout/lib2_layout.xml"),
-            layout_text
-        )
-
-        // Run twice to catch issues with configuration caching
-        projectWithLibs.getExecutor().run("clean", ":feature:lint")
-        projectWithLibs.getExecutor().run("clean", ":feature:lint")
-        assertThat(projectWithLibs.buildResult.failedTasks).isEmpty()
-
-        assertThat(projectWithLibs.file("feature/lint-results.txt")).containsAllOf(
-            "app_layout.xml:10: Warning: Hardcoded string",
-            "feature_layout.xml:10: Warning: Hardcoded string",
-            "lib1_layout.xml:10: Warning: Hardcoded string",
-            "lib2_layout.xml:10: Warning: Hardcoded string"
-        )
-    }
-
-    @Test
     fun runLintFromApp() {
         // Run twice to catch issues with configuration caching
         project.getExecutor().run(":app:clean", ":app:lint")
         project.getExecutor().run(":app:clean", ":app:lint")
         assertThat(project.buildResult.failedTasks).isEmpty()
 
-        // TODO (b/180672373) Merge issues from dynamic features into app report when using lint
-        //  partial analysis.
-        if (!usePartialAnalysis) {
-            assertThat(project.file("app/lint-results.txt")).containsAllOf(
-                "base_layout.xml:10: Warning: Hardcoded string",
-                "feature_layout.xml:10: Warning: Hardcoded string",
-                "feature2_layout.xml:10: Warning: Hardcoded string"
-            )
-        }
+        assertThat(project.file("app/lint-results.txt")).containsAllOf(
+            "base_layout.xml:10: Warning: Hardcoded string",
+            "feature_layout.xml:10: Warning: Hardcoded string",
+            "feature2_layout.xml:10: Warning: Hardcoded string"
+        )
     }
 
     @Test

@@ -29,6 +29,7 @@ import com.android.tools.lint.model.LintModelExternalLibrary
 import com.android.tools.lint.model.LintModelModule
 import com.android.tools.lint.model.LintModelModuleLibrary
 import com.android.tools.lint.model.LintModelModuleType
+import com.android.tools.lint.model.LintModelModuleType.DYNAMIC_FEATURE
 import com.android.tools.lint.model.LintModelSourceProvider
 import com.android.tools.lint.model.LintModelVariant
 import com.android.utils.XmlUtils
@@ -379,7 +380,11 @@ open class LintModelModuleProject(
          * dependency lists based on the dependencies found in the
          * underlying models.
          */
-        fun resolveDependencies(projects: Collection<LintModelModuleProject>): List<LintModelModuleProject> {
+        @JvmStatic
+        fun resolveDependencies(
+            projects: Collection<LintModelModuleProject>,
+            reporting: Boolean
+        ): List<LintModelModuleProject> {
             // Record project names such that we can resolve dependencies once all the
             // projects have been initialized
             val projectMap: MutableMap<String, LintModelModuleProject> = HashMap()
@@ -399,7 +404,14 @@ open class LintModelModuleProject(
                         val projectPath = library.projectPath
                         val dependsOn = projectMap[projectPath]
                             ?: error("WARNING: Dependency from ${project.name} to $projectPath was not found")
-                        project.addDirectLibrary(dependsOn)
+                        if (reporting && project.type == DYNAMIC_FEATURE && dependsOn.type != DYNAMIC_FEATURE) {
+                            // When reporting, reverse the dependencies such that
+                            // we treat the consuming app module as the root and we merge
+                            // dynamic feature lint results into it instead of the other way.
+                            dependsOn.addDirectLibrary(project)
+                        } else {
+                            project.addDirectLibrary(dependsOn)
+                        }
                     }
                 }
             }

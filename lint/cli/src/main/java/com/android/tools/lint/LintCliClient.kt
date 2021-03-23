@@ -70,6 +70,7 @@ import com.android.tools.lint.detector.api.guessGradleLocation
 import com.android.tools.lint.detector.api.guessGradleLocationForFile
 import com.android.tools.lint.detector.api.isJdkFolder
 import com.android.tools.lint.helpers.DefaultUastParser
+import com.android.tools.lint.model.LintModelModuleType
 import com.android.utils.CharSequences
 import com.android.utils.StdLogger
 import com.google.common.annotations.Beta
@@ -449,6 +450,18 @@ open class LintCliClient : LintClient {
                     ?: ArrayList<Project>().also { dependentsMap[dependency] = it }
                 dependents.add(root)
                 projects.add(dependency)
+            }
+        } else {
+            // Even in non-check-dependencies scenarios we have to add in any dynamic
+            // features since we've transferred them in as dependencies instead
+            // (see LintModelModuleProject.resolveDependencies)
+            for (dependency in root.allLibraries) {
+                if (dependency.type == LintModelModuleType.DYNAMIC_FEATURE) {
+                    val dependents = dependentsMap[dependency]
+                        ?: ArrayList<Project>().also { dependentsMap[dependency] = it }
+                    dependents.add(root)
+                    projects.add(dependency)
+                }
             }
         }
 
