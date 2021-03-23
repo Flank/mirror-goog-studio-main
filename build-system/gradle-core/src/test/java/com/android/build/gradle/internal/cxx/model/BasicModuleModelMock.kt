@@ -389,8 +389,6 @@ open class BasicModuleModelMock {
                 .`when`(projectOptions).get(BooleanOption.ENABLE_SIDE_BY_SIDE_CMAKE)
             doReturn(null)
                 .`when`(projectOptions).get(StringOption.IDE_BUILD_TARGET_ABI)
-            doReturn(false)
-                .`when`(projectOptions).get(BooleanOption.PREFER_CMAKE_FILE_API)
             doReturn("verbose")
                 .`when`(projectOptions).get(StringOption.NATIVE_BUILD_OUTPUT_LEVEL)
 

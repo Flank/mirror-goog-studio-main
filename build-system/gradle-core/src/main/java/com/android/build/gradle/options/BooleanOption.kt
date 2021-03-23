@@ -180,8 +180,6 @@ enum class BooleanOption(
 
     ENABLE_SYMBOL_TABLE_CACHING("android.enableSymbolTableCaching", true, FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.VERSION_7_0)),
 
-    PREFER_CMAKE_FILE_API("android.preferCmakeFileApi", true, FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.VERSION_7_0)),
-
     USE_NEW_JAR_CREATOR("android.useNewJarCreator", true, FeatureStage.SoftlyEnforced(VERSION_8_0)),
 
     USE_NEW_APK_CREATOR("android.useNewApkCreator", true, FeatureStage.SoftlyEnforced(VERSION_8_0)),
@@ -198,6 +196,11 @@ enum class BooleanOption(
     /* -----------------
      * ENFORCED FEATURES
      */
+    @Suppress("unused")
+    PREFER_CMAKE_FILE_API(
+        "android.preferCmakeFileApi",
+        true, FeatureStage.Enforced(VERSION_7_0)),
+
     @Suppress("unused")
     ENABLE_NATIVE_CONFIGURATION_FOLDING(
         "android.enableNativeConfigurationFolding",

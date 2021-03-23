@@ -112,8 +112,7 @@ fun createCxxModuleModel(
                     CmakeVersionRequirements(configurationParameters.cmakeVersion).effectiveRequestVersion,
                     isValidCmakeAvailable = cmakeFolder != null,
                     cmakeExe = cmakeExe,
-                    ninjaExe = ninjaExe,
-                    isPreferCmakeFileApiEnabled = configurationParameters.isPreferCmakeFileApiEnabled
+                    ninjaExe = ninjaExe
             )
 
         } else {
