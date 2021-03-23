@@ -29,17 +29,17 @@ abstract class AnalyticsEnabledComponentBuilder(
 ) : ComponentBuilder {
 
     override var enabled: Boolean
-        get() = delegate.enable
+        get() = delegate.enabled
         set(value) {
             stats.variantApiAccessBuilder.addVariantAccessBuilder().type = VariantMethodType.ENABLED_VALUE
-            delegate.enable = value
+            delegate.enabled = value
         }
 
     override var enable: Boolean
-        get() = delegate.enable
+        get() = delegate.enabled
         set(value) {
             stats.variantApiAccessBuilder.addVariantAccessBuilder().type = VariantMethodType.ENABLED_VALUE
-            delegate.enable = value
+            delegate.enabled = value
         }
 
     override fun getName(): String =
