@@ -20,6 +20,7 @@
 #include <atomic>
 #include <string>
 
+#include "agent/jni_wrappers.h"
 #include "jvmti.h"
 
 namespace app_inspection {
@@ -30,18 +31,18 @@ class AppInspectionService {
 
   // transforms the given method and inserts AppInspectionService.onEntry call
   // as an entry hook
-  void AddEntryTransform(JNIEnv* jni, const std::string& class_name,
+  void AddEntryTransform(JNIEnv* jni, const jclass& origin_class,
                          const std::string& method_name,
                          const std::string& signature) {
-    AddTransform(jni, class_name, method_name, signature, true);
+    AddTransform(jni, origin_class, method_name, signature, true);
   }
 
   // transforms the given method and inserts AppInspectionService.onExit call as
   // exit hook
-  void AddExitTransform(JNIEnv* jni, const std::string& class_name,
+  void AddExitTransform(JNIEnv* jni, const jclass& origin_class,
                         const std::string& method_name,
                         const std::string& signature) {
-    AddTransform(jni, class_name, method_name, signature, false);
+    AddTransform(jni, origin_class, method_name, signature, false);
   }
   // finds instances of the given class in the heap
   jobjectArray FindInstances(JNIEnv* jni, jclass jclass);
@@ -56,14 +57,12 @@ class AppInspectionService {
   jvmtiEnv* jvmti_;
   std::atomic<long> next_tag_;
 
-  void AddTransform(JNIEnv* jni, const std::string& class_name,
+  void AddTransform(JNIEnv* jni, const jclass& origin_class,
                     const std::string& method_name,
                     const std::string& signature, bool is_entry);
   bool tagClassInstancesO(JNIEnv* jni, jclass clazz, jlong tag);
   bool tagClassInstancesQ(jclass clazz, jlong tag);
 
-  static void OnClassPrepare(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
-                             jthread thread, jclass klass);
   static void OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
                                 jclass class_being_redefined, jobject loader,
                                 const char* name, jobject protection_domain,

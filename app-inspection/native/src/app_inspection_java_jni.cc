@@ -297,21 +297,6 @@ jobject CreateAppInspectionService(JNIEnv *env) {
                         reinterpret_cast<jlong>(service));
 }
 
-static std::string ConvertClass(JNIEnv *env, jclass cls) {
-  jclass classClass = env->FindClass("java/lang/Class");
-  jmethodID mid =
-      env->GetMethodID(classClass, "getCanonicalName", "()Ljava/lang/String;");
-
-  jstring strObj = (jstring)env->CallObjectMethod(cls, mid);
-
-  profiler::JStringWrapper name_wrapped(env, strObj);
-
-  std::string name = "L" + name_wrapped.get() + ";";
-
-  std::replace(name.begin(), name.end(), '.', '/');
-  return name;
-}
-
 jobjectArray FindInstances(JNIEnv *env, jlong nativePtr, jclass jclass) {
   AppInspectionService *inspector =
       reinterpret_cast<AppInspectionService *>(nativePtr);
@@ -333,7 +318,7 @@ void AddEntryTransformation(JNIEnv *env, jlong nativePtr, jclass origin_class,
     return;
   }
 
-  inspector->AddEntryTransform(env, ConvertClass(env, origin_class),
+  inspector->AddEntryTransform(env, origin_class,
                                method_str.get().substr(0, found),
                                method_str.get().substr(found));
 }
@@ -353,7 +338,7 @@ void AddExitTransformation(JNIEnv *env, jlong nativePtr, jclass origin_class,
     return;
   }
 
-  inspector->AddExitTransform(env, ConvertClass(env, origin_class),
+  inspector->AddExitTransform(env, origin_class,
                               method_str.get().substr(0, found),
                               method_str.get().substr(found));
 }
