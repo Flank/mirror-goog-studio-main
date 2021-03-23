@@ -590,7 +590,7 @@ fun getManifestProducerTask() =
 
             abstract class CopyApksTask extends DefaultTask {
 
-                WorkerExecutor workers
+                private WorkerExecutor workers
 
                 @Inject
                 CopyApksTask(WorkerExecutor workerExecutor) {
