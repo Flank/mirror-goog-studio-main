@@ -38,7 +38,7 @@ class UtpConnectedTest {
         val EMULATOR = getEmulator()
 
         const val TEST_REPORT = "build/reports/androidTests/connected/com.example.android.kotlin.html"
-        const val TEST_RESULT_PB = "build/outputs/androidTest-results/connected/test-result.pb"
+        const val TEST_RESULT_PB = "build/outputs/androidTest-results/connected/emulator-5554 - 10/test-result.pb"
     }
 
     @get:Rule

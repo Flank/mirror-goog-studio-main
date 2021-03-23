@@ -71,7 +71,7 @@ class FailureRetentionConnectedTest {
             )
             .run("connectedAndroidTest")
         val connectedDir = project.projectDir
-            .resolve("app/build/outputs/androidTest-results/connected")
+            .resolve("app/build/outputs/androidTest-results/connected/emulator-5554 - 10")
         assertThat(connectedDir.resolve("test-result.pb")).exists()
     }
 
@@ -87,8 +87,8 @@ class FailureRetentionConnectedTest {
                 )
                 .run("connectedAndroidTest")
         }
-        val connectedDir =
-            project.projectDir.resolve("app/build/outputs/androidTest-results/connected")
+        val connectedDir = project.projectDir
+                .resolve("app/build/outputs/androidTest-results/connected/emulator-5554 - 10")
         connectedDir.listFiles().forEach {
             System.err.println("$it")
         }

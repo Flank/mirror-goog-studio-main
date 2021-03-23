@@ -67,7 +67,11 @@ class UtpTestRunner @JvmOverloads constructor(
         return UtpTestResultListenerServerRunner(utpTestResultListener).use { resultListenerServerRunner ->
             val resultListenerServerMetadata = resultListenerServerRunner.metadata
             apksForDevice.map { (deviceConnector, apks) ->
-                val utpOutputDir = resultsDir
+                val utpOutputDir = File(resultsDir, deviceConnector.name).apply {
+                    if (!exists()) {
+                        mkdirs()
+                    }
+                }
                 val utpTmpDir = Files.createTempDir()
                 val runnerConfigProtoFile =
                         File.createTempFile("runnerConfig", ".pb").also { file ->
