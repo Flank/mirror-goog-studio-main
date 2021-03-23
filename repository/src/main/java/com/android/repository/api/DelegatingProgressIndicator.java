@@ -17,13 +17,11 @@ package com.android.repository.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import java.util.HashSet;
+import com.google.common.annotations.VisibleForTesting;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * {@link ProgressIndicator} that just delegates all its functionality to another.
- */
+/** {@link ProgressIndicator} that just delegates all its functionality to another. */
 public class DelegatingProgressIndicator implements ProgressIndicator {
 
     protected Set<ProgressIndicator> mWrapped = ConcurrentHashMap.newKeySet();
@@ -43,7 +41,7 @@ public class DelegatingProgressIndicator implements ProgressIndicator {
 
     @Override
     public boolean isCanceled() {
-        return mWrapped.stream().filter(ProgressIndicator::isCanceled).findFirst().isPresent();
+        return mWrapped.stream().anyMatch(ProgressIndicator::isCanceled);
     }
 
     @Override
@@ -59,8 +57,7 @@ public class DelegatingProgressIndicator implements ProgressIndicator {
     @Override
     public boolean isCancellable() {
         // If any are not cancellable we aren't.
-        return !mWrapped.stream().filter(progress -> !progress.isCancellable()).findFirst()
-                .isPresent();
+        return mWrapped.stream().allMatch(ProgressIndicator::isCancellable);
     }
 
     @Override
@@ -70,7 +67,7 @@ public class DelegatingProgressIndicator implements ProgressIndicator {
 
     @Override
     public boolean isIndeterminate() {
-        return mWrapped.stream().filter(ProgressIndicator::isIndeterminate).findFirst().isPresent();
+        return mWrapped.stream().anyMatch(ProgressIndicator::isIndeterminate);
     }
 
     @Override
@@ -111,5 +108,10 @@ public class DelegatingProgressIndicator implements ProgressIndicator {
     @Override
     public void logInfo(@NonNull String s) {
         mWrapped.forEach(progress -> progress.logInfo(s));
+    }
+
+    @VisibleForTesting
+    public Set<ProgressIndicator> getDelegates() {
+        return mWrapped;
     }
 }
