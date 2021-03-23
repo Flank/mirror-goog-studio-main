@@ -74,9 +74,10 @@ com.android.build.api.component.ComponentBuilder.getEnable: boolean ()
 com.android.build.api.component.ComponentBuilder.getEnabled: boolean ()
 com.android.build.api.component.ComponentBuilder.setEnable: void (boolean)
 com.android.build.api.component.ComponentBuilder.setEnabled: void (boolean)
-com.android.build.api.component.ComponentIdentity implements org.gradle.api.Named
+com.android.build.api.component.ComponentIdentity
 com.android.build.api.component.ComponentIdentity.getBuildType: java.lang.String ()
 com.android.build.api.component.ComponentIdentity.getFlavorName: java.lang.String ()
+com.android.build.api.component.ComponentIdentity.getName: java.lang.String ()
 com.android.build.api.component.ComponentIdentity.getProductFlavors: java.util.List<kotlin.Pair<java.lang.String, java.lang.String>> ()
 com.android.build.api.component.TestComponent implements com.android.build.api.component.Component
 com.android.build.api.component.TestComponent.getTestedVariant: com.android.build.api.variant.Variant ()

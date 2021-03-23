@@ -42,8 +42,8 @@ abstract class AnalyticsEnabledComponentBuilder(
             delegate.enabled = value
         }
 
-    override fun getName(): String =
-        delegate.name
+    override val name: String
+        get() = delegate.name
 
     override val buildType: String?
         get() = delegate.buildType

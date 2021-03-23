@@ -17,7 +17,6 @@
 package com.android.build.api.component
 
 import org.gradle.api.Incubating
-import org.gradle.api.Named
 
 /**
  * Variant Configuration represents the identify of a variant
@@ -25,7 +24,13 @@ import org.gradle.api.Named
  * This is computed from the list of build types and flavors.
  */
 @Incubating
-interface ComponentIdentity: Named {
+interface ComponentIdentity {
+
+    /**
+     * Component's name.
+     */
+    val name: String
+
     /**
      * Build type name, might be replaced with access to locked DSL object once ready.
      */

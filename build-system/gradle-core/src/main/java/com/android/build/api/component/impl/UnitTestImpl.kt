@@ -131,12 +131,9 @@ open class UnitTestImpl @Inject constructor(
             ) as T
         }
 
-
     /**
      * for unit tests, the placeholders are always empty.
      */
     override val manifestPlaceholders: MapProperty<String, String> =
             internalServices.mapPropertyOf(String::class.java, String::class.java, mapOf())
-
-
 }

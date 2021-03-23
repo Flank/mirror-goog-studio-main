@@ -17,8 +17,6 @@
 package com.android.build.api.dsl
 
 import org.gradle.api.Incubating
-import org.gradle.api.Named
-import java.io.File
 
 /** DSL object to configure signing configs. */
 @Incubating
