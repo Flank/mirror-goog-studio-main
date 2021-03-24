@@ -339,7 +339,9 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         override val autoFix: Boolean get() = false
         override val description: String get() = "Run lint on the ${creationConfig.name} variant"
         override val checkDependencies: Boolean
-            get() = creationConfig.globalScope.extension.lintOptions.isCheckDependencies
+            get() =
+                creationConfig.globalScope.extension.lintOptions.isCheckDependencies
+                        && !variant.main.variantType.isDynamicFeature
         override val reportOnly: Boolean
             get() = creationConfig.services.projectOptions.get(USE_LINT_PARTIAL_ANALYSIS)
 
@@ -390,7 +392,9 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         override val autoFix: Boolean get() = true
         override val description: String get() = "Fix lint on the ${creationConfig.name} variant"
         override val checkDependencies: Boolean
-            get() = creationConfig.globalScope.extension.lintOptions.isCheckDependencies
+            get() =
+                creationConfig.globalScope.extension.lintOptions.isCheckDependencies
+                        && !variant.main.variantType.isDynamicFeature
         override val reportOnly: Boolean
             get() = creationConfig.services.projectOptions.get(USE_LINT_PARTIAL_ANALYSIS)
 

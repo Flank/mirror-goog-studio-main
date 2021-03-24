@@ -24,11 +24,13 @@ import com.android.build.gradle.integration.common.runner.FilterableParameterize
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.truth.PathSubject.assertThat
+import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
+import java.io.File
 
 @RunWith(FilterableParameterized::class)
 class LintDynamicFeatureTest(private val usePartialAnalysis: Boolean) {
@@ -87,6 +89,7 @@ class LintDynamicFeatureTest(private val usePartialAnalysis: Boolean) {
         )
     }
 
+    // TODO(b/183566683) Stop supporting running lint from feature modules
     @Test
     fun runLintFromDynamicFeatures() {
         // Run twice to catch issues with configuration caching
@@ -105,6 +108,61 @@ class LintDynamicFeatureTest(private val usePartialAnalysis: Boolean) {
         assertThat(project.file("feature2/lint-results.txt")).containsAllOf(
             "Should explicitly set android:allowBackup to true or false",
             "Hardcoded string \"Button\", should use @string resource"
+        )
+    }
+
+    // TODO(b/183566683) Stop supporting running lint from feature modules.
+    // TODO(b/178810169) Running lint from an app module with checkDependencies true should also
+    //  analyze all of the dynamic feature module dependencies.
+    @Test
+    fun runLintFromDynamicFeatureWithCheckDependencies() {
+        // checkDependencies in a dynamic feature module has no effect; this test is mainly to check
+        // that we're not breaking people who might have it set to true currently.
+        TestFileUtils.appendToFile(
+            projectWithLibs.getSubproject(":feature").buildFile,
+            """
+                android {
+                    lintOptions {
+                        checkDependencies true
+                        abortOnError false
+                        textOutput file("lint-results.txt")
+                    }
+                }
+                """.trimIndent()
+        )
+
+        // Add hard-coded resource to each module
+        FileUtils.writeToFile(
+            File(projectWithLibs.getSubproject(":app").mainResDir, "layout/app_layout.xml"),
+            layout_text
+        )
+        FileUtils.writeToFile(
+            File(projectWithLibs.getSubproject(":feature").mainResDir, "layout/feature_layout.xml"),
+            layout_text
+        )
+        FileUtils.writeToFile(
+            File(projectWithLibs.getSubproject(":lib1").mainResDir, "layout/lib1_layout.xml"),
+            layout_text
+        )
+        FileUtils.writeToFile(
+            File(projectWithLibs.getSubproject(":lib2").mainResDir, "layout/lib2_layout.xml"),
+            layout_text
+        )
+
+        projectWithLibs.getExecutor().run("clean", ":feature:lint")
+        assertThat(projectWithLibs.buildResult.failedTasks).isEmpty()
+
+        assertThat(projectWithLibs.file("feature/lint-results.txt")).contains(
+            "feature_layout.xml:10: Warning: Hardcoded string"
+        )
+        assertThat(projectWithLibs.file("feature/lint-results.txt")).doesNotContain(
+            "app_layout.xml:10: Warning: Hardcoded string"
+        )
+        assertThat(projectWithLibs.file("feature/lint-results.txt")).doesNotContain(
+            "lib1_layout.xml:10: Warning: Hardcoded string"
+        )
+        assertThat(projectWithLibs.file("feature/lint-results.txt")).doesNotContain(
+            "lib2_layout.xml:10: Warning: Hardcoded string"
         )
     }
 

@@ -159,7 +159,6 @@ class PublishingSpecs {
                 // publish the LINT_MODEL again as BASE_MODULE_LINT_MODEL for consumption by dynamic
                 // features when writing their lint models to be published back to the app.
                 runtime(LINT_MODEL, ArtifactType.BASE_MODULE_LINT_MODEL)
-                runtime(LINT_PARTIAL_RESULTS, ArtifactType.LINT_PARTIAL_RESULTS)
             }
 
             variantSpec(VariantTypeImpl.OPTIONAL_APK) {
