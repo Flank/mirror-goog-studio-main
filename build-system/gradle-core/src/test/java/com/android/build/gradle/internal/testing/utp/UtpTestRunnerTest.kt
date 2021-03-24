@@ -29,9 +29,11 @@ import com.android.ide.common.process.ProcessResult
 import com.android.ide.common.workers.ExecutorServiceAdapter
 import com.android.testutils.MockitoKt.any
 import com.android.testutils.truth.PathSubject.assertThat
+import com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidTestResultListenerProto.TestResultEvent
 import com.android.utils.ILogger
 import com.google.common.io.Files
 import com.google.common.truth.Truth.assertThat
+import com.google.protobuf.Any
 import com.google.protobuf.TextFormat
 import com.google.testing.platform.proto.api.config.RunnerConfigProto
 import com.google.testing.platform.proto.api.core.TestSuiteResultProto
@@ -87,8 +89,11 @@ class UtpTestRunnerTest {
         override val testPluginResultListenerGradle = FakeConfigurableFileCollection(File(""))
     }
 
+    private lateinit var runner: UtpTestRunner
+
     @Before
     fun setupMocks() {
+        `when`(mockDevice.serialNumber).thenReturn("mockDeviceSerialNumber")
         `when`(mockDevice.apiLevel).thenReturn(28)
         `when`(mockDevice.name).thenReturn("mockDeviceName")
         `when`(mockTestData.minSdkVersion).thenReturn(AndroidVersionImpl(28))
@@ -121,29 +126,53 @@ class UtpTestRunnerTest {
         `when`(mockJavaProcessExecutor.execute(
                 any(JavaProcessInfo::class.java),
                 any(ProcessOutputHandler::class.java))).then {
+            val testSuiteResult = createStubResultProto()
             Files.asCharSink(
                     File(requireNotNull(utpOutputDir), TEST_RESULT_OUTPUT_FILE_NAME),
                     Charsets.UTF_8)
-                    .write(TextFormat.printToString(createStubResultProto()))
+                    .write(TextFormat.printToString(testSuiteResult))
+
+            runner.onTestResultEvent(TestResultEvent.newBuilder().apply {
+                testSuiteStartedBuilder.apply {
+                    deviceId = "mockDeviceSerialNumber"
+                    testSuiteMetadata = Any.pack(testSuiteResult.testSuiteMetaData)
+                }
+            }.build())
+            testSuiteResult.testResultList.forEach { testResult ->
+                runner.onTestResultEvent(TestResultEvent.newBuilder().apply {
+                    testCaseStartedBuilder.apply {
+                        deviceId = "mockDeviceSerialNumber"
+                        testCase = Any.pack(testResult.testCase)
+                    }
+                }.build())
+                runner.onTestResultEvent(TestResultEvent.newBuilder().apply {
+                    testCaseFinishedBuilder.apply {
+                        deviceId = "mockDeviceSerialNumber"
+                        testCaseResult = Any.pack(testResult)
+                    }
+                }.build())
+            }
+            runner.onTestResultEvent(TestResultEvent.newBuilder().apply {
+                testSuiteFinishedBuilder.apply {
+                    deviceId = "mockDeviceSerialNumber"
+                    this.testSuiteResult = Any.pack(testSuiteResult)
+                }
+            }.build())
+
             mock(ProcessResult::class.java)
         }
     }
 
     private fun createStubResultProto(): TestSuiteResultProto.TestSuiteResult {
         return TextFormat.parse("""
+            test_suite_meta_data {
+              scheduled_test_case_count: 1
+            }
             test_result {
               test_case {
                 test_class: "ExampleInstrumentedTest"
                 test_package: "com.example.application"
                 test_method: "useAppContext"
-                start_time {
-                  seconds: 1584078246
-                  nanos: 414000000
-                }
-                end_time {
-                  seconds: 1584078328
-                  nanos: 998000000
-                }
               }
               test_status: PASSED
             }
@@ -152,8 +181,7 @@ class UtpTestRunnerTest {
 
     @Test
     fun runTests() {
-        val resultDir = temporaryFolderRule.newFolder("results").toPath()
-        val runner = UtpTestRunner(
+        runner = UtpTestRunner(
                 null,
                 mockProcessExecutor,
                 mockJavaProcessExecutor,
@@ -164,6 +192,8 @@ class UtpTestRunnerTest {
                 useOrchestrator = false,
                 mockTestResultListener,
                 mockUtpConfigFactory)
+
+        val resultDir = temporaryFolderRule.newFolder("results").toPath()
 
         runner.runTests(
                 "projectName",
@@ -193,12 +223,11 @@ class UtpTestRunnerTest {
         val variant = resultDir.resolve("TEST-mockDeviceName-projectName-variantName.xml")
         assertThat(variant).exists()
         assertThat(variant).containsAllOf(
-                """name="com.example.application.ExampleInstrumentedTest"""",
-                """tests="1" failures="0" errors="0" skipped="0" time="82.584"""",
+                """<testsuite name="com.example.application.ExampleInstrumentedTest" tests="1" failures="0" errors="0" skipped="0"""",
                 """<property name="device" value="mockDeviceName" />""",
                 """<property name="flavor" value="variantName" />""",
                 """<property name="project" value="projectName" />""",
-                """<testcase name="useAppContext" classname="com.example.application.ExampleInstrumentedTest" time="82.584" />"""
+                """<testcase name="useAppContext" classname="com.example.application.ExampleInstrumentedTest""""
         )
     }
 }
