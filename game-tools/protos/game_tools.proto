@@ -43,6 +43,7 @@ message Window {
     PROFILER = 1;
     SDK_MANAGER = 2;
     AVD_MANAGER = 3;
+    DEVICE_FILE_EXPLORER = 4;
   }
 }
 
