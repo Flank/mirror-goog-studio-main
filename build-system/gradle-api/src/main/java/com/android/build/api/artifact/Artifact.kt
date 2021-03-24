@@ -20,7 +20,6 @@ import org.gradle.api.Incubating
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.file.RegularFile
-import java.io.File
 import java.util.Locale
 import java.io.Serializable
 
@@ -32,7 +31,7 @@ import java.io.Serializable
  *
  * An artifact can potentially be produced by more than one task (each task acting in an additive
  * behavior), but consumers must be aware when more than one artifact can be present,
- * implementing the [MultipleArtifact] interface will indicate such requirement.
+ * implementing the [Multiple] interface will indicate such requirement.
  *
  * An artifact must be one of the supported [ArtifactKind] and must be provided when the constructor is called.
  * ArtifactKind also defines the specific [FileSystemLocation] subclass used.
@@ -103,7 +102,7 @@ abstract class Artifact<T: FileSystemLocation>(
      * [FileSystemLocation].
      */
     @Incubating
-    abstract class MultipleArtifact<FileTypeT: FileSystemLocation>(
+    abstract class Multiple<FileTypeT: FileSystemLocation>(
         kind: ArtifactKind<FileTypeT>,
         category: Category
     ) : Artifact<FileTypeT>(kind, category)
@@ -114,7 +113,7 @@ abstract class Artifact<T: FileSystemLocation>(
      * Single artifact types can be transformed or replaced but never appended.
      */
     @Incubating
-    abstract class SingleArtifact<FileTypeT: FileSystemLocation>(
+    abstract class Single<FileTypeT: FileSystemLocation>(
         kind: ArtifactKind<FileTypeT>,
         category: Category
     ) : Artifact<FileTypeT>(kind, category)
@@ -138,7 +137,7 @@ abstract class Artifact<T: FileSystemLocation>(
      * new task producing the artifact type will have its output appended to the list of artifacts.
      *
      * Due to the additive behavior of the append scenario, an [Appendable] must be a
-     * [MultipleArtifact].
+     * [Multiple].
      */
     @Incubating
     interface Appendable
@@ -146,14 +145,14 @@ abstract class Artifact<T: FileSystemLocation>(
     /**
      * Denotes an artifact type that can transformed.
      *
-     * Either a [SingleArtifact] or [MultipleArtifact] artifact type can be transformed.
+     * Either a [Single] or [Multiple] artifact type can be transformed.
      */
     @Incubating
     interface Transformable
 
     /**
      * Denotes an artifact type that can be replaced.
-     * Only [SingleArtifact] artifacts can be replaced, if you want to replace a [MultipleArtifact]
+     * Only [Single] artifacts can be replaced, if you want to replace a [Multiple]
      * artifact type, you will need to transform it by combining all the inputs into a single output
      * instance.
      */

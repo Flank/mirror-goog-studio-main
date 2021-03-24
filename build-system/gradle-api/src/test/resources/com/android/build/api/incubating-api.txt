@@ -11,11 +11,11 @@ com.android.build.api.artifact.Artifact$Category.values: com.android.build.api.a
 com.android.build.api.artifact.Artifact$Companion
 com.android.build.api.artifact.Artifact$Companion.<init>: com.android.build.api.artifact.Artifact$Companion (kotlin.jvm.internal.DefaultConstructorMarker)
 com.android.build.api.artifact.Artifact$ContainsMany
-com.android.build.api.artifact.Artifact$MultipleArtifact extends com.android.build.api.artifact.Artifact
-com.android.build.api.artifact.Artifact$MultipleArtifact.<init>: com.android.build.api.artifact.Artifact$MultipleArtifact<FileTypeT> (com.android.build.api.artifact.ArtifactKind<FileTypeT>, com.android.build.api.artifact.Artifact$Category)
+com.android.build.api.artifact.Artifact$Multiple extends com.android.build.api.artifact.Artifact
+com.android.build.api.artifact.Artifact$Multiple.<init>: com.android.build.api.artifact.Artifact$Multiple<FileTypeT> (com.android.build.api.artifact.ArtifactKind<FileTypeT>, com.android.build.api.artifact.Artifact$Category)
 com.android.build.api.artifact.Artifact$Replaceable
-com.android.build.api.artifact.Artifact$SingleArtifact extends com.android.build.api.artifact.Artifact
-com.android.build.api.artifact.Artifact$SingleArtifact.<init>: com.android.build.api.artifact.Artifact$SingleArtifact<FileTypeT> (com.android.build.api.artifact.ArtifactKind<FileTypeT>, com.android.build.api.artifact.Artifact$Category)
+com.android.build.api.artifact.Artifact$Single extends com.android.build.api.artifact.Artifact
+com.android.build.api.artifact.Artifact$Single.<init>: com.android.build.api.artifact.Artifact$Single<FileTypeT> (com.android.build.api.artifact.ArtifactKind<FileTypeT>, com.android.build.api.artifact.Artifact$Category)
 com.android.build.api.artifact.Artifact$Transformable
 com.android.build.api.artifact.Artifact.<init>: com.android.build.api.artifact.Artifact<T> (com.android.build.api.artifact.ArtifactKind<T>, com.android.build.api.artifact.Artifact$Category)
 com.android.build.api.artifact.Artifact.getCategory: com.android.build.api.artifact.Artifact$Category ()
@@ -33,7 +33,7 @@ com.android.build.api.artifact.ArtifactKind.dataType: kotlin.reflect.KClass<T> (
 com.android.build.api.artifact.ArtifactTransformationRequest
 com.android.build.api.artifact.ArtifactTransformationRequest.submit: java.util.function.Supplier<com.android.build.api.variant.BuiltArtifacts> (TaskT, org.gradle.workers.WorkQueue, java.lang.Class<? extends org.gradle.workers.WorkAction<ParamT>>, kotlin.jvm.functions.Function3<? super com.android.build.api.variant.BuiltArtifact, ? super org.gradle.api.file.Directory, ? super ParamT, ? extends java.io.File>)
 com.android.build.api.artifact.ArtifactTransformationRequest.submit: void (TaskT, kotlin.jvm.functions.Function1<? super com.android.build.api.variant.BuiltArtifact, ? extends java.io.File>)
-com.android.build.api.artifact.ArtifactType extends com.android.build.api.artifact.Artifact$SingleArtifact
+com.android.build.api.artifact.ArtifactType extends com.android.build.api.artifact.Artifact$Single
 com.android.build.api.artifact.ArtifactType$AAR extends com.android.build.api.artifact.ArtifactType implements com.android.build.api.artifact.Artifact$Transformable
 com.android.build.api.artifact.ArtifactType$APK extends com.android.build.api.artifact.ArtifactType implements com.android.build.api.artifact.Artifact$Transformable, com.android.build.api.artifact.Artifact$Replaceable, com.android.build.api.artifact.Artifact$ContainsMany
 com.android.build.api.artifact.ArtifactType$BUNDLE extends com.android.build.api.artifact.ArtifactType implements com.android.build.api.artifact.Artifact$Transformable
@@ -55,7 +55,7 @@ com.android.build.api.artifact.InAndOutDirectoryOperationRequest.toTransform: vo
 com.android.build.api.artifact.InAndOutDirectoryOperationRequest.toTransformMany: com.android.build.api.artifact.ArtifactTransformationRequest<TaskT> (ArtifactTypeT)
 com.android.build.api.artifact.InAndOutFileOperationRequest
 com.android.build.api.artifact.InAndOutFileOperationRequest.toTransform: void (ArtifactTypeT)
-com.android.build.api.artifact.MultipleArtifactType extends com.android.build.api.artifact.Artifact$MultipleArtifact
+com.android.build.api.artifact.MultipleArtifactType extends com.android.build.api.artifact.Artifact$Multiple
 com.android.build.api.artifact.OutOperationRequest
 com.android.build.api.artifact.OutOperationRequest.toAppendTo: void (ArtifactTypeT)
 com.android.build.api.artifact.OutOperationRequest.toCreate: void (ArtifactTypeT)

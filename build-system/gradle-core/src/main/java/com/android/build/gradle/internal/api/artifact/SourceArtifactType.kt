@@ -23,7 +23,7 @@ import org.gradle.api.file.Directory
 
 /** [Artifact] for source set. */
 @Incubating
-sealed class SourceArtifactType: Artifact.SingleArtifact<Directory>(
+sealed class SourceArtifactType: Artifact.Single<Directory>(
     ArtifactKind.DIRECTORY,
     Category.SOURCES
 ) {

@@ -112,7 +112,7 @@ class PublishingSpecs {
      * A published output
      */
     interface OutputSpec {
-        val outputType: Artifact.SingleArtifact<out FileSystemLocation>
+        val outputType: Artifact.Single<out FileSystemLocation>
         val artifactType: ArtifactType
         val publishedConfigTypes: ImmutableList<PublishedConfigType>
         val libraryElements: String?
@@ -301,11 +301,11 @@ class PublishingSpecs {
     interface VariantSpecBuilder {
         val variantType: VariantType
 
-        fun output(taskOutputType: Artifact.SingleArtifact<out FileSystemLocation>, artifactType: ArtifactType)
-        fun api(taskOutputType: Artifact.SingleArtifact<out FileSystemLocation>, artifactType: ArtifactType)
-        fun runtime(taskOutputType: Artifact.SingleArtifact<out FileSystemLocation>, artifactType: ArtifactType, libraryElements: String? = null)
-        fun reverseMetadata(taskOutputType: Artifact.SingleArtifact<out FileSystemLocation>, artifactType: ArtifactType)
-        fun publish(taskOutputType: Artifact.SingleArtifact<out FileSystemLocation>, artifactType: ArtifactType)
+        fun output(taskOutputType: Artifact.Single<out FileSystemLocation>, artifactType: ArtifactType)
+        fun api(taskOutputType: Artifact.Single<out FileSystemLocation>, artifactType: ArtifactType)
+        fun runtime(taskOutputType: Artifact.Single<out FileSystemLocation>, artifactType: ArtifactType, libraryElements: String? = null)
+        fun reverseMetadata(taskOutputType: Artifact.Single<out FileSystemLocation>, artifactType: ArtifactType)
+        fun publish(taskOutputType: Artifact.Single<out FileSystemLocation>, artifactType: ArtifactType)
     }
 }
 
@@ -367,7 +367,7 @@ private class VariantPublishingSpecImpl(
 }
 
 private data class OutputSpecImpl(
-        override val outputType: Artifact.SingleArtifact<out FileSystemLocation>,
+        override val outputType: Artifact.Single<out FileSystemLocation>,
         override val artifactType: ArtifactType,
         override val publishedConfigTypes: ImmutableList<PublishedConfigType> = API_AND_RUNTIME_ELEMENTS,
         override val libraryElements: String? = null
@@ -380,26 +380,26 @@ private open class VariantSpecBuilderImpl (
 
     protected val outputs = mutableSetOf<PublishingSpecs.OutputSpec>()
 
-    override fun output(taskOutputType: Artifact.SingleArtifact<*>, artifactType: ArtifactType) {
+    override fun output(taskOutputType: Artifact.Single<*>, artifactType: ArtifactType) {
         outputs.add(OutputSpecImpl(taskOutputType, artifactType))
     }
 
-    override fun api(taskOutputType: Artifact.SingleArtifact<*>, artifactType: ArtifactType) {
+    override fun api(taskOutputType: Artifact.Single<*>, artifactType: ArtifactType) {
         outputs.add(OutputSpecImpl(taskOutputType, artifactType, API_ELEMENTS_ONLY))
     }
 
-    override fun runtime(taskOutputType: Artifact.SingleArtifact<*>, artifactType: ArtifactType, libraryElements: String?) {
+    override fun runtime(taskOutputType: Artifact.Single<*>, artifactType: ArtifactType, libraryElements: String?) {
         outputs.add(OutputSpecImpl(taskOutputType, artifactType, RUNTIME_ELEMENTS_ONLY, libraryElements))
     }
 
-    override fun reverseMetadata(taskOutputType: Artifact.SingleArtifact<*>, artifactType: ArtifactType) {
+    override fun reverseMetadata(taskOutputType: Artifact.Single<*>, artifactType: ArtifactType) {
         if (!variantType.publishToMetadata) {
             throw RuntimeException("VariantType '$variantType' does not support metadata publishing")
         }
         outputs.add(OutputSpecImpl(taskOutputType, artifactType, REVERSE_METADATA_ELEMENTS_ONLY))
     }
 
-    override fun publish(taskOutputType: Artifact.SingleArtifact<*>, artifactType: ArtifactType) {
+    override fun publish(taskOutputType: Artifact.Single<*>, artifactType: ArtifactType) {
         throw RuntimeException("This VariantSpecBuilder does not support publish. VariantType is $variantType")
     }
 
@@ -413,14 +413,14 @@ private open class VariantSpecBuilderImpl (
 
 private class LibraryVariantSpecBuilder(variantType: VariantType): VariantSpecBuilderImpl(variantType) {
 
-    override fun publish(taskOutputType: Artifact.SingleArtifact<*>, artifactType: ArtifactType) {
+    override fun publish(taskOutputType: Artifact.Single<*>, artifactType: ArtifactType) {
         outputs.add(OutputSpecImpl(taskOutputType, artifactType, API_AND_RUNTIME_PUBLICATION))
     }
 }
 
 private class AppVariantSpecBuilder(variantType: VariantType): VariantSpecBuilderImpl(variantType) {
 
-    override fun publish(taskOutputType: Artifact.SingleArtifact<*>, artifactType: ArtifactType) {
+    override fun publish(taskOutputType: Artifact.Single<*>, artifactType: ArtifactType) {
         if (artifactType == ArtifactType.BUNDLE) {
             outputs.add(OutputSpecImpl(taskOutputType, artifactType, AAB_PUBLICATION))
         } else {

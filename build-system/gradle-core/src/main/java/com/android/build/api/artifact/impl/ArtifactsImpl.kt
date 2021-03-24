@@ -18,8 +18,8 @@ package com.android.build.api.artifact.impl
 
 import com.android.build.api.artifact.ArtifactKind
 import com.android.build.api.artifact.Artifact
-import com.android.build.api.artifact.Artifact.MultipleArtifact
-import com.android.build.api.artifact.Artifact.SingleArtifact
+import com.android.build.api.artifact.Artifact.Multiple
+import com.android.build.api.artifact.Artifact.Single
 import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.artifact.Artifacts
 import com.android.build.api.artifact.MultipleArtifactType
@@ -31,7 +31,6 @@ import com.android.build.gradle.internal.utils.setDisallowChanges
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.Directory
-import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.file.FileSystemLocationProperty
@@ -70,7 +69,7 @@ class ArtifactsImpl(
     ): Provider<FILE_TYPE> = getArtifactContainer(type).get()
 
     fun <FILE_TYPE : FileSystemLocation> get(
-        type: SingleArtifact<FILE_TYPE>
+        type: Single<FILE_TYPE>
     ): Provider<FILE_TYPE> = getArtifactContainer(type).get()
 
     override fun <FileTypeT : FileSystemLocation> getAll(
@@ -78,7 +77,7 @@ class ArtifactsImpl(
     ): Provider<List<FileTypeT>> = getArtifactContainer(type).get()
 
     fun <FILE_TYPE : FileSystemLocation> getAll(
-        type: MultipleArtifact<FILE_TYPE>
+        type: Multiple<FILE_TYPE>
     ): Provider<List<FILE_TYPE>>
             = getArtifactContainer(type).get()
 
@@ -98,12 +97,12 @@ class ArtifactsImpl(
         type.getOutputPath(buildDirectory, identifier, *paths)
 
     /**
-     * Returns a [RegularFile] that can be used to output a [SingleArtifact]
+     * Returns a [RegularFile] that can be used to output a [Single]
      * @param type expect output [ArtifactType]
      * @param paths the extra folder to add when constructing the file path.
      */
     internal fun getOutputRegularFile(
-            type: SingleArtifact<RegularFile>,
+            type: Single<RegularFile>,
             vararg paths: String) =
             buildDirectory.file(type.getOutputPath(buildDirectory, identifier, *paths).absolutePath)
 
@@ -115,7 +114,7 @@ class ArtifactsImpl(
      * @return the [ArtifactContainer] for the passed type
      */
     internal fun <FILE_TYPE : FileSystemLocation> getArtifactContainer(
-        type: SingleArtifact<FILE_TYPE>
+        type: Single<FILE_TYPE>
     ): SingleArtifactContainer<FILE_TYPE> {
 
         return storageProvider.getStorage(type.kind).getArtifact(objects, type)
@@ -129,15 +128,15 @@ class ArtifactsImpl(
      * @return the [ArtifactContainer] for the passed type
      */
     internal fun <FILE_TYPE : FileSystemLocation> getArtifactContainer(
-        type: MultipleArtifact <FILE_TYPE>
+        type: Multiple <FILE_TYPE>
     ): MultipleArtifactContainer<FILE_TYPE> {
 
         return storageProvider.getStorage(type.kind).getArtifact(objects, type)
     }
 
     fun <T: FileSystemLocation> republish(
-        source: SingleArtifact<T>,
-        target: SingleArtifact<T>) {
+        source: Single<T>,
+        target: Single<T>) {
         storageProvider.getStorage(target.kind).copy(target, getArtifactContainer(source))
     }
 
@@ -164,7 +163,7 @@ class ArtifactsImpl(
     /**
      * Adds an Android Gradle Plugin producer.
      *
-     * The passed [type] must be a [MultipleArtifact] that accepts more than one producer.
+     * The passed [type] must be a [Multiple] that accepts more than one producer.
      *
      * Although conceptually the AGP producers are first to produce artifacts, we want to register
      * them last after all custom code had the opportunity to transform or replace it.
@@ -172,12 +171,12 @@ class ArtifactsImpl(
      * Therefore, we cannot rely on the usual append/replace pattern but instead use this API to
      * be artificially put first in the list of producers for the passed [type]
      *
-     * @param type the [MultipleArtifact] artifact type being produced
+     * @param type the [Multiple] artifact type being produced
      * @param taskProvider the [TaskProvider] for the task producing the artifact
      * @param property: the field reference to retrieve the output from the task
      */
     internal fun <FILE_TYPE: FileSystemLocation, TASK: Task> addInitialProvider(
-        type: MultipleArtifact<FILE_TYPE>,
+        type: Multiple<FILE_TYPE>,
         taskProvider: TaskProvider<TASK>,
         property: (TASK) -> FileSystemLocationProperty<FILE_TYPE>
     ) {
@@ -212,14 +211,14 @@ class ArtifactsImpl(
      * @param taskInputProperty the [Property] to set the final producer on.
      */
     fun <T: FileSystemLocation> setTaskInputToFinalProduct(
-        artifactType: SingleArtifact<T>, taskInputProperty: Property<T>
+        artifactType: Single<T>, taskInputProperty: Property<T>
     ) {
         val finalProduct = get(artifactType)
         taskInputProperty.setDisallowChanges(finalProduct)
     }
 
     fun <FILE_TYPE : FileSystemLocation> copy(
-        artifactType: SingleArtifact<FILE_TYPE>,
+        artifactType: Single<FILE_TYPE>,
         from: ArtifactsImpl
     ) {
         val artifactContainer = from.getArtifactContainer(artifactType)
@@ -307,7 +306,7 @@ internal class SingleInitialProviderRequestImpl<TASK: Task, FILE_TYPE: FileSyste
         return this
     }
 
-    fun on(type: SingleArtifact<FILE_TYPE>) {
+    fun on(type: Single<FILE_TYPE>) {
 
         val artifactContainer = artifactsImpl.getArtifactContainer(type)
         taskProvider.configure {

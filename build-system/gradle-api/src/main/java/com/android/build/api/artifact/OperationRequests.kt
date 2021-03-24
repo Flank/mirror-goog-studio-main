@@ -31,11 +31,11 @@ import org.gradle.api.provider.ListProperty
 @Incubating
 interface OutOperationRequest<FileTypeT: FileSystemLocation> {
     /**
-     * Initiates an append request to a [Artifact.MultipleArtifact] artifact type.
+     * Initiates an append request to a [Artifact.Multiple] artifact type.
      *
      * @param type The [Artifact] of [FileTypeT] identifying the artifact to append to.
      *
-     * The artifact type must be [Artifact.MultipleArtifact] and [Artifact.Appendable].
+     * The artifact type must be [Artifact.Multiple] and [Artifact.Appendable].
      *
      * As an example, let's take a [Task] that outputs a [org.gradle.api.file.RegularFile]:
      * ```kotlin
@@ -70,7 +70,7 @@ interface OutOperationRequest<FileTypeT: FileSystemLocation> {
      * ```
      */
     fun <ArtifactTypeT> toAppendTo(type: ArtifactTypeT)
-        where ArtifactTypeT : Artifact.MultipleArtifact<FileTypeT>,
+        where ArtifactTypeT : Artifact.Multiple<FileTypeT>,
               ArtifactTypeT : Artifact.Appendable
 
     /**
@@ -85,7 +85,7 @@ interface OutOperationRequest<FileTypeT: FileSystemLocation> {
      * outputs). Please note that when such replace requests are made, the [Task] will replace
      * initial AGP providers.
      *
-     * You cannot replace the [Artifact.MultipleArtifact] artifact type; therefore, you must instead
+     * You cannot replace the [Artifact.Multiple] artifact type; therefore, you must instead
      * combine it using the [TaskBasedOperation.wiredWith] API.
      *
      * For example, let's take a [Task] that outputs a [org.gradle.api.file.RegularFile]:
@@ -119,7 +119,7 @@ interface OutOperationRequest<FileTypeT: FileSystemLocation> {
      * ```
      */
     fun <ArtifactTypeT> toCreate(type: ArtifactTypeT)
-        where ArtifactTypeT : Artifact.SingleArtifact<FileTypeT>,
+        where ArtifactTypeT : Artifact.Single<FileTypeT>,
               ArtifactTypeT : Artifact.Replaceable
 }
 
@@ -136,7 +136,7 @@ interface InAndOutFileOperationRequest {
      * @param type The [Artifact] identifying the artifact to transform. The [Artifact]'s
      * [Artifact.kind] must be [Artifact.FILE].
      *
-     * The artifact type must be [Artifact.SingleArtifact] and [Artifact.Transformable].
+     * The artifact type must be [Artifact.Single] and [Artifact.Transformable].
      *
      * As an example, let's take a [Task] transforming an input [org.gradle.api.file.RegularFile]
      * into an output:
@@ -172,7 +172,7 @@ interface InAndOutFileOperationRequest {
      * ```
      */
     fun <ArtifactTypeT> toTransform(type: ArtifactTypeT)
-        where ArtifactTypeT: Artifact.SingleArtifact<RegularFile>,
+        where ArtifactTypeT: Artifact.Single<RegularFile>,
               ArtifactTypeT: Artifact.Transformable
 }
 
@@ -183,7 +183,7 @@ interface CombiningOperationRequest<FileTypeT: FileSystemLocation> {
      *
      * @param type The [Artifact] of [FileTypeT] identifying the artifact to transform.
      *
-     * The artifact type must be [Artifact.MultipleArtifact] and [Artifact.Transformable].
+     * The artifact type must be [Artifact.Multiple] and [Artifact.Transformable].
      *
      * The implementation of the task must combine all the inputs into a single output.
      * Chained transforms will get a [ListProperty] containing the single output from the upstream
@@ -226,7 +226,7 @@ interface CombiningOperationRequest<FileTypeT: FileSystemLocation> {
      * ```
      */
     fun <ArtifactTypeT> toTransform(type: ArtifactTypeT)
-        where ArtifactTypeT: Artifact.MultipleArtifact<FileTypeT>,
+        where ArtifactTypeT: Artifact.Multiple<FileTypeT>,
               ArtifactTypeT: Artifact.Transformable
 }
 
@@ -239,7 +239,7 @@ interface InAndOutDirectoryOperationRequest<TaskT : Task> {
      * @param type The [Artifact] identifying the artifact to transform. The [Artifact]'s
      * [Artifact.kind] must be [Artifact.DIRECTORY]
      *
-     * The artifact type must be [Artifact.SingleArtifact] and [Artifact.Transformable].
+     * The artifact type must be [Artifact.Single] and [Artifact.Transformable].
      *
      * Let's take a [Task] transforming an input [org.gradle.api.file.Directory] into an
      * output:
@@ -275,7 +275,7 @@ interface InAndOutDirectoryOperationRequest<TaskT : Task> {
      * ```
      */
     fun <ArtifactTypeT> toTransform(type: ArtifactTypeT)
-        where ArtifactTypeT: Artifact.SingleArtifact<Directory>,
+        where ArtifactTypeT: Artifact.Single<Directory>,
               ArtifactTypeT: Artifact.Transformable
 
     /**
@@ -286,7 +286,7 @@ interface InAndOutDirectoryOperationRequest<TaskT : Task> {
      * @return [ArtifactTransformationRequest] that will allow processing of individual artifacts
      * located in the input directory.
      *
-     * The artifact type must be [Artifact.SingleArtifact], [Artifact.Transformable],
+     * The artifact type must be [Artifact.Single], [Artifact.Transformable],
      * and [Artifact.ContainsMany].
      *
      * For example, let's take a [Task] to transform a list of [org.gradle.api.file.RegularFile] as inputs into
@@ -320,6 +320,6 @@ interface InAndOutDirectoryOperationRequest<TaskT : Task> {
      * ```
      */
     fun <ArtifactTypeT> toTransformMany(type: ArtifactTypeT): ArtifactTransformationRequest<TaskT>
-        where ArtifactTypeT: Artifact.SingleArtifact<Directory>,
+        where ArtifactTypeT: Artifact.Single<Directory>,
               ArtifactTypeT: Artifact.ContainsMany
 }

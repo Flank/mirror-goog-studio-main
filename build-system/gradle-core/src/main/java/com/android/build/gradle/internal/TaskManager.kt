@@ -19,7 +19,7 @@ import android.databinding.tool.DataBindingBuilder
 import com.android.SdkConstants
 import com.android.SdkConstants.DATA_BINDING_KTX_LIB_ARTIFACT
 import com.android.SdkConstants.DOT_JAR
-import com.android.build.api.artifact.Artifact.SingleArtifact
+import com.android.build.api.artifact.Artifact.Single
 import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.component.impl.AndroidTestImpl
 import com.android.build.api.component.impl.ComponentImpl
@@ -725,7 +725,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         /** Merge all resources with all the dependencies resources (i.e. "big merge").  */
         MERGE {
 
-            override val outputType: SingleArtifact<Directory>
+            override val outputType: Single<Directory>
                 get() = MERGED_RES
         },
 
@@ -734,11 +734,11 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
          */
         PACKAGE {
 
-            override val outputType: SingleArtifact<Directory>
+            override val outputType: Single<Directory>
                 get() = PACKAGED_RES
         };
 
-        abstract val outputType: SingleArtifact<Directory>
+        abstract val outputType: Single<Directory>
     }
 
     fun basicCreateMergeResourcesTask(
@@ -849,7 +849,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
 
     private fun createApkProcessResTask(
             creationConfig: ComponentCreationConfig,
-            packageOutputType: SingleArtifact<Directory>?) {
+            packageOutputType: Single<Directory>?) {
         val projectInfo = creationConfig.services.projectInfo
 
         // Check AAR metadata files
@@ -885,7 +885,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
 
     fun createProcessResTask(
             creationConfig: ComponentCreationConfig,
-            packageOutputType: SingleArtifact<Directory>?,
+            packageOutputType: Single<Directory>?,
             mergeType: MergeType,
             baseName: String) {
         val scope = creationConfig.variantScope
@@ -931,7 +931,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
 
     private fun createNonNamespacedResourceTasks(
             creationConfig: ComponentCreationConfig,
-            packageOutputType: SingleArtifact<Directory>?,
+            packageOutputType: Single<Directory>?,
             mergeType: MergeType,
             baseName: String,
             useAaptToGenerateLegacyMultidexMainDexProguardRules: Boolean) {

@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.scope
 
 import com.android.build.api.artifact.Artifact
 import com.android.build.api.artifact.ArtifactKind
-import com.android.build.api.artifact.ArtifactType
 import org.gradle.api.Incubating
 import org.gradle.api.file.Directory
 
@@ -29,7 +28,7 @@ import org.gradle.api.file.Directory
  * This interface is not currently usable. It is a work in progress.
  */
 @Incubating
-sealed class BuildArtifactType : Artifact.SingleArtifact<Directory>(
+sealed class BuildArtifactType : Artifact.Single<Directory>(
     ArtifactKind.DIRECTORY,
     Category.INTERMEDIATES
 ) {

@@ -30,7 +30,7 @@ open class AnalyticsEnabledInAndOutFileOperationRequest @Inject constructor(
     val stats: GradleBuildVariant.Builder
 ): InAndOutFileOperationRequest {
     override fun <ArtifactTypeT> toTransform(type: ArtifactTypeT)
-            where ArtifactTypeT : Artifact.SingleArtifact<RegularFile>,
+            where ArtifactTypeT : Artifact.Single<RegularFile>,
                   ArtifactTypeT : Artifact.Transformable {
         stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
             VariantPropertiesMethodType.TO_TRANSFORM_FILE_VALUE

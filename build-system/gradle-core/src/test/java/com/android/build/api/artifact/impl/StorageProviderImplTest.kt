@@ -51,13 +51,13 @@ class StorageProviderImplTest {
 
     sealed class SingleTestTypes<T: FileSystemLocation>(
         kind: ArtifactKind<T>
-    ): Artifact.SingleArtifact<T>(kind, Category.INTERMEDIATES) {
+    ): Artifact.Single<T>(kind, Category.INTERMEDIATES) {
         object SINGLE_FILE : SingleTestTypes<RegularFile>(ArtifactKind.FILE)
         object SINGLE_DIRECTORY : SingleTestTypes<Directory>(ArtifactKind.DIRECTORY)
     }
     sealed class MultipleTestTypes<T: FileSystemLocation>(
         kind: ArtifactKind<T>
-    ): Artifact.MultipleArtifact<T>(kind, Category.INTERMEDIATES) {
+    ): Artifact.Multiple<T>(kind, Category.INTERMEDIATES) {
         object MULTIPLE_FILES: MultipleTestTypes<RegularFile>(ArtifactKind.FILE)
         object MULTIPLE_DIRECTORIESS: MultipleTestTypes<Directory>(ArtifactKind.DIRECTORY)
     }
