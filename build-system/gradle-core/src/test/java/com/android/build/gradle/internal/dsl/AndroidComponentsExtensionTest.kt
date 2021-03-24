@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.dsl
 
-import com.android.build.api.artifact.ArtifactType
+import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.api.dsl.LibraryExtension
 import com.android.build.api.dsl.SdkComponents
@@ -204,15 +204,15 @@ class AndroidComponentsExtensionTest {
         )
         val fooVariant = appExtension.selector().withName(Pattern.compile("foo"))
 
-        appExtension.onVariants(fooVariant, Action { it.artifacts.get(ArtifactType.APK) })
+        appExtension.onVariants(fooVariant, Action { it.artifacts.get(SingleArtifact.APK) })
         val f1Variant = appExtension.selector().withFlavor("f1" to "dim1")
-        appExtension.onVariants(f1Variant, Action { it.artifacts.get(ArtifactType.APK) })
+        appExtension.onVariants(f1Variant, Action { it.artifacts.get(SingleArtifact.APK) })
 
         val debugF1Variant = appExtension.selector()
                 .withBuildType("debug")
                 .withFlavor("f1" to "dim1")
         appExtension.onVariants(debugF1Variant) {
-                    it.artifacts.get(ArtifactType.APK)
+                    it.artifacts.get(SingleArtifact.APK)
         }
     }
 

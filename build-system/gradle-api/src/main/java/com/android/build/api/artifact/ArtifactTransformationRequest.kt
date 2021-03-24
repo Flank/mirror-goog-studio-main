@@ -28,7 +28,7 @@ import java.io.File
 import java.util.function.Supplier
 
 /**
- * When a [Directory] contains more than one artifact (for example, consider [ArtifactType.APK] with multiple
+ * When a [Directory] contains more than one artifact (for example, consider [SingleArtifact.APK] with multiple
  * APKs for different screen densities), this object will abstract away having to deal with
  * [BuiltArtifacts] and manually load and write the metadata files.
  *

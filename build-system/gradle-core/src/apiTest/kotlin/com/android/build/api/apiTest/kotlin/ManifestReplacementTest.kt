@@ -41,7 +41,7 @@ class ManifestReplacementTest: VariantApiBaseTest(TestType.Script) {
             import org.gradle.api.tasks.InputFile
             import org.gradle.api.tasks.OutputFile
             import org.gradle.api.tasks.TaskAction
-            import com.android.build.api.artifact.ArtifactType
+            import com.android.build.api.artifact.SingleArtifact
             ${testingElements.getGitVersionTask()}
             ${testingElements.getManifestProducerTask()}
             android {
@@ -59,7 +59,7 @@ class ManifestReplacementTest: VariantApiBaseTest(TestType.Script) {
                     }
                     variant.artifacts.use(manifestProducer)
                         .wiredWith(ManifestProducerTask::outputManifest)
-                        .toCreate(ArtifactType.MERGED_MANIFEST)
+                        .toCreate(SingleArtifact.MERGED_MANIFEST)
                 }
             }
                 """.trimIndent()

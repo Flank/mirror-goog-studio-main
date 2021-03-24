@@ -16,14 +16,11 @@
 
 package com.android.build.api.component.analytics
 
-import com.android.build.api.artifact.ArtifactType
-import com.android.build.api.artifact.InAndOutDirectoryOperationRequest
+import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.artifact.InAndOutFileOperationRequest
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.common.truth.Truth
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
-import org.gradle.api.Task
-import org.junit.Assert.*
 import org.junit.Before
 
 import org.junit.Test
@@ -47,13 +44,13 @@ class AnalyticsEnabledInAndOutFileOperationRequestTest {
 
     @Test
     fun toTransform() {
-        proxy.toTransform(ArtifactType.MERGED_MANIFEST)
+        proxy.toTransform(SingleArtifact.MERGED_MANIFEST)
 
         Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
         Truth.assertThat(
             stats.variantApiAccess.variantPropertiesAccessList.first().type
         ).isEqualTo(VariantPropertiesMethodType.TO_TRANSFORM_FILE_VALUE)
         Mockito.verify(delegate, Mockito.times(1))
-            .toTransform(ArtifactType.MERGED_MANIFEST)
+            .toTransform(SingleArtifact.MERGED_MANIFEST)
     }
 }

@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.artifact.ArtifactType;
+import com.android.build.api.artifact.SingleArtifact;
 import com.android.build.api.component.impl.ComponentImpl;
 import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.gradle.api.BaseVariant;
@@ -491,7 +491,7 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
         RegularFile mappingFile =
                 component
                         .getArtifacts()
-                        .get(ArtifactType.OBFUSCATION_MAPPING_FILE.INSTANCE)
+                        .get(SingleArtifact.OBFUSCATION_MAPPING_FILE.INSTANCE)
                         .getOrNull();
         return mappingFile != null ? mappingFile.getAsFile() : null;
     }
@@ -509,7 +509,7 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
                                                 component
                                                         .getArtifacts()
                                                         .get(
-                                                                ArtifactType
+                                                                SingleArtifact
                                                                         .OBFUSCATION_MAPPING_FILE
                                                                         .INSTANCE)));
     }

@@ -28,7 +28,7 @@ import org.gradle.api.provider.ListProperty
  * Interface with methods to wire input and output method references to [Task]-based operations.
  *
  * A [Task]-based operation will create, transform, or append files or directories to public
- * [ArtifactType] to customize or participate in the build flow.
+ * [SingleArtifact] to customize or participate in the build flow.
  *
  * Each operation should indicate through the methods of this interface which method can be used
  * to set or retrieve the [Task] inputs and outputs.
@@ -45,7 +45,7 @@ interface TaskBasedOperation<TaskT: Task> {
      *
      * @param taskOutput The method reference to retrieve the task output after successful task
      * execution.
-     * @return The [OutOperationRequest] to set the desired operation type and [ArtifactType] on
+     * @return The [OutOperationRequest] to set the desired operation type and [SingleArtifact] on
      * which the operation applies.
      */
     fun <FileTypeT: FileSystemLocation> wiredWith(
@@ -54,19 +54,19 @@ interface TaskBasedOperation<TaskT: Task> {
 
     /**
      * Sets the [TaskT] input and output methods references so the [Task] can retrieve the
-     * current version of the target [ArtifactType] when invoking [taskInput]. [TaskT] will also
+     * current version of the target [SingleArtifact] when invoking [taskInput]. [TaskT] will also
      * produce a new version of the same artifact type accessible through the [taskOutput] method
      * after successful execution.
      *
-     * This method is useful when [TaskT] is transforming an [ArtifactType] from its current
-     * version to a new one and the [ArtifactType]'s [Artifact.kind] is [Artifact.FILE]
+     * This method is useful when [TaskT] is transforming an [SingleArtifact] from its current
+     * version to a new one and the [SingleArtifact]'s [Artifact.kind] is [Artifact.FILE]
      *
      * @param taskInput The method reference the [TaskT] will use to retrieve the current artifact
      * version during [TaskT] execution (and only then).
      * @param taskOutput The method reference to retrieve the task output after successful task
      * execution.
-     * @return The [OutOperationRequest] to set the desired operation type and [ArtifactType] as
-     * well as the target [ArtifactType].
+     * @return The [OutOperationRequest] to set the desired operation type and [SingleArtifact] as
+     * well as the target [SingleArtifact].
      */
     fun wiredWithFiles(
         taskInput: (TaskT) -> RegularFileProperty,
@@ -75,19 +75,19 @@ interface TaskBasedOperation<TaskT: Task> {
 
     /**
      * Sets the [TaskT] input and output methods references so the [Task] can retrieve the
-     * current versions of a [Artifact.Multiple] [ArtifactType] when invoking [taskInput]
+     * current versions of a [Artifact.Multiple] [SingleArtifact] when invoking [taskInput]
      * while producing a new version of the same artifact type accessible through the [taskOutput]
      * method after successful execution.
      *
-     * This method is useful when [TaskT] is combining all elements of an [ArtifactType] into a
+     * This method is useful when [TaskT] is combining all elements of an [SingleArtifact] into a
      * single element.
      *
      * @param taskInput The method reference the [TaskT] will use to retrieve the current artifact
      * versions during [TaskT] execution (and only then).
      * @param taskOutput The method reference to retrieve the task output after successful task
      * execution.
-     * @return The [CombiningOperationRequest] to set the desired operation type and [ArtifactType]
-     * as well as the target [ArtifactType].
+     * @return The [CombiningOperationRequest] to set the desired operation type and [SingleArtifact]
+     * as well as the target [SingleArtifact].
      */
     fun <FileTypeT: FileSystemLocation> wiredWith(
         taskInput: (TaskT) -> ListProperty<FileTypeT>,
@@ -96,19 +96,19 @@ interface TaskBasedOperation<TaskT: Task> {
 
     /**
      * Sets the [TaskT] input and output methods references so the [Task] can retrieve the
-     * current version of the target [ArtifactType] when invoking [taskInput]. [TaskT] will also
+     * current version of the target [SingleArtifact] when invoking [taskInput]. [TaskT] will also
      * produce a new version of the same artifact type accessible through the [taskOutput] method
      * after successful execution.
      *
-     * This method is useful when [TaskT] is transforming an [ArtifactType] from its current
-     * version to a new one and the [ArtifactType]'s [Artifact.kind] is [Artifact.DIRECTORY]
+     * This method is useful when [TaskT] is transforming an [SingleArtifact] from its current
+     * version to a new one and the [SingleArtifact]'s [Artifact.kind] is [Artifact.DIRECTORY]
      *
      * @param taskInput The method reference the [TaskT] will use to retrieve the current artifact
      * version during [TaskT] execution (and only then).
      * @param taskOutput The method reference to retrieve the task output after successful task
      * execution.
      * @return The [InAndOutDirectoryOperationRequest] to set the desired operation type as well
-     * as the target [ArtifactType].
+     * as the target [SingleArtifact].
      */
     fun wiredWithDirectories(
         taskInput: (TaskT) -> DirectoryProperty,

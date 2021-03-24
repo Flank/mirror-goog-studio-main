@@ -17,7 +17,7 @@
 package com.android.build.gradle.tasks
 
 import com.android.SdkConstants
-import com.android.build.api.artifact.ArtifactType
+import com.android.build.api.artifact.SingleArtifact
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -227,7 +227,7 @@ abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
 
             creationConfig
                     .artifacts
-                    .setTaskInputToFinalProduct(ArtifactType.MERGED_MANIFEST, task.mergedManifest)
+                    .setTaskInputToFinalProduct(SingleArtifact.MERGED_MANIFEST, task.mergedManifest)
         }
 
         override fun handleProvider(

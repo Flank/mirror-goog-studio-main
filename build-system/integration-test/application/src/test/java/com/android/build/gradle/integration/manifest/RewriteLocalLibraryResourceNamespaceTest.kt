@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.integration.manifest
 
-import com.android.build.api.artifact.ArtifactType
+import com.android.build.api.artifact.SingleArtifact
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile
 import com.android.build.gradle.options.BooleanOption
@@ -118,7 +118,7 @@ class RewriteLocalLibraryResourceNamespaceTest {
 
         val libraryManifest =
             project.getSubproject("library")
-                .file("build/intermediates/${ArtifactType.MERGED_MANIFEST.getFolderName()}/debug/AndroidManifest.xml")
+                .file("build/intermediates/${SingleArtifact.MERGED_MANIFEST.getFolderName()}/debug/AndroidManifest.xml")
 
         // namespaces in library are resolved
         assertThat(libraryManifest).contains("@com.example.android.multiproject.library:string/app_name")

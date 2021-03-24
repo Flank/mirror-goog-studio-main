@@ -17,9 +17,9 @@
 package com.android.build.gradle.internal.publishing
 
 import com.android.build.api.artifact.Artifact
-import com.android.build.api.artifact.ArtifactType.APK
-import com.android.build.api.artifact.ArtifactType.MERGED_MANIFEST
-import com.android.build.api.artifact.ArtifactType.OBFUSCATION_MAPPING_FILE
+import com.android.build.api.artifact.SingleArtifact.APK
+import com.android.build.api.artifact.SingleArtifact.MERGED_MANIFEST
+import com.android.build.api.artifact.SingleArtifact.OBFUSCATION_MAPPING_FILE
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.ALL_API_PUBLICATION
@@ -148,7 +148,7 @@ class PublishingSpecs {
                 runtime(NAVIGATION_JSON, ArtifactType.NAVIGATION_JSON)
 
                 // output of bundle-tool
-                publish(com.android.build.api.artifact.ArtifactType.BUNDLE, ArtifactType.BUNDLE)
+                publish(com.android.build.api.artifact.SingleArtifact.BUNDLE, ArtifactType.BUNDLE)
 
                 // this is only for base modules.
                 api(FEATURE_SET_METADATA, ArtifactType.FEATURE_SET_METADATA)
@@ -205,7 +205,7 @@ class PublishingSpecs {
 
 
             variantSpec(VariantTypeImpl.LIBRARY) {
-                publish(com.android.build.api.artifact.ArtifactType.AAR, ArtifactType.AAR)
+                publish(com.android.build.api.artifact.SingleArtifact.AAR, ArtifactType.AAR)
 
                 api(AIDL_PARCELABLE, ArtifactType.AIDL)
                 api(RENDERSCRIPT_HEADERS, ArtifactType.RENDERSCRIPT)
@@ -245,7 +245,7 @@ class PublishingSpecs {
                 runtime(LINT_MODEL, ArtifactType.LINT_MODEL)
                 runtime(LINT_PARTIAL_RESULTS, ArtifactType.LINT_PARTIAL_RESULTS)
                 runtime(
-                    com.android.build.api.artifact.ArtifactType.AAR,
+                    com.android.build.api.artifact.SingleArtifact.AAR,
                     ArtifactType.LOCAL_AAR_FOR_LINT)
             }
 

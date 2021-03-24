@@ -16,7 +16,7 @@
 
 package com.android.build.api.component.analytics
 
-import com.android.build.api.artifact.ArtifactType
+import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.artifact.InAndOutDirectoryOperationRequest
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.common.truth.Truth
@@ -44,25 +44,25 @@ class AnalyticsEnabledInAndOutDirectoryOperationRequestTest {
 
     @Test
     fun toTransform() {
-        proxy.toTransform(ArtifactType.APK)
+        proxy.toTransform(SingleArtifact.APK)
 
         Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
         Truth.assertThat(
             stats.variantApiAccess.variantPropertiesAccessList.first().type
         ).isEqualTo(VariantPropertiesMethodType.TO_TRANSFORM_DIRECTORY_VALUE)
         Mockito.verify(delegate, Mockito.times(1))
-            .toTransform(ArtifactType.APK)
+            .toTransform(SingleArtifact.APK)
     }
 
     @Test
     fun toTransformMany() {
-        proxy.toTransformMany(ArtifactType.APK)
+        proxy.toTransformMany(SingleArtifact.APK)
 
         Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
         Truth.assertThat(
             stats.variantApiAccess.variantPropertiesAccessList.first().type
         ).isEqualTo(VariantPropertiesMethodType.TO_TRANSFORM_MANY_VALUE)
         Mockito.verify(delegate, Mockito.times(1))
-            .toTransformMany(ArtifactType.APK)
+            .toTransformMany(SingleArtifact.APK)
     }
 }

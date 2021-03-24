@@ -19,7 +19,7 @@ package com.android.build.gradle.internal;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.APK;
 
 import com.android.annotations.NonNull;
-import com.android.build.api.artifact.ArtifactType;
+import com.android.build.api.artifact.SingleArtifact;
 import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.component.impl.TestFixturesComponentImpl;
 import com.android.build.api.variant.impl.TestVariantBuilderImpl;
@@ -93,7 +93,7 @@ public class TestApplicationTaskManager
         TestVariantImpl testVariantProperties = variantInfo.getVariant();
 
         Provider<Directory> testingApk =
-                testVariantProperties.getArtifacts().get(ArtifactType.APK.INSTANCE);
+                testVariantProperties.getArtifacts().get(SingleArtifact.APK.INSTANCE);
 
         // The APKs to be tested.
         FileCollection testedApks =

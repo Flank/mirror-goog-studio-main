@@ -22,7 +22,7 @@ import org.gradle.internal.impldep.com.google.common.collect.ArrayListMultimap;
 import org.gradle.internal.impldep.com.google.common.collect.ListMultimap;
 import org.junit.Test;
 
-public class ArtifactTypeTest {
+public class SingleArtifactTest {
 
     @Test
     public void checkNo2ArtifactTypeUseSameValue() {

@@ -16,16 +16,13 @@
 
 package com.android.build.api.apiTest.kotlin
 
-import com.android.build.api.apiTest.TestingElements
 import com.android.build.api.apiTest.VariantApiBaseTest
 import com.android.build.api.artifact.Artifact
-import com.android.build.api.artifact.ArtifactType
+import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.variant.impl.BuiltArtifactsImpl
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
-import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.tools.apk.analyzer.AaptInvoker
 import com.android.tools.apk.analyzer.ApkAnalyzerImpl
-import com.google.common.truth.Truth
 import com.google.common.truth.Truth.assertThat
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Test
@@ -63,7 +60,7 @@ class LibraryManifestTest: VariantApiBaseTest(TestType.Script, ScriptingLanguage
                         .wiredWithFiles(
                             ManifestTransformerTask::mergedManifest,
                             ManifestTransformerTask::updatedManifest)
-                        .toTransform(com.android.build.api.artifact.ArtifactType.MERGED_MANIFEST)
+                        .toTransform(com.android.build.api.artifact.SingleArtifact.MERGED_MANIFEST)
                 }
             }
             """.trimIndent()
@@ -107,7 +104,7 @@ class LibraryManifestTest: VariantApiBaseTest(TestType.Script, ScriptingLanguage
             "libraryManifestTransformerTest/app/build/"
                     + Artifact.Category.OUTPUTS.name.toLowerCase(Locale.US)
                     + "/"
-                    + ArtifactType.APK.getFolderName()
+                    + SingleArtifact.APK.getFolderName()
                     + "/debug")
         val byteArrayOutputStream = object : ByteArrayOutputStream() {
             @Synchronized

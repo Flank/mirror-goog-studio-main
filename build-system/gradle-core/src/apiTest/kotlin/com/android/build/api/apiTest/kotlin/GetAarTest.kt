@@ -43,7 +43,7 @@ class GetAarTest: VariantApiBaseTest(TestType.Script) {
             import org.gradle.api.tasks.TaskAction
 
             import com.android.build.api.variant.BuiltArtifactsLoader
-            import com.android.build.api.artifact.ArtifactType
+            import com.android.build.api.artifact.SingleArtifact
             import org.gradle.api.provider.Property
             import org.gradle.api.tasks.Internal
 
@@ -63,7 +63,7 @@ class GetAarTest: VariantApiBaseTest(TestType.Script) {
             androidComponents {
                 onVariants { variant ->
                     project.tasks.register<AarUploadTask>("${ '$' }{variant.name}AarUpload") {
-                        aar.set(variant.artifacts.get(ArtifactType.AAR))
+                        aar.set(variant.artifacts.get(SingleArtifact.AAR))
                     }
                 }
             }
@@ -79,8 +79,8 @@ class GetAarTest: VariantApiBaseTest(TestType.Script) {
 
 This sample shows how to obtain the aar from the AGP.
 The [onVariants] block will wire the [AarUploadTask] input property (apkFolder) by using
-the [Artifacts.get] call with the right [ArtifactType]
-`aar.set(artifacts.get(ArtifactType.AAR))`
+the [Artifacts.get] call with the right [SingleArtifact.
+`aar.set(artifacts.get(SingleArtifact.AAR))`
 ## To Run
 ./gradlew debugAarUpload
 expected result : "Uploading .... to a fantasy server...s" message.

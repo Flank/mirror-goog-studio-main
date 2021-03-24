@@ -105,7 +105,7 @@ The added field is used in the MainActivity.kt file.
             import org.gradle.api.tasks.InputFile
             import org.gradle.api.tasks.OutputFile
             import org.gradle.api.tasks.TaskAction
-            import com.android.build.api.artifact.ArtifactType
+            import com.android.build.api.artifact.SingleArtifact
 
             ${testingElements.getGitVersionTask()}
 

@@ -18,7 +18,7 @@ package com.android.build.gradle.tasks
 
 import android.databinding.tool.DataBindingBuilder
 import com.android.SdkConstants
-import com.android.build.api.artifact.ArtifactType
+import com.android.build.api.artifact.SingleArtifact
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_AND_LOCAL_JARS_JNI
@@ -38,7 +38,6 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.bundling.Zip
-import java.io.File
 import java.util.Locale
 
 /** Custom Zip task to allow archive name to be set lazily. */
@@ -97,7 +96,7 @@ abstract class BundleAar : Zip(), VariantAwareTask {
                 property
             }
             creationConfig.artifacts.setInitialProvider(taskProvider, propertyProvider)
-                .on(ArtifactType.AAR)
+                .on(SingleArtifact.AAR)
         }
 
         override fun configure(
@@ -158,7 +157,7 @@ abstract class BundleAar : Zip(), VariantAwareTask {
             )
             if (!creationConfig.globalScope.extension.aaptOptions.namespaced) {
                 // In non-namespaced projects bundle the library manifest straight to the AAR.
-                task.from(artifacts.get(ArtifactType.MERGED_MANIFEST))
+                task.from(artifacts.get(SingleArtifact.MERGED_MANIFEST))
             } else {
                 // In namespaced projects the bundled manifest needs to have stripped resource
                 // references for backwards compatibility.

@@ -24,13 +24,13 @@ import org.gradle.api.file.RegularFile
 /**
  * Public [Artifact] for Android Gradle plugin.
  *
- * These are [Artifact.Single], see [MultipleArtifactType] for multiple ones.
+ * These are [Artifact.Single], see [MultipleArtifact] for multiple ones.
  *
  * All methods in the [Artifacts] class should be supported with any subclass of this
  * class.
  */
 @Incubating
-sealed class ArtifactType<T : FileSystemLocation>(
+sealed class SingleArtifact<T : FileSystemLocation>(
     kind: ArtifactKind<T>,
     category: Category = Category.INTERMEDIATES,
     private val fileSystemLocationName: FileNames? = null
@@ -48,7 +48,7 @@ sealed class ArtifactType<T : FileSystemLocation>(
      */
     @Incubating
     object APK:
-        ArtifactType<Directory>(DIRECTORY),
+        SingleArtifact<Directory>(DIRECTORY),
         Transformable,
         Replaceable,
         ContainsMany
@@ -66,13 +66,13 @@ sealed class ArtifactType<T : FileSystemLocation>(
      */
     @Incubating
     object MERGED_MANIFEST:
-        ArtifactType<RegularFile>(FILE, Category.INTERMEDIATES, FileNames.ANDROID_MANIFEST_XML),
+        SingleArtifact<RegularFile>(FILE, Category.INTERMEDIATES, FileNames.ANDROID_MANIFEST_XML),
         Replaceable,
         Transformable
 
     @Incubating
     object OBFUSCATION_MAPPING_FILE:
-        ArtifactType<RegularFile>(FILE, Category.OUTPUTS, FileNames.OBFUSCATION_MAPPING_FILE) {
+        SingleArtifact<RegularFile>(FILE, Category.OUTPUTS, FileNames.OBFUSCATION_MAPPING_FILE) {
             override fun getFolderName(): String = "mapping"
         }
 
@@ -82,12 +82,12 @@ sealed class ArtifactType<T : FileSystemLocation>(
      */
     @Incubating
     object BUNDLE:
-        ArtifactType<RegularFile>(FILE, Category.OUTPUTS),
+        SingleArtifact<RegularFile>(FILE, Category.OUTPUTS),
         Transformable
 
     @Incubating
     object AAR:
-        ArtifactType<RegularFile>(FILE),
+        SingleArtifact<RegularFile>(FILE),
         Transformable
 
     /**
@@ -106,5 +106,5 @@ sealed class ArtifactType<T : FileSystemLocation>(
      * See [Choose resources to make public](https://developer.android.com/studio/projects/android-library.html#PrivateResources).
      */
     @Incubating
-    object PUBLIC_ANDROID_RESOURCES_LIST: ArtifactType<RegularFile>(FILE)
+    object PUBLIC_ANDROID_RESOURCES_LIST: SingleArtifact<RegularFile>(FILE)
 }

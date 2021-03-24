@@ -58,7 +58,7 @@ class ManifestTransformerTest: VariantApiBaseTest(
                         .wiredWithFiles(
                             ManifestTransformerTask::mergedManifest,
                             ManifestTransformerTask::updatedManifest)
-                        .toTransform(com.android.build.api.artifact.ArtifactType.MERGED_MANIFEST)
+                        .toTransform(com.android.build.api.artifact.SingleArtifact.MERGED_MANIFEST)
                 }
             }
             """.trimIndent()

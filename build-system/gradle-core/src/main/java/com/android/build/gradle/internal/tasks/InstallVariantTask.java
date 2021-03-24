@@ -16,7 +16,7 @@
 package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
-import com.android.build.api.artifact.ArtifactType;
+import com.android.build.api.artifact.SingleArtifact;
 import com.android.build.api.variant.impl.BuiltArtifactsImpl;
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl;
 import com.android.build.api.variant.impl.VariantApiExtensionsKt;
@@ -229,7 +229,8 @@ public abstract class InstallVariantTask extends NonIncrementalTask {
             task.setGroup(TaskManager.INSTALL_GROUP);
             creationConfig
                     .getArtifacts()
-                    .setTaskInputToFinalProduct(ArtifactType.APK.INSTANCE, task.getApkDirectory());
+                    .setTaskInputToFinalProduct(
+                            SingleArtifact.APK.INSTANCE, task.getApkDirectory());
             task.setTimeOutInMs(
                     creationConfig
                             .getGlobalScope()

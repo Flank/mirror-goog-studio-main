@@ -16,12 +16,8 @@
 
 package com.android.build.gradle.internal.scope
 
-import com.android.build.api.artifact.ArtifactKind
 import com.android.build.api.artifact.Artifact
-import com.android.build.api.artifact.ArtifactKind.DIRECTORY
-import com.android.build.api.artifact.ArtifactType
 import org.gradle.api.file.Directory
-import org.gradle.api.file.FileSystemLocation
 
 /**
  * List of internal [Artifact.Multiple] [Artifact]

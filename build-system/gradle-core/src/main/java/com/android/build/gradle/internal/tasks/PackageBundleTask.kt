@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.artifact.ArtifactType
+import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.dsl.AssetPackBundleExtension
 import com.android.build.api.variant.impl.ApplicationVariantImpl
@@ -422,12 +422,12 @@ abstract class PackageBundleTask : NonIncrementalTask() {
             super.handleProvider(taskProvider)
 
             val buildDirectory =
-                ArtifactType.BUNDLE.getOutputPath(artifacts.buildDirectory, "").absolutePath
+                SingleArtifact.BUNDLE.getOutputPath(artifacts.buildDirectory, "").absolutePath
             val outputFileName = "${projectServices.projectInfo.getProjectBaseName()}.aab"
             artifacts.setInitialProvider(taskProvider, PackageBundleTask::bundleFile)
                 .atLocation(buildDirectory)
                 .withName(outputFileName)
-                .on(ArtifactType.BUNDLE)
+                .on(SingleArtifact.BUNDLE)
         }
 
         override fun configure(
@@ -540,7 +540,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
             }
 
             creationConfig.artifacts.setTaskInputToFinalProduct(
-                ArtifactType.OBFUSCATION_MAPPING_FILE,
+                SingleArtifact.OBFUSCATION_MAPPING_FILE,
                 task.obsfuscationMappingFile
             )
 

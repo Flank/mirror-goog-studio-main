@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.plugins
 
-import com.android.build.api.artifact.ArtifactType
+import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.dsl.AssetPackBundleExtension
 import com.android.build.gradle.internal.SdkComponentsBuildService
@@ -212,7 +212,7 @@ class AssetPackBundlePlugin : Plugin<Project> {
             object : TaskConfigAction<Task> {
                 override fun configure(task: Task) {
                     task.description = "Assembles asset pack bundle for asset only updates"
-                    task.dependsOn(artifacts.get(ArtifactType.BUNDLE))
+                    task.dependsOn(artifacts.get(SingleArtifact.BUNDLE))
                 }
             }
         )

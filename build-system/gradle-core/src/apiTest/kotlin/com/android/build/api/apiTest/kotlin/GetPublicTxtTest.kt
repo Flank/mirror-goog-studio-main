@@ -36,7 +36,7 @@ class GetPublicTxtTest: VariantApiBaseTest(TestType.Script){
                 kotlin("android")
             }
 
-            import com.android.build.api.artifact.ArtifactType
+            import com.android.build.api.artifact.SingleArtifact
             import com.android.build.api.variant.BuiltArtifactsLoader
             import java.lang.RuntimeException
             import java.util.Locale
@@ -92,7 +92,7 @@ class GetPublicTxtTest: VariantApiBaseTest(TestType.Script){
                     @OptIn(ExperimentalStdlibApi::class)
                     val capitalizedName = variant.name.capitalize(Locale.US)
                     project.tasks.register<PublicResourcesValidatorTask>("validate${'$'}{capitalizedName}PublicResources") {
-                        publicAndroidResources.set(variant.artifacts.get(ArtifactType.PUBLIC_ANDROID_RESOURCES_LIST))
+                        publicAndroidResources.set(variant.artifacts.get(SingleArtifact.PUBLIC_ANDROID_RESOURCES_LIST))
                         expectedPublicResources.set(project.file("src/test/expectedApi/public-resources.txt"))
                         fakeOutput.set(project.layout.buildDirectory.dir("intermediates/PublicResourcesValidatorTask/${'$'}name"))
                     }
@@ -122,9 +122,9 @@ class GetPublicTxtTest: VariantApiBaseTest(TestType.Script){
 This sample show how to obtain the file listing the public artifacts from the Android Gradle Plugin.
 The [onVariants] block will wire the [PublicResourcesValidatorTask] input property
 (publicAndroidResources) by using
-the [Artifacts.get] call with the right [ArtifactType].
+the [Artifacts.get] call with the right [SingleArtifact..
 
-```publicAndroidResources.set(artifacts.get(ArtifactType.PUBLIC_ANDROID_RESOURCES_LIST))```
+```publicAndroidResources.set(artifacts.get(SingleArtifact.PUBLIC_ANDROID_RESOURCES_LIST))```
 
 For more information about how to mark resources as public see
 [Choose resources to make public](https://developer.android.com/studio/projects/android-library.html#PrivateResources)

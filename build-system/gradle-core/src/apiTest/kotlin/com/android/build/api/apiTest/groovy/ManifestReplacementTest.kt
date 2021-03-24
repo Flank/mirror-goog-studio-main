@@ -36,7 +36,7 @@ class ManifestReplacementTest: VariantApiBaseTest(TestType.Script, ScriptingLang
             ${testingElements.getGitVersionTask()}
             ${testingElements.getManifestProducerTask()}
 
-            import com.android.build.api.artifact.ArtifactType
+            import com.android.build.api.artifact.SingleArtifact
 
             android {
                 ${testingElements.addCommonAndroidBuildLogic()}
@@ -59,7 +59,7 @@ class ManifestReplacementTest: VariantApiBaseTest(TestType.Script, ScriptingLang
                     }
                     it.artifacts.use(manifestProducer)
                         .wiredWith({ it.outputManifest })
-                        .toCreate(ArtifactType.MERGED_MANIFEST.INSTANCE)
+                        .toCreate(SingleArtifact.MERGED_MANIFEST.INSTANCE)
                 })
             }
             """.trimIndent()

@@ -16,7 +16,7 @@
 
 package com.android.build.api
 
-import com.android.build.api.artifact.ArtifactType
+import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.artifact.Artifacts
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.Directory
@@ -69,7 +69,7 @@ class OperationRequestTest {
         artifacts
             .use(dirTask)
             .wiredWithDirectories(MyDirTask::input, MyDirTask::output)
-            .toTransform(ArtifactType.APK)
+            .toTransform(SingleArtifact.APK)
 
 //        artifacts
 //            .use2(fileTask)
@@ -79,11 +79,11 @@ class OperationRequestTest {
         artifacts
             .use(fileTask)
             .wiredWithFiles(MyFileTask::input, MyFileTask::output)
-            .toTransform(ArtifactType.BUNDLE)
+            .toTransform(SingleArtifact.BUNDLE)
 
         artifacts
             .use(fileTask)
             .wiredWith(MyFileTask::output)
-            .toCreate(ArtifactType.MERGED_MANIFEST)
+            .toCreate(SingleArtifact.MERGED_MANIFEST)
     }
 }

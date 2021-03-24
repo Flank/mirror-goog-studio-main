@@ -42,7 +42,7 @@ class GetApksTest: VariantApiBaseTest(TestType.Script, ScriptingLanguage.Groovy)
             androidComponents {
                 onVariants(selector().all(), { variant ->
                     project.tasks.register(variant.getName() + "DisplayApks", DisplayApksTask.class) {
-                        it.apkFolder.set(variant.artifacts.get(ArtifactType.APK.INSTANCE))
+                        it.apkFolder.set(variant.artifacts.get(SingleArtifact.APK.INSTANCE))
                         it.builtArtifactsLoader.set(variant.artifacts.getBuiltArtifactsLoader())
                     }
                 })

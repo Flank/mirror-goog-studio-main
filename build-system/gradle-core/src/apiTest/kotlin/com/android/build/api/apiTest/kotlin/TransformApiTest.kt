@@ -59,7 +59,7 @@ class TransformApiTest(private val artifact: String, private val plugin: String)
         import org.gradle.api.tasks.TaskAction
         import org.gradle.api.provider.Property
         import org.gradle.api.tasks.Internal
-        import com.android.build.api.artifact.ArtifactType
+        import com.android.build.api.artifact.SingleArtifact
         import org.gradle.api.tasks.OutputFile
         import com.android.utils.appendCapitalized
 
@@ -96,13 +96,13 @@ class TransformApiTest(private val artifact: String, private val plugin: String)
             onVariants {
                 val updateArtifact = project.tasks.register<UpdateArtifactTask>("${'$'}{it.name}UpdateArtifact")
                 val finalArtifact = project.tasks.register<ConsumeArtifactTask>("${'$'}{it.name}ConsumeArtifact") {
-                    finalArtifact.set(it.artifacts.get(ArtifactType.$artifact))
+                    finalArtifact.set(it.artifacts.get(SingleArtifact.$artifact))
                 }
                 it.artifacts.use(updateArtifact)
                     .wiredWithFiles(
                         UpdateArtifactTask::initialArtifact,
                         UpdateArtifactTask::updatedArtifact)
-                .toTransform(ArtifactType.$artifact)
+                .toTransform(SingleArtifact.$artifact)
             }
         }
     """.trimIndent()

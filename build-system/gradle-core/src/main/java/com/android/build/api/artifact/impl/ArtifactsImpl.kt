@@ -20,9 +20,9 @@ import com.android.build.api.artifact.ArtifactKind
 import com.android.build.api.artifact.Artifact
 import com.android.build.api.artifact.Artifact.Multiple
 import com.android.build.api.artifact.Artifact.Single
-import com.android.build.api.artifact.ArtifactType
+import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.artifact.Artifacts
-import com.android.build.api.artifact.MultipleArtifactType
+import com.android.build.api.artifact.MultipleArtifact
 import com.android.build.api.variant.BuiltArtifactsLoader
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.gradle.internal.scope.AnchorOutputType
@@ -65,7 +65,7 @@ class ArtifactsImpl(
     }
 
     override fun <FILE_TYPE : FileSystemLocation> get(
-        type: ArtifactType<FILE_TYPE>
+        type: SingleArtifact<FILE_TYPE>
     ): Provider<FILE_TYPE> = getArtifactContainer(type).get()
 
     fun <FILE_TYPE : FileSystemLocation> get(
@@ -73,7 +73,7 @@ class ArtifactsImpl(
     ): Provider<FILE_TYPE> = getArtifactContainer(type).get()
 
     override fun <FileTypeT : FileSystemLocation> getAll(
-        type: MultipleArtifactType<FileTypeT>
+        type: MultipleArtifact<FileTypeT>
     ): Provider<List<FileTypeT>> = getArtifactContainer(type).get()
 
     fun <FILE_TYPE : FileSystemLocation> getAll(
@@ -98,7 +98,7 @@ class ArtifactsImpl(
 
     /**
      * Returns a [RegularFile] that can be used to output a [Single]
-     * @param type expect output [ArtifactType]
+     * @param type expect output [SingleArtifact]
      * @param paths the extra folder to add when constructing the file path.
      */
     internal fun getOutputRegularFile(

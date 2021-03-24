@@ -37,7 +37,7 @@ class ManifestTransformerTest: VariantApiBaseTest(TestType.Script, ScriptingLang
             ${testingElements.getGitVersionTask()}
             ${testingElements.getGitVersionManifestTransformerTask()}
 
-            import com.android.build.api.artifact.ArtifactType
+            import com.android.build.api.artifact.SingleArtifact
 
             android {
                 ${testingElements.addCommonAndroidBuildLogic()}
@@ -60,7 +60,7 @@ class ManifestTransformerTest: VariantApiBaseTest(TestType.Script, ScriptingLang
                         .wiredWithFiles(
                             { it.mergedManifest },
                             { it.updatedManifest })
-                        .toTransform(ArtifactType.MERGED_MANIFEST.INSTANCE)
+                        .toTransform(SingleArtifact.MERGED_MANIFEST.INSTANCE)
                 })
             }
             """.trimIndent()

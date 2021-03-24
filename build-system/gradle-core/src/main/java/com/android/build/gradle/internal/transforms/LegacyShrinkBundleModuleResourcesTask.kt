@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.transforms
 
-import com.android.build.api.artifact.ArtifactType
+import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.variant.VariantOutput
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.gradle.internal.component.VariantCreationConfig
@@ -239,7 +239,7 @@ abstract class LegacyShrinkBundleModuleResourcesTask : NonIncrementalTask() {
                 task.resourceDir)
 
             artifacts.setTaskInputToFinalProduct(
-                ArtifactType.OBFUSCATION_MAPPING_FILE,
+                SingleArtifact.OBFUSCATION_MAPPING_FILE,
                 task.mappingFileSrc)
 
             artifacts.setTaskInputToFinalProduct(

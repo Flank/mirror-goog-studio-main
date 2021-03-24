@@ -20,7 +20,7 @@ import com.android.SdkConstants
 import com.android.SdkConstants.DATA_BINDING_KTX_LIB_ARTIFACT
 import com.android.SdkConstants.DOT_JAR
 import com.android.build.api.artifact.Artifact.Single
-import com.android.build.api.artifact.ArtifactType
+import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.component.impl.AndroidTestImpl
 import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.api.component.impl.TestComponentImpl
@@ -1550,7 +1550,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                     project.providers,
                     androidTestProperties,
                     androidTestProperties,
-                    androidTestProperties.artifacts.get(ArtifactType.APK),
+                    androidTestProperties.artifacts.get(SingleArtifact.APK),
                     getFeatureName(project.path),
                     testedVariant
                             .variantDependencies
@@ -1559,12 +1559,12 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                                     AndroidArtifacts.ArtifactType.APKS_FROM_BUNDLE))
         } else {
             val testedApkFileCollection =
-                    project.files(testedVariant.artifacts.get(ArtifactType.APK))
+                    project.files(testedVariant.artifacts.get(SingleArtifact.APK))
             TestDataImpl(
                     project.providers,
                     androidTestProperties,
                     androidTestProperties,
-                    androidTestProperties.artifacts.get(ArtifactType.APK),
+                    androidTestProperties.artifacts.get(SingleArtifact.APK),
                     if (isLibrary) null else testedApkFileCollection)
         }
         configureTestData(androidTestProperties, testData)
@@ -2041,7 +2041,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                 .assembleTask
                 .configure { task: Task ->
                     task.dependsOn(
-                            creationConfig.artifacts.get(ArtifactType.APK))
+                            creationConfig.artifacts.get(SingleArtifact.APK))
                 }
 
         // create install task for the variant Data. This will deal with finding the
@@ -2249,7 +2249,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                 object : TaskConfigAction<Task> {
                     override fun configure(task: Task) {
                         task.description = "Assembles bundle for variant " + component.name
-                        task.dependsOn(component.artifacts.get(ArtifactType.BUNDLE))
+                        task.dependsOn(component.artifacts.get(SingleArtifact.BUNDLE))
                         task.dependsOn(component.artifacts.get(InternalArtifactType.BUNDLE_IDE_MODEL))
                     }
                 },

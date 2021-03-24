@@ -42,7 +42,7 @@ class GetMappingFileTest: VariantApiBaseTest(TestType.Script) {
             import org.gradle.api.tasks.TaskAction
 
             import com.android.build.api.variant.BuiltArtifactsLoader
-            import com.android.build.api.artifact.ArtifactType
+            import com.android.build.api.artifact.SingleArtifact
             import org.gradle.api.provider.Property
             import org.gradle.api.tasks.Internal
 
@@ -67,7 +67,7 @@ class GetMappingFileTest: VariantApiBaseTest(TestType.Script) {
             androidComponents {
                 onVariants { variant ->
                     project.tasks.register<MappingFileUploadTask>("${ '$' }{variant.name}MappingFileUpload") {
-                        mappingFile.set(variant.artifacts.get(ArtifactType.OBFUSCATION_MAPPING_FILE))
+                        mappingFile.set(variant.artifacts.get(SingleArtifact.OBFUSCATION_MAPPING_FILE))
                     }
                 }
             }
@@ -83,8 +83,8 @@ class GetMappingFileTest: VariantApiBaseTest(TestType.Script) {
 
 This sample shows how to obtain the obfuscation mapping file from the AGP.
 The [onVariants] block will wire the [MappingFileUploadTask] input property (apkFolder) by using
-the [Artifacts.get] call with the right [ArtifactType]
-`mapping.set(artifacts.get(ArtifactType.OBFUSCATION_MAPPING_FILE))`
+the [Artifacts.get] call with the right [SingleArtifact.
+`mapping.set(artifacts.get(SingleArtifact.OBFUSCATION_MAPPING_FILE))`
 ## To Run
 ./gradlew debugMappingFileUpload
 expected result : "Uploading .... to a fantasy server...s" message.

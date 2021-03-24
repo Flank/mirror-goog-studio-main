@@ -67,7 +67,7 @@ android {
 
 import javax.inject.Inject
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.api.artifact.ArtifactType
+import com.android.build.api.artifact.SingleArtifact
 import com.android.build.gradle.internal.services.BuildServicesKt
 import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.api.variant.BuiltArtifact
@@ -99,7 +99,7 @@ abstract class ProducerTask extends DefaultTask {
 
       new BuiltArtifactsImpl(
         BuiltArtifacts.METADATA_FILE_VERSION,
-        ArtifactType.APK.INSTANCE,
+        SingleArtifact.APK.INSTANCE,
         "com.android.test",
         getVariantName().get(),
         [
@@ -214,7 +214,7 @@ androidComponents.onVariants(androidComponents.selector().all(), {
 
   it.artifacts.use(outputTask)
         .wiredWith({ it.getOutputDir() })
-        .toCreate(ArtifactType.APK.INSTANCE)
+        .toCreate(SingleArtifact.APK.INSTANCE)
 
   TaskProvider consumerTask = tasks.register(it.getName() + 'ConsumerTask', ConsumerTask)
   ArtifactTransformationRequest replacementRequest = it.artifacts.use(consumerTask)
@@ -222,7 +222,7 @@ androidComponents.onVariants(androidComponents.selector().all(), {
         { it.getInputDir() },
         { it.getOutputDir() }
     )
-    .toTransformMany(ArtifactType.APK.INSTANCE)
+    .toTransformMany(SingleArtifact.APK.INSTANCE)
 
   consumerTask.configure { task ->
     task.replacementRequest = replacementRequest
@@ -232,7 +232,7 @@ androidComponents.onVariants(androidComponents.selector().all(), {
 
   tasks.register(it.getName() + 'Verifier', VerifierTask) { task ->
     task.getInputDir().set(
-      it.artifacts.get(ArtifactType.APK.INSTANCE)
+      it.artifacts.get(SingleArtifact.APK.INSTANCE)
     )
     task.getArtifactsLoader().set(it.artifacts.getBuiltArtifactsLoader())
   }

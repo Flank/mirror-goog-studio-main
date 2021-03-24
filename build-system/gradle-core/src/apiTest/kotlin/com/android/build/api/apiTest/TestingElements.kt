@@ -93,7 +93,7 @@ class TestingElements(val language: ScriptingLanguage) {
             import org.gradle.workers.WorkParameters
             import org.gradle.workers.WorkerExecutor
             import org.gradle.workers.WorkAction
-            import com.android.build.api.artifact.ArtifactType
+            import com.android.build.api.artifact.SingleArtifact
             import com.android.build.api.artifact.ArtifactKind
             import com.android.build.api.artifact.Artifact
             import com.android.build.api.artifact.Artifact.Replaceable
@@ -511,15 +511,11 @@ fun getManifestProducerTask() =
             // language=groovy
                     """
             import org.gradle.api.DefaultTask
-            import org.gradle.api.file.Directory
             import org.gradle.api.file.DirectoryProperty
             import org.gradle.api.tasks.InputFiles
             import org.gradle.api.tasks.TaskAction
-            import java.io.ByteArrayOutputStream
-            import java.io.PrintStream
-
+            import com.android.build.api.artifact.SingleArtifact
             import com.android.build.api.variant.BuiltArtifactsLoader
-            import com.android.build.api.artifact.ArtifactType
             import com.android.build.api.variant.BuiltArtifacts
             import org.gradle.api.provider.Property
             import org.gradle.api.tasks.Internal

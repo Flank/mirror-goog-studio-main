@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.artifact.ArtifactType
+import com.android.build.api.artifact.SingleArtifact
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -158,7 +158,7 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
                 creationConfig.artifacts.setInitialProvider(
                     taskProvider,
                     FinalizeBundleTask::finalBundleFile
-                ).withName(bundleName).on(ArtifactType.BUNDLE)
+                ).withName(bundleName).on(SingleArtifact.BUNDLE)
             } else {
                 creationConfig.artifacts.setInitialProvider(
                     taskProvider,
@@ -167,7 +167,7 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
                         creationConfig.services.file(apkLocationOverride),
                         creationConfig.dirName).absolutePath)
                     .withName(bundleName)
-                    .on(ArtifactType.BUNDLE)
+                    .on(SingleArtifact.BUNDLE)
             }
         }
 
