@@ -367,13 +367,13 @@
       jars="${mavenRepo}/com/android/support/support-annotations/28.0.0/support-annotations-28.0.0.jar"
       resolved="com.android.support:support-annotations:28.0.0"/>
   <library
-      name="org.jetbrains.kotlin:kotlin-stdlib:1.4.31@jar"
-      jars="${mavenRepo}/org/jetbrains/kotlin/kotlin-stdlib/1.4.31/kotlin-stdlib-1.4.31.jar"
-      resolved="org.jetbrains.kotlin:kotlin-stdlib:1.4.31"/>
+      name="org.jetbrains.kotlin:kotlin-stdlib:1.4.32@jar"
+      jars="${mavenRepo}/org/jetbrains/kotlin/kotlin-stdlib/1.4.32/kotlin-stdlib-1.4.32.jar"
+      resolved="org.jetbrains.kotlin:kotlin-stdlib:1.4.32"/>
   <library
-      name="org.jetbrains.kotlin:kotlin-stdlib-common:1.4.31@jar"
-      jars="${mavenRepo}/org/jetbrains/kotlin/kotlin-stdlib-common/1.4.31/kotlin-stdlib-common-1.4.31.jar"
-      resolved="org.jetbrains.kotlin:kotlin-stdlib-common:1.4.31"/>
+      name="org.jetbrains.kotlin:kotlin-stdlib-common:1.4.32@jar"
+      jars="${mavenRepo}/org/jetbrains/kotlin/kotlin-stdlib-common/1.4.32/kotlin-stdlib-common-1.4.32.jar"
+      resolved="org.jetbrains.kotlin:kotlin-stdlib-common:1.4.32"/>
   <library
       name="org.jetbrains:annotations:13.0@jar"
       jars="${mavenRepo}/org/jetbrains/annotations/13.0/annotations-13.0.jar"
