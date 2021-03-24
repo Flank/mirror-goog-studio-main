@@ -4150,7 +4150,7 @@ browse sources online:
 <a class="target" name="appendix:recentchanges">&nbsp;</a><a class="target" name="appendix:recentchanges">&nbsp;</a><a class="target" name="toc9">&nbsp;</a><h1>Appendix: Recent Changes</h1>
 <p>
 
-           
+
 <strong class="asterisk">Recent Changes</strong>
 
 </p><p>
@@ -4175,12 +4175,12 @@ information about user visible changes to lint, see
 <li class="asterisk">Partial analysis. Lint's architecture has changed to support better
   scalability across large projects, where module results can be
   cached, etc. See the api-guide's dedicated chapter for more details.
-  To opt in before it's turned on by default to test this on your full
-  Gradle projects rather than just the detector tests, add
+  It is enabled by default starting in AGP 7.0.0-alpha13, but you can
+  disable it by adding
 
 <p></p><p>
 
-      <code>android.experimental.useLintPartialAnalysis=true</code>
+      <code>android.enableParallelLint=false</code>
 
 </p><p>
 

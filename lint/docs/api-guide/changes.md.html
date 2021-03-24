@@ -12,10 +12,10 @@ information about user visible changes to lint, see
 * Partial analysis. Lint's architecture has changed to support better
   scalability across large projects, where module results can be
   cached, etc. See the api-guide's dedicated chapter for more details.
-  To opt in before it's turned on by default to test this on your full
-  Gradle projects rather than just the detector tests, add
+  It is enabled by default starting in AGP 7.0.0-alpha13, but you can
+  disable it by adding
 
-      `android.experimental.useLintPartialAnalysis=true`
+      `android.enableParallelLint=false`
 
   to your `gradle.properties` file. If you want to debug your lint check
   you may want to also set
