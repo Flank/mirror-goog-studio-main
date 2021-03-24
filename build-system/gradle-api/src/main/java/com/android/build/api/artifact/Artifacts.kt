@@ -43,14 +43,6 @@ import org.gradle.api.tasks.TaskProvider
 interface Artifacts {
 
     /**
-     * Provides an implementation of [BuiltArtifactsLoader] that can be used to load built artifacts
-     * metadata.
-     *
-     * @return A thread safe implementation of [BuiltArtifactsLoader] that can be reused.
-     */
-    fun getBuiltArtifactsLoader(): BuiltArtifactsLoader
-
-    /**
      * Get the [Provider] of [FileTypeT] for the passed [Artifact].
      *
      * @param type Type of the single artifact.
@@ -76,4 +68,12 @@ interface Artifacts {
      * @return A [TaskBasedOperation] object using the passed [TaskProvider] for all its operations.
      */
     fun <TaskT: Task> use(taskProvider: TaskProvider<TaskT>): TaskBasedOperation<TaskT>
+
+    /**
+     * Provides an implementation of [BuiltArtifactsLoader] that can be used to load built artifacts
+     * metadata.
+     *
+     * @return A thread safe implementation of [BuiltArtifactsLoader] that can be reused.
+     */
+    fun getBuiltArtifactsLoader(): BuiltArtifactsLoader
 }
