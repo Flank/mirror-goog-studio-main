@@ -21,6 +21,7 @@ import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.truth.ScannerSubject.Companion.assertThat
 import com.android.bundle.Config
+import com.android.ide.common.signing.KeystoreHelper
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.testutils.truth.ZipFileSubject.assertThat
 import com.android.tools.build.bundletool.model.AppBundle
@@ -167,6 +168,51 @@ class AssetPackBundleTest {
     }
 
     @Test
+    fun `should build signed asset pack bundle successfully if signing config is provided`() {
+        val storePassword = "storePassword"
+        val keyPassword = "keyPassword"
+        val keyAlias = "key0"
+
+        val keyStoreFile = tmpFile.root.resolve("keystore")
+        KeystoreHelper.createNewStore(
+            "jks",
+            keyStoreFile,
+            storePassword,
+            keyPassword,
+            keyAlias,
+            "CN=Bundle signing test",
+            100
+        )
+
+        project.getSubproject("assetPackBundle").buildFile.appendText(
+            """
+                bundle {
+                  signingConfig {
+                    storeFile = file('${keyStoreFile.absolutePath.replace("\\", "\\\\")}')
+                    storePassword = '$storePassword'
+                    keyAlias = '$keyAlias'
+                    keyPassword = '$keyPassword'
+                  }
+                }
+            """.trimIndent()
+        )
+
+        project.executor().run(":assetPackBundle:bundle")
+
+        val bundleFile = getResultBundle()
+        assertThat(bundleFile.toPath()).exists()
+        assertThat(bundleFile) {
+            it.containsFileWithContent("assetPackOne/assets/assetFileOne.txt", assetFileOneContent)
+            it.containsFileWithContent("assetPackTwo/assets/assetFileTwo.txt", assetFileTwoContent)
+            it.contains("assetPackOne/manifest/AndroidManifest.xml")
+            it.contains("assetPackTwo/manifest/AndroidManifest.xml")
+            it.contains("BundleConfig.pb")
+            it.contains("META-INF/KEY0.SF")
+            it.contains("META-INF/KEY0.RSA")
+        }
+    }
+
+    @Test
     fun `should fail if asset pack bundle is misconfigured`() {
         project.getSubproject("assetPackBundle").buildFile
             .appendText(
@@ -226,6 +272,30 @@ class AssetPackBundleTest {
         failure.stderr.use {
             assertThat(it)
                 .contains("bundle contains an install-time asset module 'assetPackTwo'")
+        }
+    }
+
+    @Test
+    fun `should fail if keystore file is signing config is invalid`() {
+        project.getSubproject("assetPackBundle").buildFile.appendText(
+            """
+                bundle {
+                  signingConfig {
+                    storeFile = file('./keystore.jks')
+                    storePassword = ''
+                    keyAlias = 'key'
+                    keyPassword = ''
+                  }
+                }
+            """.trimIndent()
+        )
+
+        val failure = project.executor().expectFailure().run(":assetPackBundle:bundle")
+        failure.stderr.use {
+            val expectedKeystoreFile =
+                File(project.getSubproject("assetPackBundle").projectDir, "keystore.jks")
+            assertThat(it)
+                .contains("Keystore file '${expectedKeystoreFile.absolutePath}' not found")
         }
     }
 

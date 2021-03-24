@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.plugins
 import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.dsl.AssetPackBundleExtension
+import com.android.build.api.dsl.SigningConfig
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.errors.DeprecationReporterImpl
 import com.android.build.gradle.internal.errors.SyncIssueReporterImpl
@@ -34,9 +35,11 @@ import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.getBuildServiceName
 import com.android.build.gradle.internal.tasks.AppMetadataTask
 import com.android.build.gradle.internal.tasks.AssetPackPreBundleTask
+import com.android.build.gradle.internal.tasks.FinalizeBundleTask
 import com.android.build.gradle.internal.tasks.LinkManifestForAssetPackTask
 import com.android.build.gradle.internal.tasks.PackageBundleTask
 import com.android.build.gradle.internal.tasks.ProcessAssetPackManifestTask
+import com.android.build.gradle.internal.tasks.ValidateSigningTask
 import com.android.build.gradle.internal.tasks.factory.TaskConfigAction
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryImpl
 import com.android.build.gradle.internal.tasks.populateAssetPacksConfigurations
@@ -143,6 +146,19 @@ class AssetPackBundlePlugin : Plugin<Project> {
             errors.add("Asset pack bundle must contain at least one asset pack.")
         }
 
+        val signingConfig = extension.signingConfig
+        if (signingConfig.isPresent()) {
+            if (signingConfig.storeFile == null ||
+                signingConfig.storePassword == null ||
+                signingConfig.keyAlias == null ||
+                signingConfig.keyPassword == null) {
+                errors.add(
+                    "Signing config is specified but incomplete. To make it complete " +
+                        "'storeFile', 'storePassword', 'keyAlias', 'keyPassword' must be specified."
+                )
+            }
+        }
+
         if (errors.isNotEmpty()) {
             issueReporter.reportWarning(
                 IssueReporter.Type.GENERIC,
@@ -206,6 +222,24 @@ class AssetPackBundlePlugin : Plugin<Project> {
             )
         )
 
+        if (extension.signingConfig.isPresent()) {
+            tasks.register(
+                ValidateSigningTask.CreationForAssetPackBundleAction(
+                    artifacts,
+                    extension.signingConfig
+                )
+            )
+        }
+
+        tasks.register(
+            FinalizeBundleTask.CreationForAssetPackBundleAction(
+                projectServices,
+                artifacts,
+                extension.signingConfig,
+                extension.signingConfig.isPresent()
+            )
+        )
+
         tasks.register(
             "bundle",
             null,
@@ -217,4 +251,11 @@ class AssetPackBundlePlugin : Plugin<Project> {
             }
         )
     }
+}
+
+private fun SigningConfig.isPresent(): Boolean {
+    return this.storeFile != null ||
+            this.storePassword != null ||
+            this.keyAlias != null ||
+            this.keyPassword != null
 }

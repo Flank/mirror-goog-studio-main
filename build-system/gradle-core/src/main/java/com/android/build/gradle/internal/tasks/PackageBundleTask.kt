@@ -25,7 +25,6 @@ import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.getOutputPath
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -420,14 +419,10 @@ abstract class PackageBundleTask : NonIncrementalTask() {
             taskProvider: TaskProvider<PackageBundleTask>
         ) {
             super.handleProvider(taskProvider)
-
-            val buildDirectory =
-                SingleArtifact.BUNDLE.getOutputPath(artifacts.buildDirectory, "").absolutePath
-            val outputFileName = "${projectServices.projectInfo.getProjectBaseName()}.aab"
-            artifacts.setInitialProvider(taskProvider, PackageBundleTask::bundleFile)
-                .atLocation(buildDirectory)
-                .withName(outputFileName)
-                .on(SingleArtifact.BUNDLE)
+            artifacts.setInitialProvider(
+                taskProvider,
+                PackageBundleTask::bundleFile
+            ).on(InternalArtifactType.INTERMEDIARY_BUNDLE)
         }
 
         override fun configure(
