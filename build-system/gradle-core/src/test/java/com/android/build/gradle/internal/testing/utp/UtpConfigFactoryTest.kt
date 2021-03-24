@@ -77,6 +77,7 @@ class UtpConfigFactoryTest {
     lateinit var mockResultListenerClientPrivateKey: File
     @Mock
     lateinit var mockTrustCertCollection: File
+    lateinit var testResultListenerServerMetadata: UtpTestResultListenerServerMetadata
     val testData = StaticTestData(
         testedApplicationId = "com.example.application",
         applicationId = "com.example.application.test",
@@ -138,6 +139,12 @@ class UtpConfigFactoryTest {
         `when`(mockResultListenerClientCert.absolutePath).thenReturn("mockResultListenerClientCertPath")
         `when`(mockResultListenerClientPrivateKey.absolutePath).thenReturn("mockResultListenerClientPrivateKeyPath")
         `when`(mockTrustCertCollection.absolutePath).thenReturn("mockTrustCertCollectionPath")
+        testResultListenerServerMetadata = UtpTestResultListenerServerMetadata(
+                serverCert = mockTrustCertCollection,
+                serverPort = 1234,
+                clientCert = mockResultListenerClientCert,
+                clientPrivateKey = mockResultListenerClientPrivateKey
+        )
     }
 
     @Test
@@ -948,7 +955,8 @@ class UtpConfigFactoryTest {
             mockOutputDir,
             mockTmpDir,
             mockRetentionConfig,
-            useOrchestrator = false
+            useOrchestrator = false,
+            testResultListenerServerMetadata
         )
         assertThat(runnerConfigProto.toString()).isEqualTo("""
             device {
@@ -1055,6 +1063,19 @@ class UtpConfigFactoryTest {
                 }
               }
             }
+            test_result_listener {
+              label {
+                label: "ANDROID_TEST_PLUGIN_RESULT_LISTENER_GRADLE"
+              }
+              class_name: "com.android.tools.utp.plugins.result.listener.gradle.GradleAndroidTestResultListener"
+              jar {
+                path: "pathToANDROID_TEST_PLUGIN_RESULT_LISTENER_GRADLE.jar"
+              }
+              config {
+                type_url: "type.googleapis.com/com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidTestResultListenerConfig"
+                value: "\b\322\t\022 mockResultListenerClientCertPath\032&mockResultListenerClientPrivateKeyPath\"\033mockTrustCertCollectionPath*\037:app:deviceNameDebugAndroidTest"
+              }
+            }
             single_device_executor {
               device_execution {
                 device_id {
@@ -1090,7 +1111,8 @@ class UtpConfigFactoryTest {
                 mockOutputDir,
                 mockTmpDir,
                 mockRetentionConfig,
-                useOrchestrator = true
+                useOrchestrator = true,
+                testResultListenerServerMetadata
         )
         assertThat(runnerConfigProto.toString()).isEqualTo("""
             device {
@@ -1195,6 +1217,19 @@ class UtpConfigFactoryTest {
                   type_url: "type.googleapis.com/google.testing.platform.proto.api.config.AndroidInstrumentationDriver"
                   value: "\nd\n`\n\027com.example.application\022\034com.example.application.test\032\'androidx.test.runner.AndroidJUnitRunner\022\000\020\200\347\204\017\030\001"
                 }
+              }
+            }
+            test_result_listener {
+              label {
+                label: "ANDROID_TEST_PLUGIN_RESULT_LISTENER_GRADLE"
+              }
+              class_name: "com.android.tools.utp.plugins.result.listener.gradle.GradleAndroidTestResultListener"
+              jar {
+                path: "pathToANDROID_TEST_PLUGIN_RESULT_LISTENER_GRADLE.jar"
+              }
+              config {
+                type_url: "type.googleapis.com/com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidTestResultListenerConfig"
+                value: "\b\322\t\022 mockResultListenerClientCertPath\032&mockResultListenerClientPrivateKeyPath\"\033mockTrustCertCollectionPath*\037:app:deviceNameDebugAndroidTest"
               }
             }
             single_device_executor {

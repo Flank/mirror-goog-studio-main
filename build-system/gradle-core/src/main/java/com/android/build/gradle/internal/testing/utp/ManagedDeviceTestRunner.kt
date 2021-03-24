@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.testing.utp
 
 import com.android.build.gradle.internal.SdkComponentsBuildService
+import com.android.build.gradle.internal.testing.CustomTestRunListener
 import com.android.build.gradle.internal.testing.StaticTestData
 import com.android.builder.testing.api.DeviceException
 import com.android.builder.testing.api.TestException
@@ -49,53 +50,59 @@ class ManagedDeviceTestRunner(
         helperApks: Set<File>,
         logger: ILogger
     ): Boolean {
-        val testedApks = getTestedApks(testData, managedDevice, logger)
-        val utpOutputDir = outputDirectory
-        val utpTmpDir = Files.createTempDir()
-        val runnerConfigProtoFile = File.createTempFile("runnerConfig", ".pb").also { file ->
-            FileOutputStream(file).use { writer ->
-                configFactory.createRunnerConfigProtoForManagedDevice(
-                    managedDevice,
-                    testData,
-                    testedApks.union(helperApks) + testData.testApk,
-                    utpDependencies,
-                    versionedSdkLoader,
-                    utpOutputDir,
-                    utpTmpDir,
-                    retentionConfig,
-                    useOrchestrator).writeTo(writer)
+        val testResultListener = DdmlibTestResultAdapter(
+                managedDevice.deviceName,
+                CustomTestRunListener(
+                        managedDevice.deviceName,
+                        projectName,
+                        variantName,
+                        logger).apply {
+                    setReportDir(outputDirectory)
+                }
+        )
+        UtpTestResultListenerServerRunner(testResultListener).use { resultListenerServerRunner ->
+            val testedApks = getTestedApks(testData, managedDevice, logger)
+            val utpOutputDir = outputDirectory
+            val utpTmpDir = Files.createTempDir()
+            val runnerConfigProtoFile = File.createTempFile("runnerConfig", ".pb").also { file ->
+                FileOutputStream(file).use { writer ->
+                    configFactory.createRunnerConfigProtoForManagedDevice(
+                            managedDevice,
+                            testData,
+                            testedApks.union(helperApks) + testData.testApk,
+                            utpDependencies,
+                            versionedSdkLoader,
+                            utpOutputDir,
+                            utpTmpDir,
+                            retentionConfig,
+                            useOrchestrator,
+                            resultListenerServerRunner.metadata).writeTo(writer)
+                }
             }
-        }
-        val resultsProto = runUtpTestSuite(
-            runnerConfigProtoFile,
-            utpOutputDir,
-            configFactory,
-            utpDependencies,
-            javaProcessExecutor,
-            logger)
-        resultsProto.writeTo(File(utpOutputDir, "test-result.pb").outputStream())
+            val resultsProto = runUtpTestSuite(
+                    runnerConfigProtoFile,
+                    utpOutputDir,
+                    configFactory,
+                    utpDependencies,
+                    javaProcessExecutor,
+                    logger)
+            resultsProto.writeTo(File(utpOutputDir, "test-result.pb").outputStream())
 
-        try {
-            FileUtils.deleteRecursivelyIfExists(utpOutputDir.resolve(TEST_LOG_DIR))
-            FileUtils.deleteRecursivelyIfExists(utpTmpDir)
-        } catch (e: IOException) {
-            logger.warning("Failed to cleanup temporary directories: $e")
-        }
-        createTestReportXml(
-            resultsProto,
-            managedDevice.deviceName,
-            projectName,
-            variantName,
-            logger,
-            outputDirectory)
-        if (resultsProto.hasPlatformError()) {
-            logger.error(null, "Platform error occurred when running the UTP test suite")
-        }
-        return !resultsProto.hasPlatformError() &&
-                !resultsProto.testResultList.any { testCaseResult ->
+            try {
+                FileUtils.deleteRecursivelyIfExists(utpOutputDir.resolve(TEST_LOG_DIR))
+                FileUtils.deleteRecursivelyIfExists(utpTmpDir)
+            } catch (e: IOException) {
+                logger.warning("Failed to cleanup temporary directories: $e")
+            }
+            if (resultsProto.hasPlatformError()) {
+                logger.error(null, "Platform error occurred when running the UTP test suite")
+            }
+            return !resultsProto.hasPlatformError() &&
+                    !resultsProto.testResultList.any { testCaseResult ->
                         testCaseResult.testStatus == TestStatusProto.TestStatus.FAILED
                                 || testCaseResult.testStatus == TestStatusProto.TestStatus.ERROR
-                }
+                    }
+        }
     }
 
     private fun getTestedApks(

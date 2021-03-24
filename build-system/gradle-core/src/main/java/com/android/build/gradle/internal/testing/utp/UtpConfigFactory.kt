@@ -156,7 +156,8 @@ class UtpConfigFactory {
         outputDir: File,
         tmpDir: File,
         retentionConfig: RetentionConfig,
-        useOrchestrator: Boolean
+        useOrchestrator: Boolean,
+        testResultListenerServerMetadata: UtpTestResultListenerServerMetadata,
     ): RunnerConfigProto.RunnerConfig {
         return RunnerConfigProto.RunnerConfig.newBuilder().apply {
             addDevice(createGradleManagedDevice(device, testData, utpDependencies))
@@ -167,6 +168,14 @@ class UtpConfigFactory {
                 )
             )
             singleDeviceExecutor = createSingleDeviceExecutor(device.id)
+            addTestResultListener(
+                    createTestResultListener(
+                            utpDependencies,
+                            testResultListenerServerMetadata.serverPort,
+                            testResultListenerServerMetadata.clientCert,
+                            testResultListenerServerMetadata.clientPrivateKey,
+                            testResultListenerServerMetadata.serverCert,
+                            device.id))
         }.build()
     }
 
