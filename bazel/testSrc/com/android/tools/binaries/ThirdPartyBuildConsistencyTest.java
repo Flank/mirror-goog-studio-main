@@ -20,10 +20,8 @@ import com.android.testutils.TestUtils;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMultimap;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -54,14 +52,17 @@ public class ThirdPartyBuildConsistencyTest {
     public void ensureThirdPartyGeneratorRun() throws IOException {
         Path buildFile = TestUtils.resolveWorkspacePath("tools/base/third_party/BUILD");
         Path localRepo = TestUtils.resolveWorkspacePath("prebuilts/tools/common/m2/repository");
+        Path dependenciesPropertiesFile =
+                TestUtils.resolveWorkspacePath("tools/buildSrc/base/dependencies.properties");
+
         ThirdPartyBuildGenerator thirdPartyBuildGenerator =
                 new ThirdPartyBuildGenerator(buildFile, localRepo);
         String buildContents = Joiner.on("\n").join(Files.readAllLines(buildFile));
 
         Stream<String> depsFromDependenciesProperties =
-                readDependenciesProperties()
+                ThirdPartyBuildGenerator.readDependenciesProperties(dependenciesPropertiesFile)
                         .map(DefaultArtifact::new)
-                        .map(thirdPartyBuildGenerator::getJarTarget);
+                        .map(thirdPartyBuildGenerator::getTarget);
 
         Set<String> missingDeps =
                 depsFromDependenciesProperties
@@ -78,16 +79,6 @@ public class ThirdPartyBuildConsistencyTest {
                             + "\n"
                             + "which is inconsistent with tools/base/third_party/BUILD\n\n");
         }
-    }
-
-    private static Stream<String> readDependenciesProperties() throws IOException {
-        Path dependenciesProperties =
-                TestUtils.resolveWorkspacePath("tools/buildSrc/base/dependencies.properties");
-        Properties dependencies = new Properties();
-        try (InputStream inputStream = Files.newInputStream(dependenciesProperties)) {
-            dependencies.load(inputStream);
-        }
-        return dependencies.stringPropertyNames().stream().map(dependencies::getProperty);
     }
 
     @Test
