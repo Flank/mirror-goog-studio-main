@@ -468,7 +468,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
             // ignore dynamic features for lintVital and lintFix
             val hasDynamicFeatures = creationConfig.globalScope.hasDynamicFeatures()
             val includeDynamicFeatureSourceProviders =
-                !fatalOnly && !autoFix && !reportOnly && hasDynamicFeatures
+                !fatalOnly && !reportOnly && hasDynamicFeatures
             task.variantInputs.initialize(
                 variant,
                 checkDependencies,
@@ -482,8 +482,8 @@ abstract class AndroidLintTask : NonIncrementalTask() {
                     creationConfig.artifacts.get(InternalArtifactType.LINT_PARTIAL_RESULTS)
                 }
                 task.partialResults.set(partialResults)
-                // lintVital and lintFix do not currently examine dynamic feature modules. See b/180672373
-                if (!fatalOnly && !autoFix && hasDynamicFeatures) {
+                // TODO(b/180672373) analyze dynamic features when running lintVital from app
+                if (!fatalOnly && hasDynamicFeatures) {
                     task.dynamicFeatureLintModels.from(
                         creationConfig.variantDependencies.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,

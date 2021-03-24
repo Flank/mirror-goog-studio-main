@@ -2916,7 +2916,10 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                 assembleAndroidTestTask.description = "Assembles all the Test applications."
             }
             taskFactory.register(LintCompile.CreationAction(globalScope))
-            if (!variantType.isForTesting) {
+            // Don't register global lint or lintFix tasks for dynamic features because dynamic
+            // features are analyzed and their lint issues are reported and/or fixed when running
+            // lint or lintFix from the base app.
+            if (!variantType.isForTesting && !variantType.isDynamicFeature) {
                 LintTaskManager(globalScope, taskFactory, projectInfo).createBeforeEvaluateLintTasks()
             }
 
