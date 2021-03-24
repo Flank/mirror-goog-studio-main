@@ -16,9 +16,11 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import org.gradle.api.file.ConfigurableFileCollection
@@ -26,6 +28,7 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
@@ -48,7 +51,9 @@ abstract class ProcessAssetPackManifestTask : NonIncrementalTask() {
     @get:Input
     abstract val applicationId: Property<String>
 
-    private lateinit var assetPackNames: Set<String>
+    @get:Input
+    lateinit var assetPackNames: Set<String>
+        private set
 
     override fun doTaskAction() {
         for (assetPackManifest: File in assetPackManifests.files) {
@@ -63,6 +68,31 @@ abstract class ProcessAssetPackManifestTask : NonIncrementalTask() {
                 it.applicationId.set(applicationId)
                 it.processedManifestsDir.set(processedManifests)
             }
+        }
+    }
+
+    internal class CreationForAssetPackBundleAction(
+        private val artifacts: ArtifactsImpl,
+        private val applicationId: String,
+        private val assetPackManifestFileCollection: FileCollection,
+        private val assetPackNames: Set<String>
+    ) : TaskCreationAction<ProcessAssetPackManifestTask>() {
+
+        override val type = ProcessAssetPackManifestTask::class.java
+        override val name = "processAssetPackManifests"
+
+        override fun handleProvider(taskProvider: TaskProvider<ProcessAssetPackManifestTask>) {
+            artifacts.setInitialProvider(
+                taskProvider,
+                ProcessAssetPackManifestTask::processedManifests
+            ).on(InternalArtifactType.ASSET_PACK_MANIFESTS)
+        }
+
+        override fun configure(task: ProcessAssetPackManifestTask) {
+            task.configureVariantProperties(variantName = "", task.project)
+            task.applicationId.setDisallowChanges(applicationId)
+            task.assetPackManifests.from(assetPackManifestFileCollection)
+            task.assetPackNames = assetPackNames
         }
     }
 
@@ -90,7 +120,6 @@ abstract class ProcessAssetPackManifestTask : NonIncrementalTask() {
             task: ProcessAssetPackManifestTask
         ) {
             super.configure(task)
-
             task.applicationId.setDisallowChanges(creationConfig.applicationId)
             task.assetPackManifests.from(assetPackManifestFileCollection)
             task.assetPackNames = assetPackNames
@@ -100,6 +129,7 @@ abstract class ProcessAssetPackManifestTask : NonIncrementalTask() {
 
 abstract class ProcessAssetPackManifestWorkAction :
     ProfileAwareWorkAction<ProcessAssetPackManifestWorkAction.Params>() {
+
     override fun run() {
         // Write application ID in manifest.
         val assetPackManifest = parameters.assetPackManifest.asFile.get()

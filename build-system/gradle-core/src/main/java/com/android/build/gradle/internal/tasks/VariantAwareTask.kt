@@ -17,8 +17,9 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.profile.AnalyticsService
+import com.android.build.gradle.internal.services.getBuildService
+import org.gradle.api.Project
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 
 /**
@@ -31,4 +32,12 @@ interface VariantAwareTask {
 
     @get:Internal
     val analyticsService: Property<AnalyticsService>
+}
+
+fun VariantAwareTask.configureVariantProperties(
+    variantName: String,
+    project: Project
+) {
+    this.variantName = variantName
+    this.analyticsService.set(getBuildService(project.gradle.sharedServices))
 }

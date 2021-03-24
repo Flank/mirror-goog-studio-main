@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.component.ApplicationCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
+import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.dsl.NdkOptions
 import com.android.build.gradle.internal.dsl.NdkOptions.DebugSymbolLevel
 import com.android.build.gradle.internal.pipeline.TransformManager
@@ -142,8 +143,9 @@ open class ApplicationVariantImpl @Inject constructor(
     override val testOnlyApk: Boolean
         get() = variantScope.isTestOnly(this)
 
-    override val needAssetPackTasks: Property<Boolean> =
-        internalServices.propertyOf(Boolean::class.java, false)
+    override val needAssetPackTasks: Boolean by lazy {
+        (globalScope.extension as BaseAppModuleExtension).assetPacks.isNotEmpty()
+    }
 
     override val shouldPackageDesugarLibDex: Boolean
         get() = delegate.isCoreLibraryDesugaringEnabled

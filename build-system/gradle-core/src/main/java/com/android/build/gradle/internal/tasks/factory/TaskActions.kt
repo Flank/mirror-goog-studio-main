@@ -22,7 +22,7 @@ import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.BaseTask
 import com.android.build.gradle.internal.tasks.VariantAwareTask
-import com.android.build.gradle.options.BooleanOption
+import com.android.build.gradle.internal.tasks.configureVariantProperties
 import org.gradle.api.Task
 import org.gradle.api.tasks.TaskProvider
 
@@ -87,9 +87,7 @@ abstract class VariantTaskCreationAction<TaskT, CreationConfigT: ComponentCreati
             val taskContainer: MutableTaskContainer = creationConfig.taskContainer
             task.dependsOn(taskContainer.preBuildTask)
         }
-
-        task.variantName = creationConfig.name
-        task.analyticsService.set(getBuildService(task.project.gradle.sharedServices))
+        task.configureVariantProperties(creationConfig.name, task.project)
     }
 }
 

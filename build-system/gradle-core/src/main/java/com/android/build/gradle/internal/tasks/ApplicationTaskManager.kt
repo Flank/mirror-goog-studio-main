@@ -36,15 +36,12 @@ import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadataWr
 import com.android.build.gradle.internal.variant.ComponentInfo
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
-import com.android.builder.errors.IssueReporter
-import com.google.common.collect.ImmutableMap
 import org.gradle.api.Action
 import org.gradle.api.artifacts.ArtifactView
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.attributes.AttributeContainer
 import org.gradle.api.file.FileCollection
 import java.io.File
-import java.util.ArrayList
 import java.util.stream.Collectors
 
 class ApplicationTaskManager(
@@ -68,9 +65,9 @@ class ApplicationTaskManager(
 ) {
 
     override fun doCreateTasksForVariant(
-            variantInfo: ComponentInfo<ApplicationVariantBuilderImpl, ApplicationVariantImpl>,
-            allVariants: List<ComponentInfo<ApplicationVariantBuilderImpl, ApplicationVariantImpl>>)
-    {
+        variantInfo: ComponentInfo<ApplicationVariantBuilderImpl, ApplicationVariantImpl>,
+        allVariants: List<ComponentInfo<ApplicationVariantBuilderImpl, ApplicationVariantImpl>>
+    ) {
         createCommonTasks(variantInfo, allVariants)
 
         val variant = variantInfo.variant
@@ -85,6 +82,7 @@ class ApplicationTaskManager(
 
         // Add a task to produce the app-metadata.properties file
         taskFactory.register(AppMetadataTask.CreationAction(variant))
+            .dependsOn(variant.taskContainer.preBuildTask)
 
         if ((extension as BaseAppModuleExtension).assetPacks.isNotEmpty()) {
             createAssetPackTasks(variant)
@@ -179,42 +177,24 @@ class ApplicationTaskManager(
     }
 
     private fun createAssetPackTasks(appVariant: ApplicationVariantImpl) {
-        val depHandler = project.dependencies
-        val notFound: MutableList<String> =
-            ArrayList()
         val assetPackFilesConfiguration =
             project.configurations.maybeCreate("assetPackFiles")
         val assetPackManifestConfiguration =
             project.configurations.maybeCreate("assetPackManifest")
-        val assetPacks: Set<String> =
-            (extension as BaseAppModuleExtension).assetPacks
-        for (assetPack in assetPacks) {
-            if (project.findProject(assetPack) != null) {
-                val filesDependency: Map<String, String?> =
-                    ImmutableMap.of<String, String?>(
-                        "path",
-                        assetPack,
-                        "configuration",
-                        "packElements"
-                    )
-                depHandler.add("assetPackFiles", depHandler.project(filesDependency))
-                val manifestDependency: Map<String, String?> =
-                    ImmutableMap.of<String, String?>(
-                        "path",
-                        assetPack,
-                        "configuration",
-                        "manifestElements"
-                    )
-                depHandler.add("assetPackManifest", depHandler.project(manifestDependency))
-                appVariant.needAssetPackTasks.set(true)
-            } else {
-                notFound.add(assetPack)
-            }
-        }
-        if (appVariant.needAssetPackTasks.get()) {
+        val assetPacks = (extension as BaseAppModuleExtension).assetPacks
+        populateAssetPacksConfigurations(
+            project,
+            appVariant.services.issueReporter,
+            assetPacks,
+            assetPackFilesConfiguration,
+            assetPackManifestConfiguration
+        )
+
+        if (assetPacks.isNotEmpty()) {
             val assetPackManifest =
                 assetPackManifestConfiguration.incoming.files
             val assetFiles = assetPackFilesConfiguration.incoming.files
+
             taskFactory.register(
                 ProcessAssetPackManifestTask.CreationAction(
                         appVariant,
@@ -240,12 +220,6 @@ class ApplicationTaskManager(
                         appVariant,
                         assetFiles
                 )
-            )
-        }
-        if (!notFound.isEmpty()) {
-            appVariant.services.issueReporter.reportError(
-                IssueReporter.Type.GENERIC,
-                "Unable to find matching projects for Asset Packs: $notFound"
             )
         }
     }

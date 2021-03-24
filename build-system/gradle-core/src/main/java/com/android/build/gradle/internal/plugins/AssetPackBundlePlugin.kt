@@ -19,27 +19,47 @@ package com.android.build.gradle.internal.plugins
 import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.dsl.AssetPackBundleExtension
+import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.errors.DeprecationReporterImpl
 import com.android.build.gradle.internal.errors.SyncIssueReporterImpl
 import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.profile.NoOpAnalyticsService
 import com.android.build.gradle.internal.res.Aapt2FromMaven.Companion.create
 import com.android.build.gradle.internal.scope.ProjectInfo
-import com.android.build.gradle.internal.scope.getOutputPath
+import com.android.build.gradle.internal.services.Aapt2DaemonBuildService
+import com.android.build.gradle.internal.services.Aapt2ThreadPoolBuildService
+import com.android.build.gradle.internal.services.AndroidLocationsBuildService
 import com.android.build.gradle.internal.services.DslServicesImpl
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.getBuildServiceName
+import com.android.build.gradle.internal.tasks.AppMetadataTask
+import com.android.build.gradle.internal.tasks.AssetPackPreBundleTask
+import com.android.build.gradle.internal.tasks.LinkManifestForAssetPackTask
+import com.android.build.gradle.internal.tasks.PackageBundleTask
+import com.android.build.gradle.internal.tasks.ProcessAssetPackManifestTask
 import com.android.build.gradle.internal.tasks.factory.TaskConfigAction
-import com.android.build.gradle.internal.tasks.factory.TaskFactory
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryImpl
+import com.android.build.gradle.internal.tasks.populateAssetPacksConfigurations
 import com.android.build.gradle.options.ProjectOptionService
 import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.options.SyncOptions
-import com.google.common.io.Files
+import com.android.builder.errors.IssueReporter
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
+import java.io.File
 
+/**
+ * Plugin that allows to build asset-pack bundles.
+ *
+ * <p>Asset-pack bundle is supported by Google Play only.
+ *
+ * <p>Asset-pack bundle is a special kind of Android App Bundle that contains only subset of
+ * on-demand / fast-follow asset-packs. This bundle can be used as a patch to a regular bundle and
+ * allows to update asset-packs without requirement to release a new app version. This is mainly
+ * valuable for game developers who whom updating assets (new levels, new textures) is more
+ * frequent than code updates.
+ */
 class AssetPackBundlePlugin : Plugin<Project> {
 
     override fun apply(project: Project) {
@@ -82,7 +102,8 @@ class AssetPackBundlePlugin : Plugin<Project> {
         project.extensions.add(AssetPackBundleExtension::class.java, "bundle", extension)
 
         project.afterEvaluate {
-            createAssetOnlyTasks(project, projectServices, extension)
+            validateInput(projectServices.issueReporter, extension)
+            createTasks(project, projectServices, extension)
         }
     }
 
@@ -95,17 +116,95 @@ class AssetPackBundlePlugin : Plugin<Project> {
                 NoOpAnalyticsService::class.java,
             ) {}
         }
+        Aapt2ThreadPoolBuildService.RegistrationAction(project, projectOptions).execute()
+        Aapt2DaemonBuildService.RegistrationAction(project, projectOptions).execute()
+        SyncIssueReporterImpl.GlobalSyncIssueService.RegistrationAction(
+            project,
+            SyncOptions.getModelQueryMode(projectOptions),
+            SyncOptions.getErrorFormatMode(projectOptions)
+        )
+            .execute()
+        AndroidLocationsBuildService.RegistrationAction(project).execute()
+        SdkComponentsBuildService.RegistrationAction(project, projectOptions).execute()
     }
 
-    private fun createAssetOnlyTasks(
+    private fun validateInput(issueReporter: IssueReporter, extension: AssetPackBundleExtension) {
+        val errors = arrayListOf<String>()
+        if (extension.applicationId.isEmpty()) {
+            errors.add("'applicationId' must be specified for asset pack bundle.")
+        }
+        if (extension.versionTag.isEmpty()) {
+            errors.add("'versionTag' must be specified for asset pack bundle.")
+        }
+        if (extension.versionCodes.isEmpty()) {
+            errors.add("Asset pack bundle must target at least one version code.")
+        }
+        if (extension.assetPacks.isEmpty()) {
+            errors.add("Asset pack bundle must contain at least one asset pack.")
+        }
+
+        if (errors.isNotEmpty()) {
+            issueReporter.reportWarning(
+                IssueReporter.Type.GENERIC,
+                errors.joinToString(separator = "\n"),
+                multilineMsg = errors
+            )
+        }
+    }
+
+    private fun createTasks(
         project: Project,
         projectServices: ProjectServices,
         extension: AssetPackBundleExtension
     ) {
+        val assetPackFilesConfiguration =
+            project.configurations.maybeCreate("assetPackFiles")
+        val assetPackManifestConfiguration =
+            project.configurations.maybeCreate("assetPackManifest")
+        populateAssetPacksConfigurations(
+            project,
+            projectServices.issueReporter,
+            extension.assetPacks,
+            assetPackFilesConfiguration,
+            assetPackManifestConfiguration
+        )
+
         val tasks = TaskFactoryImpl(project.tasks)
         val artifacts = ArtifactsImpl(project, "global")
 
-        registerDummyTask(projectServices, extension, tasks, artifacts)
+        tasks.register(AppMetadataTask.CreationAction(artifacts, variantName = ""))
+
+        tasks.register(
+            ProcessAssetPackManifestTask.CreationForAssetPackBundleAction(
+                artifacts,
+                extension.applicationId,
+                assetPackManifestConfiguration,
+                extension.assetPacks.map { it.replace(':', File.separatorChar) }.toSet()
+            )
+        )
+
+        tasks.register(
+            LinkManifestForAssetPackTask.CreationForAssetPackBundleAction(
+                artifacts,
+                projectServices,
+                extension.compileSdk!!
+            )
+        )
+
+        tasks.register(
+            AssetPackPreBundleTask.CreationForAssetPackBundleAction(
+                artifacts,
+                assetPackFilesConfiguration
+            )
+        )
+
+        tasks.register(
+            PackageBundleTask.CreationForAssetPackBundleAction(
+                projectServices,
+                artifacts,
+                extension
+            )
+        )
 
         tasks.register(
             "bundle",
@@ -117,31 +216,5 @@ class AssetPackBundlePlugin : Plugin<Project> {
                 }
             }
         )
-    }
-
-    private fun registerDummyTask(
-        projectServices: ProjectServices,
-        extension: AssetPackBundleExtension,
-        tasks: TaskFactory,
-        artifacts: ArtifactsImpl
-    ) {
-        val buildDirectory =
-            ArtifactType.BUNDLE.getOutputPath(artifacts.buildDirectory, "").absolutePath
-        val outputFileName = "${projectServices.projectInfo.getProjectBaseName()}.aab"
-
-        val outputProperty = projectServices.objectFactory.fileProperty()
-        tasks.register(
-            "dummyTask"
-        ) {
-            it.outputs.file(outputProperty)
-            it.doLast {
-                Files.write(extension.versionTag.toByteArray(), outputProperty.asFile.get())
-            }
-        }.also {
-            artifacts.setInitialProvider(it, { outputProperty })
-                .atLocation(buildDirectory)
-                .withName(outputFileName)
-                .on(ArtifactType.BUNDLE)
-        }
     }
 }

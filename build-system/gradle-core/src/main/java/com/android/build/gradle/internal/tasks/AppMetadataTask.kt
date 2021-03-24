@@ -18,9 +18,10 @@ package com.android.build.gradle.internal.tasks
 import com.android.SdkConstants.ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY
 import com.android.SdkConstants.APP_METADATA_VERSION_PROPERTY
 import com.android.Version
+import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.gradle.internal.component.ApplicationCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.builder.internal.packaging.IncrementalPackager.APP_METADATA_FILE_NAME
 import com.android.utils.FileUtils
@@ -58,28 +59,29 @@ abstract class AppMetadataTask : NonIncrementalTask() {
     }
 
     class CreationAction(
-        creationConfig: ApplicationCreationConfig
-    ) : VariantTaskCreationAction<AppMetadataTask, ApplicationCreationConfig>(creationConfig) {
+        private val artifacts: ArtifactsImpl,
+        private val variantName: String,
+        override val name: String = "writeAppMetadata"
+    ) : TaskCreationAction<AppMetadataTask>() {
 
-        override val name: String
-            get() = computeTaskName("write", "AppMetadata")
+        constructor(creationConfig: ApplicationCreationConfig) : this(
+            creationConfig.artifacts,
+            creationConfig.name,
+            creationConfig.computeTaskName("write", "AppMetadata")
+        )
 
-        override val type: Class<AppMetadataTask>
-            get() = AppMetadataTask::class.java
+        override val type = AppMetadataTask::class.java
 
-        override fun handleProvider(
-            taskProvider: TaskProvider<AppMetadataTask>
-        ) {
+        override fun handleProvider(taskProvider: TaskProvider<AppMetadataTask>) {
             super.handleProvider(taskProvider)
-
-            creationConfig.artifacts
+            artifacts
                 .setInitialProvider(taskProvider, AppMetadataTask::outputFile)
                 .withName(APP_METADATA_FILE_NAME)
                 .on(InternalArtifactType.APP_METADATA)
         }
 
         override fun configure(task: AppMetadataTask) {
-            super.configure(task)
+            task.configureVariantProperties(variantName, task.project)
 
             task.appMetadataVersion.setDisallowChanges(APP_METADATA_VERSION)
             task.agpVersion.setDisallowChanges(Version.ANDROID_GRADLE_PLUGIN_VERSION)
