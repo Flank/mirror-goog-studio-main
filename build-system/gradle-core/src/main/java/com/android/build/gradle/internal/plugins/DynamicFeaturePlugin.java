@@ -20,6 +20,11 @@ import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
 import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.component.impl.TestFixturesImpl;
+import com.android.build.api.dsl.AndroidSourceSet;
+import com.android.build.api.dsl.ApkSigningConfig;
+import com.android.build.api.dsl.DynamicFeatureBuildType;
+import com.android.build.api.dsl.DynamicFeatureDefaultConfig;
+import com.android.build.api.dsl.DynamicFeatureProductFlavor;
 import com.android.build.api.dsl.SdkComponents;
 import com.android.build.api.extension.DynamicFeatureAndroidComponentsExtension;
 import com.android.build.api.extension.impl.DynamicFeatureAndroidComponentsExtensionImpl;
@@ -52,6 +57,7 @@ import javax.inject.Inject;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.component.SoftwareComponentFactory;
+import org.gradle.api.reflect.TypeOf;
 import org.gradle.build.event.BuildEventsListenerRegistry;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
@@ -104,19 +110,36 @@ public class DynamicFeaturePlugin
                 dslServices.newDecoratedInstance(
                         DynamicFeatureExtensionImpl.class, dslServices, dslContainers);
         if (projectServices.getProjectOptions().get(BooleanOption.USE_NEW_DSL_INTERFACES)) {
+            //noinspection unchecked,rawtypes I am so sorry.
+            Class<
+                            com.android.build.api.dsl.DynamicFeatureExtension<
+                                    AndroidSourceSet,
+                                    DynamicFeatureBuildType,
+                                    DynamicFeatureDefaultConfig,
+                                    DynamicFeatureProductFlavor,
+                                    ApkSigningConfig>>
+                    instanceType = (Class) DynamicFeatureExtension.class;
             DynamicFeatureExtension android =
                     (DynamicFeatureExtension)
-                            project.getExtensions()
-                                    .create(
-                                            com.android.build.api.dsl.DynamicFeatureExtension.class,
-                                            "android",
-                                            DynamicFeatureExtension.class,
-                                            dslServices,
-                                            globalScope,
-                                            buildOutputs,
-                                            dslContainers.getSourceSetManager(),
-                                            extraModelInfo,
-                                            dynamicFeatureExtension);
+                            (Object)
+                                    project.getExtensions()
+                                            .create(
+                                                    new TypeOf<
+                                                            com.android.build.api.dsl
+                                                                            .DynamicFeatureExtension<
+                                                                    AndroidSourceSet,
+                                                                    DynamicFeatureBuildType,
+                                                                    DynamicFeatureDefaultConfig,
+                                                                    DynamicFeatureProductFlavor,
+                                                                    ApkSigningConfig>>() {},
+                                                    "android",
+                                                    instanceType,
+                                                    dslServices,
+                                                    globalScope,
+                                                    buildOutputs,
+                                                    dslContainers.getSourceSetManager(),
+                                                    extraModelInfo,
+                                                    dynamicFeatureExtension);
             project.getExtensions()
                     .add(
                             DynamicFeatureExtension.class,

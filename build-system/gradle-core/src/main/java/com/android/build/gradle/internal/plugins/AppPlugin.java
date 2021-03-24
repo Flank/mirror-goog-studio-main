@@ -19,7 +19,12 @@ package com.android.build.gradle.internal.plugins;
 import com.android.annotations.NonNull;
 import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.component.impl.TestFixturesImpl;
-import com.android.build.api.dsl.CommonExtension;
+import com.android.build.api.dsl.AndroidSourceSet;
+import com.android.build.api.dsl.ApkSigningConfig;
+import com.android.build.api.dsl.ApplicationBuildType;
+import com.android.build.api.dsl.ApplicationDefaultConfig;
+import com.android.build.api.dsl.ApplicationExtension;
+import com.android.build.api.dsl.ApplicationProductFlavor;
 import com.android.build.api.dsl.SdkComponents;
 import com.android.build.api.extension.ApplicationAndroidComponentsExtension;
 import com.android.build.api.extension.impl.ApplicationAndroidComponentsExtensionImpl;
@@ -107,19 +112,38 @@ public class AppPlugin
         ApplicationExtensionImpl applicationExtension =
                 dslServices.newDecoratedInstance(ApplicationExtensionImpl.class, dslServices, dslContainers);
         if (projectServices.getProjectOptions().get(BooleanOption.USE_NEW_DSL_INTERFACES)) {
+            // noinspection unchecked,rawtypes: Hacks to make the parameterized types make sense
+            Class<
+                            ApplicationExtension<
+                                    AndroidSourceSet,
+                                    ApplicationBuildType<ApkSigningConfig>,
+                                    ApplicationDefaultConfig<ApkSigningConfig>,
+                                    ApplicationProductFlavor<ApkSigningConfig>,
+                                    ApkSigningConfig>>
+                    instanceType = (Class) BaseAppModuleExtension.class;
             BaseAppModuleExtension android =
                     (BaseAppModuleExtension)
-                            project.getExtensions()
-                                    .create(
-                                            TypeOf.typeOf(CommonExtension.class),
-                                            "android",
-                                            BaseAppModuleExtension.class,
-                                            dslServices,
-                                            globalScope,
-                                            buildOutputs,
-                                            dslContainers.getSourceSetManager(),
-                                            extraModelInfo,
-                                            applicationExtension);
+                            (Object)
+                                    project.getExtensions()
+                                            .create(
+                                                    new TypeOf<
+                                                            ApplicationExtension<
+                                                                    AndroidSourceSet,
+                                                                    ApplicationBuildType<
+                                                                            ApkSigningConfig>,
+                                                                    ApplicationDefaultConfig<
+                                                                            ApkSigningConfig>,
+                                                                    ApplicationProductFlavor<
+                                                                            ApkSigningConfig>,
+                                                                    ApkSigningConfig>>() {},
+                                                    "android",
+                                                    instanceType,
+                                                    dslServices,
+                                                    globalScope,
+                                                    buildOutputs,
+                                                    dslContainers.getSourceSetManager(),
+                                                    extraModelInfo,
+                                                    applicationExtension);
             project.getExtensions()
                     .add(
                             BaseAppModuleExtension.class,

@@ -30,7 +30,7 @@ import org.gradle.api.Incubating
 interface DynamicFeatureExtension<
         AndroidSourceSetT : AndroidSourceSet,
         BuildTypeT : DynamicFeatureBuildType,
-        DefaultConfigT : DefaultConfig,
+        DefaultConfigT : DynamicFeatureDefaultConfig,
         ProductFlavorT : DynamicFeatureProductFlavor,
         SigningConfigT : ApkSigningConfig> :
     CommonExtension<
