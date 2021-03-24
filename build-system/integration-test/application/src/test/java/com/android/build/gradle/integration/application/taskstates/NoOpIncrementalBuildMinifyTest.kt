@@ -78,6 +78,7 @@ class NoOpIncrementalBuildMinifyTest {
                 ":javaPreCompileRelease",
                 ":javaPreCompileReleaseUnitTest",
                 ":lint",
+                ":lintAnalyzeDebug",
                 ":lintDebug",
                 ":mergeDebugAndroidTestAssets",
                 ":mergeDebugAndroidTestJavaResource",

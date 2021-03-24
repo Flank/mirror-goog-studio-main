@@ -90,6 +90,8 @@ class CacheabilityTest {
              */
             TaskInfo(DID_WORK, "collect", "Dependencies", listOf("Release")),
             TaskInfo(DID_WORK, "lintVital", "", listOf("Release")),
+            /* Bug 178810169 */
+            TaskInfo(DID_WORK, "lintVitalAnalyze", "", listOf("Release")),
             /* Bug 141301405 */
             TaskInfo(DID_WORK, "merge", "Resources", listOf("Debug", "Release")),
             /* Bug 74595859 */
