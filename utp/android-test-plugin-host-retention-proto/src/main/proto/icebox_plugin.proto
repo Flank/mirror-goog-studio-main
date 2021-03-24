@@ -10,6 +10,13 @@ enum Compression {
     TARGZ = 1;
 }
 
+// The behavior of the test driver.
+enum IceboxSetupStrategy {
+  UNSPECIFIED = 0;
+  CONNECT_BEFORE_ALL_TEST = 1;
+  RECONNECT_BETWEEN_TEST_CASES = 2;
+}
+
 // Sets the following icebox args on the device. The args will be read by icebox
 // plogin. It tells icebox which package to track, as well as the emulator grpc
 // address/port.
@@ -39,4 +46,7 @@ message IceboxPlugin {
 
     // The emulator gRPC token
     string emulator_grpc_token = 8;
+
+    // The behavior of the test driver.
+    IceboxSetupStrategy setup_strategy = 9;
 }

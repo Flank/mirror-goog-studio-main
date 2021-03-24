@@ -165,6 +165,10 @@ class IceboxCallerImpl public constructor(
         // The test should be marked with --debug=true which will force it to wait for
         // debugger on start. It is OK (actually, preferred) to query the pid after
         // test started.
+
+        // Add a delay before querying the PID. Otherwise it might got a stale PID from the previous
+        // run.
+        delay(500)
         val pid = queryPid(deviceController, testedApplicationID)
         if (pid < 0) {
             throw IceboxException("Failed to get pid for package $testedApplicationID:$pid")
@@ -266,6 +270,7 @@ class IceboxCallerImpl public constructor(
 
     override fun shutdownGrpc() {
         try {
+            iceboxCoroutine?.cancel()
             managedChannel.shutdown().awaitTermination(5, TimeUnit.SECONDS)
         } finally {
             managedChannel.shutdownNow()

@@ -18,16 +18,20 @@ package com.android.build.gradle.integration.connected.application
 
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.builder
+import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.integration.connected.utils.getEmulator
 import com.android.testutils.truth.PathSubject.assertThat
-import org.junit.Before
-import org.junit.ClassRule
-import org.junit.Rule
-import org.junit.Test
+import com.google.testing.platform.proto.api.core.TestResultProto
+import com.google.testing.platform.proto.api.core.TestSuiteResultProto
+import java.io.File
 import java.io.IOException
 import java.nio.charset.Charset
 import kotlin.test.assertFailsWith
 import org.gradle.tooling.BuildException
+import org.junit.Before
+import org.junit.ClassRule
+import org.junit.Rule
+import org.junit.Test
 
 /**
  * Connected tests for Android Test Failure Retention.
@@ -87,33 +91,59 @@ class FailureRetentionConnectedTest {
                 )
                 .run("connectedAndroidTest")
         }
-        val connectedDir = project.projectDir
-                .resolve("app/build/outputs/androidTest-results/connected/emulator-5554 - 10")
-        connectedDir.listFiles().forEach {
-            System.err.println("$it")
+        validateFailureOutputs()
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun connectedAndroidTestWithOrchestratorAndFailures() {
+        TestFileUtils.appendToFile(
+            project.getSubproject("app").buildFile,
+            "\n"
+                    + "android.testOptions.execution 'ANDROIDX_TEST_ORCHESTRATOR'\n"
+        )
+
+        assertFailsWith<BuildException> {
+            project.executor()
+                .withArguments(
+                    listOf(
+                        "-Dandroid.emulator.home=${System.getProperty("user.dir")}/.android",
+                    )
+                )
+                .run("connectedAndroidTest")
         }
-        assertThat(connectedDir.resolve("test-result.pb")).exists()
-        connectedDir
-            .resolve("test-result.textproto")
-            .readLines(charset = Charset.defaultCharset())
-            .forEach {
-                System.err.println("$it")
-            }
-        assertThat(
-            connectedDir
-                .resolve("snapshot-ExampleInstrumentedTest-failingTest0-failure0.tar")
-        ).exists()
-        assertThat(
-            connectedDir
-                .resolve("icebox-info-ExampleInstrumentedTest-failingTest0-failure0.pb")
-        ).exists()
-        assertThat(
-            connectedDir
-                .resolve("snapshot-ExampleInstrumentedTest-failingTest1-failure1.tar")
-        ).exists()
-        assertThat(
-            connectedDir
-                .resolve("icebox-info-ExampleInstrumentedTest-failingTest1-failure1.pb")
-        ).exists()
+        validateFailureOutputs()
+    }
+
+    private fun validateIceboxArtifacts(testResult: TestResultProto.TestResult) {
+        testResult.outputArtifactList.first {
+            it.label.label == "icebox.info" && it.label.namespace == "android"
+        }.also { artifact ->
+            assertThat(File(artifact.sourcePath.path)).exists()
+        }
+        testResult.outputArtifactList.first {
+            it.label.label == "icebox.snapshot" && it.label.namespace == "android"
+        }.also { artifact ->
+            assertThat(File(artifact.sourcePath.path)).exists()
+        }
+    }
+
+    private fun validateFailureOutputs() {
+        val connectedDir = project.projectDir
+            .resolve("app/build/outputs/androidTest-results/connected/emulator-5554 - 10")
+        val testResultFile = connectedDir.resolve("test-result.pb")
+        assertThat(testResultFile).exists()
+        val testSuiteResultProto = TestSuiteResultProto.TestSuiteResult.parseFrom(
+            testResultFile.inputStream())
+        testSuiteResultProto.testResultList.first {
+            it.testCase.testMethod == "failingTest0"
+        }.also {
+            validateIceboxArtifacts(it)
+        }
+        testSuiteResultProto.testResultList.first {
+            it.testCase.testMethod == "failingTest1"
+        }.also {
+            validateIceboxArtifacts(it)
+        }
     }
 }

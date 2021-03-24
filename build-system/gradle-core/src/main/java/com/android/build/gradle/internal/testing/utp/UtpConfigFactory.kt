@@ -283,7 +283,7 @@ class UtpConfigFactory {
                 versionedSdkLoader
             )
 
-            if (retentionConfig.enabled && !useOrchestrator && grpcPort != null) {
+            if (retentionConfig.enabled && grpcPort != null) {
                 val retentionTestData = testData.copy(
                     instrumentationRunnerArguments = testData.instrumentationRunnerArguments
                         .toMutableMap()
@@ -292,14 +292,14 @@ class UtpConfigFactory {
                     retentionTestData, utpDependencies, useOrchestrator
                 )
                 addHostPlugin(
-                        createIceboxPlugin(
-                                grpcPort, grpcToken, testData, utpDependencies, retentionConfig))
+                    createIceboxPlugin(
+                        grpcPort, grpcToken, testData, utpDependencies, retentionConfig,
+                        useOrchestrator
+                    )
+                )
             } else {
                 if (retentionConfig.enabled) {
-                    if (useOrchestrator) {
-                        logger.error("Currently Retention does not work with orchestrator. " +
-                                "Disabling Android Test Retention.");
-                    } else if (grpcPort == null) {
+                    if (grpcPort == null) {
                         logger.error(
                             "GRPC port of the emulator not set. Disabling Android Test Retention."
                         );
@@ -318,6 +318,7 @@ class UtpConfigFactory {
             testData: StaticTestData,
             utpDependencies: UtpDependencies,
             retentionConfig: RetentionConfig,
+            rebootBetweenTestCases: Boolean
     ): ExtensionProto.Extension {
         val config = Any.pack(IceboxPlugin.newBuilder().apply {
             appPackage = testData.testedApplicationId
@@ -335,6 +336,11 @@ class UtpConfigFactory {
                 0
             } else {
                 retentionConfig.maxSnapshots
+            }
+            setupStrategy = if (rebootBetweenTestCases) {
+                IceboxPluginProto.IceboxSetupStrategy.RECONNECT_BETWEEN_TEST_CASES
+            } else {
+                IceboxPluginProto.IceboxSetupStrategy.CONNECT_BEFORE_ALL_TEST
             }
         }.build())
         return ANDROID_TEST_PLUGIN_HOST_RETENTION.toExtensionProto(utpDependencies, config)
