@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 The Android Open Source Project
+ * Copyright (C) 2021 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,10 +20,8 @@ import com.android.build.api.variant.impl.AndroidVersionImpl
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.fixtures.FakeConfigurableFileCollection
 import com.android.build.gradle.internal.testing.StaticTestData
-import com.android.builder.testing.api.DeviceConnector
 import com.android.ide.common.process.JavaProcessExecutor
 import com.android.ide.common.process.JavaProcessInfo
-import com.android.ide.common.process.ProcessExecutor
 import com.android.ide.common.process.ProcessOutputHandler
 import com.android.ide.common.process.ProcessResult
 import com.android.ide.common.workers.ExecutorServiceAdapter
@@ -42,9 +40,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.mockito.ArgumentCaptor
-import org.mockito.ArgumentMatchers.anyBoolean
-import org.mockito.ArgumentMatchers.anyInt
-import org.mockito.ArgumentMatchers.anyIterable
 import org.mockito.Mock
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
@@ -55,14 +50,13 @@ import org.mockito.quality.Strictness
 import java.io.File
 
 /**
- * Unit tests for [UtpTestRunner].
+ * Unit tests for [ManagedDeviceTestRunner].
  */
-class UtpTestRunnerTest {
+class ManagedDeviceTestRunnerTest {
     @get:Rule var mockitoJUnitRule: MockitoRule =
             MockitoJUnit.rule().strictness(Strictness.STRICT_STUBS)
     @get:Rule var temporaryFolderRule = TemporaryFolder()
 
-    @Mock lateinit var mockProcessExecutor: ProcessExecutor
     @Mock lateinit var mockJavaProcessExecutor: JavaProcessExecutor
     @Mock lateinit var mockExecutorServiceAdapter: ExecutorServiceAdapter
     @Mock lateinit var mockVersionedSdkLoader: SdkComponentsBuildService.VersionedSdkLoader
@@ -70,12 +64,12 @@ class UtpTestRunnerTest {
     @Mock lateinit var mockAppApk: File
     @Mock lateinit var mockTestApk: File
     @Mock lateinit var mockHelperApk: File
-    @Mock lateinit var mockDevice: DeviceConnector
-    @Mock lateinit var mockCoverageDir: File
     @Mock lateinit var mockLogger: ILogger
     @Mock lateinit var mockUtpConfigFactory: UtpConfigFactory
     @Mock lateinit var mockRetentionConfig: RetentionConfig
-    @Mock lateinit var mockTestResultListener: UtpTestResultListener
+    @Mock lateinit var mockManagedDevice: UtpManagedDevice
+    @Mock lateinit var mockUtpTestResultListenerServerRunner: UtpTestResultListenerServerRunner
+    @Mock lateinit var mockUtpTestResultListenerServerMetadata: UtpTestResultListenerServerMetadata
 
     private val utpDependencies = object: UtpDependencies() {
         override val launcher = FakeConfigurableFileCollection(File("/pathToLAUNCHER.jar"))
@@ -90,62 +84,51 @@ class UtpTestRunnerTest {
         override val testPluginResultListenerGradle = FakeConfigurableFileCollection(File(""))
     }
 
-    private lateinit var runner: UtpTestRunner
+    private lateinit var runner: ManagedDeviceTestRunner
+    private lateinit var capturedTestResultListener: UtpTestResultListener
 
     @Before
     fun setupMocks() {
-        `when`(mockDevice.serialNumber).thenReturn("mockDeviceSerialNumber")
-        `when`(mockDevice.apiLevel).thenReturn(28)
-        `when`(mockDevice.name).thenReturn("mockDeviceName")
+        `when`(mockManagedDevice.deviceName).thenReturn("mockDeviceName")
+        `when`(mockManagedDevice.api).thenReturn(28)
         `when`(mockTestData.minSdkVersion).thenReturn(AndroidVersionImpl(28))
         `when`(mockTestData.testApk).thenReturn(mockTestApk)
         `when`(mockTestData.testedApkFinder).thenReturn { _, _ -> listOf(mockAppApk) }
-        `when`(mockUtpConfigFactory.createRunnerConfigProtoForLocalDevice(
-                any(DeviceConnector::class.java),
-                any(StaticTestData::class.java),
-                anyIterable(),
-                any(UtpDependencies::class.java),
-                any(SdkComponentsBuildService.VersionedSdkLoader::class.java),
-                any(File::class.java),
-                any(File::class.java),
-                any(RetentionConfig::class.java),
-                anyBoolean(),
-                anyInt(),
-                any(File::class.java),
-                any(File::class.java),
-                any(File::class.java))).then {
+        `when`(mockUtpConfigFactory.createRunnerConfigProtoForManagedDevice(
+                any(), any(), any(), any(), any(),
+                any(), any(), any(), any(), any())).then {
             RunnerConfigProto.RunnerConfig.getDefaultInstance()
         }
         `when`(mockUtpConfigFactory.createServerConfigProto())
                 .thenReturn(ServerConfig.getDefaultInstance())
-        // When the java process executor is invoked, creates a result proto file
-        // to the output directory which was passed into the config factory.
+        `when`(mockUtpTestResultListenerServerRunner.metadata)
+                .thenReturn(mockUtpTestResultListenerServerMetadata)
         `when`(mockJavaProcessExecutor.execute(
                 any(JavaProcessInfo::class.java),
                 any(ProcessOutputHandler::class.java))).then {
             val testSuiteResult = createStubResultProto()
 
-            runner.onTestResultEvent(TestResultEvent.newBuilder().apply {
+            capturedTestResultListener.onTestResultEvent(TestResultEvent.newBuilder().apply {
                 testSuiteStartedBuilder.apply {
                     deviceId = "mockDeviceSerialNumber"
                     testSuiteMetadata = Any.pack(testSuiteResult.testSuiteMetaData)
                 }
             }.build())
             testSuiteResult.testResultList.forEach { testResult ->
-                runner.onTestResultEvent(TestResultEvent.newBuilder().apply {
+                capturedTestResultListener.onTestResultEvent(TestResultEvent.newBuilder().apply {
                     testCaseStartedBuilder.apply {
                         deviceId = "mockDeviceSerialNumber"
                         testCase = Any.pack(testResult.testCase)
                     }
                 }.build())
-                runner.onTestResultEvent(TestResultEvent.newBuilder().apply {
+                capturedTestResultListener.onTestResultEvent(TestResultEvent.newBuilder().apply {
                     testCaseFinishedBuilder.apply {
                         deviceId = "mockDeviceSerialNumber"
                         testCaseResult = Any.pack(testResult)
                     }
                 }.build())
             }
-            runner.onTestResultEvent(TestResultEvent.newBuilder().apply {
+            capturedTestResultListener.onTestResultEvent(TestResultEvent.newBuilder().apply {
                 testSuiteFinishedBuilder.apply {
                     deviceId = "mockDeviceSerialNumber"
                     this.testSuiteResult = Any.pack(testSuiteResult)
@@ -153,6 +136,17 @@ class UtpTestRunnerTest {
             }.build())
 
             mock(ProcessResult::class.java)
+        }
+
+        runner = ManagedDeviceTestRunner(
+                mockJavaProcessExecutor,
+                utpDependencies,
+                mockVersionedSdkLoader,
+                mockRetentionConfig,
+                useOrchestrator = false,
+                mockUtpConfigFactory) { utpTestResultListener ->
+            capturedTestResultListener = utpTestResultListener
+            mockUtpTestResultListenerServerRunner
         }
     }
 
@@ -174,36 +168,20 @@ class UtpTestRunnerTest {
 
     @Test
     fun runTests() {
-        runner = UtpTestRunner(
-                null,
-                mockProcessExecutor,
-                mockJavaProcessExecutor,
-                mockExecutorServiceAdapter,
-                utpDependencies,
-                mockVersionedSdkLoader,
-                mockRetentionConfig,
-                useOrchestrator = false,
-                mockTestResultListener,
-                mockUtpConfigFactory)
-
         val resultDir = temporaryFolderRule.newFolder("results").toPath()
 
         runner.runTests(
+                mockManagedDevice,
+                resultDir.toFile(),
                 "projectName",
                 "variantName",
                 mockTestData,
                 setOf(mockHelperApk),
-                listOf(mockDevice),
-                0,
-                setOf(),
-                resultDir.toFile(),
-                false,
-                null,
-                mockCoverageDir,
                 mockLogger)
 
         val captor = ArgumentCaptor.forClass(JavaProcessInfo::class.java)
-        verify(mockJavaProcessExecutor).execute(captor.capture(), any(ProcessOutputHandler::class.java))
+        verify(mockJavaProcessExecutor)
+                .execute(captor.capture(), any(ProcessOutputHandler::class.java))
         assertThat(captor.value.classpath).isEqualTo(utpDependencies.launcher.singleFile.absolutePath)
         assertThat(captor.value.mainClass).isEqualTo(UtpDependency.LAUNCHER.mainClass)
         assertThat(captor.value.jvmArgs).hasSize(1)

@@ -22,10 +22,12 @@ import com.android.build.gradle.internal.testing.StaticTestData
 import com.android.builder.testing.api.DeviceException
 import com.android.builder.testing.api.TestException
 import com.android.ide.common.process.JavaProcessExecutor
+import com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidTestResultListenerProto.TestResultEvent
 import com.android.utils.FileUtils
 import com.android.utils.ILogger
 import com.google.common.io.Files
 import com.google.testing.platform.proto.api.core.TestStatusProto
+import com.google.testing.platform.proto.api.core.TestSuiteResultProto.TestSuiteResult
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -39,7 +41,11 @@ class ManagedDeviceTestRunner(
     private val versionedSdkLoader: SdkComponentsBuildService.VersionedSdkLoader,
     private val retentionConfig: RetentionConfig,
     private val useOrchestrator: Boolean,
-    private val configFactory: UtpConfigFactory = UtpConfigFactory()) {
+    private val configFactory: UtpConfigFactory = UtpConfigFactory(),
+    private val resultListenerServerRunnerFactory:
+        (UtpTestResultListener) -> UtpTestResultListenerServerRunner = {
+        UtpTestResultListenerServerRunner(it)
+    }) {
 
     fun runTests(
         managedDevice: UtpManagedDevice,
@@ -50,7 +56,8 @@ class ManagedDeviceTestRunner(
         helperApks: Set<File>,
         logger: ILogger
     ): Boolean {
-        val testResultListener = DdmlibTestResultAdapter(
+        lateinit var resultsProto: TestSuiteResult
+        val ddmlibTestResultAdapter = DdmlibTestResultAdapter(
                 managedDevice.deviceName,
                 CustomTestRunListener(
                         managedDevice.deviceName,
@@ -60,7 +67,17 @@ class ManagedDeviceTestRunner(
                     setReportDir(outputDirectory)
                 }
         )
-        UtpTestResultListenerServerRunner(testResultListener).use { resultListenerServerRunner ->
+        val testResultListener = object : UtpTestResultListener {
+            override fun onTestResultEvent(testResultEvent: TestResultEvent) {
+                ddmlibTestResultAdapter.onTestResultEvent(testResultEvent)
+
+                if (testResultEvent.hasTestSuiteFinished()) {
+                    resultsProto = testResultEvent.testSuiteFinished.testSuiteResult
+                            .unpack(TestSuiteResult::class.java)
+                }
+            }
+        }
+        resultListenerServerRunnerFactory(testResultListener).use { resultListenerServerRunner ->
             val testedApks = getTestedApks(testData, managedDevice, logger)
             val utpOutputDir = outputDirectory
             val utpTmpDir = Files.createTempDir()
@@ -79,9 +96,8 @@ class ManagedDeviceTestRunner(
                             resultListenerServerRunner.metadata).writeTo(writer)
                 }
             }
-            val resultsProto = runUtpTestSuite(
+            runUtpTestSuite(
                     runnerConfigProtoFile,
-                    utpOutputDir,
                     configFactory,
                     utpDependencies,
                     javaProcessExecutor,
