@@ -34,6 +34,7 @@
 #include "src/profiling/symbolizer/symbolizer.h"
 #include "trace_events/android_frame_events_request_handler.h"
 #include "trace_events/trace_events_request_handler.h"
+#include "trace_metadata_request_handler.h"
 
 using ::perfetto::profiling::BinaryFinder;
 using ::perfetto::profiling::LocalBinaryFinder;
@@ -210,6 +211,12 @@ grpc::Status TraceProcessorServiceImpl::QueryBatch(
         handler.PopulateFrameEvents(
             request.android_frame_events_request(),
             query_result->mutable_android_frame_events_result());
+      } break;
+      case QueryParameters::kTraceMetadataRequest: {
+        TraceMetadataRequestHandler handler(tp_.get());
+        handler.PopulateTraceMetadata(
+            request.trace_metadata_request(),
+            query_result->mutable_trace_metadata_result());
       } break;
       case QueryParameters::QUERY_NOT_SET:
         // Do nothing.

@@ -83,6 +83,7 @@ message QueryParameters {
     ProcessCountersParameters process_counters_request = 105;
     CpuCoreCountersParameters cpu_core_counters_request = 106;
     AndroidFrameEventsParameters android_frame_events_request = 107;
+    TraceMetadataParameters trace_metadata_request = 108;
   }
 
   // Returns metadata information for a process of the provided id.
@@ -91,6 +92,15 @@ message QueryParameters {
   // See ResultProcessMetadata for the data returned from this.
   message ProcessMetadataParameters {
     int64 process_id = 1;
+  }
+
+  // Returns metadata information for a given metadata name, and/or type of
+  // of metadata. If there is more than one match, all matching results will
+  // be returned. If no name or type is provided all rows will be returned.
+  // https://perfetto.dev/docs/analysis/sql-tables#metadata
+  message TraceMetadataParameters {
+    string type = 1;
+    string name = 2;
   }
 
   // Returns all the trace events for all threads part of the process_id
@@ -160,6 +170,7 @@ message QueryResult {
     ProcessCountersResult process_counters_result = 105;
     CpuCoreCountersResult cpu_core_counters_result = 106;
     AndroidFrameEventsResult android_frame_events_result = 107;
+    TraceMetadataResult trace_metadata_result = 108;
   }
 
   enum QueryFailureReason {
@@ -192,6 +203,28 @@ message ProcessMetadataResult {
     int64 id = 1;
     int64 internal_id = 2;
     string name = 3;
+  }
+}
+
+// Result of each row returned from the metadata table.
+message TraceMetadataResult {
+  repeated TraceMetadataRow metadata_row = 1;
+}
+
+// Metadata table represented as a proto
+// Each field here is a column in the metadata table, the
+// values are expected to be either int64 or string never
+// both.
+message TraceMetadataRow {
+  // Name of metadata key
+  string name = 1;
+  // How many expected values are associated with this key,
+  // typically this is "single" can be "multi"
+  // See: https://github.com/google/perfetto/blob/31f297b260df8ab33e372fc81d612fecb4bcf9e7/src/trace_processor/storage/metadata.h
+  string key_type = 2;
+  oneof value {
+    int64 int64_value = 3;
+    string string_value = 4;
   }
 }
 
