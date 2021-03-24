@@ -17,6 +17,7 @@
 package com.android.build.api.component.impl
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
+import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.TestComponent
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.component.TestComponentCreationConfig
@@ -37,7 +38,7 @@ import org.gradle.api.provider.Provider
 import javax.inject.Inject
 
 abstract class TestComponentImpl @Inject constructor(
-    componentIdentity: TestComponentBuilderImpl,
+    componentIdentity: ComponentIdentity,
     buildFeatureValues: BuildFeatureValues,
     variantDslInfo: VariantDslInfo,
     variantDependencies: VariantDependencies,

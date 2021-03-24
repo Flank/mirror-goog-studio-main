@@ -26,7 +26,6 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC
 
 import com.android.annotations.NonNull;
 import com.android.build.api.artifact.ArtifactType;
-import com.android.build.api.component.impl.TestComponentBuilderImpl;
 import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.Scope;
@@ -94,8 +93,7 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
 
     public LibraryTaskManager(
             @NonNull List<ComponentInfo<LibraryVariantBuilderImpl, LibraryVariantImpl>> variants,
-            @NonNull
-                    List<ComponentInfo<TestComponentBuilderImpl, TestComponentImpl>> testComponents,
+            @NonNull List<TestComponentImpl> testComponents,
             boolean hasFlavors,
             @NonNull ProjectOptions projectOptions,
             @NonNull GlobalScope globalScope,

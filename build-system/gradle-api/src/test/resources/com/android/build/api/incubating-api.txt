@@ -64,7 +64,6 @@ com.android.build.api.artifact.TaskBasedOperation.wiredWith: com.android.build.a
 com.android.build.api.artifact.TaskBasedOperation.wiredWith: com.android.build.api.artifact.OutOperationRequest<FileTypeT> (kotlin.jvm.functions.Function1<? super TaskT, ? extends org.gradle.api.file.FileSystemLocationProperty<FileTypeT>>)
 com.android.build.api.artifact.TaskBasedOperation.wiredWithDirectories: com.android.build.api.artifact.InAndOutDirectoryOperationRequest<TaskT> (kotlin.jvm.functions.Function1<? super TaskT, ? extends org.gradle.api.file.DirectoryProperty>, kotlin.jvm.functions.Function1<? super TaskT, ? extends org.gradle.api.file.DirectoryProperty>)
 com.android.build.api.artifact.TaskBasedOperation.wiredWithFiles: com.android.build.api.artifact.InAndOutFileOperationRequest (kotlin.jvm.functions.Function1<? super TaskT, ? extends org.gradle.api.file.RegularFileProperty>, kotlin.jvm.functions.Function1<? super TaskT, ? extends org.gradle.api.file.RegularFileProperty>)
-com.android.build.api.component.AndroidTestBuilder implements com.android.build.api.component.TestComponentBuilder
 com.android.build.api.component.Component implements com.android.build.api.component.ComponentIdentity
 com.android.build.api.component.Component.getArtifacts: com.android.build.api.artifact.Artifacts ()
 com.android.build.api.component.Component.setAsmFramesComputationMode: void (com.android.build.api.instrumentation.FramesComputationMode)
@@ -81,10 +80,8 @@ com.android.build.api.component.ComponentIdentity.getName: java.lang.String ()
 com.android.build.api.component.ComponentIdentity.getProductFlavors: java.util.List<kotlin.Pair<java.lang.String, java.lang.String>> ()
 com.android.build.api.component.TestComponent implements com.android.build.api.component.Component
 com.android.build.api.component.TestComponent.getTestedVariant: com.android.build.api.variant.Variant ()
-com.android.build.api.component.TestComponentBuilder implements com.android.build.api.component.ComponentBuilder
 com.android.build.api.component.TestFixturesComponent implements com.android.build.api.component.Component
 com.android.build.api.component.TestFixturesComponentBuilder implements com.android.build.api.component.ComponentBuilder
-com.android.build.api.component.UnitTestBuilder implements com.android.build.api.component.TestComponentBuilder
 com.android.build.api.dsl.AaptOptions implements com.android.build.api.dsl.AndroidResources
 com.android.build.api.dsl.AarMetadata
 com.android.build.api.dsl.AarMetadata.getMinCompileSdk: java.lang.Integer ()
@@ -773,14 +770,6 @@ com.android.build.api.extension.AndroidComponentsExtension.androidTest: void (co
 com.android.build.api.extension.AndroidComponentsExtension.androidTest: void (com.android.build.api.extension.VariantSelector, org.gradle.api.Action<com.android.build.api.component.AndroidTest>)
 com.android.build.api.extension.AndroidComponentsExtension.androidTests: void (com.android.build.api.extension.VariantSelector, kotlin.jvm.functions.Function1<? super com.android.build.api.component.AndroidTest, kotlin.Unit>)
 com.android.build.api.extension.AndroidComponentsExtension.androidTests: void (com.android.build.api.extension.VariantSelector, org.gradle.api.Action<com.android.build.api.component.AndroidTest>)
-com.android.build.api.extension.AndroidComponentsExtension.beforeAndroidTest: void (com.android.build.api.extension.VariantSelector, kotlin.jvm.functions.Function1<? super com.android.build.api.component.AndroidTestBuilder, kotlin.Unit>)
-com.android.build.api.extension.AndroidComponentsExtension.beforeAndroidTest: void (com.android.build.api.extension.VariantSelector, org.gradle.api.Action<com.android.build.api.component.AndroidTestBuilder>)
-com.android.build.api.extension.AndroidComponentsExtension.beforeAndroidTests: void (com.android.build.api.extension.VariantSelector, kotlin.jvm.functions.Function1<? super com.android.build.api.component.AndroidTestBuilder, kotlin.Unit>)
-com.android.build.api.extension.AndroidComponentsExtension.beforeAndroidTests: void (com.android.build.api.extension.VariantSelector, org.gradle.api.Action<com.android.build.api.component.AndroidTestBuilder>)
-com.android.build.api.extension.AndroidComponentsExtension.beforeUnitTest: void (com.android.build.api.extension.VariantSelector, kotlin.jvm.functions.Function1<? super com.android.build.api.component.UnitTestBuilder, kotlin.Unit>)
-com.android.build.api.extension.AndroidComponentsExtension.beforeUnitTest: void (com.android.build.api.extension.VariantSelector, org.gradle.api.Action<com.android.build.api.component.UnitTestBuilder>)
-com.android.build.api.extension.AndroidComponentsExtension.beforeUnitTests: void (com.android.build.api.extension.VariantSelector, kotlin.jvm.functions.Function1<? super com.android.build.api.component.UnitTestBuilder, kotlin.Unit>)
-com.android.build.api.extension.AndroidComponentsExtension.beforeUnitTests: void (com.android.build.api.extension.VariantSelector, org.gradle.api.Action<com.android.build.api.component.UnitTestBuilder>)
 com.android.build.api.extension.AndroidComponentsExtension.beforeVariants: void (com.android.build.api.extension.VariantSelector, kotlin.jvm.functions.Function1<? super VariantBuilderT, kotlin.Unit>)
 com.android.build.api.extension.AndroidComponentsExtension.beforeVariants: void (com.android.build.api.extension.VariantSelector, org.gradle.api.Action<VariantBuilderT>)
 com.android.build.api.extension.AndroidComponentsExtension.getSdkComponents: com.android.build.api.dsl.SdkComponents ()

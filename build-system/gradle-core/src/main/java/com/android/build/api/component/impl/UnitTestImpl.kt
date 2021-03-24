@@ -18,6 +18,7 @@ package com.android.build.api.component.impl
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.Component
+import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.UnitTest
 import com.android.build.api.component.analytics.AnalyticsEnabledUnitTest
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
@@ -48,7 +49,7 @@ import org.gradle.api.provider.Provider
 import javax.inject.Inject
 
 open class UnitTestImpl @Inject constructor(
-    componentIdentity: UnitTestBuilderImpl,
+    componentIdentity: ComponentIdentity,
     buildFeatureValues: BuildFeatureValues,
     variantDslInfo: VariantDslInfo,
     variantDependencies: VariantDependencies,

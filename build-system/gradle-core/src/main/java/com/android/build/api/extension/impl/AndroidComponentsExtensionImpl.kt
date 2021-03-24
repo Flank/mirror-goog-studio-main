@@ -17,9 +17,7 @@
 package com.android.build.api.extension.impl
 
 import com.android.build.api.component.AndroidTest
-import com.android.build.api.component.AndroidTestBuilder
 import com.android.build.api.component.UnitTest
-import com.android.build.api.component.UnitTestBuilder
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.SdkComponents
 import com.android.build.api.extension.AndroidComponentsExtension
@@ -61,45 +59,6 @@ abstract class AndroidComponentsExtensionImpl<VariantBuilderT: VariantBuilder, V
 
     override fun selector(): VariantSelectorImpl =
             dslServices.newInstance(VariantSelectorImpl::class.java) as VariantSelectorImpl
-
-    override fun beforeUnitTests(
-            selector: VariantSelector,
-            callback: Action<UnitTestBuilder>) {
-        variantApiOperations.unitTestBuilderOperations.addOperation(
-                callback,
-                selector)
-    }
-
-    override fun beforeUnitTests(
-            selector: VariantSelector,
-            callback: (UnitTestBuilder) -> Unit) {
-        variantApiOperations.unitTestBuilderOperations.addOperation(
-                {
-                    callback.invoke(it)
-                },
-                selector
-        )
-    }
-
-    override fun beforeAndroidTests(
-            selector: VariantSelector,
-            callback: Action<AndroidTestBuilder>) {
-        variantApiOperations.androidTestBuilderOperations.addOperation(
-                callback,
-                selector
-        )
-    }
-
-    override fun beforeAndroidTests(
-            selector: VariantSelector,
-            callback: (AndroidTestBuilder) -> Unit) {
-        variantApiOperations.androidTestBuilderOperations.addOperation(
-                {
-                    callback.invoke(it)
-                },
-                selector
-        )
-    }
 
     override fun unitTests(
             selector: VariantSelector,

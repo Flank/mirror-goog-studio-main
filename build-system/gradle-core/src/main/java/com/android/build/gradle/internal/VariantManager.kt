@@ -35,12 +35,9 @@ import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.AndroidTest
 import com.android.build.api.component.TestFixturesComponent
 import com.android.build.api.component.UnitTest
-import com.android.build.api.component.impl.AndroidTestBuilderImpl
-import com.android.build.api.component.impl.TestComponentBuilderImpl
 import com.android.build.api.component.impl.TestComponentImpl
 import com.android.build.api.component.impl.TestFixturesComponentBuilderImpl
 import com.android.build.api.component.impl.TestFixturesComponentImpl
-import com.android.build.api.component.impl.UnitTestBuilderImpl
 import com.android.build.api.extension.VariantExtensionConfig
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.HasAndroidTestBuilder
@@ -139,7 +136,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
      *
      * @see .createVariants
      */
-    val testComponents: MutableList<ComponentInfo<TestComponentBuilderImpl, TestComponentImpl>> =
+    val testComponents: MutableList<TestComponentImpl> =
             Lists.newArrayList()
 
     /**
@@ -614,7 +611,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
             testedComponentInfo: VariantComponentInfo<VariantBuilderT, VariantT>,
             variantType: VariantType,
             testFixturesEnabled: Boolean
-    ): ComponentInfo<TestComponentBuilderImpl, TestComponentImpl>? {
+    ): TestComponentImpl? {
 
         // handle test variant
         // need a suppress warning because ProductFlavor.getTestSourceSet(type) is annotated
@@ -653,39 +650,17 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
         val variantDslInfo = variantDslInfoBuilder.createVariantDslInfo(
                 project.layout.buildDirectory)
         val apiAccessStats = testedComponentInfo.stats
-        // this is ANDROID_TEST
-        val component = if (variantType.isApk
+        if (variantType.isApk
             && testedComponentInfo.variantBuilder is HasAndroidTestBuilder) {
-            val androidTestVariantBuilder = variantFactory.createAndroidTestBuilder(
-                    variantDslInfo.componentIdentity,
-                    variantDslInfo,
-                    testedComponentInfo.variantBuilder,
-                    variantApiServices)
-
-            // run actions registered at the extension level.
-            testedComponentInfo.variantApiOperationsRegistrar.androidTestBuilderOperations
-                    .executeOperations(androidTestVariantBuilder)
+            // this is ANDROID_TEST
             if (!testedComponentInfo.variantBuilder.enableAndroidTest) {
                 return null
             }
-            androidTestVariantBuilder
-
         } else {
             // this is UNIT_TEST
-            val unitTestVariantBuilder = variantFactory.createUnitTestBuilder(
-                    variantDslInfo.componentIdentity,
-                    variantDslInfo,
-                    testedComponentInfo.variantBuilder,
-                    variantApiServices)
-
-            // run actions registered in the extension level.
-            testedComponentInfo.variantApiOperationsRegistrar.unitTestBuilderOperations
-                    .executeOperations(unitTestVariantBuilder)
-
             if (!testedComponentInfo.variantBuilder.enableUnitTest) {
                 return null
             }
-            unitTestVariantBuilder
         }
 
         // now that we have the result of the filter, we can continue configuring the variant
@@ -779,7 +754,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
         // this is ANDROID_TEST
         testComponent = if (variantType.isApk) {
             val androidTest = variantFactory.createAndroidTest(
-                    (component as AndroidTestBuilderImpl),
+                    variantDslInfo.componentIdentity,
                     buildFeatureValues,
                     variantDslInfo,
                     variantDependencies,
@@ -803,7 +778,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
         } else {
             // this is UNIT_TEST
             val unitTest = variantFactory.createUnitTest(
-                    (component as UnitTestBuilderImpl),
+                    variantDslInfo.componentIdentity,
                     buildFeatureValues,
                     variantDslInfo,
                     variantDependencies,
@@ -830,7 +805,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
         testedComponentInfo
                 .variant
                 .testComponents[variantDslInfo.variantType] = testComponent
-        return ComponentInfo(component, testComponent, testedComponentInfo.stats)
+        return testComponent
     }
 
     /**
@@ -927,7 +902,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                         )
                         androidTest?.let {
                             addTestComponent(it)
-                            (variantInfo.variant as HasAndroidTest).androidTest = it.variant as AndroidTest
+                            (variantInfo.variant as HasAndroidTest).androidTest = it as AndroidTest
                         }
                     }
                     val unitTest = createTestComponents(
@@ -940,7 +915,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                     )
                     unitTest?.let {
                         addTestComponent(it)
-                        variantInfo.variant.unitTest = it.variant as UnitTest
+                        variantInfo.variant.unitTest = it as UnitTest
                     }
                 }
 
@@ -1023,7 +998,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
     }
 
     private fun addTestComponent(
-            testComponent: ComponentInfo<TestComponentBuilderImpl, TestComponentImpl>) {
+            testComponent: TestComponentImpl) {
         testComponents.add(testComponent)
     }
 

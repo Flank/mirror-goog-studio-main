@@ -18,7 +18,6 @@ package com.android.build.gradle.internal
 
 import com.android.build.api.attributes.BuildTypeAttr.Companion.ATTRIBUTE
 import com.android.build.api.attributes.ProductFlavorAttr
-import com.android.build.api.component.impl.TestComponentBuilderImpl
 import com.android.build.api.component.impl.TestComponentImpl
 import com.android.build.api.variant.impl.VariantBuilderImpl
 import com.android.build.api.variant.impl.VariantImpl
@@ -567,10 +566,10 @@ class DependencyConfigurator(
     fun <VariantBuilderT : VariantBuilderImpl, VariantT : VariantImpl>
             configureVariantTransforms(
         variants: List<ComponentInfo<VariantBuilderT, VariantT>>,
-        testComponents: List<ComponentInfo<TestComponentBuilderImpl, TestComponentImpl>>
+        testComponents: List<TestComponentImpl>
     ): DependencyConfigurator {
         val allComponents: List<ComponentCreationConfig> =
-            (variants + testComponents).map { it.variant as ComponentCreationConfig }
+            variants.map { it.variant as ComponentCreationConfig }.plus(testComponents)
 
         val dependencies = project.dependencies
 

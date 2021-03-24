@@ -16,17 +16,13 @@
 package com.android.build.gradle.internal.variant
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
-import com.android.build.api.component.ComponentBuilder
 import com.android.build.api.component.ComponentIdentity
-import com.android.build.api.component.impl.AndroidTestBuilderImpl
 import com.android.build.api.component.impl.AndroidTestImpl
 import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.api.component.impl.TestFixturesComponentBuilderImpl
 import com.android.build.api.component.impl.TestFixturesComponentImpl
-import com.android.build.api.component.impl.UnitTestBuilderImpl
 import com.android.build.api.component.impl.UnitTestImpl
 import com.android.build.api.dsl.BuildFeatures
-import com.android.build.api.variant.HasAndroidTestBuilder
 import com.android.build.api.variant.impl.VariantBuilderImpl
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.api.BaseVariantImpl
@@ -66,19 +62,6 @@ interface VariantFactory<VariantBuilderT : VariantBuilderImpl, VariantT : Varian
             componentIdentity: ComponentIdentity,
             variantDslInfo: VariantDslInfo,
             variantApiServices: VariantApiServices): VariantBuilderT
-
-    fun createUnitTestBuilder(
-            componentIdentity: ComponentIdentity,
-            variantDslInfo: VariantDslInfo,
-            testedComponent: ComponentBuilder,
-            variantApiServices: VariantApiServices): UnitTestBuilderImpl
-
-    fun createAndroidTestBuilder(
-            componentIdentity: ComponentIdentity,
-            variantDslInfo: VariantDslInfo,
-            testedComponent: HasAndroidTestBuilder,
-            variantApiServices: VariantApiServices): AndroidTestBuilderImpl
-
     fun createTestFixturesBuilder(
         componentIdentity: ComponentIdentity,
         variantDslInfo: VariantDslInfo,
@@ -116,7 +99,7 @@ interface VariantFactory<VariantBuilderT : VariantBuilderImpl, VariantT : Varian
         taskCreationServices: TaskCreationServices): TestFixturesComponentImpl
 
     fun createUnitTest(
-            unitTestBuilder: UnitTestBuilderImpl,
+            componentIdentity: ComponentIdentity,
             buildFeatures: BuildFeatureValues,
             variantDslInfo: VariantDslInfo,
             variantDependencies: VariantDependencies,
@@ -131,7 +114,7 @@ interface VariantFactory<VariantBuilderT : VariantBuilderImpl, VariantT : Varian
             taskCreationServices: TaskCreationServices): UnitTestImpl
 
     fun createAndroidTest(
-            androidTestBuilder: AndroidTestBuilderImpl,
+            componentIdentity: ComponentIdentity,
             buildFeatures: BuildFeatureValues,
             variantDslInfo: VariantDslInfo,
             variantDependencies: VariantDependencies,

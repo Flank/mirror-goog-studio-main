@@ -53,55 +53,11 @@ class AndroidComponentsFilteringTest: AbstractReturnGivenBuildResultTest<String,
     }
 
     @Test
-    fun `before-unit-tests filtering via deprecated api using buildtype callback`() {
-        given {
-            """
-                |    beforeUnitTests(selector().withBuildType("debug")) {
-                |        enabled = false
-                |    }
-            """
-        }
-
-        expect {
-            variant {
-                name = "release"
-                androidTest = false
-            }
-            variant {
-                name = "debug"
-                unitTest = false
-            }
-        }
-    }
-
-    @Test
     fun `before-android-tests filtering via new api using buildtype callback`() {
         given {
             """
                 |    beforeVariants(selector().withBuildType("debug")) {
                 |        androidTestEnabled = false
-                |    }
-            """
-        }
-
-        expect {
-            variant {
-                name = "release"
-                androidTest = false
-            }
-            variant {
-                name = "debug"
-                androidTest = false
-            }
-        }
-    }
-
-    @Test
-    fun `before-android-tests filtering via deprecated api using buildtype callback`() {
-        given {
-            """
-                |    beforeAndroidTests(selector().withBuildType("debug")) {
-                |        enabled = false
                 |    }
             """
         }

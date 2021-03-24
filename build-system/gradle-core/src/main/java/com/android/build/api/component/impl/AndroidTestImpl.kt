@@ -19,6 +19,7 @@ package com.android.build.api.component.impl
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.AndroidTest
 import com.android.build.api.component.Component
+import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.analytics.AnalyticsEnabledAndroidTest
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.*
@@ -51,7 +52,7 @@ import java.io.Serializable
 import javax.inject.Inject
 
 open class AndroidTestImpl @Inject constructor(
-    override val variantBuilder: AndroidTestBuilderImpl,
+    componentIdentity: ComponentIdentity,
     buildFeatureValues: BuildFeatureValues,
     variantDslInfo: VariantDslInfo,
     variantDependencies: VariantDependencies,
@@ -66,7 +67,7 @@ open class AndroidTestImpl @Inject constructor(
     taskCreationServices: TaskCreationServices,
     globalScope: GlobalScope
 ) : TestComponentImpl(
-    variantBuilder,
+    componentIdentity,
     buildFeatureValues,
     variantDslInfo,
     variantDependencies,

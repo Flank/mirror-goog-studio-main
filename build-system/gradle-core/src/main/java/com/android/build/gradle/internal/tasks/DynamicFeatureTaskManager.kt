@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.component.impl.TestComponentBuilderImpl
 import com.android.build.api.component.impl.TestComponentImpl
 import com.android.build.api.variant.impl.DynamicFeatureVariantBuilderImpl
 import com.android.build.api.variant.impl.DynamicFeatureVariantImpl
@@ -33,7 +32,7 @@ import com.android.build.gradle.options.ProjectOptions
 
 internal class DynamicFeatureTaskManager(
         variants: List<ComponentInfo<DynamicFeatureVariantBuilderImpl, DynamicFeatureVariantImpl>>,
-        testComponents: List<ComponentInfo<TestComponentBuilderImpl, TestComponentImpl>>,
+        testComponents: List<TestComponentImpl>,
         hasFlavors: Boolean,
         projectOptions: ProjectOptions,
         globalScope: GlobalScope,

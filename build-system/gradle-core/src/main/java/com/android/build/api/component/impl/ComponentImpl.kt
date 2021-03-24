@@ -88,7 +88,7 @@ import java.io.File
 import java.util.concurrent.Callable
 
 abstract class ComponentImpl(
-    open val variantBuilder: ComponentBuilderImpl,
+    open val componentIdentity: ComponentIdentity,
     override val buildFeatures: BuildFeatureValues,
     override val variantDslInfo: VariantDslInfo,
     override val variantDependencies: VariantDependencies,
@@ -102,7 +102,7 @@ abstract class ComponentImpl(
     override val services: TaskCreationServices,
     @Deprecated("Do not use if you can avoid it. Check if services has what you need")
     override val globalScope: GlobalScope
-): Component, ComponentCreationConfig, ComponentIdentity by variantBuilder {
+): Component, ComponentCreationConfig, ComponentIdentity by componentIdentity {
 
     // ---------------------------------------------------------------------------------------------
     // PUBLIC API
