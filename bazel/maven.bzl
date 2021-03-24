@@ -422,7 +422,7 @@ _maven_repo_list = rule(
         "include_sources": attr.bool(),
     },
     outputs = {
-        "manifest": "%{name}.csv",
+        "manifest": "%{name}.manifest",
     },
     implementation = _maven_repo_list_impl,
 )
