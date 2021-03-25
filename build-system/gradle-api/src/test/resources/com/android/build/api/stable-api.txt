@@ -4,12 +4,8 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-ad86777617ad0b98cff81003ed5c1dffb295203eac43b7ccd9367e6d68df3155
+4ab2e6fff256094dc86c6fff216935dff0b26c1168cb735799e08406cc1c4e73
 -------------------------------------------------------------------------
-com.android.build.api.artifact.FileNames extends java.lang.Enum
-com.android.build.api.artifact.FileNames.getFileName: java.lang.String ()
-com.android.build.api.artifact.FileNames.valueOf: com.android.build.api.artifact.FileNames (java.lang.String)
-com.android.build.api.artifact.FileNames.values: com.android.build.api.artifact.FileNames[] ()
 com.android.build.api.attributes.BuildTypeAttr implements org.gradle.api.Named
 com.android.build.api.attributes.BuildTypeAttr$Companion
 com.android.build.api.attributes.ProductFlavorAttr implements org.gradle.api.Named

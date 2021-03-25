@@ -33,12 +33,12 @@ import org.gradle.api.file.RegularFile
 sealed class SingleArtifact<T : FileSystemLocation>(
     kind: ArtifactKind<T>,
     category: Category = Category.INTERMEDIATES,
-    private val fileSystemLocationName: FileNames? = null
+    private val fileName: String? = null
 )
     : Artifact.Single<T>(kind, category) {
 
     override fun getFileSystemLocationName(): String {
-        return fileSystemLocationName?.fileName ?: ""
+        return fileName ?: ""
     }
 
     /**
@@ -66,13 +66,13 @@ sealed class SingleArtifact<T : FileSystemLocation>(
      */
     @Incubating
     object MERGED_MANIFEST:
-        SingleArtifact<RegularFile>(FILE, Category.INTERMEDIATES, FileNames.ANDROID_MANIFEST_XML),
+        SingleArtifact<RegularFile>(FILE, Category.INTERMEDIATES, "AndroidManifest.xml"),
         Replaceable,
         Transformable
 
     @Incubating
     object OBFUSCATION_MAPPING_FILE:
-        SingleArtifact<RegularFile>(FILE, Category.OUTPUTS, FileNames.OBFUSCATION_MAPPING_FILE) {
+        SingleArtifact<RegularFile>(FILE, Category.OUTPUTS, "mapping.txt") {
             override fun getFolderName(): String = "mapping"
         }
 
