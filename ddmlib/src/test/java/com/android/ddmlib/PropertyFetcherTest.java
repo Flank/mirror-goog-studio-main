@@ -20,6 +20,7 @@ import com.android.ddmlib.internal.DeviceTest;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import junit.framework.Assert;
 import junit.framework.TestCase;
 import org.easymock.EasyMock;
 
@@ -51,6 +52,10 @@ public class PropertyFetcherTest extends TestCase {
                     + "reboot,remount-test,ERROR\n" // not ended properly
                     + "[persist.after]: [after]\r\n";
 
+    private static final String[] MULTILINE_CUT_LINES = {
+        "[foo.bar]: [a, b\n c, d ,e\n", "f ,g] \n"
+    };
+
     /**
      * Simple test to ensure parsing result of 'shell getprop' works as expected
      */
@@ -58,7 +63,22 @@ public class PropertyFetcherTest extends TestCase {
         GetPropReceiver receiver = new GetPropReceiver();
         byte[] byteData = GETPROP_RESPONSE.getBytes();
         receiver.addOutput(byteData, 0, byteData.length);
+        receiver.done();
         assertEquals("480", receiver.getCollectedProperties().get("ro.sf.lcd_density"));
+    }
+
+    // Depending on how the socket is read, the String[] can be cut
+    // anywhere, including in the middle of a multiline property.
+    public void testGetPropReceiver_multiline_cut() {
+        GetPropReceiver receiver = new GetPropReceiver();
+        for (String lines : MULTILINE_CUT_LINES) {
+            byte[] bytes = lines.getBytes();
+            receiver.addOutput(bytes, 0, bytes.length);
+        }
+        receiver.done();
+
+        String value = receiver.getCollectedProperties().get("foo.bar");
+        Assert.assertNotNull("Cut multiline failed", value);
     }
 
     /** Test that properties with multi-lines value are parsed. */
@@ -66,6 +86,7 @@ public class PropertyFetcherTest extends TestCase {
         GetPropReceiver receiver = new GetPropReceiver();
         byte[] byteData = MULTI_LINE_PROP.getBytes();
         receiver.addOutput(byteData, 0, byteData.length);
+        receiver.done();
         assertEquals(
                 "reboot,remount,1565385848\n"
                         + "reboot,remount-test,1565385820\n"
@@ -80,6 +101,7 @@ public class PropertyFetcherTest extends TestCase {
         GetPropReceiver receiver = new GetPropReceiver();
         byte[] byteData = MULTI_LINE_PROP_WITH_EMPTY_LINES.getBytes();
         receiver.addOutput(byteData, 0, byteData.length);
+        receiver.done();
         assertEquals(
                 "reboot,remount,1565385848\n"
                         + "\n"
@@ -95,6 +117,7 @@ public class PropertyFetcherTest extends TestCase {
         GetPropReceiver receiver = new GetPropReceiver();
         byte[] byteData = ERROR_MULTI_LINE_PROP.getBytes();
         receiver.addOutput(byteData, 0, byteData.length);
+        receiver.done();
         assertNull(receiver.getCollectedProperties().get("persist.sys.boot.reason.history"));
         assertEquals("before", receiver.getCollectedProperties().get("persist.before"));
         assertEquals("after", receiver.getCollectedProperties().get("persist.after"));
