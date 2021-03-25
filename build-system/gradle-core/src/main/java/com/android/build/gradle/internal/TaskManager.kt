@@ -146,6 +146,7 @@ import com.android.build.gradle.internal.tasks.databinding.DataBindingGenBaseCla
 import com.android.build.gradle.internal.tasks.databinding.DataBindingMergeBaseClassLogTask
 import com.android.build.gradle.internal.tasks.databinding.DataBindingMergeDependencyArtifactsTask
 import com.android.build.gradle.internal.tasks.databinding.DataBindingTriggerTask
+import com.android.build.gradle.internal.tasks.databinding.MergeRFilesForDataBindingTask
 import com.android.build.gradle.internal.tasks.factory.TaskConfigAction
 import com.android.build.gradle.internal.tasks.factory.TaskFactory
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryImpl
@@ -2209,6 +2210,11 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
 
         // DATA_BINDING_TRIGGER artifact is created for data binding only (not view binding)
         if (dataBindingEnabled) {
+            if (projectOptions[BooleanOption.NON_TRANSITIVE_R_CLASS]
+                    && isKotlinKaptPluginApplied(project)) {
+                // TODO(183423660): Undo this workaround for KAPT resolving files at compile time
+                taskFactory.register(MergeRFilesForDataBindingTask.CreationAction(creationConfig))
+            }
             taskFactory.register(DataBindingTriggerTask.CreationAction(creationConfig))
             setDataBindingAnnotationProcessorParams(creationConfig)
         }
@@ -2232,7 +2238,8 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             val dataBindingArgs = createArguments(
                     creationConfig,
                     logger.isDebugEnabled,
-                    DataBindingBuilder.getPrintMachineReadableOutput())
+                    DataBindingBuilder.getPrintMachineReadableOutput(),
+                    isKotlinKaptPluginApplied(project))
             processorOptions.compilerArgumentProvider(dataBindingArgs)
         } else {
             logger
