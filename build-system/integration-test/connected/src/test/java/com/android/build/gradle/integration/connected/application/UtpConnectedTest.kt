@@ -39,6 +39,7 @@ class UtpConnectedTest {
 
         const val TEST_REPORT = "build/reports/androidTests/connected/com.example.android.kotlin.html"
         const val TEST_RESULT_PB = "build/outputs/androidTest-results/connected/emulator-5554 - 10/test-result.pb"
+        const val ENABLE_UTP_TEST_REPORT_PROPERTY = "com.android.tools.utp.GradleAndroidProjectResolverExtension.enable"
     }
 
     @get:Rule
@@ -105,6 +106,7 @@ class UtpConnectedTest {
         val result = project.executor()
                 .withArgument("--init-script")
                 .withArgument(initScriptPath.toString())
+                .withArgument("-P${ENABLE_UTP_TEST_REPORT_PROPERTY}=true")
                 .run(testTaskName)
 
         result.stdout.use {
@@ -124,11 +126,34 @@ class UtpConnectedTest {
         val resultWithConfigCache = project.executor()
                 .withArgument("--init-script")
                 .withArgument(initScriptPath.toString())
+                .withArgument("-P${ENABLE_UTP_TEST_REPORT_PROPERTY}=true")
                 .run(testTaskName)
 
         resultWithConfigCache.stdout.use {
             assertThat(it).contains("<UTP_TEST_RESULT_ON_TEST_RESULT_EVENT>")
             assertThat(it).contains("</UTP_TEST_RESULT_ON_TEST_RESULT_EVENT>")
+        }
+        assertThat(project.file(testReportPath)).exists()
+        assertThat(project.file(testResultPbPath)).exists()
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun connectedAndroidTestWithUtpTestResultListenerAndTestReportingDisabled() {
+        val initScriptPath = TestUtils.resolveWorkspacePath(
+                "tools/adt/idea/utp/addGradleAndroidTestListener.gradle")
+        val testTaskName = ":app:connectedAndroidTest"
+        val testReportPath = "app/$TEST_REPORT"
+        val testResultPbPath = "app/$TEST_RESULT_PB"
+
+        val result = project.executor()
+                .withArgument("--init-script")
+                .withArgument(initScriptPath.toString())
+                .run(testTaskName)
+
+        result.stdout.use {
+            assertThat(it).doesNotContain("<UTP_TEST_RESULT_ON_TEST_RESULT_EVENT>")
+            assertThat(it).doesNotContain("</UTP_TEST_RESULT_ON_TEST_RESULT_EVENT>")
         }
         assertThat(project.file(testReportPath)).exists()
         assertThat(project.file(testResultPbPath)).exists()
