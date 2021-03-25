@@ -1004,9 +1004,10 @@ class LintModelSerializationTest {
         val file2 = File(folder2, "file2")
         file2.createNewFile()
 
-        val pathVariables: MutableList<Pair<String, File>> = mutableListOf()
-        pathVariables.add(Pair("SDK", folder1))
-        pathVariables.add(Pair("GRADLE", folder2))
+        val pathVariables = PathVariables()
+        pathVariables.add("SDK", folder1)
+        pathVariables.add("GRADLE", folder2)
+
         LintModelSerializationFileAdapter(root, pathVariables).use { adapter ->
             assertEquals("module.xml", adapter.toPathString(moduleFile, root).cleanup())
             assertEquals("\$SDK/file1", adapter.toPathString(file1, root))
@@ -1428,7 +1429,7 @@ class LintModelSerializationTest {
         override val root: File? = null,
         private val reader: (TargetFile, String, String) -> Reader = { _, _, _ -> StringReader("<error>") },
         private val writer: (TargetFile, String, String) -> Writer = { _, _, _ -> StringWriter() },
-        override val pathVariables: LintModelPathVariables = emptyList()
+        override val pathVariables: PathVariables = PathVariables()
     ) : LintModelSerialization.LintModelSerializationAdapter {
         override fun file(target: TargetFile, variantName: String, artifactName: String): File {
             return if (variantName.isNotEmpty())

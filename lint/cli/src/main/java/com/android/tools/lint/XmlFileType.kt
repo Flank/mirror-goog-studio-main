@@ -37,7 +37,7 @@ enum class XmlFileType(private val typeName: String) {
      * instead of requiring the user to apply fix in the IDE and upload
      * a new changelist.
      */
-    REPORT_WITH_FIXES("report_with_Fixes"),
+    REPORT_WITH_FIXES("report_with_fixes"),
 
     /**
      * This report is intended to be used as a baseline. This will write
@@ -74,6 +74,9 @@ enum class XmlFileType(private val typeName: String) {
      * flag turning on absolute paths has been set to true?
      */
     fun relativePaths(): Boolean = this == BASELINE
+
+    /** Whether we should use path variables for this file type */
+    fun variables(): Boolean = isPersistenceFile()
 
     /**
      * Should all paths be converted to Unix paths (file separator /

@@ -64,7 +64,7 @@ object LintModelSerialization : LintModelModuleLoader {
 
     interface LintModelSerializationAdapter {
         /** Any path mapping to directory variables. */
-        val pathVariables: LintModelPathVariables
+        val pathVariables: PathVariables
 
         /**
          * The file we're reading/writing from if known (only used for
@@ -103,52 +103,10 @@ object LintModelSerialization : LintModelModuleLoader {
          * various files (classes, lint jar, etc) are relative to the
          * library root.)
          */
-        fun toPathString(file: File, relativeTo: File? = root): String {
-            val fullPath = file.path
-
-            for ((prefix, root) in pathVariables) {
-                if (fullPath.startsWith(root.path) &&
-                    fullPath.length > root.path.length &&
-                    fullPath[root.path.length] == File.separatorChar
-                ) {
-                    val relative = fullPath.substring(root.path.length)
-                    return "\$$prefix$relative"
-                }
-            }
-
-            if (relativeTo != null &&
-                fullPath.startsWith(relativeTo.path) &&
-                fullPath.length > relativeTo.path.length &&
-                fullPath[relativeTo.path.length] == File.separatorChar
-            ) {
-                return fullPath.substring(relativeTo.path.length + 1)
-            }
-
-            return fullPath
-        }
+        fun toPathString(file: File, relativeTo: File? = root): String = pathVariables.toPathString(file, relativeTo)
 
         /** Reverses the path string computed by [toPathString] */
-        fun fromPathString(path: String, relativeTo: File? = null): File {
-            if (path.startsWith("$")) {
-                for (i in 1 until path.length) {
-                    val c = path[i]
-                    if (!c.isJavaIdentifierPart()) {
-                        val name = path.substring(1, i)
-                        val dir = pathVariables.firstOrNull { it.first == name }?.second
-                            ?: error("Path variable \$$name referenced in $path not provided to XML reader")
-                        val relativeStart = if (c == '/' || c == '\\') i + 1 else i
-                        return File(dir, path.substring(relativeStart))
-                    }
-                }
-            }
-
-            val file = File(path)
-            return if (relativeTo != null && !file.isAbsolute) {
-                File(relativeTo, path)
-            } else {
-                file
-            }
-        }
+        fun fromPathString(path: String, relativeTo: File? = null): File = pathVariables.fromPathString(path, relativeTo)
     }
 
     /**
@@ -157,7 +115,7 @@ object LintModelSerialization : LintModelModuleLoader {
      */
     class LintModelSerializationFileAdapter(
         override val root: File,
-        override val pathVariables: LintModelPathVariables = emptyList()
+        override val pathVariables: PathVariables = PathVariables()
     ) : LintModelSerializationAdapter, Closeable {
 
         private val closer: Closer = Closer.create()
@@ -216,7 +174,7 @@ object LintModelSerialization : LintModelModuleLoader {
         resolver: DefaultLintModelLibraryResolver? = null,
         variantName: String? = null,
         artifactName: String? = null,
-        pathVariables: LintModelPathVariables = emptyList()
+        pathVariables: PathVariables = PathVariables()
     ): LintModelDependencies {
         LintModelSerializationFileAdapter(source, pathVariables).use { adapter ->
             return LintModelDependenciesReader(
@@ -244,7 +202,7 @@ object LintModelSerialization : LintModelModuleLoader {
         resolver: DefaultLintModelLibraryResolver? = null,
         variantName: String? = null,
         artifactName: String? = null,
-        pathVariables: LintModelPathVariables = emptyList()
+        pathVariables: PathVariables = PathVariables()
     ): LintModelLibraryResolver {
         LintModelSerializationFileAdapter(source, pathVariables).use { adapter ->
             return LintModelLibrariesReader(
@@ -268,7 +226,7 @@ object LintModelSerialization : LintModelModuleLoader {
         source: File,
         variantNames: List<String>? = null,
         readDependencies: Boolean = true,
-        pathVariables: LintModelPathVariables = emptyList()
+        pathVariables: PathVariables = PathVariables()
     ): LintModelModule {
         LintModelSerializationFileAdapter(source, pathVariables).use { adapter ->
             return readModule(
@@ -394,7 +352,7 @@ object LintModelSerialization : LintModelModuleLoader {
         destination: File,
         variantName: String = "",
         artifactName: String = "",
-        pathVariables: LintModelPathVariables = emptyList()
+        pathVariables: PathVariables = PathVariables()
     ) {
         LintModelSerializationFileAdapter(destination, pathVariables).use { adapter ->
             destination.toWriter().use { writer ->
@@ -425,7 +383,7 @@ object LintModelSerialization : LintModelModuleLoader {
         destination: File,
         variantName: String = "",
         artifactName: String = "",
-        pathVariables: LintModelPathVariables = emptyList()
+        pathVariables: PathVariables = PathVariables()
     ) {
         LintModelSerializationFileAdapter(destination, pathVariables).use { adapter ->
             destination.toWriter().use { writer ->
@@ -468,7 +426,7 @@ object LintModelSerialization : LintModelModuleLoader {
         destination: File,
         writeVariants: List<LintModelVariant>? = module.variants,
         writeDependencies: Boolean = true,
-        pathVariables: LintModelPathVariables = emptyList(),
+        pathVariables: PathVariables = PathVariables(),
         createdBy: String? = null
     ) {
         LintModelSerializationFileAdapter(destination, pathVariables).use { adapter ->
@@ -492,7 +450,7 @@ object LintModelSerialization : LintModelModuleLoader {
         variant: LintModelVariant,
         destination: File,
         writeDependencies: Boolean = true,
-        pathVariables: LintModelPathVariables = emptyList(),
+        pathVariables: PathVariables = PathVariables(),
         createdBy: String? = null
     ) {
         LintModelSerializationFileAdapter(destination, pathVariables).use { adapter ->
@@ -981,8 +939,6 @@ private class LintModelVariantWriter(
         }
     }
 }
-
-typealias LintModelPathVariables = List<Pair<String, File>>
 
 private class LintModelDependenciesWriter(
     adapter: LintModelSerializationAdapter,

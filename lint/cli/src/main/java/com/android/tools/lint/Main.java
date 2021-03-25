@@ -54,6 +54,7 @@ import com.android.tools.lint.detector.api.TextFormat;
 import com.android.tools.lint.model.LintModelModule;
 import com.android.tools.lint.model.LintModelSerialization;
 import com.android.tools.lint.model.LintModelVariant;
+import com.android.tools.lint.model.PathVariables;
 import com.android.utils.SdkUtils;
 import com.android.utils.XmlUtils;
 import com.google.common.annotations.Beta;
@@ -148,6 +149,7 @@ public class Main {
     private static final String ARG_FATAL_ONLY = "--fatalOnly";
     private static final String ARG_PROJECT = "--project";
     private static final String ARG_LINT_MODEL = "--lint-model";
+    private static final String ARG_PATH_VARIABLES = "--path-variables";
     private static final String ARG_LINT_RULE_JARS = "--lint-rule-jars";
     private static final String ARG_VARIANT = "--variant";
     private static final String ARG_CLASSES = "--classpath";
@@ -216,6 +218,7 @@ public class Main {
         @Nullable String urlMap = null;
         @NonNull List<File> files = new ArrayList<>();
         @NonNull LintDriver.DriverMode mode = LintDriver.DriverMode.GLOBAL;
+        @Nullable PathVariables pathVariables = null;
     }
 
     /**
@@ -248,6 +251,8 @@ public class Main {
             return exitCode;
         }
         LintRequest lintRequest = createLintRequest(client, argumentState);
+        createDefaultPathVariables(argumentState, client);
+
         exitCode = run(client, lintRequest, argumentState);
 
         // If the user has not asked for the exit code to be set, don't
@@ -263,6 +268,42 @@ public class Main {
         return exitCode;
     }
 
+    private void createDefaultPathVariables(
+            @NonNull ArgumentState argumentState, @NonNull LintCliClient client) {
+        PathVariables pathVariables = client.getPathVariables();
+        if (!pathVariables.any()) {
+            // It's tempting to define a $PROJECT variable here to
+            // refer to the common parent director of all the project
+            // modules, but this does not work because when invoked
+            // in --analyze-only we'll take an individual module's
+            // folder, whereas with --report-only we'll take the parent
+            // directory, so the path resolves to different values
+            for (LintModelModule module : argumentState.modules) {
+                String variableName = getPathVariableName(module);
+                pathVariables.add(variableName, module.getDir(), false);
+            }
+
+            // Create some default variables
+            pathVariables.add("HOME", new File(System.getProperty("user.home")), true);
+        }
+    }
+
+    @NonNull
+    private String getPathVariableName(@NonNull LintModelModule module) {
+        String path = module.getModulePath();
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < path.length(); i++) {
+            char c = path.charAt(i);
+            if (Character.isJavaIdentifierPart(c)) {
+                sb.append(Character.toUpperCase(c));
+            } else if (i > 0) {
+                sb.append('_');
+            }
+        }
+
+        return sb.toString();
+    }
+
     // Debugging utility
     @SuppressWarnings("unused")
     private void logArguments(String[] args, File log) {
@@ -272,7 +313,7 @@ public class Main {
             parent.mkdirs();
         }
         StringBuilder sb = new StringBuilder();
-        sb.append(java.util.Calendar.getInstance().getTime().toString()).append("\n");
+        sb.append(java.util.Calendar.getInstance().getTime()).append("\n");
         sb.append("pwd=").append(System.getProperty("user.dir")).append("\narguments: ");
         for (String arg : args) {
             String s = arg.replace("\"", "\\\"");
@@ -295,6 +336,12 @@ public class Main {
         MainLintClient(LintCliFlags flags, ArgumentState argumentState) {
             super(flags, LintClient.CLIENT_CLI);
             this.argumentState = argumentState;
+
+            PathVariables pathVariables = getPathVariables();
+            if (argumentState.pathVariables != null) {
+                pathVariables.add(argumentState.pathVariables);
+                pathVariables.normalize();
+            }
         }
 
         private Pattern mAndroidAnnotationPattern;
@@ -327,6 +374,10 @@ public class Main {
             initializeDriver(driver);
 
             return driver;
+        }
+
+        public ArgumentState getArgumentState() {
+            return argumentState;
         }
 
         @NonNull
@@ -1132,6 +1183,22 @@ public class Main {
                     return ERRNO_INVALID_ARGS;
                 }
                 argumentState.variantName = args[++index];
+            } else if (arg.equals(ARG_PATH_VARIABLES)) {
+                if (index == args.length - 1) {
+                    System.err.println(
+                            "Missing path variable descriptor  after " + ARG_PATH_VARIABLES);
+                    return ERRNO_INVALID_ARGS;
+                }
+                if (argumentState.pathVariables != null) {
+                    System.err.println(
+                            ARG_PATH_VARIABLES
+                                    + " must be specified before "
+                                    + ARG_LINT_MODEL
+                                    + " and only once");
+                    return ERRNO_INVALID_ARGS;
+                }
+                String paths = args[++index];
+                argumentState.pathVariables = PathVariables.Companion.parse(paths);
             } else if (arg.equals(ARG_LINT_MODEL)) {
                 if (index == args.length - 1) {
                     System.err.println("Missing lint model argument after " + ARG_LINT_MODEL);
@@ -1152,15 +1219,13 @@ public class Main {
                                         + (input.isDirectory() ? ", not a file" : ""));
                         return ERRNO_INVALID_ARGS;
                     }
+                    if (argumentState.pathVariables == null) {
+                        argumentState.pathVariables = new PathVariables();
+                    }
                     try {
                         LintModelSerialization reader = LintModelSerialization.INSTANCE;
                         LintModelModule module =
-                                reader.readModule(
-                                        input,
-                                        null,
-                                        // TODO: Define any path variables Gradle may be setting!
-                                        true,
-                                        Collections.emptyList());
+                                reader.readModule(input, null, true, argumentState.pathVariables);
                         argumentState.modules.add(module);
                     } catch (Throwable error) {
                         System.err.println(
@@ -1788,6 +1853,8 @@ public class Main {
                     "Only check for fatal severity issues",
                     ARG_AUTO_FIX,
                     "Apply suggestions to the source code (for safe fixes)",
+                    ARG_ABORT_IF_SUGGESTIONS_APPLIED,
+                    "Set the exit code to an error if any fixes are applied",
                     "",
                     "\nEnabled Checks:",
                     ARG_DISABLE + " <list>",
@@ -1827,9 +1894,17 @@ public class Main {
                             + "configuration overrides any local configuration files",
                     ARG_BASELINE,
                     "Use (or create) the given baseline file to filter out known issues.",
+                    ARG_UPDATE_BASELINE,
+                    "Updates the baselines even if they already exist",
+                    ARG_REMOVE_FIXED,
+                    "Rewrite the baseline files to remove any issues that have been fixed",
                     ARG_ALLOW_SUPPRESS,
                     "Whether to allow suppressing issues that have been explicitly registered "
                             + "as not suppressible.",
+                    ARG_RESTRICT_SUPPRESS,
+                    "Opposite of "
+                            + ARG_ALLOW_SUPPRESS
+                            + ": do not allow suppressing restricted issues",
                     "",
                     "\nOutput Options:",
                     ARG_QUIET,
@@ -1866,10 +1941,6 @@ public class Main {
                             + "for standard out), the report is written to the console.",
                     "",
                     "\nProject Options:",
-                    ARG_PROJECT + " <file>",
-                    "Use the given project layout descriptor file to describe "
-                            + "the set of available sources, resources and libraries. Used to drive lint with "
-                            + "build systems not natively integrated with lint.",
                     ARG_RESOURCES + " <dir>",
                     "Add the given folder (or path) as a resource directory "
                             + "for the project. Only valid when running lint on a single project.",
@@ -1894,6 +1965,29 @@ public class Main {
                     "Use the given version of the Java programming language",
                     ARG_KOTLIN_LANGUAGE_LEVEL + " <level>",
                     "Use the given version of the Kotlin programming language",
+                    "",
+                    "\nAdvanced Options (for build system integration):",
+                    ARG_PROJECT + " <file>",
+                    "Use the given project layout descriptor file to describe "
+                            + "the set of available sources, resources and libraries. Used to drive lint with "
+                            + "build systems not natively integrated with lint.",
+                    ARG_LINT_MODEL + " <path>",
+                    "Alternative to " + ARG_PROJECT + " which defines the project layout",
+                    ARG_VARIANT + " <name>",
+                    "The name of the variant from the lint model to use for analysis",
+                    ARG_LINT_RULE_JARS + " <path>",
+                    "One or more .jar files to load additional lint checks from",
+                    ARG_ANALYZE_ONLY,
+                    "Perform only analysis, not reporting, of the given lint model",
+                    ARG_REPORT_ONLY,
+                    "Perform only reporting of previous analysis results",
+                    ARG_PATH_VARIABLES + " <variables>",
+                    "Path variables to use in internal persistence files to make lint results cacheable. "
+                            + "Use a semi-colon separated list of name=path pairs.",
+                    ARG_DESCRIBE_FIXES + " <file>",
+                    "Describes all the quickfixes in an XML file expressed as document edits -- insert, replace, delete",
+                    ARG_PRINT_INTERNAL_ERROR_STACKTRACE,
+                    "Dump exceptions from detectors to the console",
                     "",
                     "\nExit Status:",
                     "0",
