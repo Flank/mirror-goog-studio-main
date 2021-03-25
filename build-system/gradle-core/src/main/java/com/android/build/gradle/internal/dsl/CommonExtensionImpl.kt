@@ -276,6 +276,10 @@ abstract class CommonExtensionImpl<
             buildToolsRevision = Revision.parseRevision(version, Revision.Precision.MICRO)
         }
 
+    override fun buildToolsVersion(buildToolsVersion: String) {
+        this.buildToolsVersion = buildToolsVersion
+    }
+
     override fun useLibrary(name: String) {
         useLibrary(name, true)
     }

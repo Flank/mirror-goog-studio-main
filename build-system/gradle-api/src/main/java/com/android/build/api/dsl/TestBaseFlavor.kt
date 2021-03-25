@@ -31,6 +31,9 @@ interface TestBaseFlavor<SigningConfigT : ApkSigningConfig> :
      */
     var targetSdk: Int?
 
+    @Deprecated("Replaced by targetSdk property")
+    fun targetSdkVersion(targetSdkVersion: Int)
+
     /**
      * The target SDK version.
      * Setting this it will override previous calls of [targetSdk] and [targetSdkPreview] setters.
@@ -40,6 +43,12 @@ interface TestBaseFlavor<SigningConfigT : ApkSigningConfig> :
      */
     var targetSdkPreview: String?
 
+    @Deprecated("Replaced by targetSdkPreview property")
+    fun setTargetSdkVersion(targetSdkVersion: String?)
+
+    @Deprecated("Replaced by targetSdkPreview property")
+    fun targetSdkVersion(targetSdkVersion: String?)
+
     /**
      * The maxSdkVersion, or null if not specified. This is only the value set on this produce
      * flavor.
@@ -47,4 +56,7 @@ interface TestBaseFlavor<SigningConfigT : ApkSigningConfig> :
      * See [uses-sdk element documentation](http://developer.android.com/guide/topics/manifest/uses-sdk-element.html).
      */
     var maxSdk: Int?
+
+    @Deprecated("Replaced by maxSdk property")
+    fun maxSdkVersion(maxSdkVersion: Int)
 }

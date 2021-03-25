@@ -36,6 +36,9 @@ interface LibraryBaseFlavor<SigningConfigT : ApkSigningConfig> :
      */
     var targetSdk: Int?
 
+    @Deprecated("Replaced by targetSdk property")
+    fun targetSdkVersion(targetSdkVersion: Int)
+
     /**
      * The target SDK version used for building the test APK.
      *
@@ -48,4 +51,10 @@ interface LibraryBaseFlavor<SigningConfigT : ApkSigningConfig> :
      * See [uses-sdk element documentation](http://developer.android.com/guide/topics/manifest/uses-sdk-element.html).
      */
     var targetSdkPreview: String?
+
+    @Deprecated("Replaced by targetSdkPreview property")
+    fun setTargetSdkVersion(targetSdkVersion: String?)
+
+    @Deprecated("Replaced by targetSdkPreview property")
+    fun targetSdkVersion(targetSdkVersion: String?)
 }

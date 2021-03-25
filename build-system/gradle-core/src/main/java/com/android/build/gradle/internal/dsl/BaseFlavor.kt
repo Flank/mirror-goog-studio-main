@@ -75,7 +75,7 @@ abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
             setMinSdkVersion(value)
         }
 
-    override var targetSdk: Int?
+    override var targetSdk:Int?
         get() = targetSdkVersion?.apiLevel
         set(value) {
             if (value == null) targetSdkVersion = null
@@ -87,7 +87,7 @@ abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
             setTargetSdkVersion(value)
         }
 
-    fun setMinSdkVersion(minSdkVersion: Int) {
+    override fun setMinSdkVersion(minSdkVersion: Int) {
         setMinSdkVersion(DefaultApiVersion(minSdkVersion))
     }
 
@@ -96,11 +96,11 @@ abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
      *
      * See [uses-sdk element documentation](http://developer.android.com/guide/topics/manifest/uses-sdk-element.html).
      */
-    open fun minSdkVersion(minSdkVersion: Int) {
+    override fun minSdkVersion(minSdkVersion: Int) {
         setMinSdkVersion(minSdkVersion)
     }
 
-    open fun setMinSdkVersion(minSdkVersion: String?) {
+    override fun setMinSdkVersion(minSdkVersion: String?) {
         setMinSdkVersion(getApiVersion(minSdkVersion))
     }
 
@@ -109,7 +109,7 @@ abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
      *
      * See [uses-sdk element documentation](http://developer.android.com/guide/topics/manifest/uses-sdk-element.html).
      */
-    open fun minSdkVersion(minSdkVersion: String?) {
+    override fun minSdkVersion(minSdkVersion: String?) {
         setMinSdkVersion(minSdkVersion)
     }
 
@@ -124,11 +124,11 @@ abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
      * See [
  * uses-sdk element documentation](http://developer.android.com/guide/topics/manifest/uses-sdk-element.html).
      */
-    open fun targetSdkVersion(targetSdkVersion: Int) {
+    override fun targetSdkVersion(targetSdkVersion: Int) {
         setTargetSdkVersion(targetSdkVersion)
     }
 
-    fun setTargetSdkVersion(targetSdkVersion: String?) {
+    override fun setTargetSdkVersion(targetSdkVersion: String?) {
         setTargetSdkVersion(getApiVersion(targetSdkVersion))
     }
 
@@ -138,7 +138,7 @@ abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
      * See [
  * uses-sdk element documentation](http://developer.android.com/guide/topics/manifest/uses-sdk-element.html).
      */
-    open fun targetSdkVersion(targetSdkVersion: String?) {
+    override fun targetSdkVersion(targetSdkVersion: String?) {
         setTargetSdkVersion(targetSdkVersion)
     }
 
@@ -148,7 +148,7 @@ abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
      * See [
  * uses-sdk element documentation](http://developer.android.com/guide/topics/manifest/uses-sdk-element.html).
      */
-    open fun maxSdkVersion(maxSdkVersion: Int) {
+    override fun maxSdkVersion(maxSdkVersion: Int) {
         setMaxSdkVersion(maxSdkVersion)
     }
 

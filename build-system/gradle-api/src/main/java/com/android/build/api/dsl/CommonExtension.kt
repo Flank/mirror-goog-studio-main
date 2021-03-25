@@ -711,6 +711,10 @@ interface CommonExtension<
     @set:Incubating
     var buildToolsVersion: String
 
+    @Incubating
+    @Deprecated("Replaced by buildToolsVersion property")
+    fun buildToolsVersion(buildToolsVersion: String)
+
     /**
      * Includes the specified library to the classpath.
      *

@@ -43,6 +43,11 @@ interface BaseFlavor : VariantDimension {
      */
     var minSdk: Int?
 
+    @Deprecated("Replaced by minSdk property")
+    fun setMinSdkVersion(minSdkVersion: Int)
+    @Deprecated("Replaced by minSdk property")
+    fun minSdkVersion(minSdkVersion: Int)
+
     /**
      * The minimum SDK version.
      * Setting this it will override previous calls of [minSdk] and [minSdkPreview] setters. Only
@@ -51,6 +56,11 @@ interface BaseFlavor : VariantDimension {
      * See [uses-sdk element documentation](http://developer.android.com/guide/topics/manifest/uses-sdk-element.html).
      */
     var minSdkPreview: String?
+
+    @Deprecated("Replaced by minSdkPreview property")
+    fun setMinSdkVersion(minSdkVersion: String?)
+    @Deprecated("Replaced by minSdkPreview property")
+    fun minSdkVersion(minSdkVersion: String?)
 
     /**
      * The renderscript target api, or null if not specified. This is only the value set on this
