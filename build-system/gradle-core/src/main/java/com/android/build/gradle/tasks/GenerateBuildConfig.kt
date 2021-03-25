@@ -258,7 +258,7 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
 
             // no need to memoize, variant configuration does that already.
             task.flavorName.setDisallowChanges(
-                    project.provider { creationConfig.flavorName })
+                    project.provider { creationConfig.flavorName ?: "" })
 
             task.flavorNamesWithDimensionNames.setDisallowChanges(project.provider {
                 variantDslInfo.flavorNamesWithDimensionNames

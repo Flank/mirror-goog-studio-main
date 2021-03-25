@@ -58,7 +58,7 @@ class LibraryVariantData(
             val sb = StringBuilder(50)
             componentIdentity.buildType?.let { sb.appendCapitalized(it) }
             sb.append(" build for flavor ")
-            sb.appendCapitalized(componentIdentity.flavorName)
+            componentIdentity.flavorName?.let { sb.appendCapitalized(it) }
             sb.toString()
         } else {
             componentIdentity.buildType!!.capitalizeAndAppend(" build")

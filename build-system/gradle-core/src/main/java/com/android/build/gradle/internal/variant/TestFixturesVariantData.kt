@@ -54,7 +54,7 @@ class TestFixturesVariantData(
             val sb = StringBuilder(50)
             variantDslInfo.componentIdentity.buildType?.let { sb.appendCapitalized(it) }
             sb.append(" build for flavor ")
-            sb.appendCapitalized(variantDslInfo.componentIdentity.flavorName)
+            variantDslInfo.componentIdentity.flavorName?.let { sb.appendCapitalized(it) }
             sb.toString()
         } else {
             variantDslInfo.componentIdentity.buildType!!.capitalizeAndAppend(" build")

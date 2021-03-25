@@ -97,7 +97,7 @@ abstract class AnalyticsEnabledComponent(
             return delegate.productFlavors
         }
 
-    override val flavorName: String
+    override val flavorName: String?
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
                 VariantPropertiesMethodType.FLAVOR_NAME_VALUE
