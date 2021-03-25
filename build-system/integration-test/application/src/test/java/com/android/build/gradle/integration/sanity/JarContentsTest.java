@@ -315,6 +315,7 @@ public class JarContentsTest {
                 "com/android/build/gradle/internal/annotations/",
                 "com/android/build/gradle/internal/api/",
                 "com/android/build/gradle/internal/api/artifact/",
+                "com/android/build/gradle/internal/attributes/",
                 "com/android/build/gradle/internal/attribution/",
                 "com/android/build/gradle/internal/component/",
                 "com/android/build/gradle/internal/core/",

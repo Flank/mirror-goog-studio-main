@@ -17,7 +17,7 @@
 @file:JvmName("LibraryUtils")
 package com.android.build.gradle.internal.ide.dependencies
 
-import com.android.build.api.attributes.VariantAttr
+import com.android.build.gradle.internal.attributes.VariantAttr
 import com.android.build.gradle.internal.ide.DependenciesImpl
 import com.android.builder.model.AndroidLibrary
 import com.android.builder.model.AndroidProject
