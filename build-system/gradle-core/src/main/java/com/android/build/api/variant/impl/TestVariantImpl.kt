@@ -29,6 +29,7 @@ import com.android.build.api.variant.Renderscript
 import com.android.build.api.variant.TestVariant
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
+import com.android.build.gradle.internal.ProguardFileType
 import com.android.build.gradle.internal.component.TestVariantCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
@@ -47,6 +48,8 @@ import com.android.build.gradle.options.IntegerOption
 import com.android.builder.dexing.DexingType
 import com.android.builder.model.CodeShrinker
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
+import org.gradle.api.file.RegularFile
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import javax.inject.Inject
@@ -143,6 +146,14 @@ open class TestVariantImpl @Inject constructor(
 
     override val renderscript: Renderscript? by lazy {
         delegate.renderscript(internalServices)
+    }
+
+    override val proguardFiles: ListProperty<RegularFile> by lazy {
+        internalServices.projectInfo.getProject().objects
+            .listProperty(RegularFile::class.java).also {
+                variantDslInfo.gatherProguardFiles(ProguardFileType.TEST, it)
+                it.finalizeValueOnRead()
+            }
     }
 
     // ---------------------------------------------------------------------------------------------

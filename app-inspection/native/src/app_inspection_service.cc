@@ -20,6 +20,7 @@
 
 #include "agent/jvmti_helper.h"
 #include "app_inspection_transform.h"
+#include "hidden_api_silencer.h"
 #include "slicer/reader.h"
 #include "slicer/writer.h"
 #include "utils/device_info.h"
@@ -271,6 +272,7 @@ void AppInspectionService::AddTransform(JNIEnv* jni,
                                         const std::string& method_name,
                                         const std::string& signature,
                                         bool is_entry) {
+  HiddenApiSilencer silencer(jvmti_);
   auto class_transforms = GetAppInspectionTransforms();
   auto transform_iter = class_transforms->find(class_name);
   AppInspectionTransform* app_transform;

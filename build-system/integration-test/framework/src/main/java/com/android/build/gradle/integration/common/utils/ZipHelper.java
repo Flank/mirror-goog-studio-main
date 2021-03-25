@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.testutils.apk.Zip;
+import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
@@ -35,7 +36,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Map;
@@ -83,7 +83,7 @@ public class ZipHelper {
         File apk = File.createTempFile("findAndExtractFromZip", "apk");
         apk.deleteOnExit();
         try {
-            java.nio.file.Files.copy(entry, apk.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            FileUtils.copyFile(entry, apk.toPath());
         } catch (IOException e) {
             throw new IOException("Failed to open " + zip, e);
         }

@@ -44,3 +44,13 @@ inline fun renderIf(predicate: Boolean, trim: Boolean = true, skipLine: Boolean 
     if(trim) str().trim() else str()
   else
     SKIP_LINE.takeIf { skipLine }.orEmpty()
+
+/**
+ * Returns a new String with [SKIP_LINE] removed.
+ *
+ * @see SKIP_LINE
+ */
+fun CharSequence.withoutSkipLines() = this.split("\n")
+    .filter { it.trim() != SKIP_LINE }
+    .joinToString("\n")
+    .replace(SKIP_LINE, "") // for some SKIP_LINEs which are not on their own line

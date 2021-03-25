@@ -176,6 +176,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 HardcodedDebugModeDetector.ISSUE,
                 HardcodedValuesDetector.ISSUE,
                 HardwareIdDetector.ISSUE,
+                HighSensorSamplingRateDetector.ISSUE,
                 IconDetector.DUPLICATES_CONFIGURATIONS,
                 IconDetector.DUPLICATES_NAMES,
                 IconDetector.GIF_USAGE,
@@ -367,6 +368,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 SharedPrefsDetector.ISSUE,
                 SignatureOrSystemDetector.ISSUE,
                 SliceDetector.ISSUE,
+                SplashScreenDetector.ISSUE,
                 SQLiteDetector.ISSUE,
                 SslCertificateSocketFactoryDetector.CREATE_SOCKET,
                 SslCertificateSocketFactoryDetector.GET_INSECURE,
@@ -394,7 +396,6 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 TranslationDetector.MISSING_BASE,
                 TranslationDetector.TRANSLATED_UNTRANSLATABLE,
                 TranslucentViewDetector.ISSUE,
-                TrustAllX509TrustManagerDetector.ISSUE,
                 TypedefDetector.TYPE_DEF,
                 TypoDetector.ISSUE,
                 TypographyDetector.DASHES,
@@ -436,7 +437,9 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 WrongIdDetector.UNKNOWN_ID_LAYOUT,
                 WrongImportDetector.ISSUE,
                 WrongLocationDetector.ISSUE,
-                WrongThreadInterproceduralDetector.ISSUE
+                WrongThreadInterproceduralDetector.ISSUE,
+                X509TrustManagerDetector.IMPLEMENTS_CUSTOM,
+                X509TrustManagerDetector.TRUSTS_ALL
             )
         )
     }

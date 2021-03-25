@@ -48,7 +48,7 @@ class NamespacedResourcesTaskManager(
      * TODO: Test support, Synthesize non-namespaced output.
      */
     fun createNamespacedResourceTasks(
-            packageOutputType: Artifact.SingleArtifact<Directory>?,
+            packageOutputType: Artifact.Single<Directory>?,
             baseName: String,
             useAaptToGenerateLegacyMultidexMainDexProguardRules: Boolean) {
 
@@ -87,7 +87,7 @@ class NamespacedResourcesTaskManager(
     }
 
     private fun createNamespacedAppProcessTask(
-            packageOutputType: Artifact.SingleArtifact<Directory>?,
+            packageOutputType: Artifact.Single<Directory>?,
             baseName: String,
             useAaptToGenerateLegacyMultidexMainDexProguardRules: Boolean) {
         // TODO fix by using the right type for field componentProperties
@@ -104,7 +104,7 @@ class NamespacedResourcesTaskManager(
     }
 
     private fun createNamespacedLibraryTestProcessResourcesTask(
-            packageOutputType: Artifact.SingleArtifact<Directory>?) {
+            packageOutputType: Artifact.Single<Directory>?) {
         taskFactory.register(ProcessAndroidAppResourcesTask.CreationAction(creationConfig))
         if (packageOutputType != null) {
             creationConfig.artifacts.republish(InternalArtifactType.PROCESSED_RES, packageOutputType)

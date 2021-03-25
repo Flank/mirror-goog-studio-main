@@ -21,7 +21,6 @@ package com.android.tools.lint.client.api
 import com.android.SdkConstants.CONSTRUCTOR_NAME
 import com.android.SdkConstants.DOT_CLASS
 import com.google.common.io.ByteStreams
-import org.jetbrains.kotlin.descriptors.runtime.structure.createArrayType
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassReader.SKIP_DEBUG
 import org.objectweb.asm.ClassReader.SKIP_FRAMES
@@ -33,24 +32,14 @@ import java.io.File
 import java.lang.Byte
 import java.lang.Double
 import java.lang.Float
+import java.lang.Integer
 import java.lang.Long
 import java.lang.Short
-import java.lang.StringBuilder
 import java.lang.reflect.Constructor
 import java.lang.reflect.Executable
 import java.lang.reflect.Field
 import java.lang.reflect.Method
 import java.util.jar.JarFile
-import kotlin.Any
-import kotlin.Array
-import kotlin.Boolean
-import kotlin.Int
-import kotlin.String
-import kotlin.Suppress
-import kotlin.Throwable
-import kotlin.also
-import kotlin.error
-import kotlin.let
 
 /**
  * Given a lint jar file, checks to see if the jar file looks compatible
@@ -316,7 +305,8 @@ private fun Type.toTypeClass(): Class<out Any> {
         else -> {
             when {
                 descriptor.startsWith("L") -> Class.forName(className)
-                descriptor.startsWith("[") -> elementType.toTypeClass().createArrayType()
+                descriptor.startsWith("[") ->
+                    java.lang.reflect.Array.newInstance(elementType.toTypeClass(), 0)::class.java
                 else -> error("Unexpected internal type $descriptor")
             }
         }

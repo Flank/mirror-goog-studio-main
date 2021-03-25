@@ -83,10 +83,7 @@ fun <VariantBuilderT : ComponentBuilderImpl, VariantT : VariantImpl> createCxxTa
                         androidLocationsProvider,
                         configurationParameters)
             }
-            val enableFolding = configurationParameters.first().isConfigurationFoldingEnabled
-            val taskModel =
-                    if (enableFolding) createFoldedCxxTaskDependencyModel(abis)
-                    else createCxxTaskDependencyModel(abis)
+            val taskModel = createFoldedCxxTaskDependencyModel(abis)
 
             val global = variants.first().variant.globalScope
 
@@ -177,31 +174,6 @@ fun createPrefabTasks(taskFactory: TaskFactory, libraryVariant: LibraryVariantIm
                 .get()
                 .dependsOn(libraryVariant.taskContainer.externalNativeBuildTask)
     }
-}
-
-/**
- * Create the non-folded task dependency model. Each variant is built in its own separate
- * folder even if two variants share the same C/C++ configuration.
- */
-fun createCxxTaskDependencyModel(abis: List<CxxAbiModel>) : CxxTaskDependencyModel {
-    val tasks = mutableMapOf<String, CxxGradleTaskModel>()
-    val edges = mutableListOf<Pair<String, String>>()
-    abis
-        .groupBy { it.variant.variantName }
-            .forEach { (variantName, abis) ->
-                if (abis.any { abi -> abi.isActiveAbi }) {
-                    val configureName = "generateJsonModel".appendCapitalized(variantName)
-                    val buildName = "externalNativeBuild".appendCapitalized(variantName)
-                    tasks[configureName] = Configure(abis)
-                    tasks[buildName] = VariantBuild(variantName, false, abis)
-                    edges += buildName to configureName
-                }
-            }
-
-    return CxxTaskDependencyModel(
-            tasks = tasks,
-            edges = edges.distinct()
-    )
 }
 
 /**

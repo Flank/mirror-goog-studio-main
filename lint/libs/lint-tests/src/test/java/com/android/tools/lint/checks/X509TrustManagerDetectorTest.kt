@@ -17,12 +17,12 @@ package com.android.tools.lint.checks
 
 import com.android.tools.lint.detector.api.Detector
 
-class TrustAllX509TrustManagerDetectorTest : AbstractCheckTest() {
+class X509TrustManagerDetectorTest : AbstractCheckTest() {
     override fun getDetector(): Detector {
-        return TrustAllX509TrustManagerDetector()
+        return X509TrustManagerDetector()
     }
 
-    fun testBroken() {
+    fun testTrustsAll() {
         lint().files(
             manifest(
                 """
@@ -102,7 +102,10 @@ class TrustAllX509TrustManagerDetectorTest : AbstractCheckTest() {
             src/test/pkg/InsecureTLSIntentService.java:26: Warning: checkServerTrusted is empty, which could cause insecure network traffic due to trusting arbitrary TLS/SSL certificates presented by peers [TrustAllX509TrustManager]
                     public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) throws CertificateException {
                                 ~~~~~~~~~~~~~~~~~~
-            0 errors, 2 warnings
+            src/test/pkg/InsecureTLSIntentService.java:15: Warning: Implementing a custom X509TrustManager is error-prone and likely to be insecure. It is likely to disable certificate validation altogether, and is non-trivial to implement correctly without calling Android's default implementation. [CustomX509TrustManager]
+                TrustManager[] trustAllCerts = new TrustManager[]{ new X509TrustManager() {
+                                                                       ~~~~~~~~~~~~~~~~
+            0 errors, 3 warnings
             """
         )
 
@@ -112,7 +115,7 @@ class TrustAllX509TrustManagerDetectorTest : AbstractCheckTest() {
         // "bytecode/InsecureTLSIntentService$1.class.data=>bin/classes/test/pkg/InsecureTLSIntentService$1.class"));
     }
 
-    fun testCorrect() {
+    fun testCustom() {
         lint().files(
             manifest(
                 """
@@ -201,6 +204,13 @@ class TrustAllX509TrustManagerDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented()
-        ).run().expectClean()
+        ).run().expect(
+            """
+            src/test/pkg/ExampleTLSIntentService.java:22: Warning: Implementing a custom X509TrustManager is error-prone and likely to be insecure. It is likely to disable certificate validation altogether, and is non-trivial to implement correctly without calling Android's default implementation. [CustomX509TrustManager]
+                    trustManagerExample = new TrustManager[]{new X509TrustManager() {
+                                                                 ~~~~~~~~~~~~~~~~
+            0 errors, 1 warnings
+            """
+        )
     }
 }

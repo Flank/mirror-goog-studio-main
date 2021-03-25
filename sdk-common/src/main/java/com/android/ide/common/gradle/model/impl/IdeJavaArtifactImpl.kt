@@ -25,7 +25,6 @@ data class IdeJavaArtifactImpl(
   override val name: IdeArtifactName,
   override val compileTaskName: String,
   override val assembleTaskName: String,
-  override val assembleTaskOutputListingFile: String,
   override val classesFolder: File,
   override val additionalClassesFolders: Collection<File>,
   override val javaResourcesFolder: File?,

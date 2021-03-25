@@ -20,22 +20,22 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.ProguardFiles;
 import com.android.build.gradle.ProguardFiles.ProguardFile;
 import com.android.build.gradle.internal.component.VariantCreationConfig;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.utils.HasConfigurableValuesKt;
 import java.io.File;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.file.DirectoryProperty;
+import org.gradle.api.file.RegularFile;
+import org.gradle.api.provider.ListProperty;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 
 public abstract class CheckProguardFiles extends NonIncrementalTask {
-
-    private List<File> proguardFiles;
 
     @Override
     protected void doTaskAction() {
@@ -54,7 +54,8 @@ public abstract class CheckProguardFiles extends NonIncrementalTask {
                         .getAbsoluteFile(),
                 ProguardFile.DONT_OPTIMIZE);
 
-        for (File file : proguardFiles) {
+        for (RegularFile regularFile : getProguardFiles().get()) {
+            File file = regularFile.getAsFile();
             if (oldFiles.containsKey(file.getAbsoluteFile())) {
                 String name = oldFiles.get(file.getAbsoluteFile()).fileName;
                 throw new InvalidUserDataException(
@@ -68,9 +69,13 @@ public abstract class CheckProguardFiles extends NonIncrementalTask {
 
     @InputFiles
     @PathSensitive(PathSensitivity.ABSOLUTE)
-    public List<File> getProguardFiles() {
-        return proguardFiles;
-    }
+    public abstract ListProperty<RegularFile> getProguardFiles();
+
+    // the extracted proguard files are probably also part of the proguardFiles but we need to set
+    // the dependency explicitly so Gradle can track it properly.
+    @InputFiles
+    @PathSensitive(PathSensitivity.ABSOLUTE)
+    public abstract DirectoryProperty getExtractedProguardFile();
 
     @Internal("only for task execution")
     public abstract DirectoryProperty getBuildDirectory();
@@ -98,7 +103,14 @@ public abstract class CheckProguardFiles extends NonIncrementalTask {
         public void configure(@NonNull CheckProguardFiles task) {
             super.configure(task);
 
-            task.proguardFiles = creationConfig.getVariantScope().getProguardFiles();
+            task.getProguardFiles().set(creationConfig.getProguardFiles());
+            task.getExtractedProguardFile()
+                    .set(
+                            creationConfig
+                                    .getGlobalScope()
+                                    .getGlobalArtifacts()
+                                    .get(InternalArtifactType.DEFAULT_PROGUARD_FILES.INSTANCE));
+            task.getProguardFiles().disallowChanges();
             HasConfigurableValuesKt.setDisallowChanges(
                     task.getBuildDirectory(), task.getProject().getLayout().getBuildDirectory());
         }

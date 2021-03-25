@@ -16,6 +16,7 @@
 package com.android.tools.idea.wizard.template.impl.activities.common
 
 import com.android.tools.idea.wizard.template.renderIf
+import com.android.tools.idea.wizard.template.withoutSkipLines
 
 fun commonActivityBody(isLauncher: Boolean, isLibraryProject: Boolean = false) =
   renderIf(isLauncher && !isLibraryProject) {
@@ -26,3 +27,9 @@ fun commonActivityBody(isLauncher: Boolean, isLibraryProject: Boolean = false) =
     </intent-filter>
     """
   }
+
+fun String.collapseEmptyActivityTags():String {
+    // Tags with empty body show a lint warning. We only handle <activity>
+    return withoutSkipLines()
+        .replace("(<activity[^>]*)>\\s*</activity>".toRegex()) { "${it.groupValues[1]} />" }
+}

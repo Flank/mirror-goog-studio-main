@@ -15,28 +15,28 @@
  */
 package com.android.ddmlib;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.google.common.base.Charsets;
-
+import com.android.annotations.NonNull;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-/**
- * A {@link IShellOutputReceiver} which collects the whole shell output into one
- * {@link String}.
- */
+/** A {@link IShellOutputReceiver} which collects the whole shell output into one {@link String}. */
 public class CollectingOutputReceiver implements IShellOutputReceiver {
-    private CountDownLatch mCompletionLatch;
-    private StringBuffer mOutputBuffer = new StringBuffer();
-    private AtomicBoolean mIsCanceled = new AtomicBoolean(false);
+    @NonNull private final CountDownLatch mCompletionLatch;
+    @NonNull private final StringBuffer mOutputBuffer = new StringBuffer();
+    @NonNull private final AtomicBoolean mIsCanceled = new AtomicBoolean(false);
 
     public CollectingOutputReceiver() {
+        mCompletionLatch = new CountDownLatch(1);
     }
 
-    public CollectingOutputReceiver(CountDownLatch commandCompleteLatch) {
+    public CollectingOutputReceiver(@NonNull CountDownLatch commandCompleteLatch) {
         mCompletionLatch = commandCompleteLatch;
     }
 
+    @NonNull
     public String getOutput() {
         return mOutputBuffer.toString();
     }
@@ -46,9 +46,7 @@ public class CollectingOutputReceiver implements IShellOutputReceiver {
         return mIsCanceled.get();
     }
 
-    /**
-     * Cancel the output collection
-     */
+    /** Cancels the output collection. */
     public void cancel() {
         mIsCanceled.set(true);
     }
@@ -56,16 +54,21 @@ public class CollectingOutputReceiver implements IShellOutputReceiver {
     @Override
     public void addOutput(byte[] data, int offset, int length) {
         if (!isCancelled()) {
-            String s;
-            s = new String(data, offset, length, Charsets.UTF_8);
+            String s = new String(data, offset, length, UTF_8);
             mOutputBuffer.append(s);
         }
     }
 
     @Override
     public void flush() {
-        if (mCompletionLatch != null) {
-            mCompletionLatch.countDown();
-        }
+        mCompletionLatch.countDown();
+    }
+
+    public boolean isComplete() {
+        return mCompletionLatch.getCount() == 0;
+    }
+
+    public boolean awaitCompletion(long timeout, TimeUnit unit) throws InterruptedException {
+        return mCompletionLatch.await(timeout, unit);
     }
 }

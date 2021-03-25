@@ -377,7 +377,7 @@ TEST_F(TraceManagerTest, AlwaysUseFixedSizeForPerfetto) {
   // Check the argument.
   EXPECT_EQ(2, perfetto_config.buffers_size());
   EXPECT_EQ(TraceManager::kPerfettoBufferSizeInMb * 1024,
-            perfetto_config.buffers(1).size_kb());
+            perfetto_config.buffers(0).size_kb());
 
   // This needs to happen otherwise the termination handler attempts to call
   // shutdown on the TraceManager which causes a segfault.

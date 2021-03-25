@@ -173,20 +173,6 @@ private val CxxAbiModel.modelMetadataFolder: File
     get() = join(variant.intermediatesFolder, "meta", abi.tag)
 
 /**
- * The command that is executed to build or generate projects
- *   ex, $moduleRootFolder/build/intermediates/cxx/Debug/{hashcode}/meta/x86_64/build_command.txt
- */
-val CxxAbiModel.buildCommandFile: File
-    get() = join(modelMetadataFolder, "build_command.txt")
-
-/**
- * Output of the build
- *   ex, $moduleRootFolder/build/intermediates/cxx/Debug/{hashcode}/meta/x86_64/build_output.txt
- */
-val CxxAbiModel.buildOutputFile: File
-    get() = join(modelMetadataFolder, "build_output.txt")
-
-/**
  * Output file of the Cxx*Model structure
  *   ex, $moduleRootFolder/build/intermediates/cxx/Debug/{hashcode}/meta/x86_64/build_model.json
  */

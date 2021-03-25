@@ -16,13 +16,12 @@
 
 package com.android.build.api.component.impl
 
-import com.android.build.api.component.ActionableComponentObject
 import com.android.build.api.component.ComponentIdentity
 import org.gradle.api.Action
 import java.util.regex.Pattern
 
 /**
- * An [Action] on a [ComponenT], associated with filters.
+ * An [Action] on a [ComponentT], associated with filters.
  *
  * The filters guarantees that [executeFor] only runs the actions on [ComponentT] that match the
  * them.
@@ -31,13 +30,12 @@ import java.util.regex.Pattern
  * [ComponentIdentity].
  */
 class FilteredComponentAction<ComponentT>(
-    val specificType: Class<ComponentT>,
     private val buildType: String? = null,
     private val flavors: List<Pair<String, String>> = listOf(),
     private val namePattern: Pattern? = null,
     private val name: String? = null,
     private val action: Action<ComponentT>
-) where ComponentT: ActionableComponentObject, ComponentT: ComponentIdentity {
+) where ComponentT: ComponentIdentity {
 
     /**
      * executes the action if the component matches the filters.

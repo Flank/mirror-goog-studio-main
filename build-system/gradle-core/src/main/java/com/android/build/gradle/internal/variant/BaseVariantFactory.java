@@ -20,14 +20,12 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.VariantOutput;
 import com.android.build.api.artifact.impl.ArtifactsImpl;
-import com.android.build.api.component.ComponentBuilder;
 import com.android.build.api.component.ComponentIdentity;
-import com.android.build.api.component.impl.AndroidTestBuilderImpl;
 import com.android.build.api.component.impl.AndroidTestImpl;
 import com.android.build.api.component.impl.ComponentImpl;
-import com.android.build.api.component.impl.UnitTestBuilderImpl;
+import com.android.build.api.component.impl.TestFixturesComponentBuilderImpl;
+import com.android.build.api.component.impl.TestFixturesComponentImpl;
 import com.android.build.api.component.impl.UnitTestImpl;
-import com.android.build.api.variant.HasAndroidTestBuilder;
 import com.android.build.api.variant.impl.VariantBuilderImpl;
 import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl;
@@ -53,6 +51,7 @@ import com.android.build.gradle.internal.services.TaskCreationServices;
 import com.android.build.gradle.internal.services.VariantApiServices;
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices;
 import com.android.build.gradle.options.BooleanOption;
+import com.android.builder.core.BuilderConstants;
 import com.android.builder.errors.IssueReporter;
 import com.android.builder.errors.IssueReporter.Type;
 import com.google.common.collect.ImmutableList;
@@ -78,42 +77,70 @@ public abstract class BaseVariantFactory<
 
     @NonNull
     @Override
-    public UnitTestBuilderImpl createUnitTestBuilder(
+    public TestFixturesComponentBuilderImpl createTestFixturesBuilder(
             @NonNull ComponentIdentity componentIdentity,
             @NonNull VariantDslInfo variantDslInfo,
-            @NonNull ComponentBuilder testedComponent,
             @NonNull VariantApiServices variantApiServices) {
         return projectServices
                 .getObjectFactory()
                 .newInstance(
-                        UnitTestBuilderImpl.class,
+                        TestFixturesComponentBuilderImpl.class,
                         variantDslInfo,
                         componentIdentity,
-                        testedComponent,
                         variantApiServices);
     }
 
     @NonNull
     @Override
-    public AndroidTestBuilderImpl createAndroidTestBuilder(
-            @NonNull ComponentIdentity componentIdentity,
+    public TestFixturesComponentImpl createTestFixtures(
+            @NonNull TestFixturesComponentBuilderImpl testFixturesComponentBuilderImpl,
+            @NonNull BuildFeatureValues buildFeatures,
             @NonNull VariantDslInfo variantDslInfo,
-            @NonNull HasAndroidTestBuilder testedComponent,
-            @NonNull VariantApiServices variantApiServices) {
-        return projectServices
-                .getObjectFactory()
-                .newInstance(
-                        AndroidTestBuilderImpl.class,
-                        variantDslInfo,
-                        componentIdentity,
-                        testedComponent,
-                        variantApiServices);
+            @NonNull VariantDependencies variantDependencies,
+            @NonNull VariantSources variantSources,
+            @NonNull VariantPathHelper paths,
+            @NonNull ArtifactsImpl artifacts,
+            @NonNull VariantScope variantScope,
+            @NonNull TestFixturesVariantData variantData,
+            @NonNull VariantImpl mainVariant,
+            @NonNull TransformManager transformManager,
+            @NonNull VariantPropertiesApiServices variantPropertiesApiServices,
+            @NonNull TaskCreationServices taskCreationServices) {
+        TestFixturesComponentImpl testFixturesComponent =
+                projectServices
+                        .getObjectFactory()
+                        .newInstance(
+                                TestFixturesComponentImpl.class,
+                                testFixturesComponentBuilderImpl,
+                                buildFeatures,
+                                variantDslInfo,
+                                variantDependencies,
+                                variantSources,
+                                paths,
+                                artifacts,
+                                variantScope,
+                                variantData,
+                                mainVariant,
+                                transformManager,
+                                variantPropertiesApiServices,
+                                taskCreationServices,
+                                globalScope);
+        // create default output
+        String name =
+                testFixturesComponent.getServices().getProjectInfo().getProjectBaseName()
+                        + "-"
+                        + testFixturesComponent.getBaseName()
+                        + "-testFixtures."
+                        + BuilderConstants.EXT_LIB_ARCHIVE;
+        testFixturesComponent.addVariantOutput(
+                new VariantOutputConfigurationImpl(false, ImmutableList.of()), name);
+        return testFixturesComponent;
     }
 
     @NonNull
     @Override
     public UnitTestImpl createUnitTest(
-            @NonNull UnitTestBuilderImpl unitTestBuilder,
+            @NonNull ComponentIdentity componentIdentity,
             @NonNull BuildFeatureValues buildFeatures,
             @NonNull VariantDslInfo variantDslInfo,
             @NonNull VariantDependencies variantDependencies,
@@ -131,7 +158,7 @@ public abstract class BaseVariantFactory<
                         .getObjectFactory()
                         .newInstance(
                                 UnitTestImpl.class,
-                                unitTestBuilder,
+                                componentIdentity,
                                 buildFeatures,
                                 variantDslInfo,
                                 variantDependencies,
@@ -155,7 +182,7 @@ public abstract class BaseVariantFactory<
     @NonNull
     @Override
     public AndroidTestImpl createAndroidTest(
-            @NonNull AndroidTestBuilderImpl androidTestBuilder,
+            @NonNull ComponentIdentity componentIdentity,
             @NonNull BuildFeatureValues buildFeatures,
             @NonNull VariantDslInfo variantDslInfo,
             @NonNull VariantDependencies variantDependencies,
@@ -173,7 +200,7 @@ public abstract class BaseVariantFactory<
                         .getObjectFactory()
                         .newInstance(
                                 AndroidTestImpl.class,
-                                androidTestBuilder,
+                                componentIdentity,
                                 buildFeatures,
                                 variantDslInfo,
                                 variantDependencies,

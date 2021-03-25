@@ -41,7 +41,9 @@ ext.testEnvironment =
                     // For AccentCharacterAndProguardTest
                     key.startsWith("LC_") ||
                     key.startsWith("LANG") ||
-                    key.startsWith("BUILDBOT_")
+                    key.startsWith("BUILDBOT_") ||
+                    key.startsWith("MALLOC_CONF") ||
+                    key.startsWith("LD_PRELOAD")
             if (captureValue) {
                 providerFactory.environmentVariable(key).forUseAtConfigurationTime().get()
             }

@@ -23,17 +23,16 @@ import org.gradle.api.Incubating
  * changes the build flow for the variant.
  */
 @Incubating
-interface ComponentBuilder: ComponentIdentity,
-    ActionableComponentObject {
+interface ComponentBuilder: ComponentIdentity {
 
     /**
      * Set to `true` if the variant is active and should be configured, false otherwise.
      */
-    @Deprecated("Replaced by enable", ReplaceWith("enable"))
     var enabled: Boolean
 
     /**
      * Set to `true` if the variant is active and should be configured, false otherwise.
      */
+    @Deprecated("Replaced by enable", ReplaceWith("enable"))
     var enable: Boolean
 }

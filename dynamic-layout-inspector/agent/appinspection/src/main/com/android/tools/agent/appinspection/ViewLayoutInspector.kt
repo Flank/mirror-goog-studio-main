@@ -343,8 +343,12 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
     ) {
         synchronized(stateLock) {
             state.screenshotSettings = ScreenshotSettings(
-                updateScreenshotTypeCommand.type.let { if (it == Screenshot.Type.UNKNOWN) state.screenshotSettings.type else it},
-                updateScreenshotTypeCommand.scale
+                updateScreenshotTypeCommand.type.let {
+                    if (it == Screenshot.Type.UNKNOWN) state.screenshotSettings.type else it
+                },
+                updateScreenshotTypeCommand.scale.let {
+                    if (it <= 0f) state.screenshotSettings.scale else it
+                }
             )
         }
         callback.reply {

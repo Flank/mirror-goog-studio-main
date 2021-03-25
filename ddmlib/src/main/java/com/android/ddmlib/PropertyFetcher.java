@@ -225,10 +225,11 @@ public final class PropertyFetcher {
 
     private synchronized void handleException(Throwable e) {
         mCacheState = CacheState.UNPOPULATED;
-        Log.w("PropertyFetcher",
-                String.format("%s getting properties for device %s: %s",
-                        e.getClass().getSimpleName(), mDevice.getSerialNumber(),
-                        e.getMessage()));
+        String msg =
+                String.format(
+                        "%s getting properties for device %s",
+                        e.getClass().getSimpleName(), mDevice.getSerialNumber());
+        Log.w("PropertyFetcher", new Throwable(msg, e));
         for (Map.Entry<String, SettableFuture<String>> entry : mPendingRequests.entrySet()) {
             entry.getValue().setException(e);
         }

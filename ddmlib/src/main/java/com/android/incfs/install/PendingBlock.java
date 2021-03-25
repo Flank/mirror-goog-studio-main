@@ -21,10 +21,15 @@ import java.nio.ByteBuffer;
 import java.nio.file.Path;
 
 /** A block of data belonging to the APK or signature file that is needed by the device. */
-public final class PendingBlock {
+public class PendingBlock {
     public enum Type {
         APK_DATA,
         SIGNATURE_TREE,
+    }
+
+    public enum Compression {
+        NONE,
+        LZ4,
     }
 
     @NonNull private final Path mFilePath;
@@ -53,6 +58,16 @@ public final class PendingBlock {
         this.mBlockSize = blockSize;
     }
 
+    public PendingBlock(@NonNull PendingBlock block) {
+        this.mFilePath = block.mFilePath;
+        this.mType = block.mType;
+        this.mBlockIndex = block.mBlockIndex;
+        this.mBlockCount = block.mBlockCount;
+        this.mApk = block.mApk;
+        this.mBlockOffset = block.mBlockOffset;
+        this.mBlockSize = block.mBlockSize;
+    }
+
     /** The path to the file in which the block resides. */
     @NonNull
     public Path getPath() {
@@ -63,6 +78,12 @@ public final class PendingBlock {
     @NonNull
     public Type getType() {
         return mType;
+    }
+
+    /** @see PendingBlock.Compression */
+    @NonNull
+    public Compression getCompression() {
+        return Compression.NONE;
     }
 
     /** The index of the data block in the file. */
@@ -76,12 +97,12 @@ public final class PendingBlock {
     }
 
     /** The size in bytes of the block data. */
-    short getBlockSize() {
+    public short getBlockSize() {
         return mBlockSize;
     }
 
     /** Reads the block data into the buffer at the current position. */
-    void readBlockData(@NonNull ByteBuffer buffer) throws IOException {
+    public void readBlockData(@NonNull ByteBuffer buffer) throws IOException {
         mApk.readBlockData(buffer, mType, mBlockOffset, mBlockSize);
     }
 

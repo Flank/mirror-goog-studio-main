@@ -71,9 +71,8 @@ abstract class PackageApplication : PackageAndroidArtifact() {
         ) {
             super.handleProvider(taskProvider)
             creationConfig.taskContainer.packageAndroidTask = taskProvider
-            val useOptimizedResources = !creationConfig.debuggable &&
-                    !creationConfig.variantType.isForTesting &&
-                    creationConfig.services.projectOptions[BooleanOption.ENABLE_RESOURCE_OPTIMIZATIONS]
+            val useOptimizedResources =
+                !creationConfig.debuggable && !creationConfig.variantType.isForTesting
             val operationRequest = creationConfig.artifacts.use(taskProvider)
                     .wiredWithDirectories(
                             PackageAndroidArtifact::getResourceFiles,

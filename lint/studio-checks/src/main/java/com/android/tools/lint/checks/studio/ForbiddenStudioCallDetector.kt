@@ -52,9 +52,26 @@ class ForbiddenStudioCallDetector : Detector(), SourceCodeScanner {
             //noinspection LintImplUnexpectedDomain
             moreInfo = "https://shipilev.net/jvm/anatomy-quarks/10-string-intern/"
         )
+
+        @JvmField
+        val FILES_COPY = Issue.create(
+            id = "NoNioFilesCopy",
+            briefDescription = "Do not use `java.nio.file.Files.copy(Path, Path)`",
+            explanation = """
+                `java.nio.file.Files.copy(Path, Path)` propagates the readonly bit
+                on Windows, this can result in a file that can't be overwritten the
+                next time. Instead, use `FileUtils.copyFile(Path, Path)` or Kotlin's
+                `File#copyTo(File)`.
+                """,
+            category = CORRECTNESS,
+            severity = Severity.ERROR,
+            platforms = STUDIO_PLATFORMS,
+            implementation = IMPLEMENTATION,
+            moreInfo = "https://issuetracker.google.com/182063560"
+        )
     }
 
-    override fun getApplicableMethodNames(): List<String> = listOf("intern")
+    override fun getApplicableMethodNames(): List<String> = listOf("intern", "copy")
 
     override fun visitMethodCall(
         context: JavaContext,
@@ -73,6 +90,24 @@ class ForbiddenStudioCallDetector : Detector(), SourceCodeScanner {
                     includeArguments = true
                 ),
                 "Do not intern strings; if reusing strings is truly necessary build a local cache"
+            )
+        }
+        // Files#copy
+        if (method.name == "copy" &&
+            method.isVarArgs() &&
+            context.evaluator.isMemberInClass(method, "java.nio.file.Files") &&
+            context.evaluator.parameterHasType(method, 0, "java.nio.file.Path") &&
+            context.evaluator.parameterHasType(method, 1, "java.nio.file.Path")
+        ) {
+            context.report(
+                FILES_COPY, node,
+                context.getCallLocation(
+                    node,
+                    includeReceiver = false,
+                    includeArguments = true
+                ),
+                "Do not use `java.nio.file.Files.copy(Path, Path)`. " +
+                    "Instead, use `FileUtils.copyFile(Path, Path)` or Kotlin's `File#copyTo(File)`"
             )
         }
     }

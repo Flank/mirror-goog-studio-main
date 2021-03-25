@@ -93,16 +93,22 @@ interface TestOptions {
      * ```
      * android {
      *   testOptions {
-     *     failureRetention {
-     *       enable true
-     *       maxSnapshots 2
+     *     emulatorSnapshots {
+     *       enableForTestFailures true
+     *       maxSnapshotsForTestFailures 2
      *       compressSnapshots false
      *     }
      *   }
      * }
      * ```
      */
+    val emulatorSnapshots: EmulatorSnapshots
+
+    fun emulatorSnapshots(action: EmulatorSnapshots.() -> Unit)
+
+    @Deprecated("Renamed to emulatorSnapshots", replaceWith = ReplaceWith("emulatorSnapshots"))
     val failureRetention: FailureRetention
 
+    @Deprecated("Renamed to emulatorSnapshots", replaceWith = ReplaceWith("emulatorSnapshots"))
     fun failureRetention(action: FailureRetention.() -> Unit)
 }

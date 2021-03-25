@@ -207,11 +207,10 @@ class FilteredComponentActionTest: AbstractReturnGivenReturnExpectTest<Pair<Filt
 
         val operation = with(given.first) {
             FilteredComponentAction(
-                specificType = VariantBuilder::class.java,
-                name = name,
-                namePattern = namePattern,
                 buildType = buildType,
                 flavors = productFlavors ?: listOf(),
+                namePattern = namePattern,
+                name = name,
                 action = Action {
                     atomicBoolean.set(true)
                 })

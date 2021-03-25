@@ -20,6 +20,8 @@ import com.android.build.api.variant.Renderscript
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.builder.dexing.DexingType
 import com.android.builder.model.CodeShrinker
+import org.gradle.api.file.RegularFile
+import org.gradle.api.provider.ListProperty
 
 /**
  * CreationConfig for variants that produces an artifact that is directly install-able to devices

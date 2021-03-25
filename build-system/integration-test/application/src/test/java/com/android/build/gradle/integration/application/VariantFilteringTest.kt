@@ -104,7 +104,7 @@ class VariantFilteringTest: AbstractReturnGivenBuildResultTest<String, VariantFi
     }
 
     @Test
-    fun `filtering via new api using generic callback on build type names`() {
+    fun `filtering using generic callback on build type names`() {
         withAndroidComponents {
             """
                 |    beforeVariants(selector().all(), {
@@ -124,7 +124,7 @@ class VariantFilteringTest: AbstractReturnGivenBuildResultTest<String, VariantFi
     }
 
     @Test
-    fun `filtering via new api using buildtype callback`() {
+    fun `filtering using buildtype callback`() {
         given {""}
         withAndroidComponents {
             """
@@ -143,7 +143,7 @@ class VariantFilteringTest: AbstractReturnGivenBuildResultTest<String, VariantFi
     }
 
     @Test
-    fun `filtering via new api using flavor callback`() {
+    fun `filtering using flavor callback`() {
         given {
             """
                 |    flavorDimensions "one"
@@ -176,7 +176,7 @@ class VariantFilteringTest: AbstractReturnGivenBuildResultTest<String, VariantFi
     }
 
     @Test
-    fun `filtering via new api using multiple flavor callbacks`() {
+    fun `filtering using multiple flavor callbacks`() {
         given {
             """
                 |    flavorDimensions "one", "two"
@@ -228,7 +228,7 @@ class VariantFilteringTest: AbstractReturnGivenBuildResultTest<String, VariantFi
     }
 
     @Test
-    fun `filtering via new api using flavor callback then build type callback`() {
+    fun `filtering using flavor callback then build type callback`() {
         given {
             """
                 |    flavorDimensions "one"
@@ -267,7 +267,7 @@ class VariantFilteringTest: AbstractReturnGivenBuildResultTest<String, VariantFi
     }
 
     @Test
-    fun `filtering via new api using build-type callback then flavor callback`() {
+    fun `filtering using build-type callback then flavor callback`() {
         given {
             """
                 |    flavorDimensions "one"
@@ -306,7 +306,7 @@ class VariantFilteringTest: AbstractReturnGivenBuildResultTest<String, VariantFi
     }
 
     @Test
-    fun `filtering via new api using multiple flavor callback then build-type callback`() {
+    fun `filtering using multiple flavor callback then build-type callback`() {
         given {
             """
                 |    flavorDimensions "one", "two"
@@ -362,7 +362,7 @@ class VariantFilteringTest: AbstractReturnGivenBuildResultTest<String, VariantFi
     }
 
     @Test
-    fun `filtering via new api using build-type callback then multiple flavor callback`() {
+    fun `filtering using build-type callback then multiple flavor callback`() {
         given {
             """
                 |    flavorDimensions "one", "two"
@@ -419,7 +419,7 @@ class VariantFilteringTest: AbstractReturnGivenBuildResultTest<String, VariantFi
     }
 
     @Test
-    fun `filtering via new api using name callback`() {
+    fun `filtering using name callback`() {
         given {
             """
                 |    flavorDimensions "one"
@@ -457,30 +457,7 @@ class VariantFilteringTest: AbstractReturnGivenBuildResultTest<String, VariantFi
     }
 
     @Test
-    fun `unit-test filtering via deprecated api using buildtype callback`() {
-        withAndroidComponents {
-            """
-                |    beforeUnitTests(selector()
-                |          .withBuildType("debug"), {
-                |        enabled = false
-                |    })
-            """
-        }
-
-        expect {
-            variant {
-                name = "release"
-                androidTest = false
-            }
-            variant {
-                name = "debug"
-                unitTest = false
-            }
-        }
-    }
-
-    @Test
-    fun `unit-test filtering via new api using buildtype callback`() {
+    fun `unit-test filtering using buildtype callback`() {
         withAndroidComponents {
             """
                 |    beforeVariants(selector()
@@ -503,30 +480,7 @@ class VariantFilteringTest: AbstractReturnGivenBuildResultTest<String, VariantFi
     }
 
     @Test
-    fun `android-test filtering via deprecated api using buildtype callback`() {
-        withAndroidComponents {
-            """
-                |    beforeAndroidTests(selector()
-                |          .withBuildType("debug"), {
-                |        enabled = false
-                |    })
-            """
-        }
-
-        expect {
-            variant {
-                name = "release"
-                androidTest = false
-            }
-            variant {
-                name = "debug"
-                androidTest = false
-            }
-        }
-    }
-
-    @Test
-    fun `android-test filtering via new api using buildtype callback`() {
+    fun `android-test filtering using buildtype callback`() {
         withAndroidComponents {
             """
                 |    beforeVariants(selector()

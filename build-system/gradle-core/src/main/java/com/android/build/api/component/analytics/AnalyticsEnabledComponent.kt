@@ -33,6 +33,7 @@ abstract class AnalyticsEnabledComponent(
     val stats: GradleBuildVariant.Builder,
     val objectFactory: ObjectFactory
 ) : Component {
+
     override val artifacts: Artifacts
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
@@ -103,5 +104,6 @@ abstract class AnalyticsEnabledComponent(
             return delegate.flavorName
         }
 
-    override fun getName(): String = delegate.name
+    override val name: String
+        get() = delegate.name
 }

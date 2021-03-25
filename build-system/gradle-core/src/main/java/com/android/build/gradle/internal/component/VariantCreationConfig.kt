@@ -20,6 +20,8 @@ import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.Packaging
 import com.android.build.api.variant.impl.ResValue
+import org.gradle.api.file.RegularFile
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 
 interface VariantCreationConfig: ComponentCreationConfig {
@@ -42,4 +44,6 @@ interface VariantCreationConfig: ComponentCreationConfig {
     val isMultiDexEnabled: Boolean
 
     val isCoreLibraryDesugaringEnabled: Boolean
+
+    val proguardFiles: ListProperty<RegularFile>
 }

@@ -15,9 +15,9 @@
  */
 package com.android.tools.appinspection.network.okhttp
 
+import com.android.tools.appinspection.common.logError
 import com.android.tools.appinspection.network.HttpTrackerFactory
 import com.android.tools.appinspection.network.trackers.HttpConnectionTracker
-import com.android.tools.appinspection.network.utils.logError
 import okhttp3.Interceptor
 import okhttp3.Request
 import okhttp3.Response

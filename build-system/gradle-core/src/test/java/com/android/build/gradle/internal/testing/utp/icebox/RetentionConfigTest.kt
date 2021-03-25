@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.testing.utp.icebox
 
 import com.android.build.gradle.internal.SdkComponentsBuildService
-import com.android.build.gradle.internal.dsl.FailureRetention
+import com.android.build.gradle.internal.dsl.EmulatorSnapshots
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.fixtures.FakeProviderFactory
 import com.android.build.gradle.internal.services.DslServices
@@ -34,7 +34,7 @@ import org.mockito.Mockito
 
 class RetentionConfigTest {
     private lateinit var dslServices: DslServices
-    private lateinit var failureRetention: FailureRetention
+    private lateinit var emulatorSnapshots: EmulatorSnapshots
 
     val emptyProjectOptions = ProjectOptions(
         ImmutableMap.of(),
@@ -47,19 +47,19 @@ class RetentionConfigTest {
     fun setUp() {
         val sdkComponents = Mockito.mock(SdkComponentsBuildService::class.java)
         dslServices = createDslServices(sdkComponents = FakeGradleProvider(sdkComponents))
-        failureRetention = FailureRetention(dslServices)
+        emulatorSnapshots = EmulatorSnapshots(dslServices)
     }
 
     @Test
     fun disableByDefault() {
-        val retentionConfig = createRetentionConfig(emptyProjectOptions, failureRetention)
+        val retentionConfig = createRetentionConfig(emptyProjectOptions, emulatorSnapshots)
         assertThat(retentionConfig.enabled).isFalse()
     }
 
     @Test
     fun enableByDslWithDefaultSetup() {
-        failureRetention.enable = true
-        val retentionConfig = createRetentionConfig(emptyProjectOptions, failureRetention)
+        emulatorSnapshots.enableForTestFailures = true
+        val retentionConfig = createRetentionConfig(emptyProjectOptions, emulatorSnapshots)
         assertThat(retentionConfig.enabled).isTrue()
         assertThat(retentionConfig.maxSnapshots).isEqualTo(2)
         assertThat(retentionConfig.compressSnapshots).isFalse()
@@ -69,9 +69,9 @@ class RetentionConfigTest {
     @Test
     fun setMaxSnapshotsByDsl() {
         val maxSnapshots = 3
-        failureRetention.enable = true
-        failureRetention.maxSnapshots = maxSnapshots
-        val retentionConfig = createRetentionConfig(emptyProjectOptions, failureRetention)
+        emulatorSnapshots.enableForTestFailures = true
+        emulatorSnapshots.maxSnapshotsForTestFailures = maxSnapshots
+        val retentionConfig = createRetentionConfig(emptyProjectOptions, emulatorSnapshots)
         assertThat(retentionConfig.enabled).isTrue()
         assertThat(retentionConfig.maxSnapshots).isEqualTo(maxSnapshots)
         assertThat(retentionConfig.retainAll).isFalse()
@@ -79,18 +79,18 @@ class RetentionConfigTest {
 
     @Test
     fun setRetainAllByDsl() {
-        failureRetention.enable = true
-        failureRetention.retainAll()
-        val retentionConfig = createRetentionConfig(emptyProjectOptions, failureRetention)
+        emulatorSnapshots.enableForTestFailures = true
+        emulatorSnapshots.retainAll()
+        val retentionConfig = createRetentionConfig(emptyProjectOptions, emulatorSnapshots)
         assertThat(retentionConfig.enabled).isTrue()
         assertThat(retentionConfig.retainAll).isTrue()
     }
 
     @Test
     fun setCompressionDsl() {
-        failureRetention.enable = true
-        failureRetention.compressSnapshots = true
-        val retentionConfig = createRetentionConfig(emptyProjectOptions, failureRetention)
+        emulatorSnapshots.enableForTestFailures = true
+        emulatorSnapshots.compressSnapshots = true
+        val retentionConfig = createRetentionConfig(emptyProjectOptions, emulatorSnapshots)
         assertThat(retentionConfig.enabled).isTrue()
         assertThat(retentionConfig.compressSnapshots).isTrue()
     }
@@ -112,9 +112,9 @@ class RetentionConfigTest {
                 FakeProviderFactory.factory, properties.build()
             )
         )
-        assertThat(failureRetention.enable).isFalse()
-        assertThat(failureRetention.compressSnapshots).isFalse()
-        val retentionConfig = createRetentionConfig(projectOptions, failureRetention)
+        assertThat(emulatorSnapshots.enableForTestFailures).isFalse()
+        assertThat(emulatorSnapshots.compressSnapshots).isFalse()
+        val retentionConfig = createRetentionConfig(projectOptions, emulatorSnapshots)
         assertThat(retentionConfig.enabled).isTrue()
         assertThat(retentionConfig.compressSnapshots).isTrue()
         assertThat(retentionConfig.maxSnapshots).isEqualTo(1)
@@ -134,10 +134,10 @@ class RetentionConfigTest {
                 FakeProviderFactory.factory, properties.build()
             )
         )
-        failureRetention.enable = true
-        failureRetention.getRetainAll()
-        failureRetention.maxSnapshots = 2
-        val retentionConfig = createRetentionConfig(projectOptions, failureRetention)
+        emulatorSnapshots.enableForTestFailures = true
+        emulatorSnapshots.getRetainAll()
+        emulatorSnapshots.maxSnapshotsForTestFailures = 2
+        val retentionConfig = createRetentionConfig(projectOptions, emulatorSnapshots)
         assertThat(retentionConfig.enabled).isTrue()
         assertThat(retentionConfig.maxSnapshots).isEqualTo(maxSnapshot)
         assertThat(retentionConfig.retainAll).isFalse()
@@ -156,8 +156,8 @@ class RetentionConfigTest {
                 FakeProviderFactory.factory, properties.build()
             )
         )
-        assertThat(failureRetention.enable).isFalse()
-        val retentionConfig = createRetentionConfig(projectOptions, failureRetention)
+        assertThat(emulatorSnapshots.enableForTestFailures).isFalse()
+        val retentionConfig = createRetentionConfig(projectOptions, emulatorSnapshots)
         assertThat(retentionConfig.enabled).isTrue()
     }
 
@@ -174,8 +174,8 @@ class RetentionConfigTest {
                 FakeProviderFactory.factory, properties.build()
             )
         )
-        failureRetention.enable = true
-        val retentionConfig = createRetentionConfig(projectOptions, failureRetention)
+        emulatorSnapshots.enableForTestFailures = true
+        val retentionConfig = createRetentionConfig(projectOptions, emulatorSnapshots)
         assertThat(retentionConfig.enabled).isFalse()
     }
 
@@ -192,9 +192,9 @@ class RetentionConfigTest {
                 FakeProviderFactory.factory, properties.build()
             )
         )
-        failureRetention.enable = true
-        assertThat(failureRetention.getRetainAll()).isFalse()
-        val retentionConfig = createRetentionConfig(projectOptions, failureRetention)
+        emulatorSnapshots.enableForTestFailures = true
+        assertThat(emulatorSnapshots.getRetainAll()).isFalse()
+        val retentionConfig = createRetentionConfig(projectOptions, emulatorSnapshots)
         assertThat(retentionConfig.enabled).isTrue()
         assertThat(retentionConfig.retainAll).isTrue()
     }

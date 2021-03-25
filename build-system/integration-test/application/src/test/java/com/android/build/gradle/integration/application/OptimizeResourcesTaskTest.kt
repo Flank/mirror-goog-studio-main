@@ -19,22 +19,7 @@ class OptimizeResourcesTaskTest {
             .create()
 
     @Test
-    fun `test OptimizeResourcesTask produces smaller APK during release build` () {
-        project.gradlePropertiesFile.writeText("android.enableResourceOptimizations=false")
-                project.execute("assembleRelease")
-        val unoptimzedApk = project.getApk(GradleTestProject.ApkType.RELEASE).contentsSize
-
-        project.gradlePropertiesFile.writeText("android.enableResourceOptimizations=true")
-        project.execute("assembleRelease")
-        val optimzedApk = project.getApk(GradleTestProject.ApkType.RELEASE).contentsSize
-        assertThat(optimzedApk)
-
-        assertThat(unoptimzedApk).isGreaterThan(optimzedApk)
-    }
-
-    @Test
     fun `test OptimizeResourcesTask works with resource shrinker` () {
-        project.gradlePropertiesFile.writeText("android.enableResourceOptimizations=false")
         project.buildFile.appendText("""android {
                 buildTypes {
                     release {
@@ -44,16 +29,9 @@ class OptimizeResourcesTaskTest {
                 }
             }""")
         project.execute("assembleRelease")
-        val shrinkedApkSize =
-                project.getApk(GradleTestProject.ApkType.RELEASE).contentsSize
-
-        project.gradlePropertiesFile.writeText("android.enableResourceOptimizations=true")
-        project.execute("assembleRelease")
         val shrinkedOptimizedApkSize =
                 project.getApk(GradleTestProject.ApkType.RELEASE).contentsSize
 
-        assertThat(shrinkedApkSize).isNotEqualTo(0)
-        assertThat(shrinkedOptimizedApkSize).isNotEqualTo(0)
-        assertThat(shrinkedApkSize).isGreaterThan(shrinkedOptimizedApkSize)
+        assertThat(shrinkedOptimizedApkSize).isGreaterThan(0)
     }
 }

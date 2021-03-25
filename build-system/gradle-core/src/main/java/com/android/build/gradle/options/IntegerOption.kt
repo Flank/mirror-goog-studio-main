@@ -76,7 +76,7 @@ enum class IntegerOption(
      * 0: disable Android Test Retention.
      * <0: enable Android Test Retention with unlimited number of snapshots.
      */
-    TEST_FAILURE_RETENTION("android.experimental.testOptions.failureRetention", ApiStage.Experimental),
+    TEST_FAILURE_RETENTION("android.experimental.testOptions.emulatorSnapshots", ApiStage.Experimental),
 
     /* ------------
      * REMOVED APIS

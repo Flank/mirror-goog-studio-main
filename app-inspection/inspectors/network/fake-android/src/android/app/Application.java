@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 The Android Open Source Project
+ * Copyright (C) 2021 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,16 +14,13 @@
  * limitations under the License.
  */
 
-package com.android.build.api.component.analytics
+package android.app;
 
-import com.android.build.api.component.TestComponentBuilder
-import com.google.wireless.android.sdk.stats.GradleBuildVariant
+import android.content.pm.ApplicationInfo;
 
-/**
- * Shim object for [TestComponentBuilder] that records all mutating accesses to the analytics.
- */
-abstract class AnalyticsEnabledTestComponentBuilder(
-    delegate: TestComponentBuilder,
-    stats: GradleBuildVariant.Builder
-) : AnalyticsEnabledComponentBuilder(delegate, stats),
-    TestComponentBuilder
+public class Application {
+
+    public ApplicationInfo getApplicationInfo() {
+        return new ApplicationInfo();
+    }
+}

@@ -60,5 +60,5 @@ fun androidManifestXml(
     </activity>
     </application>
     </manifest>
-    """
+    """.collapseEmptyActivityTags()
 }

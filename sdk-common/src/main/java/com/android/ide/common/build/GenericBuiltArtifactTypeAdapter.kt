@@ -80,6 +80,7 @@ abstract class CommonBuiltArtifactTypeAdapter<T: CommonBuiltArtifact>: TypeAdapt
         var versionCode = 0
         var versionName: String? = null
         var outputFile: String? = null
+        var attributes: ImmutableMap<String, String> = ImmutableMap.of()
 
         while (reader.hasNext()) {
             when (val attributeName = reader.nextName()) {
@@ -136,17 +137,27 @@ internal class GenericBuiltArtifactTypeAdapter: CommonBuiltArtifactTypeAdapter<G
             out.endObject()
         }
         out.endArray()
+        out.name("attributes").beginArray()
+        for (attribute in value.attributes) {
+            out.beginObject()
+            out.name("key").value(attribute.key)
+            out.name("value").value(attribute.value)
+            out.endObject()
+        }
+        out.endArray()
     }
 
     @Throws(IOException::class)
     override fun read(reader: JsonReader): GenericBuiltArtifact {
         var outputType: String? = null
         val filters = ImmutableList.Builder<GenericFilterConfiguration>()
+        val attributes = mutableMapOf<String, String>()
         return super.read(reader,
             { attributeName: String ->
                 when(attributeName) {
                     "type" -> outputType = reader.nextString()
                     "filters" -> readFilters(reader, filters)
+                    "attributes" -> readAttributes(reader, attributes)
                     // any other attribute we do not know about is AGP implementation details
                     // we do not care about. it has to be a String though.
                     else -> reader.nextString()
@@ -160,7 +171,8 @@ internal class GenericBuiltArtifactTypeAdapter: CommonBuiltArtifactTypeAdapter<G
                     filters = filters.build(),
                     outputFile = outputFile,
                     versionCode = versionCode,
-                    versionName = versionName
+                    versionName = versionName,
+                    attributes = attributes
                 )
             })
     }
@@ -181,6 +193,28 @@ internal class GenericBuiltArtifactTypeAdapter: CommonBuiltArtifactTypeAdapter<G
             }
             if (filterType != null && value != null) {
                 filters.add(GenericFilterConfiguration(filterType, value))
+            }
+            reader.endObject()
+        }
+        reader.endArray()
+    }
+
+    @Throws(IOException::class)
+    private fun readAttributes(reader: JsonReader, attributes: MutableMap<String, String>) {
+
+        reader.beginArray()
+        while (reader.hasNext()) {
+            reader.beginObject()
+            var key: String? = null
+            var value: String? = null
+            while (reader.hasNext()) {
+                when (reader.nextName()) {
+                    "key" -> key = reader.nextString()
+                    "value" -> value = reader.nextString()
+                }
+            }
+            if (key != null && value != null) {
+                attributes[key] = value
             }
             reader.endObject()
         }

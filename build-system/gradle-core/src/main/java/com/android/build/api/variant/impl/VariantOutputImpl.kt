@@ -34,7 +34,7 @@ data class VariantOutputImpl(
     @get:Optional
     override val versionName: Property<String?>,
     @get:Input
-    override val enable: Property<Boolean>,
+    override val enabled: Property<Boolean>,
 
     @get:Input
     val variantOutputConfiguration: VariantOutputConfigurationImpl,
@@ -49,7 +49,7 @@ data class VariantOutputImpl(
 ) : VariantOutput, VariantOutputConfiguration by variantOutputConfiguration {
 
     @get:Internal
-    override val enabled = enable
+    override val enable = enabled
 
     data class SerializedForm(
         @get:Input

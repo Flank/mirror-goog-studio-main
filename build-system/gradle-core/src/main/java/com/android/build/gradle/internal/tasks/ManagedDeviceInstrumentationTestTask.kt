@@ -23,7 +23,7 @@ import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.computeAvdName
-import com.android.build.gradle.internal.dsl.FailureRetention
+import com.android.build.gradle.internal.dsl.EmulatorSnapshots
 import com.android.build.gradle.internal.dsl.ManagedVirtualDevice
 import com.android.build.gradle.internal.process.GradleJavaProcessExecutor
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
@@ -349,7 +349,7 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
                 .setDisallowChanges(
                         createRetentionConfig(
                                 projectOptions,
-                                extension.testOptions.failureRetention as FailureRetention))
+                                extension.testOptions.emulatorSnapshots as EmulatorSnapshots))
 
             task.dependencies =
                 creationConfig

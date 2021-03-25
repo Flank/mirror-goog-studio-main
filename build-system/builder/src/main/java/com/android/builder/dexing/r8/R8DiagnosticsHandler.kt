@@ -21,6 +21,7 @@ import com.android.ide.common.blame.Message
 import com.android.ide.common.blame.MessageReceiver
 import com.android.tools.r8.Diagnostic
 import com.android.tools.r8.diagnostic.MissingDefinitionsDiagnostic
+import com.android.tools.r8.errors.UnsupportedMainDexListUsageDiagnostic
 import java.nio.file.Path
 
 /** Handle R8-specific warning/errors and capture additional information. */
@@ -33,6 +34,16 @@ class R8DiagnosticsHandler(
     override fun warning(warning: Diagnostic?) {
         if (warning is MissingDefinitionsDiagnostic) {
             generateMissingRulesFile(warning, Message.Kind.WARNING)
+        }
+
+        if (warning is UnsupportedMainDexListUsageDiagnostic) {
+            messageReceiver.receiveMessage(
+                Message(
+                    Message.Kind.WARNING,
+                    "Using multiDexKeepFile property with R8 is deprecated and will be fully" +
+                            " removed in AGP 8.0. Please migrate to use multiDexKeepProguard instead."
+                )
+            )
         }
 
         super.warning(warning)

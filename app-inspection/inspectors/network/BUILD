@@ -2,6 +2,7 @@ package(default_visibility = ["//visibility:public"])
 
 load("//tools/adt/idea/studio:studio.bzl", "studio_data")
 load("//tools/base/app-inspection:app_inspection.bzl", "app_inspection_jar")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_test")
 load("//tools/base/bazel:proto.bzl", "android_java_proto_library")
 
 android_java_proto_library(
@@ -28,7 +29,6 @@ app_inspection_jar(
     # do not sort: fake_android must come before latest_jar in the classpath to override small pieces of it
     deps = [
         ":network_inspector_java_proto",
-        "//tools/base/app-inspection/inspectors/network/fake-android:fake_android",
         "//prebuilts/studio/sdk:platforms/latest_jar",
         "//prebuilts/tools/common/m2/repository/androidx/annotation/annotation/1.1.0:jar",
         "//prebuilts/tools/common/m2/repository/androidx/inspection/inspection/1.0.0:jar",
@@ -37,6 +37,30 @@ app_inspection_jar(
         "//prebuilts/tools/common/m2/repository/com/squareup/okhttp/okhttp/2.5.0:jar",
         "//prebuilts/tools/common/m2/repository/com/squareup/okhttp3/okhttp/3.3.0:jar",
         "//prebuilts/tools/common/m2/repository/com/squareup/okio/okio/1.6.0:jar",
+        "//tools/base/app-inspection/inspectors/common:app-inspection.inspectors.common",
+    ],
+)
+
+kotlin_test(
+    name = "agent_tests",
+    srcs = glob([
+        "testSrc/**/*.kt",
+        "testSrc/**/*.java",
+    ]),
+    jvm_flags = [
+        "-Dtest.suite.jar=agent_tests.jar",
+    ],
+    test_class = "com.android.testutils.JarTestSuite",
+    runtime_deps = [
+        "//prebuilts/studio/sdk:platforms/latest_runtime_jar",
+    ],
+    deps = [
+        ":agent-sources_undexed",
+        "//tools/base/app-inspection/inspectors/network/fake-android:fake_android",
+        "//tools/base/testutils:tools.testutils",
+        "//tools/base/third_party:com.google.guava_guava",
+        "//tools/base/third_party:com.google.truth_truth",
+        "//tools/base/third_party:junit_junit",
     ],
 )
 

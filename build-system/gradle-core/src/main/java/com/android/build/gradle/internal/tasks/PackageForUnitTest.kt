@@ -83,7 +83,7 @@ abstract class PackageForUnitTest : NonIncrementalTask() {
                     )
                     val destPath = apkAssetsPath.resolve(relativePath)
                     Files.createDirectories(destPath.parent)
-                    Files.copy(path, destPath)
+                    FileUtils.copyFile(path, destPath)
                     return FileVisitResult.CONTINUE
                 }
             })

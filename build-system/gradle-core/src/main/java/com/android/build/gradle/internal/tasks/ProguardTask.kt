@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.google.common.base.Charsets
 import com.google.common.io.Files
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.ProjectLayout
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
@@ -37,6 +38,7 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
 import java.util.concurrent.Callable
+import javax.inject.Inject
 
 private const val PROGUARD_CONCURRENCY_LIMIT = 4
 private val proguardWorkLimiter: WorkLimiter by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
@@ -44,7 +46,9 @@ private val proguardWorkLimiter: WorkLimiter by lazy(LazyThreadSafetyMode.SYNCHR
 }
 
 @CacheableTask
-abstract class ProguardTask : ProguardConfigurableTask() {
+abstract class ProguardTask @Inject constructor(
+    projectLayout: ProjectLayout
+): ProguardConfigurableTask(projectLayout) {
 
     @get:OutputFile
     abstract val shrunkJar: RegularFileProperty
@@ -96,7 +100,7 @@ abstract class ProguardTask : ProguardConfigurableTask() {
                             seedsFile,
                             usageFile,
                             testedMappingFile.singleOrNull(),
-                            configurationFiles.files,
+                            reconcileDefaultProguardFile(configurationFiles, extractedDefaultProguardFile),
                             bootClasspath.files,
                             fullBootClasspath.files,
                             keepRules.get(),

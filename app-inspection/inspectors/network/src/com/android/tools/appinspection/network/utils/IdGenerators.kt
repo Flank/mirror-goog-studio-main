@@ -16,11 +16,13 @@
 
 package com.android.tools.appinspection.network.utils
 
+import androidx.annotation.VisibleForTesting
 import java.util.concurrent.atomic.AtomicLong
 
 sealed class IdGenerator {
 
-    private val id = AtomicLong()
+    @VisibleForTesting
+    val id = AtomicLong()
 
     fun nextId() = id.getAndIncrement()
 }

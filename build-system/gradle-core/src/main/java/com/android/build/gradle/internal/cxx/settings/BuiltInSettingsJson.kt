@@ -184,12 +184,7 @@ fun CxxAbiModel.getAndroidGradleSettings() : Settings {
     // This is the main switch point which defines the group of output folders used for
     // configuration and build.
     val legacyConfigurationSegment = join(variant.module.buildSystem.tag, NDK_VARIANT_NAME.ref)
-    val configurationSegment =
-            if (variant.module.project.isConfigurationFoldingEnabled) {
-                join(NDK_VARIANT_OPTIMIZATION_TAG.ref, NDK_CONFIGURATION_HASH.ref)
-            } else {
-                legacyConfigurationSegment
-            }
+    val configurationSegment = join(NDK_VARIANT_OPTIMIZATION_TAG.ref, NDK_CONFIGURATION_HASH.ref)
 
     nameTable.addAll(
         NDK_VARIANT_BUILD_ROOT to join(NDK_MODULE_BUILD_ROOT.ref, configurationSegment),

@@ -107,7 +107,7 @@ for i in 1 2 3
 do
   start_time=$SECONDS
 
-  $emulator @emu -no-window -port $1 -grpc $emulator_grpc_port -delay-adb -no-snapshot -read-only 2>&1 &
+  $emulator @emu -no-window -port $1 -grpc $emulator_grpc_port -delay-adb -no-snapshot 2>&1 &
   emu_pid=$!
 
   # Wait for the emulator to boot.

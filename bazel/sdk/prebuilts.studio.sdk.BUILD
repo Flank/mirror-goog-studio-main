@@ -202,6 +202,7 @@ java_import(
     testonly = 1,
     visibility = [
         "//tools/base/dynamic-layout-inspector/agent:__subpackages__",
+        "//tools/base/app-inspection/inspectors:__subpackages__",
     ],
 )
 

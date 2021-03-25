@@ -19,6 +19,7 @@ import com.android.ide.common.gradle.model.CodeShrinker
 import com.android.ide.common.gradle.model.IdeAndroidArtifact
 import com.android.ide.common.gradle.model.IdeAndroidArtifactOutput
 import com.android.ide.common.gradle.model.IdeArtifactName
+import com.android.ide.common.gradle.model.IdeBuildTasksAndOutputInformation
 import com.android.ide.common.gradle.model.IdeClassField
 import com.android.ide.common.gradle.model.IdeDependencies
 import com.android.ide.common.gradle.model.IdeSourceProvider
@@ -29,7 +30,6 @@ data class IdeAndroidArtifactImpl(
   override val name: IdeArtifactName,
   override val compileTaskName: String,
   override val assembleTaskName: String,
-  override val assembleTaskOutputListingFile: String,
   override val classesFolder: File,
   override val additionalClassesFolders: Collection<File>,
   override val javaResourcesFolder: File?,
@@ -47,10 +47,7 @@ data class IdeAndroidArtifactImpl(
   override val additionalRuntimeApks: List<File>,
   override val testOptions: IdeTestOptions?,
   override val abiFilters: Set<String>,
-  override val bundleTaskName: String?,
-  override val bundleTaskOutputListingFile: String?,
-  override val apkFromBundleTaskName: String?,
-  override val apkFromBundleTaskOutputListingFile: String?,
+  override val buildInformation: IdeBuildTasksAndOutputInformation,
   override val codeShrinker: CodeShrinker?
 ) : IdeAndroidArtifact {
   override val generatedSourceFolders: Collection<File> get() = mutableGeneratedSourceFolders

@@ -17,17 +17,14 @@
 package com.android.build.gradle.internal.testing.utp
 
 import com.android.build.gradle.internal.dsl.TestOptions
-import com.android.build.gradle.internal.testing.CustomTestRunListener
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
-import com.android.ddmlib.testrunner.TestIdentifier
 import com.android.ide.common.process.JavaProcessExecutor
 import com.android.ide.common.process.LoggedProcessOutputHandler
 import com.android.ide.common.process.ProcessInfoBuilder
 import com.android.utils.ILogger
 import com.google.common.io.Files
 import com.google.protobuf.TextFormat
-import com.google.testing.platform.proto.api.core.TestStatusProto
 import com.google.testing.platform.proto.api.core.TestSuiteResultProto
 import java.io.File
 import java.io.FileInputStream
@@ -88,59 +85,10 @@ internal fun getResultsProto(outputDir: File): TestSuiteResultProto.TestSuiteRes
     }.build()
 }
 
-/**
- * Creates JUnit test report XML file based on information in the results proto.
- */
-internal fun createTestReportXml(
-    resultsProto: TestSuiteResultProto.TestSuiteResult,
-    deviceName: String,
-    projectName: String,
-    flavorName: String,
-    logger: ILogger,
-    reportOutputDir: File) {
-    CustomTestRunListener(deviceName, projectName, flavorName, logger).apply {
-        setReportDir(reportOutputDir)
-        var numTestFails = 0
-        var totalElapsedTimeMillis = 0L
-        testRunStarted(deviceName, resultsProto.testResultCount)
-        resultsProto.testResultList.forEach { testResult ->
-            val testId = TestIdentifier(
-                "${testResult.testCase.testPackage}.${testResult.testCase.testClass}",
-                testResult.testCase.testMethod)
-            testStarted(testId)
-            when(testResult.testStatus) {
-                TestStatusProto.TestStatus.FAILED, TestStatusProto.TestStatus.ERROR -> {
-                    testFailed(testId, testResult.error.stackTrace)
-                    ++numTestFails
-                }
-                TestStatusProto.TestStatus.IGNORED -> {
-                    testIgnored(testId)
-                }
-                else -> {}
-            }
-            testEnded(testId, mapOf())
-
-            val startTimeMillis =
-                testResult.testCase.startTime.seconds * 1000L + testResult.testCase.startTime.nanos / 1000000L
-            val endTimeMillis =
-                testResult.testCase.endTime.seconds * 1000L + testResult.testCase.endTime.nanos / 1000000L
-            runResult.testResults.getValue(testId).apply {
-                startTime = startTimeMillis
-                endTime = endTimeMillis
-            }
-            totalElapsedTimeMillis += endTimeMillis - startTimeMillis
-        }
-        if (numTestFails > 0) {
-            testRunFailed("There was $numTestFails failure(s).")
-        }
-        testRunEnded(totalElapsedTimeMillis, mapOf())
-    }
-}
-
 fun shouldEnableUtp(
     projectOptions: ProjectOptions,
     testOptions: TestOptions?
 ): Boolean {
     return (projectOptions[BooleanOption.ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM]
-            || (testOptions != null && testOptions.failureRetention.enable))
+            || (testOptions != null && testOptions.emulatorSnapshots.enableForTestFailures))
 }

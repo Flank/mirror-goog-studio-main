@@ -37,9 +37,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.BooleanOption.BUILD_ONLY_TARGET_ABI
 import com.android.build.gradle.options.BooleanOption.ENABLE_CMAKE_BUILD_COHABITATION
-import com.android.build.gradle.options.BooleanOption.ENABLE_NATIVE_CONFIGURATION_FOLDING
 import com.android.build.gradle.options.BooleanOption.ENABLE_PROFILE_JSON
-import com.android.build.gradle.options.BooleanOption.PREFER_CMAKE_FILE_API
 import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.options.StringOption
 import com.android.build.gradle.options.StringOption.IDE_BUILD_TARGET_ABI
@@ -117,7 +115,6 @@ data class CxxConfigurationParameters(
     val isBuildOnlyTargetAbiEnabled: Boolean,
     val ideBuildTargetAbi: String?,
     val isCmakeBuildCohabitationEnabled: Boolean,
-    val isConfigurationFoldingEnabled: Boolean,
     val chromeTraceJsonFolder: File?,
     val isPrefabEnabled: Boolean,
     val prefabClassPath: FileCollection?,
@@ -125,7 +122,6 @@ data class CxxConfigurationParameters(
     val implicitBuildTargetSet: Set<String>,
     val variantName: String,
     val nativeVariantConfig: NativeBuildSystemVariantConfig,
-    val isPreferCmakeFileApiEnabled: Boolean,
     val nativeBuildOutputLevel: NativeBuildOutputLevel,
 )
 
@@ -270,7 +266,6 @@ fun tryCreateConfigurationParameters(
         splitsAbiFilterSet = global.extension.splits.abiFilters,
         intermediatesFolder = global.intermediatesDir,
         gradleModulePathName = project.path,
-        isConfigurationFoldingEnabled = option(ENABLE_NATIVE_CONFIGURATION_FOLDING),
         isBuildOnlyTargetAbiEnabled = option(BUILD_ONLY_TARGET_ABI),
         ideBuildTargetAbi = option(IDE_BUILD_TARGET_ABI),
         isCmakeBuildCohabitationEnabled = option(ENABLE_CMAKE_BUILD_COHABITATION),
@@ -283,7 +278,6 @@ fun tryCreateConfigurationParameters(
         nativeVariantConfig = createNativeBuildSystemVariantConfig(
             buildSystem, variant, variant.variantDslInfo
         ),
-        isPreferCmakeFileApiEnabled = option(PREFER_CMAKE_FILE_API),
         nativeBuildOutputLevel = NativeBuildOutputLevel.values()
             .firstOrNull { it.toString() == option(NATIVE_BUILD_OUTPUT_LEVEL)?.toUpperCase(Locale.US) }
             ?: NativeBuildOutputLevel.QUIET
@@ -368,9 +362,7 @@ fun createCxxMetadataGenerator(
             }
 
             val isPreCmakeFileApiVersion = cmakeRevision.major == 3 && cmakeRevision.minor < 15
-            if (isPreCmakeFileApiVersion ||
-                !variant.module.cmake!!.isPreferCmakeFileApiEnabled
-            ) {
+            if (isPreCmakeFileApiVersion) {
                 return CmakeServerExternalNativeJsonGenerator(variant, abis, variantBuilder)
             }
             return CmakeQueryMetadataGenerator(variant, abis, variantBuilder)

@@ -32,7 +32,7 @@ open class AnalyticsEnabledInAndOutDirectoryOperationRequest<TaskT: Task> @Injec
     val stats: GradleBuildVariant.Builder
 ): InAndOutDirectoryOperationRequest<TaskT> {
     override fun <ArtifactTypeT> toTransform(type: ArtifactTypeT)
-            where ArtifactTypeT : Artifact.SingleArtifact<Directory>,
+            where ArtifactTypeT : Artifact.Single<Directory>,
                   ArtifactTypeT : Artifact.Transformable {
         stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
             VariantPropertiesMethodType.TO_TRANSFORM_DIRECTORY_VALUE
@@ -44,7 +44,7 @@ open class AnalyticsEnabledInAndOutDirectoryOperationRequest<TaskT: Task> @Injec
     }
 
     override fun <ArtifactTypeT> toTransformMany(type: ArtifactTypeT): ArtifactTransformationRequest<TaskT>
-            where ArtifactTypeT : Artifact.SingleArtifact<Directory>,
+            where ArtifactTypeT : Artifact.Single<Directory>,
                   ArtifactTypeT : Artifact.ContainsMany {
         stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
             VariantPropertiesMethodType.TO_TRANSFORM_MANY_VALUE

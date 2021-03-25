@@ -15,15 +15,12 @@
  */
 package com.android.ide.common.gradle.model.impl
 
+import com.android.ide.common.gradle.model.IdeBuildTasksAndOutputInformation
 import com.android.ide.common.gradle.model.IdeVariantBuildInformation
 import java.io.Serializable
 
 data class IdeVariantBuildInformationImpl(
   override val variantName: String,
-  override val assembleTaskName: String,
-  override val assembleTaskOutputListingFile: String?,
-  override val bundleTaskName: String?,
-  override val bundleTaskOutputListingFile: String?,
-  override val apkFromBundleTaskName: String?,
-  override val apkFromBundleTaskOutputListingFile: String?
+  override val buildInformation: IdeBuildTasksAndOutputInformation
 ) : IdeVariantBuildInformation, Serializable
+

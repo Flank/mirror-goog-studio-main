@@ -21,6 +21,7 @@ import com.android.build.api.transform.QualifiedContent
 import com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES
 import com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES
 import com.android.build.api.transform.QualifiedContent.Scope
+import com.android.build.gradle.ProguardFiles
 import com.android.build.gradle.internal.InternalScope
 import com.android.build.gradle.internal.PostprocessingFeatures
 import com.android.build.gradle.internal.VariantManager
@@ -41,9 +42,15 @@ import com.android.builder.core.VariantType
 import com.google.common.base.Preconditions
 import com.google.common.collect.Sets
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.Directory
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.ProjectLayout
+import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
@@ -61,7 +68,9 @@ import java.util.concurrent.Callable
  * We use this type to configure ProGuard and the R8 consistently, using the same
  * code.
  */
-abstract class ProguardConfigurableTask : NonIncrementalTask() {
+abstract class ProguardConfigurableTask(
+    private val projectLayout: ProjectLayout
+) : NonIncrementalTask() {
 
     @get:Input
     abstract val variantType: Property<VariantType>
@@ -90,10 +99,53 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val extractedDefaultProguardFile: DirectoryProperty
+
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val configurationFiles: ConfigurableFileCollection
 
     @get:OutputFile
     abstract val mappingFile: RegularFileProperty
+
+    /**
+     * Users can have access to the default proguard file location through the
+     * VariantDimension.getDefaultProguardFile API.
+     * These files are not available during the configuration phase as they are extracted by the
+     * ExtractProguardFile during execution.
+     * However, the Variant API will allow to override these files and therefore, there is a need
+     * to identify the default file location in the incoming list of proguard file and swap them
+     * with the final location from [InternalArtifactType.DEFAULT_PROGUARD_FILES]
+     */
+    internal fun reconcileDefaultProguardFile(
+        incomingProguardFile: FileCollection,
+        extractedDefaultProguardFile: Provider<Directory>
+    ): Collection<File> {
+
+        // if this is not a base module, there should not be any default proguard files so just
+        // return.
+        if (!variantType.get().isBaseModule) {
+            return incomingProguardFile.files
+        }
+
+        // get the default proguard files default locations.
+        val defaultFiles = ProguardFiles.KNOWN_FILE_NAMES.map { name ->
+            ProguardFiles.getDefaultProguardFile(
+                name,
+                projectLayout.buildDirectory
+            )
+        }
+
+        return incomingProguardFile.files.map { proguardFile ->
+            // if the file is a default proguard file, swap its location with the directory
+            // where the final artifacts are.
+            if (defaultFiles.contains(proguardFile)) {
+               extractedDefaultProguardFile.get().file(proguardFile.name).asFile
+            } else {
+                proguardFile
+            }
+        }
+    }
 
     abstract class CreationAction<TaskT : ProguardConfigurableTask, CreationConfigT: ConsumableCreationConfig>
     @JvmOverloads
@@ -240,6 +292,9 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
 
             task.referencedResources.from(referencedResources)
 
+            task.extractedDefaultProguardFile.set(
+                creationConfig.globalScope.globalArtifacts.get(InternalArtifactType.DEFAULT_PROGUARD_FILES))
+
             applyProguardRules(task, creationConfig, task.testedMappingFile, testedConfig)
         }
 
@@ -256,7 +311,7 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
 
                     // All -dontwarn rules for test dependencies should go in here:
                     val configurationFiles = task.project.files(
-                        Callable<Collection<File>> { testedConfig.variantScope.testProguardFiles },
+                        creationConfig.proguardFiles,
                         creationConfig.variantDependencies.getArtifactFileCollection(
                             RUNTIME_CLASSPATH,
                             ALL,
@@ -272,7 +327,7 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
 
                     // All -dontwarn rules for test dependencies should go in here:
                     val configurationFiles = task.project.files(
-                        Callable<Collection<File>> { creationConfig.variantScope.testProguardFiles },
+                        creationConfig.proguardFiles,
                         creationConfig.variantDependencies.getArtifactFileCollection(
                             RUNTIME_CLASSPATH,
                             ALL,
@@ -320,8 +375,6 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
             val postprocessingFeatures = creationConfig.variantScope.postprocessingFeatures
             postprocessingFeatures?.let { setActions(postprocessingFeatures) }
 
-            val proguardConfigFiles = Callable<Collection<File>> { creationConfig.variantScope.proguardFiles }
-
             val aaptProguardFile =
                 if (task.includeFeaturesInScopes.get()) {
                     creationConfig.artifacts.get(
@@ -333,7 +386,7 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
                 }
 
             val configurationFiles = task.project.files(
-                proguardConfigFiles,
+                creationConfig.proguardFiles,
                 aaptProguardFile,
                 creationConfig.artifacts.get(GENERATED_PROGUARD_FILE),
                 creationConfig.variantDependencies.getArtifactFileCollection(

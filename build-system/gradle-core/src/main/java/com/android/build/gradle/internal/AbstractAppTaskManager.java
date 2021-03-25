@@ -22,7 +22,6 @@ import static com.android.builder.model.CodeShrinker.R8;
 
 import com.android.annotations.NonNull;
 import com.android.build.api.component.impl.ComponentImpl;
-import com.android.build.api.component.impl.TestComponentBuilderImpl;
 import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.ScopeType;
@@ -79,8 +78,7 @@ public abstract class AbstractAppTaskManager<
 
     protected AbstractAppTaskManager(
             @NonNull List<ComponentInfo<VariantBuilderT, VariantT>> variants,
-            @NonNull
-                    List<ComponentInfo<TestComponentBuilderImpl, TestComponentImpl>> testComponents,
+            @NonNull List<TestComponentImpl> testComponents,
             boolean hasFlavors,
             @NonNull ProjectOptions projectOptions,
             @NonNull GlobalScope globalScope,

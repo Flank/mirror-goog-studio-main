@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 The Android Open Source Project
+ * Copyright (C) 2021 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,14 +14,17 @@
  * limitations under the License.
  */
 
-package com.android.build.api.component
+package com.android.tools.appinspection.network
 
-import org.gradle.api.Incubating
+import android.app.Application
+import com.android.tools.appinspection.common.FakeArtTooling
 
-/**
- * Variant of the unit test artifact.
- */
-@Incubating
-@Deprecated("Will be removed in 4.2-beta6")
-interface UnitTestBuilder: TestComponentBuilder {
+class NetworkArtTooling : FakeArtTooling() {
+    override fun <T> findInstances(clazz: Class<T>): List<T> {
+        if (clazz.name == Application::class.java.name) {
+            return listOf(Application()) as List<T>
+        } else {
+            throw UnsupportedOperationException()
+        }
+    }
 }

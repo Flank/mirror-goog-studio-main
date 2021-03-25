@@ -24,8 +24,7 @@ import com.android.build.api.instrumentation.InstrumentationScope
 import org.gradle.api.Incubating
 
 @Incubating
-interface Component: ComponentIdentity,
-    ActionableComponentObject {
+interface Component: ComponentIdentity {
 
     /**
      * Access to the variant's buildable artifacts for build customization.

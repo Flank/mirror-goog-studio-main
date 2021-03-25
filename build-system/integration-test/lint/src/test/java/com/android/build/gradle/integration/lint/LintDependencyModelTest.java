@@ -86,9 +86,22 @@ public class LintDependencyModelTest {
         assertThat(textReport).contains("androidlib/src/main/java/com/example/mylibrary/MyClass.java:4: Information: Do not hardcode");
         assertThat(textReport).contains("javalib/src/main/java/com/example/MyClass.java:4: Warning: Do not hardcode");
         assertThat(textReport).contains("javalib2/src/main/java/com/example2/MyClass.java:4: Warning: Do not hardcode");
-        // TODO(b/160392650): Inheritance of lint severity configurations between projects:
-        //  assertThat(textReport).contains("indirectlib/src/main/java/com/example/MyClass2.java:4: Information: Do not hardcode");
-        //  assertThat(textReport).contains("indirectlib2/src/main/java/com/example2/MyClass2.java:4: Information: Do not hardcode");
+        if (usePartialAnalysis) {
+            // TODO(b/182859396): These should be informational, as explained in comments above
+            assertThat(textReport)
+                    .contains(
+                            "indirectlib/src/main/java/com/example/MyClass2.java:4: Warning: Do not hardcode");
+            assertThat(textReport)
+                    .contains(
+                            "indirectlib2/src/main/java/com/example2/MyClass2.java:4: Warning: Do not hardcode");
+        } else {
+            assertThat(textReport)
+                    .contains(
+                            "indirectlib/src/main/java/com/example/MyClass2.java:4: Information: Do not hardcode");
+            assertThat(textReport)
+                    .contains(
+                            "indirectlib2/src/main/java/com/example2/MyClass2.java:4: Information: Do not hardcode");
+        }
         // This issue is turned off in javalib but still returns to (default) enabled when processing
         // its sibling
         assertThat(textReport).contains("javalib2/src/main/java/com/example2/MyClass.java:5: Warning: Use Boolean.valueOf(false)");
@@ -111,6 +124,7 @@ public class LintDependencyModelTest {
             GradleBuildResult firstResult = getExecutor().run(":app:lintDebug");
             tasks.forEach(taskName -> assertThat(firstResult.findTask(taskName)).didWork());
             String textReport = readTextReportToString();
+            // TODO(b/182859396): There should be 5 warnings; see TODO in checkFindNestedResult().
             assertThat(textReport).contains("0 errors, 7 warnings");
 
             GradleBuildResult secondResult = getExecutor().run(":app:lintDebug");

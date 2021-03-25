@@ -78,7 +78,7 @@ fi
 readonly script_dir="$(dirname "$0")"
 readonly script_name="$(basename "$0")"
 
-config_options="--config=dynamic"
+config_options="--config=dynamic --config=datasize_aspect"
 
 # Generate a UUID for use as the bazel test invocation id
 readonly invocation_id="$(uuidgen)"

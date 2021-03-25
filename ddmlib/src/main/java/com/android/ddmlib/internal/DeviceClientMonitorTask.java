@@ -61,8 +61,6 @@ import java.util.concurrent.TimeUnit;
  * host. Devices are keyed off of the given {@link Socketchannel} connection.
  */
 class DeviceClientMonitorTask implements Runnable {
-    private static final String ADB_TRACK_JDWP_COMMAND = "track-jdwp";
-    private static final String ADB_TRACK_APP_COMMAND = "track-app";
     private volatile boolean mQuit;
     @NonNull private final Selector mSelector;
     // Note that mChannelsToRegister is not synchronized other than through the compute* interface.
@@ -70,6 +68,8 @@ class DeviceClientMonitorTask implements Runnable {
     private final ConcurrentHashMap<SocketChannel, DeviceImpl> mChannelsToRegister =
             new ConcurrentHashMap<>();
     private final Set<ClientImpl> mClientsToReopen = new HashSet<>();
+    private final TrackServiceProcessor mTrackAppProcessor = new TrackAppProcessor();
+    private final TrackServiceProcessor mTrackJdwpProcessor = new TrackJdwpProcessor();
 
     DeviceClientMonitorTask() throws IOException {
         mSelector = Selector.open();
@@ -241,11 +241,7 @@ class DeviceClientMonitorTask implements Runnable {
 
                 try {
                     int length = AdbSocketUtils.readLength(socket, lengthBuffer);
-                    if (isDeviceVersionAtLeastS(device)) {
-                        processIncomingTrackAppData(device, socket, length);
-                    } else {
-                        processIncomingTrackJdwpData(device, socket, length);
-                    }
+                    getProcessor(device).processIncomingData(device, socket, length);
                 } catch (IOException ioe) {
                     Log.d(
                             "DeviceClientMonitorTask",
@@ -267,17 +263,13 @@ class DeviceClientMonitorTask implements Runnable {
         mSelector.wakeup();
     }
 
-    private static boolean sendDeviceMonitoringRequest(
+    private boolean sendDeviceMonitoringRequest(
             @NonNull SocketChannel socket, @NonNull DeviceImpl device)
             throws TimeoutException, AdbCommandRejectedException, IOException {
 
         try {
             AdbHelper.setDevice(socket, device);
-            String command =
-                    isDeviceVersionAtLeastS(device)
-                            ? ADB_TRACK_APP_COMMAND
-                            : ADB_TRACK_JDWP_COMMAND;
-            AdbHelper.write(socket, AdbHelper.formAdbRequest(command));
+            AdbHelper.write(socket, AdbHelper.formAdbRequest(getProcessor(device).getCommand()));
             AdbHelper.AdbResponse resp = AdbHelper.readAdbResponse(socket, false);
 
             if (!resp.okay) {
@@ -292,78 +284,6 @@ class DeviceClientMonitorTask implements Runnable {
         } catch (IOException e) {
             Log.e("DeviceClientMonitorTask", "Sending jdwp tracking request failed!");
             throw e;
-        }
-    }
-
-    private void processIncomingTrackAppData(
-            @NonNull DeviceImpl device, @NonNull SocketChannel monitorSocket, int length)
-            throws IOException {
-        if (length < 0) {
-            return;
-        }
-
-        ByteBuffer buffer = AdbSocketUtils.read(monitorSocket, length);
-        AppProcessesProto.AppProcesses processes = AppProcessesProto.AppProcesses.parseFrom(buffer);
-        Set<Integer> newJdwpPids = new HashSet<Integer>();
-        List<ProfileableClientImpl> newProfileableList = new LinkedList<>();
-        for (AppProcessesProto.ProcessEntry process : processes.getProcessList()) {
-            if (process.getDebuggable()) {
-                newJdwpPids.add(Integer.valueOf((int) process.getPid()));
-            }
-            // A debuggable process must be profileable.
-            if (process.getProfileable() || process.getDebuggable()) {
-                ProfileableClientImpl client =
-                        new ProfileableClientImpl(
-                                (int) process.getPid(), process.getArchitecture());
-                newProfileableList.add(client);
-            }
-        }
-
-        updateJdwpClients(device, newJdwpPids);
-
-        List<ProfileableClientImpl> existingList =
-                Lists.newArrayList(device.getProfileableClients());
-        List<ProfileableClientImpl> addList = Lists.newLinkedList(newProfileableList);
-        addList.removeAll(existingList);
-        List<ProfileableClientImpl> deleteList = Lists.newLinkedList(existingList);
-        deleteList.removeAll(newProfileableList);
-        if (!addList.isEmpty() || !deleteList.isEmpty()) {
-            device.updateProfileableClientList(newProfileableList);
-            AndroidDebugBridge.deviceChanged(device, IDevice.CHANGE_PROFILEABLE_CLIENT_LIST);
-        }
-    }
-
-    private void processIncomingTrackJdwpData(
-            @NonNull DeviceImpl device, @NonNull SocketChannel monitorSocket, int length)
-            throws IOException {
-
-        // This methods reads @length bytes from the @monitorSocket channel.
-        // These bytes correspond to the pids of the current set of processes on the device.
-        // It takes this set of pids and compares them with the existing set of clients
-        // for the device. Clients that correspond to pids that are not alive anymore are
-        // dropped, and new clients are created for pids that don't have a corresponding Client.
-
-        if (length >= 0) {
-            // array for the current pids.
-            Set<Integer> newPids = new HashSet<Integer>();
-
-            // get the string data if there are any
-            if (length > 0) {
-                byte[] buffer = new byte[length];
-                String result = AdbSocketUtils.read(monitorSocket, buffer);
-
-                // split each line in its own list and create an array of integer pid
-                String[] pids = result.split("\n"); // $NON-NLS-1$
-
-                for (String pid : pids) {
-                    try {
-                        newPids.add(Integer.valueOf(pid));
-                    } catch (NumberFormatException nfe) {
-                        // looks like this pid is not really a number. Lets ignore it.
-                    }
-                }
-            }
-            updateJdwpClients(device, newPids);
         }
     }
 
@@ -496,5 +416,108 @@ class DeviceClientMonitorTask implements Runnable {
 
     private static boolean isDeviceVersionAtLeastS(@NonNull DeviceImpl device) {
         return device.getVersion().getFeatureLevel() >= AndroidVersion.VersionCodes.S;
+    }
+
+    private TrackServiceProcessor getProcessor(@NonNull DeviceImpl device) {
+        return isDeviceVersionAtLeastS(device) ? mTrackAppProcessor : mTrackJdwpProcessor;
+    }
+
+    private abstract class TrackServiceProcessor {
+        @NonNull
+        abstract String getCommand();
+
+        abstract void processIncomingData(
+                @NonNull DeviceImpl device, @NonNull SocketChannel monitorSocket, int length)
+                throws IOException;
+    }
+
+    private class TrackAppProcessor extends TrackServiceProcessor {
+        @Override
+        @NonNull
+        String getCommand() {
+            return "track-app";
+        }
+
+        @Override
+        void processIncomingData(
+                @NonNull DeviceImpl device, @NonNull SocketChannel monitorSocket, int length)
+                throws IOException {
+            if (length < 0) {
+                return;
+            }
+
+            ByteBuffer buffer = AdbSocketUtils.read(monitorSocket, length);
+            AppProcessesProto.AppProcesses processes =
+                    AppProcessesProto.AppProcesses.parseFrom(buffer);
+            Set<Integer> newJdwpPids = new HashSet<Integer>();
+            List<ProfileableClientImpl> newProfileableList = new LinkedList<>();
+            for (AppProcessesProto.ProcessEntry process : processes.getProcessList()) {
+                if (process.getDebuggable()) {
+                    newJdwpPids.add(Integer.valueOf((int) process.getPid()));
+                }
+                // A debuggable process must be profileable.
+                if (process.getProfileable() || process.getDebuggable()) {
+                    ProfileableClientImpl client =
+                            new ProfileableClientImpl(
+                                    (int) process.getPid(), process.getArchitecture());
+                    newProfileableList.add(client);
+                }
+            }
+
+            updateJdwpClients(device, newJdwpPids);
+
+            List<ProfileableClientImpl> existingList =
+                    Lists.newArrayList(device.getProfileableClients());
+            List<ProfileableClientImpl> addList = Lists.newLinkedList(newProfileableList);
+            addList.removeAll(existingList);
+            List<ProfileableClientImpl> deleteList = Lists.newLinkedList(existingList);
+            deleteList.removeAll(newProfileableList);
+            if (!addList.isEmpty() || !deleteList.isEmpty()) {
+                device.updateProfileableClientList(newProfileableList);
+                AndroidDebugBridge.deviceChanged(device, IDevice.CHANGE_PROFILEABLE_CLIENT_LIST);
+            }
+        }
+    }
+
+    private class TrackJdwpProcessor extends TrackServiceProcessor {
+        @Override
+        @NonNull
+        String getCommand() {
+            return "track-jdwp";
+        }
+
+        @Override
+        void processIncomingData(
+                @NonNull DeviceImpl device, @NonNull SocketChannel monitorSocket, int length)
+                throws IOException {
+            // This methods reads @length bytes from the @monitorSocket channel.
+            // These bytes correspond to the pids of the current set of processes on the device.
+            // It takes this set of pids and compares them with the existing set of clients
+            // for the device. Clients that correspond to pids that are not alive anymore are
+            // dropped, and new clients are created for pids that don't have a corresponding Client.
+
+            if (length >= 0) {
+                // array for the current pids.
+                Set<Integer> newPids = new HashSet<Integer>();
+
+                // get the string data if there are any
+                if (length > 0) {
+                    byte[] buffer = new byte[length];
+                    String result = AdbSocketUtils.read(monitorSocket, buffer);
+
+                    // split each line in its own list and create an array of integer pid
+                    String[] pids = result.split("\n"); // $NON-NLS-1$
+
+                    for (String pid : pids) {
+                        try {
+                            newPids.add(Integer.valueOf(pid));
+                        } catch (NumberFormatException nfe) {
+                            // looks like this pid is not really a number. Lets ignore it.
+                        }
+                    }
+                }
+                updateJdwpClients(device, newPids);
+            }
+        }
     }
 }

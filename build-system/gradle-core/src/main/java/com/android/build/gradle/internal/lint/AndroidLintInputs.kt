@@ -532,7 +532,9 @@ abstract class VariantInputs {
                         unitTest as UnitTestImpl,
                         checkDependencies,
                         addBaseModuleLintModel,
-                        warnIfProjectTreatedAsExternalDependency
+                        warnIfProjectTreatedAsExternalDependency,
+                        // analyzing test bytecode is expensive, without much benefit
+                        includeClassesOutputDirectories = false
                     )
             }
         )
@@ -544,7 +546,9 @@ abstract class VariantInputs {
                         androidTest as ComponentImpl,
                         checkDependencies,
                         addBaseModuleLintModel,
-                        warnIfProjectTreatedAsExternalDependency
+                        warnIfProjectTreatedAsExternalDependency,
+                        // analyzing test bytecode is expensive, without much benefit
+                        includeClassesOutputDirectories = false
                     )
         })
         mergedManifest.setDisallowChanges(
@@ -574,7 +578,26 @@ abstract class VariantInputs {
         // FIXME proguardFiles
         // FIXME consumerProguardFiles
 
-        // FIXME testSourceProviders
+        val testSourceProviderList: MutableList<SourceProviderInput> = mutableListOf()
+        variantWithTests.unitTest?.let { unitTestCreationConfig ->
+            testSourceProviderList.addAll(
+                unitTestCreationConfig.variantSources.sortedSourceProviders.map { sourceProvider ->
+                    creationConfig.services
+                        .newInstance(SourceProviderInput::class.java)
+                        .initialize(sourceProvider, unitTestOnly = true)
+                }
+            )
+        }
+        variantWithTests.androidTest?.let { androidTestCreationConfig ->
+            testSourceProviderList.addAll(
+                androidTestCreationConfig.variantSources.sortedSourceProviders.map { sourceProvider ->
+                    creationConfig.services
+                        .newInstance(SourceProviderInput::class.java)
+                        .initialize(sourceProvider, instrumentationTestOnly = true)
+                }
+            )
+        }
+        testSourceProviders.setDisallowChanges(testSourceProviderList.toList())
         debuggable.setDisallowChanges(
             if (creationConfig is ApkCreationConfig) {
                 creationConfig.debuggable
@@ -607,7 +630,9 @@ abstract class VariantInputs {
             project,
             projectOptions,
             mainSourceSet,
-            checkDependencies
+            checkDependencies,
+            // analyzing test bytecode is expensive, without much benefit
+            includeClassesOutputDirectories = false
         ))
         androidTestArtifact.disallowChanges()
         namespace.setDisallowChanges("")
@@ -625,7 +650,7 @@ abstract class VariantInputs {
         ))
         testSourceProviders.setDisallowChanges(listOf(
             project.objects.newInstance(SourceProviderInput::class.java)
-                .initializeForStandalone(project, testSourceSet, unitTestOnly = false)
+                .initializeForStandalone(project, testSourceSet, unitTestOnly = true)
         ))
         buildFeatures.initializeForStandalone()
         libraryDependencyCacheBuildService.setDisallowChanges(getBuildService(project.gradle.sharedServices))
@@ -660,7 +685,7 @@ abstract class VariantInputs {
             proguardFiles = proguardFiles.get().map { it.asFile },
             consumerProguardFiles = consumerProguardFiles.get(),
             sourceProviders = sourceProviders.get().map { it.toLintModel() } + dynamicFeatureSourceProviders,
-            testSourceProviders = listOf(), //FIXME
+            testSourceProviders = testSourceProviders.get().map { it.toLintModel() },
             debuggable = debuggable.get(),
             shrinkable = false, //FIXME
             buildFeatures = buildFeatures.toLintModel(),
@@ -733,15 +758,19 @@ abstract class SourceProviderInput {
     @get:Input
     abstract val instrumentationTestOnly: Property<Boolean>
 
-    internal fun initialize(sourceProvider: SourceProvider): SourceProviderInput {
+    internal fun initialize(
+        sourceProvider: SourceProvider,
+        unitTestOnly: Boolean = false,
+        instrumentationTestOnly: Boolean = false
+    ): SourceProviderInput {
         this.manifestFile.set(sourceProvider.manifestFile)
         val javaDirectories = sourceProvider.javaDirectories + sourceProvider.kotlinDirectories
         this.javaDirectories.fromDisallowChanges(javaDirectories)
         this.resDirectories.fromDisallowChanges(sourceProvider.resDirectories)
         this.assetsDirectories.fromDisallowChanges(sourceProvider.assetsDirectories)
         this.debugOnly.setDisallowChanges(false) //TODO
-        this.unitTestOnly.setDisallowChanges(false) //TODO
-        this.instrumentationTestOnly.setDisallowChanges(false) //TODO
+        this.unitTestOnly.setDisallowChanges(unitTestOnly)
+        this.instrumentationTestOnly.setDisallowChanges(instrumentationTestOnly)
         return this
     }
 
@@ -826,20 +855,26 @@ abstract class AndroidArtifactInput : ArtifactInput() {
         componentImpl: ComponentImpl,
         checkDependencies: Boolean,
         addBaseModuleLintModel: Boolean,
-        warnIfProjectTreatedAsExternalDependency: Boolean
+        warnIfProjectTreatedAsExternalDependency: Boolean,
+        includeClassesOutputDirectories: Boolean = true
     ): AndroidArtifactInput {
         applicationId.setDisallowChanges(componentImpl.applicationId)
         generatedSourceFolders.setDisallowChanges(ModelBuilder.getGeneratedSourceFolders(componentImpl))
         generatedResourceFolders.setDisallowChanges(ModelBuilder.getGeneratedResourceFolders(componentImpl))
-        classesOutputDirectories.from(componentImpl.artifacts.get(InternalArtifactType.JAVAC))
+        if (includeClassesOutputDirectories) {
+            classesOutputDirectories.from(componentImpl.artifacts.get(InternalArtifactType.JAVAC))
 
-        classesOutputDirectories.from(
-            componentImpl.variantData.allPreJavacGeneratedBytecode
-        )
-        classesOutputDirectories.from(componentImpl.variantData.allPostJavacGeneratedBytecode)
-        classesOutputDirectories.from(componentImpl
-            .getCompiledRClasses(
-                AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH))
+            classesOutputDirectories.from(
+                componentImpl.variantData.allPreJavacGeneratedBytecode
+            )
+            classesOutputDirectories.from(componentImpl.variantData.allPostJavacGeneratedBytecode)
+            classesOutputDirectories.from(
+                componentImpl
+                    .getCompiledRClasses(
+                        AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
+                    )
+            )
+        }
         classesOutputDirectories.disallowChanges()
         this.warnIfProjectTreatedAsExternalDependency.setDisallowChanges(warnIfProjectTreatedAsExternalDependency)
         if (checkDependencies) {
@@ -923,17 +958,23 @@ abstract class JavaArtifactInput : ArtifactInput() {
         checkDependencies: Boolean,
         addBaseModuleLintModel: Boolean,
         warnIfProjectTreatedAsExternalDependency: Boolean,
+        includeClassesOutputDirectories: Boolean
     ): JavaArtifactInput {
-        classesOutputDirectories.from(
-            unitTestImpl.artifacts.get(InternalArtifactType.JAVAC)
-        )
-        classesOutputDirectories.from(
-            unitTestImpl.variantData.allPreJavacGeneratedBytecode
-        )
-        classesOutputDirectories.from(unitTestImpl.variantData.allPostJavacGeneratedBytecode)
-        classesOutputDirectories.from(unitTestImpl
-            .getCompiledRClasses(
-                AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH))
+        if (includeClassesOutputDirectories) {
+            classesOutputDirectories.from(
+                unitTestImpl.artifacts.get(InternalArtifactType.JAVAC)
+            )
+            classesOutputDirectories.from(
+                unitTestImpl.variantData.allPreJavacGeneratedBytecode
+            )
+            classesOutputDirectories.from(unitTestImpl.variantData.allPostJavacGeneratedBytecode)
+            classesOutputDirectories.from(
+                unitTestImpl
+                    .getCompiledRClasses(
+                        AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
+                    )
+            )
+        }
         classesOutputDirectories.disallowChanges()
         this.warnIfProjectTreatedAsExternalDependency.setDisallowChanges(warnIfProjectTreatedAsExternalDependency)
         if (checkDependencies) {
@@ -960,8 +1001,17 @@ abstract class JavaArtifactInput : ArtifactInput() {
         return this
     }
 
-    fun initializeForStandalone(project: Project, projectOptions: ProjectOptions, sourceSet: SourceSet, checkDependencies: Boolean): JavaArtifactInput {
-        classesOutputDirectories.fromDisallowChanges(sourceSet.output.classesDirs)
+    fun initializeForStandalone(
+        project: Project,
+        projectOptions: ProjectOptions,
+        sourceSet: SourceSet,
+        checkDependencies: Boolean,
+        includeClassesOutputDirectories: Boolean
+    ): JavaArtifactInput {
+        if (includeClassesOutputDirectories) {
+            classesOutputDirectories.from(sourceSet.output.classesDirs)
+        }
+        classesOutputDirectories.disallowChanges()
         // Only ever used within the model builder in the standalone plugin
         warnIfProjectTreatedAsExternalDependency.setDisallowChanges(false)
         val variantDependencies = VariantDependencies(

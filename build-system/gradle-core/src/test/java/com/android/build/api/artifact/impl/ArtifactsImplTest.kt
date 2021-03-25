@@ -59,7 +59,7 @@ class ArtifactsImplTest {
     @Suppress("ClassName")
     sealed class TestSingleArtifactType<T : FileSystemLocation>(
         kind: ArtifactKind<T>
-    ) : Artifact.SingleArtifact<T>(kind, Category.INTERMEDIATES) {
+    ) : Artifact.Single<T>(kind, Category.INTERMEDIATES) {
 
         object TEST_FILE : TestSingleArtifactType<RegularFile>(FILE)
         object TEST_DIRECTORY : TestSingleArtifactType<Directory>(DIRECTORY)
@@ -73,7 +73,7 @@ class ArtifactsImplTest {
 
     sealed class TestMultipleArtifactType<T : FileSystemLocation>(
         kind: ArtifactKind<T>
-    ) : Artifact.MultipleArtifact<T>(kind, Category.INTERMEDIATES){
+    ) : Artifact.Multiple<T>(kind, Category.INTERMEDIATES){
 
         object TEST_FILES : TestMultipleArtifactType<RegularFile>(FILE)
         object TEST_DIRECTORIES : TestMultipleArtifactType<Directory>(DIRECTORY)

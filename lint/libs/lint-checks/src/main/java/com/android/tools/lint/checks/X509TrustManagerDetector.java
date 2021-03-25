@@ -24,6 +24,7 @@ import com.android.tools.lint.detector.api.ClassContext;
 import com.android.tools.lint.detector.api.ClassScanner;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
+import com.android.tools.lint.detector.api.Incident;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Location;
@@ -48,17 +49,16 @@ import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.MethodNode;
 
-public class TrustAllX509TrustManagerDetector extends Detector
-        implements SourceCodeScanner, ClassScanner {
+public class X509TrustManagerDetector extends Detector implements SourceCodeScanner, ClassScanner {
 
     @SuppressWarnings("unchecked")
     private static final Implementation IMPLEMENTATION =
             new Implementation(
-                    TrustAllX509TrustManagerDetector.class,
+                    X509TrustManagerDetector.class,
                     EnumSet.of(Scope.JAVA_LIBRARIES, Scope.JAVA_FILE),
                     Scope.JAVA_FILE_SCOPE);
 
-    public static final Issue ISSUE =
+    public static final Issue TRUSTS_ALL =
             Issue.create(
                             "TrustAllX509TrustManager",
                             "Insecure TLS/SSL trust manager",
@@ -72,7 +72,18 @@ public class TrustAllX509TrustManagerDetector extends Detector
                             IMPLEMENTATION)
                     .setAndroidSpecific(true);
 
-    public TrustAllX509TrustManagerDetector() {}
+    public static final Issue IMPLEMENTS_CUSTOM =
+            Issue.create(
+                            "CustomX509TrustManager",
+                            "Implements custom TLS trust manager",
+                            "This check looks for custom `X509TrustManager` implementations.",
+                            Category.SECURITY,
+                            5,
+                            Severity.WARNING,
+                            IMPLEMENTATION)
+                    .setAndroidSpecific(true);
+
+    public X509TrustManagerDetector() {}
 
     // ---- implements SourceCodeScanner ----
 
@@ -84,6 +95,17 @@ public class TrustAllX509TrustManagerDetector extends Detector
 
     @Override
     public void visitClass(@NonNull JavaContext context, @NonNull UClass cls) {
+        Location location = context.getNameLocation(cls);
+        context.report(
+                new Incident(
+                        IMPLEMENTS_CUSTOM,
+                        cls,
+                        location,
+                        "Implementing a custom `X509TrustManager` is error-prone and likely to be insecure. "
+                                + "It is likely to disable certificate validation altogether, and is "
+                                + "non-trivial to implement correctly without calling Android's default "
+                                + "implementation."));
+
         checkMethod(context, cls, "checkServerTrusted");
         checkMethod(context, cls, "checkClientTrusted");
     }
@@ -115,7 +137,7 @@ public class TrustAllX509TrustManagerDetector extends Detector
             if (!visitor.isComplex()) {
                 Location location = context.getNameLocation(method);
                 String message = getErrorMessage(methodName);
-                context.report(ISSUE, method, location, message);
+                context.report(new Incident(TRUSTS_ALL, method, location, message));
             }
         }
     }
@@ -190,7 +212,8 @@ public class TrustAllX509TrustManagerDetector extends Detector
                 }
                 if (emptyMethod) {
                     Location location = context.getLocation(method, classNode);
-                    context.report(ISSUE, location, getErrorMessage(method.name));
+                    context.report(
+                            new Incident(TRUSTS_ALL, location, getErrorMessage(method.name)));
                 }
             }
         }

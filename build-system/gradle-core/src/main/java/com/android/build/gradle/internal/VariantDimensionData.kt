@@ -22,6 +22,7 @@ import com.google.common.base.Preconditions
 /** Common parts of build type and product flavor data objects.  */
 abstract class VariantDimensionData(
     val sourceSet: DefaultAndroidSourceSet,
+    val testFixturesSourceSet: DefaultAndroidSourceSet?,
     private val androidTestSourceSet: DefaultAndroidSourceSet?,
     private val unitTestSourceSet: DefaultAndroidSourceSet?
 ) {

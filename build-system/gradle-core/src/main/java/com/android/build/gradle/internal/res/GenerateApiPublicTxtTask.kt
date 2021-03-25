@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.builder.symbols.writePublicTxtFile
 import com.android.ide.common.symbols.SymbolIo
+import com.android.utils.FileUtils
 import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.CacheableTask
@@ -111,10 +112,9 @@ abstract class GenerateApiPublicTxtTask : NonIncrementalTask() {
             externalPublicTxt: Path
         ) {
             if (Files.exists(internalPublicTxt)) {
-                Files.copy(
+                FileUtils.copyFile(
                     internalPublicTxt,
-                    externalPublicTxt,
-                    StandardCopyOption.REPLACE_EXISTING
+                    externalPublicTxt
                 )
             } else {
                 Files.newBufferedWriter(externalPublicTxt).use { writer ->

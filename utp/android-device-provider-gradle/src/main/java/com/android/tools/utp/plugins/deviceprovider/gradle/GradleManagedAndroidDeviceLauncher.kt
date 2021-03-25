@@ -123,7 +123,6 @@ class GradleManagedAndroidDeviceLauncher @VisibleForTesting constructor(
         val targetSerial = findSerial()
 
         val emulatorPort = targetSerial.substring("emulator-".length).toInt()
-        val properties = AndroidDeviceProperties(map = mapOf(MANAGED_DEVICE_NAME_KEY to dslName))
         device = AndroidDevice(
                 host = "localhost",
                 serial = targetSerial,
@@ -131,7 +130,7 @@ class GradleManagedAndroidDeviceLauncher @VisibleForTesting constructor(
                 port = emulatorPort + 1,
                 emulatorPort = emulatorPort,
                 serverPort = adbServerPort,
-                properties = properties
+                properties = AndroidDeviceProperties()
         )
         return device
     }
@@ -196,7 +195,16 @@ class GradleManagedAndroidDeviceLauncher @VisibleForTesting constructor(
                     throwable
             )
         }
-        deviceController.setDevice(makeDevice())
+
+        // As a temporary work around. We need to add the dslName to the
+        // properties here. b/183651101
+        // This will be overwritten if setDevice() is called again.
+        val device = makeDevice()
+        deviceController.setDevice(device)
+        device.properties = device.properties.copy(
+            map = device.properties.map +
+                mapOf(MANAGED_DEVICE_NAME_KEY to dslName)
+        )
         return deviceController
     }
 

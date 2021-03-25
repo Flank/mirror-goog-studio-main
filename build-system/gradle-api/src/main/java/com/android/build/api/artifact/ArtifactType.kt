@@ -24,7 +24,7 @@ import org.gradle.api.file.RegularFile
 /**
  * Public [Artifact] for Android Gradle plugin.
  *
- * These are [Artifact.SingleArtifact], see [MultipleArtifactType] for multiple ones.
+ * These are [Artifact.Single], see [MultipleArtifactType] for multiple ones.
  *
  * All methods in the [Artifacts] class should be supported with any subclass of this
  * class.
@@ -35,7 +35,7 @@ sealed class ArtifactType<T : FileSystemLocation>(
     category: Category = Category.INTERMEDIATES,
     private val fileSystemLocationName: FileNames? = null
 )
-    : Artifact.SingleArtifact<T>(kind, category) {
+    : Artifact.Single<T>(kind, category) {
 
     override fun getFileSystemLocationName(): String {
         return fileSystemLocationName?.fileName ?: ""

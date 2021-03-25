@@ -10,18 +10,8 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="dynamic-layout-inspector.agent.transport.fake-android" scope="PROVIDED" />
-    <orderEntry type="module-library" scope="PROVIDED">
-      <library>
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../../../../prebuilts/studio/sdk/darwin/platforms/android-29/android.jar!/" />
-          <root url="jar://$MODULE_DIR$/../../../../../prebuilts/studio/sdk/linux/platforms/android-29/android.jar!/" />
-          <root url="jar://$MODULE_DIR$/../../../../../prebuilts/studio/sdk/windows/platforms/android-29/android.jar!/" />
-          <root url="jar://$MODULE_DIR$/../../../../../prebuilts/tools/common/m2/repository/androidx/annotation/annotation/1.1.0/annotation-1.1.0.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
+    <orderEntry type="library" scope="PROVIDED" name="android" level="project" />
+    <orderEntry type="module" module-name="transport-test-framework" scope="TEST" />
     <orderEntry type="library" name="transport-proto" level="project" />
     <orderEntry type="library" name="kotlin-stdlib-jdk8" level="project" />
     <orderEntry type="library" name="studio-proto" level="project" />
@@ -30,6 +20,5 @@
     <orderEntry type="library" scope="TEST" name="truth" level="project" />
     <orderEntry type="library" scope="TEST" name="mockito" level="project" />
     <orderEntry type="module" module-name="android.sdktools.testutils" scope="TEST" />
-    <orderEntry type="module" module-name="transport-test-framework" scope="TEST" />
   </component>
 </module>

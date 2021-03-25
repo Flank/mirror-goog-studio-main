@@ -28,7 +28,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactTyp
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_NAME
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_SHRUNK_JAVA_RES
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.LINT_MODEL
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.LINT_PARTIAL_RESULTS
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.PACKAGED_DEPENDENCIES
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType
@@ -218,7 +217,6 @@ class VariantDependencies internal constructor(
                         && artifactType != FEATURE_SHRUNK_JAVA_RES
                         && artifactType != LINT_MODEL
                         && artifactType != BASE_MODULE_LINT_MODEL
-                        && artifactType != LINT_PARTIAL_RESULTS
             variantType.isSeparateTestProject ->
                 isArtifactTypeSubtractedForInstrumentationTests(artifactType)
             else -> false

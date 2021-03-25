@@ -38,7 +38,7 @@ class UtpConnectedTest {
         val EMULATOR = getEmulator()
 
         const val TEST_REPORT = "build/reports/androidTests/connected/com.example.android.kotlin.html"
-        const val TEST_RESULT_PB = "build/outputs/androidTest-results/connected/test-result.pb"
+        const val TEST_RESULT_PB = "build/outputs/androidTest-results/connected/emulator-5554 - 10/test-result.pb"
     }
 
     @get:Rule
@@ -110,8 +110,6 @@ class UtpConnectedTest {
         result.stdout.use {
             assertThat(it).contains("<UTP_TEST_RESULT_ON_TEST_RESULT_EVENT>")
             assertThat(it).contains("</UTP_TEST_RESULT_ON_TEST_RESULT_EVENT>")
-            assertThat(it).contains("<UTP_TEST_RESULT_ON_COMPLETED />")
-            assertThat(it).doesNotContain("<UTP_TEST_RESULT_ON_ERROR />")
         }
         assertThat(project.file(testReportPath)).exists()
         assertThat(project.file(testResultPbPath)).exists()
@@ -131,8 +129,6 @@ class UtpConnectedTest {
         resultWithConfigCache.stdout.use {
             assertThat(it).contains("<UTP_TEST_RESULT_ON_TEST_RESULT_EVENT>")
             assertThat(it).contains("</UTP_TEST_RESULT_ON_TEST_RESULT_EVENT>")
-            assertThat(it).contains("<UTP_TEST_RESULT_ON_COMPLETED />")
-            assertThat(it).doesNotContain("<UTP_TEST_RESULT_ON_ERROR />")
         }
         assertThat(project.file(testReportPath)).exists()
         assertThat(project.file(testResultPbPath)).exists()

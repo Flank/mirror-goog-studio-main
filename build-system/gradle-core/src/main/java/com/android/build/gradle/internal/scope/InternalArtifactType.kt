@@ -29,7 +29,7 @@ InternalArtifactType<T : FileSystemLocation>(
     kind: ArtifactKind<T>,
     category: Category = Category.INTERMEDIATES,
     private val folderName: String? = null
-) : Artifact.SingleArtifact<T>(kind, category) {
+) : Artifact.Single<T>(kind, category) {
 
     // --- classes ---
     // These are direct task outputs. If you are looking for all the classes of a

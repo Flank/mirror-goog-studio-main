@@ -82,8 +82,8 @@ public class CheckAll {
                 GradleTestProject.builder()
                         .fromTestProject(projectName)
                         .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-                        .withKotlinVersion( // Compose alpha12 required 1.4.30
-                                "composeHelloWorld".equals(projectName) ? "1.4.30" : null)
+                        .withKotlinVersion( // Compose alpha12 required 1.4.31
+                                "composeHelloWorld".equals(projectName) ? "1.4.31" : null)
                         .create();
     }
 

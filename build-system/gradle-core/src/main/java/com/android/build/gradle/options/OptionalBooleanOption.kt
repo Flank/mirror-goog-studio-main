@@ -36,7 +36,7 @@ enum class OptionalBooleanOption(
     FIREBASE_PERF_PLUGIN_ENABLE_FLAG("firebasePerformanceInstrumentationEnabled", ApiStage.Stable),
 
     // Flags for Android Test Retention
-    ENABLE_TEST_FAILURE_RETENTION_COMPRESS_SNAPSHOT("android.experimental.testOptions.failureRetention.compressSnapshots", ApiStage.Experimental),
+    ENABLE_TEST_FAILURE_RETENTION_COMPRESS_SNAPSHOT("android.experimental.testOptions.emulatorSnapshots.compressSnapshots", ApiStage.Experimental),
 
     /* ----------------
      * ENFORCED FEATURES

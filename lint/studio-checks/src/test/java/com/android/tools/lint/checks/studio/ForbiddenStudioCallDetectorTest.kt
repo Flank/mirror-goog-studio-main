@@ -24,7 +24,7 @@ import org.junit.Test
 class ForbiddenStudioCallDetectorTest {
 
     @Test
-    fun testProblems() {
+    fun testStringIntern() {
         studioLint()
             .files(
                 java(
@@ -66,6 +66,43 @@ class ForbiddenStudioCallDetectorTest {
                         String s3 = s.intern(); // ERROR
                                       ~~~~~~~~
                 2 errors, 0 warnings
+                """
+            )
+    }
+
+    @Test
+    fun testFilesCopy() {
+        studioLint()
+            .files(
+                java(
+                    """
+                    package java.nio.file;
+
+                    // Actual test
+                    public class Test {
+                        public void test(Path p1, Path p2, InputStream in) {
+                            Files.copy(path1, path2); // ERROR
+                        }
+                    }
+
+                    // Stubs
+                    public interface InputStream { }
+                    public interface Path { }
+                    public interface CopyOption { }
+                    public class Files {
+                        public static Path copy(Path source, Path target, CopyOption... options) { return null; }
+                    }
+                    """
+                ).indented(),
+            )
+            .issues(ForbiddenStudioCallDetector.FILES_COPY)
+            .run()
+            .expect(
+                """
+                src/java/nio/file/Test.java:6: Error: Do not use java.nio.file.Files.copy(Path, Path). Instead, use FileUtils.copyFile(Path, Path) or Kotlin's File#copyTo(File) [NoNioFilesCopy]
+                        Files.copy(path1, path2); // ERROR
+                              ~~~~~~~~~~~~~~~~~~
+                1 errors, 0 warnings
                 """
             )
     }

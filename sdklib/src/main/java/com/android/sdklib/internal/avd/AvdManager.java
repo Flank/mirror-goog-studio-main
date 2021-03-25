@@ -45,6 +45,7 @@ import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.IdDisplay;
 import com.android.sdklib.repository.LoggerProgressIndicatorWrapper;
 import com.android.sdklib.repository.targets.SystemImage;
+import com.android.utils.FileUtils;
 import com.android.utils.GrabProcessOutput;
 import com.android.utils.GrabProcessOutput.IProcessOutput;
 import com.android.utils.GrabProcessOutput.Wait;
@@ -1951,7 +1952,7 @@ public class AvdManager {
         Path userdataDest = avdFolder.resolve(USERDATA_IMG);
 
         if (CancellableFileIo.notExists(userdataDest)) {
-            Files.copy(userdataSrc, userdataDest);
+            FileUtils.copyFile(userdataSrc, userdataDest);
 
             if (CancellableFileIo.notExists(userdataDest)) {
                 log.warning("Unable to create '%1$s' file in the AVD folder.",

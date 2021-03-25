@@ -26,26 +26,29 @@ import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.common.truth.Truth
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
+import org.gradle.api.file.RegularFile
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
-import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mock
 import org.mockito.Mockito
-import org.mockito.MockitoAnnotations
+import org.mockito.junit.MockitoJUnit
+import org.mockito.junit.MockitoRule
+import org.mockito.quality.Strictness
 import java.io.Serializable
 
 class AnalyticsEnabledVariantTest {
+
+    @get:Rule
+    val rule: MockitoRule = MockitoJUnit.rule().strictness(Strictness.STRICT_STUBS)
 
     @Mock
     lateinit var delegate: Variant
 
     private val stats = GradleBuildVariant.newBuilder()
-    private lateinit var proxy: AnalyticsEnabledVariant
-
-    @Before
-    fun setup() {
-        MockitoAnnotations.initMocks(this)
-        proxy = object: AnalyticsEnabledVariant(delegate, stats, FakeObjectFactory.factory) {}
+    private val proxy: AnalyticsEnabledVariant by lazy {
+        object : AnalyticsEnabledVariant(delegate, stats, FakeObjectFactory.factory) {}
     }
 
     @Test
@@ -169,5 +172,18 @@ class AnalyticsEnabledVariantTest {
             )
         )
         Mockito.verify(delegate, Mockito.times(1)).packaging
+    }
+
+    @Test
+    fun getProguardFiles() {
+        @Suppress("UNCHECKED_CAST")
+        val proguardFiles = Mockito.mock(ListProperty::class.java) as ListProperty<RegularFile>
+        Mockito.`when`(delegate.proguardFiles).thenReturn(proguardFiles)
+
+        Truth.assertThat(proxy.proguardFiles).isEqualTo(proguardFiles)
+        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
+        Truth.assertThat(
+            stats.variantApiAccess.variantPropertiesAccessList.first().type
+        ).isEqualTo(VariantPropertiesMethodType.PROGUARD_FILES_VALUE)
     }
 }

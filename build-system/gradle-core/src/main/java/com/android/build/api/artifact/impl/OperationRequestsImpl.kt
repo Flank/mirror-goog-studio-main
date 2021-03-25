@@ -17,8 +17,8 @@
 package com.android.build.api.artifact.impl
 
 import com.android.build.api.artifact.Artifact
-import com.android.build.api.artifact.Artifact.MultipleArtifact
-import com.android.build.api.artifact.Artifact.SingleArtifact
+import com.android.build.api.artifact.Artifact.Multiple
+import com.android.build.api.artifact.Artifact.Single
 import com.android.build.api.artifact.ArtifactKind
 import com.android.build.api.artifact.ArtifactTransformationRequest
 import com.android.build.api.artifact.ArtifactType
@@ -40,7 +40,6 @@ import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
-import java.io.File
 import java.util.concurrent.atomic.AtomicReference
 
 class OutOperationRequestImpl<TaskT: Task, FileTypeT: FileSystemLocation>(
@@ -50,14 +49,14 @@ class OutOperationRequestImpl<TaskT: Task, FileTypeT: FileSystemLocation>(
 ) : OutOperationRequest<FileTypeT>, ArtifactOperationRequest {
 
     override fun <ArtifactTypeT> toAppendTo(type: ArtifactTypeT)
-            where ArtifactTypeT : MultipleArtifact<FileTypeT>,
+            where ArtifactTypeT : Multiple<FileTypeT>,
                   ArtifactTypeT : Artifact.Appendable {
         closeRequest()
         toAppend(artifacts, taskProvider, with, type)
     }
 
     override fun <ArtifactTypeT> toCreate(type: ArtifactTypeT)
-            where ArtifactTypeT : SingleArtifact<FileTypeT>,
+            where ArtifactTypeT : Single<FileTypeT>,
                   ArtifactTypeT : Artifact.Replaceable {
         closeRequest()
         toCreate(artifacts, taskProvider, with, type)
@@ -76,7 +75,7 @@ class InAndOutFileOperationRequestImpl<TaskT: Task>(
 ): InAndOutFileOperationRequest, ArtifactOperationRequest {
 
     override fun <ArtifactTypeT> toTransform(type: ArtifactTypeT)
-            where ArtifactTypeT : SingleArtifact<RegularFile>,
+            where ArtifactTypeT : Single<RegularFile>,
                   ArtifactTypeT : Artifact.Transformable {
         closeRequest()
         toTransform(artifacts, taskProvider, from, into, type)
@@ -95,7 +94,7 @@ class CombiningOperationRequestImpl<TaskT: Task, FileTypeT: FileSystemLocation>(
     val into: (TaskT) -> FileSystemLocationProperty<FileTypeT>
 ): CombiningOperationRequest<FileTypeT>, ArtifactOperationRequest {
     override fun <ArtifactTypeT> toTransform(type: ArtifactTypeT)
-            where ArtifactTypeT : MultipleArtifact<FileTypeT>,
+            where ArtifactTypeT : Multiple<FileTypeT>,
                   ArtifactTypeT : Artifact.Transformable {
         closeRequest()
         val artifactContainer = artifacts.getArtifactContainer(type)
@@ -121,7 +120,7 @@ class InAndOutDirectoryOperationRequestImpl<TaskT: Task>(
 ): InAndOutDirectoryOperationRequest<TaskT>, ArtifactOperationRequest {
 
     override fun <ArtifactTypeT> toTransform(type: ArtifactTypeT)
-            where ArtifactTypeT : SingleArtifact<Directory>,
+            where ArtifactTypeT : Single<Directory>,
                   ArtifactTypeT : Artifact.Transformable {
         closeRequest()
         toTransform(artifacts, taskProvider, from, into, type)
@@ -130,7 +129,7 @@ class InAndOutDirectoryOperationRequestImpl<TaskT: Task>(
     override fun <ArtifactTypeT> toTransformMany(
         type: ArtifactTypeT
     ): ArtifactTransformationRequest<TaskT>
-            where ArtifactTypeT : SingleArtifact<Directory>,
+            where ArtifactTypeT : Single<Directory>,
                   ArtifactTypeT : Artifact.ContainsMany {
 
         closeRequest()
@@ -175,9 +174,9 @@ class InAndOutDirectoryOperationRequestImpl<TaskT: Task>(
         atLocation: String? = null
     ): ArtifactTransformationRequestImpl<TaskT>
             where
-            ArtifactTypeT : SingleArtifact<Directory>,
+            ArtifactTypeT : Single<Directory>,
             ArtifactTypeT : Artifact.ContainsMany,
-            ArtifactTypeU : SingleArtifact<Directory>,
+            ArtifactTypeU : Single<Directory>,
             ArtifactTypeU : Artifact.ContainsMany {
         closeRequest()
         val initialProvider = artifacts.setInitialProvider(taskProvider, into)
@@ -195,9 +194,9 @@ class InAndOutDirectoryOperationRequestImpl<TaskT: Task>(
         inputLocation: (TaskT) -> DirectoryProperty,
         outputLocation: (TaskT) -> DirectoryProperty
     ): ArtifactTransformationRequestImpl<TaskT>
-            where ArtifactTypeT : SingleArtifact<Directory>,
+            where ArtifactTypeT : Single<Directory>,
                   ArtifactTypeT : Artifact.ContainsMany,
-                  ArtifactTypeU : SingleArtifact<Directory>,
+                  ArtifactTypeU : Single<Directory>,
                   ArtifactTypeU : Artifact.ContainsMany {
 
         val builtArtifactsReference = AtomicReference<BuiltArtifactsImpl>()
@@ -225,7 +224,7 @@ class InAndOutDirectoryOperationRequestImpl<TaskT: Task>(
          * value is the [InternalArtifactType] of [RegularFile] for the listing file artifact.
          */
         val publicTypesToIdeModelTypeMap:
-                Map<SingleArtifact<Directory>, InternalArtifactType<RegularFile>>
+                Map<Single<Directory>, InternalArtifactType<RegularFile>>
                 = mapOf(ArtifactType.APK to InternalArtifactType.APK_IDE_MODEL,
         )
 
@@ -255,7 +254,7 @@ private fun <TaskT: Task, FileTypeT: FileSystemLocation, ArtifactTypeT> toAppend
     taskProvider: TaskProvider<TaskT>,
     with: (TaskT) -> FileSystemLocationProperty<FileTypeT>,
     type: ArtifactTypeT
-) where ArtifactTypeT : MultipleArtifact<FileTypeT>,
+) where ArtifactTypeT : Multiple<FileTypeT>,
         ArtifactTypeT: Artifact.Appendable {
 
     val artifactContainer = artifacts.getArtifactContainer(type)
@@ -274,7 +273,7 @@ private fun <TaskT: Task, FileTypeT: FileSystemLocation, ArtifactTypeT> toCreate
     taskProvider: TaskProvider<TaskT>,
     with: (TaskT) -> FileSystemLocationProperty<FileTypeT>,
     type: ArtifactTypeT
-) where ArtifactTypeT : SingleArtifact<FileTypeT>,
+) where ArtifactTypeT : Single<FileTypeT>,
         ArtifactTypeT: Artifact.Replaceable {
 
     val artifactContainer = artifacts.getArtifactContainer(type)
@@ -290,7 +289,7 @@ private fun <TaskT: Task, FileTypeT: FileSystemLocation, ArtifactTypeT> toTransf
     from: (TaskT) -> FileSystemLocationProperty<FileTypeT>,
     into: (TaskT) -> FileSystemLocationProperty<FileTypeT>,
     type: ArtifactTypeT)
-        where ArtifactTypeT : SingleArtifact<FileTypeT>,
+        where ArtifactTypeT : Single<FileTypeT>,
               ArtifactTypeT : Artifact.Transformable {
     val artifactContainer = artifacts.getArtifactContainer(type)
     val currentProvider =  artifactContainer.transform(taskProvider.flatMap { into(it) })

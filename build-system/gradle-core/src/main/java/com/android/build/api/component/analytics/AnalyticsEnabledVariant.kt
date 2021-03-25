@@ -24,7 +24,9 @@ import com.android.build.api.variant.Packaging
 import com.android.build.api.variant.Variant
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
+import org.gradle.api.file.RegularFile
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
@@ -150,5 +152,12 @@ abstract class AnalyticsEnabledVariant (
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
                     VariantPropertiesMethodType.VARIANT_PSEUDOLOCALES_ENABLED_VALUE
             return delegate.isPseudoLocalesEnabled
+        }
+
+    override val proguardFiles: ListProperty<RegularFile>
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.PROGUARD_FILES_VALUE
+            return delegate.proguardFiles
         }
 }

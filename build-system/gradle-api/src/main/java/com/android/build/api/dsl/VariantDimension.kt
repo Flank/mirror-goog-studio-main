@@ -44,6 +44,7 @@ interface VariantDimension {
      * If set, the file should contain one class per line, in the following format:
      * `com/example/MyClass.class`
      */
+    @Deprecated("This property is deprecated. Migrate to multiDexKeepProguard.")
     var multiDexKeepFile: File?
 
     /** Encapsulates per-variant configurations for the NDK, such as ABI filters.  */

@@ -114,7 +114,9 @@ class BuiltArtifactsImpl @JvmOverloads constructor(
                             Paths.get(builtArtifact.outputFile)).toString(),
                         versionCode = builtArtifact.versionCode,
                         versionName = builtArtifact.versionName,
-                        variantOutputConfiguration = builtArtifact.variantOutputConfiguration
+                        variantOutputConfiguration = builtArtifact.variantOutputConfiguration,
+                        attributes = builtArtifact.attributes
+
                     )
                 }.toList(),
                 elementType())

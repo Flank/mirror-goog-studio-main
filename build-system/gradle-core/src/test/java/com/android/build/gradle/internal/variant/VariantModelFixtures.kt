@@ -86,23 +86,26 @@ class VariantInputModelBuilder(
     fun toModel() : TestVariantInputModel {
         val buildTypes = buildTypes.values.map {
             val mainSourceSet = Mockito.mock(DefaultAndroidSourceSet::class.java)
+            val testFixturesSourceSet = Mockito.mock(DefaultAndroidSourceSet::class.java)
             val androidTestSourceSet = Mockito.mock(DefaultAndroidSourceSet::class.java)
             val unitTestSourceSet = Mockito.mock(DefaultAndroidSourceSet::class.java)
 
-            BuildTypeData(it, mainSourceSet, androidTestSourceSet, unitTestSourceSet)
+            BuildTypeData(it, mainSourceSet, testFixturesSourceSet, androidTestSourceSet, unitTestSourceSet)
         }.associateBy { it.buildType.name }
 
         val flavors = productFlavors.values.map {
             val mainSourceSet = Mockito.mock(DefaultAndroidSourceSet::class.java)
+            val testFixturesSourceSet = Mockito.mock(DefaultAndroidSourceSet::class.java)
             val androidTestSourceSet = Mockito.mock(DefaultAndroidSourceSet::class.java)
             val unitTestSourceSet = Mockito.mock(DefaultAndroidSourceSet::class.java)
 
-            ProductFlavorData(it, mainSourceSet, androidTestSourceSet, unitTestSourceSet)
+            ProductFlavorData(it, mainSourceSet, testFixturesSourceSet, androidTestSourceSet, unitTestSourceSet)
         }.associateBy { it.productFlavor.name }
 
         // the default Config
         val defaultConfig = DefaultConfigData(
             defaultConfig,
+            Mockito.mock(DefaultAndroidSourceSet::class.java),
             Mockito.mock(DefaultAndroidSourceSet::class.java),
             Mockito.mock(DefaultAndroidSourceSet::class.java),
             Mockito.mock(DefaultAndroidSourceSet::class.java)

@@ -19,11 +19,10 @@ import android.databinding.tool.DataBindingBuilder
 import com.android.SdkConstants
 import com.android.SdkConstants.DATA_BINDING_KTX_LIB_ARTIFACT
 import com.android.SdkConstants.DOT_JAR
-import com.android.build.api.artifact.Artifact.SingleArtifact
+import com.android.build.api.artifact.Artifact.Single
 import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.component.impl.AndroidTestImpl
 import com.android.build.api.component.impl.ComponentImpl
-import com.android.build.api.component.impl.TestComponentBuilderImpl
 import com.android.build.api.component.impl.TestComponentImpl
 import com.android.build.api.component.impl.UnitTestImpl
 import com.android.build.api.instrumentation.FramesComputationMode
@@ -248,7 +247,7 @@ import java.util.stream.Collectors
  */
 abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImpl>(
         private val variants: List<ComponentInfo<VariantBuilderT, VariantT>>,
-        private val testComponents: List<ComponentInfo<TestComponentBuilderImpl, TestComponentImpl>>,
+        private val testComponents: List<TestComponentImpl>,
         private val hasFlavors: Boolean,
         private val projectOptions: ProjectOptions,
         @JvmField protected val globalScope: GlobalScope,
@@ -265,10 +264,8 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
     @JvmField
     protected val variantPropertiesList: List<VariantT> =
             variants.map(ComponentInfo<VariantBuilderT, VariantT>::variant)
-    private val testComponentPropertiesList: List<TestComponentImpl> =
-            testComponents.map(ComponentInfo<TestComponentBuilderImpl, TestComponentImpl>::variant)
     private val allPropertiesList: List<ComponentCreationConfig> =
-            variantPropertiesList + testComponentPropertiesList
+            variantPropertiesList + testComponents
 
 
     /**
@@ -307,7 +304,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             variantType,
             variantModel,
             variantPropertiesList,
-            testComponentPropertiesList
+            testComponents
         )
         createReportTasks()
 
@@ -391,9 +388,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             allVariants: List<ComponentInfo<VariantBuilderT, VariantT>>)
 
     /** Create tasks for the specified variant.  */
-    private fun createTasksForTest(
-            testComponentInfo: ComponentInfo<TestComponentBuilderImpl, TestComponentImpl>) {
-        val testVariant = testComponentInfo.variant
+    private fun createTasksForTest(testVariant: TestComponentImpl) {
         createAssembleTask(testVariant)
         val testedVariant = testVariant.testedVariant
         val variantDependencies = testVariant.variantDependencies
@@ -730,7 +725,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         /** Merge all resources with all the dependencies resources (i.e. "big merge").  */
         MERGE {
 
-            override val outputType: SingleArtifact<Directory>
+            override val outputType: Single<Directory>
                 get() = MERGED_RES
         },
 
@@ -739,11 +734,11 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
          */
         PACKAGE {
 
-            override val outputType: SingleArtifact<Directory>
+            override val outputType: Single<Directory>
                 get() = PACKAGED_RES
         };
 
-        abstract val outputType: SingleArtifact<Directory>
+        abstract val outputType: Single<Directory>
     }
 
     fun basicCreateMergeResourcesTask(
@@ -854,7 +849,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
 
     private fun createApkProcessResTask(
             creationConfig: ComponentCreationConfig,
-            packageOutputType: SingleArtifact<Directory>?) {
+            packageOutputType: Single<Directory>?) {
         val projectInfo = creationConfig.services.projectInfo
 
         // Check AAR metadata files
@@ -890,7 +885,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
 
     fun createProcessResTask(
             creationConfig: ComponentCreationConfig,
-            packageOutputType: SingleArtifact<Directory>?,
+            packageOutputType: Single<Directory>?,
             mergeType: MergeType,
             baseName: String) {
         val scope = creationConfig.variantScope
@@ -936,7 +931,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
 
     private fun createNonNamespacedResourceTasks(
             creationConfig: ComponentCreationConfig,
-            packageOutputType: SingleArtifact<Directory>?,
+            packageOutputType: Single<Directory>?,
             mergeType: MergeType,
             baseName: String,
             useAaptToGenerateLegacyMultidexMainDexProguardRules: Boolean) {
@@ -995,9 +990,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                                 project.files(
                                         artifacts.get(
                                                 COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR)))
-                if (!creationConfig.debuggable &&
-                        !creationConfig.variantType.isForTesting &&
-                         projectOptions[BooleanOption.ENABLE_RESOURCE_OPTIMIZATIONS]) {
+                if (!creationConfig.debuggable && !creationConfig.variantType.isForTesting) {
                     taskFactory.register(OptimizeResourcesTask.CreateAction(creationConfig))
                 }
             }
@@ -2423,7 +2416,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         ) { task: DependencyReportTask ->
             task.description = "Displays the Android dependencies of the project."
             task.variants = variantPropertiesList
-            task.testComponents = testComponentPropertiesList
+            task.testComponents = testComponents
             task.group = ANDROID_GROUP
         }
         val signingReportComponents = allPropertiesList.stream()
@@ -2449,7 +2442,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         for (variant in variantPropertiesList) {
             taskFactory.register(AnalyzeDependenciesTask.CreationAction(variant))
         }
-        for (testComponent in testComponentPropertiesList) {
+        for (testComponent in testComponents) {
             taskFactory.register(AnalyzeDependenciesTask.CreationAction(testComponent))
         }
     }

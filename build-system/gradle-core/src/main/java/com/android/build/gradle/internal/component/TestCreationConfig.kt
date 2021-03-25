@@ -17,14 +17,13 @@
 package com.android.build.gradle.internal.component
 
 import com.android.build.api.variant.AndroidVersion
-import org.gradle.api.Named
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Provider
 
 /**
  * Interface for properties common to all test components.
  */
-interface TestCreationConfig: ComponentCreationConfig, Named {
+interface TestCreationConfig: ComponentCreationConfig {
 
     val instrumentationRunner: Provider<out String>
 

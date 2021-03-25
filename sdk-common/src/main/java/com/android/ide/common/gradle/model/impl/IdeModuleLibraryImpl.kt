@@ -31,8 +31,18 @@ data class IdeModuleLibraryImpl(
   constructor(
     projectPath: String,
     artifactAddress: String,
-    buildId: String?
-  ) : this(IdeModuleLibraryCore(projectPath, artifactAddress, buildId), isProvided = false)
+    buildId: String?,
+    variant: String? = null
+  ) : this(
+      IdeModuleLibraryCore(
+          projectPath = projectPath,
+          artifactAddress = artifactAddress,
+          buildId = buildId,
+          variant = variant,
+          lintJar = null
+      ),
+      isProvided = false
+  )
 }
 
 data class IdeModuleLibraryCore(

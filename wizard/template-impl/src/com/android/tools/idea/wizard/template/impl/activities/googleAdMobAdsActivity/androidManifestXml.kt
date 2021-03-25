@@ -18,6 +18,7 @@ package com.android.tools.idea.wizard.template.impl.activities.googleAdMobAdsAct
 
 import com.android.tools.idea.wizard.template.activityToLayout
 import com.android.tools.idea.wizard.template.impl.activities.common.commonActivityBody
+import com.android.tools.idea.wizard.template.impl.activities.common.collapseEmptyActivityTags
 
 fun androidManifestXml(
   activityClass: String,
@@ -59,5 +60,5 @@ fun androidManifestXml(
     </application>
 
 </manifest>
-"""
+""".collapseEmptyActivityTags()
 }

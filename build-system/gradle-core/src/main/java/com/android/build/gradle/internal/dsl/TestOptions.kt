@@ -63,8 +63,12 @@ open class TestOptions @Inject constructor(dslServices: DslServices) :
             )!!
         }
 
-    override val failureRetention: com.android.build.api.dsl.FailureRetention =
-        dslServices.newInstance(FailureRetention::class.java, dslServices)
+    override val emulatorSnapshots: com.android.build.api.dsl.EmulatorSnapshots =
+        dslServices.newInstance(EmulatorSnapshots::class.java, dslServices)
+
+    @Deprecated("Renamed to emulatorSnapshots", replaceWith = ReplaceWith("emulatorSnapshots"))
+    override val failureRetention: com.android.build.api.dsl.FailureRetention
+        get() = emulatorSnapshots as com.android.build.api.dsl.FailureRetention
 
     init {
         devices.registerBinding(
@@ -131,10 +135,22 @@ open class TestOptions @Inject constructor(dslServices: DslServices) :
     }
 
     // (Implementing interface for kotlin)
+    override fun emulatorSnapshots(action: com.android.build.api.dsl.EmulatorSnapshots.() -> Unit) {
+        action.invoke(emulatorSnapshots)
+    }
+
+    // Runtime only for groovy decorator to generate the closure based block
+    fun emulatorSnapshots(action: Action<com.android.build.api.dsl.EmulatorSnapshots>) {
+        action.execute(emulatorSnapshots)
+    }
+
+    @Deprecated("Renamed to emulatorSnapshots", replaceWith = ReplaceWith("emulatorSnapshots"))
     override fun failureRetention(action: com.android.build.api.dsl.FailureRetention.() -> Unit) {
         action.invoke(failureRetention)
     }
+
     // Runtime only for groovy decorator to generate the closure based block
+    @Deprecated("Renamed to emulatorSnapshots", replaceWith = ReplaceWith("emulatorSnapshots"))
     fun failureRetention(action: Action<com.android.build.api.dsl.FailureRetention>) {
         action.execute(failureRetention)
     }

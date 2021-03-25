@@ -50,13 +50,13 @@ class StorageProviderImpl {
 }
 
 class TypedStorageProvider<T :FileSystemLocation>(private val propertyAllocator: (ObjectFactory) -> Property<T>) {
-    private val singleStorage= mutableMapOf<Artifact.SingleArtifact<*>,  SingleArtifactContainer<T>>()
-    private val multipleStorage=  mutableMapOf<Artifact.MultipleArtifact<*>,  MultipleArtifactContainer<T>>()
+    private val singleStorage= mutableMapOf<Artifact.Single<*>,  SingleArtifactContainer<T>>()
+    private val multipleStorage=  mutableMapOf<Artifact.Multiple<*>,  MultipleArtifactContainer<T>>()
 
     @Synchronized
     internal fun getArtifact(
         objects: ObjectFactory,
-        artifactType: Artifact.SingleArtifact<T>
+        artifactType: Artifact.Single<T>
     ): SingleArtifactContainer<T> {
 
         return singleStorage.getOrPut(artifactType) {
@@ -68,7 +68,7 @@ class TypedStorageProvider<T :FileSystemLocation>(private val propertyAllocator:
 
     internal fun getArtifact(
         objects: ObjectFactory,
-        artifactType: Artifact.MultipleArtifact<T>
+        artifactType: Artifact.Multiple<T>
     ): MultipleArtifactContainer<T> {
         return multipleStorage.getOrPut(artifactType) {
             MultipleArtifactContainer<T> {
@@ -78,7 +78,7 @@ class TypedStorageProvider<T :FileSystemLocation>(private val propertyAllocator:
         }
     }
 
-    internal fun copy(type: Artifact.SingleArtifact<T>,
+    internal fun copy(type: Artifact.Single<T>,
         container: SingleArtifactContainer<T>) {
         // if the target container is null, we can just override with the source container
         // however, if it is not null, which mean that is has been queried, we cannot just

@@ -1380,7 +1380,8 @@ public class Main {
 
             // Set up lint project dependencies based on the model
             List<LintModelModuleProject> roots =
-                    LintModelModuleProject.Companion.resolveDependencies(projects);
+                    LintModelModuleProject.resolveDependencies(
+                            projects, argumentState.mode == LintDriver.DriverMode.MERGE);
 
             lintRequest = new LintRequest(client, Collections.emptyList());
             lintRequest.setProjects(roots);

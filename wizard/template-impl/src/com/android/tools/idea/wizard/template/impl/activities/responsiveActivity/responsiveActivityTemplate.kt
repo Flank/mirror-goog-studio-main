@@ -121,8 +121,7 @@ val responsiveActivityTemplate = template {
     LanguageWidget()
   )
 
-  // TODO: Replace thumbnail b/181725934
-  thumb { File("template_blank_activity_drawer.png") }
+  thumb { File("template_responsive_activity.png") }
 
   recipe = { data: TemplateData ->
     generateResponsiveActivity(

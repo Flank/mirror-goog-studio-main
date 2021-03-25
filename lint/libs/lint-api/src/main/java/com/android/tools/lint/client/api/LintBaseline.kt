@@ -315,6 +315,8 @@ class LintBaseline(
             "InvalidPackage" -> sameSuffixFrom("not included in", new, old)
             // See https://issuetracker.google.com/68802305
             "IconDensities" -> true
+            // Error message changed but details aren't important; b/169615369
+            "UselessLeaf" -> true
             // See 181170484
             "ScopedStorage" -> sameSuffixFrom("MANAGE_EXTERNAL_STORAGE", new, old)
             // See 168897210

@@ -36,9 +36,9 @@ android {
     }
 
     testOptions {
-        failureRetention {
-            enable = true
-            maxSnapshots = 1
+        emulatorSnapshots {
+            enableForTestFailures = true
+            maxSnapshotsForTestFailures = 2
         }
     }
 }

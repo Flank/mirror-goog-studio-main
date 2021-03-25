@@ -18,11 +18,13 @@ package com.android.build.gradle.internal.testing.utp
 
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.testing.BaseTestRunner
+import com.android.build.gradle.internal.testing.CustomTestRunListener
 import com.android.build.gradle.internal.testing.StaticTestData
 import com.android.builder.testing.api.DeviceConnector
 import com.android.ide.common.process.JavaProcessExecutor
 import com.android.ide.common.process.ProcessExecutor
 import com.android.ide.common.workers.ExecutorServiceAdapter
+import com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidTestResultListenerProto
 import com.android.utils.FileUtils
 import com.android.utils.ILogger
 import com.google.common.collect.ImmutableList
@@ -49,7 +51,9 @@ class UtpTestRunner @JvmOverloads constructor(
         private val useOrchestrator: Boolean,
         private val utpTestResultListener: UtpTestResultListener?,
         private val configFactory: UtpConfigFactory = UtpConfigFactory())
-    : BaseTestRunner(splitSelectExec, processExecutor, executor) {
+    : BaseTestRunner(splitSelectExec, processExecutor, executor), UtpTestResultListener {
+
+    private val testResultReporters: MutableMap<String, UtpTestResultListener> = mutableMapOf()
 
     override fun scheduleTests(
             projectName: String,
@@ -64,12 +68,15 @@ class UtpTestRunner @JvmOverloads constructor(
             additionalTestOutputDir: File?,
             coverageDir: File,
             logger: ILogger): MutableList<TestResult> {
-        return UtpTestResultListenerServerRunner(utpTestResultListener).use { resultListenerServerRunner ->
+        return UtpTestResultListenerServerRunner(this).use { resultListenerServerRunner ->
             val resultListenerServerMetadata = resultListenerServerRunner.metadata
             apksForDevice.map { (deviceConnector, apks) ->
-                val utpOutputDir = resultsDir
+                val utpOutputDir = File(resultsDir, deviceConnector.name).apply {
+                    if (!exists()) {
+                        mkdirs()
+                    }
+                }
                 val utpTmpDir = Files.createTempDir()
-                val utpTestRunLogDir = Files.createTempDir()
                 val runnerConfigProtoFile =
                         File.createTempFile("runnerConfig", ".pb").also { file ->
                             FileOutputStream(file).use { writer ->
@@ -90,6 +97,17 @@ class UtpTestRunner @JvmOverloads constructor(
                             }
                         }
 
+                testResultReporters[deviceConnector.serialNumber] = DdmlibTestResultAdapter(
+                        deviceConnector.name,
+                        CustomTestRunListener(
+                                deviceConnector.name,
+                                projectName,
+                                variantName,
+                                logger).apply {
+                            setReportDir(resultsDir)
+                        }
+                )
+
                 val resultsProto = runUtpTestSuite(
                         runnerConfigProtoFile,
                         utpOutputDir,
@@ -98,23 +116,18 @@ class UtpTestRunner @JvmOverloads constructor(
                         javaProcessExecutor,
                         logger)
 
+                testResultReporters.remove(deviceConnector.serialNumber)
+
                 val testResultPbFile = File(utpOutputDir, "test-result.pb")
                 resultsProto.writeTo(testResultPbFile.outputStream())
 
                 try {
                     FileUtils.deleteRecursivelyIfExists(utpOutputDir.resolve(TEST_LOG_DIR))
-                    FileUtils.deleteRecursivelyIfExists(utpTestRunLogDir)
                     FileUtils.deleteRecursivelyIfExists(utpTmpDir)
                 } catch (e: IOException) {
                     logger.warning("Failed to cleanup temporary directories: $e")
                 }
 
-                createTestReportXml(resultsProto,
-                        deviceConnector.name,
-                        projectName,
-                        variantName,
-                        logger,
-                        resultsDir)
                 if (resultsProto.hasPlatformError()) {
                     logger.error(null, "Platform error occurred when running the UTP test suite")
                 }
@@ -135,5 +148,10 @@ class UtpTestRunner @JvmOverloads constructor(
                 }
             }.toMutableList()
         }
+    }
+
+    override fun onTestResultEvent(testResultEvent: GradleAndroidTestResultListenerProto.TestResultEvent) {
+        testResultReporters[testResultEvent.deviceId]?.onTestResultEvent(testResultEvent)
+        utpTestResultListener?.onTestResultEvent(testResultEvent)
     }
 }

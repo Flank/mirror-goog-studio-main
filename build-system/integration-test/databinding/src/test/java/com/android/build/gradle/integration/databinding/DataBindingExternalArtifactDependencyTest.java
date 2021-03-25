@@ -17,12 +17,18 @@
 package com.android.build.gradle.integration.databinding;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
+import com.android.build.gradle.integration.common.truth.ScannerSubject;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.BooleanOption;
+import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Scanner;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -106,5 +112,35 @@ public class DataBindingExternalArtifactDependencyTest {
                 .with(BooleanOption.NON_TRANSITIVE_R_CLASS, useNonTransitiveR)
                 .withArguments(args)
                 .run("assembleDebugAndroidTest");
+    }
+
+    @Test
+    public void expectedMissingResources() throws Exception {
+        File layout =
+                FileUtils.join(
+                        app.getSubproject("app").getMainResDir(),
+                        "layout",
+                        "layout_with_lib_res_ref_in_db.xml");
+        TestFileUtils.searchAndReplace(layout, "app_string", "incorrect_string");
+
+        List<String> args = createLibraryArtifact();
+        GradleBuildResult result =
+                app.executor()
+                        .withFailOnWarning(false)
+                        .with(BooleanOption.NON_TRANSITIVE_R_CLASS, useNonTransitiveR)
+                        .withArguments(args)
+                        .expectFailure()
+                        .run("assembleDebug");
+
+        try (Scanner s = result.getStderr()) {
+            if (useNonTransitiveR) {
+                // If we're namespacing the R class references, we'll actually verify the resources
+                // during the package search step in DB, getting the error early on.
+                ScannerSubject.assertThat(s)
+                        .contains("Resource not found: string incorrect_string");
+            } else {
+                ScannerSubject.assertThat(s).contains("getString(R.string.incorrect_string)");
+            }
+        }
     }
 }

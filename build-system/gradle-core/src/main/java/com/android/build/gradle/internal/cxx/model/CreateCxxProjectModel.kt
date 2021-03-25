@@ -42,7 +42,6 @@ fun createCxxProjectModel(
       sdkFolder = sdkComponents.sdkDirectoryProvider.get().asFile,
       isBuildOnlyTargetAbiEnabled = configurationParameters.isBuildOnlyTargetAbiEnabled,
       ideBuildTargetAbi = configurationParameters.ideBuildTargetAbi,
-      isConfigurationFoldingEnabled = configurationParameters.isConfigurationFoldingEnabled,
       isCmakeBuildCohabitationEnabled = configurationParameters.isCmakeBuildCohabitationEnabled,
       chromeTraceJsonFolder = configurationParameters.chromeTraceJsonFolder,
       isPrefabEnabled = configurationParameters.isPrefabEnabled

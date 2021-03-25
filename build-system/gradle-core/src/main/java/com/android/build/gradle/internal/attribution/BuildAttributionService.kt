@@ -16,11 +16,14 @@
 
 package com.android.build.gradle.internal.attribution
 
+import com.android.Version
+import com.android.build.gradle.internal.isConfigurationCache
 import com.android.build.gradle.internal.services.ServiceRegistrationAction
 import com.android.build.gradle.internal.services.getBuildServiceName
-import com.android.build.gradle.internal.utils.getBuildscriptDependencies
 import com.android.build.gradle.internal.utils.getBuildSrcPlugins
+import com.android.build.gradle.internal.utils.getBuildscriptDependencies
 import com.android.ide.common.attribution.AndroidGradlePluginAttributionData
+import com.android.ide.common.attribution.AndroidGradlePluginAttributionData.BuildInfo
 import com.android.ide.common.attribution.AndroidGradlePluginAttributionData.JavaInfo
 import com.android.tools.analytics.HostData
 import org.gradle.api.Project
@@ -94,6 +97,12 @@ abstract class BuildAttributionService : BuildService<BuildAttributionService.Pa
                     )
                 )
                 serviceRegistration.parameters.buildscriptDependenciesInfo.set(buildscriptDependenciesInfo)
+                serviceRegistration.parameters.buildInfo.set(
+                    BuildInfo(
+                        agpVersion = Version.ANDROID_GRADLE_PLUGIN_VERSION,
+                        configurationCacheIsOn = project.gradle.startParameter.isConfigurationCache
+                    )
+                )
 
 
                 listenersRegistry.onTaskCompletion(serviceRegistration.service)
@@ -131,7 +140,8 @@ abstract class BuildAttributionService : BuildService<BuildAttributionService.Pa
                 garbageCollectionData = gcData,
                 buildSrcPlugins = getBuildSrcPlugins(this.javaClass.classLoader),
                 javaInfo = parameters.javaInfo.get(),
-                buildscriptDependenciesInfo = parameters.buildscriptDependenciesInfo.get()
+                buildscriptDependenciesInfo = parameters.buildscriptDependenciesInfo.get(),
+                buildInfo = parameters.buildInfo.get()
             )
         )
     }
@@ -153,6 +163,8 @@ abstract class BuildAttributionService : BuildService<BuildAttributionService.Pa
         val javaInfo: Property<JavaInfo>
 
         val buildscriptDependenciesInfo: SetProperty<String>
+
+        val buildInfo: Property<BuildInfo>
     }
 
     class RegistrationAction(project: Project)

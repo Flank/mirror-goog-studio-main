@@ -530,10 +530,12 @@ coverage_report(
 coverage_report(
     name = "utp",
     srcpath_include = [
+        "tools/adt/idea/utp/src",
         "tools/base/build-system/gradle-core/src/main/java/com/android/build/gradle/internal/testing/utp",
         "tools/base/utp",
     ],
     tests = [
+        "//tools/adt/idea/utp:utp_tests",
         "//tools/base/build-system/gradle-core:tests.test",
         "//tools/base/build-system/integration-test/connected:UtpConnectedTest",
         "//tools/base/utp/android-device-provider-ddmlib:tests.test",
@@ -663,6 +665,7 @@ coverage_report(
         "//tools/adt/idea/studio-updater:integration_test",
         "//tools/adt/idea/swingp:intellij.android.adt.swingp_tests",
         "//tools/adt/idea/transport-database:intellij.android.transportDatabase_tests",
+        "//tools/adt/idea/utp:utp_tests",
         "//tools/adt/idea/whats-new-assistant:whats-new-assistant-test_tests",
         "//tools/adt/idea/wizard-model:intellij.android.wizard.model_tests",
         "//tools/analytics-library/crash:analytics-crash_tests",

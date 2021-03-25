@@ -30,7 +30,7 @@ open class AnalyticsEnabledOutOperationRequest<FileTypeT: FileSystemLocation> @I
     val stats: GradleBuildVariant.Builder
 ): OutOperationRequest<FileTypeT> {
     override fun <ArtifactTypeT> toAppendTo(type: ArtifactTypeT)
-            where ArtifactTypeT : Artifact.MultipleArtifact<FileTypeT>,
+            where ArtifactTypeT : Artifact.Multiple<FileTypeT>,
                   ArtifactTypeT : Artifact.Appendable {
         stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
             VariantPropertiesMethodType.TO_APPEND_TO_VALUE
@@ -42,7 +42,7 @@ open class AnalyticsEnabledOutOperationRequest<FileTypeT: FileSystemLocation> @I
     }
 
     override fun <ArtifactTypeT> toCreate(type: ArtifactTypeT)
-            where ArtifactTypeT : Artifact.SingleArtifact<FileTypeT>,
+            where ArtifactTypeT : Artifact.Single<FileTypeT>,
                   ArtifactTypeT : Artifact.Replaceable {
         stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
             VariantPropertiesMethodType.TO_CREATE_VALUE

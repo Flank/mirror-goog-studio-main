@@ -525,14 +525,9 @@ public class AppPluginInternalTest {
                         .map(ComponentInfo::getVariant)
                         .collect(Collectors.toList());
 
-        List<TestComponentImpl> testComponents =
-                variantManager.getTestComponents().stream()
-                        .map(ComponentInfo::getVariant)
-                        .collect(Collectors.toList());
-
         return ImmutableList.<ComponentImpl>builder()
                 .addAll(variants)
-                .addAll(testComponents)
+                .addAll(variantManager.getTestComponents())
                 .build();
     }
 }

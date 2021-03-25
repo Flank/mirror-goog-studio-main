@@ -16,13 +16,26 @@
 
 package com.android.build.gradle.internal.dsl
 
+import com.android.build.api.dsl.FailureRetention
 import com.android.build.gradle.internal.services.DslServices
 import javax.inject.Inject
 
-open class FailureRetention @Inject constructor(dslServices: DslServices) :
-    com.android.build.api.dsl.FailureRetention {
+open class EmulatorSnapshots @Inject constructor(dslServices: DslServices) :
+    com.android.build.api.dsl.EmulatorSnapshots, FailureRetention {
 
-    override var enable: Boolean = false
+    override var enable: Boolean
+        get() = enableForTestFailures
+        set(value) {
+            enableForTestFailures = value
+        }
+
+    override var maxSnapshots: Int
+        get() = maxSnapshotsForTestFailures
+        set(value) {
+            maxSnapshotsForTestFailures = value
+        }
+
+    override var enableForTestFailures: Boolean = false
     private var retainAll: Boolean = false
 
     override fun retainAll() {
@@ -33,7 +46,7 @@ open class FailureRetention @Inject constructor(dslServices: DslServices) :
         return retainAll
     }
 
-    override var maxSnapshots: Int = 2
+    override var maxSnapshotsForTestFailures: Int = 2
 
     override var compressSnapshots: Boolean = false
 }

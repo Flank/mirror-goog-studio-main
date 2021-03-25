@@ -38,7 +38,7 @@ import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.SdkComponentsBuildService;
 import com.android.build.gradle.internal.SdkComponentsKt;
 import com.android.build.gradle.internal.component.VariantCreationConfig;
-import com.android.build.gradle.internal.dsl.FailureRetention;
+import com.android.build.gradle.internal.dsl.EmulatorSnapshots;
 import com.android.build.gradle.internal.process.GradleJavaProcessExecutor;
 import com.android.build.gradle.internal.process.GradleProcessExecutor;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
@@ -650,8 +650,8 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                     .set(
                             createRetentionConfig(
                                     projectOptions,
-                                    (FailureRetention)
-                                            extension.getTestOptions().getFailureRetention()));
+                                    (EmulatorSnapshots)
+                                            extension.getTestOptions().getEmulatorSnapshots()));
 
             task.getCodeCoverageEnabled()
                     .set(creationConfig.getVariantDslInfo().isTestCoverageEnabled());

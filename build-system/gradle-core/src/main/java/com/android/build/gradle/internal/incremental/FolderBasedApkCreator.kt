@@ -21,6 +21,7 @@ import com.android.tools.build.apkzlib.zfile.ApkCreatorFactory
 import com.android.tools.build.apkzlib.zip.StoredEntry
 import com.android.tools.build.apkzlib.zip.ZFile
 import com.android.tools.build.apkzlib.zip.ZFileOptions
+import com.android.utils.FileUtils
 import com.google.common.base.Function
 import com.google.common.base.Predicate
 import java.io.File
@@ -87,10 +88,9 @@ class FolderBasedApkCreator(private val creationData: ApkCreatorFactory.Creation
     override fun writeFile(inputFile: File, entryPath: String) {
         val destinationFile = File(creationData.apkPath, entryPath)
         destinationFile.parentFile.mkdirs()
-        Files.copy(
+        FileUtils.copyFile(
             inputFile.toPath(),
-            destinationFile.toPath(),
-            StandardCopyOption.REPLACE_EXISTING
+            destinationFile.toPath()
         )
     }
 

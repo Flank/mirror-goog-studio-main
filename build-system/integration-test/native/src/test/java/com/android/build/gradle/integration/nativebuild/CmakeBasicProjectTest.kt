@@ -43,7 +43,6 @@ import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons
 import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.cxx.model.jsonGenerationLoggingRecordFile
 import com.android.build.gradle.options.BooleanOption
-import com.android.build.gradle.options.BooleanOption.ENABLE_NATIVE_CONFIGURATION_FOLDING
 import com.android.build.gradle.options.StringOption
 import com.android.builder.model.v2.models.ndk.NativeModule
 import com.android.testutils.truth.PathSubject.assertThat
@@ -62,8 +61,7 @@ import java.util.zip.GZIPInputStream
 /** Assemble tests for Cmake.  */
 @RunWith(Parameterized::class)
 class CmakeBasicProjectTest(
-    private val cmakeVersionInDsl: String,
-    private val enableConfigurationFolding: Boolean
+    private val cmakeVersionInDsl: String
 ) {
     @Rule
     @JvmField
@@ -72,16 +70,12 @@ class CmakeBasicProjectTest(
         // TODO(b/159233213) Turn to ON when release configuration is cacheable
         .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
         .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
-        .addGradleProperties("${ENABLE_NATIVE_CONFIGURATION_FOLDING.propertyName}=$enableConfigurationFolding")
         .create()
 
     companion object {
-        @Parameterized.Parameters(name = "version={0} enableConfigurationFolding={1}")
+        @Parameterized.Parameters(name = "version={0}")
         @JvmStatic
-        fun data() = cartesianOf(
-            arrayOf("3.6.0", OFF_STAGE_CMAKE_VERSION, DEFAULT_CMAKE_VERSION),
-            arrayOf(true, false)
-        )
+        fun data() = arrayOf("3.6.0", OFF_STAGE_CMAKE_VERSION, DEFAULT_CMAKE_VERSION)
     }
 
     @Before
@@ -294,8 +288,7 @@ class CmakeBasicProjectTest(
         project.execute("assembleDebug")
         val golden = project.goldenBuildProducts()
         println(golden)
-        if (enableConfigurationFolding) {
-            Truth.assertThat(golden).isEqualTo("""
+        Truth.assertThat(golden).isEqualTo("""
             {PROJECT}/.cxx/{DEBUG}/armeabi-v7a/CMakeFiles/hello-jni.dir/src/main/cxx/hello-jni.c.o{F}
             {PROJECT}/.cxx/{DEBUG}/x86_64/CMakeFiles/hello-jni.dir/src/main/cxx/hello-jni.c.o{F}
             {PROJECT}/build/intermediates/cmake/debug/obj/armeabi-v7a/libhello-jni.so{F}
@@ -306,19 +299,7 @@ class CmakeBasicProjectTest(
             {PROJECT}/build/intermediates/stripped_native_libs/debug/out/lib/x86_64/libhello-jni.so{F}
             {PROJECT}/build/intermediates/{DEBUG}/obj/armeabi-v7a/libhello-jni.so{F}
             {PROJECT}/build/intermediates/{DEBUG}/obj/x86_64/libhello-jni.so{F}
-        """.trimIndent())
-        } else {
-            Truth.assertThat(golden).isEqualTo("""
-            {PROJECT}/.cxx/{DEBUG}/armeabi-v7a/CMakeFiles/hello-jni.dir/src/main/cxx/hello-jni.c.o{F}
-            {PROJECT}/.cxx/{DEBUG}/x86_64/CMakeFiles/hello-jni.dir/src/main/cxx/hello-jni.c.o{F}
-            {PROJECT}/build/intermediates/merged_native_libs/debug/out/lib/armeabi-v7a/libhello-jni.so{F}
-            {PROJECT}/build/intermediates/merged_native_libs/debug/out/lib/x86_64/libhello-jni.so{F}
-            {PROJECT}/build/intermediates/stripped_native_libs/debug/out/lib/armeabi-v7a/libhello-jni.so{F}
-            {PROJECT}/build/intermediates/stripped_native_libs/debug/out/lib/x86_64/libhello-jni.so{F}
-            {PROJECT}/build/intermediates/{DEBUG}/obj/armeabi-v7a/libhello-jni.so{F}
-            {PROJECT}/build/intermediates/{DEBUG}/obj/x86_64/libhello-jni.so{F}
-        """.trimIndent())
-        }
+            """.trimIndent())
     }
 
     @Test

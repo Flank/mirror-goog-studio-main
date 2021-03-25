@@ -22,10 +22,15 @@ import com.android.build.gradle.options.BooleanOption
 import com.google.common.annotations.VisibleForTesting
 import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.options.StringOption
-import com.android.Version
 import com.google.common.base.CharMatcher
 import com.google.common.base.Splitter
 import org.gradle.api.InvalidUserDataException
+
+/**
+ * For AGP 7.0 and above, the minimum version of Studio that is required to open
+ * the project is different from the plugin version itself.
+ */
+private val MINIMUM_REQUIRED_STUDIO_VERSION = MajorMinorVersion(2020, 3,1)
 
 /** Throws if the Intellij Android Support plugin version used has a lower major/minor version than the current Android Gradle plugin */
 fun verifyIDEIsNotOld(projectOptions: ProjectOptions) {
@@ -34,30 +39,18 @@ fun verifyIDEIsNotOld(projectOptions: ProjectOptions) {
     }
     verifyIDEIsNotOld(
         projectOptions.get(StringOption.IDE_ANDROID_STUDIO_VERSION),
-        ANDROID_GRADLE_PLUGIN_VERSION
+        MINIMUM_REQUIRED_STUDIO_VERSION
     )
 }
 
 @VisibleForTesting
-internal fun verifyIDEIsNotOld(
-    injectedVersion: String?,
-    androidGradlePluginVersion: MajorMinorVersion
-) {
+internal fun verifyIDEIsNotOld(injectedVersion: String?, minRequiredVersion: MajorMinorVersion) {
     if (injectedVersion == null) {
         // Be lenient when the version is not injected.
         return
     }
-
     val parsedInjected = parseVersion(injectedVersion)
         ?: throw InvalidUserDataException("Invalid injected android support version '$injectedVersion', expected to be of the form 'w.x.y.z'")
-
-    // for AGP 7.0 and above, the minimum version of Studio that is required to open
-    // the project is different from the plugin version itself.
-    // For now, maintain a table, but this will be changed in the future.
-    val minRequiredVersion = when (androidGradlePluginVersion) {
-        MajorMinorVersion(majorVersion = 7, minorVersion = 0) -> MajorMinorVersion(2020, 3,1)
-        else -> androidGradlePluginVersion
-    }
 
     // the injected version is something like 203.7148.57.2031.SNAPSHOT in the tests, which is not the case
     // in product. so just ignore it.
@@ -68,18 +61,18 @@ internal fun verifyIDEIsNotOld(
     }
 }
 
-/** This will accept some things that are not valid versions as it ignores everything after the
- * second.
+/**
+ * This will accept some things that are not valid versions as it ignores everything after
+ * extracting the Year (if applicable), Major and Minor versions.
  *
- * There are two possible types of format that we can obtain from the IDE, in versions before
- * 4.0, the application ID is send. This will be either eg - "2020.1.4535" if run from IDEA or
- * eg 0 "3.6.3" if send from Android Studio.
+ * Before Android Studio 4.x, the platform version number is injected. e.g. "3.6.3.0" for Android
+ * Studio 3.6.3 or something like "2020.1.4535" if run from the Android Plugin in IDEA
  *
- * On and after 4.0 this version will be the version of the Android Support Plugin which will
- * be the same between Android Studio and Intellij IDEA. This will be in the form 10.x.y.* where
- * x and y are the major and minor versions respectively.
+ * In Android Studio 4.x this version is the version of the Android Support Plugin, e.g. "10.4.3.1",
+ * which will be the same between Android Studio and Intellij IDEA.
+ * This will be in the form 10.x.y.* where x and y are the major and minor versions respectively.
  *
- * On and after 4.3, Android Studio moved to a year-based system that is more closely aligned with
+ * Android Studio Arctic Fox moved to a year-based system that is more closely aligned with
  * IntelliJ IDEA, so the new format is YYYY.x.y where YYYY is the year, x and y are the major and
  * minor versions respectively
  *
@@ -89,31 +82,35 @@ internal fun verifyIDEIsNotOld(
  */
 @VisibleForTesting
 internal fun parseVersion(version: String): MajorMinorVersion? {
-    val segments = SPLITTER.split(version).iterator()
-    if (!segments.hasNext()) {
+    val segments = SPLITTER.split(version).map { it.toIntOrNull() ?: -1 }
+    if (segments.size < 3) {
         return null
     }
-    var yearVersion = 0
-    var majorVersion = segments.next().toIntOrNull() ?: return null
-    if (majorVersion == 10 || majorVersion > 2000) {
-        if (!segments.hasNext()) {
-            return null
+    return when {
+        segments[0] <= 4 -> {
+            // Handle case of e.g. 3.2.1.6
+            versionOf(year = 0, major = segments[0], minor = segments[1])
         }
-        yearVersion = majorVersion
-        majorVersion = segments.next().toIntOrNull() ?: return null
+        // 4.x versions have sometimes a 10. prefix, e.g. 10.4.1.3.6, discard it.
+        segments[0] == 10 && segments[1] == 4 -> {
+            versionOf(year = 0, major = segments[1], minor = segments[2])
+        }
+        version.startsWith("10.2020.3 ") -> {
+            // Handle the missing minor version from earlier Android Studio Arctic Fox canaries.
+            return MajorMinorVersion(yearVersion = 2020, majorVersion = 3, minorVersion = 1)
+        }
+        segments[0] >= 2020 -> {
+            versionOf(year = segments[0], major = segments[1], minor = segments[2])
+        }
+        else -> null
     }
+}
 
-    if (!segments.hasNext()) {
+private fun versionOf(year: Int, major: Int, minor: Int): MajorMinorVersion? {
+    if (major < 0 || minor < 0) {
         return null
     }
-    val minorVersion = segments.next().toIntOrNull() ?: return null
-    if (majorVersion < 0 || minorVersion < 0) {
-        return null
-    }
-    if (yearVersion > 2000) {
-        return MajorMinorVersion(yearVersion, majorVersion, minorVersion)
-    }
-    return MajorMinorVersion(majorVersion = majorVersion, minorVersion = minorVersion)
+    return MajorMinorVersion(year, major, minor)
 }
 
 @VisibleForTesting
@@ -142,7 +139,4 @@ internal data class MajorMinorVersion(
     }
 }
 
-private val SPLITTER = Splitter.on(CharMatcher.anyOf(". "))
-
-private val ANDROID_GRADLE_PLUGIN_VERSION =
-    parseVersion(Version.ANDROID_GRADLE_PLUGIN_VERSION)!!
+private val SPLITTER = Splitter.on(CharMatcher.anyOf(". ")).omitEmptyStrings()

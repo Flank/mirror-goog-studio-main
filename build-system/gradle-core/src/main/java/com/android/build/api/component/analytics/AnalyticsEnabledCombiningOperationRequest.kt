@@ -30,7 +30,7 @@ open class AnalyticsEnabledCombiningOperationRequest<FileTypeT: FileSystemLocati
     val stats: GradleBuildVariant.Builder
 ): CombiningOperationRequest<FileTypeT> {
     override fun <ArtifactTypeT> toTransform(type: ArtifactTypeT)
-            where ArtifactTypeT : Artifact.MultipleArtifact<FileTypeT>,
+            where ArtifactTypeT : Artifact.Multiple<FileTypeT>,
                   ArtifactTypeT : Artifact.Transformable {
         stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
             VariantPropertiesMethodType.TO_TRANSFORM_COMBINE_VALUE

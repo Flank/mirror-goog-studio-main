@@ -34,6 +34,7 @@ import com.android.builder.model.SourceProvider
 import com.android.utils.appendCapitalized
 import com.android.utils.combineAsCamelCase
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.provider.Provider
 
 /** Builder for [VariantDslInfo].
  *
@@ -53,7 +54,7 @@ class VariantDslInfoBuilder private constructor(
     private val manifestDataProvider: ManifestDataProvider,
     private val dslServices: DslServices,
     private val variantPropertiesApiServices: VariantPropertiesApiServices,
-    private val dslNamespace: String?,
+    private val dslNamespaceProvider: Provider<String>?,
     private val dslTestNamespace: String?
 ) {
 
@@ -73,7 +74,7 @@ class VariantDslInfoBuilder private constructor(
             manifestDataProvider: ManifestDataProvider,
             dslServices: DslServices,
             variantPropertiesApiServices: VariantPropertiesApiServices,
-            dslNamespace: String? = null,
+            dslNamespaceProvider: Provider<String>? = null,
             dslTestNamespace: String? = null
         ): VariantDslInfoBuilder {
             return VariantDslInfoBuilder(
@@ -87,7 +88,7 @@ class VariantDslInfoBuilder private constructor(
                 manifestDataProvider,
                 dslServices,
                 variantPropertiesApiServices,
-                dslNamespace,
+                dslNamespaceProvider,
                 dslTestNamespace
             )
         }
@@ -122,7 +123,7 @@ class VariantDslInfoBuilder private constructor(
             if (buildType == null) {
                 if (flavorName.isNotEmpty()) {
                     sb.append(flavorName)
-                } else if (!variantType.isTestComponent) {
+                } else if (!variantType.isTestComponent && !variantType.isTestFixturesComponent) {
                     sb.append("main")
                 }
             } else {
@@ -133,7 +134,7 @@ class VariantDslInfoBuilder private constructor(
                     sb.append(buildType)
                 }
             }
-            if (variantType.isTestComponent) {
+            if (variantType.isTestComponent || variantType.isTestFixturesComponent) {
                 if (sb.isEmpty()) {
                     // need the lower case version
                     sb.append(variantType.prefix)
@@ -296,7 +297,7 @@ class VariantDslInfoBuilder private constructor(
             dslServices,
             variantPropertiesApiServices,
             buildDirectory,
-            dslNamespace,
+            dslNamespaceProvider,
             dslTestNamespace
         )
     }

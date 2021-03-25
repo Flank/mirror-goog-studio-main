@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.tools.appinspection.network.utils
+package com.android.tools.appinspection.common
 
 import android.util.Log
 import java.util.concurrent.ConcurrentHashMap

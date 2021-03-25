@@ -26,7 +26,6 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
-import org.junit.Assume
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -71,8 +70,6 @@ class LintDynamicFeatureTest(private val usePartialAnalysis: Boolean) {
 
     @Test
     fun testUnusedResourcesInFeatureModules() {
-        // TODO (b/180672373) Support the unused resource detector with lint partial analysis.
-        Assume.assumeFalse(usePartialAnalysis)
         project.getExecutor().run("clean", "lint")
 
         val file = project.file("app/lint-results.txt")
@@ -92,6 +89,7 @@ class LintDynamicFeatureTest(private val usePartialAnalysis: Boolean) {
         )
     }
 
+    // TODO(b/183566683) Stop supporting running lint from feature modules
     @Test
     fun runLintFromDynamicFeatures() {
         // Run twice to catch issues with configuration caching
@@ -113,8 +111,13 @@ class LintDynamicFeatureTest(private val usePartialAnalysis: Boolean) {
         )
     }
 
+    // TODO(b/183566683) Stop supporting running lint from feature modules.
+    // TODO(b/178810169) Running lint from an app module with checkDependencies true should also
+    //  analyze all of the dynamic feature module dependencies.
     @Test
     fun runLintFromDynamicFeatureWithCheckDependencies() {
+        // checkDependencies in a dynamic feature module has no effect; this test is mainly to check
+        // that we're not breaking people who might have it set to true currently.
         TestFileUtils.appendToFile(
             projectWithLibs.getSubproject(":feature").buildFile,
             """
@@ -146,15 +149,19 @@ class LintDynamicFeatureTest(private val usePartialAnalysis: Boolean) {
             layout_text
         )
 
-        // Run twice to catch issues with configuration caching
-        projectWithLibs.getExecutor().run("clean", ":feature:lint")
         projectWithLibs.getExecutor().run("clean", ":feature:lint")
         assertThat(projectWithLibs.buildResult.failedTasks).isEmpty()
 
-        assertThat(projectWithLibs.file("feature/lint-results.txt")).containsAllOf(
-            "app_layout.xml:10: Warning: Hardcoded string",
-            "feature_layout.xml:10: Warning: Hardcoded string",
-            "lib1_layout.xml:10: Warning: Hardcoded string",
+        assertThat(projectWithLibs.file("feature/lint-results.txt")).contains(
+            "feature_layout.xml:10: Warning: Hardcoded string"
+        )
+        assertThat(projectWithLibs.file("feature/lint-results.txt")).doesNotContain(
+            "app_layout.xml:10: Warning: Hardcoded string"
+        )
+        assertThat(projectWithLibs.file("feature/lint-results.txt")).doesNotContain(
+            "lib1_layout.xml:10: Warning: Hardcoded string"
+        )
+        assertThat(projectWithLibs.file("feature/lint-results.txt")).doesNotContain(
             "lib2_layout.xml:10: Warning: Hardcoded string"
         )
     }
@@ -166,15 +173,11 @@ class LintDynamicFeatureTest(private val usePartialAnalysis: Boolean) {
         project.getExecutor().run(":app:clean", ":app:lint")
         assertThat(project.buildResult.failedTasks).isEmpty()
 
-        // TODO (b/180672373) Merge issues from dynamic features into app report when using lint
-        //  partial analysis.
-        if (!usePartialAnalysis) {
-            assertThat(project.file("app/lint-results.txt")).containsAllOf(
-                "base_layout.xml:10: Warning: Hardcoded string",
-                "feature_layout.xml:10: Warning: Hardcoded string",
-                "feature2_layout.xml:10: Warning: Hardcoded string"
-            )
-        }
+        assertThat(project.file("app/lint-results.txt")).containsAllOf(
+            "base_layout.xml:10: Warning: Hardcoded string",
+            "feature_layout.xml:10: Warning: Hardcoded string",
+            "feature2_layout.xml:10: Warning: Hardcoded string"
+        )
     }
 
     @Test

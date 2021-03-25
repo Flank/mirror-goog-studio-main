@@ -17,9 +17,7 @@
 package com.android.build.api.extension.impl
 
 import com.android.build.api.component.AndroidTest
-import com.android.build.api.component.AndroidTestBuilder
 import com.android.build.api.component.UnitTest
-import com.android.build.api.component.UnitTestBuilder
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
 
@@ -29,8 +27,6 @@ import com.android.build.api.variant.VariantBuilder
 class VariantApiOperationsRegistrar<VariantBuilderT: VariantBuilder, VariantT: Variant> {
     internal val variantBuilderOperations = OperationsRegistrar<VariantBuilderT>()
     internal val variantOperations = OperationsRegistrar<VariantT>()
-    internal val unitTestBuilderOperations = OperationsRegistrar<UnitTestBuilder>()
-    internal val androidTestBuilderOperations = OperationsRegistrar<AndroidTestBuilder>()
     internal val unitTestOperations = OperationsRegistrar<UnitTest>()
     internal val androidTestOperations = OperationsRegistrar<AndroidTest>()
     internal val dslExtensions = mutableListOf<AndroidComponentsExtensionImpl.RegisteredApiExtension<VariantT>>()

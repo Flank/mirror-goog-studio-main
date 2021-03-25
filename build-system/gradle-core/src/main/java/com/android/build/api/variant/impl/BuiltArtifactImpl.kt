@@ -38,7 +38,8 @@ data class BuiltArtifactImpl private constructor(
     override val outputFile: String,
     override val versionCode: Int?,
     override val versionName: String?,
-    val variantOutputConfiguration: VariantOutputConfiguration = VariantOutputConfigurationImpl()
+    val variantOutputConfiguration: VariantOutputConfiguration = VariantOutputConfigurationImpl(),
+    val attributes: Map<String, String> = mapOf()
 ) : BuiltArtifact, CommonBuiltArtifact, Serializable, VariantOutputConfiguration by variantOutputConfiguration {
 
     fun newOutput(newOutputFile: Path): BuiltArtifactImpl {
@@ -46,7 +47,8 @@ data class BuiltArtifactImpl private constructor(
             outputFile = newOutputFile.toString(),
             versionCode = versionCode,
             versionName = versionName,
-            variantOutputConfiguration = variantOutputConfiguration
+            variantOutputConfiguration = variantOutputConfiguration,
+            attributes = attributes
         )
     }
 
@@ -60,12 +62,14 @@ data class BuiltArtifactImpl private constructor(
             outputFile: String,
             versionCode: Int? = null,
             versionName: String? = null,
-            variantOutputConfiguration: VariantOutputConfiguration = VariantOutputConfigurationImpl()
+            variantOutputConfiguration: VariantOutputConfiguration = VariantOutputConfigurationImpl(),
+            attributes: Map<String, String> = mapOf()
         )
                     = BuiltArtifactImpl(FileUtils.toSystemIndependentPath(outputFile),
                 versionCode,
                 versionName,
-                variantOutputConfiguration
+                variantOutputConfiguration,
+                attributes
         )
 
     }
@@ -83,17 +87,27 @@ internal class BuiltArtifactTypeAdapter: CommonBuiltArtifactTypeAdapter<BuiltArt
             out.endObject()
         }
         out.endArray()
+        out.name("attributes").beginArray()
+        for (attribute in value.attributes) {
+            out.beginObject()
+            out.name("key").value(attribute.key)
+            out.name("value").value(attribute.value)
+            out.endObject()
+        }
+        out.endArray()
     }
 
     @Throws(IOException::class)
     override fun read(reader: JsonReader): BuiltArtifactImpl {
         var outputType: String? = null
         val filters = ImmutableList.Builder<FilterConfiguration>()
+        val attributes = mutableMapOf<String, String>()
         return super.read(reader,
             { attributeName: String ->
                 when(attributeName) {
                     "type" -> outputType = reader.nextString()
                     "filters" -> readFilters(reader, filters)
+                    "attributes" -> readAttributes(reader, attributes)
                 }
             },
             { outputFile: String,
@@ -107,7 +121,8 @@ internal class BuiltArtifactTypeAdapter: CommonBuiltArtifactTypeAdapter<BuiltArt
                     VariantOutputConfigurationImpl(
                         isUniversal = OutputType.UNIVERSAL.name == outputType,
                         filters = filters.build()
-                    )
+                    ),
+                    attributes = attributes
                 )
             })
     }
@@ -128,6 +143,28 @@ internal class BuiltArtifactTypeAdapter: CommonBuiltArtifactTypeAdapter<BuiltArt
             }
             if (filterType != null && value != null) {
                 filters.add(FilterConfiguration(filterType, value))
+            }
+            reader.endObject()
+        }
+        reader.endArray()
+    }
+
+    @Throws(IOException::class)
+    private fun readAttributes(reader: JsonReader, attributes: MutableMap<String, String>) {
+
+        reader.beginArray()
+        while (reader.hasNext()) {
+            reader.beginObject()
+            var key: String? = null
+            var value: String? = null
+            while (reader.hasNext()) {
+                when (reader.nextName()) {
+                    "key" -> key = reader.nextString()
+                    "value" -> value = reader.nextString()
+                }
+            }
+            if (key != null && value != null) {
+                attributes[key] = value
             }
             reader.endObject()
         }

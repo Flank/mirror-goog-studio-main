@@ -39,8 +39,7 @@ import org.junit.runners.Parameterized
 @RunWith(Parameterized::class)
 class CmakeMultiModuleTest(
         private val cmakeVersionInDsl: String,
-        private val hasFoldableVariants: Boolean,
-        enableConfigurationFolding: Boolean
+        private val hasFoldableVariants: Boolean
 ) {
 
     @get:Rule
@@ -57,7 +56,6 @@ class CmakeMultiModuleTest(
         .setCmakeVersion(DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION)
         .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
         .setWithCmakeDirInLocalProp(true)
-        .addGradleProperties("${BooleanOption.ENABLE_NATIVE_CONFIGURATION_FOLDING.propertyName}=$enableConfigurationFolding")
         .create()
 
     companion object {
@@ -66,7 +64,6 @@ class CmakeMultiModuleTest(
         fun data() =
                 cartesianOf(
                         arrayOf("3.6.0", OFF_STAGE_CMAKE_VERSION, DEFAULT_CMAKE_VERSION),
-                        arrayOf(true, false),
                         arrayOf(true, false)
                 )
     }

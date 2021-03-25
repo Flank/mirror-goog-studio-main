@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.CopyOption;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
@@ -114,28 +115,50 @@ public final class FileUtils {
     }
 
     /**
-     * Copies a regular file from one path to another, preserving file attributes. If the
-     * destination file exists, it gets overwritten. If the [from] file is read-only on windows, the
-     * [to] file will be left read-write so that it can be overwritten the next time this function
-     * is called.
+     * Copies a regular file from one path to another. This function uses two standard copy options:
+     * - COPY_ATTRIBUTES copies platform-dependent attributes like file timestamp (though it doesn't
+     * include Windows read-only bit). - REPLACE_EXISTING will try to delete the target file before
+     * the copy. If you want other options, there is an overload which lets you set a custom set.
+     *
+     * <p>Lastly, if the [from] file is read-only on windows, the [to] file will be left read-write
+     * so that it can be overwritten the next time this function is called.
      */
     public static void copyFile(@NonNull Path from, @NonNull Path to) throws IOException {
-        java.nio.file.Files.copy(
-                from, to, StandardCopyOption.COPY_ATTRIBUTES, StandardCopyOption.REPLACE_EXISTING);
+        copyFile(from, to, StandardCopyOption.COPY_ATTRIBUTES, StandardCopyOption.REPLACE_EXISTING);
+    }
 
+    /**
+     * Copies a regular file from one path to another. If the [from] file is read-only on windows,
+     * the [to] file will be left read-write so that it can be overwritten the next time this
+     * function is called.
+     */
+    // Suppress because this is the sanctioned use of Files.copy.
+    // See https://issuetracker.google.com/182063560
+    @SuppressWarnings("NoNioFilesCopy")
+    public static void copyFile(@NonNull Path from, @NonNull Path to, CopyOption... options)
+            throws IOException {
+        java.nio.file.Files.copy(from, to, options);
         /*
          * Some source-control systems on Windows use the read-only bit to signify that the
          * file has not been checked out. If we're copying one of these files then we don't
          * want to propagate that bit because a followup call to [copyFile] would not be
          * able to overwrite the file a second time.
-         *
-         * Special note: JimFS doesn't support converting to File from Path and Path doesn't
-         * support checking or setting the Windows readonly bit. We have to catch this case
-         * and skip the setting writable=true.
          */
+        setWritable(to);
+    }
+
+    /**
+     * Set the destination file to writeable.
+     *
+     * <p>Special note: JimFS doesn't support converting to File from Path and Path doesn't support
+     * checking or setting the Windows readonly bit. We have to catch this case and skip the setting
+     * writable=true.
+     */
+    private static void setWritable(Path path) {
+
         File fileOrNull;
         try {
-            fileOrNull = to.toFile();
+            fileOrNull = path.toFile();
         } catch (UnsupportedOperationException e) {
             fileOrNull = null;
         }

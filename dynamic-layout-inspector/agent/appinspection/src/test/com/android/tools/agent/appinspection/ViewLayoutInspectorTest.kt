@@ -610,7 +610,8 @@ class ViewLayoutInspectorTest {
         val resourceNames = mutableMapOf<Int, String>()
         val resources = Resources(resourceNames)
         val context = Context("view.inspector.test", resources)
-        val scale = 2
+        val scale = 0.5
+        val scale2 = 0.2
         val root = ViewGroup(context).apply {
             width = 100
             height = 200
@@ -665,12 +666,57 @@ class ViewLayoutInspectorTest {
                     assertThat(screenshot.type).isEqualTo(Screenshot.Type.BITMAP)
                     val decompressedBytes = screenshot.bytes.toByteArray().decompress()
 
-                    // The full screenshot byte array is width * height, normally all zeroed out,
-                    // so if we just check the first few bytes to make sure they match our header,
+                    // The full screenshot byte array is width * height
+                    assertThat(decompressedBytes.size)
+                        .isEqualTo((8 + root.width * scale * root.height * scale).toInt())
+                    // Check the first few bytes to make sure they match our header,
                     // that's enough to know that all the data went through correctly.
                     assertThat(decompressedBytes.take(fakeBitmapHeader.size)).isEqualTo(
                         fakeBitmapHeader.asList()
                     )
+                }
+            }
+
+            // Send another event without the screenshot type specified and verify it isn't changed
+            val dontUpdateScreenshotCommand = Command.newBuilder().apply {
+                updateScreenshotTypeCommandBuilder.apply {
+                    this.scale = scale2.toFloat()
+                }
+            }.build()
+            viewInspector.onReceiveCommand(
+                dontUpdateScreenshotCommand.toByteArray(),
+                inspectorRule.commandCallback
+            )
+
+            responseQueue.take()
+            root.forcePictureCapture(fakePicture1)
+            eventQueue.take().let { bytes ->
+                Event.parseFrom(bytes).layoutEvent.screenshot.let { screenshot ->
+                    assertThat(screenshot.type).isEqualTo(Screenshot.Type.BITMAP)
+                    val decompressedBytes = screenshot.bytes.toByteArray().decompress()
+                    // verify the newly scaled size
+                    assertThat(decompressedBytes.size)
+                        .isEqualTo((8 + root.width * scale2 * root.height * scale2).toInt())
+                }
+            }
+
+            // Send another event without the scale specified and verify it isn't changed
+            val dontUpdateScaleCommand = Command.newBuilder().apply {
+                updateScreenshotTypeCommandBuilder.apply {
+                    type = Screenshot.Type.SKP
+                }
+            }.build()
+            viewInspector.onReceiveCommand(
+                dontUpdateScaleCommand.toByteArray(),
+                inspectorRule.commandCallback
+            )
+
+            responseQueue.take()
+            root.forcePictureCapture(fakePicture1)
+            eventQueue.take().let { bytes ->
+                Event.parseFrom(bytes).layoutEvent.screenshot.let { screenshot ->
+                    assertThat(screenshot.type).isEqualTo(Screenshot.Type.SKP)
+                    // We don't have a good way to test that the scale is the same in the SKP case
                 }
             }
         }
@@ -699,6 +745,46 @@ class ViewLayoutInspectorTest {
                 event.layoutEvent.screenshot.let { screenshot ->
                     assertThat(screenshot.type).isEqualTo(Screenshot.Type.SKP)
                     assertThat(screenshot.bytes.toByteArray()).isEqualTo(fakePicture2.bytes)
+                }
+            }
+            // Send another event without the screenshot type specified and verify it isn't changed
+            val dontUpdateScreenshotCommand = Command.newBuilder().apply {
+                updateScreenshotTypeCommandBuilder.apply {
+                    this.scale = scale2.toFloat()
+                }
+            }.build()
+            viewInspector.onReceiveCommand(
+                dontUpdateScreenshotCommand.toByteArray(),
+                inspectorRule.commandCallback
+            )
+
+            responseQueue.take()
+            root.forcePictureCapture(fakePicture2)
+            eventQueue.take().let { bytes ->
+                assertThat(Event.parseFrom(bytes).layoutEvent.screenshot.type)
+                    .isEqualTo(Screenshot.Type.SKP)
+            }
+
+            // Send another event without the scale specified and verify it isn't changed
+            val dontUpdateScaleCommand = Command.newBuilder().apply {
+                updateScreenshotTypeCommandBuilder.apply {
+                    type = Screenshot.Type.BITMAP
+                }
+            }.build()
+            viewInspector.onReceiveCommand(
+                dontUpdateScaleCommand.toByteArray(),
+                inspectorRule.commandCallback
+            )
+
+            responseQueue.take()
+            root.forcePictureCapture(fakePicture2 )
+            eventQueue.take().let { bytes ->
+                Event.parseFrom(bytes).layoutEvent.screenshot.let { screenshot ->
+                    assertThat(screenshot.type).isEqualTo(Screenshot.Type.BITMAP)
+                    val decompressedBytes = screenshot.bytes.toByteArray().decompress()
+                    // verify the scaled size
+                    assertThat(decompressedBytes.size)
+                        .isEqualTo((8 + root.width * scale2 * root.height * scale2).toInt())
                 }
             }
         }

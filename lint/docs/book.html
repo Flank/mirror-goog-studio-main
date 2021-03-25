@@ -1587,7 +1587,15 @@ There is usually no need to look at Java PSI since UAST fully covers
 it, unless you want to look at individual details like specific
 whitespace between AST nodes, which is represented in PSI but not UAST.
 
-</p>
+</p><p>
+
+</p><div class="admonition tip">You can find additional documentation from JetBrains for both
+   <a href="https://plugins.jetbrains.com/docs/intellij/psi.html">PSI</a> and
+   <a href="https://plugins.jetbrains.com/docs/intellij/uast.html">UAST</a>.
+   Just note that their documentation is aimed at IDE plugin developers
+   rather than lint developers.</div>
+
+<p></p>
 <a class="target" name="testing">&nbsp;</a><a class="target" name="writingalintcheck:basics/testing">&nbsp;</a><a class="target" name="toc2.15">&nbsp;</a><h2>Testing</h2>
 <p>
 
@@ -4142,7 +4150,7 @@ browse sources online:
 <a class="target" name="appendix:recentchanges">&nbsp;</a><a class="target" name="appendix:recentchanges">&nbsp;</a><a class="target" name="toc9">&nbsp;</a><h1>Appendix: Recent Changes</h1>
 <p>
 
-           
+
 <strong class="asterisk">Recent Changes</strong>
 
 </p><p>
@@ -4167,12 +4175,12 @@ information about user visible changes to lint, see
 <li class="asterisk">Partial analysis. Lint's architecture has changed to support better
   scalability across large projects, where module results can be
   cached, etc. See the api-guide's dedicated chapter for more details.
-  To opt in before it's turned on by default to test this on your full
-  Gradle projects rather than just the detector tests, add
+  It is enabled by default starting in AGP 7.0.0-alpha13, but you can
+  disable it by adding
 
 <p></p><p>
 
-      <code>android.experimental.useLintPartialAnalysis=true</code>
+      <code>android.enableParallelLint=false</code>
 
 </p><p>
 
@@ -4247,6 +4255,13 @@ information about user visible changes to lint, see
   no longer a need to create separate issues for flavors of the same
   underlying problem with slightly different expectations around
   warnings or errors.
+
+<p></p><p>
+
+</p></li>
+<li class="asterisk">There are additional modifier lookup methods for Kotlin modifiers
+  on `JavaEvaluator, like isReified(), isCompanion(), isTailRec(), and
+  so on.
 
 <p></p><p>
 

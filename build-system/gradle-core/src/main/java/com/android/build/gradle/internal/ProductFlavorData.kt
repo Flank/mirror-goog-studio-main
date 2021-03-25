@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
 class ProductFlavorData<ProductFlavorT : ProductFlavor>(
     val productFlavor: ProductFlavorT,
     sourceSet: DefaultAndroidSourceSet,
+    testFixturesSourceSet: DefaultAndroidSourceSet?,
     androidTestSourceSet: DefaultAndroidSourceSet?,
     unitTestSourceSet: DefaultAndroidSourceSet?
-) : VariantDimensionData(sourceSet, androidTestSourceSet, unitTestSourceSet)
+) : VariantDimensionData(sourceSet, testFixturesSourceSet, androidTestSourceSet, unitTestSourceSet)

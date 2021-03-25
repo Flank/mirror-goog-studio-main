@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="android">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../../prebuilts/studio/sdk/linux/platforms/android-29/android.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../prebuilts/studio/sdk/darwin/platforms/android-29/android.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../prebuilts/studio/sdk/windows/platforms/android-29/android.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/androidx/annotation/annotation/1.1.0/annotation-1.1.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

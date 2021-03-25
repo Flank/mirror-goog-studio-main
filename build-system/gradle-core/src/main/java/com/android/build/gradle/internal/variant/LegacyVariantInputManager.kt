@@ -31,6 +31,7 @@ import com.android.build.gradle.internal.packaging.getDefaultDebugKeystoreLocati
 import com.android.build.gradle.internal.services.AndroidLocationsBuildService
 import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.services.getBuildService
+import com.android.build.gradle.options.BooleanOption
 import com.android.builder.core.BuilderConstants
 import com.android.builder.core.VariantType
 import org.gradle.api.NamedDomainObjectContainer
@@ -44,6 +45,7 @@ class LegacyVariantInputManager(
     variantType: VariantType,
     sourceSetManager: SourceSetManager
 ) : AbstractVariantInputManager<DefaultConfig, BuildType, ProductFlavor, SigningConfig>(
+    dslServices,
     variantType,
     sourceSetManager
 ) {
@@ -77,6 +79,7 @@ class LegacyVariantInputManager(
     override val defaultConfigData: DefaultConfigData<DefaultConfig>
 
     init {
+        var testFixturesSourceSet: DefaultAndroidSourceSet? = null
         var androidTestSourceSet: DefaultAndroidSourceSet? = null
         var unitTestSourceSet: DefaultAndroidSourceSet? = null
         if (variantType.hasTestComponents) {
@@ -86,11 +89,18 @@ class LegacyVariantInputManager(
                 sourceSetManager.setUpTestSourceSet(VariantType.UNIT_TEST_PREFIX) as DefaultAndroidSourceSet
         }
 
+        if (dslServices.projectOptions[BooleanOption.ENABLE_TEST_FIXTURES]) {
+            testFixturesSourceSet =
+                sourceSetManager.setUpSourceSet(VariantType.TEST_FIXTURES_PREFIX)
+                        as DefaultAndroidSourceSet
+        }
+
         defaultConfigData = DefaultConfigData(
-            defaultConfig,
-            sourceSetManager.setUpSourceSet(SdkConstants.FD_MAIN) as DefaultAndroidSourceSet,
-            androidTestSourceSet,
-            unitTestSourceSet
+            defaultConfig = defaultConfig,
+            sourceSet = sourceSetManager.setUpSourceSet(SdkConstants.FD_MAIN) as DefaultAndroidSourceSet,
+            testFixturesSourceSet = testFixturesSourceSet,
+            androidTestSourceSet = androidTestSourceSet,
+            unitTestSourceSet = unitTestSourceSet
         )
 
         // map the whenObjectAdded/whenObjectRemoved callbacks on the containers.

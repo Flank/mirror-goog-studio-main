@@ -27,16 +27,4 @@ interface UtpTestResultListener {
      * Called when a new test result event is available.
      */
     fun onTestResultEvent(testResultEvent: TestResultEvent)
-
-    /**
-     * Called when an error happens in AGP/UTP communication. If this method is invoked,
-     * it's the last method call and no more [onTestResultEvent] or [onCompleted] are
-     * invoked.
-     */
-    fun onError()
-
-    /**
-     * Called when all test result events are received successfully.
-     */
-    fun onCompleted()
 }

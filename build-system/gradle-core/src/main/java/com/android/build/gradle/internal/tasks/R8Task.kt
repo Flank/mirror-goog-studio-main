@@ -46,6 +46,7 @@ import com.android.zipflinger.ZipArchive
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileSystemLocation
+import org.gradle.api.file.ProjectLayout
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
@@ -78,7 +79,9 @@ import javax.inject.Inject
 
 // TODO(b/139181913): add workers
 @CacheableTask
-abstract class R8Task: ProguardConfigurableTask() {
+abstract class R8Task @Inject constructor(
+    projectLayout: ProjectLayout
+): ProguardConfigurableTask(projectLayout) {
 
     @get:Input
     abstract val enableDesugaring: Property<Boolean>
@@ -459,7 +462,7 @@ abstract class R8Task: ProguardConfigurableTask() {
                 } else {
                     testedMappingFile.singleFile
                 },
-            proguardConfigurationFiles = configurationFiles.toList(),
+            proguardConfigurationFiles =  reconcileDefaultProguardFile(configurationFiles, extractedDefaultProguardFile),
             proguardConfigurations = proguardConfigurations,
             variantType = variantType.orNull,
             messageReceiver = MessageReceiverImpl(errorFormatMode.get(), logger),
@@ -503,7 +506,7 @@ abstract class R8Task: ProguardConfigurableTask() {
             mainDexListFiles: List<File>,
             mainDexRulesFiles: List<File>,
             inputProguardMapping: File?,
-            proguardConfigurationFiles: List<File>,
+            proguardConfigurationFiles: Collection<File>,
             proguardConfigurations: MutableList<String>,
             variantType: VariantType?,
             messageReceiver: MessageReceiver,

@@ -17,7 +17,6 @@
 package com.android.build.api.variant
 
 import com.android.build.api.component.ComponentBuilder
-import com.android.build.api.component.ActionableComponentObject
 import org.gradle.api.Incubating
 
 /**
@@ -25,7 +24,7 @@ import org.gradle.api.Incubating
  * changes the build flow for the variant.
  */
 @Incubating
-interface VariantBuilder: ComponentBuilder, ActionableComponentObject {
+interface VariantBuilder: ComponentBuilder {
 
     /**
      * Gets the minimum supported SDK Version for this variant.

@@ -16,7 +16,6 @@
 
 package com.android.build.api.extension.impl
 
-import com.android.build.api.component.ActionableComponentObject
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.extension.VariantSelector
 import org.gradle.api.Action
