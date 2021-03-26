@@ -41,6 +41,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -116,15 +117,24 @@ public final class FileUtils {
 
     /**
      * Copies a regular file from one path to another. This function uses two standard copy options:
-     * - COPY_ATTRIBUTES copies platform-dependent attributes like file timestamp (though it doesn't
-     * include Windows read-only bit). - REPLACE_EXISTING will try to delete the target file before
-     * the copy. If you want other options, there is an overload which lets you set a custom set.
+     * - COPY_ATTRIBUTES copies platform-dependent attributes like file timestamp (only used for
+     * non-Windows OSes because performance is worse for Windows and better for non-Windows OSes).
+     * - REPLACE_EXISTING will try to delete the target file before the copy. If you want other
+     * options, there is an overload which lets you set a custom set.
      *
      * <p>Lastly, if the [from] file is read-only on windows, the [to] file will be left read-write
      * so that it can be overwritten the next time this function is called.
      */
     public static void copyFile(@NonNull Path from, @NonNull Path to) throws IOException {
-        copyFile(from, to, StandardCopyOption.COPY_ATTRIBUTES, StandardCopyOption.REPLACE_EXISTING);
+        if (System.getProperty("os.name").toLowerCase(Locale.US).contains("windows")) {
+            copyFile(from, to, StandardCopyOption.REPLACE_EXISTING);
+        } else {
+            copyFile(
+                    from,
+                    to,
+                    StandardCopyOption.COPY_ATTRIBUTES,
+                    StandardCopyOption.REPLACE_EXISTING);
+        }
     }
 
     /**
