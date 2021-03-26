@@ -27,19 +27,45 @@ import org.gradle.api.Incubating
 interface VariantBuilder: ComponentBuilder {
 
     /**
-     * Gets the minimum supported SDK Version for this variant.
+     * Gets or sets the minimum supported SDK Version for this variant.
+     * Setting this it will override previous calls of [minSdk] and [minSdkPreview] setters. Only
+     * one of [minSdk] and [minSdkPreview] should be set.
+     *
+     * @return the minimum supported SDK Version or null if [minSdkPreview] was used to set it.
      */
-    var minSdkVersion: AndroidVersion
+    var minSdk: Int?
+
+    /**
+     * Gets or sets the minimum supported SDK Version for this variant as a Preview codename.
+     * Setting this it will override previous calls of [minSdk] and [minSdkPreview] setters. Only
+     * one of [minSdk] and [minSdkPreview] should be set.
+     *
+     * @return the minimum supported SDK Version or null if [minSdk] was used to set it.
+     */
+    var minSdkPreview: String?
 
     /**
      * Gets the maximum supported SDK Version for this variant.
      */
-    var maxSdkVersion: Int?
+    var maxSdk: Int?
 
     /**
-     * Gets the target SDK version for this variant.
+     * Gets or sets the target SDK Version for this variant as a Preview codename.
+     * Setting this it will override previous calls of [targetSdk] and [targetSdkPreview] setters.
+     * Only one of [targetSdk] and [targetSdkPreview] should be set.
+     *
+     * @return the target SDK Version or null if [targetSdkPreview] was used to set it.
      */
-    var targetSdkVersion: AndroidVersion
+    var targetSdk: Int?
+
+    /**
+     * Gets or sets the target SDK Version for this variant as a Preview codename.
+     * Setting this it will override previous calls of [targetSdk] and [targetSdkPreview] setters.
+     * Only one of [targetSdk] and [targetSdkPreview] should be set.
+     *
+     * @return the target supported SDK Version or null if [targetSdkPreview] was used to set it.
+     */
+    var targetSdkPreview: String?
 
     /**
      * Specifies the bytecode version to be generated. We recommend you set this value to the

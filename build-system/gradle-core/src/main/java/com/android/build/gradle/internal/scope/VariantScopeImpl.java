@@ -297,8 +297,8 @@ public class VariantScopeImpl implements VariantScope {
                 || !Strings.isNullOrEmpty(projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY))
                 || projectOptions.get(IntegerOption.IDE_TARGET_DEVICE_API) != null
                 || isPreviewTargetPlatform()
-                || variant.getVariantBuilder().getMinSdkVersion().getCodename() != null
-                || variant.getVariantBuilder().getTargetSdkVersion().getCodename() != null;
+                || variant.getMinSdkVersion().getCodename() != null
+                || variant.getTargetSdkVersion().getCodename() != null;
     }
 
     private boolean isPreviewTargetPlatform() {

@@ -36,9 +36,9 @@ class ProcessManifestTest {
 
             androidComponents {
                 beforeVariants(selector().all(), { variant ->
-                    variant.minSdkVersion = new AndroidVersion(21, null)
-                    variant.maxSdkVersion = 29
-                    variant.targetSdkVersion = new AndroidVersion(22, null)
+                    variant.minSdk = 21
+                    variant.maxSdk = 29
+                    variant.targetSdk = 22
                 })
             }
         """.trimIndent())

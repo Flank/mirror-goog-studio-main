@@ -186,7 +186,7 @@ class AndroidComponentsExtensionTest {
         )
         val fooVariant = appExtension.selector().withName(Pattern.compile("foo"))
         appExtension.beforeVariants {
-                    it.minSdkVersion = AndroidVersion(23)
+                    it.minSdk = 23
         }
 
         appExtension.beforeVariants(fooVariant) {

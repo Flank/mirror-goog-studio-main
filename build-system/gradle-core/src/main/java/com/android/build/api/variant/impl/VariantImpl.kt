@@ -42,6 +42,7 @@ import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
+import com.android.builder.core.DefaultApiVersion
 import com.android.builder.core.VariantType
 import com.google.common.collect.ImmutableList
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
@@ -87,6 +88,23 @@ abstract class VariantImpl(
     // ---------------------------------------------------------------------------------------------
     // PUBLIC API
     // ---------------------------------------------------------------------------------------------
+
+    override val minSdkVersion: AndroidVersion  by lazy {
+        val apiVersion = variantBuilder.minSdk?.let { DefaultApiVersion(it)}
+            ?: variantBuilder.minSdkPreview?.let { DefaultApiVersion(it) }
+            ?: DefaultApiVersion(1)
+        AndroidVersionImpl(apiVersion.apiLevel, apiVersion.codename)
+    }
+
+    override val targetSdkVersion: AndroidVersion  by lazy {
+        val apiVersion = variantBuilder.targetSdk?.let { DefaultApiVersion(it)}
+            ?: variantBuilder.targetSdkPreview?.let { DefaultApiVersion(it) }
+            ?: DefaultApiVersion(1)
+        AndroidVersionImpl(apiVersion.apiLevel, apiVersion.codename)
+    }
+
+    override val maxSdkVersion: Int?
+        get() = variantBuilder.maxSdk
 
     override val buildConfigFields: MapProperty<String, BuildConfigField<out Serializable>> by lazy {
         internalServices.mapPropertyOf(
@@ -191,15 +209,6 @@ abstract class VariantImpl(
 
     override val renderscriptTargetApi: Int
         get() =  variantBuilder.renderscriptTargetApi
-
-    override val minSdkVersion: AndroidVersion
-        get() = variantBuilder.minSdkVersion
-
-    override val maxSdkVersion: Int?
-        get() = variantBuilder.maxSdkVersion
-
-    override val targetSdkVersion: AndroidVersion
-        get() = variantBuilder.targetSdkVersion
 
     private var _isMultiDexEnabled: Boolean? = variantDslInfo.isMultiDexEnabled
     override val isMultiDexEnabled: Boolean

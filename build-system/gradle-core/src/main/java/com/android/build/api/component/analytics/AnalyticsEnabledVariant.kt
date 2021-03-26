@@ -17,6 +17,7 @@
 package com.android.build.api.component.analytics
 
 import com.android.build.api.component.UnitTest
+import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.ExternalCmake
 import com.android.build.api.variant.ExternalNdkBuild
@@ -159,5 +160,26 @@ abstract class AnalyticsEnabledVariant (
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
                 VariantPropertiesMethodType.PROGUARD_FILES_VALUE
             return delegate.proguardFiles
+        }
+
+    override val minSdkVersion: AndroidVersion
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.MIN_SDK_VERSION_VALUE
+            return delegate.minSdkVersion
+        }
+
+    override val maxSdkVersion: Int?
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.MAX_SDK_VERSION_VALUE
+            return delegate.maxSdkVersion
+        }
+
+    override val targetSdkVersion: AndroidVersion
+        get()  {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.TARGET_SDK_VERSION_VALUE
+            return delegate.targetSdkVersion
         }
 }

@@ -32,6 +32,21 @@ import java.io.Serializable
 interface Variant : Component {
 
     /**
+     * Gets the minimum supported SDK Version for this variant.
+     */
+    val minSdkVersion: AndroidVersion
+
+    /**
+     * Gets the maximum supported SDK Version for this variant.
+     */
+    val maxSdkVersion: Int?
+
+    /**
+     * Gets the target SDK Version for this variant.
+     */
+    val targetSdkVersion: AndroidVersion
+
+    /**
      * Variant's application ID as present in the final manifest file of the APK.
      *
      * Some type of variants allows this to be writeable but for some it's only read-only.

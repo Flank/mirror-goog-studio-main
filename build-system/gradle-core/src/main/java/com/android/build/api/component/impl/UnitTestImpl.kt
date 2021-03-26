@@ -84,6 +84,12 @@ open class UnitTestImpl @Inject constructor(
     // PUBLIC API
     // ---------------------------------------------------------------------------------------------
 
+    override val minSdkVersion: AndroidVersion
+        get() = testedVariant.minSdkVersion
+
+    override val targetSdkVersion: AndroidVersion
+        get() = testedVariant.targetSdkVersion
+
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------
@@ -110,12 +116,6 @@ open class UnitTestImpl @Inject constructor(
 
     override fun addDataBindingSources(
         sourceSets: ImmutableList.Builder<ConfigurableFileTree>) {}
-
-    override val minSdkVersion: AndroidVersion
-        get() = testedVariant.variantBuilder.minSdkVersion
-
-    override val targetSdkVersion: AndroidVersion
-        get() = testedVariant.variantBuilder.targetSdkVersion
 
     override fun <T : Component> createUserVisibleVariantObject(
             projectServices: ProjectServices,

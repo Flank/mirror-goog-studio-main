@@ -16,6 +16,7 @@
 
 package com.android.build.api.component.analytics
 
+import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.JniLibsPackaging
 import com.android.build.api.variant.Packaging
@@ -49,6 +50,47 @@ class AnalyticsEnabledVariantTest {
     private val stats = GradleBuildVariant.newBuilder()
     private val proxy: AnalyticsEnabledVariant by lazy {
         object : AnalyticsEnabledVariant(delegate, stats, FakeObjectFactory.factory) {}
+    }
+
+    @Test
+    fun getMinSdkVersion() {
+        val androidVersion = Mockito.mock(AndroidVersion::class.java)
+        Mockito.`when`(delegate.minSdkVersion).thenReturn(androidVersion)
+        Truth.assertThat(proxy.minSdkVersion).isEqualTo(androidVersion)
+
+        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
+        Truth.assertThat(
+            stats.variantApiAccess.variantPropertiesAccessList.first().type
+        ).isEqualTo(VariantPropertiesMethodType.MIN_SDK_VERSION_VALUE)
+        Mockito.verify(delegate, Mockito.times(1))
+            .minSdkVersion
+    }
+
+    @Test
+    fun getTargetSdkVersion() {
+        val androidVersion = Mockito.mock(AndroidVersion::class.java)
+        Mockito.`when`(delegate.targetSdkVersion).thenReturn(androidVersion)
+        Truth.assertThat(proxy.targetSdkVersion).isEqualTo(androidVersion)
+
+        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
+        Truth.assertThat(
+            stats.variantApiAccess.variantPropertiesAccessList.first().type
+        ).isEqualTo(VariantPropertiesMethodType.TARGET_SDK_VERSION_VALUE)
+        Mockito.verify(delegate, Mockito.times(1))
+            .targetSdkVersion
+    }
+
+    @Test
+    fun getMaxSdkVersion() {
+        Mockito.`when`(delegate.maxSdkVersion).thenReturn(23)
+        Truth.assertThat(proxy.maxSdkVersion).isEqualTo(23)
+
+        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
+        Truth.assertThat(
+            stats.variantApiAccess.variantPropertiesAccessList.first().type
+        ).isEqualTo(VariantPropertiesMethodType.MAX_SDK_VERSION_VALUE)
+        Mockito.verify(delegate, Mockito.times(1))
+            .maxSdkVersion
     }
 
     @Test

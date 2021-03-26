@@ -25,7 +25,7 @@ import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.VariantApiServices
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 
-abstract class VariantBuilderImpl(
+abstract class VariantBuilderImpl (
     variantDslInfo: VariantDslInfo,
     componentIdentity: ComponentIdentity,
     variantApiServices: VariantApiServices
@@ -33,26 +33,43 @@ abstract class VariantBuilderImpl(
     ComponentBuilderImpl(variantDslInfo, componentIdentity, variantApiServices),
     VariantBuilder {
 
-    private var _minSdkVersion= AndroidVersionImpl(
-        variantDslInfo.minSdkVersion.apiLevel,
-        variantDslInfo.minSdkVersion.codename)
+    private var _minSdkPreview: String? = variantDslInfo.minSdkVersion.codename
+    private var _minSdk: Int? = if (variantDslInfo.minSdkVersion.codename == null)
+        variantDslInfo.minSdkVersion.apiLevel else null
 
-    override var minSdkVersion: AndroidVersion
-        get() = _minSdkVersion
+    override var minSdk: Int?
+        get() = _minSdk
         set(value) {
-            _minSdkVersion = AndroidVersionImpl(value.apiLevel, value.codename)
+            _minSdkPreview = null
+            _minSdk = value
         }
 
-    private var _targetSdkVersion= AndroidVersionImpl(
-            variantDslInfo.targetSdkVersion.apiLevel,
-            variantDslInfo.targetSdkVersion.codename
-    )
-    override var targetSdkVersion: AndroidVersion
-        get() = _targetSdkVersion
+    override var minSdkPreview: String?
+        get() = _minSdkPreview
         set(value) {
-            _targetSdkVersion = AndroidVersionImpl(value.apiLevel, value.codename)
+            _minSdk = null
+            _minSdkPreview = value
         }
-    override var maxSdkVersion: Int? = variantDslInfo.maxSdkVersion
+
+    private var _targetSdkPreview: String? =  variantDslInfo.targetSdkVersion.codename
+    private var _targetSdk: Int? =  if (variantDslInfo.targetSdkVersion.codename == null)
+        variantDslInfo.targetSdkVersion.apiLevel else null
+
+    override var targetSdk: Int?
+        get() = _targetSdk
+        set(value) {
+            _targetSdkPreview = null
+            _targetSdk = value
+        }
+
+    override var targetSdkPreview: String?
+        get() = _targetSdkPreview
+        set(value) {
+            _targetSdk = null
+            _targetSdkPreview = value
+        }
+
+    override var maxSdk: Int? = variantDslInfo.maxSdkVersion
 
     abstract fun <T: VariantBuilder> createUserVisibleVariantObject(
             projectServices: ProjectServices,
@@ -65,7 +82,9 @@ abstract class VariantBuilderImpl(
             if (field != -1) return field
             val targetApi = variantDslInfo.renderscriptTarget
             // default to -1 if not in build.gradle file.
-            val minSdk = minSdkVersion.getFeatureLevel()
+            val minSdk = AndroidVersionImpl(
+                _minSdk ?: 1,
+                _minSdkPreview).getFeatureLevel()
             return if (targetApi > minSdk) targetApi else minSdk
         }
 

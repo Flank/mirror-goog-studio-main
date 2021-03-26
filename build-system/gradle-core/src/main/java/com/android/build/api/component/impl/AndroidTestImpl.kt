@@ -97,7 +97,13 @@ open class AndroidTestImpl @Inject constructor(
         get() = variantDslInfo.isDebuggable
 
     override val minSdkVersion: AndroidVersion
-        get() = testedVariant.variantBuilder.minSdkVersion
+        get() = testedVariant.minSdkVersion
+
+    override val maxSdkVersion: Int?
+        get() = testedVariant.maxSdkVersion
+
+    override val targetSdkVersion: AndroidVersion
+        get() = testedVariant.targetSdkVersion
 
     override val applicationId: Property<String> = internalServices.propertyOf(
         String::class.java,
@@ -263,12 +269,6 @@ open class AndroidTestImpl @Inject constructor(
 
     override val minSdkVersionWithTargetDeviceApi: AndroidVersion =
         testedVariant.minSdkVersionWithTargetDeviceApi
-
-    override val maxSdkVersion: Int?
-        get() = testedVariant.variantBuilder.maxSdkVersion
-
-    override val targetSdkVersion: AndroidVersion
-        get() = testedVariant.variantBuilder.targetSdkVersion
 
     override val isMultiDexEnabled: Boolean =
         testedVariant.isMultiDexEnabled

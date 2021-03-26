@@ -17,11 +17,14 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.variant.AndroidVersion
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Optional
 import java.io.Serializable
 
 /**
  * Implementation of [AndroidVersion]
  */
 class AndroidVersionImpl(
-    apiLevel: Int,
-    codename: String? = null): AndroidVersion(apiLevel, codename), Serializable
+    override val apiLevel: Int,
+    override val codename: String? = null
+): AndroidVersion
