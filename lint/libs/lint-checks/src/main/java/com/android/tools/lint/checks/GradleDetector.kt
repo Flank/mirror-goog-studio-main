@@ -34,7 +34,7 @@ import com.android.io.CancellableFileIo
 import com.android.sdklib.AndroidTargetHash
 import com.android.sdklib.SdkVersionInfo
 import com.android.sdklib.SdkVersionInfo.LOWEST_ACTIVE_API
-import com.android.tools.lint.checks.ManifestDetector.TARGET_NEWER
+import com.android.tools.lint.checks.ManifestDetector.Companion.TARGET_NEWER
 import com.android.tools.lint.client.api.IssueRegistry
 import com.android.tools.lint.client.api.LintClient
 import com.android.tools.lint.detector.api.Category
