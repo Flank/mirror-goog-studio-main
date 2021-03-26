@@ -199,7 +199,7 @@ abstract class LintPlugin : Plugin<Project> {
                     )
                 )
             }
-            LintModelWriterTask.CreationAction.registerOutputArtifacts(lintModelWriterTask, artifacts)
+            LintModelWriterTask.BaseCreationAction.registerOutputArtifacts(lintModelWriterTask, artifacts)
             AndroidLintTask.SingleVariantCreationAction.registerLintReportArtifacts(lintTask, artifacts, null, project.buildDir.resolve("reports"))
             if (LintTaskManager.needsCopyReportTask(lintOptions!!)) {
                 val copyLintReportsTask =

@@ -220,22 +220,51 @@ class LintDynamicFeatureTest(private val usePartialAnalysis: Boolean) {
         }
     }
 
-
     @Test
     fun testLintVital() {
+        // check that lintVital succeeds before change to feature manifest
         project.getExecutor().run(":app:lintVitalRelease")
-        project.getExecutor().run(":app:lintVitalRelease")
+        ScannerSubject.assertThat(project.buildResult.stdout).contains("BUILD SUCCESSFUL")
 
-        assertThat(project.buildResult.upToDateTasks).contains(":app:lintVitalRelease")
+        val featureManifest =
+            project.getSubproject(":feature1").file("src/main/AndroidManifest.xml")
+        TestFileUtils.searchAndReplace(
+            featureManifest,
+            "package=",
+            "android:debuggable=\"true\"\npackage="
+        )
 
-        // Dynamic Feature Modules are not analyzed by the main module's lintVital task
+        val failureMessage =
+            project.getExecutor().expectFailure().run(":app:lintVitalRelease").failureMessage
+        assertThat(failureMessage).contains("fatal errors")
+    }
+
+    @Test
+    fun testLintVitalUpToDate() {
+        project.getExecutor().run("lintVitalRelease")
+
+        assertThat(project.buildResult.tasks).contains(":app:lintVitalRelease")
+        if (usePartialAnalysis) {
+            assertThat(project.buildResult.tasks).contains(":app:lintVitalAnalyzeRelease")
+            assertThat(project.buildResult.tasks).contains(":feature1:lintVitalAnalyzeRelease")
+            assertThat(project.buildResult.tasks).contains(":feature2:lintVitalAnalyzeRelease")
+        }
         assertThat(project.buildResult.tasks).doesNotContain(":feature1:lintVitalRelease")
-        assertThat(project.buildResult.tasks).doesNotContain(":feature1:lintVitalAnalyzeRelease")
         assertThat(project.buildResult.tasks).doesNotContain(":feature2:lintVitalRelease")
-        assertThat(project.buildResult.tasks).doesNotContain(":feature2:lintVitalAnalyzeRelease")
+
+        project.getExecutor().run("lintVitalRelease")
 
         if (usePartialAnalysis) {
+            assertThat(project.buildResult.upToDateTasks).contains(":app:lintVitalRelease")
             assertThat(project.buildResult.upToDateTasks).contains(":app:lintVitalAnalyzeRelease")
+            assertThat(project.buildResult.upToDateTasks).contains(
+                ":feature1:lintVitalAnalyzeRelease"
+            )
+            assertThat(project.buildResult.upToDateTasks).contains(
+                ":feature2:lintVitalAnalyzeRelease"
+            )
+        } else {
+            assertThat(project.buildResult.upToDateTasks).doesNotContain(":app:lintVitalRelease")
         }
     }
 

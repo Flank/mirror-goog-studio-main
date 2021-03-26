@@ -326,6 +326,9 @@ InternalArtifactType<T : FileSystemLocation>(
     object LINT_PUBLISH_JAR: InternalArtifactType<RegularFile>(FILE), Replaceable
     // Serialized Lint Model for a variant
     object LINT_MODEL:  InternalArtifactType<Directory>(DIRECTORY)
+    // Serialized Lint Model for a variant, with the partial results location set to
+    // LINT_VITAL_PARTIAL_RESULTS.
+    object LINT_VITAL_LINT_MODEL:  InternalArtifactType<Directory>(DIRECTORY)
     // Lint reports
     object LINT_TEXT_REPORT: InternalArtifactType<RegularFile>(FILE, Category.REPORTS)
     object LINT_HTML_REPORT: InternalArtifactType<RegularFile>(FILE, Category.REPORTS)

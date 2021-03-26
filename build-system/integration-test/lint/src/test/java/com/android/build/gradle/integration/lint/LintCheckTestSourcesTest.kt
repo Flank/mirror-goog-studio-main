@@ -187,7 +187,8 @@ class LintCheckTestSourcesTest(private val usePartialAnalysis: Boolean) {
         if (usePartialAnalysis) {
             // TODO(b/183138097) Analyze test sources in android library dependencies when not using
             //  partial analysis? Currently, we omit test sources from published lint models
-            //  intentionally for some reason (see LintModelWriterTask.CreationAction::configure)
+            //  intentionally for some reason (see
+            //  LintModelWriterTask.BaseCreationAction::configure)
             assertThat(reportFile).containsAllOf(
                 "LibUnitTest.java:4: Error: STOPSHIP comment found",
                 "LibAndroidTest.java:4: Error: STOPSHIP comment found",

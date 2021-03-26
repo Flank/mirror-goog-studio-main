@@ -55,6 +55,8 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_JNI
 import com.android.build.gradle.internal.scope.InternalArtifactType.LINT_MODEL
 import com.android.build.gradle.internal.scope.InternalArtifactType.LINT_PARTIAL_RESULTS
 import com.android.build.gradle.internal.scope.InternalArtifactType.LINT_PUBLISH_JAR
+import com.android.build.gradle.internal.scope.InternalArtifactType.LINT_VITAL_LINT_MODEL
+import com.android.build.gradle.internal.scope.InternalArtifactType.LINT_VITAL_PARTIAL_RESULTS
 import com.android.build.gradle.internal.scope.InternalArtifactType.MANIFEST_METADATA
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_JAVA_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.METADATA_FEATURE_DECLARATION
@@ -197,7 +199,9 @@ class PublishingSpecs {
                 reverseMetadata(DESUGAR_LIB_MERGED_KEEP_RULES, ArtifactType.DESUGAR_LIB_MERGED_KEEP_RULES)
                 reverseMetadata(FEATURE_PUBLISHED_DEX, ArtifactType.FEATURE_PUBLISHED_DEX)
                 reverseMetadata(LINT_MODEL, ArtifactType.LINT_MODEL)
+                reverseMetadata(LINT_VITAL_LINT_MODEL, ArtifactType.LINT_VITAL_LINT_MODEL)
                 reverseMetadata(LINT_PARTIAL_RESULTS, ArtifactType.LINT_PARTIAL_RESULTS)
+                reverseMetadata(LINT_VITAL_PARTIAL_RESULTS, ArtifactType.LINT_VITAL_PARTIAL_RESULTS)
 
                 runtime(NAVIGATION_JSON, ArtifactType.NAVIGATION_JSON)
                 runtime(FEATURE_NAME, ArtifactType.FEATURE_NAME)

@@ -57,14 +57,14 @@ class LintTaskManager constructor(private val globalScope: GlobalScope, private 
         for (variantWithTests in variantsWithTests.values) {
             if (variantType.isAar) {
                 // We need the library lint models if checkDependencies is true
-                taskFactory.register(LintModelWriterTask.CreationAction(variantWithTests.main))
+                taskFactory.register(LintModelWriterTask.LintCreationAction(variantWithTests.main))
             } else {
                 // We need app and dynamic feature models if there are dynamic features.
                 // TODO (b/180672373) consider also publishing dynamic feature and app lint models
                 //  with checkDependencies = true if that's necessary to properly run lint from an
                 //  app or dynamic feature module with checkDependencies = true.
                 taskFactory.register(
-                    LintModelWriterTask.CreationAction(
+                    LintModelWriterTask.LintCreationAction(
                         variantWithTests.main,
                         checkDependencies = false
                     )
@@ -74,9 +74,15 @@ class LintTaskManager constructor(private val globalScope: GlobalScope, private 
                 AndroidLintAnalysisTask.SingleVariantCreationAction(variantWithTests)
             )
 
-            // Don't register any lint reporting tasks or lintFix task for dynamic features because
-            // any reporting and/or fixing is done when lint runs from the base app.
             if (variantType.isDynamicFeature) {
+                taskFactory.register(
+                    AndroidLintAnalysisTask.LintVitalCreationAction(variantWithTests)
+                )
+                taskFactory.register(
+                    LintModelWriterTask.LintVitalCreationAction(variantWithTests.main)
+                )
+                // Don't register any lint reporting tasks or lintFix task for dynamic features
+                // because any reporting and/or fixing is done when lint runs from the base app.
                 continue
             }
 
