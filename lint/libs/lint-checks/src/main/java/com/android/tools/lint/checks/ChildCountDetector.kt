@@ -36,7 +36,6 @@ import org.w3c.dom.Element
  * declared children (e.g. at most one in ScrollViews and none in
  * AdapterViews)
  */
-/** Constructs a new [ChildCountDetector] */
 class ChildCountDetector : LayoutDetector() {
     companion object Issues {
         private val IMPLEMENTATION = Implementation(

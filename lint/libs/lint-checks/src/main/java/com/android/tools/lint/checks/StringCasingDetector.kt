@@ -39,7 +39,7 @@ import java.util.ArrayList
 import java.util.HashMap
 import java.util.Locale
 
-/** Constructs a new [StringCasingDetector] check. */
+/** String duplication when case conversion is more efficient. */
 class StringCasingDetector : ResourceXmlDetector() {
 
     companion object {

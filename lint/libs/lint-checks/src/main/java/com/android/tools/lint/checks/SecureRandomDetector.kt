@@ -32,7 +32,6 @@ import org.jetbrains.uast.UElement
 import org.jetbrains.uast.tryResolve
 
 /** Checks for hardcoded seeds with random numbers. */
-/** Constructs a new [SecureRandomDetector] */
 class SecureRandomDetector : Detector(), SourceCodeScanner {
 
     override fun getApplicableMethodNames(): List<String> {

@@ -34,7 +34,6 @@ import org.w3c.dom.Node
  * validation, such as making sure that resource references point to
  * resources that exist, but this detector looks for additional issues.
  */
-/** Constructs a new detector. */
 class ExtraTextDetector : ResourceXmlDetector() {
     companion object Issues {
 

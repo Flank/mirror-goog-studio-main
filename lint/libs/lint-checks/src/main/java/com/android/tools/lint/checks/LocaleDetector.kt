@@ -41,7 +41,6 @@ import org.jetbrains.uast.UThrowExpression
 import org.jetbrains.uast.getParentOfType
 
 /** Checks for errors related to locale handling. */
-/** Constructs a new [LocaleDetector] */
 class LocaleDetector : Detector(), SourceCodeScanner {
 
     override fun getApplicableMethodNames(): List<String> {
