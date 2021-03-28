@@ -112,7 +112,10 @@ public class ApiLookup extends ApiDatabase {
             if (db == null) {
                 String versionKey = null;
                 // Fallbacks: Allow the API database to be read from a custom location
-                String env = System.getProperty("LINT_API_DATABASE");
+                String env = System.getenv("LINT_API_DATABASE");
+                if (env == null) {
+                    env = System.getProperty("LINT_API_DATABASE");
+                }
                 File file = null;
                 if (env != null) {
                     file = new File(env);
