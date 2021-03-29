@@ -79,10 +79,10 @@ class HtmlReporter(
 
     override fun write(
         stats: LintStats,
-        issues: List<Incident>
+        incidents: List<Incident>
     ) {
-        val missing = computeMissingIssues(issues)
-        val related = computeIssueLists(issues)
+        val missing = computeMissingIssues(incidents)
+        val related = computeIssueLists(incidents)
         startReport(stats)
         writeNavigationHeader(stats) {
             append(
@@ -101,7 +101,7 @@ class HtmlReporter(
                 append("$desc (${warnings.size})</a>\n")
             }
         }
-        if (issues.isNotEmpty()) {
+        if (incidents.isNotEmpty()) {
             append("\n<a name=\"overview\"></a>\n")
             writeCard(
                 "Overview",
@@ -189,8 +189,8 @@ class HtmlReporter(
                 // Don't show thousands of matches for common errors; this just
                 // makes some reports huge and slow to render and nobody really wants to
                 // inspect 50+ individual reports of errors of the same type
-                if (count >= 50) {
-                    if (count == 50) {
+                if (count >= MAX_COUNT) {
+                    if (count == MAX_COUNT) {
                         append(
                             "<br/><b>NOTE: " +
                                 (incidents.size - count).toString() +
@@ -1020,7 +1020,12 @@ ${action.title}</button>"""
         private var SPLIT_LIMIT = 0
 
         /**
-         * When a warning has at least [.SPLIT_LIMIT] items, then we
+         * Maximum number of incidents shown per issue type
+         */
+        private var MAX_COUNT = 0
+
+        /**
+         * When a warning has at least [SPLIT_LIMIT] items, then we
          * show the following number of items before the "Show more"
          * button/link.
          */
@@ -1029,7 +1034,9 @@ ${action.title}</button>"""
         /** Number of lines to show around code snippets. */
         @JvmField
         var CODE_WINDOW_SIZE = 0
-        private const val REPORT_PREFERENCE_PROPERTY = "lint.html.prefs"
+
+        private const val REPORT_PREFERENCE_ENV_VAR = "LINT_HTML_PREFS"
+        const val REPORT_PREFERENCE_PROPERTY = "lint.html.prefs"
         private var USE_WAVY_UNDERLINES_FOR_ERRORS = false
 
         /**
@@ -1283,7 +1290,7 @@ pre.errorlines {
                 "    background-color: #FFDF80;\n" +
                 "}\n"
             )
-        private var cssSyntaxColors: String
+        private var cssSyntaxColors: String = "" // set by initializePreferences() called from init { }
 
         /**
          * Stylesheet for the HTML report. Note that the
@@ -1426,9 +1433,15 @@ $cssSyntaxColors.overview {
         }
 
         init {
-            val preferences = System.getProperty(REPORT_PREFERENCE_PROPERTY)
+            initializePreferences()
+        }
+
+        fun initializePreferences() {
+            val preferences = System.getenv(REPORT_PREFERENCE_ENV_VAR)
+                ?: System.getProperty(REPORT_PREFERENCE_PROPERTY)
             var codeWindowSize = 3
             var splitLimit = 8
+            var maxCount = 50
             var underlineErrors = true
             if (preferences != null) {
                 for (
@@ -1451,7 +1464,7 @@ $cssSyntaxColors.overview {
                                 } catch (ignore: NumberFormatException) {
                                 }
                             }
-                            "maxPerIssue" -> {
+                            "maxPerIssue", "splitLimit" -> {
                                 try {
                                     val count =
                                         Integer.decode(value)
@@ -1461,12 +1474,20 @@ $cssSyntaxColors.overview {
                                 } catch (ignore: NumberFormatException) {
                                 }
                             }
+                            "maxIncidents" -> {
+                                try {
+                                    maxCount = max(1, Integer.decode(value))
+                                } catch (ignore: NumberFormatException) {
+                                }
+                            }
                             "underlineErrors" -> underlineErrors = value.toBoolean()
                         }
                     }
                 }
             }
+
             SPLIT_LIMIT = splitLimit
+            MAX_COUNT = maxCount
             SHOWN_COUNT = max(1, SPLIT_LIMIT - 3)
             CODE_WINDOW_SIZE = codeWindowSize
             USE_WAVY_UNDERLINES_FOR_ERRORS = underlineErrors
