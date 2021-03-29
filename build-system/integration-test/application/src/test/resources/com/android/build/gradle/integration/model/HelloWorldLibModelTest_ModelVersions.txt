@@ -1,14 +1,14 @@
 > ModelVersions:
    - AndroidDsl:
-      - major = 1
-      - minor = 0
+      - major = 0
+      - minor = 1
    - AndroidProject:
-      - major = 1
-      - minor = 0
+      - major = 0
+      - minor = 1
    - VariantDependencies:
-      - major = 1
-      - minor = 0
+      - major = 0
+      - minor = 1
    - AndroidProject:
-      - major = 1
-      - minor = 0
+      - major = 0
+      - minor = 1
 < ModelVersions
