@@ -29,11 +29,13 @@ gradle_integration_test(
         "//tools/base/build-system/integration-test:test-projects/lintStandaloneCustomRules",
         "//tools/base/build-system/integration-test:test-projects/lintStandaloneVital",
     ],
-    maven_repos = [
+    maven_repo_manifests = [
         "//tools/base/build-system/integration-test/lint:prebuilts",
+        "//tools/base/build-system/integration-test:support_library_latest",
+    ],
+    maven_repos = [
         "//tools/base/build-system:gradle_plugin_no_databinding_repo",
         "//tools/base/third_party/kotlin:kotlin-m2repository",
-        "//tools/base/build-system/integration-test:support_library_latest",
     ],
     resources = glob(["src/test/resources/**"]),
     shard_count = 4,
@@ -326,4 +328,5 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/xpp3/xpp3_min/1.1.4c:jar",
         "//tools/base/third_party:junit_junit",
     ],
+    use_zip = False,
 )

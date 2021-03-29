@@ -63,12 +63,14 @@ gradle_integration_test(
         ],
     ),
     data = TEST_DATA,
-    maven_repos = [
-        "//tools/base/build-system:gradle_plugin_no_databinding_repo",
+    maven_repo_manifests = [
         "//tools/base/build-system/integration-test/application/src/test/java/com/android/build/gradle/integration/testing/unit:prebuilts",
-        "//tools/base/third_party/kotlin:kotlin-m2repository",
         "//tools/base/build-system/integration-test:support_library_latest",
         "//tools/base/build-system/integration-test:androidx_latest",
+    ],
+    maven_repos = [
+        "//tools/base/build-system:gradle_plugin_no_databinding_repo",
+        "//tools/base/third_party/kotlin:kotlin-m2repository",
     ],
     resources = glob(["src/test/resources/**"]),
     shard_count = 4,
@@ -192,5 +194,6 @@ maven_repo(
         "//tools/base/testing-infrastructure/device-pool/device-provider",  # TODO: neverlink
         "//tools/base/third_party:junit_junit",
     ],
+    use_zip = False,
     visibility = ["__subpackages__"],
 )
