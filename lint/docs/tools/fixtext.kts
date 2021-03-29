@@ -8,8 +8,7 @@
 import java.io.File
 import kotlin.system.exitProcess
 
-val path = File("..").canonicalPath
-Main().run(arrayOf(path, "--strip-duplicate-newlines", "--smart-quotes"))
+Main().run(args)
 
 class Main {
     private var modified = 0
@@ -35,7 +34,7 @@ class Main {
                     exitProcess(-1)
                 }
                 else -> {
-                    val file = File(arg)
+                    val file = File(arg).canonicalFile
                     if (!file.exists()) {
                         System.err.println("$file does not exist")
                         exitProcess(-1)
