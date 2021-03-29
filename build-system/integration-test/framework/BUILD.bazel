@@ -13,7 +13,6 @@ kotlin_library(
         "//tools/analytics-library/protos/src/main/proto",
         "//tools/apksig",
         "//tools/base/annotations",
-        "//tools/base/bazel/repolinker:repo_linker",
         "//tools/base/build-system:gradle-api",
         "//tools/base/build-system/builder",
         "//tools/base/build-system/builder-model",
