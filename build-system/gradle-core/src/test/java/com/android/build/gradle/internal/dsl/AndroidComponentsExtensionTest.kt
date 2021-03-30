@@ -16,12 +16,14 @@
 
 package com.android.build.gradle.internal.dsl
 
+import com.android.build.api.AndroidPluginVersion
 import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.LibraryExtension
 import com.android.build.api.dsl.SdkComponents
 import com.android.build.api.dsl.TestExtension
+import com.android.build.api.extension.ApplicationAndroidComponentsExtension
 import com.android.build.api.extension.DslExtension
 import com.android.build.api.extension.impl.AndroidComponentsExtensionImpl
 import com.android.build.api.extension.impl.ApplicationAndroidComponentsExtensionImpl
@@ -64,6 +66,20 @@ class AndroidComponentsExtensionTest {
         dslServices = createDslServices(sdkComponents = FakeGradleProvider(sdkComponentsBuildService))
         sdkComponents = Mockito.mock(SdkComponents::class.java)
         applicationExtension = Mockito.mock(ApplicationExtension::class.java)
+    }
+
+    @Test
+    fun testPluginVersion() {
+        val variantApiOperationsRegistrar = VariantApiOperationsRegistrar<ApplicationExtension, ApplicationVariantBuilder, ApplicationVariant>()
+
+        val androidComponents: ApplicationAndroidComponentsExtension = ApplicationAndroidComponentsExtensionImpl(
+            dslServices,
+            sdkComponents,
+            variantApiOperationsRegistrar,
+            Mockito.mock(ApplicationExtension::class.java)
+        )
+        assertThat(androidComponents.pluginVersion).isNotNull()
+        assertThat(androidComponents.pluginVersion >= AndroidPluginVersion(4, 2)).isTrue()
     }
 
     @Test

@@ -16,6 +16,7 @@
 
 package com.android.build.api.extension.impl
 
+import com.android.build.api.AndroidPluginVersion
 import com.android.build.api.component.AndroidTest
 import com.android.build.api.component.UnitTest
 import com.android.build.api.dsl.CommonExtension
@@ -49,6 +50,9 @@ abstract class AndroidComponentsExtensionImpl<
     override fun finalizeDSl(callback: Action<DslExtensionT>) {
         variantApiOperations.dslFinalizationOperations.add(callback)
     }
+
+    override val pluginVersion: AndroidPluginVersion
+        get() = CURRENT_AGP_VERSION
 
     override fun beforeVariants(selector: VariantSelector, callback: (VariantBuilderT) -> Unit) {
         variantApiOperations.variantBuilderOperations.addOperation({

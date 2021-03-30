@@ -16,6 +16,7 @@
 
 package com.android.build.api.extension
 
+import com.android.build.api.AndroidPluginVersion
 import com.android.build.api.component.AndroidTest
 import com.android.build.api.component.ComponentBuilder
 import com.android.build.api.component.UnitTest
@@ -60,6 +61,12 @@ interface AndroidComponentsExtension<
      * [Action] based version of [finalizeDsl] above.
      */
     fun finalizeDSl(callback: Action<DslExtensionT>)
+
+    /**
+     * The version of the Android Gradle Plugin currently in use.
+     */
+    @get:Incubating
+    val pluginVersion: AndroidPluginVersion
 
     /**
      * Provides access to underlying Android SDK and build-tools components like adb.

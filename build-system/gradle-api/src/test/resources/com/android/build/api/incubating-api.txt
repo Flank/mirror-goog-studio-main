@@ -3,6 +3,25 @@ Incubating Android Gradle Plugin API.
 ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
+com.android.build.api.AndroidPluginVersion implements java.lang.Comparable
+com.android.build.api.AndroidPluginVersion.<init>: com.android.build.api.AndroidPluginVersion (int, int)
+com.android.build.api.AndroidPluginVersion.<init>: com.android.build.api.AndroidPluginVersion (int, int, int)
+com.android.build.api.AndroidPluginVersion.access$getComparator$cp: java.util.Comparator ()
+com.android.build.api.AndroidPluginVersion.access$get_previewType$p: com.android.build.api.AndroidPluginVersion$PreviewType (com.android.build.api.AndroidPluginVersion)
+com.android.build.api.AndroidPluginVersion.alpha: com.android.build.api.AndroidPluginVersion (int)
+com.android.build.api.AndroidPluginVersion.beta: com.android.build.api.AndroidPluginVersion (int)
+com.android.build.api.AndroidPluginVersion.compareTo: int (com.android.build.api.AndroidPluginVersion)
+com.android.build.api.AndroidPluginVersion.compareTo: int (java.lang.Object)
+com.android.build.api.AndroidPluginVersion.dev: com.android.build.api.AndroidPluginVersion ()
+com.android.build.api.AndroidPluginVersion.equals: boolean (java.lang.Object)
+com.android.build.api.AndroidPluginVersion.getMajor: int ()
+com.android.build.api.AndroidPluginVersion.getMicro: int ()
+com.android.build.api.AndroidPluginVersion.getMinor: int ()
+com.android.build.api.AndroidPluginVersion.getPreview: int ()
+com.android.build.api.AndroidPluginVersion.getPreviewType: java.lang.String ()
+com.android.build.api.AndroidPluginVersion.hashCode: int ()
+com.android.build.api.AndroidPluginVersion.rc: com.android.build.api.AndroidPluginVersion (int)
+com.android.build.api.AndroidPluginVersion.toString: java.lang.String ()
 com.android.build.api.artifact.Artifact implements java.io.Serializable
 com.android.build.api.artifact.Artifact$Appendable
 com.android.build.api.artifact.Artifact$Category extends java.lang.Enum
@@ -825,6 +844,7 @@ com.android.build.api.extension.AndroidComponentsExtension.beforeVariants: void 
 com.android.build.api.extension.AndroidComponentsExtension.beforeVariants: void (com.android.build.api.extension.VariantSelector, org.gradle.api.Action<VariantBuilderT>)
 com.android.build.api.extension.AndroidComponentsExtension.finalizeDSl: void (org.gradle.api.Action<DslExtensionT>)
 com.android.build.api.extension.AndroidComponentsExtension.finalizeDsl: void (kotlin.jvm.functions.Function1<? super DslExtensionT, kotlin.Unit>)
+com.android.build.api.extension.AndroidComponentsExtension.getPluginVersion: com.android.build.api.AndroidPluginVersion ()
 com.android.build.api.extension.AndroidComponentsExtension.getSdkComponents: com.android.build.api.dsl.SdkComponents ()
 com.android.build.api.extension.AndroidComponentsExtension.onVariants: void (com.android.build.api.extension.VariantSelector, kotlin.jvm.functions.Function1<? super VariantT, kotlin.Unit>)
 com.android.build.api.extension.AndroidComponentsExtension.onVariants: void (com.android.build.api.extension.VariantSelector, org.gradle.api.Action<VariantT>)
