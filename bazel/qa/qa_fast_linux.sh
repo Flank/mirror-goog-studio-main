@@ -50,6 +50,7 @@ QA_ANDROID_SDK_ROOT=${HOME}/Android_emulator/sdk "${script_dir}/../bazel" \
   --keep_going \
   ${config_options} \
   --jobs=8 \
+  --test_strategy=exclusive \
   --invocation_id=${invocation_id_emu} \
   --build_tag_filters=${target_filters} \
   --test_tag_filters=${target_filters} \
