@@ -77,7 +77,8 @@ class AndroidTestClasspathTest {
                 it.writeText("package test; public class DataTest extends Data {}")
             }
 
-            executor().run("assembleDebug", "assembleDebugAndroidTest")
+            // Disable failOnWarning temporarily (bug 184038058)
+            executor().withFailOnWarning(false).run("assembleDebug", "assembleDebugAndroidTest")
             getApk(GradleTestProject.ApkType.DEBUG).use {
                 assertThatApk(it).containsClass("Ltest/Data;")
             }
