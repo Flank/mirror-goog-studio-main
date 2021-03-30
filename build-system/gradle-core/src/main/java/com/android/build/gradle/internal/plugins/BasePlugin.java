@@ -987,7 +987,7 @@ public abstract class BasePlugin<
         JavaVersion minRequired = JavaVersion.VERSION_11;
         if (!current.isCompatibleWith(minRequired)) {
             syncIssueReporter.reportError(
-                    Type.GENERIC,
+                    Type.AGP_USED_JAVA_VERSION_TOO_LOW,
                     "Android Gradle plugin requires Java "
                             + minRequired.toString()
                             + " to run. You are currently using Java "

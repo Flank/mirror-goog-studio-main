@@ -81,6 +81,7 @@ abstract class IssueReporter {
         EDIT_LOCKED_DSL_VALUE(SyncIssue.TYPE_EDIT_LOCKED_DSL_VALUE),
         MISSING_ANDROID_MANIFEST(SyncIssue.TYPE_MISSING_ANDROID_MANIFEST),
         JCENTER_IS_DEPRECATED(SyncIssue.TYPE_JCENTER_IS_DEPRECATED),
+        AGP_USED_JAVA_VERSION_TOO_LOW(SyncIssue.TYPE_AGP_USED_JAVA_VERSION_TOO_LOW),
     }
 
     protected abstract fun reportIssue(type: Type, severity: Severity, exception: EvalIssueException)
