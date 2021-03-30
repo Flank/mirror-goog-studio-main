@@ -38,7 +38,6 @@ package $packageName;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.Menu;
-import android.view.View;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.navigation.NavigationView;
@@ -47,7 +46,6 @@ import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
-import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.appcompat.app.AppCompatActivity;
 ${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Java)}
 
@@ -66,17 +64,12 @@ public class $activityClass extends AppCompatActivity {
         setSupportActionBar(binding.${appBarMainBinding}.toolbar);
         binding.${appBarMainBinding}.fab.setOnClickListener(view -> Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                 .setAction("Action", null).show());
-        View activityContainer = binding.activityContainer;
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
         NavigationView navigationView = binding.navView;
         if (navigationView != null) {
-            DrawerLayout drawerLayout = null;
-            if (activityContainer instanceof DrawerLayout) {
-                drawerLayout = (DrawerLayout) activityContainer;
-            }
             mAppBarConfiguration = new AppBarConfiguration.Builder(
                     R.id.nav_transform, R.id.nav_reflow, R.id.nav_slideshow, R.id.nav_settings)
-                    .setOpenableLayout(drawerLayout)
+                    .setOpenableLayout(binding.drawerLayout)
                     .build();
             NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
             NavigationUI.setupWithNavController(navigationView, navController);

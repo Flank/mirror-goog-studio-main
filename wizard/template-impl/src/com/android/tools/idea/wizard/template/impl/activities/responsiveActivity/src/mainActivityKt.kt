@@ -47,7 +47,6 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
-import androidx.drawerlayout.widget.DrawerLayout
 import androidx.appcompat.app.AppCompatActivity
 ${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Kotlin)}
 
@@ -67,12 +66,11 @@ class $activityClass : AppCompatActivity() {
                     .setAction("Action", null).show()
         }
 
-        val activityContainer = binding.activityContainer
         val navController = findNavController(R.id.$navHostFragmentId)
         binding.navView?.let {
             appBarConfiguration = AppBarConfiguration(setOf(
                 R.id.nav_transform, R.id.nav_reflow, R.id.nav_slideshow, R.id.nav_settings),
-                if (activityContainer is DrawerLayout) activityContainer else null
+                binding.drawerLayout
             )
             setupActionBarWithNavController(navController, appBarConfiguration)
             it.setupWithNavController(navController)
