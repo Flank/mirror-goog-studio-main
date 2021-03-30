@@ -16,9 +16,9 @@
 
 package com.android.tools.lint.client.api
 
+import com.android.SdkConstants.VALUE_TRUE
 import com.android.resources.ResourceFolderType
 import com.android.tools.lint.checks.AbstractCheckTest
-import com.android.tools.lint.checks.infrastructure.TestResultChecker
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
@@ -61,7 +61,7 @@ class LintDriverCrashTest : AbstractCheckTest() {
             // the lint implementation, including this test, which keeps shifting every
             // time there is an edit
             .check(
-                TestResultChecker {
+                {
                     assertThat(it).contains("Foo.java: Error: Unexpected failure during lint analysis of Foo.java (this is a bug in lint or one of the libraries it depends on)")
                     assertThat(it).contains("The crash seems to involve the detector com.android.tools.lint.client.api.LintDriverCrashTest＄CrashingDetector.")
                     assertThat(
@@ -77,7 +77,19 @@ class LintDriverCrashTest : AbstractCheckTest() {
                             """.trimIndent()
                         )
                     )
-                    assertThat(it).contains("You can run with --stacktrace or set environment variable LINT_PRINT_STACKTRACE=true to dump a full stacktrace to stdout. [LintError]")
+
+                    // It's not easy to set environment variables from Java once the process is running,
+                    // so instead of attempting to set it to true and false in tests, we'll just make this
+                    // test adapt to what's set in the environment. On our CI tests, it should not be
+                    // set, so the doesNotContain() assertion will be used. For developers on the lint team
+                    // it's typically set so the contains() assertion will be used.
+                    val suggestion = "You can run with --stacktrace or set environment variable LINT_PRINT_"
+                    if (System.getenv("LINT_PRINT_STACKTRACE") == VALUE_TRUE) {
+                        assertThat(it).doesNotContain(suggestion)
+                    } else {
+                        assertThat(it).contains(suggestion)
+                    }
+
                     assertThat(it).contains("ArithmeticException:LintDriverCrashTest＄CrashingDetector＄createUastHandler＄1.visitFile(LintDriverCrashTest.kt:")
                     assertThat(it).contains("1 errors, 0 warnings")
                 }
@@ -156,10 +168,10 @@ class LintDriverCrashTest : AbstractCheckTest() {
 
     class CrashingDetector : Detector(), SourceCodeScanner {
 
-        override fun getApplicableUastTypes(): List<Class<out UElement>>? =
+        override fun getApplicableUastTypes(): List<Class<out UElement>> =
             listOf(UFile::class.java)
 
-        override fun createUastHandler(context: JavaContext): UElementHandler? =
+        override fun createUastHandler(context: JavaContext): UElementHandler =
             object : UElementHandler() {
                 override fun visitFile(node: UFile) {
                     @Suppress("DIVISION_BY_ZERO", "UNUSED_VARIABLE") // Intentional crash
@@ -249,11 +261,11 @@ class LintDriverCrashTest : AbstractCheckTest() {
 
     class ColorCasingDetector : ResourceXmlDetector() {
         override fun appliesTo(folderType: ResourceFolderType) = true
-        override fun getApplicableElements() = ALL
+        override fun getApplicableElements(): List<String> = ALL
         override fun visitElement(context: XmlContext, element: Element) {
             element.attributes()
                 .filter { it.nodeValue.matches(COLOR_REGEX) }
-                .filter { it.nodeValue.any { it.isLowerCase() } }
+                .filter { it.nodeValue.any { c -> c.isLowerCase() } }
                 .forEach {
                     val fix = fix()
                         .name("Convert to uppercase")
@@ -291,7 +303,7 @@ class LintDriverCrashTest : AbstractCheckTest() {
         }
 
         override fun visitElement(context: XmlContext, element: Element) {
-            throw AssertionError("Already disposed: " + this)
+            throw AssertionError("Already disposed: $this")
         }
 
         companion object {
@@ -308,10 +320,10 @@ class LintDriverCrashTest : AbstractCheckTest() {
 
     class LinkageErrorDetector : Detector(), SourceCodeScanner {
 
-        override fun getApplicableUastTypes(): List<Class<out UElement>>? =
+        override fun getApplicableUastTypes(): List<Class<out UElement>> =
             listOf(UFile::class.java)
 
-        override fun createUastHandler(context: JavaContext): UElementHandler? =
+        override fun createUastHandler(context: JavaContext): UElementHandler =
             object : UElementHandler() {
                 override fun visitFile(node: UFile) {
                     throw LinkageError(
