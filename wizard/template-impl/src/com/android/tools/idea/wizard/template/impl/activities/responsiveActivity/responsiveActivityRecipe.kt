@@ -33,7 +33,6 @@ import com.android.tools.idea.wizard.template.impl.activities.responsiveActivity
 import com.android.tools.idea.wizard.template.impl.activities.responsiveActivity.res.layout_w600dp.appBarMainXml as appBarMainXmlW600dp
 import com.android.tools.idea.wizard.template.impl.activities.responsiveActivity.res.layout_w1240dp.appBarMainXml as appBarMainXmlW1240dp
 import com.android.tools.idea.wizard.template.impl.activities.responsiveActivity.res.layout.contentMainXml
-import com.android.tools.idea.wizard.template.impl.activities.responsiveActivity.res.layout.fragmentReflowXml
 import com.android.tools.idea.wizard.template.impl.activities.responsiveActivity.res.layout.fragmentTransformXml
 import com.android.tools.idea.wizard.template.impl.activities.responsiveActivity.res.layout.itemTransformXml
 import com.android.tools.idea.wizard.template.impl.activities.responsiveActivity.res.layout.navigationDrawerHeaderXml
@@ -53,8 +52,6 @@ import com.android.tools.idea.wizard.template.impl.activities.responsiveActivity
 import com.android.tools.idea.wizard.template.impl.activities.responsiveActivity.res.values.strings
 import com.android.tools.idea.wizard.template.impl.activities.responsiveActivity.src.mainActivityJava
 import com.android.tools.idea.wizard.template.impl.activities.responsiveActivity.src.mainActivityKt
-import com.android.tools.idea.wizard.template.impl.activities.responsiveActivity.src.ui.reflow.reflowFragmentJava
-import com.android.tools.idea.wizard.template.impl.activities.responsiveActivity.src.ui.reflow.reflowFragmentKt
 import com.android.tools.idea.wizard.template.impl.activities.responsiveActivity.src.ui.transform.transformFragmentJava
 import com.android.tools.idea.wizard.template.impl.activities.responsiveActivity.src.ui.transform.transformFragmentKt
 import com.android.tools.idea.wizard.template.impl.activities.responsiveActivity.src.ui.transform.transformViewModelJava
@@ -163,7 +160,6 @@ fun RecipeExecutor.generateResponsiveActivity(
   mergeXml(fragmentTransformXmlW600dp("TransformFragment"), resOut.resolve("layout-w600dp/fragment_transform.xml"))
   mergeXml(itemTransformXml(), resOut.resolve("layout/item_transform.xml"))
   mergeXml(itemTransformXmlW600dp(), resOut.resolve("layout-w600dp/item_transform.xml"))
-  mergeXml(fragmentReflowXml(), resOut.resolve("layout/fragment_reflow.xml"))
   mergeXml(
     navigationDrawerHeaderXml(
       appCompatVersion = apis.appCompatVersion,
@@ -234,23 +230,14 @@ fun RecipeExecutor.generateResponsiveActivity(
     }, srcOut.resolve("ui/transform/TransformViewModel.${ktOrJavaExt}")
   )
 
-  save(
-    when (projectTemplateData.language) {
-      Language.Java -> reflowFragmentJava(
-        packageName = packageName,
-        fragmentClassName = "ReflowFragment",
-        navFragmentPrefix = "reflow",
-        isViewBindingSupported = isViewBindingSupported
-      )
-      Language.Kotlin -> reflowFragmentKt(
-        packageName = packageName,
-        fragmentClassName = "ReflowFragment",
-        navFragmentPrefix = "reflow",
-        isViewBindingSupported = isViewBindingSupported
-      )
-    }, srcOut.resolve("ui/reflow/ReflowFragment.${ktOrJavaExt}")
-  )
-
+  saveFragmentAndViewModel(
+    resOut = resOut,
+    srcOut = srcOut,
+    language = language,
+    packageName = packageName,
+    fragmentPrefix = "reflow",
+    useAndroidX = true,
+    isViewBindingSupported = isViewBindingSupported)
   saveFragmentAndViewModel(
     resOut = resOut,
     srcOut = srcOut,
