@@ -14,7 +14,10 @@ kotlin_test(
         "//tools/base/bazel:windows": [":skiaparser-test.dll"],
         "//tools/base/bazel:darwin": [":libskiaparser-test.dylib"],
         "//conditions:default": [":libskiaparser-test.so"],
-    }) + glob(["testData/**"]),
+    }) + glob([
+        "testData/**",
+        "files/**",
+    ]),
     jvm_flags = [
         "-Dtest.suite.jar=skiaparser_tests.jar",
         "-Djava.library.path=tools/base/dynamic-layout-inspector/skia",

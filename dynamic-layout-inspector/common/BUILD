@@ -14,7 +14,7 @@ iml_module(
         "//tools/adt/idea/.idea/libraries:layoutinspector-skia-proto",
         "//prebuilts/tools/common/m2/repository/junit/junit/4.12:junit-4.12[test]",
         "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
-        "//tools/base/common:studio.android.sdktools.common[module, test]",
+        "//tools/base/common:studio.android.sdktools.common[module]",
         "//tools/adt/idea/.idea/libraries:truth[test]",
     ],
 )

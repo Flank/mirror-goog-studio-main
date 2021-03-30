@@ -74,6 +74,10 @@ class TreeBuildingCanvas : public SkCanvasVirtualEnforcer<SkCanvas> {
         SkMemoryStream::MakeDirect(skp, len);
     sk_sp<SkPicture> picture(SkPicture::MakeFromStream(stream.get()));
     if (picture == nullptr) {
+#ifdef TREEBUILDINGCANVAS_DEBUG
+      std::cerr << "Got null picture, abort. Len was " << len << std::endl;
+#endif
+
       return;
     }
     picture->ref();

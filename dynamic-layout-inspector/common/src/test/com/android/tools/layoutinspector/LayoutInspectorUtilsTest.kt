@@ -18,7 +18,9 @@ package com.android.tools.layoutinspector
 import com.android.testutils.ImageDiffUtil.assertImageSimilar
 import com.android.tools.idea.layoutinspector.proto.SkiaParser
 import com.android.tools.idea.protobuf.ByteString
+import com.android.tools.layoutinspector.LayoutInspectorUtils.getSkpVersion
 import com.google.common.truth.Truth.assertThat
+import junit.framework.TestCase
 import org.junit.Test
 import java.awt.Color
 import java.awt.Point
@@ -105,6 +107,15 @@ class LayoutInspectorUtilsTest {
                 SkiaViewNode(3, listOf(SkiaViewNode(3, node3Image))))),
             ))
         assertTreesEqual(result, expected)
+    }
+
+    @Test
+    fun testGetSkpVersion() {
+        val version = getSkpVersion(
+            "skiapict".toByteArray()
+                .plus(byteArrayOf(10, 0, 1, 0))
+                .plus("blah".toByteArray()))
+        TestCase.assertEquals(65546, version)
     }
 
     private fun assertTreesEqual(actual: SkiaViewNode, expected: SkiaViewNode) {
