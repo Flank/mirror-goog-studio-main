@@ -92,12 +92,92 @@ class MergeRootFrameLayoutDetectorTest : AbstractCheckTest() {
         lint().files(simple).run().expectClean()
     }
 
+    fun testFitsSystemWindow() {
+        lint().files(
+            xml(
+                "res/layout/simple.xml",
+                """
+                <FrameLayout
+                    xmlns:android="http://schemas.android.com/apk/res/android"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:fitsSystemWindows="true"
+                    android:keepScreenOn="true">
+                    <View />
+                </FrameLayout>
+                """
+            ).indented(),
+            simpleInclude
+        ).run().expectClean()
+    }
+
+    fun testFitsSystemWindowViaTheme() {
+        lint().files(
+            xml(
+                "res/layout/simple.xml",
+                """
+                <FrameLayout
+                    xmlns:android="http://schemas.android.com/apk/res/android"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    style="@style/Widget.MaterialComponents.NavigationView">
+                    <View />
+                </FrameLayout>
+                """
+            ).indented(),
+            simpleInclude,
+            xml(
+                "res/values/styles.xml",
+                """
+                <resources>
+                    <style name="Widget.Design.NavigationView" parent="">
+                        <item name="android:background">?android:windowBackground</item>
+                        <item name="android:fitsSystemWindows">true</item>
+                    </style>
+                    <style name="Widget.MaterialComponents.NavigationView" parent="@style/Widget.Design.NavigationView">
+                    </style>
+                </resources>
+                """
+            ).indented()
+        ).run().expectClean()
+    }
+
+    fun testFitsSystemWindowViaManifestTheme() {
+        lint().files(
+            xml(
+                "res/layout/simple.xml",
+                """
+                <FrameLayout
+                    xmlns:android="http://schemas.android.com/apk/res/android"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    style="@style/Widget.MaterialComponents.NavigationView">
+                    <View />
+                </FrameLayout>
+                """
+            ).indented(),
+            simpleInclude,
+            xml(
+                "res/values/styles.xml",
+                """
+                <resources>
+                    <style name="Widget.Design.NavigationView" parent="">
+                        <item name="android:background">?android:windowBackground</item>
+                        <item name="android:fitsSystemWindows">true</item>
+                    </style>
+                    <style name="Widget.MaterialComponents.NavigationView" parent="@style/Widget.Design.NavigationView">
+                    </style>
+                </resources>
+                """
+            ).indented()
+        ).run().expectClean()
+    }
+
     private val simple = xml(
         "res/layout/simple.xml",
         """
         <FrameLayout
             xmlns:android="http://schemas.android.com/apk/res/android"
-
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
         """

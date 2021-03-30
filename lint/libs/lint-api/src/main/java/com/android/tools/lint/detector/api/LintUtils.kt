@@ -1159,7 +1159,7 @@ fun getStyleAttributes(
                 }
 
                 val index = name.lastIndexOf('.')
-                if (index > 0) {
+                if (parent == null && index > 0) {
                     val parentName = name.substring(0, index)
                     if (!seen.contains(parentName)) {
                         seen.add(parentName)

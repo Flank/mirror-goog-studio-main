@@ -27,11 +27,13 @@ import com.android.SdkConstants.ATTR_PADDING_BOTTOM
 import com.android.SdkConstants.ATTR_PADDING_LEFT
 import com.android.SdkConstants.ATTR_PADDING_RIGHT
 import com.android.SdkConstants.ATTR_PADDING_TOP
+import com.android.SdkConstants.ATTR_STYLE
 import com.android.SdkConstants.FRAME_LAYOUT
 import com.android.SdkConstants.LAYOUT_RESOURCE_PREFIX
 import com.android.SdkConstants.SET_CONTENT_VIEW_METHOD
 import com.android.SdkConstants.VALUE_FILL_PARENT
 import com.android.SdkConstants.VALUE_MATCH_PARENT
+import com.android.SdkConstants.VALUE_TRUE
 import com.android.SdkConstants.VIEW_INCLUDE
 import com.android.resources.ResourceType
 import com.android.tools.lint.detector.api.Category
@@ -47,6 +49,7 @@ import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.UastLintUtils.Companion.toAndroidReferenceViaResolve
 import com.android.tools.lint.detector.api.XmlContext
 import com.android.tools.lint.detector.api.getLayoutName
+import com.android.tools.lint.detector.api.getStyleAttributes
 import com.android.tools.lint.detector.api.isRootElement
 import com.android.utils.Pair
 import com.intellij.psi.PsiMethod
@@ -119,19 +122,34 @@ class MergeRootFrameLayoutDetector : LayoutDetector(), SourceCodeScanner {
             }
         } else {
             assert(tag == FRAME_LAYOUT)
-            if (isRootElement(element) && (isWidthFillParent(element) && isHeightFillParent(element) ||
-                        !element.hasAttributeNS(ANDROID_URI, ATTR_LAYOUT_GRAVITY)) &&
+            if (isRootElement(element) && (
+                isWidthFillParent(element) && isHeightFillParent(element) ||
+                    !element.hasAttributeNS(ANDROID_URI, ATTR_LAYOUT_GRAVITY)
+                ) &&
                 !element.hasAttributeNS(ANDROID_URI, ATTR_BACKGROUND) &&
                 !element.hasAttributeNS(ANDROID_URI, ATTR_FOREGROUND) &&
+                element.getAttributeNS(ANDROID_URI, ATTR_FITS_SYSTEM_WINDOWS) != VALUE_TRUE &&
                 !hasPadding(element)
             ) {
-                val layout = getLayoutName(context.file)
-                val handle = context.createLocationHandle(element)
-                handle.clientData = element
                 if (!context.project.reportIssues) {
                     // If this is a library project not being analyzed, ignore it
                     return
                 }
+
+                element.getAttributeNode(ATTR_STYLE)?.value?.let { url ->
+                    // Root frame theme defines it
+                    val styles = getStyleAttributes(
+                        context.project, context.client, url, ANDROID_URI,
+                        ATTR_FITS_SYSTEM_WINDOWS
+                    )
+                    if (styles != null && styles.any { it.value == VALUE_TRUE }) {
+                        return
+                    }
+                }
+
+                val layout = getLayoutName(context.file)
+                val handle = context.createLocationHandle(element)
+                handle.clientData = element
                 val pending = pending ?: ArrayList<Pair<String, Location.Handle>>().also { pending = it }
                 pending.add(Pair.of(layout, handle))
             }
@@ -184,6 +202,8 @@ class MergeRootFrameLayoutDetector : LayoutDetector(), SourceCodeScanner {
             )
         )
 
+        private const val ATTR_FITS_SYSTEM_WINDOWS = "fitsSystemWindows"
+
         private fun isFillParent(element: Element, dimension: String): Boolean {
             val width = element.getAttributeNS(ANDROID_URI, dimension)
             return width == VALUE_MATCH_PARENT || width == VALUE_FILL_PARENT
@@ -199,10 +219,10 @@ class MergeRootFrameLayoutDetector : LayoutDetector(), SourceCodeScanner {
 
         private fun hasPadding(root: Element): Boolean {
             return root.hasAttributeNS(ANDROID_URI, ATTR_PADDING) ||
-                    root.hasAttributeNS(ANDROID_URI, ATTR_PADDING_LEFT) ||
-                    root.hasAttributeNS(ANDROID_URI, ATTR_PADDING_RIGHT) ||
-                    root.hasAttributeNS(ANDROID_URI, ATTR_PADDING_TOP) ||
-                    root.hasAttributeNS(ANDROID_URI, ATTR_PADDING_BOTTOM)
+                root.hasAttributeNS(ANDROID_URI, ATTR_PADDING_LEFT) ||
+                root.hasAttributeNS(ANDROID_URI, ATTR_PADDING_RIGHT) ||
+                root.hasAttributeNS(ANDROID_URI, ATTR_PADDING_TOP) ||
+                root.hasAttributeNS(ANDROID_URI, ATTR_PADDING_BOTTOM)
         }
     }
 }
