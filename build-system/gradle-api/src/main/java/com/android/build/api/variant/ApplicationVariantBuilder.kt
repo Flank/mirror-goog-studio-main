@@ -36,7 +36,4 @@ interface ApplicationVariantBuilder : VariantBuilder, HasAndroidTestBuilder {
 
     /** Specify whether to include SDK dependency information in APKs and Bundles. */
     val dependenciesInfo: DependenciesInfo
-
-    /** Specify whether to include SDK dependency information in APKs and Bundles. */
-    fun dependenciesInfo(action: DependenciesInfo.() -> Unit)
 }

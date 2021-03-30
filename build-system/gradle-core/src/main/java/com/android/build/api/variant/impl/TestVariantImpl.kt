@@ -104,10 +104,6 @@ open class TestVariantImpl @Inject constructor(
         )
     }
 
-    override fun aaptOptions(action: Aapt.() -> Unit) {
-        action.invoke(aapt)
-    }
-
     override val testedApplicationId: Provider<String> = calculateTestedApplicationId(variantDependencies)
 
     override val minifiedEnabled: Boolean
@@ -131,10 +127,6 @@ open class TestVariantImpl @Inject constructor(
             internalServices,
             minSdkVersion.apiLevel
         )
-    }
-
-    override fun packaging(action: ApkPackaging.() -> Unit) {
-        action.invoke(packaging)
     }
 
     override val dexing: Dexing by lazy {

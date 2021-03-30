@@ -18,7 +18,6 @@ package com.android.build.api.component.analytics
 
 import com.android.build.api.component.AndroidTest
 import com.android.build.api.variant.AarMetadata
-import com.android.build.api.variant.LibraryPackaging
 import com.android.build.api.variant.LibraryVariant
 import com.android.build.api.variant.Renderscript
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
@@ -39,21 +38,6 @@ open class AnalyticsEnabledLibraryVariant @Inject constructor(
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
                 VariantPropertiesMethodType.READ_ONLY_APPLICATION_ID_VALUE
             return delegate.applicationId
-        }
-
-    private val userVisiblePackagingOptions: LibraryPackaging by lazy {
-        objectFactory.newInstance(
-            AnalyticsEnabledLibraryPackaging::class.java,
-            delegate.packaging,
-            stats
-        )
-    }
-
-    override val packaging: LibraryPackaging
-        get() {
-            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-                VariantPropertiesMethodType.PACKAGING_OPTIONS_VALUE
-            return userVisiblePackagingOptions
         }
 
     override val androidTest: AndroidTest?

@@ -37,13 +37,11 @@ open class AnalyticsEnabledApplicationVariantBuilder @Inject constructor(
     override val debuggable: Boolean
         get() = delegate.debuggable
     override val dependenciesInfo: DependenciesInfo
-        get() = delegate.dependenciesInfo
-
-    override fun dependenciesInfo(action: DependenciesInfo.() -> Unit) {
-        stats.variantApiAccessBuilder.addVariantAccessBuilder().type =
-                VariantMethodType.DEPENDENCIES_ACTION_VALUE
-        delegate.dependenciesInfo(action)
-    }
+        get() {
+            stats.variantApiAccessBuilder.addVariantAccessBuilder().type =
+                VariantMethodType.VARIANT_BUILDER_DEPENDENCIES_INFO_VALUE
+            return delegate.dependenciesInfo
+        }
 
     override var androidTestEnabled: Boolean
         get() = delegate.enableAndroidTest

@@ -31,11 +31,6 @@ interface LibraryVariant : Variant {
     override val applicationId: Provider<String>
 
     /**
-     * Variant's packagingOptions, initialized by the corresponding global DSL element.
-     */
-    override val packaging: LibraryPackaging
-
-    /**
      * Variant's [AndroidTest] configuration, or null if android tests are disabled for this
      * variant.
      */

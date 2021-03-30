@@ -30,8 +30,4 @@ open class PackagingImpl(
 
     override val resources =
         ResourcesPackagingImpl(dslPackagingOptions, variantPropertiesApiServices)
-
-    override fun resources(action: ResourcesPackaging.() -> Unit) {
-        action.invoke(resources)
-    }
 }

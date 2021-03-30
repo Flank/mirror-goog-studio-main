@@ -856,10 +856,8 @@ com.android.build.api.variant.AndroidVersion
 com.android.build.api.variant.AndroidVersion.getApiLevel: int ()
 com.android.build.api.variant.AndroidVersion.getCodename: java.lang.String ()
 com.android.build.api.variant.ApkPackaging implements com.android.build.api.variant.Packaging
-com.android.build.api.variant.ApkPackaging.dex: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.DexPackagingOptions, kotlin.Unit>)
 com.android.build.api.variant.ApkPackaging.getDex: com.android.build.api.variant.DexPackagingOptions ()
 com.android.build.api.variant.ApkPackaging.getJniLibs: com.android.build.api.variant.JniLibsApkPackaging ()
-com.android.build.api.variant.ApkPackaging.jniLibs: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.JniLibsApkPackaging, kotlin.Unit>)
 com.android.build.api.variant.ApplicationVariant implements com.android.build.api.variant.Variant
 com.android.build.api.variant.ApplicationVariant.getAapt: com.android.build.api.variant.Aapt ()
 com.android.build.api.variant.ApplicationVariant.getAndroidTest: com.android.build.api.component.AndroidTest ()
@@ -871,7 +869,6 @@ com.android.build.api.variant.ApplicationVariant.getPackaging: com.android.build
 com.android.build.api.variant.ApplicationVariant.getRenderscript: com.android.build.api.variant.Renderscript ()
 com.android.build.api.variant.ApplicationVariant.getSigningConfig: com.android.build.api.variant.SigningConfig ()
 com.android.build.api.variant.ApplicationVariantBuilder implements com.android.build.api.variant.VariantBuilder, com.android.build.api.variant.HasAndroidTestBuilder
-com.android.build.api.variant.ApplicationVariantBuilder.dependenciesInfo: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.DependenciesInfo, kotlin.Unit>)
 com.android.build.api.variant.ApplicationVariantBuilder.getDebuggable: boolean ()
 com.android.build.api.variant.ApplicationVariantBuilder.getDependenciesInfo: com.android.build.api.dsl.DependenciesInfo ()
 com.android.build.api.variant.BuildConfigField implements java.io.Serializable
@@ -952,19 +949,15 @@ com.android.build.api.variant.JniLibsPackaging
 com.android.build.api.variant.JniLibsPackaging.getExcludes: org.gradle.api.provider.SetProperty<java.lang.String> ()
 com.android.build.api.variant.JniLibsPackaging.getKeepDebugSymbols: org.gradle.api.provider.SetProperty<java.lang.String> ()
 com.android.build.api.variant.JniLibsPackaging.getPickFirsts: org.gradle.api.provider.SetProperty<java.lang.String> ()
-com.android.build.api.variant.LibraryPackaging implements com.android.build.api.variant.Packaging
-com.android.build.api.variant.LibraryPackaging.jniLibs: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.JniLibsPackaging, kotlin.Unit>)
 com.android.build.api.variant.LibraryVariant implements com.android.build.api.variant.Variant
 com.android.build.api.variant.LibraryVariant.getAarMetadata: com.android.build.api.variant.AarMetadata ()
 com.android.build.api.variant.LibraryVariant.getAndroidTest: com.android.build.api.component.AndroidTest ()
 com.android.build.api.variant.LibraryVariant.getApplicationId: org.gradle.api.provider.Provider<java.lang.String> ()
-com.android.build.api.variant.LibraryVariant.getPackaging: com.android.build.api.variant.LibraryPackaging ()
 com.android.build.api.variant.LibraryVariant.getRenderscript: com.android.build.api.variant.Renderscript ()
 com.android.build.api.variant.LibraryVariantBuilder implements com.android.build.api.variant.VariantBuilder, com.android.build.api.variant.HasAndroidTestBuilder
 com.android.build.api.variant.Packaging
 com.android.build.api.variant.Packaging.getJniLibs: com.android.build.api.variant.JniLibsPackaging ()
 com.android.build.api.variant.Packaging.getResources: com.android.build.api.variant.ResourcesPackaging ()
-com.android.build.api.variant.Packaging.resources: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.ResourcesPackaging, kotlin.Unit>)
 com.android.build.api.variant.Renderscript
 com.android.build.api.variant.Renderscript.getRenderscriptNdkModeEnabled: org.gradle.api.provider.Property<java.lang.Boolean> ()
 com.android.build.api.variant.Renderscript.getRenderscriptOptimLevel: org.gradle.api.provider.Property<java.lang.Integer> ()
@@ -980,7 +973,6 @@ com.android.build.api.variant.SigningConfig.getEnableV2Signing: org.gradle.api.p
 com.android.build.api.variant.SigningConfig.getEnableV3Signing: org.gradle.api.provider.Property<java.lang.Boolean> ()
 com.android.build.api.variant.SigningConfig.getEnableV4Signing: org.gradle.api.provider.Property<java.lang.Boolean> ()
 com.android.build.api.variant.TestVariant implements com.android.build.api.variant.Variant
-com.android.build.api.variant.TestVariant.aaptOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.Aapt, kotlin.Unit>)
 com.android.build.api.variant.TestVariant.getAapt: com.android.build.api.variant.Aapt ()
 com.android.build.api.variant.TestVariant.getApplicationId: org.gradle.api.provider.Property<java.lang.String> ()
 com.android.build.api.variant.TestVariant.getDexing: com.android.build.api.variant.Dexing ()
@@ -990,7 +982,6 @@ com.android.build.api.variant.TestVariant.getInstrumentationRunner: org.gradle.a
 com.android.build.api.variant.TestVariant.getPackaging: com.android.build.api.variant.ApkPackaging ()
 com.android.build.api.variant.TestVariant.getTestLabel: org.gradle.api.provider.Property<java.lang.String> ()
 com.android.build.api.variant.TestVariant.getTestedApplicationId: org.gradle.api.provider.Provider<java.lang.String> ()
-com.android.build.api.variant.TestVariant.packaging: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.ApkPackaging, kotlin.Unit>)
 com.android.build.api.variant.TestVariantBuilder implements com.android.build.api.variant.VariantBuilder
 com.android.build.api.variant.Variant implements com.android.build.api.component.Component
 com.android.build.api.variant.Variant.addBuildConfigField: void (java.lang.String, java.io.Serializable, java.lang.String)
