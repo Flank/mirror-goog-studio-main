@@ -21,6 +21,7 @@ import com.android.build.api.variant.Aapt
 import com.android.build.api.variant.ApkPackaging
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.JniLibsApkPackaging
+import com.android.build.api.variant.ResValue
 import com.android.build.api.variant.ResourcesPackaging
 import com.android.build.api.variant.SigningConfig
 import com.android.build.gradle.internal.fixtures.FakeGradleProperty
@@ -165,28 +166,20 @@ class AnalyticsEnabledAndroidTestTest {
 
 
     @Test
-    fun addResValue() {
-        proxy.addResValue("name","key", "value", "comment")
+    fun getResValues() {
+        @Suppress("UNCHECKED_CAST")
+        val map: MapProperty<ResValue.Key, ResValue> =
+            Mockito.mock(MapProperty::class.java)
+                    as MapProperty<ResValue.Key, ResValue>
+        Mockito.`when`(delegate.resValues).thenReturn(map)
+        Truth.assertThat(proxy.resValues).isEqualTo(map)
 
         Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
         Truth.assertThat(
             stats.variantApiAccess.variantPropertiesAccessList.first().type
-        ).isEqualTo(VariantPropertiesMethodType.ADD_RES_VALUE_VALUE)
+        ).isEqualTo(VariantPropertiesMethodType.RES_VALUE_VALUE)
         Mockito.verify(delegate, Mockito.times(1))
-            .addResValue("name", "key", "value", "comment")
-    }
-
-    @Test
-    fun addResValueProvider() {
-        val provider = FakeGradleProvider("value")
-        proxy.addResValue("name","key", provider, "comment")
-
-        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
-        Truth.assertThat(
-            stats.variantApiAccess.variantPropertiesAccessList.first().type
-        ).isEqualTo(VariantPropertiesMethodType.ADD_RES_VALUE_VALUE)
-        Mockito.verify(delegate, Mockito.times(1))
-            .addResValue("name", "key", provider, "comment")
+            .resValues
     }
 
     @Test

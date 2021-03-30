@@ -16,7 +16,8 @@
 
 package com.android.build.gradle.tasks
 
-import com.android.build.api.variant.impl.ResValue
+import com.android.build.api.variant.ResValue
+import com.android.build.api.variant.impl.ResValueKeyImpl
 import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.build.gradle.internal.generators.ResValueGenerator
 import com.android.testutils.truth.PathSubject.assertThat
@@ -44,7 +45,8 @@ class GenerateResValuesTest {
 
         val task = project.tasks.create("test", GenerateResValues::class.java)
         task.items.put(
-            ResValue.Key("string", "VALUE_DEFAULT"), ResValue("1"))
+            ResValueKeyImpl("string", "VALUE_DEFAULT"), ResValue("1")
+        )
         task.resOutputDir = testDir
         task.analyticsService.set(FakeNoOpAnalyticsService())
 

@@ -69,22 +69,14 @@ interface Variant : Component {
     val buildConfigFields: MapProperty<String, BuildConfigField<out Serializable>>
 
     /**
-     * Adds a ResValue element to the generated resources.
-     * @param name the resource name
-     * @param type the resource type like 'string'
-     * @param value the resource value
-     * @param comment optional comment to be added to the generated resource file for the field.
+     * Make a [ResValue.Key] to interact with [resValues]'s [MapProperty]
      */
-    fun addResValue(name: String, type: String, value: String, comment: String?)
+    fun makeResValueKey(type: String, name: String): ResValue.Key
 
     /**
-     * Adds a ResValue element to the generated resources.
-     * @param name the resource name
-     * @param type the resource type like 'string'
-     * @param value a [Provider] for the value
-     * @param comment optional comment to be added to the generated resource file for the field.
+     * Variant's [ResValue] which will be generated.
      */
-    fun addResValue(name: String, type: String, value: Provider<String>, comment: String?)
+    val resValues: MapProperty<ResValue.Key, ResValue>
 
     /**
      * [MapProperty] of the variant's manifest placeholders.

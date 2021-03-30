@@ -15,7 +15,7 @@
  */
 package com.android.build.gradle.tasks
 
-import com.android.build.api.variant.impl.ResValue
+import com.android.build.api.variant.ResValue
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.generators.ResValueGenerator

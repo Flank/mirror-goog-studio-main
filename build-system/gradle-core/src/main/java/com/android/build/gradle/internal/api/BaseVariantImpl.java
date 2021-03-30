@@ -20,6 +20,8 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.artifact.SingleArtifact;
 import com.android.build.api.component.impl.ComponentImpl;
+import com.android.build.api.variant.ResValue;
+import com.android.build.api.variant.impl.ResValueKeyImpl;
 import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
@@ -647,7 +649,9 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
     @Override
     public void resValue(@NonNull String type, @NonNull String name, @NonNull String value) {
         if (component instanceof VariantImpl) {
-            ((VariantImpl) component).addResValue(name, type, value, "Value from the variant");
+            ((VariantImpl) component).getResValues().put(
+                    new ResValueKeyImpl(type, name),
+                    new ResValue(value,  "Value from the variant"));
         } else {
             throw new RuntimeException(
                     "Variant "

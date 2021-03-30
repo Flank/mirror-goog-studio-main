@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.generators
 
 import com.android.SdkConstants
-import com.android.build.api.variant.impl.ResValue
+import com.android.build.api.variant.ResValue
 import com.android.ide.common.xml.XmlPrettyPrinter
 import com.android.resources.ResourceType
 import com.android.utils.XmlUtils

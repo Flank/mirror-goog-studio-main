@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.core
 import com.android.SdkConstants
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.variant.BuildConfigField
-import com.android.build.api.variant.impl.ResValue
+import com.android.build.api.variant.ResValue
 import com.android.build.gradle.api.JavaCompileOptions
 import com.android.build.gradle.internal.ProguardFileType
 import com.android.build.gradle.internal.dsl.CoreExternalNativeBuildOptions

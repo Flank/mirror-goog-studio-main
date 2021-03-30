@@ -22,6 +22,7 @@ import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.ExternalCmake
 import com.android.build.api.variant.ExternalNdkBuild
 import com.android.build.api.variant.Packaging
+import com.android.build.api.variant.ResValue
 import com.android.build.api.variant.Variant
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
@@ -60,21 +61,17 @@ abstract class AnalyticsEnabledVariant (
             return delegate.buildConfigFields
         }
 
-    override fun addResValue(name: String, type: String, value: String, comment: String?) {
-        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-            VariantPropertiesMethodType.ADD_RES_VALUE_VALUE
-        delegate.addResValue(name, type, value, comment)
-    }
+    override val resValues: MapProperty<ResValue.Key, ResValue>
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.RES_VALUE_VALUE
+            return delegate.resValues
+        }
 
-    override fun addResValue(
-        name: String,
-        type: String,
-        value: Provider<String>,
-        comment: String?
-    ) {
+    override fun makeResValueKey(type: String, name: String): ResValue.Key {
         stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-            VariantPropertiesMethodType.ADD_RES_VALUE_VALUE
-        delegate.addResValue(name, type, value, comment)
+            VariantPropertiesMethodType.MAKE_RES_VALUE_KEY_VALUE
+        return delegate.makeResValueKey(type, name)
     }
 
     override val manifestPlaceholders: MapProperty<String, String>

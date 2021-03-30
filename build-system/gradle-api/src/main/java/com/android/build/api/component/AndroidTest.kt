@@ -20,6 +20,7 @@ import com.android.build.api.variant.Aapt
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.ApkPackaging
 import com.android.build.api.variant.Renderscript
+import com.android.build.api.variant.ResValue
 import com.android.build.api.variant.SigningConfig
 import org.gradle.api.Incubating
 import org.gradle.api.file.RegularFile
@@ -80,23 +81,9 @@ interface AndroidTest : TestComponent {
     val buildConfigFields: MapProperty<String, out BuildConfigField<out Serializable>>
 
     /**
-     * Adds a ResValue element to the generated resources.
-     * @param name The resource name.
-     * @param type The resource type like 'string'.
-     * @param value The resource value.
-     * @param comment Optional comment to be added to the generated resource file for the field.
+     * Make a [ResValue.Key] to interact with [resValues]'s [MapProperty]
      */
-    fun addResValue(name: String, type: String, value: String, comment: String?)
-
-    /**
-     * Adds a ResValue element to the generated resources.
-     * @param name The resource name.
-     * @param type The resource type like 'string'.
-     * @param value A [Provider] for the value.
-     * @param comment Optional comment to be added to the generated resource file for the field.
-     */
-    fun addResValue(name: String, type: String, value: Provider<String>, comment: String?)
-
+    val resValues: MapProperty<ResValue.Key, ResValue>
 
     /**
      * [MapProperty] of the variant's manifest placeholders.

@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.component
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.Packaging
-import com.android.build.api.variant.impl.ResValue
+import com.android.build.api.variant.ResValue
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty

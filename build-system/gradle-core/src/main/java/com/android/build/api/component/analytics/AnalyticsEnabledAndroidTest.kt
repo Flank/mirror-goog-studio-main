@@ -21,6 +21,7 @@ import com.android.build.api.variant.Aapt
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.ApkPackaging
 import com.android.build.api.variant.Renderscript
+import com.android.build.api.variant.ResValue
 import com.android.build.api.variant.SigningConfig
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
@@ -94,22 +95,12 @@ open class AnalyticsEnabledAndroidTest @Inject constructor(
             return delegate.buildConfigFields
         }
 
-    override fun addResValue(name: String, type: String, value: String, comment: String?) {
-        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-            VariantPropertiesMethodType.ADD_RES_VALUE_VALUE
-        delegate.addResValue(name, type, value, comment)
-    }
-
-    override fun addResValue(
-        name: String,
-        type: String,
-        value: Provider<String>,
-        comment: String?
-    ) {
-        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-            VariantPropertiesMethodType.ADD_RES_VALUE_VALUE
-        delegate.addResValue(name, type, value, comment)
-    }
+    override val resValues: MapProperty<ResValue.Key, ResValue>
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.RES_VALUE_VALUE
+            return delegate.resValues
+        }
 
     override val manifestPlaceholders: MapProperty<String, String>
         get() {

@@ -17,7 +17,8 @@ package com.android.build.gradle.internal.core
 
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.variant.BuildConfigField
-import com.android.build.api.variant.impl.ResValue
+import com.android.build.api.variant.ResValue
+import com.android.build.api.variant.impl.ResValueKeyImpl
 import com.android.build.gradle.ProguardFiles
 import com.android.build.gradle.api.JavaCompileOptions
 import com.android.build.gradle.internal.PostprocessingFeatures
@@ -701,7 +702,7 @@ open class VariantDslInfoImpl internal constructor(
         val resValueFields = mutableMapOf<ResValue.Key, ResValue>()
 
         fun addToListIfNotAlreadyPresent(classField: ClassField, comment: String) {
-            val key = ResValue.Key(classField.type, classField.name)
+            val key = ResValueKeyImpl(classField.type, classField.name)
             if (!resValueFields.containsKey(key)) {
                 resValueFields[key] = ResValue(
                     value = classField.value,
