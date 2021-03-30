@@ -89,6 +89,7 @@ class CacheabilityTest {
              * If you add a task to this list, remember to add an explanation/file a bug for it.
              */
             TaskInfo(DID_WORK, "collect", "Dependencies", listOf("Release")),
+            TaskInfo(DID_WORK, "extractProguardFiles", "", listOf("Release"), isGlobalTask = true),
             TaskInfo(DID_WORK, "lintVital", "", listOf("Release")),
             /* Bug 178810169 */
             TaskInfo(DID_WORK, "lintVitalAnalyze", "", listOf("Release")),
@@ -201,7 +202,8 @@ class CacheabilityTest {
             private val executionState: TaskStateList.ExecutionState,
             private val taskPrefix: String,
             private val taskSuffix: String,
-            private val variants: List<String> = emptyList()
+            private val variants: List<String> = emptyList(),
+            private val isGlobalTask: Boolean = false
     ) {
         fun getVariantTaskMap(variantFilter: (variantName: String) -> Boolean) =
                 getVariantTaskStrings(variantFilter).associateWith { executionState }
@@ -211,7 +213,9 @@ class CacheabilityTest {
                 if (variants.any()) {
                     variants
                             .filter(variantFilter)
-                            .map { variant -> ":app:$taskPrefix$variant$taskSuffix" }
+                            .map { variant ->
+                                ":app:$taskPrefix${ if(isGlobalTask) "" else variant }$taskSuffix"
+                            }
                 } else {
                     listOf(":app:$taskPrefix$taskSuffix")
                 }

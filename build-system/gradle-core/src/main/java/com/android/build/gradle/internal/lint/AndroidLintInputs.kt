@@ -77,6 +77,7 @@ import org.gradle.api.JavaVersion
 import org.gradle.api.Project
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
@@ -463,7 +464,15 @@ abstract class VariantInputs {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NAME_ONLY)
+    @get:Optional
     abstract val proguardFiles: ListProperty<RegularFile>
+
+    // the extracted proguard files are probably also part of the proguardFiles but we need to set
+    // the dependency explicitly so Gradle can track it properly.
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.NAME_ONLY)
+    @get:Optional
+    abstract val extractedProguardFiles: DirectoryProperty
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NAME_ONLY)
@@ -575,7 +584,13 @@ abstract class VariantInputs {
         sourceProviders.setDisallowChanges(creationConfig.variantSources.sortedSourceProviders.map { sourceProvider ->
             creationConfig.services.newInstance(SourceProviderInput::class.java).initialize(sourceProvider)
         })
-        // FIXME proguardFiles
+
+        proguardFiles.setDisallowChanges(creationConfig.proguardFiles)
+        extractedProguardFiles.setDisallowChanges(
+            creationConfig.globalScope
+                .globalArtifacts
+                .get(InternalArtifactType.DEFAULT_PROGUARD_FILES)
+        )
         // FIXME consumerProguardFiles
 
         val testSourceProviderList: MutableList<SourceProviderInput> = mutableListOf()
@@ -655,6 +670,8 @@ abstract class VariantInputs {
         buildFeatures.initializeForStandalone()
         libraryDependencyCacheBuildService.setDisallowChanges(getBuildService(project.gradle.sharedServices))
         mavenCoordinatesCache.setDisallowChanges(getBuildService(project.gradle.sharedServices))
+        proguardFiles.setDisallowChanges(null)
+        extractedProguardFiles.setDisallowChanges(null)
     }
 
     fun toLintModel(module: LintModelModule, partialResultsDir: File? = null): LintModelVariant {
@@ -682,7 +699,7 @@ abstract class VariantInputs {
             resValues = resValues.get().associateBy { it.name },
             manifestPlaceholders = manifestPlaceholders.get(),
             resourceConfigurations = resourceConfigurations.get(),
-            proguardFiles = proguardFiles.get().map { it.asFile },
+            proguardFiles = proguardFiles.orNull?.map { it.asFile } ?: listOf(),
             consumerProguardFiles = consumerProguardFiles.get(),
             sourceProviders = sourceProviders.get().map { it.toLintModel() } + dynamicFeatureSourceProviders,
             testSourceProviders = testSourceProviders.get().map { it.toLintModel() },
