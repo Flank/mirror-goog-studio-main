@@ -69,16 +69,6 @@ interface Variant : Component {
     val buildConfigFields: MapProperty<String, BuildConfigField<out Serializable>>
 
     /**
-     * Convenience method to add a new Build Config field which value is known at configuration
-     * time.
-     *
-     * @param key the build config field name
-     * @param value the build config field value which type must be [Serializable]
-     * @param comment optional comment for the field.
-     */
-    fun addBuildConfigField(key: String, value: Serializable, comment: String?)
-
-    /**
      * Adds a ResValue element to the generated resources.
      * @param name the resource name
      * @param type the resource type like 'string'

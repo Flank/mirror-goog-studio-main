@@ -60,12 +60,6 @@ abstract class AnalyticsEnabledVariant (
             return delegate.buildConfigFields
         }
 
-    override fun addBuildConfigField(key: String, value: Serializable, comment: String?) {
-        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-            VariantPropertiesMethodType.ADD_BUILD_CONFIG_FIELD_VALUE
-        delegate.addBuildConfigField(key, value, comment)
-    }
-
     override fun addResValue(name: String, type: String, value: String, comment: String?) {
         stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
             VariantPropertiesMethodType.ADD_RES_VALUE_VALUE

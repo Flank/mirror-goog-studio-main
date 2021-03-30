@@ -114,12 +114,6 @@ abstract class VariantImpl(
         )
     }
 
-    override fun addBuildConfigField(key: String, value: Serializable, comment: String?) {
-        val descriptor = Type.getDescriptor(value::class.java)
-                .removeSurrounding("Ljava/lang/", ";")
-        buildConfigFields.put(key, BuildConfigField(descriptor, value, comment))
-    }
-
     // for compatibility with old variant API.
     fun addBuildConfigField(type: String, key: String, value: Serializable, comment: String?) {
         buildConfigFields.put(key, BuildConfigField(type, value, comment))

@@ -873,17 +873,9 @@ com.android.build.api.variant.ApplicationVariantBuilder.getDebuggable: boolean (
 com.android.build.api.variant.ApplicationVariantBuilder.getDependenciesInfo: com.android.build.api.dsl.DependenciesInfo ()
 com.android.build.api.variant.BuildConfigField implements java.io.Serializable
 com.android.build.api.variant.BuildConfigField.<init>: com.android.build.api.variant.BuildConfigField<T> (java.lang.String, T, java.lang.String)
-com.android.build.api.variant.BuildConfigField.component1: java.lang.String ()
-com.android.build.api.variant.BuildConfigField.component2: T ()
-com.android.build.api.variant.BuildConfigField.component3: java.lang.String ()
-com.android.build.api.variant.BuildConfigField.copy$default: com.android.build.api.variant.BuildConfigField (com.android.build.api.variant.BuildConfigField, java.lang.String, java.io.Serializable, java.lang.String, int, java.lang.Object)
-com.android.build.api.variant.BuildConfigField.copy: com.android.build.api.variant.BuildConfigField<T> (java.lang.String, T, java.lang.String)
-com.android.build.api.variant.BuildConfigField.equals: boolean (java.lang.Object)
 com.android.build.api.variant.BuildConfigField.getComment: java.lang.String ()
 com.android.build.api.variant.BuildConfigField.getType: java.lang.String ()
 com.android.build.api.variant.BuildConfigField.getValue: T ()
-com.android.build.api.variant.BuildConfigField.hashCode: int ()
-com.android.build.api.variant.BuildConfigField.toString: java.lang.String ()
 com.android.build.api.variant.BuiltArtifact implements com.android.build.api.variant.VariantOutputConfiguration
 com.android.build.api.variant.BuiltArtifact.getOutputFile: java.lang.String ()
 com.android.build.api.variant.BuiltArtifact.getVersionCode: java.lang.Integer ()
@@ -984,7 +976,6 @@ com.android.build.api.variant.TestVariant.getTestLabel: org.gradle.api.provider.
 com.android.build.api.variant.TestVariant.getTestedApplicationId: org.gradle.api.provider.Provider<java.lang.String> ()
 com.android.build.api.variant.TestVariantBuilder implements com.android.build.api.variant.VariantBuilder
 com.android.build.api.variant.Variant implements com.android.build.api.component.Component
-com.android.build.api.variant.Variant.addBuildConfigField: void (java.lang.String, java.io.Serializable, java.lang.String)
 com.android.build.api.variant.Variant.addResValue: void (java.lang.String, java.lang.String, java.lang.String, java.lang.String)
 com.android.build.api.variant.Variant.addResValue: void (java.lang.String, java.lang.String, org.gradle.api.provider.Provider<java.lang.String>, java.lang.String)
 com.android.build.api.variant.Variant.getApplicationId: org.gradle.api.provider.Provider<java.lang.String> ()

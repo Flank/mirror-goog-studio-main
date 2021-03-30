@@ -137,18 +137,6 @@ class AnalyticsEnabledVariantTest {
     }
 
     @Test
-    fun addBuildConfigField() {
-        proxy.addBuildConfigField("key", "value", "comment")
-
-        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
-        Truth.assertThat(
-            stats.variantApiAccess.variantPropertiesAccessList.first().type
-        ).isEqualTo(VariantPropertiesMethodType.ADD_BUILD_CONFIG_FIELD_VALUE)
-        Mockito.verify(delegate, Mockito.times(1))
-            .addBuildConfigField("key", "value", "comment")
-    }
-
-    @Test
     fun addResValue() {
         proxy.addResValue("name","key", "value", "comment")
 
