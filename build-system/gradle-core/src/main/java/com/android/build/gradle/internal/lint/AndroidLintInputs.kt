@@ -575,7 +575,8 @@ abstract class VariantInputs {
         sourceProviders.setDisallowChanges(creationConfig.variantSources.sortedSourceProviders.map { sourceProvider ->
             creationConfig.services.newInstance(SourceProviderInput::class.java).initialize(sourceProvider)
         })
-        // FIXME proguardFiles
+
+        proguardFiles.setDisallowChanges(creationConfig.proguardFiles)
         // FIXME consumerProguardFiles
 
         val testSourceProviderList: MutableList<SourceProviderInput> = mutableListOf()
