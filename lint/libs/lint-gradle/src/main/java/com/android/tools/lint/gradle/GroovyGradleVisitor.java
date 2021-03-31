@@ -122,23 +122,8 @@ public class GroovyGradleVisitor extends GradleVisitor {
                                     mMethodCallStack.get(mMethodCallStack.size() - 1);
                             if (call.getArguments() == tupleExpression) {
                                 String parent = getParent();
-
-                                // Newer versions of Groovy (e.g., 3.0.7) may insert "this" AST
-                                // nodes before method calls (e.g., `apply(plugin)` is converted
-                                // into `this.apply(plugin)`), so we need to skip those "this" AST
-                                // nodes to keep the previous behavior which the current analysis
-                                // relies on (bug 183971877).
-                                int parent2Level = 2;
-                                String parentParent = getParentN(parent2Level);
-                                if ("this".equals(parentParent)) {
-                                    parent2Level = 3;
-                                    parentParent = getParentN(parent2Level);
-                                }
-                                String parent3 = getParentN(parent2Level + 1);
-                                if ("this".equals(parent3)) {
-                                    parent3 = getParentN(parent2Level + 2);
-                                }
-
+                                String parentParent = getParentN(2);
+                                String parent3 = getParentN(3);
                                 Map<String, String> namedArguments = new HashMap<>();
                                 List<String> unnamedArguments = new ArrayList<>();
                                 extractMethodCallArguments(
@@ -260,9 +245,11 @@ public class GroovyGradleVisitor extends GradleVisitor {
                         result.add(methodCallExpression.getMethodAsString());
                         Expression expression = methodCallExpression.getObjectExpression();
                         while (true) {
-                            if (expression == VariableExpression.THIS_EXPRESSION) break;
-                            else if (expression instanceof VariableExpression) {
-                                result.add(((VariableExpression) expression).getName());
+                            if (expression instanceof VariableExpression) {
+                                VariableExpression variableExpr = (VariableExpression) expression;
+                                if (!variableExpr.isThisExpression()) {
+                                    result.add(variableExpr.getName());
+                                }
                                 break;
                             } else if (expression instanceof PropertyExpression) {
                                 PropertyExpression propertyExpression =
@@ -292,9 +279,11 @@ public class GroovyGradleVisitor extends GradleVisitor {
                         result.add(propertyExpression.getPropertyAsString());
                         Expression expression = propertyExpression.getObjectExpression();
                         while (true) {
-                            if (expression == VariableExpression.THIS_EXPRESSION) break;
-                            else if (expression instanceof VariableExpression) {
-                                result.add(((VariableExpression) expression).getName());
+                            if (expression instanceof VariableExpression) {
+                                VariableExpression variableExpr = (VariableExpression) expression;
+                                if (!variableExpr.isThisExpression()) {
+                                    result.add(variableExpr.getName());
+                                }
                                 break;
                             } else if (expression instanceof PropertyExpression) {
                                 propertyExpression = (PropertyExpression) expression;
