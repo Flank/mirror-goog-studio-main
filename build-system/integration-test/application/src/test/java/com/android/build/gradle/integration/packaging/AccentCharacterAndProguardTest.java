@@ -30,7 +30,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 /**
- * Checks that we can handle a class with non-ASCII name in combination with ProGuard.
+ * Checks that we can handle a class with non-ASCII name in combination with minification.
  *
  * <p>See http://b.android.com/221057
  */

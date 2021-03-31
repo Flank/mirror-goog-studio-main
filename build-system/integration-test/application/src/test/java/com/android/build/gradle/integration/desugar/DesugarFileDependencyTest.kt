@@ -129,11 +129,9 @@ class DesugarFileDependencyTest(var tool: Tool) {
 
     private fun executor(): GradleTaskExecutor {
         return project.executor()
-            .with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, tool == Tool.R8)
             .with(
                 BooleanOption.ENABLE_DEXING_DESUGARING_ARTIFACT_TRANSFORM,
                 tool == Tool.D8_WITH_ARTIFACT_TRANSFORMS
             )
     }
-
 }

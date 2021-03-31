@@ -21,11 +21,9 @@ import static com.android.build.gradle.integration.desugar.DesugaringProjectConf
 import static com.android.build.gradle.internal.scope.VariantScope.Java8LangSupport.D8;
 import static com.android.build.gradle.internal.scope.VariantScope.Java8LangSupport.R8;
 
-import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.ide.common.process.ProcessException;
 import com.android.testutils.apk.Apk;
 import com.google.common.collect.ImmutableList;
@@ -98,13 +96,8 @@ public class DesugarAppWithLibraryTest {
         if (java8LangSupport == R8) {
             configureR8Desugaring(project.getSubproject("app"));
         }
-        GradleTaskExecutor executor =
-                project.executor()
-                        .with(
-                                OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8,
-                                java8LangSupport == R8);
 
-        executor.run(":app:assembleDebug");
+        project.executor().run(":app:assembleDebug");
         Apk apk = project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG);
         assertThat(apk).containsClass("Lcom/example/Data;");
     }

@@ -399,8 +399,7 @@ class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
         )
 
         // Run a full build with shrinkResources enabled
-        var result = project.executor().with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, false)
-            .run(":app:clean", ":app:assembleDebug")
+        var result = project.executor().run(":app:clean", ":app:assembleDebug")
         assertThat(result.getTask(":app:mergeDebugResources")).didWork()
         val apkSizeWithShrinkResources =
             appProject.getApk(GradleTestProject.ApkType.DEBUG).contentsSize
@@ -410,9 +409,7 @@ class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
         TestFileUtils.searchAndReplace(
             appBuildFile, "shrinkResources true", "shrinkResources false"
         )
-        result = project.executor()
-            .with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, false)
-            .run(":app:assembleDebug")
+        result = project.executor().run(":app:assembleDebug")
         assertThat(result.getTask(":app:mergeDebugResources")).didWork()
         val apkSizeWithoutShrinkResources =
             appProject.getApk(GradleTestProject.ApkType.DEBUG).contentsSize
@@ -423,9 +420,7 @@ class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
         TestFileUtils.searchAndReplace(
             appBuildFile, "shrinkResources false", "shrinkResources true"
         )
-        result = project.executor()
-            .with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, false)
-            .run(":app:assembleDebug")
+        result = project.executor().run(":app:assembleDebug")
         assertThat(result.getTask(":app:mergeDebugResources")).didWork()
         val sameApkSizeShrinkResources =
             appProject.getApk(GradleTestProject.ApkType.DEBUG).contentsSize

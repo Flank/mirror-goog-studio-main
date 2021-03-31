@@ -271,7 +271,6 @@ class CompileLibraryResourcesTest {
         project.executor().with(BooleanOption.PRECOMPILE_DEPENDENCIES_RESOURCES, true)
             // http://b/149978740
             .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
-            .with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, true)
             .run(":app:assembleRelease")
 
         val compressed = project.getSubproject(":app").getIntermediateFile(

@@ -1,34 +1,21 @@
 package com.android.build.gradle.integration.testing;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.BooleanOption;
-import com.android.build.gradle.options.OptionalBooleanOption;
-import com.android.builder.model.CodeShrinker;
 import com.android.ide.common.process.ProcessException;
 import com.android.testutils.apk.Apk;
 import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /**
  * Test separate test module that tests an application with some complicated dependencies : - the
  * app imports a library importing a jar file itself.
  */
-@RunWith(FilterableParameterized.class)
 public class SeparateTestWithoutMinificationWithDependenciesTest {
-
-    @Parameterized.Parameters(name = "codeShrinker = {0}")
-    public static CodeShrinker[] getShrinkers() {
-        return new CodeShrinker[] {CodeShrinker.PROGUARD, CodeShrinker.R8};
-    }
-
-    @Parameterized.Parameter public CodeShrinker codeShrinker;
 
     @Rule
     public GradleTestProject project =
@@ -51,11 +38,7 @@ public class SeparateTestWithoutMinificationWithDependenciesTest {
                         + "            targetVariant 'debug'\n"
                         + "        }\n");
         project.execute("clean");
-        project.executor()
-                .with(
-                        OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8,
-                        codeShrinker == CodeShrinker.R8)
-                .run("assemble");
+        project.executor().run("assemble");
     }
 
     @Test

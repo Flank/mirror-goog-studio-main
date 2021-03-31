@@ -17,28 +17,15 @@
 package com.android.build.gradle.integration.connected.testing;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.connected.utils.EmulatorUtils;
-import com.android.build.gradle.options.OptionalBooleanOption;
-import com.android.builder.model.CodeShrinker;
 import java.io.IOException;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExternalResource;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
-@RunWith(FilterableParameterized.class)
 public class SeparateTestModuleWithMinifiedAppConnectedTest {
-
-    @Parameterized.Parameters(name = "codeShrinker = {0}")
-    public static CodeShrinker[] getShrinkers() {
-        return new CodeShrinker[] {CodeShrinker.PROGUARD, CodeShrinker.R8};
-    }
-
-    @Parameterized.Parameter public CodeShrinker codeShrinker;
 
     @Rule
     public GradleTestProject project =
@@ -59,10 +46,6 @@ public class SeparateTestModuleWithMinifiedAppConnectedTest {
 
     @Test
     public void checkRunOnDevice() throws Exception {
-        project.executor()
-                .with(
-                        OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8,
-                        codeShrinker == CodeShrinker.R8)
-                .run(":test:connectedAndroidTest");
+        project.executor().run(":test:connectedAndroidTest");
     }
 }

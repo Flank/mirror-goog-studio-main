@@ -247,7 +247,6 @@ class PrecompileRemoteResourcesTest {
             // http://b/149978740
             .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
             .with(BooleanOption.PRECOMPILE_DEPENDENCIES_RESOURCES, true)
-            .with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, true)
             .run(":app:assembleRelease")
 
         val compressed = project.getSubproject(":app").getIntermediateFile(

@@ -216,7 +216,7 @@ public class D8DesugaringTest {
     }
 
     @Test
-    public void checkWithProguard() throws IOException, InterruptedException {
+    public void checkMinified() throws IOException, InterruptedException {
         // Regression test for http://b/72624896
         TestFileUtils.appendToFile(
                 project.getSubproject(":app").getBuildFile(),

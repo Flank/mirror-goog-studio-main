@@ -17,27 +17,14 @@
 package com.android.build.gradle.integration.application;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.runner.FilterableParameterized;
-import com.android.build.gradle.options.OptionalBooleanOption;
-import com.android.builder.model.CodeShrinker;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /**
  * Test for the new optional library mechanism when a library dependency uses some now optional
- * classes and runs proguard, in which case proguard needs to see the optional classes.
+ * classes and runs code shrinker, in which case proguard needs to see the optional classes.
  */
-@RunWith(FilterableParameterized.class)
 public class OptionalLibraryWithProguardTest {
-
-    @Parameterized.Parameters(name = "codeShrinker = {0}")
-    public static CodeShrinker[] data() {
-        return new CodeShrinker[] {CodeShrinker.PROGUARD, CodeShrinker.R8};
-    }
-
-    @Parameterized.Parameter public CodeShrinker codeShrinker;
 
     @Rule
     public GradleTestProject project =
@@ -45,19 +32,11 @@ public class OptionalLibraryWithProguardTest {
 
     @Test
     public void testThatProguardCompilesWithOptionalClasses() throws Exception {
-        project.executor()
-                .with(
-                        OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8,
-                        codeShrinker == CodeShrinker.R8)
-                .run("clean", "app:assembleDebug");
+        project.executor().run("clean", "app:assembleDebug");
     }
 
     @Test
     public void testUnitTestWithOptionalClasses() throws Exception {
-        project.executor()
-                .with(
-                        OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8,
-                        codeShrinker == CodeShrinker.R8)
-                .run("clean", "mylibrary:test");
+        project.executor().run("clean", "mylibrary:test");
     }
 }

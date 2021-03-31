@@ -23,12 +23,9 @@ import com.android.Version;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TestVersions;
-import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.truth.ScannerSubject;
-import com.android.build.gradle.integration.common.truth.TaskStateList;
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.CodeShrinker;
 import com.android.builder.model.SyncIssue;
@@ -48,19 +45,9 @@ import java.util.stream.Collectors;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /** Assemble tests for minify. */
-@RunWith(FilterableParameterized.class)
 public class MinifyTest {
-
-    @Parameterized.Parameters(name = "shrinker = {0}")
-    public static CodeShrinker[] getConfigurations() {
-        return new CodeShrinker[] {CodeShrinker.PROGUARD, CodeShrinker.R8};
-    }
-
-    @Parameterized.Parameter public CodeShrinker codeShrinker;
 
     @Rule
     public GradleTestProject project =
@@ -72,9 +59,6 @@ public class MinifyTest {
     public void model() throws Exception {
         AndroidProject model =
                 project.model()
-                        .with(
-                                OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8,
-                                codeShrinker == CodeShrinker.R8)
                         .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
                         .fetchAndroidProjects()
                         .getOnlyModel();
@@ -83,7 +67,7 @@ public class MinifyTest {
                 AndroidProjectUtils.getVariantByName(model, "minified")
                         .getMainArtifact()
                         .getCodeShrinker();
-        assertThat(minifiedShrinker).isEqualTo(codeShrinker);
+        assertThat(minifiedShrinker).isEqualTo(CodeShrinker.R8);
 
         CodeShrinker debugShrinker =
                 AndroidProjectUtils.getDebugVariant(model).getMainArtifact().getCodeShrinker();
@@ -92,17 +76,7 @@ public class MinifyTest {
 
     @Test
     public void appApkIsMinified() throws Exception {
-        if (codeShrinker == CodeShrinker.PROGUARD) {
-            // Jacoco has references to java.lang.Module that trigger notes
-            TestFileUtils.appendToFile(
-                    project.file("proguard-rules.pro"), "\n" + "-dontnote org.jacoco.agent.**\n");
-        }
-        GradleBuildResult result =
-                project.executor()
-                        .with(
-                                OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8,
-                                codeShrinker == CodeShrinker.R8)
-                        .run("assembleMinified");
+        GradleBuildResult result = project.executor().run("assembleMinified");
         try (Scanner stdout = result.getStdout()) {
             ScannerSubject.assertThat(stdout).doesNotContain("Note");
         }
@@ -124,19 +98,11 @@ public class MinifyTest {
                             .collect(Collectors.toSet()));
         }
 
-        if (codeShrinker == CodeShrinker.R8) {
-            assertThat(allClasses)
-                    .containsExactly(
-                            "La/a;",
-                            "Lcom/android/tests/basic/Main;",
-                            "Lcom/android/tests/basic/IndirectlyReferencedClass;");
-        } else {
-            assertThat(allClasses)
-                    .containsExactly(
-                            "Lcom/android/tests/basic/a;",
-                            "Lcom/android/tests/basic/Main;",
-                            "Lcom/android/tests/basic/IndirectlyReferencedClass;");
-        }
+        assertThat(allClasses)
+                .containsExactly(
+                        "La/a;",
+                        "Lcom/android/tests/basic/Main;",
+                        "Lcom/android/tests/basic/IndirectlyReferencedClass;");
 
         File defaultProguardFile =
                 project.file(
@@ -156,9 +122,7 @@ public class MinifyTest {
         assertThat(project.file("build/outputs/mapping/minified/mapping.txt")).exists();
         assertThat(project.file("build/outputs/mapping/minified/usage.txt")).exists();
         assertThat(project.file("build/outputs/mapping/minified/seeds.txt")).exists();
-        if (codeShrinker == CodeShrinker.R8) {
-            assertThat(project.file("build/outputs/mapping/minified/configuration.txt")).exists();
-        }
+        assertThat(project.file("build/outputs/mapping/minified/configuration.txt")).exists();
     }
 
     @Test
@@ -188,11 +152,7 @@ public class MinifyTest {
                         + "    implementation 'androidx.annotation:annotation:1.0.0'\n"
                         + "}");
 
-        project.executor()
-                .with(
-                        OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8,
-                        codeShrinker == CodeShrinker.R8)
-                .run("assembleMinified");
+        project.executor().run("assembleMinified");
 
         Apk minified = project.getApk(GradleTestProject.ApkType.of("minified", true));
         assertThat(minified).hasClass("Lexample/ToBeKept;").that().hasField("field1");
@@ -235,11 +195,7 @@ public class MinifyTest {
                         + "')\n"
                         + "}");
 
-        project.executor()
-                .with(
-                        OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8,
-                        codeShrinker == CodeShrinker.R8)
-                .run("assembleMinified");
+        project.executor().run("assembleMinified");
 
         Apk minified = project.getApk(GradleTestProject.ApkType.of("minified", true));
         assertThat(minified).containsClass("Lexample/ToBeKept;");
@@ -273,11 +229,7 @@ public class MinifyTest {
                         + "')\n"
                         + "}");
 
-        project.executor()
-                .with(
-                        OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8,
-                        codeShrinker == CodeShrinker.R8)
-                .run("assembleMinified");
+        project.executor().run("assembleMinified");
 
         Apk minified = project.getApk(GradleTestProject.ApkType.of("minified", true));
         assertThat(minified).containsClass("Lexample/ToBeKept;");
@@ -287,11 +239,7 @@ public class MinifyTest {
     @Test
     public void testApkIsNotMinified_butMappingsAreApplied() throws Exception {
         // Run just a single task, to make sure task dependencies are correct.
-        project.executor()
-                .with(
-                        OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8,
-                        codeShrinker == CodeShrinker.R8)
-                .run("assembleMinifiedAndroidTest");
+        project.executor().run("assembleMinifiedAndroidTest");
 
         GradleTestProject.ApkType testMinified =
                 GradleTestProject.ApkType.of("minified", "androidTest", true);
@@ -308,17 +256,10 @@ public class MinifyTest {
                 .containsClass("Lcom/android/tests/basic/UsedTestClass;");
         assertThat(apk).containsClass("Lcom/android/tests/basic/test/R;");
 
-        if (codeShrinker == CodeShrinker.R8) {
-            assertThat(apk)
-                    .hasClass("Lcom/android/tests/basic/MainTest;")
-                    .that()
-                    .hasFieldWithType("stringProvider", "La/a;");
-        } else {
-            assertThat(apk)
-                    .hasClass("Lcom/android/tests/basic/MainTest;")
-                    .that()
-                    .hasFieldWithType("stringProvider", "Lcom/android/tests/basic/a;");
-        }
+        assertThat(apk)
+                .hasClass("Lcom/android/tests/basic/MainTest;")
+                .that()
+                .hasFieldWithType("stringProvider", "La/a;");
     }
 
     @Test
@@ -327,11 +268,7 @@ public class MinifyTest {
                 project.getBuildFile(),
                 "getDefaultProguardFile('proguard-android.txt')",
                 "getDefaultProguardFile('proguard-android-optimize.txt')");
-        project.executor()
-                .with(
-                        OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8,
-                        codeShrinker == CodeShrinker.R8)
-                .run("assembleMinified");
+        project.executor().run("assembleMinified");
     }
 
     @Test
@@ -339,38 +276,20 @@ public class MinifyTest {
         Path javaRes = project.getProjectDir().toPath().resolve("src/main/resources/my_res.txt");
         Files.createDirectories(javaRes.getParent());
         Files.createFile(javaRes);
-        project.executor()
-                .with(
-                        OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8,
-                        codeShrinker == CodeShrinker.R8)
-                .run("assembleMinified");
+        project.executor().run("assembleMinified");
         assertThat(project.getApk(GradleTestProject.ApkType.of("minified", true)))
                 .contains("my_res.txt");
     }
 
     @Test
     public void testAndroidTestIsNotUpToDate() throws IOException, InterruptedException {
-        project.executor()
-                .with(
-                        OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8,
-                        codeShrinker == CodeShrinker.R8)
-                .run("assembleMinified", "assembleMinifiedAndroidTest");
+        project.executor().run("assembleMinified", "assembleMinifiedAndroidTest");
 
         TestFileUtils.appendToFile(project.file("proguard-rules.pro"), "\n-keep class **");
         GradleBuildResult minifiedAndroidTest =
-                project.executor()
-                        .with(
-                                OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8,
-                                codeShrinker == CodeShrinker.R8)
-                        .run("assembleMinifiedAndroidTest");
+                project.executor().run("assembleMinifiedAndroidTest");
 
-        TaskStateList.TaskInfo taskInfo =
-                minifiedAndroidTest.findTask(
-                        codeShrinker == CodeShrinker.R8
-                                ? ":minifyMinifiedAndroidTestWithR8"
-                                : ":minifyMinifiedAndroidTestWithProguard");
-
-        assertThat(taskInfo).didWork();
+        assertThat(minifiedAndroidTest.findTask(":minifyMinifiedAndroidTestWithR8")).didWork();
     }
 
     @Test

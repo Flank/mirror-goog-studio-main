@@ -29,7 +29,6 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.integration.common.utils.getOutputByName
 import com.android.build.gradle.integration.common.utils.getVariantByName
 import com.android.build.gradle.options.BooleanOption
-import com.android.build.gradle.options.OptionalBooleanOption
 import com.android.build.gradle.options.StringOption
 import com.android.builder.model.AppBundleProjectBuildOutput
 import com.android.builder.model.AppBundleVariantBuildOutput
@@ -313,24 +312,9 @@ class DynamicAppTest {
     }
 
     @Test
-    fun `test unsigned bundleRelease task with proguard`() {
-        val bundleTaskName = getBundleTaskName("release")
-        project.executor().with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, false).run("app:$bundleTaskName")
-
-        val bundleFile = getApkFolderOutput("release").bundleFile
-        assertThat(bundleFile).exists()
-
-        Zip(bundleFile).use {
-            assertThat(it.entries.map { it.toString() }).containsExactly(*releaseUnsignedContent)
-            val dex = Dex(it.getEntry("base/dex/classes.dex")!!)
-            assertThat(dex).containsClass("Landroid/support/multidex/MultiDexApplication;")
-        }
-    }
-
-    @Test
     fun `test unsigned bundleRelease task with r8`() {
         val bundleTaskName = getBundleTaskName("release")
-        project.executor().with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, true).run("app:$bundleTaskName")
+        project.executor().run("app:$bundleTaskName")
 
         val bundleFile = getApkFolderOutput("release").bundleFile
         assertThat(bundleFile).exists()
@@ -347,7 +331,7 @@ class DynamicAppTest {
         project.getSubproject("app").projectDir.resolve("proguard-rules.pro")
             .writeText("-dontobfuscate")
         val bundleTaskName = getBundleTaskName("release")
-        project.executor().with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, true).run("app:$bundleTaskName")
+        project.executor().run("app:$bundleTaskName")
 
         val bundleFile = getApkFolderOutput("release").bundleFile
         assertThat(bundleFile).exists()

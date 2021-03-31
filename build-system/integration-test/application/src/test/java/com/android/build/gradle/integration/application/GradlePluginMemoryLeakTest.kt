@@ -75,9 +75,7 @@ class GradlePluginMemoryLeakTest {
     fun changeBuildSrcTest() {
         for (i in 1..RUNS) {
             System.out.println("---- RUN $i ----")
-            project.executor()
-                .with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, false)
-                .run("assembleRelease")
+            project.executor().run("assembleRelease")
             TestFileUtils.searchAndReplace(
                 project.file(BUILDSRC_JAVA_SOURCE_FILE),
                 EDIT_MARKER,

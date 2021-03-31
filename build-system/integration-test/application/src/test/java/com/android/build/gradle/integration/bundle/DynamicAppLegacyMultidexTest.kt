@@ -18,10 +18,6 @@ package com.android.build.gradle.integration.bundle
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.truth.AabSubject.Companion.assertThat
-import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.getOutputDir
-import com.android.build.gradle.options.OptionalBooleanOption
-import com.google.common.truth.Truth.assertThat
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -141,31 +137,6 @@ class DynamicAppLegacyMultidexTest {
             forcedPrimaryDexClasses.map { "L$it;" }.forEach {
                     className -> assertThat(aab).containsMainClass("base", className)
             }
-        }
-    }
-
-    /** Regression test for b/131204372 */
-    @Test
-    fun testPrimaryDexContainsAllNecessaryClassesWithProguard() {
-        project.executor().with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, false).run("bundleIcsR8")
-
-        // also check the main dex list contains computed entries, not only manually specified ones
-        val mainDexListClasses =
-            InternalArtifactType.LEGACY_MULTIDEX_MAIN_DEX_LIST.getOutputDir(project.buildDir)
-                .resolve("icsR8/mainDexList.txt")
-                .readLines()
-                .map { it.dropLast(".class".length) }
-                .map { "L$it;" }
-        assertThat(mainDexListClasses).containsAllIn(multiDexSupportLibClasses)
-
-        project.getBundle(GradleTestProject.ApkType.of("icsR8", false)).use { aab ->
-            multiDexSupportLibClasses.forEach {
-                className -> assertThat(aab).containsMainClass("base", className)
-            }
-            forcedPrimaryDexClasses.map { "L$it;" }.forEach {
-                className -> assertThat(aab).containsMainClass("base", className)
-            }
-
         }
     }
 }
