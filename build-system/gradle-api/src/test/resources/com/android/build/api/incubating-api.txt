@@ -908,14 +908,13 @@ com.android.build.api.variant.DynamicFeatureVariant.getDexing: com.android.build
 com.android.build.api.variant.DynamicFeatureVariant.getPackaging: com.android.build.api.variant.ApkPackaging ()
 com.android.build.api.variant.DynamicFeatureVariant.getRenderscript: com.android.build.api.variant.Renderscript ()
 com.android.build.api.variant.DynamicFeatureVariantBuilder implements com.android.build.api.variant.VariantBuilder, com.android.build.api.variant.HasAndroidTestBuilder
-com.android.build.api.variant.ExternalCmake implements com.android.build.api.variant.ExternalNativeGenericOptions
-com.android.build.api.variant.ExternalNativeGenericOptions
-com.android.build.api.variant.ExternalNativeGenericOptions.getAbiFilters: org.gradle.api.provider.SetProperty<java.lang.String> ()
-com.android.build.api.variant.ExternalNativeGenericOptions.getArguments: org.gradle.api.provider.ListProperty<java.lang.String> ()
-com.android.build.api.variant.ExternalNativeGenericOptions.getCFlags: org.gradle.api.provider.ListProperty<java.lang.String> ()
-com.android.build.api.variant.ExternalNativeGenericOptions.getCppFlags: org.gradle.api.provider.ListProperty<java.lang.String> ()
-com.android.build.api.variant.ExternalNativeGenericOptions.getTargets: org.gradle.api.provider.SetProperty<java.lang.String> ()
-com.android.build.api.variant.ExternalNdkBuild implements com.android.build.api.variant.ExternalNativeGenericOptions
+com.android.build.api.variant.ExternalNativeBuild
+com.android.build.api.variant.ExternalNativeBuild.getAbiFilters: org.gradle.api.provider.SetProperty<java.lang.String> ()
+com.android.build.api.variant.ExternalNativeBuild.getArguments: org.gradle.api.provider.ListProperty<java.lang.String> ()
+com.android.build.api.variant.ExternalNativeBuild.getCFlags: org.gradle.api.provider.ListProperty<java.lang.String> ()
+com.android.build.api.variant.ExternalNativeBuild.getCppFlags: org.gradle.api.provider.ListProperty<java.lang.String> ()
+com.android.build.api.variant.ExternalNativeBuild.getTargets: org.gradle.api.provider.SetProperty<java.lang.String> ()
+com.android.build.api.variant.ExternalNdkBuild implements com.android.build.api.variant.ExternalNativeBuild
 com.android.build.api.variant.FilterConfiguration implements java.io.Serializable
 com.android.build.api.variant.FilterConfiguration$FilterType extends java.lang.Enum
 com.android.build.api.variant.FilterConfiguration$FilterType.valueOf: com.android.build.api.variant.FilterConfiguration$FilterType (java.lang.String)
@@ -987,8 +986,8 @@ com.android.build.api.variant.Variant implements com.android.build.api.component
 com.android.build.api.variant.Variant.getApplicationId: org.gradle.api.provider.Provider<java.lang.String> ()
 com.android.build.api.variant.Variant.getBuildConfigFields: org.gradle.api.provider.MapProperty<java.lang.String, com.android.build.api.variant.BuildConfigField<? extends java.io.Serializable>> ()
 com.android.build.api.variant.Variant.getExtension: T (java.lang.Class<T>)
-com.android.build.api.variant.Variant.getExternalCmake: com.android.build.api.variant.ExternalCmake ()
-com.android.build.api.variant.Variant.getExternalNdkBuild: com.android.build.api.variant.ExternalNdkBuild ()
+com.android.build.api.variant.Variant.getExternalCmake: com.android.build.api.variant.ExternalNativeBuild ()
+com.android.build.api.variant.Variant.getExternalNdkBuild: com.android.build.api.variant.ExternalNativeBuild ()
 com.android.build.api.variant.Variant.getManifestPlaceholders: org.gradle.api.provider.MapProperty<java.lang.String, java.lang.String> ()
 com.android.build.api.variant.Variant.getMaxSdkVersion: java.lang.Integer ()
 com.android.build.api.variant.Variant.getMinSdkVersion: com.android.build.api.variant.AndroidVersion ()

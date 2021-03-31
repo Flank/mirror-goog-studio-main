@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.dsl
 
-import com.android.build.api.dsl.AndroidResources
 import com.android.build.api.dsl.BuildFeatures
 import com.android.build.api.dsl.ComposeOptions
 import com.android.build.api.dsl.DefaultConfig
@@ -31,7 +30,6 @@ import com.android.build.gradle.internal.CompileOptions
 import com.android.build.gradle.internal.coverage.JacocoOptions
 import com.android.build.gradle.internal.plugins.DslContainerProvider
 import com.android.build.gradle.internal.services.DslServices
-import com.android.build.gradle.options.BooleanOption
 import com.android.builder.core.LibraryRequest
 import com.android.builder.core.ToolsRevisionUtils
 import com.android.repository.Revision

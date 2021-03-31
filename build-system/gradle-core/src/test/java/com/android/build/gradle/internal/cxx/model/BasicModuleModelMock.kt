@@ -16,8 +16,6 @@
 
 package com.android.build.gradle.internal.cxx.model
 
-import com.android.build.api.variant.ExternalCmake
-import com.android.build.api.variant.ExternalNdkBuild
 import com.android.build.api.variant.impl.AndroidVersionImpl
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.BaseExtension
@@ -170,10 +168,10 @@ open class BasicModuleModelMock {
         throwUnmocked
     )
     val externalNativeNdkBuildOptions = mock(
-        ExternalNdkBuild::class.java
+        com.android.build.api.variant.ExternalNativeBuild::class.java
     )
     val externalNativeCmakeOptions = mock(
-        ExternalCmake::class.java
+        com.android.build.api.variant.ExternalNativeBuild::class.java
     )
     val mergedNdkConfig = mock(
         MergedNdkConfig::class.java,

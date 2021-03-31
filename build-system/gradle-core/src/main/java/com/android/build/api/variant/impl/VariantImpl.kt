@@ -22,8 +22,7 @@ import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.BuildConfigField
-import com.android.build.api.variant.ExternalCmake
-import com.android.build.api.variant.ExternalNdkBuild
+import com.android.build.api.variant.ExternalNativeBuild
 import com.android.build.api.variant.ExternalNdkBuildImpl
 import com.android.build.api.variant.Packaging
 import com.android.build.api.variant.ResValue
@@ -133,7 +132,7 @@ abstract class VariantImpl(
     }
 
 
-    override val externalCmake: ExternalCmake? by lazy {
+    override val externalCmake: ExternalNativeBuild? by lazy {
         variantDslInfo.externalNativeBuildOptions.externalNativeCmakeOptions?.let {
             ExternalCmakeImpl(
                     it,
@@ -142,7 +141,7 @@ abstract class VariantImpl(
         }
     }
 
-    override val externalNdkBuild: ExternalNdkBuild? by lazy {
+    override val externalNdkBuild: ExternalNativeBuild? by lazy {
         variantDslInfo.externalNativeBuildOptions.externalNativeNdkBuildOptions?.let {
             ExternalNdkBuildImpl(
                     it,

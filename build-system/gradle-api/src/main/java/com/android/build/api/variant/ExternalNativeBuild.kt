@@ -21,7 +21,7 @@ import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.SetProperty
 
 @Incubating
-interface ExternalNativeGenericOptions {
+interface ExternalNativeBuild {
 
     /**
      * Specifies the Application Binary Interfaces (ABI) that Gradle should build outputs for. The

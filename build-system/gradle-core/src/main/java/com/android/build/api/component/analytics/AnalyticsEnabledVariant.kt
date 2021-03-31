@@ -19,8 +19,7 @@ package com.android.build.api.component.analytics
 import com.android.build.api.component.UnitTest
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.BuildConfigField
-import com.android.build.api.variant.ExternalCmake
-import com.android.build.api.variant.ExternalNdkBuild
+import com.android.build.api.variant.ExternalNativeBuild
 import com.android.build.api.variant.Packaging
 import com.android.build.api.variant.ResValue
 import com.android.build.api.variant.Variant
@@ -106,7 +105,7 @@ abstract class AnalyticsEnabledVariant (
         }
     }
 
-    override val externalCmake: ExternalCmake?
+    override val externalCmake: ExternalNativeBuild?
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
                     VariantPropertiesMethodType.CMAKE_NATIVE_OPTIONS_VALUE
@@ -123,7 +122,7 @@ abstract class AnalyticsEnabledVariant (
         }
     }
 
-    override val externalNdkBuild: ExternalNdkBuild?
+    override val externalNdkBuild: ExternalNativeBuild?
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
                     VariantPropertiesMethodType.NDK_BUILD_NATIVE_OPTIONS_VALUE

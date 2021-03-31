@@ -94,16 +94,16 @@ interface Variant : Component {
     val packaging: Packaging
 
     /**
-     * Variant's [ExternalCmake], initialized by merging the product flavor values or
+     * Variant's cmake [ExternalNativeBuild], initialized by merging the product flavor values or
      * null if no cmake external build is configured for this variant.
      */
-    val externalCmake: ExternalCmake?
+    val externalCmake: ExternalNativeBuild?
 
     /**
-     * Variant's [ExternalNdkBuild], initialized by merging the product flavor values
+     * Variant's ndk-build [ExternalNativeBuild], initialized by merging the product flavor values
      * or null if no ndk-build external build is configured for this variant.
      */
-    val externalNdkBuild: ExternalNdkBuild?
+    val externalNdkBuild: ExternalNativeBuild?
 
     /**
      * Variant's [UnitTest], or null if the unit tests for this variant are disabled.

@@ -24,7 +24,7 @@ import org.gradle.api.provider.SetProperty
 class ExternalNdkBuildImpl(
     mergedExternalNativeNdkBuildOptions: CoreExternalNativeNdkBuildOptions,
     variantPropertiesApiServices: VariantPropertiesApiServices
-): ExternalNdkBuild {
+): ExternalNativeBuild {
 
     override val abiFilters: SetProperty<String> =
             variantPropertiesApiServices.setPropertyOf(

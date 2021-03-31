@@ -16,7 +16,7 @@
 
 package com.android.build.api.component.analytics
 
-import com.android.build.api.variant.ExternalCmake
+import com.android.build.api.variant.ExternalNativeBuild
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.provider.ListProperty
@@ -24,9 +24,9 @@ import org.gradle.api.provider.SetProperty
 import javax.inject.Inject
 
 open class AnalyticsEnabledExternalCmake @Inject constructor(
-        val delegate: ExternalCmake,
+        val delegate: ExternalNativeBuild,
         val stats: GradleBuildVariant.Builder
-) : ExternalCmake {
+) : ExternalNativeBuild {
 
     override val abiFilters: SetProperty<String>
         get() {
