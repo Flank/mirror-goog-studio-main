@@ -75,7 +75,7 @@ class NonConstantResourceIdDetector : Detector(), SourceCodeScanner {
                             switchCase,
                             location,
                             /* Bug 170852493 */
-                            "Resource IDs will be non-final in Android Gradle Plugin version 7.0, " +
+                            "Resource IDs will be non-final by default in Android Gradle Plugin version 8.0, " +
                                 "avoid using them in switch case statements"
                         )
                     }
@@ -93,7 +93,7 @@ class NonConstantResourceIdDetector : Detector(), SourceCodeScanner {
                         attributeExpression,
                         location,
                         /* Bug 170852493 */
-                        "Resource IDs will be non-final in Android Gradle Plugin version 7.0, " +
+                        "Resource IDs will be non-final by default in Android Gradle Plugin version 8.0, " +
                             "avoid using them as annotation attributes"
                     )
                 }

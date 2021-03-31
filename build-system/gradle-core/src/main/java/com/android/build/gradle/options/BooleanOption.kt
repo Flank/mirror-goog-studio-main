@@ -80,6 +80,8 @@ enum class BooleanOption(
     // Disabled by default due to low usage.
     GENERATE_MANIFEST_CLASS("android.generateManifestClass", false, ApiStage.Stable),
 
+    USE_NON_FINAL_RES_IDS("android.nonFinalResIds", false, ApiStage.Stable),
+
     /* ------------------
      * SUPPORTED FEATURES
      */
@@ -122,7 +124,6 @@ enum class BooleanOption(
     R8_FAIL_ON_MISSING_CLASSES("android.r8.failOnMissingClasses", false, FeatureStage.Experimental),
     CONDITIONAL_KEEP_RULES("android.useConditionalKeepRules", false, FeatureStage.Experimental),
     KEEP_SERVICES_BETWEEN_BUILDS("android.keepWorkerActionServicesBetweenBuilds", false, FeatureStage.Experimental),
-    USE_NON_FINAL_RES_IDS("android.nonFinalResIds", false, FeatureStage.Experimental),
     ENABLE_R_TXT_RESOURCE_SHRINKING("android.enableRTxtResourceShrinking", true, FeatureStage.Experimental),
     ENABLE_PARTIAL_R_INCREMENTAL_BUILDS("android.enablePartialRIncrementalBuilds", false, FeatureStage.Experimental),
     ENABLE_NEW_RESOURCE_SHRINKER("android.experimental.enableNewResourceShrinker", false, FeatureStage.Experimental),
