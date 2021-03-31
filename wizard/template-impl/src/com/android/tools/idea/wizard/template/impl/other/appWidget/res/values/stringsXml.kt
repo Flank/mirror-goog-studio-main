@@ -18,7 +18,6 @@ package com.android.tools.idea.wizard.template.impl.other.appWidget.res.values
 
 import com.android.tools.idea.wizard.template.renderIf
 
-
 fun stringsXml(
   configurable: Boolean
 ) = """
@@ -29,4 +28,5 @@ ${renderIf(configurable) {"""
     <string name="configure">Configure</string>
 """}}
     <string name="add_widget">Add widget</string>
+    <string name="app_widget_description">This is an app widget description</string>
 </resources>"""

@@ -23,12 +23,15 @@ import com.android.tools.idea.wizard.template.renderIf
 fun appwidgetInfoXml(
   minHeightDp: Int,
   minWidthDp: Int,
+  minHeightCells: Int,
+  minWidthCells: Int,
   className: String,
   configurable: Boolean,
   layoutName: String,
   packageName: String,
   placement: Placement,
-  resizeable: Resizeable
+  resizeable: Resizeable,
+  withSFeatures: Boolean = false
 ): String {
   val resizeableBlock = when (resizeable) {
     Resizeable.Both -> "android:resizeMode=\"horizontal|vertical\""
@@ -42,6 +45,14 @@ fun appwidgetInfoXml(
     Placement.Keyguard -> "android:widgetCategory=\"keyguard\""
   }
 
+  val previewLayoutBlock = renderIf(withSFeatures){
+    """android:previewLayout="@layout/${layoutName}""""
+  }
+  val targetCellBlock = renderIf(withSFeatures){
+    """android:targetCellHeight="$minHeightCells"
+       android:targetCellWidth="$minWidthCells""""
+  }
+
   return """
 <?xml version="1.0" encoding="utf-8"?>
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
@@ -50,13 +61,16 @@ fun appwidgetInfoXml(
     android:updatePeriodMillis="86400000"
     android:previewImage="@drawable/example_appwidget_preview"
     android:initialLayout="@layout/${layoutName}"
+    android:description="@string/app_widget_description"
 ${renderIf(configurable) {
     """
     android:configure="${packageName}.${className}ConfigureActivity"
 """
   }}
-    $resizeableBlock 
+    $resizeableBlock
     $placementBlock
-    android:initialKeyguardLayout="@layout/${layoutName}">
-</appwidget-provider>"""
+    $previewLayoutBlock
+    $targetCellBlock
+    android:initialKeyguardLayout="@layout/${layoutName}"
+/>"""
 }
