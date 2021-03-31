@@ -488,7 +488,14 @@ abstract class BuildType @Inject constructor(
      * To learn more, read
      * [Shrink, obfuscate, and optimize your app](https://developer.android.com/studio/build/shrink-code.html).
      */
-    override val isUseProguard: Boolean? = false
+    override val isUseProguard: Boolean?
+        get() {
+            dslServices.deprecationReporter.reportObsoleteUsage(
+                    "useProguard",
+                    DeprecationReporter.DeprecationTarget.VERSION_8_0
+            )
+            return false
+        }
 
     override var isCrunchPngs: Boolean? = null
 
