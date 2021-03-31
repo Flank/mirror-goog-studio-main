@@ -280,6 +280,11 @@ abstract class CommonExtensionImpl<
         this.buildToolsVersion = buildToolsVersion
     }
 
+    override fun flavorDimensions(vararg dimensions: String) {
+        flavorDimensions.clear()
+        flavorDimensions.addAll(dimensions)
+    }
+
     override fun useLibrary(name: String) {
         useLibrary(name, true)
     }

@@ -174,7 +174,7 @@ abstract class BaseExtension protected constructor(
         buildToolsVersion = version
     }
 
-    fun flavorDimensions(vararg dimensions: String) {
+    open fun flavorDimensions(vararg dimensions: String) {
         checkWritability()
         flavorDimensionList.clear()
         flavorDimensionList.addAll(dimensions)
