@@ -34,6 +34,10 @@ class AndroidFrameEventsRequestHandler {
 
  private:
   ::perfetto::trace_processor::TraceProcessor* tp_;
+  void PopulateFrameEventsByPhase(
+      const std::string& layer_name, const std::string& phase_name_hint,
+      const std::string& phase_name,
+      proto::AndroidFrameEventsResult::Phase* phase_proto);
 };
 }  // namespace perfetto
 }  // namespace profiler
