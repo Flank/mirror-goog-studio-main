@@ -42,10 +42,12 @@ class LintProguardFilesTest(private val usePartialAnalysis: Boolean) {
     }
 
     @get:Rule
-    val project: GradleTestProject =
+    val appProject: GradleTestProject =
         GradleTestProject.builder()
+            .withName("appProject")
             .fromTestApp(
                 MinimalSubProject.app("com.example.app")
+                    .withFile("proguard-rules.pro", "foo.\ufeffbar")
                     .appendToBuild(
                         """
                             android {
@@ -63,17 +65,49 @@ class LintProguardFilesTest(private val usePartialAnalysis: Boolean) {
                                 }
                             }
                         """.trimIndent()
-                    ).withFile("proguard-rules.pro", "foo.\ufeffbar")
+                    )
+            ).create()
+
+    @get:Rule
+    val libProject: GradleTestProject =
+        GradleTestProject.builder()
+            .withName("libProject")
+            .fromTestApp(
+                MinimalSubProject.lib("com.example.lib")
+                    .withFile("consumer-rules.pro", "foo.\ufeffbar")
+                    .appendToBuild(
+                        """
+                            android {
+                                defaultConfig {
+                                    consumerProguardFiles 'consumer-rules.pro'
+                                }
+
+                                lintOptions {
+                                    abortOnError false
+                                    textOutput file("lint-results.txt")
+                                    error 'ByteOrderMark'
+                                }
+                            }
+                        """.trimIndent()
+                    )
             ).create()
 
     @Test
     fun testIssueFromProguardFile() {
-        getExecutor().run("lintRelease")
-        assertThat(project.file("lint-results.txt")).contains(
+        appProject.getExecutor().run("lintRelease")
+        assertThat(appProject.file("lint-results.txt")).contains(
             "proguard-rules.pro:1: Error: Found byte-order-mark in the middle of a file"
         )
     }
 
-    private fun getExecutor(): GradleTaskExecutor =
-        project.executor().with(BooleanOption.USE_LINT_PARTIAL_ANALYSIS, usePartialAnalysis)
+    @Test
+    fun testIssueFromConsumerProguardFile() {
+        libProject.getExecutor().run("lint")
+        assertThat(libProject.file("lint-results.txt")).contains(
+            "consumer-rules.pro:1: Error: Found byte-order-mark in the middle of a file"
+        )
+    }
+
+    private fun GradleTestProject.getExecutor(): GradleTaskExecutor =
+        this.executor().with(BooleanOption.USE_LINT_PARTIAL_ANALYSIS, usePartialAnalysis)
 }

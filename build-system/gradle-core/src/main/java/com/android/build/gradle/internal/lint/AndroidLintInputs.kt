@@ -476,6 +476,7 @@ abstract class VariantInputs {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NAME_ONLY)
+    @get:Optional
     abstract val consumerProguardFiles: ListProperty<File>
 
     @get:Nested
@@ -591,7 +592,7 @@ abstract class VariantInputs {
                 .globalArtifacts
                 .get(InternalArtifactType.DEFAULT_PROGUARD_FILES)
         )
-        // FIXME consumerProguardFiles
+        consumerProguardFiles.setDisallowChanges(creationConfig.variantScope.consumerProguardFiles)
 
         val testSourceProviderList: MutableList<SourceProviderInput> = mutableListOf()
         variantWithTests.unitTest?.let { unitTestCreationConfig ->
@@ -672,6 +673,7 @@ abstract class VariantInputs {
         mavenCoordinatesCache.setDisallowChanges(getBuildService(project.gradle.sharedServices))
         proguardFiles.setDisallowChanges(null)
         extractedProguardFiles.setDisallowChanges(null)
+        consumerProguardFiles.setDisallowChanges(null)
     }
 
     fun toLintModel(module: LintModelModule, partialResultsDir: File? = null): LintModelVariant {
@@ -700,7 +702,7 @@ abstract class VariantInputs {
             manifestPlaceholders = manifestPlaceholders.get(),
             resourceConfigurations = resourceConfigurations.get(),
             proguardFiles = proguardFiles.orNull?.map { it.asFile } ?: listOf(),
-            consumerProguardFiles = consumerProguardFiles.get(),
+            consumerProguardFiles = consumerProguardFiles.orNull ?: listOf(),
             sourceProviders = sourceProviders.get().map { it.toLintModel() } + dynamicFeatureSourceProviders,
             testSourceProviders = testSourceProviders.get().map { it.toLintModel() },
             debuggable = debuggable.get(),
