@@ -132,10 +132,10 @@ open class ConsumableCreationConfigImpl(
     fun renderscript(internalServices: VariantPropertiesApiServices): Renderscript? {
         return if (config.buildFeatures.renderScript) {
             internalServices.newInstance(Renderscript::class.java).also {
-                it.renderscriptSupportModeEnabled.set(variantDslInfo.renderscriptSupportModeEnabled)
-                it.renderscriptSupportModeBlasEnabled.set(variantDslInfo.renderscriptSupportModeBlasEnabled)
-                it.renderscriptNdkModeEnabled.set(variantDslInfo.renderscriptNdkModeEnabled)
-                it.renderscriptOptimLevel.set(variantDslInfo.renderscriptOptimLevel)
+                it.supportModeEnabled.set(variantDslInfo.renderscriptSupportModeEnabled)
+                it.supportModeBlasEnabled.set(variantDslInfo.renderscriptSupportModeBlasEnabled)
+                it.ndkModeEnabled.set(variantDslInfo.renderscriptNdkModeEnabled)
+                it.optimLevel.set(variantDslInfo.renderscriptOptimLevel)
             }
         } else null
     }

@@ -27,31 +27,31 @@ class AnalyticsEnabledRenderscript @Inject constructor(
     val stats: GradleBuildVariant.Builder)
 : Renderscript {
 
-    override val renderscriptSupportModeEnabled: Property<Boolean>
+    override val supportModeEnabled: Property<Boolean>
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
                 VariantPropertiesMethodType.RENDERSCRIPT_SUPPORT_MODE_VALUE
-            return delegate.renderscriptSupportModeEnabled
+            return delegate.supportModeEnabled
         }
 
-    override val renderscriptSupportModeBlasEnabled: Property<Boolean>
+    override val supportModeBlasEnabled: Property<Boolean>
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
                 VariantPropertiesMethodType.RENDERSCRIPT_SUPPORT_MODE_BLAS_VALUE
-            return delegate.renderscriptSupportModeBlasEnabled
+            return delegate.supportModeBlasEnabled
         }
 
-    override val renderscriptNdkModeEnabled: Property<Boolean>
+    override val ndkModeEnabled: Property<Boolean>
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
                 VariantPropertiesMethodType.RENDERSCRIPT_NDK_MODE_VALUE
-            return delegate.renderscriptNdkModeEnabled
+            return delegate.ndkModeEnabled
         }
 
-    override val renderscriptOptimLevel: Property<Int>
+    override val optimLevel: Property<Int>
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
                 VariantPropertiesMethodType.RENDERSCRIPT_OPTIMIZATION_LEVEL_VALUE
-            return delegate.renderscriptOptimLevel
+            return delegate.optimLevel
         }
 }

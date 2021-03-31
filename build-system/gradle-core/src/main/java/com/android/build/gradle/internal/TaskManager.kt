@@ -380,7 +380,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             project.dependencies
                     .add(variantDependencies.runtimeClasspath.name, multiDexDependency)
         }
-        if (variantProperties.renderscript?.renderscriptSupportModeEnabled?.get() == true) {
+        if (variantProperties.renderscript?.supportModeEnabled?.get() == true) {
             val fileCollection = project.files(
                     globalScope.versionedSdkLoader.flatMap {
                         it.renderScriptSupportJarProvider
@@ -654,7 +654,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         createAssembleTask(testVariant)
         val testedVariant = testVariant.testedVariant
         val variantDependencies = testVariant.variantDependencies
-        if (testedVariant.renderscript?.renderscriptSupportModeEnabled?.get() == true) {
+        if (testedVariant.renderscript?.supportModeEnabled?.get() == true) {
             project.dependencies
                     .add(
                             variantDependencies.compileClasspath.name,

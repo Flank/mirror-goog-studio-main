@@ -950,10 +950,10 @@ com.android.build.api.variant.Packaging
 com.android.build.api.variant.Packaging.getJniLibs: com.android.build.api.variant.JniLibsPackaging ()
 com.android.build.api.variant.Packaging.getResources: com.android.build.api.variant.ResourcesPackaging ()
 com.android.build.api.variant.Renderscript
-com.android.build.api.variant.Renderscript.getRenderscriptNdkModeEnabled: org.gradle.api.provider.Property<java.lang.Boolean> ()
-com.android.build.api.variant.Renderscript.getRenderscriptOptimLevel: org.gradle.api.provider.Property<java.lang.Integer> ()
-com.android.build.api.variant.Renderscript.getRenderscriptSupportModeBlasEnabled: org.gradle.api.provider.Property<java.lang.Boolean> ()
-com.android.build.api.variant.Renderscript.getRenderscriptSupportModeEnabled: org.gradle.api.provider.Property<java.lang.Boolean> ()
+com.android.build.api.variant.Renderscript.getNdkModeEnabled: org.gradle.api.provider.Property<java.lang.Boolean> ()
+com.android.build.api.variant.Renderscript.getOptimLevel: org.gradle.api.provider.Property<java.lang.Integer> ()
+com.android.build.api.variant.Renderscript.getSupportModeBlasEnabled: org.gradle.api.provider.Property<java.lang.Boolean> ()
+com.android.build.api.variant.Renderscript.getSupportModeEnabled: org.gradle.api.provider.Property<java.lang.Boolean> ()
 com.android.build.api.variant.ResValue implements java.io.Serializable
 com.android.build.api.variant.ResValue$Key implements java.io.Serializable
 com.android.build.api.variant.ResValue$Key.getName: java.lang.String ()

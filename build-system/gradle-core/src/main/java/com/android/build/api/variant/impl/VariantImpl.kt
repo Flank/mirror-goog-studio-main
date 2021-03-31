@@ -51,7 +51,6 @@ import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.provider.Provider
 import java.io.Serializable
 
 abstract class VariantImpl(
@@ -214,7 +213,7 @@ abstract class VariantImpl(
         sourceSets: ImmutableList.Builder<ConfigurableFileTree>
     ) {
         renderscript?.let {
-            if (!it.renderscriptNdkModeEnabled.get()
+            if (!it.ndkModeEnabled.get()
                 && taskContainer.renderscriptCompileTask != null
             ) {
                 val rsFC = artifacts.get(InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR)
