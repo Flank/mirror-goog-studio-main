@@ -244,6 +244,9 @@ private fun ModelSnapshotter<SourceSetContainer>.snapshotSourceSetContainer() {
     dataObject("unitTestSourceProvider", SourceSetContainer::unitTestSourceProvider) {
         snapshotSourceProvider()
     }
+    dataObject("testFixturesSourceProvider", SourceSetContainer::testFixturesSourceProvider) {
+        snapshotSourceProvider()
+    }
 }
 
 private fun ModelSnapshotter<ProductFlavor>.snapshotProductFlavor() {
@@ -383,6 +386,9 @@ private fun ModelSnapshotter<Variant>.snapshotVariant() {
     dataObject("unitTestArtifact", Variant::unitTestArtifact) {
         snapshotJavaArtifact()
     }
+    dataObject("testFixturesArtifact", Variant::testFixturesArtifact) {
+        snapshotAndroidArtifact()
+    }
     dataObject("testedTargetVariant", Variant::testedTargetVariant) {
         item("targetProjectPath", TestedTargetVariant::targetProjectPath)
         item("targetVariant", TestedTargetVariant::targetVariant)
@@ -487,6 +493,9 @@ internal fun ModelSnapshotter<VariantDependencies>.snapshotVariantDependencies()
         snapshotArtifactDependencies()
     }
     dataObject("unitTestArtifact", VariantDependencies::unitTestArtifact) {
+        snapshotArtifactDependencies()
+    }
+    dataObject("testFixturesArtifact", VariantDependencies::testFixturesArtifact) {
         snapshotArtifactDependencies()
     }
 }

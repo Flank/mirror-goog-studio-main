@@ -587,6 +587,11 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
 //        mainComponentInfo.variantApiOperationsRegistrar.testFixturesOperations
 //            .executeOperations(userVisibleVariant)
 
+        // register testFixtures component to the main variant
+        mainComponentInfo
+            .variant
+            .testFixturesComponent = testFixturesComponent
+
         return testFixturesComponent
     }
 

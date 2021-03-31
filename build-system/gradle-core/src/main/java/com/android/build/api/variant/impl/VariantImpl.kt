@@ -165,6 +165,8 @@ abstract class VariantImpl(
     // ---------------------------------------------------------------------------------------------
 
     val testComponents = mutableMapOf<VariantType, ComponentImpl>()
+    var testFixturesComponent: ComponentImpl? = null
+
     val externalExtensions: Map<Class<*>, Any>? by lazy {
         variantBuilder.getRegisteredExtensions()
     }

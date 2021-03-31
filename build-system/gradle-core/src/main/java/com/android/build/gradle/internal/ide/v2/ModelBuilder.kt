@@ -212,7 +212,8 @@ class ModelBuilder<
         val defaultConfig = SourceSetContainerImpl(
             sourceProvider = defaultConfigData.sourceSet.convert(buildFeatures),
             androidTestSourceProvider = defaultConfigData.getTestSourceSet(VariantTypeImpl.ANDROID_TEST)?.convert(buildFeatures),
-            unitTestSourceProvider = defaultConfigData.getTestSourceSet(VariantTypeImpl.UNIT_TEST)?.convert(buildFeatures)
+            unitTestSourceProvider = defaultConfigData.getTestSourceSet(VariantTypeImpl.UNIT_TEST)?.convert(buildFeatures),
+            testFixturesSourceProvider = defaultConfigData.testFixturesSourceSet?.convert(buildFeatures)
         )
 
         // gather all the build types
@@ -222,7 +223,8 @@ class ModelBuilder<
                 SourceSetContainerImpl(
                     sourceProvider = buildType.sourceSet.convert(buildFeatures),
                     androidTestSourceProvider = buildType.getTestSourceSet(VariantTypeImpl.ANDROID_TEST)?.convert(buildFeatures),
-                    unitTestSourceProvider = buildType.getTestSourceSet(VariantTypeImpl.UNIT_TEST)?.convert(buildFeatures)
+                    unitTestSourceProvider = buildType.getTestSourceSet(VariantTypeImpl.UNIT_TEST)?.convert(buildFeatures),
+                    testFixturesSourceProvider = buildType.testFixturesSourceSet?.convert(buildFeatures)
                 )
             )
         }
@@ -234,7 +236,8 @@ class ModelBuilder<
                 SourceSetContainerImpl(
                     sourceProvider = flavor.sourceSet.convert(buildFeatures),
                     androidTestSourceProvider = flavor.getTestSourceSet(VariantTypeImpl.ANDROID_TEST)?.convert(buildFeatures),
-                    unitTestSourceProvider = flavor.getTestSourceSet(VariantTypeImpl.UNIT_TEST)?.convert(buildFeatures)
+                    unitTestSourceProvider = flavor.getTestSourceSet(VariantTypeImpl.UNIT_TEST)?.convert(buildFeatures),
+                    testFixturesSourceProvider = flavor.testFixturesSourceSet?.convert(buildFeatures)
                 )
             )
         }
@@ -404,6 +407,14 @@ class ModelBuilder<
                     globalLibraryBuildService,
                     mavenCoordinatesBuildService
                 )
+            },
+            testFixturesArtifact = variant.testFixturesComponent?.let {
+                createDependencies(
+                    it,
+                    buildMapping,
+                    globalLibraryBuildService,
+                    mavenCoordinatesBuildService
+                )
             }
         )
     }
@@ -422,6 +433,9 @@ class ModelBuilder<
             },
             unitTestArtifact = variant.testComponents[VariantTypeImpl.UNIT_TEST]?.let {
                 createJavaArtifact(it, features)
+            },
+            testFixturesArtifact = variant.testFixturesComponent?.let {
+                createAndroidArtifact(it, features)
             },
             buildType = variant.buildType,
             productFlavors = variant.productFlavors.map { it.second },

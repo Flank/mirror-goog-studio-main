@@ -39,4 +39,5 @@ interface VariantDependencies: AndroidModel {
 
     val androidTestArtifact: ArtifactDependencies?
     val unitTestArtifact: ArtifactDependencies?
+    val testFixturesArtifact: ArtifactDependencies?
 }
