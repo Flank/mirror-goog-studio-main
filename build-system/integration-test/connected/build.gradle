@@ -35,6 +35,7 @@ dependencies {
     testImplementation libs.protobuf
     testImplementation libs.protobuf_util
     testImplementation libs.truth
+    testImplementation libs.unified_test_platform
 
     testImplementation libs.mockito_core
 
