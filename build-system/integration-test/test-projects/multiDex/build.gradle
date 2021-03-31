@@ -37,7 +37,6 @@ android {
         }
         r8 {
             initWith proguard
-            useProguard false
         }
     }
 }

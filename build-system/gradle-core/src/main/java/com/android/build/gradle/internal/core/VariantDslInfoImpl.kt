@@ -992,7 +992,6 @@ open class VariantDslInfoImpl internal constructor(
 
                 override fun getCodeShrinker() = when {
                     !buildTypeObj.isMinifyEnabled -> null
-                    buildTypeObj.isUseProguard == true -> CodeShrinker.PROGUARD
                     else -> CodeShrinker.R8
                 }
 

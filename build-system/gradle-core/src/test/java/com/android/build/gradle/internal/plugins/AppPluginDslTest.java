@@ -360,7 +360,7 @@ public class AppPluginDslTest {
     }
 
     @Test
-    public void testApkShrinker_oldDsl_useProguardFalse() throws Exception {
+    public void testApkShrinker_oldDsl() throws Exception {
         project =
                 TestProjects.builder(projectDirectory.newFolder("oldDsl_builtInShrinker").toPath())
                         .withPlugin(pluginType)
@@ -368,24 +368,6 @@ public class AppPluginDslTest {
         initFieldsFromProject();
         BuildType debug = android.getBuildTypes().getByName("debug");
         debug.setMinifyEnabled(true);
-        debug.setUseProguard(false);
-
-        plugin.createAndroidTasks();
-
-        assertThat(project.getTasks().getNames()).contains(R8_DEBUG);
-        assertThat(project.getTasks().getNames()).contains(R8_DEBUG_ANDROID_TEST);
-    }
-
-    @Test
-    public void testApkShrinker_oldDsl_useProguardTrue() throws Exception {
-        project =
-                TestProjects.builder(projectDirectory.newFolder("oldDsl_builtInShrinker").toPath())
-                        .withPlugin(pluginType)
-                        .build();
-        initFieldsFromProject();
-        BuildType debug = android.getBuildTypes().getByName("debug");
-        debug.setMinifyEnabled(true);
-        debug.setUseProguard(true);
 
         plugin.createAndroidTasks();
 
@@ -440,7 +422,6 @@ public class AppPluginDslTest {
         initFieldsFromProject();
         BuildType buildType = android.getBuildTypes().getByName("debug");
         buildType.setMinifyEnabled(true);
-        buildType.setUseProguard(false);
         android.getCompileOptions().setSourceCompatibility(JavaVersion.VERSION_1_8);
         android.getCompileOptions().setTargetCompatibility(JavaVersion.VERSION_1_8);
 

@@ -21,7 +21,7 @@ apply from: "../../commonLocalRepo.gradle"
 android {
     compileSdkVersion rootProject.latestCompileSdk
     buildToolsVersion = rootProject.buildToolsVersion
-    
+
     defaultConfig {
         minSdkVersion rootProject.supportLibMinSdk
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
@@ -33,7 +33,6 @@ android {
         minified.initWith(buildTypes.debug)
         minified {
             minifyEnabled true
-            useProguard true
             testProguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }

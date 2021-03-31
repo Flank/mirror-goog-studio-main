@@ -218,10 +218,6 @@ public class ShrinkResourcesOldShrinkerTest {
 
     @Test
     public void checkShrinkResources() throws Exception {
-        TestFileUtils.appendToFile(
-                project.getBuildFile(),
-                "android.buildTypes.release.useProguard = " + (shrinker == CodeShrinker.PROGUARD));
-
         GradleTestProjectUtils.setApkCreatorType(project, apkCreatorType);
 
         project.executor()

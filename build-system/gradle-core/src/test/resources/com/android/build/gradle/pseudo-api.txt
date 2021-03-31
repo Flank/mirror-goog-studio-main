@@ -991,8 +991,6 @@ com.android.build.gradle.internal.dsl.BuildType.setSigningConfig: void (com.andr
 com.android.build.gradle.internal.dsl.BuildType.setSigningConfig: void (java.lang.Object)
 com.android.build.gradle.internal.dsl.BuildType.setTestCoverageEnabled: void (boolean)
 com.android.build.gradle.internal.dsl.BuildType.setTestProguardFiles: com.android.build.gradle.internal.dsl.BuildType (java.lang.Iterable<?>)
-com.android.build.gradle.internal.dsl.BuildType.setUseProguard: void (boolean)
-com.android.build.gradle.internal.dsl.BuildType.setUseProguard: void (java.lang.Boolean)
 com.android.build.gradle.internal.dsl.BuildType.setZipAlignEnabled: void (boolean)
 com.android.build.gradle.internal.dsl.BuildType.shaders: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.Shaders, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.BuildType.shaders: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.ShaderOptions>)
