@@ -116,15 +116,38 @@ interface BaseFlavor : VariantDimension {
      */
     val testInstrumentationRunnerArguments: MutableMap<String, String>
 
+    @Incubating
+    @Deprecated("Replaced by testInstrumentationRunnerArguments property")
+    fun testInstrumentationRunnerArgument(key: String, value: String)
+
+    @Incubating
+    @Deprecated("Replaced by testInstrumentationRunnerArguments property")
+    fun setTestInstrumentationRunnerArguments(
+        testInstrumentationRunnerArguments: MutableMap<String, String>
+    ): Any?
+
+    @Incubating
+    @Deprecated("Replaced by testInstrumentationRunnerArguments property")
+    fun testInstrumentationRunnerArguments(args: Map<String, String>)
+
     /**
      * See [instrumentation](http://developer.android.com/guide/topics/manifest/instrumentation-element.html).
      */
     var testHandleProfiling: Boolean?
 
+    @Incubating
+    @Deprecated("Replaced by testFunctionalTest property")
+    fun setTestHandleProfiling(testHandleProfiling: Boolean): Any?
+
+
     /**
      * See [instrumentation](http://developer.android.com/guide/topics/manifest/instrumentation-element.html).
      */
     var testFunctionalTest: Boolean?
+
+    @Incubating
+    @Deprecated("Replaced by testFunctionalTest property")
+    fun setTestFunctionalTest(testFunctionalTest: Boolean): Any?
 
     /**
      * Specifies a list of
@@ -163,7 +186,17 @@ interface BaseFlavor : VariantDimension {
      */
     val resourceConfigurations: MutableSet<String>
 
-    /** Options to configure the build-time support for `vector` drawables. */
+    @Incubating
+    @Deprecated("Replaced by resourceConfigurations field")
+    fun resConfigs(config: Collection<String>)
+    @Incubating
+    @Deprecated("Replaced by resourceConfigurations field")
+    fun resConfig(config: String)
+    @Incubating
+    @Deprecated("Replaced by resourceConfigurations field")
+    fun resConfigs(vararg config: String)
+
+        /** Options to configure the build-time support for `vector` drawables. */
     val vectorDrawables: VectorDrawables
 
     /** Configures [VectorDrawables]. */

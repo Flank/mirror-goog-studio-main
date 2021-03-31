@@ -119,13 +119,13 @@ abstract class BuildType @Inject constructor(
 
     override val matchingFallbacks: MutableList<String> = mutableListOf()
 
-    fun setMatchingFallbacks(fallbacks: List<String>) {
+    override fun setMatchingFallbacks(fallbacks: List<String>) {
         val newFallbacks = ArrayList(fallbacks)
         matchingFallbacks.clear()
         matchingFallbacks.addAll(newFallbacks)
     }
 
-    fun setMatchingFallbacks(vararg fallbacks: String) {
+    override fun setMatchingFallbacks(vararg fallbacks: String) {
         matchingFallbacks.clear()
         for (fallback in fallbacks) {
             matchingFallbacks.add(fallback)

@@ -148,6 +148,9 @@ interface VariantDimension {
      */
     fun addManifestPlaceholders(manifestPlaceholders: Map<String, Any>)
 
+    @Deprecated("Use manifestPlaceholders property instead")
+    fun setManifestPlaceholders(manifestPlaceholders: Map<String, Any>): Void?
+
     /** Options for configuring Java compilation. */
     val javaCompileOptions: JavaCompileOptions
 

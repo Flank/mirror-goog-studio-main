@@ -164,7 +164,7 @@ abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
      * ./gradlew connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.foo=bar
      * ```
      */
-    fun testInstrumentationRunnerArgument(key: String, value: String) {
+    override fun testInstrumentationRunnerArgument(key: String, value: String) {
         testInstrumentationRunnerArguments[key] = value
     }
 
@@ -180,7 +180,7 @@ abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
      * ./gradlew connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.foo=bar
      * ```
      */
-    open fun testInstrumentationRunnerArguments(args: Map<String, String>) {
+    override fun testInstrumentationRunnerArguments(args: Map<String, String>) {
         testInstrumentationRunnerArguments.putAll(args)
     }
 
@@ -383,7 +383,7 @@ abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
      * To learn more, see
      * [Remove unused alternative resources](https://d.android.com/studio/build/shrink-code.html#unused-alt-resources).
      */
-    fun resConfig(config: String) {
+    override fun resConfig(config: String) {
         addResourceConfiguration(config)
     }
 
@@ -422,7 +422,7 @@ abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
      * To learn more, see
      * [Remove unused alternative resources](https://d.android.com/studio/build/shrink-code.html#unused-alt-resources).
      */
-    fun resConfigs(vararg config: String) {
+    override fun resConfigs(vararg config: String) {
         addResourceConfigurations(*config)
     }
 
@@ -461,7 +461,7 @@ abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
      * To learn more, see
      * [Remove unused alternative resources](https://d.android.com/studio/build/shrink-code.html#unused-alt-resources).
      */
-    fun resConfigs(config: Collection<String>) {
+    override fun resConfigs(config: Collection<String>) {
         addResourceConfigurations(config)
     }
 

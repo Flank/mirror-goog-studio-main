@@ -169,7 +169,7 @@ class KotlinDslTest {
 
     @Test
     fun `manifest placeholders source compatibility`() {
-        (android as BaseAppModuleExtension).defaultConfig.apply {
+        android.defaultConfig.apply {
             // Check can accept mapOf with string to string
             setManifestPlaceholders(mapOf("a" to "A"))
             assertThat(manifestPlaceholders).containsExactly("a", "A")
@@ -181,6 +181,31 @@ class KotlinDslTest {
             // Check use of overloaded +=
             manifestPlaceholders += mapOf("d" to "D")
             assertThat(manifestPlaceholders).containsExactly("c", 3,"d", "D")
+        }
+    }
+
+    @Test
+    fun `baseFlavor source compatibility`() {
+        android.defaultConfig.apply {
+            setTestFunctionalTest(true)
+            assertThat(testFunctionalTest).isTrue()
+            setTestHandleProfiling(true)
+            assertThat(testHandleProfiling).isTrue()
+            resConfig("one")
+            resConfigs("two", "three")
+            resConfigs(listOf("four"))
+            assertThat(resourceConfigurations).containsExactly("one", "two", "three", "four")
+        }
+    }
+
+
+    @Test
+    fun `productFlavor source compatibility`() {
+        android.productFlavors.create("t").apply {
+            setDimension("foo")
+            assertThat(dimension).isEqualTo("foo")
+            setMatchingFallbacks(listOf("bar"))
+            assertThat(matchingFallbacks).containsExactly("bar")
         }
     }
 
@@ -218,6 +243,9 @@ class KotlinDslTest {
 
         android.defaultConfig.testInstrumentationRunnerArguments += "c" to "d"
         assertThat(android.defaultConfig.testInstrumentationRunnerArguments).containsExactly("a", "b", "c", "d")
+
+        android.defaultConfig.setTestInstrumentationRunnerArguments(mutableMapOf("x" to "y"))
+        assertThat(android.defaultConfig.testInstrumentationRunnerArguments).containsExactly("x", "y")
     }
 
     @Test

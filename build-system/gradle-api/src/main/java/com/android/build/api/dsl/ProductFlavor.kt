@@ -52,6 +52,7 @@ import org.gradle.api.plugins.ExtensionAware
  */
 @Incubating
 interface ProductFlavor : Named, BaseFlavor, ExtensionAware {
+
     /**
      * Specifies the flavor dimension that this product flavor belongs to.
      *
@@ -116,6 +117,10 @@ interface ProductFlavor : Named, BaseFlavor, ExtensionAware {
      */
     var dimension: String?
 
+    @Incubating
+    @Deprecated("Replaced with the dimension property")
+    fun setDimension(dimension: String?): Void?
+
     /**
      * Specifies a sorted list of product flavors that the plugin should try to use when a direct
      * variant match with a local module dependency is not possible.
@@ -174,4 +179,12 @@ interface ProductFlavor : Named, BaseFlavor, ExtensionAware {
      * flavor dimension that your app does not**, use [missingDimensionStrategy].
      */
     val matchingFallbacks: MutableList<String>
+
+    @Incubating
+    @Deprecated("Replaced with property matchingFallbacks")
+    fun setMatchingFallbacks(vararg fallbacks: String)
+
+    @Incubating
+    @Deprecated("Replaced with property matchingFallbacks")
+    fun setMatchingFallbacks(fallbacks: List<String>)
 }
