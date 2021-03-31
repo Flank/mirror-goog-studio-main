@@ -1088,7 +1088,8 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
     fun createGenerateResValuesTask(creationConfig: ComponentCreationConfig) {
         if (creationConfig.buildFeatures.resValues) {
             val generateResValuesTask =
-                    taskFactory.register(GenerateResValues.CreationAction(creationConfig))
+                    taskFactory.register(GenerateResValues.
+                    CreationAction(creationConfig))
             creationConfig.taskContainer.resourceGenTask.dependsOn(generateResValuesTask)
         }
     }

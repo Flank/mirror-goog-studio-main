@@ -49,7 +49,7 @@ interface ApplicationVariant : Variant {
     /**
      * Variant's aaptOptions, initialized by the corresponding global DSL element.
      */
-    val aapt: Aapt
+    val androidResources: AndroidResources
 
     /**
      * Variant's signingConfig, initialized by the corresponding DSL element.

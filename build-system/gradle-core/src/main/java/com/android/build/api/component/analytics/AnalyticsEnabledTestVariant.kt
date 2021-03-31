@@ -17,7 +17,7 @@
 package com.android.build.api.component.analytics
 
 import com.android.build.api.component.UnitTest
-import com.android.build.api.variant.Aapt
+import com.android.build.api.variant.AndroidResources
 import com.android.build.api.variant.ApkPackaging
 import com.android.build.api.variant.Dexing
 import com.android.build.api.variant.TestVariant
@@ -40,11 +40,11 @@ open class AnalyticsEnabledTestVariant @Inject constructor(
             return delegate.applicationId
         }
 
-    override val aapt: Aapt
+    override val androidResources: AndroidResources
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
                 VariantPropertiesMethodType.AAPT_OPTIONS_VALUE
-            return delegate.aapt
+            return delegate.androidResources
         }
 
     override val testedApplicationId: Provider<String>

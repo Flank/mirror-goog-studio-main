@@ -16,7 +16,7 @@
 
 package com.android.build.api.component
 
-import com.android.build.api.variant.Aapt
+import com.android.build.api.variant.AndroidResources
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.ApkPackaging
 import com.android.build.api.variant.Renderscript
@@ -24,7 +24,6 @@ import com.android.build.api.variant.ResValue
 import com.android.build.api.variant.SigningConfig
 import org.gradle.api.Incubating
 import org.gradle.api.file.RegularFile
-import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
@@ -45,7 +44,7 @@ interface AndroidTest : TestComponent {
     /**
      * Variant's aaptOptions, initialized by the corresponding global DSL element.
      */
-    val aapt: Aapt
+    val androidResources: AndroidResources
 
     /**
      * The namespace of the generated R and BuildConfig classes. Also, the namespace used to resolve

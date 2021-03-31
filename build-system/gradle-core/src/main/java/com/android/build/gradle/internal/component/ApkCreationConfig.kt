@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.component
 
-import com.android.build.api.variant.Aapt
+import com.android.build.api.variant.AndroidResources
 import com.android.build.api.variant.ApkPackaging
 import com.android.build.api.variant.Dexing
 import com.android.build.api.variant.impl.SigningConfigImpl
@@ -27,7 +27,7 @@ import org.gradle.api.provider.MapProperty
  */
 interface ApkCreationConfig: ConsumableCreationConfig {
 
-    val aapt: Aapt
+    val androidResources: AndroidResources
 
     val manifestPlaceholders: MapProperty<String, String>
 

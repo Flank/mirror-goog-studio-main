@@ -94,7 +94,7 @@ open class ApplicationVariantImpl @Inject constructor(
 
     override val dependenciesInfo: DependenciesInfo = variantDependencyInfo
 
-    override val aapt: Aapt by lazy {
+    override val androidResources: AndroidResources by lazy {
         initializeAaptOptionsFromDsl(
             globalScope.extension.aaptOptions,
             internalServices

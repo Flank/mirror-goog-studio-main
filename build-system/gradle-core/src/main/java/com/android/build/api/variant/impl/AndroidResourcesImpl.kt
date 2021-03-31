@@ -16,25 +16,25 @@
 
 package com.android.build.api.variant.impl
 
-import com.android.build.api.variant.Aapt
+import com.android.build.api.variant.AndroidResources
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import org.gradle.api.provider.ListProperty
 
-class AaptImpl(
+class AndroidResourcesImpl(
     override val ignoreAssetsPatterns: ListProperty<String>,
-    override val additionalParameters: ListProperty<String>
-) : Aapt
+    override val aaptAdditionalParameters: ListProperty<String>
+) : AndroidResources
 
 internal fun initializeAaptOptionsFromDsl(
     dslAaptOptions: com.android.build.gradle.internal.dsl.AaptOptions,
     variantPropertiesApiServices: VariantPropertiesApiServices
-) : Aapt {
-    return AaptImpl(
+) : AndroidResources {
+    return AndroidResourcesImpl(
         ignoreAssetsPatterns = variantPropertiesApiServices.listPropertyOf(
             String::class.java,
             dslAaptOptions.ignoreAssetsPattern?.split(':') ?: listOf()
         ),
-        additionalParameters = variantPropertiesApiServices.listPropertyOf(
+        aaptAdditionalParameters = variantPropertiesApiServices.listPropertyOf(
             String::class.java,
             dslAaptOptions.additionalParameters
         )

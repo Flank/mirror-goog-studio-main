@@ -67,7 +67,7 @@ class AaptTest {
             """
                 androidComponents {
                     onVariants(selector().all(), {
-                        aapt.additionalParameters.addAll(
+                        androidResources.aaptAdditionalParameters.addAll(
                             ["--trace-folder", "$windowsFriendlyFilePath"]
                         )
                     })
@@ -126,7 +126,7 @@ class AaptTest {
             """
                 androidComponents {
                     onVariants(selector().all(), {
-                        aapt.ignoreAssetsPatterns.add("ignored")
+                        androidResources.ignoreAssetsPatterns.add("ignored")
                     })
                 }
                 """.trimIndent()
@@ -188,7 +188,7 @@ class AaptTest {
                 }
                 androidComponents {
                     onVariants(selector().all(), {
-                        aapt.ignoreAssetsPatterns.add(".ignoreAssetsPatternApi")
+                        androidResources.ignoreAssetsPatterns.add(".ignoreAssetsPatternApi")
                     })
                 }
                 """.trimIndent()

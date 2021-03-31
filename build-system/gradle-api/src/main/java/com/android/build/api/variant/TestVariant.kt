@@ -32,7 +32,7 @@ interface TestVariant: Variant {
     /**
      * Variant's aaptOptions, initialized by the corresponding global DSL element.
      */
-    val aapt: Aapt
+    val androidResources: AndroidResources
 
     /**
      * The application of the app under tests.

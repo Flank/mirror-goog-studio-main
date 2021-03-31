@@ -118,7 +118,7 @@ open class AndroidTestImpl @Inject constructor(
         )
     }
 
-    override val aapt: Aapt by lazy {
+    override val androidResources: AndroidResources by lazy {
         initializeAaptOptionsFromDsl(
                 globalScope.extension.aaptOptions,
                 variantPropertiesApiServices

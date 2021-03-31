@@ -23,7 +23,7 @@ import org.gradle.api.provider.ListProperty
  * Defines a variant's aapt options.
  */
 @Incubating
-interface Aapt {
+interface AndroidResources {
 
     /**
      * The list of patterns describing assets to be ignored.
@@ -40,5 +40,5 @@ interface Aapt {
      *
      * This property will be initialized using the corresponding DSL value.
      */
-    val additionalParameters: ListProperty<String>
+    val aaptAdditionalParameters: ListProperty<String>
 }
