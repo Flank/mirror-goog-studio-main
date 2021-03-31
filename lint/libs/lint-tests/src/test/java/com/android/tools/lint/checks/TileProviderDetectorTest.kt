@@ -16,7 +16,7 @@
 
 package com.android.tools.lint.checks
 
-class TileProviderDetectorTest : AbstractCheckTest(){
+class TileProviderDetectorTest : AbstractCheckTest() {
     override fun getDetector() = TileProviderDetector()
 
     fun testMissingPermission() {
@@ -36,7 +36,8 @@ class TileProviderDetectorTest : AbstractCheckTest(){
                                 <action android:name="androidx.wear.tiles.action.BIND_TILE_PROVIDER" />
                             </intent-filter>
                         </service>
-                    </manifest>""")
+                    </manifest>"""
+            )
                 .indented()
         ).run()
             .expect(
@@ -44,7 +45,8 @@ class TileProviderDetectorTest : AbstractCheckTest(){
                     AndroidManifest.xml:7: Warning: TileProvider does not specify BIND_TILE_PROVIDER permission [TileProviderPermissions]
                         <service
                          ~~~~~~~
-                    0 errors, 1 warnings""")
+                    0 errors, 1 warnings"""
+            )
             .verifyFixes()
             .window(1)
             .expectFixDiffs(
@@ -78,7 +80,8 @@ class TileProviderDetectorTest : AbstractCheckTest(){
                                 <action android:name="androidx.wear.tiles.action.BIND_TILE_PROVIDER" />
                             </intent-filter>
                         </service>
-                    </manifest>""")
+                    </manifest>"""
+            )
                 .indented()
         ).run()
             .expect(
@@ -86,7 +89,8 @@ class TileProviderDetectorTest : AbstractCheckTest(){
                     AndroidManifest.xml:7: Warning: TileProvider does not specify BIND_TILE_PROVIDER permission [TileProviderPermissions]
                         <service
                          ~~~~~~~
-                    0 errors, 1 warnings""")
+                    0 errors, 1 warnings"""
+            )
             .verifyFixes()
             .window(1)
             .expectFixDiffs(
@@ -118,7 +122,8 @@ class TileProviderDetectorTest : AbstractCheckTest(){
                                 <action android:name="androidx.wear.tiles.action.BIND_TILE_PROVIDER" />
                             </intent-filter>
                         </service>
-                    </manifest>""")
+                    </manifest>"""
+            )
                 .indented()
         ).run().expectClean()
     }

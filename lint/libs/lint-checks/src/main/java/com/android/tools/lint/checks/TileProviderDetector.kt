@@ -20,27 +20,22 @@ import com.android.SdkConstants.ANDROID_URI
 import com.android.SdkConstants.ATTR_NAME
 import com.android.SdkConstants.ATTR_PERMISSION
 import com.android.SdkConstants.TAG_ACTION
-import com.android.SdkConstants.TAG_APPLICATION
 import com.android.SdkConstants.TAG_INTENT_FILTER
-import com.android.SdkConstants.TAG_MANIFEST
 import com.android.SdkConstants.TAG_SERVICE
 import com.android.tools.lint.detector.api.Category
-import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.Issue
-import com.android.tools.lint.detector.api.LintFix
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.XmlContext
 import com.android.tools.lint.detector.api.XmlScanner
 import com.android.utils.XmlUtils.getFirstSubTagByName
 import com.android.utils.XmlUtils.getNextTagByName
-import org.w3c.dom.Attr
 import org.w3c.dom.Element
 
-class TileProviderDetector: Detector(), XmlScanner {
+class TileProviderDetector : Detector(), XmlScanner {
     companion object Issues {
         @JvmField
         val ISSUE = Issue.create(
