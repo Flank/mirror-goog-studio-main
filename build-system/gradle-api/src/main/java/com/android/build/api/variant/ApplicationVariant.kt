@@ -24,7 +24,7 @@ import org.gradle.api.provider.Property
  * Properties for the main Variant of an application.
  */
 @Incubating
-interface ApplicationVariant : Variant {
+interface ApplicationVariant : ApkComponent, Variant {
 
     /**
      * Variant's application ID as present in the final manifest file of the APK.
@@ -47,20 +47,10 @@ interface ApplicationVariant : Variant {
     val dependenciesInfo: DependenciesInfo
 
     /**
-     * Variant's aaptOptions, initialized by the corresponding global DSL element.
-     */
-    val androidResources: AndroidResources
-
-    /**
      * Variant's signingConfig, initialized by the corresponding DSL element.
      * @return Variant's config or null if the variant is not configured for signing.
      */
     val signingConfig: SigningConfig?
-
-    /**
-     * Variant's packagingOptions, initialized by the corresponding global DSL element.
-     */
-    override val packaging: ApkPackaging
 
     /**
      * Variant settings related to transforming bytecodes into dex files initialized from

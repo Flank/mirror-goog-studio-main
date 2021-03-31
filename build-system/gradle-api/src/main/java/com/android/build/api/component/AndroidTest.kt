@@ -16,9 +16,8 @@
 
 package com.android.build.api.component
 
-import com.android.build.api.variant.AndroidResources
+import com.android.build.api.variant.ApkComponent
 import com.android.build.api.variant.BuildConfigField
-import com.android.build.api.variant.ApkPackaging
 import com.android.build.api.variant.Renderscript
 import com.android.build.api.variant.ResValue
 import com.android.build.api.variant.SigningConfig
@@ -34,17 +33,12 @@ import java.io.Serializable
  * Properties for the android test Variant of a module.
  */
 @Incubating
-interface AndroidTest : TestComponent {
+interface AndroidTest : ApkComponent, TestComponent {
 
     /**
      * Variant's application ID as present in the final manifest file of the APK.
      */
     val applicationId: Property<String>
-
-    /**
-     * Variant's aaptOptions, initialized by the corresponding global DSL element.
-     */
-    val androidResources: AndroidResources
 
     /**
      * The namespace of the generated R and BuildConfig classes. Also, the namespace used to resolve
@@ -99,11 +93,6 @@ interface AndroidTest : TestComponent {
      * @return Variant's config or null if the variant is not configured for signing.
      */
     val signingConfig: SigningConfig?
-
-    /**
-     * Variant's packagingOptions, initialized by the corresponding global DSL element.
-     */
-    val packaging: ApkPackaging
 
     /**
      * Variant specific settings for the renderscript compiler. This will return null when

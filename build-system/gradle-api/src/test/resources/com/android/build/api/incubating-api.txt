@@ -873,17 +873,18 @@ com.android.build.api.variant.AndroidResources.getIgnoreAssetsPatterns: org.grad
 com.android.build.api.variant.AndroidVersion
 com.android.build.api.variant.AndroidVersion.getApiLevel: int ()
 com.android.build.api.variant.AndroidVersion.getCodename: java.lang.String ()
+com.android.build.api.variant.ApkComponent
+com.android.build.api.variant.ApkComponent.getAndroidResources: com.android.build.api.variant.AndroidResources ()
+com.android.build.api.variant.ApkComponent.getPackaging: com.android.build.api.variant.ApkPackaging ()
 com.android.build.api.variant.ApkPackaging implements com.android.build.api.variant.Packaging
 com.android.build.api.variant.ApkPackaging.getDex: com.android.build.api.variant.DexPackagingOptions ()
 com.android.build.api.variant.ApkPackaging.getJniLibs: com.android.build.api.variant.JniLibsApkPackaging ()
-com.android.build.api.variant.ApplicationVariant implements com.android.build.api.variant.Variant
-com.android.build.api.variant.ApplicationVariant.getAndroidResources: com.android.build.api.variant.AndroidResources ()
+com.android.build.api.variant.ApplicationVariant implements com.android.build.api.variant.ApkComponent, com.android.build.api.variant.Variant
 com.android.build.api.variant.ApplicationVariant.getAndroidTest: com.android.build.api.component.AndroidTest ()
 com.android.build.api.variant.ApplicationVariant.getApplicationId: org.gradle.api.provider.Property<java.lang.String> ()
 com.android.build.api.variant.ApplicationVariant.getDependenciesInfo: com.android.build.api.variant.DependenciesInfo ()
 com.android.build.api.variant.ApplicationVariant.getDexing: com.android.build.api.variant.Dexing ()
 com.android.build.api.variant.ApplicationVariant.getOutputs: java.util.List<com.android.build.api.variant.VariantOutput> ()
-com.android.build.api.variant.ApplicationVariant.getPackaging: com.android.build.api.variant.ApkPackaging ()
 com.android.build.api.variant.ApplicationVariant.getRenderscript: com.android.build.api.variant.Renderscript ()
 com.android.build.api.variant.ApplicationVariant.getSigningConfig: com.android.build.api.variant.SigningConfig ()
 com.android.build.api.variant.ApplicationVariantBuilder implements com.android.build.api.variant.VariantBuilder, com.android.build.api.variant.HasAndroidTestBuilder
@@ -918,12 +919,10 @@ com.android.build.api.variant.DexPackagingOptions.getUseLegacyPackaging: org.gra
 com.android.build.api.variant.Dexing
 com.android.build.api.variant.Dexing.getMultiDexKeepFile: org.gradle.api.file.RegularFileProperty ()
 com.android.build.api.variant.Dexing.getMultiDexKeepProguard: org.gradle.api.file.RegularFileProperty ()
-com.android.build.api.variant.DynamicFeatureVariant implements com.android.build.api.variant.Variant
-com.android.build.api.variant.DynamicFeatureVariant.getAndroidResources: com.android.build.api.variant.AndroidResources ()
+com.android.build.api.variant.DynamicFeatureVariant implements com.android.build.api.variant.Variant, com.android.build.api.variant.ApkComponent
 com.android.build.api.variant.DynamicFeatureVariant.getAndroidTest: com.android.build.api.component.AndroidTest ()
 com.android.build.api.variant.DynamicFeatureVariant.getApplicationId: org.gradle.api.provider.Provider<java.lang.String> ()
 com.android.build.api.variant.DynamicFeatureVariant.getDexing: com.android.build.api.variant.Dexing ()
-com.android.build.api.variant.DynamicFeatureVariant.getPackaging: com.android.build.api.variant.ApkPackaging ()
 com.android.build.api.variant.DynamicFeatureVariant.getRenderscript: com.android.build.api.variant.Renderscript ()
 com.android.build.api.variant.DynamicFeatureVariantBuilder implements com.android.build.api.variant.VariantBuilder, com.android.build.api.variant.HasAndroidTestBuilder
 com.android.build.api.variant.ExternalNativeBuild
@@ -989,14 +988,12 @@ com.android.build.api.variant.SigningConfig.getEnableV1Signing: org.gradle.api.p
 com.android.build.api.variant.SigningConfig.getEnableV2Signing: org.gradle.api.provider.Property<java.lang.Boolean> ()
 com.android.build.api.variant.SigningConfig.getEnableV3Signing: org.gradle.api.provider.Property<java.lang.Boolean> ()
 com.android.build.api.variant.SigningConfig.getEnableV4Signing: org.gradle.api.provider.Property<java.lang.Boolean> ()
-com.android.build.api.variant.TestVariant implements com.android.build.api.variant.Variant
-com.android.build.api.variant.TestVariant.getAndroidResources: com.android.build.api.variant.AndroidResources ()
+com.android.build.api.variant.TestVariant implements com.android.build.api.variant.ApkComponent, com.android.build.api.variant.Variant
 com.android.build.api.variant.TestVariant.getApplicationId: org.gradle.api.provider.Property<java.lang.String> ()
 com.android.build.api.variant.TestVariant.getDexing: com.android.build.api.variant.Dexing ()
 com.android.build.api.variant.TestVariant.getFunctionalTest: org.gradle.api.provider.Property<java.lang.Boolean> ()
 com.android.build.api.variant.TestVariant.getHandleProfiling: org.gradle.api.provider.Property<java.lang.Boolean> ()
 com.android.build.api.variant.TestVariant.getInstrumentationRunner: org.gradle.api.provider.Property<java.lang.String> ()
-com.android.build.api.variant.TestVariant.getPackaging: com.android.build.api.variant.ApkPackaging ()
 com.android.build.api.variant.TestVariant.getTestLabel: org.gradle.api.provider.Property<java.lang.String> ()
 com.android.build.api.variant.TestVariant.getTestedApplicationId: org.gradle.api.provider.Provider<java.lang.String> ()
 com.android.build.api.variant.TestVariantBuilder implements com.android.build.api.variant.VariantBuilder

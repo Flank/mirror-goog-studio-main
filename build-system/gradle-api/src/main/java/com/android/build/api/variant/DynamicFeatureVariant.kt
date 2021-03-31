@@ -20,7 +20,7 @@ import org.gradle.api.Incubating
 import org.gradle.api.provider.Provider
 
 @Incubating
-interface DynamicFeatureVariant : Variant {
+interface DynamicFeatureVariant : Variant, ApkComponent {
 
     /**
      * Variant's application ID as present in the final manifest file of the APK.
@@ -30,20 +30,10 @@ interface DynamicFeatureVariant : Variant {
     override val applicationId: Provider<String>
 
     /**
-     * Variant's aaptOptions, initialized by the corresponding global DSL element.
-     */
-    val androidResources: AndroidResources
-
-    /**
      * Variant's [AndroidTest] configuration, or null if android tests are disabled for this
      * variant.
      */
     val androidTest: AndroidTest?
-
-    /**
-     * Variant's packagingOptions, initialized by the corresponding global DSL element.
-     */
-    override val packaging: ApkPackaging
 
     /**
      * Variant settings related to transforming bytecodes into dex files initialized from

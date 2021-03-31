@@ -23,16 +23,11 @@ import org.gradle.api.provider.Provider
  * [Variant] for test-only modules.
  */
 @Incubating
-interface TestVariant: Variant {
+interface TestVariant: ApkComponent, Variant {
     /**
      * Variant's application ID as present in the final manifest file of the APK.
      */
     override val applicationId: Property<String>
-
-    /**
-     * Variant's aaptOptions, initialized by the corresponding global DSL element.
-     */
-    val androidResources: AndroidResources
 
     /**
      * The application of the app under tests.
@@ -56,11 +51,6 @@ interface TestVariant: Variant {
 
     /** the test label  */
     val testLabel: Property<String?>
-
-    /**
-     * Variant's packagingOptions, initialized by the corresponding global DSL element.
-     */
-    override val packaging: ApkPackaging
 
     /**
      * Variant settings related to transforming bytecodes into dex files initialized from
