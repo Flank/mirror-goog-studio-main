@@ -20,11 +20,16 @@ import com.android.tools.idea.wizard.template.MaterialColor.*
 
 fun themesXml(themesData: ThemesData) =
   """<resources>
-    <style name="${getAppWidgetThemeOverlay(themesData.overlay.name)}" parent="">
-        <item name="appWidgetBackgroundColor">@color/${LIGHT_BLUE_600.colorName}</item>
-        <item name="appWidgetTextColor">@color/${LIGHT_BLUE_50.colorName}</item>
+    <style name="${getParentAppWidgetThemeOverlay(themesData.overlay.name)}" parent="@android:style/Theme.DeviceDefault">
+        <item name="appWidgetRadius">8dp</item>
+        <item name="appWidgetPadding">4dp</item>
+        <item name="appWidgetInnerRadius">4dp</item>
     </style>
+
+    <style name="${getAppWidgetThemeOverlay(themesData.overlay.name)}"
+        parent="${getParentAppWidgetThemeOverlay(themesData.overlay.name)}" />
 </resources>
 """
 
 fun getAppWidgetThemeOverlay(overlayThemeName: String) = "${overlayThemeName}.AppWidgetContainer"
+fun getParentAppWidgetThemeOverlay(overlayThemeName: String) = "${overlayThemeName}.AppWidgetContainerParent"

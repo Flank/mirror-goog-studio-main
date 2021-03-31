@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 The Android Open Source Project
+ * Copyright (C) 2021 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,14 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.tools.idea.wizard.template.impl.other.appWidget.res.values
 
-fun attrsXml() =
-  """<resources>
-    <declare-styleable name="AppWidgetAttrs">
-        <attr name="appWidgetPadding" format="dimension" />
-        <attr name="appWidgetInnerRadius" format="dimension" />
-        <attr name="appWidgetRadius" format="dimension" />
-    </declare-styleable>
-</resources>
+package com.android.tools.idea.wizard.template.impl.other.appWidget.res.drawable_v21
+
+fun appWidgetInnerViewBackgroundXml() = """
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+
+    <corners android:radius="?attr/appWidgetInnerRadius" />
+    <solid android:color="?android:attr/colorAccent" />
+</shape>
 """

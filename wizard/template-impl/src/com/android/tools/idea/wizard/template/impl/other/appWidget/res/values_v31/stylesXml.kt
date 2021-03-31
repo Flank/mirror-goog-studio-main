@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 The Android Open Source Project
+ * Copyright (C) 2021 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,17 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.tools.idea.wizard.template.impl.other.appWidget.res.values_night
+package com.android.tools.idea.wizard.template.impl.other.appWidget.res.values_v31
 
 import com.android.tools.idea.wizard.template.ThemesData
-import com.android.tools.idea.wizard.template.MaterialColor.*
-import com.android.tools.idea.wizard.template.impl.other.appWidget.res.values.getAppWidgetThemeOverlay
+import com.android.tools.idea.wizard.template.impl.other.appWidget.res.values.getAppWidgetContainerStyleName
 
-fun themesXml(themesData: ThemesData) =
+fun stylesXml(themesData: ThemesData) =
   """<resources>
-    <style name="${getAppWidgetThemeOverlay(themesData.overlay.name)}" parent="">
-        <item name="appWidgetBackgroundColor">@color/${LIGHT_BLUE_900.colorName}</item>
-        <item name="appWidgetTextColor">@color/${LIGHT_BLUE_200.colorName}</item>
+    <style name="${getAppWidgetContainerStyleName(themesData.appName)}" parent="android:Widget">
+        <item name="android:clipToOutline">true</item>
     </style>
 </resources>
 """
