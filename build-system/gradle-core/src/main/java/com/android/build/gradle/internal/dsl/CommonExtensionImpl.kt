@@ -25,6 +25,7 @@ import com.android.build.api.dsl.SdkComponents
 import com.android.build.api.dsl.TestCoverage
 import com.android.build.api.variant.VariantBuilder
 import com.android.build.api.variant.Variant
+import com.android.build.gradle.ProguardFiles
 import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.internal.CompileOptions
 import com.android.build.gradle.internal.coverage.JacocoOptions
@@ -32,10 +33,12 @@ import com.android.build.gradle.internal.plugins.DslContainerProvider
 import com.android.build.gradle.internal.services.DslServices
 import com.android.builder.core.LibraryRequest
 import com.android.builder.core.ToolsRevisionUtils
+import com.android.builder.errors.IssueReporter
 import com.android.repository.Revision
 import java.util.function.Supplier
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
+import java.io.File
 
 /** Internal implementation of the 'new' DSL interface */
 abstract class CommonExtensionImpl<
@@ -291,5 +294,16 @@ abstract class CommonExtensionImpl<
 
     override fun useLibrary(name: String, required: Boolean) {
         libraryRequests.add(LibraryRequest(name, required))
+    }
+
+    override fun getDefaultProguardFile(name: String): File {
+        if (!ProguardFiles.KNOWN_FILE_NAMES.contains(name)) {
+            dslServices
+                .issueReporter
+                .reportError(
+                    IssueReporter.Type.GENERIC, ProguardFiles.UNKNOWN_FILENAME_MESSAGE
+                )
+        }
+        return ProguardFiles.getDefaultProguardFile(name, dslServices.buildDirectory)
     }
 }

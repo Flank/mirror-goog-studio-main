@@ -22,6 +22,7 @@ import org.gradle.api.Action
 import org.gradle.api.Incubating
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.plugins.ExtensionAware
+import java.io.File
 
 /**
  * Common extension properties for the Android Application. Library and Dynamic Feature Plugins.
@@ -818,4 +819,7 @@ interface CommonExtension<
      * in the AndroidManifest.xml.
      */
     var namespace: String?
+
+    @Incubating
+    fun getDefaultProguardFile(name: String): File
 }

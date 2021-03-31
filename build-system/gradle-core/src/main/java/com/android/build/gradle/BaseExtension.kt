@@ -430,7 +430,7 @@ abstract class BaseExtension protected constructor(
             return adbExecutable
         }
 
-    fun getDefaultProguardFile(name: String): File {
+    open fun getDefaultProguardFile(name: String): File {
         if (!ProguardFiles.KNOWN_FILE_NAMES.contains(name)) {
             dslServices
                 .issueReporter

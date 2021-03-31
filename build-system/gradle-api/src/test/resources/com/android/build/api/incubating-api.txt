@@ -371,6 +371,7 @@ com.android.build.api.dsl.CommonExtension.getBuildToolsVersion: java.lang.String
 com.android.build.api.dsl.CommonExtension.getBuildTypes: org.gradle.api.NamedDomainObjectContainer<BuildTypeT> ()
 com.android.build.api.dsl.CommonExtension.getComposeOptions: com.android.build.api.dsl.ComposeOptions ()
 com.android.build.api.dsl.CommonExtension.getDefaultConfig: DefaultConfigT ()
+com.android.build.api.dsl.CommonExtension.getDefaultProguardFile: java.io.File (java.lang.String)
 com.android.build.api.dsl.CommonExtension.getExternalNativeBuild: com.android.build.api.dsl.ExternalNativeBuild ()
 com.android.build.api.dsl.CommonExtension.getFlavorDimensions: java.util.List<java.lang.String> ()
 com.android.build.api.dsl.CommonExtension.getInstallation: com.android.build.api.dsl.Installation ()
