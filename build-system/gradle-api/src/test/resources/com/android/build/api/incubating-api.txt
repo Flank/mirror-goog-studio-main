@@ -80,7 +80,7 @@ com.android.build.api.component.ComponentIdentity.getName: java.lang.String ()
 com.android.build.api.component.ComponentIdentity.getProductFlavors: java.util.List<kotlin.Pair<java.lang.String, java.lang.String>> ()
 com.android.build.api.component.TestComponent implements com.android.build.api.component.Component
 com.android.build.api.component.TestComponent.getTestedVariant: com.android.build.api.variant.Variant ()
-com.android.build.api.component.TestFixturesComponent implements com.android.build.api.variant.AarComponent, com.android.build.api.component.Component
+com.android.build.api.component.TestFixtures implements com.android.build.api.variant.AarComponent, com.android.build.api.component.Component
 com.android.build.api.dsl.AaptOptions implements com.android.build.api.dsl.AndroidResources
 com.android.build.api.dsl.AarMetadata
 com.android.build.api.dsl.AarMetadata.getMinCompileSdk: java.lang.Integer ()

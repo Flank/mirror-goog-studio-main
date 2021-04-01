@@ -14,17 +14,10 @@
  * limitations under the License.
  */
 
-package com.android.build.api.component.analytics
+package com.android.build.api.component
 
-import com.android.build.api.component.TestFixturesComponent
-import com.google.wireless.android.sdk.stats.GradleBuildVariant
-import org.gradle.api.model.ObjectFactory
-import javax.inject.Inject
+import com.android.build.api.variant.AarComponent
+import org.gradle.api.Incubating
 
-abstract class AnalyticsEnabledTestFixturesComponent @Inject constructor(
-    override val delegate: TestFixturesComponent,
-    stats: GradleBuildVariant.Builder,
-    objectFactory: ObjectFactory
-) : AnalyticsEnabledComponent(
-    delegate, stats, objectFactory
-), TestFixturesComponent
+@Incubating
+interface TestFixtures: AarComponent, Component

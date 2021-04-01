@@ -27,7 +27,7 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC
 import com.android.annotations.NonNull;
 import com.android.build.api.artifact.SingleArtifact;
 import com.android.build.api.component.impl.TestComponentImpl;
-import com.android.build.api.component.impl.TestFixturesComponentImpl;
+import com.android.build.api.component.impl.TestFixturesImpl;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.QualifiedContent.ScopeType;
@@ -93,7 +93,7 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
     public LibraryTaskManager(
             @NonNull List<ComponentInfo<LibraryVariantBuilderImpl, LibraryVariantImpl>> variants,
             @NonNull List<TestComponentImpl> testComponents,
-            @NonNull List<TestFixturesComponentImpl> testFixturesComponents,
+            @NonNull List<TestFixturesImpl> testFixturesComponents,
             boolean hasFlavors,
             @NonNull ProjectOptions projectOptions,
             @NonNull GlobalScope globalScope,

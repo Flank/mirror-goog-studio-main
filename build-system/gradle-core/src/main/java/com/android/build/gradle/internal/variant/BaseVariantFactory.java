@@ -23,7 +23,7 @@ import com.android.build.api.artifact.impl.ArtifactsImpl;
 import com.android.build.api.component.ComponentIdentity;
 import com.android.build.api.component.impl.AndroidTestImpl;
 import com.android.build.api.component.impl.ComponentImpl;
-import com.android.build.api.component.impl.TestFixturesComponentImpl;
+import com.android.build.api.component.impl.TestFixturesImpl;
 import com.android.build.api.component.impl.UnitTestImpl;
 import com.android.build.api.variant.impl.VariantBuilderImpl;
 import com.android.build.api.variant.impl.VariantImpl;
@@ -75,7 +75,7 @@ public abstract class BaseVariantFactory<
 
     @NonNull
     @Override
-    public TestFixturesComponentImpl createTestFixtures(
+    public TestFixturesImpl createTestFixtures(
             @NonNull ComponentIdentity componentIdentity,
             @NonNull BuildFeatureValues buildFeatures,
             @NonNull VariantDslInfo variantDslInfo,
@@ -89,11 +89,11 @@ public abstract class BaseVariantFactory<
             @NonNull TransformManager transformManager,
             @NonNull VariantPropertiesApiServices variantPropertiesApiServices,
             @NonNull TaskCreationServices taskCreationServices) {
-        TestFixturesComponentImpl testFixturesComponent =
+        TestFixturesImpl testFixturesComponent =
                 projectServices
                         .getObjectFactory()
                         .newInstance(
-                                TestFixturesComponentImpl.class,
+                                TestFixturesImpl.class,
                                 componentIdentity,
                                 buildFeatures,
                                 variantDslInfo,

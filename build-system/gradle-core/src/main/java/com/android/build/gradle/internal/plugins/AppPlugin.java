@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.plugins;
 
 import com.android.annotations.NonNull;
 import com.android.build.api.component.impl.TestComponentImpl;
-import com.android.build.api.component.impl.TestFixturesComponentImpl;
+import com.android.build.api.component.impl.TestFixturesImpl;
 import com.android.build.api.dsl.CommonExtension;
 import com.android.build.api.dsl.SdkComponents;
 import com.android.build.api.extension.ApplicationAndroidComponentsExtension;
@@ -175,7 +175,7 @@ public class AppPlugin
                     List<ComponentInfo<ApplicationVariantBuilderImpl, ApplicationVariantImpl>>
                             variants,
             @NonNull List<TestComponentImpl> testComponents,
-            @NonNull List<TestFixturesComponentImpl> testFixturesComponents,
+            @NonNull List<TestFixturesImpl> testFixturesComponents,
             boolean hasFlavors,
             @NonNull ProjectOptions projectOptions,
             @NonNull GlobalScope globalScope,

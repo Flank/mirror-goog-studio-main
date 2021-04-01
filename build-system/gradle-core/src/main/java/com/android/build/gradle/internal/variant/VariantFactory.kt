@@ -19,7 +19,7 @@ import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.impl.AndroidTestImpl
 import com.android.build.api.component.impl.ComponentImpl
-import com.android.build.api.component.impl.TestFixturesComponentImpl
+import com.android.build.api.component.impl.TestFixturesImpl
 import com.android.build.api.component.impl.UnitTestImpl
 import com.android.build.api.dsl.BuildFeatures
 import com.android.build.api.variant.impl.VariantBuilderImpl
@@ -90,7 +90,7 @@ interface VariantFactory<VariantBuilderT : VariantBuilderImpl, VariantT : Varian
         mainVariant: VariantImpl,
         transformManager: TransformManager,
         variantPropertiesApiServices: VariantPropertiesApiServices,
-        taskCreationServices: TaskCreationServices): TestFixturesComponentImpl
+        taskCreationServices: TaskCreationServices): TestFixturesImpl
 
     fun createUnitTest(
             componentIdentity: ComponentIdentity,

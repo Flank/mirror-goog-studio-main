@@ -21,7 +21,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import com.android.annotations.NonNull;
 import com.android.build.api.artifact.SingleArtifact;
 import com.android.build.api.component.impl.TestComponentImpl;
-import com.android.build.api.component.impl.TestFixturesComponentImpl;
+import com.android.build.api.component.impl.TestFixturesImpl;
 import com.android.build.api.variant.impl.TestVariantBuilderImpl;
 import com.android.build.api.variant.impl.TestVariantImpl;
 import com.android.build.gradle.BaseExtension;
@@ -63,7 +63,7 @@ public class TestApplicationTaskManager
     public TestApplicationTaskManager(
             @NonNull List<ComponentInfo<TestVariantBuilderImpl, TestVariantImpl>> variants,
             @NonNull List<TestComponentImpl> testComponents,
-            @NonNull List<TestFixturesComponentImpl> testFixturesComponents,
+            @NonNull List<TestFixturesImpl> testFixturesComponents,
             boolean hasFlavors,
             @NonNull ProjectOptions projectOptions,
             @NonNull GlobalScope globalScope,

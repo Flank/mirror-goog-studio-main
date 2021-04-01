@@ -24,7 +24,7 @@ import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.component.impl.AndroidTestImpl
 import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.api.component.impl.TestComponentImpl
-import com.android.build.api.component.impl.TestFixturesComponentImpl
+import com.android.build.api.component.impl.TestFixturesImpl
 import com.android.build.api.component.impl.UnitTestImpl
 import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.api.transform.QualifiedContent
@@ -267,7 +267,7 @@ import java.util.stream.Collectors
 abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImpl>(
         private val variants: List<ComponentInfo<VariantBuilderT, VariantT>>,
         private val testComponents: List<TestComponentImpl>,
-        private val testFixturesComponents: List<TestFixturesComponentImpl>,
+        private val testFixturesComponents: List<TestFixturesImpl>,
         private val hasFlavors: Boolean,
         private val projectOptions: ProjectOptions,
         @JvmField protected val globalScope: GlobalScope,
@@ -411,7 +411,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             allVariants: List<ComponentInfo<VariantBuilderT, VariantT>>)
 
     /** Create tasks for the specified test fixtures component.  */
-    private fun createTasksForTestFixtures(testFixturesComponent: TestFixturesComponentImpl) {
+    private fun createTasksForTestFixtures(testFixturesComponent: TestFixturesImpl) {
         createAssembleTask(testFixturesComponent)
         createAnchorTasks(testFixturesComponent)
 
@@ -580,7 +580,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         }
     }
 
-    private fun createBundleTaskForTestFixtures(testFixturesComponent: TestFixturesComponentImpl) {
+    private fun createBundleTaskForTestFixtures(testFixturesComponent: TestFixturesImpl) {
         // publish testFixtures for libraries only for now
         if (this !is LibraryTaskManager) {
             return

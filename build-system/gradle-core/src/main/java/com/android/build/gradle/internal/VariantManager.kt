@@ -33,10 +33,10 @@ import com.android.build.gradle.internal.profile.AnalyticsConfiguratorService
 import com.android.build.gradle.internal.dependency.VariantDependenciesBuilder
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.AndroidTest
-import com.android.build.api.component.TestFixturesComponent
+import com.android.build.api.component.TestFixtures
 import com.android.build.api.component.UnitTest
 import com.android.build.api.component.impl.TestComponentImpl
-import com.android.build.api.component.impl.TestFixturesComponentImpl
+import com.android.build.api.component.impl.TestFixturesImpl
 import com.android.build.api.extension.VariantExtensionConfig
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.HasAndroidTestBuilder
@@ -141,7 +141,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
     /**
      * Returns a list of all test fixtures components.
      */
-    val testFixturesComponents: MutableList<TestFixturesComponentImpl> = Lists.newArrayList()
+    val testFixturesComponents: MutableList<TestFixturesImpl> = Lists.newArrayList()
 
     /**
      * Creates the variants.
@@ -431,7 +431,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
         buildTypeData: BuildTypeData<BuildType>,
         productFlavorDataList: List<ProductFlavorData<ProductFlavor>>,
         mainComponentInfo: VariantComponentInfo<VariantBuilderT, VariantT>
-    ): TestFixturesComponentImpl {
+    ): TestFixturesImpl {
         val testFixturesVariantType = VariantTypeImpl.TEST_FIXTURES
         val testFixturesSourceSet = variantInputModel.defaultConfigData.testFixturesSourceSet!!
         @Suppress("DEPRECATION") val dslServices = globalScope.dslServices
@@ -581,7 +581,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
         )
 
         val userVisibleVariant =
-            testFixturesComponent.createUserVisibleVariantObject<TestFixturesComponent>(
+            testFixturesComponent.createUserVisibleVariantObject<TestFixtures>(
                 projectServices, variantApiOperationsRegistrar, apiAccessStats)
         // todo: execute the actions registered at the extension level.
 //        mainComponentInfo.variantApiOperationsRegistrar.testFixturesOperations

@@ -22,7 +22,7 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC
 import com.android.annotations.NonNull;
 import com.android.build.api.component.impl.ComponentImpl;
 import com.android.build.api.component.impl.TestComponentImpl;
-import com.android.build.api.component.impl.TestFixturesComponentImpl;
+import com.android.build.api.component.impl.TestFixturesImpl;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.ScopeType;
 import com.android.build.api.variant.impl.VariantBuilderImpl;
@@ -79,7 +79,7 @@ public abstract class AbstractAppTaskManager<
     protected AbstractAppTaskManager(
             @NonNull List<ComponentInfo<VariantBuilderT, VariantT>> variants,
             @NonNull List<TestComponentImpl> testComponents,
-            @NonNull List<TestFixturesComponentImpl> testFixturesComponents,
+            @NonNull List<TestFixturesImpl> testFixturesComponents,
             boolean hasFlavors,
             @NonNull ProjectOptions projectOptions,
             @NonNull GlobalScope globalScope,

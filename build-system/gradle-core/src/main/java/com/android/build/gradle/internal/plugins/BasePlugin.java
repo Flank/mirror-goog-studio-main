@@ -26,7 +26,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.component.ComponentBuilder;
 import com.android.build.api.component.impl.TestComponentImpl;
-import com.android.build.api.component.impl.TestFixturesComponentImpl;
+import com.android.build.api.component.impl.TestFixturesImpl;
 import com.android.build.api.dsl.CommonExtension;
 import com.android.build.api.dsl.TestedExtension;
 import com.android.build.api.extension.AndroidComponentsExtension;
@@ -226,7 +226,7 @@ public abstract class BasePlugin<
     protected abstract TaskManager<VariantBuilderT, VariantT> createTaskManager(
             @NonNull List<ComponentInfo<VariantBuilderT, VariantT>> variants,
             @NonNull List<TestComponentImpl> testComponents,
-            @NonNull List<TestFixturesComponentImpl> testFixturesComponents,
+            @NonNull List<TestFixturesImpl> testFixturesComponents,
             boolean hasFlavors,
             @NonNull ProjectOptions projectOptions,
             @NonNull GlobalScope globalScope,
@@ -774,7 +774,7 @@ public abstract class BasePlugin<
         }
 
         // now publish all testFixtures components artifacts.
-        for (TestFixturesComponentImpl testFixturesComponent :
+        for (TestFixturesImpl testFixturesComponent :
                 variantManager.getTestFixturesComponents()) {
             testFixturesComponent.publishBuildArtifacts();
         }

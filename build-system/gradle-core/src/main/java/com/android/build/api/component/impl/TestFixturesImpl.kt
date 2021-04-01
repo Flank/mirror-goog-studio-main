@@ -19,8 +19,8 @@ package com.android.build.api.component.impl
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.Component
 import com.android.build.api.component.ComponentIdentity
-import com.android.build.api.component.TestFixturesComponent
-import com.android.build.api.component.analytics.AnalyticsEnabledTestFixturesComponent
+import com.android.build.api.component.TestFixtures
+import com.android.build.api.component.analytics.AnalyticsEnabledTestFixtures
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.AarMetadata
 import com.android.build.api.variant.AndroidVersion
@@ -46,7 +46,7 @@ import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import javax.inject.Inject
 
-open class TestFixturesComponentImpl @Inject constructor(
+open class TestFixturesImpl @Inject constructor(
     componentIdentity: ComponentIdentity,
     buildFeatureValues: BuildFeatureValues,
     variantDslInfo: VariantDslInfo,
@@ -75,7 +75,7 @@ open class TestFixturesComponentImpl @Inject constructor(
     variantPropertiesApiServices,
     taskCreationServices,
     globalScope
-), TestFixturesComponent, ComponentCreationConfig, AarCreationConfig {
+), TestFixtures, ComponentCreationConfig, AarCreationConfig {
 
     // ---------------------------------------------------------------------------------------------
     // PUBLIC API
@@ -109,7 +109,7 @@ open class TestFixturesComponentImpl @Inject constructor(
             this as T
         } else {
             projectServices.objectFactory.newInstance(
-                AnalyticsEnabledTestFixturesComponent::class.java,
+                AnalyticsEnabledTestFixtures::class.java,
                 this,
                 stats
             ) as T

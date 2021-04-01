@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.component.impl.TestComponentImpl
-import com.android.build.api.component.impl.TestFixturesComponentImpl
+import com.android.build.api.component.impl.TestFixturesImpl
 import com.android.build.api.variant.impl.DynamicFeatureVariantBuilderImpl
 import com.android.build.api.variant.impl.DynamicFeatureVariantImpl
 import com.android.build.gradle.BaseExtension
@@ -34,7 +34,7 @@ import com.android.build.gradle.options.ProjectOptions
 internal class DynamicFeatureTaskManager(
         variants: List<ComponentInfo<DynamicFeatureVariantBuilderImpl, DynamicFeatureVariantImpl>>,
         testComponents: List<TestComponentImpl>,
-        testFixturesComponents: List<TestFixturesComponentImpl>,
+        testFixturesComponents: List<TestFixturesImpl>,
         hasFlavors: Boolean,
         projectOptions: ProjectOptions,
         globalScope: GlobalScope,
