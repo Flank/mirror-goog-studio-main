@@ -18,6 +18,7 @@ package com.android.tools.lint.checks
 
 import com.android.tools.lint.checks.RestrictToDetector.Companion.sameLibraryGroupPrefix
 import com.android.tools.lint.checks.infrastructure.ProjectDescription
+import com.android.tools.lint.checks.infrastructure.TestFile
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Project
 import java.io.File
@@ -829,21 +830,7 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                 """
             ).indented(),
             // From Guava; also Apache licensed
-            java(
-                """
-                package com.google.common.annotations;
-                @SuppressWarnings("ClassNameDiffersFromFileName")
-                public @interface VisibleForTesting {
-                    enum Visibility {
-                        NONE,
-                        PRIVATE,
-                        PACKAGE_PRIVATE,
-                        PROTECTED
-                    }
-                  Visibility productionVisibility() default Visibility.PRIVATE;
-                }
-                """
-            ).indented()
+            guavaVisibleForTestingAnnotation
         ).run().expect(expected)
     }
 
@@ -1979,7 +1966,54 @@ class RestrictToDetectorTest : AbstractCheckTest() {
         assertTrue(libDir2!!.parentFile.path == libDir1!!.path)
     }
 
-    val restrictToAnnotation = java(
+    fun test183961872() {
+        lint().files(
+            java(
+                """
+                package test.pkg;
+
+                import com.google.common.annotations.VisibleForTesting;
+                import com.google.common.annotations.VisibleForTesting.Visibility;
+
+                @SuppressWarnings("unused")
+                public class VisibilityTest {
+                    @VisibleForTesting(productionVisibility = Visibility.NONE)
+                    static JobWriteFailure createError(DriveStatus driveStatus) {
+                        return createError(PermanentFailureReason.UNKNOWN, driveStatus);
+                    }
+
+                    @VisibleForTesting(productionVisibility = Visibility.NONE)
+                    static JobWriteFailure createError(PermanentFailureReason failure, DriveStatus driveStatus) {
+                        return null;
+                    }
+
+                    private enum PermanentFailureReason { UNKNOWN }
+                    private static class DriveStatus { }
+                    private static class JobWriteFailure { }
+                }
+                """
+            ).indented(),
+            guavaVisibleForTestingAnnotation
+        ).allowDuplicates().run().expectClean()
+    }
+
+    private val guavaVisibleForTestingAnnotation: TestFile = java(
+        """
+        package com.google.common.annotations;
+        @SuppressWarnings("ClassNameDiffersFromFileName")
+        public @interface VisibleForTesting {
+            enum Visibility {
+                NONE,
+                PRIVATE,
+                PACKAGE_PRIVATE,
+                PROTECTED
+            }
+          Visibility productionVisibility() default Visibility.PRIVATE;
+        }
+        """
+    ).indented()
+
+    private val restrictToAnnotation: TestFile = java(
         """
         package androidx.annotation;
 
