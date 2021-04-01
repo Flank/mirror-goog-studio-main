@@ -43,7 +43,6 @@ class OptionVersionTest {
          */
         private val KNOWN_VIOLATING_DEPRECATED_OPTIONS: List<Option<*>> = listOf(
                 BooleanOption.ENABLE_JVM_RESOURCE_COMPILER,
-                OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8
         )
 
         private fun getStableVersionIgnoringDotReleases(versionString: String): GradleVersion {
