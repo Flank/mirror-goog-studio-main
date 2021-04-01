@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.apk.Dex
 import com.android.testutils.truth.PathSubject.assertThat
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.objectweb.asm.Opcodes
@@ -270,6 +271,7 @@ class NamespacedDynamicFeatureIntegrationTest {
     val project = GradleTestProject.builder().fromTestApp(testApp)
         .create()
 
+    @Ignore("b/160949546")
     @Test
     fun testApkContentsAndPackageIds() {
         project.executor()

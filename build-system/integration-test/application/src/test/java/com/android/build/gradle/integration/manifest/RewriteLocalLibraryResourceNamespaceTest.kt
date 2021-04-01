@@ -25,6 +25,7 @@ import com.android.utils.FileUtils
 import com.google.common.base.Charsets
 import com.google.common.io.Files
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 
@@ -110,6 +111,7 @@ class RewriteLocalLibraryResourceNamespaceTest {
         )
     }
 
+    @Ignore("b/160949546")
     @Test
     fun build() {
         project.executor()

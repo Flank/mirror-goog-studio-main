@@ -61,7 +61,6 @@ class ProjectServices constructor(
         aapt2Input.binaryDirectory.from(aapt2FromMaven?.aapt2Directory)
         aapt2Input.binaryDirectory.disallowChanges()
         aapt2Input.version.setDisallowChanges(aapt2FromMaven?.version)
-        aapt2Input.useJvmResourceCompiler.setDisallowChanges(projectOptions[BooleanOption.ENABLE_JVM_RESOURCE_COMPILER])
         aapt2Input.maxWorkerCount.setDisallowChanges(maxWorkerCount)
         aapt2Input.maxAapt2Daemons.setDisallowChanges(computeMaxAapt2Daemons(projectOptions))
     }

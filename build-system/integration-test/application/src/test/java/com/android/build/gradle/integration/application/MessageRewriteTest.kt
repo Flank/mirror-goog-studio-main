@@ -50,7 +50,6 @@ class MessageRewriteTest {
         TemporaryProjectModification.doTest(project) {
             it.replaceInFile("src/main/res/layout/main.xml","@string/text", "@string/agloe")
             val result = project.executor()
-                    .with(BooleanOption.ENABLE_JVM_RESOURCE_COMPILER, false)
                     .expectFailure()
                     .run("assembleDebug")
             checkPathInOutput(
@@ -63,7 +62,6 @@ class MessageRewriteTest {
         TemporaryProjectModification.doTest(project) {
             it.replaceInFile("src/main/res/values/strings.xml", "string", "")
             val result = project.executor()
-                    .with(BooleanOption.ENABLE_JVM_RESOURCE_COMPILER, false)
                     .expectFailure()
                     .run("assembleDebug")
             checkPathInOutput(

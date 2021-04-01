@@ -88,9 +88,6 @@ abstract class Aapt2DaemonBuildService : BuildService<Aapt2DaemonBuildService.Pa
     fun getLeasingAapt2(aapt2Input: Aapt2Input) : Aapt2 {
         val manager = getManager(Aapt2DaemonServiceKey(aapt2Input.version.get()), getAapt2ExecutablePath(aapt2Input))
         val leasingAapt2 = manager.leasingAapt2Daemon
-        if (!aapt2Input.useJvmResourceCompiler.get()) {
-            return leasingAapt2
-        }
         return PartialInProcessResourceProcessor(leasingAapt2)
     }
 
@@ -176,9 +173,6 @@ interface Aapt2Input {
 
     @get:Internal
     val binaryDirectory: ConfigurableFileCollection
-
-    @get:Input
-    val useJvmResourceCompiler: Property<Boolean>
 
     /** The max worker count from Gradle, for bucketing in-process resource compilation for workers */
     @get:Internal

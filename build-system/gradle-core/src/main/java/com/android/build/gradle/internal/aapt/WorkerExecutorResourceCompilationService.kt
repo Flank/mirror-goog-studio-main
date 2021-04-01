@@ -21,10 +21,7 @@ import com.android.aaptcompiler.canCompileResourceInJvm
 import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.res.Aapt2CompileRunnable
 import com.android.build.gradle.internal.res.ResourceCompilerRunnable
-import com.android.build.gradle.internal.services.Aapt2DaemonServiceKey
 import com.android.build.gradle.internal.services.Aapt2Input
-import com.android.build.gradle.options.SyncOptions
-import com.android.build.gradle.tasks.MergeResources
 import com.android.builder.internal.aapt.v2.Aapt2RenamingConventions
 import com.android.ide.common.resources.CompileResourceRequest
 import com.android.ide.common.resources.ResourceCompilationService
@@ -70,26 +67,26 @@ class WorkerExecutorResourceCompilationService(
             return
         }
         val maxWorkersCount = aapt2Input.maxWorkerCount.get()
-        if (aapt2Input.useJvmResourceCompiler.get()) {
-            // First remove all values files to be consumed by the kotlin compiler.
-            val valuesRequests = requests.filter {
-                canCompileResourceInJvm(it.inputFile, it.isPngCrunching) && it.partialRFile == null
-            }
-            requests.removeAll(valuesRequests)
 
-            // Split all requests into buckets, giving each worker the same number of files to process
-            var ord = 0
-            val buckets =
-                valuesRequests.groupByTo(HashMap(maxWorkersCount)) { (ord++) % maxWorkersCount }
-
-            buckets.values.forEach { bucket ->
-                workerExecutor.noIsolation()
-                    .submit(ResourceCompilerRunnable::class.java) {
-                        it.initializeWith(projectName = projectName, taskOwner = taskOwner, analyticsService = analyticsService)
-                        it.request.set(bucket)
-                    }
-            }
+        // First remove all JVM res compiler compatible files to be consumed by the kotlin compiler.
+        val jvmRequests = requests.filter {
+            canCompileResourceInJvm(it.inputFile, it.isPngCrunching) && it.partialRFile == null
         }
+        requests.removeAll(jvmRequests)
+
+        // Split all requests into buckets, giving each worker the same number of files to process
+        var ord = 0
+        val jvmBuckets =
+            jvmRequests.groupByTo(HashMap(maxWorkersCount)) { (ord++) % maxWorkersCount }
+
+        jvmBuckets.values.forEach { bucket ->
+            workerExecutor.noIsolation()
+                .submit(ResourceCompilerRunnable::class.java) {
+                    it.initializeWith(projectName = projectName, taskOwner = taskOwner, analyticsService = analyticsService)
+                    it.request.set(bucket)
+                }
+        }
+
 
         // Sort the resource files by extension and size for a better distribution of files
         // between workers. Files of the same type will be distributed equally between the workers.

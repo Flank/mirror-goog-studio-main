@@ -25,6 +25,7 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.builder.model.AndroidProject
 import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth.assertThat
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 
@@ -116,6 +117,7 @@ class NamespacedAarTest {
 
     @get:Rule val project = GradleTestProject.builder().fromTestApp(testApp).create()
 
+    @Ignore("b/160949546")
     @Test
     fun checkBuilds() {
         project.executor()

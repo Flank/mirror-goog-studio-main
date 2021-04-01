@@ -23,6 +23,7 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import java.io.File
@@ -70,6 +71,7 @@ class PartialRTest {
     @get:Rule
     val project = GradleTestProject.builder().fromTestApp(testApp).create()
 
+    @Ignore("b/160949546")
     @Test
     fun checkBuilds() {
         project.executor()
