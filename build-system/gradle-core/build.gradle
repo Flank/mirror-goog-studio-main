@@ -148,7 +148,6 @@ dependencies {
     implementation libs.bouncycastle_pkix
     implementation libs.jaxb_runtime
     implementation libs.jopt
-    implementation libs.proguard
     implementation libs.bundle_tool
     implementation libs.jetifier_core
     implementation libs.jetifier_processor

@@ -88,7 +88,6 @@ kotlin_library(
         "//tools/base/third_party:com.sun.istack_istack-commons-runtime",
         "//tools/base/third_party:commons-io_commons-io",  # TODO: remove?
         "//tools/base/third_party:net.sf.jopt-simple_jopt-simple",
-        "//tools/base/third_party:net.sf.proguard_proguard-gradle",
         "//tools/base/third_party:org.apache.commons_commons-compress",  # TODO: remove?
         "//tools/base/third_party:org.apache.httpcomponents_httpmime",
         "//tools/base/third_party:org.bouncycastle_bcpkix-jdk15on",
