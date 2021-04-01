@@ -517,7 +517,7 @@ abstract class VariantInputs {
         val creationConfig = variantWithTests.main
         name.setDisallowChanges(creationConfig.name)
         this.checkDependencies.setDisallowChanges(checkDependencies)
-        minifiedEnabled.setDisallowChanges(creationConfig.codeShrinker != null)
+        minifiedEnabled.setDisallowChanges(creationConfig.minifiedEnabled)
         mainArtifact.initialize(
             creationConfig as ComponentImpl,
             checkDependencies,

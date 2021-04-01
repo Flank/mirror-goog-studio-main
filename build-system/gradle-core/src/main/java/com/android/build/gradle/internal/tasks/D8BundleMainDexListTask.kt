@@ -28,7 +28,6 @@ import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.SyncOptions
-import com.android.builder.model.CodeShrinker
 import com.android.builder.multidex.D8MainDexList
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
@@ -196,15 +195,13 @@ abstract class D8BundleMainDexListTask : NonIncrementalTask() {
             task.baseDexDirs.from(
                 creationConfig.artifacts.getAll(InternalMultipleArtifactType.DEX))
 
-            if (creationConfig.codeShrinker != CodeShrinker.PROGUARD) {
-                task.featureDexDirs.from(
-                    creationConfig.variantDependencies.getArtifactFileCollection(
-                        AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
-                        AndroidArtifacts.ArtifactScope.ALL,
-                        AndroidArtifacts.ArtifactType.FEATURE_PUBLISHED_DEX
-                    )
+            task.featureDexDirs.from(
+                creationConfig.variantDependencies.getArtifactFileCollection(
+                    AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
+                    AndroidArtifacts.ArtifactScope.ALL,
+                    AndroidArtifacts.ArtifactType.FEATURE_PUBLISHED_DEX
                 )
-            }
+            )
         }
     }
 }

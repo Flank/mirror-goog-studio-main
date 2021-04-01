@@ -324,7 +324,7 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
 
         taskFactory.register(
                 new LibraryAarJarsTask.CreationAction(
-                        libraryVariant, libraryVariant.getCodeShrinker()));
+                        libraryVariant, libraryVariant.getMinifiedEnabled()));
 
         // now add a task that will take all the native libs and package
         // them into the libs folder of the bundle. This processes both the PROJECT

@@ -220,7 +220,7 @@ public class VariantScopeImpl implements VariantScope {
     @Override
     public boolean consumesFeatureJars() {
         return variantDslInfo.getVariantType().isBaseModule()
-                && variantDslInfo.isMinifyEnabled()
+                && variantDslInfo.getPostProcessingOptions().codeShrinkerEnabled()
                 && globalScope.hasDynamicFeatures();
     }
 

@@ -44,10 +44,8 @@ import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.ProcessTestManifest;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.VariantType;
-import com.android.builder.model.CodeShrinker;
 import com.google.common.base.Preconditions;
 import java.util.List;
-import java.util.Objects;
 import org.gradle.api.Task;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
@@ -161,10 +159,8 @@ public class TestApplicationTaskManager
     @Override
     protected void maybeCreateJavaCodeShrinkerTask(
             @NonNull ConsumableCreationConfig creationConfig) {
-        final CodeShrinker codeShrinker = creationConfig.getCodeShrinker();
-        if (codeShrinker != null) {
-            doCreateJavaCodeShrinkerTask(
-                    creationConfig, Objects.requireNonNull(codeShrinker), true);
+        if (creationConfig.getMinifiedEnabled()) {
+            doCreateJavaCodeShrinkerTask(creationConfig, true);
         } else {
             TaskProvider<CheckTestedAppObfuscation> checkObfuscation =
                     taskFactory.register(

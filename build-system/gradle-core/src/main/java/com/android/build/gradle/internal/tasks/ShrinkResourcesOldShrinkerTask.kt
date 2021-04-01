@@ -31,7 +31,6 @@ import com.android.build.gradle.internal.workeractions.DecoratedWorkParameters
 import com.android.build.gradle.internal.workeractions.WorkActionAdapter
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.tasks.ResourceUsageAnalyzer
-import com.android.builder.model.CodeShrinker
 import com.android.utils.FileUtils
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.Directory
@@ -215,20 +214,14 @@ abstract class ShrinkResourcesOldShrinkerTask : NonIncrementalTask() {
             creationConfig.outputs.getEnabledVariantOutputs().forEach(task.variantOutputs::add)
             task.variantOutputs.disallowChanges()
 
-            // When R8 produces dex files, this task analyzes them. If R8 or Proguard produce
+            // When R8 produces dex files, this task analyzes them. If R8 produces
             // class files, this task will analyze those. That is why both types are specified.
             task.classes.from(
-                if (creationConfig.codeShrinker == CodeShrinker.PROGUARD) {
-                    creationConfig.artifacts.get(InternalArtifactType.SHRUNK_JAR)
-                } else {
-                    check(creationConfig.codeShrinker == CodeShrinker.R8)
-                    { "Unexpected shrinker type: ${creationConfig.codeShrinker}" }
                     if (creationConfig.variantType.isAar) {
                         creationConfig.artifacts.get(InternalArtifactType.SHRUNK_CLASSES)
                     } else {
                         artifacts.getAll(InternalMultipleArtifactType.DEX)
                     }
-                }
             )
         }
     }

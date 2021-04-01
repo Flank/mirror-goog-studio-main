@@ -131,7 +131,6 @@ import com.android.build.gradle.internal.tasks.OptimizeResourcesTask
 import com.android.build.gradle.internal.tasks.PackageForUnitTest
 import com.android.build.gradle.internal.tasks.PrepareLintJarForPublish
 import com.android.build.gradle.internal.tasks.ProcessJavaResTask
-import com.android.build.gradle.internal.tasks.ProguardTask
 import com.android.build.gradle.internal.tasks.R8Task
 import com.android.build.gradle.internal.tasks.RecalculateStackFramesTask
 import com.android.build.gradle.internal.tasks.ShrinkResourcesOldShrinkerTask
@@ -215,7 +214,6 @@ import com.android.builder.core.VariantType
 import com.android.builder.dexing.DexingType
 import com.android.builder.dexing.isLegacyMultiDexMode
 import com.android.builder.errors.IssueReporter
-import com.android.builder.model.CodeShrinker
 import com.android.utils.usLocaleCapitalize
 import com.google.common.base.MoreObjects
 import com.google.common.base.Preconditions
@@ -565,7 +563,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         taskFactory.register(
             LibraryAarJarsTask.CreationAction(
                 testFixturesComponent,
-                codeShrinker = null
+                minifyEnabled = false
             )
         )
 
@@ -2009,7 +2007,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         // ----- Minify next -----
         maybeCreateCheckDuplicateClassesTask(creationConfig)
         maybeCreateJavaCodeShrinkerTask(creationConfig)
-        if (creationConfig.codeShrinker == CodeShrinker.R8) {
+        if (creationConfig.minifiedEnabled) {
             maybeCreateResourcesShrinkerTasks(creationConfig)
             maybeCreateDesugarLibTask(creationConfig, false)
             return
@@ -2046,7 +2044,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             dexingType: DexingType,
             registeredLegacyTransforms: Boolean) {
         val java8SLangSupport = creationConfig.getJava8LangSupportType()
-        val minified = creationConfig.codeShrinker != null
         val supportsDesugaring = (java8SLangSupport == VariantScope.Java8LangSupport.UNUSED
                 || (java8SLangSupport == VariantScope.Java8LangSupport.D8
                 && creationConfig
@@ -2056,7 +2053,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                 .services
                 .projectOptions[BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM]
                 && !registeredLegacyTransforms
-                && !minified
                 && supportsDesugaring)
         taskFactory.register(
                 DexArchiveBuilderTask.CreationAction(enableDexingArtifactTransform, creationConfig))
@@ -2108,7 +2104,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                     dexingUsingArtifactTransforms,
                     separateFileDependenciesDexingTask)
             taskFactory.register(configAction)
-        } else if (creationConfig.codeShrinker != null) {
+        } else if (creationConfig.minifiedEnabled) {
             val configAction = DexMergingTask.CreationAction(
                     creationConfig,
                     DexMergingAction.MERGE_ALL,
@@ -2521,8 +2517,9 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
 
     protected open fun maybeCreateJavaCodeShrinkerTask(
             creationConfig: ConsumableCreationConfig) {
-        val codeShrinker = creationConfig.codeShrinker
-        codeShrinker?.let { doCreateJavaCodeShrinkerTask(creationConfig, it) }
+        if (creationConfig.minifiedEnabled) {
+            doCreateJavaCodeShrinkerTask(creationConfig)
+        }
     }
 
     /**
@@ -2531,35 +2528,19 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
      */
     protected fun doCreateJavaCodeShrinkerTask(
             creationConfig: ConsumableCreationConfig,
-            codeShrinker: CodeShrinker,
             isTestApplication: Boolean = false) {
         // The compile R class jar is added to the classes to be processed in libraries so that
         // proguard can shrink an empty library project, as the R class is always kept and
         // then removed by library jar transforms.
         val addCompileRClass = (this is LibraryTaskManager
                 && creationConfig.buildFeatures.androidResources)
-        val task: TaskProvider<out Task>
-        task = when (codeShrinker) {
-            CodeShrinker.PROGUARD -> createProguardTask(creationConfig,
-                    isTestApplication,
-                    addCompileRClass)
-            CodeShrinker.R8 -> createR8Task(creationConfig, isTestApplication, addCompileRClass)
-            else -> throw AssertionError("Unknown value $codeShrinker")
-        }
+        val task: TaskProvider<out Task> =
+                createR8Task(creationConfig, isTestApplication, addCompileRClass)
         if (creationConfig.variantScope.postprocessingFeatures != null) {
             val checkFilesTask =
                     taskFactory.register(CheckProguardFiles.CreationAction(creationConfig))
             task.dependsOn(checkFilesTask)
         }
-    }
-
-    private fun createProguardTask(
-            creationConfig: ConsumableCreationConfig,
-            isTestApplication: Boolean,
-            addCompileRClass: Boolean): TaskProvider<ProguardTask> {
-        return taskFactory.register(
-                ProguardTask.CreationAction(
-                        creationConfig, isTestApplication, addCompileRClass))
     }
 
     private fun createR8Task(
@@ -3240,7 +3221,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
 
         private fun generatesProguardOutputFile(creationConfig: ComponentCreationConfig): Boolean {
             return ((creationConfig is ConsumableCreationConfig
-                    && creationConfig.codeShrinker != null)
+                    && creationConfig.minifiedEnabled)
                     || creationConfig.variantType.isDynamicFeature)
         }
 

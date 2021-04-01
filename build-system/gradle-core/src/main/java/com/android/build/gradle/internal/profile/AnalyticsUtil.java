@@ -31,7 +31,6 @@ import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
-import com.android.builder.model.CodeShrinker;
 import com.android.builder.model.TestOptions;
 import com.android.resources.Density;
 import com.android.tools.analytics.CommonMetricsData;
@@ -195,17 +194,6 @@ public class AnalyticsUtil {
                 throw new IllegalArgumentException("Unexpected type " + type);
         }
         throw new AssertionError("Unrecognized type " + type);
-    }
-
-    @NonNull
-    public static GradleBuildVariant.CodeShrinkerTool toProto(@NonNull CodeShrinker codeShrinker) {
-        switch (codeShrinker) {
-            case PROGUARD:
-                return GradleBuildVariant.CodeShrinkerTool.PROGUARD;
-            case R8:
-                return GradleBuildVariant.CodeShrinkerTool.R8;
-        }
-        throw new AssertionError("Unrecognized type " + codeShrinker);
     }
 
     @NonNull

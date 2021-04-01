@@ -950,7 +950,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                     it
                         .setIsDebug(buildType.isDebuggable)
                         .setMinSdkVersion(AnalyticsUtil.toProto(variantInfo.variant.minSdkVersion))
-                        .setMinifyEnabled(variant.codeShrinker != null)
+                        .setMinifyEnabled(variant.minifiedEnabled)
                         .setUseMultidex(variant.isMultiDexEnabled)
                         .setUseLegacyMultidex(variant.dexingType.isLegacyMultiDexMode())
                         .setVariantType(variant.variantType.analyticsVariantType)
@@ -959,8 +959,9 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                         .setCoreLibraryDesugaringEnabled(variant.isCoreLibraryDesugaringEnabled)
                         .testExecution = AnalyticsUtil.toProto(globalScope.extension.testOptions.getExecutionEnum())
 
-                    variant.codeShrinker?.let { codeShrinker ->
-                        variantAnalytics.codeShrinker = AnalyticsUtil.toProto(codeShrinker)
+                    if (variant.minifiedEnabled) {
+                        // If code shrinker is used, it can only be R8
+                        variantAnalytics.codeShrinker = GradleBuildVariant.CodeShrinkerTool.R8
                     }
                     if (variantDslInfo.targetSdkVersion.apiLevel > 0) {
                         variantAnalytics.targetSdkVersion =
@@ -1038,8 +1039,6 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
     }
 
     companion object {
-
-        val SHRINKER_ATTR: Attribute<String> = Attribute.of("codeShrinker", String::class.java)
 
         /**
          * Returns a modified name.
