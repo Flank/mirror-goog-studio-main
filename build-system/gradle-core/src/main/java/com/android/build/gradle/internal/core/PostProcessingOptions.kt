@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.core
 
 import com.android.build.gradle.internal.PostprocessingFeatures
 import com.android.build.gradle.internal.ProguardFilesProvider
-import com.android.builder.model.CodeShrinker
 import java.io.File
 
 /**
@@ -30,7 +29,7 @@ interface PostProcessingOptions : ProguardFilesProvider {
 
     fun getPostprocessingFeatures(): PostprocessingFeatures?
 
-    fun getCodeShrinker(): CodeShrinker?
+    fun codeShrinkerEnabled(): Boolean
 
     fun resourcesShrinkingEnabled(): Boolean
 }

@@ -36,8 +36,6 @@ interface ApkCreationConfig: ConsumableCreationConfig {
     // TODO: move to a non variant object (GlobalTaskScope?)
     val testOnlyApk: Boolean
 
-    val minifiedEnabled: Boolean
-
     /** If this variant should package desugar_lib DEX in the final APK. */
     val shouldPackageDesugarLibDex: Boolean
 

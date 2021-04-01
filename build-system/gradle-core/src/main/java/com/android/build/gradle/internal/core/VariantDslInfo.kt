@@ -306,8 +306,6 @@ interface VariantDslInfo {
     @Deprecated("Can be removed once the AaptOptions crunch method is removed.")
     val isCrunchPngsDefault: Boolean
 
-    val isMinifyEnabled: Boolean
-
     val isRenderscriptDebuggable: Boolean
 
     val isJniDebuggable: Boolean

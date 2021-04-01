@@ -67,7 +67,6 @@ import com.android.builder.compiling.BuildConfigType
 import com.android.builder.core.VariantType
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.errors.IssueReporter
-import com.android.builder.model.CodeShrinker
 import com.android.utils.FileUtils
 import com.android.utils.appendCapitalized
 import com.google.common.base.Preconditions
@@ -266,7 +265,7 @@ abstract class ComponentImpl(
                 .reportError(IssueReporter.Type.GENERIC, "Resource shrinker cannot be used for libraries.")
             return false
         }
-        if (codeShrinker == null) {
+        if (!variantDslInfo.getPostProcessingOptions().codeShrinkerEnabled()) {
             globalScope
                 .dslServices
                 .issueReporter
@@ -279,9 +278,6 @@ abstract class ComponentImpl(
         }
         return true
     }
-
-    open val codeShrinker: CodeShrinker?
-        get() = null
 
     // ---------------------------------------------------------------------------------------------
     // Private stuff

@@ -46,7 +46,6 @@ import com.android.builder.errors.IssueReporter
 import com.android.builder.model.ApiVersion
 import com.android.builder.model.BaseConfig
 import com.android.builder.model.ClassField
-import com.android.builder.model.CodeShrinker
 import com.android.builder.model.VectorDrawablesOptions
 import com.android.sdklib.AndroidVersion
 import com.android.utils.combineAsCamelCase
@@ -991,10 +990,7 @@ open class VariantDslInfoImpl internal constructor(
 
                 override fun getPostprocessingFeatures(): PostprocessingFeatures? = null
 
-                override fun getCodeShrinker() = when {
-                    !buildTypeObj.isMinifyEnabled -> null
-                    else -> CodeShrinker.R8
-                }
+                override fun codeShrinkerEnabled() = buildTypeObj.isMinifyEnabled
 
                 override fun resourcesShrinkingEnabled(): Boolean = buildTypeObj.isShrinkResources
             }
@@ -1099,9 +1095,6 @@ open class VariantDslInfoImpl internal constructor(
     @Suppress("OverridingDeprecatedMember", "DEPRECATION")
     override val isCrunchPngsDefault: Boolean
         get() = buildTypeObj.isCrunchPngsDefault
-
-    override val isMinifyEnabled: Boolean
-        get() = buildTypeObj.isMinifyEnabled
 
     override val isRenderscriptDebuggable: Boolean
         get() = buildTypeObj.isRenderscriptDebuggable

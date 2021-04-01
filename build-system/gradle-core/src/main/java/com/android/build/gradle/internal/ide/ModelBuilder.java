@@ -93,6 +93,7 @@ import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ArtifactMetaData;
 import com.android.builder.model.BaseArtifact;
 import com.android.builder.model.BuildTypeContainer;
+import com.android.builder.model.CodeShrinker;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.DependenciesInfo;
 import com.android.builder.model.InstantRun;
@@ -947,6 +948,13 @@ public class ModelBuilder<Extension extends BaseExtension>
 
         MutableTaskContainer taskContainer = component.getTaskContainer();
         ArtifactsImpl artifacts = component.getArtifacts();
+        final CodeShrinker codeShrinker;
+        if (component instanceof ConsumableCreationConfig
+                && ((ConsumableCreationConfig) component).getMinifiedEnabled()) {
+            codeShrinker = CodeShrinker.R8;
+        } else {
+            codeShrinker = null;
+        }
 
         return new AndroidArtifactImpl(
                 name,
@@ -979,9 +987,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                 artifacts.get(InternalArtifactType.BUNDLE_IDE_MODEL.INSTANCE).getOrNull(),
                 ExtractApksTask.Companion.getTaskName(component),
                 artifacts.get(InternalArtifactType.APK_FROM_BUNDLE_IDE_MODEL.INSTANCE).getOrNull(),
-                component instanceof ConsumableCreationConfig
-                        ? ((ConsumableCreationConfig) component).getCodeShrinker()
-                        : null);
+                codeShrinker);
     }
 
     private void validateMinSdkVersion(@NonNull ManifestAttributeSupplier supplier) {

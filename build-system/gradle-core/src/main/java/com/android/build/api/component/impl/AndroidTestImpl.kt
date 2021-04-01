@@ -42,7 +42,6 @@ import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.build.gradle.options.IntegerOption
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import com.android.builder.dexing.DexingType
-import com.android.builder.model.CodeShrinker
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
@@ -141,7 +140,12 @@ open class AndroidTestImpl @Inject constructor(
     }
 
     override val minifiedEnabled: Boolean
-        get() = variantDslInfo.isMinifyEnabled
+        get() {
+            return when {
+                testedConfig.variantType.isAar -> false
+                else -> variantDslInfo.getPostProcessingOptions().codeShrinkerEnabled()
+            }
+        }
 
     override val instrumentationRunner: Property<String> =
         internalServices.propertyOf(
@@ -276,9 +280,6 @@ open class AndroidTestImpl @Inject constructor(
     override val shouldPackageProfilerDependencies: Boolean = false
 
     override val advancedProfilingTransforms: List<String> = emptyList()
-
-    override val codeShrinker: CodeShrinker?
-        get() = delegate.getCodeShrinker()
 
     override fun getNeedsMergedJavaResStream(): Boolean =
         delegate.getNeedsMergedJavaResStream()

@@ -73,6 +73,7 @@ import com.android.builder.model.SyncIssue
 import com.android.builder.model.v2.ide.AndroidGradlePluginProjectFlags.BooleanFlag
 import com.android.builder.model.v2.ide.ArtifactDependencies
 import com.android.builder.model.v2.ide.BundleInfo
+import com.android.builder.model.v2.ide.CodeShrinker
 import com.android.builder.model.v2.ide.JavaArtifact
 import com.android.builder.model.v2.ide.ProjectType
 import com.android.builder.model.v2.ide.SourceSetContainer
@@ -504,7 +505,9 @@ class ModelBuilder<
             abiFilters = variantDslInfo.supportedAbis,
             testInfo = testInfo,
             bundleInfo = getBundleInfo(component),
-            codeShrinker = if (component is ConsumableCreationConfig) component.codeShrinker?.convert() else null,
+            codeShrinker = CodeShrinker.R8.takeIf {
+                component is ConsumableCreationConfig && component.minifiedEnabled
+            },
 
             assembleTaskName = taskContainer.assembleTask.name,
             compileTaskName = taskContainer.compileTask.name,

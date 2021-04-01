@@ -24,11 +24,9 @@ import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
-import com.android.build.gradle.options.OptionalBooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.dexing.DexingType
 import com.android.builder.errors.IssueReporter
-import com.android.builder.model.CodeShrinker
 
 /**
  * This class and subclasses are implementing methods defined in the CreationConfig
@@ -63,24 +61,12 @@ open class ConsumableCreationConfigImpl(
             DexingType.MONO_DEX
         }
 
-    open fun getCodeShrinker(): CodeShrinker? {
-        val codeShrinker: CodeShrinker = variantDslInfo.getPostProcessingOptions().getCodeShrinker() ?: return null
-        val enableR8 = projectOptions[OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8]
-        return if (enableR8 == null) {
-                codeShrinker
-            } else if (enableR8) {
-                CodeShrinker.R8
-            } else {
-                CodeShrinker.PROGUARD
-            }
-    }
-
     open fun getNeedsMergedJavaResStream(): Boolean {
         // We need to create a stream from the merged java resources if we're in a library module,
         // or if we're in an app/feature module which uses the transform pipeline.
         return (variantDslInfo.variantType.isAar
-                || !globalScope.extension.transforms.isEmpty()
-                || getCodeShrinker() != null)
+                || globalScope.extension.transforms.isNotEmpty()
+                || config.minifiedEnabled)
     }
 
     open fun getJava8LangSupportType(): VariantScope.Java8LangSupport {
@@ -94,12 +80,11 @@ open class ConsumableCreationConfigImpl(
         if (config.services.projectInfo.getProject().plugins.hasPlugin("me.tatarka.retrolambda")) {
             return VariantScope.Java8LangSupport.RETROLAMBDA
         }
-        val shrinker = getCodeShrinker()
-        if (shrinker == CodeShrinker.R8) {
-            return VariantScope.Java8LangSupport.R8
+        return if (config.minifiedEnabled) {
+            VariantScope.Java8LangSupport.R8
         } else {
             // D8 cannot be used if R8 is used
-            return VariantScope.Java8LangSupport.D8
+            VariantScope.Java8LangSupport.D8
         }
     }
 

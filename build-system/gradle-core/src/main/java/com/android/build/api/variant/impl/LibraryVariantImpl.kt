@@ -44,7 +44,6 @@ import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.builder.dexing.DexingType
-import com.android.builder.model.CodeShrinker
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.provider.Provider
 import javax.inject.Inject
@@ -145,8 +144,8 @@ open class  LibraryVariantImpl @Inject constructor(
             ) as T
         }
 
-    override val codeShrinker: CodeShrinker?
-        get() = delegate.getCodeShrinker()
+    override val minifiedEnabled: Boolean
+        get() = variantDslInfo.getPostProcessingOptions().codeShrinkerEnabled()
 
     override fun getNeedsMergedJavaResStream(): Boolean = delegate.getNeedsMergedJavaResStream()
 

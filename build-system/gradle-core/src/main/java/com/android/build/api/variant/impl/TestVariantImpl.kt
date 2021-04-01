@@ -46,7 +46,6 @@ import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.build.gradle.options.IntegerOption
 import com.android.builder.dexing.DexingType
-import com.android.builder.model.CodeShrinker
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.ListProperty
@@ -107,7 +106,7 @@ open class TestVariantImpl @Inject constructor(
     override val testedApplicationId: Provider<String> = calculateTestedApplicationId(variantDependencies)
 
     override val minifiedEnabled: Boolean
-        get() = variantDslInfo.isMinifyEnabled
+        get() = variantDslInfo.getPostProcessingOptions().codeShrinkerEnabled()
 
     override val instrumentationRunner: Property<String> =
         internalServices.propertyOf(String::class.java, variantDslInfo.getInstrumentationRunner(dexingType))
@@ -232,9 +231,6 @@ open class TestVariantImpl @Inject constructor(
 
     override val minSdkVersionWithTargetDeviceApi: AndroidVersion
         get() = delegate.minSdkVersionWithTargetDeviceApi
-
-    override val codeShrinker: CodeShrinker?
-        get() = delegate.getCodeShrinker()
 
     override fun getNeedsMergedJavaResStream(): Boolean = delegate.getNeedsMergedJavaResStream()
 

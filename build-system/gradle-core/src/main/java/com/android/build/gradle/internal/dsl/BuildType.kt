@@ -28,7 +28,6 @@ import com.android.builder.core.BuilderConstants
 import com.android.builder.errors.IssueReporter
 import com.android.builder.internal.ClassFieldImpl
 import com.android.builder.model.BaseConfig
-import com.android.builder.model.CodeShrinker
 import com.google.common.collect.Iterables
 import org.gradle.api.Action
 import org.gradle.api.Incubating
