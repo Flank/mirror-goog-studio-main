@@ -30,6 +30,7 @@ import static org.gradle.api.attributes.Bundling.BUNDLING_ATTRIBUTE;
 import static org.gradle.api.attributes.Bundling.EXTERNAL;
 import static org.gradle.api.attributes.Category.CATEGORY_ATTRIBUTE;
 import static org.gradle.api.attributes.LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE;
+import static org.gradle.api.attributes.java.TargetJvmEnvironment.TARGET_JVM_ENVIRONMENT_ATTRIBUTE;
 import static org.gradle.internal.component.external.model.TestFixturesSupport.TEST_FIXTURES_FEATURE_NAME;
 
 import com.android.annotations.NonNull;
@@ -70,6 +71,7 @@ import org.gradle.api.attributes.Bundling;
 import org.gradle.api.attributes.Category;
 import org.gradle.api.attributes.LibraryElements;
 import org.gradle.api.attributes.Usage;
+import org.gradle.api.attributes.java.TargetJvmEnvironment;
 import org.gradle.api.capabilities.Capability;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.Provider;
@@ -204,6 +206,8 @@ public class VariantDependenciesBuilder {
         final Usage apiUsage = factory.named(Usage.class, Usage.JAVA_API);
         final Usage runtimeUsage = factory.named(Usage.class, Usage.JAVA_RUNTIME);
         final Usage reverseMetadataUsage = factory.named(Usage.class, "android-reverse-meta-data");
+        final TargetJvmEnvironment jvmEnvironment =
+                factory.named(TargetJvmEnvironment.class, TargetJvmEnvironment.ANDROID);
 
         String variantName = variantDslInfo.getComponentIdentity().getName();
         VariantType variantType = variantDslInfo.getVariantType();
@@ -252,6 +256,7 @@ public class VariantDependenciesBuilder {
         final AttributeContainer compileAttributes = compileClasspath.getAttributes();
         applyVariantAttributes(compileAttributes, buildType, consumptionFlavorMap);
         compileAttributes.attribute(Usage.USAGE_ATTRIBUTE, apiUsage);
+        compileAttributes.attribute(TARGET_JVM_ENVIRONMENT_ATTRIBUTE, jvmEnvironment);
 
         Configuration annotationProcessor =
                 configurations.maybeCreate(variantName + "AnnotationProcessorClasspath");
@@ -292,6 +297,7 @@ public class VariantDependenciesBuilder {
         final AttributeContainer runtimeAttributes = runtimeClasspath.getAttributes();
         applyVariantAttributes(runtimeAttributes, buildType, consumptionFlavorMap);
         runtimeAttributes.attribute(Usage.USAGE_ATTRIBUTE, runtimeUsage);
+        runtimeAttributes.attribute(TARGET_JVM_ENVIRONMENT_ATTRIBUTE, jvmEnvironment);
 
         if (projectOptions.get(BooleanOption.USE_DEPENDENCY_CONSTRAINTS)) {
             Provider<StringCachingBuildService> stringCachingService =
