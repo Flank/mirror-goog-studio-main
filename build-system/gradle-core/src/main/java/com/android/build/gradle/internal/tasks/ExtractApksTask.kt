@@ -30,6 +30,7 @@ import com.android.build.gradle.options.StringOption
 import com.android.bundle.Devices.DeviceSpec
 import com.android.tools.build.bundletool.commands.ExtractApksCommand
 import com.android.utils.FileUtils
+import com.google.gson.stream.JsonReader
 import com.google.protobuf.util.JsonFormat
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
@@ -44,6 +45,7 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
+import java.io.FileReader
 import java.nio.file.Files
 
 /**
@@ -86,6 +88,9 @@ abstract class ExtractApksTask : NonIncrementalTask() {
     var extractInstant = false
         private set
 
+    @get:Input
+    abstract val setIncludeMetadata: Property<Boolean>
+
     override fun doTaskAction() {
         workerExecutor.noIsolation().submit(BundleToolRunnable::class.java) {
             it.initializeFromAndroidVariantTask(this)
@@ -100,6 +105,7 @@ abstract class ExtractApksTask : NonIncrementalTask() {
             it.applicationId.set(applicationId)
             it.variantName.set(variantName)
             it.optionalListOfDynamicModulesToInstall.set(dynamicModulesToInstall.orElse(listOf()))
+            it.setIncludeMetadata.set(setIncludeMetadata)
         }
     }
 
@@ -112,6 +118,7 @@ abstract class ExtractApksTask : NonIncrementalTask() {
         abstract val applicationId: Property<String>
         abstract val variantName: Property<String>
         abstract val optionalListOfDynamicModulesToInstall: ListProperty<String>
+        abstract val setIncludeMetadata: Property<Boolean>
     }
 
     abstract class BundleToolRunnable : ProfileAwareWorkAction<Params>() {
@@ -119,6 +126,7 @@ abstract class ExtractApksTask : NonIncrementalTask() {
             FileUtils.cleanOutputDir(parameters.outputDir.asFile.get())
 
             val builder: DeviceSpec.Builder = DeviceSpec.newBuilder()
+            val elementList = mutableListOf<BuiltArtifactImpl>()
 
             Files.newBufferedReader(parameters.deviceConfig.get().toPath(), Charsets.UTF_8).use {
                 JsonFormat.parser().merge(it, builder)
@@ -131,21 +139,56 @@ abstract class ExtractApksTask : NonIncrementalTask() {
                 .setOutputDirectory(parameters.outputDir.asFile.get().toPath())
                 .setInstant(parameters.extractInstant.get())
                 .also {
-                    if (parameters.optionalListOfDynamicModulesToInstall.get().isNotEmpty())
+                    if (parameters.optionalListOfDynamicModulesToInstall.get().isNotEmpty()) {
                         it.setModules(
-                            parameters.optionalListOfDynamicModulesToInstall.get().toImmutableSet()
+                                parameters.optionalListOfDynamicModulesToInstall.get().toImmutableSet()
                         )
+                        it.setIncludeMetadata(parameters.setIncludeMetadata.get())
+                    }
+
                 }
 
             command.build().execute()
+
+            if (parameters.setIncludeMetadata.get()) {
+                val metadataJson = parameters.outputDir.file("metadata.json").get().asFile
+                val fileReader = FileReader(metadataJson)
+                val reader = JsonReader(fileReader)
+                val deliveryTypeMap = mutableMapOf<String, String>()
+                var path = ""
+                reader.beginObject()
+                reader.nextName()
+                reader.beginArray()
+                while (reader.hasNext()) {
+                    reader.beginObject()
+                    while (reader.hasNext()) {
+                        when (reader.nextName()) {
+                            "moduleName" -> reader.nextString()
+                            "path" -> path = reader.nextString()
+                            "deliveryType" -> deliveryTypeMap[path] = reader.nextString()
+                        }
+                    }
+                    reader.endObject()
+                }
+                reader.endArray()
+                reader.endObject()
+                deliveryTypeMap.forEach { elementList.add(BuiltArtifactImpl.make(outputFile = parameters.outputDir.asFile.get().absolutePath + "/" + it.key,
+                        attributes = mapOf("deliveryType" to it.value))) }
+
+                fileReader.close()
+                FileUtils.deleteIfExists(metadataJson)
+            }
 
             BuiltArtifactsImpl(
                 artifactType = InternalArtifactType.EXTRACTED_APKS,
                 applicationId = parameters.applicationId.get(),
                 variantName = parameters.variantName.get(),
-                elements = listOf(
-                    BuiltArtifactImpl.make(outputFile = parameters.outputDir.asFile.get().absolutePath)
-                )
+                elements = if (elementList.isEmpty()) {
+                    parameters.outputDir.asFileTree.files.forEach { elementList.add(BuiltArtifactImpl.make(outputFile = it.absolutePath)) }
+                    elementList
+                }
+            else elementList
+
             ).saveToFile(parameters.apksFromBundleIdeModel.asFile.get())
         }
     }
@@ -199,6 +242,7 @@ abstract class ExtractApksTask : NonIncrementalTask() {
                     optionalListOfDynamicModulesToInstall.split(','))
             }
             task.dynamicModulesToInstall.disallowChanges()
+            task.setIncludeMetadata.setDisallowChanges(creationConfig.services.projectOptions[BooleanOption.ENABLE_LOCAL_TESTING])
         }
     }
 }

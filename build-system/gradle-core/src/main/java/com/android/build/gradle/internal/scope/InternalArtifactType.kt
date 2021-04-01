@@ -378,7 +378,7 @@ InternalArtifactType<T : FileSystemLocation>(
     // APK Set archive with APKs generated from a bundle.
     object APKS_FROM_BUNDLE: InternalArtifactType<RegularFile>(FILE), Replaceable
     // output of ExtractApks applied to APKS_FROM_BUNDLE and a device config.
-    object EXTRACTED_APKS: InternalArtifactType<Directory>(DIRECTORY), Replaceable
+    object EXTRACTED_APKS: InternalArtifactType<Directory>(DIRECTORY), Replaceable, ContainsMany
     // Universal APK from the bundle
     object UNIVERSAL_APK: InternalArtifactType<RegularFile>(FILE, Category.OUTPUTS)
     // The manifest meant to be consumed by the bundle.
