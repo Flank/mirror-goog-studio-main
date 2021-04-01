@@ -118,6 +118,11 @@ class ResourcesOverridingTest(private val precompileDependenciesResources: Boole
                 "res/raw/shared_between_local_and_published_lib",
                 "fromLocalLib"
             )
+        assertThatApk(project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG))
+            .containsFileWithContent(
+                "res/raw/shared_between_app_and_local_lib",
+                "fromApp"
+            )
     }
 
     /**
@@ -153,6 +158,11 @@ class ResourcesOverridingTest(private val precompileDependenciesResources: Boole
             .containsFileWithContent(
                 "res/raw/shared_between_local_and_published_lib",
                 "fromLocalLib"
+            )
+        assertThatApk(project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG))
+            .containsFileWithContent(
+                "res/raw/shared_between_app_and_local_lib",
+                "fromApp"
             )
     }
 

@@ -46,7 +46,7 @@ import com.android.build.gradle.internal.services.Aapt2Input;
 import com.android.build.gradle.internal.services.Aapt2ThreadPoolBuildService;
 import com.android.build.gradle.internal.services.BuildServicesKt;
 import com.android.build.gradle.internal.tasks.Blocks;
-import com.android.build.gradle.internal.tasks.NewIncrementalTask;
+import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.utils.HasConfigurableValuesKt;
@@ -57,6 +57,7 @@ import com.android.builder.model.VectorDrawablesOptions;
 import com.android.builder.png.VectorDrawableRenderer;
 import com.android.ide.common.blame.MergingLog;
 import com.android.ide.common.resources.CopyToOutputDirectoryResourceCompilationService;
+import com.android.ide.common.resources.FileStatus;
 import com.android.ide.common.resources.FileValidity;
 import com.android.ide.common.resources.GeneratedResourceSet;
 import com.android.ide.common.resources.MergedResourceWriter;
@@ -86,14 +87,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Spliterator;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 import javax.xml.bind.JAXBException;
 import org.gradle.api.GradleException;
 import org.gradle.api.artifacts.ArtifactCollection;
-import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.RegularFileProperty;
@@ -101,22 +99,16 @@ import org.gradle.api.provider.Property;
 import org.gradle.api.provider.SetProperty;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.OutputFile;
-import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskProvider;
-import org.gradle.work.ChangeType;
-import org.gradle.work.FileChange;
-import org.gradle.work.Incremental;
-import org.gradle.work.InputChanges;
 
 @CacheableTask
-public abstract class MergeResources extends NewIncrementalTask {
+public abstract class MergeResources extends IncrementalTask {
     // ----- PUBLIC TASK API -----
 
     /** Directory to write the merged resources to */
@@ -193,28 +185,6 @@ public abstract class MergeResources extends NewIncrementalTask {
     @Nested
     public abstract Aapt2Input getAapt2();
 
-    // TODO(141301405): when we compile resources AAPT2 stores the absolute path of the raw
-    // resource in the proto (.flat) file, so we need to mark those inputs with absolute
-    // path sensitivity (e.g. big merge in app). Otherwise just using the relative path
-    // sensitivity is enough (e.g. merges in libraries).
-    @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
-    @Incremental
-    public abstract ConfigurableFileCollection getRawLocalResourcesNoProcessRes();
-
-    @InputFiles
-    @PathSensitive(PathSensitivity.ABSOLUTE)
-    @Incremental
-    public abstract ConfigurableFileCollection getRawLocalResourcesProcessRes();
-
-    @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
-    public abstract ConfigurableFileCollection getLibrarySourceSets();
-
-    @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
-    public abstract ConfigurableFileCollection getExtraGeneratedResDir();
-
     @NonNull
     private static ResourceCompilationService getResourceProcessor(
             @NonNull MergeResources mergeResourcesTask,
@@ -241,6 +211,11 @@ public abstract class MergeResources extends NewIncrementalTask {
                 aapt2Input);
     }
 
+    @Override
+    protected boolean getIncremental() {
+        return true;
+    }
+
     @Internal
     @NonNull
     public WorkerExecutorFacade getAaptWorkerFacade() {
@@ -258,8 +233,9 @@ public abstract class MergeResources extends NewIncrementalTask {
     public abstract Property<String> getAaptEnv();
 
     @Internal
-    public abstract DirectoryProperty getProjectRootDir();
+    public abstract RegularFileProperty getProjectRootDir();
 
+    @Override
     protected void doFullTaskAction() throws IOException, JAXBException {
         ResourcePreprocessor preprocessor = getPreprocessor();
 
@@ -319,7 +295,7 @@ public abstract class MergeResources extends NewIncrementalTask {
                                     mergingLog,
                                     preprocessor,
                                     resourceCompiler,
-                                    getIncrementalFolder().get().getAsFile(),
+                                    getIncrementalFolder(),
                                     dataBindingLayoutProcessor,
                                     mergedNotCompiledResourcesOutputDirectory,
                                     getPseudoLocalesEnabled().get(),
@@ -347,9 +323,7 @@ public abstract class MergeResources extends NewIncrementalTask {
                     getPath(),
                     GradleBuildProfileSpan.ExecutionType.TASK_EXECUTION_PHASE_4,
                     getAnalyticsService().get(),
-                    () ->
-                            merger.writeBlobTo(
-                                    getIncrementalFolder().get().getAsFile(), writer, false));
+                    () -> merger.writeBlobTo(getIncrementalFolder(), writer, false));
 
         } catch (Exception e) {
             MergingException.findAndReportMergingException(
@@ -357,7 +331,7 @@ public abstract class MergeResources extends NewIncrementalTask {
             try {
                 throw e;
             } catch (MergingException mergingException) {
-                merger.cleanBlob(getIncrementalFolder().get().getAsFile());
+                merger.cleanBlob(getIncrementalFolder());
                 throw new ResourceException(mergingException.getMessage(), mergingException);
             }
         } finally {
@@ -370,7 +344,7 @@ public abstract class MergeResources extends NewIncrementalTask {
      * resources task, if it is then it should be ignored.
      */
     private boolean isFilteredOutLibraryResource(File changedFile) {
-        FileCollection localLibraryResources = getLibrarySourceSets();
+        FileCollection localLibraryResources = getSourceSetInputs().getLibrarySourceSets();
         File parentFile = changedFile.getParentFile();
         if (parentFile.getName().startsWith(FD_RES_VALUES)) {
             return false;
@@ -384,52 +358,30 @@ public abstract class MergeResources extends NewIncrementalTask {
     }
 
     @Override
-    public void doTaskAction(@NonNull InputChanges changedInputs) {
-        if (!changedInputs.isIncremental()) {
-            try {
-                doFullTaskAction();
-            } catch (IOException | JAXBException e) {
-                throw new RuntimeException(e);
-            }
-            return;
-        }
-
+    protected void doIncrementalTaskAction(@NonNull Map<File, ? extends FileStatus> changedInputs)
+            throws IOException, JAXBException {
         ResourcePreprocessor preprocessor = getPreprocessor();
 
-        ConfigurableFileCollection rawLocalResources =
-                processResources
-                        ? getRawLocalResourcesProcessRes()
-                        : getRawLocalResourcesNoProcessRes();
-        Spliterator<FileChange> changeIterator =
-                changedInputs.getFileChanges(rawLocalResources).spliterator();
-
-        Map<File, ChangeType> changes =
-                StreamSupport.stream(changeIterator, true)
-                        .collect(
-                                Collectors.toMap(
-                                        FileChange::getFile,
-                                        FileChange::getChangeType,
-                                        (a, b) -> b));
         // create a merger and load the known state.
         ResourceMerger merger = new ResourceMerger(getMinSdk().get());
         try {
             if (!merger.loadFromBlob(
-                    getIncrementalFolder().get().getAsFile(),
-                    true /*incrementalState*/,
-                    getAaptEnv().getOrNull())) {
+                    getIncrementalFolder(), true /*incrementalState*/, getAaptEnv().getOrNull())) {
                 doFullTaskAction();
                 return;
             }
 
             if (precompileDependenciesResources) {
-                changes =
-                        changes.entrySet().stream()
+                changedInputs =
+                        changedInputs
+                                .entrySet()
+                                .stream()
                                 .filter(
                                         fileEntry ->
                                                 !isFilteredOutLibraryResource(fileEntry.getKey()))
                                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
-                if (changes.isEmpty()) {
+                if (changedInputs.isEmpty()) {
                     return;
                 }
             }
@@ -453,7 +405,7 @@ public abstract class MergeResources extends NewIncrementalTask {
             // The incremental process is the following:
             // Loop on all the changed files, find which ResourceSet it belongs to, then ask
             // the resource set to update itself with the new file.
-            for (Map.Entry<File, ? extends ChangeType> entry : changes.entrySet()) {
+            for (Map.Entry<File, ? extends FileStatus> entry : changedInputs.entrySet()) {
                 File changedFile = entry.getKey();
 
                 merger.findDataSetContaining(changedFile, fileValidity);
@@ -466,7 +418,7 @@ public abstract class MergeResources extends NewIncrementalTask {
                             .updateWith(
                                     fileValidity.getSourceFile(),
                                     changedFile,
-                                    IncrementalChangesUtils.toSerializable(entry.getValue()),
+                                    entry.getValue(),
                                     new LoggerWrapper(getLogger()))) {
                         getLogger().info(
                                 String.format("Failed to process %s event! Full task run",
@@ -507,7 +459,7 @@ public abstract class MergeResources extends NewIncrementalTask {
                                         mergingLog,
                                         preprocessor,
                                         resourceCompiler,
-                                        getIncrementalFolder().get().getAsFile(),
+                                        getIncrementalFolder(),
                                         dataBindingLayoutProcessor,
                                         mergedNotCompiledResourcesOutputDirectory,
                                         getPseudoLocalesEnabled().get(),
@@ -521,7 +473,7 @@ public abstract class MergeResources extends NewIncrementalTask {
                 }
 
                 // No exception? Write the known state.
-                merger.writeBlobTo(getIncrementalFolder().get().getAsFile(), writer, false);
+                merger.writeBlobTo(getIncrementalFolder(), writer, false);
             }
         } catch (Exception e) {
             MergingException.findAndReportMergingException(
@@ -529,10 +481,8 @@ public abstract class MergeResources extends NewIncrementalTask {
             try {
                 throw e;
             } catch (MergingException mergingException) {
-                merger.cleanBlob(getIncrementalFolder().get().getAsFile());
+                merger.cleanBlob(getIncrementalFolder());
                 throw new ResourceException(mergingException.getMessage(), mergingException);
-            } catch (JAXBException | IOException runTimeException) {
-                throw new RuntimeException(runTimeException);
             }
         } finally {
             cleanup();
@@ -553,13 +503,11 @@ public abstract class MergeResources extends NewIncrementalTask {
             sourceSets.add(getGeneratedPngsOutputDir().get().getAsFile());
         }
         sourceSets.add(destinationDir);
-        sourceSets.add(
-                FileUtils.join(
-                        getIncrementalFolder().get().getAsFile(), SdkConstants.FD_MERGED_DOT_DIR));
-        sourceSets.add(
-                FileUtils.join(
-                        getIncrementalFolder().get().getAsFile(),
-                        SdkConstants.FD_STRIPPED_DOT_DIR));
+        if (getIncremental()) {
+            sourceSets.add(FileUtils.join(getIncrementalFolder(), SdkConstants.FD_MERGED_DOT_DIR));
+            sourceSets.add(
+                    FileUtils.join(getIncrementalFolder(), SdkConstants.FD_STRIPPED_DOT_DIR));
+        }
         return RelativeResourceUtils.getIdentifiedSourceSetMap(
                 sourceSets, getNamespace().get(), getProjectName());
     }
@@ -842,10 +790,6 @@ public abstract class MergeResources extends NewIncrementalTask {
         return flags.stream().map(Enum::name).sorted().collect(Collectors.joining(","));
     }
 
-    @OutputDirectory
-    @Optional
-    public abstract DirectoryProperty getIncrementalFolder();
-
     public static class CreationAction
             extends VariantTaskCreationAction<MergeResources, ComponentCreationConfig> {
         @NonNull private final TaskManager.MergeType mergeType;
@@ -944,7 +888,7 @@ public abstract class MergeResources extends NewIncrementalTask {
                                             () -> creationConfig.getMinSdkVersion().getApiLevel()));
             task.getMinSdk().disallowChanges();
 
-            task.getIncrementalFolder().set(paths.getIncrementalDir(getName()));
+            task.setIncrementalFolder(paths.getIncrementalDir(getName()));
             task.processResources = processResources;
             task.crunchPng = variantScope.isCrunchPngs();
 
@@ -983,8 +927,6 @@ public abstract class MergeResources extends NewIncrementalTask {
                                             .getArtifacts()
                                             .get(InternalArtifactType.MICRO_APK_RES.INSTANCE));
             task.getSourceSetInputs().initialise(creationConfig, task, includeDependencies);
-            task.getLibrarySourceSets().setFrom(task.getSourceSetInputs().getLibrarySourceSets());
-            task.getExtraGeneratedResDir().setFrom(task.getSourceSetInputs().getExtraGeneratedResDir());
             task.resourcesComputer.initFromVariantScope(
                     creationConfig, task.getSourceSetInputs(), microApk, libraryArtifacts);
 
@@ -1034,15 +976,15 @@ public abstract class MergeResources extends NewIncrementalTask {
 
             task.dependsOn(creationConfig.getTaskContainer().getResourceGenTask());
 
-            if (processResources) {
-                task.getRawLocalResourcesProcessRes()
-                        .setFrom(task.getSourceSetInputs().getResourceSourceSets());
-            } else {
-                task.getRawLocalResourcesNoProcessRes()
-                        .setFrom(task.getSourceSetInputs().getResourceSourceSets());
-            }
-            task.getRawLocalResourcesProcessRes().disallowChanges();
-            task.getRawLocalResourcesNoProcessRes().disallowChanges();
+            // TODO(141301405): when we compile resources AAPT2 stores the absolute path of the raw
+            // resource in the proto (.flat) file, so we need to mark those inputs with absolute
+            // path sensitivity (e.g. big merge in app). Otherwise just using the relative path
+            // sensitivity is enough (e.g. merges in libraries).
+            task.getInputs()
+                    .files(task.getSourceSetInputs().getResourceSourceSets())
+                    .withPathSensitivity(
+                            processResources ? PathSensitivity.ABSOLUTE : PathSensitivity.RELATIVE)
+                    .withPropertyName("rawLocalResources");
 
             HasConfigurableValuesKt.setDisallowChanges(
                     task.getAapt2ThreadPoolBuildService(),
@@ -1085,12 +1027,7 @@ public abstract class MergeResources extends NewIncrementalTask {
             // resource sets that are outside of the root project directory, so we need to collect
             // the latter set.
             File rootProjectDir = task.getProject().getRootDir();
-            ConfigurableFileCollection resourceSourceSets =
-                    task.processResources
-                            ? task.getRawLocalResourcesProcessRes()
-                            : task.getRawLocalResourcesNoProcessRes();
-
-            for (File resDir : resourceSourceSets.getFiles()) {
+            for (File resDir : task.getSourceSetInputs().getResourceSourceSets().getFiles()) {
                 if (!FileUtils.isFileInDirectory(resDir, rootProjectDir)) {
                     resourceDirsOutsideRootProjectDir.add(resDir.getCanonicalPath());
                 }
