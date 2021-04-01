@@ -18,7 +18,6 @@ package com.android.build.api.component
 
 import com.android.build.api.variant.ApkComponent
 import com.android.build.api.variant.BuildConfigField
-import com.android.build.api.variant.Renderscript
 import com.android.build.api.variant.ResValue
 import com.android.build.api.variant.SigningConfig
 import org.gradle.api.Incubating

@@ -93,6 +93,7 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.scope.publishArtifactToConfiguration
 import com.android.build.gradle.internal.services.AndroidLocationsBuildService
 import com.android.build.gradle.internal.services.getBuildService
+import com.android.build.gradle.internal.tasks.AarMetadataTask
 import com.android.build.gradle.internal.tasks.AndroidReportTask
 import com.android.build.gradle.internal.tasks.AndroidVariantTask
 import com.android.build.gradle.internal.tasks.BundleLibraryClassesDir
@@ -551,6 +552,9 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         taskFactory.register(BundleLibraryClassesDir.CreationAction(testFixturesComponent))
 
         taskFactory.register(BundleLibraryJavaRes.CreationAction(testFixturesComponent))
+
+        // Add a task to create the AAR metadata file
+        taskFactory.register(AarMetadataTask.CreationAction(testFixturesComponent))
 
         // Create a jar with both classes and java resources.  This artifact is not
         // used by the Android application plugin and the task usually don't need to

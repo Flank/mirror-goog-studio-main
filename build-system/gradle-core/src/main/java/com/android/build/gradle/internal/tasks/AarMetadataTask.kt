@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.tasks
 import com.android.SdkConstants.AAR_FORMAT_VERSION_PROPERTY
 import com.android.SdkConstants.AAR_METADATA_VERSION_PROPERTY
 import com.android.SdkConstants.MIN_COMPILE_SDK_PROPERTY
-import com.android.build.gradle.internal.component.LibraryCreationConfig
+import com.android.build.gradle.internal.component.AarCreationConfig
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -62,8 +62,8 @@ abstract class AarMetadataTask : NonIncrementalTask() {
     }
 
     class CreationAction(
-        creationConfig: LibraryCreationConfig
-    ) : VariantTaskCreationAction<AarMetadataTask, LibraryCreationConfig>(creationConfig) {
+        creationConfig: AarCreationConfig
+    ) : VariantTaskCreationAction<AarMetadataTask, AarCreationConfig>(creationConfig) {
 
         override val name: String
             get() = computeTaskName("write", "AarMetadata")

@@ -22,10 +22,12 @@ import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.TestFixturesComponent
 import com.android.build.api.component.analytics.AnalyticsEnabledTestFixturesComponent
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
+import com.android.build.api.variant.AarMetadata
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
 import com.android.build.api.variant.impl.VariantImpl
+import com.android.build.gradle.internal.component.AarCreationConfig
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
@@ -73,7 +75,11 @@ open class TestFixturesComponentImpl @Inject constructor(
     variantPropertiesApiServices,
     taskCreationServices,
     globalScope
-), TestFixturesComponent, ComponentCreationConfig {
+), TestFixturesComponent, ComponentCreationConfig, AarCreationConfig {
+
+    // ---------------------------------------------------------------------------------------------
+    // PUBLIC API
+    // ---------------------------------------------------------------------------------------------
 
     override val applicationId: Provider<String> =
         internalServices.providerOf(String::class.java, variantDslInfo.namespace)
@@ -86,6 +92,14 @@ open class TestFixturesComponentImpl @Inject constructor(
     override val isPseudoLocalesEnabled: Property<Boolean>
         get() = mainVariant.isPseudoLocalesEnabled
 
+    override val aarMetadata: AarMetadata =
+            internalServices.newInstance(AarMetadata::class.java).also {
+                it.minCompileSdk.set(variantDslInfo.aarMetadata.minCompileSdk ?: 1)
+            }
+
+    // ---------------------------------------------------------------------------------------------
+    // INTERNAL API
+    // ---------------------------------------------------------------------------------------------
     override fun <T : Component> createUserVisibleVariantObject(
         projectServices: ProjectServices,
         operationsRegistrar: VariantApiOperationsRegistrar<out VariantBuilder, out Variant>,
@@ -101,5 +115,7 @@ open class TestFixturesComponentImpl @Inject constructor(
             ) as T
         }
     }
+
+    //
 
 }
