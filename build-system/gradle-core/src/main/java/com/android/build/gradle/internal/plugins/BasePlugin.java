@@ -412,7 +412,7 @@ public abstract class BasePlugin<
                                         .provider(() -> extension.getBuildToolsRevision()))
                         .execute();
 
-        new SymbolTableBuildService.RegistrationAction(project, projectOptions).execute();
+        new SymbolTableBuildService.RegistrationAction(project).execute();
         new ClassesHierarchyBuildService.RegistrationAction(project).execute();
         new LintFixBuildService.RegistrationAction(project).execute();
 
