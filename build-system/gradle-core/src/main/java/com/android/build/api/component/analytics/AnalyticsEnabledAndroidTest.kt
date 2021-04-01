@@ -18,6 +18,7 @@ package com.android.build.api.component.analytics
 
 import com.android.build.api.component.AndroidTest
 import com.android.build.api.variant.AndroidResources
+import com.android.build.api.variant.ApkComponent
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.ApkPackaging
 import com.android.build.api.variant.Renderscript
@@ -46,13 +47,6 @@ open class AnalyticsEnabledAndroidTest @Inject constructor(
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
                 VariantPropertiesMethodType.APPLICATION_ID_VALUE
             return delegate.applicationId
-        }
-
-    override val androidResources: AndroidResources
-        get() {
-            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-                VariantPropertiesMethodType.AAPT_OPTIONS_VALUE
-            return delegate.androidResources
         }
 
     override val namespace: Provider<String>
@@ -116,42 +110,27 @@ open class AnalyticsEnabledAndroidTest @Inject constructor(
             return delegate.signingConfig
         }
 
-    private val userVisiblePackaging: ApkPackaging by lazy {
-        objectFactory.newInstance(
-            AnalyticsEnabledApkPackaging::class.java,
-            delegate.packaging,
-            stats
-        )
-    }
-
-    override val packaging: ApkPackaging
-        get() {
-            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-                VariantPropertiesMethodType.PACKAGING_OPTIONS_VALUE
-            return userVisiblePackaging
-        }
-
-    private val userVisibleRenderscript: Renderscript by lazy {
-        objectFactory.newInstance(
-            AnalyticsEnabledRenderscript::class.java,
-            delegate.renderscript,
-            stats
-        )
-    }
-
-    override val renderscript: Renderscript?
-        get() {
-            return if (delegate.renderscript != null) {
-                stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-                    VariantPropertiesMethodType.RENDERSCRIPT_VALUE
-                userVisibleRenderscript
-            } else null
-        }
-
     override val proguardFiles: ListProperty<RegularFile>
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
                 VariantPropertiesMethodType.PROGUARD_FILES_VALUE
             return delegate.proguardFiles
         }
+
+    private val apkComponent: ApkComponent by lazy {
+        AnalyticsEnabledApkComponent(
+                delegate,
+                stats,
+                objectFactory
+        )
+    }
+
+    override val androidResources: AndroidResources
+        get() = apkComponent.androidResources
+
+    override val renderscript: Renderscript?
+        get() = apkComponent.renderscript
+
+    override val packaging: ApkPackaging
+        get() = apkComponent.packaging
 }

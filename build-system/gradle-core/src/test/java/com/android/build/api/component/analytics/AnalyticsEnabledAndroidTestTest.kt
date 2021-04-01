@@ -21,6 +21,7 @@ import com.android.build.api.variant.AndroidResources
 import com.android.build.api.variant.ApkPackaging
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.JniLibsApkPackaging
+import com.android.build.api.variant.Renderscript
 import com.android.build.api.variant.ResValue
 import com.android.build.api.variant.ResourcesPackaging
 import com.android.build.api.variant.SigningConfig
@@ -69,10 +70,10 @@ class AnalyticsEnabledAndroidTestTest {
     }
 
     @Test
-    fun getAaptOptions() {
-        val aaptOptions = Mockito.mock(AndroidResources::class.java)
-        Mockito.`when`(delegate.androidResources).thenReturn(aaptOptions)
-        Truth.assertThat(proxy.androidResources).isEqualTo(aaptOptions)
+    fun getAndroidResources() {
+        val androidResources = Mockito.mock(AndroidResources::class.java)
+        Mockito.`when`(delegate.androidResources).thenReturn(androidResources)
+        Truth.assertThat(proxy.androidResources).isEqualTo(androidResources)
 
         Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
         Truth.assertThat(
@@ -213,28 +214,43 @@ class AnalyticsEnabledAndroidTestTest {
             .signingConfig
     }
 
+
     @Test
-    fun getPackagingOptions() {
-        val packagingOptions = Mockito.mock(ApkPackaging::class.java)
+    fun getRenderscript() {
+        val renderscript = Mockito.mock(Renderscript::class.java)
+        Mockito.`when`(delegate.renderscript).thenReturn(renderscript)
+        // simulate a user configuring packaging options for jniLibs and resources
+        proxy.renderscript
+
+        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
+        Truth.assertThat(
+                stats.variantApiAccess.variantPropertiesAccessList.first().type
+        ).isEqualTo(VariantPropertiesMethodType.RENDERSCRIPT_VALUE)
+        Mockito.verify(delegate, Mockito.times(1)).renderscript
+    }
+
+    @Test
+    fun getApkPackaging() {
+        val apkPackaging = Mockito.mock(ApkPackaging::class.java)
         val jniLibsApkPackagingOptions = Mockito.mock(JniLibsApkPackaging::class.java)
         val resourcesPackagingOptions = Mockito.mock(ResourcesPackaging::class.java)
-        Mockito.`when`(packagingOptions.jniLibs).thenReturn(jniLibsApkPackagingOptions)
-        Mockito.`when`(packagingOptions.resources).thenReturn(resourcesPackagingOptions)
-        Mockito.`when`(delegate.packaging).thenReturn(packagingOptions)
+        Mockito.`when`(apkPackaging.jniLibs).thenReturn(jniLibsApkPackagingOptions)
+        Mockito.`when`(apkPackaging.resources).thenReturn(resourcesPackagingOptions)
+        Mockito.`when`(delegate.packaging).thenReturn(apkPackaging)
         // simulate a user configuring packaging options for jniLibs and resources
         proxy.packaging.jniLibs
         proxy.packaging.resources
 
         Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(4)
         Truth.assertThat(
-            stats.variantApiAccess.variantPropertiesAccessList.map { it.type }
+                stats.variantApiAccess.variantPropertiesAccessList.map { it.type }
         ).containsExactlyElementsIn(
-            listOf(
-                VariantPropertiesMethodType.PACKAGING_OPTIONS_VALUE,
-                VariantPropertiesMethodType.JNI_LIBS_PACKAGING_OPTIONS_VALUE,
-                VariantPropertiesMethodType.PACKAGING_OPTIONS_VALUE,
-                VariantPropertiesMethodType.RESOURCES_PACKAGING_OPTIONS_VALUE
-            )
+                listOf(
+                        VariantPropertiesMethodType.PACKAGING_OPTIONS_VALUE,
+                        VariantPropertiesMethodType.JNI_LIBS_PACKAGING_OPTIONS_VALUE,
+                        VariantPropertiesMethodType.PACKAGING_OPTIONS_VALUE,
+                        VariantPropertiesMethodType.RESOURCES_PACKAGING_OPTIONS_VALUE
+                )
         )
         Mockito.verify(delegate, Mockito.times(1)).packaging
     }

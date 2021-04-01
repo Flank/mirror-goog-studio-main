@@ -19,7 +19,7 @@ package com.android.build.api.variant
 import org.gradle.api.Incubating
 
 /**
- * Cross cutting interfaces for [com.android.build.api.component.Component] subtypes that are
+ * Cross cutting interface for [com.android.build.api.component.Component] subtypes that are
  * producing APK files.
  */
 @Incubating
@@ -35,4 +35,10 @@ interface ApkComponent {
      * Variant's packagingOptions, initialized by the corresponding global DSL element.
      */
     val packaging: ApkPackaging
+
+    /**
+     * Variant specific settings for the renderscript compiler. This will return null when
+     * [com.android.build.api.dsl.BuildFeatures.renderScript] is false.
+     */
+    val renderscript: Renderscript?
 }

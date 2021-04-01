@@ -876,6 +876,7 @@ com.android.build.api.variant.AndroidVersion.getCodename: java.lang.String ()
 com.android.build.api.variant.ApkComponent
 com.android.build.api.variant.ApkComponent.getAndroidResources: com.android.build.api.variant.AndroidResources ()
 com.android.build.api.variant.ApkComponent.getPackaging: com.android.build.api.variant.ApkPackaging ()
+com.android.build.api.variant.ApkComponent.getRenderscript: com.android.build.api.variant.Renderscript ()
 com.android.build.api.variant.ApkPackaging implements com.android.build.api.variant.Packaging
 com.android.build.api.variant.ApkPackaging.getDex: com.android.build.api.variant.DexPackagingOptions ()
 com.android.build.api.variant.ApkPackaging.getJniLibs: com.android.build.api.variant.JniLibsApkPackaging ()
@@ -885,7 +886,6 @@ com.android.build.api.variant.ApplicationVariant.getApplicationId: org.gradle.ap
 com.android.build.api.variant.ApplicationVariant.getDependenciesInfo: com.android.build.api.variant.DependenciesInfo ()
 com.android.build.api.variant.ApplicationVariant.getDexing: com.android.build.api.variant.Dexing ()
 com.android.build.api.variant.ApplicationVariant.getOutputs: java.util.List<com.android.build.api.variant.VariantOutput> ()
-com.android.build.api.variant.ApplicationVariant.getRenderscript: com.android.build.api.variant.Renderscript ()
 com.android.build.api.variant.ApplicationVariant.getSigningConfig: com.android.build.api.variant.SigningConfig ()
 com.android.build.api.variant.ApplicationVariantBuilder implements com.android.build.api.variant.VariantBuilder, com.android.build.api.variant.HasAndroidTestBuilder
 com.android.build.api.variant.ApplicationVariantBuilder.getDebuggable: boolean ()
@@ -923,7 +923,6 @@ com.android.build.api.variant.DynamicFeatureVariant implements com.android.build
 com.android.build.api.variant.DynamicFeatureVariant.getAndroidTest: com.android.build.api.component.AndroidTest ()
 com.android.build.api.variant.DynamicFeatureVariant.getApplicationId: org.gradle.api.provider.Provider<java.lang.String> ()
 com.android.build.api.variant.DynamicFeatureVariant.getDexing: com.android.build.api.variant.Dexing ()
-com.android.build.api.variant.DynamicFeatureVariant.getRenderscript: com.android.build.api.variant.Renderscript ()
 com.android.build.api.variant.DynamicFeatureVariantBuilder implements com.android.build.api.variant.VariantBuilder, com.android.build.api.variant.HasAndroidTestBuilder
 com.android.build.api.variant.ExternalNativeBuild
 com.android.build.api.variant.ExternalNativeBuild.getAbiFilters: org.gradle.api.provider.SetProperty<java.lang.String> ()

@@ -18,6 +18,7 @@ package com.android.build.api.component.analytics
 
 import com.android.build.api.component.AndroidTest
 import com.android.build.api.variant.AndroidResources
+import com.android.build.api.variant.ApkComponent
 import com.android.build.api.variant.ApkPackaging
 import com.android.build.api.variant.ApplicationVariant
 import com.android.build.api.variant.DependenciesInfo
@@ -59,33 +60,11 @@ open class AnalyticsEnabledApplicationVariant @Inject constructor(
             return delegate.dependenciesInfo
         }
 
-    override val androidResources: AndroidResources
-        get() {
-            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-                VariantPropertiesMethodType.AAPT_OPTIONS_VALUE
-            return delegate.androidResources
-        }
-
     override val signingConfig: SigningConfig?
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
                 VariantPropertiesMethodType.SIGNING_CONFIG_VALUE
             return delegate.signingConfig
-        }
-
-    private val userVisiblePackagingOptions: ApkPackaging by lazy {
-        objectFactory.newInstance(
-            AnalyticsEnabledApkPackaging::class.java,
-            delegate.packaging,
-            stats
-        )
-    }
-
-    override val packaging: ApkPackaging
-        get() {
-            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-                VariantPropertiesMethodType.PACKAGING_OPTIONS_VALUE
-            return userVisiblePackagingOptions
         }
 
     private val userVisibleDexing: Dexing by lazy {
@@ -120,20 +99,20 @@ open class AnalyticsEnabledApplicationVariant @Inject constructor(
             return userVisibleDexing
         }
 
-    private val userVisibleRenderscript: Renderscript by lazy {
-        objectFactory.newInstance(
-            AnalyticsEnabledRenderscript::class.java,
-            delegate.renderscript,
-            stats
+    private val apkComponent: ApkComponent by lazy {
+        AnalyticsEnabledApkComponent(
+                delegate,
+                stats,
+                objectFactory
         )
     }
 
+    override val androidResources: AndroidResources
+        get() = apkComponent.androidResources
+
     override val renderscript: Renderscript?
-        get() {
-            return if (delegate.renderscript != null) {
-                stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-                    VariantPropertiesMethodType.RENDERSCRIPT_VALUE
-                userVisibleRenderscript
-            } else null
-        }
+        get() = apkComponent.renderscript
+
+    override val packaging: ApkPackaging
+        get() = apkComponent.packaging
 }

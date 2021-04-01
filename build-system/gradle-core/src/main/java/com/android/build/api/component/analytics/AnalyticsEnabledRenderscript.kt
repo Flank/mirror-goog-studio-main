@@ -22,7 +22,7 @@ import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.provider.Property
 import javax.inject.Inject
 
-class AnalyticsEnabledRenderscript @Inject constructor(
+open class AnalyticsEnabledRenderscript @Inject constructor(
     val delegate: Renderscript,
     val stats: GradleBuildVariant.Builder)
 : Renderscript {
