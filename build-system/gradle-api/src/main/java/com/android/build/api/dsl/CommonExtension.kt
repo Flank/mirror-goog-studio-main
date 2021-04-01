@@ -398,7 +398,7 @@ interface CommonExtension<
      * For more information about the properties you can configure in this block, see [DefaultConfig].
      */
     @Incubating
-    fun defaultConfig(action: Action<DefaultConfigT>)
+    fun defaultConfig(action: DefaultConfigT.() -> Unit)
 
 
     /**

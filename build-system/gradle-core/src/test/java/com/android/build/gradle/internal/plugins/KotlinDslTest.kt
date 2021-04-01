@@ -186,7 +186,7 @@ class KotlinDslTest {
 
     @Test
     fun `baseFlavor source compatibility`() {
-        android.defaultConfig.apply {
+        android.defaultConfig {
             setTestFunctionalTest(true)
             assertThat(testFunctionalTest).isTrue()
             setTestHandleProfiling(true)

@@ -197,6 +197,10 @@ abstract class CommonExtensionImpl<
         action.execute(defaultConfig)
     }
 
+    override fun defaultConfig(action: DefaultConfigT.() -> Unit) {
+        action.invoke(defaultConfig)
+    }
+
     override val externalNativeBuild: ExternalNativeBuild =
         dslServices.newInstance(ExternalNativeBuild::class.java, dslServices)
 
