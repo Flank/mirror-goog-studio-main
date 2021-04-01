@@ -85,8 +85,9 @@ abstract class PerModuleReportDependenciesTask : NonIncrementalTask() {
             valueTransform = { artifact -> artifact.file }
         )
             .mapValues { (id, fileList) ->
-                val fileSet = fileList.toSet() // FIXME file equality -- probably bad idea?
-                if (fileSet.size > 1) error("Component ${id.displayName} maps to multiple files") //FIXME this should probably be a warning
+                val fileSet = fileList.toSet()
+                if (fileSet.size > 1)
+                    logger.warn("Component ${id.displayName} maps to multiple files")
                 getFileDigest(fileSet.first())
             }
 
