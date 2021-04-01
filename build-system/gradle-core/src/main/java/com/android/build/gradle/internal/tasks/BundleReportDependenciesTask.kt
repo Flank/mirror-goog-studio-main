@@ -24,6 +24,7 @@ import com.android.tools.build.libraries.metadata.AppDependencies
 import com.android.tools.build.libraries.metadata.Library
 import com.android.tools.build.libraries.metadata.LibraryDependencies
 import com.android.tools.build.libraries.metadata.ModuleDependencies
+import com.android.tools.build.libraries.metadata.Repository
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.OutputFile
 import java.io.FileOutputStream
@@ -66,6 +67,9 @@ abstract class BundleReportDependenciesTask : NonIncrementalTask() {
             featureAppDeps.add(AppDependencies.parseFrom(FileInputStream(it)))
         }
 
+        val repoToIndexMap = mutableMapOf<Repository, Int>()
+        val repoList = baseAppDeps.repositoriesList.toMutableList()
+
         val libraryToIndexMap = HashMap<Library, Integer>()
         val libraryList = LinkedList(baseAppDeps.libraryList)
         for ((index, lib) in libraryList.withIndex()) {
@@ -76,7 +80,17 @@ abstract class BundleReportDependenciesTask : NonIncrementalTask() {
 
         for (featureAppDep in featureAppDeps) {
             val libIndexDict = HashMap<Integer, Integer>()
+            val repoIndexDict = mutableMapOf<Int,Int>()
             val featureLibraryDeps = featureAppDep.libraryList
+
+            // update the repos list
+            featureAppDep.repositoriesList.forEachIndexed { origIndex, repo ->
+                val newIndex = repoToIndexMap.computeIfAbsent(repo) {
+                    repoList += it
+                    repoList.size-1
+                }
+                repoIndexDict[origIndex] = newIndex
+            }
 
             // update the library list indices
             for ((origIndex, lib) in featureLibraryDeps.withIndex()) {
@@ -84,7 +98,13 @@ abstract class BundleReportDependenciesTask : NonIncrementalTask() {
                 if (newIndex == null) {
                     newIndex = Integer(libraryList.size)
                     libraryToIndexMap.put(lib, newIndex)
-                    libraryList.add(lib)
+                    // If lib has a repo_index, build a copy with corrected value of repo_index
+                    if (lib.hasRepoIndex())
+                        libraryList.add(lib.toBuilder().also { libCopy ->
+                            libCopy.repoIndexBuilder.value = repoIndexDict[lib.repoIndex.value]!!
+                        }.build())
+                    else
+                        libraryList.add(lib)
                 }
                 libIndexDict.put(Integer(origIndex), newIndex)
             }
@@ -117,6 +137,7 @@ abstract class BundleReportDependenciesTask : NonIncrementalTask() {
             .addAllLibrary(libraryList)
             .addAllLibraryDependencies(libraryDeps)
             .addAllModuleDependencies(moduleDeps)
+            .addAllRepositories(repoList)
             .build()
 
         FileOutputStream(dependenciesList.get().asFile).use {

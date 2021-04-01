@@ -16,16 +16,11 @@
 
 package com.android.build.gradle.internal.utils
 
-import com.android.build.gradle.internal.fixtures.FakeModuleComponentIdentifier
 import com.android.build.gradle.internal.fixtures.FakeResolutionResult
-import com.android.build.gradle.internal.fixtures.FakeResolvedComponentResult
-import com.android.build.gradle.internal.fixtures.FakeResolvedDependencyResult
 import com.android.build.gradle.internal.fixtures.addDependencyEdge
-import com.android.build.gradle.internal.fixtures.createComponent
+import com.android.build.gradle.internal.fixtures.createModuleComponent
 import com.android.ide.common.repository.GradleVersion
 import com.google.common.truth.Truth.assertThat
-import org.gradle.api.artifacts.result.DependencyResult
-import org.gradle.api.artifacts.result.ResolvedComponentResult
 import org.junit.Test
 
 /**
@@ -35,12 +30,12 @@ class GradlePluginUtilsTest {
 
     @Test
     fun testViolatingDependency() {
-        val violatingDependency = createComponent(
+        val violatingDependency = createModuleComponent(
             group = "org.jetbrains.kotlin",
             name = "kotlin-gradle-plugin",
             version = "1.0"
         )
-        val rootDependency = createComponent("", "project", "unspecified")
+        val rootDependency = createModuleComponent("", "project", "unspecified")
         val projectDisplayName = "root project 'project'"
         addDependencyEdge(rootDependency, violatingDependency)
         val buildscriptClasspath = FakeResolutionResult(rootDependency)
@@ -59,12 +54,12 @@ class GradlePluginUtilsTest {
 
     @Test
     fun testNonViolatingDependency() {
-        val nonViolatingDependency = createComponent(
+        val nonViolatingDependency = createModuleComponent(
             group = "org.jetbrains.kotlin",
             name = "kotlin-gradle-plugin",
             version = "1.3.10"
         )
-        val rootDependency = createComponent("", "project", "unspecified")
+        val rootDependency = createModuleComponent("", "project", "unspecified")
         val projectDisplayName = "root project 'project'"
         addDependencyEdge(rootDependency, nonViolatingDependency)
         val buildscriptClasspath = FakeResolutionResult(rootDependency)

@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.utils
 
 import com.android.build.gradle.internal.fixtures.FakeResolutionResult
 import com.android.build.gradle.internal.fixtures.addDependencyEdge
-import com.android.build.gradle.internal.fixtures.createComponent
+import com.android.build.gradle.internal.fixtures.createModuleComponent
 import com.google.common.truth.Truth.assertThat
 import org.junit.Before
 import org.junit.Test
@@ -35,10 +35,10 @@ class ResolutionResultUtilsTest {
         //     |  |- b
         //     |  |- c
         //     |- c
-        val root = createComponent("root", "root", "1")
-        val a = createComponent("a", "a", "1")
-        val b = createComponent("b", "b", "1")
-        val c = createComponent("c", "c", "1")
+        val root = createModuleComponent("root", "root", "1")
+        val a = createModuleComponent("a", "a", "1")
+        val b = createModuleComponent("b", "b", "1")
+        val c = createModuleComponent("c", "c", "1")
         addDependencyEdge(root, a)
         addDependencyEdge(root, c)
         addDependencyEdge(a, b)

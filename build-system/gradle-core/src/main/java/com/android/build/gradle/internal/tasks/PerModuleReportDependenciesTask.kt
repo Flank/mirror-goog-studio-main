@@ -22,22 +22,23 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.build.gradle.options.BooleanOption
 import com.android.tools.build.libraries.metadata.AppDependencies
-import com.android.tools.build.libraries.metadata.Library
-import com.android.tools.build.libraries.metadata.LibraryDependencies
-import com.android.tools.build.libraries.metadata.MavenLibrary
-import com.android.tools.build.libraries.metadata.ModuleDependencies
 import com.google.protobuf.ByteString
 import java.io.File
 import java.io.FileOutputStream
+import java.net.URI
 import java.security.MessageDigest
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.component.ComponentIdentifier
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
+import org.gradle.api.artifacts.repositories.IvyArtifactRepository
+import org.gradle.api.artifacts.repositories.MavenArtifactRepository
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.internal.artifacts.result.ResolvedComponentResultInternal
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
@@ -67,6 +68,11 @@ abstract class PerModuleReportDependenciesTask : NonIncrementalTask() {
     @get:Input
     abstract val moduleName: Property<String>
 
+    @get:Input
+    abstract val includeRepositoryInfo: Property<Boolean>
+
+    //FIXME repositories aren't fully represented in Inputs
+
     private fun getFileDigest(file: File): ByteString {
         return ByteString.copyFrom(MessageDigest.getInstance("SHA-256").digest(file.readBytes()))
     }
@@ -92,12 +98,20 @@ abstract class PerModuleReportDependenciesTask : NonIncrementalTask() {
             }
 
         // Declare local classes used for intermediate data representations
+        abstract class InternalRepositoryMetadata(val name: String)
+        class InternalMavenRepoMetadata(name: String, val url: URI): InternalRepositoryMetadata(name)
+        class InternalIvyRepoMetadata(name: String, val url: URI): InternalRepositoryMetadata(name)
+
         class InternalGraphNode(
             val id: ComponentIdentifier,
             val neighborIdList: List<ComponentIdentifier>,
-            // val repoName: String?, //TODO uncomment and populate in upcoming CL
+            val repoIndex: Int?,
         )
-        class InternalLibraryMetadata(id: ComponentIdentifier, val sha256: ByteString?) {
+        class InternalLibraryMetadata(
+            id: ComponentIdentifier,
+            val sha256: ByteString?,
+            val repoIndex: Int?,
+            ) {
             val mavenLibrary: MavenLibraryData? = (id as? ModuleComponentIdentifier)?.let {
                 MavenLibraryData(
                     groupId = it.group,
@@ -117,18 +131,49 @@ abstract class PerModuleReportDependenciesTask : NonIncrementalTask() {
         )
 
 
+        fun MavenArtifactRepository.isLocalRepo() = url.scheme == "file"
+        fun IvyArtifactRepository.isLocalRepo() = url.scheme == "file"
+        // FIXME project usage in taskAction
+        // Build an intermediate list of InternalRepositoryMetadata objects
+        // If the includeRepositoryInfo flag is not set, just return an empty list -- all subsequent
+        //   operations on intermediateRepositories will be no-ops with empty/null results
+        val intermediateRepositories = if (includeRepositoryInfo.get()) {
+            project.repositories.asSequence()
+                .mapNotNull { repo ->
+                    when {
+                        repo is MavenArtifactRepository && !repo.isLocalRepo() ->
+                            InternalMavenRepoMetadata(repo.name, repo.url)
+                        repo is IvyArtifactRepository && !repo.isLocalRepo() ->
+                            InternalIvyRepoMetadata(repo.name, repo.url)
+                        else -> null // Drop any other types of repositories, such as flatDirectory
+                    }
+                }.toList()
+        } else listOf()
+
+        // Build a map of repoName->Index
+        val repoNameToIndexMap =
+            intermediateRepositories.associateIndexed { index, it -> it.name to index }
+
         // Build the graph representation, partitioning into "Project" and "Library" nodes
         //   and removing all edges (dependencies) that point to Projects
         val resolutionResult = runtimeClasspath.incoming.resolutionResult
-        val (projectNodes, libraryNodesPartialList) = resolutionResult.allComponents.asSequence().map { component ->
-            InternalGraphNode(
-                id = component.id,
-                neighborIdList = component.dependencies
-                    .filterIsInstance<ResolvedDependencyResult>()
-                    .map { it.selected.id }
-                    .filter { it !is ProjectComponentIdentifier }
-            )
-        }.distinctBy { it.id }.partition { it.id is ProjectComponentIdentifier }
+        val (projectNodes, libraryNodesPartialList) = resolutionResult.allComponents.asSequence()
+            .map { component ->
+                InternalGraphNode(
+                    id = component.id,
+                    neighborIdList = component.dependencies
+                        .filterIsInstance<ResolvedDependencyResult>()
+                        .map { it.selected.id }
+                        .filter { it !is ProjectComponentIdentifier },
+                    repoIndex = try {
+                        repoNameToIndexMap[(component as? ResolvedComponentResultInternal)?.repositoryName]
+                    } catch (e: Exception) {
+                        null
+                    }
+                )
+            }
+            .distinctBy { it.id }
+            .partition { it.id is ProjectComponentIdentifier }
 
         // Calculate the list of IDs which correspond to an Artifact, but not to a Node in the graph
         //   This includes direct dependencies on files (like Jar files)
@@ -136,11 +181,15 @@ abstract class PerModuleReportDependenciesTask : NonIncrementalTask() {
 
         // Add a node for each unused ID
         val libraryNodes = libraryNodesPartialList +
-                unusedIds.asSequence().map { unusedId -> InternalGraphNode(unusedId, listOf()) }
+                unusedIds.asSequence().map { unusedId -> InternalGraphNode(unusedId, listOf(), null) }
 
         // Build an intermediate sequence of InternalLibraryMetadata objects
         val intermediateLibraries = libraryNodes.asSequence().map { node ->
-            InternalLibraryMetadata(node.id, componentDigestMap[node.id])
+            InternalLibraryMetadata(
+                id = node.id,
+                sha256 = componentDigestMap[node.id],
+                repoIndex = node.repoIndex
+            )
         }
 
         // Build a map of ComponentId->Index
@@ -162,35 +211,44 @@ abstract class PerModuleReportDependenciesTask : NonIncrementalTask() {
                 .mapNotNull { id -> idToIndexMap[id] }
                 .toSet()
 
-
-        // Convert internal object representations to Protobufs
-        val libraryProtos = intermediateLibraries.map { libObj ->
-            Library.newBuilder().apply {
-                if (libObj.mavenLibrary != null)
-                    mavenLibrary = MavenLibrary.newBuilder().apply {
-                        groupId = libObj.mavenLibrary.groupId
-                        artifactId = libObj.mavenLibrary.artifactId
-                        version = libObj.mavenLibrary.version
-                    }.build()
-                if (libObj.sha256 != null) {
-                    digests = Library.Digests.newBuilder().setSha256(libObj.sha256).build()
-                }
-            }.build()
-        }
-        val libDepProtos = intermediateLibraryDependencies.map { libDepObj ->
-            LibraryDependencies.newBuilder().apply {
-                libraryIndex = libDepObj.libIndex
-                addAllLibraryDepIndex(libDepObj.libDepIndices)
-            }.build()
-        }
-        val moduleDependenciesProto = ModuleDependencies.newBuilder().apply {
-            moduleName = this@PerModuleReportDependenciesTask.moduleName.get()
-            addAllDependencyIndex(directDepIndices)
-        }.build()
+        // Convert internal object representations to Protobuf
         val appDependenciesProto = AppDependencies.newBuilder().apply {
-            libraryProtos.forEach { addLibrary(it) }
-            libDepProtos.forEach { addLibraryDependencies(it) }
-            addModuleDependencies(moduleDependenciesProto)
+            intermediateLibraries.forEach { libObj ->
+                addLibraryBuilder().apply {
+                    if (libObj.mavenLibrary != null)
+                        mavenLibraryBuilder.apply {
+                            groupId = libObj.mavenLibrary.groupId
+                            artifactId = libObj.mavenLibrary.artifactId
+                            version = libObj.mavenLibrary.version
+                        }
+                    if (libObj.repoIndex != null) {
+                        repoIndexBuilder.value = libObj.repoIndex
+                    }
+                    if (libObj.sha256 != null) {
+                        digestsBuilder.sha256 = libObj.sha256
+                    }
+                }
+            }
+            intermediateLibraryDependencies.forEach { libDepObj ->
+                addLibraryDependenciesBuilder().apply {
+                    libraryIndex = libDepObj.libIndex
+                    addAllLibraryDepIndex(libDepObj.libDepIndices)
+                }
+            }
+            intermediateRepositories.forEach { repoObj ->
+                addRepositoriesBuilder().apply {
+                    when (repoObj) {
+                        is InternalMavenRepoMetadata ->
+                            mavenRepoBuilder.url = repoObj.url.toString()
+                        is InternalIvyRepoMetadata ->
+                            ivyRepoBuilder.url = repoObj.url.toString()
+                    }
+                }
+            }
+            addModuleDependenciesBuilder().apply {
+                moduleName = this@PerModuleReportDependenciesTask.moduleName.get()
+                addAllDependencyIndex(directDepIndices)
+            }
         }.build()
 
         // Write the final Protobuf to a file
@@ -228,6 +286,8 @@ abstract class PerModuleReportDependenciesTask : NonIncrementalTask() {
                 AndroidArtifacts.ArtifactType.AAR_OR_JAR
             )
 
+            task.includeRepositoryInfo
+                .set(creationConfig.services.projectOptions[BooleanOption.INCLUDE_REPOSITORIES_IN_DEPENDENCY_REPORT])
 
             if (creationConfig is DynamicFeatureCreationConfig) {
                 task.moduleName.setDisallowChanges(creationConfig.featureName)

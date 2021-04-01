@@ -16,13 +16,15 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.gradle.internal.tasks.bundle.ADBuilder
+import com.android.build.gradle.internal.tasks.bundle.appDependencies
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.file.FileCollection
 import com.android.tools.build.libraries.metadata.AppDependencies
 import com.android.tools.build.libraries.metadata.Library
 import com.android.tools.build.libraries.metadata.LibraryDependencies
-import com.android.tools.build.libraries.metadata.MavenLibrary
 import com.android.tools.build.libraries.metadata.ModuleDependencies
+import com.android.tools.build.libraries.metadata.Repository
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Before
@@ -37,8 +39,7 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
 import com.google.common.collect.ImmutableSet
-import org.gradle.api.file.RegularFile
-import org.gradle.api.file.RegularFileProperty
+import com.google.protobuf.Int32Value
 
 class BundleReportDependenciesTaskTest {
 
@@ -78,113 +79,46 @@ class BundleReportDependenciesTaskTest {
 
     @Test
     fun combineDepsTest() {
-        val lib1 = Library.newBuilder().setMavenLibrary(
-            MavenLibrary.newBuilder()
-                .setGroupId("foo")
-                .setArtifactId("baz")
-                .setVersion("1.2")
-                .build())
-            .build()
-        val lib2 = Library.newBuilder().setMavenLibrary(
-            MavenLibrary.newBuilder()
-                .setGroupId("bar")
-                .setArtifactId("beef")
-                .setVersion("1.1")
-                .build())
-            .build()
-        val lib3 = Library.newBuilder().setMavenLibrary(
-            MavenLibrary.newBuilder()
-                .setGroupId("dead")
-                .setArtifactId("beef")
-                .setVersion("1.1")
-                .build())
-            .build()
-
-        val baseAppDeps = AppDependencies.newBuilder()
-            .addLibrary(lib1)
-            .addLibrary(lib2)
-            .addModuleDependencies(
-                ModuleDependencies.newBuilder()
-                    .setModuleName("base")
-                    .addDependencyIndex(0)
-                    .build())
-            .addLibraryDependencies(
-                LibraryDependencies.newBuilder()
-                    .setLibraryIndex(0)
-                    .addLibraryDepIndex(1)
-                    .build())
-            .addLibraryDependencies(
-                LibraryDependencies.newBuilder()
-                    .setLibraryIndex(1)
-                    .build())
-            .build()
-        val featureDep1 = AppDependencies.newBuilder()
-            .addLibrary(lib2)
-            .addModuleDependencies(
-                ModuleDependencies.newBuilder()
-                    .setModuleName("feature1")
-                    .addDependencyIndex(0)
-                    .build())
-            .addLibraryDependencies(
-                LibraryDependencies.newBuilder()
-                    .setLibraryIndex(0)
-                    .build())
-            .build()
-        val featureDep2 = AppDependencies.newBuilder()
-            .addLibrary(lib3)
-            .addLibrary(lib2)
-            .addModuleDependencies(
-                ModuleDependencies.newBuilder()
-                    .setModuleName("feature2")
-                    .addDependencyIndex(0)
-                    .build())
-            .addLibraryDependencies(
-                LibraryDependencies.newBuilder()
-                    .setLibraryIndex(0)
-                    .addLibraryDepIndex(1)
-                    .build())
-            .addLibraryDependencies(
-                LibraryDependencies.newBuilder()
-                    .setLibraryIndex(1)
-                    .build())
-            .build()
+        val addLib1 = fun ADBuilder.() = run { addLibrary("foo", "baz", "1.2") }
+        val addLib2 = fun ADBuilder.() = run { addLibrary("bar", "beef", "1.1") }
+        val addLib3 = fun ADBuilder.() = run { addLibrary("dead", "beef", "1.1") }
+        val baseAppDeps = appDependencies {
+            addLib1().setRepoIndex(0)
+            addLib2()
+            addModuleDeps("base",0)
+            addLibraryDeps(0,1)
+            addLibraryDeps(1)
+            addMavenRepository("fakeUrl1")
+        }
+        val featureDep1 = appDependencies {
+            addLib2()
+            addModuleDeps("feature1", 0)
+            addLibraryDeps(0)
+        }
+        val featureDep2 = appDependencies {
+            addLib3().setRepoIndex(0)
+            addLib2()
+            addModuleDeps("feature2", 0)
+            addLibraryDeps(0, 1)
+            addLibraryDeps(1)
+            addIvyRepository("fakeUrl2")
+        }
         FileOutputStream(baseDepsFile).use { baseAppDeps.writeTo(it) }
         FileOutputStream(feature1File).use { featureDep1.writeTo(it) }
         FileOutputStream(feature2File).use { featureDep2.writeTo(it) }
-        val expected = AppDependencies.newBuilder()
-            .addLibrary(lib1)
-            .addLibrary(lib2)
-            .addLibrary(lib3)
-            .addModuleDependencies(
-                ModuleDependencies.newBuilder()
-                    .setModuleName("base")
-                    .addDependencyIndex(0)
-                    .build())
-            .addModuleDependencies(
-                ModuleDependencies.newBuilder()
-                    .setModuleName("feature1")
-                    .addDependencyIndex(1)
-                    .build())
-            .addModuleDependencies(
-                ModuleDependencies.newBuilder()
-                    .setModuleName("feature2")
-                    .addDependencyIndex(2)
-                    .build())
-            .addLibraryDependencies(
-                LibraryDependencies.newBuilder()
-                    .setLibraryIndex(0)
-                    .addLibraryDepIndex(1)
-                    .build())
-            .addLibraryDependencies(
-                LibraryDependencies.newBuilder()
-                    .setLibraryIndex(1)
-                    .build())
-            .addLibraryDependencies(
-                LibraryDependencies.newBuilder()
-                    .setLibraryIndex(2)
-                    .addLibraryDepIndex(1)
-                    .build())
-            .build()
+        val expected = appDependencies {
+            addLib1().setRepoIndex(0)
+            addLib2()
+            addLib3().setRepoIndex(1)
+            addModuleDeps("base", 0)
+            addModuleDeps("feature1", 1)
+            addModuleDeps("feature2", 2)
+            addLibraryDeps(0, 1)
+            addLibraryDeps(1)
+            addLibraryDeps(2, 1)
+            addMavenRepository("fakeUrl1")
+            addIvyRepository("fakeUrl2")
+        }
 
         task.baseDeps.set(baseDepsFile)
         task.featureDeps = featureDeps
