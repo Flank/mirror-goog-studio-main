@@ -24,10 +24,8 @@ import com.android.build.api.transform.QualifiedContent.Scope
 import com.android.build.gradle.ProguardFiles
 import com.android.build.gradle.internal.InternalScope
 import com.android.build.gradle.internal.PostprocessingFeatures
-import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
-import com.android.build.gradle.internal.dependency.AndroidAttributes
 import com.android.build.gradle.internal.pipeline.StreamFilter
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
@@ -253,7 +251,7 @@ abstract class ProguardConfigurableTask(
         ) {
             super.configure(task)
 
-            if (testedConfig is ConsumableCreationConfig && testedConfig.codeShrinker != null) {
+            if (testedConfig is ConsumableCreationConfig && testedConfig.minifiedEnabled) {
                 task.testedMappingFile.from(
                     testedConfig
                         .artifacts
@@ -312,8 +310,7 @@ abstract class ProguardConfigurableTask(
                         creationConfig.variantDependencies.getArtifactFileCollection(
                             RUNTIME_CLASSPATH,
                             ALL,
-                            FILTERED_PROGUARD_RULES,
-                            maybeGetCodeShrinkerAttributes(creationConfig)
+                            FILTERED_PROGUARD_RULES
                         )
                     )
                     task.configurationFiles.from(configurationFiles)
@@ -328,8 +325,7 @@ abstract class ProguardConfigurableTask(
                         creationConfig.variantDependencies.getArtifactFileCollection(
                             RUNTIME_CLASSPATH,
                             ALL,
-                            FILTERED_PROGUARD_RULES,
-                            maybeGetCodeShrinkerAttributes(creationConfig)
+                            FILTERED_PROGUARD_RULES
                         )
                     )
                     task.configurationFiles.from(configurationFiles)
@@ -389,8 +385,7 @@ abstract class ProguardConfigurableTask(
                 creationConfig.variantDependencies.getArtifactFileCollection(
                     RUNTIME_CLASSPATH,
                     ALL,
-                    FILTERED_PROGUARD_RULES,
-                    maybeGetCodeShrinkerAttributes(creationConfig)
+                    FILTERED_PROGUARD_RULES
                 )
             )
 
@@ -421,20 +416,9 @@ abstract class ProguardConfigurableTask(
                 creationConfig.variantDependencies.getArtifactFileCollection(
                     REVERSE_METADATA_VALUES,
                     PROJECT,
-                    FILTERED_PROGUARD_RULES,
-                    maybeGetCodeShrinkerAttributes(creationConfig)
+                    FILTERED_PROGUARD_RULES
                 )
             )
-        }
-
-        private fun maybeGetCodeShrinkerAttributes(
-            creationConfig: ConsumableCreationConfig
-        ): AndroidAttributes? {
-            return if (creationConfig.codeShrinker != null) {
-                AndroidAttributes(VariantManager.SHRINKER_ATTR to creationConfig.codeShrinker.toString())
-            } else {
-                null
-            }
         }
 
         protected abstract fun keep(keep: String)

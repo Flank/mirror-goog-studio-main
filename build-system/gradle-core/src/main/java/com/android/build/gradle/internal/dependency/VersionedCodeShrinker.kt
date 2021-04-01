@@ -17,36 +17,16 @@
 package com.android.build.gradle.internal.dependency
 
 import com.android.build.gradle.internal.LoggerWrapper
-import com.android.builder.model.CodeShrinker
 import com.android.builder.dexing.getR8Version
 import com.google.common.annotations.VisibleForTesting
-import proguard.ProGuard
 import java.io.Serializable
 
-data class VersionedCodeShrinker(val shrinker: CodeShrinker, val version: String) : Serializable {
+data class VersionedCodeShrinker(val version: String) : Serializable {
     companion object {
         @JvmStatic
-        fun of(codeShrinker: CodeShrinker) = when (codeShrinker) {
-            CodeShrinker.PROGUARD -> VersionedCodeShrinker(
-                CodeShrinker.PROGUARD,
-                parseVersionString(getProguardVersionString())
-            )
-            CodeShrinker.R8 -> VersionedCodeShrinker(CodeShrinker.R8,
-                parseVersionString(getR8Version()))
-        }
+        fun create() = VersionedCodeShrinker(parseVersionString(getR8Version()))
 
         private val versionPattern = """[^\s.]+(?:\.[^\s.]+)+""".toRegex()
-
-        private fun getProguardVersionString(): String {
-            try {
-                // Get version through reflection to avoid inlining of the compile time constant
-                return ProGuard::class.java.getField("VERSION").get(null) as String
-            } catch (e: Exception) { // Multiple reflection related exceptions possible here
-                LoggerWrapper.getLogger(VersionedCodeShrinker::class.java)
-                    .warning("Unable to find ProGuard.VERSION field, assuming empty string.")
-                return ""
-            }
-        }
 
         @VisibleForTesting
         internal fun parseVersionString(version: String): String {

@@ -50,7 +50,7 @@ import com.android.build.gradle.internal.dependency.ModelArtifactCompatibilityRu
 import com.android.build.gradle.internal.dependency.PlatformAttrTransform
 import com.android.build.gradle.internal.dependency.RecalculateStackFramesTransform.Companion.registerGlobalRecalculateStackFramesTransform
 import com.android.build.gradle.internal.dependency.RecalculateStackFramesTransform.Companion.registerRecalculateStackFramesTransformForComponent
-import com.android.build.gradle.internal.dependency.VersionedCodeShrinker.Companion.of
+import com.android.build.gradle.internal.dependency.VersionedCodeShrinker
 import com.android.build.gradle.internal.dependency.getDexingArtifactConfigurations
 import com.android.build.gradle.internal.dependency.getJavaHome
 import com.android.build.gradle.internal.dependency.getJdkId
@@ -73,7 +73,6 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.options.StringOption
 import com.android.build.gradle.options.SyncOptions
-import com.android.builder.model.CodeShrinker
 import com.google.common.collect.Maps
 import org.gradle.api.ActionConfiguration
 import org.gradle.api.Project
@@ -600,40 +599,24 @@ class DependencyConfigurator(
                 )
             }
         }
-        if (projectOptions[BooleanOption.ENABLE_PROGUARD_RULES_EXTRACTION]) {
-            val shrinkers: Set<CodeShrinker> = allComponents
-                .asSequence()
-                .filterIsInstance(ConsumableCreationConfig::class.java)
-                .map { it.codeShrinker }
-                .filterNotNull()
-                .toSet()
-            for (shrinker in shrinkers) {
-                dependencies.registerTransform(
+        if (projectOptions[BooleanOption.ENABLE_PROGUARD_RULES_EXTRACTION]
+                && allComponents.any { it is ConsumableCreationConfig && it.minifiedEnabled }) {
+            dependencies.registerTransform(
                     FilterShrinkerRulesTransform::class.java
-                ) { reg: TransformSpec<FilterShrinkerRulesTransform.Parameters> ->
-                    reg.from
+            ) { reg: TransformSpec<FilterShrinkerRulesTransform.Parameters> ->
+                reg.from
                         .attribute(
-                            ArtifactAttributes.ARTIFACT_FORMAT,
-                            AndroidArtifacts.ArtifactType.UNFILTERED_PROGUARD_RULES.type
+                                ArtifactAttributes.ARTIFACT_FORMAT,
+                                AndroidArtifacts.ArtifactType.UNFILTERED_PROGUARD_RULES.type
                         )
-                    reg.to
+                reg.to
                         .attribute(
-                            ArtifactAttributes.ARTIFACT_FORMAT,
-                            AndroidArtifacts.ArtifactType.FILTERED_PROGUARD_RULES.type
+                                ArtifactAttributes.ARTIFACT_FORMAT,
+                                AndroidArtifacts.ArtifactType.FILTERED_PROGUARD_RULES.type
                         )
-                    reg.from.attribute(
-                        VariantManager.SHRINKER_ATTR,
-                        shrinker.toString()
-                    )
-                    reg.to.attribute(
-                        VariantManager.SHRINKER_ATTR,
-                        shrinker.toString()
-                    )
-                    reg.parameters { params: FilterShrinkerRulesTransform.Parameters ->
-                        params.shrinker
-                            .set(of(shrinker))
-                        params.projectName.set(project.name)
-                    }
+                reg.parameters { params: FilterShrinkerRulesTransform.Parameters ->
+                    params.shrinker.set(VersionedCodeShrinker.create())
+                    params.projectName.set(project.name)
                 }
             }
         }

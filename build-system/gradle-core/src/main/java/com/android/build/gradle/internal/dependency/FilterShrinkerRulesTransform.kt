@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.dependency
 
 import com.android.SdkConstants
 import com.android.SdkConstants.COM_ANDROID_TOOLS_FOLDER
-import com.android.builder.model.CodeShrinker
 import com.android.ide.common.repository.GradleVersion
 import com.android.utils.FileUtils
 import com.google.common.annotations.VisibleForTesting
@@ -102,7 +101,7 @@ abstract class FilterShrinkerRulesTransform :
 }
 
 // Regex for directories containing PG/R8 configuration files inside META-INF/com.android.tools/
-private val configDirRegex = """(proguard|r8)(?:-from-([^:@]+?))?(?:-upto-([^:@]+?))?""".toRegex()
+private val configDirRegex = """r8(?:-from-([^:@]+?))?(?:-upto-([^:@]+?))?""".toRegex()
 
 @VisibleForTesting
 internal fun configDirMatchesVersion(
@@ -110,14 +109,7 @@ internal fun configDirMatchesVersion(
     versionedShrinker: VersionedCodeShrinker
 ): Boolean {
     configDirRegex.matchEntire(dirName.toLowerCase(Locale.US))?.let { matchResult ->
-        val (shrinker, from, upto) = matchResult.destructured
-
-        if (versionedShrinker.shrinker == CodeShrinker.R8 && shrinker != "r8") {
-            return false
-        }
-        if (versionedShrinker.shrinker == CodeShrinker.PROGUARD && shrinker != "proguard") {
-            return false
-        }
+        val (from, upto) = matchResult.destructured
 
         if (from.isEmpty() && upto.isEmpty()) {
             return true
