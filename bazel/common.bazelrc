@@ -152,6 +152,7 @@ build:dynamic --strategy=JavaIjar=dynamic
 build:dynamic --strategy=JavaDeployJar=dynamic
 build:dynamic --strategy=JavaSourceJar=dynamic
 build:dynamic --strategy=Turbine=dynamic
+build:dynamic --strategy=JavacTurbine=dynamic
 # Studio build actions, see b/171900265 for details
 build:dynamic --strategy=zipper=dynamic
 build:dynamic --strategy=zipmerger=dynamic
