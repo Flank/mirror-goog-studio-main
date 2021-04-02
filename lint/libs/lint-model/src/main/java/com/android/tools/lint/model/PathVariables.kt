@@ -47,6 +47,11 @@ class PathVariables {
         pathVariables.sortWith(PATH_COMPARATOR)
     }
 
+    /** Removes all the variables */
+    fun clear() {
+        pathVariables.clear()
+    }
+
     /**
      * For a given [file], produce a path with variables which applies
      * the path variable mapping and root file. If [relativeTo] is
@@ -136,17 +141,17 @@ class PathVariables {
         if (pathVariables.isEmpty()) {
             return
         }
-        sort()
         for (variable in pathVariables.toList()) {
             try {
                 assert(!variable.name.endsWith(CANONICALIZED)) // unlikely -- reserved suffix
                 val canonical = variable.dir.canonicalFile
                 if (canonical.path != variable.dir.path) {
-                    add(variable.name + CANONICALIZED, canonical)
+                    add(variable.name + CANONICALIZED, canonical, false)
                 }
             } catch (ignore: IOException) {
             }
         }
+        sort()
     }
 
     /** Returns true if there is at least one path variable */

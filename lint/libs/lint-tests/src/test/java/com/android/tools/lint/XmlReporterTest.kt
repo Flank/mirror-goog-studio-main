@@ -29,9 +29,11 @@ import com.android.tools.lint.checks.infrastructure.TestFiles.xml
 import com.android.tools.lint.checks.infrastructure.TestLintTask
 import com.android.tools.lint.checks.infrastructure.TestMode
 import com.android.tools.lint.checks.infrastructure.TestResultChecker
+import com.android.utils.PathUtils
 import org.intellij.lang.annotations.Language
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import java.nio.file.Files
 
 class XmlReporterTest {
     private val xmlPrologue = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
@@ -105,29 +107,26 @@ class XmlReporterTest {
 
     @Test
     fun testFullPaths() {
-        var currentClient: com.android.tools.lint.checks.infrastructure.TestLintClient? = null
+        val tempDir = Files.createTempDirectory("testFullPaths")
+        val rootDirectory = tempDir.toFile()
+
         val factory: () -> com.android.tools.lint.checks.infrastructure.TestLintClient =
             {
                 val client = com.android.tools.lint.checks.infrastructure.TestLintClient()
                 client.flags.isFullPath = true
-                currentClient = client
+                client.pathVariables.clear()
+                client.pathVariables.add("TEST_ROOT", rootDirectory)
                 client
             }
+
         lint().files(sampleManifest, sampleLayout)
             .issues(ManifestDetector.USES_SDK, HardcodedValuesDetector.ISSUE)
             .clientFactory(factory)
             .testModes(TestMode.PARTIAL)
+            .rootDirectory(rootDirectory)
             .run()
             .checkXmlReport(
                 TestResultChecker { xml ->
-                    val testRoot = currentClient?.knownProjects?.firstOrNull()?.dir?.parentFile
-                    val actual = if (testRoot != null) {
-                        xml.replace(testRoot.path, "TESTROOT")
-                            .replace(testRoot.canonicalPath, "TESTROOT")
-                            .replace('\\', '/')
-                    } else {
-                        xml
-                    }
                     @Language("XML")
                     val expected =
                         """
@@ -169,10 +168,12 @@ class XmlReporterTest {
 
                         </issues>
                     """
-                    assertEquals(xmlPrologue + expected.trimIndent() + "\n", actual)
+                    assertEquals(xmlPrologue + expected.trimIndent() + "\n", xml)
                 },
                 fullPaths = true
             )
+
+        PathUtils.deleteRecursivelyIfExists(tempDir)
     }
 
     @Test
