@@ -20,6 +20,7 @@ import com.android.build.api.variant.ApkComponent
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.ResValue
 import com.android.build.api.variant.SigningConfig
+import com.android.build.api.variant.TestApkComponent
 import org.gradle.api.Incubating
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.ListProperty
@@ -32,7 +33,7 @@ import java.io.Serializable
  * Properties for the android test Variant of a module.
  */
 @Incubating
-interface AndroidTest : ApkComponent, TestComponent {
+interface AndroidTest : TestApkComponent, TestComponent {
 
     /**
      * Variant's application ID as present in the final manifest file of the APK.
@@ -48,24 +49,6 @@ interface AndroidTest : ApkComponent, TestComponent {
      * in the AndroidManifest.xml.
      */
     val namespace: Provider<String>
-
-    /**
-     * The instrumentationRunner to use to run the tests.
-     */
-    val instrumentationRunner: Property<String>
-
-    /**
-     * The handleProfiling value to use to run the tests.
-     */
-    val handleProfiling: Property<Boolean>
-
-    /**
-     * The functionalTest value to use to run the tests.
-     */
-    val functionalTest: Property<Boolean>
-
-    /** The test label.  */
-    val testLabel: Property<String?>
 
     /**
      * Variant's [BuildConfigField] which will be generated in the BuildConfig class.

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 The Android Open Source Project
+ * Copyright (C) 2021 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,30 +13,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.android.build.api.variant
 
 import org.gradle.api.Incubating
 import org.gradle.api.provider.Property
-import org.gradle.api.provider.Provider
 
-/**
- * [Variant] for test-only modules.
- */
 @Incubating
-interface TestVariant: TestApkComponent, Variant {
-    /**
-     * Variant's application ID as present in the final manifest file of the APK.
-     */
-    override val applicationId: Property<String>
+interface TestApkComponent: ApkComponent {
 
     /**
-     * The application of the app under tests.
+     * The instrumentationRunner to use to run the tests.
      */
-    val testedApplicationId: Provider<String>
+    val instrumentationRunner: Property<String>
 
     /**
-     * Variant settings related to transforming bytecodes into dex files initialized from
-     * the corresponding fields in the DSL.
+     * The handleProfiling value to use to run the tests.
      */
-    val dexing: Dexing
+    val handleProfiling: Property<Boolean>
+
+    /**
+     * The functionalTest value to use to run the tests.
+     */
+    val functionalTest: Property<Boolean>
+
+    /**
+     * The test label.
+     */
+    val testLabel: Property<String?>
 }

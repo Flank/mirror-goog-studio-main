@@ -980,13 +980,14 @@ com.android.build.api.variant.SigningConfig.getEnableV1Signing: org.gradle.api.p
 com.android.build.api.variant.SigningConfig.getEnableV2Signing: org.gradle.api.provider.Property<java.lang.Boolean> ()
 com.android.build.api.variant.SigningConfig.getEnableV3Signing: org.gradle.api.provider.Property<java.lang.Boolean> ()
 com.android.build.api.variant.SigningConfig.getEnableV4Signing: org.gradle.api.provider.Property<java.lang.Boolean> ()
-com.android.build.api.variant.TestVariant implements com.android.build.api.variant.ApkComponent, com.android.build.api.variant.Variant
+com.android.build.api.variant.TestApkComponent implements com.android.build.api.variant.ApkComponent
+com.android.build.api.variant.TestApkComponent.getFunctionalTest: org.gradle.api.provider.Property<java.lang.Boolean> ()
+com.android.build.api.variant.TestApkComponent.getHandleProfiling: org.gradle.api.provider.Property<java.lang.Boolean> ()
+com.android.build.api.variant.TestApkComponent.getInstrumentationRunner: org.gradle.api.provider.Property<java.lang.String> ()
+com.android.build.api.variant.TestApkComponent.getTestLabel: org.gradle.api.provider.Property<java.lang.String> ()
+com.android.build.api.variant.TestVariant implements com.android.build.api.variant.TestApkComponent, com.android.build.api.variant.Variant
 com.android.build.api.variant.TestVariant.getApplicationId: org.gradle.api.provider.Property<java.lang.String> ()
 com.android.build.api.variant.TestVariant.getDexing: com.android.build.api.variant.Dexing ()
-com.android.build.api.variant.TestVariant.getFunctionalTest: org.gradle.api.provider.Property<java.lang.Boolean> ()
-com.android.build.api.variant.TestVariant.getHandleProfiling: org.gradle.api.provider.Property<java.lang.Boolean> ()
-com.android.build.api.variant.TestVariant.getInstrumentationRunner: org.gradle.api.provider.Property<java.lang.String> ()
-com.android.build.api.variant.TestVariant.getTestLabel: org.gradle.api.provider.Property<java.lang.String> ()
 com.android.build.api.variant.TestVariant.getTestedApplicationId: org.gradle.api.provider.Provider<java.lang.String> ()
 com.android.build.api.variant.TestVariantBuilder implements com.android.build.api.variant.VariantBuilder
 com.android.build.api.variant.Variant implements com.android.build.api.component.Component
