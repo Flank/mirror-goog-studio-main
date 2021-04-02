@@ -933,20 +933,12 @@ com.android.build.api.variant.ExternalNativeBuild.getCFlags: org.gradle.api.prov
 com.android.build.api.variant.ExternalNativeBuild.getCppFlags: org.gradle.api.provider.ListProperty<java.lang.String> ()
 com.android.build.api.variant.ExternalNativeBuild.getTargets: org.gradle.api.provider.SetProperty<java.lang.String> ()
 com.android.build.api.variant.ExternalNdkBuild implements com.android.build.api.variant.ExternalNativeBuild
-com.android.build.api.variant.FilterConfiguration implements java.io.Serializable
+com.android.build.api.variant.FilterConfiguration
 com.android.build.api.variant.FilterConfiguration$FilterType extends java.lang.Enum
 com.android.build.api.variant.FilterConfiguration$FilterType.valueOf: com.android.build.api.variant.FilterConfiguration$FilterType (java.lang.String)
 com.android.build.api.variant.FilterConfiguration$FilterType.values: com.android.build.api.variant.FilterConfiguration$FilterType[] ()
-com.android.build.api.variant.FilterConfiguration.<init>: com.android.build.api.variant.FilterConfiguration (com.android.build.api.variant.FilterConfiguration$FilterType, java.lang.String)
-com.android.build.api.variant.FilterConfiguration.component1: com.android.build.api.variant.FilterConfiguration$FilterType ()
-com.android.build.api.variant.FilterConfiguration.component2: java.lang.String ()
-com.android.build.api.variant.FilterConfiguration.copy$default: com.android.build.api.variant.FilterConfiguration (com.android.build.api.variant.FilterConfiguration, com.android.build.api.variant.FilterConfiguration$FilterType, java.lang.String, int, java.lang.Object)
-com.android.build.api.variant.FilterConfiguration.copy: com.android.build.api.variant.FilterConfiguration (com.android.build.api.variant.FilterConfiguration$FilterType, java.lang.String)
-com.android.build.api.variant.FilterConfiguration.equals: boolean (java.lang.Object)
 com.android.build.api.variant.FilterConfiguration.getFilterType: com.android.build.api.variant.FilterConfiguration$FilterType ()
 com.android.build.api.variant.FilterConfiguration.getIdentifier: java.lang.String ()
-com.android.build.api.variant.FilterConfiguration.hashCode: int ()
-com.android.build.api.variant.FilterConfiguration.toString: java.lang.String ()
 com.android.build.api.variant.HasAndroidTestBuilder
 com.android.build.api.variant.HasAndroidTestBuilder.getAndroidTestEnabled: boolean ()
 com.android.build.api.variant.HasAndroidTestBuilder.getEnableAndroidTest: boolean ()

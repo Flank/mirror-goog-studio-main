@@ -23,6 +23,7 @@ import com.android.build.api.variant.BuiltArtifacts;
 import com.android.build.api.variant.FilterConfiguration;
 import com.android.build.api.variant.impl.BuiltArtifactImpl;
 import com.android.build.api.variant.impl.BuiltArtifactsImpl;
+import com.android.build.api.variant.impl.FilterConfigurationImpl;
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.builder.files.IncrementalRelativeFileSets;
@@ -125,7 +126,7 @@ public class PackageAndroidArtifactTest {
                                 new VariantOutputConfigurationImpl(
                                         false,
                                         ImmutableList.of(
-                                                new FilterConfiguration(
+                                                new FilterConfigurationImpl(
                                                         FilterConfiguration.FilterType.DENSITY,
                                                         "xxhdpi"))),
                                 Collections.emptyMap()),
@@ -136,7 +137,7 @@ public class PackageAndroidArtifactTest {
                                 new VariantOutputConfigurationImpl(
                                         false,
                                         ImmutableList.of(
-                                                new FilterConfiguration(
+                                                new FilterConfigurationImpl(
                                                         FilterConfiguration.FilterType.LANGUAGE,
                                                         "fr"))),
                                 Collections.emptyMap()),
@@ -147,7 +148,7 @@ public class PackageAndroidArtifactTest {
                                 new VariantOutputConfigurationImpl(
                                         false,
                                         ImmutableList.of(
-                                                new FilterConfiguration(
+                                                new FilterConfigurationImpl(
                                                         FilterConfiguration.FilterType.LANGUAGE,
                                                         "en"))),
                                 Collections.emptyMap()));
@@ -171,7 +172,7 @@ public class PackageAndroidArtifactTest {
                                 new VariantOutputConfigurationImpl(
                                         false,
                                         ImmutableList.of(
-                                                new FilterConfiguration(
+                                                new FilterConfigurationImpl(
                                                         FilterConfiguration.FilterType.LANGUAGE,
                                                         "fr"))),
                                 Collections.emptyMap()),
@@ -182,7 +183,7 @@ public class PackageAndroidArtifactTest {
                                 new VariantOutputConfigurationImpl(
                                         false,
                                         ImmutableList.of(
-                                                new FilterConfiguration(
+                                                new FilterConfigurationImpl(
                                                         FilterConfiguration.FilterType.LANGUAGE,
                                                         "en"))),
                                 Collections.emptyMap()));

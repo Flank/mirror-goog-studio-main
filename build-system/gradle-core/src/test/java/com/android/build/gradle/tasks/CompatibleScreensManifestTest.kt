@@ -24,13 +24,13 @@ import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.impl.AndroidVersionImpl
 import com.android.build.api.variant.impl.ApplicationVariantImpl
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
+import com.android.build.api.variant.impl.FilterConfigurationImpl
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.VariantOutputList
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.fixtures.FakeGradleProperty
 import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
-import com.android.build.gradle.internal.fixtures.FakeProviderFactory
 import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.MutableTaskContainer
@@ -38,12 +38,10 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.createTaskCreationServices
 import com.android.build.gradle.internal.services.getBuildServiceName
 import com.android.build.gradle.internal.variant.BaseVariantData
-import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.profile.NameAnonymizer
 import com.android.builder.profile.NameAnonymizerSerializer
 import com.google.common.base.Joiner
-import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
 import com.google.common.truth.Truth.assertThat
 import com.google.wireless.android.sdk.stats.GradleBuildProfile
@@ -191,7 +189,7 @@ class CompatibleScreensManifestTest {
                 FakeGradleProperty("version_name"),
                 FakeGradleProperty(true),
                 VariantOutputConfigurationImpl(false,
-                    listOf(FilterConfiguration(FilterConfiguration.FilterType.DENSITY, "xhdpi"))),
+                    listOf(FilterConfigurationImpl(FilterConfiguration.FilterType.DENSITY, "xhdpi"))),
                 "base_name",
 
                 "split_full_name",
@@ -226,7 +224,7 @@ class CompatibleScreensManifestTest {
                 FakeGradleProperty("version_name"),
                 FakeGradleProperty(true),
                 VariantOutputConfigurationImpl(false,
-                    listOf(FilterConfiguration(FilterConfiguration.FilterType.DENSITY, "xhdpi"))),
+                    listOf(FilterConfigurationImpl(FilterConfiguration.FilterType.DENSITY, "xhdpi"))),
                 "base_name",
                 "split_full_name",
                 FakeGradleProperty(value = "output_file_name")))
@@ -258,7 +256,7 @@ class CompatibleScreensManifestTest {
                 FakeGradleProperty("version_name"),
                 FakeGradleProperty(true),
                 VariantOutputConfigurationImpl(false,
-                    listOf(FilterConfiguration(FilterConfiguration.FilterType.DENSITY, "xhdpi"))),
+                    listOf(FilterConfigurationImpl(FilterConfiguration.FilterType.DENSITY, "xhdpi"))),
                 "base_name",
                 "split_full_name",
                 FakeGradleProperty(value = "output_file_name")))
@@ -268,7 +266,7 @@ class CompatibleScreensManifestTest {
                 FakeGradleProperty("version_name"),
                 FakeGradleProperty(true),
                 VariantOutputConfigurationImpl(false,
-                    listOf(FilterConfiguration(FilterConfiguration.FilterType.DENSITY, "xxhdpi"))),
+                    listOf(FilterConfigurationImpl(FilterConfiguration.FilterType.DENSITY, "xxhdpi"))),
                 "base_name",
 
                 "split_full_name",

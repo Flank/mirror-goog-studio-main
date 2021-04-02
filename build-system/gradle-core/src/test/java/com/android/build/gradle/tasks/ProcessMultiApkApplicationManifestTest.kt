@@ -21,6 +21,7 @@ import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.VariantOutputConfiguration
 import com.android.build.api.variant.impl.BuiltArtifactsImpl
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
+import com.android.build.api.variant.impl.FilterConfigurationImpl
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.gradle.internal.fixtures.FakeGradleProperty
@@ -267,7 +268,7 @@ class ProcessMultiApkApplicationManifestTest {
         }
     }
 
-    private fun createVariantOutput(filter: FilterConfiguration? = null) =
+    private fun createVariantOutput(filter: FilterConfigurationImpl? = null) =
         VariantOutputImpl(
             FakeGradleProperty(value = 0),
             FakeGradleProperty(value =""),
@@ -279,7 +280,7 @@ class ProcessMultiApkApplicationManifestTest {
         )
 
     private fun createVariantOutputForFilter(filterType: FilterConfiguration.FilterType, identifier: String) =
-        createVariantOutput(FilterConfiguration(filterType, identifier))
+        createVariantOutput(FilterConfigurationImpl(filterType, identifier))
 
     private fun createVariantOutputForDensity(density: String) =
         createVariantOutputForFilter(FilterConfiguration.FilterType.DENSITY, density)
@@ -314,24 +315,24 @@ class ProcessMultiApkApplicationManifestTest {
                 package="com.android.tests.basic.debug"
                 android:versionCode="12"
                 android:versionName="2.0" >
-            
+
                 <uses-sdk
                     android:minSdkVersion="16"
                     android:targetSdkVersion="16" />
-            
+
                 <uses-permission android:name="com.blah12" />
-            
+
                 <permission-group
                     android:name="foo.permission-group.COST_MONEY"
                     android:description="@string/app_name"
                     android:label="@string/app_name" />
-            
+
                 <permission
                     android:name="foo.permission.SEND_SMS"
                     android:description="@string/app_name"
                     android:label="@string/app_name"
                     android:permissionGroup="foo.permission-group.COST_MONEY" />
-            
+
                 <application
                     android:appComponentFactory="android.support.v4.app.CoreComponentFactory"
                     android:debuggable="true"
@@ -342,7 +343,7 @@ class ProcessMultiApkApplicationManifestTest {
                         android:label="@string/app_name" >
                         <intent-filter>
                             <action android:name="android.intent.action.MAIN" />
-            
+
                             <category android:name="android.intent.category.LAUNCHER" />
                         </intent-filter>
                     </activity>
@@ -350,13 +351,13 @@ class ProcessMultiApkApplicationManifestTest {
                         android:name="com.google.android.gms.common.api.GoogleApiActivity"
                         android:exported="false"
                         android:theme="@android:style/Theme.Translucent.NoTitleBar" />
-            
+
                     <meta-data
                         android:name="com.google.android.gms.version"
                         android:value="@integer/google_play_services_version" />
                 </application>
-            
-            </manifest>                
+
+            </manifest>
         """.trimIndent())
     }
 }

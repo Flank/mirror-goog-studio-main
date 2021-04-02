@@ -81,6 +81,7 @@ import com.android.build.gradle.internal.workeractions.DecoratedWorkParameters
 
 import com.android.build.api.variant.impl.BuiltArtifactImpl
 import com.android.build.api.variant.impl.BuiltArtifactsImpl
+import com.android.build.api.variant.impl.FilterConfigurationImpl
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
 import com.android.build.api.artifact.ArtifactTransformationRequest
 
@@ -122,7 +123,7 @@ abstract class ProducerTask extends DefaultTask {
         "123",
         new VariantOutputConfigurationImpl(false,
           [
-            new FilterConfiguration(FilterConfiguration.FilterType.DENSITY, identifier)
+            new FilterConfigurationImpl(FilterConfiguration.FilterType.DENSITY, identifier)
           ]),
         Collections.emptyMap()
       )

@@ -17,8 +17,6 @@
 package com.android.build.api.variant
 
 import org.gradle.api.Incubating
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.Nested
 
 @Incubating
 interface VariantOutputConfiguration {
@@ -38,7 +36,6 @@ interface VariantOutputConfiguration {
      *
      * @return the [OutputType] for this APK
      */
-    @get:Input
     val outputType: OutputType
 
     /**
@@ -47,6 +44,5 @@ interface VariantOutputConfiguration {
      *
      * @return list of [FilterConfiguration] for this output.
      */
-    @get:Nested
     val filters: Collection<FilterConfiguration>
 }

@@ -25,6 +25,7 @@ import com.android.build.api.variant.DependenciesInfo
 import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.impl.ApplicationVariantBuilderImpl
 import com.android.build.api.variant.impl.ApplicationVariantImpl
+import com.android.build.api.variant.impl.FilterConfigurationImpl
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.VariantOutputList
@@ -211,7 +212,7 @@ class ApplicationVariantFactory(
                     variantOutputs.add(
                         VariantOutputConfigurationImpl(
                             filters = listOf(
-                                FilterConfiguration(
+                                FilterConfigurationImpl(
                                     filterType = FilterConfiguration.FilterType.ABI,
                                     identifier = abi
                                 )
@@ -228,11 +229,11 @@ class ApplicationVariantFactory(
                     variantOutputs.add(
                         VariantOutputConfigurationImpl(
                             filters = listOf(
-                                FilterConfiguration(
+                                FilterConfigurationImpl(
                                     filterType = FilterConfiguration.FilterType.ABI,
                                     identifier = abi
                                 ),
-                                FilterConfiguration(
+                                FilterConfigurationImpl(
                                     filterType = FilterConfiguration.FilterType.DENSITY,
                                     identifier = density
                                 )
@@ -244,7 +245,7 @@ class ApplicationVariantFactory(
                 variantOutputs.add(
                     VariantOutputConfigurationImpl(
                         filters = listOf(
-                            FilterConfiguration(
+                            FilterConfigurationImpl(
                                 filterType = FilterConfiguration.FilterType.DENSITY,
                                 identifier = density
                             )

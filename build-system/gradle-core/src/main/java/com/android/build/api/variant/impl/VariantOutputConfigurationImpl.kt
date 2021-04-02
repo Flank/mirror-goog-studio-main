@@ -21,15 +21,20 @@ import com.android.build.api.variant.VariantOutputConfiguration
 import com.android.build.api.variant.VariantOutputConfiguration.OutputType
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.utils.appendCamelCase
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Nested
 import java.io.File
 import java.io.Serializable
 import java.util.Locale
 
 data class VariantOutputConfigurationImpl(
+    @get:Input
     private val isUniversal: Boolean = false,
-    override val filters: Collection<FilterConfiguration> = listOf()
+    @get:Nested
+    override val filters: Collection<FilterConfigurationImpl> = listOf()
 ) : VariantOutputConfiguration, Serializable {
 
+    @get:Input
     override val outputType: OutputType
         get() {
             if (isUniversal) return OutputType.UNIVERSAL

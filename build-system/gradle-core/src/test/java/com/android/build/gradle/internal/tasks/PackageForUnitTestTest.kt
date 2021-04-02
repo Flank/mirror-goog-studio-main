@@ -16,11 +16,11 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.FilterConfiguration.FilterType
 import com.android.build.api.variant.VariantOutputConfiguration
 import com.android.build.api.variant.impl.BuiltArtifactImpl
 import com.android.build.api.variant.impl.BuiltArtifactsImpl
+import com.android.build.api.variant.impl.FilterConfigurationImpl
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.google.common.truth.Truth.assertThat
@@ -79,7 +79,7 @@ class PackageForUnitTestTest {
         createBuiltArtifacts(listOf(
             createBuiltArtifact(File(outputFolder,"the_right_file").absolutePath,
                 VariantOutputConfigurationImpl(false,
-                    listOf(FilterConfiguration(FilterType.ABI, "x86"))))
+                    listOf(FilterConfigurationImpl(FilterType.ABI, "x86"))))
         )).saveToDirectory(outputFolder)
 
         assertThat(task.apkFrom(directoryProperty).name).isEqualTo("the_right_file")
@@ -92,10 +92,10 @@ class PackageForUnitTestTest {
         createBuiltArtifacts(listOf(
             createBuiltArtifact(File(outputFolder,"the_right_file_1").absolutePath,
                 VariantOutputConfigurationImpl(false,
-                    listOf(FilterConfiguration(FilterType.ABI, "x86")))),
+                    listOf(FilterConfigurationImpl(FilterType.ABI, "x86")))),
             createBuiltArtifact(File(outputFolder,"the_right_file_2").absolutePath,
                 VariantOutputConfigurationImpl(false,
-                    listOf(FilterConfiguration(FilterType.ABI, "arm"))))
+                    listOf(FilterConfigurationImpl(FilterType.ABI, "arm"))))
         )).saveToDirectory(outputFolder)
 
         assertThat(task.apkFrom(directoryProperty).name).startsWith("the_right_file")
@@ -108,10 +108,10 @@ class PackageForUnitTestTest {
         createBuiltArtifacts(listOf(
             createBuiltArtifact(File(outputFolder,"the_wrong_file").absolutePath,
                 VariantOutputConfigurationImpl(false,
-                    listOf(FilterConfiguration(FilterType.DENSITY, "xhdpi")))),
+                    listOf(FilterConfigurationImpl(FilterType.DENSITY, "xhdpi")))),
             createBuiltArtifact(File(outputFolder,"the_wrong_file").absolutePath,
                 VariantOutputConfigurationImpl(false,
-                    listOf(FilterConfiguration(FilterType.DENSITY, "xxhdpi"))))
+                    listOf(FilterConfigurationImpl(FilterType.DENSITY, "xxhdpi"))))
         )).saveToDirectory(outputFolder)
 
         try {
@@ -131,21 +131,21 @@ class PackageForUnitTestTest {
             createBuiltArtifact(File(outputFolder,"the_wrong_file_1").absolutePath,
                 VariantOutputConfigurationImpl(false,
                     listOf(
-                        FilterConfiguration(FilterType.DENSITY, "xhdpi"),
-                        FilterConfiguration(FilterType.ABI, "x86")
+                        FilterConfigurationImpl(FilterType.DENSITY, "xhdpi"),
+                        FilterConfigurationImpl(FilterType.ABI, "x86")
                     ))),
             createBuiltArtifact(File(outputFolder,"the_right_file_1").absolutePath,
                 VariantOutputConfigurationImpl(false,
-                    listOf(FilterConfiguration(FilterType.ABI, "x86")))),
+                    listOf(FilterConfigurationImpl(FilterType.ABI, "x86")))),
             createBuiltArtifact(File(outputFolder,"the_wrong_file_2").absolutePath,
                 VariantOutputConfigurationImpl(false,
                     listOf(
-                        FilterConfiguration(FilterType.DENSITY, "xxhdpi"),
-                        FilterConfiguration(FilterType.ABI, "arm")
+                        FilterConfigurationImpl(FilterType.DENSITY, "xxhdpi"),
+                        FilterConfigurationImpl(FilterType.ABI, "arm")
                     ))),
             createBuiltArtifact(File(outputFolder,"the_right_file_2").absolutePath,
                 VariantOutputConfigurationImpl(false,
-                    listOf(FilterConfiguration(FilterType.ABI, "arm"))))
+                    listOf(FilterConfigurationImpl(FilterType.ABI, "arm"))))
         )).saveToDirectory(outputFolder)
 
         assertThat(task.apkFrom(directoryProperty).name).startsWith("the_right_file")
@@ -160,12 +160,12 @@ class PackageForUnitTestTest {
             createBuiltArtifact(File(outputFolder,"the_wrong_file_1").absolutePath,
                 VariantOutputConfigurationImpl(false,
                     listOf(
-                        FilterConfiguration(FilterType.DENSITY, "hdpi")
+                        FilterConfigurationImpl(FilterType.DENSITY, "hdpi")
                     ))),
 
             createBuiltArtifact(File(outputFolder,"the_wrong_file_2").absolutePath,
                 VariantOutputConfigurationImpl(false,
-                    listOf(FilterConfiguration(FilterType.DENSITY, "xhdpi")))),
+                    listOf(FilterConfigurationImpl(FilterType.DENSITY, "xhdpi")))),
 
             createBuiltArtifact(File(outputFolder,"the_right_file").absolutePath,
                 VariantOutputConfigurationImpl(true,
