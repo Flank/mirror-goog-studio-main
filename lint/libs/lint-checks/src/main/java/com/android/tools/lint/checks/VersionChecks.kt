@@ -92,15 +92,17 @@ class VersionChecks(
         }
 
         @JvmStatic
+        @JvmOverloads
         fun isWithinVersionCheckConditional(
             context: JavaContext,
             element: UElement,
-            api: Int
+            api: Int,
+            lowerBound: Boolean = true
         ): Boolean {
             val client = context.client
             val evaluator = context.evaluator
             val project = context.project
-            val check = VersionChecks(client, evaluator, project)
+            val check = VersionChecks(client, evaluator, project, lowerBound)
             val constraint = check.getWithinVersionCheckConditional(
                 evaluator = evaluator, element = element, apiLookup = null
             ) ?: return false
@@ -108,6 +110,7 @@ class VersionChecks(
         }
 
         @JvmStatic
+        @JvmOverloads
         fun isWithinVersionCheckConditional(
             client: LintClient,
             evaluator: JavaEvaluator,
