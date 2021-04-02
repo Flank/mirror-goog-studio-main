@@ -365,6 +365,17 @@ open class LintCliClient : LintClient {
             return ERRNO_CREATED_BASELINE
         }
 
+        // If failing the build on exit: print at least one error to the
+        // console to help pinpoint the problem.
+        if (hasErrors && !reportingToConsole() && flags.isSetExitCode && !flags.isQuiet) {
+            val writer = PrintWriter(System.out, true)
+            val count = describeCounts(stats.errorCount, stats.warningCount, comma = false, capitalize = false)
+            println("Lint found $count. First failure:")
+            val reporter = Reporter.createTextReporter(this, LintCliFlags(), null, writer, false)
+            reporter.setWriteStats(false)
+            reporter.write(stats, listOf(definiteIncidents.first { it.severity.isError }))
+        }
+
         return if (flags.isSetExitCode) if (hasErrors) ERRNO_ERRORS else ERRNO_SUCCESS else ERRNO_SUCCESS
     }
 
@@ -1665,6 +1676,14 @@ open class LintCliClient : LintClient {
         }
 
         return super.getRootDir()
+    }
+
+    /**
+     * True if this client has at least one reporter writing to the
+     * console (stdout/stderr)
+     */
+    fun reportingToConsole(): Boolean {
+        return flags.reporters.any { it is TextReporter && it.isWriteToConsole }
     }
 
     protected open inner class LintCliUastParser(project: Project?) :

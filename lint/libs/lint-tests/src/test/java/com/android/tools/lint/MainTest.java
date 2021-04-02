@@ -950,6 +950,66 @@ public class MainTest extends AbstractCheckTest {
                 });
     }
 
+    public void testPrintFirstError() throws Exception {
+        // Regression test for 183625575: Lint tasks doesn't output errors anymore
+        File project =
+                getProjectDir(
+                        null,
+                        manifest().minSdk(1),
+                        xml(
+                                "lint.xml",
+                                ""
+                                        + "<lint>\n"
+                                        + "    <issue id=\"DuplicateDefinition\" severity=\"fatal\"/>\n"
+                                        + "</lint>\n"),
+                        xml(
+                                "res/layout/test.xml",
+                                ""
+                                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
+                                        + "    <Button android:id='@+id/duplicated'/>\n"
+                                        + "    <Button android:id='@+id/duplicated'/>\n"
+                                        + "</LinearLayout>\n"),
+                        xml(
+                                "res/values/duplicates.xml",
+                                ""
+                                        + "<resources>\n"
+                                        + "    <item type=\"id\" name=\"name\" />\n"
+                                        + "    <item type=\"id\" name=\"name\" />\n"
+                                        + "</resources>\n"),
+                        kotlin("val path = \"/sdcard/path\""));
+
+        File html = File.createTempFile("report", "html");
+        html.deleteOnExit();
+
+        checkDriver(
+                ""
+                        + "Scanning MainTest_testPrintFirstError: ......\n"
+                        + "Scanning MainTest_testPrintFirstError (Phase 2): ...\n"
+                        + "Wrote HTML report to file://report.html\n"
+                        + "Lint found 2 errors and 5 warnings. First failure:\n"
+                        + "res/layout/test.xml:3: Error: Duplicate id @+id/duplicated, already defined earlier in this layout [DuplicateIds]\n"
+                        + "    <Button android:id='@+id/duplicated'/>\n"
+                        + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "    res/layout/test.xml:2: Duplicate id @+id/duplicated originally defined here",
+                "",
+                ERRNO_ERRORS,
+
+                // Args
+                new String[] {
+                    // "--quiet",
+                    "--disable",
+                    "LintError",
+                    "--html",
+                    html.getPath(),
+                    "--disable",
+                    "UsesMinSdkAttributes",
+                    "--exitcode",
+                    project.getPath()
+                },
+                s -> s.replace(html.getPath(), "report.html"),
+                null);
+    }
+
     public void testValidateOutput() throws Exception {
         if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
             // This test relies on making directories not writable, then

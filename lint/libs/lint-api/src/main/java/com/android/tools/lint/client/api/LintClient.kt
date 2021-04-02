@@ -1739,7 +1739,18 @@ abstract class LintClient {
     open fun getClientRevision(): String? = null
 
     /** Returns the display name of this lint client, if known. */
-    open fun getClientDisplayName(): String = clientName
+    open fun getClientDisplayName(): String {
+        // Fallback implementation if not overridden by LintClient
+        return when (clientName) {
+            // This will never be CLIENT_STUDIO because this method
+            // is overridden in the IDE to return the right IDE name,
+            // which could be Android Studio, or IntelliJ, etc.
+            CLIENT_GRADLE -> "Android Gradle Plugin"
+            CLIENT_UNIT_TESTS -> "Lint Unit Test"
+            CLIENT_CLI, CLIENT_UNKNOWN -> "Lint"
+            else -> clientName
+        }
+    }
 
     /**
      * Returns the version number of this lint client, if known. This is
