@@ -17,7 +17,7 @@
 package com.android.build.api.component.analytics
 
 import com.android.build.api.component.AndroidTest
-import com.android.build.api.variant.Aapt
+import com.android.build.api.variant.AndroidResources
 import com.android.build.api.variant.ApkPackaging
 import com.android.build.api.variant.ApplicationVariant
 import com.android.build.api.variant.DependenciesInfo
@@ -59,11 +59,11 @@ open class AnalyticsEnabledApplicationVariant @Inject constructor(
             return delegate.dependenciesInfo
         }
 
-    override val aapt: Aapt
+    override val androidResources: AndroidResources
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
                 VariantPropertiesMethodType.AAPT_OPTIONS_VALUE
-            return delegate.aapt
+            return delegate.androidResources
         }
 
     override val signingConfig: SigningConfig?

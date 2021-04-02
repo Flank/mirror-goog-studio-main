@@ -17,10 +17,9 @@ void add_requested_node(::layoutinspector::proto::GetViewTreeRequest &request,
   node1->set_id(id);
 }
 
-jbyteArray build_tree(sk_sp<SkPicture> picture,
+jbyteArray build_tree(sk_sp<SkData> data,
                       ::layoutinspector::proto::GetViewTreeRequest request,
                       float scale, JNIEnv *env) {
-  sk_sp<SkData> data = picture->serialize();
   auto root = ::layoutinspector::proto::InspectorView();
   v1::TreeBuildingCanvas::ParsePicture(
       static_cast<const char *>(data->data()), data->size(), 1,
@@ -37,9 +36,7 @@ jbyteArray build_tree(sk_sp<SkPicture> picture,
 
 extern "C" {
 
-JNIEXPORT jbyteArray JNICALL
-Java_com_android_tools_layoutinspector_SkiaParserTest_generateBoxes(
-    JNIEnv *env, jobject instance) {
+sk_sp<SkData> generateBoxesData() {
   SkPictureRecorder recorder;
   SkPaint paint;
 
@@ -91,11 +88,26 @@ Java_com_android_tools_layoutinspector_SkiaParserTest_generateBoxes(
 
   sk_sp<SkPicture> picture = recorder.finishRecordingAsPicture();
 
+  return picture->serialize();
+}
+
+JNIEXPORT jbyteArray JNICALL
+Java_com_android_tools_layoutinspector_SkiaParserTest_generateBoxes(
+    JNIEnv *env, jobject instance) {
   ::layoutinspector::proto::GetViewTreeRequest request;
   add_requested_node(request, 0, 0, 1000, 2000, 1);
   add_requested_node(request, 300, 1200, 400, 500, 4);
 
-  return build_tree(picture, request, 1.0, env);
+  return build_tree(generateBoxesData(), request, 1.0, env);
+}
+
+JNIEXPORT jbyteArray JNICALL
+Java_com_android_tools_layoutinspector_SkiaParserTest_generateBoxesData(
+    JNIEnv *env, jobject instance) {
+  sk_sp<SkData> skp = generateBoxesData();
+  jbyteArray result = env->NewByteArray(skp->size());
+  env->SetByteArrayRegion(result, 0, skp->size(), (const jbyte *)skp->bytes());
+  return result;
 }
 
 JNIEXPORT jbyteArray JNICALL
@@ -129,7 +141,7 @@ Java_com_android_tools_layoutinspector_SkiaParserTest_generateImage(
 
   ::layoutinspector::proto::GetViewTreeRequest request;
   add_requested_node(request, 0, 0, 10, 10, 1);
-  return build_tree(picture, request, 1.0, env);
+  return build_tree(picture->serialize(), request, 1.0, env);
 }
 
 JNIEXPORT jbyteArray JNICALL
@@ -214,7 +226,7 @@ Java_com_android_tools_layoutinspector_SkiaParserTest_generateTransformedViews(
   add_requested_node(request, 98, 185, 90, 55, 3);
   add_requested_node(request, 10, 10, 20, 20, 4);
 
-  return build_tree(picture, request, 0.7, env);
+  return build_tree(picture->serialize(), request, 0.7, env);
 }
 
 JNIEXPORT jbyteArray JNICALL
@@ -237,6 +249,6 @@ Java_com_android_tools_layoutinspector_SkiaParserTest_generateRealWorldExample(
   add_requested_node(request, 0, 0, 1000, 904, 80);
   add_requested_node(request, 0, 0, 1000, 1000, 73);
 
-  return build_tree(picture, request, 0.7, env);
+  return build_tree(picture->serialize(), request, 0.7, env);
 }
 }

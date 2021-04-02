@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
-import com.android.build.api.artifact.ArtifactType;
+import com.android.build.api.artifact.SingleArtifact;
 import com.android.build.api.component.impl.AndroidTestImpl;
 import com.android.build.api.variant.BuiltArtifact;
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl;
@@ -137,11 +137,11 @@ public abstract class TestServerTask extends NonIncrementalTask {
 
             testedVariant
                     .getArtifacts()
-                    .setTaskInputToFinalProduct(ArtifactType.APK.INSTANCE, task.getTestedApks());
+                    .setTaskInputToFinalProduct(SingleArtifact.APK.INSTANCE, task.getTestedApks());
 
             creationConfig
                     .getArtifacts()
-                    .setTaskInputToFinalProduct(ArtifactType.APK.INSTANCE, task.getTestApks());
+                    .setTaskInputToFinalProduct(SingleArtifact.APK.INSTANCE, task.getTestApks());
 
             if (!testServer.isConfigured()) {
                 task.setEnabled(false);

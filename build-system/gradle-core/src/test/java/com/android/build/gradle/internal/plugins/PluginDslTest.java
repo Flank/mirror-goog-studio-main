@@ -637,14 +637,12 @@ public class PluginDslTest {
                         + "\n"
                         + "    buildTypes {\n"
                         + "        debug {\n"
-                        + "            useProguard false\n"
                         + "            shrinkResources true\n"
                         + "        }\n"
                         + "    }\n"
                         + "}\n"
                         + "\n");
         BuildType debug = android.getBuildTypes().getByName("debug");
-        assertThat(debug.isUseProguard()).isFalse();
         assertThat(debug.isShrinkResources()).isTrue();
     }
 

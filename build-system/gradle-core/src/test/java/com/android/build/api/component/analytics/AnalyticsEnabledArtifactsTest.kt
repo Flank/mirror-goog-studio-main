@@ -16,9 +16,8 @@
 
 package com.android.build.api.component.analytics
 
-import com.android.build.api.artifact.ArtifactType
+import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.artifact.Artifacts
-import com.android.build.api.artifact.MultipleArtifactType
 import com.android.build.api.artifact.TaskBasedOperation
 import com.android.build.api.variant.BuiltArtifactsLoader
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
@@ -82,15 +81,15 @@ class AnalyticsEnabledArtifactsTest {
         @Suppress("UNCHECKED_CAST")
         val fakeProvider = Mockito.mock(Provider::class.java) as Provider<Directory>
 
-        Mockito.`when`(delegate.get(ArtifactType.APK)).thenReturn(fakeProvider)
-        Truth.assertThat(proxy.get(ArtifactType.APK)).isEqualTo(fakeProvider)
+        Mockito.`when`(delegate.get(SingleArtifact.APK)).thenReturn(fakeProvider)
+        Truth.assertThat(proxy.get(SingleArtifact.APK)).isEqualTo(fakeProvider)
 
         Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
         Truth.assertThat(
             stats.variantApiAccess.variantPropertiesAccessList.first().type
         ).isEqualTo(VariantPropertiesMethodType.GET_ARTIFACT_VALUE)
         Mockito.verify(delegate, Mockito.times(1))
-            .get(ArtifactType.APK)
+            .get(SingleArtifact.APK)
     }
 
     @Test

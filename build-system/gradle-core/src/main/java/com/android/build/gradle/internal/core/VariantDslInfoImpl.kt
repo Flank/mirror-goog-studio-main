@@ -17,7 +17,8 @@ package com.android.build.gradle.internal.core
 
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.variant.BuildConfigField
-import com.android.build.api.variant.impl.ResValue
+import com.android.build.api.variant.ResValue
+import com.android.build.api.variant.impl.ResValueKeyImpl
 import com.android.build.gradle.ProguardFiles
 import com.android.build.gradle.api.JavaCompileOptions
 import com.android.build.gradle.internal.PostprocessingFeatures
@@ -194,7 +195,7 @@ open class VariantDslInfoImpl internal constructor(
     override val directorySegments: Collection<String?> by lazy {
         val builder =
             ImmutableList.builder<String>()
-        if (variantType.isTestComponent) {
+        if (variantType.isTestComponent || variantType.isTestFixturesComponent) {
             builder.add(variantType.prefix)
         }
         if (productFlavorList.isNotEmpty()) {
@@ -701,7 +702,7 @@ open class VariantDslInfoImpl internal constructor(
         val resValueFields = mutableMapOf<ResValue.Key, ResValue>()
 
         fun addToListIfNotAlreadyPresent(classField: ClassField, comment: String) {
-            val key = ResValue.Key(classField.type, classField.name)
+            val key = ResValueKeyImpl(classField.type, classField.name)
             if (!resValueFields.containsKey(key)) {
                 resValueFields[key] = ResValue(
                     value = classField.value,
@@ -992,7 +993,6 @@ open class VariantDslInfoImpl internal constructor(
 
                 override fun getCodeShrinker() = when {
                     !buildTypeObj.isMinifyEnabled -> null
-                    buildTypeObj.isUseProguard == true -> CodeShrinker.PROGUARD
                     else -> CodeShrinker.R8
                 }
 

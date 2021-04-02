@@ -19,20 +19,29 @@ fun activityMainXml(
   appBarMainName: String
 ) = """
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.drawerlayout.widget.DrawerLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<!--
+Wrap the DrawerLayout with FrameLayout to use the same View type for the same view ID
+across the layout configurations
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/activity_container"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
-    tools:openDrawer="start">
+    android:layout_height="match_parent">
 
-    <include
-        android:id="@+id/${appBarMainName}"
-        layout="@layout/${appBarMainName}"
+    <androidx.drawerlayout.widget.DrawerLayout
+        android:id="@+id/drawer_layout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:fitsSystemWindows="true"
+        tools:openDrawer="start">
 
-</androidx.drawerlayout.widget.DrawerLayout>
+        <include
+            android:id="@+id/${appBarMainName}"
+            layout="@layout/${appBarMainName}"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+    </androidx.drawerlayout.widget.DrawerLayout>
+</FrameLayout>
 """

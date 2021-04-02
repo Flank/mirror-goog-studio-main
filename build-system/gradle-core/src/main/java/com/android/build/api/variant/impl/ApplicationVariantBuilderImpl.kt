@@ -64,10 +64,6 @@ open class ApplicationVariantBuilderImpl @Inject constructor(
         }
     }
 
-    override fun dependenciesInfo(action: DependenciesInfo.() -> Unit) {
-        action.invoke(dependenciesInfo)
-    }
-
     fun dependenciesInfo(action: Action<DependenciesInfo>) {
         action.execute(dependenciesInfo)
     }

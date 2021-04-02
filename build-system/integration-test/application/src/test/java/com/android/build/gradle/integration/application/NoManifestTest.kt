@@ -16,8 +16,7 @@
 
 package com.android.build.gradle.integration.application
 
-import com.android.build.api.artifact.ArtifactType
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
+import com.android.build.api.artifact.SingleArtifact
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
@@ -127,7 +126,7 @@ class NoManifestTest {
         assertThat(project.buildResult.failedTasks).isEmpty()
         val fileOutput =
                 FileUtils.join(
-                        ArtifactType.MERGED_MANIFEST.getOutputDir(
+                        SingleArtifact.MERGED_MANIFEST.getOutputDir(
                                 project.getSubproject(":lib").buildDir
                         ),
                         "debug",

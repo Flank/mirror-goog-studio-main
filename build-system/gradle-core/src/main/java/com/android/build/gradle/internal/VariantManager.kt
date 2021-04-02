@@ -36,7 +36,6 @@ import com.android.build.api.component.AndroidTest
 import com.android.build.api.component.TestFixturesComponent
 import com.android.build.api.component.UnitTest
 import com.android.build.api.component.impl.TestComponentImpl
-import com.android.build.api.component.impl.TestFixturesComponentBuilderImpl
 import com.android.build.api.component.impl.TestFixturesComponentImpl
 import com.android.build.api.extension.VariantExtensionConfig
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
@@ -142,9 +141,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
     /**
      * Returns a list of all test fixtures components.
      */
-    val testFixturesComponents:
-            MutableList<ComponentInfo<TestFixturesComponentBuilderImpl, TestFixturesComponentImpl>>
-    = Lists.newArrayList()
+    val testFixturesComponents: MutableList<TestFixturesComponentImpl> = Lists.newArrayList()
 
     /**
      * Creates the variants.
@@ -434,7 +431,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
         buildTypeData: BuildTypeData<BuildType>,
         productFlavorDataList: List<ProductFlavorData<ProductFlavor>>,
         mainComponentInfo: VariantComponentInfo<VariantBuilderT, VariantT>
-    ): ComponentInfo<TestFixturesComponentBuilderImpl, TestFixturesComponentImpl> {
+    ): TestFixturesComponentImpl {
         val testFixturesVariantType = VariantTypeImpl.TEST_FIXTURES
         val testFixturesSourceSet = variantInputModel.defaultConfigData.testFixturesSourceSet!!
         @Suppress("DEPRECATION") val dslServices = globalScope.dslServices
@@ -473,12 +470,6 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
             project.layout.buildDirectory
         )
         val apiAccessStats = mainComponentInfo.stats
-
-        val testFixturesVariantBuilder = variantFactory.createTestFixturesBuilder(
-            variantDslInfo.componentIdentity,
-            variantDslInfo,
-            variantApiServices
-        )
 
         // todo: run actions registered at the extension level.
 //        mainComponentInfo.variantApiOperationsRegistrar.testFixturesBuilderOperations
@@ -574,7 +565,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
         )
 
         val testFixturesComponent = variantFactory.createTestFixtures(
-            testFixturesVariantBuilder,
+            variantDslInfo.componentIdentity,
             buildFeatureValues,
             variantDslInfo,
             variantDependencies,
@@ -596,11 +587,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
 //        mainComponentInfo.variantApiOperationsRegistrar.testFixturesOperations
 //            .executeOperations(userVisibleVariant)
 
-        return ComponentInfo(
-            testFixturesVariantBuilder,
-            testFixturesComponent,
-            mainComponentInfo.stats
-        )
+        return testFixturesComponent
     }
 
     /** Create a TestVariantData for the specified testedVariantData.  */

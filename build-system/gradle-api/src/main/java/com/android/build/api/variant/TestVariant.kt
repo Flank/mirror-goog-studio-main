@@ -32,12 +32,7 @@ interface TestVariant: Variant {
     /**
      * Variant's aaptOptions, initialized by the corresponding global DSL element.
      */
-    val aapt: Aapt
-
-    /**
-     * Variant's aaptOptions, initialized by the corresponding global DSL element.
-     */
-    fun aaptOptions(action: Aapt.() -> Unit)
+    val androidResources: AndroidResources
 
     /**
      * The application of the app under tests.
@@ -66,11 +61,6 @@ interface TestVariant: Variant {
      * Variant's packagingOptions, initialized by the corresponding global DSL element.
      */
     override val packaging: ApkPackaging
-
-    /**
-     * Variant's packagingOptions, initialized by the corresponding global DSL element.
-     */
-    fun packaging(action: ApkPackaging.() -> Unit)
 
     /**
      * Variant settings related to transforming bytecodes into dex files initialized from

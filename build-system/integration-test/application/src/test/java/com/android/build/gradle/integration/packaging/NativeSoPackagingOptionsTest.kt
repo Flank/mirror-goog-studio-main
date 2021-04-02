@@ -75,9 +75,11 @@ class NativeSoPackagingOptionsTest {
             .withFile("src/main/jniLibs/x86/dslExclude2.so", "foo")
             .withFile("src/main/jniLibs/x86/dslExclude3.so", "foo")
             .withFile("src/main/jniLibs/x86/dslPickFirst.so", "foo")
+            .withFile("src/main/jniLibs/x86_64/dslPickFirst.so", "foo")
             .withFile("src/main/jniLibs/x86/debugExclude.so", "foo")
             .withFile("src/main/jniLibs/x86/releaseExclude.so", "foo")
             .withFile("src/main/jniLibs/x86/variantPickFirst.so", "foo")
+            .withFile("src/main/jniLibs/x86_64/variantPickFirst.so", "foo")
             .withFile("src/androidTest/jniLibs/x86/testKeep.so", "foo")
             .withFile("src/androidTest/jniLibs/x86/testExclude.so", "foo")
 
@@ -109,8 +111,10 @@ class NativeSoPackagingOptionsTest {
             .withFile("src/main/jniLibs/x86/dslExclude2.so", "bar")
             .withFile("src/main/jniLibs/x86/dslExclude3.so", "bar")
             .withFile("src/main/jniLibs/x86/dslPickFirst.so", "bar")
+            .withFile("src/main/jniLibs/x86_64/dslPickFirst.so", "bar")
             .withFile("src/main/jniLibs/x86/libExclude.so", "bar")
             .withFile("src/main/jniLibs/x86/variantPickFirst.so", "bar")
+            .withFile("src/main/jniLibs/x86_64/variantPickFirst.so", "bar")
             .withFile("src/androidTest/jniLibs/x86/testKeep.so", "bar")
             .withFile("src/androidTest/jniLibs/x86/testExclude.so", "bar")
 
@@ -147,8 +151,10 @@ class NativeSoPackagingOptionsTest {
         debugApk.doesNotContainJavaResource("lib/x86/debugExclude.so")
         debugApk.containsJavaResourceWithContent("lib/x86/appKeep.so", "foo")
         debugApk.containsJavaResourceWithContent("lib/x86/dslPickFirst.so", "foo")
+        debugApk.containsJavaResourceWithContent("lib/x86_64/dslPickFirst.so", "foo")
         debugApk.containsJavaResourceWithContent("lib/x86/releaseExclude.so", "foo")
         debugApk.containsJavaResourceWithContent("lib/x86/variantPickFirst.so", "foo")
+        debugApk.containsJavaResourceWithContent("lib/x86_64/variantPickFirst.so", "foo")
         // check correct compression and manifest from useLegacyPackaging
         ZipFile(debugApkFile).use {
             val nativeLibEntry = it.getEntry("lib/x86/appKeep.so")
@@ -170,8 +176,10 @@ class NativeSoPackagingOptionsTest {
         releaseApk.doesNotContainJavaResource("lib/x86/releaseExclude.so")
         releaseApk.containsJavaResourceWithContent("lib/x86/appKeep.so", "foo")
         releaseApk.containsJavaResourceWithContent("lib/x86/dslPickFirst.so", "foo")
+        releaseApk.containsJavaResourceWithContent("lib/x86_64/dslPickFirst.so", "foo")
         releaseApk.containsJavaResourceWithContent("lib/x86/debugExclude.so", "foo")
         releaseApk.containsJavaResourceWithContent("lib/x86/variantPickFirst.so", "foo")
+        releaseApk.containsJavaResourceWithContent("lib/x86_64/variantPickFirst.so", "foo")
         // check correct compression and manifest from useLegacyPackaging
         ZipFile(releaseApkFile).use {
             val nativeLibEntry = it.getEntry("lib/x86/appKeep.so")

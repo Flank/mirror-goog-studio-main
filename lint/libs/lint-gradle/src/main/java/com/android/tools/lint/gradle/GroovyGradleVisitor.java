@@ -245,9 +245,11 @@ public class GroovyGradleVisitor extends GradleVisitor {
                         result.add(methodCallExpression.getMethodAsString());
                         Expression expression = methodCallExpression.getObjectExpression();
                         while (true) {
-                            if (expression == VariableExpression.THIS_EXPRESSION) break;
-                            else if (expression instanceof VariableExpression) {
-                                result.add(((VariableExpression) expression).getName());
+                            if (expression instanceof VariableExpression) {
+                                VariableExpression variableExpr = (VariableExpression) expression;
+                                if (!variableExpr.isThisExpression()) {
+                                    result.add(variableExpr.getName());
+                                }
                                 break;
                             } else if (expression instanceof PropertyExpression) {
                                 PropertyExpression propertyExpression =
@@ -277,9 +279,11 @@ public class GroovyGradleVisitor extends GradleVisitor {
                         result.add(propertyExpression.getPropertyAsString());
                         Expression expression = propertyExpression.getObjectExpression();
                         while (true) {
-                            if (expression == VariableExpression.THIS_EXPRESSION) break;
-                            else if (expression instanceof VariableExpression) {
-                                result.add(((VariableExpression) expression).getName());
+                            if (expression instanceof VariableExpression) {
+                                VariableExpression variableExpr = (VariableExpression) expression;
+                                if (!variableExpr.isThisExpression()) {
+                                    result.add(variableExpr.getName());
+                                }
                                 break;
                             } else if (expression instanceof PropertyExpression) {
                                 propertyExpression = (PropertyExpression) expression;

@@ -23,30 +23,6 @@ cc_library(
     ],
 )
 
-# Common helper used by both perfa_lib and JVMTI agent.
-cc_library(
-    name = "jvmti_helper",
-    srcs = [
-        "jvmti_helper.cc",
-        "jvmti_helper.h",
-        "scoped_local_ref.h",
-    ],
-    hdrs = [
-        "jvmti_helper.h",
-        "scoped_local_ref.h",
-    ],
-    copts = ANDROID_COPTS,
-    include_prefix = "agent",
-    tags = [
-        "no_windows",
-    ],
-    visibility = ["//visibility:public"],
-    deps = [
-        "//prebuilts/studio/jdk:jni_headers",
-        "//tools/base/transport/native/utils",
-    ],
-)
-
 # Common helper for JNI libraries.
 cc_library(
     name = "jni_wrappers",
@@ -82,7 +58,6 @@ cc_binary(
     ],
     visibility = ["//visibility:public"],
     deps = [
-        ":jvmti_helper",
         "//prebuilts/studio/jdk:jni_headers",
         "//tools/base/app-inspection:agent_command",
         "//tools/base/app-inspection:jni",
@@ -92,6 +67,7 @@ cc_binary(
         "//tools/base/echo-sample:jni",
         "//tools/base/profiler/native/perfa:perfa_lib",
         "//tools/base/transport/native/agent",
+        "//tools/base/transport/native/jvmti",
         "//tools/base/transport/native/utils",
         "//tools/base/transport/proto:cc_proto",
     ],

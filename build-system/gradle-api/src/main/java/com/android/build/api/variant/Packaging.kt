@@ -29,7 +29,4 @@ interface Packaging {
 
     /** PackagingOptions for java resources. Initialized from the corresponding DSL. */
     val resources: ResourcesPackaging
-
-    /** PackagingOptions for java resources. Initialized from the corresponding DSL. */
-    fun resources(action: ResourcesPackaging.() -> Unit)
 }

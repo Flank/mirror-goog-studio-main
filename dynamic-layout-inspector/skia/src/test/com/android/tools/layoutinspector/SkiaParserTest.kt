@@ -25,7 +25,8 @@ import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertEquals
 import kotlin.test.fail
 
-private const val TEST_DATA_PATH = "tools/base/dynamic-layout-inspector/skia/testData"
+private const val COMPONENT_PATH = "tools/base/dynamic-layout-inspector/skia"
+private const val TEST_DATA_PATH = "$COMPONENT_PATH/testData"
 private const val DIFF_THRESHOLD = 0.01
 
 class SkiaParserTest {
@@ -136,6 +137,17 @@ class SkiaParserTest {
         assertImagesSimilar(tree, 87, 0, "skiaTest_testRealWorld_87.png")
         assertImagesSimilar(tree, 80, 0, "skiaTest_testRealWorld_80.png")
         assertImagesSimilar(tree, 73, 0, "skiaTest_testRealWorld_73.png")
+    }
+
+    private external fun generateBoxesData(): ByteArray?
+
+    @Test
+    fun testMaxSupportedVersion() {
+        val skp = generateBoxesData()!!
+        val versionMap = LayoutInspectorUtils.loadSkiaParserVersionMap(
+            TestUtils.getWorkspaceRoot().resolve("$COMPONENT_PATH/files/version-map.xml"))
+        assertThat(LayoutInspectorUtils.getSkpVersion(skp))
+            .isEqualTo(versionMap.servers.mapNotNull { it.skpEnd }.max())
     }
 
     private fun assertImagesSimilar(root: SkiaViewNode, id: Long, instance: Int, fileName: String) {

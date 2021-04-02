@@ -17,7 +17,7 @@
 package com.android.build.gradle.tasks
 
 import com.android.SdkConstants
-import com.android.build.api.artifact.ArtifactType
+import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.variant.impl.BuiltArtifactImpl
 import com.android.build.api.variant.impl.BuiltArtifactsImpl
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
@@ -48,7 +48,7 @@ import org.gradle.api.tasks.TaskProvider
 import java.io.File
 
 /**
- * Task that consumes [ArtifactType.MERGED_MANIFEST] single merged manifest and create several
+ * Task that consumes [SingleArtifact.MERGED_MANIFEST] single merged manifest and create several
  * versions that are each suitable for all [VariantOutputImpl] for this variant.
  */
 @CacheableTask
@@ -191,7 +191,7 @@ abstract class ProcessMultiApkApplicationManifest: ManifestProcessorTask() {
             creationConfig
                 .artifacts
                 .setTaskInputToFinalProduct(
-                    ArtifactType.MERGED_MANIFEST,
+                    SingleArtifact.MERGED_MANIFEST,
                     task.mainMergedManifest
                 )
 

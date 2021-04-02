@@ -340,6 +340,11 @@ class TestLintRunner(private val task: TestLintTask) {
                 }
             }
             client.task = this
+
+            client.pathVariables.add("TEST_ROOT", tempDir)
+            rootDirectory?.let { client.pathVariables.add("ROOT", it) }
+            client.pathVariables.normalize()
+
             return client
         }
     }

@@ -73,7 +73,6 @@ fun createCmakeProjectCxxAbiForTest(projectParentFolder: TemporaryFolder): CxxAb
     val ndkPlatform = Mockito.mock(NdkPlatform::class.java)
     val ndkInfo = Mockito.mock(NdkInfo::class.java)
     val ndkInstallStatus = NdkInstallStatus.Valid(ndkPlatform)
-    val variantBuilder: VariantBuilderImpl = Mockito.mock(VariantBuilderImpl::class.java) as VariantBuilderImpl
     val variantImpl = Mockito.mock(VariantImpl::class.java)
     val baseVariantData = Mockito.mock(BaseVariantData::class.java)
     val variantScope = Mockito.mock(VariantScope::class.java)
@@ -130,7 +129,7 @@ fun createCmakeProjectCxxAbiForTest(projectParentFolder: TemporaryFolder): CxxAb
     Mockito.doReturn(buildFeatures).`when`(variantImpl).buildFeatures
     Mockito.doReturn(false).`when`(buildFeatures).prefab
     Mockito.doReturn(variantDslInfo).`when`(variantImpl).variantDslInfo
-    Mockito.doReturn(variantBuilder).`when`(variantImpl).variantBuilder
+    Mockito.doReturn(minSdkVersion).`when`(variantImpl).minSdkVersion
     Mockito.doReturn(true).`when`(variantImpl).debuggable
     Mockito.doReturn(externalNativeBuildOptions).`when`(variantDslInfo).externalNativeBuildOptions
     Mockito.doReturn(externalNativeCmakeOptions).`when`(externalNativeBuildOptions).externalNativeCmakeOptions
@@ -141,7 +140,6 @@ fun createCmakeProjectCxxAbiForTest(projectParentFolder: TemporaryFolder): CxxAb
     Mockito.doReturn(listOf<String>()).`when`(externalNativeCmakeOptions).cppFlags
     Mockito.doReturn(setOf<String>()).`when`(externalNativeCmakeOptions).targets
     Mockito.doReturn(setOf<String>()).`when`(mergedNdkConfig).abiFilters
-    Mockito.doReturn(minSdkVersion).`when`(variantBuilder).minSdkVersion
     val componentParameters = tryCreateConfigurationParameters(
             projectOptions,
             variantImpl

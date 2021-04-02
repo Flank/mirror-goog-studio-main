@@ -16,30 +16,31 @@
 
 package com.android.build.api.component.analytics
 
-import com.android.build.api.variant.ExternalCmake
+import com.android.build.api.variant.ExternalNativeBuild
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.common.truth.Truth
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.SetProperty
-import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mock
 import org.mockito.Mockito
-import org.mockito.MockitoAnnotations
+import org.mockito.junit.MockitoJUnit
+import org.mockito.junit.MockitoRule
+import org.mockito.quality.Strictness
 
 class AnalyticsEnabledExternalCmakeTest {
 
+    @get:Rule
+    val rule: MockitoRule = MockitoJUnit.rule().strictness(Strictness.STRICT_STUBS)
+
     @Mock
-    lateinit var delegate: ExternalCmake
+    lateinit var delegate: ExternalNativeBuild
 
     private val stats = GradleBuildVariant.newBuilder()
-    private lateinit var proxy: AnalyticsEnabledExternalCmake
-
-    @Before
-    fun setup() {
-        MockitoAnnotations.initMocks(this)
-        proxy = AnalyticsEnabledExternalCmake(delegate, stats)
+    private val proxy: AnalyticsEnabledExternalCmake by lazy {
+        AnalyticsEnabledExternalCmake(delegate, stats)
     }
 
     @Test

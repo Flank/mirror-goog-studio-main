@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.InternalScope.LOCAL_DEPS
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.TaskManager
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.pipeline.StreamFilter.PROJECT_RESOURCES
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -292,7 +293,7 @@ abstract class MergeJavaResourceTask
 }
 
 fun getProjectJavaRes(
-    creationConfig: VariantCreationConfig
+    creationConfig: ComponentCreationConfig
 ): FileCollection {
     val javaRes = creationConfig.services.fileCollection()
     javaRes.from(creationConfig.artifacts.get(JAVA_RES))
@@ -339,7 +340,7 @@ private fun getExternalLibJavaRes(
 }
 
 /** Returns true if anything's been added to the annotation processor configuration. */
-fun projectHasAnnotationProcessors(creationConfig: VariantCreationConfig): Boolean {
+fun projectHasAnnotationProcessors(creationConfig: ComponentCreationConfig): Boolean {
     val config = creationConfig.variantDependencies.annotationProcessorConfiguration
     return config.incoming.dependencies.isNotEmpty()
 }

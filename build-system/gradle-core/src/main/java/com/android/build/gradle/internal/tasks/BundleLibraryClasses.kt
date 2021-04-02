@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.tasks
 import com.android.SdkConstants.FN_CLASSES_JAR
 import com.android.build.api.transform.QualifiedContent
 import com.android.build.gradle.internal.component.ComponentCreationConfig
-import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.databinding.DataBindingExcludeDelegate
 import com.android.build.gradle.internal.databinding.configureFrom
 import com.android.build.gradle.internal.dependency.getClassesDirFormat
@@ -143,8 +142,8 @@ abstract class BundleLibraryClassesDir: NewIncrementalTask(), BundleLibraryClass
     }
 
     class CreationAction(
-        creationConfig: VariantCreationConfig
-    ) : VariantTaskCreationAction<BundleLibraryClassesDir, VariantCreationConfig>(
+        creationConfig: ComponentCreationConfig
+    ) : VariantTaskCreationAction<BundleLibraryClassesDir, ComponentCreationConfig>(
         creationConfig
     ) {
 

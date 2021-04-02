@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.artifact.ArtifactType
+import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.transform.QualifiedContent
 import com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES
 import com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES
@@ -46,9 +46,7 @@ import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.ProjectLayout
-import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Classpath
@@ -60,7 +58,6 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
-import java.util.concurrent.Callable
 
 /**
  * Base class for tasks that consume ProGuard configuration files.
@@ -248,7 +245,7 @@ abstract class ProguardConfigurableTask(
             creationConfig.artifacts
                 .setInitialProvider(taskProvider,
                 ProguardConfigurableTask::mappingFile)
-                .on(ArtifactType.OBFUSCATION_MAPPING_FILE)
+                .on(SingleArtifact.OBFUSCATION_MAPPING_FILE)
         }
 
         override fun configure(
@@ -260,7 +257,7 @@ abstract class ProguardConfigurableTask(
                 task.testedMappingFile.from(
                     testedConfig
                         .artifacts
-                        .get(ArtifactType.OBFUSCATION_MAPPING_FILE)
+                        .get(SingleArtifact.OBFUSCATION_MAPPING_FILE)
                 )
             } else if (isTestApplication) {
                 task.testedMappingFile.from(

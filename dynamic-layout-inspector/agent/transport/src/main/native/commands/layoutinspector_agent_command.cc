@@ -17,7 +17,7 @@
 #include "layoutinspector_agent_command.h"
 
 #include "agent/agent.h"
-#include "agent/jvmti_helper.h"
+#include "jvmti/jvmti_helper.h"
 
 using layoutinspector::EditProperty;
 using layoutinspector::LayoutInspectorCommand;

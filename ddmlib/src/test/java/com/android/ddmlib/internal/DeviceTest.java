@@ -105,6 +105,7 @@ public class DeviceTest extends TestCase {
                             (IShellOutputReceiver) EasyMock.getCurrentArguments()[1];
                     byte[] inputData = response.getBytes();
                     receiver.addOutput(inputData, 0, inputData.length);
+                    receiver.flush();
                     return null;
                 };
         mockDevice.executeShellCommand(

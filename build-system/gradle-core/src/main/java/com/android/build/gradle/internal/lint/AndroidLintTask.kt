@@ -465,10 +465,8 @@ abstract class AndroidLintTask : NonIncrementalTask() {
                 creationConfig.globalScope.extension.lintOptions.checkOnly
             })
             task.projectInputs.initialize(variant)
-            // ignore dynamic features for lintVital and lintFix
             val hasDynamicFeatures = creationConfig.globalScope.hasDynamicFeatures()
-            val includeDynamicFeatureSourceProviders =
-                !fatalOnly && !autoFix && !reportOnly && hasDynamicFeatures
+            val includeDynamicFeatureSourceProviders = !reportOnly && hasDynamicFeatures
             task.variantInputs.initialize(
                 variant,
                 checkDependencies,
@@ -482,20 +480,27 @@ abstract class AndroidLintTask : NonIncrementalTask() {
                     creationConfig.artifacts.get(InternalArtifactType.LINT_PARTIAL_RESULTS)
                 }
                 task.partialResults.set(partialResults)
-                // lintVital and lintFix do not currently examine dynamic feature modules. See b/180672373
-                if (!fatalOnly && !autoFix && hasDynamicFeatures) {
+                if (hasDynamicFeatures) {
                     task.dynamicFeatureLintModels.from(
                         creationConfig.variantDependencies.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
                             AndroidArtifacts.ArtifactScope.PROJECT,
-                            AndroidArtifacts.ArtifactType.LINT_MODEL
+                            if (fatalOnly) {
+                                AndroidArtifacts.ArtifactType.LINT_VITAL_LINT_MODEL
+                            } else {
+                                AndroidArtifacts.ArtifactType.LINT_MODEL
+                            }
                         )
                     )
                     task.dependencyPartialResults.from(
                         creationConfig.variantDependencies.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
                             AndroidArtifacts.ArtifactScope.PROJECT,
-                            AndroidArtifacts.ArtifactType.LINT_PARTIAL_RESULTS
+                            if (fatalOnly) {
+                                AndroidArtifacts.ArtifactType.LINT_VITAL_PARTIAL_RESULTS
+                            } else {
+                                AndroidArtifacts.ArtifactType.LINT_PARTIAL_RESULTS
+                            }
                         )
                     )
                 }

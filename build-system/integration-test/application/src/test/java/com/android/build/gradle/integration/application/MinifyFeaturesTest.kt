@@ -223,7 +223,6 @@ class MinifyFeaturesTest(
                                 minified.initWith(buildTypes.debug)
                                 minified {
                                     minifyEnabled true
-                                    useProguard ${codeShrinker == CodeShrinker.PROGUARD}
                                     proguardFiles getDefaultProguardFile('proguard-android.txt'),
                                             "proguard-rules.pro"
                                 }

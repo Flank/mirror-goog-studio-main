@@ -89,7 +89,7 @@ abstract class AbstractTestDataImpl(
 
     override val minSdkVersion = creationConfig.services.provider { creationConfig.minSdkVersion }
 
-    override val flavorName = creationConfig.services.provider { creationConfig.flavorName }
+    override val flavorName = creationConfig.services.provider { creationConfig.flavorName ?: "" }
 
     override val testDirectories: ConfigurableFileCollection =
         creationConfig.services.fileCollection().from(Callable<List<File>> {

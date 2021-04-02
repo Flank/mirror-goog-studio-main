@@ -33,7 +33,6 @@ import org.jetbrains.uast.UElement
  * Looks for `WebView` method usages that should be replaced by
  * `androidx.webkit` methods.
  */
-/** Constructs a new [WebViewApiAvailabilityDetector] */
 class WebViewApiAvailabilityDetector : Detector(), SourceCodeScanner {
     companion object {
         private const val WEBVIEW_CLASS_NAME = "android.webkit.WebView"

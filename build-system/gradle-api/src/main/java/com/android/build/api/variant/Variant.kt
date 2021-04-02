@@ -32,6 +32,21 @@ import java.io.Serializable
 interface Variant : Component {
 
     /**
+     * Gets the minimum supported SDK Version for this variant.
+     */
+    val minSdkVersion: AndroidVersion
+
+    /**
+     * Gets the maximum supported SDK Version for this variant.
+     */
+    val maxSdkVersion: Int?
+
+    /**
+     * Gets the target SDK Version for this variant.
+     */
+    val targetSdkVersion: AndroidVersion
+
+    /**
      * Variant's application ID as present in the final manifest file of the APK.
      *
      * Some type of variants allows this to be writeable but for some it's only read-only.
@@ -54,32 +69,14 @@ interface Variant : Component {
     val buildConfigFields: MapProperty<String, BuildConfigField<out Serializable>>
 
     /**
-     * Convenience method to add a new Build Config field which value is known at configuration
-     * time.
-     *
-     * @param key the build config field name
-     * @param value the build config field value which type must be [Serializable]
-     * @param comment optional comment for the field.
+     * Make a [ResValue.Key] to interact with [resValues]'s [MapProperty]
      */
-    fun addBuildConfigField(key: String, value: Serializable, comment: String?)
+    fun makeResValueKey(type: String, name: String): ResValue.Key
 
     /**
-     * Adds a ResValue element to the generated resources.
-     * @param name the resource name
-     * @param type the resource type like 'string'
-     * @param value the resource value
-     * @param comment optional comment to be added to the generated resource file for the field.
+     * Variant's [ResValue] which will be generated.
      */
-    fun addResValue(name: String, type: String, value: String, comment: String?)
-
-    /**
-     * Adds a ResValue element to the generated resources.
-     * @param name the resource name
-     * @param type the resource type like 'string'
-     * @param value a [Provider] for the value
-     * @param comment optional comment to be added to the generated resource file for the field.
-     */
-    fun addResValue(name: String, type: String, value: Provider<String>, comment: String?)
+    val resValues: MapProperty<ResValue.Key, ResValue>
 
     /**
      * [MapProperty] of the variant's manifest placeholders.
@@ -97,16 +94,16 @@ interface Variant : Component {
     val packaging: Packaging
 
     /**
-     * Variant's [ExternalCmake], initialized by merging the product flavor values or
+     * Variant's cmake [ExternalNativeBuild], initialized by merging the product flavor values or
      * null if no cmake external build is configured for this variant.
      */
-    val externalCmake: ExternalCmake?
+    val externalCmake: ExternalNativeBuild?
 
     /**
-     * Variant's [ExternalNdkBuild], initialized by merging the product flavor values
+     * Variant's ndk-build [ExternalNativeBuild], initialized by merging the product flavor values
      * or null if no ndk-build external build is configured for this variant.
      */
-    val externalNdkBuild: ExternalNdkBuild?
+    val externalNdkBuild: ExternalNativeBuild?
 
     /**
      * Variant's [UnitTest], or null if the unit tests for this variant are disabled.

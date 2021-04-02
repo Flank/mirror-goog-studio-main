@@ -257,7 +257,7 @@ fun tryCreateConfigurationParameters(
         rootDir = project.rootDir,
         buildFile = project.buildFile,
         isDebuggable = variant.debuggable,
-        minSdkVersion = variant.variantBuilder.minSdkVersion.toSharedAndroidVersion(),
+        minSdkVersion = variant.minSdkVersion.toSharedAndroidVersion(),
         compileSdkVersion = global.extension.compileSdkVersion ?:
             throw IllegalStateException("compileSdkVersion not set in android configuration"),
         ndkVersion = global.extension.ndkVersion,

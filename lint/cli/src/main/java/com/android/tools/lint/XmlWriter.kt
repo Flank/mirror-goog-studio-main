@@ -376,12 +376,6 @@ open class XmlWriter constructor(
         val indented = indent + 1
         writer.write("<")
         writer.write(tag)
-        val path = client.getDisplayPath(
-            project,
-            location.file,
-            // Don't use absolute paths in baseline files
-            client.flags.isFullPath && (type != XmlFileType.BASELINE)
-        )
         if (key != null) {
             writer.write(" ")
             writer.write(ATTR_ID)
@@ -389,11 +383,7 @@ open class XmlWriter constructor(
             writer.write(XmlUtils.toXmlAttributeValue(key))
             writer.write("\"")
         }
-        // Baselines: neutralize paths
-        val neutralPath = if (type.unixPaths())
-            path.replace('\\', '/')
-        else
-            path
+        val neutralPath = getPath(location.file, project)
         writeAttribute(writer, indent + 1, ATTR_FILE, neutralPath)
         val start = location.start
         if (start != null) {
@@ -449,6 +439,29 @@ open class XmlWriter constructor(
         }
     }
 
+    private fun getPath(file: File, project: Project?): String {
+        var absolute = client.flags.isFullPath && !type.relativePaths()
+        val path = client.getDisplayPath(project, file, absolute)
+
+        if (type.variables() && client.pathVariables.any()) {
+            if (!absolute) {
+                val relative = File(path)
+                if (!relative.isAbsolute) {
+                    absolute = false
+                }
+            }
+
+            if (absolute) {
+                return client.pathVariables.toPathString(file, unix = type.unixPaths())
+            }
+        }
+
+        return if (type.unixPaths())
+            path.replace('\\', '/')
+        else
+            path
+    }
+
     private fun emitEdit(incident: Incident, lintFix: LintFix) {
         indent(2)
         writer.write("<")
@@ -474,16 +487,7 @@ open class XmlWriter constructor(
                     indent(3)
                     writer.write("<$TAG_EDIT")
 
-                    val path = client.getDisplayPath(
-                        incident.project,
-                        file.file,
-                        // Don't use absolute paths in baseline files
-                        client.flags.isFullPath && !type.relativePaths()
-                    )
-                    val neutralPath = if (type.unixPaths())
-                        path.replace('\\', '/')
-                    else
-                        path
+                    val neutralPath = getPath(file.file, incident.project)
                     writeAttribute(writer, 4, ATTR_FILE, neutralPath)
 
                     with(edit) {
@@ -648,13 +652,7 @@ open class XmlWriter constructor(
                             is String -> value
                             is Int,
                             is Boolean -> value.toString()
-                            is File -> {
-                                client.getDisplayPath(
-                                    incident.project,
-                                    value,
-                                    client.flags.isFullPath && !type.relativePaths()
-                                )
-                            }
+                            is File -> getPath(value, incident.project)
                             is List<*> ->
                                 // Strings are not allowed to contain ,
                                 value.joinToString {

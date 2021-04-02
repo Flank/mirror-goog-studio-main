@@ -46,7 +46,8 @@ public interface VariantScope {
             @NonNull Provider<?> artifact,
             @NonNull ArtifactType artifactType,
             @NonNull Collection<AndroidArtifacts.PublishedConfigType> configTypes,
-            @Nullable LibraryElements libraryElements);
+            @Nullable LibraryElements libraryElements,
+            boolean isTestFixturesArtifact);
 
     @NonNull
     List<File> getConsumerProguardFiles();

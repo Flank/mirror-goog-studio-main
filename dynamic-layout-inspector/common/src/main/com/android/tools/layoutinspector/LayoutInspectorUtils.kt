@@ -16,6 +16,7 @@
 
 package com.android.tools.layoutinspector
 
+import com.android.io.CancellableFileIo
 import com.android.tools.idea.layoutinspector.proto.SkiaParser
 import com.android.tools.idea.protobuf.ByteString
 import java.awt.Image
@@ -30,8 +31,16 @@ import java.awt.image.Raster
 import java.awt.image.SinglePixelPackedSampleModel
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import java.nio.file.Path
+import javax.xml.bind.JAXBContext
+import javax.xml.bind.annotation.XmlAttribute
+import javax.xml.bind.annotation.XmlElement
+import javax.xml.bind.annotation.XmlRootElement
 
 object LayoutInspectorUtils {
+    private val versionMapUnmarshaller =
+        JAXBContext.newInstance(VersionMap::class.java).createUnmarshaller()
+
     fun createImage8888(bytes: ByteBuffer, width: Int, height: Int): BufferedImage {
         val intArray = IntArray(width * height)
         bytes.order(ByteOrder.LITTLE_ENDIAN).asIntBuffer().get(intArray)
@@ -86,6 +95,19 @@ object LayoutInspectorUtils {
             .setHeight(height)
             .build()
     }
+
+    fun getSkpVersion(data: ByteArray): Int {
+        // SKPs start with "skiapict" in ascii
+        if (data.slice(0..7) != "skiapict".toByteArray(Charsets.US_ASCII).asList() || data.size < 12) {
+            throw InvalidPictureException()
+        }
+        return data.sliceArray(8..11).toInt()
+    }
+
+    fun loadSkiaParserVersionMap(path: Path): VersionMap {
+        val mapInputStream = CancellableFileIo.newInputStream(path)
+        return versionMapUnmarshaller.unmarshal(mapInputStream) as VersionMap
+    }
 }
 
 /**
@@ -98,6 +120,22 @@ fun Int.toBytes(bytes: ByteArray = ByteArray(4), offset: Int = 0): ByteArray {
     }
     return bytes
 }
+
+/**
+ * Convert the first four bytes to an Int, assuming little-endian representation.
+ */
+fun ByteArray.toInt(): Int {
+    var result = 0
+    for (i in 0..3) {
+        result += (this[i].toInt() and 0xFF).shl(i * 8)
+    }
+    return result
+}
+
+/**
+ * Thrown if a request is made to create a server for something that doesn't look like a valid `SkPicture`.
+ */
+class InvalidPictureException : Exception()
 
 /**
  * A view as seen in a Skia image.
@@ -114,4 +152,27 @@ class SkiaViewNode private constructor(val id: Long, var image: Image?, val chil
     fun flatten(): Sequence<SkiaViewNode> {
         return children.asSequence().flatMap { it.flatten() }.plus(this)
     }
+}
+
+@XmlRootElement(name="versionMapping")
+class VersionMap {
+    @XmlElement(name = "server")
+    val servers: MutableList<ServerVersionSpec> = mutableListOf()
+}
+
+/**
+ * The `SkPicture` versions supported by a given `skiaparser` server version. Used by JAXB to parse `version-map.xml`.
+ */
+class ServerVersionSpec {
+    /** The version of the `skiaparser` package (e.g. the `1` in the sdk package `skiaparser;1` */
+    @XmlAttribute(name = "version", required = true)
+    val version: Int = 0
+
+    /** The first `SkPicture` version supported by this server. */
+    @XmlAttribute(name = "skpStart", required = true)
+    val skpStart: Int = 0
+
+    /** The last `SkPicture` version supported by this server. */
+    @XmlAttribute(name = "skpEnd", required = false)
+    val skpEnd: Int? = null
 }

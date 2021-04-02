@@ -16,17 +16,21 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.gradle.internal.AndroidJarInput
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.initialize
 import com.android.build.gradle.internal.res.Aapt2ProcessResourcesRunnable
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.Aapt2Input
+import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.services.registerAaptService
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.SyncOptions
+import com.android.builder.core.ToolsRevisionUtils
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
@@ -44,6 +48,7 @@ import java.io.File
  * producing a linked manifest file suitable for packaging in the Android App Bundle.
  */
 abstract class LinkManifestForAssetPackTask : NonIncrementalTask() {
+
     /**
      * The manifest file previously generated for this asset pack by the
      * AssetPackManifestGenerationTask.
@@ -89,11 +94,46 @@ abstract class LinkManifestForAssetPackTask : NonIncrementalTask() {
         }
     }
 
+    internal class CreationForAssetPackBundleAction(
+        private val artifacts: ArtifactsImpl,
+        private val projectServices: ProjectServices,
+        private val compileSdk: Int
+    ) : TaskCreationAction<LinkManifestForAssetPackTask>() {
+
+        override val type = LinkManifestForAssetPackTask::class.java
+        override val name = "linkManifestForAssetPacks"
+
+        override fun handleProvider(taskProvider: TaskProvider<LinkManifestForAssetPackTask>) {
+            super.handleProvider(taskProvider)
+            artifacts.setInitialProvider(
+                taskProvider,
+                LinkManifestForAssetPackTask::linkedManifestsDirectory
+            ).on(InternalArtifactType.LINKED_RES_FOR_ASSET_PACK)
+        }
+
+        override fun configure(task: LinkManifestForAssetPackTask) {
+            task.configureVariantProperties(variantName = "", task.project)
+            artifacts.setTaskInputToFinalProduct(
+                InternalArtifactType.ASSET_PACK_MANIFESTS, task.manifestsDirectory
+            )
+            projectServices.initializeAapt2Input(task.aapt2)
+
+            task.androidJarInput.sdkBuildService.setDisallowChanges(
+                getBuildService(projectServices.buildServiceRegistry)
+            )
+            task.androidJarInput.buildToolsRevision.setDisallowChanges(
+                ToolsRevisionUtils.DEFAULT_BUILD_TOOLS_REVISION
+            )
+            task.androidJarInput.compileSdkVersion.setDisallowChanges("android-${compileSdk}")
+        }
+    }
+
     internal class CreationAction(
         creationConfig: VariantCreationConfig
     ) : VariantTaskCreationAction<LinkManifestForAssetPackTask, VariantCreationConfig>(
         creationConfig
     ) {
+
         override val type = LinkManifestForAssetPackTask::class.java
         override val name = computeTaskName("link", "ManifestForAssetPacks")
 

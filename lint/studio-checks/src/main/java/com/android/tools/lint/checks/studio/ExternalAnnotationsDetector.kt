@@ -24,6 +24,7 @@ import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
+import com.android.tools.lint.detector.api.isKotlin
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMember
 import com.intellij.psi.PsiMethod
@@ -66,6 +67,7 @@ class ExternalAnnotationsDetector : Detector(), SourceCodeScanner {
     override fun getApplicableMethodNames() = listOf("getAnnotations", "getUAnnotations")
     override fun getApplicableReferenceNames() = listOf("annotations", "uAnnotations")
 
+    // For references to Java/Kotlin methods.
     override fun visitMethodCall(
         context: JavaContext,
         node: UCallExpression,
@@ -74,12 +76,15 @@ class ExternalAnnotationsDetector : Detector(), SourceCodeScanner {
         check(node, method, context)
     }
 
+    // For references to Kotlin properties.
     override fun visitReference(
         context: JavaContext,
         reference: UReferenceExpression,
         referenced: PsiElement
     ) {
-        check(reference, referenced as? PsiMember ?: return, context)
+        if (isKotlin(referenced)) {
+            check(reference, referenced as? PsiMember ?: return, context)
+        }
     }
 
     private fun check(

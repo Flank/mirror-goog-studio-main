@@ -521,7 +521,7 @@ class UtpConfigFactoryTest {
                 }
                 config {
                   type_url: "type.googleapis.com/com.android.tools.utp.plugins.host.icebox.proto.IceboxPlugin"
-                  value: "\n\027com.example.application\022\tlocalhost\030\352B"
+                  value: "\n\027com.example.application\022\tlocalhost\030\352BH\001"
                 }
               }
               host_plugin {
@@ -689,7 +689,7 @@ class UtpConfigFactoryTest {
                 }
                 config {
                   type_url: "type.googleapis.com/com.android.tools.utp.plugins.host.icebox.proto.IceboxPlugin"
-                  value: "\n\027com.example.application\022\tlocalhost\030\352B(\0028\001"
+                  value: "\n\027com.example.application\022\tlocalhost\030\352B(\0028\001H\001"
                 }
               }
               host_plugin {
@@ -847,6 +847,19 @@ class UtpConfigFactoryTest {
               }
               host_plugin {
                 label {
+                  label: "ANDROID_TEST_PLUGIN_HOST_RETENTION"
+                }
+                class_name: "com.android.tools.utp.plugins.host.icebox.IceboxPlugin"
+                jar {
+                  path: "pathToANDROID_TEST_PLUGIN_HOST_RETENTION.jar"
+                }
+                config {
+                  type_url: "type.googleapis.com/com.android.tools.utp.plugins.host.icebox.proto.IceboxPlugin"
+                  value: "\n\027com.example.application\022\tlocalhost\030\352BH\002"
+                }
+              }
+              host_plugin {
+                label {
                   label: "ANDROID_TEST_PLUGIN"
                 }
                 class_name: "com.google.testing.platform.plugin.android.AndroidDevicePlugin"
@@ -903,7 +916,7 @@ class UtpConfigFactoryTest {
                 }
                 config {
                   type_url: "type.googleapis.com/google.testing.platform.proto.api.config.AndroidInstrumentationDriver"
-                  value: "\nd\n`\n\027com.example.application\022\034com.example.application.test\032\'androidx.test.runner.AndroidJUnitRunner\022\000\020\200\347\204\017\030\001"
+                  value: "\ns\n`\n\027com.example.application\022\034com.example.application.test\032\'androidx.test.runner.AndroidJUnitRunner\022\017\022\r\n\005debug\022\004true\020\200\347\204\017\030\001"
                 }
               }
             }

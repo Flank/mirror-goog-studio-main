@@ -23,8 +23,8 @@ import org.gradle.api.file.FileCollection
 /**
  * Facility to load [BuiltArtifacts] instances from metadata files in the file system.
  *
- * When an artifact can have more than one output file, its [com.android.build.api.artifact.ArtifactType] is annotated with
- * [com.android.build.api.artifact.ArtifactType.ContainsMany]. [com.android.build.api.artifact.ArtifactTypes.APK] is an example
+ * When an artifact can have more than one output file, its [com.android.build.api.artifact.SingleArtifact] is annotated with
+ * [com.android.build.api.artifact.SingleArtifact.ContainsMany]. [com.android.build.api.artifact.ArtifactTypes.APK] is an example
  * of such an artifact: the folder produced can contain multiple APK files when multi-apk build
  * is configured.
  *

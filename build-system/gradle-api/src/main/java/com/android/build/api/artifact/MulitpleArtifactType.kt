@@ -22,13 +22,13 @@ import org.gradle.api.file.FileSystemLocation
 /**
  * Public [Artifact] for Android Gradle plugin.
  *
- * This type inherits [Artifact.Multiple]. For single artifacts, see [ArtifactType].
+ * This type inherits [Artifact.Multiple]. For single artifacts, see [SingleArtifact].
  *
  * All methods in [Artifacts] should be supported with any subclass of this
  * class.
  */
 @Incubating
-sealed class MultipleArtifactType<FileTypeT : FileSystemLocation>(
+sealed class MultipleArtifact<FileTypeT : FileSystemLocation>(
     kind: ArtifactKind<FileTypeT>,
     category: Category
 ) : Artifact.Multiple<FileTypeT>(kind, category) {

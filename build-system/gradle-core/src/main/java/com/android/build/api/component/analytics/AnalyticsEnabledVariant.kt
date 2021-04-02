@@ -17,10 +17,11 @@
 package com.android.build.api.component.analytics
 
 import com.android.build.api.component.UnitTest
+import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.BuildConfigField
-import com.android.build.api.variant.ExternalCmake
-import com.android.build.api.variant.ExternalNdkBuild
+import com.android.build.api.variant.ExternalNativeBuild
 import com.android.build.api.variant.Packaging
+import com.android.build.api.variant.ResValue
 import com.android.build.api.variant.Variant
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
@@ -59,27 +60,17 @@ abstract class AnalyticsEnabledVariant (
             return delegate.buildConfigFields
         }
 
-    override fun addBuildConfigField(key: String, value: Serializable, comment: String?) {
-        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-            VariantPropertiesMethodType.ADD_BUILD_CONFIG_FIELD_VALUE
-        delegate.addBuildConfigField(key, value, comment)
-    }
+    override val resValues: MapProperty<ResValue.Key, ResValue>
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.RES_VALUE_VALUE
+            return delegate.resValues
+        }
 
-    override fun addResValue(name: String, type: String, value: String, comment: String?) {
+    override fun makeResValueKey(type: String, name: String): ResValue.Key {
         stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-            VariantPropertiesMethodType.ADD_RES_VALUE_VALUE
-        delegate.addResValue(name, type, value, comment)
-    }
-
-    override fun addResValue(
-        name: String,
-        type: String,
-        value: Provider<String>,
-        comment: String?
-    ) {
-        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-            VariantPropertiesMethodType.ADD_RES_VALUE_VALUE
-        delegate.addResValue(name, type, value, comment)
+            VariantPropertiesMethodType.MAKE_RES_VALUE_KEY_VALUE
+        return delegate.makeResValueKey(type, name)
     }
 
     override val manifestPlaceholders: MapProperty<String, String>
@@ -114,7 +105,7 @@ abstract class AnalyticsEnabledVariant (
         }
     }
 
-    override val externalCmake: ExternalCmake?
+    override val externalCmake: ExternalNativeBuild?
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
                     VariantPropertiesMethodType.CMAKE_NATIVE_OPTIONS_VALUE
@@ -131,7 +122,7 @@ abstract class AnalyticsEnabledVariant (
         }
     }
 
-    override val externalNdkBuild: ExternalNdkBuild?
+    override val externalNdkBuild: ExternalNativeBuild?
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
                     VariantPropertiesMethodType.NDK_BUILD_NATIVE_OPTIONS_VALUE
@@ -159,5 +150,26 @@ abstract class AnalyticsEnabledVariant (
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
                 VariantPropertiesMethodType.PROGUARD_FILES_VALUE
             return delegate.proguardFiles
+        }
+
+    override val minSdkVersion: AndroidVersion
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.MIN_SDK_VERSION_VALUE
+            return delegate.minSdkVersion
+        }
+
+    override val maxSdkVersion: Int?
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.MAX_SDK_VERSION_VALUE
+            return delegate.maxSdkVersion
+        }
+
+    override val targetSdkVersion: AndroidVersion
+        get()  {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.TARGET_SDK_VERSION_VALUE
+            return delegate.targetSdkVersion
         }
 }

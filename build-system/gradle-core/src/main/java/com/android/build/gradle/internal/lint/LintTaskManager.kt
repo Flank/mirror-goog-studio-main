@@ -57,19 +57,35 @@ class LintTaskManager constructor(private val globalScope: GlobalScope, private 
         for (variantWithTests in variantsWithTests.values) {
             if (variantType.isAar) {
                 // We need the library lint models if checkDependencies is true
-                taskFactory.register(LintModelWriterTask.CreationAction(variantWithTests.main))
+                taskFactory.register(LintModelWriterTask.LintCreationAction(variantWithTests.main))
             } else {
                 // We need app and dynamic feature models if there are dynamic features.
                 // TODO (b/180672373) consider also publishing dynamic feature and app lint models
                 //  with checkDependencies = true if that's necessary to properly run lint from an
                 //  app or dynamic feature module with checkDependencies = true.
                 taskFactory.register(
-                    LintModelWriterTask.CreationAction(
+                    LintModelWriterTask.LintCreationAction(
                         variantWithTests.main,
                         checkDependencies = false
                     )
                 )
             }
+            taskFactory.register(
+                AndroidLintAnalysisTask.SingleVariantCreationAction(variantWithTests)
+            )
+
+            if (variantType.isDynamicFeature) {
+                taskFactory.register(
+                    AndroidLintAnalysisTask.LintVitalCreationAction(variantWithTests)
+                )
+                taskFactory.register(
+                    LintModelWriterTask.LintVitalCreationAction(variantWithTests.main)
+                )
+                // Don't register any lint reporting tasks or lintFix task for dynamic features
+                // because any reporting and/or fixing is done when lint runs from the base app.
+                continue
+            }
+
             val variantLintTask =
                 taskFactory.register(AndroidLintTask.SingleVariantCreationAction(variantWithTests))
 
@@ -96,9 +112,12 @@ class LintTaskManager constructor(private val globalScope: GlobalScope, private 
                 variantLintTaskToLintVitalTask[getTaskPath(variantLintTask)] = lintVitalTask
             }
             taskFactory.register(AndroidLintTask.FixSingleVariantCreationAction(variantWithTests))
-            taskFactory.register(
-                AndroidLintAnalysisTask.SingleVariantCreationAction(variantWithTests)
-            )
+        }
+
+        // Nothing left to do for dynamic features because they don't have global lint or lintFix
+        // tasks, and they don't have any lint reporting tasks.
+        if (variantType.isDynamicFeature) {
+            return
         }
 
         val defaultVariant = variantModel.defaultVariant

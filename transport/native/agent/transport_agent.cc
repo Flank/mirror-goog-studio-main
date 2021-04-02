@@ -24,7 +24,7 @@
 #include "commands/echo_agent_command.h"
 #include "commands/layoutinspector_agent_command.h"
 #include "jvmti.h"
-#include "jvmti_helper.h"
+#include "jvmti/jvmti_helper.h"
 #include "perfa/perfa.h"
 #include "utils/device_info.h"
 #include "utils/log.h"

@@ -83,8 +83,12 @@ public class AndroidArtifacts {
     private static final String TYPE_LINT_MODEL = "android-lint-variant-dependencies-model";
     private static final String TYPE_BASE_MODULE_LINT_MODEL =
             "android-base-module-lint-variant-dependencies-model";
+    private static final String TYPE_LINT_VITAL_LINT_MODEL =
+            "android-lint-vital-lint-variant-dependencies-model";
     private static final String TYPE_LINT_PARTIAL_RESULTS =
             "android-lint-variant-dependencies-partial-results";
+    private static final String TYPE_LINT_VITAL_PARTIAL_RESULTS =
+            "android-lint-vital-variant-dependencies-partial-results";
     private static final String TYPE_LOCAL_AAR_FOR_LINT = "android-lint-local-aar";
     private static final String TYPE_LOCAL_EXPLODED_AAR_FOR_LINT = "android-lint-exploded-aar";
     private static final String TYPE_EXT_ANNOTATIONS = "android-ext-annot";
@@ -382,8 +386,12 @@ public class AndroidArtifacts {
         LINT_MODEL(AndroidArtifacts.TYPE_LINT_MODEL),
         // The lint model published by the base module for consumption by dynamic features.
         BASE_MODULE_LINT_MODEL(AndroidArtifacts.TYPE_BASE_MODULE_LINT_MODEL),
+        // The lint model with partial results set to the location of LINT_VITAL_PARTIAL_RESULTS.
+        LINT_VITAL_LINT_MODEL(AndroidArtifacts.TYPE_LINT_VITAL_LINT_MODEL),
         // The partial results produced by running lint with --analyze-only
         LINT_PARTIAL_RESULTS(AndroidArtifacts.TYPE_LINT_PARTIAL_RESULTS),
+        // The partial results produced by running lint with --analyze-only and --fatalOnly
+        LINT_VITAL_PARTIAL_RESULTS(TYPE_LINT_VITAL_PARTIAL_RESULTS),
         // An AAR built from a library project for lint to consume.
         LOCAL_AAR_FOR_LINT(TYPE_LOCAL_AAR_FOR_LINT),
         // Exploded AARs from library projects for lint to consume when not run with check

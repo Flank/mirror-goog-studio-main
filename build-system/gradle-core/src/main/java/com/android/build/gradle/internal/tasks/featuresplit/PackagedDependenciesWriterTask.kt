@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.tasks.featuresplit
 
-import com.android.build.api.attributes.VariantAttr
+import com.android.build.gradle.internal.attributes.VariantAttr
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE

@@ -106,7 +106,7 @@ maven_pom(
 )
 
 # The Gradle APIs to build against and run against.
-GRADLE_VERSION = "6.8.2"
+GRADLE_VERSION = "7.0-rc-1"
 
 filegroup(
     name = "gradle-distrib",
@@ -187,6 +187,7 @@ GRADLE_PLUGIN_NO_DATABINDING_ARTIFACTS = [
     "//prebuilts/tools/common/m2/repository/com/google/errorprone/error_prone_annotations/2.1.3:jar",
     "//prebuilts/tools/common/m2/repository/com/google/errorprone/error_prone_annotations/2.2.0:jar",
     "//prebuilts/tools/common/m2/repository/org/checkerframework/checker-qual/2.5.2:jar",
+    "//prebuilts/tools/common/m2/repository/com/github/javaparser/javaparser-core/3.17.0:jar",
 ]
 
 maven_repo(

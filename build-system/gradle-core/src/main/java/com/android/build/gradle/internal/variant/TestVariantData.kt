@@ -68,7 +68,7 @@ class TestVariantData(
                 val sb = StringBuilder(50)
                 sb.append(prefix)
                 sb.append(" for the ")
-                sb.appendCapitalized(componentIdentity.flavorName)
+                componentIdentity.flavorName?.let { sb.appendCapitalized(it) }
                 componentIdentity.buildType?.let { sb.appendCapitalized(it) }
                 sb.append(" build")
                 sb.toString()

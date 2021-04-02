@@ -26,7 +26,6 @@ import com.android.build.api.instrumentation.InstrumentationParameters
 import com.android.build.api.instrumentation.InstrumentationScope
 import com.android.build.api.variant.AarMetadata
 import com.android.build.api.variant.AndroidVersion
-import com.android.build.api.variant.LibraryPackaging
 import com.android.build.api.variant.LibraryVariant
 import com.android.build.api.variant.Renderscript
 import com.android.build.api.variant.Variant
@@ -102,10 +101,6 @@ open class  LibraryVariantImpl @Inject constructor(
             )
         }
         super.transformClassesWith(classVisitorFactoryImplClass, scope, instrumentationParamsConfig)
-    }
-
-    override val packaging: LibraryPackaging by lazy {
-        LibraryPackagingImpl(globalScope.extension.packagingOptions, internalServices)
     }
 
     override var androidTest: AndroidTest? = null

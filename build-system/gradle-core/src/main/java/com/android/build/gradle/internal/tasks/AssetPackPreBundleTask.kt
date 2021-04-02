@@ -18,10 +18,12 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
 import com.android.SdkConstants.FD_ASSETS
+import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.packaging.JarCreatorFactory
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.packaging.JarCreator
 import com.android.utils.FileUtils
@@ -79,6 +81,33 @@ abstract class AssetPackPreBundleTask : NonIncrementalTask() {
                 }.asPath)
                 it.manifestFile.set(manifestFile)
             }
+        }
+    }
+
+    class CreationForAssetPackBundleAction(
+        private val artifacts: ArtifactsImpl,
+        private val assetFileCollection: FileCollection
+    ) : TaskCreationAction<AssetPackPreBundleTask>() {
+        override val type = AssetPackPreBundleTask::class.java
+        override val name = "assetPackPreBundleTask"
+
+        override fun handleProvider(
+            taskProvider: TaskProvider<AssetPackPreBundleTask>
+        ) {
+            super.handleProvider(taskProvider)
+            artifacts.setInitialProvider(
+                taskProvider,
+                AssetPackPreBundleTask::outputDir
+            ).on(InternalArtifactType.ASSET_PACK_BUNDLE)
+        }
+
+        override fun configure(
+            task: AssetPackPreBundleTask
+        ) {
+            task.configureVariantProperties(variantName = "", task.project)
+            artifacts.setTaskInputToFinalProduct(
+                InternalArtifactType.LINKED_RES_FOR_ASSET_PACK, task.manifestFiles)
+            task.assetsFiles.from(assetFileCollection)
         }
     }
 

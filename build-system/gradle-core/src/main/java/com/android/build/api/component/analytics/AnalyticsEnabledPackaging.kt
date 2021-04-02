@@ -41,10 +41,4 @@ open class AnalyticsEnabledPackaging @Inject constructor(
                 VariantPropertiesMethodType.RESOURCES_PACKAGING_OPTIONS_VALUE
             return delegate.resources
         }
-
-    override fun resources(action: ResourcesPackaging.() -> Unit) {
-        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-            VariantPropertiesMethodType.RESOURCES_PACKAGING_OPTIONS_ACTION_VALUE
-        delegate.resources(action)
-    }
 }

@@ -31,7 +31,6 @@ import com.android.testutils.MockitoKt.any
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidTestResultListenerProto.TestResultEvent
 import com.android.utils.ILogger
-import com.google.common.io.Files
 import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.Any
 import com.google.protobuf.TextFormat
@@ -52,13 +51,15 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnit
 import org.mockito.junit.MockitoRule
+import org.mockito.quality.Strictness
 import java.io.File
 
 /**
  * Unit tests for [UtpTestRunner].
  */
 class UtpTestRunnerTest {
-    @get:Rule var mockitoJUnitRule: MockitoRule = MockitoJUnit.rule()
+    @get:Rule var mockitoJUnitRule: MockitoRule =
+            MockitoJUnit.rule().strictness(Strictness.STRICT_STUBS)
     @get:Rule var temporaryFolderRule = TemporaryFolder()
 
     @Mock lateinit var mockProcessExecutor: ProcessExecutor
@@ -99,9 +100,6 @@ class UtpTestRunnerTest {
         `when`(mockTestData.minSdkVersion).thenReturn(AndroidVersionImpl(28))
         `when`(mockTestData.testApk).thenReturn(mockTestApk)
         `when`(mockTestData.testedApkFinder).thenReturn { _, _ -> listOf(mockAppApk) }
-        `when`(mockRetentionConfig.enabled).thenReturn(false)
-
-        var utpOutputDir: File? = null
         `when`(mockUtpConfigFactory.createRunnerConfigProtoForLocalDevice(
                 any(DeviceConnector::class.java),
                 any(StaticTestData::class.java),
@@ -116,7 +114,6 @@ class UtpTestRunnerTest {
                 any(File::class.java),
                 any(File::class.java),
                 any(File::class.java))).then {
-            utpOutputDir = it.getArgument<File>(5)
             RunnerConfigProto.RunnerConfig.getDefaultInstance()
         }
         `when`(mockUtpConfigFactory.createServerConfigProto())
@@ -127,10 +124,6 @@ class UtpTestRunnerTest {
                 any(JavaProcessInfo::class.java),
                 any(ProcessOutputHandler::class.java))).then {
             val testSuiteResult = createStubResultProto()
-            Files.asCharSink(
-                    File(requireNotNull(utpOutputDir), TEST_RESULT_OUTPUT_FILE_NAME),
-                    Charsets.UTF_8)
-                    .write(TextFormat.printToString(testSuiteResult))
 
             runner.onTestResultEvent(TestResultEvent.newBuilder().apply {
                 testSuiteStartedBuilder.apply {

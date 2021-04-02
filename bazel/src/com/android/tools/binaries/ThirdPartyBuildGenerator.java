@@ -34,7 +34,6 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -42,6 +41,7 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
@@ -110,24 +110,18 @@ public class ThirdPartyBuildGenerator {
             usage();
         }
 
-        Set<Artifact> artifacts;
+        Stream<String> artifacts;
         if (!args.isEmpty()) {
-            artifacts = args.stream().map(DefaultArtifact::new).collect(Collectors.toSet());
+            artifacts = args.stream();
         } else {
-            Path dependenciesProperties =
+            Path dependenciesPropertiesFile =
                     WorkspaceUtils.findWorkspace()
                             .resolve("tools/buildSrc/base/dependencies.properties");
-            Properties dependencies = new Properties();
-            try(InputStream inputStream = Files.newInputStream(dependenciesProperties)) {
-                dependencies.load(inputStream);
-            }
-            artifacts = new HashSet<>();
-            for (String key: dependencies.stringPropertyNames()) {
-                artifacts.add(new DefaultArtifact(dependencies.getProperty(key)));
-            }
+            artifacts = readDependenciesProperties(dependenciesPropertiesFile);
         }
+        Set<Artifact> artifactSet = artifacts.map(DefaultArtifact::new).collect(Collectors.toSet());
 
-        new ThirdPartyBuildGenerator(buildFile, localRepo).generateBuildFile(artifacts);
+        new ThirdPartyBuildGenerator(buildFile, localRepo).generateBuildFile(artifactSet);
     }
 
     private static void usage() {
@@ -186,8 +180,20 @@ public class ThirdPartyBuildGenerator {
                                 + "see top of this file.\n");
                 fileWriter.append("maven_java_library(");
                 fileWriter.append(String.format("name = \"%s\", ", ruleName));
-                fileWriter.append(
-                        String.format("export_artifact = \"%s\", ", getJarTarget(artifact)));
+                switch (artifact.getExtension()) {
+                    case "jar":
+                        fileWriter.append(
+                                String.format("export_artifact = \"%s\", ", getTarget(artifact)));
+                        break;
+                    case "pom":
+                        fileWriter.append(String.format("pom = \"%s\", ", getTarget(artifact)));
+                        break;
+                    default:
+                        throw new IllegalStateException(
+                                String.format(
+                                        "Artifact '%s' has unknown packaging type '%s'.",
+                                        artifact.toString(), artifact.getExtension()));
+                }
                 fileWriter.append("visibility = [\"//visibility:public\"], ");
                 fileWriter.append(String.format("exports = [%s], ", formatAsBazelList(deps)));
 
@@ -223,17 +229,52 @@ public class ThirdPartyBuildGenerator {
     }
 
     @VisibleForTesting
-    protected String getJarTarget(Artifact artifact) {
+    protected static Stream<String> readDependenciesProperties(Path dependenciesPropertiesFile)
+            throws IOException {
+        Properties dependencies = new Properties();
+        try (InputStream inputStream = Files.newInputStream(dependenciesPropertiesFile)) {
+            dependencies.load(inputStream);
+        }
+        Stream<String> deps = dependencies.stringPropertyNames().stream();
+        return deps.map(
+                (key) -> {
+                    String value = dependencies.getProperty(key);
+                    // Hack to support pom packaging (bug 183921630)
+                    if (value.startsWith("org.codehaus.groovy:groovy-all:3")) {
+                        value =
+                                "org.codehaus.groovy:groovy-all:pom:"
+                                        + value.substring(
+                                                "org.codehaus.groovy:groovy-all:".length());
+                    }
+                    return value;
+                });
+    }
+
+    @VisibleForTesting
+    protected String getTarget(Artifact artifact) {
         Path jar = mRepo.getRelativePath(artifact);
-        return PREBUILTS_BAZEL_PACKAGE + jar.getParent() + ":" + JavaImportGenerator.JAR_RULE_NAME;
+        String ruleName;
+        switch (artifact.getExtension()) {
+            case "jar":
+                ruleName = JavaImportGenerator.JAR_RULE_NAME;
+                break;
+            case "pom":
+                ruleName = JavaImportGenerator.POM_RULE_NAME;
+                break;
+            default:
+                throw new IllegalStateException(
+                        String.format(
+                                "Artifact '%s' has unknown packaging type '%s'.",
+                                artifact.toString(), artifact.getExtension()));
+        }
+        return PREBUILTS_BAZEL_PACKAGE + jar.getParent() + ":" + ruleName;
     }
 
     private SortedMap<String, Artifact> computeEffectiveVersions(Set<Artifact> artifacts)
             throws DependencyCollectionException, DependencyResolutionException, IOException {
         CollectRequest collectRequest = new CollectRequest();
         collectRequest.setDependencies(
-                artifacts
-                        .stream()
+                artifacts.stream()
                         .map(artifact -> new Dependency(artifact, JavaScopes.COMPILE))
                         .collect(Collectors.toList()));
 

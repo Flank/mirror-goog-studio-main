@@ -26,6 +26,7 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
@@ -66,7 +67,7 @@ interface TestData {
     val testCoverageEnabled: Provider<Boolean>
 
     /** The min SDK version of the app  */
-    @get:Input
+    @get:Nested
     val minSdkVersion: Provider<AndroidVersion>
 
     /** If this is a library type. */

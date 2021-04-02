@@ -15,7 +15,7 @@
  */
 package com.android.build.gradle.tasks
 
-import com.android.build.api.artifact.ArtifactType
+import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.getApiString
 import com.android.build.gradle.internal.LoggerWrapper
@@ -310,7 +310,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
                 taskProvider,
                 ProcessApplicationManifest::mergedManifest
             )
-                .on(ArtifactType.MERGED_MANIFEST)
+                .on(SingleArtifact.MERGED_MANIFEST)
 
             artifacts.setInitialProvider(
                 taskProvider,

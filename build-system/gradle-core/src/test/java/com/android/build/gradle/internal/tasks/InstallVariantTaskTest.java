@@ -25,7 +25,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import com.android.annotations.NonNull;
-import com.android.build.api.artifact.ArtifactType;
+import com.android.build.api.artifact.SingleArtifact;
 import com.android.build.api.variant.BuiltArtifacts;
 import com.android.build.api.variant.impl.BuiltArtifactImpl;
 import com.android.build.api.variant.impl.BuiltArtifactsImpl;
@@ -79,7 +79,7 @@ public class InstallVariantTaskTest {
         BuiltArtifactsImpl builtArtifacts =
                 new BuiltArtifactsImpl(
                         BuiltArtifacts.METADATA_FILE_VERSION,
-                        ArtifactType.APK.INSTANCE,
+                        SingleArtifact.APK.INSTANCE,
                         "com.android.test",
                         "debug",
                         ImmutableList.of(

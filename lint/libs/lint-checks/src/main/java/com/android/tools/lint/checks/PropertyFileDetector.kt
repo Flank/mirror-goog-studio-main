@@ -36,7 +36,6 @@ import java.io.File
  * TODO: Warn about bad paths like sdk properties with ' in the path, or
  *     suffix of " " etc.
  */
-/** Constructs a new [PropertyFileDetector] */
 class PropertyFileDetector : Detector() {
     override fun run(context: Context) {
         val contents = context.getContents() ?: return

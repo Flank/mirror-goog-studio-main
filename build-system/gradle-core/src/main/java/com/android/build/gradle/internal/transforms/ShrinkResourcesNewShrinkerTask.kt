@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.transforms
 
 import com.android.build.api.artifact.ArtifactTransformationRequest
-import com.android.build.api.artifact.ArtifactType
+import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.variant.BuiltArtifact
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.gradle.internal.LoggerWrapper
@@ -192,7 +192,7 @@ abstract class ShrinkResourcesNewShrinkerTask : NonIncrementalTask() {
             )
 
             creationConfig.artifacts.setTaskInputToFinalProduct(
-                ArtifactType.OBFUSCATION_MAPPING_FILE,
+                SingleArtifact.OBFUSCATION_MAPPING_FILE,
                 task.mappingFileSrc
             )
 

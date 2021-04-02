@@ -18,15 +18,34 @@
 #include <functional>
 #include <unordered_map>
 
-#include "agent/jvmti_helper.h"
 #include "app_inspection_transform.h"
-#include "hidden_api_silencer.h"
+#include "jvmti/hidden_api_silencer.h"
+#include "jvmti/jvmti_helper.h"
 #include "slicer/reader.h"
 #include "slicer/writer.h"
 #include "utils/device_info.h"
 #include "utils/log.h"
 
 using namespace profiler;
+
+namespace {
+
+static std::string ConvertClass(JNIEnv* env, jclass cls) {
+  jclass classClass = env->FindClass("java/lang/Class");
+  jmethodID mid =
+      env->GetMethodID(classClass, "getCanonicalName", "()Ljava/lang/String;");
+
+  jstring strObj = (jstring)env->CallObjectMethod(cls, mid);
+
+  profiler::JStringWrapper name_wrapped(env, strObj);
+
+  std::string name = "L" + name_wrapped.get() + ";";
+
+  std::replace(name.begin(), name.end(), '.', '/');
+  return name;
+}
+
+}  // namespace
 
 namespace app_inspection {
 
@@ -186,27 +205,6 @@ GetAppInspectionTransforms() {
   return transformations;
 }
 
-// ClassPrepare event callback to invoke transformation of selected classes.
-// In pre-P, this saves expensive OnClassFileLoaded calls for other classes.
-void AppInspectionService::OnClassPrepare(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
-                                          jthread thread, jclass klass) {
-  char* sig_mutf8;
-  jvmti_env->GetClassSignature(klass, &sig_mutf8, nullptr);
-  auto class_transforms = GetAppInspectionTransforms();
-  if (class_transforms->find(sig_mutf8) != class_transforms->end()) {
-    CheckJvmtiError(
-        jvmti_env, jvmti_env->SetEventNotificationMode(
-                       JVMTI_ENABLE, JVMTI_EVENT_CLASS_FILE_LOAD_HOOK, thread));
-    CheckJvmtiError(jvmti_env, jvmti_env->RetransformClasses(1, &klass));
-    CheckJvmtiError(jvmti_env, jvmti_env->SetEventNotificationMode(
-                                   JVMTI_DISABLE,
-                                   JVMTI_EVENT_CLASS_FILE_LOAD_HOOK, thread));
-  }
-  if (sig_mutf8 != nullptr) {
-    jvmti_env->Deallocate((unsigned char*)sig_mutf8);
-  }
-}
-
 void AppInspectionService::OnClassFileLoaded(
     jvmtiEnv* jvmti_env, JNIEnv* jni_env, jclass class_being_redefined,
     jobject loader, const char* name, jobject protection_domain,
@@ -249,7 +247,6 @@ void AppInspectionService::Initialize() {
   memset(&callbacks, 0, sizeof(callbacks));
   callbacks.ClassFileLoadHook = OnClassFileLoaded;
 
-  callbacks.ClassPrepare = OnClassPrepare;
   CheckJvmtiError(jvmti_,
                   jvmti_->SetEventCallbacks(&callbacks, sizeof(callbacks)));
 
@@ -260,20 +257,17 @@ void AppInspectionService::Initialize() {
   // retransformation on class prepare).
   bool filter_class_load_hook = DeviceInfo::feature_level() < DeviceInfo::P;
   SetEventNotification(jvmti_,
-                       filter_class_load_hook ? JVMTI_ENABLE : JVMTI_DISABLE,
-                       JVMTI_EVENT_CLASS_PREPARE);
-  SetEventNotification(jvmti_,
                        filter_class_load_hook ? JVMTI_DISABLE : JVMTI_ENABLE,
                        JVMTI_EVENT_CLASS_FILE_LOAD_HOOK);
 }
 
-void AppInspectionService::AddTransform(JNIEnv* jni,
-                                        const std::string& class_name,
+void AppInspectionService::AddTransform(JNIEnv* jni, const jclass& origin_class,
                                         const std::string& method_name,
                                         const std::string& signature,
                                         bool is_entry) {
   HiddenApiSilencer silencer(jvmti_);
   auto class_transforms = GetAppInspectionTransforms();
+  std::string class_name = ConvertClass(jni, origin_class);
   auto transform_iter = class_transforms->find(class_name);
   AppInspectionTransform* app_transform;
   if (transform_iter == class_transforms->end()) {
@@ -285,50 +279,27 @@ void AppInspectionService::AddTransform(JNIEnv* jni,
   app_transform->AddTransform(class_name.c_str(), method_name.c_str(),
                               signature.c_str(), is_entry);
 
-  jclass found_class = nullptr;
-  jint class_count;
-  jclass* loaded_classes;
-  char* sig_mutf8;
-  jvmti_->GetLoadedClasses(&class_count, &loaded_classes);
-  for (int i = 0; i < class_count; ++i) {
-    jvmti_->GetClassSignature(loaded_classes[i], &sig_mutf8, nullptr);
-    if (sig_mutf8 == class_name) {
-      found_class = loaded_classes[i];
-    }
-    if (sig_mutf8 != nullptr) {
-      jvmti_->Deallocate((unsigned char*)sig_mutf8);
-    }
+  jthread thread = nullptr;
+  jvmti_->GetCurrentThread(&thread);
+
+  // Class file load hooks are automatically managed on P (and newer) devices
+  bool manually_toggle_load_hook = DeviceInfo::feature_level() < DeviceInfo::P;
+
+  if (manually_toggle_load_hook) {
+    CheckJvmtiError(
+        jvmti_, jvmti_->SetEventNotificationMode(
+                    JVMTI_ENABLE, JVMTI_EVENT_CLASS_FILE_LOAD_HOOK, thread));
+  }
+  CheckJvmtiError(jvmti_, jvmti_->RetransformClasses(1, &origin_class));
+  if (manually_toggle_load_hook) {
+    CheckJvmtiError(
+        jvmti_, jvmti_->SetEventNotificationMode(
+                    JVMTI_DISABLE, JVMTI_EVENT_CLASS_FILE_LOAD_HOOK, thread));
   }
 
-  if (found_class != nullptr) {
-    jthread thread = nullptr;
-    jvmti_->GetCurrentThread(&thread);
-
-    // Class file load hooks are automatically managed on P (and newer) devices
-    bool manually_toggle_load_hook =
-        DeviceInfo::feature_level() < DeviceInfo::P;
-
-    if (manually_toggle_load_hook) {
-      CheckJvmtiError(
-          jvmti_, jvmti_->SetEventNotificationMode(
-                      JVMTI_ENABLE, JVMTI_EVENT_CLASS_FILE_LOAD_HOOK, thread));
-    }
-    CheckJvmtiError(jvmti_, jvmti_->RetransformClasses(1, &found_class));
-    if (manually_toggle_load_hook) {
-      CheckJvmtiError(
-          jvmti_, jvmti_->SetEventNotificationMode(
-                      JVMTI_DISABLE, JVMTI_EVENT_CLASS_FILE_LOAD_HOOK, thread));
-    }
-
-    if (thread != nullptr) {
-      jni->DeleteLocalRef(thread);
-    }
+  if (thread != nullptr) {
+    jni->DeleteLocalRef(thread);
   }
-
-  for (int i = 0; i < class_count; ++i) {
-    jni->DeleteLocalRef(loaded_classes[i]);
-  }
-  jvmti_->Deallocate(reinterpret_cast<unsigned char*>(loaded_classes));
 }
 
 }  // namespace app_inspection

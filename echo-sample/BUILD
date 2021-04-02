@@ -39,7 +39,7 @@ cc_library(
     deps = [
         "//prebuilts/studio/jdk:jni_headers",
         "//tools/base/transport/native/agent",
-        "//tools/base/transport/native/agent:jvmti_helper",
+        "//tools/base/transport/native/jvmti",
         "//tools/base/transport/proto:cc_proto",
     ],
     alwayslink = 1,

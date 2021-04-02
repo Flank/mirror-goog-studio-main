@@ -4,17 +4,11 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-ad86777617ad0b98cff81003ed5c1dffb295203eac43b7ccd9367e6d68df3155
+aa2f39953f355dc2bc2043b4ddd78a7c1d3806d3db4a486178e748ee962bdc3f
 -------------------------------------------------------------------------
-com.android.build.api.artifact.FileNames extends java.lang.Enum
-com.android.build.api.artifact.FileNames.getFileName: java.lang.String ()
-com.android.build.api.artifact.FileNames.valueOf: com.android.build.api.artifact.FileNames (java.lang.String)
-com.android.build.api.artifact.FileNames.values: com.android.build.api.artifact.FileNames[] ()
 com.android.build.api.attributes.BuildTypeAttr implements org.gradle.api.Named
 com.android.build.api.attributes.BuildTypeAttr$Companion
 com.android.build.api.attributes.ProductFlavorAttr implements org.gradle.api.Named
-com.android.build.api.attributes.VariantAttr implements org.gradle.api.Named
-com.android.build.api.attributes.VariantAttr$Companion
 com.android.build.api.dsl.AndroidResources
 com.android.build.api.dsl.CommonExtension
 com.android.build.api.dsl.CommonExtension.androidResources: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.AndroidResources, kotlin.Unit>)

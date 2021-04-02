@@ -16,12 +16,18 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.artifact.ArtifactType
+import com.android.build.api.artifact.SingleArtifact
+import com.android.build.api.artifact.impl.ArtifactsImpl
+import com.android.build.api.dsl.SigningConfig
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.getOutputPath
+import com.android.build.gradle.internal.services.ProjectServices
+import com.android.build.gradle.internal.signing.SigningConfigData
 import com.android.build.gradle.internal.signing.SigningConfigDataProvider
 import com.android.build.gradle.internal.signing.SigningConfigProviderParams
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.StringOption
 import com.android.builder.internal.packaging.AabFlinger
@@ -134,6 +140,52 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
         }
     }
 
+    class CreationForAssetPackBundleAction(
+        private val projectServices: ProjectServices,
+        private val artifacts: ArtifactsImpl,
+        private val signingConfig: SigningConfig,
+        private val isSigningReady: Boolean
+    ) : TaskCreationAction<FinalizeBundleTask>() {
+
+        override val type = FinalizeBundleTask::class.java
+        override val name = "signBundle"
+
+        override fun handleProvider(
+            taskProvider: TaskProvider<FinalizeBundleTask>
+        ) {
+            super.handleProvider(taskProvider)
+
+            val bundleName = "${projectServices.projectInfo.getProjectBaseName()}.aab"
+            val location = SingleArtifact.BUNDLE.getOutputPath(artifacts.buildDirectory, "")
+            artifacts.setInitialProvider(taskProvider, FinalizeBundleTask::finalBundleFile)
+                .atLocation(location.absolutePath)
+                .withName(bundleName)
+                .on(SingleArtifact.BUNDLE)
+        }
+
+        override fun configure(
+            task: FinalizeBundleTask
+        ) {
+            task.configureVariantProperties(variantName = "", task.project)
+            artifacts.setTaskInputToFinalProduct(
+                InternalArtifactType.INTERMEDIARY_BUNDLE,
+                task.intermediaryBundleFile
+            )
+
+            if (isSigningReady) {
+                val signingConfigData =
+                    SigningConfigData.fromDslSigningConfig(signingConfig)
+                task.signingConfigData = SigningConfigDataProvider(
+                    signingConfigData = projectServices.providerFactory.provider { signingConfigData },
+                    signingConfigFileCollection = null,
+                    signingConfigValidationResultDir = artifacts.get(
+                        InternalArtifactType.VALIDATE_SIGNING_CONFIG
+                    )
+                )
+            }
+        }
+    }
+
     /**
      * CreateAction for a task that will sign the bundle artifact.
      */
@@ -158,7 +210,7 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
                 creationConfig.artifacts.setInitialProvider(
                     taskProvider,
                     FinalizeBundleTask::finalBundleFile
-                ).withName(bundleName).on(ArtifactType.BUNDLE)
+                ).withName(bundleName).on(SingleArtifact.BUNDLE)
             } else {
                 creationConfig.artifacts.setInitialProvider(
                     taskProvider,
@@ -167,7 +219,7 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
                         creationConfig.services.file(apkLocationOverride),
                         creationConfig.dirName).absolutePath)
                     .withName(bundleName)
-                    .on(ArtifactType.BUNDLE)
+                    .on(SingleArtifact.BUNDLE)
             }
         }
 

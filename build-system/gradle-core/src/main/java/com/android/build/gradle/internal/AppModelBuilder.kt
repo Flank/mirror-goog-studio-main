@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal
 
-import com.android.build.api.artifact.ArtifactType
+import com.android.build.api.artifact.SingleArtifact
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.errors.SyncIssueReporter
 import com.android.build.gradle.internal.ide.DefaultAppBundleProjectBuildOutput
@@ -83,7 +83,7 @@ class AppModelBuilder(
 
             // TODO(b/111168382): Remove the namespaced check check once bundle pipeline works with namespaces.
             if (component.variantType.isBaseModule && !component.globalScope.extension.aaptOptions.namespaced) {
-                val bundleFile = artifacts.get(ArtifactType.BUNDLE)
+                val bundleFile = artifacts.get(SingleArtifact.BUNDLE)
                 val apkFolder = artifacts.get(InternalArtifactType.EXTRACTED_APKS)
                 variantsOutput.add(
                         DefaultAppBundleVariantBuildOutput(

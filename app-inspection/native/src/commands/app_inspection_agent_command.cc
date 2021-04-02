@@ -18,7 +18,7 @@
 #include "app_inspection_common.h"
 
 #include "agent/agent.h"
-#include "agent/jvmti_helper.h"
+#include "jvmti/jvmti_helper.h"
 
 using app_inspection::AppInspectionCommand;
 using app_inspection::CreateInspectorCommand;

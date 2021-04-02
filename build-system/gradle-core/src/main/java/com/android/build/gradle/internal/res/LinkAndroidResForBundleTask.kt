@@ -27,7 +27,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactTyp
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.Aapt2Input
-import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.services.getErrorFormatMode
 import com.android.build.gradle.internal.services.registerAaptService
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -258,7 +257,7 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
 
             task.noCompress.setDisallowChanges(creationConfig.globalScope.extension.aaptOptions.noCompress)
             task.aaptAdditionalParameters.setDisallowChanges(
-                creationConfig.aapt.additionalParameters
+                creationConfig.androidResources.aaptAdditionalParameters
             )
 
             task.excludeResSourcesForReleaseBundles

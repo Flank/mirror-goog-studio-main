@@ -160,13 +160,15 @@ public class VariantScopeImpl implements VariantScope {
      * @param artifactType the artifact type.
      * @param configTypes the PublishedConfigType. (e.g. api, runtime, etc)
      * @param libraryElements the artifact's library elements
+     * @param isTestFixturesArtifact whether the artifact is from a test fixtures component
      */
     @Override
     public void publishIntermediateArtifact(
             @NonNull Provider<?> artifact,
             @NonNull ArtifactType artifactType,
             @NonNull Collection<PublishedConfigType> configTypes,
-            @Nullable LibraryElements libraryElements) {
+            @Nullable LibraryElements libraryElements,
+            boolean isTestFixturesArtifact) {
 
         Preconditions.checkState(!configTypes.isEmpty());
 
@@ -186,6 +188,8 @@ public class VariantScopeImpl implements VariantScope {
                     String classifier = null;
                     if (configType.isClassifierRequired()) {
                         classifier = componentIdentity.getName();
+                    } else if (isTestFixturesArtifact) {
+                        classifier = "test-fixtures";
                     }
                     publishArtifactToDefaultVariant(config, artifact, artifactType, classifier);
                 } else {
@@ -293,8 +297,8 @@ public class VariantScopeImpl implements VariantScope {
                 || !Strings.isNullOrEmpty(projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY))
                 || projectOptions.get(IntegerOption.IDE_TARGET_DEVICE_API) != null
                 || isPreviewTargetPlatform()
-                || variant.getVariantBuilder().getMinSdkVersion().getCodename() != null
-                || variant.getVariantBuilder().getTargetSdkVersion().getCodename() != null;
+                || variant.getMinSdkVersion().getCodename() != null
+                || variant.getTargetSdkVersion().getCodename() != null;
     }
 
     private boolean isPreviewTargetPlatform() {

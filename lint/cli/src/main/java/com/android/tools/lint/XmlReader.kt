@@ -30,7 +30,6 @@ import com.android.SdkConstants.TAG_LOCATION
 import com.android.SdkConstants.VALUE_TRUE
 import com.android.ide.common.util.PathString
 import com.android.tools.lint.client.api.IssueRegistry
-import com.android.tools.lint.client.api.LintClient
 import com.android.tools.lint.client.api.LintDriver
 import com.android.tools.lint.detector.api.Constraint
 import com.android.tools.lint.detector.api.DefaultPosition
@@ -60,7 +59,7 @@ import java.util.HashMap
 
 /** The [XmlReader] can restore the state saved by [XmlWriter] */
 class XmlReader(
-    private val client: LintClient,
+    private val client: LintCliClient,
     private val registry: IssueRegistry,
     private val project: Project?,
     xmlFile: File
@@ -477,6 +476,10 @@ class XmlReader(
             .build()
     }
 
+    private fun getFile(path: String): File {
+        return client.pathVariables.fromPathString(path, project?.dir)
+    }
+
     private fun readLocation(): Location {
         var file: File? = null
         var line: String? = null
@@ -493,12 +496,7 @@ class XmlReader(
             when (name) {
                 ATTR_ID -> { /* ignore: this is used as attribute key when in a note */
                 }
-                ATTR_FILE -> {
-                    file = File(value)
-                    if (project != null && !file.isAbsolute) {
-                        file = File(project.dir, value)
-                    }
-                }
+                ATTR_FILE -> file = getFile(value)
                 ATTR_LINE -> line = value
                 ATTR_END_LINE -> endLine = value
                 ATTR_COLUMN -> column = value

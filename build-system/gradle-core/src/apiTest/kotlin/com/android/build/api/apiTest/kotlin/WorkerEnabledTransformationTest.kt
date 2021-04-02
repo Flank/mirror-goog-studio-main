@@ -45,7 +45,7 @@ class WorkerEnabledTransformationTest: VariantApiBaseTest(TestType.Script) {
             import org.gradle.api.tasks.OutputFile
             import org.gradle.api.tasks.TaskAction
             import org.gradle.workers.WorkerExecutor
-            import com.android.build.api.artifact.ArtifactType
+            import com.android.build.api.artifact.SingleArtifact
             import com.android.build.api.artifact.ArtifactTransformationRequest
             import com.android.build.api.variant.BuiltArtifact
 
@@ -62,7 +62,7 @@ class WorkerEnabledTransformationTest: VariantApiBaseTest(TestType.Script) {
                         .wiredWithDirectories(
                             CopyApksTask::apkFolder,
                             CopyApksTask::outFolder)
-                        .toTransformMany(ArtifactType.APK)
+                        .toTransformMany(SingleArtifact.APK)
 
 
                     copyApksProvider.configure {

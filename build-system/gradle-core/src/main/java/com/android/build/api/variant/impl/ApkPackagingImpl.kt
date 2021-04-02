@@ -30,16 +30,8 @@ class ApkPackagingImpl(
     override val dex =
         DexPackagingOptionsImpl(dslPackagingOptions, variantPropertiesApiServices, minSdk)
 
-    override fun dex(action: DexPackagingOptions.() -> Unit) {
-        action.invoke(dex)
-    }
-
     override val jniLibs =
         JniLibsApkPackagingImpl(dslPackagingOptions, variantPropertiesApiServices, minSdk)
-
-    override fun jniLibs(action: JniLibsApkPackaging.() -> Unit) {
-        action.invoke(jniLibs)
-    }
 
     override val resources =
         ResourcesApkPackagingImpl(dslPackagingOptions, variantPropertiesApiServices)

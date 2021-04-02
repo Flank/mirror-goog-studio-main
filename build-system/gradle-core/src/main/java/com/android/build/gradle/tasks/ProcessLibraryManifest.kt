@@ -16,14 +16,15 @@
 package com.android.build.gradle.tasks
 
 import com.android.SdkConstants
-import com.android.build.api.artifact.ArtifactType
+import com.android.build.api.artifact.SingleArtifact
+import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.BuiltArtifacts
 import com.android.build.api.variant.impl.BuiltArtifactsImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.dirName
 import com.android.build.api.variant.impl.getApiString
 import com.android.build.gradle.internal.LoggerWrapper
-import com.android.build.gradle.internal.component.LibraryCreationConfig
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.MANIFEST_MERGE_REPORT
@@ -34,9 +35,7 @@ import com.android.manifmerger.ManifestMerger2
 import com.android.manifmerger.MergingReport
 import com.android.utils.FileUtils
 import com.google.common.annotations.VisibleForTesting
-import com.google.common.base.Charsets
 import com.google.common.base.Preconditions
-import com.google.common.io.Files
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
@@ -265,9 +264,14 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
     @get:Internal
     abstract val tmpDir: DirectoryProperty
 
-    class CreationAction
-    /** `EagerTaskCreationAction` for the library process manifest task.  */(creationConfig: LibraryCreationConfig) :
-        VariantTaskCreationAction<ProcessLibraryManifest, LibraryCreationConfig>(creationConfig) {
+    class CreationAction(
+        creationConfig: ComponentCreationConfig,
+        private val targetSdkVersion: AndroidVersion?,
+        private val maxSdkVersion: Int?,
+        private val manifestPlaceholders: MapProperty<String, String>?
+    ) : VariantTaskCreationAction<ProcessLibraryManifest, ComponentCreationConfig>(
+        creationConfig
+    ) {
         override val name: String
             get() = computeTaskName("process", "Manifest")
 
@@ -293,7 +297,7 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
             artifacts.setInitialProvider(
                 taskProvider
             ) { task: ProcessLibraryManifest -> task.manifestOutputFile }
-                .on(ArtifactType.MERGED_MANIFEST)
+                .on(SingleArtifact.MERGED_MANIFEST)
 
             artifacts.setInitialProvider(
                 taskProvider,
@@ -322,16 +326,18 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
             task.minSdkVersion.setDisallowChanges(creationConfig.minSdkVersion.getApiString())
             task.targetSdkVersion
                 .setDisallowChanges(
-                    if (creationConfig.targetSdkVersion.apiLevel < 1) null
-                    else creationConfig.targetSdkVersion.getApiString()
+                    if (targetSdkVersion == null || targetSdkVersion.apiLevel < 1) null
+                    else targetSdkVersion.getApiString()
                 )
-            task.maxSdkVersion.setDisallowChanges(creationConfig.maxSdkVersion)
+            task.maxSdkVersion.setDisallowChanges(maxSdkVersion)
             task.mainSplit.set(project.provider { creationConfig.outputs.getMainSplit() })
             task.mainSplit.disallowChanges()
             task.isNamespaced =
                 creationConfig.globalScope.extension.aaptOptions.namespaced
             task.packageOverride.setDisallowChanges(creationConfig.applicationId)
-            task.manifestPlaceholders.setDisallowChanges(creationConfig.manifestPlaceholders)
+            manifestPlaceholders?.let {
+                task.manifestPlaceholders.setDisallowChanges(it)
+            }
             task.mainManifest
                 .set(project.provider(variantSources::mainManifestIfExists))
             task.mainManifest.disallowChanges()

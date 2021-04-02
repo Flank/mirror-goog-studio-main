@@ -2,7 +2,7 @@ apply(from="../../commonHeader.gradle")
 apply(from="../../commonVersions.gradle", to=project.ext)
 
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "1.4.31"
+    id("org.jetbrains.kotlin.jvm") version "1.4.32"
     `java-gradle-plugin`
 }
 

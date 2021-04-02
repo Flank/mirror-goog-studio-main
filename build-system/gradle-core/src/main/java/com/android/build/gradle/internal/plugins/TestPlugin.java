@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.plugins;
 import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
 import com.android.build.api.component.impl.TestComponentImpl;
+import com.android.build.api.component.impl.TestFixturesComponentImpl;
 import com.android.build.api.dsl.SdkComponents;
 import com.android.build.api.extension.TestAndroidComponentsExtension;
 import com.android.build.api.extension.impl.TestAndroidComponentsExtensionImpl;
@@ -90,18 +91,22 @@ public class TestPlugin
                 dslServices.newDecoratedInstance(
                         TestExtensionImpl.class, dslServices, dslContainers);
         if (projectServices.getProjectOptions().get(BooleanOption.USE_NEW_DSL_INTERFACES)) {
-            return (BaseExtension)
-                    project.getExtensions()
-                            .create(
-                                    com.android.build.api.dsl.TestExtension.class,
-                                    "android",
-                                    TestExtension.class,
-                                    dslServices,
-                                    globalScope,
-                                    buildOutputs,
-                                    dslContainers.getSourceSetManager(),
-                                    extraModelInfo,
-                                    testExtension);
+            TestExtension android =
+                    (TestExtension)
+                            project.getExtensions()
+                                    .create(
+                                            com.android.build.api.dsl.TestExtension.class,
+                                            "android",
+                                            TestExtension.class,
+                                            dslServices,
+                                            globalScope,
+                                            buildOutputs,
+                                            dslContainers.getSourceSetManager(),
+                                            extraModelInfo,
+                                            testExtension);
+            project.getExtensions()
+                    .add(TestExtension.class, "_internal_legacy_android_extension", android);
+            return android;
         }
 
         return project.getExtensions()
@@ -154,6 +159,7 @@ public class TestPlugin
     protected TestApplicationTaskManager createTaskManager(
             @NonNull List<ComponentInfo<TestVariantBuilderImpl, TestVariantImpl>> variants,
             @NonNull List<TestComponentImpl> testComponents,
+            @NonNull List<TestFixturesComponentImpl> testFixturesComponents,
             boolean hasFlavors,
             @NonNull ProjectOptions projectOptions,
             @NonNull GlobalScope globalScope,
@@ -162,6 +168,7 @@ public class TestPlugin
         return new TestApplicationTaskManager(
                 variants,
                 testComponents,
+                testFixturesComponents,
                 hasFlavors,
                 projectOptions,
                 globalScope,

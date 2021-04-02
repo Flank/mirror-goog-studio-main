@@ -16,19 +16,23 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.variant.impl.SigningConfigImpl
+import com.android.build.api.artifact.impl.ArtifactsImpl
+import com.android.build.api.dsl.SigningConfig
 import com.android.build.gradle.internal.component.ApkCreationConfig
-import com.google.common.annotations.VisibleForTesting
 import com.android.build.gradle.internal.packaging.createDefaultDebugStore
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.signing.SigningConfigData
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.core.BuilderConstants
 import com.android.builder.signing.DefaultSigningConfig
 import com.android.builder.utils.SynchronizedFile
 import com.android.utils.FileUtils
+import com.google.common.annotations.VisibleForTesting
 import com.google.common.base.Preconditions.checkState
 import org.gradle.api.InvalidUserDataException
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputDirectory
@@ -56,38 +60,43 @@ abstract class ValidateSigningTask : NonIncrementalTask() {
     @get:OutputDirectory
     abstract val dummyOutputDirectory: DirectoryProperty
 
-    @get:Internal internal lateinit var signingConfig: SigningConfigImpl
-    @get:Internal internal lateinit var defaultDebugKeystoreLocation: File
+    @get:Internal
+    abstract val signingConfigData: Property<SigningConfigData>
+
+    @get:Internal
+    abstract val defaultDebugKeystoreLocation: Property<File>
 
     override fun doTaskAction() = when {
-        !signingConfig.storeFile.isPresent -> throw InvalidUserDataException(
-                """Keystore file not set for signing config ${signingConfig.name}""")
+        signingConfigData.get().storeFile == null -> throw InvalidUserDataException(
+                """Keystore file not set for signing config ${signingConfigData.get().name}""")
         isSigningConfigUsingTheDefaultDebugKeystore() ->
             /* Check if the debug keystore is being used rather than directly checking if it
                already exists. A "fast path" of returning true if the store file is present would
                allow one task to return while another validate task has only partially written the
                default debug keystore file, which could lead to confusing transient build errors. */
             createDefaultDebugKeystoreIfNeeded()
-        signingConfig.storeFile.get()?.isFile == true -> {
+        signingConfigData.get().storeFile?.isFile == true -> {
             /* Keystore file is present, allow the build to continue. */
         }
         else -> throw InvalidUserDataException(
-                """Keystore file '${signingConfig.storeFile.get()?.absolutePath}' """
-                        + """not found for signing config '${signingConfig.name}'.""")
+                """Keystore file '${signingConfigData.get().storeFile?.absolutePath}' """
+                        + """not found for signing config '${signingConfigData.get().name}'.""")
     }
 
     @Throws(ExecutionException::class, IOException::class)
     private fun createDefaultDebugKeystoreIfNeeded() {
-
-        checkState(signingConfig.isSigningReady(), "Debug signing config not ready.")
-
+        checkState(
+            defaultDebugKeystoreLocation.isPresent,
+            "Debug keystore location is not specified."
+        )
         // Synchronized file with multi process locking requires that the parent directory of the
         // default debug keystore is present.
-        FileUtils.mkdirs(defaultDebugKeystoreLocation.parentFile)
+        val location = defaultDebugKeystoreLocation.get()
+        FileUtils.mkdirs(location.parentFile)
 
-        if (!defaultDebugKeystoreLocation.parentFile.canWrite()) {
+        if (!location.parentFile.canWrite()) {
             throw IOException("""Unable to create debug keystore in """
-                    + """${defaultDebugKeystoreLocation.parentFile.absolutePath} because it is not writable.""")
+                    + """${location.parentFile.absolutePath} because it is not writable.""")
         }
 
         /* Creating the debug keystore is done with the multi process file locking,
@@ -99,18 +108,19 @@ abstract class ValidateSigningTask : NonIncrementalTask() {
            This is generally safe as the keystore is only automatically created,
            never automatically deleted.  */
         SynchronizedFile
-                .getInstanceWithMultiProcessLocking(defaultDebugKeystoreLocation)
+                .getInstanceWithMultiProcessLocking(location)
                 .createIfAbsent { createDefaultDebugStore(it, this.logger) }
     }
 
 
     private fun isSigningConfigUsingTheDefaultDebugKeystore(): Boolean {
+        val signingConfig = signingConfigData.get()
         return signingConfig.name == BuilderConstants.DEBUG &&
-                signingConfig.keyAlias.get() == DefaultSigningConfig.DEFAULT_ALIAS &&
-                signingConfig.keyPassword.get() == DefaultSigningConfig.DEFAULT_PASSWORD &&
-                signingConfig.storePassword.get() == DefaultSigningConfig.DEFAULT_PASSWORD &&
-                signingConfig.storeType.get() == KeyStore.getDefaultType() &&
-                signingConfig.storeFile.get()?.isSameFile(defaultDebugKeystoreLocation) == true
+                signingConfig.keyAlias == DefaultSigningConfig.DEFAULT_ALIAS &&
+                signingConfig.keyPassword == DefaultSigningConfig.DEFAULT_PASSWORD &&
+                signingConfig.storePassword == DefaultSigningConfig.DEFAULT_PASSWORD &&
+                signingConfig.storeType == KeyStore.getDefaultType() &&
+                signingConfig.storeFile?.isSameFile(defaultDebugKeystoreLocation.get()) == true
     }
 
     private fun File?.isSameFile(other: File?) =
@@ -124,8 +134,30 @@ abstract class ValidateSigningTask : NonIncrementalTask() {
      */
     @VisibleForTesting
     fun forceRerun(): Boolean {
-        val storeFile = signingConfig.storeFile.orNull
+        val storeFile: File? = signingConfigData.map { it.storeFile }.orNull
         return storeFile == null || !storeFile.isFile
+    }
+
+    class CreationForAssetPackBundleAction(
+        private val artifacts: ArtifactsImpl,
+        private val signingConfig: SigningConfig
+    ) : TaskCreationAction<ValidateSigningTask>() {
+
+        override val type = ValidateSigningTask::class.java
+        override val name = "validateSigning"
+
+        override fun handleProvider(taskProvider: TaskProvider<ValidateSigningTask>) {
+            super.handleProvider(taskProvider)
+            artifacts.setInitialProvider(
+                taskProvider,
+                ValidateSigningTask::dummyOutputDirectory
+            ).on(InternalArtifactType.VALIDATE_SIGNING_CONFIG)
+        }
+
+        override fun configure(task: ValidateSigningTask) {
+            task.signingConfigData.set(SigningConfigData.fromDslSigningConfig(signingConfig))
+            task.outputs.upToDateWhen { !task.forceRerun() }
+        }
     }
 
     class CreationAction(
@@ -156,10 +188,15 @@ abstract class ValidateSigningTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            task.signingConfig = creationConfig.signingConfig ?: throw IllegalStateException(
+            val signingConfig = creationConfig.signingConfig ?: throw IllegalStateException(
                 "No signing config configured for variant " + creationConfig.name
             )
-            task.defaultDebugKeystoreLocation = defaultDebugKeystoreLocation
+            task.signingConfigData.set(
+                creationConfig.services.variantPropertiesApiServices.provider {
+                    SigningConfigData.fromSigningConfig(signingConfig)
+                }
+            )
+            task.defaultDebugKeystoreLocation.set(defaultDebugKeystoreLocation)
             task.outputs.upToDateWhen { !task.forceRerun() }
         }
     }

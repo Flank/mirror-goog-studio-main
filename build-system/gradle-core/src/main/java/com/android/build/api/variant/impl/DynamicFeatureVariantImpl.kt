@@ -22,7 +22,7 @@ import com.android.build.api.component.Component
 import com.android.build.api.component.analytics.AnalyticsEnabledDynamicFeatureVariant
 import com.android.build.api.component.impl.ApkCreationConfigImpl
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
-import com.android.build.api.variant.Aapt
+import com.android.build.api.variant.AndroidResources
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.ApkPackaging
 import com.android.build.api.variant.Dexing
@@ -105,7 +105,7 @@ open class DynamicFeatureVariantImpl @Inject constructor(
     override val applicationId: Provider<String> =
         internalServices.providerOf(String::class.java, baseModuleMetadata.map { it.applicationId })
 
-    override val aapt: Aapt by lazy {
+    override val androidResources: AndroidResources by lazy {
         initializeAaptOptionsFromDsl(
             globalScope.extension.aaptOptions,
             internalServices

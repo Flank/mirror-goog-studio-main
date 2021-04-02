@@ -97,21 +97,50 @@ abstract class LintModelWriterTask : NonIncrementalTask() {
         this.partialResultsDirPath = partialResultsDir.absolutePath
     }
 
-    class CreationAction(
+    class LintCreationAction(
         creationConfig: ConsumableCreationConfig,
-        private val checkDependencies: Boolean = true
-    ) : VariantTaskCreationAction<LintModelWriterTask, ConsumableCreationConfig>(
-        creationConfig
-    ) {
+        checkDependencies: Boolean = true
+    ) : BaseCreationAction(creationConfig, checkDependencies) {
+
+        override val useLintVitalPartialResults: Boolean
+            get() = false
 
         override val name: String
             get() = computeTaskName("generate", "LintModel")
-        override val type: Class<LintModelWriterTask>
+    }
+
+    class LintVitalCreationAction(
+        creationConfig: ConsumableCreationConfig,
+        checkDependencies: Boolean = false
+    ) : BaseCreationAction(creationConfig, checkDependencies) {
+
+        override val useLintVitalPartialResults: Boolean
+            get() = true
+
+        override val name: String
+            get() = computeTaskName("generate", "LintVitalLintModel")
+    }
+
+    abstract class BaseCreationAction(
+        creationConfig: ConsumableCreationConfig,
+        private val checkDependencies: Boolean
+    ) : VariantTaskCreationAction<LintModelWriterTask, ConsumableCreationConfig>(
+        creationConfig
+    ) {
+        abstract val useLintVitalPartialResults: Boolean
+
+        final override val type: Class<LintModelWriterTask>
             get() = LintModelWriterTask::class.java
 
         override fun handleProvider(taskProvider: TaskProvider<LintModelWriterTask>) {
             super.handleProvider(taskProvider)
-            registerOutputArtifacts(taskProvider, creationConfig.artifacts)
+            if (useLintVitalPartialResults) {
+                creationConfig.artifacts
+                    .setInitialProvider(taskProvider, LintModelWriterTask::outputDirectory)
+                    .on(InternalArtifactType.LINT_VITAL_LINT_MODEL)
+            } else {
+                registerOutputArtifacts(taskProvider, creationConfig.artifacts)
+            }
         }
 
         override fun configure(task: LintModelWriterTask) {
@@ -127,7 +156,11 @@ abstract class LintModelWriterTask : NonIncrementalTask() {
             )
             task.partialResultsDir =
                 creationConfig.artifacts.getOutputPath(
-                    InternalArtifactType.LINT_PARTIAL_RESULTS,
+                    if (useLintVitalPartialResults) {
+                        InternalArtifactType.LINT_VITAL_PARTIAL_RESULTS
+                    } else {
+                        InternalArtifactType.LINT_PARTIAL_RESULTS
+                    },
                     AndroidLintAnalysisTask.PARTIAL_RESULTS_DIR_NAME
                 )
             task.partialResultsDirPath = task.partialResultsDir.absolutePath

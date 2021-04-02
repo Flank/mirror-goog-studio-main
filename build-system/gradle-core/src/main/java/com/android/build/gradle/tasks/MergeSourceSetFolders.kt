@@ -378,7 +378,7 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
             )
 
             if (creationConfig is ApkCreationConfig) {
-                task.ignoreAssetsPatterns.set(creationConfig.aapt.ignoreAssetsPatterns)
+                task.ignoreAssetsPatterns.set(creationConfig.androidResources.ignoreAssetsPatterns)
             } else {
                 // support ignoring asset patterns in library modules via DSL
                 creationConfig.globalScope.extension.aaptOptions.ignoreAssetsPattern?.let {
@@ -406,7 +406,7 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
             get() = computeTaskName("merge", "Assets")
     }
 
-    class LibraryAssetCreationAction(creationConfig: VariantCreationConfig) :
+    class LibraryAssetCreationAction(creationConfig: ComponentCreationConfig) :
         MergeAssetBaseCreationAction(
             creationConfig,
             InternalArtifactType.LIBRARY_ASSETS,
@@ -486,7 +486,7 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
         }
     }
 
-    class MergeMlModelsSourceFoldersCreationAction(creationConfig: VariantCreationConfig) :
+    class MergeMlModelsSourceFoldersCreationAction(creationConfig: ComponentCreationConfig) :
         CreationAction(creationConfig) {
 
         override val name: String

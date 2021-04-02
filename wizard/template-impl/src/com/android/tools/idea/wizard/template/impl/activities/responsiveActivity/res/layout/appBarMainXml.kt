@@ -55,7 +55,7 @@ fun appBarMainXml(
     <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginBottom="72dp"
+        android:layout_marginBottom="56dp"
         android:background="@android:color/transparent">
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -63,7 +63,7 @@ fun appBarMainXml(
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom|end"
-            android:layout_marginEnd="@dimen/fab_margin"
+            android:layout_margin="@dimen/fab_margin"
             app:srcCompat="@android:drawable/ic_dialog_email" />
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

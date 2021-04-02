@@ -82,6 +82,8 @@ message QueryParameters {
     AllocationDataRequest memory_request = 104;
     ProcessCountersParameters process_counters_request = 105;
     CpuCoreCountersParameters cpu_core_counters_request = 106;
+    AndroidFrameEventsParameters android_frame_events_request = 107;
+    TraceMetadataParameters trace_metadata_request = 108;
   }
 
   // Returns metadata information for a process of the provided id.
@@ -90,6 +92,15 @@ message QueryParameters {
   // See ResultProcessMetadata for the data returned from this.
   message ProcessMetadataParameters {
     int64 process_id = 1;
+  }
+
+  // Returns metadata information for a given metadata name, and/or type of
+  // of metadata. If there is more than one match, all matching results will
+  // be returned. If no name or type is provided all rows will be returned.
+  // https://perfetto.dev/docs/analysis/sql-tables#metadata
+  message TraceMetadataParameters {
+    string type = 1;
+    string name = 2;
   }
 
   // Returns all the trace events for all threads part of the process_id
@@ -122,6 +133,15 @@ message QueryParameters {
   // Returns data from all CPU cores, e.g. frequency counters.
   // See https://perfetto.dev/docs/analysis/sql-tables#cpu_counter_track.
   message CpuCoreCountersParameters {}
+
+  // Returns data from the Perfetto data source: android.surfaceflinger.frame.
+  // See https://perfetto.dev/docs/analysis/sql-tables#frame_slice.
+  // Only avaialbe from Android R.
+  message AndroidFrameEventsParameters {
+    // String hint to filter frame_slices by layer name. For apps, use the
+    // process name. If empty, the response will not return any events.
+    string layer_name_hint = 1;
+  }
 }
 
 message QueryResult {
@@ -149,6 +169,8 @@ message QueryResult {
     NativeAllocationContext memory_events = 104;
     ProcessCountersResult process_counters_result = 105;
     CpuCoreCountersResult cpu_core_counters_result = 106;
+    AndroidFrameEventsResult android_frame_events_result = 107;
+    TraceMetadataResult trace_metadata_result = 108;
   }
 
   enum QueryFailureReason {
@@ -181,6 +203,28 @@ message ProcessMetadataResult {
     int64 id = 1;
     int64 internal_id = 2;
     string name = 3;
+  }
+}
+
+// Result of each row returned from the metadata table.
+message TraceMetadataResult {
+  repeated TraceMetadataRow metadata_row = 1;
+}
+
+// Metadata table represented as a proto
+// Each field here is a column in the metadata table, the
+// values are expected to be either int64 or string never
+// both.
+message TraceMetadataRow {
+  // Name of metadata key
+  string name = 1;
+  // How many expected values are associated with this key,
+  // typically this is "single" can be "multi"
+  // See: https://github.com/google/perfetto/blob/31f297b260df8ab33e372fc81d612fecb4bcf9e7/src/trace_processor/storage/metadata.h
+  string key_type = 2;
+  oneof value {
+    int64 int64_value = 3;
+    string string_value = 4;
   }
 }
 
@@ -282,4 +326,34 @@ message Counter {
 message CounterValue {
   int64 timestamp_nanoseconds = 1;
   double value = 2;
+}
+
+message AndroidFrameEventsResult {
+  // List of Android Layers, the unit of composition in SurfaceFlinger.
+  repeated Layer layer = 1;
+
+  message Layer {
+    // Full layer name, e.g. com.example.app/MainActivity#0.
+    string layer_name = 2;
+    // List of phases in the graphics pipeline, e.g. application, wait for GPU.
+    repeated Phase phase = 1;
+  }
+
+  message Phase {
+    // Frame lifecycle phase name, e.g. APP, SF.
+    string phase_name = 3;
+    // List of events in the frame lifecycle.
+    repeated FrameEvent frame_event = 1;
+  }
+
+  message FrameEvent {
+    // Unique event ID, using frame_slice.id.
+    int64 id = 1;
+    // Event timestamp in nanoseconds.
+    int64 timestamp_nanoseconds = 2;
+    // Event duration in nanoseconds.
+    int64 duration_nanoseconds = 3;
+    // A number to associate events of various phases to the same frame.
+    int32 frame_number = 4;
+  }
 }

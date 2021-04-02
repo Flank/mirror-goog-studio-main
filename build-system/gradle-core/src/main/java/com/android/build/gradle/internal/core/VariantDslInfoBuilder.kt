@@ -220,7 +220,7 @@ class VariantDslInfoBuilder private constructor(
 
             val flavorName = variantConfiguration.flavorName
 
-            if (flavorName.isNotEmpty()) {
+            if (!flavorName.isNullOrEmpty()) {
                 sb.append(flavorName)
                 sb.appendCapitalized(splitName)
             } else {

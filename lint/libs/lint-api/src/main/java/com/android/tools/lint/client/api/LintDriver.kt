@@ -3475,15 +3475,17 @@ class LintDriver(
             sb.append(':')
             appendStackTraceSummary(throwable, sb)
             sb.append("`")
-            sb.append("\n\nYou can ")
-            if (!LintClient.isStudio) {
+            if (!driver.client.printInternalErrorStackTrace) {
+                sb.append("\n\nYou can ")
+                if (!LintClient.isStudio) {
+                    sb.append(
+                        "run with --stacktrace or "
+                    )
+                }
                 sb.append(
-                    "run with --stacktrace or "
+                    "set environment variable `LINT_PRINT_STACKTRACE=true` to dump a full stacktrace to stdout."
                 )
             }
-            sb.append(
-                "set environment variable `LINT_PRINT_STACKTRACE=true` to dump a full stacktrace to stdout."
-            )
 
             val throwableMessage = throwable.message
             if (throwableMessage != null && throwableMessage.startsWith(

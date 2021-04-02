@@ -16,9 +16,11 @@
 
 package com.android.build.api.component.analytics
 
+import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.JniLibsPackaging
 import com.android.build.api.variant.Packaging
+import com.android.build.api.variant.ResValue
 import com.android.build.api.variant.ResourcesPackaging
 import com.android.build.api.variant.Variant
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider
@@ -49,6 +51,47 @@ class AnalyticsEnabledVariantTest {
     private val stats = GradleBuildVariant.newBuilder()
     private val proxy: AnalyticsEnabledVariant by lazy {
         object : AnalyticsEnabledVariant(delegate, stats, FakeObjectFactory.factory) {}
+    }
+
+    @Test
+    fun getMinSdkVersion() {
+        val androidVersion = Mockito.mock(AndroidVersion::class.java)
+        Mockito.`when`(delegate.minSdkVersion).thenReturn(androidVersion)
+        Truth.assertThat(proxy.minSdkVersion).isEqualTo(androidVersion)
+
+        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
+        Truth.assertThat(
+            stats.variantApiAccess.variantPropertiesAccessList.first().type
+        ).isEqualTo(VariantPropertiesMethodType.MIN_SDK_VERSION_VALUE)
+        Mockito.verify(delegate, Mockito.times(1))
+            .minSdkVersion
+    }
+
+    @Test
+    fun getTargetSdkVersion() {
+        val androidVersion = Mockito.mock(AndroidVersion::class.java)
+        Mockito.`when`(delegate.targetSdkVersion).thenReturn(androidVersion)
+        Truth.assertThat(proxy.targetSdkVersion).isEqualTo(androidVersion)
+
+        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
+        Truth.assertThat(
+            stats.variantApiAccess.variantPropertiesAccessList.first().type
+        ).isEqualTo(VariantPropertiesMethodType.TARGET_SDK_VERSION_VALUE)
+        Mockito.verify(delegate, Mockito.times(1))
+            .targetSdkVersion
+    }
+
+    @Test
+    fun getMaxSdkVersion() {
+        Mockito.`when`(delegate.maxSdkVersion).thenReturn(23)
+        Truth.assertThat(proxy.maxSdkVersion).isEqualTo(23)
+
+        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
+        Truth.assertThat(
+            stats.variantApiAccess.variantPropertiesAccessList.first().type
+        ).isEqualTo(VariantPropertiesMethodType.MAX_SDK_VERSION_VALUE)
+        Mockito.verify(delegate, Mockito.times(1))
+            .maxSdkVersion
     }
 
     @Test
@@ -95,40 +138,20 @@ class AnalyticsEnabledVariantTest {
     }
 
     @Test
-    fun addBuildConfigField() {
-        proxy.addBuildConfigField("key", "value", "comment")
+    fun getResValues() {
+        @Suppress("UNCHECKED_CAST")
+        val map: MapProperty<ResValue.Key, ResValue> =
+            Mockito.mock(MapProperty::class.java)
+                    as MapProperty<ResValue.Key, ResValue>
+        Mockito.`when`(delegate.resValues).thenReturn(map)
+        Truth.assertThat(proxy.resValues).isEqualTo(map)
 
         Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
         Truth.assertThat(
             stats.variantApiAccess.variantPropertiesAccessList.first().type
-        ).isEqualTo(VariantPropertiesMethodType.ADD_BUILD_CONFIG_FIELD_VALUE)
+        ).isEqualTo(VariantPropertiesMethodType.RES_VALUE_VALUE)
         Mockito.verify(delegate, Mockito.times(1))
-            .addBuildConfigField("key", "value", "comment")
-    }
-
-    @Test
-    fun addResValue() {
-        proxy.addResValue("name","key", "value", "comment")
-
-        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
-        Truth.assertThat(
-            stats.variantApiAccess.variantPropertiesAccessList.first().type
-        ).isEqualTo(VariantPropertiesMethodType.ADD_RES_VALUE_VALUE)
-        Mockito.verify(delegate, Mockito.times(1))
-            .addResValue("name", "key", "value", "comment")
-    }
-
-    @Test
-    fun addResValueProvider() {
-        val provider = FakeGradleProvider("value")
-        proxy.addResValue("name","key", provider, "comment")
-
-        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
-        Truth.assertThat(
-            stats.variantApiAccess.variantPropertiesAccessList.first().type
-        ).isEqualTo(VariantPropertiesMethodType.ADD_RES_VALUE_VALUE)
-        Mockito.verify(delegate, Mockito.times(1))
-            .addResValue("name", "key", provider, "comment")
+            .resValues
     }
 
     @Test

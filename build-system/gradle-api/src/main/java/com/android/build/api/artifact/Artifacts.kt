@@ -35,7 +35,7 @@ import org.gradle.api.tasks.TaskProvider
  * are not transformed further.
  *
  * Artifacts are uniquely defined by their [Artifact] type and public artifact types that can be
- * accessed from third-party plugins or build script are defined in [ArtifactType]
+ * accessed from third-party plugins or build script are defined in [SingleArtifact]
  *
  * @since 4.1
  */
@@ -48,7 +48,7 @@ interface Artifacts {
      * @param type Type of the single artifact.
      */
     fun <FileTypeT: FileSystemLocation> get(
-        type: ArtifactType<FileTypeT>
+        type: SingleArtifact<FileTypeT>
     ): Provider<FileTypeT>
 
     /**
@@ -57,7 +57,7 @@ interface Artifacts {
      * @param type Type of the multiple artifact.
      */
     fun <FileTypeT: FileSystemLocation> getAll(
-        type: MultipleArtifactType<FileTypeT>
+        type: MultipleArtifact<FileTypeT>
     ): Provider<List<FileTypeT>>
 
     /**

@@ -28,7 +28,9 @@ fun androidManifestXml(
 
     <application>
 
-        <receiver android:name="${packageName}.${className}" >
+        <receiver
+            android:name="${packageName}.${className}"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>

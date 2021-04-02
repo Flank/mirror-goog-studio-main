@@ -42,7 +42,7 @@ import java.io.File
 val blankWearActivityTemplate
   get() = template {
     name = "Blank Activity"
-    minApi = 23
+    minApi = 25
     description = "Creates a blank activity for Wear OS"
 
     constraints = listOf(TemplateConstraint.AndroidX)

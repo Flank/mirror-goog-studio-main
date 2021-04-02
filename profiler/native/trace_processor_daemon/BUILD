@@ -23,16 +23,20 @@ cc_library(
         "memory/memory_request_handler.cc",
         "process_metadata/process_metadata_request_handler.cc",
         "scheduling/scheduling_request_handler.cc",
+        "trace_events/android_frame_events_request_handler.cc",
         "trace_events/trace_events_request_handler.cc",
         "trace_processor_service.cc",
+        "trace_metadata_request_handler.cc",
     ],
     hdrs = [
         "counters/counters_request_handler.h",
         "memory/memory_request_handler.h",
         "process_metadata/process_metadata_request_handler.h",
         "scheduling/scheduling_request_handler.h",
+        "trace_events/android_frame_events_request_handler.h",
         "trace_events/trace_events_request_handler.h",
         "trace_processor_service.h",
+        "trace_metadata_request_handler.h",
     ],
     copts = [
         "-I$(GENDIR)/tools/base/profiler/native/trace_processor_daemon",
@@ -40,8 +44,8 @@ cc_library(
     deps = [
         "//tools/base/profiler/native/trace_processor_daemon/proto:cc_trace_processor_service_proto",
         "@com_google_absl//absl/strings",
-        "@perfetto//:trace_processor",
         "@perfetto//:libpprofbuilder",
+        "@perfetto//:trace_processor",
     ],
 )
 
@@ -134,6 +138,26 @@ cc_test(
     size = "medium",
     srcs = [
         "process_metadata/process_metadata_request_handler_test.cc",
+    ],
+    copts = [
+        "-I$(GENDIR)/tools/base/profiler/native/trace_processor_daemon",
+        "-Itools/base/profiler/native/trace_processor_daemon",
+    ],
+    data = [
+        "testdata/tank.trace",
+    ],
+    linkstatic = 1,
+    deps = [
+        ":trace_processor_service_impl",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "trace_metadata_request_handler_test",
+    size = "medium",
+    srcs = [
+        "trace_metadata_request_handler_test.cc",
     ],
     copts = [
         "-I$(GENDIR)/tools/base/profiler/native/trace_processor_daemon",

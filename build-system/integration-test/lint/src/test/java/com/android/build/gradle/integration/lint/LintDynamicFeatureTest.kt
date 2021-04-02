@@ -21,6 +21,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
+import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.truth.PathSubject.assertThat
@@ -89,47 +90,23 @@ class LintDynamicFeatureTest(private val usePartialAnalysis: Boolean) {
         )
     }
 
-    // TODO(b/183566683) Stop supporting running lint from feature modules
-    @Test
-    fun runLintFromDynamicFeatures() {
-        // Run twice to catch issues with configuration caching
-        project.getExecutor().run(":feature1:clean", ":feature1:lint")
-        project.getExecutor().run(":feature1:clean", ":feature1:lint")
-        assertThat(project.buildResult.failedTasks).isEmpty()
-
-        assertThat(project.file("feature1/lint-results.txt")).containsAllOf(
-            "Should explicitly set android:allowBackup to true or false",
-            "Hardcoded string \"Button\", should use @string resource"
-        )
-
-        project.getExecutor().run(":feature2:clean", ":feature2:lint")
-        assertThat(project.buildResult.failedTasks).isEmpty()
-
-        assertThat(project.file("feature2/lint-results.txt")).containsAllOf(
-            "Should explicitly set android:allowBackup to true or false",
-            "Hardcoded string \"Button\", should use @string resource"
-        )
-    }
-
-    // TODO(b/183566683) Stop supporting running lint from feature modules.
     // TODO(b/178810169) Running lint from an app module with checkDependencies true should also
     //  analyze all of the dynamic feature module dependencies.
     @Test
-    fun runLintFromDynamicFeatureWithCheckDependencies() {
-        // checkDependencies in a dynamic feature module has no effect; this test is mainly to check
-        // that we're not breaking people who might have it set to true currently.
-        TestFileUtils.appendToFile(
-            projectWithLibs.getSubproject(":feature").buildFile,
-            """
-                android {
-                    lintOptions {
-                        checkDependencies true
-                        abortOnError false
-                        textOutput file("lint-results.txt")
+    fun testLintAnchorTaskWithDynamicFeatures() {
+        for (subProject in listOf(":app", ":lib1", ":lib2")) {
+            TestFileUtils.appendToFile(
+                projectWithLibs.getSubproject(subProject).buildFile,
+                """
+                    android {
+                        lintOptions {
+                            abortOnError false
+                            textOutput file("lint-results.txt")
+                        }
                     }
-                }
-                """.trimIndent()
-        )
+                    """.trimIndent()
+            )
+        }
 
         // Add hard-coded resource to each module
         FileUtils.writeToFile(
@@ -149,19 +126,29 @@ class LintDynamicFeatureTest(private val usePartialAnalysis: Boolean) {
             layout_text
         )
 
-        projectWithLibs.getExecutor().run("clean", ":feature:lint")
+        // Run twice to catch issues with configuration caching
+        projectWithLibs.getExecutor().run("clean", "lint")
+        projectWithLibs.getExecutor().run("clean", "lint")
         assertThat(projectWithLibs.buildResult.failedTasks).isEmpty()
 
-        assertThat(projectWithLibs.file("feature/lint-results.txt")).contains(
+        assertThat(projectWithLibs.buildResult.tasks).contains(":app:lint")
+        assertThat(projectWithLibs.buildResult.tasks).contains(":app:lintDebug")
+        assertThat(projectWithLibs.buildResult.tasks).contains(":lib1:lint")
+        assertThat(projectWithLibs.buildResult.tasks).contains(":lib1:lintDebug")
+        assertThat(projectWithLibs.buildResult.tasks).contains(":lib2:lint")
+        assertThat(projectWithLibs.buildResult.tasks).contains(":lib2:lintDebug")
+        // There should not be a lint reporting task or lint anchor task for the dynamic feature.
+        assertThat(projectWithLibs.buildResult.tasks).doesNotContain(":feature:lint")
+        assertThat(projectWithLibs.buildResult.tasks).doesNotContain(":feature:lintDebug")
+
+        assertThat(projectWithLibs.file("app/lint-results.txt")).containsAllOf(
+            "app_layout.xml:10: Warning: Hardcoded string",
             "feature_layout.xml:10: Warning: Hardcoded string"
         )
-        assertThat(projectWithLibs.file("feature/lint-results.txt")).doesNotContain(
-            "app_layout.xml:10: Warning: Hardcoded string"
-        )
-        assertThat(projectWithLibs.file("feature/lint-results.txt")).doesNotContain(
+        assertThat(projectWithLibs.file("lib1/lint-results.txt")).contains(
             "lib1_layout.xml:10: Warning: Hardcoded string"
         )
-        assertThat(projectWithLibs.file("feature/lint-results.txt")).doesNotContain(
+        assertThat(projectWithLibs.file("lib2/lint-results.txt")).contains(
             "lib2_layout.xml:10: Warning: Hardcoded string"
         )
     }
@@ -233,23 +220,136 @@ class LintDynamicFeatureTest(private val usePartialAnalysis: Boolean) {
         }
     }
 
-
     @Test
     fun testLintVital() {
+        // check that lintVital succeeds before change to feature manifest
         project.getExecutor().run(":app:lintVitalRelease")
-        project.getExecutor().run(":app:lintVitalRelease")
+        ScannerSubject.assertThat(project.buildResult.stdout).contains("BUILD SUCCESSFUL")
 
-        assertThat(project.buildResult.upToDateTasks).contains(":app:lintVitalRelease")
+        val featureManifest =
+            project.getSubproject(":feature1").file("src/main/AndroidManifest.xml")
+        TestFileUtils.searchAndReplace(
+            featureManifest,
+            "package=",
+            "android:debuggable=\"true\"\npackage="
+        )
 
-        // Dynamic Feature Modules are not analyzed by the main module's lintVital task
+        val failureMessage =
+            project.getExecutor().expectFailure().run(":app:lintVitalRelease").failureMessage
+        assertThat(failureMessage).contains("fatal errors")
+    }
+
+    @Test
+    fun testLintVitalUpToDate() {
+        project.getExecutor().run("lintVitalRelease")
+
+        assertThat(project.buildResult.tasks).contains(":app:lintVitalRelease")
+        if (usePartialAnalysis) {
+            assertThat(project.buildResult.tasks).contains(":app:lintVitalAnalyzeRelease")
+            assertThat(project.buildResult.tasks).contains(":feature1:lintVitalAnalyzeRelease")
+            assertThat(project.buildResult.tasks).contains(":feature2:lintVitalAnalyzeRelease")
+        }
         assertThat(project.buildResult.tasks).doesNotContain(":feature1:lintVitalRelease")
-        assertThat(project.buildResult.tasks).doesNotContain(":feature1:lintVitalAnalyzeRelease")
         assertThat(project.buildResult.tasks).doesNotContain(":feature2:lintVitalRelease")
-        assertThat(project.buildResult.tasks).doesNotContain(":feature2:lintVitalAnalyzeRelease")
+
+        project.getExecutor().run("lintVitalRelease")
 
         if (usePartialAnalysis) {
+            assertThat(project.buildResult.upToDateTasks).contains(":app:lintVitalRelease")
             assertThat(project.buildResult.upToDateTasks).contains(":app:lintVitalAnalyzeRelease")
+            assertThat(project.buildResult.upToDateTasks).contains(
+                ":feature1:lintVitalAnalyzeRelease"
+            )
+            assertThat(project.buildResult.upToDateTasks).contains(
+                ":feature2:lintVitalAnalyzeRelease"
+            )
+        } else {
+            assertThat(project.buildResult.upToDateTasks).doesNotContain(":app:lintVitalRelease")
         }
+    }
+
+    @Test
+    fun testLintFixWithDynamicFeatures() {
+        project.getSubproject(":app").buildFile.appendText(
+            "\nandroid.lintOptions.error 'SyntheticAccessor'\n"
+        )
+        // TODO(b/178810169) should dynamic features inherit some lintOptions from base app?
+        project.getSubproject(":feature1").buildFile.appendText(
+            "\nandroid.lintOptions.error 'SyntheticAccessor'\n"
+        )
+        val appSourceFile =
+            project.getSubproject(":app").file("src/main/java/com/example/foo/Foo.java")
+        appSourceFile.parentFile.mkdirs()
+        appSourceFile.writeText(
+            """
+                package com.example.foo;
+
+                public class Foo {
+
+                    private void foo() {
+                        new InnerClass().bar();
+                    }
+
+                    static class InnerClass {
+                        private void bar() {}
+                    }
+                }
+            """.trimIndent()
+        )
+        val featureSourceFile =
+            project.getSubproject(":feature1").file("src/main/java/com/example/bar/Bar.java")
+        featureSourceFile.parentFile.mkdirs()
+        featureSourceFile.writeText(
+            """
+                package com.example.bar;
+
+                public class Bar {
+
+                    private void foo() {
+                        new InnerClass().bar();
+                    }
+
+                    static class InnerClass {
+                        private void bar() {}
+                    }
+                }
+            """.trimIndent()
+        )
+
+        val result = project.getExecutor().expectFailure().run(":app:lintFix")
+        ScannerSubject.assertThat(result.stderr)
+            .contains(
+                "Aborting build since sources were modified to apply quickfixes after compilation"
+            )
+
+        // Make sure quickfixes worked too.
+        // The original source files have this:
+        //    ...
+        //    private void bar() {}
+        //    ...
+        // After applying quickfixes, they contains this:
+        //    ...
+        //    void bar() {}
+        //    ...
+        assertThat(appSourceFile).doesNotContain("private void bar()")
+        assertThat(appSourceFile).contains("void bar()")
+        assertThat(featureSourceFile).doesNotContain("private void bar()")
+        assertThat(featureSourceFile).contains("void bar()")
+        val result2 = project.getExecutor().run("clean", "lintFix")
+        ScannerSubject.assertThat(result2.stdout).contains("BUILD SUCCESSFUL")
+    }
+
+    @Test
+    fun testLintFixAnchorTaskWithDynamicFeatures() {
+        project.getExecutor().run("lintFix")
+
+        assertThat(project.buildResult.tasks).contains(":app:lintFix")
+        assertThat(project.buildResult.tasks).contains(":app:lintFixDebug")
+        // There should not be lintFix tasks or lintFix anchor tasks for the dynamic features.
+        assertThat(project.buildResult.tasks).doesNotContain(":feature1:lintFix")
+        assertThat(project.buildResult.tasks).doesNotContain(":feature1:lintFixDebug")
+        assertThat(project.buildResult.tasks).doesNotContain(":feature2:lintFix")
+        assertThat(project.buildResult.tasks).doesNotContain(":feature2:lintFixDebug")
     }
 
     private fun GradleTestProject.getExecutor(): GradleTaskExecutor =

@@ -92,7 +92,7 @@ public class MergedAssetWriter
                         Files.copy(gzipInputStream, toFile, StandardCopyOption.REPLACE_EXISTING);
                     }
                 } else {
-                    FileUtils.copyFile(fromFile, toFile, StandardCopyOption.REPLACE_EXISTING);
+                    FileUtils.copyFile(fromFile, toFile);
                 }
             } catch (IOException e) {
                 throw new RuntimeException(e);

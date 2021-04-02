@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.artifact.ArtifactType
+import com.android.build.api.artifact.SingleArtifact
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -111,10 +111,10 @@ abstract class ApkZipPackagingTask : NonIncrementalTask() {
             super.configure(task)
 
             creationConfig.artifacts.setTaskInputToFinalProduct(
-                ArtifactType.APK, task.apkFolder
+                SingleArtifact.APK, task.apkFolder
             )
             creationConfig.artifacts.setTaskInputToFinalProduct(
-                ArtifactType.OBFUSCATION_MAPPING_FILE,
+                SingleArtifact.OBFUSCATION_MAPPING_FILE,
                 task.mappingFile
             )
         }

@@ -28,7 +28,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.component.VariantCreationConfig;
+import com.android.build.gradle.internal.component.ComponentCreationConfig;
 import com.android.build.gradle.internal.lint.LintTool;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
@@ -323,9 +323,9 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
     }
 
     public static class CreationAction
-            extends VariantTaskCreationAction<ExtractAnnotations, VariantCreationConfig> {
+            extends VariantTaskCreationAction<ExtractAnnotations, ComponentCreationConfig> {
 
-        public CreationAction(@NonNull VariantCreationConfig creationConfig) {
+        public CreationAction(@NonNull ComponentCreationConfig creationConfig) {
             super(creationConfig);
         }
 

@@ -359,12 +359,8 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
                             AndroidArtifacts.ArtifactScope.EXTERNAL,
                             AndroidArtifacts.ArtifactType.CLASSES_JAR)
 
-            val flavor = testData.flavorName.get()
-            val flavorFolder = if (flavor.isNotEmpty()) {
-                "$FD_FLAVORS/$flavor"
-            } else {
-                ""
-            }
+            val flavor: String? = testData.flavorName.get()
+            val flavorFolder = flavor?.let { "$FD_FLAVORS/$it"} ?: ""
             val deviceFolder = "$MANAGED_DEVICE/${device.name}"
             val subFolder = "/$deviceFolder/$flavorFolder"
 

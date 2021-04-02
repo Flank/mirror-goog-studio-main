@@ -50,7 +50,6 @@ fun RecipeExecutor.appWidgetRecipe(
   val ktOrJavaExt = projectData.language.extension
   val packageName = moduleData.packageName
   val layoutName = camelCaseToUnderlines(className)
-  val themeName = moduleData.themesData.main.name
   addAllKotlinDependencies(moduleData)
   addViewBindingSupport(moduleData.viewBindingSupport, true)
 
@@ -63,10 +62,24 @@ fun RecipeExecutor.appWidgetRecipe(
     save(appwidgetConfigureXml(), resOut.resolve("layout/${layoutName}_configure.xml"))
   }
 
-  val minWidthDp = -30 + 70 * minWidth.name.toInt()
-  val minHeightDp = -30 + 70 * minHeight.name.toInt()
+  val minHeightCells = minHeight.name.toInt()
+  val minWidthCells = minWidth.name.toInt()
+  val minWidthDp = -30 + 70 * minWidthCells
+  val minHeightDp = -30 + 70 * minHeightCells
   save(
-    appwidgetInfoXml(minHeightDp, minWidthDp, className, configurable, layoutName, packageName, placement, resizable),
+    appwidgetInfoXml(
+      minHeightDp = minHeightDp,
+      minWidthDp = minWidthDp,
+      minHeightCells = minHeightCells,
+      minWidthCells = minWidthCells,
+      className = className,
+      configurable = configurable,
+      layoutName = layoutName,
+      packageName = packageName,
+      placement = placement,
+      resizeable = resizable,
+      withSFeatures = moduleData.apis.targetApi.api >= 31
+    ),
     resOut.resolve("xml/${layoutName}_info.xml")
   )
   mergeXml(stringsXml(configurable), resOut.resolve("values/strings.xml"))

@@ -459,7 +459,8 @@ abstract class ComponentImpl(
                         outputSpec.publishedConfigTypes,
                         outputSpec.libraryElements?.let {
                             internalServices.named(LibraryElements::class.java, it)
-                        }
+                        },
+                        variantType.isTestFixturesComponent
                     )
             }
         }

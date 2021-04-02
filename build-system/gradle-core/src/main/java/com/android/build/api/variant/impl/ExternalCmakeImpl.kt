@@ -16,7 +16,7 @@
 
 package com.android.build.api.variant.impl
 
-import com.android.build.api.variant.ExternalCmake
+import com.android.build.api.variant.ExternalNativeBuild
 import com.android.build.gradle.internal.dsl.CoreExternalNativeCmakeOptions
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import org.gradle.api.provider.ListProperty
@@ -25,7 +25,7 @@ import org.gradle.api.provider.SetProperty
 class ExternalCmakeImpl(
         mergedExternalNativeCmakeOptions: CoreExternalNativeCmakeOptions,
         variantPropertiesApiServices: VariantPropertiesApiServices
-): ExternalCmake {
+): ExternalNativeBuild {
 
     override val abiFilters: SetProperty<String> =
             variantPropertiesApiServices.setPropertyOf(

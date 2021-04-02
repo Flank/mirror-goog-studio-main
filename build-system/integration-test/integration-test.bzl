@@ -10,14 +10,18 @@ load("//tools/base/bazel/validations:timeout.bzl", "APPROVED_ETERNAL_TESTS")
 #     srcs = glob(['**/*.java'], ['**/*.kt'])
 #     deps = test classes output
 #     data = test data: SDK parts and test projects.
-#     maven_repos = Absolute targets for maven repos containing the plugin(s) under test
+#     maven_repos = Absolute targets for maven repos containing the plugin(s) under test.
+#                   The targets supplied here must produce zip files (use_zip = True or
+#                   omitted for maven_repo targets).
+#     maven_repo_manifests = Absolute targets for maven_repo targets that set use_zip = False.
 #     shard_count = 8)
 def gradle_integration_test(
         name,
         srcs,
         deps,
         data,
-        maven_repos,
+        maven_repos = [],
+        maven_repo_manifests = [],
         resources = [],
         runtime_deps = [],
         shard_count = None,
@@ -43,20 +47,30 @@ def gradle_integration_test(
     if not all([maven_repo.startswith("//") for maven_repo in maven_repos]):
         fail("All maven repos should be absolute targets.")
 
-    zip_targets = [maven_repo + ".zip" for maven_repo in maven_repos]
-    zip_file_names = ",".join([maven_repo[2:].replace(":", "/") + ".zip" for maven_repo in maven_repos])
+    # Generate the file names for all maven_repos. These will be passed to the
+    # test suite in a Java property.
+    # TODO (b/148081564) maven_repos should become the default for manifests and
+    # zip file targets should go in maven_repo_zips once the migration to
+    # manifests is complete.
+    zip_file_targets = [maven_repo + ".zip" for maven_repo in maven_repos]
+    manifest_file_targets = [manifest + ".manifest" for manifest in maven_repo_manifests]
+    repo_file_names = ",".join([target[2:].replace(":", "/") for target in zip_file_targets + manifest_file_targets])
+
+    # Depend on the manifest targets in addition to the manifest file targets so
+    # that runfiles are included.
+    maven_repo_dependencies = zip_file_targets + manifest_file_targets + maven_repo_manifests
 
     coverage_java_test(
         name = name,
         timeout = timeout,
-        data = data + zip_targets,
+        data = data + maven_repo_dependencies,
         jvm_flags = [
             "-Dtest.suite.jar=" + lib_name + ".jar",
             "-Dfile.encoding=UTF-8",
             "-Dsun.jnu.encoding=UTF-8",
             "-Dmaven.repo.local=/tmp/localMavenRepo",  # For gradle publishing, writing to ~/.m2
             "-Dtest.excludeCategories=com.android.build.gradle.integration.common.category.OnlineTests",
-            "-Dtest.android.build.gradle.integration.repos=" + zip_file_names,
+            "-Dtest.android.build.gradle.integration.repos=" + repo_file_names,
         ],
         resources = resources,
         shard_count = shard_count,

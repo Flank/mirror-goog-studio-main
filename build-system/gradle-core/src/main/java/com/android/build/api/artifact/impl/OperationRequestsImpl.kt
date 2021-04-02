@@ -21,7 +21,7 @@ import com.android.build.api.artifact.Artifact.Multiple
 import com.android.build.api.artifact.Artifact.Single
 import com.android.build.api.artifact.ArtifactKind
 import com.android.build.api.artifact.ArtifactTransformationRequest
-import com.android.build.api.artifact.ArtifactType
+import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.artifact.CombiningOperationRequest
 import com.android.build.api.artifact.InAndOutDirectoryOperationRequest
 import com.android.build.api.artifact.InAndOutFileOperationRequest
@@ -219,13 +219,13 @@ class InAndOutDirectoryOperationRequestImpl<TaskT: Task>(
     companion object {
 
         /**
-         * Map of public [ArtifactType] of [Directory] that have an associated listing file used
+         * Map of public [SingleArtifact] of [Directory] that have an associated listing file used
          * by Android Studio and passed through the model. The key is the artifact type and the
          * value is the [InternalArtifactType] of [RegularFile] for the listing file artifact.
          */
         val publicTypesToIdeModelTypeMap:
                 Map<Single<Directory>, InternalArtifactType<RegularFile>>
-                = mapOf(ArtifactType.APK to InternalArtifactType.APK_IDE_MODEL,
+                = mapOf(SingleArtifact.APK to InternalArtifactType.APK_IDE_MODEL,
         )
 
         /**

@@ -17,8 +17,9 @@
 #include "trace_processor_service.h"
 
 #include <grpc++/grpc++.h>
-#include <mutex>
 #include <stdio.h>
+
+#include <mutex>
 
 #include "counters/counters_request_handler.h"
 #include "memory/memory_request_handler.h"
@@ -31,7 +32,9 @@
 #include "src/profiling/symbolizer/local_symbolizer.h"
 #include "src/profiling/symbolizer/symbolize_database.h"
 #include "src/profiling/symbolizer/symbolizer.h"
+#include "trace_events/android_frame_events_request_handler.h"
 #include "trace_events/trace_events_request_handler.h"
+#include "trace_metadata_request_handler.h"
 
 using ::perfetto::profiling::BinaryFinder;
 using ::perfetto::profiling::LocalBinaryFinder;
@@ -202,6 +205,18 @@ grpc::Status TraceProcessorServiceImpl::QueryBatch(
         handler.PopulateCpuCoreCounters(
             request.cpu_core_counters_request(),
             query_result->mutable_cpu_core_counters_result());
+      } break;
+      case QueryParameters::kAndroidFrameEventsRequest: {
+        AndroidFrameEventsRequestHandler handler(tp_.get());
+        handler.PopulateFrameEvents(
+            request.android_frame_events_request(),
+            query_result->mutable_android_frame_events_result());
+      } break;
+      case QueryParameters::kTraceMetadataRequest: {
+        TraceMetadataRequestHandler handler(tp_.get());
+        handler.PopulateTraceMetadata(
+            request.trace_metadata_request(),
+            query_result->mutable_trace_metadata_result());
       } break;
       case QueryParameters::QUERY_NOT_SET:
         // Do nothing.

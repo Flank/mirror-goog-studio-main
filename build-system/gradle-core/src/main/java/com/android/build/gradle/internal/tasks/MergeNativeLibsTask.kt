@@ -156,8 +156,6 @@ abstract class MergeNativeLibsTask : NonIncrementalTask() {
             // A map of pickFirst pattern strings to their compiled globs.
             val pickFirstsPathMatchers: Map<String, PathMatcher> =
                 parameters.pickFirsts.get().associateWith { compileGlob(it) }
-            // Keep track of which pickFirst patterns have already been "picked"
-            val usedPickFirsts: MutableSet<String> = mutableSetOf()
 
             val excludesPathMatchers: List<PathMatcher> =
                 parameters.excludes.get().map { compileGlob(it) }
@@ -175,10 +173,9 @@ abstract class MergeNativeLibsTask : NonIncrementalTask() {
                 val pickFirstMatches =
                     pickFirstsPathMatchers.filter { it.value.matches(systemDependentPath) }.keys
                 if (pickFirstMatches.isNotEmpty()) {
-                    // if the path matches a pickFirst pattern, we copy the file only if the path
-                    // matches a pickFirst pattern which hasn't been "picked"
-                    if (pickFirstMatches.any { !usedPickFirsts.contains(it) }) {
-                        usedPickFirsts.addAll(pickFirstMatches)
+                    // if the path matches a pickFirst pattern, we copy the file only if the
+                    // relative path hasn't already been used.
+                    if (!usedRelativePaths.containsKey(inputFile.relativePath)) {
                         copyInputFileToOutput(inputFile, outputDir, usedRelativePaths)
                     }
                 } else if (excludesPathMatchers.none { it.matches(systemDependentPath) }) {
@@ -188,7 +185,7 @@ abstract class MergeNativeLibsTask : NonIncrementalTask() {
 
             // Check usedRelativePaths and throw an exception or log warning(s) if necessary
             for (entry in usedRelativePaths) {
-                if (entry.value.size > 1 && !usedPickFirsts.contains(entry.key)) {
+                if (entry.value.size > 1) {
                     val projectFiles =
                         entry.value.filter { parameters.projectNativeLibs.get().contains(it) }
                     if (projectFiles.size == 1) {

@@ -16,7 +16,7 @@
 
 package com.android.build.api.variant.impl
 
-import com.android.build.api.artifact.ArtifactType
+import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.variant.BuiltArtifacts
 import com.android.build.api.variant.FilterConfiguration
 import com.android.build.gradle.internal.fixtures.FakeGradleDirectory
@@ -44,7 +44,7 @@ class BuiltArtifactsImplTest {
     fun simpleWriting() {
         val outputFolder = tmpFolder.newFolder("some_folder")
         BuiltArtifactsImpl(
-            artifactType = ArtifactType.APK,
+            artifactType = SingleArtifact.APK,
             applicationId = "com.android.test",
             variantName = "debug",
             elements = listOf(
@@ -131,7 +131,7 @@ class BuiltArtifactsImplTest {
     fun testMultipleOutputWithFilters() {
         val outputFolder = tmpFolder.newFolder("some_folder")
         BuiltArtifactsImpl(
-            artifactType = ArtifactType.APK,
+            artifactType = SingleArtifact.APK,
             applicationId = "com.android.test",
             variantName = "debug",
             elements = listOf(
@@ -336,10 +336,10 @@ class BuiltArtifactsImplTest {
             BuiltArtifacts.METADATA_FILE_VERSION
         )
         Truth.assertThat(builtArtifacts.artifactType.type).isEqualTo(
-            ArtifactType.APK.name()
+            SingleArtifact.APK.name()
         )
         Truth.assertThat(builtArtifacts.artifactType.kind).isEqualTo(
-            ArtifactType.APK.kind.dataType().simpleName
+            SingleArtifact.APK.kind.dataType().simpleName
         )
         Truth.assertThat(builtArtifacts.applicationId).isEqualTo("com.android.test")
         Truth.assertThat(builtArtifacts.version).isEqualTo(
@@ -524,7 +524,7 @@ class BuiltArtifactsImplTest {
 
     private fun createBuiltArtifacts(vararg elements: BuiltArtifactImpl) =
         BuiltArtifactsImpl(
-            artifactType = ArtifactType.APK,
+            artifactType = SingleArtifact.APK,
             applicationId = "com.android.test",
             variantName = "debug",
             elements = elements.toList()

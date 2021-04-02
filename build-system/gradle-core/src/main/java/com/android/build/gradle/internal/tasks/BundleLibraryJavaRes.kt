@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
 import com.android.SdkConstants.FN_INTERMEDIATE_RES_JAR
-import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.packaging.JarCreatorFactory
 import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.pipeline.StreamFilter.PROJECT_RESOURCES
@@ -90,8 +90,8 @@ abstract class BundleLibraryJavaRes : NonIncrementalTask() {
     }
 
     class CreationAction(
-        creationConfig: VariantCreationConfig
-    ) : VariantTaskCreationAction<BundleLibraryJavaRes, VariantCreationConfig>(
+        creationConfig: ComponentCreationConfig
+    ) : VariantTaskCreationAction<BundleLibraryJavaRes, ComponentCreationConfig>(
         creationConfig
     ) {
 

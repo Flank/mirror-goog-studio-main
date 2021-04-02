@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.tasks
 import com.android.SdkConstants
 import com.android.build.api.transform.QualifiedContent
 import com.android.build.api.transform.QualifiedContent.Scope
-import com.android.build.gradle.internal.component.ConsumableCreationConfig
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.databinding.DataBindingExcludeDelegate
 import com.android.build.gradle.internal.databinding.configureFrom
 import com.android.build.gradle.internal.packaging.JarCreatorFactory
@@ -287,8 +287,9 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
     }
 
     class CreationAction(
-        creationConfig: ConsumableCreationConfig
-    ) : VariantTaskCreationAction<LibraryAarJarsTask, ConsumableCreationConfig>(
+        creationConfig: ComponentCreationConfig,
+        private val codeShrinker: CodeShrinker?
+    ) : VariantTaskCreationAction<LibraryAarJarsTask, ComponentCreationConfig>(
         creationConfig
     ) {
         override val type = LibraryAarJarsTask::class.java
@@ -339,7 +340,7 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
              * which means gradle will have to deal with possibly non-existent files in the cache
              */
             task.mainScopeClassFiles.from(
-                if (creationConfig.codeShrinker == CodeShrinker.R8) {
+                if (codeShrinker == CodeShrinker.R8) {
                     creationConfig.artifacts
                         .get(InternalArtifactType.SHRUNK_CLASSES)
                 } else {
@@ -360,7 +361,7 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
             task.mainScopeClassFiles.disallowChanges()
 
             task.mainScopeResourceFiles.from(
-                if (creationConfig.codeShrinker == CodeShrinker.R8) {
+                if (codeShrinker == CodeShrinker.R8) {
                     creationConfig.artifacts
                         .get(InternalArtifactType.SHRUNK_JAVA_RES)
                 } else {

@@ -43,7 +43,6 @@ class OptionVersionTest {
          */
         private val KNOWN_VIOLATING_DEPRECATED_OPTIONS: List<Option<*>> = listOf(
                 BooleanOption.ENABLE_JVM_RESOURCE_COMPILER,
-                BooleanOption.ENABLE_SYMBOL_TABLE_CACHING,
                 OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8
         )
 

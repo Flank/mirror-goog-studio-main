@@ -41,7 +41,7 @@ class GetBundleTest: VariantApiBaseTest(TestType.Script)  {
             import org.gradle.api.tasks.InputFile
             import org.gradle.api.tasks.TaskAction
             import com.android.build.api.variant.BuiltArtifactsLoader
-            import com.android.build.api.artifact.ArtifactType
+            import com.android.build.api.artifact.SingleArtifact
             import org.gradle.api.provider.Property
             import org.gradle.api.tasks.Internal
 
@@ -63,7 +63,7 @@ class GetBundleTest: VariantApiBaseTest(TestType.Script)  {
             androidComponents {
                 onVariants { variant ->
                     project.tasks.register<DisplayBundleFileTask>("${ '$' }{variant.name}DisplayBundleFile") {
-                        bundleFile.set(variant.artifacts.get(ArtifactType.BUNDLE))
+                        bundleFile.set(variant.artifacts.get(SingleArtifact.BUNDLE))
                     }
                 }
             }
@@ -79,8 +79,8 @@ class GetBundleTest: VariantApiBaseTest(TestType.Script)  {
 
 This sample shows how to obtain the bundle file from the AGP.
 The [onVariants] block will wire the [DisplayBundleFile] input property (bundleFile) by using
-the Artifacts.get call with the right ArtifactType
-`bundleFile.set(artifacts.get(ArtifactType.BUNDLE))`
+the Artifacts.get call with the right SingleArtifact
+`bundleFile.set(artifacts.get(SingleArtifact.BUNDLE))`
 ## To Run
 ./gradlew debugDisplayBundleFile
 expected result : "Got the Bundle ...." message.

@@ -62,10 +62,10 @@ class ArtifactReplacementTest {
                         }
                         it.artifacts.use(produceTwoArtifacts)
                             .wiredWith({ it.getOutputManifest() })
-                            .toCreate(ArtifactType.MERGED_MANIFEST.INSTANCE)
+                            .toCreate(SingleArtifact.MERGED_MANIFEST.INSTANCE)
                         it.artifacts.use(produceTwoArtifacts)
                             .wiredWith({ it.getMappingFile() })
-                            .toCreate(ArtifactType.OBFUSCATION_MAPPING_FILE.INSTANCE)
+                            .toCreate(SingleArtifact.OBFUSCATION_MAPPING_FILE.INSTANCE)
                         TaskProvider replaceArtifacts = tasks.register(it.getName() + 'ReplaceArtifacts', ReplaceArtifact) {
                             task -> task.getReplacedManifest().set(
                                 new File(project.buildDir, "intermediates/replaceArtifact/replacedManifest.xml")
@@ -73,13 +73,13 @@ class ArtifactReplacementTest {
                         }
                         it.artifacts.use(replaceArtifacts)
                             .wiredWith({ it.getReplacedManifest() })
-                            .toCreate(ArtifactType.MERGED_MANIFEST.INSTANCE)
+                            .toCreate(SingleArtifact.MERGED_MANIFEST.INSTANCE)
                       TaskProvider verify = tasks.register(it.getName() + 'VerifyArtifacts', VerifyArtifacts) {
                             task -> task.getFinalManifest().set(
-                                it.artifacts.get(ArtifactType.MERGED_MANIFEST.INSTANCE)
+                                it.artifacts.get(SingleArtifact.MERGED_MANIFEST.INSTANCE)
                             )
                             task.getMappingFile().set(
-                                it.artifacts.get(ArtifactType.OBFUSCATION_MAPPING_FILE.INSTANCE)
+                                it.artifacts.get(SingleArtifact.OBFUSCATION_MAPPING_FILE.INSTANCE)
                             )
                             task.getProjectBuildDir().set(
                                 project.buildDir.toString()
@@ -88,7 +88,7 @@ class ArtifactReplacementTest {
                     })
                 }
                 import com.android.build.api.artifact.impl.ArtifactsImpl
-                import com.android.build.api.artifact.ArtifactType
+                import com.android.build.api.artifact.SingleArtifact
                 import com.android.build.api.artifact.impl.ArtifactContainer
 
                 abstract class ReplaceArtifact extends DefaultTask {

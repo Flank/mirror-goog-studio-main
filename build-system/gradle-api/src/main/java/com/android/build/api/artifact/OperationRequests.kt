@@ -26,7 +26,7 @@ import org.gradle.api.provider.ListProperty
 /**
  * Operations performed by a [Task] with a single [RegularFile] or [Directory] output.
  *
- * [Task] is not consuming existing version of the target [ArtifactType].
+ * [Task] is not consuming existing version of the target [SingleArtifact].
  */
 @Incubating
 interface OutOperationRequest<FileTypeT: FileSystemLocation> {
@@ -100,7 +100,7 @@ interface OutOperationRequest<FileTypeT: FileSystemLocation> {
      *     }
      * ```
      *
-     * An [ArtifactType] is defined as follows:
+     * An [SingleArtifact] is defined as follows:
      *
      * ```kotlin
      *     sealed class ArtifactType<T: FileSystemLocation>(val kind: ArtifactKind) {
@@ -126,7 +126,7 @@ interface OutOperationRequest<FileTypeT: FileSystemLocation> {
 /**
  * Operations performed by a [Task] with a single [RegularFile] or [Directory] output.
  *
- * [Task] is consuming existing version of the target [ArtifactType] and producing a new version.
+ * [Task] is consuming existing version of the target [SingleArtifact] and producing a new version.
  */
 @Incubating
 interface InAndOutFileOperationRequest {
@@ -205,7 +205,7 @@ interface CombiningOperationRequest<FileTypeT: FileSystemLocation> {
      *     }
      * ```
      *
-     * An [ArtifactType] defined as follows :
+     * An [SingleArtifact] defined as follows :
      *
      * ```kotlin
      *     sealed class ArtifactType<T: FileSystemLocation>(val kind: ArtifactKind) {

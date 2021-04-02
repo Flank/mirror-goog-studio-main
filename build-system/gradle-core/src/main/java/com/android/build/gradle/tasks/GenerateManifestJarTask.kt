@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.tasks
 
-import com.android.build.api.artifact.ArtifactType
+import com.android.build.api.artifact.SingleArtifact
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.generators.ManifestClassData
 import com.android.build.gradle.internal.generators.ManifestClassGenerator
@@ -93,7 +93,7 @@ abstract class GenerateManifestJarTask : NonIncrementalTask() {
             creationConfig
                     .artifacts
                     .setTaskInputToFinalProduct(
-                            ArtifactType.MERGED_MANIFEST,
+                            SingleArtifact.MERGED_MANIFEST,
                             task.mergedManifests
                     )
             task.namespace.setDisallowChanges(creationConfig.namespace)

@@ -45,7 +45,7 @@ import com.intellij.psi.PsiReference
 import com.intellij.psi.PsiType
 import com.intellij.psi.PsiTypeVisitor
 import com.intellij.psi.PsiWildcardType
-import org.jetbrains.kotlin.asJava.elements.KtLightModifierList
+import org.jetbrains.kotlin.asJava.unwrapped
 import org.jetbrains.kotlin.lexer.KtModifierKeywordToken
 import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.psi.KtAnnotationEntry
@@ -369,16 +369,8 @@ class JavaEvaluator {
     // our forked kotlin-compiler).
 
     open fun hasModifier(owner: PsiModifierListOwner?, keyword: KtModifierKeywordToken): Boolean {
-        if (owner != null) {
-            val modifierList = owner.modifierList
-            if (modifierList is KtLightModifierList<*>) {
-                val ktModifierList = modifierList.kotlinOrigin
-                if (ktModifierList != null) {
-                    return ktModifierList.hasModifier(keyword)
-                }
-            }
-        }
-        return false
+        val sourcePsi = if (owner is UElement) owner.sourcePsi else owner?.unwrapped
+        return sourcePsi is KtModifierListOwner && sourcePsi.hasModifier(keyword)
     }
 
     open fun getSuperMethod(method: PsiMethod?): PsiMethod? {

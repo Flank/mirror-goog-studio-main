@@ -20,7 +20,7 @@ import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
 import static com.android.testutils.truth.PathSubject.assertThat;
 import static org.junit.Assert.assertEquals;
 
-import com.android.build.api.artifact.ArtifactType;
+import com.android.build.api.artifact.SingleArtifact;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -81,7 +81,7 @@ public class ManifestMergingTest {
                         "libapp/build/"
                                 + FD_INTERMEDIATES
                                 + File.separator
-                                + ArtifactType.MERGED_MANIFEST.INSTANCE.getFolderName()
+                                + SingleArtifact.MERGED_MANIFEST.INSTANCE.getFolderName()
                                 + "/debug/AndroidManifest.xml");
 
         assertThat(fileOutput).isFile();
@@ -91,7 +91,7 @@ public class ManifestMergingTest {
                         "libapp/build/"
                                 + FD_INTERMEDIATES
                                 + File.separator
-                                + ArtifactType.MERGED_MANIFEST.INSTANCE.getFolderName()
+                                + SingleArtifact.MERGED_MANIFEST.INSTANCE.getFolderName()
                                 + "/release/AndroidManifest.xml");
 
         assertThat(fileOutput).isFile();
@@ -269,7 +269,7 @@ public class ManifestMergingTest {
                 navigation.file(
                         "library/build/intermediates"
                                 + File.separator
-                                + ArtifactType.MERGED_MANIFEST.INSTANCE.getFolderName()
+                                + SingleArtifact.MERGED_MANIFEST.INSTANCE.getFolderName()
                                 + "/debug/AndroidManifest.xml");
         // Deep links from nav graph are NOT resolved into intent filters at the lib level
         assertThat(manifestFile).contains("nav-graph android:value=\"@navigation/nav1\"");
@@ -450,5 +450,29 @@ public class ManifestMergingTest {
         GradleBuildResult buildResult =
                 flavors.executor().expectFailure().run("clean", "assembleF1FaDebug");
         Truth.assertThat(buildResult.getFailureMessage()).contains("Package Name not found");
+    }
+
+    // an integration test to make sure using tool:ignore_warning doesn't cause any failures
+    @Test
+    public void checkUseIgnoreWarning() throws Exception {
+        File appManifest = new File(flavors.getMainSrcDir().getParent(), "AndroidManifest.xml");
+        System.out.println(appManifest.getAbsolutePath());
+        TestFileUtils.searchAndReplace(
+                appManifest,
+                "package=\"com.android.tests.flavors\">",
+                "xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                        + "      package=\"com.android.tests.flavors\">");
+        TestFileUtils.searchAndReplace(
+                appManifest,
+                "<application\n"
+                        + "        android:icon=\"@drawable/icon\"\n"
+                        + "        android:label=\"@string/app_name\" >",
+                "<application\n"
+                        + "        android:icon=\"@drawable/icon\"\n"
+                        + "        tools:replace=\"android:icon\"\n"
+                        + "        tools:ignore_warning=\"true\"\n"
+                        + "        android:label=\"@string/app_name\" >");
+        GradleBuildResult buildResult = flavors.executor().run("clean", "assembleDebug");
+        Truth.assertThat(buildResult.getFailedTasks()).isEmpty();
     }
 }

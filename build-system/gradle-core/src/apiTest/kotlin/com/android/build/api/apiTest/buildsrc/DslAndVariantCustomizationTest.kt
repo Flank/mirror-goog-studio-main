@@ -71,7 +71,7 @@ class DslAndVariantCustomizationTest : BuildSrcScriptApiTest() {
                     import java.io.File
                     import com.android.build.api.dsl.ApplicationExtension
                     import com.android.build.api.extension.AndroidComponentsExtension
-                    import com.android.build.api.artifact.ArtifactType
+                    import com.android.build.api.artifact.SingleArtifact
 
                     abstract class ExamplePlugin: Plugin<Project> {
 
@@ -278,7 +278,7 @@ class DslAndVariantCustomizationTest : BuildSrcScriptApiTest() {
                     import java.io.File
                     import com.android.build.api.dsl.ApplicationExtension
                     import com.android.build.api.extension.AndroidComponentsExtension
-                    import com.android.build.api.artifact.ArtifactType
+                    import com.android.build.api.artifact.SingleArtifact
 
                     abstract class ConsumerPlugin: Plugin<Project> {
 

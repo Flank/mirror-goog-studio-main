@@ -25,4 +25,4 @@ import org.gradle.api.Incubating
  * on each of these fields.
  */
 @Incubating
-interface ExternalNdkBuild: ExternalNativeGenericOptions
+interface ExternalNdkBuild: ExternalNativeBuild

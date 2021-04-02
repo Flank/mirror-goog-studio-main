@@ -24,18 +24,16 @@ import com.android.builder.testing.api.DeviceConnector
 import com.android.ide.common.process.JavaProcessExecutor
 import com.android.ide.common.process.ProcessExecutor
 import com.android.ide.common.workers.ExecutorServiceAdapter
-import com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidTestResultListenerProto
+import com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidTestResultListenerProto.TestResultEvent
 import com.android.utils.FileUtils
 import com.android.utils.ILogger
 import com.google.common.collect.ImmutableList
 import com.google.common.io.Files
 import com.google.testing.platform.proto.api.core.TestStatusProto
+import com.google.testing.platform.proto.api.core.TestSuiteResultProto.TestSuiteResult
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
-
-// Unified Test Platform outputs test results with this hardcoded name file.
-const val TEST_RESULT_OUTPUT_FILE_NAME = "test-result.textproto"
 
 /**
  * Runs Android Instrumentation tests using UTP (Unified Test Platform).
@@ -97,7 +95,8 @@ class UtpTestRunner @JvmOverloads constructor(
                             }
                         }
 
-                testResultReporters[deviceConnector.serialNumber] = DdmlibTestResultAdapter(
+                lateinit var resultsProto: TestSuiteResult
+                val ddmlibTestResultAdapter = DdmlibTestResultAdapter(
                         deviceConnector.name,
                         CustomTestRunListener(
                                 deviceConnector.name,
@@ -107,10 +106,19 @@ class UtpTestRunner @JvmOverloads constructor(
                             setReportDir(resultsDir)
                         }
                 )
+                testResultReporters[deviceConnector.serialNumber] = object: UtpTestResultListener {
+                    override fun onTestResultEvent(testResultEvent: TestResultEvent) {
+                        ddmlibTestResultAdapter.onTestResultEvent(testResultEvent)
 
-                val resultsProto = runUtpTestSuite(
+                        if (testResultEvent.hasTestSuiteFinished()) {
+                            resultsProto = testResultEvent.testSuiteFinished.testSuiteResult
+                                    .unpack(TestSuiteResult::class.java)
+                        }
+                    }
+                }
+
+                runUtpTestSuite(
                         runnerConfigProtoFile,
-                        utpOutputDir,
                         configFactory,
                         utpDependencies,
                         javaProcessExecutor,
@@ -150,7 +158,7 @@ class UtpTestRunner @JvmOverloads constructor(
         }
     }
 
-    override fun onTestResultEvent(testResultEvent: GradleAndroidTestResultListenerProto.TestResultEvent) {
+    override fun onTestResultEvent(testResultEvent: TestResultEvent) {
         testResultReporters[testResultEvent.deviceId]?.onTestResultEvent(testResultEvent)
         utpTestResultListener?.onTestResultEvent(testResultEvent)
     }

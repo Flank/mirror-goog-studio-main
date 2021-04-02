@@ -19,6 +19,7 @@ package com.android.tools.utp.plugins.host.icebox
 import com.android.tools.utp.plugins.host.icebox.proto.IceboxPluginProto.Compression
 import com.android.tools.utp.plugins.host.icebox.proto.IceboxPluginProto.IceboxPlugin as IceboxPluginConfig
 import com.android.tools.utp.plugins.host.icebox.proto.IceboxOutputProto.IceboxOutput
+import com.android.tools.utp.plugins.host.icebox.proto.IceboxPluginProto
 import com.google.common.annotations.VisibleForTesting
 import com.google.testing.platform.api.config.Config
 import com.google.testing.platform.api.config.ProtoConfig
@@ -94,29 +95,36 @@ class IceboxPlugin @VisibleForTesting constructor(
         outputDir = File(config.environment.outputDirectory)
     }
 
-    /** Creates the IceboxCaller, takes no actions on the device. */
-    override fun beforeAll(deviceController: DeviceController) {
+    // Setup Icebox connection to the emulator. Depending on the test driver behavior it should be
+    // called in beforeEach or beforeAll.
+    fun setupIcebox(deviceController: DeviceController) {
         this.deviceController = deviceController
         printedWarning = false
         iceboxCaller = iceboxCallerFactory(
-                ManagedChannelBuilder.forAddress(
-                        iceboxPluginConfig.emulatorGrpcAddress,
-                        iceboxPluginConfig.emulatorGrpcPort
-                ).usePlaintext(),
-                iceboxPluginConfig.emulatorGrpcToken,
-                CoroutineScope(Dispatchers.Default)
+            ManagedChannelBuilder.forAddress(
+                iceboxPluginConfig.emulatorGrpcAddress,
+                iceboxPluginConfig.emulatorGrpcPort
+            ).usePlaintext(),
+            iceboxPluginConfig.emulatorGrpcToken,
+            CoroutineScope(Dispatchers.Default)
         )
         failureSnapshotId = 0
         iceboxCaller.runIcebox(
-                deviceController,
-                iceboxPluginConfig.appPackage,
-                snapshotNamePrefix,
-                remainSnapshotNumber,
-                androidStudioDdmlibPort
+            deviceController,
+            iceboxPluginConfig.appPackage,
+            snapshotNamePrefix,
+            remainSnapshotNumber,
+            androidStudioDdmlibPort
         )
     }
 
-    /** Starts Icebox. */
+    // Icebox should be set up once per test APP reboot. Depending on test driver behavior it might
+    // boot the APP once for all tests, or once for each test.
+    override fun beforeAll(deviceController: DeviceController) {
+        setupIcebox(deviceController)
+    }
+
+    // Note: Icebox must setup before the beforeEach call, otherwise it be deadlocked.
     override fun beforeEach(
             testCase: TestCaseProto.TestCase?,
             deviceController: DeviceController
@@ -124,8 +132,20 @@ class IceboxPlugin @VisibleForTesting constructor(
 
     /** Finishes the icebox snapshot and saves it on [testResult]. */
     override fun afterEach(
-            testResult: TestResult,
-            deviceController: DeviceController
+        testResult: TestResult,
+        deviceController: DeviceController
+    ): TestResult {
+        val res = updateIceboxResult(testResult)
+        if (iceboxPluginConfig.setupStrategy
+            == IceboxPluginProto.IceboxSetupStrategy.RECONNECT_BETWEEN_TEST_CASES) {
+            iceboxCaller.shutdownGrpc()
+            setupIcebox(deviceController)
+        }
+        return res
+    }
+
+    private fun updateIceboxResult(
+        testResult: TestResult
     ): TestResult {
         if (testResult.testStatus != TestStatus.FAILED
                 || remainSnapshotNumber <= 0) {

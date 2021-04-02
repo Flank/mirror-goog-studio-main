@@ -70,7 +70,6 @@ import org.w3c.dom.Node
 import java.util.TreeMap
 
 /** Checks for cycles in resource definitions. */
-/** Constructs a new [ResourceCycleDetector] */
 class ResourceCycleDetector : ResourceXmlDetector() {
 
     /**
@@ -106,13 +105,11 @@ class ResourceCycleDetector : ResourceXmlDetector() {
     }
 
     override fun appliesTo(folderType: ResourceFolderType): Boolean {
-        return (
-            folderType == ResourceFolderType.VALUES ||
-                folderType == ResourceFolderType.FONT ||
-                folderType == ResourceFolderType.COLOR ||
-                folderType == ResourceFolderType.DRAWABLE ||
-                folderType == ResourceFolderType.LAYOUT
-            )
+        return folderType == ResourceFolderType.VALUES ||
+            folderType == ResourceFolderType.FONT ||
+            folderType == ResourceFolderType.COLOR ||
+            folderType == ResourceFolderType.DRAWABLE ||
+            folderType == ResourceFolderType.LAYOUT
     }
 
     override fun getApplicableElements(): Collection<String> {
@@ -127,7 +124,7 @@ class ResourceCycleDetector : ResourceXmlDetector() {
         )
     }
 
-    override fun getApplicableAttributes(): Collection<String>? = ALL
+    override fun getApplicableAttributes(): Collection<String> = ALL
 
     private fun recordReference(type: ResourceType, from: String, to: String) {
         if (to.isEmpty() || to.startsWith(ANDROID_PREFIX)) {

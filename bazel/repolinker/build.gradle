@@ -1,0 +1,9 @@
+apply plugin: 'com.android.tools.java-library'
+
+dependencies {
+    implementation libs.guava
+    implementation 'org.apache.maven:maven-model-builder:3.6.1'
+
+    testImplementation libs.junit
+    testImplementation libs.truth
+}

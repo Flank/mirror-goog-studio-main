@@ -17,13 +17,12 @@ package com.android.build.gradle.tasks
 
 import com.android.build.api.artifact.Artifact
 import com.android.build.api.artifact.ArtifactTransformationRequest
-import com.android.build.api.artifact.ArtifactType
+import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.variant.impl.BuiltArtifactsImpl
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.APK_IDE_MODEL
-import com.android.build.gradle.options.BooleanOption
 import com.google.wireless.android.sdk.stats.GradleBuildProjectMetrics
 import org.gradle.api.file.Directory
 import org.gradle.api.provider.Provider
@@ -81,15 +80,15 @@ abstract class PackageApplication : PackageAndroidArtifact() {
             transformationRequest = when {
                 useOptimizedResources -> operationRequest.toTransformMany(
                         InternalArtifactType.OPTIMIZED_PROCESSED_RES,
-                        ArtifactType.APK,
+                        SingleArtifact.APK,
                         outputDirectory.absolutePath)
                 useResourceShrinker -> operationRequest.toTransformMany(
                         InternalArtifactType.SHRUNK_PROCESSED_RES,
-                        ArtifactType.APK,
+                        SingleArtifact.APK,
                         outputDirectory.absolutePath)
                 else -> operationRequest.toTransformMany(
                         InternalArtifactType.PROCESSED_RES,
-                        ArtifactType.APK,
+                        SingleArtifact.APK,
                         outputDirectory.absolutePath)
             }
 

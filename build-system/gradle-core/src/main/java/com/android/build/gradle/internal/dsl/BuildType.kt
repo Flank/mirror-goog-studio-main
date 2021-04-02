@@ -480,34 +480,22 @@ abstract class BuildType @Inject constructor(
         }
 
     /**
-     * Specifies whether to always use ProGuard for code and resource shrinking.
+     * Always returns [false].
      *
-     * By default, when you enable code shrinking by setting
-     * [`minifyEnabled`](com.android.build.gradle.internal.dsl.BuildType.html#com.android.build.gradle.internal.dsl.BuildType:minifyEnabled) to `true`, the Android plugin uses R8. If you set
-     * this property to `true`, the Android plugin uses ProGuard.
+     * When you enable code shrinking by setting
+     * [`minifyEnabled`](com.android.build.gradle.internal.dsl.BuildType.html#com.android.build.gradle.internal.dsl.BuildType:minifyEnabled) to `true`, the Android plugin uses R8.
      *
      * To learn more, read
      * [Shrink, obfuscate, and optimize your app](https://developer.android.com/studio/build/shrink-code.html).
      */
-    override var isUseProguard: Boolean?
-        get() = if (_postProcessingConfiguration != PostProcessingConfiguration.POSTPROCESSING_BLOCK) {
-            false
-        } else {
-            _postProcessing.codeShrinkerEnum == CodeShrinker.PROGUARD
+    override val isUseProguard: Boolean?
+        get() {
+            dslServices.deprecationReporter.reportObsoleteUsage(
+                    "useProguard",
+                    DeprecationReporter.DeprecationTarget.VERSION_8_0
+            )
+            return false
         }
-        set(_: Boolean?) {
-            checkPostProcessingConfiguration(PostProcessingConfiguration.OLD_DSL, "setUseProguard")
-            if (dslChecksEnabled) {
-                dslServices.deprecationReporter
-                    .reportObsoleteUsage(
-                        "useProguard", DeprecationReporter.DeprecationTarget.DSL_USE_PROGUARD
-                    )
-            }
-    }
-
-    fun setUseProguard(useProguard: Boolean) {
-        isUseProguard = useProguard
-    }
 
     override var isCrunchPngs: Boolean? = null
 

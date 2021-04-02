@@ -131,6 +131,27 @@ enum class ReplacedOption(
         "This property has been replaced by ${BooleanOption.ENABLE_STABLE_IDS.propertyName}"
     ),
 
+    @Suppress("unused")
+    TEST_FAILURE_RETENTION_0(
+        "android.experimental.testOptions.emulatorSnapshots",
+        VERSION_7_0,
+        "This property has been replaced by ${IntegerOption.TEST_FAILURE_RETENTION.propertyName}"
+    ),
+
+    @Suppress("unused")
+    TEST_FAILURE_RETENTION_1(
+        "android.testOptions.failureRetention",
+        VERSION_7_0,
+        "This property has been replaced by ${IntegerOption.TEST_FAILURE_RETENTION.propertyName}"
+    ),
+
+    @Suppress("unused")
+    ENABLE_TEST_FAILURE_RETENTION_COMPRESS_SNAPSHOT(
+        "android.testOptions.failureRetention.compressSnapshots",
+        VERSION_7_0,
+        "This property has been replaced by ${OptionalBooleanOption.ENABLE_TEST_FAILURE_RETENTION_COMPRESS_SNAPSHOT.propertyName}"
+    ),
+
     // Jetifier: List of regular expressions for libraries that should not be jetified
     @Suppress("unused", "WrongTerminology")
     JETIFIER_BLACKLIST(

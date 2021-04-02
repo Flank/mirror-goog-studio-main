@@ -36,7 +36,7 @@ fun appWidgetConfigureActivityKt(
   """ else "setContentView(R.layout.$layout)"
 
   return """
-package ${packageName}
+package $packageName
 
 import android.app.Activity
 import android.appwidget.AppWidgetManager

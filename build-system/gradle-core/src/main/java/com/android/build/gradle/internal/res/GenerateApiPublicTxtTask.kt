@@ -16,8 +16,8 @@
 
 package com.android.build.gradle.internal.res
 
-import com.android.build.api.artifact.ArtifactType
-import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.api.artifact.SingleArtifact
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -37,10 +37,9 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.StandardCopyOption
 
 /**
- * Task to generate the public.txt API artifact [ArtifactType.PUBLIC_ANDROID_RESOURCES_LIST]
+ * Task to generate the public.txt API artifact [SingleArtifact.PUBLIC_ANDROID_RESOURCES_LIST]
  *
  * The artifact in the AAR has the challenging-for-consumers attribute (They can;t ) of sometimes not existing,
  * so this tasks
@@ -85,7 +84,11 @@ abstract class GenerateApiPublicTxtTask : NonIncrementalTask() {
         }
     }
 
-    class CreationAction(creationConfig: VariantCreationConfig) : VariantTaskCreationAction<GenerateApiPublicTxtTask, VariantCreationConfig>(creationConfig) {
+    class CreationAction(creationConfig: ComponentCreationConfig):
+        VariantTaskCreationAction<GenerateApiPublicTxtTask, ComponentCreationConfig>(
+            creationConfig
+        ) {
+
         override val name: String = computeTaskName("generate", "ExternalPublicTxt")
         override val type: Class<GenerateApiPublicTxtTask> get() = GenerateApiPublicTxtTask::class.java
 
@@ -94,7 +97,7 @@ abstract class GenerateApiPublicTxtTask : NonIncrementalTask() {
             creationConfig.artifacts.setInitialProvider(taskProvider,
             GenerateApiPublicTxtTask::externalPublicTxt)
                 .withName("public.txt")
-                .on(ArtifactType.PUBLIC_ANDROID_RESOURCES_LIST)
+                .on(SingleArtifact.PUBLIC_ANDROID_RESOURCES_LIST)
         }
 
         override fun configure(task: GenerateApiPublicTxtTask) {

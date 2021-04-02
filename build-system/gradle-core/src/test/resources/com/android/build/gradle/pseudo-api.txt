@@ -52,6 +52,12 @@ com.android.build.gradle.AppPlugin.apply: void (java.lang.Object)
 com.android.build.gradle.AppPlugin.apply: void (org.gradle.api.Project)
 com.android.build.gradle.AppPluginKt
 com.android.build.gradle.AppPluginKt.access$getINTERNAL_PLUGIN_ID$p: java.util.Map ()
+com.android.build.gradle.AssetPackBundlePlugin implements org.gradle.api.Plugin
+com.android.build.gradle.AssetPackBundlePlugin.<init>: com.android.build.gradle.AssetPackBundlePlugin ()
+com.android.build.gradle.AssetPackBundlePlugin.apply: void (java.lang.Object)
+com.android.build.gradle.AssetPackBundlePlugin.apply: void (org.gradle.api.Project)
+com.android.build.gradle.AssetPackBundlePluginKt
+com.android.build.gradle.AssetPackBundlePluginKt.access$getINTERNAL_PLUGIN_ID$p: java.util.Map ()
 com.android.build.gradle.AssetPackPlugin implements org.gradle.api.Plugin
 com.android.build.gradle.AssetPackPlugin.<init>: com.android.build.gradle.AssetPackPlugin ()
 com.android.build.gradle.AssetPackPlugin.apply: void (java.lang.Object)
@@ -985,8 +991,6 @@ com.android.build.gradle.internal.dsl.BuildType.setSigningConfig: void (com.andr
 com.android.build.gradle.internal.dsl.BuildType.setSigningConfig: void (java.lang.Object)
 com.android.build.gradle.internal.dsl.BuildType.setTestCoverageEnabled: void (boolean)
 com.android.build.gradle.internal.dsl.BuildType.setTestProguardFiles: com.android.build.gradle.internal.dsl.BuildType (java.lang.Iterable<?>)
-com.android.build.gradle.internal.dsl.BuildType.setUseProguard: void (boolean)
-com.android.build.gradle.internal.dsl.BuildType.setUseProguard: void (java.lang.Boolean)
 com.android.build.gradle.internal.dsl.BuildType.setZipAlignEnabled: void (boolean)
 com.android.build.gradle.internal.dsl.BuildType.shaders: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.Shaders, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.BuildType.shaders: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.ShaderOptions>)

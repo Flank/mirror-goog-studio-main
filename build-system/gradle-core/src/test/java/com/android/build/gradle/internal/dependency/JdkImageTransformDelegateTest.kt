@@ -244,7 +244,7 @@ class JdkImageTransformDelegateTest {
         ).rethrowFailure().assertNormalExitValue()
 
         Truth.assertThat(processHandler.processOutput.standardOutputAsString).apply {
-            startsWith("java.base@11.0.8")
+            startsWith("java.base@11.0")
             contains("exports java.lang")
             contains("exports android.icu.lang")
             contains("exports dalvik.system")

@@ -26,6 +26,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.component.ComponentBuilder;
 import com.android.build.api.component.impl.TestComponentImpl;
+import com.android.build.api.component.impl.TestFixturesComponentImpl;
 import com.android.build.api.dsl.CommonExtension;
 import com.android.build.api.dsl.TestedExtension;
 import com.android.build.api.extension.AndroidComponentsExtension;
@@ -225,6 +226,7 @@ public abstract class BasePlugin<
     protected abstract TaskManager<VariantBuilderT, VariantT> createTaskManager(
             @NonNull List<ComponentInfo<VariantBuilderT, VariantT>> variants,
             @NonNull List<TestComponentImpl> testComponents,
+            @NonNull List<TestFixturesComponentImpl> testFixturesComponents,
             boolean hasFlavors,
             @NonNull ProjectOptions projectOptions,
             @NonNull GlobalScope globalScope,
@@ -724,6 +726,7 @@ public abstract class BasePlugin<
                 createTaskManager(
                         variants,
                         variantManager.getTestComponents(),
+                        variantManager.getTestFixturesComponents(),
                         !variantInputModel.getProductFlavors().isEmpty(),
                         projectServices.getProjectOptions(),
                         globalScope,
@@ -768,6 +771,12 @@ public abstract class BasePlugin<
         // tests don't publish anything.
         for (ComponentInfo<VariantBuilderT, VariantT> component : variants) {
             component.getVariant().publishBuildArtifacts();
+        }
+
+        // now publish all testFixtures components artifacts.
+        for (TestFixturesComponentImpl testFixturesComponent :
+                variantManager.getTestFixturesComponents()) {
+            testFixturesComponent.publishBuildArtifacts();
         }
 
         checkSplitConfiguration();
@@ -978,7 +987,7 @@ public abstract class BasePlugin<
         JavaVersion minRequired = JavaVersion.VERSION_11;
         if (!current.isCompatibleWith(minRequired)) {
             syncIssueReporter.reportError(
-                    Type.GENERIC,
+                    Type.AGP_USED_JAVA_VERSION_TOO_LOW,
                     "Android Gradle plugin requires Java "
                             + minRequired.toString()
                             + " to run. You are currently using Java "

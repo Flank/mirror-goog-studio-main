@@ -44,7 +44,6 @@ import org.w3c.dom.Element
 import java.util.HashMap
 
 /** Checks for various issues related to XML namespaces. */
-/** Constructs a new [NamespaceDetector] */
 class NamespaceDetector : ResourceXmlDetector() {
 
     private var unusedNamespaces: MutableMap<String, Attr>? = null

@@ -21,7 +21,7 @@ import com.android.build.api.component.Component
 import com.android.build.api.component.analytics.AnalyticsEnabledTestVariant
 import com.android.build.api.component.impl.TestVariantCreationConfigImpl
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
-import com.android.build.api.variant.Aapt
+import com.android.build.api.variant.AndroidResources
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.ApkPackaging
 import com.android.build.api.variant.Dexing
@@ -97,15 +97,11 @@ open class TestVariantImpl @Inject constructor(
     override val applicationId: Property<String> =
         internalServices.propertyOf(String::class.java, variantDslInfo.applicationId)
 
-    override val aapt: Aapt by lazy {
+    override val androidResources: AndroidResources by lazy {
         initializeAaptOptionsFromDsl(
             globalScope.extension.aaptOptions,
             internalServices
         )
-    }
-
-    override fun aaptOptions(action: Aapt.() -> Unit) {
-        action.invoke(aapt)
     }
 
     override val testedApplicationId: Provider<String> = calculateTestedApplicationId(variantDependencies)
@@ -131,10 +127,6 @@ open class TestVariantImpl @Inject constructor(
             internalServices,
             minSdkVersion.apiLevel
         )
-    }
-
-    override fun packaging(action: ApkPackaging.() -> Unit) {
-        action.invoke(packaging)
     }
 
     override val dexing: Dexing by lazy {

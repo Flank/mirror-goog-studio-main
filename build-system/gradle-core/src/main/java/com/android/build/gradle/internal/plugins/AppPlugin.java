@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.plugins;
 
 import com.android.annotations.NonNull;
 import com.android.build.api.component.impl.TestComponentImpl;
+import com.android.build.api.component.impl.TestFixturesComponentImpl;
 import com.android.build.api.dsl.ApplicationExtension;
 import com.android.build.api.dsl.SdkComponents;
 import com.android.build.api.extension.ApplicationAndroidComponentsExtension;
@@ -105,18 +106,25 @@ public class AppPlugin
         ApplicationExtensionImpl applicationExtension =
                 dslServices.newDecoratedInstance(ApplicationExtensionImpl.class, dslServices, dslContainers);
         if (projectServices.getProjectOptions().get(BooleanOption.USE_NEW_DSL_INTERFACES)) {
-            return (BaseExtension)
-                    project.getExtensions()
-                            .create(
-                                    ApplicationExtension.class,
-                                    "android",
-                                    BaseAppModuleExtension.class,
-                                    dslServices,
-                                    globalScope,
-                                    buildOutputs,
-                                    dslContainers.getSourceSetManager(),
-                                    extraModelInfo,
-                                    applicationExtension);
+            BaseAppModuleExtension android =
+                    (BaseAppModuleExtension)
+                            project.getExtensions()
+                                    .create(
+                                            ApplicationExtension.class,
+                                            "android",
+                                            BaseAppModuleExtension.class,
+                                            dslServices,
+                                            globalScope,
+                                            buildOutputs,
+                                            dslContainers.getSourceSetManager(),
+                                            extraModelInfo,
+                                            applicationExtension);
+            project.getExtensions()
+                    .add(
+                            BaseAppModuleExtension.class,
+                            "_internal_legacy_android_extension",
+                            android);
+            return android;
         }
 
         return project.getExtensions()
@@ -165,8 +173,8 @@ public class AppPlugin
             @NonNull
                     List<ComponentInfo<ApplicationVariantBuilderImpl, ApplicationVariantImpl>>
                             variants,
-            @NonNull
-                    List<TestComponentImpl> testComponents,
+            @NonNull List<TestComponentImpl> testComponents,
+            @NonNull List<TestFixturesComponentImpl> testFixturesComponents,
             boolean hasFlavors,
             @NonNull ProjectOptions projectOptions,
             @NonNull GlobalScope globalScope,
@@ -175,6 +183,7 @@ public class AppPlugin
         return new ApplicationTaskManager(
                 variants,
                 testComponents,
+                testFixturesComponents,
                 hasFlavors,
                 projectOptions,
                 globalScope,

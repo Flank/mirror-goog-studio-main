@@ -97,7 +97,13 @@ open class AndroidTestImpl @Inject constructor(
         get() = variantDslInfo.isDebuggable
 
     override val minSdkVersion: AndroidVersion
-        get() = testedVariant.variantBuilder.minSdkVersion
+        get() = testedVariant.minSdkVersion
+
+    override val maxSdkVersion: Int?
+        get() = testedVariant.maxSdkVersion
+
+    override val targetSdkVersion: AndroidVersion
+        get() = testedVariant.targetSdkVersion
 
     override val applicationId: Property<String> = internalServices.propertyOf(
         String::class.java,
@@ -112,7 +118,7 @@ open class AndroidTestImpl @Inject constructor(
         )
     }
 
-    override val aapt: Aapt by lazy {
+    override val androidResources: AndroidResources by lazy {
         initializeAaptOptionsFromDsl(
                 globalScope.extension.aaptOptions,
                 variantPropertiesApiServices
@@ -158,33 +164,6 @@ open class AndroidTestImpl @Inject constructor(
             BuildConfigField::class.java,
             variantDslInfo.getBuildConfigFields()
         )
-    }
-
-    /**
-     * Adds a ResValue element to the generated resources.
-     * @param name the resource name
-     * @param type the resource type like 'string'
-     * @param value the resource value
-     * @param comment optional comment to be added to the generated resource file for the field.
-     */
-    override fun addResValue(name: String, type: String, value: String, comment: String?) {
-        resValues.put(ResValue.Key(type, name), ResValue(value, comment))
-    }
-
-    /**
-     * Adds a ResValue element to the generated resources.
-     * @param name the resource name
-     * @param type the resource type like 'string'
-     * @param value a [Provider] for the value
-     * @param comment optional comment to be added to the generated resource file for the field.
-     */
-    override fun addResValue(
-        name: String,
-        type: String,
-        value: Provider<String>,
-        comment: String?
-    ) {
-        resValues.put(ResValue.Key(type, name), value.map { ResValue(it, comment) })
     }
 
     override val signingConfig: SigningConfigImpl? by lazy {
@@ -263,12 +242,6 @@ open class AndroidTestImpl @Inject constructor(
 
     override val minSdkVersionWithTargetDeviceApi: AndroidVersion =
         testedVariant.minSdkVersionWithTargetDeviceApi
-
-    override val maxSdkVersion: Int?
-        get() = testedVariant.variantBuilder.maxSdkVersion
-
-    override val targetSdkVersion: AndroidVersion
-        get() = testedVariant.variantBuilder.targetSdkVersion
 
     override val isMultiDexEnabled: Boolean =
         testedVariant.isMultiDexEnabled

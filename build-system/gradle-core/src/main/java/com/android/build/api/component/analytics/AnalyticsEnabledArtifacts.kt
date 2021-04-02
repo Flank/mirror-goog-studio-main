@@ -16,13 +16,12 @@
 
 package com.android.build.api.component.analytics
 
-import com.android.build.api.artifact.ArtifactType
+import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.artifact.Artifacts
-import com.android.build.api.artifact.MultipleArtifactType
+import com.android.build.api.artifact.MultipleArtifact
 import com.android.build.api.artifact.TaskBasedOperation
 import com.android.build.api.variant.BuiltArtifactsLoader
 import com.android.build.gradle.internal.profile.AnalyticsUtil
-import com.android.tools.build.gradle.internal.profile.VariantApiArtifactType
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.ArtifactAccess
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
@@ -45,7 +44,7 @@ open class AnalyticsEnabledArtifacts @Inject constructor(
         return delegate.getBuiltArtifactsLoader()
     }
 
-    override fun <FileTypeT : FileSystemLocation> get(type: ArtifactType<FileTypeT>): Provider<FileTypeT> {
+    override fun <FileTypeT : FileSystemLocation> get(type: SingleArtifact<FileTypeT>): Provider<FileTypeT> {
         stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
             VariantPropertiesMethodType.GET_ARTIFACT_VALUE
         stats.variantApiAccessBuilder.addArtifactAccessBuilder().also {
@@ -55,7 +54,7 @@ open class AnalyticsEnabledArtifacts @Inject constructor(
         return delegate.get(type)
     }
 
-    override fun <FileTypeT : FileSystemLocation> getAll(type: MultipleArtifactType<FileTypeT>): Provider<List<FileTypeT>> {
+    override fun <FileTypeT : FileSystemLocation> getAll(type: MultipleArtifact<FileTypeT>): Provider<List<FileTypeT>> {
         stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
             VariantPropertiesMethodType.GET_ALL_ARTIFACTS_VALUE
         stats.variantApiAccessBuilder.addArtifactAccessBuilder().also {

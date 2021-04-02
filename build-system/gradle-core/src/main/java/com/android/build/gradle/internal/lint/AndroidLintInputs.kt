@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.lint
 
 import com.android.Version
-import com.android.build.api.artifact.ArtifactType
+import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.api.component.impl.UnitTestImpl
 import com.android.build.gradle.internal.component.ApkCreationConfig
@@ -552,7 +552,7 @@ abstract class VariantInputs {
                     )
         })
         mergedManifest.setDisallowChanges(
-            creationConfig.artifacts.get(ArtifactType.MERGED_MANIFEST)
+            creationConfig.artifacts.get(SingleArtifact.MERGED_MANIFEST)
         )
         manifestMergeReport.setDisallowChanges(
             creationConfig.artifacts.get(InternalArtifactType.MANIFEST_MERGE_REPORT)

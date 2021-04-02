@@ -26,6 +26,7 @@ import com.android.repository.util.InstallerUtil;
 import com.android.testutils.TestExecutionTimeLogger;
 import com.android.testutils.TestUtils;
 import com.android.testutils.WindowsPathUtilsKt;
+import com.android.tools.bazel.repolinker.RepoLinker;
 import com.android.utils.FileUtils;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -39,6 +40,7 @@ import java.nio.channels.FileLock;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
@@ -90,7 +92,7 @@ public class BazelIntegrationTestsSuite {
     }
 
     @BeforeClass
-    public static void unzipOfflineRepo() throws Exception {
+    public static void unpackOfflineRepo() throws Exception {
         TestExecutionTimeLogger.log();
 
         // use a lock file to avoid tests stepping on each others toes when running sharded on the
@@ -107,7 +109,7 @@ public class BazelIntegrationTestsSuite {
 
                 // do the test set up while holding the lock.
                 for (Map.Entry<String, Path> mavenRepoSource : MAVEN_REPO_SOURCES.entrySet()) {
-                    unzip(mavenRepoSource.getValue(), mavenRepoSource.getKey());
+                    unpack(mavenRepoSource.getValue(), mavenRepoSource.getKey());
                 }
             }
         } catch (IOException e) {
@@ -168,12 +170,26 @@ public class BazelIntegrationTestsSuite {
         TestExecutionTimeLogger.log();
     }
 
-    private static void unzip(@NonNull Path repoPath, @NonNull String zipName) throws IOException {
-        Path offlineRepoZip = TestUtils.resolveWorkspacePath(zipName);
+    private static void unpack(@NonNull Path repoPath, @NonNull String repoName) throws Exception {
+        Path offlineRepoPath = TestUtils.resolveWorkspacePath(repoName);
         Files.createDirectory(repoPath);
 
-        InstallerUtil.unzip(
-                offlineRepoZip, repoPath, Files.size(offlineRepoZip), new FakeProgressIndicator());
+        if (repoName.endsWith(".zip")) {
+            InstallerUtil.unzip(
+                    offlineRepoPath,
+                    repoPath,
+                    Files.size(offlineRepoPath),
+                    new FakeProgressIndicator());
+            return;
+        }
+        if (repoName.endsWith(".manifest")) {
+            RepoLinker linker = new RepoLinker();
+            List<String> artifacts = Files.readAllLines(offlineRepoPath);
+            linker.link(repoPath, artifacts);
+            return;
+        }
+
+        throw new IllegalArgumentException("Unrecognized repository " + repoName);
     }
 
     private static ImmutableSortedMap<String, Path> mavenRepos(Path parentDirectory) {

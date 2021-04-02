@@ -39,7 +39,7 @@ class WorkerEnabledTransformationTest: BuildSrcScriptApiTest() {
                 import org.gradle.api.Project
                 import java.io.File
                 import com.android.build.api.extension.AndroidComponentsExtension
-                import com.android.build.api.artifact.ArtifactType
+                import com.android.build.api.artifact.SingleArtifact
 
                 abstract class ExamplePlugin: Plugin<Project> {
 
@@ -55,7 +55,7 @@ class WorkerEnabledTransformationTest: BuildSrcScriptApiTest() {
                                 .wiredWithDirectories(
                                     CopyApksTask::apkFolder,
                                     CopyApksTask::outFolder)
-                                .toTransformMany(ArtifactType.APK)
+                                .toTransformMany(SingleArtifact.APK)
 
                             copyApksProvider.configure {
                                 it.transformationRequest.set(transformationRequest)

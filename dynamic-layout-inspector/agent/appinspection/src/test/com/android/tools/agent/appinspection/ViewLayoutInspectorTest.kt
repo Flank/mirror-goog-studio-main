@@ -790,7 +790,90 @@ class ViewLayoutInspectorTest {
         }
     }
 
-    // TODO: Add test for filtering system views and properties
+    @Test
+    fun settingScreenshotTypeToExistingDoesntTriggerInvalidate() = createViewInspector { viewInspector ->
+        val responseQueue = ArrayBlockingQueue<ByteArray>(1)
+        inspectorRule.commandCallback.replyListeners.add { bytes ->
+            responseQueue.add(bytes)
+        }
+
+        val eventQueue = ArrayBlockingQueue<ByteArray>(2)
+        inspectorRule.connection.eventListeners.add { bytes ->
+            eventQueue.add(bytes)
+        }
+
+        val resourceNames = mutableMapOf<Int, String>()
+        val resources = Resources(resourceNames)
+        val context = Context("view.inspector.test", resources)
+        val scale = 0.5
+        val root = ViewGroup(context).apply {
+            width = 100
+            height = 200
+            setAttachInfo(View.AttachInfo())
+        }
+        WindowManagerGlobal.getInstance().rootViews.addAll(listOf(root))
+
+        val startFetchCommand = Command.newBuilder().apply {
+            startFetchCommandBuilder.apply {
+                continuous = true
+            }
+        }.build()
+        viewInspector.onReceiveCommand(
+            startFetchCommand.toByteArray(),
+            inspectorRule.commandCallback
+        )
+        responseQueue.take().let { bytes ->
+            val response = Response.parseFrom(bytes)
+            assertThat(response.specializedCase).isEqualTo(Response.SpecializedCase.START_FETCH_RESPONSE)
+        }
+        ThreadUtils.runOnMainThread { }.get() // Wait for startCommand to finish initializing
+        assertThat(eventQueue).isEmpty()
+
+        val updateScreenshotTypeCommand = Command.newBuilder().apply {
+            updateScreenshotTypeCommandBuilder.apply {
+                type = Screenshot.Type.BITMAP
+                this.scale = scale.toFloat()
+            }
+        }.build()
+        val initialInvalidateCount = root.invalidateCount
+        viewInspector.onReceiveCommand(
+            updateScreenshotTypeCommand.toByteArray(),
+            inspectorRule.commandCallback
+        )
+        responseQueue.take()
+
+        ThreadUtils.runOnMainThread { }.get() // Ensure the kicked-off invalidation is complete
+        // Validate that setting the screenshot type and scale caused an invalidation
+        assertThat(root.invalidateCount).isEqualTo(initialInvalidateCount + 1)
+
+        // Send the same values again and verify that no invalidation happened
+        viewInspector.onReceiveCommand(
+            updateScreenshotTypeCommand.toByteArray(),
+            inspectorRule.commandCallback
+        )
+        responseQueue.take()
+
+        ThreadUtils.runOnMainThread { }.get() // Ensure the kicked-off invalidation is complete
+        assertThat(root.invalidateCount).isEqualTo(initialInvalidateCount + 1)
+
+        // Make another change and verify that in invalidation did happen
+        val updateScreenshotTypeCommand2 = Command.newBuilder().apply {
+            updateScreenshotTypeCommandBuilder.apply {
+                type = Screenshot.Type.SKP
+            }
+        }.build()
+        viewInspector.onReceiveCommand(
+            updateScreenshotTypeCommand2.toByteArray(),
+            inspectorRule.commandCallback
+        )
+        responseQueue.take()
+
+        ThreadUtils.runOnMainThread { }.get() // Ensure the kicked-off invalidation is complete
+        assertThat(root.invalidateCount).isEqualTo(initialInvalidateCount + 2)
+
+    }
+
+        // TODO: Add test for filtering system views and properties
 
     private fun createViewInspector(block: (ViewLayoutInspector) -> Unit) {
         // We could just create the view inspector directly, but using the factory mimics what

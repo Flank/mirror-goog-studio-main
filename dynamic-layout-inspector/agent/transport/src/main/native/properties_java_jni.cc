@@ -18,7 +18,7 @@
 #include <sstream>
 #include "agent/agent.h"
 #include "agent/jni_wrappers.h"
-#include "agent/jvmti_helper.h"
+#include "jvmti/jvmti_helper.h"
 #include "utils/log.h"
 
 using layoutinspector::LambdaValue;

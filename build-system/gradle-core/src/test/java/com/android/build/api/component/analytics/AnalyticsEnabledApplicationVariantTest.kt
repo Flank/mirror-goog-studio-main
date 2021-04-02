@@ -17,7 +17,7 @@
 package com.android.build.api.component.analytics
 
 import com.android.build.api.component.AndroidTest
-import com.android.build.api.variant.Aapt
+import com.android.build.api.variant.AndroidResources
 import com.android.build.api.variant.ApplicationVariant
 import com.android.build.api.variant.DependenciesInfo
 import com.android.build.api.variant.ApkPackaging
@@ -95,16 +95,16 @@ class AnalyticsEnabledApplicationVariantTest {
 
     @Test
     fun getAaptOptions() {
-        val aaptOptions = Mockito.mock(Aapt::class.java)
-        Mockito.`when`(delegate.aapt).thenReturn(aaptOptions)
-        Truth.assertThat(proxy.aapt).isEqualTo(aaptOptions)
+        val aaptOptions = Mockito.mock(AndroidResources::class.java)
+        Mockito.`when`(delegate.androidResources).thenReturn(aaptOptions)
+        Truth.assertThat(proxy.androidResources).isEqualTo(aaptOptions)
 
         Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
         Truth.assertThat(
             stats.variantApiAccess.variantPropertiesAccessList.first().type
         ).isEqualTo(VariantPropertiesMethodType.AAPT_OPTIONS_VALUE)
         Mockito.verify(delegate, Mockito.times(1))
-            .aapt
+            .androidResources
     }
 
     @Test

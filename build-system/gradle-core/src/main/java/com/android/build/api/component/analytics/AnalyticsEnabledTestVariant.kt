@@ -17,7 +17,7 @@
 package com.android.build.api.component.analytics
 
 import com.android.build.api.component.UnitTest
-import com.android.build.api.variant.Aapt
+import com.android.build.api.variant.AndroidResources
 import com.android.build.api.variant.ApkPackaging
 import com.android.build.api.variant.Dexing
 import com.android.build.api.variant.TestVariant
@@ -40,18 +40,12 @@ open class AnalyticsEnabledTestVariant @Inject constructor(
             return delegate.applicationId
         }
 
-    override val aapt: Aapt
+    override val androidResources: AndroidResources
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
                 VariantPropertiesMethodType.AAPT_OPTIONS_VALUE
-            return delegate.aapt
+            return delegate.androidResources
         }
-
-    override fun aaptOptions(action: Aapt.() -> Unit) {
-        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-            VariantPropertiesMethodType.AAPT_OPTIONS_ACTION_VALUE
-        delegate.aaptOptions(action)
-    }
 
     override val testedApplicationId: Provider<String>
         get() {
@@ -102,12 +96,6 @@ open class AnalyticsEnabledTestVariant @Inject constructor(
                 VariantPropertiesMethodType.PACKAGING_OPTIONS_VALUE
             return userVisiblePackagingOptions
         }
-
-    override fun packaging(action: ApkPackaging.() -> Unit) {
-        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-            VariantPropertiesMethodType.PACKAGING_OPTIONS_ACTION_VALUE
-        action.invoke(userVisiblePackagingOptions)
-    }
 
     override val unitTest: UnitTest? = null
 

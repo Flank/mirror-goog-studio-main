@@ -49,6 +49,8 @@ class MergeNativeLibsTaskTest {
     private lateinit var outputDir: File
     private lateinit var unfilteredProjectNativeLibs: List<File>
 
+    private val abis = listOf("x86", "x86_64")
+
     abstract class TestMergeNativeLibsTask @Inject constructor(testWorkerExecutor: WorkerExecutor) :
         MergeNativeLibsTask() {
         override val workerExecutor = testWorkerExecutor
@@ -68,98 +70,114 @@ class MergeNativeLibsTaskTest {
 
         val projectNativeLib1 =
             temporaryFolder.newFolder("projectNativeLib1").also { dir ->
-                dir.resolve("x86/projectNativeLib1.so").also {
-                    it.parentFile.mkdirs()
-                    it.writeText("projectNativeLib1")
-                }
-                dir.resolve("x86/notANativeLib.txt").also {
-                    it.parentFile.mkdirs()
-                    it.writeText("notANativeLib")
-                }
-                dir.resolve("x86/exclude.so").also {
-                    it.parentFile.mkdirs()
-                    it.writeText("exclude")
+                abis.forEach { abi ->
+                    dir.resolve("$abi/projectNativeLib1.so").also {
+                        it.parentFile.mkdirs()
+                        it.writeText("projectNativeLib1")
+                    }
+                    dir.resolve("$abi/notANativeLib.txt").also {
+                        it.parentFile.mkdirs()
+                        it.writeText("notANativeLib")
+                    }
+                    dir.resolve("$abi/exclude.so").also {
+                        it.parentFile.mkdirs()
+                        it.writeText("exclude")
+                    }
                 }
             }
         val projectNativeLib2 =
             temporaryFolder.newFolder("projectNativeLib2").also { dir ->
-                dir.resolve("x86/projectNativeLib2.so").also {
-                    it.parentFile.mkdirs()
-                    it.writeText("projectNativeLib2")
+                abis.forEach { abi ->
+                    dir.resolve("$abi/projectNativeLib2.so").also {
+                        it.parentFile.mkdirs()
+                        it.writeText("projectNativeLib2")
+                    }
                 }
             }
         unfilteredProjectNativeLibs = listOf(projectNativeLib1, projectNativeLib2)
         projectNativeLibs =
-            listOf(
-                projectNativeLib1.resolve("x86/projectNativeLib1.so"),
-                projectNativeLib2.resolve("x86/projectNativeLib2.so")
-            )
+            mutableListOf<File>().also {
+                abis.forEach { abi ->
+                    it.add(projectNativeLib1.resolve("$abi/projectNativeLib1.so"))
+                    it.add(projectNativeLib2.resolve("$abi/projectNativeLib2.so"))
+                }
+            }.toList()
 
         val subProjectNativeLib1 =
             temporaryFolder.newFolder("subProjectNativeLib1").also { dir ->
-                dir.resolve("x86/subProjectNativeLib1.so").also {
-                    it.parentFile.mkdirs()
-                    it.writeText("subProjectNativeLib1")
-                }
-                dir.resolve("x86/exclude.so").also {
-                    it.parentFile.mkdirs()
-                    it.writeText("exclude")
-                }
-                dir.resolve("x86/pickFirst.so").also {
-                    it.parentFile.mkdirs()
-                    it.writeText("subProjectPickFirst")
+                abis.forEach { abi ->
+                    dir.resolve("$abi/subProjectNativeLib1.so").also {
+                        it.parentFile.mkdirs()
+                        it.writeText("subProjectNativeLib1")
+                    }
+                    dir.resolve("$abi/exclude.so").also {
+                        it.parentFile.mkdirs()
+                        it.writeText("exclude")
+                    }
+                    dir.resolve("$abi/pickFirst.so").also {
+                        it.parentFile.mkdirs()
+                        it.writeText("subProjectPickFirst")
+                    }
                 }
             }
         val subProjectNativeLib2 =
             temporaryFolder.newFolder("subProjectNativeLib2").also { dir ->
-                dir.resolve("x86/subProjectNativeLib2.so").also {
-                    it.parentFile.mkdirs()
-                    it.writeText("subProjectNativeLib2")
+                abis.forEach { abi ->
+                    dir.resolve("$abi/subProjectNativeLib2.so").also {
+                        it.parentFile.mkdirs()
+                        it.writeText("subProjectNativeLib2")
+                    }
                 }
             }
         subProjectNativeLibs = listOf(subProjectNativeLib1, subProjectNativeLib2)
 
         val externalLibNativeLib1 =
             temporaryFolder.newFolder("externalLibNativeLib1").also { dir ->
-                dir.resolve("x86/externalLibNativeLib1.so").also {
-                    it.parentFile.mkdirs()
-                    it.writeText("externalLibNativeLib1")
-                }
-                dir.resolve("x86/exclude.so").also {
-                    it.parentFile.mkdirs()
-                    it.writeText("exclude")
-                }
-                dir.resolve("x86/pickFirst.so").also {
-                    it.parentFile.mkdirs()
-                    it.writeText("externalLibPickFirst")
+                abis.forEach { abi ->
+                    dir.resolve("$abi/externalLibNativeLib1.so").also {
+                        it.parentFile.mkdirs()
+                        it.writeText("externalLibNativeLib1")
+                    }
+                    dir.resolve("$abi/exclude.so").also {
+                        it.parentFile.mkdirs()
+                        it.writeText("exclude")
+                    }
+                    dir.resolve("$abi/pickFirst.so").also {
+                        it.parentFile.mkdirs()
+                        it.writeText("externalLibPickFirst")
+                    }
                 }
             }
         val externalLibNativeLib2 =
             temporaryFolder.newFolder("externalLibNativeLib2").also { dir ->
-                dir.resolve("x86/externalLibNativeLib2.so").also {
-                    it.parentFile.mkdirs()
-                    it.writeText("externalLibNativeLib2")
+                abis.forEach { abi ->
+                    dir.resolve("$abi/externalLibNativeLib2.so").also {
+                        it.parentFile.mkdirs()
+                        it.writeText("externalLibNativeLib2")
+                    }
                 }
             }
         externalLibNativeLibs = listOf(externalLibNativeLib1, externalLibNativeLib2)
 
         profilerNativeLibs =
             temporaryFolder.newFolder("profilerNativeLib").also { dir ->
-                dir.resolve("x86/profilerNativeLib1.so").also {
-                    it.parentFile.mkdirs()
-                    it.writeText("profilerNativeLib1")
-                }
-                dir.resolve("x86/profilerNativeLib2.so").also {
-                    it.parentFile.mkdirs()
-                    it.writeText("profilerNativeLib2")
-                }
-                dir.resolve("x86/exclude.so").also {
-                    it.parentFile.mkdirs()
-                    it.writeText("exclude")
-                }
-                dir.resolve("x86/pickFirst.so").also {
-                    it.parentFile.mkdirs()
-                    it.writeText("profilerPickFirst")
+                abis.forEach { abi ->
+                    dir.resolve("$abi/profilerNativeLib1.so").also {
+                        it.parentFile.mkdirs()
+                        it.writeText("profilerNativeLib1")
+                    }
+                    dir.resolve("$abi/profilerNativeLib2.so").also {
+                        it.parentFile.mkdirs()
+                        it.writeText("profilerNativeLib2")
+                    }
+                    dir.resolve("$abi/exclude.so").also {
+                        it.parentFile.mkdirs()
+                        it.writeText("exclude")
+                    }
+                    dir.resolve("$abi/pickFirst.so").also {
+                        it.parentFile.mkdirs()
+                        it.writeText("profilerPickFirst")
+                    }
                 }
             }
 
@@ -181,79 +199,136 @@ class MergeNativeLibsTaskTest {
         task.taskAction()
 
         assertThat(outputDir).exists()
-        assertThat(outputDir.resolve("lib/x86/projectNativeLib1.so")).exists()
-        assertThat(outputDir.resolve("lib/x86/projectNativeLib1.so"))
-            .hasContents("projectNativeLib1")
-        assertThat(outputDir.resolve("lib/x86/projectNativeLib2.so")).exists()
-        assertThat(outputDir.resolve("lib/x86/projectNativeLib2.so"))
-            .hasContents("projectNativeLib2")
-        assertThat(outputDir.resolve("lib/x86/subProjectNativeLib1.so")).exists()
-        assertThat(outputDir.resolve("lib/x86/subProjectNativeLib1.so"))
-            .hasContents("subProjectNativeLib1")
-        assertThat(outputDir.resolve("lib/x86/subProjectNativeLib2.so")).exists()
-        assertThat(outputDir.resolve("lib/x86/subProjectNativeLib2.so"))
-            .hasContents("subProjectNativeLib2")
-        assertThat(outputDir.resolve("lib/x86/externalLibNativeLib1.so")).exists()
-        assertThat(outputDir.resolve("lib/x86/externalLibNativeLib1.so"))
-            .hasContents("externalLibNativeLib1")
-        assertThat(outputDir.resolve("lib/x86/externalLibNativeLib2.so")).exists()
-        assertThat(outputDir.resolve("lib/x86/externalLibNativeLib2.so"))
-            .hasContents("externalLibNativeLib2")
-        assertThat(outputDir.resolve("lib/x86/profilerNativeLib1.so")).exists()
-        assertThat(outputDir.resolve("lib/x86/profilerNativeLib1.so"))
-            .hasContents("profilerNativeLib1")
-        assertThat(outputDir.resolve("lib/x86/profilerNativeLib2.so")).exists()
-        assertThat(outputDir.resolve("lib/x86/profilerNativeLib2.so"))
-            .hasContents("profilerNativeLib2")
+        abis.forEach { abi ->
+            assertThat(outputDir.resolve("lib/$abi/projectNativeLib1.so")).exists()
+            assertThat(outputDir.resolve("lib/$abi/projectNativeLib1.so"))
+                .hasContents("projectNativeLib1")
+            assertThat(outputDir.resolve("lib/$abi/projectNativeLib2.so")).exists()
+            assertThat(outputDir.resolve("lib/$abi/projectNativeLib2.so"))
+                .hasContents("projectNativeLib2")
+            assertThat(outputDir.resolve("lib/$abi/subProjectNativeLib1.so")).exists()
+            assertThat(outputDir.resolve("lib/$abi/subProjectNativeLib1.so"))
+                .hasContents("subProjectNativeLib1")
+            assertThat(outputDir.resolve("lib/$abi/subProjectNativeLib2.so")).exists()
+            assertThat(outputDir.resolve("lib/$abi/subProjectNativeLib2.so"))
+                .hasContents("subProjectNativeLib2")
+            assertThat(outputDir.resolve("lib/$abi/externalLibNativeLib1.so")).exists()
+            assertThat(outputDir.resolve("lib/$abi/externalLibNativeLib1.so"))
+                .hasContents("externalLibNativeLib1")
+            assertThat(outputDir.resolve("lib/$abi/externalLibNativeLib2.so")).exists()
+            assertThat(outputDir.resolve("lib/$abi/externalLibNativeLib2.so"))
+                .hasContents("externalLibNativeLib2")
+            assertThat(outputDir.resolve("lib/$abi/profilerNativeLib1.so")).exists()
+            assertThat(outputDir.resolve("lib/$abi/profilerNativeLib1.so"))
+                .hasContents("profilerNativeLib1")
+            assertThat(outputDir.resolve("lib/$abi/profilerNativeLib2.so")).exists()
+            assertThat(outputDir.resolve("lib/$abi/profilerNativeLib2.so"))
+                .hasContents("profilerNativeLib2")
 
-        assertThat(outputDir.resolve("lib/x86/notANativeLib.txt")).doesNotExist()
-        assertThat(outputDir.resolve("lib/x86/exclude.so")).doesNotExist()
-        assertThat(outputDir.resolve("lib/x86/pickFirst.so")).exists()
-        assertThat(outputDir.resolve("lib/x86/pickFirst.so")).hasContents("subProjectPickFirst")
+            assertThat(outputDir.resolve("lib/$abi/notANativeLib.txt")).doesNotExist()
+            assertThat(outputDir.resolve("lib/$abi/exclude.so")).doesNotExist()
+            assertThat(outputDir.resolve("lib/$abi/pickFirst.so")).exists()
+            assertThat(outputDir.resolve("lib/$abi/pickFirst.so"))
+                .hasContents("subProjectPickFirst")
+        }
     }
 
     @Test
     fun testErrorWhenDuplicateNativeLibsInDependencies() {
-        subProjectNativeLibs[0].resolve("x86/duplicate.so")
-            .writeText("subProjectDuplicate1")
-        subProjectNativeLibs[1].resolve("x86/duplicate.so")
-            .writeText("subProjectDuplicate2")
-        externalLibNativeLibs[0].resolve("x86/duplicate.so")
-            .writeText("externalLibDuplicate1")
-        externalLibNativeLibs[1].resolve("x86/duplicate.so")
-            .writeText("externalLibDuplicate2")
-        profilerNativeLibs.resolve("x86/duplicate.so")
-            .writeText("profilerDuplicate")
+        abis.forEach { abi ->
+            subProjectNativeLibs[0].resolve("$abi/duplicate.so")
+                .writeText("subProjectDuplicate1")
+            subProjectNativeLibs[1].resolve("$abi/duplicate.so")
+                .writeText("subProjectDuplicate2")
+            externalLibNativeLibs[0].resolve("$abi/duplicate.so")
+                .writeText("externalLibDuplicate1")
+            externalLibNativeLibs[1].resolve("$abi/duplicate.so")
+                .writeText("externalLibDuplicate2")
+            profilerNativeLibs.resolve("$abi/duplicate.so")
+                .writeText("profilerDuplicate")
+        }
 
         try {
             task.taskAction()
             fail("task action should fail because of duplicates")
         } catch (e: DuplicateRelativeFileException) {
-            assertThat(e.message).contains("5 files found with path 'lib/x86/duplicate.so'")
+            assertThat(e.message).contains("5 files found with path")
         }
     }
 
     @Test
     fun testDuplicateNativeLibInProject() {
-        val duplicateProjectNativeLib =
-            unfilteredProjectNativeLibs[0].resolve("x86/duplicate.so").also {
-                it.writeText("projectDuplicate")
-            }
-        task.projectNativeLibs.from(duplicateProjectNativeLib)
+        abis.forEach { abi ->
+            val duplicateProjectNativeLib =
+                unfilteredProjectNativeLibs[0].resolve("$abi/duplicate.so").also {
+                    it.writeText("projectDuplicate")
+                }
+            task.projectNativeLibs.from(duplicateProjectNativeLib)
 
-        subProjectNativeLibs[0].resolve("x86/duplicate.so")
-            .writeText("subProjectDuplicate1")
-        subProjectNativeLibs[1].resolve("x86/duplicate.so")
-            .writeText("subProjectDuplicate2")
-        externalLibNativeLibs[0].resolve("x86/duplicate.so")
-            .writeText("externalLibDuplicate1")
-        externalLibNativeLibs[1].resolve("x86/duplicate.so")
-            .writeText("externalLibDuplicate2")
-        profilerNativeLibs.resolve("x86/duplicate.so")
-            .writeText("profilerDuplicate")
+            subProjectNativeLibs[0].resolve("$abi/duplicate.so")
+                .writeText("subProjectDuplicate1")
+            subProjectNativeLibs[1].resolve("$abi/duplicate.so")
+                .writeText("subProjectDuplicate2")
+            externalLibNativeLibs[0].resolve("$abi/duplicate.so")
+                .writeText("externalLibDuplicate1")
+            externalLibNativeLibs[1].resolve("$abi/duplicate.so")
+                .writeText("externalLibDuplicate2")
+            profilerNativeLibs.resolve("$abi/duplicate.so")
+                .writeText("profilerDuplicate")
+        }
 
         task.taskAction()
-        assertThat(outputDir.resolve("lib/x86/duplicate.so")).exists()
-        assertThat(outputDir.resolve("lib/x86/duplicate.so")).hasContents("projectDuplicate")
+
+        abis.forEach { abi ->
+            assertThat(outputDir.resolve("lib/$abi/duplicate.so")).exists()
+            assertThat(outputDir.resolve("lib/$abi/duplicate.so")).hasContents("projectDuplicate")
+        }
+    }
+
+    // Regression test for b/183538866
+    @Test
+    fun testPickFirstForAllNativeLibs() {
+        pickFirsts = setOf("**/*.so")
+        task.pickFirsts.set(pickFirsts)
+
+        task.taskAction()
+
+        assertThat(outputDir).exists()
+        abis.forEach { abi ->
+            assertThat(outputDir.resolve("lib/$abi/projectNativeLib1.so")).exists()
+            assertThat(outputDir.resolve("lib/$abi/projectNativeLib1.so"))
+                .hasContents("projectNativeLib1")
+            assertThat(outputDir.resolve("lib/$abi/projectNativeLib2.so")).exists()
+            assertThat(outputDir.resolve("lib/$abi/projectNativeLib2.so"))
+                .hasContents("projectNativeLib2")
+            assertThat(outputDir.resolve("lib/$abi/subProjectNativeLib1.so")).exists()
+            assertThat(outputDir.resolve("lib/$abi/subProjectNativeLib1.so"))
+                .hasContents("subProjectNativeLib1")
+            assertThat(outputDir.resolve("lib/$abi/subProjectNativeLib2.so")).exists()
+            assertThat(outputDir.resolve("lib/$abi/subProjectNativeLib2.so"))
+                .hasContents("subProjectNativeLib2")
+            assertThat(outputDir.resolve("lib/$abi/externalLibNativeLib1.so")).exists()
+            assertThat(outputDir.resolve("lib/$abi/externalLibNativeLib1.so"))
+                .hasContents("externalLibNativeLib1")
+            assertThat(outputDir.resolve("lib/$abi/externalLibNativeLib2.so")).exists()
+            assertThat(outputDir.resolve("lib/$abi/externalLibNativeLib2.so"))
+                .hasContents("externalLibNativeLib2")
+            assertThat(outputDir.resolve("lib/$abi/profilerNativeLib1.so")).exists()
+            assertThat(outputDir.resolve("lib/$abi/profilerNativeLib1.so"))
+                .hasContents("profilerNativeLib1")
+            assertThat(outputDir.resolve("lib/$abi/profilerNativeLib2.so")).exists()
+            assertThat(outputDir.resolve("lib/$abi/profilerNativeLib2.so"))
+                .hasContents("profilerNativeLib2")
+
+            assertThat(outputDir.resolve("lib/$abi/notANativeLib.txt")).doesNotExist()
+
+            // exclude.so exists because pickFirst trumps exclude
+            assertThat(outputDir.resolve("lib/$abi/exclude.so")).exists()
+            assertThat(outputDir.resolve("lib/$abi/exclude.so")).hasContents("exclude")
+
+            assertThat(outputDir.resolve("lib/$abi/pickFirst.so")).exists()
+            assertThat(outputDir.resolve("lib/$abi/pickFirst.so"))
+                .hasContents("subProjectPickFirst")
+        }
     }
 }

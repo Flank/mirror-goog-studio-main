@@ -46,9 +46,9 @@ interface ComponentIdentity {
     /**
      * The multi-flavor name of the variant.
      *
-     * This does not include the build type. If no flavors are present, this is an empty string.
+     * This does not include the build type. If no flavors are present, this will return null
      *
      * The full name of the variant is queried via [getName].
      */
-    val flavorName: String
+    val flavorName: String?
 }

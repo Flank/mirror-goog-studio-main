@@ -46,6 +46,11 @@ public final class PropertyFetcher {
 
     /**
      * Shell output parser for a getprop command
+     *
+     * <p>We don't process String[] as they are read from the socket because they can be "cut"
+     * anywhere depending on how the socket is read (e.g: We can receive a multiline property with
+     * three values as String[2] and then String[1]). Instead, we buffer all the lines and parse
+     * them once the full stream has be received.
      */
     @VisibleForTesting
     static class GetPropReceiver extends MultiLineReceiver {
@@ -53,8 +58,18 @@ public final class PropertyFetcher {
         private final Map<String, String> mCollectedProperties =
                 Maps.newHashMapWithExpectedSize(EXPECTED_PROP_COUNT);
 
+        private String[] lines = new String[0];
+
         @Override
-        public void processNewLines(@NonNull String[] lines) {
+        public void processNewLines(@NonNull String[] newLines) {
+            String[] tmp = new String[lines.length + newLines.length];
+            System.arraycopy(lines, 0, tmp, 0, lines.length);
+            System.arraycopy(newLines, 0, tmp, lines.length, newLines.length);
+            lines = tmp;
+        }
+
+        @Override
+        public void done() {
             // We receive an array of lines.
             // Some properties are single line, e.g.
             //   [foo.bar] = [blah]

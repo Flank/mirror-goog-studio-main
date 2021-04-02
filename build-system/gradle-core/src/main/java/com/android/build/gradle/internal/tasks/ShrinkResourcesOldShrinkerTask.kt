@@ -16,13 +16,12 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.artifact.ArtifactType
+import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.artifact.impl.ArtifactTransformationRequestImpl
 import com.android.build.api.variant.BuiltArtifact
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
-import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.res.shrinker.LinkedResourcesFormat
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
@@ -196,7 +195,7 @@ abstract class ShrinkResourcesOldShrinkerTask : NonIncrementalTask() {
             )
 
             artifacts.setTaskInputToFinalProduct(
-                ArtifactType.OBFUSCATION_MAPPING_FILE,
+                SingleArtifact.OBFUSCATION_MAPPING_FILE,
                 task.mappingFileSrc)
 
             artifacts.setTaskInputToFinalProduct(

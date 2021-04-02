@@ -16,10 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.model
 
-import com.android.build.api.variant.ExternalCmake
-import com.android.build.api.variant.ExternalNdkBuild
 import com.android.build.api.variant.impl.AndroidVersionImpl
-import com.android.build.api.variant.impl.VariantBuilderImpl
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.SdkComponentsBuildService
@@ -137,11 +134,6 @@ open class BasicModuleModelMock {
         throwUnmocked
     )
 
-    val variantBuilder: VariantBuilderImpl = mock(
-            VariantBuilderImpl::class.java,
-        throwUnmocked
-    ) as VariantBuilderImpl
-
     val variantImpl: VariantImpl = mock(
         VariantImpl::class.java,
         throwUnmocked
@@ -176,10 +168,10 @@ open class BasicModuleModelMock {
         throwUnmocked
     )
     val externalNativeNdkBuildOptions = mock(
-        ExternalNdkBuild::class.java
+        com.android.build.api.variant.ExternalNativeBuild::class.java
     )
     val externalNativeCmakeOptions = mock(
-        ExternalCmake::class.java
+        com.android.build.api.variant.ExternalNativeBuild::class.java
     )
     val mergedNdkConfig = mock(
         MergedNdkConfig::class.java,
@@ -259,10 +251,7 @@ open class BasicModuleModelMock {
             Splits::class.java,
             throwUnmocked
         )
-        val variantBuilderImpl = mock(
-            VariantBuilderImpl::class.java,
-            throwUnmocked
-        )
+
         val prefabArtifactCollection = mock(ArtifactCollection::class.java, throwUnmocked)
         val prefabFileCollection = mock(FileCollection::class.java, throwUnmocked)
 
@@ -307,7 +296,7 @@ open class BasicModuleModelMock {
             AndroidArtifacts.ArtifactType.PREFAB_PACKAGE
         )
         doReturn(variantDependencies).`when`(this.variantImpl).variantDependencies
-        doReturn(variantBuilder).`when`(this.variantImpl).variantBuilder
+        doReturn(minSdkVersion).`when`(this.variantImpl).minSdkVersion
         doReturn(prefabFileCollection).`when`(prefabArtifactCollection).artifactFiles
         doReturn(emptyList<File>().iterator()).`when`(prefabFileCollection).iterator()
 
@@ -318,7 +307,6 @@ open class BasicModuleModelMock {
         doReturn(abiSplitOptions).`when`(splits).abi
         doReturn(setOf<String>()).`when`(splits).abiFilters
         doReturn(false).`when`(abiSplitOptions).isUniversalApk
-        doReturn(minSdkVersion).`when`(variantBuilder).minSdkVersion
         doReturn(":$appName").`when`(project).path
         return appFolder
     }

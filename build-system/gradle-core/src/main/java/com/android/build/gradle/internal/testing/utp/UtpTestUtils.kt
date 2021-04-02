@@ -24,26 +24,19 @@ import com.android.ide.common.process.LoggedProcessOutputHandler
 import com.android.ide.common.process.ProcessInfoBuilder
 import com.android.utils.ILogger
 import com.google.common.io.Files
-import com.google.protobuf.TextFormat
-import com.google.testing.platform.proto.api.core.TestSuiteResultProto
 import java.io.File
-import java.io.FileInputStream
 import java.io.FileOutputStream
-import java.io.InputStreamReader
 
 /**
  * Runs the given runner config on the Unified Test Platform server.
- *
- * Returns the result of the UTP execution from the given output directory.
  */
 internal fun runUtpTestSuite(
     runnerConfigFile: File,
-    utpOutputDir: File,
     configFactory: UtpConfigFactory,
     utpDependencies: UtpDependencies,
     javaProcessExecutor: JavaProcessExecutor,
     logger: ILogger
-): TestSuiteResultProto.TestSuiteResult {
+) {
     val serverConfigProtoFile = File.createTempFile("serverConfig", ".pb").also { file ->
         FileOutputStream(file).use { writer ->
             configFactory.createServerConfigProto().writeTo(writer)
@@ -68,21 +61,6 @@ internal fun runUtpTestSuite(
     javaProcessExecutor.execute(javaProcessInfo, LoggedProcessOutputHandler(logger)).apply {
         rethrowFailure()
     }
-
-    return getResultsProto(utpOutputDir)
-}
-
-/**
- * Retrieves a test suite result proto from the Unified Test Platform's output directory.
- */
-internal fun getResultsProto(outputDir: File): TestSuiteResultProto.TestSuiteResult {
-    val testResultInAsciiProto = File(outputDir, TEST_RESULT_OUTPUT_FILE_NAME)
-    check(testResultInAsciiProto.exists())
-    return TestSuiteResultProto.TestSuiteResult.newBuilder().apply {
-        TextFormat.merge(
-            InputStreamReader(FileInputStream(testResultInAsciiProto)),
-            this)
-    }.build()
 }
 
 fun shouldEnableUtp(

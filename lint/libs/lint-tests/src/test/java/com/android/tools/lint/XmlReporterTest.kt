@@ -27,6 +27,7 @@ import com.android.tools.lint.checks.infrastructure.TestFiles.java
 import com.android.tools.lint.checks.infrastructure.TestFiles.manifest
 import com.android.tools.lint.checks.infrastructure.TestFiles.xml
 import com.android.tools.lint.checks.infrastructure.TestLintTask
+import com.android.tools.lint.checks.infrastructure.TestMode
 import com.android.tools.lint.checks.infrastructure.TestResultChecker
 import org.intellij.lang.annotations.Language
 import org.junit.Assert.assertEquals
@@ -115,12 +116,15 @@ class XmlReporterTest {
         lint().files(sampleManifest, sampleLayout)
             .issues(ManifestDetector.USES_SDK, HardcodedValuesDetector.ISSUE)
             .clientFactory(factory)
+            .testModes(TestMode.PARTIAL)
             .run()
             .checkXmlReport(
                 TestResultChecker { xml ->
-                    val testRoot = currentClient?.knownProjects?.firstOrNull()?.dir?.parent
+                    val testRoot = currentClient?.knownProjects?.firstOrNull()?.dir?.parentFile
                     val actual = if (testRoot != null) {
-                        xml.replace(testRoot, "TESTROOT").replace('\\', '/')
+                        xml.replace(testRoot.path, "TESTROOT")
+                            .replace(testRoot.canonicalPath, "TESTROOT")
+                            .replace('\\', '/')
                     } else {
                         xml
                     }

@@ -22,10 +22,10 @@ import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.BuildConfigField
-import com.android.build.api.variant.ExternalCmake
-import com.android.build.api.variant.ExternalNdkBuild
+import com.android.build.api.variant.ExternalNativeBuild
 import com.android.build.api.variant.ExternalNdkBuildImpl
 import com.android.build.api.variant.Packaging
+import com.android.build.api.variant.ResValue
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
@@ -42,6 +42,7 @@ import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
+import com.android.builder.core.DefaultApiVersion
 import com.android.builder.core.VariantType
 import com.google.common.collect.ImmutableList
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
@@ -51,7 +52,6 @@ import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
-import org.objectweb.asm.Type
 import java.io.Serializable
 
 abstract class VariantImpl(
@@ -88,6 +88,23 @@ abstract class VariantImpl(
     // PUBLIC API
     // ---------------------------------------------------------------------------------------------
 
+    override val minSdkVersion: AndroidVersion  by lazy {
+        val apiVersion = variantBuilder.minSdk?.let { DefaultApiVersion(it)}
+            ?: variantBuilder.minSdkPreview?.let { DefaultApiVersion(it) }
+            ?: DefaultApiVersion(1)
+        AndroidVersionImpl(apiVersion.apiLevel, apiVersion.codename)
+    }
+
+    override val targetSdkVersion: AndroidVersion  by lazy {
+        val apiVersion = variantBuilder.targetSdk?.let { DefaultApiVersion(it)}
+            ?: variantBuilder.targetSdkPreview?.let { DefaultApiVersion(it) }
+            ?: DefaultApiVersion(1)
+        AndroidVersionImpl(apiVersion.apiLevel, apiVersion.codename)
+    }
+
+    override val maxSdkVersion: Int?
+        get() = variantBuilder.maxSdk
+
     override val buildConfigFields: MapProperty<String, BuildConfigField<out Serializable>> by lazy {
         internalServices.mapPropertyOf(
             String::class.java,
@@ -96,37 +113,9 @@ abstract class VariantImpl(
         )
     }
 
-    override fun addBuildConfigField(key: String, value: Serializable, comment: String?) {
-        val descriptor = Type.getDescriptor(value::class.java)
-                .removeSurrounding("Ljava/lang/", ";")
-        buildConfigFields.put(key, BuildConfigField(descriptor, value, comment))
-    }
-
     // for compatibility with old variant API.
     fun addBuildConfigField(type: String, key: String, value: Serializable, comment: String?) {
         buildConfigFields.put(key, BuildConfigField(type, value, comment))
-    }
-
-    /**
-     * Adds a ResValue element to the generated resources.
-     * @param name the resource name
-     * @param type the resource type like 'string'
-     * @param value the resource value
-     * @param comment optional comment to be added to the generated resource file for the field.
-     */
-    override fun addResValue(name: String, type: String, value: String, comment: String?) {
-        resValues.put(ResValue.Key(type, name), ResValue(value, comment))
-    }
-
-    /**
-     * Adds a ResValue element to the generated resources.
-     * @param name the resource name
-     * @param type the resource type like 'string'
-     * @param value a [Provider] for the value
-     * @param comment optional comment to be added to the generated resource file for the field.
-     */
-    override fun addResValue(name: String, type: String, value: Provider<String>, comment: String?) {
-        resValues.put(ResValue.Key(type, name), value.map { ResValue(it, comment) })
     }
 
     override val manifestPlaceholders: MapProperty<String, String> by lazy {
@@ -143,7 +132,7 @@ abstract class VariantImpl(
     }
 
 
-    override val externalCmake: ExternalCmake? by lazy {
+    override val externalCmake: ExternalNativeBuild? by lazy {
         variantDslInfo.externalNativeBuildOptions.externalNativeCmakeOptions?.let {
             ExternalCmakeImpl(
                     it,
@@ -152,7 +141,7 @@ abstract class VariantImpl(
         }
     }
 
-    override val externalNdkBuild: ExternalNdkBuild? by lazy {
+    override val externalNdkBuild: ExternalNativeBuild? by lazy {
         variantDslInfo.externalNativeBuildOptions.externalNativeNdkBuildOptions?.let {
             ExternalNdkBuildImpl(
                     it,
@@ -189,17 +178,10 @@ abstract class VariantImpl(
         )
     }
 
+    override fun makeResValueKey(type: String, name: String): ResValue.Key = ResValueKeyImpl(type, name)
+
     override val renderscriptTargetApi: Int
         get() =  variantBuilder.renderscriptTargetApi
-
-    override val minSdkVersion: AndroidVersion
-        get() = variantBuilder.minSdkVersion
-
-    override val maxSdkVersion: Int?
-        get() = variantBuilder.maxSdkVersion
-
-    override val targetSdkVersion: AndroidVersion
-        get() = variantBuilder.targetSdkVersion
 
     private var _isMultiDexEnabled: Boolean? = variantDslInfo.isMultiDexEnabled
     override val isMultiDexEnabled: Boolean

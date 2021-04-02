@@ -13,7 +13,7 @@ cc_binary(
     ],
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/transport/native/agent:jvmti_helper",
+        "//tools/base/transport/native/jvmti",
     ],
 )
 

@@ -18,8 +18,8 @@ package com.android.build.gradle.tasks
 
 import android.databinding.tool.DataBindingBuilder
 import com.android.SdkConstants
-import com.android.build.api.artifact.ArtifactType
-import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.api.artifact.SingleArtifact
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_AND_LOCAL_JARS_JNI
 import com.android.build.gradle.internal.tasks.AarMetadataTask
@@ -38,7 +38,6 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.bundling.Zip
-import java.io.File
 import java.util.Locale
 
 /** Custom Zip task to allow archive name to be set lazily. */
@@ -74,9 +73,115 @@ abstract class BundleAar : Zip(), VariantAwareTask {
             return hasLocalAarDependencies
         }
 
-    class CreationAction(
-        creationConfig: VariantCreationConfig
-    ) : VariantTaskCreationAction<BundleAar, VariantCreationConfig>(
+    /**
+     * Package artifacts similar to [LibraryCreationAction] without aidl, merged proguard,
+     * renderscript, jni, lint jar, prefab package and aar metadata.
+     */
+    class TestFixturesCreationAction(
+        creationConfig: ComponentCreationConfig
+    ) : VariantTaskCreationAction<BundleAar, ComponentCreationConfig>(
+        creationConfig
+    ) {
+
+        override val name: String
+            get() = computeTaskName("bundle", "Aar")
+        override val type: Class<BundleAar>
+            get() = BundleAar::class.java
+
+        override fun handleProvider(
+            taskProvider: TaskProvider<BundleAar>
+        ) {
+            super.handleProvider(taskProvider)
+
+            val propertyProvider = { task : BundleAar ->
+                val property = task.project.objects.fileProperty()
+                property.set(task.archiveFile)
+                property
+            }
+            creationConfig.artifacts.setInitialProvider(taskProvider, propertyProvider)
+                .on(SingleArtifact.AAR)
+        }
+
+        override fun configure(
+            task: BundleAar
+        ) {
+            super.configure(task)
+
+            val artifacts = creationConfig.artifacts
+            val buildFeatures = creationConfig.buildFeatures
+
+            // There should never be duplicates.
+            task.duplicatesStrategy = DuplicatesStrategy.FAIL
+            // Make the AAR reproducible. Note that we package several zips inside the AAR, so all of
+            // those need to be reproducible too before we can switch this on.
+            // https://issuetracker.google.com/67597902
+            task.isReproducibleFileOrder = true
+            task.isPreserveFileTimestamps = false
+
+            task.description = "Assembles a bundle containing the testFixtures in ${creationConfig.name}."
+
+            task.archiveFileName.set(creationConfig.outputs.getMainSplit().outputFileName)
+            task.destinationDirectory.set(creationConfig.paths.aarLocation)
+            task.archiveExtension.set(BuilderConstants.EXT_LIB_ARCHIVE)
+
+            if (buildFeatures.dataBinding && buildFeatures.androidResources) {
+                task.from(
+                    task.project.provider {
+                        creationConfig.artifacts.get(InternalArtifactType.DATA_BINDING_ARTIFACT) },
+                    prependToCopyPath(DataBindingBuilder.DATA_BINDING_ROOT_FOLDER_IN_AAR)
+                )
+                task.from(
+                    creationConfig.artifacts.get(
+                        InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT),
+                    prependToCopyPath(
+                        DataBindingBuilder.DATA_BINDING_CLASS_LOG_ROOT_FOLDER_IN_AAR
+                    )
+                )
+            }
+
+            task.from(
+                artifacts.get(
+                    InternalArtifactType.COMPILE_SYMBOL_LIST))
+            task.from(
+                artifacts.get(InternalArtifactType.PACKAGED_RES),
+                prependToCopyPath(SdkConstants.FD_RES)
+            )
+            if (!creationConfig.globalScope.extension.aaptOptions.namespaced) {
+                // In non-namespaced projects bundle the library manifest straight to the AAR.
+                task.from(artifacts.get(SingleArtifact.MERGED_MANIFEST))
+            } else {
+                // In namespaced projects the bundled manifest needs to have stripped resource
+                // references for backwards compatibility.
+                task.from(artifacts.get(
+                    InternalArtifactType.NON_NAMESPACED_LIBRARY_MANIFEST))
+                task.from(artifacts.get(InternalArtifactType.RES_STATIC_LIBRARY))
+            }
+
+            if (buildFeatures.androidResources) {
+                task.from(artifacts.get(InternalArtifactType.PUBLIC_RES))
+            }
+            task.from(artifacts.get(InternalArtifactType.ANNOTATIONS_ZIP))
+            task.from(artifacts.get(InternalArtifactType.AAR_MAIN_JAR))
+
+            task.from(
+                artifacts.get(InternalArtifactType.AAR_LIBS_DIRECTORY),
+                prependToCopyPath(SdkConstants.LIBS_FOLDER)
+            )
+            task.from(
+                creationConfig.artifacts.get(InternalArtifactType.LIBRARY_ASSETS),
+                prependToCopyPath(SdkConstants.FD_ASSETS))
+            task.localAarDeps.from(
+                creationConfig.variantScope.getLocalFileDependencies {
+                    it.name.toLowerCase(Locale.US).endsWith(SdkConstants.DOT_AAR)
+                }
+            )
+            task.projectPath = task.project.path
+        }
+    }
+
+    class LibraryCreationAction(
+        creationConfig: ComponentCreationConfig
+    ) : VariantTaskCreationAction<BundleAar, ComponentCreationConfig>(
         creationConfig
     ) {
 
@@ -97,7 +202,7 @@ abstract class BundleAar : Zip(), VariantAwareTask {
                 property
             }
             creationConfig.artifacts.setInitialProvider(taskProvider, propertyProvider)
-                .on(ArtifactType.AAR)
+                .on(SingleArtifact.AAR)
         }
 
         override fun configure(
@@ -108,7 +213,7 @@ abstract class BundleAar : Zip(), VariantAwareTask {
             val artifacts = creationConfig.artifacts
             val buildFeatures = creationConfig.buildFeatures
 
-            // Sanity check, there should never be duplicates.
+            // There should never be duplicates.
             task.duplicatesStrategy = DuplicatesStrategy.FAIL
             // Make the AAR reproducible. Note that we package several zips inside the AAR, so all of
             // those need to be reproducible too before we can switch this on.
@@ -158,7 +263,7 @@ abstract class BundleAar : Zip(), VariantAwareTask {
             )
             if (!creationConfig.globalScope.extension.aaptOptions.namespaced) {
                 // In non-namespaced projects bundle the library manifest straight to the AAR.
-                task.from(artifacts.get(ArtifactType.MERGED_MANIFEST))
+                task.from(artifacts.get(SingleArtifact.MERGED_MANIFEST))
             } else {
                 // In namespaced projects the bundled manifest needs to have stripped resource
                 // references for backwards compatibility.
@@ -213,11 +318,13 @@ abstract class BundleAar : Zip(), VariantAwareTask {
             )
             task.projectPath = task.project.path
         }
+    }
 
+    companion object {
         private fun prependToCopyPath(pathSegment: String) = Action { copySpec: CopySpec ->
             copySpec.eachFile { fileCopyDetails: FileCopyDetails ->
                 fileCopyDetails.relativePath =
-                        fileCopyDetails.relativePath.prepend(pathSegment)
+                    fileCopyDetails.relativePath.prepend(pathSegment)
             }
         }
     }

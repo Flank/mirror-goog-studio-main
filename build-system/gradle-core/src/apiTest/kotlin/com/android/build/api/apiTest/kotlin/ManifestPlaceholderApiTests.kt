@@ -55,7 +55,7 @@ class ManifestPlaceholderApiTests: VariantApiBaseTest(
                     kotlin("android.extensions")
             }
 
-            import com.android.build.api.artifact.ArtifactType
+            import com.android.build.api.artifact.SingleArtifact
             abstract class ManifestReaderTask: DefaultTask() {
 
                 @get:InputFile
@@ -77,7 +77,7 @@ class ManifestPlaceholderApiTests: VariantApiBaseTest(
             androidComponents {
                 onVariants {
                     val manifestReader = tasks.register<ManifestReaderTask>("${'$'}{it.name}ManifestReader") {
-                        mergedManifest.set(it.artifacts.get(ArtifactType.MERGED_MANIFEST))
+                        mergedManifest.set(it.artifacts.get(SingleArtifact.MERGED_MANIFEST))
                     }
                     it.manifestPlaceholders.put("MyName", "MyRealName")
                 }
@@ -138,7 +138,7 @@ known at configuration time.
             import org.gradle.api.tasks.InputFile
             import org.gradle.api.tasks.OutputFile
             import org.gradle.api.tasks.TaskAction
-            import com.android.build.api.artifact.ArtifactType
+            import com.android.build.api.artifact.SingleArtifact
 
             ${testingElements.getGitVersionTask()}
 
@@ -170,7 +170,7 @@ known at configuration time.
             androidComponents {
                 onVariants {
                     val manifestReader = tasks.register<ManifestReaderTask>("${'$'}{it.name}ManifestReader") {
-                        mergedManifest.set(it.artifacts.get(ArtifactType.MERGED_MANIFEST))
+                        mergedManifest.set(it.artifacts.get(SingleArtifact.MERGED_MANIFEST))
                     }
                     it.manifestPlaceholders.put("MyName", gitVersionProvider.map { task ->
                         "NameWithGit-" + task.gitVersionOutputFile.get().asFile.readText(Charsets.UTF_8)

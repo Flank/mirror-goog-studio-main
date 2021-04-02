@@ -17,9 +17,9 @@
 package com.android.build.gradle.internal.publishing
 
 import com.android.build.api.artifact.Artifact
-import com.android.build.api.artifact.ArtifactType.APK
-import com.android.build.api.artifact.ArtifactType.MERGED_MANIFEST
-import com.android.build.api.artifact.ArtifactType.OBFUSCATION_MAPPING_FILE
+import com.android.build.api.artifact.SingleArtifact.APK
+import com.android.build.api.artifact.SingleArtifact.MERGED_MANIFEST
+import com.android.build.api.artifact.SingleArtifact.OBFUSCATION_MAPPING_FILE
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.ALL_API_PUBLICATION
@@ -55,6 +55,8 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_JNI
 import com.android.build.gradle.internal.scope.InternalArtifactType.LINT_MODEL
 import com.android.build.gradle.internal.scope.InternalArtifactType.LINT_PARTIAL_RESULTS
 import com.android.build.gradle.internal.scope.InternalArtifactType.LINT_PUBLISH_JAR
+import com.android.build.gradle.internal.scope.InternalArtifactType.LINT_VITAL_LINT_MODEL
+import com.android.build.gradle.internal.scope.InternalArtifactType.LINT_VITAL_PARTIAL_RESULTS
 import com.android.build.gradle.internal.scope.InternalArtifactType.MANIFEST_METADATA
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_JAVA_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.METADATA_FEATURE_DECLARATION
@@ -148,7 +150,7 @@ class PublishingSpecs {
                 runtime(NAVIGATION_JSON, ArtifactType.NAVIGATION_JSON)
 
                 // output of bundle-tool
-                publish(com.android.build.api.artifact.ArtifactType.BUNDLE, ArtifactType.BUNDLE)
+                publish(com.android.build.api.artifact.SingleArtifact.BUNDLE, ArtifactType.BUNDLE)
 
                 // this is only for base modules.
                 api(FEATURE_SET_METADATA, ArtifactType.FEATURE_SET_METADATA)
@@ -197,7 +199,9 @@ class PublishingSpecs {
                 reverseMetadata(DESUGAR_LIB_MERGED_KEEP_RULES, ArtifactType.DESUGAR_LIB_MERGED_KEEP_RULES)
                 reverseMetadata(FEATURE_PUBLISHED_DEX, ArtifactType.FEATURE_PUBLISHED_DEX)
                 reverseMetadata(LINT_MODEL, ArtifactType.LINT_MODEL)
+                reverseMetadata(LINT_VITAL_LINT_MODEL, ArtifactType.LINT_VITAL_LINT_MODEL)
                 reverseMetadata(LINT_PARTIAL_RESULTS, ArtifactType.LINT_PARTIAL_RESULTS)
+                reverseMetadata(LINT_VITAL_PARTIAL_RESULTS, ArtifactType.LINT_VITAL_PARTIAL_RESULTS)
 
                 runtime(NAVIGATION_JSON, ArtifactType.NAVIGATION_JSON)
                 runtime(FEATURE_NAME, ArtifactType.FEATURE_NAME)
@@ -205,7 +209,7 @@ class PublishingSpecs {
 
 
             variantSpec(VariantTypeImpl.LIBRARY) {
-                publish(com.android.build.api.artifact.ArtifactType.AAR, ArtifactType.AAR)
+                publish(com.android.build.api.artifact.SingleArtifact.AAR, ArtifactType.AAR)
 
                 api(AIDL_PARCELABLE, ArtifactType.AIDL)
                 api(RENDERSCRIPT_HEADERS, ArtifactType.RENDERSCRIPT)
@@ -245,11 +249,42 @@ class PublishingSpecs {
                 runtime(LINT_MODEL, ArtifactType.LINT_MODEL)
                 runtime(LINT_PARTIAL_RESULTS, ArtifactType.LINT_PARTIAL_RESULTS)
                 runtime(
-                    com.android.build.api.artifact.ArtifactType.AAR,
+                    com.android.build.api.artifact.SingleArtifact.AAR,
                     ArtifactType.LOCAL_AAR_FOR_LINT)
             }
 
-            variantSpec(VariantTypeImpl.TEST_FIXTURES)
+            variantSpec(VariantTypeImpl.TEST_FIXTURES) {
+                publish(com.android.build.api.artifact.SingleArtifact.AAR, ArtifactType.AAR)
+
+                api(COMPILE_LIBRARY_CLASSES_JAR, ArtifactType.CLASSES_JAR)
+
+                // manifest is published to both to compare and detect provided-only library
+                // dependencies.
+                output(MERGED_MANIFEST, ArtifactType.MANIFEST)
+                output(RES_STATIC_LIBRARY, ArtifactType.RES_STATIC_LIBRARY)
+                output(DATA_BINDING_ARTIFACT, ArtifactType.DATA_BINDING_ARTIFACT)
+                output(DATA_BINDING_BASE_CLASS_LOG_ARTIFACT,
+                    ArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT)
+                output(FULL_JAR, ArtifactType.JAR)
+                /** Published to both api and runtime as consumption behavior depends on
+                 * [com.android.build.gradle.options.BooleanOption.COMPILE_CLASSPATH_LIBRARY_R_CLASSES] */
+                output(SYMBOL_LIST_WITH_PACKAGE_NAME, ArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME)
+
+                runtime(RUNTIME_LIBRARY_CLASSES_JAR, ArtifactType.CLASSES_JAR)
+
+                // Publish the CLASSES_DIR artifact type with a LibraryElements.CLASSES attribute to
+                // match the behavior of the Java library plugin. The LibraryElements attribute will
+                // be used for incremental dexing of test fixtures.
+                runtime(RUNTIME_LIBRARY_CLASSES_DIR, ArtifactType.CLASSES_DIR, LibraryElements.CLASSES)
+
+                runtime(LIBRARY_ASSETS, ArtifactType.ASSETS)
+                runtime(PACKAGED_RES, ArtifactType.ANDROID_RES)
+                runtime(PUBLIC_RES, ArtifactType.PUBLIC_RES)
+                runtime(COMPILE_SYMBOL_LIST, ArtifactType.COMPILE_SYMBOL_LIST)
+                runtime(LIBRARY_JAVA_RES, ArtifactType.JAVA_RES)
+                runtime(NAVIGATION_JSON, ArtifactType.NAVIGATION_JSON)
+                runtime(COMPILED_LOCAL_RESOURCES, ArtifactType.COMPILED_DEPENDENCIES_RESOURCES)
+            }
 
             // Publishing will be done manually from the lint standalone plugin for now.
             // Eventually we should just unify the infrastructure to declare the publications here.
@@ -294,6 +329,7 @@ class PublishingSpecs {
             when (variantType) {
                 VariantTypeImpl.BASE_APK -> AppVariantSpecBuilder(variantType)
                 VariantTypeImpl.LIBRARY -> LibraryVariantSpecBuilder(variantType)
+                VariantTypeImpl.TEST_FIXTURES -> TestFixturesVariantSpecBuilder(variantType)
                 else -> VariantSpecBuilderImpl(variantType)
             }
     }
@@ -408,6 +444,14 @@ private open class VariantSpecBuilderImpl (
                 variantType,
                 parentSpec,
                 outputs.toImmutableSet())
+    }
+}
+
+private class TestFixturesVariantSpecBuilder(variantType: VariantType):
+    VariantSpecBuilderImpl(variantType) {
+
+    override fun publish(taskOutputType: Artifact.Single<*>, artifactType: ArtifactType) {
+        outputs.add(OutputSpecImpl(taskOutputType, artifactType, API_AND_RUNTIME_PUBLICATION))
     }
 }
 
