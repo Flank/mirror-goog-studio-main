@@ -96,6 +96,21 @@ class IncrementalInstallSessionImpl implements AutoCloseable {
                 });
     }
 
+    void waitForAnyCompletion(long timeout, TimeUnit timeOutUnits)
+            throws IOException, InterruptedException {
+        waitForCondition(
+                timeOutUnits.toNanos(timeout),
+                WAIT_TIME_MS,
+                () -> {
+                    if (mPendingException != null) {
+                        throw new RuntimeException(mPendingException);
+                    }
+                    return mInstallSucceeded || mStreamingCompleted || mClosed
+                           ? ConditionResult.FULFILLED
+                           : ConditionResult.UNFULFILLED;
+                });
+    }
+
     private interface IOSupplier<T> {
         T get() throws IOException, InterruptedException;
     }

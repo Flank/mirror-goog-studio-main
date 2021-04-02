@@ -249,7 +249,7 @@ public class IncrementalInstallSession implements AutoCloseable {
      * finish before or after the install succeeds.
      *
      * @param timeout the maximum amount of time to wait for the installs to finish. A value of 0
-     *     will cause this method to wait indefinitely for the APKs to be installed.
+     *     will cause this method to wait indefinitely.
      * @param units units for non-zero {@code timeout}
      * @throws IOException if wait times out, an APK fails to be installed, or an exception occurs
      *     while handling block requests.
@@ -264,14 +264,29 @@ public class IncrementalInstallSession implements AutoCloseable {
      * may finishes before or after serving is completed.
      *
      * @param timeout the maximum amount of time to wait for serving to finish. A value of 0 will
-     *     cause this method to wait indefinitely for the APKs to be installed.
+     *     cause this method to wait indefinitely.
      * @param units units for non-zero {@code timeout}
-     * @throws IOException if wait times out, an APK fails to be installed, or an exception occurs
+     * @throws IOException if wait times out, an APK fails to be streamed, or an exception occurs
      *     while handling block requests.
      */
     public void waitForServingCompleted(long timeout, @NonNull TimeUnit units)
             throws IOException, InterruptedException {
         mImpl.waitForServingCompleted(timeout, units);
+    }
+
+    /**
+     * Blocks the current thread until either APK data has been streamed to the device or
+     * the installation is finished.
+     *
+     * @param timeout the maximum amount of time to wait. A value of 0 will
+     *     cause this method to wait indefinitely.
+     * @param units units for non-zero {@code timeout}
+     * @throws IOException if wait times out, an APK fails to be installed, or an exception occurs
+     *     while handling block requests.
+     */
+    public void waitForAnyCompletion(long timeout, @NonNull TimeUnit units)
+            throws IOException, InterruptedException {
+        mImpl.waitForAnyCompletion(timeout, units);
     }
 
     /** Cancels communication with the device. */
