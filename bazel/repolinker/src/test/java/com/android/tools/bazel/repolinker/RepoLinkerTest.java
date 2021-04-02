@@ -98,6 +98,26 @@ public final class RepoLinkerTest {
     }
 
     @Test
+    public void link_overwritesExisting() throws Exception {
+        // Write a file to the destination.
+        Path output = destination.resolve("group1/artifact1/1.0/artifact1-1.0.jar");
+        Files.createDirectories(output.getParent());
+        Files.write(output, "should_be_overwritten_by_contents".getBytes());
+        assertExists("group1/artifact1/1.0/artifact1-1.0.jar");
+
+        addStubPom(temp.newFile("1.pom"), "group1", "artifact1", "1.0");
+        addStubArtifact(temp.newFile("1.jar"), null);
+        linker.link(destination, artifacts);
+        assertExists("group1/artifact1/1.0/artifact1-1.0.pom");
+        assertExists("group1/artifact1/1.0/artifact1-1.0.jar");
+
+        // Verify that the contents have been overwritten.
+        List<String> contents = Files.readAllLines(output);
+        assertThat(contents).hasSize(1);
+        assertThat(contents.get(0)).matches("contents");
+    }
+
+    @Test
     public void link_withClassifierJars() throws Exception {
         addStubPom(temp.newFile("1.pom"), "group1", "artifact1", "1.0");
         addStubArtifact(temp.newFile("1.jar"), "classifier1");
@@ -135,13 +155,13 @@ public final class RepoLinkerTest {
         assertExists("com/android/tools/build/gradle/1.0/gradle-1.0.jar");
 
         // Verify the attributes of the jar file.
-        try (JarFile outputJar =
-                new JarFile(
-                        destination
-                                .resolve("com/android/tools/build/gradle/1.0/gradle-1.0.jar")
-                                .toString())) {
+        Path outputPath = destination.resolve("com/android/tools/build/gradle/1.0/gradle-1.0.jar");
+        try (JarFile outputJar = new JarFile(outputPath.toString())) {
             Manifest manifest = outputJar.getManifest();
             assertThat(manifest.getMainAttributes().getValue("Plugin-Version")).isEqualTo("1.0");
         }
+
+        // Verify that the linked jar is a file rather than a link.
+        assertThat(Files.isSymbolicLink(outputPath)).isFalse();
     }
 }

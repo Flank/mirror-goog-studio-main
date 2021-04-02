@@ -26,9 +26,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -62,8 +64,14 @@ public class RepoLinker {
     /** Builds effective POM models. */
     private final ModelBuilder modelBuilder = new DefaultModelBuilderFactory().newInstance();
 
+    /** Stores paths to all generated temporary jars. */
+    private final Set<Path> generatedJars = new HashSet<Path>();
+
     /**
      * Creates a Maven repository using symlinks.
+     *
+     * <p>If an artifact was generated during resolution, it will be moved instead of linked. If the
+     * destination file already exists, it will be overwritten.
      *
      * @param destination The destination directory for the Maven repository.
      * @param artifacts The list of artifacts that need to be resolved. The artifacts should be
@@ -77,7 +85,15 @@ public class RepoLinker {
             Path dest = destination.resolve(entry.getValue());
 
             Files.createDirectories(dest.getParent());
-            Files.createSymbolicLink(dest, src);
+            if (Files.exists(dest)) {
+                Files.delete(dest);
+            }
+            if (generatedJars.contains(src)) {
+                generatedJars.remove(src);
+                Files.move(src, dest);
+            } else {
+                Files.createSymbolicLink(dest, src);
+            }
         }
     }
 
@@ -118,6 +134,7 @@ public class RepoLinker {
                 // Inject the Plugin-Version attribute into the manifest if needed.
                 if (shouldInject(model)) {
                     artifactPath = injectPluginVersion(model, artifact);
+                    generatedJars.add(artifactPath);
                 }
             }
 
