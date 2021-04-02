@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ddmlib.internal;
 
 import com.android.annotations.NonNull;
@@ -537,11 +536,8 @@ public final class DeviceImpl implements IDevice {
         return mState == DeviceState.BOOTLOADER;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see com.android.ddmlib.IDevice#getSyncService()
-     */
     @Override
+    @Nullable
     public SyncService getSyncService()
             throws TimeoutException, AdbCommandRejectedException, IOException {
         SyncService syncService = new SyncService(AndroidDebugBridge.getSocketAddress(), this);
@@ -1004,38 +1000,49 @@ public final class DeviceImpl implements IDevice {
     }
 
     @Override
-    public void pushFile(String local, String remote)
+    public void push(@NonNull String[] local, @NonNull String remote)
             throws IOException, AdbCommandRejectedException, TimeoutException, SyncException {
-        SyncService sync = null;
-        try {
-            String targetFileName = getFileName(local);
-
-            Log.d(
-                    targetFileName,
-                    String.format(
-                            "Uploading %1$s onto device '%2$s'",
-                            targetFileName, getSerialNumber()));
-
-            sync = getSyncService();
-            if (sync != null) {
-                String message =
-                        String.format("Uploading file onto device '%1$s'", getSerialNumber());
-                Log.d(LOG_TAG, message);
-                sync.pushFile(local, remote, SyncService.getNullProgressMonitor());
-            } else {
-                throw new IOException("Unable to open sync connection!");
+        Log.d(
+                String.join(", ", local),
+                String.format("Uploading %1$s onto device '%2$s'", remote, getSerialNumber()));
+        try (SyncService sync = getSyncService()) {
+            if (sync == null) {
+                throw new IOException("Unable to open sync connection");
             }
+            String message = String.format("Uploading file onto device '%1$s'", getSerialNumber());
+            Log.d(LOG_TAG, message);
+            sync.push(local, remote, SyncService.getNullProgressMonitor());
         } catch (TimeoutException e) {
             Log.e(LOG_TAG, "Error during Sync: timeout.");
             throw e;
-
         } catch (SyncException | IOException e) {
             Log.e(LOG_TAG, String.format("Error during Sync: %1$s", e.getMessage()));
             throw e;
-        } finally {
-            if (sync != null) {
-                sync.close();
+        }
+    }
+
+    @Override
+    public void pushFile(@NonNull String local, @NonNull String remote)
+            throws IOException, AdbCommandRejectedException, TimeoutException, SyncException {
+        String targetFileName = getFileName(local);
+        Log.d(
+                targetFileName,
+                String.format(
+                        "Uploading %1$s onto device '%2$s'", targetFileName, getSerialNumber()));
+
+        try (SyncService sync = getSyncService()) {
+            if (sync == null) {
+                throw new IOException("Unable to open sync connection");
             }
+            String message = String.format("Uploading file onto device '%1$s'", getSerialNumber());
+            Log.d(LOG_TAG, message);
+            sync.pushFile(local, remote, SyncService.getNullProgressMonitor());
+        } catch (TimeoutException e) {
+            Log.e(LOG_TAG, "Error during Sync: timeout.");
+            throw e;
+        } catch (SyncException | IOException e) {
+            Log.e(LOG_TAG, String.format("Error during Sync: %1$s", e.getMessage()));
+            throw e;
         }
     }
 

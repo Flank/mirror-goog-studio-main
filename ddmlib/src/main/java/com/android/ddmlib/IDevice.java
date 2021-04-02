@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ddmlib;
 
 import com.android.annotations.NonNull;
@@ -343,6 +342,7 @@ public interface IDevice extends IShellEnabledDevice {
      * @throws AdbCommandRejectedException if adb rejects the command
      * @throws IOException if the connection with adb failed.
      */
+    @Nullable
     SyncService getSyncService() throws TimeoutException, AdbCommandRejectedException, IOException;
 
     /** Returns a {@link FileListingService} for this device. */
@@ -421,7 +421,7 @@ public interface IDevice extends IShellEnabledDevice {
      * <p>This uses exec:cmd <command> call or faster abb_exec:<command> if both device OS and host
      * ADB server support Android Binder Bridge execute feature.
      *
-     * @param command the binder command to execute
+     * @param parameters the binder command to execute
      * @param receiver the {@link IShellOutputReceiver} that will receives the output of the binder
      *     command
      * @param is optional input stream to send through stdin
@@ -533,16 +533,29 @@ public interface IDevice extends IShellEnabledDevice {
     String getClientName(int pid);
 
     /**
-     * Push a single file.
+     * Pushes several files or directories.
+     *
+     * @param local the local files to push
+     * @param remote the remote path representing a directory
+     * @throws IOException in case of I/O error on the connection
+     * @throws AdbCommandRejectedException if adb rejects the command
+     * @throws TimeoutException in case of a timeout reading responses from the device
+     * @throws SyncException if some files could not be pushed
+     */
+    void push(@NonNull String[] local, @NonNull String remote)
+            throws IOException, AdbCommandRejectedException, TimeoutException, SyncException;
+
+    /**
+     * Pushes a single file.
      *
      * @param local the local filepath.
-     * @param remote The remote filepath.
-     * @throws IOException in case of I/O error on the connection.
+     * @param remote the remote filepath
+     * @throws IOException in case of I/O error on the connection
      * @throws AdbCommandRejectedException if adb rejects the command
-     * @throws TimeoutException in case of a timeout reading responses from the device.
-     * @throws SyncException if file could not be pushed
+     * @throws TimeoutException in case of a timeout reading responses from the device
+     * @throws SyncException if the file could not be pushed
      */
-    void pushFile(String local, String remote)
+    void pushFile(@NonNull String local, @NonNull String remote)
             throws IOException, AdbCommandRejectedException, TimeoutException, SyncException;
 
     /**
@@ -688,7 +701,7 @@ public interface IDevice extends IShellEnabledDevice {
      * Installs an Android application made of several APK files sitting locally on the device with
      * default timeout
      *
-     * @param apks list of apk file paths on the device to install
+     * @param remoteApks list of apk file paths on the device to install
      * @param reinstall set to <code>true</code> if re-install of app should be performed
      * @param installOptions optional extra arguments to pass. See 'adb shell pm install --help' for
      *     available options.

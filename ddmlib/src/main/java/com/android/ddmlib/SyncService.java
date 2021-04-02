@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ddmlib;
 
 import com.android.annotations.NonNull;
@@ -37,7 +36,7 @@ import java.util.Date;
  *
  * <p>To get a {@link SyncService} object, use {@link IDevice#getSyncService()}.
  */
-public class SyncService {
+public class SyncService implements AutoCloseable {
 
     private static final byte[] ID_OKAY = { 'O', 'K', 'A', 'Y' };
     private static final byte[] ID_FAIL = { 'F', 'A', 'I', 'L' };
@@ -351,22 +350,42 @@ public class SyncService {
     }
 
     /**
-     * Push several files.
-     * @param local An array of loca files to push
-     * @param remote the remote {@link FileEntry} representing a directory.
-     * @param monitor The progress monitor. Cannot be null.
-     * @throws SyncException if file could not be pushed
-     * @throws IOException in case of I/O error on the connection.
-     * @throws TimeoutException in case of a timeout reading responses from the device.
+     * Pushes several files or directories.
+     *
+     * @param local the local files to push
+     * @param remote the remote {@link FileEntry} representing a directory
+     * @param monitor The progress monitor
+     * @throws SyncException if some files could not be pushed
+     * @throws IOException in case of I/O error on the connection
+     * @throws TimeoutException in case of a timeout reading responses from the device
      */
-    public void push(String[] local, FileEntry remote, ISyncProgressMonitor monitor)
+    public void push(
+            @NonNull String[] local,
+            @NonNull FileEntry remote,
+            @NonNull ISyncProgressMonitor monitor)
             throws SyncException, IOException, TimeoutException {
         if (!remote.isDirectory()) {
             throw new SyncException(SyncError.REMOTE_IS_FILE);
         }
 
-        // make a list of File from the list of String
-        ArrayList<File> files = new ArrayList<File>();
+        push(local, remote.getFullPath(), monitor);
+    }
+
+    /**
+     * Pushes several files or directories.
+     *
+     * @param local the local files to push
+     * @param remote the remote path representing a directory
+     * @param monitor The progress monitor
+     * @throws SyncException if some files could not be pushed
+     * @throws IOException in case of I/O error on the connection
+     * @throws TimeoutException in case of a timeout reading responses from the device
+     */
+    public void push(
+            @NonNull String[] local, @NonNull String remote, @NonNull ISyncProgressMonitor monitor)
+            throws SyncException, IOException, TimeoutException {
+        // Make a list of File from the list of String
+        ArrayList<File> files = new ArrayList<>();
         for (String path : local) {
             files.add(new File(path));
         }
@@ -377,7 +396,7 @@ public class SyncService {
 
         monitor.start(total);
 
-        doPush(fileArray, remote.getFullPath(), monitor);
+        doPush(fileArray, remote, monitor);
 
         monitor.stop();
     }
