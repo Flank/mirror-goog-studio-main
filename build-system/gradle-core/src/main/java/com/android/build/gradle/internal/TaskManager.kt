@@ -106,6 +106,7 @@ import com.android.build.gradle.internal.tasks.D8BundleMainDexListTask
 import com.android.build.gradle.internal.tasks.DependencyReportTask
 import com.android.build.gradle.internal.tasks.DesugarLibKeepRulesMergeTask
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask
+import com.android.build.gradle.internal.tasks.DeviceSerialTestTask
 import com.android.build.gradle.internal.tasks.DexArchiveBuilderTask
 import com.android.build.gradle.internal.tasks.DexFileDependenciesTask
 import com.android.build.gradle.internal.tasks.DexMergingAction
@@ -1803,9 +1804,13 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                     if (isLibrary) null else testedApkFileCollection)
         }
         configureTestData(androidTestProperties, testData)
+        val connectedCheckSerials: Provider<List<String>> =
+            taskFactory.named(CONNECTED_CHECK).flatMap { test ->
+                (test as DeviceSerialTestTask).serialValues
+            }
         val connectedTask = taskFactory.register(
                 DeviceProviderInstrumentTestTask.CreationAction(
-                        androidTestProperties, testData))
+                        androidTestProperties, testData, connectedCheckSerials))
         taskFactory.configure(
                 CONNECTED_ANDROID_TEST
         ) { connectedAndroidTest: Task -> connectedAndroidTest.dependsOn(connectedTask) }
@@ -1826,7 +1831,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         for (deviceProvider in providers) {
             val providerTask = taskFactory.register(
                     DeviceProviderInstrumentTestTask.CreationAction(
-                            androidTestProperties, deviceProvider, testData))
+                            androidTestProperties, deviceProvider, testData, connectedCheckSerials))
             taskFactory.configure(
                     DEVICE_ANDROID_TEST
             ) { deviceAndroidTest: Task -> deviceAndroidTest.dependsOn(providerTask) }
@@ -3121,8 +3126,9 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                 deviceCheckTask.group = JavaBasePlugin.VERIFICATION_GROUP
             }
             taskFactory.register(
-                    CONNECTED_CHECK
-            ) { connectedCheckTask: Task ->
+                    CONNECTED_CHECK,
+                    DeviceSerialTestTask::class.java
+            ) { connectedCheckTask: DeviceSerialTestTask ->
                 connectedCheckTask.description =
                         "Runs all device checks on currently connected devices."
                 connectedCheckTask.group = JavaBasePlugin.VERIFICATION_GROUP

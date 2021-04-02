@@ -60,7 +60,10 @@ public abstract class UninstallTask extends NonIncrementalTask {
         final ILogger iLogger = new LoggerWrapper(getLogger());
         final DeviceProvider deviceProvider =
                 new ConnectedDeviceProvider(
-                        getBuildToolsExecutableInput().adbExecutable(), getTimeOutInMs(), iLogger);
+                        getBuildToolsExecutableInput().adbExecutable(),
+                        getTimeOutInMs(),
+                        iLogger,
+                        System.getenv("ANDROID_SERIAL"));
 
         deviceProvider.use(
                 () -> {

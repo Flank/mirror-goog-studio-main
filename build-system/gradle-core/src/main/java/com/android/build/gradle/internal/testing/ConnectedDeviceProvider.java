@@ -64,6 +64,8 @@ public class ConnectedDeviceProvider extends DeviceProvider {
     @NonNull
     private final ILogger iLogger;
 
+    @Nullable private final String androidSerialsEnv;
+
     @NonNull
     private final List<ConnectedDevice> localDevices = Lists.newArrayList();
 
@@ -71,15 +73,19 @@ public class ConnectedDeviceProvider extends DeviceProvider {
 
     /** @param timeOutInMs The time out for each adb command, where 0 means wait forever. */
     public ConnectedDeviceProvider(
-            @NonNull File adbLocation, int timeOutInMs, @NonNull ILogger logger) {
-        this(Suppliers.ofInstance(adbLocation), timeOutInMs, logger);
+            @NonNull File adbLocation,
+            int timeOutInMs,
+            @NonNull ILogger logger,
+            @Nullable String androidSerialsEnv) {
+        this(Suppliers.ofInstance(adbLocation), timeOutInMs, logger, androidSerialsEnv);
     }
 
     public ConnectedDeviceProvider(
             @NonNull Provider<RegularFile> adbLocationProvider,
             int timeOutInMs,
-            @NonNull ILogger logger) {
-        this(() -> adbLocationProvider.get().getAsFile(), timeOutInMs, logger);
+            @NonNull ILogger logger,
+            @Nullable String androidSerialsEnv) {
+        this(() -> adbLocationProvider.get().getAsFile(), timeOutInMs, logger, androidSerialsEnv);
     }
 
     /**
@@ -89,11 +95,15 @@ public class ConnectedDeviceProvider extends DeviceProvider {
      * @param timeOutInMs The time out for each adb command, where 0 means wait forever.
      */
     public ConnectedDeviceProvider(
-            @NonNull Supplier<File> adbLocationSupplier, int timeOutInMs, @NonNull ILogger logger) {
+            @NonNull Supplier<File> adbLocationSupplier,
+            int timeOutInMs,
+            @NonNull ILogger logger,
+            @Nullable String androidSerialsEnv) {
         this.adbLocationSupplier = adbLocationSupplier;
         this.timeOut = timeOutInMs;
         timeOutUnit = TimeUnit.MILLISECONDS;
         iLogger = logger;
+        this.androidSerialsEnv = androidSerialsEnv;
     }
 
     @Override
@@ -166,7 +176,6 @@ public class ConnectedDeviceProvider extends DeviceProvider {
                 throw new DeviceException("No connected devices!");
             }
 
-            final String androidSerialsEnv = System.getenv("ANDROID_SERIAL");
             final boolean isValidSerial = androidSerialsEnv != null && !androidSerialsEnv.isEmpty();
 
             final Set<String> serials;

@@ -165,7 +165,8 @@ abstract class InstallVariantViaBundleTask : NonIncrementalTask() {
             ConnectedDeviceProvider(
                 parameters.adbExe.get().asFile,
                 parameters.timeOutInMs.get(),
-                iLogger
+                iLogger,
+                java.lang.System.getenv("ANDROID_SERIAL")
             )
 
         @VisibleForTesting
