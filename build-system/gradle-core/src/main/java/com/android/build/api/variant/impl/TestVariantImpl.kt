@@ -16,6 +16,7 @@
 
 package com.android.build.api.variant.impl
 
+import com.android.build.api.artifact.MultipleArtifact
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.Component
 import com.android.build.api.component.analytics.AnalyticsEnabledTestVariant
@@ -24,7 +25,6 @@ import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.AndroidResources
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.ApkPackaging
-import com.android.build.api.variant.Dexing
 import com.android.build.api.variant.Renderscript
 import com.android.build.api.variant.TestVariant
 import com.android.build.api.variant.Variant
@@ -83,6 +83,14 @@ open class TestVariantImpl @Inject constructor(
     globalScope
 ), TestVariant, TestVariantCreationConfig {
 
+    init {
+        variantDslInfo.multiDexKeepProguard?.let {
+            artifacts.getArtifactContainer(MultipleArtifact.MULTIDEX_KEEP_PROGUARD)
+                    .addInitialProvider(
+                            taskCreationServices.regularFile(internalServices.provider { it })
+                    )
+        }
+    }
     private val delegate by lazy { TestVariantCreationConfigImpl(
         this,
         internalServices.projectOptions,
@@ -126,13 +134,6 @@ open class TestVariantImpl @Inject constructor(
             internalServices,
             minSdkVersion.apiLevel
         )
-    }
-
-    override val dexing: Dexing by lazy {
-        internalServices.newInstance(Dexing::class.java).also {
-            it.multiDexKeepFile.set(variantDslInfo.multiDexKeepFile)
-            it.multiDexKeepProguard.set(variantDslInfo.multiDexKeepProguard)
-        }
     }
 
     override val renderscript: Renderscript? by lazy {
@@ -183,11 +184,16 @@ open class TestVariantImpl @Inject constructor(
         }
     }
 
-    /**
-     * DO NOT USE, only present for old variant API.
-     */
+    // ---------------------------------------------------------------------------------------------
+    // DO NOT USE, only present for old variant API.
+    // ---------------------------------------------------------------------------------------------
     override val dslSigningConfig: com.android.build.gradle.internal.dsl.SigningConfig? =
         variantDslInfo.signingConfig
+
+    // ---------------------------------------------------------------------------------------------
+    // DO NOT USE, Deprecated DSL APIs.
+    // ---------------------------------------------------------------------------------------------
+    override val multiDexKeepFile = variantDslInfo.multiDexKeepFile
 
     // ---------------------------------------------------------------------------------------------
     // Private stuff

@@ -20,7 +20,6 @@ import com.android.build.api.component.AndroidTest
 import com.android.build.api.variant.AndroidResources
 import com.android.build.api.variant.ApkComponent
 import com.android.build.api.variant.ApkPackaging
-import com.android.build.api.variant.Dexing
 import com.android.build.api.variant.DynamicFeatureVariant
 import com.android.build.api.variant.Renderscript
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
@@ -49,21 +48,6 @@ open class AnalyticsEnabledDynamicFeatureVariant @Inject constructor(
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
                 VariantPropertiesMethodType.ANDROID_TEST_VALUE
             return userVisibleAndroidTest
-        }
-
-    private val userVisibleDexing: Dexing by lazy {
-        objectFactory.newInstance(
-            AnalyticsEnabledDexing::class.java,
-            delegate.dexing,
-            stats
-        )
-    }
-
-    override val dexing: Dexing
-        get() {
-            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-                VariantPropertiesMethodType.DEXING_VALUE
-            return userVisibleDexing
         }
 
     private val apkComponent: ApkComponent by lazy {

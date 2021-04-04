@@ -34,10 +34,4 @@ interface DynamicFeatureVariant : Variant, ApkComponent {
      * variant.
      */
     val androidTest: AndroidTest?
-
-    /**
-     * Variant settings related to transforming bytecodes into dex files initialized from
-     * the corresponding fields in the DSL.
-     */
-    val dexing: Dexing
 }

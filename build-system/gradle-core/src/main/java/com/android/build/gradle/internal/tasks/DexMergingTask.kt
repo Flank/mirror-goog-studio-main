@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
+import com.android.build.api.artifact.MultipleArtifact
 import com.android.build.api.transform.QualifiedContent
 import com.android.build.api.transform.TransformException
 import com.android.build.api.variant.impl.getFeatureLevel
@@ -59,6 +60,7 @@ import org.gradle.api.attributes.LibraryElements
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logging
 import org.gradle.api.provider.ListProperty
@@ -136,9 +138,9 @@ abstract class DexMergingTask : NewIncrementalTask() {
             abstract val aaptGeneratedRules: RegularFileProperty
 
             @get:Optional
-            @get:InputFile
+            @get:InputFiles
             @get:PathSensitive(PathSensitivity.NONE)
-            abstract val userMultidexProguardRules: RegularFileProperty
+            abstract val userMultidexProguardRules: ListProperty<RegularFile>
 
             @get:Optional
             @get:Input
@@ -147,7 +149,7 @@ abstract class DexMergingTask : NewIncrementalTask() {
             @get:Optional
             @get:InputFile
             @get:PathSensitive(PathSensitivity.NONE)
-            abstract val userMultidexKeepFile: RegularFileProperty
+            abstract val userMultidexKeepFile: Property<File>
 
             @get:Optional
             @get:Classpath
@@ -280,12 +282,12 @@ abstract class DexMergingTask : NewIncrementalTask() {
                 )
 
                 task.sharedParams.mainDexListConfig.userMultidexProguardRules.setDisallowChanges(
-                    creationConfig.dexing.multiDexKeepProguard
+                    creationConfig.artifacts.getAll(MultipleArtifact.MULTIDEX_KEEP_PROGUARD)
                 )
 
-                task.sharedParams.mainDexListConfig.userMultidexKeepFile.setDisallowChanges(
-                    creationConfig.dexing.multiDexKeepFile
-                )
+                creationConfig.multiDexKeepFile?.let {
+                    task.sharedParams.mainDexListConfig.userMultidexKeepFile.setDisallowChanges(it)
+                }
 
                 task.sharedParams.mainDexListConfig.platformMultidexProguardRules
                     .setDisallowChanges(getPlatformRules())
@@ -853,15 +855,17 @@ abstract class DexMergingWorkAction : ProfileAwareWorkAction<DexMergingWorkActio
             sharedParams.mainDexListConfig.aaptGeneratedRules.asFile.orNull?.let {
                 proguardRules.add(it.toPath())
             }
-            sharedParams.mainDexListConfig.userMultidexProguardRules.asFile.orNull?.let {
-                proguardRules.add(it.toPath())
-            }
+            sharedParams.mainDexListConfig.userMultidexProguardRules.get()
+                    .asSequence()
+                    .map(RegularFile::getAsFile)
+                    .map(File::toPath)
+                    .forEach { proguardRules.add(it) }
             merger.mergeDexArchives(
                 dexArchiveEntries,
                 outputDir.toPath(),
                 proguardRules,
                 sharedParams.mainDexListConfig.platformMultidexProguardRules.orNull,
-                sharedParams.mainDexListConfig.userMultidexKeepFile.asFile.orNull?.toPath(),
+                sharedParams.mainDexListConfig.userMultidexKeepFile.orNull?.toPath(),
                 sharedParams.mainDexListConfig.libraryClasses.map { it.toPath() },
                 mainDexListOutput
             )

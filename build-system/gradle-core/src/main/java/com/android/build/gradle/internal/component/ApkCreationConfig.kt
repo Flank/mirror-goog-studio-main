@@ -18,9 +18,9 @@ package com.android.build.gradle.internal.component
 
 import com.android.build.api.variant.AndroidResources
 import com.android.build.api.variant.ApkPackaging
-import com.android.build.api.variant.Dexing
 import com.android.build.api.variant.impl.SigningConfigImpl
 import org.gradle.api.provider.MapProperty
+import java.io.File
 
 /**
  * Interface for properties common to all variant generating APKs
@@ -60,5 +60,5 @@ interface ApkCreationConfig: ConsumableCreationConfig {
      */
     val dslSigningConfig: com.android.build.gradle.internal.dsl.SigningConfig?
 
-    val dexing: Dexing
+    val multiDexKeepFile: File?
 }

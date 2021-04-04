@@ -20,7 +20,6 @@ import com.android.build.api.component.UnitTest
 import com.android.build.api.variant.AndroidResources
 import com.android.build.api.variant.ApkComponent
 import com.android.build.api.variant.ApkPackaging
-import com.android.build.api.variant.Dexing
 import com.android.build.api.variant.Renderscript
 import com.android.build.api.variant.TestVariant
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
@@ -79,21 +78,6 @@ class AnalyticsEnabledTestVariant @Inject constructor(
         }
 
     override val unitTest: UnitTest? = null
-
-    private val userVisibleDexing: Dexing by lazy {
-        objectFactory.newInstance(
-            Dexing::class.java,
-            delegate.dexing,
-            stats
-        )
-    }
-
-    override val dexing: Dexing
-        get() {
-            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-                VariantPropertiesMethodType.DEXING_VALUE
-            return userVisibleDexing
-        }
 
     private val apkComponent: ApkComponent by lazy {
         AnalyticsEnabledApkComponent(

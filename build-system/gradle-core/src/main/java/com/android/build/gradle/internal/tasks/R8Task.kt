@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.api.artifact.MultipleArtifact
 import com.android.build.api.transform.Format
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.PostprocessingFeatures
@@ -89,7 +90,7 @@ abstract class R8Task @Inject constructor(
     @get:InputFile
     @get:PathSensitive(PathSensitivity.NONE)
     @get:Optional
-    abstract val multiDexKeepFile: RegularFileProperty
+    abstract val multiDexKeepFile: Property<File>
 
     @get:InputFile
     @get:PathSensitive(PathSensitivity.NONE)
@@ -326,8 +327,8 @@ abstract class R8Task @Inject constructor(
                 // options applicable only when building APKs, do not apply with AARs
                 task.duplicateClassesCheck.from(artifacts.get(DUPLICATE_CLASSES_CHECK))
 
-                task.multiDexKeepProguard.setDisallowChanges(
-                    (creationConfig as ApkCreationConfig).dexing.multiDexKeepProguard
+                task.mainDexRulesFiles.from(
+                        artifacts.getAll(MultipleArtifact.MULTIDEX_KEEP_PROGUARD)
                 )
 
                 if (creationConfig.dexingType.needsMainDexList
@@ -339,8 +340,9 @@ abstract class R8Task @Inject constructor(
                         )
                     )
                 }
-
-                task.multiDexKeepFile.setDisallowChanges(creationConfig.dexing.multiDexKeepFile)
+                if (creationConfig is ApkCreationConfig) {
+                    task.multiDexKeepFile.setDisallowChanges(creationConfig.multiDexKeepFile)
+                }
 
                 if (creationConfig.variantScope.consumesFeatureJars()) {
                     creationConfig.artifacts.setTaskInputToFinalProduct(
@@ -447,7 +449,7 @@ abstract class R8Task @Inject constructor(
             disableMinification = disableMinification.get(),
             mainDexListFiles = mutableListOf<File>().also {
                 if (multiDexKeepFile.isPresent) {
-                    it.add(multiDexKeepFile.get().asFile)
+                    it.add(multiDexKeepFile.get())
                 }
             },
             mainDexRulesFiles = mutableListOf<File>().also {

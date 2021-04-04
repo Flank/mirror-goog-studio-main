@@ -51,10 +51,4 @@ interface ApplicationVariant : ApkComponent, Variant {
      * @return Variant's config or null if the variant is not configured for signing.
      */
     val signingConfig: SigningConfig?
-
-    /**
-     * Variant settings related to transforming bytecodes into dex files initialized from
-     * the corresponding fields in the DSL.
-     */
-    val dexing: Dexing
 }

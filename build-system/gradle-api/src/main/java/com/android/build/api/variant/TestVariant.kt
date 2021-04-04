@@ -33,10 +33,4 @@ interface TestVariant: TestApkComponent, Variant {
      * The application of the app under tests.
      */
     val testedApplicationId: Provider<String>
-
-    /**
-     * Variant settings related to transforming bytecodes into dex files initialized from
-     * the corresponding fields in the DSL.
-     */
-    val dexing: Dexing
 }

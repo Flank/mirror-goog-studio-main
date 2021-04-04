@@ -22,7 +22,6 @@ import com.android.build.api.variant.ApkComponent
 import com.android.build.api.variant.ApkPackaging
 import com.android.build.api.variant.ApplicationVariant
 import com.android.build.api.variant.DependenciesInfo
-import com.android.build.api.variant.Dexing
 import com.android.build.api.variant.Renderscript
 import com.android.build.api.variant.SigningConfig
 import com.android.build.api.variant.VariantOutput
@@ -67,14 +66,6 @@ open class AnalyticsEnabledApplicationVariant @Inject constructor(
             return delegate.signingConfig
         }
 
-    private val userVisibleDexing: Dexing by lazy {
-        objectFactory.newInstance(
-            AnalyticsEnabledDexing::class.java,
-            delegate.dexing,
-            stats
-        )
-    }
-
     private val userVisibleAndroidTest: AndroidTest? by lazy {
         delegate.androidTest?.let {
             objectFactory.newInstance(
@@ -90,13 +81,6 @@ open class AnalyticsEnabledApplicationVariant @Inject constructor(
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
                 VariantPropertiesMethodType.ANDROID_TEST_VALUE
             return userVisibleAndroidTest
-        }
-
-    override val dexing: Dexing
-        get() {
-            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-                VariantPropertiesMethodType.DEXING_VALUE
-            return userVisibleDexing
         }
 
     private val apkComponent: ApkComponent by lazy {

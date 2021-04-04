@@ -157,8 +157,8 @@ class D8BundleMainDexListTaskTest {
                 override val bootClasspath: ConfigurableFileCollection
                     get() = FakeConfigurableFileCollection(
                         TestUtils.resolvePlatformPath("android.jar").toFile())
-                override val userMultidexKeepFile: RegularFileProperty
-                    get() = FakeObjectFactory.factory.fileProperty().fileValue(userMultidexKeepFile)
+                override val userMultidexKeepFile: Property<File>
+                    get() = FakeGradleProperty(userMultidexKeepFile)
                 override val output: RegularFileProperty
                     get() = FakeObjectFactory.factory.fileProperty().fileValue(output)
                 override val errorFormat: Property<SyncOptions.ErrorFormatMode>

@@ -16,6 +16,7 @@
 
 package com.android.build.api.component.impl
 
+import com.android.build.api.artifact.MultipleArtifact
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.AndroidTest
 import com.android.build.api.component.Component
@@ -82,6 +83,15 @@ open class AndroidTestImpl @Inject constructor(
     globalScope
 ), AndroidTest, AndroidTestCreationConfig {
 
+    init {
+        variantDslInfo.multiDexKeepProguard?.let {
+            artifacts.getArtifactContainer(MultipleArtifact.MULTIDEX_KEEP_PROGUARD)
+                    .addInitialProvider(
+                            taskCreationServices.regularFile(internalServices.provider { it })
+                    )
+        }
+    }
+
     private val delegate by lazy { AndroidTestCreationConfigImpl(
         this,
         internalServices.projectOptions,
@@ -130,13 +140,6 @@ open class AndroidTestImpl @Inject constructor(
             variantPropertiesApiServices,
             minSdkVersion.apiLevel
         )
-    }
-
-    override val dexing: Dexing by lazy {
-        internalServices.newInstance(Dexing::class.java).also {
-            it.multiDexKeepFile.set(variantDslInfo.multiDexKeepFile)
-            it.multiDexKeepProguard.set(variantDslInfo.multiDexKeepProguard)
-        }
     }
 
     override val minifiedEnabled: Boolean
@@ -288,5 +291,11 @@ open class AndroidTestImpl @Inject constructor(
 
     override val dslSigningConfig: com.android.build.gradle.internal.dsl.SigningConfig? =
         variantDslInfo.signingConfig
+
+    // ---------------------------------------------------------------------------------------------
+    // DO NOT USE, Deprecated DSL APIs.
+    // ---------------------------------------------------------------------------------------------
+
+    override val multiDexKeepFile = variantDslInfo.multiDexKeepFile
 }
 

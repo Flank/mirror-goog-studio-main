@@ -19,7 +19,6 @@ package com.android.build.api.component.analytics
 import com.android.build.api.component.AndroidTest
 import com.android.build.api.variant.AndroidResources
 import com.android.build.api.variant.ApkPackaging
-import com.android.build.api.variant.Dexing
 import com.android.build.api.variant.DynamicFeatureVariant
 import com.android.build.api.variant.JniLibsApkPackaging
 import com.android.build.api.variant.Renderscript
@@ -126,32 +125,5 @@ class AnalyticsEnabledDynamicFeatureVariantTest {
             )
         )
         Mockito.verify(delegate, Mockito.times(1)).androidTest
-    }
-
-    @Test
-    fun getDexingConfig() {
-        val dexing = Mockito.mock(Dexing::class.java)
-        val multiDexKeepFile = Mockito.mock(RegularFileProperty::class.java)
-        Mockito.`when`(dexing.multiDexKeepFile).thenReturn(multiDexKeepFile)
-        val multiDexKeepProguard = Mockito.mock(RegularFileProperty::class.java)
-        Mockito.`when`(dexing.multiDexKeepProguard).thenReturn(multiDexKeepProguard)
-        Mockito.`when`(delegate.dexing).thenReturn(dexing)
-
-        proxy.dexing.let {
-            Truth.assertThat(it.multiDexKeepFile).isEqualTo(multiDexKeepFile)
-            Truth.assertThat(it.multiDexKeepProguard).isEqualTo(multiDexKeepProguard)
-        }
-
-        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(3)
-        Truth.assertThat(
-            stats.variantApiAccess.variantPropertiesAccessList.map { it.type }
-        ).containsExactlyElementsIn(
-            listOf(
-                VariantPropertiesMethodType.DEXING_VALUE,
-                VariantPropertiesMethodType.MULTI_DEX_KEEP_FILE_VALUE,
-                VariantPropertiesMethodType.MULTI_DEX_KEEP_PROGUARD_VALUE,
-            )
-        )
-        Mockito.verify(delegate, Mockito.times(1)).dexing
     }
 }

@@ -20,6 +20,7 @@ import com.android.build.gradle.internal.fixtures.FakeConfigurableFileCollection
 import com.android.build.gradle.internal.fixtures.FakeFileChange
 import com.android.build.gradle.internal.fixtures.FakeFileCollection
 import com.android.build.gradle.internal.fixtures.FakeGradleProperty
+import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.fixtures.FakeGradleWorkExecutor
 import com.android.build.gradle.internal.fixtures.FakeInputChanges
 import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
@@ -38,6 +39,7 @@ import com.android.testutils.TestUtils
 import com.android.testutils.truth.DexSubject.assertThatDex
 import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth.assertThat
+import org.gradle.api.file.RegularFile
 import org.gradle.testfixtures.ProjectBuilder
 import org.gradle.work.ChangeType
 import org.gradle.work.InputChanges
@@ -353,13 +355,16 @@ class DexMergingTaskTest {
                                     override val mainDexListConfig: MainDexListConfig
                                         get() = object : MainDexListConfig() {
                                             override val userMultidexKeepFile =
-                                                    FakeObjectFactory.factory.fileProperty()
-                                                        .fileValue(userMultidexKeepFile)
+                                                    FakeGradleProperty(userMultidexKeepFile)
                                             override val aaptGeneratedRules =
                                                     FakeObjectFactory.factory.fileProperty()
                                             override val userMultidexProguardRules =
-                                                    FakeObjectFactory.factory.fileProperty()
-                                                        .fileValue(multidexProguardRulesFile)
+                                                    FakeObjectFactory.factory.listProperty(RegularFile::class.java).also { listProperty ->
+                                                        multidexProguardRulesFile?.let { file ->
+                                                            listProperty.add(FakeObjectFactory.factory.fileProperty()
+                                                                    .fileValue(file))
+                                                        }
+                                                    }
                                             override val libraryClasses =
                                                     FakeConfigurableFileCollection(libraryClasses)
                                             override val platformMultidexProguardRules =
