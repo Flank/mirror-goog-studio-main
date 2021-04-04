@@ -138,11 +138,11 @@ abstract class AnalyticsEnabledVariant (
         return delegate.getExtension(type)
     }
 
-    override val isPseudoLocalesEnabled: Property<Boolean>
+    override val pseudoLocalesEnabled: Property<Boolean>
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
                     VariantPropertiesMethodType.VARIANT_PSEUDOLOCALES_ENABLED_VALUE
-            return delegate.isPseudoLocalesEnabled
+            return delegate.pseudoLocalesEnabled
         }
 
     override val proguardFiles: ListProperty<RegularFile>

@@ -89,8 +89,8 @@ open class TestFixturesImpl @Inject constructor(
         get() = mainVariant.minSdkVersion
     override val needsMainDexListForBundle: Boolean
         get() = mainVariant.needsMainDexListForBundle
-    override val isPseudoLocalesEnabled: Property<Boolean>
-        get() = mainVariant.isPseudoLocalesEnabled
+    override val pseudoLocalesEnabled: Property<Boolean>
+        get() = mainVariant.pseudoLocalesEnabled
 
     override val aarMetadata: AarMetadata =
             internalServices.newInstance(AarMetadata::class.java).also {

@@ -968,6 +968,10 @@ com.android.build.api.variant.ResValue.<init>: com.android.build.api.variant.Res
 com.android.build.api.variant.ResValue.<init>: com.android.build.api.variant.ResValue (java.lang.String, java.lang.String, int, kotlin.jvm.internal.DefaultConstructorMarker)
 com.android.build.api.variant.ResValue.getComment: java.lang.String ()
 com.android.build.api.variant.ResValue.getValue: java.lang.String ()
+com.android.build.api.variant.Resource
+com.android.build.api.variant.Resource.getPseudoLocalesEnabled: org.gradle.api.provider.Property<java.lang.Boolean> ()
+com.android.build.api.variant.Resource.getResValues: org.gradle.api.provider.MapProperty<com.android.build.api.variant.ResValue$Key, com.android.build.api.variant.ResValue> ()
+com.android.build.api.variant.Resource.makeResValueKey: com.android.build.api.variant.ResValue$Key (java.lang.String, java.lang.String)
 com.android.build.api.variant.ResourcesPackaging
 com.android.build.api.variant.ResourcesPackaging.getExcludes: org.gradle.api.provider.SetProperty<java.lang.String> ()
 com.android.build.api.variant.ResourcesPackaging.getMerges: org.gradle.api.provider.SetProperty<java.lang.String> ()
@@ -986,7 +990,7 @@ com.android.build.api.variant.TestVariant implements com.android.build.api.varia
 com.android.build.api.variant.TestVariant.getApplicationId: org.gradle.api.provider.Property<java.lang.String> ()
 com.android.build.api.variant.TestVariant.getTestedApplicationId: org.gradle.api.provider.Provider<java.lang.String> ()
 com.android.build.api.variant.TestVariantBuilder implements com.android.build.api.variant.VariantBuilder
-com.android.build.api.variant.Variant implements com.android.build.api.component.Component
+com.android.build.api.variant.Variant implements com.android.build.api.component.Component, com.android.build.api.variant.Resource
 com.android.build.api.variant.Variant.getApplicationId: org.gradle.api.provider.Provider<java.lang.String> ()
 com.android.build.api.variant.Variant.getBuildConfigFields: org.gradle.api.provider.MapProperty<java.lang.String, com.android.build.api.variant.BuildConfigField<? extends java.io.Serializable>> ()
 com.android.build.api.variant.Variant.getExtension: T (java.lang.Class<T>)
@@ -998,11 +1002,8 @@ com.android.build.api.variant.Variant.getMinSdkVersion: com.android.build.api.va
 com.android.build.api.variant.Variant.getNamespace: org.gradle.api.provider.Provider<java.lang.String> ()
 com.android.build.api.variant.Variant.getPackaging: com.android.build.api.variant.Packaging ()
 com.android.build.api.variant.Variant.getProguardFiles: org.gradle.api.provider.ListProperty<org.gradle.api.file.RegularFile> ()
-com.android.build.api.variant.Variant.getResValues: org.gradle.api.provider.MapProperty<com.android.build.api.variant.ResValue$Key, com.android.build.api.variant.ResValue> ()
 com.android.build.api.variant.Variant.getTargetSdkVersion: com.android.build.api.variant.AndroidVersion ()
 com.android.build.api.variant.Variant.getUnitTest: com.android.build.api.component.UnitTest ()
-com.android.build.api.variant.Variant.isPseudoLocalesEnabled: org.gradle.api.provider.Property<java.lang.Boolean> ()
-com.android.build.api.variant.Variant.makeResValueKey: com.android.build.api.variant.ResValue$Key (java.lang.String, java.lang.String)
 com.android.build.api.variant.VariantBuilder implements com.android.build.api.component.ComponentBuilder
 com.android.build.api.variant.VariantBuilder.getEnableUnitTest: boolean ()
 com.android.build.api.variant.VariantBuilder.getMaxSdk: java.lang.Integer ()

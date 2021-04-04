@@ -950,7 +950,7 @@ public abstract class MergeResources extends IncrementalTask {
 
             task.mergedNotCompiledResourcesOutputDirectory = mergedNotCompiledOutputDirectory;
 
-            task.getPseudoLocalesEnabled().set(creationConfig.isPseudoLocalesEnabled());
+            task.getPseudoLocalesEnabled().set(creationConfig.getPseudoLocalesEnabled());
             task.getPseudoLocalesEnabled().disallowChanges();
             task.flags = flags;
 

@@ -29,7 +29,7 @@ import java.io.Serializable
  * Parent interface for all types of variants.
  */
 @Incubating
-interface Variant : Component {
+interface Variant : Component, Resource {
 
     /**
      * Gets the minimum supported SDK Version for this variant.
@@ -67,16 +67,6 @@ interface Variant : Component {
      * Variant's [BuildConfigField] which will be generated in the BuildConfig class.
      */
     val buildConfigFields: MapProperty<String, BuildConfigField<out Serializable>>
-
-    /**
-     * Make a [ResValue.Key] to interact with [resValues]'s [MapProperty]
-     */
-    fun makeResValueKey(type: String, name: String): ResValue.Key
-
-    /**
-     * Variant's [ResValue] which will be generated.
-     */
-    val resValues: MapProperty<ResValue.Key, ResValue>
 
     /**
      * [MapProperty] of the variant's manifest placeholders.
@@ -117,11 +107,6 @@ interface Variant : Component {
      * @return the registered object or null.
      */
     fun <T> getExtension(type: Class<T>): T?
-
-    /**
-     * Variant's is pseudo locales enabled, initialized by the corresponding DSL elements.
-     */
-    val isPseudoLocalesEnabled: Property<Boolean>
 
     /**
      * List of proguard configuration files for this variant. The list is initialized from the

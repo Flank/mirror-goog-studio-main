@@ -96,6 +96,19 @@ open class AnalyticsEnabledAndroidTest @Inject constructor(
             return delegate.resValues
         }
 
+    override fun makeResValueKey(type: String, name: String): ResValue.Key {
+        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.MAKE_RES_VALUE_KEY_VALUE
+        return delegate.makeResValueKey(type, name)
+    }
+
+    override val pseudoLocalesEnabled: Property<Boolean>
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                    VariantPropertiesMethodType.VARIANT_PSEUDOLOCALES_ENABLED_VALUE
+            return delegate.pseudoLocalesEnabled
+        }
+
     override val manifestPlaceholders: MapProperty<String, String>
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =

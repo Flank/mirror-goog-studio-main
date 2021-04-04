@@ -196,6 +196,17 @@ open class AndroidTestImpl @Inject constructor(
             }
     }
 
+    override fun makeResValueKey(type: String, name: String): ResValue.Key =
+            ResValueKeyImpl(type, name)
+
+    override val resValues: MapProperty<ResValue.Key, ResValue> by lazy {
+        internalServices.mapPropertyOf(
+                ResValue.Key::class.java,
+                ResValue::class.java,
+                variantDslInfo.getResValues()
+        )
+    }
+
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------
@@ -222,14 +233,6 @@ open class AndroidTestImpl @Inject constructor(
 
     override val isTestCoverageEnabled: Boolean
         get() = variantDslInfo.isTestCoverageEnabled
-
-    override val resValues: MapProperty<ResValue.Key, ResValue> by lazy {
-        internalServices.mapPropertyOf(
-            ResValue.Key::class.java,
-            ResValue::class.java,
-            variantDslInfo.getResValues()
-        )
-    }
 
     override val renderscriptTargetApi: Int
         get() = testedVariant.variantBuilder.renderscriptTargetApi
