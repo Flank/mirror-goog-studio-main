@@ -57,6 +57,16 @@ def coverage_baseline(name, srcs, jar = None, tags = None):
         visibility = ["@baseline//:__pkg__"],
     )
 
+    native.genrule(
+        name = name + "_coverage.baseline.exempt_markers",
+        srcs = srcs,
+        outs = [name + ".coverage.baseline.exempt_markers"],
+        tags = tags + ["coverage-exempt"],
+        # grep has an exit code of 1 if no results are found so use `true` to avoid failure
+        cmd = "grep -rn '//[[:blank:]]*@coverage:' $(SRCS) >$@ || true",
+        visibility = ["@baseline//:__pkg__"],
+    )
+
 def coverage_java_library(name, srcs = [], tags = [], **kwargs):
     native.java_library(
         name = name,

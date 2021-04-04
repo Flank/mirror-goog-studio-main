@@ -41,6 +41,15 @@ py_library(
 # using py_binary as a tool in a genrule doesn't work
 # See https://github.com/bazelbuild/bazel/issues/1192.
 py_library(
+    name = "drop_exempt",
+    srcs = ["drop_exempt.py"],
+    visibility = ["//visibility:public"],
+)
+
+# This should be a py_binary, but due to a Bazel bug
+# using py_binary as a tool in a genrule doesn't work
+# See https://github.com/bazelbuild/bazel/issues/1192.
+py_library(
     name = "filter_lcov",
     srcs = ["filter_lcov.py"],
 )

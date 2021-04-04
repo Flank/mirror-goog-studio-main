@@ -44,3 +44,13 @@ def construct_baseline_processing_graph():
         allow_duplicates = True,
         visibility = ["@cov//:__pkg__", "@results//:__pkg__"],
     )
+
+    native.genrule(
+        name = "merged-baseline-exempt_markers",
+        # turn `package:target`
+        # into `@//package:target_coverage.baseline.exempt_markers`
+        srcs = ["@//{}_coverage.baseline.exempt_markers".format(pt) for pt in pts],
+        outs = ["merged-exempt_markers.txt"],
+        cmd = "cat $(SRCS) >$@",
+        visibility = ["@cov//:__pkg__"],
+    )

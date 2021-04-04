@@ -68,11 +68,25 @@ def coverage_report(name, tests, srcpath_include = [], srcpath_exclude = []):
     spi = " ".join(srcpath_include)
     spe = " ".join(["-" + x for x in srcpath_exclude])
     native.genrule(
-        name = "{}.lcov".format(name),
+        name = "{}.lcov.unexempted".format(name),
         srcs = ["{}.lcov.unfiltered".format(name)],
-        outs = ["{}/lcov".format(name)],
+        outs = ["{}/lcov.unexempted".format(name)],
         tools = [":filter_lcov"],
         cmd = "python3 $(location :filter_lcov) <$< >$@ {} {}".format(spi, spe),
+    )
+
+    native.genrule(
+        name = "{}.lcov".format(name),
+        srcs = [
+            "{}.lcov.unexempted".format(name),
+            "@baseline//:merged-baseline-exempt_markers",
+        ],
+        outs = ["{}/lcov".format(name)],
+        tools = [":drop_exempt"],
+        cmd = "python $(location :drop_exempt) <{lcov} >$@ {em}".format(
+            em = "$(location @baseline//:merged-baseline-exempt_markers)",
+            lcov = "$(location {}.lcov.unexempted)".format(name),
+        ),
     )
 
     native.genrule(
