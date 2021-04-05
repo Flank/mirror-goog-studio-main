@@ -47,7 +47,7 @@ abstract class TestComponentImpl @Inject constructor(
     artifacts: ArtifactsImpl,
     variantScope: VariantScope,
     variantData: BaseVariantData,
-    override val testedVariant: VariantImpl,
+    val testedVariant: VariantImpl,
     transformManager: TransformManager,
     variantPropertiesApiServices: VariantPropertiesApiServices,
     taskCreationServices: TaskCreationServices,
