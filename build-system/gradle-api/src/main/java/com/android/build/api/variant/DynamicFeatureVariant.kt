@@ -23,13 +23,6 @@ import org.gradle.api.provider.Provider
 interface DynamicFeatureVariant : Variant, ApkComponent {
 
     /**
-     * Variant's application ID as present in the final manifest file of the APK.
-     *
-     * This is a read-ony value in this type of project as this is fed by the base module
-     */
-    override val applicationId: Provider<String>
-
-    /**
      * Variant's [AndroidTest] configuration, or null if android tests are disabled for this
      * variant.
      */

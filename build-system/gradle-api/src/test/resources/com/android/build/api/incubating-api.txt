@@ -896,6 +896,7 @@ com.android.build.api.variant.AndroidVersion.getApiLevel: int ()
 com.android.build.api.variant.AndroidVersion.getCodename: java.lang.String ()
 com.android.build.api.variant.ApkComponent
 com.android.build.api.variant.ApkComponent.getAndroidResources: com.android.build.api.variant.AndroidResources ()
+com.android.build.api.variant.ApkComponent.getApplicationId: org.gradle.api.provider.Provider<java.lang.String> ()
 com.android.build.api.variant.ApkComponent.getPackaging: com.android.build.api.variant.ApkPackaging ()
 com.android.build.api.variant.ApkComponent.getRenderscript: com.android.build.api.variant.Renderscript ()
 com.android.build.api.variant.ApkPackaging implements com.android.build.api.variant.Packaging
@@ -943,7 +944,6 @@ com.android.build.api.variant.DexPackagingOptions
 com.android.build.api.variant.DexPackagingOptions.getUseLegacyPackaging: org.gradle.api.provider.Property<java.lang.Boolean> ()
 com.android.build.api.variant.DynamicFeatureVariant implements com.android.build.api.variant.Variant, com.android.build.api.variant.ApkComponent
 com.android.build.api.variant.DynamicFeatureVariant.getAndroidTest: com.android.build.api.component.AndroidTest ()
-com.android.build.api.variant.DynamicFeatureVariant.getApplicationId: org.gradle.api.provider.Provider<java.lang.String> ()
 com.android.build.api.variant.DynamicFeatureVariantBuilder implements com.android.build.api.variant.VariantBuilder, com.android.build.api.variant.HasAndroidTestBuilder
 com.android.build.api.variant.ExternalNativeBuild
 com.android.build.api.variant.ExternalNativeBuild.getAbiFilters: org.gradle.api.provider.SetProperty<java.lang.String> ()
@@ -971,7 +971,6 @@ com.android.build.api.variant.JniLibsPackaging.getKeepDebugSymbols: org.gradle.a
 com.android.build.api.variant.JniLibsPackaging.getPickFirsts: org.gradle.api.provider.SetProperty<java.lang.String> ()
 com.android.build.api.variant.LibraryVariant implements com.android.build.api.variant.Variant, com.android.build.api.variant.AarComponent
 com.android.build.api.variant.LibraryVariant.getAndroidTest: com.android.build.api.component.AndroidTest ()
-com.android.build.api.variant.LibraryVariant.getApplicationId: org.gradle.api.provider.Provider<java.lang.String> ()
 com.android.build.api.variant.LibraryVariant.getRenderscript: com.android.build.api.variant.Renderscript ()
 com.android.build.api.variant.LibraryVariantBuilder implements com.android.build.api.variant.VariantBuilder, com.android.build.api.variant.HasAndroidTestBuilder
 com.android.build.api.variant.Packaging
@@ -1013,7 +1012,6 @@ com.android.build.api.variant.TestVariant.getApplicationId: org.gradle.api.provi
 com.android.build.api.variant.TestVariant.getTestedApplicationId: org.gradle.api.provider.Provider<java.lang.String> ()
 com.android.build.api.variant.TestVariantBuilder implements com.android.build.api.variant.VariantBuilder
 com.android.build.api.variant.Variant implements com.android.build.api.component.Component, com.android.build.api.variant.Resource
-com.android.build.api.variant.Variant.getApplicationId: org.gradle.api.provider.Provider<java.lang.String> ()
 com.android.build.api.variant.Variant.getBuildConfigFields: org.gradle.api.provider.MapProperty<java.lang.String, com.android.build.api.variant.BuildConfigField<? extends java.io.Serializable>> ()
 com.android.build.api.variant.Variant.getExtension: T (java.lang.Class<T>)
 com.android.build.api.variant.Variant.getExternalNativeBuild: com.android.build.api.variant.ExternalNativeBuild ()

@@ -23,12 +23,20 @@ import com.android.build.api.variant.Renderscript
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.Provider
 
 class AnalyticsEnabledApkComponent(
         val delegate: ApkComponent,
         val stats: GradleBuildVariant.Builder,
         val objectFactory: ObjectFactory,
 ): ApkComponent {
+
+    override val applicationId: Provider<String>
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.READ_ONLY_APPLICATION_ID_VALUE
+            return delegate.applicationId
+        }
 
     private val userVisibleRenderscript: Renderscript? by lazy {
         delegate.renderscript?.let {

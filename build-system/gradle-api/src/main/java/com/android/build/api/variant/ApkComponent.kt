@@ -17,6 +17,7 @@
 package com.android.build.api.variant
 
 import org.gradle.api.Incubating
+import org.gradle.api.provider.Provider
 
 /**
  * Cross cutting interface for [com.android.build.api.component.Component] subtypes that are
@@ -24,6 +25,11 @@ import org.gradle.api.Incubating
  */
 @Incubating
 interface ApkComponent {
+
+    /**
+     * Variant's application ID as present in the final manifest file of the APK.
+     */
+    val applicationId: Provider<String>
 
     /**
      * Variant's android resources processing configuration, initialized by the corresponding

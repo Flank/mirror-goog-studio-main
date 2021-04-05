@@ -47,13 +47,6 @@ interface Variant : Component, Resource {
     val targetSdkVersion: AndroidVersion
 
     /**
-     * Variant's application ID as present in the final manifest file of the APK.
-     *
-     * Some type of variants allows this to be writeable but for some it's only read-only.
-     */
-    val applicationId: Provider<String>
-
-    /**
      * The namespace of the generated R and BuildConfig classes. Also, the namespace used to resolve
      * any relative class names that are declared in the AndroidManifest.xml.
      *

@@ -39,13 +39,6 @@ abstract class AnalyticsEnabledVariant (
     stats: GradleBuildVariant.Builder,
     objectFactory: ObjectFactory
 ) : AnalyticsEnabledComponent(delegate, stats, objectFactory), Variant {
-    override val applicationId: Provider<String>
-        get() {
-            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-                VariantPropertiesMethodType.
-                READ_ONLY_APPLICATION_ID_VALUE
-            return delegate.applicationId
-        }
 
     override val namespace: Provider<String>
         get() {

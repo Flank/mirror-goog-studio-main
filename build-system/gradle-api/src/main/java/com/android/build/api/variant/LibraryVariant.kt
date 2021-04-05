@@ -24,13 +24,6 @@ import org.gradle.api.provider.Provider
 interface LibraryVariant : Variant, AarComponent {
 
     /**
-     * Variant's application ID as present in the final manifest file of the APK.
-     *
-     * This is a read-ony value based on the package entry in the manifest
-     */
-    override val applicationId: Provider<String>
-
-    /**
      * Variant's [AndroidTest] configuration, or null if android tests are disabled for this
      * variant.
      */

@@ -25,6 +25,7 @@ import com.android.build.api.variant.Renderscript
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.Provider
 import javax.inject.Inject
 
 open class AnalyticsEnabledDynamicFeatureVariant @Inject constructor(
@@ -57,6 +58,9 @@ open class AnalyticsEnabledDynamicFeatureVariant @Inject constructor(
                 objectFactory
         )
     }
+
+    override val applicationId: Provider<String>
+        get() = apkComponent.applicationId
 
     override val androidResources: AndroidResources
         get() = apkComponent.androidResources

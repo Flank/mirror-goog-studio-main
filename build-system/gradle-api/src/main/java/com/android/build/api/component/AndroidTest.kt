@@ -39,7 +39,7 @@ interface AndroidTest : TestApkComponent, TestComponent, Resource {
     /**
      * Variant's application ID as present in the final manifest file of the APK.
      */
-    val applicationId: Property<String>
+    override val applicationId: Property<String>
 
     /**
      * The namespace of the generated R and BuildConfig classes. Also, the namespace used to resolve

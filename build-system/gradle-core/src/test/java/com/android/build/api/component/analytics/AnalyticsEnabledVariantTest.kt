@@ -95,19 +95,6 @@ class AnalyticsEnabledVariantTest {
     }
 
     @Test
-    fun getApplicationId() {
-        Mockito.`when`(delegate.applicationId).thenReturn(FakeGradleProvider("myApp"))
-        Truth.assertThat(proxy.applicationId.get()).isEqualTo("myApp")
-
-        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
-        Truth.assertThat(
-            stats.variantApiAccess.variantPropertiesAccessList.first().type
-        ).isEqualTo(VariantPropertiesMethodType.READ_ONLY_APPLICATION_ID_VALUE)
-        Mockito.verify(delegate, Mockito.times(1))
-            .applicationId
-    }
-
-    @Test
     fun getNamespace() {
         Mockito.`when`(delegate.namespace).thenReturn(FakeGradleProvider("package.name"))
         Truth.assertThat(proxy.namespace.get()).isEqualTo("package.name")
