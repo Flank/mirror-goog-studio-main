@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.core
 
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.impl.ComponentIdentityImpl
+import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
 import com.android.build.gradle.internal.core.VariantDslInfoBuilder.Companion.getBuilder
 import com.android.build.gradle.internal.dsl.BuildType
@@ -55,7 +56,8 @@ class VariantDslInfoBuilder private constructor(
     private val dslServices: DslServices,
     private val variantPropertiesApiServices: VariantPropertiesApiServices,
     private val dslNamespaceProvider: Provider<String>?,
-    private val dslTestNamespace: String?
+    private val dslTestNamespace: String?,
+    private val nativeBuildSystem: VariantManager.NativeBuiltType?,
 ) {
 
     companion object {
@@ -75,7 +77,8 @@ class VariantDslInfoBuilder private constructor(
             dslServices: DslServices,
             variantPropertiesApiServices: VariantPropertiesApiServices,
             dslNamespaceProvider: Provider<String>? = null,
-            dslTestNamespace: String? = null
+            dslTestNamespace: String? = null,
+            nativeBuildSystem: VariantManager.NativeBuiltType? = null,
         ): VariantDslInfoBuilder {
             return VariantDslInfoBuilder(
                 dimensionCombination,
@@ -89,7 +92,8 @@ class VariantDslInfoBuilder private constructor(
                 dslServices,
                 variantPropertiesApiServices,
                 dslNamespaceProvider,
-                dslTestNamespace
+                dslTestNamespace,
+                nativeBuildSystem,
             )
         }
 
@@ -298,7 +302,8 @@ class VariantDslInfoBuilder private constructor(
             variantPropertiesApiServices,
             buildDirectory,
             dslNamespaceProvider,
-            dslTestNamespace
+            dslTestNamespace,
+            nativeBuildSystem,
         )
     }
 

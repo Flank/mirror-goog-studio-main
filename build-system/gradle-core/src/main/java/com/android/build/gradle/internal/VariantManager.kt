@@ -237,6 +237,14 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
             return testBuildTypeData
         }
 
+    enum class NativeBuiltType { CMAKE, NDK_BUILD }
+
+    fun configuredNativeBuilder(): NativeBuiltType? {
+        if (extension.externalNativeBuild.ndkBuild.path != null) return NativeBuiltType.NDK_BUILD
+        if (extension.externalNativeBuild.cmake.path != null) return NativeBuiltType.CMAKE
+        return null;
+    }
+
     private fun createVariant(
             dimensionCombination: DimensionCombination,
             buildTypeData: BuildTypeData<BuildType>,
@@ -266,7 +274,8 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                 dslServices,
                 variantPropertiesApiServices,
                 dslNamespaceProvider,
-                dslTestNamespace)
+                dslTestNamespace,
+                configuredNativeBuilder())
 
         // We must first add the flavors to the variant config, in order to get the proper
         // variant-specific and multi-flavor name as we add/create the variant providers later.

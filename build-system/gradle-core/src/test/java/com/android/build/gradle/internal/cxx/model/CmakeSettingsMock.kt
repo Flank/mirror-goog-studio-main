@@ -47,11 +47,11 @@ class CmakeSettingsMock : BasicModuleModelMock() {
 
     init {
 //        doReturn(externalNativeCmakeOptions).`when`(coreExternalNativeBuildOptions).externalNativeCmakeOptions
-        doReturn(makeSetProperty(setOf())).`when`(externalNativeCmakeOptions).abiFilters
-        doReturn(makeListProperty(listOf("-DCMAKE_ARG=1"))).`when`(externalNativeCmakeOptions).arguments
-        doReturn(makeListProperty(listOf("-DC_FLAG_DEFINED"))).`when`(externalNativeCmakeOptions).cFlags
-        doReturn(makeListProperty(listOf("-DCPP_FLAG_DEFINED"))).`when`(externalNativeCmakeOptions).cppFlags
-        doReturn(makeSetProperty(setOf<String>())).`when`(externalNativeCmakeOptions).targets
+        doReturn(makeSetProperty(setOf())).`when`(variantExternalNativeBuild).abiFilters
+        doReturn(makeListProperty(listOf("-DCMAKE_ARG=1"))).`when`(variantExternalNativeBuild).arguments
+        doReturn(makeListProperty(listOf("-DC_FLAG_DEFINED"))).`when`(variantExternalNativeBuild).cFlags
+        doReturn(makeListProperty(listOf("-DCPP_FLAG_DEFINED"))).`when`(variantExternalNativeBuild).cppFlags
+        doReturn(makeSetProperty(setOf<String>())).`when`(variantExternalNativeBuild).targets
         val makefile = join(allPlatformsProjectRootDir, "CMakeLists.txt")
         val cmakeSettingsJson = join(allPlatformsProjectRootDir, "CMakeSettings.json")
         cmakeSettingsJson.parentFile.mkdirs()

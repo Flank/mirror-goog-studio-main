@@ -66,8 +66,8 @@ class NdkBuildVariantApiTest {
 
             androidComponents {
                 onVariants(selector().all(), {
-                    it.externalNdkBuild.abiFilters.empty()
-                    it.externalNdkBuild.abiFilters.add("x86_64")
+                    it.externalNativeBuild.abiFilters.empty()
+                    it.externalNativeBuild.abiFilters.add("x86_64")
                 })
             }
         """.trimIndent())
@@ -119,8 +119,8 @@ class NdkBuildVariantApiTest {
 
             androidComponents {
                 onVariants(selector().all(), {
-                    it.externalNdkBuild.getCFlags().add("-DTEST_C_FLAG2")
-                    it.externalNdkBuild.getCppFlags().add("-DTEST_CPP_FLAG2")
+                    it.externalNativeBuild.getCFlags().add("-DTEST_C_FLAG2")
+                    it.externalNativeBuild.getCppFlags().add("-DTEST_CPP_FLAG2")
                 })
             }
         """.trimIndent())
@@ -173,9 +173,9 @@ class NdkBuildVariantApiTest {
 
             androidComponents {
                 onVariants(selector().all(), {
-                    it.externalNdkBuild.abiFilters.empty()
-                    it.externalNdkBuild.abiFilters.add("x86_64")
-                    it.externalNdkBuild.arguments.add("NDK_MODULE_PATH+=./third_party/modules")
+                    it.externalNativeBuild.abiFilters.empty()
+                    it.externalNativeBuild.abiFilters.add("x86_64")
+                    it.externalNativeBuild.arguments.add("NDK_MODULE_PATH+=./third_party/modules")
                 })
             }
         """.trimIndent())

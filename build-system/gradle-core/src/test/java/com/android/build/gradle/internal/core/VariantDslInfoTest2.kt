@@ -660,7 +660,8 @@ class VariantDslInfoTest2 :
             services = services,
             buildDirectory = buildDirectory,
             dslNamespaceProvider = given.namespace,
-            dslTestNamespace = given.testNamespace
+            dslTestNamespace = given.testNamespace,
+            nativeBuildSystem = null,
         )
 
         return instantiateResult().also {

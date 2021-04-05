@@ -87,13 +87,7 @@ interface Variant : Component, Resource {
      * Variant's cmake [ExternalNativeBuild], initialized by merging the product flavor values or
      * null if no cmake external build is configured for this variant.
      */
-    val externalCmake: ExternalNativeBuild?
-
-    /**
-     * Variant's ndk-build [ExternalNativeBuild], initialized by merging the product flavor values
-     * or null if no ndk-build external build is configured for this variant.
-     */
-    val externalNdkBuild: ExternalNativeBuild?
+    val externalNativeBuild: ExternalNativeBuild?
 
     /**
      * Variant's [UnitTest], or null if the unit tests for this variant are disabled.

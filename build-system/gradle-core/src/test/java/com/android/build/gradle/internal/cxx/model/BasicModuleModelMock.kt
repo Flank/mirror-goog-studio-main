@@ -167,12 +167,10 @@ open class BasicModuleModelMock {
         ExternalNativeBuildOptions::class.java,
         throwUnmocked
     )
-    val externalNativeNdkBuildOptions = mock(
+    val variantExternalNativeBuild = mock(
         com.android.build.api.variant.ExternalNativeBuild::class.java
     )
-    val externalNativeCmakeOptions = mock(
-        com.android.build.api.variant.ExternalNativeBuild::class.java
-    )
+
     val mergedNdkConfig = mock(
         MergedNdkConfig::class.java,
         throwUnmocked
@@ -301,8 +299,7 @@ open class BasicModuleModelMock {
         doReturn(emptyList<File>().iterator()).`when`(prefabFileCollection).iterator()
 
         doReturn(coreExternalNativeBuildOptions).`when`(variantDslInfo).externalNativeBuildOptions
-        doReturn(externalNativeNdkBuildOptions).`when`(variantImpl).externalNdkBuild
-        doReturn(externalNativeCmakeOptions).`when`(this.variantImpl).externalCmake
+        doReturn(variantExternalNativeBuild).`when`(this.variantImpl).externalNativeBuild
         doReturn(mergedNdkConfig).`when`(variantDslInfo).ndkConfig
         doReturn(abiSplitOptions).`when`(splits).abi
         doReturn(setOf<String>()).`when`(splits).abiFilters
@@ -345,16 +342,11 @@ open class BasicModuleModelMock {
             doReturn(null).`when`(ndkBuild).path
             doReturn(null).`when`(cmake).buildStagingDirectory
             doReturn(null).`when`(ndkBuild).buildStagingDirectory
-            doReturn(Mockito.mock(SetProperty::class.java)).`when`(externalNativeNdkBuildOptions).abiFilters
-            doReturn(Mockito.mock(ListProperty::class.java)).`when`(externalNativeNdkBuildOptions).arguments
-            doReturn(Mockito.mock(ListProperty::class.java)).`when`(externalNativeNdkBuildOptions).cFlags
-            doReturn(Mockito.mock(ListProperty::class.java)).`when`(externalNativeNdkBuildOptions).cppFlags
-            doReturn(Mockito.mock(SetProperty::class.java)).`when`(externalNativeNdkBuildOptions).targets
-            doReturn(Mockito.mock(SetProperty::class.java)).`when`(externalNativeCmakeOptions).abiFilters
-            doReturn(Mockito.mock(ListProperty::class.java)).`when`(externalNativeCmakeOptions).arguments
-            doReturn(Mockito.mock(ListProperty::class.java)).`when`(externalNativeCmakeOptions).cFlags
-            doReturn(Mockito.mock(ListProperty::class.java)).`when`(externalNativeCmakeOptions).cppFlags
-            doReturn(Mockito.mock(SetProperty::class.java)).`when`(externalNativeCmakeOptions).targets
+            doReturn(Mockito.mock(SetProperty::class.java)).`when`(variantExternalNativeBuild).abiFilters
+            doReturn(Mockito.mock(ListProperty::class.java)).`when`(variantExternalNativeBuild).arguments
+            doReturn(Mockito.mock(ListProperty::class.java)).`when`(variantExternalNativeBuild).cFlags
+            doReturn(Mockito.mock(ListProperty::class.java)).`when`(variantExternalNativeBuild).cppFlags
+            doReturn(Mockito.mock(SetProperty::class.java)).`when`(variantExternalNativeBuild).targets
             doReturn(setOf<String>()).`when`(mergedNdkConfig).abiFilters
             doReturn("debug").`when`(variantImpl).name
             doReturn(buildFeatures).`when`(variantImpl).buildFeatures

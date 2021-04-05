@@ -21,6 +21,7 @@ import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.ResValue
 import com.android.build.gradle.api.JavaCompileOptions
 import com.android.build.gradle.internal.ProguardFileType
+import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.dsl.CoreExternalNativeBuildOptions
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
@@ -270,6 +271,8 @@ interface VariantDslInfo {
      * null if not.
      */
     val minSdkVersionFromIDE: Int?
+
+    val nativeBuildSystem: VariantManager.NativeBuiltType?
 
     val ndkConfig: MergedNdkConfig
 

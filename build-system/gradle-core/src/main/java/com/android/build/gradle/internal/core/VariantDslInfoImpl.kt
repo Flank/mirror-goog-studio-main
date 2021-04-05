@@ -23,11 +23,13 @@ import com.android.build.gradle.ProguardFiles
 import com.android.build.gradle.api.JavaCompileOptions
 import com.android.build.gradle.internal.PostprocessingFeatures
 import com.android.build.gradle.internal.ProguardFileType
+import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.core.MergedFlavor.Companion.mergeFlavors
 import com.android.build.gradle.internal.dsl.BaseFlavor
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.BuildType.PostProcessingConfiguration
 import com.android.build.gradle.internal.dsl.CoreExternalNativeBuildOptions
+import com.android.build.gradle.internal.dsl.CoreExternalNativeCmakeOptions
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
@@ -91,7 +93,8 @@ open class VariantDslInfoImpl internal constructor(
     private val services: VariantPropertiesApiServices,
     private val buildDirectory: DirectoryProperty,
     private val dslNamespaceProvider: Provider<String>?,
-    private val dslTestNamespace: String?
+    private val dslTestNamespace: String?,
+    override val nativeBuildSystem: VariantManager.NativeBuiltType?,
 ): VariantDslInfo, DimensionCombination {
 
     override val buildType: String?

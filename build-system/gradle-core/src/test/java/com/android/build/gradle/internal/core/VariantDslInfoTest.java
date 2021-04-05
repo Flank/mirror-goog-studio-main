@@ -351,7 +351,8 @@ public class VariantDslInfoTest {
                         dslServices,
                         variantPropertiesApiServices,
                         namespace,
-                        testNamespace);
+                        testNamespace,
+                        null /* BuildType */);
 
         builder.addProductFlavor(flavorConfig, new MockSourceProvider("custom"));
 
