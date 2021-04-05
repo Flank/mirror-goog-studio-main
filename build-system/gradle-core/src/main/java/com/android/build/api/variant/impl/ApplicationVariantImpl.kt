@@ -56,7 +56,7 @@ open class ApplicationVariantImpl @Inject constructor(
         artifacts: ArtifactsImpl,
         variantScope: VariantScope,
         variantData: BaseVariantData,
-        variantDependencyInfo: DependenciesInfo,
+        dependenciesInfoBuilder: DependenciesInfoBuilder,
         transformManager: TransformManager,
         internalServices: VariantPropertiesApiServices,
         taskCreationServices: TaskCreationServices,
@@ -101,7 +101,12 @@ open class ApplicationVariantImpl @Inject constructor(
     override val embedsMicroApp: Boolean
         get() = variantDslInfo.isEmbedMicroApp
 
-    override val dependenciesInfo: DependenciesInfo = variantDependencyInfo
+    override val dependenciesInfo: DependenciesInfo by lazy {
+        DependenciesInfoImpl(
+                dependenciesInfoBuilder.includedInApk,
+                dependenciesInfoBuilder.includedInBundle
+        )
+    }
 
     override val androidResources: AndroidResources by lazy {
         initializeAaptOptionsFromDsl(

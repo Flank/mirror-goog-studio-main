@@ -25,6 +25,7 @@ import com.android.build.api.variant.DependenciesInfo
 import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.impl.ApplicationVariantBuilderImpl
 import com.android.build.api.variant.impl.ApplicationVariantImpl
+import com.android.build.api.variant.impl.DependenciesInfoImpl
 import com.android.build.api.variant.impl.FilterConfigurationImpl
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
@@ -46,7 +47,6 @@ import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.options.StringOption
-import com.android.builder.core.VariantType
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.errors.IssueReporter
 import com.android.ide.common.build.GenericBuiltArtifact
@@ -112,7 +112,7 @@ class ApplicationVariantFactory(
                 artifacts,
                 variantScope,
                 variantData,
-                variantBuilder.dependenciesInfo as DependenciesInfo,
+                variantBuilder.dependenciesInfo,
                 transformManager,
                 variantPropertiesApiServices,
                 taskCreationServices,

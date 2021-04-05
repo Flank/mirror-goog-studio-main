@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 The Android Open Source Project
+ * Copyright (C) 2021 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,18 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.build.api.variant.impl
 
+import com.android.build.api.variant.DependenciesInfo
 
-package com.android.build.gradle.internal.dsl
-
-import com.android.build.api.dsl.DependenciesInfo
-
-/**
- * DSL options for specifying whether to include SDK dependency information in APKs and Bundles.
- */
-open class DependenciesInfoImpl : DependenciesInfo {
-
-  override var includeInApk: Boolean = true
-
-  override var includeInBundle: Boolean = true
-}
+open class DependenciesInfoImpl(
+    override val includedInApk: Boolean,
+    override val includedInBundle: Boolean,
+): DependenciesInfo

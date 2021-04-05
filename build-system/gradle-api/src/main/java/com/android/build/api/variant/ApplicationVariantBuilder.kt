@@ -16,7 +16,6 @@
 
 package com.android.build.api.variant
 
-import com.android.build.api.dsl.DependenciesInfo
 import org.gradle.api.Incubating
 
 /**
@@ -35,5 +34,5 @@ interface ApplicationVariantBuilder : VariantBuilder, HasAndroidTestBuilder {
     val debuggable: Boolean
 
     /** Specify whether to include SDK dependency information in APKs and Bundles. */
-    val dependenciesInfo: DependenciesInfo
+    val dependenciesInfo: DependenciesInfoBuilder
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 The Android Open Source Project
+ * Copyright (C) 2021 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,26 +17,22 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.dsl.DependenciesInfo
+import com.android.build.api.variant.DependenciesInfoBuilder
 import com.android.build.gradle.internal.services.VariantApiServices
 import javax.inject.Inject
 
-/**
- * Implementation of [DependenciesInfo] for usage in Variant[Property] API.
- */
-open class MutableDependenciesInfoImpl @Inject constructor(
-    dslDependencyInfo: DependenciesInfo,
-    variantApiServices: VariantApiServices
-): DependenciesInfo,
-    com.android.build.api.variant.DependenciesInfo {
-
+open class DependenciesInfoBuilderImpl @Inject constructor(
+        variantApiServices: VariantApiServices,
+        dslDependencyInfo: DependenciesInfo
+): DependenciesInfoBuilder {
     private val includeInApkValue = variantApiServices.valueOf(dslDependencyInfo.includeInApk)
     private val includeInBundleValue = variantApiServices.valueOf(dslDependencyInfo.includeInBundle)
 
-    override var includeInApk: Boolean
+    override var includedInApk: Boolean
         set(value) = includeInApkValue.set(value)
         get() = includeInApkValue.get()
 
-    override var includeInBundle: Boolean
+    override var includedInBundle: Boolean
         set(value) = includeInBundleValue.set(value)
         get() = includeInBundleValue.get()
 }
