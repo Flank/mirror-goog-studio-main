@@ -290,6 +290,13 @@ message Process {
     ALIVE = 1;
     DEAD = 2;
   }
+  // Less to more
+  enum ExposureLevel {
+    UNKNOWN = 0;
+    RELEASE = 1;
+    PROFILEABLE = 2;
+    DEBUGGABLE = 3;
+  }
   // Full name of the Android application/service
   string name = 1;
   // App's PID. Note that this is actually an int16, but gRPC only provides
@@ -303,6 +310,7 @@ message Process {
   // e.g. 'arm', 'arm86', 'x86', 'x86_64'
   // Also see SdkConstans.CPU_ARCH_*
   string abi_cpu_arch = 6;
+  ExposureLevel exposure_level = 7;
 }
 
 // A Session represents a range of profiling data for an app running on a
