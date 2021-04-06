@@ -461,7 +461,7 @@ public abstract class BasePlugin<
 
         createLintClasspathConfiguration(project);
 
-        createAndroidJdkImageConfiguration(project);
+        createAndroidJdkImageConfiguration(project, globalScope);
     }
 
     /** Creates a lint class path Configuration for the given project */
@@ -477,11 +477,22 @@ public abstract class BasePlugin<
     }
 
     /** Creates the androidJdkImage configuration */
-    public static void createAndroidJdkImageConfiguration(@NonNull Project project) {
+    public static void createAndroidJdkImageConfiguration(
+            @NonNull Project project, @NonNull GlobalScope globalScope) {
         Configuration config = project.getConfigurations().create(CONFIG_NAME_ANDROID_JDK_IMAGE);
         config.setVisible(false);
         config.setCanBeConsumed(false);
         config.setDescription("Configuration providing JDK image for compiling Java 9+ sources");
+
+        project.getDependencies()
+                .add(
+                        CONFIG_NAME_ANDROID_JDK_IMAGE,
+                        project.files(
+                                globalScope
+                                        .getVersionedSdkLoader()
+                                        .flatMap(
+                                                VersionedSdkLoader
+                                                        ::getCoreForSystemModulesProvider)));
     }
 
     private void configureExtension() {
