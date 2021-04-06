@@ -427,8 +427,7 @@ interface CommonExtension<
      * see [ApkSigningConfig].
      */
     @Incubating
-    fun signingConfigs(action: Action<NamedDomainObjectContainer<SigningConfigT>>)
-
+    fun signingConfigs(action: NamedDomainObjectContainer<out ApkSigningConfig>.() -> Unit)
 
     /**
      * Specifies options for external native build using [CMake](https://cmake.org/) or

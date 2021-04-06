@@ -67,4 +67,5 @@ interface InternalCommonExtension<
     fun buildTypes(action: Action<in NamedDomainObjectContainer<BuildTypeT>>)
     fun productFlavors(action: Action<NamedDomainObjectContainer<ProductFlavorT>>)
     fun defaultConfig(action: Action<DefaultConfigT>)
+    fun signingConfigs(action: Action<NamedDomainObjectContainer<SigningConfig>>)
 }

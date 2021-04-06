@@ -396,7 +396,7 @@ com.android.build.api.dsl.CommonExtension.setBuildToolsVersion: void (java.lang.
 com.android.build.api.dsl.CommonExtension.setNdkPath: void (java.lang.String)
 com.android.build.api.dsl.CommonExtension.setNdkVersion: void (java.lang.String)
 com.android.build.api.dsl.CommonExtension.setResourcePrefix: void (java.lang.String)
-com.android.build.api.dsl.CommonExtension.signingConfigs: void (org.gradle.api.Action<org.gradle.api.NamedDomainObjectContainer<SigningConfigT>>)
+com.android.build.api.dsl.CommonExtension.signingConfigs: void (kotlin.jvm.functions.Function1<? super org.gradle.api.NamedDomainObjectContainer<? extends com.android.build.api.dsl.ApkSigningConfig>, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.sourceSets: void (kotlin.jvm.functions.Function1<? super org.gradle.api.NamedDomainObjectContainer<AndroidSourceSetT>, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.splits: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.Splits, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.testOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.TestOptions, kotlin.Unit>)

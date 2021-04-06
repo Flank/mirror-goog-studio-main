@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.dsl
 
+import com.android.build.api.dsl.ApkSigningConfig
 import com.android.build.api.dsl.BuildFeatures
 import com.android.build.api.dsl.ComposeOptions
 import com.android.build.api.dsl.DefaultConfig
@@ -247,6 +248,10 @@ abstract class CommonExtensionImpl<
 
     override fun signingConfigs(action: Action<NamedDomainObjectContainer<SigningConfig>>) {
         action.execute(signingConfigs)
+    }
+
+    override fun signingConfigs(action: NamedDomainObjectContainer<out ApkSigningConfig>.() -> Unit) {
+        action.invoke(signingConfigs)
     }
 
     override val sourceSets: NamedDomainObjectContainer<AndroidSourceSet>
