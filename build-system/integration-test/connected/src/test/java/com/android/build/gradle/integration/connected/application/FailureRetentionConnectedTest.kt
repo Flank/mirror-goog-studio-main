@@ -30,6 +30,7 @@ import kotlin.test.assertFailsWith
 import org.gradle.tooling.BuildException
 import org.junit.Before
 import org.junit.ClassRule
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 
@@ -94,6 +95,7 @@ class FailureRetentionConnectedTest {
         validateFailureOutputs()
     }
 
+    @Ignore("b/184536229")
     @Test
     @Throws(Exception::class)
     fun connectedAndroidTestWithOrchestratorAndFailures() {
