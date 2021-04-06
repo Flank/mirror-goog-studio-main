@@ -39,6 +39,7 @@ import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.variant.DimensionCombination
 import com.android.build.gradle.options.IntegerOption
 import com.android.build.gradle.options.StringOption
+import com.android.build.gradle.options.Version
 import com.android.builder.core.AbstractProductFlavor
 import com.android.builder.core.DefaultApiVersion
 import com.android.builder.core.VariantType
@@ -288,21 +289,37 @@ open class VariantDslInfoImpl internal constructor(
             // testApplicationId, if present. This allows the test project to not have a manifest if
             // all is declared in the DSL.
             // TODO(b/170945282, b/172361895) Remove this special case - users should use namespace
-            //  DSL instead of testApplicationId DSL for this.
+            //  DSL instead of testApplicationId DSL for this... currently a warning
             variantType.isSeparateTestProject -> {
                 if (dslNamespaceProvider != null) {
                     dslNamespaceProvider
                 } else {
                     val testAppIdFromFlavors =
-                            productFlavorList.asSequence().map { it.testApplicationId }
-                                    .firstOrNull { it != null }
-                                    ?: defaultConfig.testApplicationId
+                        productFlavorList.asSequence().map { it.testApplicationId }
+                            .firstOrNull { it != null }
+                            ?: defaultConfig.testApplicationId
 
                     dataProvider.manifestData.map {
                         it.packageName
-                                ?: testAppIdFromFlavors
+                                ?: testAppIdFromFlavors?.also {
+                                    val message =
+                                        "Namespace not specified. Please specify a namespace for " +
+                                                "the generated R and BuildConfig classes via " +
+                                                "android.namespace in the test module's " +
+                                                "build.gradle file. Currently, this test module " +
+                                                "uses the testApplicationId " +
+                                                "($testAppIdFromFlavors) as its namespace, but " +
+                                                "version ${Version.VERSION_8_0} of the Android " +
+                                                "Gradle Plugin will require that a namespace be " +
+                                                "specified explicitly like so:\n\n" +
+                                                "android {\n" +
+                                                "    namespace '$testAppIdFromFlavors'\n" +
+                                                "}\n\n"
+                                    services.issueReporter
+                                        .reportWarning(IssueReporter.Type.GENERIC, message)
+                                }
                                 ?: throw RuntimeException(
-                                        "Package Name not found in ${dataProvider.manifestLocation}"
+                                    getMissingPackageNameErrorMessage(dataProvider.manifestLocation)
                                 )
                     }
                 }
@@ -321,10 +338,18 @@ open class VariantDslInfoImpl internal constructor(
             ?: dataProvider.manifestData.map {
                 it.packageName
                     ?: throw RuntimeException(
-                        "Package Name not found in ${dataProvider.manifestLocation}"
+                        getMissingPackageNameErrorMessage(dataProvider.manifestLocation)
                     )
             }
     }
+
+    private fun getMissingPackageNameErrorMessage(manifestLocation: String): String =
+        "Package Name not found in $manifestLocation, and namespace not specified. Please " +
+                "specify a namespace for the generated R and BuildConfig classes via " +
+                "android.namespace in the module's build.gradle file like so:\n\n" +
+                "android {\n" +
+                "    namespace 'com.example.namespace'\n" +
+                "}\n\n"
 
     override val testNamespace: String? = dslTestNamespace ?: dslNamespaceProvider?.let { "${it.get()}.test" }
 

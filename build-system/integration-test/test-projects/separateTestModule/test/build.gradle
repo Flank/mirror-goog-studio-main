@@ -2,6 +2,7 @@ apply from: "../../commonLocalRepo.gradle"
 apply plugin: 'com.android.test'
 
 android {
+    namespace 'com.example.android.testing.blueprint.test'
     compileSdkVersion rootProject.latestCompileSdk
     buildToolsVersion = rootProject.buildToolsVersion
 
