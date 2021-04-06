@@ -20,7 +20,7 @@ for /F "tokens=*" %%F in ('uuidgen') DO (
   set INVOCATIONID=%%F
 )
 
-CALL %BASEDIR%/tools/base/bazel/bazel.cmd ^
+CALL %BASEDIR%\tools\base\bazel\bazel.cmd ^
  --max_idle_secs=10 ^
  build ^
  --config=dynamic ^
