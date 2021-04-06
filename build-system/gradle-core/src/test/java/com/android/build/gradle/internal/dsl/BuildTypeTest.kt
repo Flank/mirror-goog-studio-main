@@ -19,6 +19,7 @@ import com.android.build.gradle.AppExtension
 import com.android.build.gradle.internal.fixture.TestProjects
 import com.android.build.gradle.internal.plugins.AppPlugin
 import com.android.build.gradle.internal.services.createDslServices
+import com.android.builder.core.AbstractBuildType
 import com.android.builder.core.BuilderConstants
 import com.android.sdklib.SdkVersionInfo
 import com.android.testutils.internal.CopyOfTester
@@ -47,6 +48,7 @@ class BuildTypeTest {
         Assert.assertTrue(type.isDebuggable)
         Assert.assertFalse(type.isJniDebuggable)
         Assert.assertFalse(type.isRenderscriptDebuggable)
+        type as AbstractBuildType
         Assert.assertNotNull(type.signingConfig)
         Assert.assertTrue(type.signingConfig!!.isSigningReady)
         Assert.assertTrue(type.isZipAlignEnabled)

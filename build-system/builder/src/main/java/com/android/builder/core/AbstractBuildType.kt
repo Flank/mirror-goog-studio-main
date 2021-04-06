@@ -50,7 +50,9 @@ abstract class AbstractBuildType : BaseConfigImpl(), BuildType {
         versionNameSuffix = that.versionNameSuffix
         isMinifyEnabled = that.isMinifyEnabled
         isZipAlignEnabled = (that.isZipAlignEnabled)
-        setSigningConfig(that.signingConfig)
+        if (that is AbstractBuildType) {
+            setSigningConfig(that.signingConfig)
+        }
         isEmbedMicroApp = that.isEmbedMicroApp
         isPseudoLocalesEnabled = that.isPseudoLocalesEnabled
         return this
@@ -122,7 +124,7 @@ abstract class AbstractBuildType : BaseConfigImpl(), BuildType {
         isZipAlignEnabled = zipAlign
     }
 
-    abstract override val signingConfig: SigningConfig?
+    abstract val signingConfig: SigningConfig?
 
     abstract fun setSigningConfig(signingConfig: SigningConfig?): BuildType
 

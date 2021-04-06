@@ -66,7 +66,4 @@ interface BuildType : BaseConfig {
 
     /**Whether the variant embeds the micro app. */
     val isEmbedMicroApp: Boolean
-
-    /** The associated signing config or null if none are set on the build type. */
-    val signingConfig: SigningConfig?
 }

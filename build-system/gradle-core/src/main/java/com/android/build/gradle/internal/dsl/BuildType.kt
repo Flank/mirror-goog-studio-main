@@ -574,7 +574,9 @@ abstract class BuildType @Inject constructor(
             that.dslChecksEnabled = false
         }
         try {
-            this.signingConfig = that.signingConfig as SigningConfig?
+            if (that is AbstractBuildType) {
+                this.signingConfig = that.signingConfig as SigningConfig?
+            }
             return super.initWith(that) as BuildType
         } finally {
             dslChecksEnabled = true

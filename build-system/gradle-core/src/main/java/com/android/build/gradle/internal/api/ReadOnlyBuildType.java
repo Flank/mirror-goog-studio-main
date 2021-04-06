@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.builder.core.AbstractBuildType;
 import com.android.builder.model.BuildType;
 import com.android.builder.model.SigningConfig;
 
@@ -102,8 +103,11 @@ public class ReadOnlyBuildType extends ReadOnlyBaseConfig implements BuildType {
     }
 
     @Nullable
-    @Override
     public SigningConfig getSigningConfig() {
-        return readOnlyObjectProvider.getSigningConfig(buildType.getSigningConfig());
+        if (!(buildType instanceof AbstractBuildType)) {
+            return null;
+        }
+        return readOnlyObjectProvider.getSigningConfig(
+                ((AbstractBuildType) buildType).getSigningConfig());
     }
 }
