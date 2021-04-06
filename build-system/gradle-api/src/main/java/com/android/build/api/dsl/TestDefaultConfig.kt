@@ -19,8 +19,8 @@ package com.android.build.api.dsl
 import org.gradle.api.Incubating
 
 @Incubating
-interface TestDefaultConfig<SigningConfigT : ApkSigningConfig> :
-    TestBaseFlavor<SigningConfigT>,
+interface TestDefaultConfig :
+    TestBaseFlavor,
     DefaultConfig {
     // TODO(b/140406102)
 }

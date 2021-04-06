@@ -30,15 +30,15 @@ import javax.inject.Inject
 abstract class TestExtensionImpl @Inject constructor(
     dslServices: DslServices,
     dslContainers: DslContainerProvider<
-            TestDefaultConfig<SigningConfig>,
-            TestBuildType<SigningConfig>,
-            TestProductFlavor<SigningConfig>, SigningConfig>
+            TestDefaultConfig,
+            TestBuildType,
+            TestProductFlavor, SigningConfig>
 ) :
     CommonExtensionImpl<
             TestBuildFeatures,
-            TestBuildType<SigningConfig>,
-            TestDefaultConfig<SigningConfig>,
-            TestProductFlavor<SigningConfig>>(
+            TestBuildType,
+            TestDefaultConfig,
+            TestProductFlavor>(
         dslServices,
         dslContainers
     ),

@@ -15,6 +15,7 @@
  */
 package com.android.build.gradle.internal.dsl
 
+import com.android.build.api.dsl.ApkSigningConfig
 import com.android.build.api.dsl.ApplicationBaseFlavor
 import com.android.build.api.dsl.DynamicFeatureBaseFlavor
 import com.android.build.api.dsl.LibraryBaseFlavor
@@ -38,10 +39,10 @@ import org.gradle.api.Action
 abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
     AbstractProductFlavor(name),
     CoreProductFlavor,
-    ApplicationBaseFlavor<SigningConfig>,
+    ApplicationBaseFlavor,
     DynamicFeatureBaseFlavor,
-    LibraryBaseFlavor<SigningConfig>,
-    TestBaseFlavor<SigningConfig> {
+    LibraryBaseFlavor,
+    TestBaseFlavor {
 
     /** Encapsulates per-variant configurations for the NDK, such as ABI filters.  */
     override val ndk: NdkOptions = dslServices.newInstance(NdkOptions::class.java)
@@ -185,9 +186,13 @@ abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
     }
 
     /** Signing config used by this product flavor.  */
-    override var signingConfig: SigningConfig?
-        get() = super.signingConfig as SigningConfig?
-        set(value) { super.setSigningConfig(value) }
+    override var signingConfig: ApkSigningConfig?
+        get() = super.signingConfig
+        set(value) { super.signingConfig = value }
+
+    fun setSigningConfig(signingConfig: com.android.build.gradle.internal.dsl.SigningConfig?) {
+        this.signingConfig = signingConfig
+    }
 
     // -- DSL Methods. TODO remove once the instantiator does what I expect it to do.
     override fun buildConfigField(

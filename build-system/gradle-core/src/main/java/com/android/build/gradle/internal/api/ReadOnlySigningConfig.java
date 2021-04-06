@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.dsl.ApkSigningConfig;
 import com.android.builder.model.SigningConfig;
 import java.io.File;
 
@@ -36,10 +37,9 @@ import java.io.File;
  */
 public class ReadOnlySigningConfig implements SigningConfig {
 
-    @NonNull
-    private final SigningConfig signingConfig;
+    @NonNull private final ApkSigningConfig signingConfig;
 
-    ReadOnlySigningConfig(@NonNull SigningConfig signingConfig) {
+    ReadOnlySigningConfig(@NonNull ApkSigningConfig signingConfig) {
         this.signingConfig = signingConfig;
     }
 
@@ -91,6 +91,9 @@ public class ReadOnlySigningConfig implements SigningConfig {
 
     @Override
     public boolean isSigningReady() {
-        return signingConfig.isSigningReady();
+        return getStoreFile() != null
+                && getStorePassword() != null
+                && getKeyAlias() != null
+                && getKeyPassword() != null;
     }
 }

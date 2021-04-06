@@ -26,6 +26,7 @@ import com.android.builder.core.DefaultVectorDrawablesOptions
 import com.android.builder.errors.IssueReporter
 import com.android.builder.model.BaseConfig
 import com.android.builder.model.ProductFlavor
+import com.android.builder.model.SigningConfig
 import com.google.common.collect.Lists
 import org.gradle.api.provider.Property
 

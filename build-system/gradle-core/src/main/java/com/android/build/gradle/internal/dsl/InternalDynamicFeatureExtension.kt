@@ -24,7 +24,7 @@ import com.android.build.api.dsl.DynamicFeatureProductFlavor
 
 /** See [InternalCommonExtension] */
 interface InternalDynamicFeatureExtension :
-    DynamicFeatureExtension<SigningConfig>,
+    DynamicFeatureExtension,
     InternalCommonExtension<
             DynamicFeatureBuildFeatures,
             DynamicFeatureBuildType,

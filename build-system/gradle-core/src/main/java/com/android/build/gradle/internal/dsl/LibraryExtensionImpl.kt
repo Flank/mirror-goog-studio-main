@@ -30,16 +30,16 @@ import javax.inject.Inject
 abstract class LibraryExtensionImpl @Inject constructor(
     dslServices: DslServices,
     dslContainers: DslContainerProvider<
-            LibraryDefaultConfig<SigningConfig>,
-            LibraryBuildType<SigningConfig>,
-            LibraryProductFlavor<SigningConfig>,
+            LibraryDefaultConfig,
+            LibraryBuildType,
+            LibraryProductFlavor,
             SigningConfig>
 ) :
     TestedExtensionImpl<
             LibraryBuildFeatures,
-            LibraryBuildType<SigningConfig>,
-            LibraryDefaultConfig<SigningConfig>,
-            LibraryProductFlavor<SigningConfig>>(
+            LibraryBuildType,
+            LibraryDefaultConfig,
+            LibraryProductFlavor>(
         dslServices,
         dslContainers
     ),

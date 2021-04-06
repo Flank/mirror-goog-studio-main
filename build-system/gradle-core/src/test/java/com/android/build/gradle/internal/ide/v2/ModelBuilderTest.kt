@@ -173,11 +173,11 @@ class ModelBuilderTest {
     private fun createApplicationModelBuilder(
     ): ModelBuilder<
             ApplicationBuildFeatures,
-            ApplicationBuildType<SigningConfig>,
-            ApplicationDefaultConfig<SigningConfig>,
-            ApplicationProductFlavor<SigningConfig>,
+            ApplicationBuildType,
+            ApplicationDefaultConfig,
+            ApplicationProductFlavor,
             SigningConfig,
-            ApplicationExtension<SigningConfig>> {
+            ApplicationExtension> {
 
         // for now create an app extension
         val sdkComponents = Mockito.mock(SdkComponentsBuildService::class.java)

@@ -19,9 +19,9 @@ package com.android.build.api.dsl
 import org.gradle.api.Incubating
 
 @Incubating
-interface TestBaseFlavor<SigningConfigT : ApkSigningConfig> :
+interface TestBaseFlavor :
     BaseFlavor,
-    TestVariantDimension<SigningConfigT> {
+    TestVariantDimension {
     /**
      * The target SDK version.
      * Setting this it will override previous calls of [targetSdk] and [targetSdkPreview] setters.

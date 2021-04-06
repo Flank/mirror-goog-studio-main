@@ -24,12 +24,12 @@ import com.android.build.api.dsl.LibraryProductFlavor
 
 /** See [InternalCommonExtension] */
 interface InternalLibraryExtension :
-    LibraryExtension<SigningConfig>,
+    LibraryExtension,
     InternalCommonExtension<
             LibraryBuildFeatures,
-            LibraryBuildType<SigningConfig>,
-            LibraryDefaultConfig<SigningConfig>,
-            LibraryProductFlavor<SigningConfig>> {
+            LibraryBuildType,
+            LibraryDefaultConfig,
+            LibraryProductFlavor> {
 
     override var aidlPackagedList: MutableCollection<String>
 }

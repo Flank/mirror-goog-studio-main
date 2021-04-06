@@ -33,16 +33,16 @@ import javax.inject.Inject
 abstract class ApplicationExtensionImpl @Inject constructor(
     dslServices: DslServices,
     dslContainers: DslContainerProvider<
-            ApplicationDefaultConfig<SigningConfig>,
-            ApplicationBuildType<SigningConfig>,
-            ApplicationProductFlavor<SigningConfig>,
+            ApplicationDefaultConfig,
+            ApplicationBuildType,
+            ApplicationProductFlavor,
             SigningConfig>
 ) :
     TestedExtensionImpl<
             ApplicationBuildFeatures,
-            ApplicationBuildType<SigningConfig>,
-            ApplicationDefaultConfig<SigningConfig>,
-            ApplicationProductFlavor<SigningConfig>>(
+            ApplicationBuildType,
+            ApplicationDefaultConfig,
+            ApplicationProductFlavor>(
         dslServices,
         dslContainers
     ),

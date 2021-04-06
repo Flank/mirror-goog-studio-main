@@ -15,6 +15,7 @@
  */
 package com.android.build.gradle.internal.dsl
 
+import com.android.build.api.dsl.ApkSigningConfig
 import com.android.build.api.dsl.ApplicationBuildType
 import com.android.build.api.dsl.DynamicFeatureBuildType
 import com.android.build.api.dsl.LibraryBuildType
@@ -43,10 +44,10 @@ abstract class BuildType @Inject constructor(
     private val dslServices: DslServices
 ) :
     AbstractBuildType(), CoreBuildType, Serializable,
-    ApplicationBuildType<SigningConfig>,
-    LibraryBuildType<SigningConfig>,
+    ApplicationBuildType,
+    LibraryBuildType,
     DynamicFeatureBuildType,
-    TestBuildType<SigningConfig> {
+    TestBuildType {
 
     /**
      * Name of this build type.
@@ -177,11 +178,15 @@ abstract class BuildType @Inject constructor(
     }
 
     /** The signing configuration. e.g.: `signingConfig signingConfigs.myConfig`  */
-    override var signingConfig: SigningConfig? = null
+    override var signingConfig: ApkSigningConfig? = null
 
     override fun setSigningConfig(signingConfig: com.android.builder.model.SigningConfig?): com.android.builder.model.BuildType {
         this.signingConfig = signingConfig as SigningConfig?
         return this
+    }
+
+    fun setSigningConfig(signingConfig: SigningConfig?) {
+        this.signingConfig = signingConfig
     }
 
     fun setSigningConfig(signingConfig: Any?) {
@@ -574,9 +579,6 @@ abstract class BuildType @Inject constructor(
             that.dslChecksEnabled = false
         }
         try {
-            if (that is AbstractBuildType) {
-                this.signingConfig = that.signingConfig as SigningConfig?
-            }
             return super.initWith(that) as BuildType
         } finally {
             dslChecksEnabled = true

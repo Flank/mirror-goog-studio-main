@@ -20,7 +20,6 @@ import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
 import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.component.impl.TestFixturesImpl;
-import com.android.build.api.dsl.ApkSigningConfig;
 import com.android.build.api.dsl.SdkComponents;
 import com.android.build.api.extension.TestAndroidComponentsExtension;
 import com.android.build.api.extension.impl.TestAndroidComponentsExtensionImpl;
@@ -94,24 +93,22 @@ public class TestPlugin
                         TestExtensionImpl.class, dslServices, dslContainers);
         if (projectServices.getProjectOptions().get(BooleanOption.USE_NEW_DSL_INTERFACES)) {
             // noinspection unchecked,rawtypes: Hacks to make the parameterized types make sense
-            Class<com.android.build.api.dsl.TestExtension<ApkSigningConfig>> instanceType =
+            Class<com.android.build.api.dsl.TestExtension> instanceType =
                     (Class) TestExtension.class;
             TestExtension android =
                     (TestExtension)
-                            (Object)
-                                    project.getExtensions()
-                                            .create(
-                                                    new TypeOf<
-                                                            com.android.build.api.dsl.TestExtension<
-                                                                    ApkSigningConfig>>() {},
-                                                    "android",
-                                                    instanceType,
-                                                    dslServices,
-                                                    globalScope,
-                                                    buildOutputs,
-                                                    dslContainers.getSourceSetManager(),
-                                                    extraModelInfo,
-                                                    testExtension);
+                            project.getExtensions()
+                                    .create(
+                                            new TypeOf<
+                                                    com.android.build.api.dsl.TestExtension>() {},
+                                            "android",
+                                            instanceType,
+                                            dslServices,
+                                            globalScope,
+                                            buildOutputs,
+                                            dslContainers.getSourceSetManager(),
+                                            extraModelInfo,
+                                            testExtension);
             project.getExtensions()
                     .add(TestExtension.class, "_internal_legacy_android_extension", android);
             return android;

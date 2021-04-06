@@ -19,9 +19,9 @@ package com.android.build.api.dsl
 import org.gradle.api.Incubating
 
 @Incubating
-interface LibraryBaseFlavor<SigningConfigT : ApkSigningConfig> :
+interface LibraryBaseFlavor :
     BaseFlavor,
-    LibraryVariantDimension<SigningConfigT> {
+    LibraryVariantDimension {
 
     /**
      * The target SDK version used for building the test APK.

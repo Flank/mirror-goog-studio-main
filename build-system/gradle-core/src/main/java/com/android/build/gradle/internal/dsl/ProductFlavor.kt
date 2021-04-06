@@ -15,6 +15,7 @@
  */
 package com.android.build.gradle.internal.dsl
 
+import com.android.build.api.dsl.ApkSigningConfig
 import com.android.build.api.dsl.ApplicationProductFlavor
 import com.android.build.api.dsl.DynamicFeatureProductFlavor
 import com.android.build.api.dsl.LibraryProductFlavor
@@ -22,16 +23,17 @@ import com.android.build.api.dsl.TestProductFlavor
 import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.services.DslServices
 import com.android.builder.model.BaseConfig
+import com.android.builder.model.SigningConfig
 import com.google.common.collect.ImmutableList
 import javax.inject.Inject
 import org.gradle.api.provider.Property
 
 abstract class ProductFlavor @Inject constructor(name: String, dslServices: DslServices) :
     BaseFlavor(name, dslServices),
-    ApplicationProductFlavor<SigningConfig>,
+    ApplicationProductFlavor,
     DynamicFeatureProductFlavor,
-    LibraryProductFlavor<SigningConfig>,
-    TestProductFlavor<SigningConfig> {
+    LibraryProductFlavor,
+    TestProductFlavor {
 
     // FIXME remove: b/149431538
     @Suppress("DEPRECATION")
@@ -69,6 +71,10 @@ abstract class ProductFlavor @Inject constructor(name: String, dslServices: DslS
     fun getIsDefault(): Property<Boolean> {
         return this._isDefaultProperty
     }
+
+    override var signingConfig: ApkSigningConfig?
+        get() = super.signingConfig
+        set(value) { super.signingConfig = value }
 
     override fun computeRequestedAndFallBacks(requestedValues: List<String>): DimensionRequest { // in order to have different fallbacks per variant for missing dimensions, we are
         // going to actually have the flavor request itself (in the other dimension), with

@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
+import com.android.build.api.dsl.ApkSigningConfig;
 import com.android.build.gradle.LibraryExtension;
 import com.android.build.gradle.api.TestVariant;
 import com.android.build.gradle.internal.dsl.BuildType;
@@ -30,7 +31,6 @@ import com.android.build.gradle.internal.fixture.TestProjects;
 import com.android.build.gradle.internal.fixture.VariantChecker;
 import com.android.build.gradle.internal.fixture.VariantCheckers;
 import com.android.builder.errors.EvalIssueException;
-import com.android.builder.model.SigningConfig;
 import java.util.Set;
 import org.gradle.api.Project;
 import org.junit.Before;
@@ -112,7 +112,8 @@ public class LibraryPluginDslTest {
     public void testDebugSigningConfig() throws Exception {
         android.getSigningConfigs().getByName("debug", debug -> debug.storePassword("foo"));
 
-        SigningConfig signingConfig = android.getBuildTypes().getByName("debug").getSigningConfig();
+        ApkSigningConfig signingConfig =
+                android.getBuildTypes().getByName("debug").getSigningConfig();
 
         assertNotNull(signingConfig);
         assertEquals(android.getSigningConfigs().getByName("debug"), signingConfig);

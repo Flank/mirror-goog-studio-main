@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.dsl
 
+import com.android.build.api.dsl.ApkSigningConfig
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.variant.VariantBuilder
 import com.android.build.api.variant.Variant
@@ -47,8 +48,7 @@ interface InternalCommonExtension<
         BuildFeaturesT,
         BuildTypeT,
         DefaultConfigT,
-        ProductFlavorT,
-        SigningConfig>, Lockable {
+        ProductFlavorT>, Lockable {
 
     override val aaptOptions: AaptOptionsImpl
 
@@ -62,6 +62,7 @@ interface InternalCommonExtension<
     override val externalNativeBuild: ExternalNativeBuildImpl
     override val testOptions: TestOptionsImpl
     override val splits: SplitsImpl
+    override val signingConfigs: NamedDomainObjectContainer<SigningConfig>
 
     fun buildTypes(action: Action<in NamedDomainObjectContainer<BuildType>>)
     fun productFlavors(action: Action<NamedDomainObjectContainer<ProductFlavor>>)

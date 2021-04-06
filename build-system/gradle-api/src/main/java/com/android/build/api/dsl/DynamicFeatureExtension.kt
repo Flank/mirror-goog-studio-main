@@ -27,14 +27,12 @@ import org.gradle.api.Incubating
  * Only the Android Gradle Plugin should create instances of this interface.
  */
 @Incubating
-interface DynamicFeatureExtension<
-        SigningConfigT : ApkSigningConfig> :
+interface DynamicFeatureExtension :
     CommonExtension<
             DynamicFeatureBuildFeatures,
             DynamicFeatureBuildType,
             DynamicFeatureDefaultConfig,
-            DynamicFeatureProductFlavor,
-            SigningConfigT>,
+            DynamicFeatureProductFlavor>,
     ApkExtension,
     TestedExtension {
     // TODO(b/140406102)

@@ -24,10 +24,9 @@ import com.android.build.api.dsl.TestProductFlavor
 
 /** See [InternalCommonExtension] */
 interface InternalTestExtension :
-    TestExtension<
-        SigningConfig>,
+    TestExtension,
         InternalCommonExtension<
                 TestBuildFeatures,
-                TestBuildType<SigningConfig>,
-                TestDefaultConfig<SigningConfig>,
-                TestProductFlavor<SigningConfig>>
+                TestBuildType,
+                TestDefaultConfig,
+                TestProductFlavor>

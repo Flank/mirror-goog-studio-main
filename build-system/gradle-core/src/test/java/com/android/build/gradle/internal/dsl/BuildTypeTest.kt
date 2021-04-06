@@ -50,7 +50,6 @@ class BuildTypeTest {
         Assert.assertFalse(type.isRenderscriptDebuggable)
         type as AbstractBuildType
         Assert.assertNotNull(type.signingConfig)
-        Assert.assertTrue(type.signingConfig!!.isSigningReady)
         Assert.assertTrue(type.isZipAlignEnabled)
     }
 

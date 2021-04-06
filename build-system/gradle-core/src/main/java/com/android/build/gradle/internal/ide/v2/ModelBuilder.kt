@@ -110,8 +110,7 @@ class ModelBuilder<
                 BuildFeaturesT,
                 BuildTypeT,
                 DefaultConfigT,
-                ProductFlavorT,
-                SigningConfigT>>(
+                ProductFlavorT>>(
     private val globalScope: GlobalScope,
     private val projectOptions: ProjectOptions,
     private val variantModel: VariantModel,
@@ -293,7 +292,7 @@ class ModelBuilder<
         }
 
         val dependenciesInfo =
-                if (extension is ApplicationExtension<*>) {
+                if (extension is ApplicationExtension) {
                     DependenciesInfoImpl(
                         extension.dependenciesInfo.includeInApk,
                         extension.dependenciesInfo.includeInBundle
@@ -731,7 +730,7 @@ class ModelBuilder<
     private fun getTestTargetVariant(
         component: ComponentImpl
     ): TestedTargetVariant? {
-        if (extension is TestExtension<*>) {
+        if (extension is TestExtension) {
             val targetPath = extension.targetProjectPath ?: return null
 
             // to get the target variant we need to get the result of the dependency resolution

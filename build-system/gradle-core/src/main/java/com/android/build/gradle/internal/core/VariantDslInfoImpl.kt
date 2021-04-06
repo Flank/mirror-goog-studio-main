@@ -16,6 +16,7 @@
 package com.android.build.gradle.internal.core
 
 import com.android.build.api.component.ComponentIdentity
+import com.android.build.api.dsl.ApkSigningConfig
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.ResValue
 import com.android.build.api.variant.impl.ResValueKeyImpl
@@ -766,7 +767,7 @@ open class VariantDslInfoImpl internal constructor(
             // cast builder.SigningConfig to dsl.SigningConfig because MergedFlavor merges
             // dsl.SigningConfig of ProductFlavor objects
             val dslSigningConfig: SigningConfig? =
-                    buildTypeObj.signingConfig ?: (mergedFlavor.signingConfig as SigningConfig?)
+                (buildTypeObj.signingConfig ?: mergedFlavor.signingConfig) as SigningConfig?
             signingConfigOverride?.let {
                 // use enableV1 and enableV2 from the DSL if the override values are null
                 if (it.enableV1Signing == null) {

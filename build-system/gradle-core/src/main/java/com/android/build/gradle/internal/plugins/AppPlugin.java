@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.plugins;
 import com.android.annotations.NonNull;
 import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.component.impl.TestFixturesImpl;
-import com.android.build.api.dsl.ApkSigningConfig;
 import com.android.build.api.dsl.ApplicationExtension;
 import com.android.build.api.dsl.SdkComponents;
 import com.android.build.api.extension.ApplicationAndroidComponentsExtension;
@@ -109,24 +108,20 @@ public class AppPlugin
                 dslServices.newDecoratedInstance(ApplicationExtensionImpl.class, dslServices, dslContainers);
         if (projectServices.getProjectOptions().get(BooleanOption.USE_NEW_DSL_INTERFACES)) {
             // noinspection unchecked,rawtypes: Hacks to make the parameterized types make sense
-            Class<ApplicationExtension<ApkSigningConfig>> instanceType =
-                    (Class) BaseAppModuleExtension.class;
+            Class<ApplicationExtension> instanceType = (Class) BaseAppModuleExtension.class;
             BaseAppModuleExtension android =
                     (BaseAppModuleExtension)
-                            (Object)
-                                    project.getExtensions()
-                                            .create(
-                                                    new TypeOf<
-                                                            ApplicationExtension<
-                                                                    ApkSigningConfig>>() {},
-                                                    "android",
-                                                    instanceType,
-                                                    dslServices,
-                                                    globalScope,
-                                                    buildOutputs,
-                                                    dslContainers.getSourceSetManager(),
-                                                    extraModelInfo,
-                                                    applicationExtension);
+                            project.getExtensions()
+                                    .create(
+                                            new TypeOf<ApplicationExtension>() {},
+                                            "android",
+                                            instanceType,
+                                            dslServices,
+                                            globalScope,
+                                            buildOutputs,
+                                            dslContainers.getSourceSetManager(),
+                                            extraModelInfo,
+                                            applicationExtension);
             project.getExtensions()
                     .add(
                             BaseAppModuleExtension.class,

@@ -20,7 +20,7 @@ import java.io.File
 import org.gradle.api.Incubating
 
 @Incubating
-interface LibraryVariantDimension<SigningConfigT : ApkSigningConfig> : VariantDimension {
+interface LibraryVariantDimension : VariantDimension {
     /**
      * Returns whether multi-dex is enabled.
      *
@@ -69,7 +69,7 @@ interface LibraryVariantDimension<SigningConfigT : ApkSigningConfig> : VariantDi
     fun consumerProguardFiles(vararg proguardFiles: Any): Any
 
     /** The associated signing config or null if none are set on the variant dimension. */
-    var signingConfig: SigningConfigT?
+    var signingConfig: ApkSigningConfig?
 
     /** Options for configuring AAR metadata. */
     val aarMetadata: AarMetadata

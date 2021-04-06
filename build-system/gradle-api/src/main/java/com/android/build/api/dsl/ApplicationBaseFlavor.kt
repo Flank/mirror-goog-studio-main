@@ -19,9 +19,9 @@ package com.android.build.api.dsl
 import org.gradle.api.Incubating
 
 @Incubating
-interface ApplicationBaseFlavor<SigningConfigT : ApkSigningConfig> :
+interface ApplicationBaseFlavor :
     BaseFlavor,
-    ApplicationVariantDimension<SigningConfigT> {
+    ApplicationVariantDimension {
     /**
      * The application ID.
      *

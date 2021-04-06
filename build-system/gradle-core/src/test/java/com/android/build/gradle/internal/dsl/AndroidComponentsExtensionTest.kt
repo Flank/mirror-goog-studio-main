@@ -40,7 +40,7 @@ import java.util.regex.Pattern
 class AndroidComponentsExtensionTest {
     private lateinit var dslServices: DslServices
     private lateinit var sdkComponents: SdkComponents
-    private lateinit var applicationExtension: ApplicationExtension<*>
+    private lateinit var applicationExtension: ApplicationExtension
 
     @Before
     fun setUp() {
@@ -341,10 +341,10 @@ class AndroidComponentsExtensionTest {
             .isEqualTo(DslExtensionType::class.java)
     }
 
-    private fun createExtensionAwareBuildType(extension: ApplicationExtension<*>): ExtensionContainer {
+    private fun createExtensionAwareBuildType(extension: ApplicationExtension): ExtensionContainer {
         @Suppress("UNCHECKED_CAST")
         val buildTypesContainer = Mockito.mock(NamedDomainObjectContainer::class.java)
-                as NamedDomainObjectContainer<com.android.build.api.dsl.ApplicationBuildType<*>>
+                as NamedDomainObjectContainer<com.android.build.api.dsl.ApplicationBuildType>
         Mockito.`when`(extension.buildTypes).thenReturn(buildTypesContainer)
         val buildTypeExtensionContainer= Mockito.mock(ExtensionContainer::class.java)
         val buildType = Mockito.mock(com.android.build.api.dsl.BuildType::class.java)
@@ -354,10 +354,10 @@ class AndroidComponentsExtensionTest {
         return buildTypeExtensionContainer
     }
 
-    private fun createExtensionAwareProductFlavor(extension: ApplicationExtension<*>): ExtensionContainer {
+    private fun createExtensionAwareProductFlavor(extension: ApplicationExtension): ExtensionContainer {
         @Suppress("UNCHECKED_CAST")
         val productFlavorContainer = Mockito.mock(NamedDomainObjectContainer::class.java)
-                as NamedDomainObjectContainer<com.android.build.api.dsl.ApplicationProductFlavor<*>>
+                as NamedDomainObjectContainer<com.android.build.api.dsl.ApplicationProductFlavor>
         Mockito.`when`(extension.productFlavors).thenReturn(productFlavorContainer)
         val extensionContainer= Mockito.mock(ExtensionContainer::class.java)
         val productFlavor = Mockito.mock(com.android.build.api.dsl.ProductFlavor::class.java)

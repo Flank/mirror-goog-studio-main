@@ -19,8 +19,8 @@ package com.android.build.api.dsl
 import org.gradle.api.Incubating
 
 @Incubating
-interface ApplicationProductFlavor<SigningConfigT : ApkSigningConfig> :
-    ApplicationBaseFlavor<SigningConfigT>,
+interface ApplicationProductFlavor :
+    ApplicationBaseFlavor,
     ProductFlavor {
     /** Whether this product flavor should be selected in Studio by default  */
     var isDefault: Boolean

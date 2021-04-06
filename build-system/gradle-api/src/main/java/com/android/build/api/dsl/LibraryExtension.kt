@@ -28,14 +28,12 @@ import org.gradle.api.NamedDomainObjectContainer
  * Only the Android Gradle Plugin should create instances of this interface.
  */
 @Incubating
-interface LibraryExtension<
-        SigningConfigT : ApkSigningConfig> :
+interface LibraryExtension :
     CommonExtension<
         LibraryBuildFeatures,
-        LibraryBuildType<SigningConfigT>,
-        LibraryDefaultConfig<SigningConfigT>,
-        LibraryProductFlavor<SigningConfigT>,
-        SigningConfigT>,
+        LibraryBuildType,
+        LibraryDefaultConfig,
+        LibraryProductFlavor>,
     TestedExtension {
     // TODO(b/140406102)
 

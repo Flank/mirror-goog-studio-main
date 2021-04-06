@@ -20,7 +20,6 @@ import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
 import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.component.impl.TestFixturesImpl;
-import com.android.build.api.dsl.ApkSigningConfig;
 import com.android.build.api.dsl.SdkComponents;
 import com.android.build.api.extension.DynamicFeatureAndroidComponentsExtension;
 import com.android.build.api.extension.impl.DynamicFeatureAndroidComponentsExtensionImpl;
@@ -107,25 +106,23 @@ public class DynamicFeaturePlugin
                         DynamicFeatureExtensionImpl.class, dslServices, dslContainers);
         if (projectServices.getProjectOptions().get(BooleanOption.USE_NEW_DSL_INTERFACES)) {
             //noinspection unchecked,rawtypes I am so sorry.
-            Class<com.android.build.api.dsl.DynamicFeatureExtension<ApkSigningConfig>>
-                    instanceType = (Class) DynamicFeatureExtension.class;
+            Class<com.android.build.api.dsl.DynamicFeatureExtension> instanceType =
+                    (Class) DynamicFeatureExtension.class;
             DynamicFeatureExtension android =
                     (DynamicFeatureExtension)
-                            (Object)
-                                    project.getExtensions()
-                                            .create(
-                                                    new TypeOf<
-                                                            com.android.build.api.dsl
-                                                                            .DynamicFeatureExtension<
-                                                                    ApkSigningConfig>>() {},
-                                                    "android",
-                                                    instanceType,
-                                                    dslServices,
-                                                    globalScope,
-                                                    buildOutputs,
-                                                    dslContainers.getSourceSetManager(),
-                                                    extraModelInfo,
-                                                    dynamicFeatureExtension);
+                            project.getExtensions()
+                                    .create(
+                                            new TypeOf<
+                                                    com.android.build.api.dsl
+                                                            .DynamicFeatureExtension>() {},
+                                            "android",
+                                            instanceType,
+                                            dslServices,
+                                            globalScope,
+                                            buildOutputs,
+                                            dslContainers.getSourceSetManager(),
+                                            extraModelInfo,
+                                            dynamicFeatureExtension);
             project.getExtensions()
                     .add(
                             DynamicFeatureExtension.class,

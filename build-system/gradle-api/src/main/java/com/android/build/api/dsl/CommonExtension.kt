@@ -34,8 +34,7 @@ interface CommonExtension<
         BuildFeaturesT : BuildFeatures,
         BuildTypeT : BuildType,
         DefaultConfigT : DefaultConfig,
-        ProductFlavorT : ProductFlavor,
-        SigningConfigT : ApkSigningConfig> {
+        ProductFlavorT : ProductFlavor> {
 
     /**
      * Specifies options for the Android Asset Packaging Tool (AAPT).
@@ -416,7 +415,7 @@ interface CommonExtension<
      * @see [ApkSigningConfig]
      */
     @get:Incubating
-    val signingConfigs: NamedDomainObjectContainer<SigningConfigT>
+    val signingConfigs: NamedDomainObjectContainer<out ApkSigningConfig>
 
     /**
      * Encapsulates signing configurations that you can apply to

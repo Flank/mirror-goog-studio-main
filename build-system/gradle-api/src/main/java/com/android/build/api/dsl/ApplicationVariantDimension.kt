@@ -19,7 +19,7 @@ package com.android.build.api.dsl
 import org.gradle.api.Incubating
 
 @Incubating
-interface ApplicationVariantDimension<SigningConfigT : ApkSigningConfig> : VariantDimension {
+interface ApplicationVariantDimension : VariantDimension {
     /**
      * Application id suffix. It is appended to the "base" application id when calculating the final
      * application id for a variant.
@@ -49,5 +49,5 @@ interface ApplicationVariantDimension<SigningConfigT : ApkSigningConfig> : Varia
     var multiDexEnabled: Boolean?
 
     /** The associated signing config or null if none are set on the variant dimension. */
-    var signingConfig: SigningConfigT?
+    var signingConfig: ApkSigningConfig?
 }

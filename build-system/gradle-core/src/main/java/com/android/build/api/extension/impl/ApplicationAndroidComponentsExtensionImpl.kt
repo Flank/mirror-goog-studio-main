@@ -28,7 +28,7 @@ open class ApplicationAndroidComponentsExtensionImpl @Inject constructor(
         dslServices: DslServices,
         sdkComponents: SdkComponents,
         variantApiOperations: VariantApiOperationsRegistrar<ApplicationVariantBuilder, ApplicationVariant>,
-        applicationExtension: ApplicationExtension<*>
+        applicationExtension: ApplicationExtension
 ): ApplicationAndroidComponentsExtension,
         AndroidComponentsExtensionImpl<ApplicationVariantBuilder, ApplicationVariant>(
                 dslServices,

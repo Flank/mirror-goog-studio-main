@@ -27,7 +27,7 @@ open class DynamicFeatureAndroidComponentsExtensionImpl(
         dslServices: DslServices,
         sdkComponents: SdkComponents,
         variantApiOperationsRegistrar: VariantApiOperationsRegistrar<DynamicFeatureVariantBuilder, DynamicFeatureVariant>,
-        dynamicFeatureExtension: DynamicFeatureExtension<*>
+        dynamicFeatureExtension: DynamicFeatureExtension
 ):
         DynamicFeatureAndroidComponentsExtension,
         AndroidComponentsExtensionImpl<DynamicFeatureVariantBuilder, DynamicFeatureVariant>(
