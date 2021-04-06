@@ -289,7 +289,11 @@ class UtpConfigFactory {
                 versionedSdkLoader
             )
 
-            if (retentionConfig.enabled) {
+            val debug =
+                (testData.instrumentationRunnerArguments
+                    .getOrDefault("debug", "false")
+                    .toBoolean())
+            if (retentionConfig.enabled && !debug) {
                 val retentionTestData = testData.copy(
                     instrumentationRunnerArguments = testData.instrumentationRunnerArguments
                         .toMutableMap()
@@ -304,6 +308,12 @@ class UtpConfigFactory {
                     )
                 )
             } else {
+                if (retentionConfig.enabled && debug) {
+                    logger.warn(
+                        "Automated test snapshot does not work with debugging. Disabling " +
+                                "automated test snapshot."
+                    )
+                }
                 testDriver = createTestDriver(testData, utpDependencies, useOrchestrator)
             }
             addHostPlugin(createAndroidTestPlugin(utpDependencies))
