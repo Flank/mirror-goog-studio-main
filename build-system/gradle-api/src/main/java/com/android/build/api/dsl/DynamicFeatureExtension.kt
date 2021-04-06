@@ -39,9 +39,7 @@ interface DynamicFeatureExtension<
             BuildTypeT,
             DefaultConfigT,
             ProductFlavorT,
-            SigningConfigT,
-            DynamicFeatureVariantBuilder,
-            DynamicFeatureVariant>,
+            SigningConfigT>,
     ApkExtension,
     TestedExtension {
     // TODO(b/140406102)

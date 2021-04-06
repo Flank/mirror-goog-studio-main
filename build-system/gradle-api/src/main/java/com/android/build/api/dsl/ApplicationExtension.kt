@@ -39,9 +39,7 @@ interface ApplicationExtension<
             BuildTypeT,
             DefaultConfigT,
             ProductFlavorT,
-            SigningConfigT,
-            ApplicationVariantBuilder,
-            ApplicationVariant>,
+            SigningConfigT>,
     ApkExtension,
     TestedExtension {
     // TODO(b/140406102)

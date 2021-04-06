@@ -34,6 +34,4 @@ interface InternalTestExtension :
                 TestBuildFeatures,
                 BuildType,
                 DefaultConfig,
-                ProductFlavor,
-                TestVariantBuilder,
-                TestVariant>
+                ProductFlavor>

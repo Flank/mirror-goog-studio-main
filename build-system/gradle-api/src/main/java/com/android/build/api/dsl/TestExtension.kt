@@ -39,9 +39,7 @@ interface TestExtension<
             BuildTypeT,
             DefaultConfigT,
             ProductFlavorT,
-            SigningConfigT,
-            TestVariantBuilder,
-            TestVariant> {
+            SigningConfigT> {
     // TODO(b/140406102)
     /**
      * The Gradle path of the project that this test project tests.

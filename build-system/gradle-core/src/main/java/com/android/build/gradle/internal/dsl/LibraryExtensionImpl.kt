@@ -34,9 +34,7 @@ abstract class LibraryExtensionImpl @Inject constructor(
             LibraryBuildFeatures,
             BuildType,
             DefaultConfig,
-            ProductFlavor,
-            LibraryVariantBuilder,
-            LibraryVariant>(
+            ProductFlavor>(
         dslServices,
         dslContainers
     ),

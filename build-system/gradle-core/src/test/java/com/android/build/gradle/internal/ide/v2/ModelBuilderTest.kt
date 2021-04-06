@@ -168,7 +168,7 @@ class ModelBuilderTest {
 
     //---------------
 
-    fun <T> ModelBuilder<*,*,*,*,*,*,*,*,*>.query(modelClass: Class<T>, project: Project) : T {
+    fun <T> ModelBuilder<*,*,*,*,*,*,*>.query(modelClass: Class<T>, project: Project) : T {
         return modelClass.cast(buildAll(modelClass.name, project))
     }
 
@@ -183,8 +183,6 @@ class ModelBuilderTest {
             DefaultConfig,
             ProductFlavor,
             SigningConfig,
-            ApplicationVariantBuilder,
-            ApplicationVariant,
             ApplicationExtension<AndroidSourceSet, BuildType, DefaultConfig, ProductFlavor, SigningConfig>> {
 
         // for now create an app extension

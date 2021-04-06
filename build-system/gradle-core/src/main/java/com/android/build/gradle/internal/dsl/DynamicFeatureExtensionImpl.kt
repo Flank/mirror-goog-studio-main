@@ -31,9 +31,7 @@ abstract class DynamicFeatureExtensionImpl @Inject constructor(
             DynamicFeatureBuildFeatures,
             BuildType,
             DefaultConfig,
-            ProductFlavor,
-            DynamicFeatureVariantBuilder,
-            DynamicFeatureVariant>(
+            ProductFlavor>(
         dslServices,
         dslContainers
     ),

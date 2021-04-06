@@ -42,18 +42,14 @@ interface InternalCommonExtension<
         BuildFeaturesT : com.android.build.api.dsl.BuildFeatures,
         BuildTypeT : com.android.build.api.dsl.BuildType,
         DefaultConfigT : com.android.build.api.dsl.DefaultConfig,
-        ProductFlavorT : com.android.build.api.dsl.ProductFlavor,
-        VariantBuilderT : VariantBuilder,
-        VariantT : Variant> :
+        ProductFlavorT : com.android.build.api.dsl.ProductFlavor> :
     CommonExtension<
         AndroidSourceSet,
         BuildFeaturesT,
         BuildTypeT,
         DefaultConfigT,
         ProductFlavorT,
-        SigningConfig,
-        VariantBuilderT,
-        VariantT>, Lockable {
+        SigningConfig>, Lockable {
 
     override val aaptOptions: AaptOptionsImpl
 

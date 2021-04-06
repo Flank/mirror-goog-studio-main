@@ -45,18 +45,14 @@ abstract class CommonExtensionImpl<
         BuildFeaturesT : BuildFeatures,
         BuildTypeT : com.android.build.api.dsl.BuildType,
         DefaultConfigT : DefaultConfig,
-        ProductFlavorT : com.android.build.api.dsl.ProductFlavor,
-        VariantBuilderT : VariantBuilder,
-        VariantT : Variant>(
+        ProductFlavorT : com.android.build.api.dsl.ProductFlavor>(
             protected val dslServices: DslServices,
             dslContainers: DslContainerProvider<DefaultConfigT, BuildTypeT, ProductFlavorT, SigningConfig>
         ) : InternalCommonExtension<
         BuildFeaturesT,
         BuildTypeT,
         DefaultConfigT,
-        ProductFlavorT,
-        VariantBuilderT,
-        VariantT> {
+        ProductFlavorT> {
 
     private val sourceSetManager = dslContainers.sourceSetManager
 

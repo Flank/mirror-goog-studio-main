@@ -34,7 +34,7 @@ abstract class AndroidComponentsExtensionImpl<VariantBuilderT: VariantBuilder, V
         private val dslServices: DslServices,
         override val sdkComponents: SdkComponents,
         private val variantApiOperations: VariantApiOperationsRegistrar<VariantBuilderT, VariantT>,
-        private val commonExtension: CommonExtension<*, *, *, *, *, *, VariantBuilderT, VariantT>
+        private val commonExtension: CommonExtension<*, *, *, *, *, *>
 ): AndroidComponentsExtension<VariantBuilderT, VariantT> {
 
     override fun beforeVariants(selector: VariantSelector, callback: (VariantBuilderT) -> Unit) {

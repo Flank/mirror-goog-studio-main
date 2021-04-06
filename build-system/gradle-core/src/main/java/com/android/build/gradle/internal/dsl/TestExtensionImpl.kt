@@ -32,9 +32,7 @@ abstract class TestExtensionImpl @Inject constructor(
             TestBuildFeatures,
             BuildType,
             DefaultConfig,
-            ProductFlavor,
-            TestVariantBuilder,
-            TestVariant>(
+            ProductFlavor>(
         dslServices,
         dslContainers
     ),

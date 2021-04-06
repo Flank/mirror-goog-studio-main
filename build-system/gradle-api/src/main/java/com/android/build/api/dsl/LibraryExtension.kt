@@ -40,9 +40,7 @@ interface LibraryExtension<
         BuildTypeT,
         DefaultConfigT,
         ProductFlavorT,
-        SigningConfigT,
-        LibraryVariantBuilder,
-        LibraryVariant>,
+        SigningConfigT>,
     TestedExtension {
     // TODO(b/140406102)
 

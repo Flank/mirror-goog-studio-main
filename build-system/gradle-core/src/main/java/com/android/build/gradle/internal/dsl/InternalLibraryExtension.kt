@@ -34,8 +34,6 @@ interface InternalLibraryExtension :
                 LibraryBuildFeatures,
                 BuildType,
                 DefaultConfig,
-                ProductFlavor,
-                LibraryVariantBuilder,
-                LibraryVariant> {
+                ProductFlavor> {
     override var aidlPackagedList: MutableCollection<String>
 }

@@ -36,9 +36,7 @@ interface InternalApplicationExtension :
                 ApplicationBuildFeatures,
                 BuildType,
                 DefaultConfig,
-                ProductFlavor,
-                ApplicationVariantBuilder,
-                ApplicationVariant> {
+                ProductFlavor> {
     override val dynamicFeatures: MutableSet<String>
     fun setDynamicFeatures(dynamicFeatures: Set<String>)
     override val assetPacks: MutableSet<String>

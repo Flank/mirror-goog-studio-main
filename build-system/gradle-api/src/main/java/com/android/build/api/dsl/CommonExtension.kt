@@ -36,9 +36,7 @@ interface CommonExtension<
         BuildTypeT : BuildType,
         DefaultConfigT : DefaultConfig,
         ProductFlavorT : ProductFlavor,
-        SigningConfigT : ApkSigningConfig,
-        VariantBuilderT : VariantBuilder,
-        VariantT : Variant> {
+        SigningConfigT : ApkSigningConfig> {
 
     /**
      * Specifies options for the Android Asset Packaging Tool (AAPT).

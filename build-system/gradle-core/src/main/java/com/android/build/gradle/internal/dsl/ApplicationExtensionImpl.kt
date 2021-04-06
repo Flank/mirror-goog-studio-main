@@ -35,9 +35,7 @@ abstract class ApplicationExtensionImpl @Inject constructor(
             ApplicationBuildFeatures,
             BuildType,
             DefaultConfig,
-            ProductFlavor,
-            ApplicationVariantBuilder,
-            ApplicationVariant>(
+            ProductFlavor>(
         dslServices,
         dslContainers
     ),
