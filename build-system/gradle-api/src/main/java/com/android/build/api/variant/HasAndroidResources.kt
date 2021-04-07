@@ -21,7 +21,7 @@ import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 
 @Incubating
-interface Resource {
+interface HasAndroidResources {
 
     /**
      * Make a [ResValue.Key] to interact with [resValues]'s [MapProperty]

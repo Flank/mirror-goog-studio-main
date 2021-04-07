@@ -958,6 +958,10 @@ com.android.build.api.variant.FilterConfiguration$FilterType.valueOf: com.androi
 com.android.build.api.variant.FilterConfiguration$FilterType.values: com.android.build.api.variant.FilterConfiguration$FilterType[] ()
 com.android.build.api.variant.FilterConfiguration.getFilterType: com.android.build.api.variant.FilterConfiguration$FilterType ()
 com.android.build.api.variant.FilterConfiguration.getIdentifier: java.lang.String ()
+com.android.build.api.variant.HasAndroidResources
+com.android.build.api.variant.HasAndroidResources.getPseudoLocalesEnabled: org.gradle.api.provider.Property<java.lang.Boolean> ()
+com.android.build.api.variant.HasAndroidResources.getResValues: org.gradle.api.provider.MapProperty<com.android.build.api.variant.ResValue$Key, com.android.build.api.variant.ResValue> ()
+com.android.build.api.variant.HasAndroidResources.makeResValueKey: com.android.build.api.variant.ResValue$Key (java.lang.String, java.lang.String)
 com.android.build.api.variant.HasAndroidTestBuilder
 com.android.build.api.variant.HasAndroidTestBuilder.getAndroidTestEnabled: boolean ()
 com.android.build.api.variant.HasAndroidTestBuilder.getEnableAndroidTest: boolean ()
@@ -989,10 +993,6 @@ com.android.build.api.variant.ResValue.<init>: com.android.build.api.variant.Res
 com.android.build.api.variant.ResValue.<init>: com.android.build.api.variant.ResValue (java.lang.String, java.lang.String, int, kotlin.jvm.internal.DefaultConstructorMarker)
 com.android.build.api.variant.ResValue.getComment: java.lang.String ()
 com.android.build.api.variant.ResValue.getValue: java.lang.String ()
-com.android.build.api.variant.Resource
-com.android.build.api.variant.Resource.getPseudoLocalesEnabled: org.gradle.api.provider.Property<java.lang.Boolean> ()
-com.android.build.api.variant.Resource.getResValues: org.gradle.api.provider.MapProperty<com.android.build.api.variant.ResValue$Key, com.android.build.api.variant.ResValue> ()
-com.android.build.api.variant.Resource.makeResValueKey: com.android.build.api.variant.ResValue$Key (java.lang.String, java.lang.String)
 com.android.build.api.variant.ResourcesPackaging
 com.android.build.api.variant.ResourcesPackaging.getExcludes: org.gradle.api.provider.SetProperty<java.lang.String> ()
 com.android.build.api.variant.ResourcesPackaging.getMerges: org.gradle.api.provider.SetProperty<java.lang.String> ()
@@ -1011,7 +1011,7 @@ com.android.build.api.variant.TestVariant implements com.android.build.api.varia
 com.android.build.api.variant.TestVariant.getApplicationId: org.gradle.api.provider.Property<java.lang.String> ()
 com.android.build.api.variant.TestVariant.getTestedApplicationId: org.gradle.api.provider.Provider<java.lang.String> ()
 com.android.build.api.variant.TestVariantBuilder implements com.android.build.api.variant.VariantBuilder
-com.android.build.api.variant.Variant implements com.android.build.api.component.Component, com.android.build.api.variant.Resource
+com.android.build.api.variant.Variant implements com.android.build.api.component.Component, com.android.build.api.variant.HasAndroidResources
 com.android.build.api.variant.Variant.getBuildConfigFields: org.gradle.api.provider.MapProperty<java.lang.String, com.android.build.api.variant.BuildConfigField<? extends java.io.Serializable>> ()
 com.android.build.api.variant.Variant.getExtension: T (java.lang.Class<T>)
 com.android.build.api.variant.Variant.getExternalNativeBuild: com.android.build.api.variant.ExternalNativeBuild ()

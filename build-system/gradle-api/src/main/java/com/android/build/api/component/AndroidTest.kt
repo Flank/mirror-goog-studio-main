@@ -16,10 +16,8 @@
 
 package com.android.build.api.component
 
-import com.android.build.api.variant.ApkComponent
 import com.android.build.api.variant.BuildConfigField
-import com.android.build.api.variant.ResValue
-import com.android.build.api.variant.Resource
+import com.android.build.api.variant.HasAndroidResources
 import com.android.build.api.variant.SigningConfig
 import com.android.build.api.variant.TestApkComponent
 import org.gradle.api.Incubating
@@ -34,7 +32,7 @@ import java.io.Serializable
  * Properties for the android test Variant of a module.
  */
 @Incubating
-interface AndroidTest : TestApkComponent, TestComponent, Resource {
+interface AndroidTest : TestApkComponent, TestComponent, HasAndroidResources {
 
     /**
      * Variant's application ID as present in the final manifest file of the APK.

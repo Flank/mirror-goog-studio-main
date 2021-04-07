@@ -21,7 +21,6 @@ import org.gradle.api.Incubating
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
-import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import java.io.Serializable
 
@@ -29,7 +28,7 @@ import java.io.Serializable
  * Parent interface for all types of variants.
  */
 @Incubating
-interface Variant : Component, Resource {
+interface Variant : Component, HasAndroidResources {
 
     /**
      * Gets the minimum supported SDK Version for this variant.
