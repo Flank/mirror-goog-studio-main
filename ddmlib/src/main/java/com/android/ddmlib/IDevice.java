@@ -71,6 +71,7 @@ public interface IDevice extends IShellEnabledDevice {
         ABB_EXEC, // Android Binder Bridge available
         REAL_PKG_NAME, // Reports the real package name, instead of inferring from client description
         SKIP_VERIFICATION, // Skips verification on installation.
+        SHELL_V2, // Supports modern `adb shell` features like exit status propagation.
     }
 
     /** Device level hardware features. */

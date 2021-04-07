@@ -364,6 +364,8 @@ public final class DeviceImpl implements IDevice {
                     }
                 }
                 return false;
+            case SHELL_V2:
+                return getAdbFeatures().contains("shell_v2");
             default:
                 return false;
         }
