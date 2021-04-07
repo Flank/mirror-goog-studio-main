@@ -23,7 +23,7 @@ import org.gradle.api.provider.Provider
  * [Variant] for test-only modules.
  */
 @Incubating
-interface TestVariant: TestApkComponent, Variant {
+interface TestVariant: GeneratesTestApk, Variant {
     /**
      * Variant's application ID as present in the final manifest file of the APK.
      */

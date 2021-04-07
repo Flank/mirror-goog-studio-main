@@ -20,7 +20,7 @@ import org.gradle.api.Incubating
 import org.gradle.api.component.Component
 
 @Incubating
-interface AarComponent: Component {
+interface GeneratesAar {
 
     /**
      * Variant's aar metadata, initialized by merging the corresponding

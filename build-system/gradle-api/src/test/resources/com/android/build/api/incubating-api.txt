@@ -81,7 +81,7 @@ com.android.build.api.component.ComponentIdentity.getFlavorName: java.lang.Strin
 com.android.build.api.component.ComponentIdentity.getName: java.lang.String ()
 com.android.build.api.component.ComponentIdentity.getProductFlavors: java.util.List<kotlin.Pair<java.lang.String, java.lang.String>> ()
 com.android.build.api.component.TestComponent implements com.android.build.api.component.Component
-com.android.build.api.component.TestFixtures implements com.android.build.api.variant.AarComponent, com.android.build.api.component.Component
+com.android.build.api.component.TestFixtures implements com.android.build.api.variant.GeneratesAar, com.android.build.api.component.Component
 com.android.build.api.dsl.AaptOptions implements com.android.build.api.dsl.AndroidResources
 com.android.build.api.dsl.AarMetadata
 com.android.build.api.dsl.AarMetadata.getMinCompileSdk: java.lang.Integer ()
@@ -886,8 +886,6 @@ com.android.build.api.instrumentation.InstrumentationScope extends java.lang.Enu
 com.android.build.api.instrumentation.InstrumentationScope.valueOf: com.android.build.api.instrumentation.InstrumentationScope (java.lang.String)
 com.android.build.api.instrumentation.InstrumentationScope.values: com.android.build.api.instrumentation.InstrumentationScope[] ()
 com.android.build.api.transform.Transform.applyToVariant: boolean (com.android.build.api.variant.VariantInfo)
-com.android.build.api.variant.AarComponent implements org.gradle.api.component.Component
-com.android.build.api.variant.AarComponent.getAarMetadata: com.android.build.api.variant.AarMetadata ()
 com.android.build.api.variant.AarMetadata
 com.android.build.api.variant.AarMetadata.getMinCompileSdk: org.gradle.api.provider.Property<java.lang.Integer> ()
 com.android.build.api.variant.AndroidResources
@@ -896,15 +894,10 @@ com.android.build.api.variant.AndroidResources.getIgnoreAssetsPatterns: org.grad
 com.android.build.api.variant.AndroidVersion
 com.android.build.api.variant.AndroidVersion.getApiLevel: int ()
 com.android.build.api.variant.AndroidVersion.getCodename: java.lang.String ()
-com.android.build.api.variant.ApkComponent
-com.android.build.api.variant.ApkComponent.getAndroidResources: com.android.build.api.variant.AndroidResources ()
-com.android.build.api.variant.ApkComponent.getApplicationId: org.gradle.api.provider.Provider<java.lang.String> ()
-com.android.build.api.variant.ApkComponent.getPackaging: com.android.build.api.variant.ApkPackaging ()
-com.android.build.api.variant.ApkComponent.getRenderscript: com.android.build.api.variant.Renderscript ()
 com.android.build.api.variant.ApkPackaging implements com.android.build.api.variant.Packaging
 com.android.build.api.variant.ApkPackaging.getDex: com.android.build.api.variant.DexPackagingOptions ()
 com.android.build.api.variant.ApkPackaging.getJniLibs: com.android.build.api.variant.JniLibsApkPackaging ()
-com.android.build.api.variant.ApplicationVariant implements com.android.build.api.variant.ApkComponent, com.android.build.api.variant.Variant
+com.android.build.api.variant.ApplicationVariant implements com.android.build.api.variant.GeneratesApk, com.android.build.api.variant.Variant
 com.android.build.api.variant.ApplicationVariant.getAndroidTest: com.android.build.api.component.AndroidTest ()
 com.android.build.api.variant.ApplicationVariant.getApplicationId: org.gradle.api.provider.Property<java.lang.String> ()
 com.android.build.api.variant.ApplicationVariant.getDependenciesInfo: com.android.build.api.variant.DependenciesInfo ()
@@ -944,7 +937,7 @@ com.android.build.api.variant.DependenciesInfoBuilder.setIncludedInApk: void (bo
 com.android.build.api.variant.DependenciesInfoBuilder.setIncludedInBundle: void (boolean)
 com.android.build.api.variant.DexPackagingOptions
 com.android.build.api.variant.DexPackagingOptions.getUseLegacyPackaging: org.gradle.api.provider.Property<java.lang.Boolean> ()
-com.android.build.api.variant.DynamicFeatureVariant implements com.android.build.api.variant.Variant, com.android.build.api.variant.ApkComponent
+com.android.build.api.variant.DynamicFeatureVariant implements com.android.build.api.variant.Variant, com.android.build.api.variant.GeneratesApk
 com.android.build.api.variant.DynamicFeatureVariant.getAndroidTest: com.android.build.api.component.AndroidTest ()
 com.android.build.api.variant.DynamicFeatureVariantBuilder implements com.android.build.api.variant.VariantBuilder, com.android.build.api.variant.HasAndroidTestBuilder
 com.android.build.api.variant.ExternalNativeBuild
@@ -960,6 +953,18 @@ com.android.build.api.variant.FilterConfiguration$FilterType.valueOf: com.androi
 com.android.build.api.variant.FilterConfiguration$FilterType.values: com.android.build.api.variant.FilterConfiguration$FilterType[] ()
 com.android.build.api.variant.FilterConfiguration.getFilterType: com.android.build.api.variant.FilterConfiguration$FilterType ()
 com.android.build.api.variant.FilterConfiguration.getIdentifier: java.lang.String ()
+com.android.build.api.variant.GeneratesAar
+com.android.build.api.variant.GeneratesAar.getAarMetadata: com.android.build.api.variant.AarMetadata ()
+com.android.build.api.variant.GeneratesApk
+com.android.build.api.variant.GeneratesApk.getAndroidResources: com.android.build.api.variant.AndroidResources ()
+com.android.build.api.variant.GeneratesApk.getApplicationId: org.gradle.api.provider.Provider<java.lang.String> ()
+com.android.build.api.variant.GeneratesApk.getPackaging: com.android.build.api.variant.ApkPackaging ()
+com.android.build.api.variant.GeneratesApk.getRenderscript: com.android.build.api.variant.Renderscript ()
+com.android.build.api.variant.GeneratesTestApk implements com.android.build.api.variant.GeneratesApk
+com.android.build.api.variant.GeneratesTestApk.getFunctionalTest: org.gradle.api.provider.Property<java.lang.Boolean> ()
+com.android.build.api.variant.GeneratesTestApk.getHandleProfiling: org.gradle.api.provider.Property<java.lang.Boolean> ()
+com.android.build.api.variant.GeneratesTestApk.getInstrumentationRunner: org.gradle.api.provider.Property<java.lang.String> ()
+com.android.build.api.variant.GeneratesTestApk.getTestLabel: org.gradle.api.provider.Property<java.lang.String> ()
 com.android.build.api.variant.HasAndroidResources
 com.android.build.api.variant.HasAndroidResources.getPseudoLocalesEnabled: org.gradle.api.provider.Property<java.lang.Boolean> ()
 com.android.build.api.variant.HasAndroidResources.getResValues: org.gradle.api.provider.MapProperty<com.android.build.api.variant.ResValue$Key, com.android.build.api.variant.ResValue> ()
@@ -975,7 +980,7 @@ com.android.build.api.variant.JniLibsPackaging
 com.android.build.api.variant.JniLibsPackaging.getExcludes: org.gradle.api.provider.SetProperty<java.lang.String> ()
 com.android.build.api.variant.JniLibsPackaging.getKeepDebugSymbols: org.gradle.api.provider.SetProperty<java.lang.String> ()
 com.android.build.api.variant.JniLibsPackaging.getPickFirsts: org.gradle.api.provider.SetProperty<java.lang.String> ()
-com.android.build.api.variant.LibraryVariant implements com.android.build.api.variant.Variant, com.android.build.api.variant.AarComponent
+com.android.build.api.variant.LibraryVariant implements com.android.build.api.variant.Variant, com.android.build.api.variant.GeneratesAar
 com.android.build.api.variant.LibraryVariant.getAndroidTest: com.android.build.api.component.AndroidTest ()
 com.android.build.api.variant.LibraryVariant.getRenderscript: com.android.build.api.variant.Renderscript ()
 com.android.build.api.variant.LibraryVariantBuilder implements com.android.build.api.variant.VariantBuilder, com.android.build.api.variant.HasAndroidTestBuilder
@@ -1004,12 +1009,7 @@ com.android.build.api.variant.SigningConfig.getEnableV1Signing: org.gradle.api.p
 com.android.build.api.variant.SigningConfig.getEnableV2Signing: org.gradle.api.provider.Property<java.lang.Boolean> ()
 com.android.build.api.variant.SigningConfig.getEnableV3Signing: org.gradle.api.provider.Property<java.lang.Boolean> ()
 com.android.build.api.variant.SigningConfig.getEnableV4Signing: org.gradle.api.provider.Property<java.lang.Boolean> ()
-com.android.build.api.variant.TestApkComponent implements com.android.build.api.variant.ApkComponent
-com.android.build.api.variant.TestApkComponent.getFunctionalTest: org.gradle.api.provider.Property<java.lang.Boolean> ()
-com.android.build.api.variant.TestApkComponent.getHandleProfiling: org.gradle.api.provider.Property<java.lang.Boolean> ()
-com.android.build.api.variant.TestApkComponent.getInstrumentationRunner: org.gradle.api.provider.Property<java.lang.String> ()
-com.android.build.api.variant.TestApkComponent.getTestLabel: org.gradle.api.provider.Property<java.lang.String> ()
-com.android.build.api.variant.TestVariant implements com.android.build.api.variant.TestApkComponent, com.android.build.api.variant.Variant
+com.android.build.api.variant.TestVariant implements com.android.build.api.variant.GeneratesTestApk, com.android.build.api.variant.Variant
 com.android.build.api.variant.TestVariant.getApplicationId: org.gradle.api.provider.Property<java.lang.String> ()
 com.android.build.api.variant.TestVariant.getTestedApplicationId: org.gradle.api.provider.Provider<java.lang.String> ()
 com.android.build.api.variant.TestVariantBuilder implements com.android.build.api.variant.VariantBuilder

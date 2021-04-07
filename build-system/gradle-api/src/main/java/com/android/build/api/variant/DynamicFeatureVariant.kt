@@ -20,7 +20,7 @@ import org.gradle.api.Incubating
 import org.gradle.api.provider.Provider
 
 @Incubating
-interface DynamicFeatureVariant : Variant, ApkComponent {
+interface DynamicFeatureVariant : Variant, GeneratesApk {
 
     /**
      * Variant's [AndroidTest] configuration, or null if android tests are disabled for this

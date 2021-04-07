@@ -21,7 +21,7 @@ import org.gradle.api.provider.Provider
 
 /** [Variant] for Library projects */
 @Incubating
-interface LibraryVariant : Variant, AarComponent {
+interface LibraryVariant : Variant, GeneratesAar {
 
     /**
      * Variant's [AndroidTest] configuration, or null if android tests are disabled for this

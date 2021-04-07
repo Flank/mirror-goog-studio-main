@@ -24,7 +24,7 @@ import org.gradle.api.provider.Provider
  * producing APK files.
  */
 @Incubating
-interface ApkComponent {
+interface GeneratesApk {
 
     /**
      * Variant's application ID as present in the final manifest file of the APK.

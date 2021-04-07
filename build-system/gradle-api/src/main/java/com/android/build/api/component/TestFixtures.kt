@@ -16,8 +16,8 @@
 
 package com.android.build.api.component
 
-import com.android.build.api.variant.AarComponent
+import com.android.build.api.variant.GeneratesAar
 import org.gradle.api.Incubating
 
 @Incubating
-interface TestFixtures: AarComponent, Component
+interface TestFixtures: GeneratesAar, Component

@@ -20,7 +20,7 @@ import org.gradle.api.Incubating
 import org.gradle.api.provider.Property
 
 @Incubating
-interface TestApkComponent: ApkComponent {
+interface GeneratesTestApk: GeneratesApk {
 
     /**
      * The instrumentationRunner to use to run the tests.

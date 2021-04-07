@@ -17,7 +17,7 @@
 package com.android.build.api.component.analytics
 
 import com.android.build.api.variant.AndroidResources
-import com.android.build.api.variant.ApkComponent
+import com.android.build.api.variant.GeneratesApk
 import com.android.build.api.variant.ApkPackaging
 import com.android.build.api.variant.Renderscript
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
@@ -25,11 +25,11 @@ import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Provider
 
-class AnalyticsEnabledApkComponent(
-        val delegate: ApkComponent,
+class AnalyticsEnabledGeneratesApk(
+        val delegate: GeneratesApk,
         val stats: GradleBuildVariant.Builder,
         val objectFactory: ObjectFactory,
-): ApkComponent {
+): GeneratesApk {
 
     override val applicationId: Provider<String>
         get() {

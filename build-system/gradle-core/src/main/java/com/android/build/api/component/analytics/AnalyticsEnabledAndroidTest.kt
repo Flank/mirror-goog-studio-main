@@ -18,7 +18,7 @@ package com.android.build.api.component.analytics
 
 import com.android.build.api.component.AndroidTest
 import com.android.build.api.variant.AndroidResources
-import com.android.build.api.variant.ApkComponent
+import com.android.build.api.variant.GeneratesApk
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.ApkPackaging
 import com.android.build.api.variant.Renderscript
@@ -130,8 +130,8 @@ open class AnalyticsEnabledAndroidTest @Inject constructor(
             return delegate.proguardFiles
         }
 
-    private val apkComponent: ApkComponent by lazy {
-        AnalyticsEnabledApkComponent(
+    private val generatesApk: GeneratesApk by lazy {
+        AnalyticsEnabledGeneratesApk(
                 delegate,
                 stats,
                 objectFactory
@@ -139,11 +139,11 @@ open class AnalyticsEnabledAndroidTest @Inject constructor(
     }
 
     override val androidResources: AndroidResources
-        get() = apkComponent.androidResources
+        get() = generatesApk.androidResources
 
     override val renderscript: Renderscript?
-        get() = apkComponent.renderscript
+        get() = generatesApk.renderscript
 
     override val packaging: ApkPackaging
-        get() = apkComponent.packaging
+        get() = generatesApk.packaging
 }

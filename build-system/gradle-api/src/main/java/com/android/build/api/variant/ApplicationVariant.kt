@@ -24,7 +24,7 @@ import org.gradle.api.provider.Property
  * Properties for the main Variant of an application.
  */
 @Incubating
-interface ApplicationVariant : ApkComponent, Variant {
+interface ApplicationVariant : GeneratesApk, Variant {
 
     /**
      * Variant's application ID as present in the final manifest file of the APK.
