@@ -727,6 +727,7 @@ public final class SdkConstants {
             "android.Manifest$permission";
     public static final String CLASS_INTENT = "android.content.Intent";
     public static final String CLASS_CONTEXT = "android.content.Context";
+    public static final String CLASS_CONFIGURATION = "android.content.res.Configuration";
     public static final String CLASS_RESOURCES = "android.content.res.Resources";
     public static final String CLS_TYPED_ARRAY = "android.content.res.TypedArray";
     public static final String CLASS_VIEW = "android.view.View";
