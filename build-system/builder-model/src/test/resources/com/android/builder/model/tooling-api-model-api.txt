@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-0fe95c1fda1c46509f9896de103a8475895f0580812ead866a560579c872a5d5
+4f74357dde78070c96c604ccd740f28e2357119d1c9ddeddbdb8590ff5c0f9b1
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -344,7 +344,6 @@ com.android.builder.model.ProductFlavor.getRenderscriptSupportModeBlasEnabled: j
 com.android.builder.model.ProductFlavor.getRenderscriptSupportModeEnabled: java.lang.Boolean ()
 com.android.builder.model.ProductFlavor.getRenderscriptTargetApi: java.lang.Integer ()
 com.android.builder.model.ProductFlavor.getResourceConfigurations: java.util.Collection<java.lang.String> ()
-com.android.builder.model.ProductFlavor.getSigningConfig: com.android.builder.model.SigningConfig ()
 com.android.builder.model.ProductFlavor.getTargetSdkVersion: com.android.builder.model.ApiVersion ()
 com.android.builder.model.ProductFlavor.getTestApplicationId: java.lang.String ()
 com.android.builder.model.ProductFlavor.getTestFunctionalTest: java.lang.Boolean ()

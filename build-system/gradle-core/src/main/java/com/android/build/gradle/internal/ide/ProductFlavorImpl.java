@@ -202,12 +202,6 @@ final class ProductFlavorImpl extends BaseConfigImpl implements ProductFlavor, S
         return mResourceConfigurations;
     }
 
-    @Nullable
-    @Override
-    public SigningConfig getSigningConfig() {
-        return null;
-    }
-
     @NonNull
     @Override
     public VectorDrawablesOptions getVectorDrawables() {
