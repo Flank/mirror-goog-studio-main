@@ -28,6 +28,7 @@ import com.android.tools.idea.protobuf.ByteString;
 import com.android.tools.tracer.Trace;
 import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableMap;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
@@ -93,6 +94,9 @@ public class Deployer {
         GET_PIDS,
         GET_ARCH,
         COMPUTE_FRESHINSTALL_OID,
+
+        // Coroutine debugger
+        INSTALL_COROUTINE_DEBUGGER
     }
 
     public enum InstallMode {
@@ -110,6 +114,7 @@ public class Deployer {
     public static class Result {
         public boolean skippedInstall = false;
         public boolean needsRestart = false;
+        public boolean coroutineDebuggerInstalled = false;
     }
 
     /**
@@ -146,6 +151,7 @@ public class Deployer {
             ApkInstaller apkInstaller = new ApkInstaller(adb, service, installer, logger);
 
             // Inputs
+            Task<String> pkgName = runner.create(packageName);
             Task<List<String>> paths = runner.create(apks);
 
             // Parse the apks
@@ -157,9 +163,25 @@ public class Deployer {
                     !apkInstaller.install(
                             packageName, apks, options, installMode, metrics.getDeployMetrics());
 
+            Task<Boolean> installCoroutineDebugger = null;
+            if (useCoroutineDebugger()) {
+                // TODO(b/185399333): instead of using apks, add  task to get arch by opening apk
+                // has to happen after install
+                installCoroutineDebugger =
+                        runner.create(
+                                Tasks.INSTALL_COROUTINE_DEBUGGER,
+                                this::installCoroutineDebugger,
+                                pkgName,
+                                apkList);
+            }
+
             CachedDexSplitter splitter = new CachedDexSplitter(dexDb, new D8DexSplitter());
             runner.create(Tasks.CACHE, splitter::cache, apkList);
             runner.runAsync();
+
+            if (installCoroutineDebugger != null) {
+                installCoroutineDebugger.get();
+            }
             return result;
         }
     }
@@ -175,6 +197,8 @@ public class Deployer {
         Task<List<Apk>> apks =
                 runner.create(Tasks.PARSE_PATHS, new ApkParser()::parsePaths, runner.create(paths));
 
+        Task<Boolean> installCoroutineDebugger = null;
+
         boolean installSuccess = false;
         if (!options.optimisticInstallSupport.isEmpty()) {
             OptimisticApkInstaller apkInstaller =
@@ -187,6 +211,20 @@ public class Deployer {
             TaskResult result = runner.run();
             installSuccess = result.isSuccess();
             if (installSuccess) {
+                if (useCoroutineDebugger()) {
+                    // TODO(b/185399333): instead of using apks, add  task to get arch by opening
+                    // apk
+                    // has to happen after install
+                    installCoroutineDebugger =
+                            runner.create(
+                                    Tasks.INSTALL_COROUTINE_DEBUGGER,
+                                    (String pkg, List<Apk> apksList, OverlayId overlay) ->
+                                            installCoroutineDebugger(pkg, apksList),
+                                    packageName,
+                                    apks,
+                                    overlayId);
+                }
+
                 runner.create(
                         Tasks.DEPLOY_CACHE_STORE,
                         deployCache::store,
@@ -212,11 +250,28 @@ public class Deployer {
                             installOptions,
                             installMode,
                             metrics.getDeployMetrics());
+
+            if (useCoroutineDebugger()) {
+                // TODO(b/185399333): instead of using apks, add  task to get arch by opening apk
+                // has to happen after install
+                installCoroutineDebugger =
+                        runner.create(
+                                Tasks.INSTALL_COROUTINE_DEBUGGER,
+                                this::installCoroutineDebugger,
+                                packageName,
+                                apks);
+            }
+
             runner.create(
                     Tasks.DEPLOY_CACHE_STORE, deployCache::invalidate, deviceSerial, packageName);
         }
 
         runner.runAsync();
+
+        if (installCoroutineDebugger != null) {
+            deployResult.coroutineDebuggerInstalled = installCoroutineDebugger.get();
+        }
+
         return deployResult;
     }
 
@@ -239,6 +294,26 @@ public class Deployer {
                 return swap(apks, true /* Restart Activity */, ImmutableMap.of());
             }
         }
+    }
+
+    private boolean installCoroutineDebugger(String packageName, List<Apk> apk)
+            throws DeployerException {
+        Deploy.Arch arch = adb.getArchFromApk(apk);
+        try {
+            installer.installCoroutineAgent(packageName, arch);
+            return true;
+        } catch (IOException e) {
+            logger.error(e, null);
+            return false;
+        }
+    }
+
+    /** Returns true if coroutine debugger is enabled in DeployerOptions and API version is P+ */
+    private boolean useCoroutineDebugger() {
+        // --attach-agent was added on API 28. Furthermore before API 28 there is no guarantee
+        // for the code_cache folder to be created during app install.
+        return this.options.enableCoroutineDebugger
+                && adb.getVersion().isGreaterOrEqualThan(AndroidVersion.VersionCodes.P);
     }
 
     private Result swap(

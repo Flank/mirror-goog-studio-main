@@ -24,6 +24,7 @@ public class DeployerOption {
     public final boolean useStructuralRedefinition;
     public final boolean useVariableReinitialization;
     public final boolean fastRestartOnSwapFail;
+    public final boolean enableCoroutineDebugger;
 
     private DeployerOption(
             boolean useOptimisticSwap,
@@ -31,13 +32,15 @@ public class DeployerOption {
             EnumSet<ChangeType> optimisticInstallSupport,
             boolean useStructuralRedefinition,
             boolean useVariableReinitialization,
-            boolean fastRestartOnSwapFail) {
+            boolean fastRestartOnSwapFail,
+            boolean enableCoroutineDebugger) {
         this.useOptimisticSwap = useOptimisticSwap;
         this.useOptimisticResourceSwap = useOptimisticResourceSwap;
         this.optimisticInstallSupport = optimisticInstallSupport;
         this.useStructuralRedefinition = useStructuralRedefinition;
         this.useVariableReinitialization = useVariableReinitialization;
         this.fastRestartOnSwapFail = fastRestartOnSwapFail;
+        this.enableCoroutineDebugger = enableCoroutineDebugger;
     }
 
     public static class Builder {
@@ -47,6 +50,7 @@ public class DeployerOption {
         private boolean useStructuralRedefinition;
         private boolean useVariableReinitialization;
         private boolean fastRestartOnSwapFail;
+        private boolean enableCoroutineDebugger;
 
         public Builder setUseOptimisticSwap(boolean useOptimisticSwap) {
             this.useOptimisticSwap = useOptimisticSwap;
@@ -78,6 +82,11 @@ public class DeployerOption {
             return this;
         }
 
+        public Builder enableCoroutineDebugger(boolean enableCoroutineDebugger) {
+            this.enableCoroutineDebugger = enableCoroutineDebugger;
+            return this;
+        }
+
         public DeployerOption build() {
             return new DeployerOption(
                     useOptimisticSwap,
@@ -85,7 +94,8 @@ public class DeployerOption {
                     optimisticInstallSupport,
                     useStructuralRedefinition,
                     useVariableReinitialization,
-                    fastRestartOnSwapFail);
+                    fastRestartOnSwapFail,
+                    enableCoroutineDebugger);
         }
     }
 }

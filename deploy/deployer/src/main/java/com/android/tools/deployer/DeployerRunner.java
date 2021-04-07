@@ -132,6 +132,7 @@ public class DeployerRunner {
                         .setUseVariableReinitialization(true)
                         .setFastRestartOnSwapFail(false)
                         .setOptimisticInstallSupport(optimisticInstallSupport)
+                        .enableCoroutineDebugger(true)
                         .build();
 
         Deployer deployer =

@@ -41,4 +41,11 @@ public interface Installer {
      * Verify the App's current OverlayID. The app's OverlayID will not be change should it differs.
      */
     Deploy.OverlayIdPushResponse verifyOverlayId(String packageName, String oid) throws IOException;
+
+    /**
+     * Extracts the coroutine debugger agent .so from the installer binary to the app's code_cache
+     * folder
+     */
+    Deploy.InstallCoroutineAgentResponse installCoroutineAgent(String packageName, Deploy.Arch arch)
+            throws IOException;
 }

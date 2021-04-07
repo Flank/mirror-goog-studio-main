@@ -22,6 +22,7 @@
 #include "tools/base/deploy/installer/delta_install.h"
 #include "tools/base/deploy/installer/delta_preinstall.h"
 #include "tools/base/deploy/installer/dump.h"
+#include "tools/base/deploy/installer/install_coroutine_agent.h"
 #include "tools/base/deploy/installer/live_literal_update.h"
 #include "tools/base/deploy/installer/oid_push.h"
 #include "tools/base/deploy/installer/overlay_install.h"
@@ -49,7 +50,8 @@ std::unique_ptr<Command> GetCommand(const char* command_name,
            [&]() { return new OverlayInstallCommand(workspace); }},
           {"overlayidpush",
            [&]() { return new OverlayIdPushCommand(workspace); }},
-
+          {"installcoroutineagent",
+           [&]() { return new InstallCoroutineAgentCommand(workspace); }},
           // Add here more commands (e.g: version, install, patch, agent, ...)
       };
 

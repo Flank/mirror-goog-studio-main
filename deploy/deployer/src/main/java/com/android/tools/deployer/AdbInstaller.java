@@ -117,6 +117,22 @@ public class AdbInstaller implements Installer {
     }
 
     @Override
+    public Deploy.InstallCoroutineAgentResponse installCoroutineAgent(
+            String packageName, Deploy.Arch arch) throws IOException {
+        Deploy.InstallCoroutineAgentRequest.Builder installCoroutineAgentRequestBuilder =
+                Deploy.InstallCoroutineAgentRequest.newBuilder();
+        installCoroutineAgentRequestBuilder.setPackageName(packageName).setArch(arch);
+        Deploy.InstallerRequest.Builder request =
+                buildRequest("installcoroutineagent")
+                        .setInstallCoroutineAgentRequest(installCoroutineAgentRequestBuilder);
+        Deploy.InstallerResponse installerResponse = sendInstallerRequest(request.build());
+        Deploy.InstallCoroutineAgentResponse response =
+                installerResponse.getInstallCoroutineAgentResponse();
+        logger.verbose("installer install coroutine agent: " + response.getStatus().toString());
+        return response;
+    }
+
+    @Override
     public Deploy.DumpResponse dump(List<String> packageNames) throws IOException {
         Deploy.DumpRequest.Builder dumpRequestBuilder = Deploy.DumpRequest.newBuilder();
         for (String packageName : packageNames) {
