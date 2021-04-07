@@ -111,14 +111,34 @@ class DependencyConfigurator(
     }
 
     fun configureDependencyChecks(): DependencyConfigurator {
-        if (!projectServices.projectOptions.get(BooleanOption.USE_ANDROID_X)) {
-            project.configurations.all { configuration ->
-                if (configuration.isCanBeResolved) {
-                    configuration.incoming.afterResolve(
-                            AndroidXDependencyCheck(configuration.name, projectServices.issueReporter))
+        val useAndroidX = projectServices.projectOptions.get(BooleanOption.USE_ANDROID_X)
+        val enableJetifier = projectServices.projectOptions.get(BooleanOption.ENABLE_JETIFIER)
+
+        when {
+            !useAndroidX && !enableJetifier -> {
+                project.configurations.all { configuration ->
+                    if (configuration.isCanBeResolved) {
+                        configuration.incoming.afterResolve(
+                                AndroidXDependencyCheck.AndroidXDisabledJetifierDisabled(
+                                        project, configuration.name, projectServices.issueReporter
+                                )
+                        )
+                    }
+                }
+            }
+            useAndroidX && !enableJetifier -> {
+                project.configurations.all { configuration ->
+                    if (configuration.isCanBeResolved) {
+                        configuration.incoming.afterResolve(
+                                AndroidXDependencyCheck.AndroidXEnabledJetifierDisabled(
+                                        project, configuration.name, projectServices.issueReporter
+                                )
+                        )
+                    }
                 }
             }
         }
+
         return this
     }
 

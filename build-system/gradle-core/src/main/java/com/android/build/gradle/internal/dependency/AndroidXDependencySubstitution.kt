@@ -154,11 +154,25 @@ object AndroidXDependencySubstitution {
      * dependency.
      */
     fun isAndroidXDependency(dependency: String): Boolean {
-        return dependency.startsWith("androidx")
+        return dependency.startsWith(ANDROIDX)
                 || dependency.startsWith(COM_GOOGLE_ANDROID_MATERIAL)
     }
 
+    /**
+     * Returns `true` if the given dependency (formatted as `group:name:version`) is a legacy
+     * support library dependency.
+     */
+    fun isLegacySupportLibDependency(dependency: String): Boolean {
+        return dependency.startsWith(COM_ANDROID_SUPPORT)
+                || dependency.startsWith(COM_ANDROID_DATABINDING)
+                || dependency.startsWith(ANDROID_ARCH_)
+    }
+
+    private const val ANDROIDX = "androidx"
+    private const val COM_GOOGLE_ANDROID_MATERIAL = "com.google.android.material"
+
+    private const val COM_ANDROID_SUPPORT = "com.android.support"
+    private const val COM_ANDROID_DATABINDING = "com.android.databinding"
     private const val COM_ANDROID_DATABINDING_BASELIBRARY = "com.android.databinding:baseLibrary"
     private const val ANDROID_ARCH_ = "android.arch."
-    private const val COM_GOOGLE_ANDROID_MATERIAL = "com.google.android.material"
 }
