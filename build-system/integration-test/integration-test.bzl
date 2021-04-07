@@ -108,6 +108,7 @@ def single_gradle_integration_test_per_source(
         srcs,
         runtime_deps = [],
         flaky_targets = [],
+        very_flaky_targets = [],
         tags = [],
         **kwargs):
     # List of target names approved to use an eternal timeout.
@@ -149,7 +150,7 @@ def single_gradle_integration_test_per_source(
             shard_count = None,
             maven_repos = maven_repos,
             runtime_deps = runtime_deps,
-            tags = tags,
+            tags = tags + (["very_flaky"] if test_name in very_flaky_targets else []),
             timeout = "eternal" if target_name in eternal_target_names else "long",
             **kwargs
         )

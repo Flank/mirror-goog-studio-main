@@ -262,7 +262,7 @@ single_gradle_integration_test_per_source(
         ],
     ),
     data = TEST_DATA + OLD_SDKS,
-    flaky_targets = [
+    very_flaky_targets = [
         "GradlePluginMemoryLeakTest",  # b/153972155
     ],
     maven_repo_manifests = [
