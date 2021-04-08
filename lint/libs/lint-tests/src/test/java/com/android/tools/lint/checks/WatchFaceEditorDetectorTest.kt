@@ -16,14 +16,13 @@
 
 package com.android.tools.lint.checks
 
-import com.android.tools.lint.detector.api.Detector
-
 class WatchFaceEditorDetectorTest : AbstractCheckTest() {
     override fun getDetector() = WatchFaceEditorDetector()
 
     fun testWrongLaunchMode() {
         lint().files(
-            xml("AndroidManifest.xml",
+            xml(
+                "AndroidManifest.xml",
                 """
                     <manifest xmlns:android="http://schemas.android.com/apk/res/android"
                         package="test.pkg">
@@ -39,14 +38,16 @@ class WatchFaceEditorDetectorTest : AbstractCheckTest() {
                         </application>
                     </manifest>"""
             ).indented()
-        ).run().expect("""
+        ).run().expect(
+            """
             AndroidManifest.xml:7: Warning: Watch face editor must use launchMode="standard" [WatchFaceEditor]
                         android:launchMode="singleTask">
                         ~~~~~~~~~~~~~~~~~~
             0 errors, 1 warnings"""
         )
             .verifyFixes()
-            .expectFixDiffs("""
+            .expectFixDiffs(
+                """
                 Fix for AndroidManifest.xml line 7: Set launchMode="standard":
                 @@ -9 +9
                 -             android:launchMode="singleTask" >
@@ -56,7 +57,8 @@ class WatchFaceEditorDetectorTest : AbstractCheckTest() {
 
     fun testCorrectLaunchMode() {
         lint().files(
-            xml("AndroidManifest.xml",
+            xml(
+                "AndroidManifest.xml",
                 """
                     <manifest xmlns:android="http://schemas.android.com/apk/res/android"
                         package="test.pkg">

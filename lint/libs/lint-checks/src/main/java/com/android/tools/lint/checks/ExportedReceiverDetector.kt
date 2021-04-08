@@ -21,8 +21,6 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.XmlContext
 import com.android.tools.lint.detector.api.XmlScanner
-import com.android.tools.lint.detector.api.targetSdkAtLeast
-import com.android.tools.lint.detector.api.targetSdkLessThan
 import com.android.utils.subtag
 import org.w3c.dom.Element
 
