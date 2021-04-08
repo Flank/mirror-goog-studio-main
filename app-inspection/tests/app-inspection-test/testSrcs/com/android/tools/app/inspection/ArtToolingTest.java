@@ -364,6 +364,8 @@ public class ArtToolingTest {
                 appInspectionRule.sendCommandAndGetResponse(disposeInspector(inspectorId)),
                 AppInspection.AppInspectionResponse.Status.SUCCESS);
 
+        assertThat(appInspectionRule.consumeCollectedEvent().hasDisposedEvent()).isTrue();
+
         // hooks will throw if they are called but inspection is disposed
         androidDriver.triggerMethod(TODO_ACTIVITY, "selectFirstGroup");
     }

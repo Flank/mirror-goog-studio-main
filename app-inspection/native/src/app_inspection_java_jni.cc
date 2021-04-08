@@ -274,13 +274,13 @@ void EnqueueAppInspectionRawEvent(JNIEnv *env, jstring inspector_id,
                             });
 }
 
-void EnqueueAppInspectionCrashEvent(JNIEnv *env, jstring inspector_id,
-                                    jstring error_message) {
+void EnqueueAppInspectionDisposedEvent(JNIEnv *env, jstring inspector_id,
+                                       jstring error_message) {
   profiler::JStringWrapper message(env, error_message);
   EnqueueAppInspectionEvent(
       env, inspector_id, [message](AppInspectionEvent *event) {
-        auto *crash_event = event->mutable_crash_event();
-        crash_event->set_error_message(message.get().c_str());
+        auto *disposed_event = event->mutable_disposed_event();
+        disposed_event->set_error_message(message.get().c_str());
       });
 }
 
@@ -441,10 +441,10 @@ Java_com_android_tools_agent_app_inspection_NativeTransport_sendGetLibraryCompat
 }
 
 JNIEXPORT void JNICALL
-Java_com_android_tools_agent_app_inspection_NativeTransport_sendCrashEvent(
+Java_com_android_tools_agent_app_inspection_NativeTransport_sendDisposedEvent(
     JNIEnv *env, jobject obj, jstring inspector_id, jstring error_message) {
-  app_inspection::EnqueueAppInspectionCrashEvent(env, inspector_id,
-                                                 error_message);
+  app_inspection::EnqueueAppInspectionDisposedEvent(env, inspector_id,
+                                                    error_message);
 }
 
 JNIEXPORT void JNICALL

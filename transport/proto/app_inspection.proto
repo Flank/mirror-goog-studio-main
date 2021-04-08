@@ -132,7 +132,7 @@ message AppInspectionEvent {
   string inspector_id = 1;
   oneof union {
     RawEvent raw_event = 2;
-    CrashEvent crash_event = 3;
+    DisposedEvent disposed_event = 3;
   }
 }
 
@@ -197,8 +197,8 @@ message RawEvent {
   }
 }
 
-// Sent when inspector encounters an unrecoverable error.
-message CrashEvent {
-  // a string message about the crash
+// Sent when an inspector is disposed due to any reason
+message DisposedEvent {
+  // option message about the cause of the disposal (ie: cause of a crash)
   string error_message = 1;
 }

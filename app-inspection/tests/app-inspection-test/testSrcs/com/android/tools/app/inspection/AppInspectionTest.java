@@ -73,6 +73,7 @@ public final class AppInspectionTest {
                 appInspectionRule.sendCommandAndGetResponse(disposeInspector("test.inspector")),
                 Status.SUCCESS);
         appInspectionRule.assertInput(EXPECTED_INSPECTOR_DISPOSED);
+        assertThat(appInspectionRule.consumeCollectedEvent().hasDisposedEvent()).isTrue();
     }
 
     @Test
@@ -89,6 +90,7 @@ public final class AppInspectionTest {
                         disposeInspector("test.native.inspector")),
                 Status.SUCCESS);
         appInspectionRule.assertInput(EXPECTED_INSPECTOR_DISPOSED);
+        assertThat(appInspectionRule.consumeCollectedEvent().hasDisposedEvent()).isTrue();
     }
 
     @Test
@@ -107,6 +109,7 @@ public final class AppInspectionTest {
                 appInspectionRule.sendCommandAndGetResponse(disposeInspector("test.inspector")),
                 Status.SUCCESS);
         appInspectionRule.assertInput(EXPECTED_INSPECTOR_DISPOSED);
+        assertThat(appInspectionRule.consumeCollectedEvent().hasDisposedEvent()).isTrue();
     }
 
     @Test
@@ -203,6 +206,10 @@ public final class AppInspectionTest {
                                 launchMetadata("project.A", true))),
                 SUCCESS);
         appInspectionRule.assertInput(EXPECTED_INSPECTOR_CREATED);
+
+        AppInspectionEvent disposedEvent = appInspectionRule.consumeCollectedEvent();
+        assertThat(disposedEvent.hasDisposedEvent()).isTrue();
+        assertThat(disposedEvent.getDisposedEvent().getErrorMessage()).isEmpty();
     }
 
     private static LaunchMetadata launchMetadata(String projectName) {
@@ -224,6 +231,7 @@ public final class AppInspectionTest {
                 appInspectionRule.sendCommandAndGetResponse(disposeInspector("test.inspector")),
                 Status.SUCCESS);
         appInspectionRule.assertInput(EXPECTED_INSPECTOR_DISPOSED);
+        assertThat(appInspectionRule.consumeCollectedEvent().hasDisposedEvent()).isTrue();
         byte[] commandBytes = new byte[] {1, 2, 127};
         AppInspectionResponse response =
                 appInspectionRule.sendCommandAndGetResponse(
@@ -579,8 +587,8 @@ public final class AppInspectionTest {
             @NonNull AppInspectionEvent event,
             @NonNull String inspectorId,
             @NonNull String message) {
-        assertThat(event.hasCrashEvent()).isTrue();
+        assertThat(event.hasDisposedEvent()).isTrue();
         assertThat(event.getInspectorId()).isEqualTo(inspectorId);
-        assertThat(event.getCrashEvent().getErrorMessage()).isEqualTo(message);
+        assertThat(event.getDisposedEvent().getErrorMessage()).isEqualTo(message);
     }
 }
