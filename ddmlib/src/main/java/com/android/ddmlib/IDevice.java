@@ -543,8 +543,10 @@ public interface IDevice extends IShellEnabledDevice {
      * @throws TimeoutException in case of a timeout reading responses from the device
      * @throws SyncException if some files could not be pushed
      */
-    void push(@NonNull String[] local, @NonNull String remote)
-            throws IOException, AdbCommandRejectedException, TimeoutException, SyncException;
+    default void push(@NonNull String[] local, @NonNull String remote)
+            throws IOException, AdbCommandRejectedException, TimeoutException, SyncException {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Pushes a single file.
