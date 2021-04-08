@@ -155,6 +155,15 @@ val CxxAbiModel.minSdkVersion : Int get() {
 val CxxAbiModel.ninjaLogFile: File
     get() = join(cxxBuildFolder, ".ninja_log")
 
+
+/**
+ * .ninja_deps file for this ABI. Only applies to CMake builds.
+ * This file contains the source -> header dependencies discovered during the last build.
+ * For example, $moduleRootFolder/.cxx/ndkBuild/debug/armeabi-v7a/.ninja_deps
+ */
+val CxxAbiModel.ninjaDepsFile: File
+    get() = join(cxxBuildFolder, ".ninja_deps")
+
 /**
  * Folder for .o files
  *   ex, $moduleRootFolder/build/intermediates/ndkBuild/debug/obj/local/armeabi-v7a/objs-debug
@@ -188,10 +197,10 @@ val CxxAbiModel.jsonGenerationLoggingRecordFile: File
 
 /**
  * Text file containing command run to generate C/C++ metadata.
- *   ex, $moduleRootFolder/build/intermediates/cxx/Debug/{hashcode}/meta/x86_64/metadata_generation_command.txt
+ *   needs to have the same clean semantics as compile_commands.json, so place in that folder.
  */
 val CxxAbiModel.metadataGenerationCommandFile: File
-    get() = join(modelMetadataFolder, "metadata_generation_command.txt")
+    get() = compileCommandsJsonFile.resolveSibling("metadata_generation_command.txt")
 
 /**
  * Text file containing STDOUT for the process run to generate C/C++ metadata.

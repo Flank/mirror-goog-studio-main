@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.nativebuild
 
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
+import com.android.build.gradle.integration.common.fixture.GradleBuildResult
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_NDK_SIDE_BY_SIDE_VERSION
 import com.android.build.gradle.integration.common.fixture.ModelBuilderV2.NativeModuleParams
@@ -42,6 +43,7 @@ import com.android.build.gradle.internal.cxx.configure.OFF_STAGE_CMAKE_VERSION
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons
 import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.cxx.model.jsonGenerationLoggingRecordFile
+import com.android.build.gradle.internal.cxx.model.ninjaDepsFile
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
 import com.android.builder.model.v2.models.ndk.NativeModule
@@ -124,6 +126,13 @@ class CmakeBasicProjectTest(
           // ------------------------------------------------------------------------
         }
     """.trimIndent())
+
+    /**
+     * Helper function that controls arguments when running a task
+     */
+    private fun runTasks(vararg tasks : String): GradleBuildResult? {
+        return project.executor().withArgument("--build-cache").run(*tasks)
+    }
 
     // Regression test for b/179062268
     @Test
@@ -253,6 +262,22 @@ class CmakeBasicProjectTest(
         // Checks for whether module body has references to objFolder and soFolder
         Truth.assertThat(moduleBody("CMakeLists.txt")).contains(".objFolder")
         Truth.assertThat(moduleBody("CMakeLists.txt")).contains(".soFolder")
+    }
+
+    /**
+     * In this bug, the file metadata_generation_command.txt was deleted by clean task.
+     * This caused configure task to delete the module/.cxx folder as 'stale'.
+     * This test checks for a build side effect: the presence of .ninja_deps file.
+     */
+    @Test
+    fun `clean should not trigger stale CMake folder deletion`() {
+        runTasks("buildCMakeDebug")
+        val abi = project.recoverExistingCxxAbiModels().first()
+        assertThat(abi.ninjaDepsFile.isFile).isTrue()
+        runTasks("clean")
+        assertThat(abi.ninjaDepsFile.isFile).isTrue()
+        runTasks("configureCMakeDebug")
+        assertThat(abi.ninjaDepsFile.isFile).isTrue()
     }
 
     @Test
