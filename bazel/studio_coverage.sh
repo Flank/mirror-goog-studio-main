@@ -29,6 +29,10 @@ collect_and_exit() {
     exit $?
   fi
 
+  # Test failures in postsubmit runs are processed by ATP from logs/junit.
+  if [[ $postsubmit && $exit_code == $BAZEL_EXITCODE_TEST_FAILURES ]]; then
+    exit 0
+  fi
   exit $exit_code
 }
 
