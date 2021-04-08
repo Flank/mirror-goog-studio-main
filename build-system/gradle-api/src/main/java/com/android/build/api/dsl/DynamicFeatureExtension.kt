@@ -28,17 +28,12 @@ import org.gradle.api.Incubating
  */
 @Incubating
 interface DynamicFeatureExtension<
-        AndroidSourceSetT : AndroidSourceSet,
-        BuildTypeT : DynamicFeatureBuildType,
-        DefaultConfigT : DynamicFeatureDefaultConfig,
-        ProductFlavorT : DynamicFeatureProductFlavor,
         SigningConfigT : ApkSigningConfig> :
     CommonExtension<
-            AndroidSourceSetT,
             DynamicFeatureBuildFeatures,
-            BuildTypeT,
-            DefaultConfigT,
-            ProductFlavorT,
+            DynamicFeatureBuildType,
+            DynamicFeatureDefaultConfig,
+            DynamicFeatureProductFlavor,
             SigningConfigT>,
     ApkExtension,
     TestedExtension {

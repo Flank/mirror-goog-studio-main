@@ -17,21 +17,16 @@
 package com.android.build.gradle.internal.dsl
 
 import com.android.build.api.dsl.DynamicFeatureBuildFeatures
+import com.android.build.api.dsl.DynamicFeatureBuildType
+import com.android.build.api.dsl.DynamicFeatureDefaultConfig
 import com.android.build.api.dsl.DynamicFeatureExtension
-import com.android.build.api.variant.DynamicFeatureVariant
-import com.android.build.api.variant.DynamicFeatureVariantBuilder
-import com.android.build.gradle.api.AndroidSourceSet
+import com.android.build.api.dsl.DynamicFeatureProductFlavor
 
 /** See [InternalCommonExtension] */
 interface InternalDynamicFeatureExtension :
-    DynamicFeatureExtension<
-        AndroidSourceSet,
-        BuildType,
-        DefaultConfig,
-        ProductFlavor,
-        SigningConfig>,
-        InternalCommonExtension<
-                DynamicFeatureBuildFeatures,
-                BuildType,
-                DefaultConfig,
-                ProductFlavor>
+    DynamicFeatureExtension<SigningConfig>,
+    InternalCommonExtension<
+            DynamicFeatureBuildFeatures,
+            DynamicFeatureBuildType,
+            DynamicFeatureDefaultConfig,
+            DynamicFeatureProductFlavor>

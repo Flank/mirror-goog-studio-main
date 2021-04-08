@@ -16,14 +16,18 @@
 package com.android.build.gradle
 
 import com.android.build.api.dsl.LibraryBuildFeatures
+import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.api.LibraryVariant
 import com.android.build.gradle.api.ViewBindingOptions
 import com.android.build.gradle.internal.ExtraModelInfo
 import com.android.build.gradle.internal.dependency.SourceSetManager
+import com.android.build.gradle.internal.dsl.BuildType
+import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.InternalLibraryExtension
 import com.android.build.gradle.internal.dsl.LibraryExtensionImpl
+import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.ViewBindingOptionsImpl
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.services.DslServices
@@ -58,6 +62,17 @@ open class LibraryExtension(
     false
 ),
    InternalLibraryExtension by publicExtensionImpl {
+
+    // Overrides to make the parameterized types match, due to BaseExtension being part of
+    // the previous public API and not wanting to paramerterize that.
+    override val buildTypes: NamedDomainObjectContainer<BuildType>
+        get() = publicExtensionImpl.buildTypes as NamedDomainObjectContainer<BuildType>
+    override val defaultConfig: DefaultConfig
+        get() = publicExtensionImpl.defaultConfig as DefaultConfig
+    override val productFlavors: NamedDomainObjectContainer<ProductFlavor>
+        get() = publicExtensionImpl.productFlavors as NamedDomainObjectContainer<ProductFlavor>
+    override val sourceSets: NamedDomainObjectContainer<AndroidSourceSet>
+        get() = publicExtensionImpl.sourceSets
 
     private val libraryVariantList: DomainObjectSet<LibraryVariant> =
         dslServices.domainObjectSet(LibraryVariant::class.java)

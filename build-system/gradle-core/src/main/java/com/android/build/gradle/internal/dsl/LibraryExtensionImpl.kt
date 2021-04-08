@@ -17,24 +17,29 @@
 package com.android.build.gradle.internal.dsl
 
 import com.android.build.api.dsl.LibraryBuildFeatures
+import com.android.build.api.dsl.LibraryBuildType
+import com.android.build.api.dsl.LibraryDefaultConfig
+import com.android.build.api.dsl.LibraryProductFlavor
 import com.android.build.api.dsl.PrefabPackagingOptions
-import com.android.build.api.variant.LibraryVariant
-import com.android.build.api.variant.LibraryVariantBuilder
-import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.plugins.DslContainerProvider
+import com.android.build.gradle.internal.services.DslServices
 import org.gradle.api.NamedDomainObjectContainer
 import javax.inject.Inject
 
 /** Internal implementation of the 'new' DSL interface */
 abstract class LibraryExtensionImpl @Inject constructor(
     dslServices: DslServices,
-    dslContainers: DslContainerProvider<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
+    dslContainers: DslContainerProvider<
+            LibraryDefaultConfig<SigningConfig>,
+            LibraryBuildType<SigningConfig>,
+            LibraryProductFlavor<SigningConfig>,
+            SigningConfig>
 ) :
     TestedExtensionImpl<
             LibraryBuildFeatures,
-            BuildType,
-            DefaultConfig,
-            ProductFlavor>(
+            LibraryBuildType<SigningConfig>,
+            LibraryDefaultConfig<SigningConfig>,
+            LibraryProductFlavor<SigningConfig>>(
         dslServices,
         dslContainers
     ),

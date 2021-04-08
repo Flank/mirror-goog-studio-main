@@ -44,7 +44,6 @@ interface InternalCommonExtension<
         DefaultConfigT : com.android.build.api.dsl.DefaultConfig,
         ProductFlavorT : com.android.build.api.dsl.ProductFlavor> :
     CommonExtension<
-        AndroidSourceSet,
         BuildFeaturesT,
         BuildTypeT,
         DefaultConfigT,
@@ -64,8 +63,8 @@ interface InternalCommonExtension<
     override val testOptions: TestOptionsImpl
     override val splits: SplitsImpl
 
-    fun buildTypes(action: Action<in NamedDomainObjectContainer<BuildTypeT>>)
-    fun productFlavors(action: Action<NamedDomainObjectContainer<ProductFlavorT>>)
-    fun defaultConfig(action: Action<DefaultConfigT>)
+    fun buildTypes(action: Action<in NamedDomainObjectContainer<BuildType>>)
+    fun productFlavors(action: Action<NamedDomainObjectContainer<ProductFlavor>>)
+    fun defaultConfig(action: Action<DefaultConfig>)
     fun signingConfigs(action: Action<NamedDomainObjectContainer<SigningConfig>>)
 }

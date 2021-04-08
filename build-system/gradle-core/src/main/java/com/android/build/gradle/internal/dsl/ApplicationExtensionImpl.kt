@@ -17,6 +17,9 @@
 package com.android.build.gradle.internal.dsl
 
 import com.android.build.api.dsl.ApplicationBuildFeatures
+import com.android.build.api.dsl.ApplicationBuildType
+import com.android.build.api.dsl.ApplicationDefaultConfig
+import com.android.build.api.dsl.ApplicationProductFlavor
 import com.android.build.api.dsl.Bundle
 import com.android.build.api.dsl.DependenciesInfo
 import com.android.build.api.variant.ApplicationVariantBuilder
@@ -29,13 +32,17 @@ import javax.inject.Inject
 /** Internal implementation of the 'new' DSL interface */
 abstract class ApplicationExtensionImpl @Inject constructor(
     dslServices: DslServices,
-    dslContainers: DslContainerProvider<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
+    dslContainers: DslContainerProvider<
+            ApplicationDefaultConfig<SigningConfig>,
+            ApplicationBuildType<SigningConfig>,
+            ApplicationProductFlavor<SigningConfig>,
+            SigningConfig>
 ) :
     TestedExtensionImpl<
             ApplicationBuildFeatures,
-            BuildType,
-            DefaultConfig,
-            ProductFlavor>(
+            ApplicationBuildType<SigningConfig>,
+            ApplicationDefaultConfig<SigningConfig>,
+            ApplicationProductFlavor<SigningConfig>>(
         dslServices,
         dslContainers
     ),

@@ -17,7 +17,10 @@
 package com.android.build.gradle.internal.dsl
 
 import com.android.build.api.dsl.ApplicationBuildFeatures
+import com.android.build.api.dsl.ApplicationBuildType
+import com.android.build.api.dsl.ApplicationDefaultConfig
 import com.android.build.api.dsl.ApplicationExtension
+import com.android.build.api.dsl.ApplicationProductFlavor
 import com.android.build.api.variant.ApplicationVariant
 import com.android.build.api.variant.ApplicationVariantBuilder
 import com.android.build.gradle.api.AndroidSourceSet
@@ -27,16 +30,12 @@ import com.android.build.gradle.internal.coverage.JacocoOptions
 /** See [InternalCommonExtension] */
 interface InternalApplicationExtension :
     ApplicationExtension<
-        AndroidSourceSet,
-        BuildType,
-        DefaultConfig,
-        ProductFlavor,
         SigningConfig>,
         InternalCommonExtension<
                 ApplicationBuildFeatures,
-                BuildType,
-                DefaultConfig,
-                ProductFlavor> {
+                ApplicationBuildType<SigningConfig>,
+                ApplicationDefaultConfig<SigningConfig>,
+                ApplicationProductFlavor<SigningConfig>> {
     override val dynamicFeatures: MutableSet<String>
     fun setDynamicFeatures(dynamicFeatures: Set<String>)
     override val assetPacks: MutableSet<String>

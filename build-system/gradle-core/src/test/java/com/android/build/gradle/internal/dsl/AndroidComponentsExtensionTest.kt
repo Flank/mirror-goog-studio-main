@@ -40,7 +40,7 @@ import java.util.regex.Pattern
 class AndroidComponentsExtensionTest {
     private lateinit var dslServices: DslServices
     private lateinit var sdkComponents: SdkComponents
-    private lateinit var applicationExtension: ApplicationExtension<*, *, *, *, *>
+    private lateinit var applicationExtension: ApplicationExtension<*>
 
     @Before
     fun setUp() {
@@ -341,7 +341,7 @@ class AndroidComponentsExtensionTest {
             .isEqualTo(DslExtensionType::class.java)
     }
 
-    private fun createExtensionAwareBuildType(extension: ApplicationExtension<*, *, *, *, *>): ExtensionContainer {
+    private fun createExtensionAwareBuildType(extension: ApplicationExtension<*>): ExtensionContainer {
         @Suppress("UNCHECKED_CAST")
         val buildTypesContainer = Mockito.mock(NamedDomainObjectContainer::class.java)
                 as NamedDomainObjectContainer<com.android.build.api.dsl.ApplicationBuildType<*>>
@@ -354,7 +354,7 @@ class AndroidComponentsExtensionTest {
         return buildTypeExtensionContainer
     }
 
-    private fun createExtensionAwareProductFlavor(extension: ApplicationExtension<*, *, *, *, *>): ExtensionContainer {
+    private fun createExtensionAwareProductFlavor(extension: ApplicationExtension<*>): ExtensionContainer {
         @Suppress("UNCHECKED_CAST")
         val productFlavorContainer = Mockito.mock(NamedDomainObjectContainer::class.java)
                 as NamedDomainObjectContainer<com.android.build.api.dsl.ApplicationProductFlavor<*>>

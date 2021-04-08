@@ -31,7 +31,6 @@ import java.io.File
  * Only the Android Gradle Plugin should create instances of this interface.
  */
 interface CommonExtension<
-        AndroidSourceSetT : AndroidSourceSet,
         BuildFeaturesT : BuildFeatures,
         BuildTypeT : BuildType,
         DefaultConfigT : DefaultConfig,
@@ -158,7 +157,7 @@ interface CommonExtension<
      * @see [BuildType
      */
     @get:Incubating
-    val buildTypes: NamedDomainObjectContainer<BuildTypeT>
+    val buildTypes: NamedDomainObjectContainer<out BuildTypeT>
 
     /**
      * Encapsulates all build type configurations for this project.
@@ -362,7 +361,7 @@ interface CommonExtension<
      * @see [ProductFlavor]
      */
     @get:Incubating
-    val productFlavors: NamedDomainObjectContainer<ProductFlavorT>
+    val productFlavors: NamedDomainObjectContainer<out ProductFlavorT>
 
     /**
      * Encapsulates all product flavors configurations for this project.
@@ -520,7 +519,7 @@ interface CommonExtension<
      * information about the properties you can configure in this block, see [AndroidSourceSet].
      */
     @get:Incubating
-    val sourceSets: NamedDomainObjectContainer<AndroidSourceSetT>
+    val sourceSets: NamedDomainObjectContainer<out AndroidSourceSet>
 
     /**
      * Encapsulates source set configurations for all variants.
@@ -529,7 +528,7 @@ interface CommonExtension<
      * information about the properties you can configure in this block, see [AndroidSourceSet].
      */
     @Incubating
-    fun sourceSets(action: NamedDomainObjectContainer<AndroidSourceSetT>.() -> Unit)
+    fun sourceSets(action: NamedDomainObjectContainer<out AndroidSourceSet>.() -> Unit)
 
     /**
      * Specifies the names of product flavor dimensions for this project.

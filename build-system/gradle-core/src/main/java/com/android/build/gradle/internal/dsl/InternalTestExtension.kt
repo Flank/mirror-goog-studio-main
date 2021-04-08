@@ -17,21 +17,17 @@
 package com.android.build.gradle.internal.dsl
 
 import com.android.build.api.dsl.TestBuildFeatures
+import com.android.build.api.dsl.TestBuildType
+import com.android.build.api.dsl.TestDefaultConfig
 import com.android.build.api.dsl.TestExtension
-import com.android.build.api.variant.TestVariant
-import com.android.build.api.variant.TestVariantBuilder
-import com.android.build.gradle.api.AndroidSourceSet
+import com.android.build.api.dsl.TestProductFlavor
 
 /** See [InternalCommonExtension] */
 interface InternalTestExtension :
     TestExtension<
-        AndroidSourceSet,
-        BuildType,
-        DefaultConfig,
-        ProductFlavor,
         SigningConfig>,
         InternalCommonExtension<
                 TestBuildFeatures,
-                BuildType,
-                DefaultConfig,
-                ProductFlavor>
+                TestBuildType<SigningConfig>,
+                TestDefaultConfig<SigningConfig>,
+                TestProductFlavor<SigningConfig>>

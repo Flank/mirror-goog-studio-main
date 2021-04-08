@@ -28,17 +28,12 @@ import org.gradle.api.Incubating
  */
 @Incubating
 interface ApplicationExtension<
-        AndroidSourceSetT : AndroidSourceSet,
-        BuildTypeT : ApplicationBuildType<SigningConfigT>,
-        DefaultConfigT : ApplicationDefaultConfig<SigningConfigT>,
-        ProductFlavorT : ApplicationProductFlavor<SigningConfigT>,
         SigningConfigT : ApkSigningConfig> :
     CommonExtension<
-            AndroidSourceSetT,
             ApplicationBuildFeatures,
-            BuildTypeT,
-            DefaultConfigT,
-            ProductFlavorT,
+            ApplicationBuildType<SigningConfigT>,
+            ApplicationDefaultConfig<SigningConfigT>,
+            ApplicationProductFlavor<SigningConfigT>,
             SigningConfigT>,
     ApkExtension,
     TestedExtension {

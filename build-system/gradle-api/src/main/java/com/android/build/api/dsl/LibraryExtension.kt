@@ -29,17 +29,12 @@ import org.gradle.api.NamedDomainObjectContainer
  */
 @Incubating
 interface LibraryExtension<
-        AndroidSourceSetT : AndroidSourceSet,
-        BuildTypeT : LibraryBuildType<SigningConfigT>,
-        DefaultConfigT : LibraryDefaultConfig<SigningConfigT>,
-        ProductFlavorT : LibraryProductFlavor<SigningConfigT>,
         SigningConfigT : ApkSigningConfig> :
     CommonExtension<
-        AndroidSourceSetT,
         LibraryBuildFeatures,
-        BuildTypeT,
-        DefaultConfigT,
-        ProductFlavorT,
+        LibraryBuildType<SigningConfigT>,
+        LibraryDefaultConfig<SigningConfigT>,
+        LibraryProductFlavor<SigningConfigT>,
         SigningConfigT>,
     TestedExtension {
     // TODO(b/140406102)

@@ -101,14 +101,12 @@ import javax.xml.stream.XMLStreamException
 import javax.xml.stream.events.EndElement
 
 class ModelBuilder<
-        AndroidSourceSetT : AndroidSourceSet,
         BuildFeaturesT : BuildFeatures,
         BuildTypeT : BuildType,
         DefaultConfigT : DefaultConfig,
         ProductFlavorT : ProductFlavor,
         SigningConfigT : ApkSigningConfig,
         ExtensionT : CommonExtension<
-                AndroidSourceSetT,
                 BuildFeaturesT,
                 BuildTypeT,
                 DefaultConfigT,
@@ -295,7 +293,7 @@ class ModelBuilder<
         }
 
         val dependenciesInfo =
-                if (extension is ApplicationExtension<*, *, *, *, *>) {
+                if (extension is ApplicationExtension<*>) {
                     DependenciesInfoImpl(
                         extension.dependenciesInfo.includeInApk,
                         extension.dependenciesInfo.includeInBundle
@@ -733,7 +731,7 @@ class ModelBuilder<
     private fun getTestTargetVariant(
         component: ComponentImpl
     ): TestedTargetVariant? {
-        if (extension is TestExtension<*,*,*,*,*>) {
+        if (extension is TestExtension<*>) {
             val targetPath = extension.targetProjectPath ?: return null
 
             // to get the target variant we need to get the result of the dependency resolution

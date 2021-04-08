@@ -24,8 +24,6 @@ import com.android.build.api.dsl.Installation
 import com.android.build.api.dsl.Lint
 import com.android.build.api.dsl.SdkComponents
 import com.android.build.api.dsl.TestCoverage
-import com.android.build.api.variant.VariantBuilder
-import com.android.build.api.variant.Variant
 import com.android.build.gradle.ProguardFiles
 import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.internal.CompileOptions
@@ -163,8 +161,8 @@ abstract class CommonExtensionImpl<
         action.invoke(composeOptions)
     }
 
-    override fun buildTypes(action: Action<in NamedDomainObjectContainer<BuildTypeT>>) {
-        action.execute(buildTypes)
+    override fun buildTypes(action: Action<in NamedDomainObjectContainer<BuildType>>) {
+        action.execute(buildTypes as NamedDomainObjectContainer<BuildType>)
     }
 
     override fun buildTypes(action: NamedDomainObjectContainer<BuildTypeT>.() -> Unit) {
@@ -190,8 +188,8 @@ abstract class CommonExtensionImpl<
         action.invoke(dataBinding)
     }
 
-    override fun defaultConfig(action: Action<DefaultConfigT>) {
-        action.execute(defaultConfig)
+    override fun defaultConfig(action: Action<com.android.build.gradle.internal.dsl.DefaultConfig>) {
+        action.execute(defaultConfig as com.android.build.gradle.internal.dsl.DefaultConfig)
     }
 
     override fun defaultConfig(action: DefaultConfigT.() -> Unit) {
@@ -238,8 +236,8 @@ abstract class CommonExtensionImpl<
         action.invoke(packagingOptions)
     }
 
-    override fun productFlavors(action: Action<NamedDomainObjectContainer<ProductFlavorT>>) {
-        action.execute(productFlavors)
+    override fun productFlavors(action: Action<NamedDomainObjectContainer<ProductFlavor>>) {
+        action.execute(productFlavors as NamedDomainObjectContainer<ProductFlavor>)
     }
 
     override fun productFlavors(action: NamedDomainObjectContainer<ProductFlavorT>.() -> Unit) {
@@ -257,7 +255,7 @@ abstract class CommonExtensionImpl<
     override val sourceSets: NamedDomainObjectContainer<AndroidSourceSet>
         get() = sourceSetManager.sourceSetsContainer
 
-    override fun sourceSets(action: NamedDomainObjectContainer<AndroidSourceSet>.() -> Unit) {
+    override fun sourceSets(action: NamedDomainObjectContainer<out com.android.build.api.dsl.AndroidSourceSet>.() -> Unit) {
         sourceSetManager.executeAction(action)
     }
 

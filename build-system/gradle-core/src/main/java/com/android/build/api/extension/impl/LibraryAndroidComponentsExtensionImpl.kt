@@ -27,7 +27,7 @@ open class LibraryAndroidComponentsExtensionImpl(
         dslServices: DslServices,
         sdkComponents: SdkComponents,
         variantApiOperationsRegistrar: VariantApiOperationsRegistrar<LibraryVariantBuilder, LibraryVariant>,
-        libraryExtension: LibraryExtension<*, *, *, *, *>
+        libraryExtension: LibraryExtension<*>
 ):
         LibraryAndroidComponentsExtension,
         AndroidComponentsExtensionImpl<LibraryVariantBuilder, LibraryVariant>(

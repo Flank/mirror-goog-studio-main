@@ -28,17 +28,12 @@ import org.gradle.api.Incubating
  */
 @Incubating
 interface TestExtension<
-        AndroidSourceSetT : AndroidSourceSet,
-        BuildTypeT : TestBuildType<SigningConfigT>,
-        DefaultConfigT : TestDefaultConfig<SigningConfigT>,
-        ProductFlavorT : TestProductFlavor<SigningConfigT>,
         SigningConfigT : ApkSigningConfig> :
     CommonExtension<
-            AndroidSourceSetT,
             TestBuildFeatures,
-            BuildTypeT,
-            DefaultConfigT,
-            ProductFlavorT,
+            TestBuildType<SigningConfigT>,
+            TestDefaultConfig<SigningConfigT>,
+            TestProductFlavor<SigningConfigT>,
             SigningConfigT> {
     // TODO(b/140406102)
     /**

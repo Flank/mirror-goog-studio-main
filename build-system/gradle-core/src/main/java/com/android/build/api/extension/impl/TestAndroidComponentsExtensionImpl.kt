@@ -27,7 +27,7 @@ open class TestAndroidComponentsExtensionImpl(
         dslServices: DslServices,
         sdkComponents: SdkComponents,
         variantApiOperationsRegistrar: VariantApiOperationsRegistrar<TestVariantBuilder, TestVariant>,
-        testExtension: TestExtension<*, *, *, *, *>
+        testExtension: TestExtension<*>
 ):
         TestAndroidComponentsExtension,
         AndroidComponentsExtensionImpl<TestVariantBuilder, TestVariant>(

@@ -17,23 +17,19 @@
 package com.android.build.gradle.internal.dsl
 
 import com.android.build.api.dsl.LibraryBuildFeatures
+import com.android.build.api.dsl.LibraryBuildType
+import com.android.build.api.dsl.LibraryDefaultConfig
 import com.android.build.api.dsl.LibraryExtension
-import com.android.build.api.variant.LibraryVariant
-import com.android.build.api.variant.LibraryVariantBuilder
-import com.android.build.gradle.api.AndroidSourceSet
+import com.android.build.api.dsl.LibraryProductFlavor
 
 /** See [InternalCommonExtension] */
 interface InternalLibraryExtension :
-    LibraryExtension<
-        AndroidSourceSet,
-        BuildType,
-        DefaultConfig,
-        ProductFlavor,
-        SigningConfig>,
-        InternalCommonExtension<
-                LibraryBuildFeatures,
-                BuildType,
-                DefaultConfig,
-                ProductFlavor> {
+    LibraryExtension<SigningConfig>,
+    InternalCommonExtension<
+            LibraryBuildFeatures,
+            LibraryBuildType<SigningConfig>,
+            LibraryDefaultConfig<SigningConfig>,
+            LibraryProductFlavor<SigningConfig>> {
+
     override var aidlPackagedList: MutableCollection<String>
 }

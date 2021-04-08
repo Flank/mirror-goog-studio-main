@@ -18,18 +18,15 @@ package com.android.build.gradle.internal.ide.v2
 
 import com.android.build.api.component.impl.TestComponentImpl
 import com.android.build.api.dsl.ApplicationBuildFeatures
+import com.android.build.api.dsl.ApplicationBuildType
+import com.android.build.api.dsl.ApplicationDefaultConfig
 import com.android.build.api.dsl.ApplicationExtension
-import com.android.build.api.variant.ApplicationVariantBuilder
-import com.android.build.api.variant.ApplicationVariant
+import com.android.build.api.dsl.ApplicationProductFlavor
 import com.android.build.api.variant.impl.VariantImpl
-import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.internal.AvdComponentsBuildService
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.dsl.ApplicationExtensionImpl
-import com.android.build.gradle.internal.dsl.BuildType
-import com.android.build.gradle.internal.dsl.DefaultConfig
-import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.errors.SyncIssueReporter
 import com.android.build.gradle.internal.errors.SyncIssueReporterImpl
@@ -57,11 +54,9 @@ import com.android.builder.model.v2.models.GlobalLibraryMap
 import com.android.builder.model.v2.models.ModelBuilderParameter
 import com.android.builder.model.v2.models.ProjectSyncIssues
 import com.android.builder.model.v2.models.VariantDependencies
-import com.google.common.io.Files
 import com.google.common.truth.Truth
 import org.gradle.api.Project
 import org.gradle.api.component.SoftwareComponentFactory
-import org.gradle.testfixtures.ProjectBuilder
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
 import org.junit.Before
 import org.junit.Rule
@@ -168,7 +163,7 @@ class ModelBuilderTest {
 
     //---------------
 
-    fun <T> ModelBuilder<*,*,*,*,*,*,*>.query(modelClass: Class<T>, project: Project) : T {
+    fun <T> ModelBuilder<*,*,*,*,*,*>.query(modelClass: Class<T>, project: Project) : T {
         return modelClass.cast(buildAll(modelClass.name, project))
     }
 
@@ -177,13 +172,12 @@ class ModelBuilderTest {
 
     private fun createApplicationModelBuilder(
     ): ModelBuilder<
-            AndroidSourceSet,
             ApplicationBuildFeatures,
-            BuildType,
-            DefaultConfig,
-            ProductFlavor,
+            ApplicationBuildType<SigningConfig>,
+            ApplicationDefaultConfig<SigningConfig>,
+            ApplicationProductFlavor<SigningConfig>,
             SigningConfig,
-            ApplicationExtension<AndroidSourceSet, BuildType, DefaultConfig, ProductFlavor, SigningConfig>> {
+            ApplicationExtension<SigningConfig>> {
 
         // for now create an app extension
         val sdkComponents = Mockito.mock(SdkComponentsBuildService::class.java)
