@@ -1022,7 +1022,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
     ): TaskProvider<MergeResources> {
         val taskNamePrefix = mergeType.name.toLowerCase(Locale.ENGLISH)
         val mergedNotCompiledDir = if (alsoOutputNotCompiledResources) File(
-                globalScope.intermediatesDir
+                creationConfig.services.projectInfo.getIntermediatesDir()
                         .toString() + "/merged-not-compiled-resources/"
                         + creationConfig.dirName) else null
         val mergeResourcesTask: TaskProvider<MergeResources> = taskFactory.register(
@@ -3165,7 +3165,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                 assembleAndroidTestTask.group = BasePlugin.BUILD_GROUP
                 assembleAndroidTestTask.description = "Assembles all the Test applications."
             }
-            taskFactory.register(LintCompile.CreationAction(globalScope))
+            taskFactory.register(LintCompile.CreationAction(projectInfo))
             // Don't register global lint or lintFix tasks for dynamic features because dynamic
             // features are analyzed and their lint issues are reported and/or fixed when running
             // lint or lintFix from the base app.

@@ -16,9 +16,12 @@
 
 package com.android.build.gradle.internal.scope
 
+import com.android.builder.core.BuilderConstants
+import com.android.builder.model.AndroidProject
 import com.google.common.base.Preconditions
 import org.gradle.api.Project
 import org.gradle.api.plugins.BasePluginConvention
+import java.io.File
 
 class ProjectInfo(project: Project) {
     private val project: Project = project
@@ -31,5 +34,41 @@ class ProjectInfo(project: Project) {
 
     fun getProject(): Project {
         return project
+    }
+
+    fun getBuildDir(): File {
+        return project.buildDir
+    }
+
+    fun getTestResultsFolder(): File? {
+        return File(getBuildDir(), "test-results")
+    }
+
+    fun getReportsDir(): File {
+        return File(getBuildDir(), BuilderConstants.FD_REPORTS)
+    }
+
+    fun getTestReportFolder(): File? {
+        return File(getBuildDir(), "reports/tests")
+    }
+
+    fun getIntermediatesDir(): File {
+        return File(getBuildDir(), AndroidProject.FD_INTERMEDIATES)
+    }
+
+    fun getTmpFolder(): File {
+        return File(getIntermediatesDir(), "tmp")
+    }
+
+    fun getOutputsDir(): File {
+        return File(getBuildDir(), AndroidProject.FD_OUTPUTS)
+    }
+
+    fun getJacocoAgentOutputDirectory(): File {
+        return File(getIntermediatesDir(), "jacoco")
+    }
+
+    fun getJacocoAgent(): File {
+        return File(getJacocoAgentOutputDirectory(), "jacocoagent.jar")
     }
 }

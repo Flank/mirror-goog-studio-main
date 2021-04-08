@@ -118,7 +118,7 @@ abstract class CheckMultiApkLibrariesTask : NonIncrementalTask() {
                     )
             task.fakeOutputDir =
                     FileUtils.join(
-                        creationConfig.globalScope.intermediatesDir,
+                        creationConfig.services.projectInfo.getIntermediatesDir(),
                         "check-libraries",
                         creationConfig.dirName
                     )

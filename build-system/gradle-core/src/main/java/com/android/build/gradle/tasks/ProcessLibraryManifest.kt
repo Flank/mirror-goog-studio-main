@@ -310,7 +310,7 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
                 ProcessLibraryManifest::reportFile
             )
                 .atLocation(
-                    FileUtils.join(creationConfig.globalScope.outputsDir, "logs")
+                    FileUtils.join(creationConfig.services.projectInfo.getOutputsDir(), "logs")
                         .absolutePath
                 )
                 .withName("manifest-merger-" + creationConfig.baseName + "-report.txt")

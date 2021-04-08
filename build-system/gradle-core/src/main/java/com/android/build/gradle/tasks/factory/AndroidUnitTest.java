@@ -194,10 +194,16 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
             // eventually be replaced with the new Java plugin.
             TestTaskReports testTaskReports = task.getReports();
             ConfigurableReport xmlReport = testTaskReports.getJunitXml();
-            xmlReport.setDestination(new File(globalScope.getTestResultsFolder(), task.getName()));
+            xmlReport.setDestination(
+                    new File(
+                            creationConfig.getServices().getProjectInfo().getTestResultsFolder(),
+                            task.getName()));
 
             ConfigurableReport htmlReport = testTaskReports.getHtml();
-            htmlReport.setDestination(new File(globalScope.getTestReportFolder(), task.getName()));
+            htmlReport.setDestination(
+                    new File(
+                            creationConfig.getServices().getProjectInfo().getTestReportFolder(),
+                            task.getName()));
 
             extension.getTestOptions().getUnitTests().applyConfiguration(task);
 

@@ -324,7 +324,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             )
                 .atLocation(
                     FileUtils.join(
-                        creationConfig.globalScope.outputsDir,
+                        creationConfig.services.projectInfo.getOutputsDir(),
                         "logs"
                     )
                         .absolutePath

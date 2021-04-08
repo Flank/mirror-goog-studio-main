@@ -32,6 +32,7 @@ import com.android.build.gradle.internal.fixtures.FakeProviderFactory;
 import com.android.build.gradle.internal.fixtures.FakeSyncIssueReporter;
 import com.android.build.gradle.internal.profile.AnalyticsService;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.scope.ProjectInfo;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.services.BuildServicesKt;
 import com.android.build.gradle.internal.services.TaskCreationServices;
@@ -309,7 +310,9 @@ public class TaskTestUtils {
     private static VariantCreationConfig getCreationConfig() {
         GlobalScope globalScope = mock(GlobalScope.class);
         TaskCreationServices taskCreationServices = mock(TaskCreationServices.class);
-        when(globalScope.getBuildDir()).thenReturn(new File("build dir"));
+        ProjectInfo projectInfo = mock(ProjectInfo.class);
+        when(taskCreationServices.getProjectInfo()).thenReturn(projectInfo);
+        when(projectInfo.getBuildDir()).thenReturn(new File("build dir"));
         when(taskCreationServices.getProjectOptions())
                 .thenReturn(
                         new ProjectOptions(

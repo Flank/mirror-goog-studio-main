@@ -346,7 +346,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
             get() = creationConfig.services.projectOptions.get(USE_LINT_PARTIAL_ANALYSIS)
 
         override fun handleProvider(taskProvider: TaskProvider<AndroidLintTask>) {
-            registerLintReportArtifacts(taskProvider, creationConfig.artifacts, creationConfig.name, creationConfig.globalScope.reportsDir)
+            registerLintReportArtifacts(taskProvider, creationConfig.artifacts, creationConfig.name, creationConfig.services.projectInfo.getReportsDir())
         }
 
         override fun configureOutputSettings(task: AndroidLintTask) {

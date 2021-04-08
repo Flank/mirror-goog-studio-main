@@ -254,7 +254,7 @@ open class BasicModuleModelMock {
         val prefabFileCollection = mock(FileCollection::class.java, throwUnmocked)
 
         doReturn(project).`when`(projectInfo).getProject()
-        doReturn(intermediates).`when`(global).intermediatesDir
+        doReturn(intermediates).`when`(projectInfo).getIntermediatesDir()
         doReturn(appFolder).`when`(project).projectDir
         doReturn(buildDir).`when`(project).buildDir
         doReturn(join(buildDir, "build.gradle")).`when`(project).buildFile

@@ -165,7 +165,7 @@ abstract class ProcessAndroidAppResourcesTask : NonIncrementalTask() {
 
             task.aaptIntermediateDir =
                     FileUtils.join(
-                            creationConfig.globalScope.intermediatesDir, "res-process-intermediate", creationConfig.dirName)
+                            creationConfig.services.projectInfo.getIntermediatesDir(), "res-process-intermediate", creationConfig.dirName)
 
             task.androidJarInput.initialize(creationConfig)
             if (creationConfig is ApkCreationConfig) {
