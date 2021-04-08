@@ -975,7 +975,8 @@ com.android.build.api.variant.HasAndroidTestBuilder.getEnableAndroidTest: boolea
 com.android.build.api.variant.HasAndroidTestBuilder.setAndroidTestEnabled: void (boolean)
 com.android.build.api.variant.HasAndroidTestBuilder.setEnableAndroidTest: void (boolean)
 com.android.build.api.variant.JniLibsApkPackaging implements com.android.build.api.variant.JniLibsPackaging
-com.android.build.api.variant.JniLibsApkPackaging.getUseLegacyPackaging: org.gradle.api.provider.Property<java.lang.Boolean> ()
+com.android.build.api.variant.JniLibsApkPackaging.getUseLegacyPackaging: org.gradle.api.provider.Provider<java.lang.Boolean> ()
+com.android.build.api.variant.JniLibsApkPackaging.getUseLegacyPackagingFromBundle: org.gradle.api.provider.Provider<java.lang.Boolean> ()
 com.android.build.api.variant.JniLibsPackaging
 com.android.build.api.variant.JniLibsPackaging.getExcludes: org.gradle.api.provider.SetProperty<java.lang.String> ()
 com.android.build.api.variant.JniLibsPackaging.getKeepDebugSymbols: org.gradle.api.provider.SetProperty<java.lang.String> ()
