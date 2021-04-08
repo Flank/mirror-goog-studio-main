@@ -51,8 +51,7 @@ fun appBarActivityXml(
         <${getMaterialComponentName("android.support.design.widget.TabLayout", useAndroidX)}
             android:id="@+id/tabs"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="?attr/colorPrimary"/>
+            android:layout_height="wrap_content" />
     </${getMaterialComponentName("android.support.design.widget.AppBarLayout", useAndroidX)}>
 
     <${getMaterialComponentName("android.support.v4.view.ViewPager", useAndroidX)}
