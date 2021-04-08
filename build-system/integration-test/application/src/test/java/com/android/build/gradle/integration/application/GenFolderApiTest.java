@@ -86,6 +86,7 @@ public class GenFolderApiTest {
     public void checkTheCustomJavaGenerationTaskRan() throws Exception {
         try (Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG)) {
             assertThat(apk).containsClass("Lcom/custom/Foo;");
+            assertThat(apk).containsClass("Lcom/custom/Bar;");
         }
     }
 
@@ -237,6 +238,6 @@ public class GenFolderApiTest {
         // ATTENTION Author and Reviewers - please make sure required changes to the build file
         // are backwards compatible before updating this test.
         assertThat(TestFileUtils.sha1NormalizedLineEndings(project.file("build.gradle")))
-                .isEqualTo("5de55b1367c97856f37bce9001554859a0636e66");
+                .isEqualTo("8b4af814210eae6f0846499b489f52ec0b65ea0e");
     }
 }

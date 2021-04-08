@@ -598,6 +598,8 @@ com.android.build.gradle.api.BaseVariant.registerGeneratedBytecode: java.lang.Ob
 com.android.build.gradle.api.BaseVariant.registerGeneratedResFolders: void (org.gradle.api.file.FileCollection)
 com.android.build.gradle.api.BaseVariant.registerJavaGeneratingTask: void (org.gradle.api.Task, java.io.File[])
 com.android.build.gradle.api.BaseVariant.registerJavaGeneratingTask: void (org.gradle.api.Task, java.util.Collection<java.io.File>)
+com.android.build.gradle.api.BaseVariant.registerJavaGeneratingTask: void (org.gradle.api.tasks.TaskProvider<? extends org.gradle.api.Task>, java.io.File[])
+com.android.build.gradle.api.BaseVariant.registerJavaGeneratingTask: void (org.gradle.api.tasks.TaskProvider<? extends org.gradle.api.Task>, java.util.Collection<java.io.File>)
 com.android.build.gradle.api.BaseVariant.registerPostJavacGeneratedBytecode: void (org.gradle.api.file.FileCollection)
 com.android.build.gradle.api.BaseVariant.registerPreJavacGeneratedBytecode: java.lang.Object (org.gradle.api.file.FileCollection)
 com.android.build.gradle.api.BaseVariant.registerResGeneratingTask: void (org.gradle.api.Task, java.io.File[])

@@ -47,6 +47,7 @@ import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SourceProvider;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -568,12 +569,25 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
 
     @Override
     public void registerJavaGeneratingTask(@NonNull Task task, @NonNull File... sourceFolders) {
-        getVariantData().registerJavaGeneratingTask(task, sourceFolders);
+        getVariantData().registerJavaGeneratingTask(task, Arrays.asList(sourceFolders));
     }
 
     @Override
     public void registerJavaGeneratingTask(@NonNull Task task, @NonNull Collection<File> sourceFolders) {
         getVariantData().registerJavaGeneratingTask(task, sourceFolders);
+    }
+
+    @Override
+    public void registerJavaGeneratingTask(
+            @NonNull TaskProvider<? extends Task> taskProvider, @NonNull File... sourceFolders) {
+        getVariantData().registerJavaGeneratingTask(taskProvider, Arrays.asList(sourceFolders));
+    }
+
+    @Override
+    public void registerJavaGeneratingTask(
+            @NonNull TaskProvider<? extends Task> taskProvider,
+            @NonNull Collection<File> sourceFolders) {
+        getVariantData().registerJavaGeneratingTask(taskProvider, sourceFolders);
     }
 
     @Override
