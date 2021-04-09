@@ -137,6 +137,7 @@ dependencies {
     implementation project(':base:utp:android-test-plugin-host-retention-proto')
     implementation project(':base:utp:android-test-plugin-result-listener-gradle-proto')
 
+    implementation gradleApi()
     implementation libs.kotlin_stdlib
     implementation libs.transform_api_deprecated
     implementation libs.apache_httpmime
@@ -159,17 +160,11 @@ dependencies {
     implementation libs.unified_test_platform
 
     compileOnly libs.kotlin_gradle_plugin
-
     compileOnly libs.jacoco_core
     compileOnly libs.jacoco_report
     // already packaged in (':base:builder')
     compileOnly project(':base:profile')
 
-    // Add gradleApi to classpath for compilation, but use provided configuration so that groovy is
-    // not exposed as a runtime dependency.
-    provided gradleApi()
-
-    testImplementation gradleApi()
     testImplementation libs.junit
     testImplementation libs.truth
     testImplementation libs.kotlin_test

@@ -149,14 +149,24 @@ gradle_build(
     name = "gradle_api_jar",
     build_file = "extract-gradle-api/build.gradle",
     data = [":gradle-distrib"],
-    output_file = "gradle-api_neverlink.jar",
+    output_file = "gradle-api.jar",
+    # Note that the Gradle API (the output of this Gradle build) consists of multiple jars:
+    #   - gradle-api-<version>.jar
+    #   - gradle-installation-beacon-<version>.jar
+    #   - groovy jars
+    #   - kotlin-stdlib jars
+    #   - etc.
+    # Currently, we extract only the "thin" gradle-api-<version>.jar, and therefore we'll have to
+    # add the other jars manually as needed.
+    # Fixing this properly requires further work (there was a failed attempt to create a fat jar at
+    # change Ia6c40546).
     output_file_source = "gradle-api-" + GRADLE_VERSION + ".jar",
-    tasks = [":copyApiJar"],
+    tasks = [":copyGradleApiJars"],
 )
 
 java_import(
     name = "gradle-api_neverlink",
-    jars = [":gradle-api_neverlink.jar"],
+    jars = [":gradle-api.jar"],
     neverlink = 1,
     visibility = ["//visibility:public"],
 )
@@ -164,7 +174,7 @@ java_import(
 # Used for tests only.
 java_import(
     name = "gradle-api",
-    jars = [":gradle-api_neverlink.jar"],
+    jars = [":gradle-api.jar"],
     visibility = ["//visibility:public"],
 )
 

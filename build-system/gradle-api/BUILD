@@ -50,7 +50,7 @@ kotlin_test(
     resources = glob(["src/test/resources/**"]),
     test_class = "com.android.testutils.JarTestSuite",
     runtime_deps = [
-        "//tools/base/third_party:org.codehaus.groovy_groovy-all",
+        "//tools/base/third_party:org.codehaus.groovy_groovy-all",  # required by //tools/base/build-system:gradle-api
     ],
     deps = [
         ":gradle-api",
