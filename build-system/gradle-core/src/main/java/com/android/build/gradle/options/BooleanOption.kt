@@ -81,6 +81,7 @@ enum class BooleanOption(
     GENERATE_MANIFEST_CLASS("android.generateManifestClass", false, ApiStage.Stable),
 
     USE_NON_FINAL_RES_IDS("android.nonFinalResIds", false, ApiStage.Stable),
+    NON_TRANSITIVE_R_CLASS("android.nonTransitiveRClass", false, ApiStage.Stable),
 
     /* ------------------
      * SUPPORTED FEATURES
@@ -119,7 +120,6 @@ enum class BooleanOption(
     CONSUME_DEPENDENCIES_AS_SHARED_LIBRARIES("android.consumeDependenciesAsSharedLibraries", false, FeatureStage.Experimental),
     DISABLE_EARLY_MANIFEST_PARSING("android.disableEarlyManifestParsing", false, FeatureStage.Experimental),
     ENABLE_RESOURCE_NAMESPACING_DEFAULT("android.enableResourceNamespacingDefault", false, FeatureStage.Experimental),
-    NON_TRANSITIVE_R_CLASS("android.nonTransitiveRClass", false, FeatureStage.Experimental),
     FULL_R8("android.enableR8.fullMode", false, FeatureStage.Experimental),
     R8_FAIL_ON_MISSING_CLASSES("android.r8.failOnMissingClasses", false, FeatureStage.Experimental),
     CONDITIONAL_KEEP_RULES("android.useConditionalKeepRules", false, FeatureStage.Experimental),
