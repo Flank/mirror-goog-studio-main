@@ -24,6 +24,7 @@ import com.android.tools.tracer.Trace;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -65,6 +66,9 @@ public class Shell {
             Expression.ExecutionResult result = Parser.parse(script).execute(env);
             output.write(env.readAllBytesFromPipe());
             return result.code;
+        } catch (Exception e) {
+            new PrintStream(output).println(e.getMessage());
+            return 1;
         }
     }
 
