@@ -18,6 +18,8 @@ package com.android.build.gradle.integration.api
 
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.truth.ScannerSubject
+import com.android.build.gradle.integration.common.truth.ScannerSubject.Companion.assertThat
 import org.junit.Rule
 import org.junit.Test
 
@@ -33,7 +35,8 @@ class ApiCompatibilityTest {
 
     @Test
     fun binaryCompatibilityTest() {
-        project.executor().run(":lib:examplePluginTask")
+        val result = project.executor().run(":lib:examplePluginTask")
+        assertThat(result.stdout).contains("Custom task ran OK")
     }
 
 }

@@ -21,11 +21,10 @@ abstract class ExampleTask: DefaultTask() {
         check(sdkDirectory.get().asFile.exists()) {
             "Sdk dir $sdkDirectory exists"
         }
-        print("OK")
+        print("Custom task ran OK")
     }
 
-    fun configure(project: Project) {
-        val baseExtension: BaseExtension = project.extensions.getByType(BaseExtension::class.java)
+    fun configure(baseExtension: BaseExtension) {
         adbExecutable.set( baseExtension.adbExecutable)
         sdkDirectory.set(baseExtension.sdkDirectory)
     }
