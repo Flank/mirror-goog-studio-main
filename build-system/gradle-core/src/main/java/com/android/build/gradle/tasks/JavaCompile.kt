@@ -53,9 +53,6 @@ class JavaCompileCreationAction(
     private val globalScope = creationConfig.globalScope
     private val project = creationConfig.services.projectInfo.getProject()
 
-    private val classesOutputDirectory = project.objects.directoryProperty()
-    private val annotationProcessorOutputDirectory = project.objects.directoryProperty()
-
     private val dataBindingArtifactDir = project.objects.directoryProperty()
     private val dataBindingExportClassListFile = project.objects.fileProperty()
 
@@ -73,12 +70,12 @@ class JavaCompileCreationAction(
         val artifacts = creationConfig.artifacts
 
         artifacts
-            .setInitialProvider(taskProvider) { classesOutputDirectory }
+            .setInitialProvider(taskProvider) { it.destinationDirectory }
             .withName("classes")
             .on(JAVAC)
 
         artifacts
-            .setInitialProvider(taskProvider) { annotationProcessorOutputDirectory }
+            .setInitialProvider(taskProvider) { it.options.generatedSourceOutputDirectory }
             // Setting a name is not required, but a lot of AGP and IDE tests are assuming this name
             // so we leave it here for now.
             .withName(AP_GENERATED_SOURCES_DIR_NAME)
@@ -151,24 +148,6 @@ class JavaCompileCreationAction(
                 getBuildService(creationConfig.services.buildServiceRegistry)
             )
         }
-
-        // Set up the outputs
-        task.setDestinationDir(classesOutputDirectory.asFile)
-        // Can't write `task.options.setAnnotationProcessorGeneratedSourcesDirectory(
-        // annotationProcessorOutputDirectory.asFile)` due to a new requirement in Gradle 7.0:
-        // https://docs.gradle.org/current/userguide/upgrading_version_6.html#querying_a_mapped_output_property_of_a_task_before_the_task_has_completed
-        // (currently caught by BasicInstantExecutionTest).
-        task.options.annotationProcessorGeneratedSourcesDirectory =
-            creationConfig.artifacts
-                .getOutputPath(AP_GENERATED_SOURCES, AP_GENERATED_SOURCES_DIR_NAME)
-
-        // The API of JavaCompile to set up outputs only accepts File or Provider<File> (see above).
-        // However, for task wiring to work correctly, we will need to register the corresponding
-        // DirectoryProperty / RegularFileProperty as outputs too (they are not yet annotated as
-        // outputs).
-        task.outputs.dir(classesOutputDirectory).withPropertyName("classesOutputDirectory")
-        task.outputs.dir(annotationProcessorOutputDirectory)
-            .withPropertyName("annotationProcessorOutputDirectory")
 
         // Also do that for data binding artifacts
         if (creationConfig.buildFeatures.dataBinding) {

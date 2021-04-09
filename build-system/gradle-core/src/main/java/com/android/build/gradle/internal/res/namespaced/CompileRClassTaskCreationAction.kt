@@ -36,8 +36,6 @@ import org.gradle.api.tasks.compile.JavaCompile
 class CompileRClassTaskCreationAction(private val creationConfig: ComponentCreationConfig) :
     TaskCreationAction<JavaCompile>() {
 
-    private val output = creationConfig.services.projectInfo.getProject().objects.directoryProperty()
-
     override val name: String
         get() = creationConfig.computeTaskName("compile", "FinalRClass")
 
@@ -49,7 +47,7 @@ class CompileRClassTaskCreationAction(private val creationConfig: ComponentCreat
 
         creationConfig.artifacts.setInitialProvider(
             taskProvider
-        ) {  output  }.withName(SdkConstants.FD_RES).on(RUNTIME_R_CLASS_CLASSES)
+        ) {  it.destinationDirectory  }.withName(SdkConstants.FD_RES).on(RUNTIME_R_CLASS_CLASSES)
     }
 
     override fun configure(task: JavaCompile) {
@@ -61,10 +59,5 @@ class CompileRClassTaskCreationAction(private val creationConfig: ComponentCreat
         if (creationConfig.variantType.isTestComponent || creationConfig.variantType.isApk) {
             task.source(creationConfig.artifacts.get(RUNTIME_R_CLASS_SOURCES))
         }
-        task.setDestinationDir(output.asFile)
-
-        // manually declare our output directory as a Task output since it's not annotated as
-        // an OutputDirectory on the task implementation.
-        task.outputs.dir(output)
     }
 }
