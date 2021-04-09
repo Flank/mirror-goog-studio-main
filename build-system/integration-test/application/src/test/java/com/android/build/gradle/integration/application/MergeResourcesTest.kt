@@ -22,9 +22,10 @@ import com.android.build.gradle.integration.common.runner.FilterableParameterize
 import com.android.build.gradle.integration.common.truth.ApkSubject.assertThat
 import com.android.build.gradle.integration.common.truth.GradleTaskSubject.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_RES
+import com.android.build.gradle.internal.scope.getOutputDir
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.IntegerOption
-import com.android.build.gradle.options.OptionalBooleanOption
 import com.android.builder.internal.packaging.ApkCreatorType
 import com.android.builder.internal.packaging.ApkCreatorType.APK_FLINGER
 import com.android.builder.internal.packaging.ApkCreatorType.APK_Z_FILE_CREATOR
@@ -82,7 +83,7 @@ class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
         /*
          * Create raw/me.raw in library and see that it comes out in the apk.
          *
-         * It should also show up in build/intermediates/res/merged/debug/raw/me.raw
+         * It should also show up in build/intermediates/merged_res/debug/raw/me.raw
          */
         val libraryRaw = FileUtils.join(project.projectDir, "library", "src", "main", "res", "raw")
         FileUtils.mkdirs(libraryRaw)
@@ -96,15 +97,9 @@ class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
         assertThat(project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG))
             .containsFileWithContent("res/raw/me.raw", byteArrayOf(0, 1, 2))
 
-        val inIntermediate = FileUtils.join(
-            project.getSubproject("app").projectDir,
-            "build",
-            "intermediates",
-            "res",
-            "merged",
-            "debug",
-            "raw_me.raw.flat"
-        )
+        val inIntermediate = File(
+                MERGED_RES.getOutputDir(project.getSubproject("app").buildDir),
+                "debug/raw_me.raw.flat")
         val inCompiledLocalResources = FileUtils.join(
             project.getSubproject("library").projectDir,
             "build",
@@ -131,7 +126,7 @@ class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
          * Create raw/me.raw in application and see that it comes out in the apk, overriding the
          * library's.
          *
-         * The change should also show up in build/intermediates/res/merged/debug/raw/me.raw
+         * The change should also show up in build/intermediates/merged_res/debug/raw/me.raw
          */
 
         val appRaw = FileUtils.join(project.projectDir, "app", "src", "main", "res", "raw")
@@ -185,15 +180,9 @@ class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
         /*
          * Check that the file is merged and in the apk.
          */
-        val inIntermediate = FileUtils.join(
-            project.getSubproject("app").projectDir,
-            "build",
-            "intermediates",
-            "res",
-            "merged",
-            "debug",
-            "raw_me.raw.flat"
-        )
+        val inIntermediate = File(
+                MERGED_RES.getOutputDir(project.getSubproject("app").buildDir),
+                "debug/raw_me.raw.flat")
         assertThat(inIntermediate).exists()
 
         val apUnderscore = FileUtils.join(
@@ -240,15 +229,9 @@ class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
         /*
          * Check that the file is merged and in the apk.
          */
-        val inIntermediate = FileUtils.join(
-            project.getSubproject("app").projectDir,
-            "build",
-            "intermediates",
-            "res",
-            "merged",
-            "debug",
-            "raw_me.raw.flat"
-        )
+        val inIntermediate = File(
+                MERGED_RES.getOutputDir(project.getSubproject("app").buildDir),
+                "debug/raw_me.raw.flat")
         assertThat(inIntermediate).exists()
 
         val apUnderscore = FileUtils.join(
@@ -301,15 +284,9 @@ class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
         /*
          * Check that the file is merged and in the apk.
          */
-        val inIntermediate = FileUtils.join(
-            project.getSubproject("app").projectDir,
-            "build",
-            "intermediates",
-            "res",
-            "merged",
-            "debug",
-            "raw_me.raw.flat"
-        )
+        val inIntermediate = File(
+                MERGED_RES.getOutputDir(project.getSubproject("app").buildDir),
+                "debug/raw_me.raw.flat")
         assertThat(inIntermediate).exists()
 
         val apUnderscore = FileUtils.join(

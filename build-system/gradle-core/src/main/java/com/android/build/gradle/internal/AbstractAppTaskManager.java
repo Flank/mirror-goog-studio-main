@@ -316,8 +316,6 @@ public abstract class AbstractAppTaskManager<
             basicCreateMergeResourcesTask(
                     variant,
                     MergeType.PACKAGE,
-                    variant.getPaths()
-                            .getIntermediateDir(InternalArtifactType.PACKAGED_RES.INSTANCE),
                     false,
                     false,
                     false,

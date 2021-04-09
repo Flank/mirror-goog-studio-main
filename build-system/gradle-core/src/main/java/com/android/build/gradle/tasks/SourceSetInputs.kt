@@ -94,8 +94,8 @@ abstract class SourceSetInputs {
             )
         }
         if (mergeResourcesTask.outputDir.isPresent) {
-            mergeResourcesOutputDir
-                .setDisallowChanges(paths.defaultMergeResourcesOutputDir.absolutePath)
+            mergeResourcesOutputDir.setDisallowChanges(
+                    creationConfig.artifacts.getOutputPath(InternalArtifactType.MERGED_RES).path)
         }
         if (mergeResourcesTask.incremental) {
             mergeResourcesTask.incrementalFolder?.let {

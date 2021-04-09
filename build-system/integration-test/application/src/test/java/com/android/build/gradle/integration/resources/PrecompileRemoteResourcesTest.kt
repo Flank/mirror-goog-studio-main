@@ -16,8 +16,6 @@
 
 package com.android.build.gradle.integration.resources
 
-import com.android.SdkConstants.FD_MERGED
-import com.android.SdkConstants.FD_RES
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
@@ -25,8 +23,9 @@ import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestPr
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertWithMessage
 import com.android.build.gradle.internal.res.shrinker.DummyContent
+import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_RES
+import com.android.build.gradle.internal.scope.getOutputDir
 import com.android.build.gradle.options.BooleanOption
-import com.android.build.gradle.options.OptionalBooleanOption
 import com.android.builder.internal.aapt.v2.Aapt2RenamingConventions
 import com.android.testutils.apk.Apk
 import com.android.tools.build.apkzlib.zip.ZFile
@@ -212,14 +211,7 @@ class PrecompileRemoteResourcesTest {
             .run(":app:assembleDebug")
 
         checkAarResourcesCompilerTransformOutput()
-        checkValuesResourcedAreMerged(
-            FileUtils.join(
-                project.getSubproject(":app").intermediatesDir,
-                FD_RES,
-                FD_MERGED,
-                "debug"
-            )
-        )
+        checkValuesResourcedAreMerged()
 
         checkAarResourcesAddedToApk(project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG))
     }
@@ -308,7 +300,9 @@ class PrecompileRemoteResourcesTest {
         )
     }
 
-    private fun checkValuesResourcedAreMerged(mergedResDir: File) {
+    private fun checkValuesResourcedAreMerged() {
+        val mergedResDir =
+                File(MERGED_RES.getOutputDir(project.getSubproject(":app").buildDir), "debug")
         assertThat(mergedResDir.listFiles()).hasLength(3)
         assertThat(mergedResDir.listFiles()!!.map { file -> file.name }.toSortedSet()).containsExactlyElementsIn(
             listOf(

@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.variant
 
-import com.android.SdkConstants
 import com.android.build.api.artifact.Artifact
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.services.DslServices
@@ -57,15 +56,6 @@ class VariantPathHelper(
 
     val renderscriptResOutputDir: Provider<Directory>
             by lazy { getGeneratedResourcesDir("rs") }
-
-    val defaultMergeResourcesOutputDir: File
-            by lazy {
-                intermediatesDir(
-                    SdkConstants.FD_RES,
-                    SdkConstants.FD_MERGED,
-                    variantDslInfo.dirName
-                ).get().asFile
-            }
 
     val buildConfigSourceOutputDir: Provider<Directory>
             by lazy { generatedDir("source", "buildConfig", variantDslInfo.dirName) }

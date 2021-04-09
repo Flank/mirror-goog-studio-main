@@ -441,7 +441,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             basicCreateMergeResourcesTask(
                 testFixturesComponent,
                 MergeType.PACKAGE,
-                testFixturesComponent.paths.getIntermediateDir(PACKAGED_RES),
                 includeDependencies = false,
                 processResources = false,
                 alsoOutputNotCompiledResources = false,
@@ -968,7 +967,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         val mergeResourcesTask = basicCreateMergeResourcesTask(
                 creationConfig,
                 MergeType.MERGE,
-                null /*outputLocation*/,
                 includeDependencies,
                 processResources,
                 alsoOutputNotCompiledResources,
@@ -1012,7 +1010,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
     fun basicCreateMergeResourcesTask(
             creationConfig: ComponentCreationConfig,
             mergeType: MergeType,
-            outputLocation: File?,
             includeDependencies: Boolean,
             processResources: Boolean,
             alsoOutputNotCompiledResources: Boolean,
@@ -1040,15 +1037,8 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                 taskProviderCallback)
         creationConfig
                 .artifacts
-                .setInitialProvider(mergeResourcesTask) { obj: MergeResources -> obj.outputDir }
-                .atLocation(
-                        MoreObjects.firstNonNull(
-                                outputLocation,
-                                creationConfig
-                                        .paths
-                                        .defaultMergeResourcesOutputDir)
-                                .absolutePath)
-                .on(mergeType.outputType!!)
+                .setInitialProvider(mergeResourcesTask, MergeResources::getOutputDir)
+                .on(mergeType.outputType)
         if (alsoOutputNotCompiledResources) {
             creationConfig
                     .artifacts

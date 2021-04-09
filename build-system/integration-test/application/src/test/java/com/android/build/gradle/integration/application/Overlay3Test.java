@@ -17,11 +17,12 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.ApkSubject.assertThat;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_RES;
 import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.ImageHelper;
-import com.android.builder.model.AndroidProject;
+import com.android.build.gradle.internal.scope.ArtifactTypeUtil;
 import com.android.testutils.apk.Apk;
 import java.io.File;
 import java.io.IOException;
@@ -46,8 +47,9 @@ public class Overlay3Test {
         // checking the contents of the APK.
 
         File resOutput =
-                project.file(
-                        "build/" + AndroidProject.FD_INTERMEDIATES + "/res/merged/freeBeta/debug");
+                new File(
+                        ArtifactTypeUtil.getOutputDir(MERGED_RES.INSTANCE, project.getBuildDir()),
+                        "freeBetaDebug");
         assertThat(new File(resOutput, "drawable_no_overlay.png.flat")).exists();
         assertThat(new File(resOutput, "drawable_debug_overlay.png.flat")).exists();
         assertThat(new File(resOutput, "drawable_beta_overlay.png.flat")).exists();
@@ -57,10 +59,9 @@ public class Overlay3Test {
         assertThat(new File(resOutput, "drawable_free_normal_overlay.png.flat")).exists();
 
         resOutput =
-                project.file(
-                        "build/"
-                                + AndroidProject.FD_INTERMEDIATES
-                                + "/res/merged/freeNormal/debug");
+                new File(
+                        ArtifactTypeUtil.getOutputDir(MERGED_RES.INSTANCE, project.getBuildDir()),
+                        "freeNormalDebug");
         assertThat(new File(resOutput, "drawable_no_overlay.png.flat")).exists();
         assertThat(new File(resOutput, "drawable_debug_overlay.png.flat")).exists();
         assertThat(new File(resOutput, "drawable_beta_overlay.png.flat")).exists();
@@ -70,8 +71,9 @@ public class Overlay3Test {
         assertThat(new File(resOutput, "drawable_free_normal_overlay.png.flat")).exists();
 
         resOutput =
-                project.file(
-                        "build/" + AndroidProject.FD_INTERMEDIATES + "/res/merged/paidBeta/debug");
+                new File(
+                        ArtifactTypeUtil.getOutputDir(MERGED_RES.INSTANCE, project.getBuildDir()),
+                        "paidBetaDebug");
         assertThat(new File(resOutput, "drawable_no_overlay.png.flat")).exists();
         assertThat(new File(resOutput, "drawable_debug_overlay.png.flat")).exists();
         assertThat(new File(resOutput, "drawable_beta_overlay.png.flat")).exists();
