@@ -166,7 +166,7 @@ class TestFixturesTest {
     }
 
     @Test
-    fun `app consumes java and android library test fixtures`() {
+    fun `app consumes local, java and android library test fixtures`() {
         setUpProject(
             publishJavaLib = false,
             publishAndroidLib = false
@@ -176,7 +176,7 @@ class TestFixturesTest {
     }
 
     @Test
-    fun `app consumes published java and android library test fixtures`() {
+    fun `app consumes local, published java and android library test fixtures`() {
         setUpProject(
             publishJavaLib = true,
             publishAndroidLib = true

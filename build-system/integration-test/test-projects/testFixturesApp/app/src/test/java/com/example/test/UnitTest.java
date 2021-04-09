@@ -15,8 +15,10 @@
  */
 package com.example.test;
 
+import com.example.app.AppInterface;
 import com.example.app.JavaLibInterfaceImpl;
 import com.example.app.LibInterfaceImpl;
+import com.example.app.testFixtures.AppInterfaceTester;
 import com.example.javalib.testFixtures.JavaLibInterfaceTester;
 import com.example.lib.testFixtures.LibInterfaceTester;
 import org.junit.Test;
@@ -35,5 +37,18 @@ public class UnitTest {
         int id = 1234;
         JavaLibInterfaceTester tester = new JavaLibInterfaceTester(id);
         tester.test(new JavaLibInterfaceImpl(id));
+    }
+
+    @Test
+    public void testLocalAppTestFixturesDependency() {
+        AppInterfaceTester tester = new AppInterfaceTester("test");
+        tester.test(new AppInterfaceImpl());
+    }
+
+    private class AppInterfaceImpl implements AppInterface {
+        @Override
+        public String getName() {
+            return "test";
+        }
     }
 }

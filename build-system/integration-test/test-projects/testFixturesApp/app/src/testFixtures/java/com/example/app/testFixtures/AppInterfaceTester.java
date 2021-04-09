@@ -14,36 +14,19 @@
  * limitations under the License.
  */
 
-plugins {
-    id 'com.android.application'
-}
+package com.example.app.testFixtures;
 
-android {
-    compileSdkVersion rootProject.latestCompileSdk
-    buildToolsVersion = rootProject.buildToolsVersion
+import com.example.app.AppInterface;
+import com.google.common.truth.Truth;
 
-    defaultConfig {
-        minSdkVersion rootProject.supportLibMinSdk
+public class AppInterfaceTester {
+    private String name;
+
+    public AppInterfaceTester(String name) {
+        this.name = name;
     }
 
-    lintOptions {
-        checkReleaseBuilds false
+    public void test(AppInterface object) {
+        Truth.assertThat(object.getName()).isEqualTo(name);
     }
-}
-
-repositories {
-    maven {
-        url = '../testrepo'
-    }
-}
-
-dependencies {
-    compileOnly project(":javaLib")
-    compileOnly project(":lib")
-
-    testFixturesApi 'com.google.truth:truth:0.44'
-
-    testImplementation 'junit:junit:4.12'
-    testImplementation testFixtures(project(":javaLib"))
-    testImplementation testFixtures(project(":lib"))
 }
