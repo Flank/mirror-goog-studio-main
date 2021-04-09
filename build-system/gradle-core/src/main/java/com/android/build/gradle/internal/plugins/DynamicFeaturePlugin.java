@@ -20,6 +20,7 @@ import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
 import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.component.impl.TestFixturesImpl;
+import com.android.build.api.dsl.CommonExtension;
 import com.android.build.api.dsl.SdkComponents;
 import com.android.build.api.extension.DynamicFeatureAndroidComponentsExtension;
 import com.android.build.api.extension.impl.DynamicFeatureAndroidComponentsExtensionImpl;
@@ -149,7 +150,9 @@ public class DynamicFeaturePlugin
             @NonNull DslServices dslServices,
             @NonNull
                     VariantApiOperationsRegistrar<
-                                    DynamicFeatureVariantBuilderImpl, DynamicFeatureVariantImpl>
+                                CommonExtension<?, ?, ?, ?>,
+                                DynamicFeatureVariantBuilderImpl,
+                                DynamicFeatureVariantImpl>
                             variantApiOperationsRegistrar) {
         SdkComponents sdkComponents =
                 dslServices.newInstance(

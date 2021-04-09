@@ -123,7 +123,10 @@ public class LibraryPlugin
     protected LibraryAndroidComponentsExtension createComponentExtension(
             @NonNull DslServices dslServices,
             @NonNull
-                    VariantApiOperationsRegistrar<LibraryVariantBuilderImpl, LibraryVariantImpl>
+                    VariantApiOperationsRegistrar<
+                            com.android.build.api.dsl.CommonExtension<?, ?, ?, ?>,
+                            LibraryVariantBuilderImpl,
+                            LibraryVariantImpl>
                             variantApiOperationsRegistrar) {
         SdkComponents sdkComponents =
                 dslServices.newInstance(

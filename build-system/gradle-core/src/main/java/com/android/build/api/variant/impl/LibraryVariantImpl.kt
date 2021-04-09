@@ -20,6 +20,7 @@ import com.android.build.api.component.AndroidTest
 import com.android.build.api.component.Component
 import com.android.build.api.component.analytics.AnalyticsEnabledLibraryVariant
 import com.android.build.api.component.impl.ConsumableCreationConfigImpl
+import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.InstrumentationParameters
@@ -131,7 +132,7 @@ open class  LibraryVariantImpl @Inject constructor(
 
     override fun <T : Component> createUserVisibleVariantObject(
         projectServices: ProjectServices,
-        operationsRegistrar: VariantApiOperationsRegistrar<out VariantBuilder, out Variant>,
+        operationsRegistrar: VariantApiOperationsRegistrar<out CommonExtension<*, *, *, *>, out VariantBuilder, out Variant>,
         stats: GradleBuildVariant.Builder?
     ): T =
         if (stats == null) {

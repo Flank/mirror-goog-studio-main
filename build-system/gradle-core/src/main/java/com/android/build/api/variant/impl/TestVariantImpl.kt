@@ -21,6 +21,7 @@ import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.Component
 import com.android.build.api.component.analytics.AnalyticsEnabledTestVariant
 import com.android.build.api.component.impl.TestVariantCreationConfigImpl
+import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.AndroidResources
 import com.android.build.api.variant.AndroidVersion
@@ -222,7 +223,7 @@ open class TestVariantImpl @Inject constructor(
 
     override fun <T : Component> createUserVisibleVariantObject(
             projectServices: ProjectServices,
-            operationsRegistrar: VariantApiOperationsRegistrar<out VariantBuilder, out Variant>,
+            operationsRegistrar: VariantApiOperationsRegistrar<out CommonExtension<*, *, *, *>, out VariantBuilder, out Variant>,
             stats: GradleBuildVariant.Builder?
     ): T =
         if (stats == null) {

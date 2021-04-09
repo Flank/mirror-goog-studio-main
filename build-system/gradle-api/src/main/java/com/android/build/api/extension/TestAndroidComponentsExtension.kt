@@ -16,6 +16,7 @@
 
 package com.android.build.api.extension
 
+import com.android.build.api.dsl.TestExtension
 import com.android.build.api.variant.TestVariant
 import com.android.build.api.variant.TestVariantBuilder
 import org.gradle.api.Incubating
@@ -27,4 +28,4 @@ import org.gradle.api.Incubating
  */
 @Incubating
 interface TestAndroidComponentsExtension:
-        AndroidComponentsExtension<TestVariantBuilder, TestVariant>
+        AndroidComponentsExtension<TestExtension, TestVariantBuilder, TestVariant>

@@ -21,6 +21,7 @@ import com.android.build.api.component.Component
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.TestFixtures
 import com.android.build.api.component.analytics.AnalyticsEnabledTestFixtures
+import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.AarMetadata
 import com.android.build.api.variant.AndroidVersion
@@ -102,7 +103,7 @@ open class TestFixturesImpl @Inject constructor(
     // ---------------------------------------------------------------------------------------------
     override fun <T : Component> createUserVisibleVariantObject(
         projectServices: ProjectServices,
-        operationsRegistrar: VariantApiOperationsRegistrar<out VariantBuilder, out Variant>,
+        operationsRegistrar: VariantApiOperationsRegistrar<out CommonExtension<*, *, *, *>, out VariantBuilder, out Variant>,
         stats: GradleBuildVariant.Builder?
     ): T {
         return if (stats == null) {

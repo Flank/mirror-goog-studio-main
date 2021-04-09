@@ -127,6 +127,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+
 import org.gradle.api.JavaVersion;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Plugin;
@@ -148,13 +149,16 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 /** Base class for all Android plugins */
 public abstract class BasePlugin<
                 AndroidComponentsT extends
-                        AndroidComponentsExtension<? extends ComponentBuilder, ? extends Variant>,
+                        AndroidComponentsExtension<
+                                ? extends CommonExtension<?, ?, ?, ?>,
+                                ? extends ComponentBuilder,
+                                ? extends Variant>,
                 VariantBuilderT extends VariantBuilderImpl,
                 VariantT extends VariantImpl>
         implements Plugin<Project> {
 
     private BaseExtension extension;
-    private AndroidComponentsExtension<? extends ComponentBuilder, ? extends Variant>
+    private AndroidComponentsExtension<? extends CommonExtension<?, ?, ?, ?>, ? extends ComponentBuilder, ? extends Variant>
             androidComponentsExtension;
 
     private VariantManager<VariantBuilderT, VariantT> variantManager;
@@ -186,6 +190,11 @@ public abstract class BasePlugin<
 
     @NonNull private final BuildEventsListenerRegistry listenerRegistry;
 
+    private final VariantApiOperationsRegistrar<
+            CommonExtension<?, ?, ?, ?>,
+            VariantBuilderT,
+            VariantT> variantApiOperations = new VariantApiOperationsRegistrar<>();
+
     public BasePlugin(
             @NonNull ToolingModelBuilderRegistry registry,
             @NonNull SoftwareComponentFactory componentFactory,
@@ -212,7 +221,7 @@ public abstract class BasePlugin<
     protected abstract AndroidComponentsT createComponentExtension(
             @NonNull DslServices dslServices,
             @NonNull
-                    VariantApiOperationsRegistrar<VariantBuilderT, VariantT>
+                    VariantApiOperationsRegistrar<CommonExtension<?, ?, ?, ?>, VariantBuilderT, VariantT>
                             variantApiOperationsRegistrar);
 
     @NonNull
@@ -521,8 +530,6 @@ public abstract class BasePlugin<
 
         globalScope.setExtension(extension);
 
-        VariantApiOperationsRegistrar<VariantBuilderT, VariantT> variantApiOperations =
-                new VariantApiOperationsRegistrar<>();
         androidComponentsExtension = createComponentExtension(dslServices, variantApiOperations);
 
         variantManager =
@@ -700,6 +707,10 @@ public abstract class BasePlugin<
         hasCreatedTasks = true;
 
         extension.disableWrite();
+
+        variantApiOperations.executeDslFinalizationBlocks(
+                (CommonExtension<?, ?, ?, ?>) extension
+        );
 
         GradleBuildProject.Builder projectBuilder =
                 configuratorService.getProjectBuilder(project.getPath());

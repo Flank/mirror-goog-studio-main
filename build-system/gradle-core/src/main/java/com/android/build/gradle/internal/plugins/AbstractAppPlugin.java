@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.plugins;
 
 import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
+import com.android.build.api.dsl.CommonExtension;
 import com.android.build.api.extension.AndroidComponentsExtension;
 import com.android.build.api.variant.impl.VariantBuilderImpl;
 import com.android.build.api.variant.impl.VariantImpl;
@@ -30,7 +31,7 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 /** Gradle plugin class for 'application' projects. */
 public abstract class AbstractAppPlugin<
                 AndroidComponentsT extends
-                        AndroidComponentsExtension<? super VariantBuilderT, ? super VariantT>,
+                        AndroidComponentsExtension<? extends CommonExtension<?, ?, ?, ?>, ? super VariantBuilderT, ? super VariantT>,
                 VariantBuilderT extends VariantBuilderImpl,
                 VariantT extends VariantImpl>
         extends BasePlugin<AndroidComponentsT, VariantBuilderT, VariantT> {

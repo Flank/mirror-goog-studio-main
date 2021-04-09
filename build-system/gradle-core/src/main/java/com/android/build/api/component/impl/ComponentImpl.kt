@@ -20,6 +20,7 @@ import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.attributes.ProductFlavorAttr
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.Component
+import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.FramesComputationMode
@@ -701,7 +702,7 @@ abstract class ComponentImpl(
 
     abstract fun <T: Component> createUserVisibleVariantObject(
             projectServices: ProjectServices,
-            operationsRegistrar: VariantApiOperationsRegistrar<out VariantBuilder, out Variant>,
+            operationsRegistrar: VariantApiOperationsRegistrar<out CommonExtension<*, *, *, *>, out VariantBuilder, out Variant>,
             stats: GradleBuildVariant.Builder?
     ): T
 

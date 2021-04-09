@@ -22,6 +22,7 @@ import com.android.build.api.component.AndroidTest
 import com.android.build.api.component.Component
 import com.android.build.api.component.analytics.AnalyticsEnabledDynamicFeatureVariant
 import com.android.build.api.component.impl.ApkCreationConfigImpl
+import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.AndroidResources
 import com.android.build.api.variant.AndroidVersion
@@ -274,7 +275,7 @@ open class DynamicFeatureVariantImpl @Inject constructor(
 
     override fun <T : Component> createUserVisibleVariantObject(
             projectServices: ProjectServices,
-            operationsRegistrar: VariantApiOperationsRegistrar<out VariantBuilder, out Variant>,
+            operationsRegistrar: VariantApiOperationsRegistrar<out CommonExtension<*, *, *, *>, out VariantBuilder, out Variant>,
             stats: GradleBuildVariant.Builder?
     ): T =
         if (stats == null) {

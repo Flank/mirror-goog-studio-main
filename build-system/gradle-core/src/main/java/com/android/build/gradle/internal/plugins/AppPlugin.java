@@ -148,8 +148,10 @@ public class AppPlugin
             @NonNull DslServices dslServices,
             @NonNull
                     VariantApiOperationsRegistrar<
-                                    ApplicationVariantBuilderImpl, ApplicationVariantImpl>
-                            variantApiOperationsRegistrar) {
+                            com.android.build.api.dsl.CommonExtension<?, ?, ?, ?>,
+                            ApplicationVariantBuilderImpl,
+                            ApplicationVariantImpl>
+                        variantApiOperationsRegistrar) {
         SdkComponents sdkComponents =
                 dslServices.newInstance(
                         SdkComponentsImpl.class,

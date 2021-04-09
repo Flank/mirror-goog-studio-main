@@ -19,6 +19,7 @@ package com.android.build.api.extension
 import com.android.build.api.component.AndroidTest
 import com.android.build.api.component.ComponentBuilder
 import com.android.build.api.component.UnitTest
+import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.SdkComponents
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
@@ -36,7 +37,29 @@ import org.gradle.api.Incubating
  */
 @Incubating
 interface AndroidComponentsExtension<
-        VariantBuilderT: VariantBuilder, VariantT: Variant> {
+        DslExtensionT: CommonExtension<*, *, *, *>,
+        VariantBuilderT: VariantBuilder,
+        VariantT: Variant> {
+
+    /**
+     * API to customize the DSL Objects programmatically before the [beforeVariants] is called.
+     *
+     * Example of a build type creation:
+     * ```kotlin
+     * androidComponents.finalizeDsl { extension ->
+     *     extension.buildTypes.create("extra")
+     * }
+     * ```
+     *
+     * The list of variants will be finalized after all finalizeDsl Callbacks and cannot be altered
+     * in the other APIs like [beforeVariants] or [onVariants].
+     */
+    fun finalizeDsl(callback: (DslExtensionT) -> Unit)
+
+    /**
+     * [Action] based version of [finalizeDsl] above.
+     */
+    fun finalizeDSl(callback: Action<DslExtensionT>)
 
     /**
      * Provides access to underlying Android SDK and build-tools components like adb.

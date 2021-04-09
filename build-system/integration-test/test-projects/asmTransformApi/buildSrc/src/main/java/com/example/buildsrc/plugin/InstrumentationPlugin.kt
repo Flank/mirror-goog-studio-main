@@ -58,7 +58,7 @@ class InstrumentationPlugin : Plugin<Project> {
     }
 
     private fun registerAnnotationAddingVisitorFactory(
-        androidComponentsExt: AndroidComponentsExtension<*, *>,
+        androidComponentsExt: AndroidComponentsExtension<*, *, *>,
         instrumentationExtension: InstrumentationPluginExtension
     ) {
         androidComponentsExt.onVariants {
@@ -98,7 +98,7 @@ class InstrumentationPlugin : Plugin<Project> {
     }
 
     private fun registerInterfaceAddingVisitorFactory(
-        androidComponentsExt: AndroidComponentsExtension<*, *>,
+        androidComponentsExt: AndroidComponentsExtension<*, *, *>,
         instrumentationExtension: InstrumentationPluginExtension
     ) {
         androidComponentsExt.onVariants(androidComponentsExt.selector().withBuildType("debug")) {

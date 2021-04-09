@@ -37,6 +37,7 @@ import com.android.build.api.component.TestFixtures
 import com.android.build.api.component.UnitTest
 import com.android.build.api.component.impl.TestComponentImpl
 import com.android.build.api.component.impl.TestFixturesImpl
+import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.extension.VariantExtensionConfig
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.HasAndroidTestBuilder
@@ -103,7 +104,11 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
         private val project: Project,
         private val projectOptions: ProjectOptions,
         private val extension: BaseExtension,
-        private val variantApiOperationsRegistrar: VariantApiOperationsRegistrar<VariantBuilder, Variant>,
+        private val variantApiOperationsRegistrar: VariantApiOperationsRegistrar<
+                CommonExtension<*, *, *, *>,
+                VariantBuilder,
+                Variant,
+                >,
         private val variantFactory: VariantFactory<VariantBuilderT, VariantT>,
         private val variantInputModel: VariantInputModel<DefaultConfig, BuildType, ProductFlavor, SigningConfig>,
         private val projectServices: ProjectServices) {

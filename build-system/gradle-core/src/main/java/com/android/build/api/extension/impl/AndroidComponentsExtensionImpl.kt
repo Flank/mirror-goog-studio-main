@@ -30,12 +30,25 @@ import com.android.build.api.variant.VariantExtension
 import com.android.build.gradle.internal.services.DslServices
 import org.gradle.api.Action
 
-abstract class AndroidComponentsExtensionImpl<VariantBuilderT: VariantBuilder, VariantT: Variant>(
+abstract class AndroidComponentsExtensionImpl<
+        DslExtensionT: CommonExtension<*, *, *, *>,
+        VariantBuilderT: VariantBuilder,
+        VariantT: Variant>(
         private val dslServices: DslServices,
         override val sdkComponents: SdkComponents,
-        private val variantApiOperations: VariantApiOperationsRegistrar<VariantBuilderT, VariantT>,
-        private val commonExtension: CommonExtension <*, *, *, *>
-): AndroidComponentsExtension<VariantBuilderT, VariantT> {
+        private val variantApiOperations: VariantApiOperationsRegistrar<DslExtensionT, VariantBuilderT, VariantT>,
+        private val commonExtension: DslExtensionT
+): AndroidComponentsExtension<DslExtensionT, VariantBuilderT, VariantT> {
+
+    override fun finalizeDsl(callback: (DslExtensionT) -> Unit) {
+        variantApiOperations.dslFinalizationOperations.add {
+            callback.invoke(it)
+        }
+    }
+
+    override fun finalizeDSl(callback: Action<DslExtensionT>) {
+        variantApiOperations.dslFinalizationOperations.add(callback)
+    }
 
     override fun beforeVariants(selector: VariantSelector, callback: (VariantBuilderT) -> Unit) {
         variantApiOperations.variantBuilderOperations.addOperation({

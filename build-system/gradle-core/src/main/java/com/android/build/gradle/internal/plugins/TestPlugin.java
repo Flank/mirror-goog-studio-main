@@ -20,6 +20,7 @@ import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
 import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.component.impl.TestFixturesImpl;
+import com.android.build.api.dsl.CommonExtension;
 import com.android.build.api.dsl.SdkComponents;
 import com.android.build.api.extension.TestAndroidComponentsExtension;
 import com.android.build.api.extension.impl.TestAndroidComponentsExtensionImpl;
@@ -131,7 +132,10 @@ public class TestPlugin
     protected TestAndroidComponentsExtension createComponentExtension(
             @NonNull DslServices dslServices,
             @NonNull
-                    VariantApiOperationsRegistrar<TestVariantBuilderImpl, TestVariantImpl>
+                    VariantApiOperationsRegistrar<
+                                                CommonExtension<?, ?, ?, ?>,
+                                                TestVariantBuilderImpl,
+                                                TestVariantImpl>
                             variantApiOperationsRegistrar) {
         SdkComponents sdkComponents =
                 dslServices.newInstance(

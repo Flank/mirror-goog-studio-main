@@ -27,10 +27,10 @@ import javax.inject.Inject
 open class ApplicationAndroidComponentsExtensionImpl @Inject constructor(
         dslServices: DslServices,
         sdkComponents: SdkComponents,
-        variantApiOperations: VariantApiOperationsRegistrar<ApplicationVariantBuilder, ApplicationVariant>,
+        variantApiOperations: VariantApiOperationsRegistrar<ApplicationExtension, ApplicationVariantBuilder, ApplicationVariant>,
         applicationExtension: ApplicationExtension
 ): ApplicationAndroidComponentsExtension,
-        AndroidComponentsExtensionImpl<ApplicationVariantBuilder, ApplicationVariant>(
+        AndroidComponentsExtensionImpl<ApplicationExtension, ApplicationVariantBuilder, ApplicationVariant>(
                 dslServices,
                 sdkComponents,
                 variantApiOperations,
