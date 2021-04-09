@@ -922,7 +922,7 @@ com.android.build.gradle.internal.dsl.BaseFlavor.testProguardFiles: void (java.l
 com.android.build.gradle.internal.dsl.BaseFlavor.vectorDrawables: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.VectorDrawables, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.BaseFlavor.vectorDrawables: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.VectorDrawablesOptions>)
 com.android.build.gradle.internal.dsl.BaseFlavor.wearAppUnbundled: void (java.lang.Boolean)
-com.android.build.gradle.internal.dsl.BuildType extends com.android.builder.core.AbstractBuildType implements com.android.build.gradle.internal.dsl.CoreBuildType, java.io.Serializable, com.android.build.api.dsl.ApplicationBuildType, com.android.build.api.dsl.LibraryBuildType, com.android.build.api.dsl.DynamicFeatureBuildType, com.android.build.api.dsl.TestBuildType
+com.android.build.gradle.internal.dsl.BuildType extends com.android.builder.core.AbstractBuildType implements com.android.build.gradle.internal.dsl.CoreBuildType, java.io.Serializable, com.android.build.gradle.internal.dsl.VariantDimensionBinaryCompatibilityFix, com.android.build.api.dsl.ApplicationBuildType, com.android.build.api.dsl.LibraryBuildType, com.android.build.api.dsl.DynamicFeatureBuildType, com.android.build.api.dsl.TestBuildType
 com.android.build.gradle.internal.dsl.BuildType$Companion
 com.android.build.gradle.internal.dsl.BuildType$Companion.<init>: com.android.build.gradle.internal.dsl.BuildType$Companion (kotlin.jvm.internal.DefaultConstructorMarker)
 com.android.build.gradle.internal.dsl.BuildType$PostProcessingConfiguration extends java.lang.Enum
@@ -931,6 +931,7 @@ com.android.build.gradle.internal.dsl.BuildType$PostProcessingConfiguration.valu
 com.android.build.gradle.internal.dsl.BuildType$WhenMappings
 com.android.build.gradle.internal.dsl.BuildType.<init>: com.android.build.gradle.internal.dsl.BuildType (java.lang.String, com.android.build.gradle.internal.services.DslServices)
 com.android.build.gradle.internal.dsl.BuildType._initWith: void (com.android.builder.model.BaseConfig)
+com.android.build.gradle.internal.dsl.BuildType._internal_getSigingConfig: com.android.build.api.dsl.ApkSigningConfig ()
 com.android.build.gradle.internal.dsl.BuildType.aarMetadata: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.AarMetadata, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.BuildType.buildConfigField: void (java.lang.String, java.lang.String, java.lang.String)
 com.android.build.gradle.internal.dsl.BuildType.consumerProguardFile: com.android.build.gradle.internal.dsl.BuildType (java.lang.Object)
@@ -1584,9 +1585,10 @@ com.android.build.gradle.internal.dsl.PrefabPackagingOptions.getName: java.lang.
 com.android.build.gradle.internal.dsl.PrefabPackagingOptions.setHeaders: void (java.lang.String)
 com.android.build.gradle.internal.dsl.PrefabPackagingOptions.setLibraryName: void (java.lang.String)
 com.android.build.gradle.internal.dsl.PrefabPackagingOptions.setName: void (java.lang.String)
-com.android.build.gradle.internal.dsl.ProductFlavor extends com.android.build.gradle.internal.dsl.BaseFlavor implements com.android.build.api.dsl.ApplicationProductFlavor, com.android.build.api.dsl.DynamicFeatureProductFlavor, com.android.build.api.dsl.LibraryProductFlavor, com.android.build.api.dsl.TestProductFlavor
+com.android.build.gradle.internal.dsl.ProductFlavor extends com.android.build.gradle.internal.dsl.BaseFlavor implements com.android.build.gradle.internal.dsl.VariantDimensionBinaryCompatibilityFix, com.android.build.api.dsl.ApplicationProductFlavor, com.android.build.api.dsl.DynamicFeatureProductFlavor, com.android.build.api.dsl.LibraryProductFlavor, com.android.build.api.dsl.TestProductFlavor
 com.android.build.gradle.internal.dsl.ProductFlavor.<init>: com.android.build.gradle.internal.dsl.ProductFlavor (java.lang.String, com.android.build.gradle.internal.services.DslServices)
 com.android.build.gradle.internal.dsl.ProductFlavor._initWith: void (com.android.builder.model.BaseConfig)
+com.android.build.gradle.internal.dsl.ProductFlavor._internal_getSigingConfig: com.android.build.api.dsl.ApkSigningConfig ()
 com.android.build.gradle.internal.dsl.ProductFlavor.getIsDefault: org.gradle.api.provider.Property<java.lang.Boolean> ()
 com.android.build.gradle.internal.dsl.ProductFlavor.getMatchingFallbacks: java.util.List<java.lang.String> ()
 com.android.build.gradle.internal.dsl.ProductFlavor.getSigningConfig: com.android.build.api.dsl.ApkSigningConfig ()
@@ -1678,6 +1680,12 @@ com.android.build.gradle.internal.dsl.TestOptions.setResultsDir: void (java.lang
 com.android.build.gradle.internal.dsl.TestOptions.unitTests: void (groovy.lang.Closure<?>)
 com.android.build.gradle.internal.dsl.TestOptions.unitTests: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.UnitTestOptions, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.TestOptions.unitTests: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.TestOptions$UnitTestOptions>)
+com.android.build.gradle.internal.dsl.VariantDimensionBinaryCompatibilityFix implements com.android.build.gradle.internal.dsl.VariantDimensionBinaryCompatibilityFixParent
+com.android.build.gradle.internal.dsl.VariantDimensionBinaryCompatibilityFix._internal_getSigingConfig: com.android.build.api.dsl.ApkSigningConfig ()
+com.android.build.gradle.internal.dsl.VariantDimensionBinaryCompatibilityFix.getSigningConfig: com.android.build.gradle.internal.dsl.SigningConfig ()
+com.android.build.gradle.internal.dsl.VariantDimensionBinaryCompatibilityFix.getSigningConfig: com.android.builder.model.SigningConfig ()
+com.android.build.gradle.internal.dsl.VariantDimensionBinaryCompatibilityFixParent
+com.android.build.gradle.internal.dsl.VariantDimensionBinaryCompatibilityFixParent.getSigningConfig: com.android.builder.model.SigningConfig ()
 com.android.build.gradle.internal.dsl.VectorDrawablesOptions extends com.android.builder.core.DefaultVectorDrawablesOptions implements com.android.build.api.dsl.VectorDrawables
 com.android.build.gradle.internal.dsl.VectorDrawablesOptions.<init>: com.android.build.gradle.internal.dsl.VectorDrawablesOptions ()
 com.android.build.gradle.internal.dsl.VectorDrawablesOptions.generatedDensities: void (java.lang.String[])

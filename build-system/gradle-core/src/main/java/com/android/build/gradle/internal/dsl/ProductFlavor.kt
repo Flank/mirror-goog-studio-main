@@ -30,6 +30,7 @@ import org.gradle.api.provider.Property
 
 abstract class ProductFlavor @Inject constructor(name: String, dslServices: DslServices) :
     BaseFlavor(name, dslServices),
+    VariantDimensionBinaryCompatibilityFix,
     ApplicationProductFlavor,
     DynamicFeatureProductFlavor,
     LibraryProductFlavor,
@@ -75,6 +76,10 @@ abstract class ProductFlavor @Inject constructor(name: String, dslServices: DslS
     override var signingConfig: ApkSigningConfig?
         get() = super.signingConfig
         set(value) { super.signingConfig = value }
+
+    override fun _internal_getSigingConfig(): ApkSigningConfig? {
+        return signingConfig
+    }
 
     override fun computeRequestedAndFallBacks(requestedValues: List<String>): DimensionRequest { // in order to have different fallbacks per variant for missing dimensions, we are
         // going to actually have the flavor request itself (in the other dimension), with

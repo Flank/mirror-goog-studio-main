@@ -5,4 +5,9 @@ plugins {
 
 android {
     compileSdkVersion(30)
+    flavorDimensions += "color"
+    productFlavors {
+        create("yellow") {
+        }
+    }
 }

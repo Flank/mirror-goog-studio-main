@@ -44,6 +44,7 @@ abstract class BuildType @Inject constructor(
     private val dslServices: DslServices
 ) :
     AbstractBuildType(), CoreBuildType, Serializable,
+    VariantDimensionBinaryCompatibilityFix,
     ApplicationBuildType,
     LibraryBuildType,
     DynamicFeatureBuildType,
@@ -191,6 +192,10 @@ abstract class BuildType @Inject constructor(
 
     fun setSigningConfig(signingConfig: Any?) {
         this.signingConfig = signingConfig as SigningConfig?
+    }
+
+    override fun _internal_getSigingConfig(): ApkSigningConfig? {
+        return signingConfig
     }
 
     override var isEmbedMicroApp: Boolean = true
