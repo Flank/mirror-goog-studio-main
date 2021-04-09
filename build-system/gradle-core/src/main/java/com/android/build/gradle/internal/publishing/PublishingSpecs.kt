@@ -286,6 +286,7 @@ class PublishingSpecs {
                 runtime(LIBRARY_JAVA_RES, ArtifactType.JAVA_RES)
                 runtime(NAVIGATION_JSON, ArtifactType.NAVIGATION_JSON)
                 runtime(COMPILED_LOCAL_RESOURCES, ArtifactType.COMPILED_DEPENDENCIES_RESOURCES)
+                runtime(AAR_METADATA, ArtifactType.AAR_METADATA)
             }
 
             // Publishing will be done manually from the lint standalone plugin for now.

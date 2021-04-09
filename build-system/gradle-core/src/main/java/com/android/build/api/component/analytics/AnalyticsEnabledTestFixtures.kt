@@ -17,6 +17,8 @@
 package com.android.build.api.component.analytics
 
 import com.android.build.api.component.TestFixtures
+import com.android.build.api.variant.AarMetadata
+import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.model.ObjectFactory
 import javax.inject.Inject
@@ -27,4 +29,19 @@ abstract class AnalyticsEnabledTestFixtures @Inject constructor(
     objectFactory: ObjectFactory
 ) : AnalyticsEnabledComponent(
     delegate, stats, objectFactory
-), TestFixtures
+), TestFixtures {
+    private val userVisibleAarMetadata: AarMetadata by lazy {
+        objectFactory.newInstance(
+            AnalyticsEnabledAarMetadata::class.java,
+            delegate.aarMetadata,
+            stats
+        )
+    }
+
+    override val aarMetadata: AarMetadata
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.VARIANT_AAR_METADATA_VALUE
+            return userVisibleAarMetadata
+        }
+}
