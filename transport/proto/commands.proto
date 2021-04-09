@@ -34,8 +34,9 @@ message Command {
     ATTACH_AGENT = 10;
 
     // General profiler commands starts at 100.
-    BEGIN_SESSION = 100;
-    END_SESSION = 101;
+    BEGIN_SESSION = 101;
+    END_SESSION = 102;
+    DISCOVER_PROFILEABLE = 103;
 
     // Network Profiler Prefix = 200
 
@@ -82,8 +83,9 @@ message Command {
     AttachAgent attach_agent = 10;
 
     // General profiler commands starts at 100.
-    BeginSession begin_session = 100;
-    EndSession end_session = 101;
+    BeginSession begin_session = 101;
+    EndSession end_session = 102;
+    // 103 Reserved for CommandType.DISCOVER_PROFILEABLE
 
     // Network Profiler Prefix = 200
 
