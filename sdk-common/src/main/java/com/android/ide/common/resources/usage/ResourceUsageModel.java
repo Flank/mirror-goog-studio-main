@@ -733,6 +733,7 @@ public class ResourceUsageModel {
                             // No exact match for "R." found (e.g. don't match against "BR.")
                             if (Character.isJavaIdentifierPart(
                                     value.charAt(resourceStartIndex - 1))) {
+                                resourceStartIndex += 2; // skip "R." in "BR." so we don't repeat
                                 continue;
                             }
                             while (resourceEndIndex < length

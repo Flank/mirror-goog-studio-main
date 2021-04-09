@@ -453,4 +453,28 @@ public class ManifestMergingTest {
                 flavors.executor().expectFailure().run("clean", "assembleF1FaDebug");
         Truth.assertThat(buildResult.getFailureMessage()).contains("Package Name not found");
     }
+
+    // an integration test to make sure using tool:ignore_warning doesn't cause any failures
+    @Test
+    public void checkUseIgnoreWarning() throws Exception {
+        File appManifest = new File(flavors.getMainSrcDir().getParent(), "AndroidManifest.xml");
+        System.out.println(appManifest.getAbsolutePath());
+        TestFileUtils.searchAndReplace(
+                appManifest,
+                "package=\"com.android.tests.flavors\">",
+                "xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                        + "      package=\"com.android.tests.flavors\">");
+        TestFileUtils.searchAndReplace(
+                appManifest,
+                "<application\n"
+                        + "        android:icon=\"@drawable/icon\"\n"
+                        + "        android:label=\"@string/app_name\" >",
+                "<application\n"
+                        + "        android:icon=\"@drawable/icon\"\n"
+                        + "        tools:replace=\"android:icon\"\n"
+                        + "        tools:ignore_warning=\"true\"\n"
+                        + "        android:label=\"@string/app_name\" >");
+        GradleBuildResult buildResult = flavors.executor().run("clean", "assembleDebug");
+        Truth.assertThat(buildResult.getFailedTasks()).isEmpty();
+    }
 }
