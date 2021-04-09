@@ -20,7 +20,5 @@ fun dimens() = """
     <dimen name="fragment_horizontal_margin">48dp</dimen>
     <dimen name="fab_margin">48dp</dimen>
     <dimen name="item_transform_image_length">142dp</dimen>
-    <dimen name="reflow_text_block_max_percent">0.45</dimen>
-    <dimen name="reflow_text_block_horizontal_gap">16dp</dimen>
 </resources>
 """

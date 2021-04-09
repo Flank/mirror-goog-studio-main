@@ -18,8 +18,5 @@ package com.android.tools.idea.wizard.template.impl.activities.responsiveActivit
 fun dimens() = """
 <resources>
     <dimen name="item_transform_image_length">160dp</dimen>
-    <dimen name="reflow_text_block_horizontal_gap">32dp</dimen>
-    <dimen name="reflow_text_title_size">28sp</dimen>
-    <dimen name="reflow_text_description_size">18sp</dimen>
 </resources>
 """
