@@ -20,6 +20,7 @@ import static com.android.build.gradle.internal.TaskManager.MergeType.MERGE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ANDROID_RES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NOT_COMPILED_RES;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_LAYOUT_INFO_TYPE_MERGE;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_LAYOUT_INFO_TYPE_PACKAGE;
 import static com.android.ide.common.resources.AndroidAaptIgnoreKt.ANDROID_AAPT_IGNORE;
@@ -31,6 +32,7 @@ import android.databinding.tool.writer.JavaFileWriter;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.artifact.impl.ArtifactsImpl;
 import com.android.build.gradle.internal.DependencyResourcesComputer;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.TaskManager;
@@ -85,6 +87,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -793,19 +796,16 @@ public abstract class MergeResources extends IncrementalTask {
     public static class CreationAction
             extends VariantTaskCreationAction<MergeResources, ComponentCreationConfig> {
         @NonNull private final TaskManager.MergeType mergeType;
-        @NonNull
-        private final String taskNamePrefix;
         @Nullable private final File mergedNotCompiledOutputDirectory;
         private final boolean includeDependencies;
         private final boolean processResources;
         private final boolean processVectorDrawables;
         @NonNull private final ImmutableSet<Flag> flags;
-        private boolean isLibrary;
+        private final boolean isLibrary;
 
         public CreationAction(
                 @NonNull ComponentCreationConfig creationConfig,
                 @NonNull TaskManager.MergeType mergeType,
-                @NonNull String taskNamePrefix,
                 @Nullable File mergedNotCompiledOutputDirectory,
                 boolean includeDependencies,
                 boolean processResources,
@@ -813,7 +813,6 @@ public abstract class MergeResources extends IncrementalTask {
                 boolean isLibrary) {
             super(creationConfig);
             this.mergeType = mergeType;
-            this.taskNamePrefix = taskNamePrefix;
             this.mergedNotCompiledOutputDirectory = mergedNotCompiledOutputDirectory;
             this.includeDependencies = includeDependencies;
             this.processResources = processResources;
@@ -825,7 +824,7 @@ public abstract class MergeResources extends IncrementalTask {
         @NonNull
         @Override
         public String getName() {
-            return computeTaskName(taskNamePrefix, "Resources");
+            return computeTaskName(mergeType.name().toLowerCase(Locale.ENGLISH), "Resources");
         }
 
         @NonNull
@@ -846,10 +845,17 @@ public abstract class MergeResources extends IncrementalTask {
             // Filed https://issuetracker.google.com//110412851 to clean this up at some point.
             creationConfig.getTaskContainer().setMergeResourcesTask(taskProvider);
 
-            creationConfig
-                    .getArtifacts()
-                    .setInitialProvider(
-                            taskProvider, MergeResources::getDataBindingLayoutInfoOutFolder)
+            ArtifactsImpl artifacts = creationConfig.getArtifacts();
+            artifacts.setInitialProvider(taskProvider, MergeResources::getOutputDir)
+                    .on(mergeType.getOutputType());
+
+            if (mergedNotCompiledOutputDirectory != null) {
+                artifacts.setInitialProvider(taskProvider, MergeResources::getMergedNotCompiledResourcesOutputDirectory)
+                        .atLocation(mergedNotCompiledOutputDirectory.getPath())
+                        .on(MERGED_NOT_COMPILED_RES.INSTANCE);
+            }
+
+            artifacts.setInitialProvider(taskProvider, MergeResources::getDataBindingLayoutInfoOutFolder)
                     .withName("out")
                     .on(
                             mergeType == MERGE
@@ -858,17 +864,13 @@ public abstract class MergeResources extends IncrementalTask {
 
             // only the full run with dependencies generates the blame folder
             if (includeDependencies) {
-                creationConfig
-                        .getArtifacts()
-                        .setInitialProvider(taskProvider, MergeResources::getBlameLogOutputFolder)
+                artifacts.setInitialProvider(taskProvider, MergeResources::getBlameLogOutputFolder)
                         .withName("out")
                         .on(InternalArtifactType.MERGED_RES_BLAME_FOLDER.INSTANCE);
             }
 
             VariantPathHelper paths = creationConfig.getPaths();
-            creationConfig
-                    .getArtifacts()
-                    .setInitialProvider(taskProvider, MergeResources::getGeneratedPngsOutputDir)
+            artifacts.setInitialProvider(taskProvider, MergeResources::getGeneratedPngsOutputDir)
                     .atLocation(mergeResources -> paths.getGeneratedPngsOutputDir());
         }
 

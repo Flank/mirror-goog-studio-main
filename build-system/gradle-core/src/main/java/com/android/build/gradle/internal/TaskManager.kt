@@ -82,7 +82,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC
 import com.android.build.gradle.internal.scope.InternalArtifactType.JAVA_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_JAVA_RES
-import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NOT_COMPILED_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.PACKAGED_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.PROCESSED_RES
@@ -250,7 +249,6 @@ import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.testing.jacoco.plugins.JacocoPlugin
 import java.io.File
-import java.util.Locale
 import java.util.concurrent.Callable
 import java.util.function.Consumer
 import java.util.stream.Collectors
@@ -1017,7 +1015,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             taskProviderCallback: TaskProviderCallback<MergeResources>?,
             isLibrary: Boolean = this.isLibrary
     ): TaskProvider<MergeResources> {
-        val taskNamePrefix = mergeType.name.toLowerCase(Locale.ENGLISH)
         val mergedNotCompiledDir = if (alsoOutputNotCompiledResources) File(
                 creationConfig.services.projectInfo.getIntermediatesDir()
                         .toString() + "/merged-not-compiled-resources/"
@@ -1026,7 +1023,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                 MergeResources.CreationAction(
                         creationConfig,
                         mergeType,
-                        taskNamePrefix,
                         mergedNotCompiledDir,
                         includeDependencies,
                         processResources,
@@ -1035,18 +1031,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                 null,
                 null,
                 taskProviderCallback)
-        creationConfig
-                .artifacts
-                .setInitialProvider(mergeResourcesTask, MergeResources::getOutputDir)
-                .on(mergeType.outputType)
-        if (alsoOutputNotCompiledResources) {
-            creationConfig
-                    .artifacts
-                    .setInitialProvider(
-                            mergeResourcesTask) { obj: MergeResources -> obj.mergedNotCompiledResourcesOutputDirectory!! }
-                    .atLocation(mergedNotCompiledDir!!.absolutePath)
-                    .on(MERGED_NOT_COMPILED_RES)
-        }
         if (extension.testOptions.unitTests.isIncludeAndroidResources) {
             creationConfig.taskContainer.compileTask.dependsOn(mergeResourcesTask)
         }
