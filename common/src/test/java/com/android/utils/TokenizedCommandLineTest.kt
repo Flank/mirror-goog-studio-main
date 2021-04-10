@@ -17,6 +17,9 @@
 package com.android.utils
 
 import com.android.SdkConstants
+import com.android.utils.cxx.STRIP_FLAGS_WITHOUT_ARG
+import com.android.utils.cxx.STRIP_FLAGS_WITH_ARG
+import com.android.utils.cxx.STRIP_FLAGS_WITH_IMMEDIATE_ARG
 import com.google.common.truth.Truth.assertThat
 import org.junit.Assert.fail
 import org.junit.Test
@@ -54,9 +57,9 @@ class TokenizedCommandLineTest {
     @Test
     fun removeNth() {
         fun check(
-            commandLine: String, 
-            n: Int, 
-            expectedToken: String?, 
+            commandLine: String,
+            n: Int,
+            expectedToken: String?,
             expectedCommandLine: String,
             raw: Boolean,
             platform: Int) {
@@ -152,6 +155,40 @@ class TokenizedCommandLineTest {
     }
 
     @Test
+    fun `remove group return extra`() {
+        fun checkRemove(commandLine: String, token: String, extra: Int, expect: String, expectLastExtra: String) {
+            val tokens = TokenizedCommandLine(commandLine, true, SdkConstants.PLATFORM_WINDOWS)
+            val lastExtra = tokens.removeTokenGroup(token, extra, returnFirstExtra = true)
+            assertThat(tokens.toString("|"))
+                .named("Removing ${extra + 1} tokens starting with '$token' in '$commandLine'")
+                .isEqualTo(expect)
+            assertThat("[$lastExtra]").isEqualTo("[$expectLastExtra]")
+        }
+
+        checkRemove("-o bob", "-o", 1, "", "bob")
+        checkRemove("a -o bob", "-o", 1, "a", "bob")
+        checkRemove("-o bob carrot", "-o", 1, "carrot", "bob")
+        checkRemove("a -o bob carrot", "-o", 1, "a|carrot", "bob")
+    }
+
+    @Test
+    fun `remove group return extra match prefix`() {
+        fun checkRemove(commandLine: String, token: String, extra: Int, expect: String, expectLastExtra: String) {
+            val tokens = TokenizedCommandLine(commandLine, true, SdkConstants.PLATFORM_WINDOWS)
+            val lastExtra = tokens.removeTokenGroup(token, extra, matchPrefix = true, returnFirstExtra = true)
+            assertThat(tokens.toString("|"))
+                .named("Removing ${extra + 1} tokens starting with '$token' in '$commandLine'")
+                .isEqualTo(expect)
+            assertThat("[$lastExtra]").isEqualTo("[$expectLastExtra]")
+        }
+
+        checkRemove("--output=bob", "--output=", 0, "", "bob")
+        checkRemove("a --output=bob", "--output=", 0, "a", "bob")
+        checkRemove("a --output=bob carrot", "--output=", 0, "a|carrot", "bob")
+        checkRemove("--output=bob carrot", "--output=", 0, "carrot", "bob")
+    }
+
+    @Test
     fun testIdentity() {
         fun checkSame(c1: String, c2: String) {
             val t1 = TokenizedCommandLine(c1, true)
@@ -209,19 +246,19 @@ class TokenizedCommandLineTest {
     fun printWindowsTokenizeRates() {
         // This string intentionally has whitespace at the end of lines
         val commandLine = """
-        \usr\local\google\home\jomof\Android\Sdk\ndk-bundle\toolchains\llvm\prebuilt\linux-x86_64\bin\clang++ 
-        --target=aarch64-none-linux-android 
-        --gcc-toolchain=\usr\local\google\home\jomof\Android\Sdk\ndk-bundle\toolchains\aarch64-linux-android-4.9\prebuilt\linux-x86_64 
-        --sysroot=\usr\local\google\home\jomof\Android\Sdk\ndk-bundle\sysroot  
-        -Dnative_lib_EXPORTS 
-        -isystem \usr\local\google\home\jomof\Android\Sdk\ndk-bundle\sources\cxx-stl\gnu-libstdc++\4.9\include 
-        -isystem \usr\local\google\home\jomof\Android\Sdk\ndk-bundle\sources\cxx-stl\gnu-libstdc++\4.9\libs\arm64-v8a\include 
-        -isystem \usr\local\google\home\jomof\Android\Sdk\ndk-bundle\sources\cxx-stl\gnu-libstdc++\4.9\include\backward  
-        -isystem \usr\local\google\home\jomof\Android\Sdk\ndk-bundle\sysroot\usr\include\aarch64-linux-android 
-        -D__ANDROID_API__=21 -g -DANDROID -ffunction-sections -funwind-tables 
-        -fstack-protector-strong -no-canonical-prefixes -Wa,--noexecstack 
-        -Wformat -Werror=format-security   -O0 -fno-limit-debug-info  -fPIC   
-        -o CMakeFiles\native-lib.dir\src\main\cpp\native-lib.cpp.o 
+        \usr\local\google\home\jomof\Android\Sdk\ndk-bundle\toolchains\llvm\prebuilt\linux-x86_64\bin\clang++
+        --target=aarch64-none-linux-android
+        --gcc-toolchain=\usr\local\google\home\jomof\Android\Sdk\ndk-bundle\toolchains\aarch64-linux-android-4.9\prebuilt\linux-x86_64
+        --sysroot=\usr\local\google\home\jomof\Android\Sdk\ndk-bundle\sysroot
+        -Dnative_lib_EXPORTS
+        -isystem \usr\local\google\home\jomof\Android\Sdk\ndk-bundle\sources\cxx-stl\gnu-libstdc++\4.9\include
+        -isystem \usr\local\google\home\jomof\Android\Sdk\ndk-bundle\sources\cxx-stl\gnu-libstdc++\4.9\libs\arm64-v8a\include
+        -isystem \usr\local\google\home\jomof\Android\Sdk\ndk-bundle\sources\cxx-stl\gnu-libstdc++\4.9\include\backward
+        -isystem \usr\local\google\home\jomof\Android\Sdk\ndk-bundle\sysroot\usr\include\aarch64-linux-android
+        -D__ANDROID_API__=21 -g -DANDROID -ffunction-sections -funwind-tables
+        -fstack-protector-strong -no-canonical-prefixes -Wa,--noexecstack
+        -Wformat -Werror=format-security   -O0 -fno-limit-debug-info  -fPIC
+        -o CMakeFiles\native-lib.dir\src\main\cpp\native-lib.cpp.o
         -c \usr\local\google\home\jomof\projects\MyApplication22\app\src\main\cpp\native-lib.cpp"""
             .trimIndent()
             .replace('\n', ' ')
@@ -265,19 +302,19 @@ class TokenizedCommandLineTest {
     fun printPOSIXTokenizeRates() {
         // This string intentionally has whitespace at the end of lines
         val commandLine = """
-        /usr/local/google/home/jomof/Android/Sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ 
-        --target=aarch64-none-linux-android 
-        --gcc-toolchain=/usr/local/google/home/jomof/Android/Sdk/ndk-bundle/toolchains/aarch64-linux-android-4.9/prebuilt/linux-x86_64 
-        --sysroot=/usr/local/google/home/jomof/Android/Sdk/ndk-bundle/sysroot  
-        -Dnative_lib_EXPORTS 
-        -isystem /usr/local/google/home/jomof/Android/Sdk/ndk-bundle/sources/cxx-stl/gnu-libstdc++/4.9/include 
-        -isystem /usr/local/google/home/jomof/Android/Sdk/ndk-bundle/sources/cxx-stl/gnu-libstdc++/4.9/libs/arm64-v8a/include 
-        -isystem /usr/local/google/home/jomof/Android/Sdk/ndk-bundle/sources/cxx-stl/gnu-libstdc++/4.9/include/backward  
-        -isystem /usr/local/google/home/jomof/Android/Sdk/ndk-bundle/sysroot/usr/include/aarch64-linux-android 
-        -D__ANDROID_API__=21 -g -DANDROID -ffunction-sections -funwind-tables 
-        -fstack-protector-strong -no-canonical-prefixes -Wa,--noexecstack 
-        -Wformat -Werror=format-security   -O0 -fno-limit-debug-info  -fPIC   
-        -o CMakeFiles/native-lib.dir/src/main/cpp/native-lib.cpp.o 
+        /usr/local/google/home/jomof/Android/Sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++
+        --target=aarch64-none-linux-android
+        --gcc-toolchain=/usr/local/google/home/jomof/Android/Sdk/ndk-bundle/toolchains/aarch64-linux-android-4.9/prebuilt/linux-x86_64
+        --sysroot=/usr/local/google/home/jomof/Android/Sdk/ndk-bundle/sysroot
+        -Dnative_lib_EXPORTS
+        -isystem /usr/local/google/home/jomof/Android/Sdk/ndk-bundle/sources/cxx-stl/gnu-libstdc++/4.9/include
+        -isystem /usr/local/google/home/jomof/Android/Sdk/ndk-bundle/sources/cxx-stl/gnu-libstdc++/4.9/libs/arm64-v8a/include
+        -isystem /usr/local/google/home/jomof/Android/Sdk/ndk-bundle/sources/cxx-stl/gnu-libstdc++/4.9/include/backward
+        -isystem /usr/local/google/home/jomof/Android/Sdk/ndk-bundle/sysroot/usr/include/aarch64-linux-android
+        -D__ANDROID_API__=21 -g -DANDROID -ffunction-sections -funwind-tables
+        -fstack-protector-strong -no-canonical-prefixes -Wa,--noexecstack
+        -Wformat -Werror=format-security   -O0 -fno-limit-debug-info  -fPIC
+        -o CMakeFiles/native-lib.dir/src/main/cpp/native-lib.cpp.o
         -c /usr/local/google/home/jomof/projects/MyApplication22/app/src/main/cpp/native-lib.cpp"""
             .trimIndent()
             .replace('\n', ' ')
@@ -308,6 +345,36 @@ class TokenizedCommandLineTest {
                 platform = SdkConstants.PLATFORM_LINUX)
                 .toTokenList()
         }
+    }
+
+    @Test
+    fun `ensure STRIP_FLAGS_XXX don't strip -o`() {
+        val interner =
+            TokenizedCommandLineMap<Triple<String, List<String>, String?>>(raw = false) { tokens, sourceFile ->
+                tokens.removeTokenGroup(sourceFile, 0)
+
+                for (flag in STRIP_FLAGS_WITH_ARG) {
+                    tokens.removeTokenGroup(flag, 1)
+                }
+                for (flag in STRIP_FLAGS_WITH_IMMEDIATE_ARG) {
+                    tokens.removeTokenGroup(flag, 0, matchPrefix = true)
+                }
+                for (flag in STRIP_FLAGS_WITHOUT_ARG) {
+                    tokens.removeTokenGroup(flag, 0)
+                }
+            }
+        val command = "clang  -fPIC   -o hello-jni.c.o   -c /project/src/main/cxx/hello-jni.c"
+        interner.computeIfAbsent(command, "") {
+            val outputFile =
+                it.removeTokenGroup("-o", 1, returnFirstExtra = true) ?:
+                it.removeTokenGroup("--output=", 0, matchPrefix = true, returnFirstExtra = true) ?:
+                it.removeTokenGroup("--output", 1, returnFirstExtra = true) ?:
+                error("Could not determine output file from ${it.toTokenList()}")
+            assertThat(outputFile).isEqualTo("hello-jni.c.o")
+            val tokenList = it.toTokenList()
+            Triple(tokenList[0], tokenList.subList(1, tokenList.size), outputFile)
+        }
+
     }
 
     @Test
@@ -418,13 +485,13 @@ class TokenizedCommandLineTest {
                 }
             }
         }
-        
+
         assertThat(shortestFault).isNull()
-        val hashCollisionRate = (0.0 + collisions) / checks 
-        val stringHashCollisionRate = (0.0 + stringHashCollisions) / checks 
+        val hashCollisionRate = (0.0 + collisions) / checks
+        val stringHashCollisionRate = (0.0 + stringHashCollisions) / checks
         assertThat(hashCollisionRate)
             .named("Hash collision too large. Compare to string hash collision rate $stringHashCollisionRate.")
-            .isLessThan(0.0001) 
+            .isLessThan(0.0001)
     }
 
 }

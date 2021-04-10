@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.cxx.json.NativeToolchainValue
 import com.android.utils.NativeSourceFileExtensions
 import com.android.utils.NdkUtils
 import com.android.utils.cxx.CompileCommandsEncoder
+import com.android.utils.cxx.extractFlagArgument
 import com.android.utils.cxx.stripArgsForIde
 import com.google.common.collect.Lists
 import com.google.common.collect.Sets
@@ -282,11 +283,14 @@ class NativeBuildConfigValueBuilder internal constructor(
                 val workingDirPath = executionRootPath.absolutePath
                 for (commandInput in output.commandInputs) {
                     val command = commandInput.command
+                    val output = extractFlagArgument("-o", "--output", command.escapedFlags)
+                    assert(output != null)
                     encoder.writeCompileCommand(
                         fileConventions.toFile(commandInput.onlyInput),
                         File(command.executable),
                         stripArgsForIde(commandInput.onlyInput, command.escapedFlags),
-                        File(workingDirPath)
+                        File(workingDirPath),
+                        File(output)
                     )
                 }
             }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 The Android Open Source Project
+ * Copyright (C) 2021 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,15 @@
  * limitations under the License.
  */
 
-package com.android.utils.cxx
+package com.android.build.gradle.internal.cxx
 
+import com.android.testutils.TestResources
+import com.android.utils.cxx.CompileCommandsEncoder
+import com.android.utils.cxx.compileCommandsFileSupportsOutputFile
+import com.android.utils.cxx.extractFlagArgument
+import com.android.utils.cxx.streamCompileCommands
+import com.android.utils.cxx.streamCompileCommandsWithOutputFile
+import com.android.utils.cxx.stripArgsForIde
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -23,8 +30,16 @@ import org.junit.rules.TemporaryFolder
 import java.io.File
 
 class CompileCommandsCodecTest {
-    @get:Rule
+    @Rule
+    @JvmField
     val tempFolder = TemporaryFolder()
+
+    private fun testFile(testFileName: String): File {
+        val resourceFolder = "/com/android/build/gradle/external/compile_commands/"
+        return TestResources.getFile(
+            CompileCommandsCodecTest::class.java, resourceFolder + testFileName
+        )
+    }
 
     @Test
     fun singleFile() {
@@ -34,26 +49,65 @@ class CompileCommandsCodecTest {
         val compiler = File("clang.exe")
         val flags = listOf("-a", "-b")
         val workingDirectory = File("my/working/directory")
+        val output = File("my/output/file.o")
         CompileCommandsEncoder(out).use { encoder ->
             encoder.writeCompileCommand(
                     sourceFile,
                     compiler,
                     flags,
-                    workingDirectory
+                    workingDirectory,
+                    output
             )
         }
         println("File size is ${out.length()}")
         // Safety check to make sure we don't write a whole final block
         assertThat(out.length()).isLessThan(1024)
-        streamCompileCommands(out) {
+        streamCompileCommandsWithOutputFile(out) {
                 sourceFileStreamed,
                 compilerStreamed,
                 flagsStreamed,
-                workingDirectoryStreamed ->
+                workingDirectoryStreamed,
+                outputStreamed ->
             assertThat(sourceFileStreamed).isEqualTo(sourceFile)
             assertThat(compilerStreamed).isEqualTo(compiler)
             assertThat(flagsStreamed).isEqualTo(flags)
             assertThat(workingDirectoryStreamed).isEqualTo(workingDirectory)
+            assertThat(outputStreamed).isEqualTo(output)
+        }
+    }
+
+    // Check whether we can detect that this version of compile_commands.json.bin supports
+    // output file streaming.
+    @Test
+    fun `check whether compile_commands json bin supports output file for version 2 file`() {
+        val folder = tempFolder.newFolder()
+        val out = File(folder, "compile_commands.json.bin")
+        val sourceFile = File("my/source/file.cpp")
+        val compiler = File("clang.exe")
+        val flags = listOf("-a", "-b")
+        val workingDirectory = File("my/working/directory")
+        val output = File("my/output/file.o")
+        CompileCommandsEncoder(out).use { encoder ->
+            encoder.writeCompileCommand(
+                sourceFile,
+                compiler,
+                flags,
+                workingDirectory,
+                output
+            )
+        }
+        assertThat(compileCommandsFileSupportsOutputFile(out)).isTrue()
+    }
+
+    @Test
+    fun `check whether compile_commands json bin supports output file for version 1 file`() {
+        val version1 = testFile("version_1_compile_commands.json.bin")
+        assertThat(compileCommandsFileSupportsOutputFile(version1)).isFalse()
+        streamCompileCommands(version1) {
+                _,
+                _,
+                _,
+                _ ->
         }
     }
 
@@ -65,6 +119,7 @@ class CompileCommandsCodecTest {
         val compiler = File("clang.exe")
         val flags = listOf("-a", "-b")
         val workingDirectory = File("my/working/directory")
+        val output = File("my/output/file.o")
         // Set the initial buffer size to 1 so that it has to grow
         // to be able to support the size of the strings passed in.
         CompileCommandsEncoder(out, initialBufferSize = 1).use { encoder ->
@@ -72,21 +127,24 @@ class CompileCommandsCodecTest {
                 sourceFile,
                 compiler,
                 flags,
-                workingDirectory
+                workingDirectory,
+                output
             )
         }
         println("File size is ${out.length()}")
         // Safety check to make sure we don't write a whole final block
         assertThat(out.length()).isLessThan(1024)
-        streamCompileCommands(out) {
+        streamCompileCommandsWithOutputFile(out) {
                 sourceFileStreamed,
                 compilerStreamed,
                 flagsStreamed,
-                workingDirectoryStreamed ->
+                workingDirectoryStreamed,
+                outputStreamed ->
             assertThat(sourceFileStreamed).isEqualTo(sourceFile)
             assertThat(compilerStreamed).isEqualTo(compiler)
             assertThat(flagsStreamed).isEqualTo(flags)
             assertThat(workingDirectoryStreamed).isEqualTo(workingDirectory)
+            assertThat(outputStreamed).isEqualTo(output)
         }
     }
 
@@ -99,18 +157,21 @@ class CompileCommandsCodecTest {
         val compiler = File("clang.exe")
         val flags = listOf("-a", "-b")
         val workingDirectory = File("my/working/directory")
+        val output = File("my/output/file.o")
         CompileCommandsEncoder(out).use { encoder ->
             encoder.writeCompileCommand(
                     sourceFile1,
                     compiler,
                     flags,
-                    workingDirectory
+                    workingDirectory,
+                    output
             )
             encoder.writeCompileCommand(
                     sourceFile2,
                     compiler,
                     flags,
-                    workingDirectory
+                    workingDirectory,
+                    output
             )
         }
 
@@ -118,11 +179,13 @@ class CompileCommandsCodecTest {
         lateinit var lastCompiler: File
         var lastFlags = listOf("")
         var lastWorkingDirectory = File("")
-        streamCompileCommands(out) {
+        var lastOutput = File("")
+        streamCompileCommandsWithOutputFile(out) {
             sourceFileStreamed,
                     compilerStreamed,
                     flagsStreamed,
-                    workingDirectoryStreamed ->
+                    workingDirectoryStreamed,
+                    outputStreamed ->
             when (count) {
                 0 -> {
                     assertThat(sourceFileStreamed).isEqualTo(sourceFile1)
@@ -130,6 +193,7 @@ class CompileCommandsCodecTest {
                     lastCompiler = compilerStreamed
                     lastFlags = flagsStreamed
                     lastWorkingDirectory = workingDirectoryStreamed
+                    lastOutput = outputStreamed!!
                 }
                 1 -> {
                     assertThat(sourceFileStreamed).isEqualTo(sourceFile2)
@@ -137,6 +201,7 @@ class CompileCommandsCodecTest {
                     assertThat(compilerStreamed === lastCompiler).isTrue()
                     assertThat(flagsStreamed === lastFlags).isTrue()
                     assertThat(workingDirectoryStreamed === lastWorkingDirectory).isTrue()
+                    assertThat(outputStreamed === lastOutput).isTrue()
                 }
                 else -> error("Saw more than two files")
             }
@@ -161,17 +226,18 @@ class CompileCommandsCodecTest {
                         sourceFile = File("source-$i.cpp"),
                         compiler = File("compiler-$i"),
                         flags = listOf("flags-$i"),
-                        workingDirectory = File("working-dir-$i")
+                        workingDirectory = File("working-dir-$i"),
+                        outputFile = File("output-file-$i")
                 )
             }
         }
         println("File length ${out.length()}")
         var streamedFileCount = 0
-        streamCompileCommands(out) { sourceFile,compiler,flags,workingDirectory ->
+        streamCompileCommandsWithOutputFile(out) { sourceFile,compiler,flags,workingDirectory,output ->
             assertThat(sourceFile.path).isEqualTo("source-$streamedFileCount.cpp")
             assertThat(compiler.path).isEqualTo("compiler-$streamedFileCount")
             assertThat(flags).isEqualTo(listOf("flags-$streamedFileCount"))
-            assertThat(workingDirectory.path).isEqualTo("working-dir-$streamedFileCount")
+            assertThat(output!!.path).isEqualTo("output-file-$streamedFileCount")
             ++streamedFileCount
         }
         assertThat(streamedFileCount).isEqualTo(fileCount)
@@ -226,7 +292,8 @@ class CompileCommandsCodecTest {
 
     @Test
     fun testStripArgsForIde_realData() {
-        assertThat(stripArgsForIde(
+        assertThat(
+            stripArgsForIde(
           "src/main/cpp/native-lib.cpp",
           listOf(
             "-MMD",
@@ -260,7 +327,8 @@ class CompileCommandsCodecTest {
             "-c",
             "src/main/cpp/native-lib.cpp",
             "-o",
-            "app/src/main/cpp/native-lib.o")))
+            "app/src/main/cpp/native-lib.o"))
+        )
           .containsExactly(
             "-target",
             "i686-none-linux-android16",
@@ -287,5 +355,18 @@ class CompileCommandsCodecTest {
             "-Werror=format-security",
               "-mstackrealign"
           ).inOrder()
+    }
+
+    @Test
+    fun `extract output file`() {
+        assertThat(
+            extractFlagArgument(
+            "-o", "--output",
+            listOf(
+                "-o",
+                "app/src/main/cpp/native-lib.o")
+                )
+        ).isEqualTo("app/src/main/cpp/native-lib.o")
+
     }
 }

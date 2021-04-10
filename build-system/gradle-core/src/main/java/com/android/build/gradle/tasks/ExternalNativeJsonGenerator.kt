@@ -344,8 +344,9 @@ abstract class ExternalNativeJsonGenerator internal constructor(
 
     private fun generateCompileCommandsJsonBin(abi : CxxAbiModel) {
         val interner =
-            TokenizedCommandLineMap<Pair<String, List<String>>>(raw = false) { tokens, sourceFile ->
+            TokenizedCommandLineMap<Triple<String, List<String>, String?>>(raw = false) { tokens, sourceFile ->
                 tokens.removeTokenGroup(sourceFile, 0)
+
                 for (flag in STRIP_FLAGS_WITH_ARG) {
                     tokens.removeTokenGroup(flag, 1)
                 }
@@ -380,15 +381,24 @@ abstract class ExternalNativeJsonGenerator internal constructor(
                         }
                     }
                     reader.endObject()
-                    val (compiler, flags) = interner.computeIfAbsent(command, sourceFile) {
+                    val (compiler, flags, output) = interner.computeIfAbsent(command, sourceFile) {
+                        // Find the output file (for example, probably something.o)
+                        val outputFile =
+                            it.removeTokenGroup("-o", 1, returnFirstExtra = true) ?:
+                            it.removeTokenGroup("--output=", 0, matchPrefix = true, returnFirstExtra = true) ?:
+                            it.removeTokenGroup("--output", 1, returnFirstExtra = true) ?:
+                            error("Could not determine output file from ${it.toTokenList()}")
                         val tokenList = it.toTokenList()
-                        tokenList[0] to tokenList.subList(1, tokenList.size)
+                        Triple(tokenList[0], tokenList.subList(1, tokenList.size), outputFile)
                     }
+                    assert(output != null)
+
                     encoder.writeCompileCommand(
                         File(sourceFile),
                         File(compiler),
                         flags,
-                        File(directory)
+                        File(directory),
+                        File(output)
                     )
                 }
                 reader.endArray()
