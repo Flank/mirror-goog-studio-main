@@ -11,7 +11,6 @@ gradle_integration_test(
     data = [
         "//prebuilts/studio/sdk:build-tools/latest",
         "//prebuilts/studio/sdk:platforms/latest_build_only",
-        "//prebuilts/tools/common/kotlin-plugin:Kotlin/kotlinc/build.txt",
         "//tools/base/build-system:gradle-distrib",
         "//tools/base/build-system/integration-test:test-projects/databindingIncremental",
     ],

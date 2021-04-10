@@ -32,7 +32,6 @@ TEST_DATA = [
     "//prebuilts/studio/sdk:build-tools/latest",
     "//prebuilts/studio/sdk:platforms/android-27_build_only",
     "//prebuilts/studio/sdk:platforms/latest",
-    "//prebuilts/tools/common/kotlin-plugin:Kotlin/kotlinc/build.txt",
     "//tools/base/build-system:gradle-distrib",
     "//tools/base/build-system:gradle_plugin_repo.zip",
     "//tools/base/build-system/integration-test:dagger_prebuilts",

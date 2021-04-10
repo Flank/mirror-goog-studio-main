@@ -5,6 +5,10 @@ load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
 # managed by go/iml_to_build
 iml_module(
     name = "studio.android.sdktools.testutils",
+    data = [
+        # For TestUtils.getKotlinVersionForTests.
+        "//prebuilts/tools/common/kotlin-plugin:Kotlin/kotlinc/build.txt",
+    ],
     iml_files = ["android.sdktools.testutils.iml"],
     test_srcs = ["src/main/java"],
     test_tags = ["manual"],  # src/main/java is TEST scoped but contains no runnable tests
@@ -48,6 +52,10 @@ kotlin_library(
         "src/main/java/**/*.kt",
         "src/main/java/**/*.java",
     ]),
+    data = [
+        # For TestUtils.getKotlinVersionForTests.
+        "//prebuilts/tools/common/kotlin-plugin:Kotlin/kotlinc/build.txt",
+    ],
     lint_baseline = "lint_baseline.xml",
     pom = ":pom",
     resource_strip_prefix = "tools/base/testutils",

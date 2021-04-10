@@ -53,7 +53,6 @@ TEST_DATA = [
     "//prebuilts/studio/sdk:platform-tools",
     "//prebuilts/studio/sdk:platforms/latest",
     "//prebuilts/studio/sdk:platforms/latest-preview",
-    "//prebuilts/tools/common/kotlin-plugin:Kotlin/kotlinc/build.txt",
     "//tools/base/build-system:gradle-distrib",
     "//tools/base/build-system/aapt2:aapt2_for_tests",
     "//tools/base/build-system/integration-test:test-projects/BasicRenderScript",

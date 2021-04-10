@@ -30,7 +30,6 @@ gradle_integration_test(
         "//prebuilts/studio/sdk/remote:dl.google.com/android/repository/sdk-tools-linux-4333796.zip",
         "//prebuilts/studio/sdk/remote:dl.google.com/android/repository/sdk-tools-windows-4333796.zip",
         "//prebuilts/tools/common/cmake:cmake-3.8.2",
-        "//prebuilts/tools/common/kotlin-plugin:Kotlin/kotlinc/build.txt",
         "//tools/base/build-system:gradle-distrib",
         "//tools/base/build-system/integration-test:test-projects/commonBuildScript.gradle",
     ],
