@@ -20,6 +20,7 @@ import com.android.Version
 import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.api.component.impl.UnitTestImpl
+import com.android.build.api.variant.ResValue
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.dependency.VariantDependencies
@@ -454,7 +455,7 @@ abstract class VariantInputs {
     abstract val targetSdkVersion: SdkVersionInput
 
     @get:Input
-    abstract val resValues: ListProperty<DefaultLintModelResourceField>
+    abstract val resValues: MapProperty<ResValue.Key, ResValue>
 
     @get:Input
     abstract val manifestPlaceholders: MapProperty<String, String>
@@ -573,7 +574,8 @@ abstract class VariantInputs {
 
         targetSdkVersion.initialize(creationConfig.targetSdkVersion)
 
-        // FIXME resvalue
+        resValues.setDisallowChanges(creationConfig.resValues)
+
         if (creationConfig is ApkCreationConfig) {
             manifestPlaceholders.setDisallowChanges(
                 creationConfig.manifestPlaceholders
@@ -674,6 +676,7 @@ abstract class VariantInputs {
         proguardFiles.setDisallowChanges(null)
         extractedProguardFiles.setDisallowChanges(null)
         consumerProguardFiles.setDisallowChanges(null)
+        resValues.disallowChanges()
     }
 
     fun toLintModel(module: LintModelModule, partialResultsDir: File? = null): LintModelVariant {
@@ -698,7 +701,14 @@ abstract class VariantInputs {
             `package` = namespace.get(),
             minSdkVersion = minSdkVersion.toLintModel(),
             targetSdkVersion = targetSdkVersion.toLintModel(),
-            resValues = resValues.get().associateBy { it.name },
+            resValues =
+                resValues.get().map {
+                    DefaultLintModelResourceField(
+                        it.key.type,
+                        it.key.name,
+                        it.value.value
+                    )
+                }.associateBy { it.name },
             manifestPlaceholders = manifestPlaceholders.get(),
             resourceConfigurations = resourceConfigurations.get(),
             proguardFiles = proguardFiles.orNull?.map { it.asFile } ?: listOf(),
