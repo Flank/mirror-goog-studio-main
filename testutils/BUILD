@@ -7,7 +7,7 @@ iml_module(
     name = "studio.android.sdktools.testutils",
     data = [
         # For TestUtils.getKotlinVersionForTests.
-        "//prebuilts/tools/common/kotlin-plugin:Kotlin/kotlinc/build.txt",
+        "//tools/buildSrc/base:dependencies.properties",
     ],
     iml_files = ["android.sdktools.testutils.iml"],
     test_srcs = ["src/main/java"],
@@ -54,7 +54,7 @@ kotlin_library(
     ]),
     data = [
         # For TestUtils.getKotlinVersionForTests.
-        "//prebuilts/tools/common/kotlin-plugin:Kotlin/kotlinc/build.txt",
+        "//tools/buildSrc/base:dependencies.properties",
     ],
     lint_baseline = "lint_baseline.xml",
     pom = ":pom",
