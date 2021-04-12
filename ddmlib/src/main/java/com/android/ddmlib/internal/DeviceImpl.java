@@ -18,6 +18,7 @@ package com.android.ddmlib.internal;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.GuardedBy;
+import com.android.annotations.concurrency.Slow;
 import com.android.ddmlib.AdbCommandRejectedException;
 import com.android.ddmlib.AdbHelper;
 import com.android.ddmlib.AndroidDebugBridge;
@@ -372,15 +373,16 @@ public final class DeviceImpl implements IDevice {
     }
 
     @NonNull
+    @Slow
     Set<String> getAdbFeatures() {
         if (mAdbFeatures != null) {
             return mAdbFeatures;
         }
 
         try {
-            String response = AdbHelper.getFeatures(AndroidDebugBridge.getSocketAddress(), this);
+            String response = AdbHelper.getFeatures(this);
             mAdbFeatures = new HashSet<>(Arrays.asList(response.split(",")));
-            response = AdbHelper.getHostFeatures(AndroidDebugBridge.getSocketAddress(), this);
+            response = AdbHelper.getHostFeatures();
             // We want features supported by both device and host.
             mAdbFeatures.retainAll(Arrays.asList(response.split(",")));
         } catch (TimeoutException | AdbCommandRejectedException | IOException e) {
