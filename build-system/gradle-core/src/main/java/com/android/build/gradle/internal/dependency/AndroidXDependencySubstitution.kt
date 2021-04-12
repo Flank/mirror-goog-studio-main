@@ -107,8 +107,8 @@ object AndroidXDependencySubstitution {
                         // entry.key is in the form of "group:module" (without a version), and
                         // Gradle accepts that form.
                         it.substitute(it.module(entry.key))
+                            .using(it.module(entry.value))
                             .because(reasonToReplace)
-                            .with(it.module(entry.value))
                     }
                 }
             }
