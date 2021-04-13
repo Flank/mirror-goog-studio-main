@@ -282,7 +282,9 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                 variantPropertiesApiServices,
                 dslNamespaceProvider,
                 dslTestNamespace,
-                configuredNativeBuilder())
+                configuredNativeBuilder(),
+                (extension as CommonExtension<*, *, *, *>).properties
+        )
 
         // We must first add the flavors to the variant config, in order to get the proper
         // variant-specific and multi-flavor name as we add/create the variant providers later.

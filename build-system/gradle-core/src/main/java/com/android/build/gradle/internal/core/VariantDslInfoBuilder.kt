@@ -58,6 +58,7 @@ class VariantDslInfoBuilder private constructor(
     private val dslNamespaceProvider: Provider<String>?,
     private val dslTestNamespace: String?,
     private val nativeBuildSystem: VariantManager.NativeBuiltType?,
+    private val properties: Map<String, Any>,
 ) {
 
     companion object {
@@ -79,6 +80,7 @@ class VariantDslInfoBuilder private constructor(
             dslNamespaceProvider: Provider<String>? = null,
             dslTestNamespace: String? = null,
             nativeBuildSystem: VariantManager.NativeBuiltType? = null,
+            properties: Map<String, Any> = mapOf(),
         ): VariantDslInfoBuilder {
             return VariantDslInfoBuilder(
                 dimensionCombination,
@@ -94,6 +96,7 @@ class VariantDslInfoBuilder private constructor(
                 dslNamespaceProvider,
                 dslTestNamespace,
                 nativeBuildSystem,
+                properties,
             )
         }
 
@@ -304,6 +307,7 @@ class VariantDslInfoBuilder private constructor(
             dslNamespaceProvider,
             dslTestNamespace,
             nativeBuildSystem,
+            properties,
         )
     }
 

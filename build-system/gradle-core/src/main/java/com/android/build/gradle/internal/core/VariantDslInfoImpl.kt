@@ -30,7 +30,6 @@ import com.android.build.gradle.internal.dsl.BaseFlavor
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.BuildType.PostProcessingConfiguration
 import com.android.build.gradle.internal.dsl.CoreExternalNativeBuildOptions
-import com.android.build.gradle.internal.dsl.CoreExternalNativeCmakeOptions
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
@@ -97,6 +96,7 @@ open class VariantDslInfoImpl internal constructor(
     private val dslNamespaceProvider: Provider<String>?,
     private val dslTestNamespace: String?,
     override val nativeBuildSystem: VariantManager.NativeBuiltType?,
+    override val properties: Map<String, Any>,
 ): VariantDslInfo, DimensionCombination {
 
     override val buildType: String?

@@ -35,6 +35,7 @@ import com.android.build.gradle.internal.component.TestVariantCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
+import com.android.build.gradle.internal.dsl.ModulePropertyKeys
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.BuildFeatureValues
@@ -112,7 +113,15 @@ open class TestVariantImpl @Inject constructor(
         )
     }
 
-    override val testedApplicationId: Provider<String> = calculateTestedApplicationId(variantDependencies)
+    // TODO: We should keep this (for the manifest) but just fix the test runner to get the
+    //         tested application id from the APK metadata file for uninstalling.
+    override val testedApplicationId: Provider<String> by lazy {
+        if (ModulePropertyKeys.SELF_INSTRUMENTING.getValueAsBoolean(properties.get())) {
+            applicationId
+        } else {
+            calculateTestedApplicationId(variantDependencies)
+        }
+    }
 
     override val minifiedEnabled: Boolean
         get() = variantDslInfo.getPostProcessingOptions().codeShrinkerEnabled()
