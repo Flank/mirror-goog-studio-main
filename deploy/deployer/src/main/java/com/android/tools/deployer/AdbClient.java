@@ -27,8 +27,10 @@ import com.android.ddmlib.SyncException;
 import com.android.ddmlib.TimeoutException;
 import com.android.sdklib.AndroidVersion;
 import com.android.tools.deploy.proto.Deploy;
+import com.android.tools.deployer.model.Apk;
 import com.android.tools.tracer.Trace;
 import com.android.utils.ILogger;
+import com.google.common.collect.ImmutableMap;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -37,11 +39,20 @@ import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class AdbClient {
+    private static final Map<String, Deploy.Arch> ABI_MAP =
+            ImmutableMap.of(
+                    "arm64-v8a", Deploy.Arch.ARCH_64_BIT,
+                    "armeabi-v7a", Deploy.Arch.ARCH_32_BIT,
+                    "x86_64", Deploy.Arch.ARCH_64_BIT,
+                    "x86", Deploy.Arch.ARCH_32_BIT);
+
     private final IDevice device;
     private final ILogger logger;
 
@@ -207,6 +218,37 @@ public class AdbClient {
             }
         }
         return result;
+    }
+
+    /**
+     * The application will run with the most-preferred device ABI that the application also
+     * natively supports. An application with no native libraries automatically runs with the
+     * most-preferred device ABI.
+     */
+    public Deploy.Arch getArchFromApk(List<Apk> apks) throws DeployerException {
+        HashSet<String> appSupported = new HashSet<>();
+        for (Apk apk : apks) {
+            appSupported.addAll(apk.libraryAbis);
+        }
+
+        List<String> deviceSupported = getAbis();
+        if (deviceSupported.isEmpty()) {
+            throw DeployerException.unsupportedArch();
+        }
+
+        // No native libraries means we use the first device-preferred ABI.
+        if (appSupported.isEmpty()) {
+            String abi = deviceSupported.get(0);
+            return ABI_MAP.get(abi);
+        }
+
+        for (String abi : deviceSupported) {
+            if (appSupported.contains(abi)) {
+                return ABI_MAP.get(abi);
+            }
+        }
+
+        throw DeployerException.unsupportedArch();
     }
 
     private Deploy.Arch getArch(int pid) {
