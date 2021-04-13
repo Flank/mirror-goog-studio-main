@@ -501,7 +501,7 @@ class LintDriver(
             } catch (throwable: Throwable) {
                 // Process canceled etc
                 if (!handleDetectorError(null, this, throwable)) {
-                    dispose(roots, EventType.ABORTED)
+                    dispose(roots)
                     return
                 }
             }
@@ -509,7 +509,8 @@ class LintDriver(
             if (!partial) {
                 reportBaselineIssues(roots)
             }
-            dispose(roots, EventType.COMPLETED)
+            dispose(roots)
+            fireEvent(EventType.COMPLETED)
         } finally {
             synchronized(currentDrivers) {
                 currentDrivers.remove(this)
@@ -628,8 +629,7 @@ class LintDriver(
         }
     }
 
-    private fun dispose(projects: Collection<Project>, eventType: EventType) {
-        fireEvent(eventType, null)
+    private fun dispose(projects: Collection<Project>) {
         disposeProjectsTimeMs += measureTimeMillis {
             realClient.performDisposeProjects(projects)
         }

@@ -49,26 +49,19 @@ interface LintListener {
         /** A new pass was initiated. */
         NEW_PHASE,
 
-        /** The lint check was canceled. */
-        CANCELED,
-
         /** Lint is about to merge results. */
         MERGING,
 
         /** The lint check is done. */
         COMPLETED,
-
-        /** Lint ran into a problem or was canceled. */
-        ABORTED
     }
 
     /**
      * Notifies listeners that the event of the given type has occurred.
      * Additional information, such as the file being scanned, or the
      * project being scanned, is available in the [Context] object
-     * (except for the [EventType.STARTING], [EventType.CANCELED] or
-     * [EventType.COMPLETED] events which are fired outside of project
-     * contexts.)
+     * (except for the [EventType.STARTING] and [EventType.COMPLETED]
+     * events which are fired outside of project contexts.)
      *
      * @param driver the driver running through the checks
      * @param type the type of event that occurred

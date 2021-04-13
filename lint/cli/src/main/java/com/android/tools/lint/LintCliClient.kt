@@ -1195,10 +1195,10 @@ open class LintCliClient : LintClient {
                 LintListener.EventType.SCANNING_FILE -> print('.')
                 LintListener.EventType.NEW_PHASE -> {
                 }
-                LintListener.EventType.CANCELED, LintListener.EventType.COMPLETED -> println()
+                LintListener.EventType.COMPLETED -> println()
                 LintListener.EventType.REGISTERED_PROJECT, LintListener.EventType.STARTING -> {
                 }
-                LintListener.EventType.MERGING, LintListener.EventType.ABORTED -> {
+                LintListener.EventType.MERGING -> {
                 }
             }
         }
