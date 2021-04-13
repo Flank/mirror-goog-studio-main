@@ -46,4 +46,6 @@ interface VariantCreationConfig: ComponentCreationConfig {
     val isCoreLibraryDesugaringEnabled: Boolean
 
     val proguardFiles: ListProperty<RegularFile>
+
+    val properties: MapProperty<String, Any>
 }

@@ -190,6 +190,17 @@ gradle_connected_test(
 )
 
 gradle_connected_test(
+    name = "CustomTestedApksTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/testing/",
+    data = TEST_DATA,
+    flaky = True,  # b/148626301 flaky emulator connectivity
+    maven_repo_manifests = TEST_MAVEN_REPO_MANIFESTS + ["//tools/base/build-system/integration-test:androidx_test_latest"],
+    maven_repos = TEST_MAVEN_REPOS,
+    resources = glob(["src/test/resources/**"]),
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
     name = "D8DesugaringConnectedTest",
     srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
     data = TEST_DATA,

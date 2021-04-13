@@ -31,7 +31,6 @@ import com.android.build.gradle.internal.dsl.BaseFlavor
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.BuildType.PostProcessingConfiguration
 import com.android.build.gradle.internal.dsl.CoreExternalNativeBuildOptions
-import com.android.build.gradle.internal.dsl.CoreExternalNativeCmakeOptions
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
@@ -100,7 +99,8 @@ open class VariantDslInfoImpl<CommonExtensionT: CommonExtension<*, *, *, *>> int
     private val dslNamespaceProvider: Provider<String>?,
     private val dslTestNamespace: String?,
     override val nativeBuildSystem: VariantManager.NativeBuiltType?,
-    private val publishingInfo: VariantPublishingInfo?
+    private val publishingInfo: VariantPublishingInfo?,
+    override val properties: Map<String, Any>,
 ): VariantDslInfo<CommonExtensionT>, DimensionCombination {
 
     override val buildType: String?

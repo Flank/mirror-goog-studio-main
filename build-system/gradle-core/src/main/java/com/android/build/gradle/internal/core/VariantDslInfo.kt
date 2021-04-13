@@ -394,4 +394,7 @@ interface VariantDslInfo<CommonExtensionT: CommonExtension<*, *, *, *>> {
 
     // DO NOT USE, Use CreationConfig and subtypes methods.
     val renderscriptOptimLevel: Int
+
+    // DO NOT USE, Use CreationConfig and subtypes methods.
+    val properties: Map<String, Any>
 }

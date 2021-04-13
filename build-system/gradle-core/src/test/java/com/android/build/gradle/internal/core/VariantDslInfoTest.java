@@ -47,6 +47,7 @@ import com.android.sdklib.AndroidVersion;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
+import java.util.Collections;
 import java.util.List;
 import kotlin.Pair;
 import org.gradle.api.file.DirectoryProperty;
@@ -356,7 +357,8 @@ public class VariantDslInfoTest {
                         testNamespace,
                         null, /* BuildType */
                         Mockito.mock(BaseExtension.class),
-                        false);
+                        false,
+                        Collections.emptyMap());
 
         builder.addProductFlavor(flavorConfig, new MockSourceProvider("custom"));
 

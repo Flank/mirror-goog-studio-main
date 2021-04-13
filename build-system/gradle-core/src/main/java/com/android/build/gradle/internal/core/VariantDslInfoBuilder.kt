@@ -66,7 +66,8 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
     private val dslTestNamespace: String?,
     private val nativeBuildSystem: VariantManager.NativeBuiltType?,
     private val extension: BaseExtension,
-    private val hasDynamicFeatures: Boolean
+    private val hasDynamicFeatures: Boolean,
+    private val properties: Map<String, Any>,
 ) {
 
     companion object {
@@ -89,7 +90,8 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
             dslTestNamespace: String? = null,
             nativeBuildSystem: VariantManager.NativeBuiltType? = null,
             extension: BaseExtension,
-            hasDynamicFeatures: Boolean
+            hasDynamicFeatures: Boolean,
+            properties: Map<String, Any> = mapOf(),
         ): VariantDslInfoBuilder<T> {
             return VariantDslInfoBuilder(
                 dimensionCombination,
@@ -106,7 +108,8 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
                 dslTestNamespace,
                 nativeBuildSystem,
                 extension,
-                hasDynamicFeatures
+                hasDynamicFeatures,
+                properties,
             )
         }
 
@@ -337,7 +340,8 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
             dslNamespaceProvider,
             dslTestNamespace,
             nativeBuildSystem,
-            publishingInfo
+            publishingInfo,
+            properties,
         )
     }
 

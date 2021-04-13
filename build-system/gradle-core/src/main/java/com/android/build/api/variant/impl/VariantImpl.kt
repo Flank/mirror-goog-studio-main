@@ -231,4 +231,10 @@ abstract class VariantImpl(
 
     override val pseudoLocalesEnabled: Property<Boolean> =
         internalServices.newPropertyBackingDeprecatedApi(Boolean::class.java, variantDslInfo.isPseudoLocalesEnabled)
+
+    override val properties: MapProperty<String, Any> =
+            internalServices.mapPropertyOf(
+                    String::class.java,
+                    Any::class.java,
+                    variantDslInfo.properties)
 }
