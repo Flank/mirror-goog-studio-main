@@ -168,6 +168,9 @@ public class GrabProcessOutput {
             }
         };
 
+        // reset the thread class loader is we do not need to load any script classes.
+        threadErr.setContextClassLoader(null);
+        threadOut.setContextClassLoader(null);
         threadErr.start();
         threadOut.start();
 
@@ -182,10 +185,12 @@ public class GrabProcessOutput {
             try {
                 threadErr.join();
             } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
             }
             try {
                 threadOut.join();
             } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
             }
         }
 
