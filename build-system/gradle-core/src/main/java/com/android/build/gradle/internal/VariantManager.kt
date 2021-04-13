@@ -15,6 +15,7 @@
  */
 package com.android.build.gradle.internal
 
+import com.android.SdkConstants
 import com.android.build.gradle.internal.core.VariantDslInfoBuilder.Companion.getBuilder
 import com.android.build.gradle.internal.core.VariantDslInfoBuilder.Companion.computeSourceSetName
 import com.android.build.api.variant.impl.VariantBuilderImpl
@@ -71,6 +72,7 @@ import com.android.build.gradle.internal.services.VariantApiServices
 import com.android.build.gradle.internal.services.VariantApiServicesImpl
 import com.android.build.gradle.internal.services.VariantPropertiesApiServicesImpl
 import com.android.build.gradle.internal.services.getBuildService
+import com.android.build.gradle.internal.testFixtures.testFixturesFeatureName
 import com.android.build.gradle.internal.variant.ComponentInfo
 import com.android.build.gradle.internal.variant.DimensionCombination
 import com.android.build.gradle.internal.variant.DimensionCombinator
@@ -462,9 +464,9 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                 testFixturesVariantType.requiresManifest) { canParseManifest() },
             dslServices,
             variantPropertiesApiServices,
-            // todo: will this cause problems?
             variantPropertiesApiServices.provider {
-                mainComponentInfo.variant.variantDslInfo.namespace.get() + ".testFixtures"
+                mainComponentInfo.variant.variantDslInfo.namespace.get() + "." +
+                        testFixturesFeatureName
             }
         )
         val productFlavorList = mainComponentInfo.variant.variantDslInfo.productFlavorList

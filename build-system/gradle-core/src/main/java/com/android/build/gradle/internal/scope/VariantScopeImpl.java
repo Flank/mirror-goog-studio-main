@@ -50,6 +50,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactTyp
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType;
 import com.android.build.gradle.internal.publishing.PublishingSpecs;
 import com.android.build.gradle.internal.services.BaseServices;
+import com.android.build.gradle.internal.testFixtures.TestFixturesUtil;
 import com.android.build.gradle.internal.variant.VariantPathHelper;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.OptionalBooleanOption;
@@ -189,7 +190,7 @@ public class VariantScopeImpl implements VariantScope {
                     if (configType.isClassifierRequired()) {
                         classifier = componentIdentity.getName();
                     } else if (isTestFixturesArtifact) {
-                        classifier = "test-fixtures";
+                        classifier = TestFixturesUtil.testFixturesClassifier;
                     }
                     publishArtifactToDefaultVariant(config, artifact, artifactType, classifier);
                 } else {
