@@ -124,7 +124,6 @@ enum class BooleanOption(
     R8_FAIL_ON_MISSING_CLASSES("android.r8.failOnMissingClasses", false, FeatureStage.Experimental),
     CONDITIONAL_KEEP_RULES("android.useConditionalKeepRules", false, FeatureStage.Experimental),
     KEEP_SERVICES_BETWEEN_BUILDS("android.keepWorkerActionServicesBetweenBuilds", false, FeatureStage.Experimental),
-    ENABLE_R_TXT_RESOURCE_SHRINKING("android.enableRTxtResourceShrinking", true, FeatureStage.Experimental),
     ENABLE_PARTIAL_R_INCREMENTAL_BUILDS("android.enablePartialRIncrementalBuilds", false, FeatureStage.Experimental),
     ENABLE_NEW_RESOURCE_SHRINKER("android.experimental.enableNewResourceShrinker", false, FeatureStage.Experimental),
     ENABLE_NEW_RESOURCE_SHRINKER_PRECISE("android.experimental.enableNewResourceShrinker.preciseShrinking", false, FeatureStage.Experimental),
@@ -186,6 +185,7 @@ enum class BooleanOption(
 
     USE_NEW_DSL_INTERFACES("android.experimental.newDslInterfaces", true, FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.VERSION_8_0)),
 
+    ENABLE_R_TXT_RESOURCE_SHRINKING("android.enableRTxtResourceShrinking", true, FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.VERSION_8_0)),
     /* -------------------
      * DEPRECATED FEATURES
      */

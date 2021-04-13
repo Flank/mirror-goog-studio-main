@@ -89,7 +89,6 @@ class BooleanOptionTest {
     fun `check experimental, deprecated, removed features have default value 'false'`() {
         // Ignore working-as-intended options (or those that we postpone fixing)
         val ignoreList = listOf(
-                BooleanOption.ENABLE_R_TXT_RESOURCE_SHRINKING,
                 BooleanOption.ENABLE_ADDITIONAL_ANDROID_TEST_OUTPUT,
                 BooleanOption.COMPILE_CLASSPATH_LIBRARY_R_CLASSES,
                 BooleanOption.ENABLE_EXTRACT_ANNOTATIONS,
