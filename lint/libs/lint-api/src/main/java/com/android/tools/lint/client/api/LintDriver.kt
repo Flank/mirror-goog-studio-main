@@ -485,32 +485,31 @@ class LintDriver(
                 return
             }
 
-            initializeExtraRegistries()
-
-            // Note: We don't consult baselines in partial analysis mode; that's left
-            // for the final report merge (since different baselines consuming these
-            // partial results can include/exclude different issues.)
-            if (!partial) {
-                initializeBaseline(roots)
-            }
-
-            fireEvent(EventType.STARTING, null)
-
             try {
-                analysis(roots)
-            } catch (throwable: Throwable) {
-                // Process canceled etc
-                if (!handleDetectorError(null, this, throwable)) {
-                    dispose(roots)
-                    return
-                }
-            }
+                initializeExtraRegistries()
 
-            if (!partial) {
-                reportBaselineIssues(roots)
+                // Note: We don't consult baselines in partial analysis mode; that's left
+                // for the final report merge (since different baselines consuming these
+                // partial results can include/exclude different issues.)
+                if (!partial) {
+                    initializeBaseline(roots)
+                }
+
+                fireEvent(EventType.STARTING, null)
+
+                try {
+                    analysis(roots)
+                } catch (throwable: Throwable) {
+                    handleDetectorError(null, this, throwable)
+                }
+
+                if (!partial) {
+                    reportBaselineIssues(roots)
+                }
+                fireEvent(EventType.COMPLETED)
+            } finally {
+                dispose(roots)
             }
-            dispose(roots)
-            fireEvent(EventType.COMPLETED)
         } finally {
             synchronized(currentDrivers) {
                 currentDrivers.remove(this)
@@ -1736,12 +1735,8 @@ class LintDriver(
 
             try {
                 visitor.runClassDetectors(context)
-            } catch (interrupt: ProcessCanceledException) {
-                throw interrupt
             } catch (throwable: Throwable) {
-                if (!handleDetectorError(context, this, throwable)) {
-                    return
-                }
+                handleDetectorError(context, this, throwable)
             }
 
             // We're not counting class files even though technically lint has
@@ -3408,24 +3403,15 @@ class LintDriver(
 
         val currentDrivers: MutableList<LintDriver> = ArrayList(2)
 
-        /**
-         * Handles an exception and returns whether the lint analysis
-         * can continue (true means continue, false means abort)
-         */
+        /** Handles an exception, generally by logging it. */
         @JvmStatic
-        fun handleDetectorError(
-            context: Context?,
-            driver: LintDriver,
-            throwable: Throwable
-        ): Boolean {
+        fun handleDetectorError(context: Context?, driver: LintDriver, throwable: Throwable) {
             when {
                 throwable is IndexNotReadyException -> {
                     // Attempting to access PSI during startup before indices are ready;
-                    // ignore these (because once indexing is over highlighting will be
-                    // retriggered.)
-                    //
+                    // ignore these (because highlighting will restart after indexing finishes).
                     // See http://b.android.com/176644 for an example.
-                    return true
+                    throw ProcessCanceledException(throwable)
                 }
                 throwable is ProcessCanceledException -> {
                     // Cancelling inspections in the IDE; bubble outwards without logging; the IDE will retry
@@ -3437,14 +3423,14 @@ class LintDriver(
                     // is created. This isn't common, but is often triggered by Studio UI
                     // testsuite which rapidly opens, edits and closes projects.
                     // Silently abort the analysis.
-                    return false
+                    throw ProcessCanceledException(throwable)
                 }
             }
 
             if (crashCount++ > MAX_REPORTED_CRASHES) {
                 // No need to keep spamming the user that a lot of the files
                 // are tripping up ECJ, they get the picture.
-                return true
+                return
             }
 
             val sb = StringBuilder(100)
@@ -3541,8 +3527,6 @@ class LintDriver(
             if (driver.client.printInternalErrorStackTrace) {
                 throwable.printStackTrace()
             }
-
-            return true
         }
 
         /**

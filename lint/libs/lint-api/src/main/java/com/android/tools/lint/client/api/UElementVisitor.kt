@@ -34,7 +34,6 @@ import com.google.common.collect.Lists
 import com.google.common.collect.Maps
 import com.google.common.collect.Multimap
 import com.google.common.collect.Sets
-import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.util.Computable
 import com.intellij.psi.PsiClass
@@ -308,9 +307,6 @@ internal class UElementVisitor constructor(
                 context.setJavaFile(null)
                 context.uastFile = null
             }
-        } catch (e: ProcessCanceledException) {
-            // Cancelling inspections in the IDE; bubble out to the IDE without logging
-            throw e
         } catch (e: Throwable) {
             // Don't allow lint bugs to take down the whole build. TRY to log this as a
             // lint error instead!
