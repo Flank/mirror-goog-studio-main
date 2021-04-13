@@ -579,10 +579,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
     }
 
     private fun createBundleTaskForTestFixtures(testFixturesComponent: TestFixturesImpl) {
-        // publish testFixtures for libraries only for now
-        if (this !is LibraryTaskManager) {
-            return
-        }
         taskFactory.register(BundleAar.TestFixturesCreationAction(testFixturesComponent))
         testFixturesComponent.taskContainer
             .assembleTask
@@ -593,6 +589,10 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                     )
                 )
             }
+        // publish testFixtures for libraries only
+        if (this !is LibraryTaskManager) {
+            return
+        }
         val variantDependencies = testFixturesComponent.variantDependencies
         // attach the testFixtures variants to the main variant component
         val component = project.components.getByName(testFixturesComponent.mainVariant.name)
