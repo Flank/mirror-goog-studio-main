@@ -173,7 +173,8 @@ class ExternalLintModelArtifactHandler private constructor(
 
         internal fun create(
             dependencyCaches: DependencyCaches,
-            projectExplodedAars: ArtifactCollection?,
+            projectRuntimeExplodedAars: ArtifactCollection?,
+            projectCompileExplodedAars: ArtifactCollection?,
             testedProjectExplodedAars: ArtifactCollection?,
             compileProjectJars: ArtifactCollection,
             runtimeProjectJars: ArtifactCollection,
@@ -181,7 +182,10 @@ class ExternalLintModelArtifactHandler private constructor(
             buildMapping: BuildMapping
         ): ExternalLintModelArtifactHandler {
             var projectExplodedAarsMap =
-                projectExplodedAars?.asProjectKeyedMap(buildMapping) ?: emptyMap()
+                projectCompileExplodedAars?.asProjectKeyedMap(buildMapping) ?: emptyMap()
+            projectRuntimeExplodedAars?.let {
+                projectExplodedAarsMap = projectExplodedAarsMap + it.asProjectKeyedMap(buildMapping)
+            }
             testedProjectExplodedAars?.let {
                 projectExplodedAarsMap = projectExplodedAarsMap + it.asProjectKeyedMap(buildMapping)
             }

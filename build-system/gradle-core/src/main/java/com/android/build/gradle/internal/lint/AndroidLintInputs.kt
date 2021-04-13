@@ -912,9 +912,15 @@ abstract class AndroidArtifactInput : ArtifactInput() {
             if (addBaseModuleLintModel) {
                 initializeBaseModuleLintModel(componentImpl.variantDependencies)
             }
-            projectDependencyExplodedAars =
+            projectRuntimeExplodedAars =
                 componentImpl.variantDependencies.getArtifactCollectionForToolingModel(
                     AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
+                    AndroidArtifacts.ArtifactScope.PROJECT,
+                    AndroidArtifacts.ArtifactType.LOCAL_EXPLODED_AAR_FOR_LINT
+                )
+            projectCompileExplodedAars =
+                componentImpl.variantDependencies.getArtifactCollectionForToolingModel(
+                    AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                     AndroidArtifacts.ArtifactScope.PROJECT,
                     AndroidArtifacts.ArtifactType.LOCAL_EXPLODED_AAR_FOR_LINT
                 )
@@ -1012,9 +1018,15 @@ abstract class JavaArtifactInput : ArtifactInput() {
             if (addBaseModuleLintModel) {
                 initializeBaseModuleLintModel(unitTestImpl.variantDependencies)
             }
-            projectDependencyExplodedAars =
+            projectRuntimeExplodedAars =
                 unitTestImpl.variantDependencies.getArtifactCollectionForToolingModel(
                     AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
+                    AndroidArtifacts.ArtifactScope.PROJECT,
+                    AndroidArtifacts.ArtifactType.LOCAL_EXPLODED_AAR_FOR_LINT
+                )
+            projectCompileExplodedAars =
+                unitTestImpl.variantDependencies.getArtifactCollectionForToolingModel(
+                    AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                     AndroidArtifacts.ArtifactScope.PROJECT,
                     AndroidArtifacts.ArtifactType.LOCAL_EXPLODED_AAR_FOR_LINT
                 )
@@ -1098,11 +1110,20 @@ abstract class ArtifactInput {
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.ABSOLUTE)
     @get:Optional
-    val projectExplodedAarsFileCollection: FileCollection?
-        get() = projectDependencyExplodedAars?.artifactFiles
+    val projectRuntimeExplodedAarsFileCollection: FileCollection?
+        get() = projectRuntimeExplodedAars?.artifactFiles
 
     @get:Internal
-    var projectDependencyExplodedAars: ArtifactCollection? = null
+    var projectRuntimeExplodedAars: ArtifactCollection? = null
+
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.ABSOLUTE)
+    @get:Optional
+    val projectCompileExplodedAarsFileCollection: FileCollection?
+        get() = projectCompileExplodedAars?.artifactFiles
+
+    @get:Internal
+    var projectCompileExplodedAars: ArtifactCollection? = null
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.ABSOLUTE)
@@ -1170,7 +1191,8 @@ abstract class ArtifactInput {
                 // module dependency, not as an external dependency.)
                 ExternalLintModelArtifactHandler.create(
                     dependencyCaches,
-                    projectDependencyExplodedAars,
+                    projectRuntimeExplodedAars,
+                    projectCompileExplodedAars,
                     null,
                     artifactCollectionsInputs.compileClasspath.projectJars,
                     artifactCollectionsInputs.runtimeClasspath!!.projectJars,

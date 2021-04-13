@@ -248,7 +248,8 @@ class PublishingSpecs {
                 runtime(AAR_METADATA, ArtifactType.AAR_METADATA)
                 runtime(LINT_MODEL, ArtifactType.LINT_MODEL)
                 runtime(LINT_PARTIAL_RESULTS, ArtifactType.LINT_PARTIAL_RESULTS)
-                runtime(
+                // Publish to both to support compileOnly module dependencies.
+                output(
                     com.android.build.api.artifact.SingleArtifact.AAR,
                     ArtifactType.LOCAL_AAR_FOR_LINT)
             }
