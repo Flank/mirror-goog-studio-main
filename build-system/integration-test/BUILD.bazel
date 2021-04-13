@@ -202,6 +202,20 @@ maven_repo(
     visibility = [":__subpackages__"],
 )
 
+maven_repo(
+    name = "androidx_test_latest",
+    # keep sorted
+    artifacts = [
+        "//prebuilts/tools/common/m2/repository/androidx/test/core/1.3.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/test/ext/junit/1.1.2:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/test/monitor/1.3.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/test/rules/1.3.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/test/runner/1.3.0:aar",
+    ],
+    use_zip = False,
+    visibility = [":__subpackages__"],
+)
+
 # These dependencies are required for the Gradle Kotlin DSL use.
 maven_repo(
     name = "gradle_kotlin_dsl_prebuilts",

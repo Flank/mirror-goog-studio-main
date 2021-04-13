@@ -20,6 +20,7 @@ dependencies {
     testImplementation project(':base:sdk-common')
     testImplementation project(':base:testing-infrastructure:device-pool:device-provider')
     testImplementation project(':base:testutils')
+    testImplementation project(':base:gradle-api')
     testCompileOnly(project(':base:profile'))
 
     testImplementation libs.kotlin_stdlib

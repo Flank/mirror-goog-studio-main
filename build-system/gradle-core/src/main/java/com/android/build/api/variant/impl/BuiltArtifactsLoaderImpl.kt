@@ -21,6 +21,7 @@ import com.android.build.api.variant.BuiltArtifactsLoader
 import com.google.gson.GsonBuilder
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.provider.Provider
 import java.io.File
 import java.io.FileReader
@@ -30,6 +31,10 @@ import java.nio.file.Paths
 class BuiltArtifactsLoaderImpl: BuiltArtifactsLoader {
 
     override fun load(folder: Directory): BuiltArtifactsImpl? {
+        return load(folder as FileSystemLocation)
+    }
+
+    fun load(folder: FileSystemLocation): BuiltArtifactsImpl? {
         return loadFromFile(
             File(folder.asFile, BuiltArtifactsImpl.METADATA_FILE_NAME),
             folder.asFile.toPath())
