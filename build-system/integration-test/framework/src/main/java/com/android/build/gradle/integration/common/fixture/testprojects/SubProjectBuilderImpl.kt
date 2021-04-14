@@ -91,7 +91,7 @@ internal class SubProjectBuilderImpl(override val path: String) : SubProjectBuil
 
         android?.writeBuildFile(sb)
 
-        dependencies.writeBuildFile(sb)
+        dependencies.writeBuildFile(sb, projectDir)
 
         for (action in buildFileActions) {
             sb.append('\n').append(action())

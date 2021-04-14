@@ -21,6 +21,7 @@ import com.android.build.gradle.integration.common.fixture.ModelBuilderV2
 import com.android.build.gradle.integration.common.fixture.ModelContainerV2
 import com.android.build.gradle.integration.common.fixture.testprojects.TestProjectBuilder
 import com.android.build.gradle.integration.common.fixture.testprojects.TestProjectBuilderImpl
+import com.android.builder.model.v2.models.VariantDependencies
 import org.junit.Rule
 
 /**
@@ -72,41 +73,57 @@ abstract class ReferenceModelComparator(
         syncOptions(deltaProject.modelV2()).fetchModels(variantName)
     }
 
-    fun compareAndroidProjectWith(goldenFileSuffix: String) {
+    fun compareAndroidProjectWith(
+        projectPath: String? = null,
+        goldenFileSuffix: String = ""
+    ) {
         Comparator(this, result, referenceResult).compare(
-            model = result.container.singleAndroidProject,
-            referenceModel = referenceResult.container.singleAndroidProject,
+            model = result.getAndroidProject(projectPath),
+            referenceModel = referenceResult.getAndroidProject(projectPath),
             goldenFile = goldenFileSuffix
         )
     }
 
-    fun ensureAndroidProjectDeltaIsEmpty() {
+    fun ensureAndroidProjectDeltaIsEmpty(projectPath: String? = null) {
         Comparator(this, result, referenceResult).ensureIsEmpty(
-            model = result.container.singleAndroidProject,
-            referenceModel = referenceResult.container.singleAndroidProject
+            model = result.getAndroidProject(projectPath),
+            referenceModel = referenceResult.getAndroidProject(projectPath)
         )
     }
 
-    fun compareAndroidDslWith(goldenFileSuffix: String) {
+    fun compareAndroidDslWith(
+        projectPath: String? = null,
+        goldenFileSuffix: String = ""
+    ) {
         Comparator(this, result, referenceResult).compare(
-            model = result.container.singleAndroidDsl,
-            referenceModel = referenceResult.container.singleAndroidDsl,
+            model = result.getAndroidDsl(projectPath),
+            referenceModel = referenceResult.getAndroidDsl(projectPath),
             goldenFile = goldenFileSuffix
         )
     }
 
-    fun ensureAndroidDslDeltaIsEmpty() {
+    fun ensureAndroidDslDeltaIsEmpty(projectPath: String? = null) {
         Comparator(this, result, referenceResult).ensureIsEmpty(
-            model = result.container.singleAndroidDsl,
-            referenceModel = referenceResult.container.singleAndroidDsl
+            model = result.getAndroidDsl(projectPath),
+            referenceModel = referenceResult.getAndroidDsl(projectPath)
         )
     }
 
-    fun compareVariantDependenciesWith(goldenFileSuffix: String) {
+    fun compareVariantDependenciesWith(
+        projectPath: String? = null,
+        goldenFileSuffix: String = ""
+    ) {
         Comparator(this, result, referenceResult).compare(
-            model = result.container.singleVariantDependencies,
-            referenceModel = referenceResult.container.singleVariantDependencies,
+            model = result.getVariantDependencies(projectPath),
+            referenceModel = referenceResult.getVariantDependencies(projectPath),
             goldenFile = goldenFileSuffix
+        )
+    }
+
+    fun ensureVariantDependenciesDeltaIsEmpty(projectPath: String? = null) {
+        Comparator(this, result, referenceResult).ensureIsEmpty(
+            model = result.getVariantDependencies(projectPath),
+            referenceModel = referenceResult.getVariantDependencies(projectPath)
         )
     }
 

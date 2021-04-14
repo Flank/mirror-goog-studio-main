@@ -154,5 +154,34 @@ interface ProductFlavorBuilder {
 }
 
 interface DependenciesBuilder {
-    fun implementation(library: MavenRepoGenerator.Library)
+
+    /**
+     * adds a dependency in the implementation scope.
+     *
+     * The instance being passed as a parameter must be:
+     * - a String: for maven coordinates. Should not be quoted.
+     * - result of [project] for sub-project dependency
+     * - result of [localJar] for on-the-fly created local jars
+     * - a [MavenRepoGenerator.Library] for on-the-fly created external AARs.
+     */
+    fun implementation(dependency: Any)
+
+    /**
+     * Creates a [LocalJarBuilder] to be passed to [implementation] (or any other scope)
+     */
+    fun localJar(action: LocalJarBuilder.() -> Unit) : LocalJarBuilder
+
+    /**
+     * Creates a [ProjectDependencyBuilder] to be passed to [implementation] (or any other scope)
+     */
+    fun project(path: String): ProjectDependencyBuilder
+}
+
+interface LocalJarBuilder {
+    var name: String
+    fun addClass(className: String)
+}
+
+interface ProjectDependencyBuilder {
+    val path: String
 }

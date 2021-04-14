@@ -51,7 +51,8 @@ class GetAndroidModelV2Action(
         val rootBuildId = rootBuild.buildIdentifier
 
         // add the projects of the root build.
-        for (project in rootBuild.projects) {
+        val projectList = rootBuild.projects
+        for (project in projectList) {
             projects.add(rootBuildId to project)
         }
 
@@ -63,16 +64,7 @@ class GetAndroidModelV2Action(
             }
         }
 
-        val modelMap = getAndroidProjectMap(projects, buildController)
-
-        // if we queried variant dependencies, include global library map
-        val libraryMap = if (variantName != null) {
-            projects.firstOrNull()?.let { (_, project) ->
-                buildController.findModel(project, GlobalLibraryMap::class.java)
-            }
-        } else {
-            null
-        }
+        val (modelMap, libraryMap) = getAndroidProjectMap(projects, buildController)
 
         val t2 = System.currentTimeMillis()
 
@@ -88,8 +80,12 @@ class GetAndroidModelV2Action(
     private fun getAndroidProjectMap(
         projects: List<Pair<BuildIdentifier, BasicGradleProject>>,
         buildController: BuildController
-    ): Map<BuildIdentifier, Map<String, ModelInfo>> {
+    ): Pair<Map<BuildIdentifier, Map<String, ModelInfo>>, GlobalLibraryMap?> {
         val models = mutableMapOf<BuildIdentifier, MutableMap<String, ModelInfo>>()
+
+        // record an Android project, so that we can query the global Library Map at the end
+        // TODO: Handle composite builds by possible querying one per build.
+        var projectWithAndroidPlugin: BasicGradleProject? = null
 
         for ((buildId, project) in projects) {
             // if we don't find ModelVersions, then it's not an AndroidProject, move on.
@@ -130,8 +126,16 @@ class GetAndroidModelV2Action(
                         nativeModule,
                         issues
                     )
+
+            projectWithAndroidPlugin = project
         }
 
-        return models
+        val libraryMap: GlobalLibraryMap? = if (projectWithAndroidPlugin != null) {
+            buildController.findModel(projectWithAndroidPlugin, GlobalLibraryMap::class.java)
+        } else {
+            null
+        }
+
+        return models to libraryMap
     }
 }

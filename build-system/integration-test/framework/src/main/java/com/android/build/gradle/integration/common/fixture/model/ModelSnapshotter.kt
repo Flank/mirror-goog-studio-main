@@ -17,7 +17,7 @@
 package com.android.build.gradle.integration.common.fixture.model
 
 import com.android.build.gradle.integration.common.fixture.model.SnapshotItemWriter.Companion.NULL_STRING
-import junit.framework.Assert.fail
+import com.android.build.gradle.internal.ide.dependencies.LOCAL_AAR_GROUPID
 import java.io.File
 
 
@@ -134,7 +134,18 @@ class ModelSnapshotter<ModelT>(
         val value = propertyAction(model)
 
         if (referenceModel == null || value != propertyAction(referenceModel)) {
-            registrar.artifactAddress(name, value)
+            // normalize the address if it contains a local JAr
+            val normalizedValue = if (value.startsWith("$LOCAL_AAR_GROUPID:")) {
+                // extract the path. The format is __local_aars__:PATH:unspecified@jar
+                val path = File(value.subSequence(15, value.length - 16).toString())
+
+                // reformat the address with the normalized path
+                "$LOCAL_AAR_GROUPID:${path.toNormalizedStrings(normalizer)}:unspecified@jar"
+            } else {
+                value
+            }
+
+            registrar.artifactAddress(name, normalizedValue)
         }
     }
 
