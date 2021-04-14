@@ -271,6 +271,35 @@ class GradleManagedAndroidDeviceLauncherTest {
         verify(emulatorHandle).closeInstance()
     }
 
+    @Test
+    fun releaseDevice_callsAdbManagerCloseDevice() {
+        `when`(adbManager.getAllSerials()).thenReturn(listOf("emulator-5558"))
+        `when`(adbManager.getId("emulator-5558")).thenReturn(deviceId)
+
+        managedDeviceLauncher.configure(
+            GradleManagedAndroidDeviceLauncher.DataBoundArgs(
+                deviceProviderConfig,
+                makeConfigFromDeviceProviderConfig(deviceProviderConfig)
+            )
+        )
+
+        val device = managedDeviceLauncher.provideDevice().getDevice() as AndroidDevice
+
+        assertThat(device.serial).isEqualTo("emulator-5558")
+        assertThat(device.port).isEqualTo(5559)
+        assertThat(device.type).isEqualTo(Device.DeviceType.VIRTUAL)
+        assertThat(device.emulatorPort).isEqualTo(5558)
+        assertThat(device.serverPort).isEqualTo(5037)
+        assertThat(device.properties.map[MANAGED_DEVICE_NAME_KEY]).isEqualTo("device1")
+
+        verifyCallToEmulator()
+
+        managedDeviceLauncher.releaseDevice()
+
+        verify(emulatorHandle).closeInstance()
+        verify(adbManager).closeDevice("emulator-5558")
+    }
+
     private fun makeConfigFromDeviceProviderConfig(
             deviceProviderConfig: GradleManagedAndroidDeviceProviderConfig
     ): DeviceProviderConfigImpl {

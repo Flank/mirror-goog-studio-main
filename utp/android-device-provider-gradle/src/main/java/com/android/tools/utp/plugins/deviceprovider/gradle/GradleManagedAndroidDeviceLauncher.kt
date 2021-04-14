@@ -122,6 +122,14 @@ class GradleManagedAndroidDeviceLauncher @VisibleForTesting constructor(
 
         val targetSerial = findSerial()
 
+        if (targetSerial == null) {
+            // Need to close the emulator if we can't connect.
+            releaseDevice()
+            throw DeviceProviderException(
+                    "Emulator failed to attach to ADB server. Check logs for details."
+            )
+        }
+
         val emulatorPort = targetSerial.substring("emulator-".length).toInt()
         device = AndroidDevice(
                 host = "localhost",
@@ -150,11 +158,11 @@ class GradleManagedAndroidDeviceLauncher @VisibleForTesting constructor(
      * retrieve each id, checking against the emulators unique id to find the
      * correct serial.
      */
-    private fun findSerial(): String {
+    private fun findSerial(numberOfRetries: Int = MAX_ADB_ATTEMPTS): String? {
         // We may need to retry as the emulator may not have attached to the
         // adb server even though the emulator has booted.
         var retries = 0
-        while (retries < MAX_ADB_ATTEMPTS) {
+        while (retries < numberOfRetries) {
             val serials = adbManager.getAllSerials()
             for (serial in serials) {
                 // ignore non-emulator devices.
@@ -170,11 +178,8 @@ class GradleManagedAndroidDeviceLauncher @VisibleForTesting constructor(
             }
             ++retries
         }
-        // Need to close the emulator if we can't connect.
-        releaseDevice()
-        throw DeviceProviderException(
-                "Emulator failed to attach to ADB server. Check logs for details."
-        )
+
+        return null
     }
 
     override fun provideDevice(): DeviceController {
@@ -210,6 +215,13 @@ class GradleManagedAndroidDeviceLauncher @VisibleForTesting constructor(
 
     override fun releaseDevice() {
         emulatorHandle.closeInstance()
+        // On Windows, this may not kill the instance. Search for the serial
+        // on adb and run a kill command from the adb. We don't want to
+        // retry to find the serial because the device either is or is not
+        // connected at this point and, ideally, would be disconnected.
+        findSerial(1)?.run {
+            adbManager.closeDevice(this)
+        }
     }
 
     override fun cancel(): Boolean = false
