@@ -14,6 +14,7 @@ kotlin_test(
     srcs = glob([
         "src/test/kotlin/**/*.kt",
     ]),
+    data = glob(["testData/**"]),
     friends = [":profgen"],
     jvm_flags = ["-Dtest.suite.jar=tests.jar"],
     test_class = "com.android.testutils.JarTestSuite",
