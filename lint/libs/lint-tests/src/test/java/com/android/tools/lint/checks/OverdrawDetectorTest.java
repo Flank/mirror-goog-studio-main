@@ -156,6 +156,47 @@ public class OverdrawDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
+    public void test184760951() {
+        lint().files(
+                        manifest(
+                                mAndroidManifest.contents.replace(
+                                        "android:theme=", "android:notheme=")),
+                        projectProperties().compileSdk(10),
+                        mCustombg,
+                        mCustombg2,
+                        image("res/drawable-ldpi/ic_launcher.png", 50, 40).fill(0xFFFFFFFF),
+                        xml(
+                                "res/layout/main.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    android:layout_width=\"fill_parent\"\n"
+                                        + "    android:layout_height=\"fill_parent\"\n"
+                                        + "    android:background=\"@drawable/ic_launcher\"\n"
+                                        + "    android:orientation=\"vertical\" >\n"
+                                        + "\n"
+                                        + "    <TextView\n"
+                                        + "        android:layout_width=\"fill_parent\"\n"
+                                        + "        android:layout_height=\"wrap_content\"\n"
+                                        + "        android:text=\"@string/hello\" />\n"
+                                        + "\n"
+                                        + "</LinearLayout>\n"),
+                        mStrings,
+                        mStyles,
+                        mR,
+                        mFourthActivity,
+                        mOverdrawActivity,
+                        mSecondActivity,
+                        mThirdActivity)
+                .run()
+                .expect(
+                        ""
+                                + "res/layout/main.xml:5: Warning: Possible overdraw: Root element paints background @drawable/ic_launcher with a theme that also paints a background (inferred theme is @android:style/Theme) [Overdraw]\n"
+                                + "    android:background=\"@drawable/ic_launcher\"\n"
+                                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "0 errors, 1 warnings");
+    }
+
     public void testSuppressed() {
         //noinspection all // Sample code
         lint().files(
