@@ -27,6 +27,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -54,20 +55,24 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
                     ArtifactUtils.getAllArtifacts(
                             artifactCollectionsInputs, COMPILE_CLASSPATH, dependencyFailureHandler);
 
-            // dependencies lintJar.
-            // This contains the list of all the lint jar provided by the dependencies.
-            // We'll match this to the component identifier of each artifact to find the lint.jar
+            // runtimeLintJar and compileLintJar are lists of the dependencies' lint jars.
+            // We'll match the component identifier of each artifact to find the lint.jar
             // that is coming via AARs.
-            Set<ResolvedArtifactResult> dependenciesLintJars =
-                    artifactCollectionsInputs.getLintJars().getArtifacts();
+            Set<ResolvedArtifactResult> runtimeLintJars =
+                    artifactCollectionsInputs.getRuntimeLintJars().getArtifacts();
+            Set<ResolvedArtifactResult> compileLintJars =
+                    artifactCollectionsInputs.getCompileLintJars().getArtifacts();
 
-            ImmutableMap.Builder<ComponentIdentifier, File> lintJarMapBuilder =
-                    ImmutableMap.builder();
-            for (ResolvedArtifactResult artifact : dependenciesLintJars) {
-                lintJarMapBuilder.put(
+            Map<ComponentIdentifier, File> mutableLintJarMap = new HashMap<>();
+            for (ResolvedArtifactResult artifact : compileLintJars) {
+                mutableLintJarMap.put(
                         artifact.getId().getComponentIdentifier(), artifact.getFile());
             }
-            Map<ComponentIdentifier, File> lintJarMap = lintJarMapBuilder.build();
+            for (ResolvedArtifactResult artifact : runtimeLintJars) {
+                mutableLintJarMap.put(
+                        artifact.getId().getComponentIdentifier(), artifact.getFile());
+            }
+            Map<ComponentIdentifier, File> lintJarMap = ImmutableMap.copyOf(mutableLintJarMap);
 
             if (withFullDependency && modelBuilder.getNeedFullRuntimeClasspath()) {
                 // in this mode, we build the full list of runtime artifact in the model

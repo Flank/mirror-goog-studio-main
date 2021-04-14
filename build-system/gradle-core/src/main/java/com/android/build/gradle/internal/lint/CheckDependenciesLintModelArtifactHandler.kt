@@ -46,7 +46,8 @@ import java.io.File
 internal class CheckDependenciesLintModelArtifactHandler(
     dependencyCaches: DependencyCaches,
     private val thisProject: ProjectKey,
-    projectDependencyLintModels: ArtifactCollection,
+    projectRuntimeLintModels: ArtifactCollection,
+    projectCompileLintModels: ArtifactCollection,
     compileProjectJars: ArtifactCollection,
     runtimeProjectJars: ArtifactCollection,
     buildMapping: BuildMapping,
@@ -56,7 +57,9 @@ internal class CheckDependenciesLintModelArtifactHandler(
     dependencyCaches.mavenCoordinatesCache
 ) {
 
-    private val projectDependencyLintModels = projectDependencyLintModels.asProjectKeyedMap(buildMapping).keys
+    private val projectDependencyLintModels =
+        projectCompileLintModels.asProjectKeyedMap(buildMapping).keys +
+                projectRuntimeLintModels.asProjectKeyedMap(buildMapping).keys
     private val compileProjectJars = compileProjectJars.asProjectKeyedMap(buildMapping)
     private val runtimeProjectJars = runtimeProjectJars.asProjectKeyedMap(buildMapping)
 
