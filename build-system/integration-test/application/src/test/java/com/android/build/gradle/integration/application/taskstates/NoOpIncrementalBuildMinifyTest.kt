@@ -145,7 +145,7 @@ class NoOpIncrementalBuildMinifyTest {
                 ":processReleaseJavaRes",
                 ":processReleaseUnitTestJavaRes",
                 ":stripReleaseDebugSymbols",
-                ":testReleaseUnitTest"
+                ":testReleaseUnitTest",
             )
         )
     }

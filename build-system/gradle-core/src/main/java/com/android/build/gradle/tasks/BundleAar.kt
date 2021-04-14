@@ -27,6 +27,7 @@ import com.android.build.gradle.internal.tasks.AarMetadataTask
 import com.android.build.gradle.internal.tasks.LintModelMetadataTask
 import com.android.build.gradle.internal.tasks.VariantAwareTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.options.BooleanOption
 import com.android.builder.core.BuilderConstants
 import org.gradle.api.Action
 import org.gradle.api.file.ConfigurableFileCollection
@@ -379,6 +380,12 @@ abstract class BundleAar : Zip(), VariantAwareTask {
                 it.rename(
                     AarMetadataTask.AAR_METADATA_FILE_NAME,
                     AarMetadataTask.AAR_METADATA_ENTRY_PATH
+                )
+            }
+            if (creationConfig.services.projectOptions[BooleanOption.ENABLE_ART_PROFILES]) {
+                task.from(
+                        creationConfig.artifacts.get(InternalArtifactType.LIBRARY_ART_PROFILE),
+                        prependToCopyPath(SdkConstants.FN_ANDROID_PRIVATE_ASSETS)
                 )
             }
             task.localAarDeps.from(

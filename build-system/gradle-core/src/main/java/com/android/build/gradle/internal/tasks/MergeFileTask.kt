@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.tasks
 import com.android.utils.FileUtils
 import com.google.common.base.Charsets
 import com.google.common.io.Files
-import org.gradle.api.file.FileCollection
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.InputFiles
@@ -34,7 +34,7 @@ abstract class MergeFileTask : NonIncrementalTask() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    abstract var inputFiles: FileCollection
+    abstract val inputFiles: ConfigurableFileCollection
 
     @get:OutputFile
     abstract val outputFile: RegularFileProperty
@@ -45,6 +45,7 @@ abstract class MergeFileTask : NonIncrementalTask() {
     }
 
     companion object {
+
         fun mergeFiles(inputFiles: Collection<File>, output: File) {
             // filter out any non-existent files
             val existingFiles = inputFiles.filter { it.isFile() }

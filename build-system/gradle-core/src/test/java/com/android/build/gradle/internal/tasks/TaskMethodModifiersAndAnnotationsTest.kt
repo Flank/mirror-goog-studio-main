@@ -126,7 +126,6 @@ class TaskMethodModifiersAndAnnotationsTest {
                 "com.android.build.gradle.internal.tasks.ManagedDeviceCleanTask::setPreserveDefinedOption",
                 "com.android.build.gradle.internal.tasks.ManagedDeviceInstrumentationTestTask::setDisplayEmulatorOption",
                 "com.android.build.gradle.internal.tasks.ManagedDeviceInstrumentationTestTask::setIgnoreFailures",
-                "com.android.build.gradle.internal.tasks.MergeFileTask::setInputFiles",
                 "com.android.build.gradle.internal.tasks.NdkTask::setNdkConfig",
                 "com.android.build.gradle.internal.tasks.NonIncrementalGlobalTask::setVariantName",
                 "com.android.build.gradle.internal.tasks.PackageRenderscriptTask::setVariantName",

@@ -222,6 +222,12 @@ public final class SdkConstants {
     /** Skin layout file */
     public static final String FN_SKIN_LAYOUT = "layout";
 
+    /** android private metadata folder */
+    public static final String FN_ANDROID_PRIVATE_ASSETS = "META-INF";
+
+    /** name of the art runtime profile in aar files (located in the android private assets) */
+    public static final String FN_ART_PROFILE = "art-profile.txt";
+
     /** aapt executable (with extension for the current OS) */
     public static final String FN_AAPT =
             "aapt" + ext(".exe", "");

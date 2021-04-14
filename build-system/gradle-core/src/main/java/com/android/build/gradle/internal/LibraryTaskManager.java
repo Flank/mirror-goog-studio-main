@@ -72,6 +72,7 @@ import com.android.build.gradle.tasks.ExtractAnnotations;
 import com.android.build.gradle.tasks.ExtractDeepLinksTask;
 import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.MergeSourceSetFolders;
+import com.android.build.gradle.tasks.ProcessLibraryArtProfileTask;
 import com.android.build.gradle.tasks.ProcessLibraryManifest;
 import com.android.build.gradle.tasks.ZipMergingTask;
 import com.android.builder.errors.IssueReporter;
@@ -468,6 +469,13 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
                                 creationConfig.getVariantData().getAllPreJavacGeneratedBytecode(),
                                 creationConfig.getVariantData().getAllPostJavacGeneratedBytecode());
         creationConfig.getArtifacts().appendToAllClasses(files);
+
+        if (creationConfig
+                .getServices()
+                .getProjectOptions()
+                .get(BooleanOption.ENABLE_ART_PROFILES)) {
+            taskFactory.register(new ProcessLibraryArtProfileTask.CreationAction(creationConfig));
+        }
 
         // Create jar used for publishing to API elements (for other projects to compile against).
         taskFactory.register(
