@@ -65,7 +65,6 @@ class MinifyCacheabilityTest {
             ":javaPreCompileMinified",
             ":mergeMinifiedAssets",
             ":mergeMinifiedGeneratedProguardFiles",
-            ":mergeMinifiedJavaResource",
             ":mergeMinifiedJniLibFolders",
             ":mergeMinifiedShaders",
             ":minifyMinifiedWithR8",
@@ -84,6 +83,7 @@ class MinifyCacheabilityTest {
         DID_WORK to setOf(
             ":createMinifiedCompatibleScreenManifests",
             ":extractProguardFiles",
+            ":mergeMinifiedJavaResource", /* Bug 181142260 */
             ":mergeMinifiedResources",
             ":packageMinified",
             ":processMinifiedMainManifest",

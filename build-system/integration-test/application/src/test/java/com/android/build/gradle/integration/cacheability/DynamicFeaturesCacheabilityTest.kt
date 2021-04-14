@@ -84,7 +84,6 @@ class DynamicFeaturesCacheabilityTest {
                     ":app:generateDebugResValues",
                     ":app:javaPreCompileDebug",
                     ":app:mergeDebugAssets",
-                    ":app:mergeDebugJavaResource",
                     ":app:mergeDebugJniLibFolders",
                     ":app:mergeDebugShaders",
                     ":app:mergeDexDebug",
@@ -111,7 +110,6 @@ class DynamicFeaturesCacheabilityTest {
                     ":feature1:generateDebugResValues",
                     ":feature1:javaPreCompileDebug",
                     ":feature1:mergeDebugAssets",
-                    ":feature1:mergeDebugJavaResource",
                     ":feature1:mergeDebugJniLibFolders",
                     ":feature1:mergeDebugShaders",
                     ":feature1:mergeExtDexDebug",
@@ -137,7 +135,6 @@ class DynamicFeaturesCacheabilityTest {
                     ":feature2:generateDebugResValues",
                     ":feature2:javaPreCompileDebug",
                     ":feature2:mergeDebugAssets",
-                    ":feature2:mergeDebugJavaResource",
                     ":feature2:mergeDebugJniLibFolders",
                     ":feature2:mergeDebugShaders",
                     ":feature2:mergeExtDexDebug",
@@ -173,15 +170,18 @@ class DynamicFeaturesCacheabilityTest {
                  */
                 DID_WORK to setOf(
                     ":app:mergeDebugResources", /* Bug 141301405 */
+                    ":app:mergeDebugJavaResource", /* Bug 181142260 */
                     ":app:packageDebug", /* Bug 74595859 */
                     ":app:writeDebugModuleMetadata",
 
                     ":feature1:featureDebugWriter",
                     ":feature1:mergeDebugResources",
+                    ":feature1:mergeDebugJavaResource",
                     ":feature1:packageDebug",
 
                     ":feature2:featureDebugWriter",
                     ":feature2:mergeDebugResources",
+                    ":feature2:mergeDebugJavaResource",
                     ":feature2:packageDebug",
                 ).plus(
                         if (BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP.defaultValue) {
