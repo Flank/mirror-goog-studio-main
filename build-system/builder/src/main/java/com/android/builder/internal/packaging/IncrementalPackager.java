@@ -191,6 +191,8 @@ public class IncrementalPackager implements Closeable {
 
     @NonNull private final List<SerializableChange> mChangedAppMetadata;
 
+    @NonNull private final List<SerializableChange> mChangedArtProfile;
+
     /**
      * Creates a new instance.
      *
@@ -230,7 +232,8 @@ public class IncrementalPackager implements Closeable {
             @NonNull List<SerializableChange> changedAssets,
             @NonNull Map<RelativeFile, FileStatus> changedAndroidResources,
             @NonNull Map<RelativeFile, FileStatus> changedNativeLibs,
-            @NonNull List<SerializableChange> changedAppMetadata)
+            @NonNull List<SerializableChange> changedAppMetadata,
+            @NonNull List<SerializableChange> changedArtProfile)
             throws IOException {
         if (!intermediateDir.isDirectory()) {
             throw new IllegalArgumentException(
@@ -254,6 +257,7 @@ public class IncrementalPackager implements Closeable {
         mChangedAppMetadata = changedAppMetadata;
         mDexRenamer = new DexIncrementalRenameManager(intermediateDir);
         mAbiPredicate = new NativeLibraryAbiPredicate(acceptedAbis, jniDebugMode);
+        mChangedArtProfile = changedArtProfile;
     }
 
     /**
@@ -280,6 +284,7 @@ public class IncrementalPackager implements Closeable {
                                 mChangedNativeLibs,
                                 rf -> mAbiPredicate.test(rf.getRelativePath()))));
         packagedFileUpdates.addAll(getAppMetadataUpdates(mChangedAppMetadata));
+        packagedFileUpdates.addAll(getArtProfileUpdates(mChangedArtProfile));
 
         // First delete all REMOVED (and maybe CHANGED) files, then add all NEW or CHANGED files.
         deleteFiles(packagedFileUpdates);
@@ -349,6 +354,19 @@ public class IncrementalPackager implements Closeable {
                                                 change.getFile().getParentFile(),
                                                 change.getFile()),
                                         APP_METADATA_ENTRY_PATH,
+                                        change.getFileStatus()))
+                .collect(Collectors.toList());
+    }
+
+    private static List<PackagedFileUpdate> getArtProfileUpdates(
+            @NonNull Collection<SerializableChange> changes) {
+        return changes.stream()
+                .map(
+                        change ->
+                                new PackagedFileUpdate(
+                                        new RelativeFile(
+                                                change.getFile().getParentFile(), change.getFile()),
+                                        "META-INF/" + SdkConstants.FN_ART_PROFILE,
                                         change.getFileStatus()))
                 .collect(Collectors.toList());
     }

@@ -84,8 +84,8 @@ class LibraryCacheabilityTest {
                 DID_WORK to setOf(
                     ":lib:bundleReleaseAar" /*Bug 121275773 */,
                     ":lib:mergeReleaseJavaResource", /* Bug 181142260 */
-                    ":lib:prepareLintJarForPublish" /* Bug 120413672 */
-                ).plus(
+                    ":lib:prepareLintJarForPublish", /* Bug 120413672 */
+                        ).plus(
                         // mapDebugSourceSetPaths is not cacheable but exists to enable the main
                         // resource compilation to be cacheable.
                         if (BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP.defaultValue) {

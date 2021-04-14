@@ -97,7 +97,7 @@ class CleanBuildTaskStatesTest {
                 ":app:mergeDebugNativeLibs",
                 ":app:processDebugJavaRes",
                 ":app:processDebugUnitTestJavaRes",
-                ":app:stripDebugDebugSymbols"
+                ":app:stripDebugDebugSymbols",
             )
         )
     }

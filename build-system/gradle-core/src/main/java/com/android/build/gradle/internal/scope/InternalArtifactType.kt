@@ -492,6 +492,10 @@ InternalArtifactType<T : FileSystemLocation>(
     // Micro APK res directory
     object MICRO_APK_RES: InternalArtifactType<Directory>(DIRECTORY)
 
+    // Human readable Art profile artifacts
+    object MERGED_ART_PROFILE: InternalArtifactType<RegularFile>(FILE)
+    object LIBRARY_ART_PROFILE: InternalArtifactType<RegularFile>(FILE)
+
     override fun getFolderName(): String {
         return folderName ?: super.getFolderName()
     }

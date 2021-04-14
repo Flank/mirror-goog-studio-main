@@ -92,6 +92,7 @@ public abstract class AarTransform implements TransformAction<AarTransform.Param
             ArtifactType.RES_SHARED_STATIC_LIBRARY,
             ArtifactType.PREFAB_PACKAGE,
             ArtifactType.AAR_METADATA,
+            ArtifactType.ART_PROFILE,
         };
     }
 
@@ -189,6 +190,14 @@ public abstract class AarTransform implements TransformAction<AarTransform.Param
             case AAR_METADATA:
                 outputIfExists(
                         FileUtils.join(input, AarMetadataTask.AAR_METADATA_ENTRY_PATH.split("/")),
+                        transformOutputs);
+                break;
+            case ART_PROFILE:
+                outputIfExists(
+                        FileUtils.join(
+                                input,
+                                SdkConstants.FN_ANDROID_PRIVATE_ASSETS,
+                                SdkConstants.FN_ART_PROFILE),
                         transformOutputs);
                 break;
             default:

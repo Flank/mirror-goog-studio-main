@@ -97,7 +97,7 @@ class NoOpIncrementalBuildTaskStatesTest {
                 ":app:mergeDebugNativeLibs",
                 ":app:processDebugJavaRes",
                 ":app:processDebugUnitTestJavaRes",
-                ":app:stripDebugDebugSymbols"
+                ":app:stripDebugDebugSymbols",
             )
         )
     }

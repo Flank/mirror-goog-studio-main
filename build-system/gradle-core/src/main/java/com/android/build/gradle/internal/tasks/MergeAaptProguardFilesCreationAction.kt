@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.fromDisallowChanges
 import org.gradle.api.tasks.TaskProvider
 
 /** Configuration action for a task to merge aapt proguard files  */
@@ -63,6 +64,6 @@ class MergeAaptProguardFilesCreationAction(
                         AndroidArtifacts.ArtifactType.AAPT_PROGUARD_RULES
                     )
                 )
-        task.inputFiles = inputFiles
+        task.inputFiles.fromDisallowChanges(inputFiles)
     }
 }

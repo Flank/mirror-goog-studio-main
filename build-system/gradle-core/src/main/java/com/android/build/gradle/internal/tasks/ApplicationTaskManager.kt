@@ -88,6 +88,10 @@ class ApplicationTaskManager(
             createAssetPackTasks(variant)
         }
 
+        if (variant.services.projectOptions[BooleanOption.ENABLE_ART_PROFILES]) {
+            taskFactory.register(MergeArtProfileTask.CreationAction(variant))
+        }
+
         if (variant.buildFeatures.dataBinding
                 && variant.globalScope.hasDynamicFeatures()) {
             // Create a task that will write the namespaces of all features into a file. This file's

@@ -125,7 +125,8 @@ public abstract class MergeConsumerProguardFilesTask extends MergeFileTask {
                                     creationConfig
                                             .getArtifacts()
                                             .get(GENERATED_PROGUARD_FILE.INSTANCE));
-            task.setInputFiles(inputFiles);
+            task.getInputFiles().from(inputFiles);
+            task.getInputFiles().disallowChanges();
             HasConfigurableValuesKt.setDisallowChanges(
                     task.getBuildDirectory(), task.getProject().getLayout().getBuildDirectory());
         }
