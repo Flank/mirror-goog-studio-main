@@ -55,11 +55,14 @@ abstract class ReferenceModelComparator(
     val referenceProject = GradleTestProject.builder()
         .withName("referenceProject")
         .fromTestApp(referenceBuilder)
+        .withAdditionalMavenRepo(referenceBuilder.mavenRepoGenerator)
         .create()
 
     @get:Rule
-    val deltaProject =
-            GradleTestProject.builder().fromTestApp(deltaBuilder).create()
+    val deltaProject = GradleTestProject.builder()
+        .fromTestApp(deltaBuilder)
+        .withAdditionalMavenRepo(deltaBuilder.mavenRepoGenerator)
+        .create()
 
     private val referenceResult: ModelBuilderV2.FetchResult<ModelContainerV2> by lazy {
         syncOptions(referenceProject.modelV2()).fetchModels(variantName)

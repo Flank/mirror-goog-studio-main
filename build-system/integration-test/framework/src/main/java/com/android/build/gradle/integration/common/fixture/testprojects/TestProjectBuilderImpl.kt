@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.common.fixture.testprojects
 
 import com.android.build.gradle.integration.common.fixture.TestProject
+import com.android.testutils.MavenRepoGenerator
 import com.android.utils.FileUtils
 import java.io.File
 
@@ -42,6 +43,16 @@ internal class TestProjectBuilderImpl: TestProjectBuilder, TestProject {
             action(project)
         }
     }
+
+    val mavenRepoGenerator: MavenRepoGenerator?
+        get() {
+            val allLibraries = rootProject.dependencies.allLibraries +
+                    subprojects.values.flatMap { it.dependencies.allLibraries }
+            if (allLibraries.isEmpty()) {
+                return null
+            }
+            return MavenRepoGenerator(allLibraries)
+        }
 
     // --- TestProject ---
 

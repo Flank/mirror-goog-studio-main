@@ -181,7 +181,8 @@ public final class GradleTestProjectBuilder {
                 outputLogOnFailure);
     }
 
-    public GradleTestProjectBuilder withAdditionalMavenRepo(@NonNull MavenRepoGenerator mavenRepo) {
+    public GradleTestProjectBuilder withAdditionalMavenRepo(
+            @Nullable MavenRepoGenerator mavenRepo) {
         additionalMavenRepo = mavenRepo;
         return this;
     }

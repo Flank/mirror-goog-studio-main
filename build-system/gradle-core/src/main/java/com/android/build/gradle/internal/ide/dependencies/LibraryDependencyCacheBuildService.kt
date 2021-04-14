@@ -71,7 +71,8 @@ abstract class LibraryDependencyCacheBuildService
         } else {
             val jarFiles = localJarRoot.listFiles { _, name -> name.endsWith(DOT_JAR) }
             if (jarFiles != null && jarFiles.isNotEmpty()) {
-                ImmutableList.copyOf(jarFiles)
+                // Sort by name, rather than relying on the file system iteration order
+                ImmutableList.copyOf(jarFiles.sortedBy(File::getName))
             } else ImmutableList.of()
         }
     })

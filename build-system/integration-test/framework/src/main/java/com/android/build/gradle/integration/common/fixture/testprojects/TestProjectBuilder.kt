@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.common.fixture.testprojects
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.TestProject
+import com.android.testutils.MavenRepoGenerator
 
 /**
  * Creates a [TestProject] with the provided configuration action
@@ -101,6 +102,11 @@ interface SubProjectBuilder {
      * This will fails if no android plugins were added.
      */
     fun android(action: AndroidProjectBuilder.() -> Unit)
+
+    /**
+     * Configures dependencies of the project
+     */
+    fun dependencies(action: DependenciesBuilder.() -> Unit)
 }
 
 interface AndroidProjectBuilder {
@@ -145,4 +151,8 @@ interface ProductFlavorBuilder {
     val name: String
     var isDefault: Boolean?
     var dimension: String?
+}
+
+interface DependenciesBuilder {
+    fun implementation(library: MavenRepoGenerator.Library)
 }
