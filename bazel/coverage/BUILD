@@ -584,6 +584,20 @@ coverage_report(
     ],
 )
 
+coverage_report(
+    name = "memory-recording-ui",
+    srcpath_include = [
+        "tools/adt/idea/profilers/src/com/android/tools/profilers/memory/AllocationStage.kt",
+        "tools/adt/idea/profilers/src/com/android/tools/profilers/memory/MainMemoryProfilerStage.kt",
+        "tools/adt/idea/profilers-ui/src/com/android/tools/profilers/memory/AllocationStageView.kt",
+        "tools/adt/idea/profilers-ui/src/com/android/tools/profilers/memory/MainMemoryProfilerStageView.kt",
+    ],
+    tests = [
+        "//tools/adt/idea/profilers:intellij.android.profilers_tests",
+        "//tools/adt/idea/profilers-ui:intellij.android.profilers.ui_tests",
+    ],
+)
+
 combine_report_definitions(
     prefix = "comps",
     # keep sorted
@@ -605,6 +619,7 @@ combine_report_definitions(
         "emulator",
         "fullscreen-heapdump-ui",
         "layouteditor",
+        "memory-recording-ui",
         "ml-model-binding",
         "motioneditor",
         "navigationeditor",
