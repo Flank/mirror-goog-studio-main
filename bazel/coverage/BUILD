@@ -598,6 +598,17 @@ coverage_report(
     ],
 )
 
+# Coverage report for "Wear OS emulator pairing assistant
+coverage_report(
+    name = "wear-pairing-assistant",
+    srcpath_include = [
+        "tools/adt/idea/android/src/com/android/tools/idea/wearparing",
+    ],
+    tests = [
+        "//tools/adt/idea/android:intellij.android.core.tests_tests__wear.pairing.assistant",
+    ],
+)
+
 combine_report_definitions(
     prefix = "comps",
     # keep sorted
@@ -637,6 +648,7 @@ combine_report_definitions(
         "upgrade-assistant",
         "utp",
         "validation",
+        "wear-pairing-assistant",
         "workmanager-inspector",
     ],
 )
