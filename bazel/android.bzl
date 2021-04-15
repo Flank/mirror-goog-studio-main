@@ -100,6 +100,12 @@ def select_android(android, default):
         "//conditions:default": default,
     })
 
+def select_target_android_host_unx(v, default):
+    return select({
+        "@//tools/base/bazel:target_android_host_un*x": v,
+        "//conditions:default": default,
+    })
+
 def dex_library(name, jars = [], output = None, visibility = None, tags = [], flags = [], dexer = "D8"):
     if dexer == "DX":
         cmd = "$(location //prebuilts/studio/sdk:dx-preview) --dex --output=./$@ ./$(SRCS)"
@@ -128,6 +134,12 @@ ANDROID_COPTS = select_android(
         "-std=c++11",
     ],
     [],
+) + select_target_android_host_unx(
+    # LTO is not working with r20 on Windows.
+    # TODO: Enable it when bazel support lld linker
+    # (a.k.a) >= r23.
+    ["-flto"],
+    [],
 )
 
 ANDROID_LINKOPTS = select_android(
@@ -140,5 +152,11 @@ ANDROID_LINKOPTS = select_android(
         "-Wl,--gc-sections",
         "-Wl,--as-needed",
     ],
+    [],
+) + select_target_android_host_unx(
+    # LTO is not working with r20 on Windows.
+    # TODO: Enable it when bazel support lld linker
+    # (a.k.a) >= r23.
+    ["-flto"],
     [],
 )
