@@ -233,3 +233,7 @@ The type of the runtime library type (if present).
 - example: c++_shared
 - environment: android-gradle
 
+## ${ndk.variantVerboseMakefile}
+Whether to invoke build tool with verbosity (for example, ninja -v).
+- environment: android-gradle
+

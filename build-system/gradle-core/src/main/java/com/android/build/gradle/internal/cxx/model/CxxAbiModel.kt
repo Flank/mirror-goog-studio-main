@@ -312,7 +312,11 @@ fun <T> CxxAbiModel.ifNdkBuild(compute : () -> T?) =
  * Returns an empty string if it does not exist.
  */
 fun CxxAbiModel.getBuildCommandArguments(): List<String> {
-    return cmake?.buildCommandArgs?.tokenizeCommandLineToEscaped() ?: emptyList()
+    val fromBuildCommandArgs = cmake?.buildCommandArgs?.tokenizeCommandLineToEscaped() ?: emptyList()
+    if (variant.verboseMakefile == true) {
+        return listOf("-v") + fromBuildCommandArgs
+    }
+    return fromBuildCommandArgs
 }
 
 /**

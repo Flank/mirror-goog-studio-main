@@ -388,7 +388,14 @@ enum class Macro(
         environment = NDK_EXPOSED_BY_HOST,
         tag = "androidGradleIsHosting",
         example = "1",
-        bind = Macro::one);
+        bind = Macro::one),
+    NDK_VARIANT_VERBOSE_MAKEFILE(
+        description = "Whether to invoke build tool with verbosity (for example, ninja -v).",
+        environment = GRADLE,
+        tag = "variantVerboseMakefile",
+        example = "",
+        cmakeProperties = listOf(CmakeProperty.CMAKE_VERBOSE_MAKEFILE),
+        bind = CxxVariantModel::verboseMakefile);
 
     /**
      * The literal value of this macro in CMakeSettings.json. For example, "${ndk.minPlatform}".

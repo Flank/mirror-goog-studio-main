@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.nativebuild
 
+import com.android.SdkConstants
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
@@ -41,8 +42,10 @@ import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_VERSION
 import com.android.build.gradle.internal.cxx.configure.OFF_STAGE_CMAKE_VERSION
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons
+import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons.getNativeBuildMiniConfig
 import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.cxx.model.jsonGenerationLoggingRecordFile
+import com.android.build.gradle.internal.cxx.model.miniConfigFile
 import com.android.build.gradle.internal.cxx.model.ninjaDepsFile
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
@@ -50,6 +53,7 @@ import com.android.builder.model.v2.models.ndk.NativeModule
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils.join
 import com.google.common.truth.Truth
+import org.junit.Assume
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -152,6 +156,25 @@ class CmakeBasicProjectTest(
         )
         project.execute("clean", "assembleRelease")
         assertThat(project.getIntermediateFile("default_proguard_files/global")).exists()
+    }
+
+    // Regression test for b/184060944
+    @Test
+    fun `ninja verbosity respects CMAKE_VERBOSE_MAKEFILE=1`() {
+        Assume.assumeFalse(cmakeVersionInDsl == "3.6.0") // We don't control this for fork CMake
+        TestFileUtils.appendToFile(
+            project.buildFile,
+            """
+            android.defaultConfig.externalNativeBuild.cmake.arguments.addAll("-DCMAKE_VERBOSE_MAKEFILE=1")
+            """.trimIndent()
+        )
+        project.execute("generateJsonModelDebug")
+        val abi = project.recoverExistingCxxAbiModels().single { it.abi == Abi.ARMEABI_V7A }
+        val config = getNativeBuildMiniConfig(abi, null)
+        val commands = config.buildTargetsCommandComponents
+        assertThat(commands)
+            .named(abi.miniConfigFile.path)
+            .contains("-v")
     }
 
     // See b/134086362

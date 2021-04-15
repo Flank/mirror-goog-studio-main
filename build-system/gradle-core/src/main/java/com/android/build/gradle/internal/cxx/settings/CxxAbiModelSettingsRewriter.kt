@@ -15,6 +15,7 @@
  */
 package com.android.build.gradle.internal.cxx.settings
 
+import com.android.build.gradle.internal.cxx.cmake.isCmakeConstantTruthy
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_BUILD_TYPE
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_SYSTEM_VERSION
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_TOOLCHAIN_FILE
@@ -36,6 +37,7 @@ import com.android.build.gradle.internal.cxx.configure.removeBlankProperties
 import com.android.build.gradle.internal.cxx.configure.removeSubsumedArguments
 import com.android.build.gradle.internal.cxx.configure.toCmakeArgument
 import com.android.build.gradle.internal.cxx.configure.toCmakeArguments
+import com.android.build.gradle.internal.cxx.configure.toNdkBuildArgument
 import com.android.build.gradle.internal.cxx.configure.toNdkBuildArguments
 import com.android.build.gradle.internal.cxx.hashing.sha256Of
 import com.android.build.gradle.internal.cxx.logging.warnln
@@ -99,12 +101,24 @@ private fun CxxAbiModel.calculateConfigurationArgumentsExceptHash() : CxxAbiMode
             cmake = cmake?.copy(buildCommandArgs = rewriteConfig.buildCommandArgs),
             configurationArguments = rewriteConfig.configurationArgs
     )
-    return argsAdded.rewrite { property, value ->
-        val replaced = property.let {
-            Macro.withBinding(it).firstOrNull()?.ref
-        } ?: value
-        rewriteConfig.reifier(replaced)
-    }
+    val argsRewritten = argsAdded.rewrite { property, value ->
+            val replaced = property.let {
+                Macro.withBinding(it).firstOrNull()?.ref
+            } ?: value
+            rewriteConfig.reifier(replaced)
+        }
+    // Remove arguments that supersede earlier arguments and remove properties that
+    // have a blank value.
+    return argsRewritten.copy(
+        configurationArguments = argsRewritten.configurationArguments.map { argument ->
+                ifCMake {
+                    argument.toCmakeArgument()
+                } ?: argument.toNdkBuildArgument()
+            }
+            .removeSubsumedArguments()
+            .removeBlankProperties()
+            .map { it.sourceArgument }
+    )
 }
 
 /**
@@ -396,6 +410,7 @@ private fun CxxVariantModel.rewrite(rewrite : (property: KProperty1<*, *>, value
         soFolder = rewrite(CxxVariantModel::soFolder, soFolder.path).toFile(),
         optimizationTag = rewrite(CxxVariantModel::optimizationTag, optimizationTag),
         stlType = rewrite(CxxVariantModel::stlType, stlType),
+        verboseMakefile = rewrite.booleanOrNull(CxxVariantModel::verboseMakefile, verboseMakefile),
 )
 
 // Rewriter for CxxCmakeAbiModel
@@ -435,5 +450,21 @@ private fun ((KProperty1<*, *>, String) -> String).fileOrNull(property: KPropert
     return result.toFile()
 }
 
+/**
+ * Rewrite a Boolean?. Use isBlank() to transmit null.
+ */
+private fun ((KProperty1<*, *>, String) -> String).booleanOrNull(
+    property: KProperty1<*, *>,
+    flag: Boolean?
+): Boolean? {
+    val value = when (flag) {
+        null -> ""
+        true -> "1"
+        false -> "0"
+    }
+    val result = this(property, value)
+    if (result.isBlank()) return null
+    return isCmakeConstantTruthy(result)
+}
 
 
