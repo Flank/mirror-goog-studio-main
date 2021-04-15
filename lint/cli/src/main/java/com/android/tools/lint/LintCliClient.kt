@@ -98,11 +98,6 @@ import java.io.IOException
 import java.io.InputStream
 import java.io.PrintWriter
 import java.net.URL
-import java.util.ArrayList
-import java.util.HashMap
-import java.util.HashSet
-import java.util.LinkedHashMap
-import java.util.LinkedHashSet
 import kotlin.math.max
 
 /**
@@ -287,6 +282,7 @@ open class LintCliClient : LintClient {
         driver = createDriver(registry, lintRequest)
         driver.analysisStartTime = startTime
         addProgressPrinter()
+        addCancellationChecker()
         validateIssueIds()
 
         analyze()
@@ -810,6 +806,22 @@ open class LintCliClient : LintClient {
         if (!flags.isQuiet) {
             driver.addLintListener(ProgressPrinter())
         }
+    }
+
+    protected open fun addCancellationChecker() {
+        driver.addLintListener(object : LintListener {
+            override fun update(
+                driver: LintDriver,
+                type: LintListener.EventType,
+                project: Project?,
+                context: Context?
+            ) {
+                // Some build systems such as Gradle use Thread.interrupt() to cancel workers.
+                if (Thread.currentThread().isInterrupted) {
+                    throw InterruptedException()
+                }
+            }
+        })
     }
 
     /** Creates a lint request. */

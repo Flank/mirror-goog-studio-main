@@ -3417,6 +3417,11 @@ class LintDriver(
                     // Cancelling inspections in the IDE; bubble outwards without logging; the IDE will retry
                     throw throwable
                 }
+                throwable is InterruptedException -> {
+                    // Some build systems such as Gradle use Thread.interrupt() to cancel workers.
+                    driver.client.log(Severity.WARNING, null, "Aborting due to InterruptedException")
+                    throw throwable
+                }
                 throwable is AssertionError &&
                     throwable.message?.startsWith("Already disposed: ") == true -> {
                     // Editor is in the middle of analysis when project
