@@ -52,6 +52,7 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.Atomics;
+import com.google.common.util.concurrent.ListenableFuture;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -329,7 +330,7 @@ public final class DeviceImpl implements IDevice {
 
     @NonNull
     @Override
-    public Future<String> getSystemProperty(@NonNull String name) {
+    public ListenableFuture<String> getSystemProperty(@NonNull String name) {
         return mPropFetcher.getProperty(name);
     }
 

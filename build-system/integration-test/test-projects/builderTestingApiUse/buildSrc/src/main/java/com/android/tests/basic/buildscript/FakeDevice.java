@@ -11,6 +11,7 @@ import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.TimeoutException;
 import com.android.utils.ILogger;
 import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import java.io.File;
 import java.io.IOException;
@@ -18,9 +19,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-
 
 public class FakeDevice extends DeviceConnector {
 
@@ -275,8 +274,7 @@ public class FakeDevice extends DeviceConnector {
         return null;
     }
 
-
-    public Future<String> getSystemProperty(@NonNull String name) {
+    public ListenableFuture<String> getSystemProperty(@NonNull String name) {
         return SettableFuture.create();
     }
 

@@ -35,6 +35,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.ListenableFuture;
 import java.io.File;
 import java.io.IOException;
 import java.time.Duration;
@@ -194,7 +195,7 @@ public class ConnectedDevice extends DeviceConnector {
 
     @NonNull
     @Override
-    public Future<String> getSystemProperty(@NonNull String name) {
+    public ListenableFuture<String> getSystemProperty(@NonNull String name) {
         return iDevice.getSystemProperty(name);
     }
 

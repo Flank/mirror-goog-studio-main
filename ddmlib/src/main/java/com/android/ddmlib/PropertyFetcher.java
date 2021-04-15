@@ -18,6 +18,7 @@ package com.android.ddmlib;
 import com.android.annotations.NonNull;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import java.util.Map;
 import java.util.concurrent.Future;
@@ -169,7 +170,7 @@ public final class PropertyFetcher {
      * @return a {@link Future} that can be used to retrieve the prop value
      */
     @NonNull
-    public synchronized Future<String> getProperty(@NonNull String name) {
+    public synchronized ListenableFuture<String> getProperty(@NonNull String name) {
         SettableFuture<String> result;
         if (mCacheState.equals(CacheState.FETCHING)) {
             result = addPendingRequest(name);

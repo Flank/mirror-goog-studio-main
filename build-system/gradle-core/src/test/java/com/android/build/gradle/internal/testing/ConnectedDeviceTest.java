@@ -20,17 +20,17 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
-import com.android.annotations.NonNull;
 import com.android.ddmlib.IDevice;
 import com.android.utils.ILogger;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
@@ -47,48 +47,57 @@ public class ConnectedDeviceTest {
 
     @Before
     public void createDevice() {
-        when(mIDevice.getSystemProperty(anyString())).thenReturn(futureOf( null));
+        when(mIDevice.getSystemProperty(anyString())).thenReturn(Futures.immediateFuture(null));
         mDevice = new ConnectedDevice(mIDevice, mLogger,  10000, TimeUnit.MILLISECONDS);
     }
 
     @Test
     public void testGetAbisForLAndAbove() {
         when(mIDevice.getSystemProperty(IDevice.PROP_DEVICE_CPU_ABI_LIST))
-                .thenReturn(futureOf("x86,x86_64"));
+                .thenReturn(Futures.immediateFuture("x86,x86_64"));
         assertThat(mDevice.getAbis()).containsExactly("x86", "x86_64");
     }
 
 
     @Test
     public void testGetSingleAbiForPreL() {
-        when(mIDevice.getSystemProperty(IDevice.PROP_DEVICE_CPU_ABI)).thenReturn(futureOf("x86"));
+        when(mIDevice.getSystemProperty(IDevice.PROP_DEVICE_CPU_ABI))
+                .thenReturn(Futures.immediateFuture("x86"));
         assertThat(mDevice.getAbis()).containsExactly("x86");
     }
 
     @Test
     public void testGetAbisForPreL() {
-        when(mIDevice.getSystemProperty(IDevice.PROP_DEVICE_CPU_ABI)).thenReturn(futureOf("x86"));
+        when(mIDevice.getSystemProperty(IDevice.PROP_DEVICE_CPU_ABI))
+                .thenReturn(Futures.immediateFuture("x86"));
         when(mIDevice.getSystemProperty(IDevice.PROP_DEVICE_CPU_ABI2))
-                .thenReturn(futureOf("x86_64"));
+                .thenReturn(Futures.immediateFuture("x86_64"));
         assertThat(mDevice.getAbis()).containsExactly("x86", "x86_64");
     }
 
     @Test
     public void testGetDensityFromDevice() {
-        when(mIDevice.getSystemProperty(IDevice.PROP_DEVICE_DENSITY)).thenReturn(futureOf("480"));
+        when(mIDevice.getSystemProperty(IDevice.PROP_DEVICE_DENSITY))
+                .thenReturn(Futures.immediateFuture("480"));
         assertThat(mDevice.getDensity()).isEqualTo(480);
     }
 
     @Test
     public void testGetDensityFromEmulator() {
         when(mIDevice.getSystemProperty(IDevice.PROP_DEVICE_EMULATOR_DENSITY))
-                .thenReturn(futureOf("380"));
+                .thenReturn(Futures.immediateFuture("380"));
         assertThat(mDevice.getDensity()).isEqualTo(380);
     }
 
     @Test
-    public void testGetDensityTimeout() {
-        when(mIDevice.getSystemProperty(IDevice.PROP_DEVICE_DENSITY)).thenReturn(TIMEOUT_FUTURE);
+    public void testGetDensityTimeout() throws Exception {
+        @SuppressWarnings("unchecked")
+        ListenableFuture<String> future = Mockito.mock(ListenableFuture.class);
+
+        Mockito.when(future.get(10_000, TimeUnit.MILLISECONDS))
+                .thenThrow(new TimeoutException("Future expected to time out"));
+
+        when(mIDevice.getSystemProperty(IDevice.PROP_DEVICE_DENSITY)).thenReturn(future);
         assertThat(mDevice.getDensity()).isEqualTo(-1);
     }
 
@@ -97,75 +106,7 @@ public class ConnectedDeviceTest {
     public void testGetDensityInfiniteTimeout() {
         ConnectedDevice device = new ConnectedDevice(mIDevice, mLogger, 0, TimeUnit.MILLISECONDS);
         when(mIDevice.getSystemProperty(IDevice.PROP_DEVICE_DENSITY))
-                .thenReturn(noTimeoutFutureOf("480"));
+                .thenReturn(Futures.immediateFuture("480"));
         assertThat(device.getDensity()).isEqualTo(480);
     }
-
-
-    private abstract static class TestFuture implements Future<String> {
-
-        boolean isDone = false;
-
-        @Override
-        public final boolean isDone() {
-            return isDone;
-        }
-
-        @Override
-        public final boolean cancel(boolean mayInterruptIfRunning) {
-            return false;
-        }
-
-        @Override
-        public final boolean isCancelled() {
-            return false;
-        }
-
-        @Override
-        public String get() throws InterruptedException, ExecutionException {
-            throw new AssertionError("Should not call get().");
-        }
-
-        @Override
-        public String get(long timeout, @NonNull TimeUnit unit)
-                throws InterruptedException, ExecutionException, TimeoutException {
-            throw new AssertionError("Should not call get(long, TimeUnit).");
-        }
-
-    }
-
-    private static TestFuture futureOf(final String value) {
-        return new TestFuture() {
-            @Override
-            public final String get(long timeout, @NonNull TimeUnit unit)
-                    throws InterruptedException, ExecutionException, TimeoutException {
-                isDone = true;
-                return value;
-            }
-        };
-    }
-
-    private static TestFuture noTimeoutFutureOf(final String value) {
-        return new TestFuture() {
-            @Override
-            public String get() throws InterruptedException, ExecutionException {
-                isDone = true;
-                return value;
-            }
-        };
-    }
-
-    private static final Future<String> TIMEOUT_FUTURE = new TestFuture() {
-        @Override
-        public final String get(long timeout, @NonNull TimeUnit unit)
-                throws InterruptedException, ExecutionException, TimeoutException {
-            isDone = true;
-            throw new TimeoutException("Future expected to time out");
-        }
-    };
-
-
-
-
-
 }
