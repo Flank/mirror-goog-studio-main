@@ -40,8 +40,7 @@ public final class LogCatHeader {
     @NonNull
     private final String mTag;
 
-    @Nullable private final Instant mTimestampInstant;
-    @Nullable private final LogCatTimestamp mTimestamp;
+    @NonNull private final Instant mTimestamp;
 
     public LogCatHeader(
             @NonNull LogLevel logLevel,
@@ -49,35 +48,12 @@ public final class LogCatHeader {
             int tid,
             @NonNull String appName,
             @NonNull String tag,
-            @NonNull Instant timestampInstant) {
+            @NonNull Instant timestamp) {
         mLogLevel = logLevel;
         mPid = pid;
         mTid = tid;
         mAppName = appName;
         mTag = tag;
-        mTimestampInstant = timestampInstant;
-        mTimestamp = null;
-    }
-
-    /**
-     * Construct an immutable log message object.
-     *
-     * @deprecated Use {@link #LogCatHeader(LogLevel, int, int, String, String, Instant)}
-     */
-    @Deprecated
-    public LogCatHeader(
-            @NonNull LogLevel logLevel,
-            int pid,
-            int tid,
-            @NonNull String appName,
-            @NonNull String tag,
-            @NonNull LogCatTimestamp timestamp) {
-        mLogLevel = logLevel;
-        mPid = pid;
-        mTid = tid;
-        mAppName = appName;
-        mTag = tag;
-        mTimestampInstant = null;
         mTimestamp = timestamp;
     }
 
@@ -104,30 +80,8 @@ public final class LogCatHeader {
         return mTag;
     }
 
-    public boolean isBefore(@NonNull LogCatHeader header) {
-        if (mTimestampInstant == null) {
-            assert mTimestamp != null;
-            assert header.mTimestamp != null;
-
-            return mTimestamp.isBefore(header.mTimestamp);
-        }
-
-        assert header.mTimestampInstant != null;
-        return mTimestampInstant.isBefore(header.mTimestampInstant);
-    }
-
-    @Nullable
-    public Instant getTimestampInstant() {
-        return mTimestampInstant;
-    }
-
-    /**
-     * @deprecated Construct a LogCatHeader instance with {@link #LogCatHeader(LogLevel, int, int,
-     *     String, String, Instant)} and use {@link #getTimestampInstant()}
-     */
-    @Deprecated
-    @Nullable
-    public LogCatTimestamp getTimestamp() {
+    @NonNull
+    public Instant getTimestamp() {
         return mTimestamp;
     }
 
@@ -144,7 +98,6 @@ public final class LogCatHeader {
                 && mTid == header.mTid
                 && mAppName.equals(header.mAppName)
                 && mTag.equals(header.mTag)
-                && Objects.equals(mTimestampInstant, header.mTimestampInstant)
                 && Objects.equals(mTimestamp, header.mTimestamp);
     }
 
@@ -157,7 +110,6 @@ public final class LogCatHeader {
         hashCode = 31 * hashCode + mTid;
         hashCode = 31 * hashCode + mAppName.hashCode();
         hashCode = 31 * hashCode + mTag.hashCode();
-        hashCode = 31 * hashCode + Objects.hashCode(mTimestampInstant);
         hashCode = 31 * hashCode + Objects.hashCode(mTimestamp);
 
         return hashCode;
@@ -165,22 +117,13 @@ public final class LogCatHeader {
 
     @Override
     public String toString() {
-        StringBuilder builder = new StringBuilder();
-
-        if (mTimestampInstant == null) {
-            builder.append(mTimestamp);
-        } else {
-            LogCatLongEpochMessageParser.EPOCH_TIME_FORMATTER.formatTo(mTimestampInstant, builder);
-        }
-
-        builder.append(": ")
-                .append(mLogLevel.getPriorityLetter())
-                .append('/')
-                .append(mTag)
-                .append('(')
-                .append(mPid)
-                .append(')');
-
-        return builder.toString();
+        return LogCatLongEpochMessageParser.EPOCH_TIME_FORMATTER.format(mTimestamp)
+                + ": "
+                + mLogLevel.getPriorityLetter()
+                + '/'
+                + mTag
+                + '('
+                + mPid
+                + ')';
     }
 }

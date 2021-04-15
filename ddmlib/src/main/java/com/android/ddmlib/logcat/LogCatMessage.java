@@ -18,6 +18,7 @@ package com.android.ddmlib.logcat;
 
 import com.android.annotations.NonNull;
 import com.android.ddmlib.Log.LogLevel;
+import java.time.Instant;
 
 /**
  * Model a single log message output from {@code logcat -v long}.
@@ -34,18 +35,6 @@ public final class LogCatMessage {
     private final String mMessage;
 
     /**
-     * @deprecated Create a {@link LogCatHeader} separately and call {@link
-     * #LogCatMessage(LogCatHeader, String)} instead. This approach shares the same header data
-     * across multiple messages.
-     */
-    @Deprecated
-    public LogCatMessage(@NonNull LogLevel logLevel, int pid, int tid,
-            @NonNull String appName, @NonNull String tag,
-            @NonNull LogCatTimestamp timestamp, @NonNull String msg) {
-        this(new LogCatHeader(logLevel, pid, tid, appName, tag, timestamp), msg);
-    }
-
-    /**
      * Construct an immutable log message object.
      */
     public LogCatMessage(@NonNull LogCatHeader header, @NonNull String msg) {
@@ -58,7 +47,7 @@ public final class LogCatMessage {
      * that matches the logcat format.
      */
     public LogCatMessage(@NonNull LogLevel logLevel, @NonNull String message) {
-        this(logLevel, -1, -1, "", "", LogCatTimestamp.ZERO, message);
+        this(new LogCatHeader(logLevel, -1, -1, "", "", Instant.EPOCH), message);
     }
 
 
@@ -96,7 +85,7 @@ public final class LogCatMessage {
     }
 
     @NonNull
-    public LogCatTimestamp getTimestamp() {
+    public Instant getTimestamp() {
         return mHeader.getTimestamp();
     }
 
