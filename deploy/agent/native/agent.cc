@@ -25,6 +25,7 @@
 #include "tools/base/deploy/agent/native/instrumenter.h"
 #include "tools/base/deploy/agent/native/jni/jni_class.h"
 #include "tools/base/deploy/agent/native/jni/jni_util.h"
+#include "tools/base/deploy/agent/native/live_edit.h"
 #include "tools/base/deploy/agent/native/live_literal.h"
 #include "tools/base/deploy/agent/native/swapper.h"
 #include "tools/base/deploy/common/event.h"
@@ -171,6 +172,9 @@ jint HandleAgentRequest(jvmtiEnv* jvmti, JNIEnv* jni, char* socket_name) {
     LiveLiteral updater(jvmti, jni, live_literal_request.package_name());
     *response.mutable_live_literal_response() =
         updater.Update(live_literal_request);
+    SendResponse(socket, response);
+  } else if (request.has_le_request()) {
+    *response.mutable_le_response() = LiveEdit(request.le_request());
     SendResponse(socket, response);
   } else {
     Log::E("Unknown / Empty Agent Request");

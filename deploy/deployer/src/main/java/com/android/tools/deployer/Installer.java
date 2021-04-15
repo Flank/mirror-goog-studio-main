@@ -48,4 +48,6 @@ public interface Installer {
      */
     Deploy.InstallCoroutineAgentResponse installCoroutineAgent(String packageName, Deploy.Arch arch)
             throws IOException;
+
+    Deploy.LiveEditResponse liveEdit(Deploy.LiveEditRequest ler) throws IOException;
 }

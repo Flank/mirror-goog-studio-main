@@ -244,6 +244,7 @@ message AgentResponse {
   oneof response {
     AgentSwapResponse swap_response = 4;
     AgentLiveLiteralUpdateResponse live_literal_response = 5;
+    LiveEditResponse le_response = 6;
   }
 }
 
@@ -371,6 +372,7 @@ message InstallerRequest {
     OverlayInstallRequest overlay_install = 8;
     LiveLiteralUpdateRequest live_literal_request = 9;
     InstallCoroutineAgentRequest install_coroutine_agent_request = 10;
+    LiveEditRequest le_request = 11;
   }
 }
 
@@ -398,6 +400,7 @@ message InstallerResponse {
     OverlayInstallResponse overlay_install_response = 8;
     LiveLiteralUpdateResponse live_literal_response = 9;
     InstallCoroutineAgentResponse install_coroutine_agent_response = 10;
+    LiveEditResponse le_response = 11;
   }
 }
 
@@ -570,6 +573,7 @@ message AgentRequest {
   oneof request {
     SwapRequest swap_request = 1;
     LiveLiteralUpdateRequest live_literal_request = 2;
+    LiveEditRequest le_request = 3;
   }
 }
 
@@ -627,4 +631,35 @@ message InstallServerResponse {
     OpenAgentSocketResponse socket_response = 6;
     SendAgentMessageResponse send_response = 7;
   }
+}
+
+message LiveEditLoc {
+  string class_name = 1;  // e.g.: foo/bar/MyClass
+  string method_name = 2; // e.g.: baz
+}
+
+message LiveEditRequest {
+  LiveEditLoc src = 1;
+  LiveEditLoc target = 2;
+  string signature = 3;   // e.g.: ([Ljava/lang/String;)V
+
+  bytes main_class = 4;  // (Java bytecode)
+  repeated bytes sup_classes = 5; // Supporting classes (Darvik bytecode)
+
+  string package_name = 6;
+  Arch arch = 7;
+  repeated int32 process_ids = 8;
+}
+
+message LiveEditResponse {
+  enum Status {
+    UNKNOWN = 0;
+    OK = 1;
+    ERROR = 2;
+  }
+
+  Status status = 1;
+  string error_message = 2;
+
+  repeated AgentResponse failed_agents = 4;
 }

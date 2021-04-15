@@ -235,6 +235,16 @@ public class AdbInstaller implements Installer {
         return response;
     }
 
+    @Override
+    public Deploy.LiveEditResponse liveEdit(Deploy.LiveEditRequest ler) throws IOException {
+        Deploy.InstallerRequest.Builder request = buildRequest("liveedit");
+        request.setLeRequest(ler);
+        Deploy.InstallerResponse installerResponse = sendInstallerRequest(request.build());
+        Deploy.LiveEditResponse response = installerResponse.getLeResponse();
+        logger.verbose("installer liveEdit: " + response.getStatus().toString());
+        return response;
+    }
+
     private Deploy.InstallerResponse sendInstallerRequest(Deploy.InstallerRequest request)
             throws IOException {
         return sendInstallerRequest(request, AdbClient.DEFAULT_TIMEOUT, AdbClient.DEFAULT_TIMEUNIT);
