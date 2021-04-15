@@ -40,10 +40,11 @@ public class SystemImage implements ISystemImage {
     /** Tag to apply to system images for wearables. */
     public static final IdDisplay WEAR_TAG = IdDisplay.create("android-wear", "Wear OS");
 
-    /**
-     * Tag to apply to system images for Android TV.
-     */
-    public static final IdDisplay TV_TAG = IdDisplay.create("android-tv", "Android TV");
+    /** Tag to apply to system images for Android TV. */
+    public static final IdDisplay ANDROID_TV_TAG = IdDisplay.create("android-tv", "Android TV");
+
+    /** Tag to apply to system images for Google TV. */
+    public static final IdDisplay GOOGLE_TV_TAG = IdDisplay.create("google-tv", "Google TV");
 
     /** Tag to apply to system images for Android Automotive. */
     public static final IdDisplay AUTOMOTIVE_TAG =
@@ -57,9 +58,9 @@ public class SystemImage implements ISystemImage {
     public static final IdDisplay CHROMEOS_TAG = IdDisplay.create("chromeos", "Chrome OS Device");
 
     /**
-     * Tag to apply to system images that include Google APIs.
-     * Note that {@link #PLAY_STORE_TAG}, {@link #WEAR_TAG}, and {@link #TV_TAG} each imply the presence of Google APIs.
-     * In addition, there is one system image that uses {@link #GOOGLE_APIS_X86_TAG}.
+     * Tag to apply to system images that include Google APIs. Note that {@link #PLAY_STORE_TAG},
+     * {@link #WEAR_TAG}, and {@link #ANDROID_TV_TAG} each imply the presence of Google APIs. In
+     * addition, there is one system image that uses {@link #GOOGLE_APIS_X86_TAG}.
      */
     public static final IdDisplay GOOGLE_APIS_TAG = IdDisplay.create("google_apis", "Google APIs");
 
