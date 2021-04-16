@@ -133,11 +133,11 @@ object SkiaQWorkaround {
                     mRenderThread = Thread.currentThread()
                 }
                 var needsInvoke = true
-                if (mQueue.size == 3) {
-                    mQueue.removeLast()
-                    needsInvoke = false
-                }
                 if (shouldSerialize()) {
+                    if (mQueue.size == 3) {
+                        mQueue.removeLast()
+                        needsInvoke = false
+                    }
                     try {
                         Picture::class.java
                             .getDeclaredMethod("writeToStream", OutputStream::class.java)
@@ -147,6 +147,10 @@ object SkiaQWorkaround {
                     }
                     mQueue.add(mByteStream.toByteArray())
                     mByteStream.reset()
+                }
+                else {
+                    // If we're not serializing there's no point in keeping the bytes around.
+                    mQueue.clear()
                 }
                 mLock.unlock()
                 if (needsInvoke) {
@@ -166,7 +170,9 @@ object SkiaQWorkaround {
                                 + "invokes asynchronously"
                     )
                 }
-                if (isStopped || !shouldSerialize()) {
+                // Note picture will be null if shouldSerialize() was false during onPictureCaptured
+                // (even if shouldSerialize() is true now).
+                if (isStopped || picture == null) {
                     return
                 }
                 var stream: OutputStream? = null
