@@ -34,7 +34,6 @@ import com.android.tools.idea.wizard.template.impl.other.appWidget.res.values.st
 import com.android.tools.idea.wizard.template.impl.other.appWidget.res.values_v21.stylesXml as stylesXmlV21
 import com.android.tools.idea.wizard.template.impl.other.appWidget.res.values_v31.stylesXml as stylesXmlV31
 import com.android.tools.idea.wizard.template.impl.other.appWidget.res.values.themesXml
-import com.android.tools.idea.wizard.template.impl.other.appWidget.res.values_v29.themesXml as themesXmlV29
 import com.android.tools.idea.wizard.template.impl.other.appWidget.res.values_v31.themesXml as themesXmlV31
 import com.android.tools.idea.wizard.template.impl.other.appWidget.res.xml.appwidgetInfoXml
 import com.android.tools.idea.wizard.template.impl.other.appWidget.src.app_package.appWidgetConfigureActivityJava
@@ -95,16 +94,16 @@ fun RecipeExecutor.appWidgetRecipe(
   mergeXml(colorsXml(), resOut.resolve("values/colors.xml"))
   mergeXml(dimensXml(), resOut.resolve("values/dimens.xml"))
   mergeXml(themesXml(moduleData.themesData), resOut.resolve("values/themes.xml"))
-  mergeXml(themesXmlV29(moduleData.themesData), resOut.resolve("values-v29/themes.xml"))
   mergeXml(stylesXml(moduleData.themesData), resOut.resolve("values/styles.xml"))
   mergeXml(stylesXmlV21(moduleData.themesData), resOut.resolve("values-v21/styles.xml"))
   if (moduleData.apis.targetApi.api >= 31) {
-    // android:clipToOutline is only avaialable with S SDK
+    // android:clipToOutline is only available with S SDK
     mergeXml(stylesXmlV31(moduleData.themesData), resOut.resolve("values-v31/styles.xml"))
     // Restrict to generate the themes for v31 because
     // @android:dimen/system_app_widget_background_radius and @android:dimen/system_app_widget_internal_padding are only available
     // with S SDK
-    mergeXml(themesXmlV31(moduleData.themesData), resOut.resolve("values-v31/themes.xml"))
+    mergeXml(themesXmlV31(moduleData.themesData, forDarkMode = false), resOut.resolve("values-v31/themes.xml"))
+    mergeXml(themesXmlV31(moduleData.themesData, forDarkMode = true), resOut.resolve("values-night-v31/themes.xml"))
   }
 
   val appWidget = when (projectData.language) {

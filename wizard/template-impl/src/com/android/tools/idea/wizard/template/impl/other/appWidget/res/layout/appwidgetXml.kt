@@ -19,12 +19,12 @@ package com.android.tools.idea.wizard.template.impl.other.appWidget.res.layout
 import com.android.tools.idea.wizard.template.ThemesData
 import com.android.tools.idea.wizard.template.impl.other.appWidget.res.values.getAppWidgetContainerStyleName
 import com.android.tools.idea.wizard.template.impl.other.appWidget.res.values.getAppWidgetInnerViewStyleName
-import com.android.tools.idea.wizard.template.impl.other.appWidget.res.values.getAppWidgetThemeOverlay
+import com.android.tools.idea.wizard.template.impl.other.appWidget.res.values.getAppWidgetTheme
 
 fun appwidgetXml(themesData: ThemesData) = """
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     style="@style/${getAppWidgetContainerStyleName(themesData.appName)}"
-    android:theme="@style/${getAppWidgetThemeOverlay(themesData.overlay.name)}"
+    android:theme="@style/${getAppWidgetTheme(themesData.main.name)}"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 

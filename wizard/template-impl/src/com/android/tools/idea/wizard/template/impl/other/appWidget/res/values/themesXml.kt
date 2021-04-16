@@ -16,20 +16,19 @@
 package com.android.tools.idea.wizard.template.impl.other.appWidget.res.values
 
 import com.android.tools.idea.wizard.template.ThemesData
-import com.android.tools.idea.wizard.template.MaterialColor.*
 
 fun themesXml(themesData: ThemesData) =
   """<resources>
-    <style name="${getParentAppWidgetThemeOverlay(themesData.overlay.name)}" parent="@android:style/Theme.DeviceDefault">
+    <style name="${getParentAppWidgetTheme(themesData.main.name)}" parent="@android:style/Theme.DeviceDefault">
         <item name="appWidgetRadius">8dp</item>
         <item name="appWidgetPadding">4dp</item>
         <item name="appWidgetInnerRadius">4dp</item>
     </style>
 
-    <style name="${getAppWidgetThemeOverlay(themesData.overlay.name)}"
-        parent="${getParentAppWidgetThemeOverlay(themesData.overlay.name)}" />
+    <style name="${getAppWidgetTheme(themesData.main.name)}"
+        parent="${getParentAppWidgetTheme(themesData.main.name)}" />
 </resources>
 """
 
-fun getAppWidgetThemeOverlay(overlayThemeName: String) = "${overlayThemeName}.AppWidgetContainer"
-fun getParentAppWidgetThemeOverlay(overlayThemeName: String) = "${overlayThemeName}.AppWidgetContainerParent"
+fun getAppWidgetTheme(themeName: String) = "${themeName}.AppWidgetContainer"
+fun getParentAppWidgetTheme(themeName: String) = "${themeName}.AppWidgetContainerParent"

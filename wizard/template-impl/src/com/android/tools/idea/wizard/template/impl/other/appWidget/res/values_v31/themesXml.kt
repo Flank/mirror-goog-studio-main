@@ -16,19 +16,24 @@
 package com.android.tools.idea.wizard.template.impl.other.appWidget.res.values_v31
 
 import com.android.tools.idea.wizard.template.ThemesData
-import com.android.tools.idea.wizard.template.impl.other.appWidget.res.values.getParentAppWidgetThemeOverlay
+import com.android.tools.idea.wizard.template.impl.other.appWidget.res.values.getParentAppWidgetTheme
 
-fun themesXml(themesData: ThemesData) =
-  """<?xml version="1.0" encoding="utf-8"?>
+fun themesXml(themesData: ThemesData, forDarkMode: Boolean): String {
+
+  val comment = if (forDarkMode) """Having themes.xml for night-v31 because of the priority order of the resource qualifiers."""
+  else """Having themes.xml for v31 variant because @android:dimen/system_app_widget_background_radius
+     and @android:dimen/system_app_widget_internal_padding requires API level 31"""
+
+  return """<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!--
-    Having themes.xml for v31 variant because @android:dimen/system_app_widget_background_radius
-    and @android:dimen/system_app_widget_internal_padding requires API level 31
+    $comment
     -->
-    <style name="${getParentAppWidgetThemeOverlay(themesData.overlay.name)}" parent="@android:style/Theme.DeviceDefault.DayNight">
+    <style name="${getParentAppWidgetTheme(themesData.main.name)}" parent="@android:style/Theme.DeviceDefault.DayNight">
         <item name="appWidgetRadius">@android:dimen/system_app_widget_background_radius</item>
         <item name="appWidgetPadding">@android:dimen/system_app_widget_internal_padding</item>
         <item name="appWidgetInnerRadius">@android:dimen/system_app_widget_inner_radius</item>
     </style>
 </resources>
 """
+}

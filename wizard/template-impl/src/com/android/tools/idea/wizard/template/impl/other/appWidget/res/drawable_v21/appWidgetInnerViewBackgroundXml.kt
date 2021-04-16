@@ -18,6 +18,10 @@ package com.android.tools.idea.wizard.template.impl.other.appWidget.res.drawable
 
 fun appWidgetInnerViewBackgroundXml() = """
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+Background for views inside widgets to make the rounded corners based on the
+appWidgetInnerRadius attribute value
+-->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
 
