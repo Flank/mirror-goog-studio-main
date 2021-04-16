@@ -17,6 +17,7 @@
 package com.android.tools.idea.wizard.template.impl.activities.scrollActivity.res.layout
 
 import com.android.tools.idea.wizard.template.getMaterialComponentName
+import com.android.tools.idea.wizard.template.renderIf
 
 fun appBarXml(
   activityClass: String,
@@ -44,6 +45,7 @@ fun appBarXml(
 
         <${getMaterialComponentName("android.support.design.widget.CollapsingToolbarLayout", useAndroidX)}
             android:id="@+id/toolbar_layout"
+            ${renderIf(useAndroidX) {"""style="@style/Widget.MaterialComponents.Toolbar.Primary""""}}
             android:fitsSystemWindows="true"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
