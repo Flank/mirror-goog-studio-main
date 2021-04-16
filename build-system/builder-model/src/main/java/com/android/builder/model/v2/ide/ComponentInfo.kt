@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 The Android Open Source Project
+ * Copyright (C) 2021 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,22 +14,19 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.ide.v2
-
-import com.android.builder.model.v2.ide.GraphItem
-import java.io.Serializable
+package com.android.builder.model.v2.ide
 
 /**
- * Implementation of [GraphItem] for serialization via the Tooling API.
+ * Basic information about dependency components
  */
-data class GraphItemImpl(
-    override val key: String,
-    override val requestedCoordinates: String?,
-    override val dependencies: List<GraphItem>
-) : GraphItem, Serializable {
-    companion object {
-        @JvmStatic
-        private val serialVersionUID: Long = 1L
-    }
+interface ComponentInfo {
+    /**
+     * The list of attributes associated with the component.
+     */
+    val attributes: Map<String, String>
 
+    /**
+     * The list of capabilities associated with the component
+     */
+    val capabilities: List<String>
 }

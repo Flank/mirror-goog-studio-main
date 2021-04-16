@@ -156,36 +156,63 @@ class ModelSnapshotter<ModelT>(
         }
     }
 
-    fun artifactAddress(
-        name: String,
-        propertyAction: ModelT.() -> String,
-    ) {
-        registrar.item(name, normalizeArtifactAddress(propertyAction(model)))
+    fun pathAsAString(name: String, onlyIfPresent: Boolean, propertyAction: ModelT.() -> String?) {
+        // use the modifyAction to convert the String to a file so that the normalizer
+        // can normalize it. Only do this if the file actually exist, otherwise, keep as
+        // as string so that it does not get normalized
+        basicProperty(propertyAction, { it?.let {
+            val f = File(it)
+            if (onlyIfPresent) {
+                if (f.exists()) {
+                    f
+                } else {
+                    it
+                }
+            } else {
+                f
+            }
+        } }) {
+            registrar.item(name, it)
+        }
     }
+
+    fun artifactKey(
+        propertyAction: ModelT.() -> String,
+    ): String = normalizeArtifactAddress(propertyAction(model)).also {
+        registrar.item("key", it)
+    }
+
+    fun normalizeArtifactAddress(
+        propertyAction: ModelT.() -> String,
+    ): String = normalizeArtifactAddress(propertyAction(model))
 
     internal fun normalizeArtifactAddress(address: String): String {
         // normalize the value if it contains a local jar path,
-        val value = if (address.startsWith("$LOCAL_AAR_GROUPID:")) {
-            // extract the path. The format is __local_aars__:PATH:unspecified@jar
-            val path = File(address.subSequence(15, address.length - 16).toString())
+
+        val normalizedValue = if (address.startsWith(LOCAL_JAR_PREFIX)) {
+            // extract the path. The format is __local_aars__|PATH|...
+            // so we search for the 2nd | char
+            val secondPipe = address.indexOf('|', LOCAL_JAR_PREFIX_LENGTH)
+
+            val path = File(address.subSequence(LOCAL_JAR_PREFIX_LENGTH, secondPipe).toString())
 
             // reformat the address with the normalized path
-            "$LOCAL_AAR_GROUPID:${path.toNormalizedStrings(normalizer)}:unspecified@jar"
+            "$LOCAL_JAR_PREFIX${path.toNormalizedStrings(normalizer)}${address.subSequence(IntRange(secondPipe, address.length - 1))}"
         } else {
             address
         }
 
         // normalize the value if it contains a buildID
-        return if (value.contains("@@")) {
-            val buildId =  value.substringBefore("@@")
-            val projectPathAndVariant = value.substringAfter("@@")
+        return if (normalizedValue.contains("@@")) {
+            val buildId = normalizedValue.substringBefore("@@")
+            val projectPathAndVariant = normalizedValue.substringAfter("@@")
 
             val newID = buildIdMap[buildId] ?: buildId
 
             "{${newID}}@@${projectPathAndVariant}"
 
         } else {
-            value
+            normalizedValue
         }
     }
 
@@ -321,6 +348,9 @@ class ModelSnapshotter<ModelT>(
         action(modifiedProperty.toValueString(normalizer))
     }
 }
+
+private const val LOCAL_JAR_PREFIX = "$LOCAL_AAR_GROUPID|"
+private const val LOCAL_JAR_PREFIX_LENGTH = LOCAL_JAR_PREFIX.length
 
 /**
  * Converts a value into a single String depending on its type (null, File, String, Collection, Any)

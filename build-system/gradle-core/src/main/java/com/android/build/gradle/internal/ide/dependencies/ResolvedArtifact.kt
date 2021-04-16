@@ -26,6 +26,7 @@ import org.gradle.api.artifacts.component.ComponentIdentifier
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
+import org.gradle.api.artifacts.result.ResolvedVariantResult
 import org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifier
 import java.io.File
 import java.util.regex.Pattern
@@ -36,8 +37,9 @@ import java.util.regex.Pattern
  * This is generally computed from a [ResolvedArtifactResult] (which is not usable as a [Map]
  * key) plus additional information.
  */
-data class ResolvedArtifact(
+data class ResolvedArtifact internal constructor(
     val componentIdentifier: ComponentIdentifier,
+    val variant: ResolvedVariantResult,
     val variantName: String?,
     val artifactFile: File,
     /**
@@ -61,6 +63,7 @@ data class ResolvedArtifact(
     ) :
             this(
                 mainArtifactResult.id.componentIdentifier,
+                mainArtifactResult.variant,
                 mainArtifactResult.getVariantName(),
                 mainArtifactResult.file,
                 secondaryArtifactResult?.file,
@@ -73,6 +76,20 @@ data class ResolvedArtifact(
     enum class DependencyType constructor(val extension: String) {
         JAVA(EXT_JAR),
         ANDROID(EXT_AAR)
+    }
+
+    fun fixWithVariantResult(variant: ResolvedVariantResult): ResolvedArtifact {
+        return ResolvedArtifact(
+            this.componentIdentifier,
+            variant,
+            variantName,
+            artifactFile,
+            extractedFolder,
+            dependencyType,
+            isWrappedModule,
+            buildMapping,
+            mavenCoordinatesCache
+        )
     }
 
     /**

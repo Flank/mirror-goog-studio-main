@@ -55,6 +55,7 @@ abstract class ReferenceModelComparator(
     @get:Rule
     val referenceProject = GradleTestProject.builder()
         .withName("referenceProject")
+        .withRootProjectName("project")
         .fromTestApp(referenceBuilder)
         .withAdditionalMavenRepo(referenceBuilder.mavenRepoGenerator)
         .create()

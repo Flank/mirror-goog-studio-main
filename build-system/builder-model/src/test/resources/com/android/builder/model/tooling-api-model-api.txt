@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-c94c4fa8cfbc858bf78e1d850adae00ec8f122a0f035ed09ebf44b1e451ada10
+1966e9d2d8c93103b51ae348efcd49fd85883544a03c0309fbe8f8b24b60e036
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -600,9 +600,12 @@ com.android.builder.model.v2.ide.BundleInfo.getBundleTaskOutputListingFile: java
 com.android.builder.model.v2.ide.CodeShrinker extends java.lang.Enum
 com.android.builder.model.v2.ide.CodeShrinker.valueOf: com.android.builder.model.v2.ide.CodeShrinker (java.lang.String)
 com.android.builder.model.v2.ide.CodeShrinker.values: com.android.builder.model.v2.ide.CodeShrinker[] ()
+com.android.builder.model.v2.ide.ComponentInfo
+com.android.builder.model.v2.ide.ComponentInfo.getAttributes: java.util.Map<java.lang.String, java.lang.String> ()
+com.android.builder.model.v2.ide.ComponentInfo.getCapabilities: java.util.List<java.lang.String> ()
 com.android.builder.model.v2.ide.GraphItem implements com.android.builder.model.v2.AndroidModel
-com.android.builder.model.v2.ide.GraphItem.getArtifactAddress: java.lang.String ()
 com.android.builder.model.v2.ide.GraphItem.getDependencies: java.util.List<com.android.builder.model.v2.ide.GraphItem> ()
+com.android.builder.model.v2.ide.GraphItem.getKey: java.lang.String ()
 com.android.builder.model.v2.ide.GraphItem.getRequestedCoordinates: java.lang.String ()
 com.android.builder.model.v2.ide.JavaArtifact implements com.android.builder.model.v2.ide.BaseArtifact, com.android.builder.model.v2.AndroidModel
 com.android.builder.model.v2.ide.JavaArtifact.getMockablePlatformJar: java.io.File ()
@@ -615,16 +618,16 @@ com.android.builder.model.v2.ide.JavaCompileOptions.isCoreLibraryDesugaringEnabl
 com.android.builder.model.v2.ide.Library implements com.android.builder.model.v2.AndroidModel
 com.android.builder.model.v2.ide.Library.getAidlFolder: java.io.File ()
 com.android.builder.model.v2.ide.Library.getArtifact: java.io.File ()
-com.android.builder.model.v2.ide.Library.getArtifactAddress: java.lang.String ()
 com.android.builder.model.v2.ide.Library.getAssetsFolder: java.io.File ()
-com.android.builder.model.v2.ide.Library.getBuildId: java.lang.String ()
 com.android.builder.model.v2.ide.Library.getCompileJarFiles: java.util.List<java.io.File> ()
 com.android.builder.model.v2.ide.Library.getExternalAnnotations: java.io.File ()
 com.android.builder.model.v2.ide.Library.getJniFolder: java.io.File ()
+com.android.builder.model.v2.ide.Library.getKey: java.lang.String ()
+com.android.builder.model.v2.ide.Library.getLibraryInfo: com.android.builder.model.v2.ide.LibraryInfo ()
 com.android.builder.model.v2.ide.Library.getLintJar: java.io.File ()
 com.android.builder.model.v2.ide.Library.getManifest: java.io.File ()
 com.android.builder.model.v2.ide.Library.getProguardRules: java.io.File ()
-com.android.builder.model.v2.ide.Library.getProjectPath: java.lang.String ()
+com.android.builder.model.v2.ide.Library.getProjectInfo: com.android.builder.model.v2.ide.ProjectInfo ()
 com.android.builder.model.v2.ide.Library.getPublicResources: java.io.File ()
 com.android.builder.model.v2.ide.Library.getRenderscriptFolder: java.io.File ()
 com.android.builder.model.v2.ide.Library.getResFolder: java.io.File ()
@@ -632,7 +635,10 @@ com.android.builder.model.v2.ide.Library.getResStaticLibrary: java.io.File ()
 com.android.builder.model.v2.ide.Library.getRuntimeJarFiles: java.util.List<java.io.File> ()
 com.android.builder.model.v2.ide.Library.getSymbolFile: java.io.File ()
 com.android.builder.model.v2.ide.Library.getType: com.android.builder.model.v2.ide.LibraryType ()
-com.android.builder.model.v2.ide.Library.getVariant: java.lang.String ()
+com.android.builder.model.v2.ide.LibraryInfo implements com.android.builder.model.v2.ide.ComponentInfo
+com.android.builder.model.v2.ide.LibraryInfo.getGroup: java.lang.String ()
+com.android.builder.model.v2.ide.LibraryInfo.getName: java.lang.String ()
+com.android.builder.model.v2.ide.LibraryInfo.getVersion: java.lang.String ()
 com.android.builder.model.v2.ide.LibraryType extends java.lang.Enum
 com.android.builder.model.v2.ide.LibraryType.valueOf: com.android.builder.model.v2.ide.LibraryType (java.lang.String)
 com.android.builder.model.v2.ide.LibraryType.values: com.android.builder.model.v2.ide.LibraryType[] ()
@@ -666,6 +672,9 @@ com.android.builder.model.v2.ide.LintOptions.isNoLines: boolean ()
 com.android.builder.model.v2.ide.LintOptions.isQuiet: boolean ()
 com.android.builder.model.v2.ide.LintOptions.isShowAll: boolean ()
 com.android.builder.model.v2.ide.LintOptions.isWarningsAsErrors: boolean ()
+com.android.builder.model.v2.ide.ProjectInfo implements com.android.builder.model.v2.ide.ComponentInfo
+com.android.builder.model.v2.ide.ProjectInfo.getBuildId: java.lang.String ()
+com.android.builder.model.v2.ide.ProjectInfo.getProjectPath: java.lang.String ()
 com.android.builder.model.v2.ide.ProjectType extends java.lang.Enum
 com.android.builder.model.v2.ide.ProjectType.valueOf: com.android.builder.model.v2.ide.ProjectType (java.lang.String)
 com.android.builder.model.v2.ide.ProjectType.values: com.android.builder.model.v2.ide.ProjectType[] ()

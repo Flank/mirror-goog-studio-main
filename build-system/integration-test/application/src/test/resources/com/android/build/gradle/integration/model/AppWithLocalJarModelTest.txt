@@ -1,44 +1,38 @@
 > VariantDependencies:
-   > mainArtifact:
+   - mainArtifact:
       - compileDependencies:
-         - __local_aars__:{PROJECT}/libs/foo.jar{F}:unspecified@jar{ADDED}:
-            - artifactAddress      = __local_aars__:{PROJECT}/libs/foo.jar{F}:unspecified@jar
+         - __local_aars__|{PROJECT}/libs/foo.jar{F}|unspecified||{ADDED}:
             - requestedCoordinates = (null)
             - dependencies         = []
       - runtimeDependencies:
-         - __local_aars__:{PROJECT}/libs/foo.jar{F}:unspecified@jar{ADDED}:
-            - artifactAddress      = __local_aars__:{PROJECT}/libs/foo.jar{F}:unspecified@jar
-            - requestedCoordinates = (null)
-            - dependencies         = []
-   < mainArtifact
+         - __local_aars__|{PROJECT}/libs/foo.jar{F}|unspecified||{ADDED}:
+            - dependencies = "*visited*"
    - androidTestArtifact:
       - compileDependencies:
-         - __local_aars__:{PROJECT}/libs/foo.jar{F}:unspecified@jar{ADDED}:
-            - artifactAddress      = __local_aars__:{PROJECT}/libs/foo.jar{F}:unspecified@jar
+         - __local_aars__|{PROJECT}/libs/foo.jar{F}|unspecified||{ADDED}:
             - requestedCoordinates = (null)
             - dependencies         = []
-   > unitTestArtifact:
+   - unitTestArtifact:
       - compileDependencies:
-         - __local_aars__:{PROJECT}/libs/foo.jar{F}:unspecified@jar{ADDED}:
-            - artifactAddress      = __local_aars__:{PROJECT}/libs/foo.jar{F}:unspecified@jar
+         - __local_aars__|{PROJECT}/libs/foo.jar{F}|unspecified||{ADDED}:
             - requestedCoordinates = (null)
             - dependencies         = []
       - runtimeDependencies:
-         - __local_aars__:{PROJECT}/libs/foo.jar{F}:unspecified@jar{ADDED}:
-            - artifactAddress      = __local_aars__:{PROJECT}/libs/foo.jar{F}:unspecified@jar
-            - requestedCoordinates = (null)
-            - dependencies         = []
-   < unitTestArtifact
+         - __local_aars__|{PROJECT}/libs/foo.jar{F}|unspecified||{ADDED}:
+            - dependencies = "*visited*"
 < VariantDependencies
 > GlobalLibraryMap:
    > libraries:
-      > __local_aars__:{PROJECT}/libs/foo.jar{F}:unspecified@jar{ADDED}:
+      > __local_aars__|{PROJECT}/libs/foo.jar{F}|unspecified||{ADDED}:
          - type                = JAVA_LIBRARY
-         - artifactAddress     = __local_aars__:{PROJECT}/libs/foo.jar{F}:unspecified@jar
          - artifact            = {PROJECT}/libs/foo.jar{F}
-         - buildId             = null
-         - projectPath         = (null)
-         - variant             = (null)
+         - projectInfo         = (null)
+         - libraryInfo:
+            - group        = "__local_aars__"
+            - name         = {PROJECT}/libs/foo.jar{F}
+            - version      = "unspecified"
+            - attributes   = []
+            - capabilities = []
          - compileJarFiles     = (null)
          - runtimeJarFiles     = (null)
          - manifest            = (null)
@@ -53,6 +47,6 @@
          - externalAnnotations = (null)
          - publicResources     = (null)
          - symbolFile          = (null)
-      < __local_aars__:{PROJECT}/libs/foo.jar{F}:unspecified@jar{ADDED}
+      < __local_aars__|{PROJECT}/libs/foo.jar{F}|unspecified||{ADDED}
    < libraries
 < GlobalLibraryMap

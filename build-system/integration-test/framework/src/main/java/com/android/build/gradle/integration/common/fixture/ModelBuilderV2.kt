@@ -160,7 +160,7 @@ class ModelBuilderV2 internal constructor(
             androidPrefsDir = preferencesRootDir,
             androidNdkSxSRoot = project?.androidNdkSxSRootSymlink,
             localRepos = GradleTestProject.localRepositories,
-            additionalMavenRepo = project?.getAdditionalMavenRepo(),
+            additionalMavenRepo = project?.additionalMavenRepoDir,
             defaultNdkSideBySideVersion = DEFAULT_NDK_SIDE_BY_SIDE_VERSION
         )
     }

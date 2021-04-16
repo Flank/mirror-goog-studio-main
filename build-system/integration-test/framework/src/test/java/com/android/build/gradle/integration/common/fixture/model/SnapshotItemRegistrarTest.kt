@@ -349,6 +349,10 @@ data class SmallObject(
     constructor(): this(null, null)
 }
 
+data class StringObject(
+    val string: String,
+): AndroidModel
+
 enum class FakeEnum {
     ENUM_1, ENUM_2;
 }

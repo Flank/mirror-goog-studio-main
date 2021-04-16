@@ -37,7 +37,7 @@ class FileNormalizerTest {
         androidPrefsDir = File("/path/to/Home"),
         androidNdkSxSRoot = File("/path/to/ndkSxSRoot"),
         localRepos = listOf(Paths.get("/path/to/localRepo1"), Paths.get("/path/to/localRepo2")),
-        additionalMavenRepo = null,
+        additionalMavenRepo = Paths.get("/path/to/additional/maven/repo"),
         defaultNdkSideBySideVersion = DEFAULT_NDK_SIDE_BY_SIDE_VERSION
     )
 
@@ -99,6 +99,13 @@ class FileNormalizerTest {
     }
 
     @Test
+    fun `Test additional maven repo`() {
+        Truth.assertThat(normalizer.normalize(File("/path/to/additional/maven/repo/groupid/artifactid/version")))
+            .isEqualTo("{ADDITIONAL_MAVEN_REPO}/groupid/artifactid/version{!}")
+    }
+
+
+    @Test
     fun `Test unscrupulouslyReplace(JsonElement)`() {
         AssumeUtil.assumeNotWindows()
         Truth.assertThat(
@@ -142,7 +149,7 @@ class FileNormalizerTest {
                 Paths.get("C:\\path\\to\\localRepo1"),
                 Paths.get("C:\\path\\to\\localRepo2")
             ),
-            additionalMavenRepo = null,
+            additionalMavenRepo = Paths.get("C:\\additional\\maven\\repo"),
             defaultNdkSideBySideVersion = DEFAULT_NDK_SIDE_BY_SIDE_VERSION
         )
 

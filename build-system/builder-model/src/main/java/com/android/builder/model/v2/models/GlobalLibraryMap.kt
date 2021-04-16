@@ -24,13 +24,13 @@ import com.android.builder.model.v2.ide.Library
  * This is a separate model to query (the same way [AndroidProject] is queried). It must
  * be queried after all the models have been queried for their [AndroidProject].
  *
- * @since 4.2
  */
 interface GlobalLibraryMap: AndroidModel {
     /**
-     * the list of external libraries used by all the variants in the module.
+     * The list of external libraries used by all the variants in the module.
      *
-     * @return the map of address to library
+     * The key for the map entries is the keys found via [com.android.builder.model.v2.ide.GraphItem.key]
+     * and [Library.key]
      */
     val libraries: Map<String, Library>
 }

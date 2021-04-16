@@ -88,6 +88,7 @@ import java.util.stream.Collectors
 class GradleTestProject @JvmOverloads internal constructor(
     /** Return the name of the test project.  */
     val name: String = DEFAULT_TEST_PROJECT_NAME,
+    val rootProjectName: String? = null,
     private val testProject: TestProject? = null,
     private val targetGradleVersion: String,
     private val withDependencyChecker: Boolean,
@@ -358,7 +359,10 @@ class GradleTestProject @JvmOverloads internal constructor(
     val ndkPath: String
         get() = androidNdkDir.absolutePath.replace("\\", "\\\\")
 
-    private var additionalMavenRepoDir: Path? = null
+    private var _additionalMavenRepoDir: Path? = null
+
+    val additionalMavenRepoDir: Path?
+        get() = _additionalMavenRepoDir
 
     /** \Returns the latest build result.  */
     private var _buildResult: GradleBuildResult? = null
@@ -402,6 +406,7 @@ class GradleTestProject @JvmOverloads internal constructor(
     ) :
         this(
             name = subProject.substring(subProject.lastIndexOf(':') + 1),
+            rootProjectName = null,
             testProject = null,
             targetGradleVersion = rootProject.targetGradleVersion,
             withDependencyChecker = rootProject.withDependencyChecker,
@@ -570,15 +575,15 @@ class GradleTestProject @JvmOverloads internal constructor(
         if (additionalMavenRepo == null) {
             return null
         }
-        if (additionalMavenRepoDir == null) {
+        if (_additionalMavenRepoDir == null) {
             val moreMavenRepoDir = projectDir
                 .toPath()
                 .parent
                 .resolve("additional_maven_repo")
-            additionalMavenRepoDir = moreMavenRepoDir
+            _additionalMavenRepoDir = moreMavenRepoDir
             additionalMavenRepo.generate(moreMavenRepoDir)
         }
-        return additionalMavenRepoDir
+        return _additionalMavenRepoDir
     }
 
     private fun generateCommonHeader(): String {
@@ -1437,6 +1442,13 @@ buildCache {
     }
 }
 """
+        }
+
+        if (rootProjectName != null) {
+            settingsContent +=
+                    """
+                        rootProject.name = "$rootProjectName"
+                    """.trimIndent()
         }
 
         if (settingsContent.isNotEmpty()) {

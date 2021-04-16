@@ -46,14 +46,15 @@ import com.android.build.gradle.internal.ide.DependencyFailureHandler
 import com.android.build.gradle.internal.ide.ModelBuilder
 import com.android.build.gradle.internal.ide.dependencies.ArtifactCollectionsInputs
 import com.android.build.gradle.internal.ide.dependencies.BuildMapping
+import com.android.build.gradle.internal.ide.dependencies.FullDependencyGraphBuilder
 import com.android.build.gradle.internal.ide.dependencies.MavenCoordinatesCacheBuildService
 import com.android.build.gradle.internal.ide.dependencies.computeBuildMapping
-import com.android.build.gradle.internal.ide.dependencies.getDependencyGraphBuilder
 import com.android.build.gradle.internal.ide.dependencies.getVariantName
 import com.android.build.gradle.internal.ide.verifyIDEIsNotOld
 import com.android.build.gradle.internal.lint.getLocalCustomLintChecksForModel
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.PROVIDED_CLASSPATH
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -626,8 +627,6 @@ class ModelBuilder<
         globalLibraryBuildService: GlobalLibraryBuildService,
         mavenCoordinatesBuildService: Provider<MavenCoordinatesCacheBuildService>
     ): ArtifactDependencies {
-        val modelBuilder = DependencyModelBuilder(globalLibraryBuildService)
-        val graphBuilder = getDependencyGraphBuilder()
 
         val inputs = ArtifactCollectionsInputs(
             variantDependencies = component.variantDependencies,
@@ -638,14 +637,8 @@ class ModelBuilder<
             buildMapping = buildMapping
         )
 
-        graphBuilder.createDependencies(
-            modelBuilder = modelBuilder,
-            artifactCollectionsProvider = inputs,
-            withFullDependency = true,
-            issueReporter = syncIssueReporter
-        )
-
-        return modelBuilder.createModel()
+        return FullDependencyGraphBuilder(inputs, component.variantDependencies, globalLibraryBuildService).build(
+            syncIssueReporter)
     }
 
     private fun getFlags(): AndroidGradlePluginProjectFlagsImpl {
@@ -787,9 +780,9 @@ class ModelBuilder<
             val apkArtifacts = component
                 .variantDependencies
                 .getArtifactCollection(
-                    COMPILE_CLASSPATH,
+                    PROVIDED_CLASSPATH,
                     AndroidArtifacts.ArtifactScope.ALL,
-                    AndroidArtifacts.ArtifactType.MANIFEST_METADATA
+                    AndroidArtifacts.ArtifactType.APK
                 )
 
             // while there should be a single result, the list may be empty if the variant

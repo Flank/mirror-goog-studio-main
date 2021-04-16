@@ -49,6 +49,7 @@ public final class GradleTestProjectBuilder {
     public static final Path DEFAULT_PROFILE_DIR = Paths.get("build", "android-profile");
 
     @Nullable private String name;
+    @Nullable private String rootProjectName = null;
     @Nullable private TestProject testProject = null;
     @Nullable private String targetGradleVersion;
     @Nullable private String compileSdkVersion;
@@ -142,6 +143,7 @@ public final class GradleTestProjectBuilder {
 
         return new GradleTestProject(
                 (name != null ? name : DEFAULT_TEST_PROJECT_NAME),
+                rootProjectName,
                 testProject,
                 (targetGradleVersion != null ? targetGradleVersion : GRADLE_TEST_VERSION),
                 withDependencyChecker,
@@ -213,6 +215,7 @@ public final class GradleTestProjectBuilder {
 
 
     }
+
     /**
      * Set the name of the project.
      *
@@ -220,6 +223,18 @@ public final class GradleTestProjectBuilder {
      */
     public GradleTestProjectBuilder withName(@NonNull String name) {
         this.name = name;
+        return this;
+    }
+
+    /**
+     * Set the name of the root project in settings.gradle
+     *
+     * <p>Necessary if you have more than one project in the same tests and you want to control the
+     * name of the project while they are different folders. The name of the root project is used
+     * for the capabilities of published subproject's artifacts
+     */
+    public GradleTestProjectBuilder withRootProjectName(@NonNull String name) {
+        this.rootProjectName = name;
         return this;
     }
 
