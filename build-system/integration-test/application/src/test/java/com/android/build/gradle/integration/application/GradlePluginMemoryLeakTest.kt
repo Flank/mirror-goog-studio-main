@@ -21,11 +21,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile
 import com.android.build.gradle.integration.common.utils.TestFileUtils
-import com.android.build.gradle.options.BooleanOption
-import com.android.build.gradle.options.OptionalBooleanOption
-import com.android.testutils.ignore.IgnoreTestRule;
-import com.android.testutils.ignore.IgnoreWithCondition;
-import com.android.testutils.ignore.OnWindows;
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 
@@ -33,6 +29,7 @@ import org.junit.Test
  * Integration stress test to verify that the plugin does not leak memory when the build script classpath
  * changes.
  */
+@Ignore("b/153972155")
 class GradlePluginMemoryLeakTest {
 
     private val app = HelloWorldApp.forPlugin("com.android.application").apply {
@@ -74,9 +71,6 @@ class GradlePluginMemoryLeakTest {
             .withMetaspace(METASPACE)
             .create()
 
-    @get:Rule val ignoreTests = IgnoreTestRule()
-
-    @IgnoreWithCondition(reason = "b/153972155", condition = OnWindows::class)
     @Test
     fun changeBuildSrcTest() {
         for (i in 1..RUNS) {
