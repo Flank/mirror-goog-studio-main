@@ -3,7 +3,6 @@
 - Reads a list of files from stdin
 - Writes a list of unignored files to stdout
 """
-import itertools as IT
 import sys
 
 
@@ -40,10 +39,10 @@ def main():
   for path in sys.stdin:
     path = path.strip()
     # ignore skipped directories
-    if any(IT.imap(path.startswith, skip)):
+    if any(map(path.startswith, skip)):
       continue
     # ignore non-source files
-    if not any(IT.imap(path.endswith, ends)):
+    if not any(map(path.endswith, ends)):
       continue
     sys.stdout.write(path + "\n")
 

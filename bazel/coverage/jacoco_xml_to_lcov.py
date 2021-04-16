@@ -4,7 +4,6 @@
 - Resolves classes to sourcefiles
 - Writes LCOV tracefile to stdout
 """
-import itertools as IT
 import os
 import sys
 import xml.etree.ElementTree as ET
@@ -40,7 +39,7 @@ def main():
         # if there's a path with the package/class as a suffix, then that's the
         # real sourcefile
         matches = list(
-            IT.ifilter(lambda path: path.endswith(pkg_name),
+            filter(lambda path: path.endswith(pkg_name),
                        filetree[sfile_name]))
         if matches:
           # the directory path upto the package portion

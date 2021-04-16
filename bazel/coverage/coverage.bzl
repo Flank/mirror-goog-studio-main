@@ -57,7 +57,7 @@ def coverage_report(name, tests, srcpath_include = [], srcpath_exclude = []):
         ],
         outs = ["{}/lcov.unfiltered".format(name)],
         tools = ["@cov//:jacoco_xml_to_lcov"],
-        cmd = "python $(location {xml2lcov}) {test} $(location {base}) <$(location {xml}) >$@".format(
+        cmd = "python3 $(location {xml2lcov}) {test} $(location {base}) <$(location {xml}) >$@".format(
             xml2lcov = "@cov//:jacoco_xml_to_lcov",
             test = name,
             base = "@baseline//:merged-baseline-srcs",
@@ -72,7 +72,7 @@ def coverage_report(name, tests, srcpath_include = [], srcpath_exclude = []):
         srcs = ["{}.lcov.unfiltered".format(name)],
         outs = ["{}/lcov".format(name)],
         tools = [":filter_lcov"],
-        cmd = "python $(location :filter_lcov) <$< >$@ {} {}".format(spi, spe),
+        cmd = "python3 $(location :filter_lcov) <$< >$@ {} {}".format(spi, spe),
     )
 
     native.genrule(
@@ -80,7 +80,7 @@ def coverage_report(name, tests, srcpath_include = [], srcpath_exclude = []):
         srcs = ["{}.lcov".format(name)],
         outs = ["{}/lcov.notests".format(name)],
         tools = [":merge_tests"],
-        cmd = "python $(location :merge_tests) <$< >$@",
+        cmd = "python3 $(location :merge_tests) <$< >$@",
     )
 
     native.genrule(
@@ -88,7 +88,7 @@ def coverage_report(name, tests, srcpath_include = [], srcpath_exclude = []):
         srcs = ["{}.lcov".format(name)],
         outs = ["{}/list".format(name)],
         tools = [":generate_list"],
-        cmd = "python $(location :generate_list) <$< >$@ {}".format(name),
+        cmd = "python3 $(location :generate_list) <$< >$@ {}".format(name),
     )
 
 # Combine custom coverage report definition into a format suitable for upload
@@ -109,5 +109,5 @@ def combine_report_definitions(prefix, reports):
         srcs = ["{}.lcov".format(c) for c in reports],
         outs = ["{}/lcov".format(prefix)],
         tools = [":merge_lcov"],
-        cmd = "python $(location :merge_lcov) $(SRCS) >$@",
+        cmd = "python3 $(location :merge_lcov) $(SRCS) >$@",
     )
