@@ -96,7 +96,7 @@ public class AppWithProvidedLibTest {
     }
 
     @Test
-    @Ignore
+    @Ignore("b/68754628, b/128449813")
     public void checkModelFailedToLoad() throws Exception {
         // TODO: full dependency should show us broken provided only dependency.
         //final AndroidProject androidProject = modelContainer.getOnlyModelMap().get(":app");
