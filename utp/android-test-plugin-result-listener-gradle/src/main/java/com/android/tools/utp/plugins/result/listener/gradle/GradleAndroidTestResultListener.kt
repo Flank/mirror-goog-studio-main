@@ -93,13 +93,10 @@ class GradleAndroidTestResultListener(
         requestObserver = grpcServiceStub.recordTestResultEvent(responseObserver)
     }
 
-    override fun onBeforeTestSuite() {
-    }
-
-    override fun onTestSuiteStarted(testSuite: TestSuiteResultProto.TestSuiteMetaData?) {
+    override fun beforeTestSuite(testSuiteMetaData: TestSuiteResultProto.TestSuiteMetaData?) {
         val suiteStarted = TestSuiteStarted.newBuilder().apply {
-            if (testSuite != null) {
-                this.testSuiteMetadata = Any.pack(testSuite)
+            if (testSuiteMetaData != null) {
+                this.testSuiteMetadata = Any.pack(testSuiteMetaData)
             }
         }.build()
         val event = createTestResultEvent().apply {
@@ -120,7 +117,7 @@ class GradleAndroidTestResultListener(
         requestObserver.onNext(event)
     }
 
-    override fun onTestResult(testResult: TestResultProto.TestResult) {
+    override fun afterTest(testResult: TestResultProto.TestResult) {
         val testCaseFinished = TestResultEvent.TestCaseFinished.newBuilder().apply {
             testCaseResult = Any.pack(testResult)
         }.build()
@@ -130,7 +127,7 @@ class GradleAndroidTestResultListener(
         requestObserver.onNext(event)
     }
 
-    override fun onTestSuiteResult(testSuiteResult: TestSuiteResultProto.TestSuiteResult) {
+    override fun afterTestSuite(testSuiteResult: TestSuiteResultProto.TestSuiteResult) {
         val testSuiteFinished = TestResultEvent.TestSuiteFinished.newBuilder().apply {
             this.testSuiteResult = Any.pack(testSuiteResult)
         }.build()
@@ -138,9 +135,7 @@ class GradleAndroidTestResultListener(
             this.testSuiteFinished = testSuiteFinished
         }.build()
         requestObserver.onNext(event)
-    }
 
-    override fun onTestSuiteFinished() {
         requestObserver.onCompleted()
         finishLatch.await()
 

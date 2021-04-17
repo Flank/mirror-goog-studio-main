@@ -114,12 +114,10 @@ class GradleAndroidTestResultListenerTest {
         assertThat(capturedPortNumber).isEqualTo(1234)
 
         testListener.apply {
-            onBeforeTestSuite()
-            onTestSuiteStarted(TestSuiteResultProto.TestSuiteMetaData.getDefaultInstance())
+            beforeTestSuite(TestSuiteResultProto.TestSuiteMetaData.getDefaultInstance())
             beforeTest(null)
-            onTestResult(TestResult.getDefaultInstance())
-            onTestSuiteResult(TestSuiteResult.getDefaultInstance())
-            onTestSuiteFinished()
+            afterTest(TestResult.getDefaultInstance())
+            afterTestSuite(TestSuiteResult.getDefaultInstance())
         }
 
         assertThat(capturedRequests).containsExactly(
