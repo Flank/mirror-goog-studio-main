@@ -594,6 +594,11 @@ public class InstrumentationResultParser extends MultiLineReceiver
     @Override
     public void handleTestRunFailed(@NonNull String errorMsg) {
         Log.i(LOG_TAG, String.format("test run failed: '%1$s'", errorMsg));
+        if (mOnError != null) {
+            errorMsg = String.format("%s. %s", errorMsg, mOnError);
+        } else if (mStreamError != null) {
+            errorMsg = String.format("%s. %s", errorMsg, mStreamError);
+        }
         if (mLastTestResult != null &&
             mLastTestResult.isComplete() &&
             StatusCodes.START == mLastTestResult.mCode) {
@@ -614,14 +619,7 @@ public class InstrumentationResultParser extends MultiLineReceiver
                 // test run wasn't started - must have crashed before it started
                 listener.testRunStarted(mTestRunName, 0);
             }
-            String runErrorMsg = errorMsg;
-            if (mOnError != null) {
-                runErrorMsg = String.format("%s. %s", errorMsg, mOnError);
-            } else if (mStreamError != null) {
-                runErrorMsg = String.format("%s. %s", errorMsg, mStreamError);
-            }
-            listener.testRunFailed(runErrorMsg);
-
+            listener.testRunFailed(errorMsg);
 
             if (mTestTime == null) {
                 // We don't report an extra failure due to missing time stamp.
