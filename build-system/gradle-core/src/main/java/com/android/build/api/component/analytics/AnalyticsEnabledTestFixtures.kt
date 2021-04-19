@@ -18,9 +18,12 @@ package com.android.build.api.component.analytics
 
 import com.android.build.api.component.TestFixtures
 import com.android.build.api.variant.AarMetadata
+import com.android.build.api.variant.ResValue
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.MapProperty
+import org.gradle.api.provider.Property
 import javax.inject.Inject
 
 abstract class AnalyticsEnabledTestFixtures @Inject constructor(
@@ -43,5 +46,25 @@ abstract class AnalyticsEnabledTestFixtures @Inject constructor(
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
                 VariantPropertiesMethodType.VARIANT_AAR_METADATA_VALUE
             return userVisibleAarMetadata
+        }
+
+    override val resValues: MapProperty<ResValue.Key, ResValue>
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.RES_VALUE_VALUE
+            return delegate.resValues
+        }
+
+    override fun makeResValueKey(type: String, name: String): ResValue.Key {
+        stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+            VariantPropertiesMethodType.MAKE_RES_VALUE_KEY_VALUE
+        return delegate.makeResValueKey(type, name)
+    }
+
+    override val pseudoLocalesEnabled: Property<Boolean>
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.VARIANT_PSEUDOLOCALES_ENABLED_VALUE
+            return delegate.pseudoLocalesEnabled
         }
 }

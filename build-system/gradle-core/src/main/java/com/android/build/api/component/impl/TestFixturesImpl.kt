@@ -25,8 +25,10 @@ import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.AarMetadata
 import com.android.build.api.variant.AndroidVersion
+import com.android.build.api.variant.ResValue
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
+import com.android.build.api.variant.impl.ResValueKeyImpl
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.component.AarCreationConfig
 import com.android.build.gradle.internal.component.ComponentCreationConfig
@@ -43,6 +45,7 @@ import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.variant.TestFixturesVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
+import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import javax.inject.Inject
@@ -90,8 +93,6 @@ open class TestFixturesImpl @Inject constructor(
         get() = mainVariant.minSdkVersion
     override val needsMainDexListForBundle: Boolean
         get() = mainVariant.needsMainDexListForBundle
-    override val pseudoLocalesEnabled: Property<Boolean>
-        get() = mainVariant.pseudoLocalesEnabled
 
     override val aarMetadata: AarMetadata =
             internalServices.newInstance(AarMetadata::class.java).also {
@@ -117,6 +118,16 @@ open class TestFixturesImpl @Inject constructor(
         }
     }
 
-    //
+    override val resValues: MapProperty<ResValue.Key, ResValue> by lazy {
+        internalServices.mapPropertyOf(
+            ResValue.Key::class.java,
+            ResValue::class.java,
+            variantDslInfo.getResValues()
+        )
+    }
 
+    override fun makeResValueKey(type: String, name: String): ResValue.Key = ResValueKeyImpl(type, name)
+
+    override val pseudoLocalesEnabled: Property<Boolean> =
+        internalServices.newPropertyBackingDeprecatedApi(Boolean::class.java, variantDslInfo.isPseudoLocalesEnabled)
 }
