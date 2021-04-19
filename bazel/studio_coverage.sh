@@ -66,7 +66,7 @@ fi
   --build_event_binary_file="${dist_dir:-/tmp}/bazel-${build_number}.bes" \
   --profile="${dist_dir:-/tmp}/profile-${build_number}.json.gz" \
   ${auth_options} \
-  --test_tag_filters=-no_linux,-no_test_linux,-perfgate,-very_flaky \
+  --test_tag_filters=-no_linux,-no_test_linux,-perfgate \
   --define agent_coverage=true \
   -- \
   @cov//:all.suite \
