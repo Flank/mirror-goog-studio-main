@@ -521,7 +521,7 @@ public abstract class AbstractPackageOperation implements PackageOperation {
                 }
             }
         } catch (Exception e) {
-            progress.logError("Failed to update status to " + status, e);
+            progress.logWarning("Failed to update status to " + status, e);
             updateStatus(InstallStatus.FAILED, progress);
             return false;
         }
