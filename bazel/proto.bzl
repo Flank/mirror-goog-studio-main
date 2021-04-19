@@ -114,13 +114,13 @@ _gen_proto_rule = rule(
         ),
         "proto_include_version": attr.string(),
         "protoc": attr.label(
-            cfg = "host",
+            cfg = "exec",
             executable = True,
             mandatory = True,
             allow_single_file = True,
         ),
         "grpc_plugin": attr.label(
-            cfg = "host",
+            cfg = "exec",
             executable = True,
             allow_single_file = True,
         ),
