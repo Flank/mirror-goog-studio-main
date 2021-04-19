@@ -1891,12 +1891,37 @@ class RestrictToDetectorTest : AbstractCheckTest() {
             restrictToAnnotation
         ).name("lib1")
 
+        // Add library3 to test case when group doesn't contain any dots.
+        val library3 = project().files(
+            java(
+                """
+                package com.example.dotless;
+
+                import androidx.annotation.RestrictTo;
+
+                public class DotlessCode {
+                    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP_PREFIX)
+                    public static void method() {
+                    }
+                }
+                """
+            ).indented(),
+            gradle(
+                """
+                    apply plugin: 'com.android.library'
+                    group=dotless
+                    """
+            ).indented(),
+            restrictToAnnotation
+        ).name("lib3")
+
         val library2 = project().files(
             kotlin(
                 """
                 package com.example.myapplication
 
                 import com.example.mylibrary.LibraryCode
+                import com.example.dotless.DotlessCode
 
                 fun test() {
                     LibraryCode.method1()
@@ -1907,6 +1932,7 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                     val f2 = LibraryCode.FIELD2
                     val f3 = LibraryCode.FIELD3
                     val f4 = LibraryCode.FIELD4
+                    DotlessCode.method()
                 }
                 """
             ).indented(),
@@ -1916,14 +1942,16 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                     group=other.app
                     """
             ).indented()
-        ).name("lib2").dependsOn(library)
+        ).name("lib2").dependsOn(library).dependsOn(library3)
 
         // Make sure projects are placed correctly on disk: to do this, record
         // project locations with a special client, then after the lint run make
         // sure the locations are correct.
         library2.under(library)
+        library3.under(library)
         var libDir1: File? = null
         var libDir2: File? = null
+        var libDir3: File? = null
         val factory: () -> com.android.tools.lint.checks.infrastructure.TestLintClient =
             {
                 object : com.android.tools.lint.checks.infrastructure.TestLintClient() {
@@ -1932,6 +1960,8 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                             libDir1 = dir
                         } else if (project.name == "lib2") {
                             libDir2 = dir
+                        } else if (project.name == "lib3") {
+                            libDir3 = dir
                         }
                         super.registerProject(dir, project)
                     }
@@ -1940,30 +1970,34 @@ class RestrictToDetectorTest : AbstractCheckTest() {
         assertEquals("LIBRARY:lib1", library.toString())
 
         lint()
-            .projects(library, library2)
+            .projects(library, library2, library3)
             .reportFrom(library2)
             .clientFactory(factory)
             .run()
             .expect(
                 """
-            src/main/kotlin/com/example/myapplication/test.kt:8: Error: LibraryCode.method3 can only be called from within the same library group (groupId=test.pkg.library) [RestrictedApi]
+            src/main/kotlin/com/example/myapplication/test.kt:9: Error: LibraryCode.method3 can only be called from within the same library group (groupId=test.pkg.library) [RestrictedApi]
                 LibraryCode.method3()
                             ~~~~~~~
-            src/main/kotlin/com/example/myapplication/test.kt:9: Error: LibraryCode.method4 can only be called from within the same library group prefix (referenced groupId=test.pkg.library with prefix test.pkg from groupId=other.app) [RestrictedApi]
+            src/main/kotlin/com/example/myapplication/test.kt:10: Error: LibraryCode.method4 can only be called from within the same library group prefix (referenced groupId=test.pkg.library with prefix test.pkg from groupId=other.app) [RestrictedApi]
                 LibraryCode.method4()
                             ~~~~~~~
-            src/main/kotlin/com/example/myapplication/test.kt:12: Error: LibraryCode.FIELD3 can only be accessed from within the same library group (groupId=test.pkg.library) [RestrictedApi]
+            src/main/kotlin/com/example/myapplication/test.kt:13: Error: LibraryCode.FIELD3 can only be accessed from within the same library group (groupId=test.pkg.library) [RestrictedApi]
                 val f3 = LibraryCode.FIELD3
                                      ~~~~~~
-            src/main/kotlin/com/example/myapplication/test.kt:13: Error: LibraryCode.FIELD4 can only be accessed from within the same library group prefix (referenced groupId=test.pkg.library with prefix test.pkg from groupId=other.app) [RestrictedApi]
+            src/main/kotlin/com/example/myapplication/test.kt:14: Error: LibraryCode.FIELD4 can only be accessed from within the same library group prefix (referenced groupId=test.pkg.library with prefix test.pkg from groupId=other.app) [RestrictedApi]
                 val f4 = LibraryCode.FIELD4
                                      ~~~~~~
-            4 errors, 0 warnings
+            src/main/kotlin/com/example/myapplication/test.kt:15: Error: DotlessCode.method can only be called from within the same library group prefix (referenced groupId=dotless with prefix "" from groupId=other.app) [RestrictedApi]
+                DotlessCode.method()
+                            ~~~~~~
+            5 errors, 0 warnings
             """
             )
 
         // Make sure project directories are laid out correctly
         assertTrue(libDir2!!.parentFile.path == libDir1!!.path)
+        assertTrue(libDir3!!.parentFile.path == libDir1!!.path)
     }
 
     fun test183961872() {

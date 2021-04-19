@@ -428,7 +428,9 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             if (methodGroup != null &&
                 (thisGroup == null || !sameLibraryGroupPrefix(thisGroup, methodGroup))
             ) {
-                val expectedPrefix = methodGroup.substring(0, methodGroup.lastIndexOf('.'))
+                val expectedPrefix = methodGroup.lastIndexOf('.').let {
+                    if (it < 0) { "\"\"" } else { methodGroup.substring(0, it) }
+                }
                 val where =
                     "from within the same library group prefix (referenced groupId=`$methodGroup` with prefix $expectedPrefix${if (thisGroup != null) " from groupId=`$thisGroup`" else ""})"
                 reportRestriction(
