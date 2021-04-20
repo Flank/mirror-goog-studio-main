@@ -46,14 +46,6 @@
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
             file="src/main/java/com/android/ddmlib/internal/DeviceImpl.java"
-            line="781"/>
-    </issue>
-
-    <issue
-        id="DefaultLocale"
-        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
-        <location
-            file="src/main/java/com/android/ddmlib/internal/DeviceImpl.java"
             line="782"/>
     </issue>
 
@@ -62,7 +54,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
             file="src/main/java/com/android/ddmlib/internal/DeviceImpl.java"
-            line="792"/>
+            line="783"/>
     </issue>
 
     <issue
@@ -70,7 +62,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
             file="src/main/java/com/android/ddmlib/internal/DeviceImpl.java"
-            line="802"/>
+            line="793"/>
     </issue>
 
     <issue
@@ -86,7 +78,15 @@
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
             file="src/main/java/com/android/ddmlib/internal/DeviceImpl.java"
-            line="813"/>
+            line="804"/>
+    </issue>
+
+    <issue
+        id="DefaultLocale"
+        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
+        <location
+            file="src/main/java/com/android/ddmlib/internal/DeviceImpl.java"
+            line="814"/>
     </issue>
 
     <issue
@@ -142,7 +142,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
             file="src/main/java/com/android/ddmlib/testrunner/InstrumentationResultParser.java"
-            line="657"/>
+            line="655"/>
     </issue>
 
     <issue
