@@ -58,10 +58,11 @@ void Log::E(const char* fmt, ...) {
 
 namespace {
 bool isUserBuild() { return Env::build_type() == "user"; }
+bool isUserDebugBuild() { return Env::build_type() == "userdebug"; }
 }  // namespace
 
 void Log::T(const char* fmt, ...) {
-  if (isUserBuild()) {
+  if (isUserBuild() || isUserDebugBuild()) {
     return;
   }
 
