@@ -58,6 +58,7 @@ import java.io.BufferedWriter
 import java.io.File
 import java.io.IOException
 import java.io.Writer
+import java.util.Base64
 import java.util.Locale
 import kotlin.math.max
 import kotlin.math.min
@@ -459,7 +460,7 @@ open class XmlWriter constructor(
         indent(2)
         writer.write("<")
         writer.write(TAG_FIX)
-        lintFix.displayName?.let {
+        lintFix.getDisplayName()?.let {
             writeAttribute(writer, 3, ATTR_DESCRIPTION, it)
         }
         writeAttribute(
@@ -633,6 +634,27 @@ open class XmlWriter constructor(
                     writer.write("/>\n")
                 }
             }
+            is LintFix.CreateFileFix -> {
+                indent(indent)
+                writer.write("<")
+                writer.write(TAG_CREATE_FILE)
+                emitFixSharedAttributes(lintFix, indented)
+                val neutralPath = getPath(lintFix.file, incident.project)
+                writeAttribute(writer, indent + 1, ATTR_FILE, neutralPath)
+                if (lintFix.delete) {
+                    writeAttribute(writer, indented, ATTR_DELETE, VALUE_TRUE)
+                }
+                lintFix.selectPattern?.let {
+                    writeAttribute(writer, indented, ATTR_SELECT_PATTERN, it)
+                }
+                lintFix.text?.let {
+                    writeAttribute(writer, indented, ATTR_REPLACEMENT, it)
+                }
+                lintFix.binary?.let {
+                    writeAttribute(writer, indented, ATTR_BINARY, Base64.getEncoder().encodeToString(it))
+                }
+                writer.write("/>\n")
+            }
             is LintFix.DataMap -> {
                 indent(indent)
                 writer.write("<")
@@ -668,10 +690,10 @@ open class XmlWriter constructor(
     }
 
     private fun emitFixSharedAttributes(lintFix: LintFix, indent: Int) {
-        lintFix.displayName?.let {
+        lintFix.getDisplayName()?.let {
             writeAttribute(writer, indent, ATTR_DESCRIPTION, it)
         }
-        lintFix.familyName?.let {
+        lintFix.getFamilyName()?.let {
             writeAttribute(writer, indent, ATTR_FAMILY, it)
         }
 
@@ -774,6 +796,7 @@ const val TAG_MAP = "map"
 const val TAG_ENTRY = "entry"
 const val TAG_SHOW_URL = "show-url"
 const val TAG_ANNOTATE = "annotate"
+const val TAG_CREATE_FILE = "create-file"
 const val ATTR_SEVERITY = "severity"
 const val ATTR_INT = "int"
 const val ATTR_BOOLEAN = "boolean"
@@ -805,6 +828,7 @@ const val ATTR_OLD_STRING = "oldString"
 const val ATTR_OLD_PATTERN = "oldPattern"
 const val ATTR_SELECT_PATTERN = "selectPattern"
 const val ATTR_REPLACEMENT = "replacement"
+const val ATTR_BINARY = "binary"
 const val ATTR_SHORTEN_NAMES = "shortenNames"
 const val ATTR_REFORMAT = "reformat"
 const val ATTR_OFFSET = "offset"

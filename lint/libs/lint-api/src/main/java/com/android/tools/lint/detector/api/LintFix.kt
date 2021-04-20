@@ -152,7 +152,7 @@ open class LintFix protected constructor(
 
         /**
          * Sets display name and family name. If not supplied a default
-         * will be created based on the the type of quickfix.
+         * will be created based on the type of quickfix.
          *
          * @param displayName the displayName
          * @param familyName the "family" name; the shared name to use
@@ -167,7 +167,7 @@ open class LintFix protected constructor(
 
         /**
          * Sets display name and family name. If not supplied a default
-         * will be created based on the the type of quickfix.
+         * will be created based on the type of quickfix.
          *
          * @param displayName the displayName
          * @param useAsFamilyNameToo if true, use the display name as
@@ -293,6 +293,21 @@ open class LintFix protected constructor(
          */
         fun replace(): ReplaceStringBuilder {
             return ReplaceStringBuilder(displayName, familyName)
+        }
+
+        /** Creates a new text file with the given contents */
+        fun newFile(file: File, contents: String): CreateFileBuilder {
+            return CreateFileBuilder(displayName, familyName).file(file).contents(contents)
+        }
+
+        /** Creates a new binary file with the given contents */
+        fun newFile(file: File, contents: ByteArray): CreateFileBuilder {
+            return CreateFileBuilder(displayName, familyName).file(file).contents(contents)
+        }
+
+        /** Deletes the given file or directory */
+        fun deleteFile(file: File): CreateFileBuilder {
+            return CreateFileBuilder(displayName, familyName).delete(file)
         }
 
         /**
@@ -528,7 +543,7 @@ open class LintFix protected constructor(
 
         /**
          * Sets display name and family name. If not supplied a default
-         * will be created based on the the type of quickfix.
+         * will be created based on the type of quickfix.
          *
          * @param displayName the displayName
          * @param familyName the "family" name; the shared name to use
@@ -590,7 +605,8 @@ open class LintFix protected constructor(
         private var robot = false
         private var independent = false
 
-        @RegExp private var oldPattern: String? = null
+        @RegExp
+        private var oldPattern: String? = null
         private var range: Location? = null
 
         /**
@@ -607,7 +623,7 @@ open class LintFix protected constructor(
 
         /**
          * Sets display name and family name. If not supplied a default
-         * will be created based on the the type of quickfix.
+         * will be created based on the type of quickfix.
          *
          * @param displayName the displayName
          * @param familyName the "family" name; the shared name to use
@@ -788,7 +804,7 @@ open class LintFix protected constructor(
          * @return this
          */
         fun independent(independent: Boolean): ReplaceStringBuilder {
-            this.independent = !independent
+            this.independent = independent
             return this
         }
 
@@ -833,7 +849,187 @@ open class LintFix protected constructor(
                 reformat,
                 range,
                 robot,
-                !independent
+                independent
+            )
+        }
+    }
+
+    /**
+     * A builder for creating (or "un-creating", e.g. deleting) a file
+     */
+    class CreateFileBuilder internal constructor(
+        @field:Nls private var displayName: String?,
+        @field:Nls private var familyName: String?
+    ) {
+        private var selectPattern: String? = null
+        private var delete: Boolean = false
+        private var file: File? = null
+        private var binary: ByteArray? = null
+        private var text: String? = null
+        private var reformat = false
+        private var robot = false
+        private var independent = false
+
+        /**
+         * Sets display name and family name. If not supplied a default
+         * will be created based on the type of quickfix.
+         *
+         * @param displayName the displayName
+         * @param familyName the "family" name; the shared name to use
+         *     to apply *all* fixes of the same family name in a single go.
+         * @return this
+         */
+        fun name(displayName: String? = null, familyName: String? = null): CreateFileBuilder {
+            this.displayName = displayName
+            this.familyName = familyName
+            return this
+        }
+
+        /** Sets the file to be created or deleted */
+        fun file(file: File): CreateFileBuilder {
+            assert(this.file == null)
+            this.file = file
+            return this
+        }
+
+        /** Marks the file for deletion */
+        fun delete(file: File): CreateFileBuilder {
+            assert(this.file == null && this.binary == null && this.text == null)
+            this.file = file
+            delete = true
+            return this
+        }
+
+        /** Sets the text contents to be written to the file */
+        fun contents(contents: String): CreateFileBuilder {
+            assert(this.binary == null && !delete)
+            this.text = contents
+            return this
+        }
+
+        /** Sets the binary contents to be written to the file */
+        fun contents(contents: ByteArray): CreateFileBuilder {
+            assert(this.text == null && !delete)
+            this.binary = contents
+            return this
+        }
+
+        /**
+         * Sets a pattern to select; if it contains parentheses,
+         * group(1) will be selected. To just set the caret, use an
+         * empty group.
+         */
+        fun select(@RegExp selectPattern: String?): CreateFileBuilder {
+            this.selectPattern = selectPattern
+            return this
+        }
+
+        /** Whether the newly created file should be reformatted */
+        fun reformat(reformat: Boolean): CreateFileBuilder {
+            this.reformat = reformat
+            return this
+        }
+
+        /**
+         * Sets whether this fix can be applied by a robot, e.g. does
+         * not require human intervention. These kinds of fixes can be
+         * automatically applied when lint is run in fix-mode where it
+         * applies all the suggested (eligible) fixes.
+         *
+         * Examples of fixes which are not auto-fixable:
+         * 1. A fix which introduces a semantic change that may not be
+         *    desirable. For example, lint may warn that the use
+         *    of an API is discouraged and offer a similar but not
+         *    identical replacement; in this case the developer
+         *    needs to consider the implications of the suggestion.
+         * 2. A fix for a problem where just a part of the solution is
+         *    offered as a fix, and there are many other plausible
+         *    paths a developer might take, such as lint telling
+         *    you that you have too many actions in the toolbar,
+         *    and a fix is offered to move each action into a menu.
+         *
+         * @param robot whether this fix can be applied by a robot, e.g.
+         *     does not require human intervention
+         * @return this
+         */
+        fun robot(robot: Boolean): CreateFileBuilder {
+            this.robot = robot
+            return this
+        }
+
+        /**
+         * Whether this fix is independent of other fixes getting
+         * applied.
+         *
+         * Lint can automatically apply all fixes which are independent
+         * in a single pass. An example of an independent fix is removal
+         * of an unused import; removing one unused import does not
+         * invalidate a warning (and fix) for another unused import. (Of
+         * course, it's possible that another fix will introduce a new
+         * dependency on the formerly unused class, but this is rare.)
+         *
+         * However, if we have a duplicate declaration warning, we might
+         * put a fix on each one of the duplicates to delete them; if we
+         * apply one, we wouldn't want to apply the other. In fix mode,
+         * lint will only apply the first fix in a compilation unit
+         * that is not independent; it will then need to re-analyze the
+         * compilation unit a second time, and if there are additional
+         * fixes found, apply just the first such dependent fix, and so
+         * on. This means that for N fixes that are not independent, it
+         * will reanalyze the file N times, which is obviously slower.
+         *
+         * @param independent whether it is **not** the case that
+         *     applying other fixes simultaneously can invalidate this fix
+         * @return this
+         */
+        fun independent(independent: Boolean): CreateFileBuilder {
+            this.independent = independent
+            return this
+        }
+
+        /**
+         * Sets options related to auto-applying this fix. Convenience
+         * method for setting both [robot] and [independent]
+         *
+         * @param robot whether this fix can be applied by a robot, e.g.
+         *     does not require human intervention
+         * @param independent whether it is **not** the case that
+         *     applying other fixes simultaneously can invalidate this fix
+         * @return this
+         */
+        fun autoFix(robot: Boolean, independent: Boolean): CreateFileBuilder {
+            robot(robot)
+            independent(independent)
+            return this
+        }
+
+        /**
+         * Convenience method for [autoFix]: indicates that this fix can
+         * safely be applied in auto-fix mode, in parallel with other
+         * fixes.
+         *
+         * @return this
+         */
+        fun autoFix(): CreateFileBuilder {
+            autoFix(robot = true, independent = true)
+            return this
+        }
+
+        /**
+         * Constructs a [LintFix] for this file creation or deletion fix
+         */
+        fun build(): LintFix {
+            return CreateFileFix(
+                displayName,
+                familyName,
+                selectPattern,
+                delete,
+                file!!,
+                binary,
+                text,
+                reformat,
+                robot,
+                independent
             )
         }
     }
@@ -882,7 +1078,7 @@ open class LintFix protected constructor(
 
         /**
          * Sets display name and family name. If not supplied a default
-         * will be created based on the the type of quickfix.
+         * will be created based on the type of quickfix.
          *
          * @param displayName the displayName
          * @param familyName the "family" name; the shared name to use
@@ -1501,7 +1697,12 @@ open class LintFix protected constructor(
                         "Delete \"$oldString\""
                     } else "Delete"
                 }
-                "Replace with $replacement"
+                var preview = replacement
+                val lineIndex = preview.indexOf('\n')
+                if (lineIndex != -1) {
+                    preview = preview.substring(0, lineIndex) + "..."
+                }
+                "Replace with $preview"
             }
         }
 
@@ -1571,6 +1772,42 @@ open class LintFix protected constructor(
                 }
                 return sb.toString()
             }
+        }
+    }
+
+    /**
+     * Fix descriptor for creating or deleting a file. This class/API is
+     * **only** intended for IDE use. Lint checks should be accessing
+     * the builder class instead - [create].
+     */
+    class CreateFileFix(
+        displayName: String?,
+        familyName: String?,
+        /**
+         * Pattern to select; if it contains parentheses, group(1) will
+         * be selected
+         */
+        val selectPattern: String?,
+        val delete: Boolean,
+        val file: File,
+        val binary: ByteArray?,
+        val text: String?,
+        val reformat: Boolean,
+        robot: Boolean,
+        independent: Boolean
+    ) : LintFix(displayName, familyName) {
+        init {
+            this.robot = robot
+            this.independent = independent
+        }
+
+        override fun getDisplayName(): String {
+            return super.getDisplayName()
+                ?: return if (delete) {
+                    "Delete ${file.name}"
+                } else {
+                    "Create ${file.name}"
+                }
         }
     }
 
@@ -1662,7 +1899,7 @@ open class LintFix protected constructor(
          * on to the starting and ending offsets, to help reduce active
          * memory usage in the IDE; see b/151240516
          */
-        private fun extractOffsets(range: Location): Location? {
+        private fun extractOffsets(range: Location): Location {
             val start = range.start
             val end = range.end
             return if (start != null && end != null) {
@@ -1672,7 +1909,8 @@ open class LintFix protected constructor(
                     DefaultPosition(-1, -1, end.offset)
                 )
             } else {
-                null
+                val pos = DefaultPosition(-1, -1, 0)
+                create(range.file, pos, pos)
             }
         }
     }

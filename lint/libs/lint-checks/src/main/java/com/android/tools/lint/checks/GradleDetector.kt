@@ -634,7 +634,7 @@ open class GradleDetector : Detector(), GradleScanner {
                         .replace()
                         .text(configuration)
                         .with(api)
-                        .independent(true)
+                        .autoFix()
                         .build()
                     val implementationFix = fix()
                         .name("Replace '$configuration' with '$implementation'")
@@ -642,7 +642,7 @@ open class GradleDetector : Detector(), GradleScanner {
                         .replace()
                         .text(configuration)
                         .with(implementation)
-                        .independent(true)
+                        .autoFix()
                         .build()
 
                     val fixes = fix()
@@ -694,7 +694,7 @@ open class GradleDetector : Detector(), GradleScanner {
                     .replace()
                     .text(configuration)
                     .with(replacement)
-                    .independent(true)
+                    .autoFix()
                     .build()
                 val message = "Add annotation processor to processor path using `$replacement`" +
                     " instead of `$configuration`"

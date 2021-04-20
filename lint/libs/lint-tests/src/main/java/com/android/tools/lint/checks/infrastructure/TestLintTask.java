@@ -138,6 +138,7 @@ public class TestLintTask {
     boolean useTestConfiguration = true;
     @Nullable ProjectDescription reportFrom = null;
     boolean stripRoot = true;
+    boolean includeSelectionMarkers = true;
 
     /** Creates a new lint test task */
     public TestLintTask() {
@@ -605,6 +606,18 @@ public class TestLintTask {
     public TestLintTask useTestProjectImplementation(boolean useTestProject) {
         ensurePreRun();
         this.useTestProject = useTestProject;
+        return this;
+    }
+
+    /**
+     * Whether lint should insert selection markers in quickfix tests, using square brackets to show
+     * the selection range and `|` to show the caret position.
+     *
+     * @param includeSelectionMarkers true (the default) to show markers
+     * @return this, for constructor chaining
+     */
+    public TestLintTask includeSelectionMarkers(boolean includeSelectionMarkers) {
+        this.includeSelectionMarkers = includeSelectionMarkers;
         return this;
     }
 

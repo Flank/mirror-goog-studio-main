@@ -43,7 +43,7 @@ class LintFixPerformerTest : TestCase() {
         var output = ""
         val printStatistics = expectedOutput != null
         val performer = object : LintFixPerformer(client, printStatistics) {
-            override fun writeFile(file: PendingEditFile, contents: String) {
+            override fun writeFile(pendingFile: PendingEditFile, contents: String) {
                 after = contents
             }
 

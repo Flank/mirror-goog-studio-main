@@ -364,7 +364,7 @@ public class FontDetector extends ResourceXmlDetector {
             provider = mFontLoader.findOnlyKnownProvider();
         }
 
-        LintFix.GroupBuilder fix = fix().composite();
+        LintFix.GroupBuilder fix = fix().composite().name("Set missing attributes");
         for (String missingAttribute : missingAttributes) {
             String value = generateNewValue(missingAttribute, provider);
             if (value == null) {
