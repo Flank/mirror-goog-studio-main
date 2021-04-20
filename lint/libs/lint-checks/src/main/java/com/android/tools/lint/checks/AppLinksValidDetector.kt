@@ -15,6 +15,7 @@
  */
 package com.android.tools.lint.checks
 
+import com.android.SdkConstants.ANDROID_NS_NAME
 import com.android.SdkConstants.ANDROID_URI
 import com.android.SdkConstants.ATTR_EXPORTED
 import com.android.SdkConstants.ATTR_HOST
@@ -39,6 +40,7 @@ import com.android.tools.lint.client.api.ResourceRepositoryScope
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
+import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.LintFix
 import com.android.tools.lint.detector.api.Location
@@ -52,6 +54,7 @@ import com.android.tools.lint.detector.api.resolvePlaceHolders
 import com.android.utils.CharSequences
 import com.android.utils.XmlUtils
 import com.android.xml.AndroidManifest
+import com.android.xml.AndroidManifest.NODE_DATA
 import com.google.common.base.Joiner
 import com.google.common.collect.Lists
 import org.w3c.dom.Attr
@@ -65,10 +68,110 @@ import java.util.regex.Pattern
 /** Checks for invalid app links URLs */
 class AppLinksValidDetector : Detector(), XmlScanner {
     override fun getApplicableElements(): Collection<String> {
-        return listOf(TAG_ACTIVITY, TAG_ACTIVITY_ALIAS)
+        return listOf(TAG_ACTIVITY, TAG_ACTIVITY_ALIAS, TAG_INTENT_FILTER)
     }
 
     override fun visitElement(context: XmlContext, element: Element) {
+        when (val tag = element.tagName) {
+            TAG_INTENT_FILTER -> checkIntentFilter(context, element)
+            TAG_ACTIVITY, TAG_ACTIVITY_ALIAS -> checkActivity(context, element)
+            else -> error("Unhandled tag $tag")
+        }
+    }
+
+    private fun checkIntentFilter(context: XmlContext, element: Element) {
+        var dataTag: Node? = XmlUtils.getFirstSubTagByName(element, NODE_DATA) ?: return
+        if (XmlUtils.getNextTagByName(dataTag, NODE_DATA) == null) return
+
+        val incidents = mutableListOf<Incident>()
+        var dataTagCount = 0
+        do {
+            dataTagCount++
+
+            val length = dataTag!!.attributes.length
+            val attributes = mutableListOf<Node>()
+            for (attributeIndex in 0 until length) {
+                attributes += dataTag.attributes.item(attributeIndex)
+            }
+
+            val hasNonPath = attributes.any {
+                // Allow tags with only path attributes, since it's obvious that those
+                // are independent, and combining them may make sense.
+                it.namespaceURI != ANDROID_URI || !it.localName.startsWith(ATTR_PATH)
+            }
+
+            val hasOnlyHostAndPort = hasNonPath && attributes.all {
+                it.namespaceURI == ANDROID_URI
+                        && (it.localName == ATTR_HOST || it.localName == ATTR_PORT)
+            }
+
+            if (!hasNonPath || hasOnlyHostAndPort) {
+                // Tags with only paths or with only host+port don't contribute to the threshold
+                dataTagCount--
+                continue
+            }
+
+            // If there's only 1 attribute, it's already correctly formatted. But this is checked
+            // here so that the above logic to ignore path-only tags is accounted for, even
+            // if that means a tag with only a path attribute.
+            if (length <= 1) continue
+
+            attributes.sortBy {
+                INTENT_FILTER_DATA_SORT_REFERENCE.indexOf(it.localName)
+                    .takeIf { it >= 0 }
+                    ?: Int.MAX_VALUE
+            }
+
+            val namespace = element.lookupNamespaceURI(ANDROID_URI) ?: ANDROID_NS_NAME
+            val hostIndex = attributes.indexOfFirst { it.localName == ATTR_HOST }
+            val portIndex = attributes.indexOfFirst { it.localName == ATTR_PORT }
+
+            val firstLine = if (hostIndex >= 0 && portIndex >= 0) {
+                val host: Node
+                val port: Node
+                // Need to remove higher index first to avoid shifting
+                if (hostIndex > portIndex) {
+                    host = attributes.removeAt(hostIndex)
+                    port = attributes.removeAt(portIndex)
+                } else {
+                    port = attributes.removeAt(portIndex)
+                    host = attributes.removeAt(hostIndex)
+                }
+                "<$TAG_DATA $namespace:${host.localName}=\"${host.nodeValue}\" " +
+                        "$namespace:${port.localName}=\"${port.nodeValue}\"/>\n"
+            } else null
+
+            val location = context.getLocation(dataTag)
+            val indent = (0 until (location.start?.column ?: 4))
+                .joinToString(separator = "") { " " }
+            val newText = firstLine.orEmpty() + attributes.mapIndexed { index, it ->
+                // Don't indent the first line, as the default fix location is already indented
+                val lineIndent = indent.takeIf { index > 0 || firstLine != null }.orEmpty()
+                "$lineIndent<$TAG_DATA $namespace:${it.localName}=\"${it.nodeValue}\"/>"
+            }.joinToString(separator = "\n")
+
+            incidents += Incident(
+                INTENT_FILTER_UNIQUE_DATA_ATTRIBUTES,
+                "Consider splitting $TAG_DATA tag into multiple tags with individual" +
+                        " attributes to avoid confusion",
+                location,
+                dataTag,
+                LintFix.create()
+                    .replace()
+                    .with(newText)
+                    .autoFix()
+                    .build()
+            )
+        } while (run { dataTag = XmlUtils.getNextTagByName(dataTag, NODE_DATA); dataTag } != null)
+
+        // Only report if there's more than 1 offending data tag, since if there is only 1,
+        // it's clear what URI should be caught.
+        if (dataTagCount > 1) {
+            incidents.forEach(context::report)
+        }
+    }
+
+    private fun checkActivity(context: XmlContext, element: Element) {
         val infos = createUriInfos(element, context)
         var current = XmlUtils.getFirstSubTagByName(element, TAG_VALIDATION)
         while (current != null) {
@@ -736,7 +839,67 @@ class AppLinksValidDetector : Detector(), XmlScanner {
             implementation = IMPLEMENTATION
         )
 
+        /** Multiple attributes in an intent filter data declaration */
+        @JvmField
+        @Suppress("LintImplUnexpectedDomain")
+        val INTENT_FILTER_UNIQUE_DATA_ATTRIBUTES = Issue.create(
+            id = "IntentFilterUniqueDataAttributes",
+            briefDescription = "Data tags should only declare unique attributes",
+            explanation = """
+                `<intent-filter>` `<data>` tags should only declare a single unique attribute \
+                (i.e. scheme OR host, but not both). This better matches the runtime behavior of \
+                intent filters, as they combine all of the declared data attributes into a single \
+                matcher which is allowed to handle any combination across attribute types.
+
+                For example, the following two `<intent-filter>` declarations are the same:
+                ```xml
+                `<intent-filter>`
+                    `<data android:scheme="http" android:host="example.com" />`
+                    `<data android:scheme="https" android:host="example.org" />`
+                `</intent-filter>`
+                ```
+
+                ```xml
+                `<intent-filter>`
+                    `<data android:scheme="http"/>`
+                    `<data android:scheme="https"/>`
+                    `<data android:host="example.com" />`
+                    `<data android:host="example.org" />`
+                `</intent-filter>`
+                ```
+
+                They both handle all of the following: \
+                * http://example.com
+                * https://example.com
+                * http://example.org
+                * https://example.org
+
+                The second one better communicates the combining behavior and is clearer to an \
+                external reader that one should not rely on the scheme/host being self contained. \
+                It is not obvious in the first that http://example.org is also matched, which can \
+                lead to confusion (or incorrect behavior) with a more complex set of schemes/hosts.
+
+                Note that this does not apply to host + port, as those must be declared in the same \
+                `<data>` tag and are only associated with each other.
+                """,
+            category = Category.CORRECTNESS,
+            severity = Severity.WARNING,
+            moreInfo = "https://developer.android.com/guide/components/intents-filters",
+            implementation = IMPLEMENTATION
+        )
+
         private const val TAG_VALIDATION = "validation"
+
+        // <scheme>://<host>:<port>[<path>|<pathPrefix>|<pathPattern>]
+        private val INTENT_FILTER_DATA_SORT_REFERENCE = listOf(
+            "scheme",
+            "host",
+            "port",
+            "path",
+            "pathPrefix",
+            "pathPattern",
+            "mimeType"
+        )
 
         private fun isSubstituted(expression: String): Boolean {
             return isDataBindingExpression(expression) || isManifestPlaceHolderExpression(expression)
