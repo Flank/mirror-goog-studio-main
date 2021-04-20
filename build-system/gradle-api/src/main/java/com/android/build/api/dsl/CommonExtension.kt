@@ -779,7 +779,7 @@ interface CommonExtension<
      *
      * This means your code can use only the Android APIs included in that API level and lower.
      * You can configure the compile sdk version by adding the following to the `android`
-     * block: `compileSdk 26`.
+     * block: `compileSdk = 26`.
      *
      * You should generally
      * [use the most up-to-date API level](https://developer.android.com/guide/topics/manifest/uses-sdk-element.html#ApiLevels)
@@ -793,6 +793,14 @@ interface CommonExtension<
      */
     var compileSdk: Int?
 
+    /**
+     * Specify a preview API to compile your project against.
+     *
+     * For example, to try out the Android S preview,
+     * rather than `compileSdk = 30` you can use `compileSdkPreview = "S"`
+     *
+     * Once the preview APIs are finalized, they will be allocated a stable integer value.
+     */
     var compileSdkPreview: String?
 
     fun compileSdkAddon(vendor: String, name: String, version: Int)

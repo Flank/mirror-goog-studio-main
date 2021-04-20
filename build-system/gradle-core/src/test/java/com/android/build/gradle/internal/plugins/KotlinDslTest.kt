@@ -64,6 +64,45 @@ class KotlinDslTest {
     }
 
     @Test
+    fun testCompileSdkPreview() {
+        android.compileSdk = 28
+        assertThat(android.compileSdkPreview).isEqualTo("28")
+
+        android.compileSdkPreview = "29"
+        assertThat(android.compileSdkPreview).isEqualTo("29")
+
+        android.compileSdkPreview = "S"
+        assertThat(android.compileSdkPreview).isEqualTo("S")
+
+        android.compileSdkPreview = "android-S"
+        assertThat(android.compileSdkPreview).isEqualTo("S")
+
+        android.compileSdkAddon(
+            "Google Inc.",
+            "Google APIs",
+            TestConstants.COMPILE_SDK_VERSION_WITH_GOOGLE_APIS
+        )
+        assertThat(android.compileSdkPreview).isNull()
+
+        android.compileSdkPreview = null
+        assertThat(android.compileSdk).isNull()
+        assertThat(android.compileSdkPreview).isNull()
+
+        android.compileSdkVersion(29)
+        assertThat(android.compileSdk).isEqualTo(29)
+
+        android.compileSdkVersion("android-30")
+        assertThat(android.compileSdk).isEqualTo(30)
+
+        android.compileSdkVersion("android-S")
+        assertThat(android.compileSdkPreview).isEqualTo("S")
+
+        android.compileSdkVersion("MadeUp")
+        assertThat(android.compileSdk).isNull()
+        assertThat(android.compileSdkPreview).isNull()
+    }
+
+    @Test
     fun testDslLocking() {
         plugin.createAndroidTasks()
         val exception = assertFailsWith(AgpDslLockedException::class) {

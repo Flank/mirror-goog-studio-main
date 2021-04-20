@@ -1363,6 +1363,7 @@ com.android.build.gradle.internal.dsl.InternalCommonExtension.defaultConfig: voi
 com.android.build.gradle.internal.dsl.InternalCommonExtension.getAaptOptions: com.android.build.gradle.internal.dsl.AaptOptions ()
 com.android.build.gradle.internal.dsl.InternalCommonExtension.getAdbOptions: com.android.build.gradle.internal.dsl.AdbOptions ()
 com.android.build.gradle.internal.dsl.InternalCommonExtension.getCompileOptions: com.android.build.gradle.internal.CompileOptions ()
+com.android.build.gradle.internal.dsl.InternalCommonExtension.getCompileSdkVersion: java.lang.String ()
 com.android.build.gradle.internal.dsl.InternalCommonExtension.getDataBinding: com.android.build.gradle.internal.dsl.DataBindingOptions ()
 com.android.build.gradle.internal.dsl.InternalCommonExtension.getExternalNativeBuild: com.android.build.gradle.internal.dsl.ExternalNativeBuild ()
 com.android.build.gradle.internal.dsl.InternalCommonExtension.getJacoco: com.android.build.gradle.internal.coverage.JacocoOptions ()
@@ -1372,6 +1373,7 @@ com.android.build.gradle.internal.dsl.InternalCommonExtension.getSigningConfigs:
 com.android.build.gradle.internal.dsl.InternalCommonExtension.getSplits: com.android.build.gradle.internal.dsl.Splits ()
 com.android.build.gradle.internal.dsl.InternalCommonExtension.getTestOptions: com.android.build.gradle.internal.dsl.TestOptions ()
 com.android.build.gradle.internal.dsl.InternalCommonExtension.productFlavors: void (org.gradle.api.Action<org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.ProductFlavor>>)
+com.android.build.gradle.internal.dsl.InternalCommonExtension.setCompileSdkVersion: void (java.lang.String)
 com.android.build.gradle.internal.dsl.InternalCommonExtension.signingConfigs: void (org.gradle.api.Action<org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.SigningConfig>>)
 com.android.build.gradle.internal.dsl.InternalDynamicFeatureExtension implements com.android.build.api.dsl.DynamicFeatureExtension, com.android.build.gradle.internal.dsl.InternalCommonExtension
 com.android.build.gradle.internal.dsl.InternalLibraryExtension implements com.android.build.api.dsl.LibraryExtension, com.android.build.gradle.internal.dsl.InternalCommonExtension
