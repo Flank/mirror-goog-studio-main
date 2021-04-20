@@ -1580,16 +1580,20 @@ class LintDriver(
         val classFolders = project.javaClassFolders
         val classEntries: List<ClassEntry>
         classEntries = if (classFolders.isEmpty()) {
-            val message = String.format(
-                "No `.class` files were found in project \"%1\$s\", " +
-                    "so none of the classfile based checks could be run. " +
-                    "Does the project need to be built first?",
-                project.name
-            )
-            LintClient.report(
-                client = client, issue = IssueRegistry.LINT_ERROR, message = message,
-                project = project, mainProject = main, driver = this
-            )
+            // This should be a lint error only if there are source files
+            val hasSourceFiles: Boolean = project.javaSourceFolders.any { folder -> folder.walk().any { it.isFile} }
+            if (hasSourceFiles) {
+                val message = String.format(
+                    "No `.class` files were found in project \"%1\$s\", " +
+                            "so none of the classfile based checks could be run. " +
+                            "Does the project need to be built first?",
+                    project.name
+                )
+                LintClient.report(
+                    client = client, issue = IssueRegistry.LINT_ERROR, message = message,
+                    project = project, mainProject = main, driver = this
+                )
+            }
             emptyList()
         } else {
             ClassEntry.fromClassPath(client, classFolders, true)

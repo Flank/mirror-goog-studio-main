@@ -381,6 +381,7 @@ class ProjectInitializerTest {
 
     @Test
     fun testManualProjectErrorHandling() {
+        val root = temp.newFolder()
 
         @Language("XML")
         val descriptor =
@@ -394,10 +395,19 @@ class ProjectInitializerTest {
             </module>
             </project>
             """.trimIndent()
-        val folder = File(temp.root, "app")
+        val folder = File(root, "app")
         folder.mkdirs()
         val projectXml = File(folder, "project.xml")
         Files.asCharSink(projectXml, Charsets.UTF_8).write(descriptor)
+        val sourceFile = File(folder, "src/main/java/com/example/Foo.java")
+        sourceFile.parentFile.mkdirs()
+        Files.asCharSink(sourceFile, Charsets.UTF_8).write(
+            """
+                package com.example;
+
+                public class Foo {}
+            """.trimIndent()
+        )
 
         MainTest.checkDriver(
             """
@@ -409,6 +419,51 @@ class ProjectInitializerTest {
               <unknown file="foo.Bar" />
               ~~~~~~~~~~~~~~~~~~~~~~~~~~
             3 errors, 0 warnings
+            """,
+            "",
+
+            ERRNO_SUCCESS,
+
+            arrayOf(
+                "--quiet",
+                "--project",
+                projectXml.path
+            ),
+            null, null
+        )
+    }
+
+    @Test
+    fun testManualProjectErrorHandlingWithoutSourceFiles() {
+        // Regression test for https://issuetracker.google.com/180408027
+        val root = temp.newFolder()
+
+        @Language("XML")
+        val descriptor =
+            """
+            <project>
+            <sdk dir='${TestUtils.getSdk()}'/>
+            <module name="Foo:App" android="true" library="true" javaLanguage="1000" kotlinLanguage="1.3">
+              <unknown file="foo.Bar" />
+              <resource file="res/values/strings.xml" />
+              <dep module="NonExistent" />
+            </module>
+            </project>
+            """.trimIndent()
+        val folder = File(root, "app")
+        folder.mkdirs()
+        val projectXml = File(folder, "project.xml")
+        Files.asCharSink(projectXml, Charsets.UTF_8).write(descriptor)
+
+        MainTest.checkDriver(
+            """
+            project.xml:3: Error: Invalid Java language level "1000" [LintError]
+            <module name="Foo:App" android="true" library="true" javaLanguage="1000" kotlinLanguage="1.3">
+            ^
+            project.xml:4: Error: Unexpected tag unknown [LintError]
+              <unknown file="foo.Bar" />
+              ~~~~~~~~~~~~~~~~~~~~~~~~~~
+            2 errors, 0 warnings
             """,
             "",
 
