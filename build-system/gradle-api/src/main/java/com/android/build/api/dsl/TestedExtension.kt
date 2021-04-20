@@ -81,4 +81,14 @@ interface TestedExtension {
      * BuildConfig classes.
      */
     var testNamespace: String?
+
+    /**
+     * Options to configure the test fixtures.
+     */
+    val testFixtures: TestFixtures
+
+    /**
+     * Options to configure the test fixtures.
+     */
+    fun testFixtures(action: TestFixtures.() -> Unit)
 }

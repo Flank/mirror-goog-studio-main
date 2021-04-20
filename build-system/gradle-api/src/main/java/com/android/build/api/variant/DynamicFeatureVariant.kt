@@ -15,4 +15,4 @@
  */
 package com.android.build.api.variant
 
-interface DynamicFeatureVariant : Variant, GeneratesApk, HasAndroidTest
+interface DynamicFeatureVariant : Variant, GeneratesApk, HasAndroidTest, HasTestFixtures

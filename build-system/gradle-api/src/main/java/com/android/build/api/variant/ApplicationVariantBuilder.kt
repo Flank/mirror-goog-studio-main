@@ -26,7 +26,9 @@ package com.android.build.api.variant
  * All these properties must be resolved during configuration time as [org.gradle.api.Task]
  * representing the variant build flows must be created.
  */
-interface ApplicationVariantBuilder : VariantBuilder, HasAndroidTestBuilder {
+interface ApplicationVariantBuilder : VariantBuilder,
+    HasAndroidTestBuilder,
+    HasTestFixturesBuilder {
 
     val debuggable: Boolean
 

@@ -705,6 +705,11 @@ com.android.build.api.dsl.TestDefaultConfig implements com.android.build.api.dsl
 com.android.build.api.dsl.TestExtension implements com.android.build.api.dsl.CommonExtension
 com.android.build.api.dsl.TestExtension.getTargetProjectPath: java.lang.String ()
 com.android.build.api.dsl.TestExtension.setTargetProjectPath: void (java.lang.String)
+com.android.build.api.dsl.TestFixtures
+com.android.build.api.dsl.TestFixtures.getAndroidResources: boolean ()
+com.android.build.api.dsl.TestFixtures.getEnable: boolean ()
+com.android.build.api.dsl.TestFixtures.setAndroidResources: void (boolean)
+com.android.build.api.dsl.TestFixtures.setEnable: void (boolean)
 com.android.build.api.dsl.TestOptions
 com.android.build.api.dsl.TestOptions.emulatorSnapshots: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.EmulatorSnapshots, kotlin.Unit>)
 com.android.build.api.dsl.TestOptions.failureRetention: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.FailureRetention, kotlin.Unit>)
@@ -730,9 +735,11 @@ com.android.build.api.dsl.TestVariantDimension.setMultiDexEnabled: void (java.la
 com.android.build.api.dsl.TestVariantDimension.setSigningConfig: void (com.android.build.api.dsl.ApkSigningConfig)
 com.android.build.api.dsl.TestedExtension
 com.android.build.api.dsl.TestedExtension.getTestBuildType: java.lang.String ()
+com.android.build.api.dsl.TestedExtension.getTestFixtures: com.android.build.api.dsl.TestFixtures ()
 com.android.build.api.dsl.TestedExtension.getTestNamespace: java.lang.String ()
 com.android.build.api.dsl.TestedExtension.setTestBuildType: void (java.lang.String)
 com.android.build.api.dsl.TestedExtension.setTestNamespace: void (java.lang.String)
+com.android.build.api.dsl.TestedExtension.testFixtures: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.TestFixtures, kotlin.Unit>)
 com.android.build.api.dsl.UnitTestOptions
 com.android.build.api.dsl.UnitTestOptions.all: void (kotlin.jvm.functions.Function1<? super org.gradle.api.tasks.testing.Test, kotlin.Unit>)
 com.android.build.api.dsl.UnitTestOptions.isIncludeAndroidResources: boolean ()
@@ -810,3 +817,8 @@ com.android.build.api.instrumentation.InstrumentationScope extends java.lang.Enu
 com.android.build.api.instrumentation.InstrumentationScope.valueOf: com.android.build.api.instrumentation.InstrumentationScope (java.lang.String)
 com.android.build.api.instrumentation.InstrumentationScope.values: com.android.build.api.instrumentation.InstrumentationScope[] ()
 com.android.build.api.transform.Transform.applyToVariant: boolean (com.android.build.api.variant.VariantInfo)
+com.android.build.api.variant.HasTestFixtures
+com.android.build.api.variant.HasTestFixtures.getTestFixtures: com.android.build.api.component.TestFixtures ()
+com.android.build.api.variant.HasTestFixturesBuilder
+com.android.build.api.variant.HasTestFixturesBuilder.getEnableTestFixtures: boolean ()
+com.android.build.api.variant.HasTestFixturesBuilder.setEnableTestFixtures: void (boolean)

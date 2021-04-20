@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 The Android Open Source Project
+ * Copyright (C) 2021 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,9 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.android.build.api.variant
 
+import org.gradle.api.Incubating
+
 /**
- * [VariantBuilder] type for library projects
+ * Interface that mark the potential existence of test fixtures associated with a variant.
  */
-interface LibraryVariantBuilder : VariantBuilder, HasAndroidTestBuilder, HasTestFixturesBuilder
+@Incubating
+interface HasTestFixturesBuilder {
+    /**
+     * Set to `true` if the variant's has test fixtures, `false` otherwise.
+     *
+     * Default value will match [com.android.build.api.dsl.TestFixtures.enable] value
+     * that is set through the extension via
+     * [com.android.build.api.dsl.TestedExtension.testFixtures].
+     */
+    var enableTestFixtures: Boolean
+}

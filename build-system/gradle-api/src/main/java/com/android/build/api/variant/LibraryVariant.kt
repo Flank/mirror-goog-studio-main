@@ -15,10 +15,8 @@
  */
 package com.android.build.api.variant
 
-import com.android.build.api.component.AndroidTest
-
 /** [Variant] for Library projects */
-interface LibraryVariant : Variant, GeneratesAar, HasAndroidTest {
+interface LibraryVariant : Variant, GeneratesAar, HasAndroidTest, HasTestFixtures {
 
     /**
      * Variant specific settings for the renderscript compiler. This will return null when
