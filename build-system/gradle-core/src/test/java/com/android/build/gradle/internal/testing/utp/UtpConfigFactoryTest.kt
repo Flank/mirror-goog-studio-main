@@ -116,6 +116,7 @@ class UtpConfigFactoryTest {
         override val driverInstrumentation = FakeConfigurableFileCollection(mockFile("pathToANDROID_DRIVER_INSTRUMENTATION.jar"))
         override val testPlugin = FakeConfigurableFileCollection(mockFile("pathToANDROID_TEST_PLUGIN.jar"))
         override val testDeviceInfoPlugin = FakeConfigurableFileCollection(mockFile("pathToANDROID_TEST_DEVICE_INFO_PLUGIN.jar"))
+        override val testLogcatPlugin = FakeConfigurableFileCollection(mockFile("pathToANDROID_TEST_PLUGIN_HOST_LOGCAT.jar"))
         override val testPluginHostRetention = FakeConfigurableFileCollection(mockFile("pathToANDROID_TEST_PLUGIN_HOST_RETENTION.jar"))
         override val testPluginResultListenerGradle = FakeConfigurableFileCollection(mockFile("pathToANDROID_TEST_PLUGIN_RESULT_LISTENER_GRADLE.jar"))
     }
@@ -262,6 +263,15 @@ class UtpConfigFactoryTest {
                   path: "pathToANDROID_TEST_DEVICE_INFO_PLUGIN.jar"
                 }
               }
+              host_plugin {
+                label {
+                  label: "ANDROID_TEST_LOGCAT_PLUGIN"
+                }
+                class_name: "com.android.tools.utp.plugins.host.logcat.AndroidTestLogcatPlugin"
+                jar {
+                  path: "pathToANDROID_TEST_PLUGIN_HOST_LOGCAT.jar"
+                }
+              }
               environment {
                 output_dir {
                   path: "mockOutputDirPath"
@@ -380,6 +390,15 @@ class UtpConfigFactoryTest {
                 class_name: "com.android.tools.utp.plugins.host.device.info.AndroidTestDeviceInfoPlugin"
                 jar {
                   path: "pathToANDROID_TEST_DEVICE_INFO_PLUGIN.jar"
+                }
+              }
+              host_plugin {
+                label {
+                  label: "ANDROID_TEST_LOGCAT_PLUGIN"
+                }
+                class_name: "com.android.tools.utp.plugins.host.logcat.AndroidTestLogcatPlugin"
+                jar {
+                  path: "pathToANDROID_TEST_PLUGIN_HOST_LOGCAT.jar"
                 }
               }
               environment {
@@ -518,6 +537,15 @@ class UtpConfigFactoryTest {
                   path: "pathToANDROID_TEST_DEVICE_INFO_PLUGIN.jar"
                 }
               }
+              host_plugin {
+                label {
+                  label: "ANDROID_TEST_LOGCAT_PLUGIN"
+                }
+                class_name: "com.android.tools.utp.plugins.host.logcat.AndroidTestLogcatPlugin"
+                jar {
+                  path: "pathToANDROID_TEST_PLUGIN_HOST_LOGCAT.jar"
+                }
+              }
               environment {
                 output_dir {
                   path: "mockOutputDirPath"
@@ -639,6 +667,15 @@ class UtpConfigFactoryTest {
                 class_name: "com.android.tools.utp.plugins.host.device.info.AndroidTestDeviceInfoPlugin"
                 jar {
                   path: "pathToANDROID_TEST_DEVICE_INFO_PLUGIN.jar"
+                }
+              }
+              host_plugin {
+                label {
+                  label: "ANDROID_TEST_LOGCAT_PLUGIN"
+                }
+                class_name: "com.android.tools.utp.plugins.host.logcat.AndroidTestLogcatPlugin"
+                jar {
+                  path: "pathToANDROID_TEST_PLUGIN_HOST_LOGCAT.jar"
                 }
               }
               environment {
@@ -779,6 +816,15 @@ class UtpConfigFactoryTest {
                   path: "pathToANDROID_TEST_DEVICE_INFO_PLUGIN.jar"
                 }
               }
+              host_plugin {
+                label {
+                  label: "ANDROID_TEST_LOGCAT_PLUGIN"
+                }
+                class_name: "com.android.tools.utp.plugins.host.logcat.AndroidTestLogcatPlugin"
+                jar {
+                  path: "pathToANDROID_TEST_PLUGIN_HOST_LOGCAT.jar"
+                }
+              }
               environment {
                 output_dir {
                   path: "mockOutputDirPath"
@@ -915,6 +961,15 @@ class UtpConfigFactoryTest {
                   path: "pathToANDROID_TEST_DEVICE_INFO_PLUGIN.jar"
                 }
               }
+              host_plugin {
+                label {
+                  label: "ANDROID_TEST_LOGCAT_PLUGIN"
+                }
+                class_name: "com.android.tools.utp.plugins.host.logcat.AndroidTestLogcatPlugin"
+                jar {
+                  path: "pathToANDROID_TEST_PLUGIN_HOST_LOGCAT.jar"
+                }
+              }
               environment {
                 output_dir {
                   path: "mockOutputDirPath"
@@ -1035,6 +1090,15 @@ class UtpConfigFactoryTest {
                   path: "pathToANDROID_TEST_DEVICE_INFO_PLUGIN.jar"
                 }
               }
+              host_plugin {
+                label {
+                  label: "ANDROID_TEST_LOGCAT_PLUGIN"
+                }
+                class_name: "com.android.tools.utp.plugins.host.logcat.AndroidTestLogcatPlugin"
+                jar {
+                  path: "pathToANDROID_TEST_PLUGIN_HOST_LOGCAT.jar"
+                }
+              }
               environment {
                 output_dir {
                   path: "mockOutputDirPath"
@@ -1153,6 +1217,15 @@ class UtpConfigFactoryTest {
                 class_name: "com.android.tools.utp.plugins.host.device.info.AndroidTestDeviceInfoPlugin"
                 jar {
                   path: "pathToANDROID_TEST_DEVICE_INFO_PLUGIN.jar"
+                }
+              }
+              host_plugin {
+                label {
+                  label: "ANDROID_TEST_LOGCAT_PLUGIN"
+                }
+                class_name: "com.android.tools.utp.plugins.host.logcat.AndroidTestLogcatPlugin"
+                jar {
+                  path: "pathToANDROID_TEST_PLUGIN_HOST_LOGCAT.jar"
                 }
               }
               environment {
@@ -1289,6 +1362,15 @@ class UtpConfigFactoryTest {
                 class_name: "com.android.tools.utp.plugins.host.device.info.AndroidTestDeviceInfoPlugin"
                 jar {
                   path: "pathToANDROID_TEST_DEVICE_INFO_PLUGIN.jar"
+                }
+              }
+              host_plugin {
+                label {
+                  label: "ANDROID_TEST_LOGCAT_PLUGIN"
+                }
+                class_name: "com.android.tools.utp.plugins.host.logcat.AndroidTestLogcatPlugin"
+                jar {
+                  path: "pathToANDROID_TEST_PLUGIN_HOST_LOGCAT.jar"
                 }
               }
               environment {

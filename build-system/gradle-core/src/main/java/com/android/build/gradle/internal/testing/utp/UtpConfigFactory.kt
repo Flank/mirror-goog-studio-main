@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_DEVIC
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_DEVICE_PROVIDER_GRADLE
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_DRIVER_INSTRUMENTATION
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_TEST_DEVICE_INFO_PLUGIN
+import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_TEST_LOGCAT_PLUGIN
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_TEST_PLUGIN
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_TEST_PLUGIN_HOST_RETENTION
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_TEST_PLUGIN_RESULT_LISTENER_GRADLE
@@ -320,6 +321,7 @@ class UtpConfigFactory {
             addHostPlugin(createAndroidTestPlugin(
                     testData, appApks, additionalInstallOptions, helperApks, utpDependencies))
             addHostPlugin(createAndroidTestDeviceInfoPlugin(utpDependencies))
+            addHostPlugin(createAndroidTestLogcatPlugin(utpDependencies))
         }.build()
     }
 
@@ -471,6 +473,10 @@ class UtpConfigFactory {
 
     private fun createAndroidTestDeviceInfoPlugin(utpDependencies: UtpDependencies): ExtensionProto.Extension {
         return ANDROID_TEST_DEVICE_INFO_PLUGIN.toExtensionProto(utpDependencies)
+    }
+
+    private fun createAndroidTestLogcatPlugin(utpDependencies:UtpDependencies): ExtensionProto.Extension {
+        return ANDROID_TEST_LOGCAT_PLUGIN.toExtensionProto(utpDependencies)
     }
 
     private fun createSingleDeviceExecutor(identifier: String): ExecutorProto.SingleDeviceExecutor {

@@ -264,6 +264,7 @@ maven_repo(
         "//tools/base/utp/android-device-provider-gradle-proto",
         "//tools/base/utp/android-test-plugin-host-device-info",
         "//tools/base/utp/android-test-plugin-host-device-info-proto",
+        "//tools/base/utp/android-test-plugin-host-logcat",
         "//tools/base/utp/android-test-plugin-host-retention",
         "//tools/base/utp/android-test-plugin-host-retention-proto",
         "//tools/base/utp/android-test-plugin-result-listener-gradle",

@@ -76,6 +76,7 @@ class ManagedDeviceTestRunnerTest {
         override val deviceProviderVirtual = FakeConfigurableFileCollection(File(""))
         override val driverInstrumentation = FakeConfigurableFileCollection(File(""))
         override val testDeviceInfoPlugin = FakeConfigurableFileCollection(File(""))
+        override val testLogcatPlugin = FakeConfigurableFileCollection(File(""))
         override val testPlugin = FakeConfigurableFileCollection(File(""))
         override val testPluginHostRetention = FakeConfigurableFileCollection(File(""))
         override val testPluginResultListenerGradle = FakeConfigurableFileCollection(File(""))

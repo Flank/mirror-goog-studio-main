@@ -73,6 +73,12 @@ enum class UtpDependency(
             UtpDependencies::testDeviceInfoPlugin,
             ANDROID_TOOLS_UTP_PLUGIN_MAVEN_GROUP_ID,
             ANDROID_TOOLS_UTP_PLUGIN_VERSION),
+    ANDROID_TEST_LOGCAT_PLUGIN(
+            "android-test-plugin-host-logcat",
+            "com.android.tools.utp.plugins.host.logcat.AndroidTestLogcatPlugin",
+            UtpDependencies::testLogcatPlugin,
+            ANDROID_TOOLS_UTP_PLUGIN_MAVEN_GROUP_ID,
+            ANDROID_TOOLS_UTP_PLUGIN_VERSION),
     ANDROID_TEST_PLUGIN_HOST_RETENTION(
             "android-test-plugin-host-retention",
             "com.android.tools.utp.plugins.host.icebox.IceboxPlugin",
@@ -128,6 +134,10 @@ abstract class UtpDependencies {
     @get:Optional
     @get:Classpath
     abstract val testDeviceInfoPlugin: ConfigurableFileCollection
+
+    @get:Optional
+    @get:Classpath
+    abstract val testLogcatPlugin: ConfigurableFileCollection
 
     @get:Optional
     @get:Classpath
