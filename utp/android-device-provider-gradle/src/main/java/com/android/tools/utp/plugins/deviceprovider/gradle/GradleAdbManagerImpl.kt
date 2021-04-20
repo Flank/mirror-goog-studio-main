@@ -80,7 +80,7 @@ class GradleAdbManagerImpl(private val subprocessComponent: SubprocessComponent)
                 environment = System.getenv(),
                 stdoutProcessor = { line ->
                     val trimmed = line.trim()
-                    if (trimmed != "OK") {
+                    if (trimmed.isNotEmpty() && trimmed != "OK") {
                         id = trimmed
                     }
                 }
