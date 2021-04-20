@@ -16,17 +16,24 @@
 
 package com.android.build.gradle.internal
 
+import com.android.Version
+import com.android.builder.core.ToolsRevisionUtils
+import com.android.builder.errors.IssueReporter
 import com.android.io.CancellableFileIo
 import com.android.repository.Revision
 import com.android.repository.api.ConsoleProgressIndicator
 import com.android.repository.api.LocalPackage
 import com.android.repository.api.Repository
 import com.android.repository.impl.meta.SchemaModuleUtil
+import com.android.sdklib.AndroidTargetHash.getPlatformHashString
+import com.android.sdklib.AndroidVersion
 import com.android.sdklib.BuildToolInfo
 import com.android.sdklib.OptionalLibrary
 import com.android.sdklib.repository.AndroidSdkHandler
 import com.android.sdklib.repository.meta.DetailsTypes
 import com.android.sdklib.repository.targets.PlatformTarget
+import com.google.common.annotations.VisibleForTesting
+import com.google.common.base.Splitter
 import com.google.common.collect.ImmutableList
 import java.io.File
 import java.io.FileInputStream
@@ -114,4 +121,53 @@ fun parseOptionalLibraries(localPackage: LocalPackage): List<OptionalLibrary> {
         return PlatformTarget.getLibsFromJson(optionalJson)
     }
     return emptyList()
+}
+
+fun warnIfCompileSdkTooNew(version: AndroidVersion, issueReporter: IssueReporter, suppressWarningIfTooNewForVersions: String?) {
+    warnIfCompileSdkTooNew(
+        version = version,
+        issueReporter = issueReporter,
+        maxVersion = ToolsRevisionUtils.MAX_RECOMMENDED_COMPILE_SDK_VERSION,
+        androidGradlePluginVersion = Version.ANDROID_GRADLE_PLUGIN_VERSION,
+        suppressWarningIfTooNewForVersions = suppressWarningIfTooNewForVersions,
+    )
+}
+
+@VisibleForTesting
+internal fun warnIfCompileSdkTooNew(
+    version: AndroidVersion,
+    issueReporter: IssueReporter,
+    maxVersion: AndroidVersion,
+    androidGradlePluginVersion: String,
+    suppressWarningIfTooNewForVersions: String? = null,
+    ) {
+    if (version <= maxVersion) return
+    val suppressName = version.apiString
+    val suppressSet = suppressWarningIfTooNewForVersions?.splitToSequence(",")?.filter(String::isNotEmpty)?.toSet() ?: setOf()
+    if (suppressSet.contains(suppressName)) return
+    issueReporter.reportWarning(
+        IssueReporter.Type.COMPILE_SDK_VERSION_TOO_HIGH,
+        "We recommend using a newer Android Gradle plugin to use ${version.asDsl()}\n" +
+                "\n" +
+                "This Android Gradle plugin ($androidGradlePluginVersion) " +
+                "was tested up to ${AndroidVersion(maxVersion.apiLevel).asDsl()}" +
+                (if (maxVersion.isPreview) " (and ${maxVersion.asDsl()})" else "") + "\n" +
+                "\n" +
+                "This warning can be suppressed by " +
+                (if (suppressWarningIfTooNewForVersions.isNullOrEmpty()) {
+                    "adding\n    ${com.android.build.gradle.options.StringOption.SUPPRESS_UNSUPPORTED_COMPILE_SDK.propertyName}=$suppressName"
+                } else {
+                    "updating\n    ${com.android.build.gradle.options.StringOption.SUPPRESS_UNSUPPORTED_COMPILE_SDK.propertyName}=${suppressSet.joinToString(",")},$suppressName"
+                }) +
+                "\n" +
+                "to this project's gradle.properties\n" +
+                "\n" +
+                "The build will continue, but you are strongly encouraged to update your project to\n" +
+                "use a newer Android Gradle Plugin that has been tested with ${version.asDsl()}",
+        getPlatformHashString(maxVersion)
+    )
+}
+
+private fun AndroidVersion.asDsl(): String {
+    return if (isPreview) """compileSdkPreview = "$codename"""" else "compileSdk = $apiLevel"
 }

@@ -37,6 +37,8 @@ import com.android.repository.api.ConsoleProgressIndicator;
 import com.android.repository.api.LocalPackage;
 import com.android.repository.api.ProgressIndicator;
 import com.android.repository.api.RepoPackage;
+import com.android.sdklib.AndroidTargetHash;
+import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.utils.ILogger;
 import com.android.utils.Pair;
@@ -54,19 +56,21 @@ public class SdkHandler {
     private static final ILogger logger = LoggerWrapper.getLogger(SdkHandler.class);
 
     @NonNull private final IssueReporter issueReporter;
-
     @NonNull private final AndroidLocationsProvider androidLocationsProvider;
     @NonNull private SdkLocationSourceSet sdkLocationSourceSet;
+    @Nullable private final String suppressWarningUnsupportedCompileSdk;
     @NonNull private SdkLibData sdkLibData = SdkLibData.dontDownload();
     private SdkLoader sdkLoader;
 
     public SdkHandler(
             @NonNull AndroidLocationsProvider androidLocationsProvider,
             @NonNull SdkLocationSourceSet sdkLocationSourceSet,
-            @NonNull IssueReporter issueReporter) {
+            @NonNull IssueReporter issueReporter,
+            @Nullable String suppressWarningUnsupportedCompileSdk) {
         this.androidLocationsProvider = androidLocationsProvider;
         this.sdkLocationSourceSet = sdkLocationSourceSet;
         this.issueReporter = issueReporter;
+        this.suppressWarningUnsupportedCompileSdk = suppressWarningUnsupportedCompileSdk;
     }
 
     /**
@@ -107,6 +111,12 @@ public class SdkHandler {
                             ToolsRevisionUtils.DEFAULT_BUILD_TOOLS_REVISION),
                     ToolsRevisionUtils.DEFAULT_BUILD_TOOLS_REVISION.toString());
             buildToolRevision = ToolsRevisionUtils.DEFAULT_BUILD_TOOLS_REVISION;
+        }
+
+        AndroidVersion platformVersion = AndroidTargetHash.getVersionFromHash(targetHash);
+        if (platformVersion != null) {
+            SdkParsingUtilsKt.warnIfCompileSdkTooNew(
+                    platformVersion, issueReporter, suppressWarningUnsupportedCompileSdk);
         }
 
         Stopwatch stopwatch = Stopwatch.createStarted();
