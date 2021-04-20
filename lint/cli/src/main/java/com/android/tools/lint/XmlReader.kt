@@ -55,6 +55,7 @@ import java.io.File
 import java.io.IOException
 import java.util.ArrayDeque
 import java.util.ArrayList
+import java.util.Base64
 import java.util.HashMap
 
 /** The [XmlReader] can restore the state saved by [XmlWriter] */
@@ -212,6 +213,7 @@ class XmlReader(
                         TAG_ANNOTATE -> addFix(readFixAnnotate())
                         TAG_FIX_REPLACE -> addFix(readFixReplace())
                         TAG_FIX_ATTRIBUTE -> addFix(readFixSetAttribute())
+                        TAG_CREATE_FILE -> addFix(readCreateFile())
                         TAG_FIX_ALTERNATIVES,
                         TAG_FIX_COMPOSITE -> readFixComposite()
                         TAG_ISSUES, TAG_INCIDENTS -> {
@@ -309,6 +311,50 @@ class XmlReader(
         newFix.autoFix(robot, independent)
         addFix(newFix)
         fixLists.addLast(fixList)
+    }
+
+    private fun readCreateFile(): LintFix {
+        var text: String? = null
+        var binary: ByteArray? = null
+        var selectPattern: String? = null
+        var reformat = false
+        var displayName: String? = null
+        var familyName: String? = null
+        var robot = false
+        var independent = false
+        var file: File? = null
+        var delete = false
+
+        val n = parser.attributeCount
+        for (i in 0 until n) {
+            val name = parser.getAttributeName(i)
+            val value = parser.getAttributeValue(i)
+            when (name) {
+                ATTR_FILE -> file = getFile(value)
+                ATTR_DELETE -> delete = value == VALUE_TRUE
+                ATTR_REPLACEMENT -> text = value
+                ATTR_BINARY -> binary = Base64.getDecoder().decode(value)
+                ATTR_SELECT_PATTERN -> selectPattern = value
+                ATTR_REFORMAT -> reformat = true
+                ATTR_DESCRIPTION -> displayName = value
+                ATTR_FAMILY -> familyName = value
+                ATTR_INDEPENDENT -> independent = true
+                ATTR_ROBOT -> robot = true
+                else -> error("Unexpected fix attribute: $name")
+            }
+        }
+
+        val builder = LintFix.create().name(displayName).sharedName(familyName)
+        val fix = when {
+            delete -> builder.deleteFile(file!!)
+            text != null -> builder.newFile(file!!, text)
+            else -> builder.newFile(file!!, binary!!)
+        }
+        return fix
+            .select(selectPattern)
+            .reformat(reformat)
+            .autoFix(robot, independent)
+            .build()
     }
 
     private fun readFixSetAttribute(): LintFix {

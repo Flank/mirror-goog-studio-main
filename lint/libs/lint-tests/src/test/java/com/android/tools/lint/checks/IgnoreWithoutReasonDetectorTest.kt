@@ -228,7 +228,7 @@ class IgnoreWithoutReasonDetectorTest {
                 Fix for src/foo/MyTest.java line 8: Give reason:
                 @@ -8 +8
                 -   @Test @Ignore void something() {
-                +   @Test @Ignore("[TODO]") void something() {
+                +   @Test @Ignore("[TODO]|") void something() {
                 """
             )
     }

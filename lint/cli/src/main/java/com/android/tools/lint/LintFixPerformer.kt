@@ -31,11 +31,12 @@ import com.android.SdkConstants.XMLNS_PREFIX
 import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.LintFix
 import com.android.tools.lint.detector.api.LintFix.AnnotateFix
+import com.android.tools.lint.detector.api.LintFix.CreateFileFix
 import com.android.tools.lint.detector.api.LintFix.GroupType
 import com.android.tools.lint.detector.api.LintFix.LintFixGroup
 import com.android.tools.lint.detector.api.LintFix.ReplaceString
-import com.android.tools.lint.detector.api.LintFix.ReplaceString.INSERT_BEGINNING
-import com.android.tools.lint.detector.api.LintFix.ReplaceString.INSERT_END
+import com.android.tools.lint.detector.api.LintFix.ReplaceString.Companion.INSERT_BEGINNING
+import com.android.tools.lint.detector.api.LintFix.ReplaceString.Companion.INSERT_END
 import com.android.tools.lint.detector.api.LintFix.SetAttribute
 import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.Severity
@@ -52,18 +53,33 @@ import java.io.IOException
 import java.io.PrintWriter
 import java.util.regex.Pattern
 import javax.xml.parsers.ParserConfigurationException
+import kotlin.math.abs
+import kotlin.math.max
+import kotlin.math.min
 
 /** Support for applying quickfixes directly. */
 open class LintFixPerformer constructor(
     val client: LintCliClient,
-    private val printStatistics: Boolean = true
+    /**
+     * Whether to emit statistics about number of files modified and
+     * number of edits applied
+     */
+    private val printStatistics: Boolean = true,
+    /**
+     * Should applied fixes be limited to those marked as safe to be
+     * applied automatically?
+     */
+    private val requireAutoFixable: Boolean = true,
+    /**
+     * Should we include markers in the applied files like indicators
+     * for the marker and selection?
+     */
+    private val includeMarkers: Boolean = false
 ) {
     private fun getFileData(
         fileMap: MutableMap<File, PendingEditFile>,
-        incident: Incident
+        file: File
     ): PendingEditFile {
-        val location = getLocation(incident)
-        val file = location.file
         return fileMap[file] ?: run {
             val source = client.getSourceText(file)
             val fileData = PendingEditFile(client, file, source.toString())
@@ -77,8 +93,9 @@ open class LintFixPerformer constructor(
         incident: Incident,
         lintFix: LintFix
     ) {
-        val fileData = getFileData(fileMap, incident)
-        if (addEdits(fileData, getLocation(incident), lintFix)) {
+        val location = getLocation(incident, lintFix)
+        val fileData = getFileData(fileMap, location.file)
+        if (addEdits(fileData, location, lintFix)) {
             incident.wasAutoFixed = true
         }
     }
@@ -88,6 +105,16 @@ open class LintFixPerformer constructor(
         return applyEdits(files)
     }
 
+    fun fix(incident: Incident, fixes: List<LintFix>): Boolean {
+        val fileMap = mutableMapOf<File, PendingEditFile>()
+        for (fix in fixes) {
+            if (canAutoFix(fix, requireAutoFixable)) {
+                registerFix(fileMap, incident, fix)
+            }
+        }
+        return applyEdits(fileMap.values.toList())
+    }
+
     @VisibleForTesting
     fun fix(
         file: File,
@@ -95,7 +122,7 @@ open class LintFixPerformer constructor(
         text: String = file.readText(Charsets.UTF_8)
     ): Boolean {
         val pendingEditFile = PendingEditFile(client, file, text)
-        fixes.filter { canAutoFix(it) }.forEach {
+        fixes.filter { canAutoFix(it, requireAutoFixable) }.forEach {
             addEdits(pendingEditFile, null, it)
         }
         return applyEdits(listOf(pendingEditFile))
@@ -107,6 +134,15 @@ open class LintFixPerformer constructor(
         val editMap: MutableMap<String, Int> = mutableMapOf()
 
         for (fileData in files) {
+            val newText = fileData.createText
+            if (newText != null) {
+                writeFile(fileData, addMarkers(fileData, newText))
+            } else if (fileData.createBytes != null) {
+                writeFile(fileData, fileData.createBytes)
+            } else if (fileData.delete) {
+                writeFile(fileData, null)
+                continue
+            }
             // Sort fixes in descending order from location
             if (fileData.edits.isEmpty()) {
                 continue
@@ -134,7 +170,24 @@ open class LintFixPerformer constructor(
                 editMap[key] = count + 1
 
                 fileContents = edit.apply(fileContents)
+
+                // Move selection offsets accordingly. These aren't just
+                // inserted as their own edits since they may apply to text
+                // that hasn't been applied yet (e.g. when using a regex
+                // pattern from a starting offset to identify what is to be selected)
+                fileData.selection?.let {
+                    val dot = min(it.dot, it.mark)
+                    val mark = max(it.dot, it.mark)
+                    if (dot != Integer.MIN_VALUE) {
+                        it.dot = edit.adjustOffset(dot, true)
+                        if (mark != Integer.MIN_VALUE) {
+                            it.mark = edit.adjustOffset(mark, false)
+                        }
+                    }
+                }
             }
+
+            fileContents = addMarkers(fileData, fileContents)
 
             writeFile(fileData, fileContents)
             editedFileCount++
@@ -145,6 +198,49 @@ open class LintFixPerformer constructor(
         }
 
         return editedFileCount > 0
+    }
+
+    /**
+     * Indicates caret position with a `|` and the selection range using
+     * square brackets if set by the fix
+     */
+    private fun addMarkers(
+        fileData: PendingEditFile,
+        fileContents: String
+    ): String {
+        if (includeMarkers) {
+            fileData.selection?.let {
+                val (pattern, offset, mark) = it
+                val selectStart: Int
+                val selectEnd: Int
+                val matcher = pattern?.matcher(fileContents)
+                if (matcher != null && matcher.find(offset)) {
+                    if (matcher.groupCount() > 0) {
+                        selectStart = matcher.start(1)
+                        selectEnd = matcher.end(1)
+                    } else {
+                        selectStart = matcher.start()
+                        selectEnd = matcher.end()
+                    }
+                } else if (pattern == null && offset != Integer.MIN_VALUE) {
+                    val effectiveMark = if (mark != Integer.MIN_VALUE) mark else offset
+                    selectStart = min(offset, effectiveMark)
+                    selectEnd = max(offset, effectiveMark)
+                } else {
+                    return fileContents
+                }
+                return if (selectStart == selectEnd) {
+                    fileContents.substring(0, selectStart) + "|" + fileContents.substring(selectEnd)
+                } else {
+                    fileContents.substring(0, selectStart) +
+                        "[" +
+                        fileContents.substring(selectStart, selectEnd) +
+                        "]|" +
+                        fileContents.substring(selectEnd)
+                }
+            }
+        }
+        return fileContents
     }
 
     protected open fun printStatistics(
@@ -164,10 +260,22 @@ open class LintFixPerformer constructor(
     }
 
     protected open fun writeFile(
-        file: PendingEditFile,
+        pendingFile: PendingEditFile,
         contents: String
     ) {
-        file.file.writeText(contents, Charsets.UTF_8)
+        writeFile(pendingFile, contents.toByteArray(Charsets.UTF_8))
+    }
+
+    protected open fun writeFile(
+        pendingFile: PendingEditFile,
+        contents: ByteArray?
+    ) {
+        if (contents == null) {
+            pendingFile.file.delete()
+        } else {
+            pendingFile.file.parentFile?.mkdirs()
+            pendingFile.file.writeBytes(contents)
+        }
     }
 
     private fun findApplicableFixes(incidents: List<Incident>): List<PendingEditFile> {
@@ -179,7 +287,7 @@ open class LintFixPerformer constructor(
                     // separated out again in applyFix
                     var all = true
                     for (sub in data.fixes) {
-                        if (!canAutoFix(sub)) {
+                        if (!canAutoFix(sub, requireAutoFixable)) {
                             all = false
                             break
                         }
@@ -192,7 +300,7 @@ open class LintFixPerformer constructor(
                 }
                 // else: for GroupType.ALTERNATIVES, we don't auto fix: user must pick
                 // which one to apply.
-            } else if (canAutoFix(data)) {
+            } else if (canAutoFix(data, requireAutoFixable)) {
                 registerFix(fileMap, incident, data)
             }
         }
@@ -211,9 +319,10 @@ open class LintFixPerformer constructor(
                 client.log(
                     Severity.WARNING, null,
                     "Overlapping edits in quickfixes; skipping. " +
-                        "Involved fixes: ${prev.fix.displayName} in [" +
+                        "Involved fixes: ${prev.fix.getDisplayName()} in [" +
                         "${prev.startOffset}-${prev.endOffset}] and ${
-                        fix.fix.displayName} in [${fix.startOffset}-${fix.endOffset}]"
+                        fix.fix.getDisplayName()
+                        } in [${fix.startOffset}-${fix.endOffset}]"
                 )
                 return true
             }
@@ -233,6 +342,8 @@ open class LintFixPerformer constructor(
             addSetAttribute(file, lintFix, location)
         } else if (lintFix is AnnotateFix) {
             addAnnotation(file, lintFix, location)
+        } else if (lintFix is CreateFileFix) {
+            addCreateFile(file, lintFix)
         } else if (lintFix is LintFixGroup && lintFix.type == GroupType.COMPOSITE) {
             var all = true
             for (nested in lintFix.fixes) {
@@ -255,6 +366,20 @@ open class LintFixPerformer constructor(
             annotateFix, annotateFix.range ?: fixLocation, file.initialText
         )
         return addReplaceString(file, replaceFix, fixLocation)
+    }
+
+    private fun addCreateFile(
+        file: PendingEditFile,
+        fix: CreateFileFix
+    ): Boolean {
+        if (fix.delete) {
+            file.delete = true
+            return true
+        }
+        file.createText = fix.text
+        file.createBytes = fix.binary
+        fix.selectPattern?.let { file.selection = Selection(Pattern.compile(it), 0) }
+        return true
     }
 
     private fun addSetAttribute(
@@ -290,18 +415,21 @@ open class LintFixPerformer constructor(
                     contents
             )
         }
+
         val element = node as Element
         val value = setFix.value
         val namespace = setFix.namespace
+        var attributeName = setFix.attribute
+
+        val attr =
+            if (namespace != null) {
+                element.getAttributeNodeNS(namespace, attributeName)
+            } else {
+                element.getAttributeNode(attributeName)
+            }
+
         if (value == null) {
             // Delete attribute
-            val attr =
-                if (namespace != null) {
-                    element.getAttributeNodeNS(namespace, setFix.attribute)
-                } else {
-                    element.getAttributeNode(setFix.attribute)
-                }
-
             if (attr != null) {
                 val position = PositionXmlParser.getPosition(attr)
                 val startOffset: Int = position.startOffset
@@ -315,7 +443,18 @@ open class LintFixPerformer constructor(
             }
             return false
         } else {
-            var attributeName = setFix.attribute
+            if (attr != null) {
+                // Already set; change it
+                val position = PositionXmlParser.getPosition(attr)
+                val startOffset: Int = position.startOffset
+                val endOffset: Int = position.endOffset
+                val prefix = attr.name + "=\""
+                val replacement = prefix + XmlUtils.toXmlAttributeValue(value) + "\""
+                file.edits.add(PendingEdit(setFix, contents, startOffset, endOffset, replacement))
+                addValueSelection(value, setFix.dot, setFix.mark, startOffset, prefix.length, file)
+                return true
+            }
+
             val insertOffset = findAttributeInsertionOffset(
                 file.initialText,
                 element,
@@ -364,13 +503,37 @@ open class LintFixPerformer constructor(
             val padLeft = if (!contents[insertOffset - 1].isWhitespace()) " " else ""
             val padRight =
                 if (contents[insertOffset] != '/' && contents[insertOffset] != '>') " " else ""
+
+            val leftPart = "$padLeft$attributeName=\""
+            val valuePart = XmlUtils.toXmlAttributeValue(value)
+            val rightPart = "\"$padRight"
             file.edits.add(
                 PendingEdit(
                     setFix, contents, insertOffset, insertOffset,
-                    "$padLeft$attributeName=\"${XmlUtils.toXmlAttributeValue(value)}\"$padRight"
+                    leftPart + valuePart + rightPart
                 )
             )
+            addValueSelection(value, setFix.dot, setFix.mark, insertOffset, leftPart.length, file)
             return true
+        }
+    }
+
+    private fun addValueSelection(
+        value: String,
+        dot: Int,
+        mark: Int,
+        startOffset: Int,
+        valueOffset: Int,
+        file: PendingEditFile
+    ) {
+        if (dot != Integer.MIN_VALUE) {
+            val valueStart = startOffset + valueOffset
+            val valueDot = valueStart + dot
+            val valueMark = if (mark != Integer.MIN_VALUE) valueStart + mark else valueDot
+            val selectionStart = min(valueDot, valueMark)
+            val selectedString = value.substring(min(dot, mark), max(dot, mark))
+            val pattern = Pattern.compile(Pattern.quote(selectedString))
+            file.selection = Selection(pattern, selectionStart)
         }
     }
 
@@ -538,12 +701,59 @@ open class LintFixPerformer constructor(
             }
         }
 
+        if (includeMarkers && replaceFix.shortenNames) {
+            // This isn't fully shortening names, it's only removing fully qualified names
+            // for symbols already imported.
+            //
+            // Also, this will not correctly handle some conflicts. This is only used for
+            // unit testing lint fixes, not for actually operating on code; for that we're using
+            // IntelliJ's built in import cleanup when running in the IDE.
+            val imported: MutableSet<String> = HashSet()
+            for (line in contents.split("\n").toTypedArray()) {
+                if (line.startsWith("package ")) {
+                    var to = line.indexOf(';')
+                    if (to == -1) {
+                        to = line.length
+                    }
+                    imported.add(line.substring("package ".length, to).trim { it <= ' ' } + ".")
+                } else if (line.startsWith("import ")) {
+                    var from = "import ".length
+                    if (line.startsWith("static ")) {
+                        from += " static ".length
+                    }
+                    var to = line.indexOf(';')
+                    if (to == -1) {
+                        to = line.length
+                    }
+                    if (line[to - 1] == '*') {
+                        to--
+                    }
+                    imported.add(line.substring(from, to).trim { it <= ' ' })
+                }
+            }
+            for (full in imported) {
+                var clz = full
+                if (replacement.contains(clz)) {
+                    if (!clz.endsWith(".")) {
+                        val index = clz.lastIndexOf('.')
+                        if (index == -1) {
+                            continue
+                        }
+                        clz = clz.substring(0, index + 1)
+                    }
+                    replacement = replacement.replace(clz, "")
+                }
+            }
+        }
+
+        replaceFix.selectPattern?.let { file.selection = Selection(Pattern.compile(it), start.offset) }
+
         val edit = PendingEdit(replaceFix, contents, startOffset, endOffset, replacement)
         file.edits.add(edit)
         return true
     }
 
-    fun computeEdits(incident: Incident, lintFix: LintFix): List<PendingEditFile>? {
+    fun computeEdits(incident: Incident, lintFix: LintFix): List<PendingEditFile> {
         val fileMap = mutableMapOf<File, PendingEditFile>()
         registerFix(fileMap, incident, lintFix)
         return fileMap.values.toList()
@@ -552,6 +762,10 @@ open class LintFixPerformer constructor(
     companion object {
         fun getLocation(incident: Incident): Location {
             val fix = incident.fix
+            return getLocation(incident, fix)
+        }
+
+        fun getLocation(incident: Incident, fix: LintFix?): Location {
             if (fix is ReplaceString) {
                 val range = fix.range
                 if (range != null) {
@@ -562,8 +776,19 @@ open class LintFixPerformer constructor(
                 if (range != null) {
                     return range
                 }
+            } else if (fix is AnnotateFix) {
+                val range = fix.range
+                if (range != null) {
+                    return range
+                }
+            } else if (fix is CreateFileFix) {
+                return Location.create(fix.file)
             }
             return incident.location
+        }
+
+        fun isEditingFix(fix: LintFix): Boolean {
+            return fix is ReplaceString || fix is AnnotateFix || fix is SetAttribute || fix is CreateFileFix
         }
 
         /**
@@ -571,6 +796,14 @@ open class LintFixPerformer constructor(
          * whether a given fix is.
          */
         fun canAutoFix(lintFix: LintFix): Boolean {
+            return canAutoFix(lintFix, true)
+        }
+
+        fun canAutoFix(lintFix: LintFix, requireAutoFixable: Boolean): Boolean {
+            if (!requireAutoFixable && !(lintFix is LintFixGroup && lintFix.type == GroupType.ALTERNATIVES)) {
+                return true
+            }
+
             if (lintFix is LintFixGroup) {
                 when (lintFix.type) {
                     GroupType.ALTERNATIVES ->
@@ -579,7 +812,7 @@ open class LintFixPerformer constructor(
                     GroupType.COMPOSITE -> {
                         // All nested fixes must be auto-fixable
                         for (nested in lintFix.fixes) {
-                            if (!canAutoFix(nested)) {
+                            if (!canAutoFix(nested, requireAutoFixable)) {
                                 return false
                             }
                         }
@@ -684,8 +917,14 @@ open class LintFixPerformer constructor(
         }
     }
 
+    data class Selection(val pattern: Pattern?, var dot: Int = Integer.MIN_VALUE, var mark: Int = Integer.MIN_VALUE)
+
     class PendingEditFile(val client: LintCliClient, val file: File, val initialText: String) {
         val edits: MutableList<PendingEdit> = mutableListOf()
+        var selection: Selection? = null
+        var delete: Boolean = false
+        var createText: String? = null
+        var createBytes: ByteArray? = null
 
         private var document: Document? = null
 
@@ -743,23 +982,37 @@ open class LintFixPerformer constructor(
             return contents.substring(0, startOffset) + replacement + contents.substring(endOffset)
         }
 
+        fun adjustOffset(offset: Int, biasLeft: Boolean): Int {
+            return if (offset < startOffset || offset == startOffset && biasLeft) {
+                offset
+            } else {
+                offset - abs(startOffset - endOffset) + replacement.length
+            }
+        }
+
         private fun isDelete(): Boolean = endOffset > startOffset
 
         fun fixName(): String {
-            return fix.familyName ?: return fix.displayName ?: fix.javaClass.simpleName
+            return fix.getFamilyName() ?: return fix.getDisplayName() ?: fix.javaClass.simpleName
         }
 
         override fun toString(): String {
             return when {
-                replacement.isEmpty() -> "At $startOffset, delete \"${source.substring(
-                    startOffset,
-                    endOffset
-                )}\""
+                replacement.isEmpty() ->
+                    "At $startOffset, delete \"${
+                    source.substring(
+                        startOffset,
+                        endOffset
+                    )
+                    }\""
                 startOffset == endOffset -> "At $startOffset, insert \"$replacement\""
-                else -> "At $startOffset, change \"${source.substring(
-                    startOffset,
-                    endOffset
-                )}\" to \"$replacement\""
+                else ->
+                    "At $startOffset, change \"${
+                    source.substring(
+                        startOffset,
+                        endOffset
+                    )
+                    }\" to \"$replacement\""
             }
         }
 

@@ -642,7 +642,7 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
         // actually figure out what to change
         if (files != null && files.isNotEmpty() && files.any { it.edits.isNotEmpty() }) {
             var indent = indent
-            val description = fix.displayName ?: "Fix"
+            val description = fix.getDisplayName() ?: "Fix"
             writer.indent(indent++).write("{\n")
             writer.writeDescription(indent, "description", description, comma = true)
             writer.indent(indent++).write("\"artifactChanges\": [\n")
