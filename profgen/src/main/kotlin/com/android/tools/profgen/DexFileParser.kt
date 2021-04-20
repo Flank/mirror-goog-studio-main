@@ -30,7 +30,7 @@ private val MAGIC_SUPPORTED_VERSIONS = listOf(
     "035",  // Android < N. Very pervasive and standard.
     "037",  // Android N. Adds support for default methods.
     "038",  // Android O. Adds support for new bytecodes and data for method handles.
-    "039",  // Android P+. TODO: determine what changed...
+    "039",  // Android P+. Adds support for const-method-handle and const-method-type bytecodes.
 )
 
 /**
