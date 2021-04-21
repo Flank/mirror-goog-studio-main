@@ -47,8 +47,7 @@ class ArtProfile internal constructor(
         for ((dexFile, data) in profileData) {
             for (typeIndex in data.classes) {
                 val type = dexFile.typePool[typeIndex]
-                val deobfuscated = obf.deobfuscate(type)
-                os.println(deobfuscated)
+                obf.deobfuscate(type).forEach { os.println(it) }
             }
             for ((methodIndex, methodData) in data.methods) {
                 val method = dexFile.methodPool[methodIndex]
@@ -381,9 +380,7 @@ fun ArtProfile(hrp: HumanReadableProfile, obf: ObfuscationMap, apk: Apk): ArtPro
 
         for (typeIndex in classDefs) {
             val type = types[typeIndex]
-            val deobfuscated = obf.deobfuscate(type)
-            val flags = hrp.match(deobfuscated)
-            if (flags != 0) {
+            if (obf.deobfuscate(type).any { hrp.match(it) != 0 }) {
                 profileClasses.add(typeIndex)
             }
         }

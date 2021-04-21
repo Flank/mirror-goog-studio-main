@@ -17,7 +17,6 @@
 package com.android.tools.profgen
 
 import org.junit.Test
-import java.io.File
 import java.nio.charset.StandardCharsets
 import kotlin.test.assertEquals
 
@@ -53,6 +52,21 @@ class ObfuscationMapTests {
         assertMethod(obf, "Lcom/google/Bar;->someMethod2(ZLcom/google/Bar;)Lcom/google/Bar;", "Lc;->d(ZLc;)Lc;")
     }
 
+    @Test
+    fun testMergedClasses() {
+        val mappingTxt = """
+            com.google.Foo -> a.b:
+                1:1:com.google.Bar someMethod1():0 -> d
+            com.google.Bar -> a.b:
+                1:1:com.google.Bar someMethod2(boolean,com.google.Bar):0 -> d
+        """.trimIndent()
+        val obf = mappingTxt.byteInputStream(StandardCharsets.UTF_8).reader().use { ObfuscationMap(it) }
+        assertType(obf, "Lcom/google/not/Present;", "Lcom/google/not/Present;")
+        assertTypes(obf, listOf("Lcom/google/Bar;", "Lcom/google/Foo;"), "La/b;")
+        assertMethod(obf, "Lcom/google/Foo;->someMethod1()Lcom/google/Bar;", "La/b;->d()La/b;")
+        assertMethod(obf, "Lcom/google/Bar;->someMethod2(ZLcom/google/Bar;)Lcom/google/Bar;", "La/b;->d(ZLa/b;)La/b;")
+    }
+
     fun assertMethod(obf: ObfuscationMap, original: String, obfuscated: String) {
         val origMethod = parseDexMethod(original)
         val obfMethod = parseDexMethod(obfuscated)
@@ -66,10 +80,20 @@ class ObfuscationMapTests {
 
     fun assertType(obf: ObfuscationMap, original: String, obfuscated: String) {
         val deobfuscated = obf.deobfuscate(obfuscated)
+        assertEquals(1, deobfuscated.size, "expected only one mapping")
         assertEquals(
-            deobfuscated,
+            deobfuscated[0],
             original,
             "Expected '$original' but found '$deobfuscated"
+        )
+    }
+
+    fun assertTypes(obf: ObfuscationMap, originals: List<String>, obfuscated: String) {
+        val deobfuscated = obf.deobfuscate(obfuscated).toSet()
+        assertEquals(
+            originals.toSet(),
+            deobfuscated,
+            "Expected '$originals' but found '$deobfuscated"
         )
     }
 }

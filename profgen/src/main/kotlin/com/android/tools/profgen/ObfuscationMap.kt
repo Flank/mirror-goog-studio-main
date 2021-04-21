@@ -27,16 +27,11 @@ import java.io.InputStreamReader
 class ObfuscationMap internal constructor(
     classMappings: List<ClassMapping>,
 ) {
-    private val obfToOrig = TypeMap(
-        classMappings.map {
-            it.obfuscated to it.original
-        }.toMap()
-    )
+    private val obfToOrig: Map<String, List<String>> =
+        classMappings.groupBy({ it.obfuscated }, { it.original })
 
     private val origToObf = TypeMap(
-        classMappings.map {
-            it.original to it.obfuscated
-        }.toMap()
+        classMappings.associate { it.original to it.obfuscated }
     )
 
     private val methodObfToOrig: Map<DexMethod, DexMethod> = classMappings.flatMap { mapping ->
@@ -57,13 +52,8 @@ class ObfuscationMap internal constructor(
         return methodObfToOrig[method] ?: method
     }
 
-    internal fun deobfuscate(type: String): String {
-        // TODO(lmr): Handle the case where one obfuscated class name maps to multiple original class names.
-        return obfToOrig[type]
-    }
-
-    companion object {
-        val Empty = ObfuscationMap(emptyList())
+    internal fun deobfuscate(type: String): List<String> {
+        return obfToOrig[type] ?: listOf(type)
     }
 }
 
