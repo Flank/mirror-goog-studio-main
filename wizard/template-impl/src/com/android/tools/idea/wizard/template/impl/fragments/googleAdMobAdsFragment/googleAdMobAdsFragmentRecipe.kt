@@ -43,7 +43,7 @@ fun RecipeExecutor.googleAdMobAdsFragmentRecipe(
   addAllKotlinDependencies(moduleData)
   addViewBindingSupport(moduleData.viewBindingSupport, true)
 
-  addDependency("com.google.android.gms:play-services-ads:+", toBase = moduleData.isDynamic)
+  addDependency("com.google.android.gms:play-services-ads:19.6.0", toBase = moduleData.isDynamic)
   addDependency("com.android.support.constraint:constraint-layout:+")
 
   mergeXml(androidManifestXml(), manifestOut.resolve("AndroidManifest.xml"))

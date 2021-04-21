@@ -49,7 +49,7 @@ fun RecipeExecutor.googleAdMobAdsActivityRecipe(
 
   generateManifestStrings(activityClass, moduleData.baseFeature?.resDir ?: resOut, moduleData.isNewModule, true)
   addDependency("com.android.support:appcompat-v7:${moduleData.apis.appCompatVersion}.+")
-  addDependency("com.google.android.gms:play-services-ads:+", toBase = moduleData.isDynamic)
+  addDependency("com.google.android.gms:play-services-ads:19.6.0", toBase = moduleData.isDynamic)
 
   mergeXml(androidManifestXml(activityClass, isLauncher, moduleData.isLibrary, moduleData.isNewModule, packageName),
            manifestOut.resolve("AndroidManifest.xml"))

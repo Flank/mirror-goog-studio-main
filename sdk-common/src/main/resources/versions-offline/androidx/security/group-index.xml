@@ -2,6 +2,6 @@
 <androidx.security>
   <security-crypto versions="1.1.0-alpha03"/>
   <security-crypto-ktx versions="1.1.0-alpha02"/>
-  <security-identity-credential versions="1.0.0-alpha01"/>
+  <security-identity-credential versions="1.0.0-alpha02"/>
 </androidx.security>
 
