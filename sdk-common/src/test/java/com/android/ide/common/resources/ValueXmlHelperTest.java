@@ -156,6 +156,8 @@ public final class ValueXmlHelperTest {
     public void htmlEntities() {
         assertEquals("Entity \u00a9 \u00a9 Copyright",
                 unescapeResourceString("Entity &#169; &#xA9; Copyright", true, true));
+        assertEquals("Crab \ud83e\udd80 \ud83e\udd80",
+                     unescapeResourceString("Crab &#129408; &#x1f980;", true, true));
     }
 
     @Test
