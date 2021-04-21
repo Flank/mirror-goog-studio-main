@@ -24,7 +24,6 @@ import com.android.ide.common.process.JavaProcessExecutor
 import com.android.ide.common.process.JavaProcessInfo
 import com.android.ide.common.process.ProcessOutputHandler
 import com.android.ide.common.process.ProcessResult
-import com.android.ide.common.workers.ExecutorServiceAdapter
 import com.android.testutils.MockitoKt.any
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidTestResultListenerProto.TestResultEvent
@@ -58,11 +57,9 @@ class ManagedDeviceTestRunnerTest {
     @get:Rule var temporaryFolderRule = TemporaryFolder()
 
     @Mock lateinit var mockJavaProcessExecutor: JavaProcessExecutor
-    @Mock lateinit var mockExecutorServiceAdapter: ExecutorServiceAdapter
     @Mock lateinit var mockVersionedSdkLoader: SdkComponentsBuildService.VersionedSdkLoader
     @Mock lateinit var mockTestData: StaticTestData
     @Mock lateinit var mockAppApk: File
-    @Mock lateinit var mockTestApk: File
     @Mock lateinit var mockHelperApk: File
     @Mock lateinit var mockLogger: ILogger
     @Mock lateinit var mockUtpConfigFactory: UtpConfigFactory
@@ -92,10 +89,9 @@ class ManagedDeviceTestRunnerTest {
         `when`(mockManagedDevice.deviceName).thenReturn("mockDeviceName")
         `when`(mockManagedDevice.api).thenReturn(28)
         `when`(mockTestData.minSdkVersion).thenReturn(AndroidVersionImpl(28))
-        `when`(mockTestData.testApk).thenReturn(mockTestApk)
         `when`(mockTestData.testedApkFinder).thenReturn { _, _ -> listOf(mockAppApk) }
         `when`(mockUtpConfigFactory.createRunnerConfigProtoForManagedDevice(
-                any(), any(), any(), any(), any(),
+                any(), any(), any(), any(), any(), any(),
                 any(), any(), any(), any(), any())).then {
             RunnerConfigProto.RunnerConfig.getDefaultInstance()
         }

@@ -82,13 +82,13 @@ class UtpConfigFactoryTest {
         testedApplicationId = "com.example.application",
         applicationId = "com.example.application.test",
         instrumentationRunner = "androidx.test.runner.AndroidJUnitRunner",
-        instrumentationRunnerArguments = emptyMap<String, String>(),
+        instrumentationRunnerArguments = emptyMap(),
         animationsDisabled = false,
         isTestCoverageEnabled = false,
         minSdkVersion = AndroidVersionImpl(1),
         isLibrary = false,
         flavorName = "",
-        testApk = File(""),
+        testApk = mockFile("testApk.apk"),
         testDirectories = emptyList(),
         testedApkFinder = { _, _ -> emptyList() }
     )
@@ -102,15 +102,11 @@ class UtpConfigFactoryTest {
         minSdkVersion = AndroidVersionImpl(1),
         isLibrary = false,
         flavorName = "",
-        testApk = File(""),
+        testApk = mockFile("testApk.apk"),
         testDirectories = emptyList(),
         testedApkFinder = { _, _ -> emptyList() }
     )
     private val utpDependencies = object: UtpDependencies() {
-        private fun mockFile(absolutePath: String): File = mock(File::class.java).also {
-            `when`(it.absolutePath).thenReturn(absolutePath)
-        }
-
         override val launcher = FakeConfigurableFileCollection(File(""))
         override val core = FakeConfigurableFileCollection(File(""))
         override val deviceControllerDdmlib = FakeConfigurableFileCollection(mockFile("pathToANDROID_DEVICE_CONTROLLER_DDMLIB.jar"))
@@ -121,6 +117,10 @@ class UtpConfigFactoryTest {
         override val testDeviceInfoPlugin = FakeConfigurableFileCollection(mockFile("pathToANDROID_TEST_DEVICE_INFO_PLUGIN.jar"))
         override val testPluginHostRetention = FakeConfigurableFileCollection(mockFile("pathToANDROID_TEST_PLUGIN_HOST_RETENTION.jar"))
         override val testPluginResultListenerGradle = FakeConfigurableFileCollection(mockFile("pathToANDROID_TEST_PLUGIN_RESULT_LISTENER_GRADLE.jar"))
+    }
+
+    private fun mockFile(absolutePath: String): File = mock(File::class.java).also {
+        `when`(it.absolutePath).thenReturn(absolutePath)
     }
 
     @Before
@@ -167,7 +167,8 @@ class UtpConfigFactoryTest {
         val runnerConfigProto = factory.createRunnerConfigProtoForLocalDevice(
             mockDevice,
             testData,
-            listOf(mockAppApk, mockTestApk, mockHelperApk),
+            listOf(mockAppApk, mockTestApk),
+            listOf(mockHelperApk),
             utpDependencies,
             versionedSdkLoader,
             mockOutputDir,
@@ -202,26 +203,6 @@ class UtpConfigFactoryTest {
               test_fixture_id {
                 id: "AGP_Test_Fixture"
               }
-              setup {
-                installable {
-                  source_path {
-                    path: "mockAppApkPath"
-                  }
-                  type: ANDROID_APK
-                }
-                installable {
-                  source_path {
-                    path: "mockTestApkPath"
-                  }
-                  type: ANDROID_APK
-                }
-                installable {
-                  source_path {
-                    path: "mockHelperApkPath"
-                  }
-                  type: ANDROID_APK
-                }
-              }
               host_plugin {
                 label {
                   label: "ANDROID_TEST_PLUGIN"
@@ -229,6 +210,10 @@ class UtpConfigFactoryTest {
                 class_name: "com.google.testing.platform.plugin.android.AndroidDevicePlugin"
                 jar {
                   path: "pathToANDROID_TEST_PLUGIN.jar"
+                }
+                config {
+                  type_url: "type.googleapis.com/google.testing.platform.runner.plugin.android.proto.AndroidDevicePlugin"
+                  value: "\"\027\022\023\n\021mockHelperApkPath \002*\023\n\021\022\r\n\vtestApk.apk \002*\026\n\024\022\020\n\016mockAppApkPath \002*\027\n\025\022\021\n\017mockTestApkPath \002"
                 }
               }
               host_plugin {
@@ -317,7 +302,8 @@ class UtpConfigFactoryTest {
         val runnerConfigProto = factory.createRunnerConfigProtoForLocalDevice(
                 mockDevice,
                 testData,
-                listOf(mockAppApk, mockTestApk, mockHelperApk),
+                listOf(mockAppApk, mockTestApk),
+                listOf(mockHelperApk),
                 utpDependencies,
                 versionedSdkLoader,
                 mockOutputDir,
@@ -352,26 +338,6 @@ class UtpConfigFactoryTest {
               test_fixture_id {
                 id: "AGP_Test_Fixture"
               }
-              setup {
-                installable {
-                  source_path {
-                    path: "mockAppApkPath"
-                  }
-                  type: ANDROID_APK
-                }
-                installable {
-                  source_path {
-                    path: "mockTestApkPath"
-                  }
-                  type: ANDROID_APK
-                }
-                installable {
-                  source_path {
-                    path: "mockHelperApkPath"
-                  }
-                  type: ANDROID_APK
-                }
-              }
               host_plugin {
                 label {
                   label: "ANDROID_TEST_PLUGIN"
@@ -379,6 +345,10 @@ class UtpConfigFactoryTest {
                 class_name: "com.google.testing.platform.plugin.android.AndroidDevicePlugin"
                 jar {
                   path: "pathToANDROID_TEST_PLUGIN.jar"
+                }
+                config {
+                  type_url: "type.googleapis.com/google.testing.platform.runner.plugin.android.proto.AndroidDevicePlugin"
+                  value: "\"\027\022\023\n\021mockHelperApkPath \002*\023\n\021\022\r\n\vtestApk.apk \002*\026\n\024\022\020\n\016mockAppApkPath \002*\027\n\025\022\021\n\017mockTestApkPath \002"
                 }
               }
               host_plugin {
@@ -470,7 +440,8 @@ class UtpConfigFactoryTest {
         val runnerConfigProto = factory.createRunnerConfigProtoForLocalDevice(
             mockDevice,
             testData,
-            listOf(mockAppApk, mockTestApk, mockHelperApk),
+            listOf(mockAppApk, mockTestApk),
+            listOf(mockHelperApk),
             utpDependencies,
             versionedSdkLoader,
             mockOutputDir,
@@ -505,26 +476,6 @@ class UtpConfigFactoryTest {
               test_fixture_id {
                 id: "AGP_Test_Fixture"
               }
-              setup {
-                installable {
-                  source_path {
-                    path: "mockAppApkPath"
-                  }
-                  type: ANDROID_APK
-                }
-                installable {
-                  source_path {
-                    path: "mockTestApkPath"
-                  }
-                  type: ANDROID_APK
-                }
-                installable {
-                  source_path {
-                    path: "mockHelperApkPath"
-                  }
-                  type: ANDROID_APK
-                }
-              }
               host_plugin {
                 label {
                   label: "ANDROID_TEST_PLUGIN_HOST_RETENTION"
@@ -545,6 +496,10 @@ class UtpConfigFactoryTest {
                 class_name: "com.google.testing.platform.plugin.android.AndroidDevicePlugin"
                 jar {
                   path: "pathToANDROID_TEST_PLUGIN.jar"
+                }
+                config {
+                  type_url: "type.googleapis.com/google.testing.platform.runner.plugin.android.proto.AndroidDevicePlugin"
+                  value: "\"\027\022\023\n\021mockHelperApkPath \002*\023\n\021\022\r\n\vtestApk.apk \002*\026\n\024\022\020\n\016mockAppApkPath \002*\027\n\025\022\021\n\017mockTestApkPath \002"
                 }
               }
               host_plugin {
@@ -636,7 +591,8 @@ class UtpConfigFactoryTest {
         val runnerConfigProto = factory.createRunnerConfigProtoForLocalDevice(
             mockDevice,
             testDataWithDebug,
-            listOf(mockAppApk, mockTestApk, mockHelperApk),
+            listOf(mockAppApk, mockTestApk),
+            listOf(mockHelperApk),
             utpDependencies,
             versionedSdkLoader,
             mockOutputDir,
@@ -671,26 +627,6 @@ class UtpConfigFactoryTest {
               test_fixture_id {
                 id: "AGP_Test_Fixture"
               }
-              setup {
-                installable {
-                  source_path {
-                    path: "mockAppApkPath"
-                  }
-                  type: ANDROID_APK
-                }
-                installable {
-                  source_path {
-                    path: "mockTestApkPath"
-                  }
-                  type: ANDROID_APK
-                }
-                installable {
-                  source_path {
-                    path: "mockHelperApkPath"
-                  }
-                  type: ANDROID_APK
-                }
-              }
               host_plugin {
                 label {
                   label: "ANDROID_TEST_PLUGIN"
@@ -698,6 +634,10 @@ class UtpConfigFactoryTest {
                 class_name: "com.google.testing.platform.plugin.android.AndroidDevicePlugin"
                 jar {
                   path: "pathToANDROID_TEST_PLUGIN.jar"
+                }
+                config {
+                  type_url: "type.googleapis.com/google.testing.platform.runner.plugin.android.proto.AndroidDevicePlugin"
+                  value: "\"\027\022\023\n\021mockHelperApkPath \002*\023\n\021\022\r\n\vtestApk.apk \002*\026\n\024\022\020\n\016mockAppApkPath \002*\027\n\025\022\021\n\017mockTestApkPath \002"
                 }
               }
               host_plugin {
@@ -791,7 +731,8 @@ class UtpConfigFactoryTest {
         val runnerConfigProto = factory.createRunnerConfigProtoForLocalDevice(
             mockDevice,
             testData,
-            listOf(mockAppApk, mockTestApk, mockHelperApk),
+            listOf(mockAppApk, mockTestApk),
+            listOf(mockHelperApk),
             utpDependencies,
             versionedSdkLoader,
             mockOutputDir,
@@ -826,26 +767,6 @@ class UtpConfigFactoryTest {
               test_fixture_id {
                 id: "AGP_Test_Fixture"
               }
-              setup {
-                installable {
-                  source_path {
-                    path: "mockAppApkPath"
-                  }
-                  type: ANDROID_APK
-                }
-                installable {
-                  source_path {
-                    path: "mockTestApkPath"
-                  }
-                  type: ANDROID_APK
-                }
-                installable {
-                  source_path {
-                    path: "mockHelperApkPath"
-                  }
-                  type: ANDROID_APK
-                }
-              }
               host_plugin {
                 label {
                   label: "ANDROID_TEST_PLUGIN_HOST_RETENTION"
@@ -866,6 +787,10 @@ class UtpConfigFactoryTest {
                 class_name: "com.google.testing.platform.plugin.android.AndroidDevicePlugin"
                 jar {
                   path: "pathToANDROID_TEST_PLUGIN.jar"
+                }
+                config {
+                  type_url: "type.googleapis.com/google.testing.platform.runner.plugin.android.proto.AndroidDevicePlugin"
+                  value: "\"\027\022\023\n\021mockHelperApkPath \002*\023\n\021\022\r\n\vtestApk.apk \002*\026\n\024\022\020\n\016mockAppApkPath \002*\027\n\025\022\021\n\017mockTestApkPath \002"
                 }
               }
               host_plugin {
@@ -957,7 +882,8 @@ class UtpConfigFactoryTest {
         val runnerConfigProto = factory.createRunnerConfigProtoForLocalDevice(
             mockDevice,
             testData,
-            listOf(mockAppApk, mockTestApk, mockHelperApk),
+            listOf(mockAppApk, mockTestApk),
+            listOf(mockHelperApk),
             utpDependencies,
             versionedSdkLoader,
             mockOutputDir,
@@ -992,26 +918,6 @@ class UtpConfigFactoryTest {
               test_fixture_id {
                 id: "AGP_Test_Fixture"
               }
-              setup {
-                installable {
-                  source_path {
-                    path: "mockAppApkPath"
-                  }
-                  type: ANDROID_APK
-                }
-                installable {
-                  source_path {
-                    path: "mockTestApkPath"
-                  }
-                  type: ANDROID_APK
-                }
-                installable {
-                  source_path {
-                    path: "mockHelperApkPath"
-                  }
-                  type: ANDROID_APK
-                }
-              }
               host_plugin {
                 label {
                   label: "ANDROID_TEST_PLUGIN_HOST_RETENTION"
@@ -1032,6 +938,10 @@ class UtpConfigFactoryTest {
                 class_name: "com.google.testing.platform.plugin.android.AndroidDevicePlugin"
                 jar {
                   path: "pathToANDROID_TEST_PLUGIN.jar"
+                }
+                config {
+                  type_url: "type.googleapis.com/google.testing.platform.runner.plugin.android.proto.AndroidDevicePlugin"
+                  value: "\"\027\022\023\n\021mockHelperApkPath \002*\023\n\021\022\r\n\vtestApk.apk \002*\026\n\024\022\020\n\016mockAppApkPath \002*\027\n\025\022\021\n\017mockTestApkPath \002"
                 }
               }
               host_plugin {
@@ -1129,7 +1039,8 @@ class UtpConfigFactoryTest {
         val runnerConfigProto = factory.createRunnerConfigProtoForManagedDevice(
             managedDevice,
             testData,
-            listOf(mockAppApk, mockTestApk, mockHelperApk),
+            listOf(mockAppApk, mockTestApk),
+            listOf(mockHelperApk),
             utpDependencies,
             versionedSdkLoader,
             mockOutputDir,
@@ -1161,26 +1072,6 @@ class UtpConfigFactoryTest {
               test_fixture_id {
                 id: "AGP_Test_Fixture"
               }
-              setup {
-                installable {
-                  source_path {
-                    path: "mockAppApkPath"
-                  }
-                  type: ANDROID_APK
-                }
-                installable {
-                  source_path {
-                    path: "mockTestApkPath"
-                  }
-                  type: ANDROID_APK
-                }
-                installable {
-                  source_path {
-                    path: "mockHelperApkPath"
-                  }
-                  type: ANDROID_APK
-                }
-              }
               host_plugin {
                 label {
                   label: "ANDROID_TEST_PLUGIN"
@@ -1188,6 +1079,10 @@ class UtpConfigFactoryTest {
                 class_name: "com.google.testing.platform.plugin.android.AndroidDevicePlugin"
                 jar {
                   path: "pathToANDROID_TEST_PLUGIN.jar"
+                }
+                config {
+                  type_url: "type.googleapis.com/google.testing.platform.runner.plugin.android.proto.AndroidDevicePlugin"
+                  value: "\"\027\022\023\n\021mockHelperApkPath \002*\023\n\021\022\r\n\vtestApk.apk \002*\026\n\024\022\020\n\016mockAppApkPath \002*\027\n\025\022\021\n\017mockTestApkPath \002"
                 }
               }
               host_plugin {
@@ -1285,7 +1180,8 @@ class UtpConfigFactoryTest {
         val runnerConfigProto = factory.createRunnerConfigProtoForManagedDevice(
                 managedDevice,
                 testData,
-                listOf(mockAppApk, mockTestApk, mockHelperApk),
+                listOf(mockAppApk, mockTestApk),
+                listOf(mockHelperApk),
                 utpDependencies,
                 versionedSdkLoader,
                 mockOutputDir,
@@ -1317,26 +1213,6 @@ class UtpConfigFactoryTest {
               test_fixture_id {
                 id: "AGP_Test_Fixture"
               }
-              setup {
-                installable {
-                  source_path {
-                    path: "mockAppApkPath"
-                  }
-                  type: ANDROID_APK
-                }
-                installable {
-                  source_path {
-                    path: "mockTestApkPath"
-                  }
-                  type: ANDROID_APK
-                }
-                installable {
-                  source_path {
-                    path: "mockHelperApkPath"
-                  }
-                  type: ANDROID_APK
-                }
-              }
               host_plugin {
                 label {
                   label: "ANDROID_TEST_PLUGIN"
@@ -1344,6 +1220,10 @@ class UtpConfigFactoryTest {
                 class_name: "com.google.testing.platform.plugin.android.AndroidDevicePlugin"
                 jar {
                   path: "pathToANDROID_TEST_PLUGIN.jar"
+                }
+                config {
+                  type_url: "type.googleapis.com/google.testing.platform.runner.plugin.android.proto.AndroidDevicePlugin"
+                  value: "\"\027\022\023\n\021mockHelperApkPath \002*\023\n\021\022\r\n\vtestApk.apk \002*\026\n\024\022\020\n\016mockAppApkPath \002*\027\n\025\022\021\n\017mockTestApkPath \002"
                 }
               }
               host_plugin {
@@ -1443,7 +1323,8 @@ class UtpConfigFactoryTest {
         val runnerConfigProto = factory.createRunnerConfigProtoForManagedDevice(
             managedDevice,
             testData,
-            listOf(mockAppApk, mockTestApk, mockHelperApk),
+            listOf(mockAppApk, mockTestApk),
+            listOf(mockHelperApk),
             utpDependencies,
             versionedSdkLoader,
             mockOutputDir,
@@ -1475,26 +1356,6 @@ class UtpConfigFactoryTest {
               test_fixture_id {
                 id: "AGP_Test_Fixture"
               }
-              setup {
-                installable {
-                  source_path {
-                    path: "mockAppApkPath"
-                  }
-                  type: ANDROID_APK
-                }
-                installable {
-                  source_path {
-                    path: "mockTestApkPath"
-                  }
-                  type: ANDROID_APK
-                }
-                installable {
-                  source_path {
-                    path: "mockHelperApkPath"
-                  }
-                  type: ANDROID_APK
-                }
-              }
               host_plugin {
                 label {
                   label: "ANDROID_TEST_PLUGIN_HOST_RETENTION"
@@ -1515,6 +1376,10 @@ class UtpConfigFactoryTest {
                 class_name: "com.google.testing.platform.plugin.android.AndroidDevicePlugin"
                 jar {
                   path: "pathToANDROID_TEST_PLUGIN.jar"
+                }
+                config {
+                  type_url: "type.googleapis.com/google.testing.platform.runner.plugin.android.proto.AndroidDevicePlugin"
+                  value: "\"\027\022\023\n\021mockHelperApkPath \002*\023\n\021\022\r\n\vtestApk.apk \002*\026\n\024\022\020\n\016mockAppApkPath \002*\027\n\025\022\021\n\017mockTestApkPath \002"
                 }
               }
               host_plugin {

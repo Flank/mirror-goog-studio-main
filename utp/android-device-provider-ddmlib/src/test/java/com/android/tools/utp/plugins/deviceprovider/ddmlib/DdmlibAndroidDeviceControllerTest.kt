@@ -36,9 +36,9 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
 /**
- * Unit tests for [Ddmlibcontroller].
+ * Unit tests for [DdmlibAndroidDeviceController].
  */
-class DdmlibcontrollerTest {
+class DdmlibAndroidDeviceControllerTest {
 
     companion object {
         private const val EXPECTED_DESTINATION_PATH = "expected/destination"
@@ -136,25 +136,22 @@ class DdmlibcontrollerTest {
     }
 
     @Test
-    fun executeDefaultTimeout() {
-        val ret = controller.execute(listOf("am", "instrument"))
-        assertThat(ret.statusCode).isEqualTo(0)
-        verify(mockDevice).executeShellCommand(eq("am instrument"), any(), eq(0L), eq(0L), any())
-    }
-
-    @Test
-    fun executeShellCommandShouldBeRemoved() {
+    fun executeShellCommand() {
         val ret = controller.execute(listOf("shell", "am", "instrument"))
         assertThat(ret.statusCode).isEqualTo(0)
         verify(mockDevice).executeShellCommand(eq("am instrument"), any(), eq(0L), eq(0L), any())
     }
 
     @Test
-    fun executeAsyncShellCommandShouldBeRemoved() {
-        val handler = controller.executeAsync(listOf("shell", "am", "instrument")) {}
-        handler.waitFor()
-        assertThat(handler.exitCode()).isEqualTo(0)
-        verify(mockDevice).executeShellCommand(eq("am instrument"), any(), eq(0L), eq(0L), any())
+    fun executeInstallCommand() {
+        val ret = controller.execute(listOf("install", "apk.apk"))
+        assertThat(ret.statusCode).isEqualTo(0)
+        verify(mockDevice).installPackage(eq("apk.apk"), eq(true), any(), eq(0L), eq(0L), any())
+    }
+
+    @Test(expected = UnsupportedOperationException::class)
+    fun executeUnsupportedCommand() {
+        controller.execute(listOf("unknownCommand"))
     }
 
     @Test

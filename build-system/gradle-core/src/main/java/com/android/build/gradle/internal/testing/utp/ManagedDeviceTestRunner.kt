@@ -86,7 +86,8 @@ class ManagedDeviceTestRunner(
                     configFactory.createRunnerConfigProtoForManagedDevice(
                             managedDevice,
                             testData,
-                            testedApks.union(helperApks) + testData.testApk,
+                            testedApks,
+                            helperApks,
                             utpDependencies,
                             versionedSdkLoader,
                             utpOutputDir,
