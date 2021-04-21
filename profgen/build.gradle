@@ -19,7 +19,6 @@ compileKotlin {
 }
 
 group = 'com.android.tools'
-archivesBaseName = 'profgen'
 version = rootProject.ext.buildVersion
 
 project.ext.pomName = 'Android Tools Profgen'
