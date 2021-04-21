@@ -16,9 +16,13 @@
 
 package com.android.tools.profgen
 
-import java.io.UTFDataFormatException
+import java.io.*
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import java.nio.charset.StandardCharsets
+import java.util.zip.Deflater
+import java.util.zip.DeflaterOutputStream
+import java.util.zip.Inflater
 
 /** Base-128 bit mask.  */
 private const val MASK: Int = 0x7f
@@ -119,3 +123,151 @@ internal enum class Endian(
         }
     }
 }
+
+internal const val UINT_8_SIZE = 1
+internal const val UINT_16_SIZE = 2
+internal const val UINT_32_SIZE = 4
+
+internal fun byteArrayOf(vararg chars: Char) = ByteArray(chars.size) { chars[it].toByte() }
+
+internal fun OutputStream.writeUInt(value: Long, numberOfBytes: Int) {
+    val buffer = ByteArray(numberOfBytes)
+    for (i in 0 until numberOfBytes) {
+        buffer[i] = (value shr i * java.lang.Byte.SIZE and 0xff).toByte()
+    }
+    write(buffer)
+}
+
+/**
+ * Writes the value as an 8 bit unsigned integer (uint8_t in c++).
+ */
+internal fun OutputStream.writeUInt8(value: Int) = writeUInt(value.toLong(), UINT_8_SIZE)
+
+/**
+ * Writes the value as a 16 bit unsigned integer (uint16_t in c++).
+ */
+internal fun OutputStream.writeUInt16(value: Int) = writeUInt(value.toLong(), UINT_16_SIZE)
+
+/**
+ * Writes the value as a 32 bit unsigned integer (uint32_t in c++).
+ */
+internal fun OutputStream.writeUInt32(value: Long) = writeUInt(value, UINT_32_SIZE)
+
+/**
+ * Writes a string in the stream using UTF-8 encoding.
+ *
+ * @param s the string to be written
+ * @throws IOException in case of IO errors
+ */
+internal fun OutputStream.writeString(s: String) {
+    write(s.toByteArray(StandardCharsets.UTF_8))
+}
+
+/**
+ * Compresses data the using [DeflaterOutputStream] before writing it to the stream.
+ * The method will write the size of the compressed data (32 bits, [.writeUInt32]) before
+ * the actual compressed bytes.
+ *
+ * @param data the data to be compressed and written.
+ * @throws IOException in case of IO errors
+ */
+internal fun OutputStream.writeCompressed(data: ByteArray) {
+    val compressor = Deflater(Deflater.BEST_SPEED)
+    val bos = ByteArrayOutputStream()
+    DeflaterOutputStream(bos, compressor).use { it.write(data) }
+    writeUInt32(bos.size().toLong())
+    // TODO(calin): we can get rid of the multiple byte array copy using a custom stream.
+    write(bos.toByteArray())
+}
+
+/**
+ * Attempts to read {@param length} bytes from the input stream.
+ * If not enough bytes are available it throws [IllegalStateException].
+ */
+internal fun InputStream.read(length: Int): ByteArray {
+    val buffer = ByteArray(length)
+    var offset = 0
+    while (offset < length) {
+        val result = read(buffer, offset, length - offset)
+        if (result < 0) {
+            error("Not enough bytes to read: $length")
+        }
+        offset += result
+    }
+    return buffer
+}
+
+/**
+ * Reads the equivalent of an 8 bit unsigned integer (uint8_t in c++).
+ */
+internal fun InputStream.readUInt8(): Int = readUInt(UINT_8_SIZE).toInt()
+
+/**
+ * Reads the equivalent of an 16 bit unsigned integer (uint16_t in c++).
+ */
+internal fun InputStream.readUInt16(): Int = readUInt(UINT_16_SIZE).toInt()
+
+/**
+ * Reads the equivalent of an 32 bit unsigned integer (uint32_t in c++).
+ */
+internal fun InputStream.readUInt32(): Long = readUInt(UINT_32_SIZE)
+
+/**
+ * Reads an unsigned integer from the stream
+ *
+ * @param numberOfBytes the size of the integer in bytes
+ */
+@OptIn(ExperimentalUnsignedTypes::class)
+internal fun InputStream.readUInt(numberOfBytes: Int): Long {
+    val buffer = read(numberOfBytes)
+    // We use a long to cover for unsigned integer.
+    var value: Long = 0
+    for (k in 0 until numberOfBytes) {
+        val next = buffer[k].toUByte().toLong()
+        value += next shl k * java.lang.Byte.SIZE
+    }
+    return value
+}
+
+/**
+ * Reads bytes from the stream and coverts them to a string using UTF-8.
+ *
+ * @param size the number of bytes to read
+ */
+internal fun InputStream.readString(size: Int): String = String(read(size), StandardCharsets.UTF_8)
+
+/**
+ * Reads a compressed data region from the stream.
+ *
+ * @param compressedDataSize the size of the compressed data (bytes)
+ * @param uncompressedDataSize the expected size of the uncompressed data (bytes)
+ */
+internal fun InputStream.readCompressed(compressedDataSize: Int, uncompressedDataSize: Int): ByteArray {
+    // Read the expected compressed data size.
+    val inf = Inflater()
+    val result = ByteArray(uncompressedDataSize)
+    var totalBytesRead = 0
+    var totalBytesInflated = 0
+    val input = ByteArray(2048) // 2KB read window size;
+    while (!inf.finished() && !inf.needsDictionary() && totalBytesRead < compressedDataSize) {
+        val bytesRead = read(input)
+        if (bytesRead < 0) {
+            error("Invalid zip data. Stream ended after $totalBytesRead bytes. Expected $compressedDataSize bytes")
+        }
+        inf.setInput(input, 0, bytesRead)
+        totalBytesInflated += inf.inflate(result, totalBytesInflated, uncompressedDataSize - totalBytesInflated)
+        totalBytesRead += bytesRead
+    }
+    if (totalBytesRead != compressedDataSize) {
+        error("Didn't read enough bytes during decompression. expected=$compressedDataSize actual=$totalBytesRead")
+    }
+    if (!inf.finished()) {
+        error("Inflater did not finish")
+    }
+    return result
+}
+
+/**
+ * Computes the length of the string's UTF-8 encoding.
+ */
+internal val String.utf8Length: Int get() = toByteArray(StandardCharsets.UTF_8).size

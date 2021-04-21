@@ -54,14 +54,22 @@ fun Apk(bytes: ByteArray, name: String): Apk {
 internal class DexFile(
     val header: DexHeader,
     val dexChecksum: Long,
-    fileName: String,
-    apkFileName: String,
+    val profileKey: String,
 ) {
-    val profileKey = if (fileName == "classes.dex") {
-        apkFileName
-    } else {
-        "$apkFileName!$fileName"
-    }
+    constructor(
+        header: DexHeader,
+        dexChecksum: Long,
+        fileName: String,
+        apkFileName: String,
+    ) : this(
+        header,
+        dexChecksum,
+        if (fileName == "classes.dex") {
+            apkFileName
+        } else {
+            "$apkFileName!$fileName"
+        }
+    )
 
     val stringPool = ArrayList<String>(header.stringIds.size)
     val typePool = ArrayList<String>(header.typeIds.size)
@@ -73,22 +81,24 @@ internal class DexFile(
 }
 
 internal class DexHeader(
-    val magic: ByteArray,
-    val checksum: Int,
-    val signature: ByteArray,
-    val fileSize: Int,
-    val headerSize: Int,
-    val endianTag: Endian,
-    val link: Span,
-    val mapOffset: Int,
     val stringIds: Span,
     val typeIds: Span,
     val prototypeIds: Span,
-    val fieldIds: Span,
     val methodIds: Span,
     val classDefs: Span,
     val data: Span,
-)
+) {
+    internal companion object {
+        val Empty = DexHeader(
+            stringIds = Span.Empty,
+            typeIds = Span.Empty,
+            prototypeIds = Span.Empty,
+            methodIds = Span.Empty,
+            classDefs = Span.Empty,
+            data = Span.Empty,
+        )
+    }
+}
 
 internal data class DexMethod(
     val parent: String,
@@ -143,6 +153,58 @@ internal class Span(
     fun includes(value: Long): Boolean {
         return value >= offset && value < offset + size
     }
+    internal companion object {
+        val Empty = Span(0, 0)
+    }
+}
+
+internal class DexFileData(
+    val classes: Set<Int>,
+    val methods: Map<Int, MethodData>,
+)
+
+internal class MutableDexFileData(
+    val classSetSize: Int,
+    val hotMethodRegionSize: Int,
+    val numMethodIds: Int,
+    val dexFile: DexFile,
+    val classes: MutableSet<Int>,
+    val methods: MutableMap<Int, MethodData>,
+)
+
+internal class MethodData(var flags: Int) {
+    inline val isHot: Boolean get() = isFlagSet(MethodFlags.HOT)
+    @Suppress("NOTHING_TO_INLINE")
+    inline fun isFlagSet(flag: Int): Boolean {
+        return flags and flag == flag
+    }
+    fun print(os: PrintStream) = with(os) {
+        if (isFlagSet(MethodFlags.HOT)) print(HOT)
+        if (isFlagSet(MethodFlags.STARTUP)) print(STARTUP)
+        if (isFlagSet(MethodFlags.POST_STARTUP)) print(POST_STARTUP)
+    }
+}
+
+// TODO(lmr): refactor to not use iteration and first/last flag strategy for this
+internal object MethodFlags {
+    // Implementation note: DO NOT CHANGE THESE VALUES without adjusting the parsing.
+    // To simplify the implementation we use the MethodHotness flag values as indexes into the
+    // internal bitmap representation. As such, they should never change unless the profile version
+    // is updated and the implementation changed accordingly.
+    /** Marker flag used to simplify iterations.  */
+    const val FIRST_FLAG = 1 shl 0
+
+    /** The method is profile-hot (this is implementation specific, e.g. equivalent to JIT-warm)  */
+    const val HOT = 1 shl 0
+
+    /** Executed during the app startup as determined by the runtime.  */
+    const val STARTUP = 1 shl 1
+
+    /** Executed after app startup as determined by the runtime.  */
+    const val POST_STARTUP = 1 shl 2
+
+    /** Marker flag used to simplify iterations.  */
+    const val LAST_FLAG_REGULAR = 1 shl 2
 }
 
 internal fun splitParameters(parameters: String): List<String> {

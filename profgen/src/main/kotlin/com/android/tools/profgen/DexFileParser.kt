@@ -77,10 +77,10 @@ private fun parseHeader(src: ByteBuffer): DexHeader {
     src.get(rawMagic)
     val magic = String(rawMagic, StandardCharsets.UTF_8)
     checkMagic(magic)
-    val checksum = src.int
+    /* val checksum = */src.int
     val signature = ByteArray(20)
-    src[signature]
-    val fileSize = src.int
+    src.get(signature)
+    /* val fileSize = */src.int
     val headerSize = src.int
     if (headerSize != HEADER_SIZE) {
         invalidDexFile("Header is wrong size. Got $headerSize, Want $HEADER_SIZE")
@@ -88,28 +88,19 @@ private fun parseHeader(src: ByteBuffer): DexHeader {
 
     // Skip the endian tag as we read it earlier.
     src.int
-    val link: Span = parseSpan(src)
-    val mapOff = src.int
+    /* val link = */parseSpan(src)
+    /* val mapOff = */src.int
     val stringIds = parseSpan(src)
     val typeIds = parseSpan(src)
     val protoIds = parseSpan(src)
-    val fieldIds = parseSpan(src)
+    /* val fieldIds = */parseSpan(src)
     val methodIds = parseSpan(src)
     val classDefs = parseSpan(src)
     val data = parseSpan(src)
     return DexHeader(
-        magic = rawMagic,
-        checksum = checksum,
-        signature = signature,
-        fileSize = fileSize,
-        headerSize = headerSize,
-        endianTag = endian,
-        link = link,
-        mapOffset = mapOff,
         stringIds = stringIds,
         typeIds = typeIds,
         prototypeIds = protoIds,
-        fieldIds = fieldIds,
         methodIds = methodIds,
         classDefs = classDefs,
         data = data,
