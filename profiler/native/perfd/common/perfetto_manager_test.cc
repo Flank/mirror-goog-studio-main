@@ -83,7 +83,7 @@ TEST(PerfettoManagerTest, ValidateConfig) {
   const int buffer_size_kb = 32000;
   perfetto::protos::TraceConfig config =
       PerfettoManager::BuildFtraceConfig(app_name, buffer_size_kb);
-  EXPECT_EQ(config.data_sources().size(), 5);
+  EXPECT_EQ(config.data_sources().size(), 4);
   // Assume the format of the config, perfetto doesn't care about the order but
   // for the test we assume its order so we don't need to search for data.
 
@@ -112,9 +112,6 @@ TEST(PerfettoManagerTest, ValidateConfig) {
   EXPECT_EQ(config.data_sources()[2].config().name(), "linux.process_stats");
   // CPU information
   EXPECT_EQ(config.data_sources()[3].config().name(), "linux.system_info");
-  // Android frame data
-  EXPECT_EQ(config.data_sources()[4].config().name(),
-            "android.surfaceflinger.frame");
 }
 
 TEST(PerfettoManagerTest, ValidateShutdownErrors) {
