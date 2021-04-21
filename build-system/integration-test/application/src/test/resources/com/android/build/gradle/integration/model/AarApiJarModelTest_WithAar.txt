@@ -74,7 +74,7 @@
          - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/jars/classes.jar{F}, {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/jars/libs/impl1.jar.jar{F}, {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/jars/libs/impl2.jar.jar{F}]
          - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/AndroidManifest.xml{F}
          - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/res{!}
-         - resStaticLibrary    = (null)
+         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/res.apk{!}
          - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/assets{!}
          - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/jni{!}
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/aidl{!}

@@ -16,12 +16,8 @@
 
 package com.android.build.api.dsl
 
-import com.android.build.api.variant.VariantBuilder
-import com.android.build.api.variant.Variant
-import org.gradle.api.Action
 import org.gradle.api.Incubating
 import org.gradle.api.NamedDomainObjectContainer
-import org.gradle.api.plugins.ExtensionAware
 import java.io.File
 
 /**

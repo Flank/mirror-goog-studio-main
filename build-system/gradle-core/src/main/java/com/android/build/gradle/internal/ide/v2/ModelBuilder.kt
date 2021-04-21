@@ -19,19 +19,17 @@ package com.android.build.gradle.internal.ide.v2
 import com.android.SdkConstants
 import com.android.build.api.component.impl.AndroidTestImpl
 import com.android.build.api.component.impl.ComponentImpl
-import com.android.build.api.dsl.AndroidSourceSet
+import com.android.build.api.dsl.ApkSigningConfig
 import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.api.dsl.BuildFeatures
 import com.android.build.api.dsl.BuildType
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.DefaultConfig
 import com.android.build.api.dsl.ProductFlavor
-import com.android.build.api.dsl.ApkSigningConfig
 import com.android.build.api.dsl.TestExtension
-import com.android.build.api.variant.Variant
-import com.android.build.api.variant.VariantBuilder
 import com.android.build.api.variant.impl.TestVariantImpl
 import com.android.build.api.variant.impl.VariantImpl
+import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
@@ -299,11 +297,19 @@ class ModelBuilder<
                     )
                 } else null
 
+
+        val compileSdkVersion = when (extension) {
+            is BaseAppModuleExtension -> extension.compileSdkVersion
+            is LibraryExtension -> extension.compileSdkVersion
+            is com.android.build.gradle.TestExtension -> extension.compileSdkVersion
+            else -> null
+        } ?: "unknown"
+
         return AndroidDslImpl(
             buildToolsVersion = extension.buildToolsVersion,
 
             groupId = project.group.toString(),
-            compileTarget = extension.compileSdk.toString(), // FIXME
+            compileTarget = compileSdkVersion,
 
             defaultConfig = defaultConfig,
             buildTypes = buildTypes,

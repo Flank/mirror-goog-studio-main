@@ -84,7 +84,6 @@ interface AndroidArtifact : BaseArtifact, AndroidModel {
      */
     val abiFilters: Set<String>?
 
-
     /**
      * Returns the absolute path for the listing file that will get updated after each build. The
      * model file will contain deployment related information like applicationId, list of APKs.
@@ -99,8 +98,12 @@ interface AndroidArtifact : BaseArtifact, AndroidModel {
      * The test info, if applicable, otherwise null
      */
     val testInfo: TestInfo?
+
     /**
      * The bundle info if applicable, otherwise null.
+     *
+     * This is only applicable to the main artifact of the APPLICATION modules. All other cases
+     * this should be null.
      */
     val bundleInfo: BundleInfo?
 
