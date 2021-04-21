@@ -273,14 +273,14 @@ proto::AgentLiveLiteralUpdateResponse LiveLiteral::Update(
     jobject value = nullptr;
 
     if (update.type() == "Ljava/lang/String;") {
-      Log::V("Live Literal Update with String");
+      LogEvent("Live Literal Update with String");
       value = jni_->NewStringUTF(update.value().c_str());
       live_literal_kt.CallStaticVoidMethod(
           "updateLiveLiteralValue", "(Ljava/lang/String;Ljava/lang/Object;)V",
           jkey, value);
 
     } else if (update.type() == "C") {
-      Log::V("Live Literal Update with Character");
+      LogEvent("Live Literal Update with Character");
       jclass string_class = jni_->FindClass("java/lang/String");
       jmethodID parse_char = jni_->GetMethodID(string_class, "charAt", "(I)C");
       jchar result = jni_->CallCharMethod(
@@ -295,7 +295,7 @@ proto::AgentLiveLiteralUpdateResponse LiveLiteral::Update(
           jkey, value);
 
     } else if (update.type() == "B") {
-      Log::V("Live Literal Update with Byte");
+      LogEvent("Live Literal Update with Byte");
       jclass byte_class = jni_->FindClass("java/lang/Byte");
       jmethodID parse = jni_->GetStaticMethodID(
           byte_class, "valueOf", "(Ljava/lang/String;)Ljava/lang/Byte;");
@@ -305,7 +305,7 @@ proto::AgentLiveLiteralUpdateResponse LiveLiteral::Update(
           "updateLiveLiteralValue", "(Ljava/lang/String;Ljava/lang/Object;)V",
           jkey, value);
     } else if (update.type() == "I") {
-      Log::V("Live Literal Update with Integer");
+      LogEvent("Live Literal Update with Integer");
       jclass int_class = jni_->FindClass("java/lang/Integer");
       jmethodID parse = jni_->GetStaticMethodID(
           int_class, "valueOf", "(Ljava/lang/String;)Ljava/lang/Integer;");
@@ -315,7 +315,7 @@ proto::AgentLiveLiteralUpdateResponse LiveLiteral::Update(
           "updateLiveLiteralValue", "(Ljava/lang/String;Ljava/lang/Object;)V",
           jkey, value);
     } else if (update.type() == "J") {
-      Log::V("Live Literal Update with Long");
+      LogEvent("Live Literal Update with Long");
       jclass long_class = jni_->FindClass("java/lang/Long");
       jmethodID parse = jni_->GetStaticMethodID(
           long_class, "valueOf", "(Ljava/lang/String;)Ljava/lang/Long;");
@@ -325,7 +325,7 @@ proto::AgentLiveLiteralUpdateResponse LiveLiteral::Update(
           "updateLiveLiteralValue", "(Ljava/lang/String;Ljava/lang/Object;)V",
           jkey, value);
     } else if (update.type() == "S") {
-      Log::V("Live Literal Update with Short");
+      LogEvent("Live Literal Update with Short");
       jclass short_class = jni_->FindClass("java/lang/Short");
       jmethodID parse = jni_->GetStaticMethodID(
           short_class, "valueOf", "(Ljava/lang/String;)Ljava/lang/Short;");
@@ -335,7 +335,7 @@ proto::AgentLiveLiteralUpdateResponse LiveLiteral::Update(
           "updateLiveLiteralValue", "(Ljava/lang/String;Ljava/lang/Object;)V",
           jkey, value);
     } else if (update.type() == "F") {
-      Log::V("Live Literal Update with Float");
+      LogEvent("Live Literal Update with Float");
       jclass float_class = jni_->FindClass("java/lang/Float");
       jmethodID parse = jni_->GetStaticMethodID(
           float_class, "valueOf", "(Ljava/lang/String;)Ljava/lang/Float;");
@@ -345,7 +345,7 @@ proto::AgentLiveLiteralUpdateResponse LiveLiteral::Update(
           "updateLiveLiteralValue", "(Ljava/lang/String;Ljava/lang/Object;)V",
           jkey, value);
     } else if (update.type() == "D") {
-      Log::V("Live Literal Update with Double");
+      LogEvent("Live Literal Update with Double");
       jclass double_class = jni_->FindClass("java/lang/Double");
       jmethodID parse = jni_->GetStaticMethodID(
           double_class, "valueOf", "(Ljava/lang/String;)Ljava/lang/Double;");
@@ -355,7 +355,7 @@ proto::AgentLiveLiteralUpdateResponse LiveLiteral::Update(
           "updateLiveLiteralValue", "(Ljava/lang/String;Ljava/lang/Object;)V",
           jkey, value);
     } else if (update.type() == "Z") {
-      Log::V("Live Literal Update with Boolean");
+      LogEvent("Live Literal Update with Boolean");
       jclass bool_class = jni_->FindClass("java/lang/Boolean");
       jmethodID parse = jni_->GetStaticMethodID(
           bool_class, "valueOf", "(Ljava/lang/String;)Ljava/lang/Boolean;");
