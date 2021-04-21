@@ -25,6 +25,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
@@ -223,7 +224,7 @@ public class LiveLiteralSupport {
         try (ObjectInputStream in =
                 new ObjectInputStream(Files.newInputStream(Paths.get(mappingFile)))) {
             initMap.putAll((HashMap) in.readObject());
-        } catch (FileNotFoundException e) {
+        } catch (FileNotFoundException | NoSuchFileException e) {
             // Just use the empty map created.
         } catch (IOException e) {
             e.printStackTrace();
