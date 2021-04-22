@@ -71,11 +71,10 @@ class PartialRTest {
     @get:Rule
     val project = GradleTestProject.builder().fromTestApp(testApp).create()
 
-    @Ignore("b/160949546")
+
     @Test
     fun checkBuilds() {
         project.executor()
-            .with(BooleanOption.ENABLE_JVM_RESOURCE_COMPILER, false) // b/160949546
             .run(":app:assembleDebug")
 
         val stringsR = FileUtils.join(
@@ -137,7 +136,6 @@ class PartialRTest {
 
         // Incremental build.
         project.executor()
-            .with(BooleanOption.ENABLE_JVM_RESOURCE_COMPILER, false) // b/160949546
             .run(":app:assembleDebug")
 
         // Partial file for the removed file should have been removed too.

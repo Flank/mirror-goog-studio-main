@@ -154,11 +154,9 @@ android.defaultConfig.minSdkVersion 21
 
     @get:Rule val project = GradleTestProject.builder().fromTestApp(testApp).create()
 
-    @Ignore("b/160949546")
     @Test
     fun smokeTest() {
         project.executor()
-            .with(BooleanOption.ENABLE_JVM_RESOURCE_COMPILER, false) // b/160949546
             .with(BooleanOption.ENABLE_RESOURCE_NAMESPACING_DEFAULT, true)
             .with(BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP, false) // b/178461741
             .with(BooleanOption.RELATIVE_COMPILE_LIB_RESOURCES, false) // b/178461741

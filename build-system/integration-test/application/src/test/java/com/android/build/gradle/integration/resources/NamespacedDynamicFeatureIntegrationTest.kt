@@ -271,11 +271,9 @@ class NamespacedDynamicFeatureIntegrationTest {
     val project = GradleTestProject.builder().fromTestApp(testApp)
         .create()
 
-    @Ignore("b/160949546")
     @Test
     fun testApkContentsAndPackageIds() {
         project.executor()
-            .with(BooleanOption.ENABLE_JVM_RESOURCE_COMPILER, false) // b/160949546
             .run(
                 ":otherFeature1:assembleDebug",
                 ":otherFeature1:assembleDebugAndroidTest",

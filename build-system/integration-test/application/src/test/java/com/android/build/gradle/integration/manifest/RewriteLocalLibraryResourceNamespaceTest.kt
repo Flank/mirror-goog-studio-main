@@ -111,11 +111,9 @@ class RewriteLocalLibraryResourceNamespaceTest {
         )
     }
 
-    @Ignore("b/160949546")
     @Test
     fun build() {
         project.executor()
-            .with(BooleanOption.ENABLE_JVM_RESOURCE_COMPILER, false) // b/160949546
             .run("assembleDebug")
 
         val libraryManifest =
