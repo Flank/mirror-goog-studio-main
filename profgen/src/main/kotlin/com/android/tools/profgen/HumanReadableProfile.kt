@@ -19,7 +19,6 @@ package com.android.tools.profgen
 import java.io.File
 import java.io.InputStreamReader
 
-
 internal const val HOT = 'H'
 internal const val STARTUP = 'S'
 internal const val POST_STARTUP = 'P'
@@ -38,9 +37,9 @@ internal const val METHOD_SEPARATOR_END = '>'
  */
 class HumanReadableProfile internal constructor(
     /**
-     * The map of method descriptors in the rule set. These
+     * The map of method descriptors to flags
      */
-    private val exactMethods: Map<String, ProfileRule>,
+    private val exactMethods: Map<DexMethod, Int>,
     /**
      * The set of string descriptors that are included in the rules, specified to be "startup" classes. This is modeled
      * as a Set because the classes are either specified or aren't. These are "exact" in the sense that these classes
@@ -53,9 +52,9 @@ class HumanReadableProfile internal constructor(
     private val fuzzyTypes: MutablePrefixTree<ProfileRule>
 ) {
     internal fun match(method: DexMethod): Int {
+        val exact = exactMethods[method]
+        if (exact != null) return exact
         val target = method.parent
-        val exact = exactMethods[target]
-        if (exact != null) return exact.flags
         val fuzzy = fuzzyMethods.firstOrNull(target) {
             it.matches(method)
         }
@@ -73,18 +72,18 @@ class HumanReadableProfile internal constructor(
 
 fun HumanReadableProfile(src: InputStreamReader): HumanReadableProfile {
     val fragmentParser = RuleFragmentParser(80)
-    val lines = src.readLines().map { parseRule(it, fragmentParser) }
-    val exactMethods = mutableMapOf<String, ProfileRule>()
+    val rules = src.readLines().map { parseRule(it, fragmentParser) }
+    val exactMethods = mutableMapOf<DexMethod, Int>()
     val exactTypes =  mutableSetOf<String>()
     val fuzzyMethods = MutablePrefixTree<ProfileRule>()
     val fuzzyTypes = MutablePrefixTree<ProfileRule>()
 
-    for (line in lines) {
+    for (rule in rules) {
         when {
-            line.isExact && line.isType -> exactTypes.add(line.prefix)
-            line.isExact && !line.isType -> exactMethods[line.prefix] = line
-            !line.isExact && line.isType -> fuzzyTypes.put(line.prefix, line)
-            !line.isExact && !line.isType -> fuzzyMethods.put(line.prefix, line)
+            rule.isExact && rule.isType -> exactTypes.add(rule.prefix)
+            rule.isExact && !rule.isType -> exactMethods[rule.toDexMethod()] = rule.flags
+            !rule.isExact && rule.isType -> fuzzyTypes.put(rule.prefix, rule)
+            !rule.isExact && !rule.isType -> fuzzyMethods.put(rule.prefix, rule)
         }
     }
 
@@ -93,6 +92,23 @@ fun HumanReadableProfile(src: InputStreamReader): HumanReadableProfile {
         exactTypes,
         fuzzyMethods,
         fuzzyTypes,
+    )
+}
+
+internal fun ProfileRule.toDexMethod(): DexMethod {
+    // the matches here are expected to be exact.
+    assert(isExact)
+    assert(target.isExact)
+    assert(method.isExact)
+    assert(params.isExact)
+    assert(returnType.isExact)
+    return DexMethod(
+        parent = target.prefix,
+        name = method.prefix,
+        prototype = DexPrototype(
+            returnType = returnType.prefix,
+            parameters = splitParameters(params.prefix),
+        )
     )
 }
 
@@ -199,6 +215,10 @@ internal class RuleFragment(
             value.startsWith(prefix) && pattern.matchEntire(value.substring(prefix.length)) != null
         }
     }
+
+    companion object {
+        val Empty = RuleFragment(true, true, "", MATCH_ALL_REGEX)
+    }
 }
 
 internal class ProfileRule(
@@ -208,7 +228,7 @@ internal class ProfileRule(
     val params: RuleFragment,
     val returnType: RuleFragment,
 ) {
-    val isExact = target.isExact
+    val isExact = target.isExact && method.isExact && params.isExact && returnType.isExact
     val isType = method.isEmpty
     val prefix = target.prefix
 
@@ -237,7 +257,11 @@ internal fun parseRule(line: String, fragmentParser: RuleFragmentParser = RuleFr
     val flags = Flags().apply { i = parseFlags(line, i) }
     i = fragmentParser.parseTarget(line, i)
     val target = fragmentParser.build()
-    // TODO(lmr): handle lines that end here to denote entire classes
+    // check if it has only target class
+    if (i == line.length) {
+        return ProfileRule(flags.flags, target,
+            RuleFragment.Empty, RuleFragment.Empty, RuleFragment.Empty)
+    }
     i = consume(METHOD_SEPARATOR_START, line, i)
     i = consume(METHOD_SEPARATOR_END, line, i)
     i = fragmentParser.parseMethodName(line, i)

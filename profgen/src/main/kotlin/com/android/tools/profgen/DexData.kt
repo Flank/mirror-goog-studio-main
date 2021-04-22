@@ -18,7 +18,6 @@ package com.android.tools.profgen
 
 import java.io.File
 import java.io.PrintStream
-import java.nio.ByteOrder
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 
@@ -91,7 +90,7 @@ internal class DexHeader(
     val data: Span,
 )
 
-internal class DexMethod(
+internal data class DexMethod(
     val parent: String,
     val name: String,
     val prototype: DexPrototype,
@@ -106,28 +105,6 @@ internal class DexMethod(
         print(parameters)
         print(')')
         print(returnType)
-    }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as DexMethod
-
-        if (parent != other.parent) return false
-        if (name != other.name) return false
-        if (prototype.returnType != other.prototype.returnType) return false
-        if (parameters != other.parameters) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = parent.hashCode()
-        result = 31 * result + name.hashCode()
-        result = 31 * result + prototype.returnType.hashCode()
-        result = 31 * result + parameters.hashCode()
-        return result
     }
 
     override fun toString(): String = buildString {
@@ -145,7 +122,7 @@ internal class DexMethod(
  * Dex files store the "prototype" or signature of a function separate from the function itself to save on space. As a
  * result, we allocate this data structure separately from the [DexMethod].
  */
-internal class DexPrototype(
+internal data class DexPrototype(
     val returnType: String,
     val parameters: List<String>,
 )
@@ -166,4 +143,19 @@ internal class Span(
     fun includes(value: Long): Boolean {
         return value >= offset && value < offset + size
     }
+}
+
+internal fun splitParameters(parameters: String): List<String> {
+    val result = mutableListOf<String>()
+    val currentParam = StringBuilder(parameters.length)
+    var inClassName = false
+    for (c in parameters) {
+        currentParam.append(c)
+        inClassName = if (inClassName) c != ';' else c == 'L'
+        if (!inClassName) {
+            result.add(currentParam.toString())
+            currentParam.clear()
+        }
+    }
+    return result
 }

@@ -20,6 +20,7 @@ import com.android.testutils.TestUtils
 import com.android.tools.profgen.Apk
 import com.android.tools.profgen.DexMethod
 import com.android.tools.profgen.DexPrototype
+import com.android.tools.profgen.splitParameters
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
@@ -49,5 +50,16 @@ class DexFileParserTest {
         assertThat(dex.methodPool).isEqualTo(listOf(
             helloInit, intMethod, voidMethod, objInit, strLength
         ))
+    }
+
+    @Test
+    fun testParseParams() {
+        assertThat(splitParameters("ILa/B;ZILa/C;J")).isEqualTo(
+            listOf("I", "La/B;", "Z", "I", "La/C;", "J")
+        )
+        assertThat(splitParameters("")).isEqualTo(emptyList<String>())
+        assertThat(splitParameters("IJ")).isEqualTo(listOf("I", "J"))
+        assertThat(splitParameters("La/C;")).isEqualTo(listOf("La/C;"))
+        assertThat(splitParameters("LB;La/C;")).isEqualTo(listOf("LB;", "La/C;"))
     }
 }

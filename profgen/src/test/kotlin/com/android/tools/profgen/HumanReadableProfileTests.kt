@@ -16,7 +16,9 @@
 
 package com.android.tools.profgen
 
+import com.google.common.truth.Truth.assertThat
 import org.junit.Test
+import java.io.ByteArrayInputStream
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
@@ -51,6 +53,22 @@ class HumanReadableProfileTests {
             "Lcom/anything/can/go/here/Foo;->someOtherMethod(II)I",
             "Lcom/Foo;->method(II)I",
         )
+    }
+
+    @Test
+    fun testExactClassMath() {
+        val hrp = HumanReadableProfile("Lcom/anything/can/go/here;")
+        assertThat(hrp.match("Lcom/anything/can/go/here;")).isEqualTo(MethodFlags.STARTUP)
+        assertThat(hrp.match("LFoo;")).isEqualTo(0)
+    }
+
+    @Test
+    fun testExactMethodMatch() {
+        val hrp = HumanReadableProfile("HSLcom/anything/can/go/here;->method()I")
+        val matchingMethod = parseDexMethod("Lcom/anything/can/go/here;->method()I")
+        val nonMatchingMethod = parseDexMethod("Lcom/anything/can/go/here;->boo()I")
+        assertThat(hrp.match(matchingMethod)).isEqualTo(MethodFlags.HOT or MethodFlags.STARTUP)
+        assertThat(hrp.match(nonMatchingMethod)).isEqualTo(0)
     }
 
     fun assertMatchesItself(vararg lines: String) {
@@ -104,21 +122,10 @@ internal class LineTestScope(private val hrpLine: String) {
 }
 
 internal fun parseDexMethod(line: String): DexMethod {
-    val parsed = parseRule(line)
-    // the matches here are expected to be exact.
-    assert(parsed.isExact)
-    assert(parsed.target.isExact)
-    assert(parsed.method.isExact)
-    assert(parsed.params.isExact)
-    assert(parsed.returnType.isExact)
-    return DexMethod(
-        parent = parsed.target.prefix,
-        name = parsed.method.prefix,
-        prototype = DexPrototype(
-            returnType = parsed.returnType.prefix,
-            // NOTE: this is a little bit shady. we are relying on the fact that the parameters are just
-            // pointblank concatenated in the implementation.
-            parameters = listOf(parsed.params.prefix),
-        )
-    )
+    return parseRule(line).toDexMethod()
+}
+
+internal fun HumanReadableProfile(vararg strings: String) : HumanReadableProfile {
+    val text = strings.joinToString("\n")
+    return HumanReadableProfile(ByteArrayInputStream(text.toByteArray()).reader())
 }

@@ -1,7 +1,6 @@
 package com.android.tools.profgen
 
 import org.junit.Test
-import java.io.File
 
 class ArtProfileTests {
     @Test
