@@ -124,6 +124,9 @@ public final class LogCatHeader {
                 + mTag
                 + '('
                 + mPid
-                + ')';
+                + ':'
+                + mTid
+                + ") "
+                + mAppName;
     }
 }
