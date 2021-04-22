@@ -108,7 +108,6 @@ readonly invocation_id="$(uuidgen)"
   //tools/adt/idea/native/installer:android-studio-bundle-data \
   //tools/base/profiler/native/trace_processor_daemon \
   //tools/adt/idea/studio:test_studio \
-  //tools/adt/idea/studio:searchable_options_test \
   //tools/vendor/google/game-tools/packaging:packaging-linux \
   //tools/vendor/google/game-tools/packaging:packaging-win \
   //tools/base/ddmlib:tools.ddmlib \
