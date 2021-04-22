@@ -6,7 +6,7 @@
         simpleName=":"/>
     <dependency
         name="${projectDir}@@:library::debug"
-        simpleName="artifacts::library"/>
+        simpleName="lintKotlin:library"/>
     <dependency
         name="org.jetbrains.kotlin:kotlin-stdlib:1.4.32@jar"/>
     <dependency

@@ -1,9 +1,9 @@
 <libraries>
   <library
       name="${projectDir}@@:library::debug"
-      jars="${projectDir}/library/build/.transforms/<digest>/transformed/library-debug/jars/classes.jar"
-      resolved="artifacts::library:unspecified"
-      folder="${projectDir}/library/build/.transforms/<digest>/transformed/library-debug"
+      jars="${projectDir}/library/build/.transforms/<digest>/transformed/out/jars/classes.jar"
+      resolved="lintKotlin:library:unspecified"
+      folder="${projectDir}/library/build/.transforms/<digest>/transformed/out"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"

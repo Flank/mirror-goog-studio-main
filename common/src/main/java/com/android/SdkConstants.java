@@ -93,6 +93,11 @@ public final class SdkConstants {
     public static final String ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY =
             "androidGradlePluginVersion";
 
+    /** Properties in lint-model-metadata.properties file */
+    public static final String MAVEN_GROUP_ID_PROPERTY = "mavenGroupId";
+
+    public static final String MAVEN_ARTIFACT_ID_PROPERTY = "mavenArtifactId";
+
     /**
      * The encoding we strive to use for all files we write.
      *
