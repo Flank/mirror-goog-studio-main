@@ -127,6 +127,9 @@ public class InstallerUtil {
                 } else if (entry.isDirectory()) {
                     Files.createDirectories(entryFile);
                 } else {
+                    if (Files.isSymbolicLink(entryFile)) {
+                        Files.delete(entryFile);
+                    }
                     if (!CancellableFileIo.exists(entryFile)) {
                         Path parent = entryFile.getParent();
                         if (parent != null && !CancellableFileIo.exists(parent)) {

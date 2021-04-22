@@ -567,6 +567,10 @@ public class InstallerUtilTest extends TestCase {
             Files.write(file2, "content2".getBytes());
             Files.createSymbolicLink(root.resolve("link1"), dir1);
             Files.createSymbolicLink(root.resolve("link2"), file2);
+            Path file3 = root.resolve("qux");
+            Files.write(file3, "content3".getBytes());
+
+            Files.createSymbolicLink(outRoot.resolve("qux"), outRoot.resolve("qux.target"));
 
             Path outZip = outRoot.resolve("out.zip");
             try (ZipArchiveOutputStream out = new ZipArchiveOutputStream(outZip.toFile())) {
@@ -605,6 +609,9 @@ public class InstallerUtilTest extends TestCase {
             assertEquals("content2", new String(Files.readAllBytes(resultLink2)));
             assertTrue(Files.isSymbolicLink(resultLink2));
             assertTrue(Files.isSameFile(resultLink2, resultFile2));
+            Path resultFile3 = unzipped.resolve("qux");
+            assertFalse(Files.isSymbolicLink(resultFile3));
+            assertEquals("content3", new String(Files.readAllBytes(resultFile3)));
         }
         finally {
             FileOpUtils.deleteFileOrFolder(root);
