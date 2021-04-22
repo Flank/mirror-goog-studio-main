@@ -274,6 +274,14 @@ platform_filegroup(
 )
 
 filegroup(
+    name = "emulator",
+    srcs = sdk_glob(
+        include = ["emulator/**"],
+    ),
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
     name = "add-ons/addon-google_apis-google-latest",
     srcs = ["add-ons/addon-google_apis-google-24"],
     visibility = ["//visibility:public"],

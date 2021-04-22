@@ -36,8 +36,8 @@ platforms;android-23:**:{data/**,skins/**,templates/**,*-src.jar}
 platforms;android-21:**:{data/**,skins/**,templates/**,*-src.jar}
 platforms;android-19:**:{data/**,skins/**,templates/**,*-src.jar}
 
-# emulator isn't needed at this point and is stubbed out
-emulator:package.xml
+# Emulator is required for managed devices in AGP
+emulator
 
 cmake;3.6.4111459:**:docs/**
 cmake;3.10.2.4988404
