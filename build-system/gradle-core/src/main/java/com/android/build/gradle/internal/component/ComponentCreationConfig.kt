@@ -81,6 +81,7 @@ interface ComponentCreationConfig : ComponentIdentity {
     val dependenciesClassesAreInstrumented: Boolean
     val debuggable: Boolean
     val pseudoLocalesEnabled: Property<Boolean>
+    val androidResourcesEnabled: Boolean
 
     val minSdkVersion: AndroidVersion
 

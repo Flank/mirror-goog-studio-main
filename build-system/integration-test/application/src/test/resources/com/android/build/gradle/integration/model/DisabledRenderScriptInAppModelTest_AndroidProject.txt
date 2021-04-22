@@ -6,6 +6,8 @@
          - renderscriptDirectories = (null)
       - unitTestSourceProvider:
          - renderscriptDirectories = (null)
+      - testFixturesSourceProvider:
+         - renderscriptDirectories = (null)
    > buildTypes:
       - debug:
          - sourceProvider:
@@ -14,12 +16,16 @@
             - renderscriptDirectories = (null)
          - unitTestSourceProvider:
             - renderscriptDirectories = (null)
+         - testFixturesSourceProvider:
+            - renderscriptDirectories = (null)
       - release:
          - sourceProvider:
             - renderscriptDirectories = (null)
          - androidTestSourceProvider:
             - renderscriptDirectories = (null)
          - unitTestSourceProvider:
+            - renderscriptDirectories = (null)
+         - testFixturesSourceProvider:
             - renderscriptDirectories = (null)
    < buildTypes
    > variants:

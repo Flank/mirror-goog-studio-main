@@ -18,6 +18,7 @@ package com.android.build.api.variant.impl
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.AndroidTest
 import com.android.build.api.component.Component
+import com.android.build.api.component.TestFixtures
 import com.android.build.api.component.analytics.AnalyticsEnabledLibraryVariant
 import com.android.build.api.component.impl.ConsumableCreationConfigImpl
 import com.android.build.api.dsl.CommonExtension
@@ -78,7 +79,7 @@ open class  LibraryVariantImpl @Inject constructor(
     internalServices,
     taskCreationServices,
     globalScope
-), LibraryVariant, LibraryCreationConfig, HasAndroidTest {
+), LibraryVariant, LibraryCreationConfig, HasAndroidTest, HasTestFixtures {
 
     // ---------------------------------------------------------------------------------------------
     // PUBLIC API
@@ -105,6 +106,8 @@ open class  LibraryVariantImpl @Inject constructor(
     }
 
     override var androidTest: AndroidTest? = null
+
+    override var testFixtures: TestFixtures? = null
 
     override val renderscript: Renderscript? by lazy {
         delegate.renderscript(internalServices)

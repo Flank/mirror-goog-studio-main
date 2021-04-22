@@ -14,20 +14,11 @@
  * limitations under the License.
  */
 
-plugins {
-    id 'com.android.library'
-    id 'maven-publish'
-}
+package com.android.build.gradle.internal.dsl
 
-android {
-    compileSdkVersion rootProject.latestCompileSdk
-    testFixtures {
-        enable true
-        androidResources true
-    }
-}
+import com.android.build.api.dsl.TestFixtures
+import javax.inject.Inject
 
-dependencies {
-    testFixturesApi 'com.google.truth:truth:0.44'
-    testImplementation 'junit:junit:4.12'
+open class TestFixturesImpl @Inject constructor(override var enable: Boolean): TestFixtures {
+    override var androidResources: Boolean = false
 }

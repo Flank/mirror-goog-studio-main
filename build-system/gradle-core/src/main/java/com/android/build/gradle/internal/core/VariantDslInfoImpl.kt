@@ -16,7 +16,6 @@
 package com.android.build.gradle.internal.core
 
 import com.android.build.api.component.ComponentIdentity
-import com.android.build.api.dsl.ApkSigningConfig
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.ResValue
@@ -101,6 +100,7 @@ open class VariantDslInfoImpl<CommonExtensionT: CommonExtension<*, *, *, *>> int
     override val nativeBuildSystem: VariantManager.NativeBuiltType?,
     private val publishingInfo: VariantPublishingInfo?,
     override val properties: Map<String, Any>,
+    override val enableTestFixtures: Boolean,
 ): VariantDslInfo<CommonExtensionT>, DimensionCombination {
 
     override val buildType: String?

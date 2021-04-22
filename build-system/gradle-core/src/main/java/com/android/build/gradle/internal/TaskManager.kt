@@ -425,7 +425,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         createProcessJavaResTask(testFixturesComponent)
 
         // android resources tasks
-        if (testFixturesComponent.buildFeatures.androidResources) {
+        if (testFixturesComponent.androidResourcesEnabled) {
             taskFactory.register(ExtractDeepLinksTask.CreationAction(testFixturesComponent))
 
             createGenerateResValuesTask(testFixturesComponent)
@@ -643,7 +643,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
     }
 
     protected fun registerLibraryRClassTransformStream(component: ComponentCreationConfig) {
-        if (!component.buildFeatures.androidResources) {
+        if (!component.androidResourcesEnabled) {
             return
         }
         val compileRClass: FileCollection = project.files(
@@ -1541,7 +1541,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                         testConfigInputs.packageNameOfFinalRClass)
             }
         } else {
-            if (testedVariant.variantType.isAar && testedVariant.buildFeatures.androidResources) {
+            if (testedVariant.variantType.isAar && testedVariant.androidResourcesEnabled) {
                 // With compile classpath R classes, we need to generate a dummy R class for unit
                 // tests
                 // See https://issuetracker.google.com/143762955 for more context.
@@ -2571,7 +2571,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         // proguard can shrink an empty library project, as the R class is always kept and
         // then removed by library jar transforms.
         val addCompileRClass = (this is LibraryTaskManager
-                && creationConfig.buildFeatures.androidResources)
+                && creationConfig.androidResourcesEnabled)
         val task: TaskProvider<out Task> =
                 createR8Task(creationConfig, isTestApplication, addCompileRClass)
         if (creationConfig.variantScope.postprocessingFeatures != null) {

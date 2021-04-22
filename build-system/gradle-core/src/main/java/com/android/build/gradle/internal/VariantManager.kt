@@ -15,7 +15,6 @@
  */
 package com.android.build.gradle.internal
 
-import com.android.SdkConstants
 import com.android.build.gradle.internal.core.VariantDslInfoBuilder.Companion.getBuilder
 import com.android.build.gradle.internal.core.VariantDslInfoBuilder.Companion.computeSourceSetName
 import com.android.build.api.variant.impl.VariantBuilderImpl
@@ -39,13 +38,16 @@ import com.android.build.api.component.UnitTest
 import com.android.build.api.component.impl.TestComponentImpl
 import com.android.build.api.component.impl.TestFixturesImpl
 import com.android.build.api.dsl.CommonExtension
+import com.android.build.api.dsl.TestedExtension
 import com.android.build.api.extension.VariantExtensionConfig
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.HasAndroidTestBuilder
+import com.android.build.api.variant.HasTestFixturesBuilder
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
 import com.android.build.api.variant.impl.HasAndroidTest
+import com.android.build.api.variant.impl.HasTestFixtures
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.crash.ExternalApiUsageException
@@ -289,7 +291,9 @@ class VariantManager<CommonExtensionT: CommonExtension<*, *, *, *>, VariantBuild
                 configuredNativeBuilder(),
                 extension,
                 hasDynamicFeatures = globalScope.hasDynamicFeatures(),
-                (extension as CommonExtension<*, *, *, *>).properties
+                (extension as CommonExtension<*, *, *, *>).properties,
+                enableTestFixtures = extension is TestedExtension &&
+                        (extension as TestedExtension).testFixtures.enable,
         )
 
         // We must first add the flavors to the variant config, in order to get the proper
@@ -895,17 +899,20 @@ class VariantManager<CommonExtensionT: CommonExtension<*, *, *, *>, VariantBuild
                                     variant.name))
                 }
 
-                val testFixturesEnabled = projectOptions[BooleanOption.ENABLE_TEST_FIXTURES]
+                val testFixturesEnabledForVariant =
+                    variantInfo.variant.variantBuilder is HasTestFixturesBuilder &&
+                            (variantInfo.variant.variantBuilder as HasTestFixturesBuilder)
+                            .enableTestFixtures
 
-                if (testFixturesEnabled) {
-                    testFixturesComponents.add(
-                        createTestFixturesComponent(
-                            dimensionCombination,
-                            buildTypeData,
-                            productFlavorDataList,
-                            variantInfo
-                        )
+                if (testFixturesEnabledForVariant) {
+                    val testFixtures = createTestFixturesComponent(
+                        dimensionCombination,
+                        buildTypeData,
+                        productFlavorDataList,
+                        variantInfo
                     )
+                    testFixturesComponents.add(testFixtures)
+                    (variantInfo.variant as HasTestFixtures).testFixtures = testFixtures
                 }
 
                 if (variantFactory.variantType.hasTestComponents) {
@@ -916,7 +923,7 @@ class VariantManager<CommonExtensionT: CommonExtension<*, *, *, *>, VariantBuild
                                 productFlavorDataList,
                                 variantInfo,
                                 VariantTypeImpl.ANDROID_TEST,
-                                testFixturesEnabled
+                                testFixturesEnabledForVariant
                         )
                         androidTest?.let {
                             addTestComponent(it)
@@ -929,7 +936,7 @@ class VariantManager<CommonExtensionT: CommonExtension<*, *, *, *>, VariantBuild
                             productFlavorDataList,
                             variantInfo,
                             VariantTypeImpl.UNIT_TEST,
-                            testFixturesEnabled
+                            testFixturesEnabledForVariant
                     )
                     unitTest?.let {
                         addTestComponent(it)

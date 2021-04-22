@@ -6,6 +6,8 @@
          - aidlDirectories = (null)
       - unitTestSourceProvider:
          - aidlDirectories = (null)
+      - testFixturesSourceProvider:
+         - aidlDirectories = (null)
    > buildTypes:
       - debug:
          - sourceProvider:
@@ -14,12 +16,16 @@
             - aidlDirectories = (null)
          - unitTestSourceProvider:
             - aidlDirectories = (null)
+         - testFixturesSourceProvider:
+            - aidlDirectories = (null)
       - release:
          - sourceProvider:
             - aidlDirectories = (null)
          - androidTestSourceProvider:
             - aidlDirectories = (null)
          - unitTestSourceProvider:
+            - aidlDirectories = (null)
+         - testFixturesSourceProvider:
             - aidlDirectories = (null)
    < buildTypes
    > variants:

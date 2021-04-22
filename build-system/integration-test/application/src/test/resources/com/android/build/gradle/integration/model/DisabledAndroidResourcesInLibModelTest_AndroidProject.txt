@@ -6,6 +6,8 @@
          - resDirectories = (null)
       - unitTestSourceProvider:
          - resDirectories = (null)
+      - testFixturesSourceProvider:
+         - resDirectories = (null)
    > buildTypes:
       - debug:
          - sourceProvider:
@@ -14,12 +16,16 @@
             - resDirectories = (null)
          - unitTestSourceProvider:
             - resDirectories = (null)
+         - testFixturesSourceProvider:
+            - resDirectories = (null)
       - release:
          - sourceProvider:
             - resDirectories = (null)
          - androidTestSourceProvider:
             - resDirectories = (null)
          - unitTestSourceProvider:
+            - resDirectories = (null)
+         - testFixturesSourceProvider:
             - resDirectories = (null)
    < buildTypes
    > variants:

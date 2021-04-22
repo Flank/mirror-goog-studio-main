@@ -19,6 +19,7 @@ import com.android.build.api.artifact.MultipleArtifact
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.AndroidTest
 import com.android.build.api.component.Component
+import com.android.build.api.component.TestFixtures
 import com.android.build.api.component.analytics.AnalyticsEnabledApplicationVariant
 import com.android.build.api.component.impl.ApkCreationConfigImpl
 import com.android.build.api.dsl.ApplicationExtension
@@ -77,7 +78,7 @@ open class ApplicationVariantImpl @Inject constructor(
     internalServices,
     taskCreationServices,
     globalScope
-), ApplicationVariant, ApplicationCreationConfig, HasAndroidTest {
+), ApplicationVariant, ApplicationCreationConfig, HasAndroidTest, HasTestFixtures {
 
     val delegate by lazy { ApkCreationConfigImpl(
         this,
@@ -140,6 +141,8 @@ open class ApplicationVariantImpl @Inject constructor(
         get() = variantDslInfo.getPostProcessingOptions().codeShrinkerEnabled()
 
     override var androidTest: AndroidTest? = null
+
+    override var testFixtures: TestFixtures? = null
 
     override val renderscript: Renderscript? by lazy {
         delegate.renderscript(internalServices)

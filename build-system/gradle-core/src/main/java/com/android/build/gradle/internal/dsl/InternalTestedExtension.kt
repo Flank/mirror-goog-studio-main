@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 The Android Open Source Project
+ * Copyright (C) 2021 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,18 +16,11 @@
 
 package com.android.build.gradle.internal.dsl
 
-import com.android.build.api.dsl.DynamicFeatureBuildFeatures
-import com.android.build.api.dsl.DynamicFeatureBuildType
-import com.android.build.api.dsl.DynamicFeatureDefaultConfig
-import com.android.build.api.dsl.DynamicFeatureExtension
-import com.android.build.api.dsl.DynamicFeatureProductFlavor
+import com.android.build.api.dsl.TestFixtures
+import com.android.build.api.dsl.TestedExtension
+import org.gradle.api.Action
 
 /** See [InternalCommonExtension] */
-interface InternalDynamicFeatureExtension :
-    DynamicFeatureExtension,
-    InternalTestedExtension,
-    InternalCommonExtension<
-            DynamicFeatureBuildFeatures,
-            DynamicFeatureBuildType,
-            DynamicFeatureDefaultConfig,
-            DynamicFeatureProductFlavor>
+interface InternalTestedExtension: TestedExtension {
+    fun testFixtures(action: Action<TestFixtures>)
+}

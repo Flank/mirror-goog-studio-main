@@ -261,6 +261,7 @@ com.android.build.gradle.LibraryExtension.getSplits: com.android.build.api.dsl.S
 com.android.build.gradle.LibraryExtension.getSplits: com.android.build.gradle.internal.dsl.Splits ()
 com.android.build.gradle.LibraryExtension.getTestBuildType: java.lang.String ()
 com.android.build.gradle.LibraryExtension.getTestCoverage: com.android.build.api.dsl.TestCoverage ()
+com.android.build.gradle.LibraryExtension.getTestFixtures: com.android.build.api.dsl.TestFixtures ()
 com.android.build.gradle.LibraryExtension.getTestNamespace: java.lang.String ()
 com.android.build.gradle.LibraryExtension.getTestOptions: com.android.build.api.dsl.TestOptions ()
 com.android.build.gradle.LibraryExtension.getTestOptions: com.android.build.gradle.internal.dsl.TestOptions ()
@@ -292,6 +293,8 @@ com.android.build.gradle.LibraryExtension.signingConfigs: void (org.gradle.api.A
 com.android.build.gradle.LibraryExtension.sourceSets: void (kotlin.jvm.functions.Function1<? super org.gradle.api.NamedDomainObjectContainer<? extends com.android.build.api.dsl.AndroidSourceSet>, kotlin.Unit>)
 com.android.build.gradle.LibraryExtension.splits: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.Splits, kotlin.Unit>)
 com.android.build.gradle.LibraryExtension.testCoverage: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.TestCoverage, kotlin.Unit>)
+com.android.build.gradle.LibraryExtension.testFixtures: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.TestFixtures, kotlin.Unit>)
+com.android.build.gradle.LibraryExtension.testFixtures: void (org.gradle.api.Action<com.android.build.api.dsl.TestFixtures>)
 com.android.build.gradle.LibraryExtension.testOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.TestOptions, kotlin.Unit>)
 com.android.build.gradle.LibraryExtension.useLibrary: void (java.lang.String)
 com.android.build.gradle.LibraryExtension.useLibrary: void (java.lang.String, boolean)
@@ -813,6 +816,7 @@ com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getSplits: com.andr
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getSplits: com.android.build.gradle.internal.dsl.Splits ()
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getTestBuildType: java.lang.String ()
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getTestCoverage: com.android.build.api.dsl.TestCoverage ()
+com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getTestFixtures: com.android.build.api.dsl.TestFixtures ()
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getTestNamespace: java.lang.String ()
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getTestOptions: com.android.build.api.dsl.TestOptions ()
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getTestOptions: com.android.build.gradle.internal.dsl.TestOptions ()
@@ -845,6 +849,8 @@ com.android.build.gradle.internal.dsl.BaseAppModuleExtension.signingConfigs: voi
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.sourceSets: void (kotlin.jvm.functions.Function1<? super org.gradle.api.NamedDomainObjectContainer<? extends com.android.build.api.dsl.AndroidSourceSet>, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.splits: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.Splits, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.testCoverage: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.TestCoverage, kotlin.Unit>)
+com.android.build.gradle.internal.dsl.BaseAppModuleExtension.testFixtures: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.TestFixtures, kotlin.Unit>)
+com.android.build.gradle.internal.dsl.BaseAppModuleExtension.testFixtures: void (org.gradle.api.Action<com.android.build.api.dsl.TestFixtures>)
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.testOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.TestOptions, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.useLibrary: void (java.lang.String)
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.useLibrary: void (java.lang.String, boolean)
@@ -1257,6 +1263,7 @@ com.android.build.gradle.internal.dsl.DynamicFeatureExtension.getSplits: com.and
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.getSplits: com.android.build.gradle.internal.dsl.Splits ()
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.getTestBuildType: java.lang.String ()
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.getTestCoverage: com.android.build.api.dsl.TestCoverage ()
+com.android.build.gradle.internal.dsl.DynamicFeatureExtension.getTestFixtures: com.android.build.api.dsl.TestFixtures ()
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.getTestNamespace: java.lang.String ()
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.getTestOptions: com.android.build.api.dsl.TestOptions ()
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.getTestOptions: com.android.build.gradle.internal.dsl.TestOptions ()
@@ -1285,6 +1292,8 @@ com.android.build.gradle.internal.dsl.DynamicFeatureExtension.signingConfigs: vo
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.sourceSets: void (kotlin.jvm.functions.Function1<? super org.gradle.api.NamedDomainObjectContainer<? extends com.android.build.api.dsl.AndroidSourceSet>, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.splits: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.Splits, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.testCoverage: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.TestCoverage, kotlin.Unit>)
+com.android.build.gradle.internal.dsl.DynamicFeatureExtension.testFixtures: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.TestFixtures, kotlin.Unit>)
+com.android.build.gradle.internal.dsl.DynamicFeatureExtension.testFixtures: void (org.gradle.api.Action<com.android.build.api.dsl.TestFixtures>)
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.testOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.TestOptions, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.useLibrary: void (java.lang.String)
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.useLibrary: void (java.lang.String, boolean)
@@ -1369,7 +1378,7 @@ com.android.build.gradle.internal.dsl.ExternalNativeNdkBuildOptions.setCppFlags:
 com.android.build.gradle.internal.dsl.ExternalNativeNdkBuildOptions.setTargets: void (java.util.Set<java.lang.String>)
 com.android.build.gradle.internal.dsl.ExternalNativeNdkBuildOptions.setcFlags: void (java.util.List<java.lang.String>)
 com.android.build.gradle.internal.dsl.ExternalNativeNdkBuildOptions.targets: void (java.lang.String[])
-com.android.build.gradle.internal.dsl.InternalApplicationExtension implements com.android.build.api.dsl.ApplicationExtension, com.android.build.gradle.internal.dsl.InternalCommonExtension
+com.android.build.gradle.internal.dsl.InternalApplicationExtension implements com.android.build.api.dsl.ApplicationExtension, com.android.build.gradle.internal.dsl.InternalTestedExtension, com.android.build.gradle.internal.dsl.InternalCommonExtension
 com.android.build.gradle.internal.dsl.InternalApplicationExtension.getAssetPacks: java.util.Set<java.lang.String> ()
 com.android.build.gradle.internal.dsl.InternalApplicationExtension.getDynamicFeatures: java.util.Set<java.lang.String> ()
 com.android.build.gradle.internal.dsl.InternalApplicationExtension.publishing: void (org.gradle.api.Action<com.android.build.api.dsl.ApplicationPublishing>)
@@ -1393,12 +1402,14 @@ com.android.build.gradle.internal.dsl.InternalCommonExtension.getTestOptions: co
 com.android.build.gradle.internal.dsl.InternalCommonExtension.productFlavors: void (org.gradle.api.Action<org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.ProductFlavor>>)
 com.android.build.gradle.internal.dsl.InternalCommonExtension.setCompileSdkVersion: void (java.lang.String)
 com.android.build.gradle.internal.dsl.InternalCommonExtension.signingConfigs: void (org.gradle.api.Action<org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.SigningConfig>>)
-com.android.build.gradle.internal.dsl.InternalDynamicFeatureExtension implements com.android.build.api.dsl.DynamicFeatureExtension, com.android.build.gradle.internal.dsl.InternalCommonExtension
-com.android.build.gradle.internal.dsl.InternalLibraryExtension implements com.android.build.api.dsl.LibraryExtension, com.android.build.gradle.internal.dsl.InternalCommonExtension
+com.android.build.gradle.internal.dsl.InternalDynamicFeatureExtension implements com.android.build.api.dsl.DynamicFeatureExtension, com.android.build.gradle.internal.dsl.InternalTestedExtension, com.android.build.gradle.internal.dsl.InternalCommonExtension
+com.android.build.gradle.internal.dsl.InternalLibraryExtension implements com.android.build.api.dsl.LibraryExtension, com.android.build.gradle.internal.dsl.InternalTestedExtension, com.android.build.gradle.internal.dsl.InternalCommonExtension
 com.android.build.gradle.internal.dsl.InternalLibraryExtension.getAidlPackagedList: java.util.Collection<java.lang.String> ()
 com.android.build.gradle.internal.dsl.InternalLibraryExtension.publishing: void (org.gradle.api.Action<com.android.build.api.dsl.LibraryPublishing>)
 com.android.build.gradle.internal.dsl.InternalLibraryExtension.setAidlPackagedList: void (java.util.Collection<java.lang.String>)
 com.android.build.gradle.internal.dsl.InternalTestExtension implements com.android.build.api.dsl.TestExtension, com.android.build.gradle.internal.dsl.InternalCommonExtension
+com.android.build.gradle.internal.dsl.InternalTestedExtension implements com.android.build.api.dsl.TestedExtension
+com.android.build.gradle.internal.dsl.InternalTestedExtension.testFixtures: void (org.gradle.api.Action<com.android.build.api.dsl.TestFixtures>)
 com.android.build.gradle.internal.dsl.JavaCompileOptions implements com.android.build.gradle.api.JavaCompileOptions, com.android.build.api.dsl.JavaCompileOptions
 com.android.build.gradle.internal.dsl.JavaCompileOptions.<init>: com.android.build.gradle.internal.dsl.JavaCompileOptions (com.android.build.gradle.internal.services.DslServices)
 com.android.build.gradle.internal.dsl.JavaCompileOptions.annotationProcessorOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.AnnotationProcessorOptions, kotlin.Unit>)

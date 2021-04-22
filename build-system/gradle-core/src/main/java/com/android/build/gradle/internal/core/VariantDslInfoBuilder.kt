@@ -68,6 +68,7 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
     private val extension: BaseExtension,
     private val hasDynamicFeatures: Boolean,
     private val properties: Map<String, Any>,
+    private val enableTestFixtures: Boolean,
 ) {
 
     companion object {
@@ -92,6 +93,7 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
             extension: BaseExtension,
             hasDynamicFeatures: Boolean,
             properties: Map<String, Any> = mapOf(),
+            enableTestFixtures: Boolean = false,
         ): VariantDslInfoBuilder<T> {
             return VariantDslInfoBuilder(
                 dimensionCombination,
@@ -110,6 +112,7 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
                 extension,
                 hasDynamicFeatures,
                 properties,
+                enableTestFixtures
             )
         }
 
@@ -342,6 +345,7 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
             nativeBuildSystem,
             publishingInfo,
             properties,
+            enableTestFixtures
         )
     }
 

@@ -22,10 +22,21 @@ import com.android.testutils.AbstractReturnGivenBuildResultTest
 import com.google.common.truth.Truth
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 
-class AndroidComponentsFilteringTest: AbstractReturnGivenBuildResultTest<String,
+@RunWith(Parameterized::class)
+class AndroidComponentsFilteringTest(private val useModelV2: Boolean)
+    : AbstractReturnGivenBuildResultTest<String,
         AndroidComponentsFilteringTest.VariantBuilder,
         List<AndroidComponentsFilteringTest.VariantInfo>>() {
+
+    companion object {
+        @JvmStatic
+        @Parameterized.Parameters(name = "useModelV2_{0}")
+        fun useModelV2() = arrayOf(true, false)
+    }
+
     @get:Rule
     val project =
             GradleTestProject.builder().fromTestProject("emptyApp").create()
@@ -70,6 +81,33 @@ class AndroidComponentsFilteringTest: AbstractReturnGivenBuildResultTest<String,
             variant {
                 name = "debug"
                 androidTest = false
+            }
+        }
+    }
+
+    @Test
+    fun `before-test-fixtures filtering via new api using buildtype callback`() {
+        // TestFixtures feature is not supported in model v1
+        if (!useModelV2) {
+            return
+        }
+        given {
+            """
+                |    beforeVariants(selector().withBuildType("debug")) {
+                |        enableTestFixtures = true
+                |    }
+            """
+        }
+
+        expect {
+            variant {
+                name = "release"
+                androidTest = false
+                testFixtures = false
+            }
+            variant {
+                name = "debug"
+                testFixtures = true
             }
         }
     }
@@ -164,6 +202,60 @@ class AndroidComponentsFilteringTest: AbstractReturnGivenBuildResultTest<String,
         }
     }
 
+    @Test
+    fun `before-test-fixtures filtering via new api using buildtype and flavor callback`() {
+        // TestFixtures feature is not supported in model v1
+        if (!useModelV2) {
+            return
+        }
+        android {
+            """
+                |    flavorDimensions "one"
+                |    productFlavors {
+                |        flavor1 {
+                |            dimension "one"
+                |        }
+                |        flavor2 {
+                |            dimension "one"
+                |        }
+                |    }
+                |    testFixtures.enable = true
+            """
+        }
+
+        given {
+            """
+                |    beforeVariants(
+                |            selector()
+                |               .withFlavor(new kotlin.Pair("one", "flavor1"))
+                |               .withBuildType("debug")) {
+                |        enableTestFixtures = false
+                |    }
+            """
+        }
+
+        expect {
+            variant {
+                name = "flavor1Debug"
+                testFixtures = false
+            }
+            variant {
+                name = "flavor1Release"
+                testFixtures = true
+                androidTest = false
+            }
+            variant {
+                name = "flavor2Release"
+                testFixtures = true
+                androidTest = false
+            }
+            variant {
+                name = "flavor2Debug"
+                testFixtures = true
+            }
+        }
+    }
+
     var androidBlock: (() -> String)? = null
 
     /**
@@ -194,12 +286,22 @@ class AndroidComponentsFilteringTest: AbstractReturnGivenBuildResultTest<String,
                 |}
             """.trimMargin()
         )
-
-        return project.model().fetchAndroidProjects().onlyModel.variants.map {
-            VariantInfo(
+        if (useModelV2) {
+            return project.modelV2().fetchModels().container.singleAndroidProject.variants.map {
+                VariantInfo(
+                    it.name,
+                    unitTest = it.unitTestArtifact != null,
+                    androidTest = it.androidTestArtifact != null,
+                    testFixtures = it.testFixturesArtifact != null,
+                )
+            }
+        } else {
+            return project.model().fetchAndroidProjects().onlyModel.variants.map {
+                VariantInfo(
                     it.name,
                     unitTest = it.extraJavaArtifacts.any { it.name == AndroidProject.ARTIFACT_UNIT_TEST },
                     androidTest = it.extraAndroidArtifacts.any { it.name == AndroidProject.ARTIFACT_ANDROID_TEST })
+            }
         }
     }
 
@@ -220,8 +322,9 @@ class AndroidComponentsFilteringTest: AbstractReturnGivenBuildResultTest<String,
     }
 
     data class VariantInfo(
-            var name: String = "",
-            var unitTest: Boolean = true,
-            var androidTest: Boolean = true
+        var name: String = "",
+        var unitTest: Boolean = true,
+        var androidTest: Boolean = true,
+        var testFixtures: Boolean = false
     )
 }

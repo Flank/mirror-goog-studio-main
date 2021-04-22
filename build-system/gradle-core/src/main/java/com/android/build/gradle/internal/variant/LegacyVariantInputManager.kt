@@ -87,9 +87,6 @@ class LegacyVariantInputManager(
                 sourceSetManager.setUpTestSourceSet(VariantType.ANDROID_TEST_PREFIX) as DefaultAndroidSourceSet
             unitTestSourceSet =
                 sourceSetManager.setUpTestSourceSet(VariantType.UNIT_TEST_PREFIX) as DefaultAndroidSourceSet
-        }
-
-        if (dslServices.projectOptions[BooleanOption.ENABLE_TEST_FIXTURES]) {
             testFixturesSourceSet =
                 sourceSetManager.setUpSourceSet(VariantType.TEST_FIXTURES_PREFIX)
                         as DefaultAndroidSourceSet

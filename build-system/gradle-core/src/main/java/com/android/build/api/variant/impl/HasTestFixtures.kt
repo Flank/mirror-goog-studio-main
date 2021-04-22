@@ -14,20 +14,13 @@
  * limitations under the License.
  */
 
-plugins {
-    id 'com.android.library'
-    id 'maven-publish'
-}
+package com.android.build.api.variant.impl
 
-android {
-    compileSdkVersion rootProject.latestCompileSdk
-    testFixtures {
-        enable true
-        androidResources true
-    }
-}
+import com.android.build.api.component.TestFixtures
 
-dependencies {
-    testFixturesApi 'com.google.truth:truth:0.44'
-    testImplementation 'junit:junit:4.12'
+/**
+ * Internal marker interface for [VariantImpl] that potentially has associated test fixtures.
+ */
+interface HasTestFixtures {
+    var testFixtures: TestFixtures?
 }

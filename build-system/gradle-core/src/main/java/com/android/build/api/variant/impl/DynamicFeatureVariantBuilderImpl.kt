@@ -45,6 +45,8 @@ open class DynamicFeatureVariantBuilderImpl @Inject constructor(
 
     override var enableAndroidTest: Boolean = true
 
+    override var enableTestFixtures: Boolean = variantDslInfo.enableTestFixtures
+
     override fun <T : VariantBuilder> createUserVisibleVariantObject(
             projectServices: ProjectServices,
             stats: GradleBuildVariant.Builder?): T =

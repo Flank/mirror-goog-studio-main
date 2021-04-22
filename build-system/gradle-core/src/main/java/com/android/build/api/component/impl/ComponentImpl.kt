@@ -89,7 +89,7 @@ import java.util.concurrent.Callable
 
 abstract class ComponentImpl(
     open val componentIdentity: ComponentIdentity,
-    override val buildFeatures: BuildFeatureValues,
+    final override val buildFeatures: BuildFeatureValues,
     override val variantDslInfo: VariantDslInfo<*>,
     override val variantDependencies: VariantDependencies,
     override val variantSources: VariantSources,
@@ -279,6 +279,8 @@ abstract class ComponentImpl(
         }
         return true
     }
+
+    override val androidResourcesEnabled = buildFeatures.androidResources
 
     // ---------------------------------------------------------------------------------------------
     // Private stuff
@@ -594,7 +596,7 @@ abstract class ComponentImpl(
                     .ENABLE_APP_COMPILE_TIME_R_CLASS]
                         && !variantType.isForTesting)
                 if (variantType.isAar || useCompileRClassInApp) {
-                    if (buildFeatures.androidResources) {
+                    if (androidResourcesEnabled) {
                         internalServices.fileCollection(artifacts.get(COMPILE_R_CLASS_JAR)
                         )
                     } else {
@@ -616,7 +618,7 @@ abstract class ComponentImpl(
                         artifacts.get(COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR)
                     )
                 } else {
-                    if (buildFeatures.androidResources) {
+                    if (androidResourcesEnabled) {
                         internalServices.fileCollection(variantScope.rJarForUnitTests)
                     } else {
                         internalServices.fileCollection()

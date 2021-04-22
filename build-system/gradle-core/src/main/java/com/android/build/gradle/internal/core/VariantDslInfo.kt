@@ -324,6 +324,8 @@ interface VariantDslInfo<CommonExtensionT: CommonExtension<*, *, *, *>> {
 
     val publishInfo: VariantPublishingInfo?
 
+    val enableTestFixtures: Boolean
+
     ////////////////////////////////////////////////////////////////////////////////////////
     //  APIs below should only be used at CreationConfig/Variant instantiation time       //
     //  DO NOT USE THOSE IN TASKS                                                         //

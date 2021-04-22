@@ -667,6 +667,7 @@ class VariantDslInfoTest2 :
             nativeBuildSystem = null,
             publishingInfo = null,
             properties = mapOf(),
+            enableTestFixtures = false,
         )
 
         return instantiateResult().also {

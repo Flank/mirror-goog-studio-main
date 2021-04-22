@@ -101,7 +101,7 @@ abstract class BundleAar : Zip(), VariantAwareTask {
             task.isReproducibleFileOrder = true
             task.isPreserveFileTimestamps = false
 
-            if (buildFeatures.dataBinding && buildFeatures.androidResources) {
+            if (buildFeatures.dataBinding && creationConfig.androidResourcesEnabled) {
                 task.from(
                     task.project.provider {
                         creationConfig.artifacts.get(InternalArtifactType.DATA_BINDING_ARTIFACT) },
@@ -133,7 +133,7 @@ abstract class BundleAar : Zip(), VariantAwareTask {
                     InternalArtifactType.NON_NAMESPACED_LIBRARY_MANIFEST))
                 task.from(artifacts.get(InternalArtifactType.RES_STATIC_LIBRARY))
             }
-            if (buildFeatures.androidResources) {
+            if (creationConfig.androidResourcesEnabled) {
                 task.from(artifacts.get(InternalArtifactType.PUBLIC_RES))
             }
             task.from(artifacts.get(InternalArtifactType.ANNOTATIONS_ZIP))

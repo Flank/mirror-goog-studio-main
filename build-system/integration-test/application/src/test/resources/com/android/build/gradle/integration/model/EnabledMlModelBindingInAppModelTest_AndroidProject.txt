@@ -9,6 +9,9 @@
       - unitTestSourceProvider:
          - mlModelsDirectories:
             * {PROJECT}/src/test/ml{!}
+      - testFixturesSourceProvider:
+         - mlModelsDirectories:
+            * {PROJECT}/src/testFixtures/ml{!}
    < defaultConfig
    > buildTypes:
       > debug:
@@ -21,6 +24,9 @@
          - unitTestSourceProvider:
             - mlModelsDirectories:
                * {PROJECT}/src/testDebug/ml{!}
+         - testFixturesSourceProvider:
+            - mlModelsDirectories:
+               * {PROJECT}/src/testFixturesDebug/ml{!}
       < debug
       > release:
          - sourceProvider:
@@ -32,6 +38,9 @@
          - unitTestSourceProvider:
             - mlModelsDirectories:
                * {PROJECT}/src/testRelease/ml{!}
+         - testFixturesSourceProvider:
+            - mlModelsDirectories:
+               * {PROJECT}/src/testFixturesRelease/ml{!}
       < release
    < buildTypes
    - flags:

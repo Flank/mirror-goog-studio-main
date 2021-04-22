@@ -21,9 +21,22 @@ import com.android.testutils.AbstractReturnGivenBuildResultTest
 import com.google.common.truth.Truth
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 
 /** Tests to validate the different filtering mechanisms  */
-class VariantFilteringTest: AbstractReturnGivenBuildResultTest<String, VariantFilteringTest.VariantBuilder, List<VariantFilteringTest.VariantInfo>>() {
+@RunWith(Parameterized::class)
+class VariantFilteringTest(private val useModelV2: Boolean)
+    : AbstractReturnGivenBuildResultTest<String,
+        VariantFilteringTest.VariantBuilder,
+        List<VariantFilteringTest.VariantInfo>>() {
+
+    companion object {
+        @JvmStatic
+        @Parameterized.Parameters(name = "useModelV2_{0}")
+        fun useModelV2() = arrayOf(true, false)
+    }
+
     @get:Rule
     val project =
         GradleTestProject.builder().fromTestProject("emptyApp").create()
@@ -502,6 +515,41 @@ class VariantFilteringTest: AbstractReturnGivenBuildResultTest<String, VariantFi
         }
     }
 
+    @Test
+    fun `test-fixtures filtering using buildtype callback`() {
+        // TestFixtures feature is not supported in model v1
+        if (!useModelV2) {
+            return
+        }
+        given {
+            """
+                |    testFixtures {
+                |        it.enable true
+                |    }
+            """
+        }
+
+        withAndroidComponents {
+            """
+                |    beforeVariants(selector()
+                |          .withBuildType("debug"), {
+                |        enableTestFixtures = false
+                |    })
+            """
+        }
+
+        expect {
+            variant {
+                name = "release"
+                testFixtures = true
+                androidTest = false
+            }
+            variant {
+                name = "debug"
+                testFixtures = false
+            }
+        }
+    }
 
     // ---------------------------------------------------------------------------------------------
 
@@ -537,11 +585,22 @@ class VariantFilteringTest: AbstractReturnGivenBuildResultTest<String, VariantFi
         }
 
 
-        return project.model().fetchAndroidProjects().onlyModel.variants.map {
-            VariantInfo(
-                it.name,
-                unitTest = it.extraJavaArtifacts.any { it.name == AndroidProject.ARTIFACT_UNIT_TEST },
-                androidTest = it.extraAndroidArtifacts.any { it.name == AndroidProject.ARTIFACT_ANDROID_TEST })
+        if (useModelV2) {
+            return project.modelV2().fetchModels().container.singleAndroidProject.variants.map {
+                VariantInfo(
+                    it.name,
+                    unitTest = it.unitTestArtifact != null,
+                    androidTest = it.androidTestArtifact != null,
+                    testFixtures = it.testFixturesArtifact != null,
+                )
+            }
+        } else {
+            return project.model().fetchAndroidProjects().onlyModel.variants.map {
+                VariantInfo(
+                    it.name,
+                    unitTest = it.extraJavaArtifacts.any { it.name == AndroidProject.ARTIFACT_UNIT_TEST },
+                    androidTest = it.extraAndroidArtifacts.any { it.name == AndroidProject.ARTIFACT_ANDROID_TEST })
+            }
         }
     }
 
@@ -566,6 +625,7 @@ class VariantFilteringTest: AbstractReturnGivenBuildResultTest<String, VariantFi
     data class VariantInfo(
         var name: String = "",
         var unitTest: Boolean = true,
-        var androidTest: Boolean = true
+        var androidTest: Boolean = true,
+        var testFixtures: Boolean = false,
     )
 }
