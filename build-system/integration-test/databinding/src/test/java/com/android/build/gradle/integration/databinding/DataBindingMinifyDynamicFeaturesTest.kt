@@ -18,16 +18,11 @@ package com.android.build.gradle.integration.databinding
 
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.truth.TruthHelper
-import com.android.build.gradle.options.OptionalBooleanOption
-import com.android.builder.model.CodeShrinker
 import com.android.testutils.apk.Apk
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 
 /**
  * <pre>
@@ -52,18 +47,7 @@ import org.junit.runners.Parameterized
  * This test is based on [DataBindingWithDynamicFeaturesTest] and modified for code shrinking.
  */
 
-@RunWith(FilterableParameterized::class)
-class DataBindingMinifyDynamicFeaturesTest(val codeShrinker: CodeShrinker) {
-    companion object {
-
-        @JvmStatic
-        @Parameterized.Parameters(name = "codeShrinker {0}, {1}")
-        fun getConfigurations(): Collection<Array<CodeShrinker>> =
-            listOf(
-                arrayOf(CodeShrinker.PROGUARD),
-                arrayOf(CodeShrinker.R8)
-            )
-    }
+class DataBindingMinifyDynamicFeaturesTest {
 
     @Rule
     @JvmField
@@ -146,9 +130,7 @@ class DataBindingMinifyDynamicFeaturesTest(val codeShrinker: CodeShrinker) {
 
     @Test
     fun assembleMinified() {
-        val executor = project.executor()
-            .with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, codeShrinker == CodeShrinker.R8)
-        executor.run("assembleMinified")
+        project.executor().run("assembleMinified")
 
         val minifiedApk = "minified"
 

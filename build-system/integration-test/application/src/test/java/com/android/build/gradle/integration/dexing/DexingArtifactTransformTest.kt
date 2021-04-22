@@ -28,7 +28,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.getOutputDir
 import com.android.build.gradle.internal.tasks.DexingExternalLibArtifactTransform
 import com.android.build.gradle.options.BooleanOption
-import com.android.build.gradle.options.OptionalBooleanOption
 import com.android.testutils.MavenRepoGenerator
 import com.android.testutils.TestInputsGenerator
 import com.google.common.truth.Truth.assertThat
@@ -173,22 +172,6 @@ class DexingArtifactTransformTest {
         val run = executor().run("assembleDebug")
         assertThat(run.didWorkTasks).contains(":mergeExtDexDebug")
         assertThat(run.upToDateTasks).containsAllOf(":mergeLibDexDebug", ":mergeProjectDexDebug")
-    }
-
-    @Test
-    fun testProguardDoesSingleMerge() {
-        project.projectDir.resolve("proguard-rules.pro").writeText("-keep class **")
-        project.buildFile.appendText("\n" +
-            """
-            android.buildTypes.debug {
-                minifyEnabled true
-                proguardFiles 'proguard-rules.pro'
-            }
-        """.trimIndent()
-        )
-        val result = executor().with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, false).run("assembleDebug")
-        assertThat(result.tasks).doesNotContain(":mergeExtDexDebug")
-        assertThat(result.tasks).contains(":mergeDexDebug")
     }
 
     @Test

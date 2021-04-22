@@ -19,7 +19,8 @@ package com.android.build.gradle.internal.plugins;
 import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
 import com.android.build.api.component.impl.TestComponentImpl;
-import com.android.build.api.component.impl.TestFixturesComponentImpl;
+import com.android.build.api.component.impl.TestFixturesImpl;
+import com.android.build.api.dsl.CommonExtension;
 import com.android.build.api.dsl.SdkComponents;
 import com.android.build.api.extension.DynamicFeatureAndroidComponentsExtension;
 import com.android.build.api.extension.impl.DynamicFeatureAndroidComponentsExtensionImpl;
@@ -52,6 +53,7 @@ import javax.inject.Inject;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.component.SoftwareComponentFactory;
+import org.gradle.api.reflect.TypeOf;
 import org.gradle.build.event.BuildEventsListenerRegistry;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
@@ -104,13 +106,18 @@ public class DynamicFeaturePlugin
                 dslServices.newDecoratedInstance(
                         DynamicFeatureExtensionImpl.class, dslServices, dslContainers);
         if (projectServices.getProjectOptions().get(BooleanOption.USE_NEW_DSL_INTERFACES)) {
+            //noinspection unchecked,rawtypes I am so sorry.
+            Class<com.android.build.api.dsl.DynamicFeatureExtension> instanceType =
+                    (Class) DynamicFeatureExtension.class;
             DynamicFeatureExtension android =
                     (DynamicFeatureExtension)
                             project.getExtensions()
                                     .create(
-                                            com.android.build.api.dsl.DynamicFeatureExtension.class,
+                                            new TypeOf<
+                                                    com.android.build.api.dsl
+                                                            .DynamicFeatureExtension>() {},
                                             "android",
-                                            DynamicFeatureExtension.class,
+                                            instanceType,
                                             dslServices,
                                             globalScope,
                                             buildOutputs,
@@ -143,7 +150,9 @@ public class DynamicFeaturePlugin
             @NonNull DslServices dslServices,
             @NonNull
                     VariantApiOperationsRegistrar<
-                                    DynamicFeatureVariantBuilderImpl, DynamicFeatureVariantImpl>
+                                CommonExtension<?, ?, ?, ?>,
+                                DynamicFeatureVariantBuilderImpl,
+                                DynamicFeatureVariantImpl>
                             variantApiOperationsRegistrar) {
         SdkComponents sdkComponents =
                 dslServices.newInstance(
@@ -172,7 +181,7 @@ public class DynamicFeaturePlugin
                     List<ComponentInfo<DynamicFeatureVariantBuilderImpl, DynamicFeatureVariantImpl>>
                             variants,
             @NonNull List<TestComponentImpl> testComponents,
-            @NonNull List<TestFixturesComponentImpl> testFixturesComponents,
+            @NonNull List<TestFixturesImpl> testFixturesComponents,
             boolean hasFlavors,
             @NonNull ProjectOptions projectOptions,
             @NonNull GlobalScope globalScope,

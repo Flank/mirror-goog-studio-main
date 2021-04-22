@@ -115,7 +115,7 @@ class DeprecationReporterImpl(
             deprecationTarget: DeprecationTarget) {
         issueReporter.reportWarning(
                 Type.DEPRECATED_DSL,
-                "DSL element '$oldDslElement' is obsolete.\n" +
+                "DSL element '$oldDslElement' is obsolete and should be removed.\n" +
                         deprecationTarget.getDeprecationTargetMessage(),
                 "$oldDslElement::::${deprecationTarget.name}")
     }

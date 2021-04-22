@@ -29,7 +29,7 @@ class ExportedReceiverDetectorTest : AbstractCheckTest() {
                 """
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="test.pkg">
-
+    <uses-sdk android:minSdkVersion="30"/>
     <application
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name" >
@@ -53,7 +53,7 @@ class ExportedReceiverDetectorTest : AbstractCheckTest() {
         ).expectFixDiffs(
             """
             Fix for AndroidManifest.xml line 7: Set exported:
-            @@ -8 +8
+            @@ -10 +10
             -         <receiver android:name="com.google.android.c2dm.C2DMBroadcastReceiver" >
             +         <receiver
             +             android:name="com.google.android.c2dm.C2DMBroadcastReceiver"
@@ -62,14 +62,14 @@ class ExportedReceiverDetectorTest : AbstractCheckTest() {
         )
     }
 
-    fun testNoExportActivity() {
+    fun testNoExportActivityPreS() {
         lint().files(
             xml(
                 "AndroidManifest.xml",
                 """
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="test.pkg">
-
+    <uses-sdk android:minSdkVersion="30"/>
     <application
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name" >
@@ -93,7 +93,48 @@ class ExportedReceiverDetectorTest : AbstractCheckTest() {
         ).expectFixDiffs(
             """
             Fix for AndroidManifest.xml line 7: Set exported:
-            @@ -8 +8
+            @@ -10 +10
+            -         <activity android:name="com.example.MainActivity" >
+            +         <activity
+            +             android:name="com.example.MainActivity"
+            +             android:exported="[TODO]|" >
+            """.trimIndent()
+        )
+    }
+
+    fun testNoExportActivityPostS() {
+        lint().files(
+            xml(
+                "AndroidManifest.xml",
+                """
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="test.pkg">
+
+    <uses-sdk android:minSdkVersion="31"/>
+    <application
+        android:icon="@drawable/ic_launcher"
+        android:label="@string/app_name" >
+        <activity android:name="com.example.MainActivity">
+          <intent-filter>
+            <action android:name="com.google.android.c2dm.intent.RECEIVE"/>
+            <action android:name="com.google.android.c2dm.intent.REGISTRATION"/>
+        </intent-filter>
+        </activity>
+    </application>
+</manifest>
+                """
+            ).indented()
+        ).run().expect(
+            """
+            AndroidManifest.xml:8: Error: When using intent filters, please specify android:exported as well [IntentFilterExportedReceiver]
+                    <activity android:name="com.example.MainActivity">
+                     ~~~~~~~~
+            1 errors, 0 warnings
+            """.trimIndent()
+        ).expectFixDiffs(
+            """
+            Fix for AndroidManifest.xml line 7: Set exported:
+            @@ -10 +10
             -         <activity android:name="com.example.MainActivity" >
             +         <activity
             +             android:name="com.example.MainActivity"

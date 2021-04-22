@@ -31,10 +31,12 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.TimeUnit;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 
 /**
  * test for packaging of android asset files.
@@ -43,6 +45,14 @@ import org.junit.Test;
  * everything around it, so raw files are easier to test in isolation.
  */
 public class ResPackagingTest {
+
+    // Add a timeout so there's a trace dump on Windows when the test hangs (b/178233111).
+    @Rule
+    public Timeout timeout =
+            Timeout.builder()
+                    .withTimeout(180, TimeUnit.SECONDS)
+                    .withLookingForStuckThread(true)
+                    .build();
 
     @Rule
     public GradleTestProject project = GradleTestProject.builder()

@@ -49,6 +49,11 @@ interface Variant: AndroidModel {
     val unitTestArtifact: JavaArtifact?
 
     /**
+     * The TestFixtures artifact for this variant, if applicable.
+     */
+    val testFixturesArtifact: AndroidArtifact?
+
+    /**
      * The build type name.
      *
      * If null, no build type is associated with the variant (this generally means that no build

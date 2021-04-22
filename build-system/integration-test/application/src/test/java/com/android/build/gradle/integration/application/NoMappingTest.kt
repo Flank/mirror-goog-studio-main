@@ -20,7 +20,6 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.options.BooleanOption
-import com.android.build.gradle.options.OptionalBooleanOption
 import com.android.builder.internal.packaging.ApkCreatorType
 import com.android.builder.internal.packaging.ApkCreatorType.APK_FLINGER
 import com.android.builder.internal.packaging.ApkCreatorType.APK_Z_FILE_CREATOR
@@ -54,12 +53,9 @@ class NoMappingTest(val apkCreatorType: ApkCreatorType) {
     fun checkEmptyMapping() {
         File(project.projectDir, "proguard-rules.pro").appendText("\n-dontobfuscate")
 
-        project.executor().with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, true).run("assembleMinified")
+        project.executor().run("assembleMinified")
         val mappingFile = project.file("build/outputs/mapping/minified/mapping.txt")
         assertThat(mappingFile).contains("com.android.tests.basic.Main -> com.android.tests.basic.Main")
-
-        project.executor().with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, false).run("assembleMinified")
-        assertThat(mappingFile).hasContents("")
     }
 
     private fun getGradleProperties() = when (apkCreatorType) {

@@ -20,6 +20,7 @@ import com.android.Version
 import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.api.component.impl.UnitTestImpl
+import com.android.build.api.variant.ResValue
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.dependency.VariantDependencies
@@ -77,6 +78,7 @@ import org.gradle.api.JavaVersion
 import org.gradle.api.Project
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
@@ -453,7 +455,7 @@ abstract class VariantInputs {
     abstract val targetSdkVersion: SdkVersionInput
 
     @get:Input
-    abstract val resValues: ListProperty<DefaultLintModelResourceField>
+    abstract val resValues: MapProperty<ResValue.Key, ResValue>
 
     @get:Input
     abstract val manifestPlaceholders: MapProperty<String, String>
@@ -463,10 +465,19 @@ abstract class VariantInputs {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NAME_ONLY)
+    @get:Optional
     abstract val proguardFiles: ListProperty<RegularFile>
+
+    // the extracted proguard files are probably also part of the proguardFiles but we need to set
+    // the dependency explicitly so Gradle can track it properly.
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.NAME_ONLY)
+    @get:Optional
+    abstract val extractedProguardFiles: DirectoryProperty
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NAME_ONLY)
+    @get:Optional
     abstract val consumerProguardFiles: ListProperty<File>
 
     @get:Nested
@@ -517,7 +528,7 @@ abstract class VariantInputs {
         val creationConfig = variantWithTests.main
         name.setDisallowChanges(creationConfig.name)
         this.checkDependencies.setDisallowChanges(checkDependencies)
-        minifiedEnabled.setDisallowChanges(creationConfig.codeShrinker != null)
+        minifiedEnabled.setDisallowChanges(creationConfig.minifiedEnabled)
         mainArtifact.initialize(
             creationConfig as ComponentImpl,
             checkDependencies,
@@ -563,7 +574,8 @@ abstract class VariantInputs {
 
         targetSdkVersion.initialize(creationConfig.targetSdkVersion)
 
-        // FIXME resvalue
+        resValues.setDisallowChanges(creationConfig.resValues)
+
         if (creationConfig is ApkCreationConfig) {
             manifestPlaceholders.setDisallowChanges(
                 creationConfig.manifestPlaceholders
@@ -575,8 +587,14 @@ abstract class VariantInputs {
         sourceProviders.setDisallowChanges(creationConfig.variantSources.sortedSourceProviders.map { sourceProvider ->
             creationConfig.services.newInstance(SourceProviderInput::class.java).initialize(sourceProvider)
         })
-        // FIXME proguardFiles
-        // FIXME consumerProguardFiles
+
+        proguardFiles.setDisallowChanges(creationConfig.proguardFiles)
+        extractedProguardFiles.setDisallowChanges(
+            creationConfig.globalScope
+                .globalArtifacts
+                .get(InternalArtifactType.DEFAULT_PROGUARD_FILES)
+        )
+        consumerProguardFiles.setDisallowChanges(creationConfig.variantScope.consumerProguardFiles)
 
         val testSourceProviderList: MutableList<SourceProviderInput> = mutableListOf()
         variantWithTests.unitTest?.let { unitTestCreationConfig ->
@@ -655,6 +673,10 @@ abstract class VariantInputs {
         buildFeatures.initializeForStandalone()
         libraryDependencyCacheBuildService.setDisallowChanges(getBuildService(project.gradle.sharedServices))
         mavenCoordinatesCache.setDisallowChanges(getBuildService(project.gradle.sharedServices))
+        proguardFiles.setDisallowChanges(null)
+        extractedProguardFiles.setDisallowChanges(null)
+        consumerProguardFiles.setDisallowChanges(null)
+        resValues.disallowChanges()
     }
 
     fun toLintModel(module: LintModelModule, partialResultsDir: File? = null): LintModelVariant {
@@ -679,11 +701,18 @@ abstract class VariantInputs {
             `package` = namespace.get(),
             minSdkVersion = minSdkVersion.toLintModel(),
             targetSdkVersion = targetSdkVersion.toLintModel(),
-            resValues = resValues.get().associateBy { it.name },
+            resValues =
+                resValues.get().map {
+                    DefaultLintModelResourceField(
+                        it.key.type,
+                        it.key.name,
+                        it.value.value
+                    )
+                }.associateBy { it.name },
             manifestPlaceholders = manifestPlaceholders.get(),
             resourceConfigurations = resourceConfigurations.get(),
-            proguardFiles = proguardFiles.get().map { it.asFile },
-            consumerProguardFiles = consumerProguardFiles.get(),
+            proguardFiles = proguardFiles.orNull?.map { it.asFile } ?: listOf(),
+            consumerProguardFiles = consumerProguardFiles.orNull ?: listOf(),
             sourceProviders = sourceProviders.get().map { it.toLintModel() } + dynamicFeatureSourceProviders,
             testSourceProviders = testSourceProviders.get().map { it.toLintModel() },
             debuggable = debuggable.get(),
@@ -883,9 +912,15 @@ abstract class AndroidArtifactInput : ArtifactInput() {
             if (addBaseModuleLintModel) {
                 initializeBaseModuleLintModel(componentImpl.variantDependencies)
             }
-            projectDependencyExplodedAars =
+            projectRuntimeExplodedAars =
                 componentImpl.variantDependencies.getArtifactCollectionForToolingModel(
                     AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
+                    AndroidArtifacts.ArtifactScope.PROJECT,
+                    AndroidArtifacts.ArtifactType.LOCAL_EXPLODED_AAR_FOR_LINT
+                )
+            projectCompileExplodedAars =
+                componentImpl.variantDependencies.getArtifactCollectionForToolingModel(
+                    AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                     AndroidArtifacts.ArtifactScope.PROJECT,
                     AndroidArtifacts.ArtifactType.LOCAL_EXPLODED_AAR_FOR_LINT
                 )
@@ -983,9 +1018,15 @@ abstract class JavaArtifactInput : ArtifactInput() {
             if (addBaseModuleLintModel) {
                 initializeBaseModuleLintModel(unitTestImpl.variantDependencies)
             }
-            projectDependencyExplodedAars =
+            projectRuntimeExplodedAars =
                 unitTestImpl.variantDependencies.getArtifactCollectionForToolingModel(
                     AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
+                    AndroidArtifacts.ArtifactScope.PROJECT,
+                    AndroidArtifacts.ArtifactType.LOCAL_EXPLODED_AAR_FOR_LINT
+                )
+            projectCompileExplodedAars =
+                unitTestImpl.variantDependencies.getArtifactCollectionForToolingModel(
+                    AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                     AndroidArtifacts.ArtifactScope.PROJECT,
                     AndroidArtifacts.ArtifactType.LOCAL_EXPLODED_AAR_FOR_LINT
                 )
@@ -1069,19 +1110,36 @@ abstract class ArtifactInput {
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.ABSOLUTE)
     @get:Optional
-    val projectExplodedAarsFileCollection: FileCollection?
-        get() = projectDependencyExplodedAars?.artifactFiles
+    val projectRuntimeExplodedAarsFileCollection: FileCollection?
+        get() = projectRuntimeExplodedAars?.artifactFiles
 
     @get:Internal
-    var projectDependencyExplodedAars: ArtifactCollection? = null
+    var projectRuntimeExplodedAars: ArtifactCollection? = null
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.ABSOLUTE)
     @get:Optional
-    abstract val projectDependencyLintModelsFileCollection: ConfigurableFileCollection
+    val projectCompileExplodedAarsFileCollection: FileCollection?
+        get() = projectCompileExplodedAars?.artifactFiles
 
     @get:Internal
-    abstract val projectDependencyLintModels: Property<ArtifactCollection>
+    var projectCompileExplodedAars: ArtifactCollection? = null
+
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.ABSOLUTE)
+    @get:Optional
+    abstract val projectRuntimeLintModelsFileCollection: ConfigurableFileCollection
+
+    @get:Internal
+    abstract val projectRuntimeLintModels: Property<ArtifactCollection>
+
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.ABSOLUTE)
+    @get:Optional
+    abstract val projectCompileLintModelsFileCollection: ConfigurableFileCollection
+
+    @get:Internal
+    abstract val projectCompileLintModels: Property<ArtifactCollection>
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.ABSOLUTE)
@@ -1095,13 +1153,20 @@ abstract class ArtifactInput {
     abstract val warnIfProjectTreatedAsExternalDependency: Property<Boolean>
 
     protected fun initializeProjectDependenciesLintModels(variantDependencies: VariantDependencies) {
-        val artifactCollection = variantDependencies.getArtifactCollectionForToolingModel(
+        val runtimeArtifacts = variantDependencies.getArtifactCollectionForToolingModel(
             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
             AndroidArtifacts.ArtifactScope.PROJECT,
             AndroidArtifacts.ArtifactType.LINT_MODEL
         )
-        projectDependencyLintModels.setDisallowChanges(artifactCollection)
-        projectDependencyLintModelsFileCollection.fromDisallowChanges(artifactCollection.artifactFiles)
+        projectRuntimeLintModels.setDisallowChanges(runtimeArtifacts)
+        projectRuntimeLintModelsFileCollection.fromDisallowChanges(runtimeArtifacts.artifactFiles)
+        val compileArtifacts = variantDependencies.getArtifactCollectionForToolingModel(
+            AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
+            AndroidArtifacts.ArtifactScope.PROJECT,
+            AndroidArtifacts.ArtifactType.LINT_MODEL
+        )
+        projectCompileLintModels.setDisallowChanges(compileArtifacts)
+        projectCompileLintModelsFileCollection.fromDisallowChanges(compileArtifacts.artifactFiles)
     }
 
     protected fun initializeBaseModuleLintModel(variantDependencies: VariantDependencies) {
@@ -1119,7 +1184,7 @@ abstract class ArtifactInput {
         val artifactCollectionsInputs = artifactCollectionsInputs.get()
 
         val artifactHandler: ArtifactHandler<LintModelLibrary> =
-            if (projectDependencyLintModels.isPresent) {
+            if (projectRuntimeLintModels.isPresent) {
                 val thisProject =
                     ProjectKey(
                         artifactCollectionsInputs.buildMapping.currentBuild,
@@ -1129,7 +1194,8 @@ abstract class ArtifactInput {
                 CheckDependenciesLintModelArtifactHandler(
                     dependencyCaches,
                     thisProject,
-                    projectDependencyLintModels.get(),
+                    projectRuntimeLintModels.get(),
+                    projectCompileLintModels.get(),
                     artifactCollectionsInputs.compileClasspath.projectJars,
                     artifactCollectionsInputs.runtimeClasspath!!.projectJars,
                     artifactCollectionsInputs.buildMapping,
@@ -1141,7 +1207,8 @@ abstract class ArtifactInput {
                 // module dependency, not as an external dependency.)
                 ExternalLintModelArtifactHandler.create(
                     dependencyCaches,
-                    projectDependencyExplodedAars,
+                    projectRuntimeExplodedAars,
+                    projectCompileExplodedAars,
                     null,
                     artifactCollectionsInputs.compileClasspath.projectJars,
                     artifactCollectionsInputs.runtimeClasspath!!.projectJars,

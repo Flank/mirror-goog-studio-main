@@ -21,8 +21,9 @@ import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
 import com.android.build.gradle.internal.res.shrinker.DummyContent
+import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_RES
+import com.android.build.gradle.internal.scope.getOutputDir
 import com.android.build.gradle.options.BooleanOption
-import com.android.build.gradle.options.OptionalBooleanOption
 import com.android.builder.internal.aapt.v2.Aapt2RenamingConventions
 import com.android.tools.build.apkzlib.zip.ZFile
 import com.android.utils.FileUtils
@@ -271,7 +272,6 @@ class CompileLibraryResourcesTest {
         project.executor().with(BooleanOption.PRECOMPILE_DEPENDENCIES_RESOURCES, true)
             // http://b/149978740
             .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
-            .with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, true)
             .run(":app:assembleRelease")
 
         val compressed = project.getSubproject(":app").getIntermediateFile(
@@ -310,12 +310,7 @@ class CompileLibraryResourcesTest {
     }
 
     private fun checkOnlyValuesWasMerged() {
-        val mergedResDir = FileUtils.join(
-            project.getSubproject(":app").intermediatesDir,
-            "res",
-            "merged",
-            "debug"
-        )
+        val mergedResDir = File(MERGED_RES.getOutputDir( project.getSubproject(":app").buildDir), "debug")
 
         assertThat(mergedResDir.listFiles()!!.map { it.name }.toSet()).containsExactlyElementsIn(
             setOf(

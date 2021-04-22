@@ -23,7 +23,8 @@ import java.io.Serializable
 data class SourceSetContainerImpl(
     override val sourceProvider: SourceProvider,
     override val androidTestSourceProvider: SourceProvider? = null,
-    override val unitTestSourceProvider: SourceProvider? = null
+    override val unitTestSourceProvider: SourceProvider? = null,
+    override val testFixturesSourceProvider: SourceProvider? = null
 ) : SourceSetContainer, Serializable {
     companion object {
         @JvmStatic

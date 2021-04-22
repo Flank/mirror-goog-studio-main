@@ -29,6 +29,7 @@ internal class SubProjectBuilderImpl(override val path: String) : SubProjectBuil
     private val buildFileActions = mutableListOf<() -> String>()
 
     override var plugins: MutableList<PluginType> = mutableListOf()
+    internal val dependencies: DependenciesBuilderImpl = DependenciesBuilderImpl()
 
     override fun android(action: AndroidProjectBuilder.() -> Unit) {
         if (!plugins.containsAndroid()) {
@@ -61,6 +62,10 @@ internal class SubProjectBuilderImpl(override val path: String) : SubProjectBuil
 
     override fun fileAtOrNull(relativePath: String) = files[relativePath]
 
+    override fun dependencies(action: DependenciesBuilder.() -> Unit) {
+        action(dependencies)
+    }
+
     internal fun write(
         projectDir: File,
         buildFileType: BuildFileType,
@@ -86,8 +91,7 @@ internal class SubProjectBuilderImpl(override val path: String) : SubProjectBuil
 
         android?.writeBuildFile(sb)
 
-        sb.append("\ndependencies {\n")
-        sb.append("}\n")
+        dependencies.writeBuildFile(sb, projectDir)
 
         for (action in buildFileActions) {
             sb.append('\n').append(action())

@@ -92,6 +92,25 @@ public class FullBackupContentDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    // Regression test for b/118866569
+    public void testCurrentDirectoryPath() {
+        // You can use "." in the path to reference the current directory; see
+        // https://developer.android.com/guide/topics/data/autobackup#XMLSyntax
+        lint().files(
+                        xml(
+                                "res/xml/backup.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<full-backup-content>\n"
+                                        + "     <include domain=\"file\" path=\".\"/>\n"
+                                        + "     <exclude domain=\"file\" path=\"dd/fo3o.txt\"/>\n"
+                                        + "     <include domain=\"sharedpref\" path=\".\"/>\n"
+                                        + "     <exclude domain=\"sharedpref\" path=\"device.xml\"/>\n"
+                                        + "</full-backup-content>"))
+                .run()
+                .expectClean();
+    }
+
     public void testSuppressed() {
         lint().files(
                         xml(

@@ -38,7 +38,6 @@ dependencies {
     implementation libs.asm_tree
     implementation libs.google_api_client
     implementation libs.google_storage_client
-    implementation libs.groovy
     implementation libs.smali_dexlib
     implementation libs.junit
     implementation libs.protobuf

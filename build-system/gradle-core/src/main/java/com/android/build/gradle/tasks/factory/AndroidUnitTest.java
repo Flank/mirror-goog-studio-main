@@ -24,12 +24,11 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.artifact.impl.ArtifactsImpl;
-import com.android.build.api.component.TestComponent;
-import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.SdkComponentsBuildService;
 import com.android.build.gradle.internal.component.ComponentCreationConfig;
 import com.android.build.gradle.internal.component.UnitTestCreationConfig;
+import com.android.build.gradle.internal.component.VariantCreationConfig;
 import com.android.build.gradle.internal.scope.BootClasspathBuilder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
@@ -45,8 +44,6 @@ import java.util.Collections;
 import java.util.concurrent.Callable;
 import org.gradle.api.Task;
 import org.gradle.api.file.ConfigurableFileCollection;
-import org.gradle.api.file.DirectoryProperty;
-import org.gradle.api.file.FileSystemLocation;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.reporting.ConfigurableReport;
@@ -55,7 +52,6 @@ import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.Optional;
-import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.testing.Test;
 import org.gradle.api.tasks.testing.TestTaskReports;
@@ -161,8 +157,7 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
             GlobalScope globalScope = creationConfig.getGlobalScope();
             BaseExtension extension = globalScope.getExtension();
 
-            VariantImpl testedVariant =
-                    (VariantImpl) ((TestComponent) creationConfig).getTestedVariant();
+            VariantCreationConfig testedVariant = creationConfig.getTestedConfig();
 
             boolean includeAndroidResources =
                     extension.getTestOptions().getUnitTests().isIncludeAndroidResources();
@@ -199,10 +194,16 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
             // eventually be replaced with the new Java plugin.
             TestTaskReports testTaskReports = task.getReports();
             ConfigurableReport xmlReport = testTaskReports.getJunitXml();
-            xmlReport.setDestination(new File(globalScope.getTestResultsFolder(), task.getName()));
+            xmlReport.setDestination(
+                    new File(
+                            creationConfig.getServices().getProjectInfo().getTestResultsFolder(),
+                            task.getName()));
 
             ConfigurableReport htmlReport = testTaskReports.getHtml();
-            htmlReport.setDestination(new File(globalScope.getTestReportFolder(), task.getName()));
+            htmlReport.setDestination(
+                    new File(
+                            creationConfig.getServices().getProjectInfo().getTestReportFolder(),
+                            task.getName()));
 
             extension.getTestOptions().getUnitTests().applyConfiguration(task);
 

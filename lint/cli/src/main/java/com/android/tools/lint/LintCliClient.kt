@@ -98,11 +98,6 @@ import java.io.IOException
 import java.io.InputStream
 import java.io.PrintWriter
 import java.net.URL
-import java.util.ArrayList
-import java.util.HashMap
-import java.util.HashSet
-import java.util.LinkedHashMap
-import java.util.LinkedHashSet
 import kotlin.math.max
 
 /**
@@ -287,6 +282,7 @@ open class LintCliClient : LintClient {
         driver = createDriver(registry, lintRequest)
         driver.analysisStartTime = startTime
         addProgressPrinter()
+        addCancellationChecker()
         validateIssueIds()
 
         analyze()
@@ -363,6 +359,17 @@ open class LintCliClient : LintClient {
         } else if (baseline != null && flags.isUpdateBaseline) {
             baseline.close()
             return ERRNO_CREATED_BASELINE
+        }
+
+        // If failing the build on exit: print at least one error to the
+        // console to help pinpoint the problem.
+        if (hasErrors && !reportingToConsole() && flags.isSetExitCode && !flags.isQuiet) {
+            val writer = PrintWriter(System.out, true)
+            val count = describeCounts(stats.errorCount, stats.warningCount, comma = false, capitalize = false)
+            println("Lint found $count. First failure:")
+            val reporter = Reporter.createTextReporter(this, LintCliFlags(), null, writer, false)
+            reporter.setWriteStats(false)
+            reporter.write(stats, listOf(definiteIncidents.first { it.severity.isError }))
         }
 
         return if (flags.isSetExitCode) if (hasErrors) ERRNO_ERRORS else ERRNO_SUCCESS else ERRNO_SUCCESS
@@ -801,6 +808,22 @@ open class LintCliClient : LintClient {
         }
     }
 
+    protected open fun addCancellationChecker() {
+        driver.addLintListener(object : LintListener {
+            override fun update(
+                driver: LintDriver,
+                type: LintListener.EventType,
+                project: Project?,
+                context: Context?
+            ) {
+                // Some build systems such as Gradle use Thread.interrupt() to cancel workers.
+                if (Thread.currentThread().isInterrupted) {
+                    throw InterruptedException()
+                }
+            }
+        })
+    }
+
     /** Creates a lint request. */
     protected open fun createLintRequest(files: List<File>): LintRequest {
         return LintRequest(this, files).also { configureLintRequest(it) }
@@ -1184,10 +1207,10 @@ open class LintCliClient : LintClient {
                 LintListener.EventType.SCANNING_FILE -> print('.')
                 LintListener.EventType.NEW_PHASE -> {
                 }
-                LintListener.EventType.CANCELED, LintListener.EventType.COMPLETED -> println()
+                LintListener.EventType.COMPLETED -> println()
                 LintListener.EventType.REGISTERED_PROJECT, LintListener.EventType.STARTING -> {
                 }
-                LintListener.EventType.MERGING, LintListener.EventType.ABORTED -> {
+                LintListener.EventType.MERGING -> {
                 }
             }
         }
@@ -1665,6 +1688,14 @@ open class LintCliClient : LintClient {
         }
 
         return super.getRootDir()
+    }
+
+    /**
+     * True if this client has at least one reporter writing to the
+     * console (stdout/stderr)
+     */
+    fun reportingToConsole(): Boolean {
+        return flags.reporters.any { it is TextReporter && it.isWriteToConsole }
     }
 
     protected open inner class LintCliUastParser(project: Project?) :

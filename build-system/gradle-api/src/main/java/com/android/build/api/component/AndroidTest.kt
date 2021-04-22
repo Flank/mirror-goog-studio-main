@@ -16,12 +16,10 @@
 
 package com.android.build.api.component
 
-import com.android.build.api.variant.AndroidResources
 import com.android.build.api.variant.BuildConfigField
-import com.android.build.api.variant.ApkPackaging
-import com.android.build.api.variant.Renderscript
-import com.android.build.api.variant.ResValue
+import com.android.build.api.variant.HasAndroidResources
 import com.android.build.api.variant.SigningConfig
+import com.android.build.api.variant.GeneratesTestApk
 import org.gradle.api.Incubating
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.ListProperty
@@ -34,17 +32,12 @@ import java.io.Serializable
  * Properties for the android test Variant of a module.
  */
 @Incubating
-interface AndroidTest : TestComponent {
+interface AndroidTest : GeneratesTestApk, TestComponent, HasAndroidResources {
 
     /**
      * Variant's application ID as present in the final manifest file of the APK.
      */
-    val applicationId: Property<String>
-
-    /**
-     * Variant's aaptOptions, initialized by the corresponding global DSL element.
-     */
-    val androidResources: AndroidResources
+    override val applicationId: Property<String>
 
     /**
      * The namespace of the generated R and BuildConfig classes. Also, the namespace used to resolve
@@ -57,32 +50,9 @@ interface AndroidTest : TestComponent {
     val namespace: Provider<String>
 
     /**
-     * The instrumentationRunner to use to run the tests.
-     */
-    val instrumentationRunner: Property<String>
-
-    /**
-     * The handleProfiling value to use to run the tests.
-     */
-    val handleProfiling: Property<Boolean>
-
-    /**
-     * The functionalTest value to use to run the tests.
-     */
-    val functionalTest: Property<Boolean>
-
-    /** The test label.  */
-    val testLabel: Property<String?>
-
-    /**
      * Variant's [BuildConfigField] which will be generated in the BuildConfig class.
      */
     val buildConfigFields: MapProperty<String, out BuildConfigField<out Serializable>>
-
-    /**
-     * Make a [ResValue.Key] to interact with [resValues]'s [MapProperty]
-     */
-    val resValues: MapProperty<ResValue.Key, ResValue>
 
     /**
      * [MapProperty] of the variant's manifest placeholders.
@@ -99,17 +69,6 @@ interface AndroidTest : TestComponent {
      * @return Variant's config or null if the variant is not configured for signing.
      */
     val signingConfig: SigningConfig?
-
-    /**
-     * Variant's packagingOptions, initialized by the corresponding global DSL element.
-     */
-    val packaging: ApkPackaging
-
-    /**
-     * Variant specific settings for the renderscript compiler. This will return null when
-     * [com.android.build.api.dsl.BuildFeatures.renderScript] is false.
-     */
-    val renderscript: Renderscript?
 
     /**
      * List of proguard configuration files for this variant. The list is initialized from the

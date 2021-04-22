@@ -23,8 +23,8 @@ public class ProfileableClientData {
     // the client's process ID
     private final int mPid;
 
-    // client's underlying package name (R+ only)
-    @NonNull private final String mProcessName;
+    // client's underlying package name.
+    @NonNull private String mProcessName;
 
     // client's ABI
     @NonNull private String mAbi;
@@ -51,5 +51,9 @@ public class ProfileableClientData {
     @NonNull
     public String getAbi() {
         return mAbi;
+    }
+
+    public void setProcessName(@NonNull String name) {
+        mProcessName = name;
     }
 }

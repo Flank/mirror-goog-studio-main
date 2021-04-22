@@ -203,7 +203,7 @@ public class TransformManager extends FilterableStreamCollection {
                         creationConfig,
                         inputStreams,
                         taskName,
-                        creationConfig.getGlobalScope().getBuildDir());
+                        creationConfig.getServices().getProjectInfo().getBuildDir());
 
         if (inputStreams.isEmpty() && referencedStreams.isEmpty()) {
             // didn't find any match. Means there is a broken order somewhere in the streams.

@@ -26,7 +26,7 @@ TEST_DEPS = [
     "//tools/base/third_party:com.google.truth_truth",
     "//tools/base/third_party:commons-io_commons-io",  # TODO: remove?
     "//tools/base/third_party:org.apache.commons_commons-compress",
-    "//tools/base/third_party:org.codehaus.groovy_groovy-all",
+    "//tools/base/third_party:org.codehaus.groovy_groovy-all",  # required by //tools/base/build-system:gradle-api
     "//tools/base/third_party:org.mockito_mockito-core",
     "//tools/base/third_party:org.ow2.asm_asm",
     "//tools/base/third_party:org.ow2.asm_asm-tree",
@@ -49,7 +49,6 @@ TEST_DATA = [
     "//prebuilts/studio/sdk:platform-tools",
     "//prebuilts/studio/sdk:platforms/latest",
     "//prebuilts/tools/common/cmake:cmake-3.8.2",
-    "//prebuilts/tools/common/kotlin-plugin:Kotlin/kotlinc/build.txt",
     "//tools/base/build-system:gradle-distrib",
     "//tools/base/build-system/aapt2:aapt2_for_tests",
 ]

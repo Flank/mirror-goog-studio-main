@@ -73,6 +73,7 @@ import com.android.builder.model.SyncIssue
 import com.android.builder.model.v2.ide.AndroidGradlePluginProjectFlags.BooleanFlag
 import com.android.builder.model.v2.ide.ArtifactDependencies
 import com.android.builder.model.v2.ide.BundleInfo
+import com.android.builder.model.v2.ide.CodeShrinker
 import com.android.builder.model.v2.ide.JavaArtifact
 import com.android.builder.model.v2.ide.ProjectType
 import com.android.builder.model.v2.ide.SourceSetContainer
@@ -100,23 +101,16 @@ import javax.xml.stream.XMLStreamException
 import javax.xml.stream.events.EndElement
 
 class ModelBuilder<
-        AndroidSourceSetT : AndroidSourceSet,
         BuildFeaturesT : BuildFeatures,
         BuildTypeT : BuildType,
         DefaultConfigT : DefaultConfig,
         ProductFlavorT : ProductFlavor,
         SigningConfigT : ApkSigningConfig,
-        VariantBuilderT : VariantBuilder,
-        VariantT : Variant,
         ExtensionT : CommonExtension<
-                AndroidSourceSetT,
                 BuildFeaturesT,
                 BuildTypeT,
                 DefaultConfigT,
-                ProductFlavorT,
-                SigningConfigT,
-                VariantBuilderT,
-                VariantT>>(
+                ProductFlavorT>>(
     private val globalScope: GlobalScope,
     private val projectOptions: ProjectOptions,
     private val variantModel: VariantModel,
@@ -211,7 +205,8 @@ class ModelBuilder<
         val defaultConfig = SourceSetContainerImpl(
             sourceProvider = defaultConfigData.sourceSet.convert(buildFeatures),
             androidTestSourceProvider = defaultConfigData.getTestSourceSet(VariantTypeImpl.ANDROID_TEST)?.convert(buildFeatures),
-            unitTestSourceProvider = defaultConfigData.getTestSourceSet(VariantTypeImpl.UNIT_TEST)?.convert(buildFeatures)
+            unitTestSourceProvider = defaultConfigData.getTestSourceSet(VariantTypeImpl.UNIT_TEST)?.convert(buildFeatures),
+            testFixturesSourceProvider = defaultConfigData.testFixturesSourceSet?.convert(buildFeatures)
         )
 
         // gather all the build types
@@ -221,7 +216,8 @@ class ModelBuilder<
                 SourceSetContainerImpl(
                     sourceProvider = buildType.sourceSet.convert(buildFeatures),
                     androidTestSourceProvider = buildType.getTestSourceSet(VariantTypeImpl.ANDROID_TEST)?.convert(buildFeatures),
-                    unitTestSourceProvider = buildType.getTestSourceSet(VariantTypeImpl.UNIT_TEST)?.convert(buildFeatures)
+                    unitTestSourceProvider = buildType.getTestSourceSet(VariantTypeImpl.UNIT_TEST)?.convert(buildFeatures),
+                    testFixturesSourceProvider = buildType.testFixturesSourceSet?.convert(buildFeatures)
                 )
             )
         }
@@ -233,7 +229,8 @@ class ModelBuilder<
                 SourceSetContainerImpl(
                     sourceProvider = flavor.sourceSet.convert(buildFeatures),
                     androidTestSourceProvider = flavor.getTestSourceSet(VariantTypeImpl.ANDROID_TEST)?.convert(buildFeatures),
-                    unitTestSourceProvider = flavor.getTestSourceSet(VariantTypeImpl.UNIT_TEST)?.convert(buildFeatures)
+                    unitTestSourceProvider = flavor.getTestSourceSet(VariantTypeImpl.UNIT_TEST)?.convert(buildFeatures),
+                    testFixturesSourceProvider = flavor.testFixturesSourceSet?.convert(buildFeatures)
                 )
             )
         }
@@ -295,7 +292,7 @@ class ModelBuilder<
         }
 
         val dependenciesInfo =
-                if (extension is ApplicationExtension<*, *, *, *, *>) {
+                if (extension is ApplicationExtension) {
                     DependenciesInfoImpl(
                         extension.dependenciesInfo.includeInApk,
                         extension.dependenciesInfo.includeInBundle
@@ -403,6 +400,14 @@ class ModelBuilder<
                     globalLibraryBuildService,
                     mavenCoordinatesBuildService
                 )
+            },
+            testFixturesArtifact = variant.testFixturesComponent?.let {
+                createDependencies(
+                    it,
+                    buildMapping,
+                    globalLibraryBuildService,
+                    mavenCoordinatesBuildService
+                )
             }
         )
     }
@@ -421,6 +426,9 @@ class ModelBuilder<
             },
             unitTestArtifact = variant.testComponents[VariantTypeImpl.UNIT_TEST]?.let {
                 createJavaArtifact(it, features)
+            },
+            testFixturesArtifact = variant.testFixturesComponent?.let {
+                createAndroidArtifact(it, features)
             },
             buildType = variant.buildType,
             productFlavors = variant.productFlavors.map { it.second },
@@ -504,7 +512,9 @@ class ModelBuilder<
             abiFilters = variantDslInfo.supportedAbis,
             testInfo = testInfo,
             bundleInfo = getBundleInfo(component),
-            codeShrinker = if (component is ConsumableCreationConfig) component.codeShrinker?.convert() else null,
+            codeShrinker = CodeShrinker.R8.takeIf {
+                component is ConsumableCreationConfig && component.minifiedEnabled
+            },
 
             assembleTaskName = taskContainer.assembleTask.name,
             compileTaskName = taskContainer.compileTask.name,
@@ -720,7 +730,7 @@ class ModelBuilder<
     private fun getTestTargetVariant(
         component: ComponentImpl
     ): TestedTargetVariant? {
-        if (extension is TestExtension<*,*,*,*,*>) {
+        if (extension is TestExtension) {
             val targetPath = extension.targetProjectPath ?: return null
 
             // to get the target variant we need to get the result of the dependency resolution

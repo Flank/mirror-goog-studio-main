@@ -44,7 +44,7 @@ class KotlinDslTest {
     val projectDirectory = TemporaryFolder()
 
     private lateinit var plugin: AppPlugin
-    private lateinit var android: ApplicationExtension<*, *, *, *, *>
+    private lateinit var android: ApplicationExtension
     private lateinit var project: Project
 
     @Before
@@ -169,7 +169,7 @@ class KotlinDslTest {
 
     @Test
     fun `manifest placeholders source compatibility`() {
-        (android as BaseAppModuleExtension).defaultConfig.apply {
+        android.defaultConfig.apply {
             // Check can accept mapOf with string to string
             setManifestPlaceholders(mapOf("a" to "A"))
             assertThat(manifestPlaceholders).containsExactly("a", "A")
@@ -182,6 +182,37 @@ class KotlinDslTest {
             manifestPlaceholders += mapOf("d" to "D")
             assertThat(manifestPlaceholders).containsExactly("c", 3,"d", "D")
         }
+    }
+
+    @Test
+    fun `baseFlavor source compatibility`() {
+        android.defaultConfig {
+            setTestFunctionalTest(true)
+            assertThat(testFunctionalTest).isTrue()
+            setTestHandleProfiling(true)
+            assertThat(testHandleProfiling).isTrue()
+            resConfig("one")
+            resConfigs("two", "three")
+            resConfigs(listOf("four"))
+            assertThat(resourceConfigurations).containsExactly("one", "two", "three", "four")
+        }
+    }
+
+
+    @Test
+    fun `productFlavor source compatibility`() {
+        android.productFlavors.create("t").apply {
+            setDimension("foo")
+            assertThat(dimension).isEqualTo("foo")
+            setMatchingFallbacks(listOf("bar"))
+            assertThat(matchingFallbacks).containsExactly("bar")
+        }
+    }
+
+    @Test
+    fun `flavorDimension source compatibility`() {
+        android.flavorDimensions("a")
+        assertThat(android.flavorDimensions).containsExactly("a")
     }
 
     /** Regression test for https://b.corp.google.com/issues/155318103 */
@@ -218,6 +249,9 @@ class KotlinDslTest {
 
         android.defaultConfig.testInstrumentationRunnerArguments += "c" to "d"
         assertThat(android.defaultConfig.testInstrumentationRunnerArguments).containsExactly("a", "b", "c", "d")
+
+        android.defaultConfig.setTestInstrumentationRunnerArguments(mutableMapOf("x" to "y"))
+        assertThat(android.defaultConfig.testInstrumentationRunnerArguments).containsExactly("x", "y")
     }
 
     @Test
@@ -370,6 +404,14 @@ class KotlinDslTest {
                 compressSnapshots = true
                 assertThat(compressSnapshots).isTrue()
             }
+        }
+    }
+
+    @Test
+    fun `compatibility for compile sdk`() {
+        android.apply {
+            compileSdkVersion(TestConstants.COMPILE_SDK_VERSION)
+            compileSdkVersion("android-${TestConstants.COMPILE_SDK_VERSION}")
         }
     }
 }

@@ -156,6 +156,7 @@ def kotlin_library(
         runtime_deps = [],
         bundled_deps = [],
         friends = [],
+        data = [],
         pom = None,
         exclusions = None,
         visibility = None,
@@ -227,6 +228,7 @@ def kotlin_library(
         name = name,
         jars = [jar_name],
         deps = deps + ["//prebuilts/tools/common/kotlin-plugin-ij:Kotlin/kotlinc/lib/kotlin-stdlib"],
+        data = data,
         visibility = visibility,
         testonly = testonly,
     )

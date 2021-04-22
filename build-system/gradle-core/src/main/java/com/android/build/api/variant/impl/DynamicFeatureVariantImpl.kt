@@ -16,16 +16,17 @@
 
 package com.android.build.api.variant.impl
 
+import com.android.build.api.artifact.MultipleArtifact
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.AndroidTest
 import com.android.build.api.component.Component
 import com.android.build.api.component.analytics.AnalyticsEnabledDynamicFeatureVariant
 import com.android.build.api.component.impl.ApkCreationConfigImpl
+import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.AndroidResources
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.ApkPackaging
-import com.android.build.api.variant.Dexing
 import com.android.build.api.variant.DynamicFeatureVariant
 import com.android.build.api.variant.Renderscript
 import com.android.build.api.variant.Variant
@@ -49,7 +50,6 @@ import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.builder.dexing.DexingType
-import com.android.builder.model.CodeShrinker
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import com.android.build.gradle.options.StringOption
 import org.gradle.api.provider.Property
@@ -86,6 +86,15 @@ open class DynamicFeatureVariantImpl @Inject constructor(
     globalScope
 ), DynamicFeatureVariant, DynamicFeatureCreationConfig, HasAndroidTest {
 
+    init {
+        variantDslInfo.multiDexKeepProguard?.let {
+            artifacts.getArtifactContainer(MultipleArtifact.MULTIDEX_KEEP_PROGUARD)
+                    .addInitialProvider(
+                            taskCreationServices.regularFile(internalServices.provider { it })
+                    )
+        }
+    }
+
     private val delegate by lazy { ApkCreationConfigImpl(
         this,
         internalServices.projectOptions,
@@ -113,7 +122,7 @@ open class DynamicFeatureVariantImpl @Inject constructor(
     }
 
     override val minifiedEnabled: Boolean
-        get() = variantDslInfo.isMinifyEnabled
+        get() = variantDslInfo.getPostProcessingOptions().codeShrinkerEnabled()
 
     override val packaging: ApkPackaging by lazy {
         ApkPackagingImpl(
@@ -121,13 +130,6 @@ open class DynamicFeatureVariantImpl @Inject constructor(
             internalServices,
             minSdkVersion.apiLevel
         )
-    }
-
-    override val dexing: Dexing by lazy {
-        internalServices.newInstance(Dexing::class.java).also {
-            it.multiDexKeepFile.set(variantDslInfo.multiDexKeepFile)
-            it.multiDexKeepProguard.set(variantDslInfo.multiDexKeepProguard)
-        }
     }
 
     override var androidTest: AndroidTest? = null
@@ -184,11 +186,18 @@ open class DynamicFeatureVariantImpl @Inject constructor(
         }
 
     override val signingConfig: SigningConfigImpl? = null
-    /**
-     * DO NOT USE, only present for old variant API.
-     */
+
+    // ---------------------------------------------------------------------------------------------
+    // DO NOT USE, only present for old variant API.
+    // ---------------------------------------------------------------------------------------------
     override val dslSigningConfig: com.android.build.gradle.internal.dsl.SigningConfig? =
         variantDslInfo.signingConfig
+
+    // ---------------------------------------------------------------------------------------------
+    // DO NOT USE, Deprecated DSL APIs.
+    // ---------------------------------------------------------------------------------------------
+
+    override val multiDexKeepFile = variantDslInfo.multiDexKeepFile
 
     // ---------------------------------------------------------------------------------------------
     // Private stuff
@@ -266,7 +275,7 @@ open class DynamicFeatureVariantImpl @Inject constructor(
 
     override fun <T : Component> createUserVisibleVariantObject(
             projectServices: ProjectServices,
-            operationsRegistrar: VariantApiOperationsRegistrar<out VariantBuilder, out Variant>,
+            operationsRegistrar: VariantApiOperationsRegistrar<out CommonExtension<*, *, *, *>, out VariantBuilder, out Variant>,
             stats: GradleBuildVariant.Builder?
     ): T =
         if (stats == null) {
@@ -281,9 +290,6 @@ open class DynamicFeatureVariantImpl @Inject constructor(
 
     override val minSdkVersionWithTargetDeviceApi: AndroidVersion
         get() = delegate.minSdkVersionWithTargetDeviceApi
-
-    override val codeShrinker: CodeShrinker?
-        get() = delegate.getCodeShrinker()
 
     override fun getNeedsMergedJavaResStream(): Boolean = delegate.getNeedsMergedJavaResStream()
 

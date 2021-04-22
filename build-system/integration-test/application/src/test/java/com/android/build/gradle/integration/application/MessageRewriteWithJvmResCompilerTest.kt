@@ -72,6 +72,5 @@ class MessageRewriteWithJvmResCompilerTest(private val useRelativeResPaths: Bool
     private fun gradleTaskExecutor(): GradleTaskExecutor {
         return project.executor()
                 .with(BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP, useRelativeResPaths)
-                .with(BooleanOption.ENABLE_JVM_RESOURCE_COMPILER, true)
     }
 }

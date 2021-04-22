@@ -28,4 +28,7 @@ interface GradleAdbManager {
 
     /** Returns the id associated with the corresponding serial */
     fun getId(deviceSerial: String): String?
+
+    /** Attempts to close the serial from adb. */
+    fun closeDevice(deviceSerial: String)
 }

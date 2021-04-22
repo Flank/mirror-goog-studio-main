@@ -80,7 +80,6 @@ import com.android.builder.files.SerializableInputChanges;
 import com.android.builder.files.ZipCentralDirectory;
 import com.android.builder.internal.packaging.ApkCreatorType;
 import com.android.builder.internal.packaging.IncrementalPackager;
-import com.android.builder.model.CodeShrinker;
 import com.android.builder.packaging.DexPackagingMode;
 import com.android.builder.packaging.PackagingUtils;
 import com.android.builder.utils.ZipEntryUtils;
@@ -1285,7 +1284,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         private FileCollection getJavaResources(@NonNull ApkCreationConfig creationConfig) {
             ArtifactsImpl artifacts = creationConfig.getArtifacts();
 
-            if (creationConfig.getCodeShrinker() == CodeShrinker.R8) {
+            if (creationConfig.getMinifiedEnabled()) {
                 Provider<RegularFile> mergedJavaResProvider =
                         artifacts.get(SHRUNK_JAVA_RES.INSTANCE);
                 return creationConfig.getServices().fileCollection(mergedJavaResProvider);

@@ -35,7 +35,7 @@ class MapSourceSetPathsTaskTest {
             com.android.tests.flavors-f1Fa-2 $projectDir/build/generated/res/rs/f1Fa/debug
             com.android.tests.flavors-mergeF1FaDebugResources-3 $projectDir/build/intermediates/incremental/mergeF1FaDebugResources/merged.dir
             com.android.tests.flavors-mergeF1FaDebugResources-4 $projectDir/build/intermediates/incremental/mergeF1FaDebugResources/stripped.dir
-            com.android.tests.flavors-f1Fa-5 $projectDir/build/intermediates/res/merged/f1Fa/debug
+            com.android.tests.flavors-merged_res-5 $projectDir/build/intermediates/merged_res/f1FaDebug
             com.android.tests.flavors-debug-6 $projectDir/src/debug/res
             com.android.tests.flavors-f1-7 $projectDir/src/f1/res
             com.android.tests.flavors-f1Fa-8 $projectDir/src/f1Fa/res

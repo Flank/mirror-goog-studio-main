@@ -16,19 +16,16 @@
 
 package com.android.build.gradle.internal.services
 
-import com.android.build.gradle.internal.fixtures.FakeGradleProperty
 import com.android.ide.common.symbols.Symbol
 import com.android.ide.common.symbols.SymbolTable
 import com.android.resources.ResourceType
 import com.google.common.cache.CacheBuilderSpec
 import com.google.common.truth.Truth.assertThat
 import com.google.common.truth.Truth.assertWithMessage
-import org.gradle.api.provider.Property
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
-
 
 /** Unit tests for ClasspathBuildService */
 class SymbolTableBuildServiceTest {
@@ -36,16 +33,8 @@ class SymbolTableBuildServiceTest {
     @get:Rule
     val temporaryDirectory = TemporaryFolder()
 
-    class FakeParameters(cacheEnabled: Boolean) : SymbolTableBuildService.Parameters() {
-        override val cacheEnabled: Property<Boolean> = FakeGradleProperty(cacheEnabled)
-    }
-
     class TestCaching() : SymbolTableBuildService(STRONG_KEYED_CACHE) {
-        override fun getParameters() = FakeParameters(cacheEnabled = true)
-    }
-
-    class TestNoCaching() : SymbolTableBuildService(STRONG_KEYED_CACHE) {
-        override fun getParameters() = FakeParameters(cacheEnabled = false)
+        override fun getParameters() = throw UnsupportedOperationException()
     }
 
     /** Smoke test for the classpath build service, check things work as expected. */
@@ -142,31 +131,6 @@ class SymbolTableBuildServiceTest {
         assertWithMessage("Symbol table is reloaded").that(content2).isNotSameInstanceAs(content1)
         assertWithMessage("Symbol intern table is dropped")
             .that(content2.onlySymbol())
-            .isNotSameInstanceAs(content1.onlySymbol())
-    }
-
-    @Test
-    fun checkNoCaching() {
-        val classpathBuildService = TestNoCaching()
-
-        val file1 = fileWithContent("com.example.lib1\nstring foo")
-        val file2 = fileWithContent("com.example.lib2\nstring foo")
-
-        val classpath = classpathBuildService.loadClasspath(listOf(file1, file2))
-        val content1 = classpath.first()
-        val content2 = classpath.last()
-
-        assertWithMessage("Symbol instances are shared with the same invocation")
-            .that(content2.onlySymbol())
-            .isSameInstanceAs(content1.onlySymbol())
-
-        val content1Again = classpathBuildService.loadClasspath(listOf(file1)).single()
-
-        assertThat(content1Again).isEqualTo(content1)
-        assertWithMessage("Symbol table is reloaded using the non caching service")
-            .that(content1Again).isNotSameInstanceAs(content1)
-        assertWithMessage("Symbol intern table is dropped")
-            .that(content1Again.onlySymbol())
             .isNotSameInstanceAs(content1.onlySymbol())
     }
 

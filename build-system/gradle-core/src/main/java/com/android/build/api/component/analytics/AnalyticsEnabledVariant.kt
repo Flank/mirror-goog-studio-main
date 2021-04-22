@@ -20,6 +20,7 @@ import com.android.build.api.component.UnitTest
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.ExternalNativeBuild
+import com.android.build.api.variant.ExternalNdkBuildImpl
 import com.android.build.api.variant.Packaging
 import com.android.build.api.variant.ResValue
 import com.android.build.api.variant.Variant
@@ -38,13 +39,6 @@ abstract class AnalyticsEnabledVariant (
     stats: GradleBuildVariant.Builder,
     objectFactory: ObjectFactory
 ) : AnalyticsEnabledComponent(delegate, stats, objectFactory), Variant {
-    override val applicationId: Provider<String>
-        get() {
-            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-                VariantPropertiesMethodType.
-                READ_ONLY_APPLICATION_ID_VALUE
-            return delegate.applicationId
-        }
 
     override val namespace: Provider<String>
         get() {
@@ -95,38 +89,32 @@ abstract class AnalyticsEnabledVariant (
             return userVisiblePackaging
         }
 
-    private val userVisibleCmakeOptions: AnalyticsEnabledExternalCmake? by lazy {
-        delegate.externalCmake?.let {
-            objectFactory.newInstance(
-                    AnalyticsEnabledExternalCmake::class.java,
-                    it,
-                    stats
-            )
+    private val userVisibleExternalNativeBuild: ExternalNativeBuild? by lazy {
+        delegate.externalNativeBuild?.let {
+            if (it is ExternalNdkBuildImpl) {
+                objectFactory.newInstance(
+                        AnalyticsEnabledExternalNdkBuild::class.java,
+                        it,
+                        stats
+                )
+            } else {
+                objectFactory.newInstance(
+                        AnalyticsEnabledExternalCmake::class.java,
+                        it,
+                        stats
+                )
+            }
         }
     }
 
-    override val externalCmake: ExternalNativeBuild?
+    override val externalNativeBuild: ExternalNativeBuild?
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-                    VariantPropertiesMethodType.CMAKE_NATIVE_OPTIONS_VALUE
-            return userVisibleCmakeOptions
-        }
-
-    private val userVisibleNdkBuildOptions: AnalyticsEnabledExternalNdkBuild? by lazy {
-        delegate.externalNdkBuild?.let {
-            objectFactory.newInstance(
-                    AnalyticsEnabledExternalNdkBuild::class.java,
-                    it,
-                    stats
-            )
-        }
-    }
-
-    override val externalNdkBuild: ExternalNativeBuild?
-        get() {
-            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                if (userVisibleExternalNativeBuild is AnalyticsEnabledExternalNdkBuild)
                     VariantPropertiesMethodType.NDK_BUILD_NATIVE_OPTIONS_VALUE
-            return userVisibleNdkBuildOptions
+                else
+                    VariantPropertiesMethodType.CMAKE_NATIVE_OPTIONS_VALUE
+            return userVisibleExternalNativeBuild
         }
 
     override val unitTest: UnitTest?
@@ -138,11 +126,11 @@ abstract class AnalyticsEnabledVariant (
         return delegate.getExtension(type)
     }
 
-    override val isPseudoLocalesEnabled: Property<Boolean>
+    override val pseudoLocalesEnabled: Property<Boolean>
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
                     VariantPropertiesMethodType.VARIANT_PSEUDOLOCALES_ENABLED_VALUE
-            return delegate.isPseudoLocalesEnabled
+            return delegate.pseudoLocalesEnabled
         }
 
     override val proguardFiles: ListProperty<RegularFile>

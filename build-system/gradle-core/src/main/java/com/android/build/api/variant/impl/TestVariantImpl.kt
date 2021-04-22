@@ -16,15 +16,16 @@
 
 package com.android.build.api.variant.impl
 
+import com.android.build.api.artifact.MultipleArtifact
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.Component
 import com.android.build.api.component.analytics.AnalyticsEnabledTestVariant
 import com.android.build.api.component.impl.TestVariantCreationConfigImpl
+import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.AndroidResources
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.ApkPackaging
-import com.android.build.api.variant.Dexing
 import com.android.build.api.variant.Renderscript
 import com.android.build.api.variant.TestVariant
 import com.android.build.api.variant.Variant
@@ -46,7 +47,6 @@ import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.build.gradle.options.IntegerOption
 import com.android.builder.dexing.DexingType
-import com.android.builder.model.CodeShrinker
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.ListProperty
@@ -84,6 +84,14 @@ open class TestVariantImpl @Inject constructor(
     globalScope
 ), TestVariant, TestVariantCreationConfig {
 
+    init {
+        variantDslInfo.multiDexKeepProguard?.let {
+            artifacts.getArtifactContainer(MultipleArtifact.MULTIDEX_KEEP_PROGUARD)
+                    .addInitialProvider(
+                            taskCreationServices.regularFile(internalServices.provider { it })
+                    )
+        }
+    }
     private val delegate by lazy { TestVariantCreationConfigImpl(
         this,
         internalServices.projectOptions,
@@ -107,7 +115,7 @@ open class TestVariantImpl @Inject constructor(
     override val testedApplicationId: Provider<String> = calculateTestedApplicationId(variantDependencies)
 
     override val minifiedEnabled: Boolean
-        get() = variantDslInfo.isMinifyEnabled
+        get() = variantDslInfo.getPostProcessingOptions().codeShrinkerEnabled()
 
     override val instrumentationRunner: Property<String> =
         internalServices.propertyOf(String::class.java, variantDslInfo.getInstrumentationRunner(dexingType))
@@ -127,13 +135,6 @@ open class TestVariantImpl @Inject constructor(
             internalServices,
             minSdkVersion.apiLevel
         )
-    }
-
-    override val dexing: Dexing by lazy {
-        internalServices.newInstance(Dexing::class.java).also {
-            it.multiDexKeepFile.set(variantDslInfo.multiDexKeepFile)
-            it.multiDexKeepProguard.set(variantDslInfo.multiDexKeepProguard)
-        }
     }
 
     override val renderscript: Renderscript? by lazy {
@@ -184,11 +185,16 @@ open class TestVariantImpl @Inject constructor(
         }
     }
 
-    /**
-     * DO NOT USE, only present for old variant API.
-     */
+    // ---------------------------------------------------------------------------------------------
+    // DO NOT USE, only present for old variant API.
+    // ---------------------------------------------------------------------------------------------
     override val dslSigningConfig: com.android.build.gradle.internal.dsl.SigningConfig? =
         variantDslInfo.signingConfig
+
+    // ---------------------------------------------------------------------------------------------
+    // DO NOT USE, Deprecated DSL APIs.
+    // ---------------------------------------------------------------------------------------------
+    override val multiDexKeepFile = variantDslInfo.multiDexKeepFile
 
     // ---------------------------------------------------------------------------------------------
     // Private stuff
@@ -217,7 +223,7 @@ open class TestVariantImpl @Inject constructor(
 
     override fun <T : Component> createUserVisibleVariantObject(
             projectServices: ProjectServices,
-            operationsRegistrar: VariantApiOperationsRegistrar<out VariantBuilder, out Variant>,
+            operationsRegistrar: VariantApiOperationsRegistrar<out CommonExtension<*, *, *, *>, out VariantBuilder, out Variant>,
             stats: GradleBuildVariant.Builder?
     ): T =
         if (stats == null) {
@@ -232,9 +238,6 @@ open class TestVariantImpl @Inject constructor(
 
     override val minSdkVersionWithTargetDeviceApi: AndroidVersion
         get() = delegate.minSdkVersionWithTargetDeviceApi
-
-    override val codeShrinker: CodeShrinker?
-        get() = delegate.getCodeShrinker()
 
     override fun getNeedsMergedJavaResStream(): Boolean = delegate.getNeedsMergedJavaResStream()
 

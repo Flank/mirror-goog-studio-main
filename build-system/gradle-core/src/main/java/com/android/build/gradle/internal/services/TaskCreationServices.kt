@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.services
 
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import java.io.File
 
@@ -31,6 +32,7 @@ import java.io.File
  * This is accessed via [com.android.build.gradle.internal.component.ComponentCreationConfig]
  */
 interface TaskCreationServices: BaseServices {
+    fun regularFile(file: Provider<File>): Provider<RegularFile>
     fun file(file: Any): File
 
     fun fileCollection(): ConfigurableFileCollection

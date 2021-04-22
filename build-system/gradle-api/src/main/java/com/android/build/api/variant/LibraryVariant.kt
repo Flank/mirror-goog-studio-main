@@ -21,14 +21,7 @@ import org.gradle.api.provider.Provider
 
 /** [Variant] for Library projects */
 @Incubating
-interface LibraryVariant : Variant {
-
-    /**
-     * Variant's application ID as present in the final manifest file of the APK.
-     *
-     * This is a read-ony value based on the package entry in the manifest
-     */
-    override val applicationId: Provider<String>
+interface LibraryVariant : Variant, GeneratesAar {
 
     /**
      * Variant's [AndroidTest] configuration, or null if android tests are disabled for this
@@ -41,10 +34,4 @@ interface LibraryVariant : Variant {
      * [com.android.build.api.dsl.BuildFeatures.renderScript] is false.
      */
     val renderscript: Renderscript?
-
-    /**
-     * Variant's aar metadata, initialized by merging the corresponding
-     * [com.android.build.api.dsl.AarMetadata] DSL elements.
-     */
-    val aarMetadata: AarMetadata
 }

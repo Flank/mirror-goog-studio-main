@@ -37,4 +37,9 @@ interface SourceSetContainer: AndroidModel {
      * The optional source set for the UnitTest component
      */
     val unitTestSourceProvider: SourceProvider?
+
+    /**
+     * The optional source set for the TestFixtures component
+     */
+    val testFixturesSourceProvider: SourceProvider?
 }

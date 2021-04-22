@@ -17,15 +17,54 @@
 
 package com.example.apiuser
 
+import com.android.build.gradle.BaseExtension
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 
+/**
+ * An example of legacy DSL & API use that we want to ensure binary compabibility for.
+ *
+ * This isn't necessarily an example to copy for new API users, for that
+ * see the API recipes on github.
+ */
 class ExamplePlugin: Plugin<Project> {
     override fun apply(project: Project) {
+        var foundAndroidPlugin = false
+        project.getPluginManager().withPlugin("com.android.application") {
+            foundAndroidPlugin = true
+            registerTask(project)
+        }
+        project.getPluginManager().withPlugin("com.android.library") {
+            foundAndroidPlugin = true
+            registerTask(project)
+        }
+
         project.afterEvaluate {
-            project.tasks.register("examplePluginTask", ExampleTask::class.java) {
-                it.configure(project)
+            if (!foundAndroidPlugin) {
+                throw IllegalStateException(
+                        "To use com.example.apiuser.example-plugin " +
+                                "you also need to apply one of the following:\n" +
+                                " * com.android.application or\n" +
+                                " * com.android.library" +
+                                "");
             }
+        }
+    }
+
+    private fun registerTask(project: Project) {
+        val baseExtension: BaseExtension = project.extensions.getByType(BaseExtension::class.java)
+
+        project.tasks.register("examplePluginTask", ExampleTask::class.java) {
+            it.configure(baseExtension)
+        }
+
+        baseExtension.buildTypes.all { buildType ->
+            println("Build type ${buildType.name} had signing config ${buildType.signingConfig?.name}")
+            buildType.signingConfig = baseExtension.signingConfigs.getByName("debug")
+        }
+        baseExtension.productFlavors.all { flavor ->
+            println("Product flavor ${flavor.name} had signing config ${flavor.signingConfig?.name}")
+            flavor.signingConfig = baseExtension.signingConfigs.getByName("debug")
         }
     }
 }

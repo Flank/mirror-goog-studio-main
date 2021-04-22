@@ -51,8 +51,17 @@ fun ResolvedComponentResult.getPathFromRoot(): ComponentPath {
     var current = this
     while (current.dependents.isNotEmpty()) {
         // Select only the first parent of this component
-        current = current.dependents.first().from
-        components.add(current)
+        val parent = current.dependents.first().from
+        components.add(parent)
+        if (parent == current) {
+            // It's possible that parent == current. For example, if configuration
+            // `debugAndroidTestRuntimeClasspath` of `project :foo` has a dependency on
+            // `project :foo`, then parent == current == `project: foo`.
+            // In that case, parent should be root, and we can stop here.
+            break
+        } else {
+            current = parent
+        }
     }
     // Reverse the list as we want the root to be the first element
     components.reverse()

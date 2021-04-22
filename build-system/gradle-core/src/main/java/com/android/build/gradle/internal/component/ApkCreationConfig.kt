@@ -18,9 +18,9 @@ package com.android.build.gradle.internal.component
 
 import com.android.build.api.variant.AndroidResources
 import com.android.build.api.variant.ApkPackaging
-import com.android.build.api.variant.Dexing
 import com.android.build.api.variant.impl.SigningConfigImpl
 import org.gradle.api.provider.MapProperty
+import java.io.File
 
 /**
  * Interface for properties common to all variant generating APKs
@@ -35,8 +35,6 @@ interface ApkCreationConfig: ConsumableCreationConfig {
 
     // TODO: move to a non variant object (GlobalTaskScope?)
     val testOnlyApk: Boolean
-
-    val minifiedEnabled: Boolean
 
     /** If this variant should package desugar_lib DEX in the final APK. */
     val shouldPackageDesugarLibDex: Boolean
@@ -62,5 +60,5 @@ interface ApkCreationConfig: ConsumableCreationConfig {
      */
     val dslSigningConfig: com.android.build.gradle.internal.dsl.SigningConfig?
 
-    val dexing: Dexing
+    val multiDexKeepFile: File?
 }

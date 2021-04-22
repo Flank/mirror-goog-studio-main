@@ -200,6 +200,26 @@ class Comparator(
         runComparison("VariantDependencies", finalString, goldenFile)
     }
 
+    fun ensureIsEmpty(
+        model: VariantDependencies,
+        referenceModel: VariantDependencies? = null,
+    ) {
+        checkEmptyDelta(
+            modelName = "VariantDependencies",
+            normalizer = result.normalizer,
+            model = model,
+            referenceModel = referenceModel,
+            referenceNormalizer = referenceResult?.normalizer,
+            action = { snapshotVariantDependencies() },
+            failureAction =  {
+                generateStdoutHeader()
+                println(SnapshotItemWriter().write(it))
+
+                fail("Expected no different between model. See stdout for details")
+            }
+        )
+    }
+
     /**
      * Entry point to dump a [GlobalLibraryMap]
      */
@@ -282,17 +302,26 @@ class Comparator(
         val path = testClass.javaClass.name.replace('.', sep)
         val root = System.getenv("PROJECT_ROOT")
 
-        val fullPath = "$root${sep}src${sep}test${sep}resources${sep}${path}_$name.txt"
+        val fullPath = if (name.isNotBlank()) {
+            "$root${sep}src${sep}test${sep}resources${sep}${path}_$name.txt"
+        } else {
+            "$root${sep}src${sep}test${sep}resources${sep}${path}.txt"
+        }
 
         return File(fullPath).also {
             FileUtils.mkdirs(it.parentFile)
         }
     }
 
-    private fun loadGoldenFile(name: String) = Resources.toString(
-        Resources.getResource(
-            testClass.javaClass,
+    private fun loadGoldenFile(name: String): String? {
+        val resourceName = if (name.isNotBlank()) {
             "${testClass.javaClass.simpleName}_${name}.txt"
-        ), Charsets.UTF_8
-    )
+        } else {
+            "${testClass.javaClass.simpleName}.txt"
+        }
+        return Resources.toString(
+            Resources.getResource(testClass.javaClass, resourceName
+            ), Charsets.UTF_8
+        )
+    }
 }

@@ -217,7 +217,7 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                     if (restrictionScope and RESTRICT_TO_TESTS != 0) {
                         return true
                     }
-                } else if (VISIBLE_FOR_TESTING_ANNOTATION.isEquals(name)) {
+                } else if (VISIBLE_FOR_TESTING_ANNOTATION.isEquals(name) || GUAVA_VISIBLE_FOR_TESTING == name) {
                     return true
                 }
             }

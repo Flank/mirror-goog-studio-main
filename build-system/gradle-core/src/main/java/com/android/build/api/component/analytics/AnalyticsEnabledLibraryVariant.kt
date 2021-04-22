@@ -33,12 +33,6 @@ open class AnalyticsEnabledLibraryVariant @Inject constructor(
 ) : AnalyticsEnabledVariant(
     delegate, stats, objectFactory
 ), LibraryVariant {
-    override val applicationId: Provider<String>
-        get() {
-            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-                VariantPropertiesMethodType.READ_ONLY_APPLICATION_ID_VALUE
-            return delegate.applicationId
-        }
 
     override val androidTest: AndroidTest?
         get() = delegate.androidTest

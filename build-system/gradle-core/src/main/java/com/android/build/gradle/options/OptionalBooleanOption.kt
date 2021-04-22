@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.options
 
-import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.build.gradle.options.Version.VERSION_7_0
 import com.android.build.gradle.options.Version.VERSION_BEFORE_4_0
 import com.android.builder.model.AndroidProject
@@ -46,9 +45,6 @@ enum class OptionalBooleanOption(
         "android.enableR8",
         FeatureStage.Enforced(VERSION_7_0, "Please remove it from `gradle.properties`.")
     ),
-    // This option is added only to allow AGP to continue running Proguard tests, until the code
-    // is fully removed.
-    INTERNAL_ONLY_ENABLE_R8("unsafe.android.enableR8", FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.ENABLE_R8)),
 
     /* ----------------
      * REMOVED FEATURES

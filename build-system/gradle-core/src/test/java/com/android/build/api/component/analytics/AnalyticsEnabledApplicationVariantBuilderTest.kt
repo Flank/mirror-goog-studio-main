@@ -18,7 +18,6 @@ package com.android.build.api.component.analytics
 
 import com.android.build.api.variant.ApplicationVariantBuilder
 import com.android.tools.build.gradle.internal.profile.VariantMethodType
-import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType.DEPENDENCIES_INFO_VALUE
 import com.google.common.truth.Truth
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.junit.Before

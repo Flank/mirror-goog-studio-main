@@ -75,7 +75,7 @@ import java.nio.channels.FileChannel
  *
  */
 private const val MAGIC = "C/C++ Build Metadata\u001a"
-private const val VERSION = 1
+private const val VERSION = 2
 private const val COMPILE_COMMAND_CONTEXT_MESSAGE : Byte = 0x00
 private const val COMPILE_COMMAND_FILE_MESSAGE : Byte = 0x01
 
@@ -248,10 +248,12 @@ class CompileCommandsEncoder(
         sourceFile: File,
         compiler: File,
         flags: List<String>,
-        workingDirectory: File) {
+        workingDirectory: File,
+        outputFile: File) {
         val compilerIndex = intern(compiler.path)
         val flagsIndex = intern(flags.map { intern(it) })
         val workingDirectoryIndex = intern(workingDirectory.path)
+        val outputFileIndex = intern(outputFile.path)
         if (compilerIndex != lastCompilerWritten ||
                 flagsIndex != lastFlagsWritten ||
                 workingDirectoryIndex != lastWorkingDirectoryWritten) {
@@ -260,6 +262,7 @@ class CompileCommandsEncoder(
             encodeInt(compilerIndex)
             encodeInt(flagsIndex)
             encodeInt(workingDirectoryIndex)
+            encodeInt(outputFileIndex) // Version 2 and up
             lastCompilerWritten = compilerIndex
             lastFlagsWritten = flagsIndex
             lastWorkingDirectoryWritten = workingDirectoryIndex
@@ -331,7 +334,7 @@ class CompileCommandsEncoder(
 /**
  * Read [MAGIC] and [VERSION] and return the position immediately after.
  */
-private fun MappedByteBuffer.positionAfterMagicAndVersion(file: File) : Int {
+private fun MappedByteBuffer.positionAfterMagicAndVersion(file: File) : Pair<Int, Int> {
     (this as Buffer).position(0)
     MAGIC.forEach { expected ->
         val actual = get()
@@ -339,8 +342,8 @@ private fun MappedByteBuffer.positionAfterMagicAndVersion(file: File) : Int {
             error("$file is not a valid C/C++ Build Metadata file")
         }
     }
-    int // Version. Don't error if not our current version. It may be backward compatible.
-    return position()
+    val version = int // Version
+    return position() to version
 }
 
 /**
@@ -405,10 +408,50 @@ private fun MappedByteBuffer.readFlagsTable(start: Int, strings : Array<String?>
  * All of these parameters are interned and do not need to be re-interned on the receiving side.
  */
 fun streamCompileCommands(file: File,
-        action : (sourceFile:File, compiler:File, flags:List<String>, workingDirectory:File) -> Unit) {
+    action : (
+        sourceFile:File,
+        compiler:File,
+        flags:List<String>,
+        workingDirectory:File) -> Unit) {
+    streamCompileCommandsImpl(file) { sourceFile, compiler, flags, workingDirectory, _ ->
+        action(sourceFile, compiler, flags, workingDirectory)
+    }
+}
+
+/**
+ * Same as [streamCompileCommands] but also emits 'outputFile' which is the .o. The caller is
+ * responsible for checking whether this compile_commands.json.bin supports 'outputFile'.
+ */
+fun streamCompileCommandsWithOutputFile(file: File,
+    action : (
+        sourceFile:File,
+        compiler:File,
+        flags:List<String>,
+        workingDirectory:File,
+        outputFile:File) -> Unit) {
+    assert(compileCommandsFileSupportsOutputFile(file)) {
+        "Caller is responsible for checking whether '$file' supports streaming output file"
+    }
+    streamCompileCommandsImpl(file) { sourceFile, compiler, flags, workingDirectory, outputFile ->
+        action(sourceFile, compiler, flags, workingDirectory, outputFile!!)
+    }
+}
+
+/**
+ * Same as [streamCompileCommands] but also emits 'outputFile' which is the .o  (always null for
+ * version 1, never null for version 2+). The caller is responsible for handling outputFile==null
+ * case.
+ */
+private fun streamCompileCommandsImpl(file: File,
+        action : (
+            sourceFile:File,
+            compiler:File,
+            flags:List<String>,
+            workingDirectory:File,
+            outputFile:File?) -> Unit) {
     RandomAccessFile(file, "r").use { ras ->
         val map = ras.channel.map(FileChannel.MapMode.READ_ONLY, 0, file.length())
-        val start = map.positionAfterMagicAndVersion(file)
+        val (start, version) = map.positionAfterMagicAndVersion(file)
         val strings = map.readStringTable(start)
         val flags = map.readFlagsTable(start, strings)
         val internedFiles = mutableMapOf<Int, File>()
@@ -423,24 +466,40 @@ fun streamCompileCommands(file: File,
         lateinit var lastCompiler: File
         var lastFlags = listOf<String>()
         var lastWorkingDirectory = File("")
+        var lastOutputFile: File? = null
         repeat(sourceMessagesCount) {
             when(map.get()) {
                 COMPILE_COMMAND_CONTEXT_MESSAGE -> {
                     lastCompiler = File(strings[map.int]!!)
                     lastFlags = flags[map.int]
                     lastWorkingDirectory = internFile(map.int)!!
+                    if (version >= 2) {
+                        lastOutputFile = internFile(map.int)!!
+                    }
                 }
                 COMPILE_COMMAND_FILE_MESSAGE -> {
                     action(
                         internFile(map.int)!!,
                         lastCompiler,
                         lastFlags,
-                        lastWorkingDirectory
+                        lastWorkingDirectory,
+                        lastOutputFile
                     )
                 }
                 else -> error("Unexpected")
             }
         }
+    }
+}
+
+/**
+ * Return true if the given compile_commands.json.bin file supports streaming output (.o) file.
+ */
+fun compileCommandsFileSupportsOutputFile(file: File) : Boolean {
+    RandomAccessFile(file, "r").use { ras ->
+        val map = ras.channel.map(FileChannel.MapMode.READ_ONLY, 0, file.length())
+        val (_, version) = map.positionAfterMagicAndVersion(file)
+        return version >= 2
     }
 }
 
@@ -465,8 +524,8 @@ fun stripArgsForIde(
         when (val arg = args[i]) {
             in STRIP_FLAGS_WITHOUT_ARG -> {
             }
-            in STRIP_FLAGS_WITH_ARG -> i++
-            else -> if (STRIP_FLAGS_WITH_IMMEDIATE_ARG.none { arg.startsWith(it) } && arg != sourceFile) {
+            in STRIP_FLAGS_WITH_ARG_INCLUDING_OUTPUT_FILE -> i++
+            else -> if (STRIP_FLAGS_WITH_IMMEDIATE_ARG_INCLUDING_OUTPUT_FILE.none { arg.startsWith(it) } && arg != sourceFile) {
                 // Skip args that starts with flags that we should strip. Also skip source file.
                 scratchSpace += arg
             }
@@ -485,20 +544,27 @@ fun stripArgsForIde(
 /** These are flags that should be stripped and have a following argument. */
 val STRIP_FLAGS_WITH_ARG =
     listOf(
-        "-o",
-        "--output",
         "-MF",
         "-MT",
         "-MQ"
     )
 
+val STRIP_FLAGS_WITH_ARG_INCLUDING_OUTPUT_FILE =
+    listOf(
+        "-o",
+        "--output"
+    ) + STRIP_FLAGS_WITH_ARG
+
 /** These are flags that have arguments immediate following them. */
 val STRIP_FLAGS_WITH_IMMEDIATE_ARG = listOf(
-    "--output=",
     "-MF",
     "-MT",
     "-MQ"
 )
+
+val STRIP_FLAGS_WITH_IMMEDIATE_ARG_INCLUDING_OUTPUT_FILE = listOf(
+    "--output="
+) + STRIP_FLAGS_WITH_IMMEDIATE_ARG
 
 /** These are flags that should be stripped and don't have a following argument. */
 val STRIP_FLAGS_WITHOUT_ARG: List<String> =
@@ -509,3 +575,19 @@ val STRIP_FLAGS_WITHOUT_ARG: List<String> =
         // -c tells the compiler to skip linking, which is always true for Android build.
         "-c"
     )
+
+/**
+ * Extract a particular flag argument. Return null if that flag doesn't exist.
+ */
+fun extractFlagArgument(short : String, long : String, flags : List<String>) : String? {
+    var returnNext = false
+    val longEquals = "$long="
+    for(flag in flags) {
+        if (returnNext) return flag
+        when {
+            flag.startsWith(longEquals) -> return flag.substringAfter(longEquals)
+            flag == short || flag == long -> returnNext = true
+        }
+    }
+    return null
+}

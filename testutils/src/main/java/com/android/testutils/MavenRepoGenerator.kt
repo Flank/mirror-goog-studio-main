@@ -85,6 +85,7 @@ class MavenRepoGenerator constructor(val libraries: List<Library>) {
 
         fun getDirName(): String = "${groupId.replace('.', '/')}/$artifactId/$version/"
         fun getFileName(ext: String): String = "$artifactId-$version.$ext"
+        override fun toString(): String = "$groupId:$artifactId:$version"
 
         companion object {
             fun parse(mavenCoordiante: String): MavenCoordinate {

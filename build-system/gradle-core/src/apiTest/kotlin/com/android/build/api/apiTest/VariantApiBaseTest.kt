@@ -460,8 +460,7 @@ rootProject.name = "${testName?.methodName ?: javaClass.simpleName}"
 
     private var docs = DocumentationBuilder()
 
-    private val parameters: MutableMap<BooleanOption, Any> =
-        mutableMapOf(BooleanOption.ENABLE_JVM_RESOURCE_COMPILER to true)
+    private val parameters: MutableMap<BooleanOption, Any> = mutableMapOf()
 
     open class DocumentationBuilder {
         var index: String? = null

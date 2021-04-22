@@ -20,6 +20,7 @@ import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.attributes.ProductFlavorAttr
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.Component
+import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.FramesComputationMode
@@ -67,7 +68,6 @@ import com.android.builder.compiling.BuildConfigType
 import com.android.builder.core.VariantType
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.errors.IssueReporter
-import com.android.builder.model.CodeShrinker
 import com.android.utils.FileUtils
 import com.android.utils.appendCapitalized
 import com.google.common.base.Preconditions
@@ -266,7 +266,7 @@ abstract class ComponentImpl(
                 .reportError(IssueReporter.Type.GENERIC, "Resource shrinker cannot be used for libraries.")
             return false
         }
-        if (codeShrinker == null) {
+        if (!variantDslInfo.getPostProcessingOptions().codeShrinkerEnabled()) {
             globalScope
                 .dslServices
                 .issueReporter
@@ -279,9 +279,6 @@ abstract class ComponentImpl(
         }
         return true
     }
-
-    open val codeShrinker: CodeShrinker?
-        get() = null
 
     // ---------------------------------------------------------------------------------------------
     // Private stuff
@@ -705,7 +702,7 @@ abstract class ComponentImpl(
 
     abstract fun <T: Component> createUserVisibleVariantObject(
             projectServices: ProjectServices,
-            operationsRegistrar: VariantApiOperationsRegistrar<out VariantBuilder, out Variant>,
+            operationsRegistrar: VariantApiOperationsRegistrar<out CommonExtension<*, *, *, *>, out VariantBuilder, out Variant>,
             stats: GradleBuildVariant.Builder?
     ): T
 

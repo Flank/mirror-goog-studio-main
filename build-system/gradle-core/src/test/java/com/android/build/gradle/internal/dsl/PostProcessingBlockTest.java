@@ -44,6 +44,7 @@ public class PostProcessingBlockTest {
 
                     // Explicitly copy the String getter.
                     original.getCodeShrinker();
+                    original.getCodeShrinkerEnum();
                 });
     }
 
@@ -51,7 +52,7 @@ public class PostProcessingBlockTest {
     public void testDefaultObject() {
         PostProcessingBlock options = new PostProcessingBlock(dslServices, Collections.emptyList());
 
-        assertThat(options.getCodeShrinkerEnum()).isNull();
+        assertThat(options.getCodeShrinkerEnum()).isEqualTo(CodeShrinker.R8);
         assertThat(options.isObfuscate()).isFalse();
         assertThat(options.isOptimizeCode()).isFalse();
         assertThat(options.isRemoveUnusedCode()).isTrue();
@@ -79,7 +80,7 @@ public class PostProcessingBlockTest {
         File consumerFile = new File("consumerFile");
 
         PostProcessingBlock options = new PostProcessingBlock(dslServices, Collections.emptyList());
-        options.setCodeShrinker("PROGUARD");
+        options.setCodeShrinker("R8");
         options.setObfuscate(true);
         options.setRemoveUnusedCode(true);
         options.setRemoveUnusedResources(true);
@@ -88,7 +89,7 @@ public class PostProcessingBlockTest {
         options.setTestProguardFiles(ImmutableList.of(testFile));
         options.setConsumerProguardFiles(ImmutableList.of(consumerFile));
 
-        assertThat(options.getCodeShrinkerEnum()).isEqualTo(CodeShrinker.PROGUARD);
+        assertThat(options.getCodeShrinkerEnum()).isEqualTo(CodeShrinker.R8);
         assertThat(options.isObfuscate()).isTrue();
         assertThat(options.isOptimizeCode()).isTrue();
         assertThat(options.isRemoveUnusedCode()).isTrue();
@@ -106,7 +107,7 @@ public class PostProcessingBlockTest {
 
         PostProcessingBlock options =
                 new PostProcessingBlock(dslServices, ImmutableList.of(explicitFile));
-        options.setCodeShrinker("PROGUARD");
+        options.setCodeShrinker("R8");
         options.setObfuscate(true);
         options.setRemoveUnusedCode(true);
         options.setRemoveUnusedResources(true);
@@ -137,7 +138,6 @@ public class PostProcessingBlockTest {
 
         PostProcessingBlock options =
                 new PostProcessingBlock(dslServices, ImmutableList.of(explicitFile));
-        options.setCodeShrinker("PROGUARD");
         options.setObfuscate(true);
         options.setRemoveUnusedCode(true);
         options.setRemoveUnusedResources(true);
@@ -149,7 +149,6 @@ public class PostProcessingBlockTest {
 
         copy.initWith(options);
 
-        options.setCodeShrinker("R8");
         options.setObfuscate(false);
         options.setRemoveUnusedCode(false);
         options.setRemoveUnusedResources(false);
@@ -157,7 +156,6 @@ public class PostProcessingBlockTest {
         options.setTestProguardFiles(ImmutableList.of(testFile));
         options.setConsumerProguardFiles(ImmutableList.of(testFile));
 
-        assertThat(copy.getCodeShrinkerEnum()).isEqualTo(CodeShrinker.PROGUARD);
         assertThat(copy.isObfuscate()).isTrue();
         assertThat(copy.isOptimizeCode()).isTrue();
         assertThat(copy.isRemoveUnusedCode()).isTrue();

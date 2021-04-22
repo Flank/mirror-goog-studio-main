@@ -366,7 +366,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.google.testing.platform_android-device-provider-local",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/testing/platform/android-device-provider-local/0.0.8-alpha02:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/testing/platform/android-device-provider-local/0.0.8-alpha03:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
@@ -374,7 +374,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.google.testing.platform_core-proto",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/testing/platform/core-proto/0.0.8-alpha02:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/testing/platform/core-proto/0.0.8-alpha03:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
@@ -382,7 +382,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.google.testing.platform_launcher",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/testing/platform/launcher/0.0.8-alpha02:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/testing/platform/launcher/0.0.8-alpha03:jar",
     neverlink = 1,
     visibility = ["//visibility:public"],
     exports = [],
@@ -976,22 +976,6 @@ maven_java_library(
     export_artifact = "//prebuilts/tools/common/m2/repository/net/sf/kxml/kxml2/2.3.0:jar",
     visibility = ["//visibility:public"],
     exports = [],
-)
-
-# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
-maven_java_library(
-    name = "net.sf.proguard_proguard-base",
-    export_artifact = "//prebuilts/tools/common/m2/repository/net/sf/proguard/proguard-base/6.0.3:jar",
-    visibility = ["//visibility:public"],
-    exports = [],
-)
-
-# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
-maven_java_library(
-    name = "net.sf.proguard_proguard-gradle",
-    export_artifact = "//prebuilts/tools/common/m2/repository/net/sf/proguard/proguard-gradle/6.0.3:jar",
-    visibility = ["//visibility:public"],
-    exports = [":net.sf.proguard_proguard-base"],
 )
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
@@ -1678,7 +1662,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.gradle_gradle-tooling-api",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/gradle/gradle-tooling-api/7.0-rc-1:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/gradle/gradle-tooling-api/7.0:jar",
     visibility = ["//visibility:public"],
     exports = [":org.slf4j_slf4j-api"],
 )

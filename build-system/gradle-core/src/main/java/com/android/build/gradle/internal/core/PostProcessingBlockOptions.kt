@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.core
 import com.android.build.gradle.internal.PostprocessingFeatures
 import com.android.build.gradle.internal.ProguardFilesProvider
 import com.android.build.gradle.internal.dsl.PostProcessingBlock
-import com.android.builder.model.CodeShrinker
 import java.io.File
 
 /**
@@ -37,20 +36,15 @@ class PostProcessingBlockOptions(
         postProcessingBlock.isObfuscate,
         postProcessingBlock.isOptimizeCode)
 
-    override fun getCodeShrinker(): CodeShrinker? {
+    override fun codeShrinkerEnabled(): Boolean {
         // For testing code, we only run ProGuard/R8 if main code is obfuscated.
-        val shouldShrink = if (isTestComponent) {
+        return if (isTestComponent) {
             postProcessingBlock.isObfuscate
         } else {
             postProcessingBlock.isRemoveUnusedCode
                     || postProcessingBlock.isObfuscate
                     || postProcessingBlock.isOptimizeCode
         }
-        if (!shouldShrink) {
-            return null
-        }
-
-        return postProcessingBlock.codeShrinkerEnum ?: CodeShrinker.R8
     }
 
     override fun resourcesShrinkingEnabled(): Boolean = postProcessingBlock.isRemoveUnusedResources

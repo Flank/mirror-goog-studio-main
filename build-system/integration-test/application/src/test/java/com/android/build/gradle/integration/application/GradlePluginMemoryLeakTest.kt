@@ -21,8 +21,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile
 import com.android.build.gradle.integration.common.utils.TestFileUtils
-import com.android.build.gradle.options.BooleanOption
-import com.android.build.gradle.options.OptionalBooleanOption
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 
@@ -30,6 +29,7 @@ import org.junit.Test
  * Integration stress test to verify that the plugin does not leak memory when the build script classpath
  * changes.
  */
+@Ignore("b/153972155")
 class GradlePluginMemoryLeakTest {
 
     private val app = HelloWorldApp.forPlugin("com.android.application").apply {
@@ -75,9 +75,7 @@ class GradlePluginMemoryLeakTest {
     fun changeBuildSrcTest() {
         for (i in 1..RUNS) {
             System.out.println("---- RUN $i ----")
-            project.executor()
-                .with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, false)
-                .run("assembleRelease")
+            project.executor().run("assembleRelease")
             TestFileUtils.searchAndReplace(
                 project.file(BUILDSRC_JAVA_SOURCE_FILE),
                 EDIT_MARKER,

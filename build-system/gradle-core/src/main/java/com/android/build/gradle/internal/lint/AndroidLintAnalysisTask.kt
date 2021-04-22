@@ -255,6 +255,15 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
                         AndroidArtifacts.ArtifactType.LINT
                     )
             )
+            task.lintRulesJar.from(
+                creationConfig
+                    .variantDependencies
+                    .getArtifactFileCollection(
+                        AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
+                        AndroidArtifacts.ArtifactScope.ALL,
+                        AndroidArtifacts.ArtifactType.LINT
+                    )
+            )
             task.lintRulesJar.disallowChanges()
             task.fatalOnly.setDisallowChanges(fatalOnly)
             task.checkOnly.set(

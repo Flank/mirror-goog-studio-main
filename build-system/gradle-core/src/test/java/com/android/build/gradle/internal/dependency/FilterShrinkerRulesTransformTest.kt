@@ -20,7 +20,6 @@ import com.android.SdkConstants
 import com.android.build.gradle.internal.fixtures.FakeFilterShrinkerRulesParameters
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.fixtures.FakeGradleRegularFile
-import com.android.builder.model.CodeShrinker
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.artifacts.transform.TransformOutputs
 import org.gradle.api.file.FileSystemLocation
@@ -29,20 +28,9 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 import java.io.File
 
-@RunWith(Parameterized::class)
-class FilterShrinkerRulesTransformTest(val shrinker: CodeShrinker){
-    companion object {
-        @Parameterized.Parameters
-        @JvmStatic
-        fun setups() = arrayOf(
-            CodeShrinker.R8,
-            CodeShrinker.PROGUARD
-        )
-    }
+class FilterShrinkerRulesTransformTest {
 
     private val slash = File.separator
 
@@ -61,7 +49,7 @@ class FilterShrinkerRulesTransformTest(val shrinker: CodeShrinker){
     @Test
     fun testSingleRuleFile() {
         val file = createFiles("foo.txt" to "bar").listFiles().first()
-        val filterTransform = createTransform(shrinker, file)
+        val filterTransform = createTransform(file)
         filterTransform.transform(outputs)
 
         assertThat(outputs.outputFiles).containsExactly(file)
@@ -76,14 +64,10 @@ class FilterShrinkerRulesTransformTest(val shrinker: CodeShrinker){
             "lib${slash}META-INF${slash}com.android.tools${slash}proguard${slash}pg.txt" to "pg"
         )
 
-        val filterTransform = createTransform(shrinker, files)
+        val filterTransform = createTransform(files)
         filterTransform.transform(outputs)
 
-        if (shrinker == CodeShrinker.R8) {
-            assertThat(outputs.outputFiles).containsExactly(File(files, "lib${slash}META-INF${slash}com.android.tools${slash}r8${slash}r8.txt"))
-        } else {
-            assertThat(outputs.outputFiles).containsExactly(File(files, "lib${slash}META-INF${slash}com.android.tools${slash}proguard${slash}pg.txt"))
-        }
+        assertThat(outputs.outputFiles).containsExactly(File(files, "lib${slash}META-INF${slash}com.android.tools${slash}r8${slash}r8.txt"))
     }
 
     @Test
@@ -92,7 +76,7 @@ class FilterShrinkerRulesTransformTest(val shrinker: CodeShrinker){
             "lib${slash}${SdkConstants.FN_PROGUARD_TXT}" to "bar"
         )
 
-        val filterTransform = createTransform(shrinker, files)
+        val filterTransform = createTransform(files)
         filterTransform.transform(outputs)
 
         assertThat(outputs.outputFiles).containsExactly(File(files, "lib${slash}${SdkConstants.FN_PROGUARD_TXT}"))
@@ -103,7 +87,7 @@ class FilterShrinkerRulesTransformTest(val shrinker: CodeShrinker){
         val files = createFiles(
             "lib${slash}META-INF${slash}proguard${slash}pro.txt" to "foo"
         )
-        val filterTransform = createTransform(shrinker, files)
+        val filterTransform = createTransform(files)
         filterTransform.transform(outputs)
 
         assertThat(outputs.outputFiles).containsExactly(File(files, "lib${slash}META-INF${slash}proguard${slash}pro.txt"))
@@ -118,22 +102,14 @@ class FilterShrinkerRulesTransformTest(val shrinker: CodeShrinker){
             "lib3${slash}proguard.txt" to "pg"
         )
 
-        val filterTransform = createTransform(shrinker, files)
+        val filterTransform = createTransform(files)
         filterTransform.transform(outputs)
 
-        if (shrinker == CodeShrinker.R8) {
-            assertThat(outputs.outputFiles).containsExactly(
-                File(files, "lib${slash}META-INF${slash}proguard${slash}pro.txt"),
-                File(files, "lib2${slash}META-INF${slash}com.android.tools${slash}r8${slash}r8.txt"),
-                File(files, "lib3${slash}proguard.txt")
-            )
-        } else {
-            assertThat(outputs.outputFiles).containsExactly(
-                File(files, "lib${slash}META-INF${slash}proguard${slash}pro.txt"),
-                File(files, "lib2${slash}META-INF${slash}com.android.tools${slash}proguard${slash}pg.txt"),
-                File(files, "lib3${slash}proguard.txt")
-            )
-        }
+        assertThat(outputs.outputFiles).containsExactly(
+            File(files, "lib${slash}META-INF${slash}proguard${slash}pro.txt"),
+            File(files, "lib2${slash}META-INF${slash}com.android.tools${slash}r8${slash}r8.txt"),
+            File(files, "lib3${slash}proguard.txt")
+        )
     }
 
     private fun createFiles(vararg entries: Pair<String, String?>): File {
@@ -153,9 +129,9 @@ class FilterShrinkerRulesTransformTest(val shrinker: CodeShrinker){
 
     @Test
     fun testConfigDirMatchesVersion() {
-        val r8Ver1_5_5 = VersionedCodeShrinker(CodeShrinker.R8, "1.5.5")
-        val pgVer6_1_5 = VersionedCodeShrinker(CodeShrinker.PROGUARD, "6.1.5")
-        val r8Ver1_5_0_alpha = VersionedCodeShrinker(CodeShrinker.R8, "1.5.0-alpha")
+        val r8Ver1_5_5 = VersionedCodeShrinker("1.5.5")
+        val pgVer6_1_5 = VersionedCodeShrinker("6.1.5")
+        val r8Ver1_5_0_alpha = VersionedCodeShrinker("1.5.0-alpha")
 
         assertThat(configDirMatchesVersion("r8", r8Ver1_5_5)).isTrue()
         assertThat(configDirMatchesVersion("r8", r8Ver1_5_0_alpha)).isTrue()
@@ -185,9 +161,9 @@ class FilterShrinkerRulesTransformTest(val shrinker: CodeShrinker){
         assertThat(configDirMatchesVersion("r8-from-1.4.0-upto-1.6.0", r8Ver1_5_5)).isTrue()
         assertThat(configDirMatchesVersion("r8-from-1.4.0-upto-1.6.0", r8Ver1_5_0_alpha)).isTrue()
 
-        assertThat(configDirMatchesVersion("proguard", pgVer6_1_5)).isTrue()
-        assertThat(configDirMatchesVersion("proguard-from-6.1.0", pgVer6_1_5)).isTrue()
-        assertThat(configDirMatchesVersion("proguard-from-6.0.0", pgVer6_1_5)).isTrue()
+        assertThat(configDirMatchesVersion("proguard", pgVer6_1_5)).isFalse()
+        assertThat(configDirMatchesVersion("proguard-from-6.1.0", pgVer6_1_5)).isFalse()
+        assertThat(configDirMatchesVersion("proguard-from-6.0.0", pgVer6_1_5)).isFalse()
         assertThat(configDirMatchesVersion("proguard-from-6.5.0", pgVer6_1_5)).isFalse()
 
         assertThat(configDirMatchesVersion("abc", pgVer6_1_5)).isFalse()
@@ -196,7 +172,7 @@ class FilterShrinkerRulesTransformTest(val shrinker: CodeShrinker){
     }
 }
 
-private fun createTransform(shrinker: CodeShrinker, inputFile: File): FilterShrinkerRulesTransform {
+private fun createTransform(inputFile: File): FilterShrinkerRulesTransform {
     return object : FilterShrinkerRulesTransform(){
         override val inputArtifact: Provider<FileSystemLocation>
             get() = FakeGradleProvider(
@@ -206,7 +182,7 @@ private fun createTransform(shrinker: CodeShrinker, inputFile: File): FilterShri
             )
 
         override fun getParameters() =
-            FakeFilterShrinkerRulesParameters(codeShrinker = VersionedCodeShrinker.of(shrinker))
+            FakeFilterShrinkerRulesParameters(codeShrinker = VersionedCodeShrinker.create())
 
     }
 }

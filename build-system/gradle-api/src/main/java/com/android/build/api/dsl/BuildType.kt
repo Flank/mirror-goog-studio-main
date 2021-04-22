@@ -152,4 +152,18 @@ interface BuildType : Named, VariantDimension, ExtensionAware {
      * @return the names of product flavors to use, in descending priority order
      */
     val matchingFallbacks: MutableList<String>
+
+
+    @Incubating
+    @Deprecated("Replaced with property matchingFallbacks")
+    fun setMatchingFallbacks(vararg fallbacks: String)
+
+    @Incubating
+    @Deprecated("Replaced with property matchingFallbacks")
+    fun setMatchingFallbacks(fallbacks: List<String>)
+
+    @get:Incubating
+    @set:Incubating
+    @Deprecated("Changing the value of isZipAlignEnabled no longer has any effect")
+    var isZipAlignEnabled: Boolean
 }

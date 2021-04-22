@@ -19,9 +19,9 @@ package com.android.build.api.dsl
 import org.gradle.api.Incubating
 
 @Incubating
-interface LibraryBuildType<SigningConfigT : ApkSigningConfig> :
+interface LibraryBuildType :
     BuildType,
-    LibraryVariantDimension<SigningConfigT> {
+    LibraryVariantDimension {
     /** Whether this product flavor should be selected in Studio by default  */
     var isDefault: Boolean
 }

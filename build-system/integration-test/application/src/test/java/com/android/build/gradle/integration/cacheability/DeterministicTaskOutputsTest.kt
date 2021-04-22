@@ -53,7 +53,7 @@ class DeterministicTaskOutputsTest {
             "app/build/intermediates/manifest_merge_blame_file/debug/manifest-merger-blame-debug-report.txt",
             "app/build/intermediates/merged_java_res/debug/base.jar",
             "app/build/intermediates/merged_res_blame_folder/debug/out",
-            "app/build/intermediates/res/merged/debug",
+            "app/build/intermediates/merged_res/debug",
             // MapSourceSetPathsTask is dependent on the absolute project path, as this test uses
             // two different project file paths for comparisons it causes the file-map.txt
             // contents to differ.

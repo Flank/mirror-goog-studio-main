@@ -16,16 +16,16 @@
 
 package com.android.testutils;
 
-import static com.android.SdkConstants.FD_PLATFORMS;
-import static org.junit.Assume.assumeFalse;
-
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.concurrency.GuardedBy;
 import com.android.utils.FileUtils;
 import com.android.utils.PathUtils;
+
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
@@ -36,8 +36,12 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Properties;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+
+import static com.android.SdkConstants.FD_PLATFORMS;
+import static org.junit.Assume.assumeFalse;
 
 /**
  * Utility methods to deal with loading the test data.
@@ -53,31 +57,27 @@ public class TestUtils {
     private static Path workspaceRoot = null;
 
     /**
-     * Returns Kotlin version that is used in new project templates and integration tests.
+     * Returns the Kotlin version to be used in new project templates and integration tests.
      *
-     * <p>This version is determined based on the checked-in kotlin-plugin prebuilt, and should be
-     * in sync with the version in:
-     *
-     * <ul>
-     *   <li>buildSrc/base/dependencies.properties
-     *   <li>tools/base/third_party/BUILD (this is generated from dependencies.properties)
-     *   <li>tools/base/build-system/integration-test/application/BUILD
-     *   <li>tools/base/build-system/integration-test/databinding/BUILD.bazel
-     *   <li>tools/adt/idea/android/BUILD
-     *   <li>tools/base/.idea/libraries definition for kotlin-stdlib-jdk8
-     *   <li>tools/idea/.idea/libraries definition for kotlin-stdlib-jdk8
-     * </ul>
+     * If you are looking for the version of the Kotlin IDE plugin,
+     * prefer using KotlinCompilerVersion.getVersion() instead.
      */
     @NonNull
     public static String getKotlinVersionForTests() {
-        try {
-            Path versionFile =
-                    resolveWorkspacePath(
-                            "prebuilts/tools/common/kotlin-plugin/Kotlin/kotlinc/build.txt");
-            return Files.readAllLines(versionFile).get(0);
+        String versionFile = "tools/buildSrc/base/dependencies.properties";
+        Properties properties = new Properties();
+        try (InputStream data = new FileInputStream(resolveWorkspacePath(versionFile).toFile())) {
+            properties.load(data);
         } catch (IOException e) {
-            throw new IllegalStateException("Could not determine Kotlin plugin version", e);
+            throw new IllegalStateException(e);
         }
+        // We assume the versions for kotlin_gradle_plugin, kotlin_stdlib, etc. are all the same.
+        String mavenCoordinate = properties.getProperty("kotlin_gradle_plugin");
+        if (mavenCoordinate == null) {
+            throw new IllegalStateException("Did not find kotlin_gradle_plugin in " + versionFile);
+        }
+        int versionIndex = mavenCoordinate.lastIndexOf(':') + 1;
+        return mavenCoordinate.substring(versionIndex);
     }
 
     /**

@@ -46,7 +46,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
             file="src/main/java/com/android/ddmlib/internal/DeviceImpl.java"
-            line="777"/>
+            line="782"/>
     </issue>
 
     <issue
@@ -54,7 +54,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
             file="src/main/java/com/android/ddmlib/internal/DeviceImpl.java"
-            line="778"/>
+            line="783"/>
     </issue>
 
     <issue
@@ -62,7 +62,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
             file="src/main/java/com/android/ddmlib/internal/DeviceImpl.java"
-            line="788"/>
+            line="793"/>
     </issue>
 
     <issue
@@ -70,7 +70,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
             file="src/main/java/com/android/ddmlib/internal/DeviceImpl.java"
-            line="798"/>
+            line="803"/>
     </issue>
 
     <issue
@@ -78,7 +78,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
             file="src/main/java/com/android/ddmlib/internal/DeviceImpl.java"
-            line="799"/>
+            line="804"/>
     </issue>
 
     <issue
@@ -86,7 +86,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
             file="src/main/java/com/android/ddmlib/internal/DeviceImpl.java"
-            line="809"/>
+            line="814"/>
     </issue>
 
     <issue
@@ -142,7 +142,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
             file="src/main/java/com/android/ddmlib/testrunner/InstrumentationResultParser.java"
-            line="657"/>
+            line="655"/>
     </issue>
 
     <issue
@@ -229,16 +229,8 @@
         id="VisibleForTests"
         message="This method should only be accessed from tests or within private scope">
         <location
-            file="src/main/java/com/android/ddmlib/internal/jdwp/chunkhandler/ChunkHandler.java"
-            line="174"/>
-    </issue>
-
-    <issue
-        id="VisibleForTests"
-        message="This method should only be accessed from tests or within private scope">
-        <location
             file="src/main/java/com/android/ddmlib/DdmPreferences.java"
-            line="127"/>
+            line="129"/>
     </issue>
 
     <issue

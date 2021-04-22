@@ -34,7 +34,6 @@ import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
 import com.android.build.gradle.internal.lint.CustomLintCheckUtils;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.services.DslServices;
-import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.SyncOptions;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.ide.common.blame.MessageReceiver;
@@ -145,51 +144,8 @@ public class GlobalScope {
         return toolingRegistry;
     }
 
-    @NonNull
-    public File getBuildDir() {
-        return project.getBuildDir();
-    }
-
-    @NonNull
-    public File getIntermediatesDir() {
-        return new File(getBuildDir(), FD_INTERMEDIATES);
-    }
-
-    @NonNull
-    public File getReportsDir() {
-        return new File(getBuildDir(), FD_REPORTS);
-    }
-
-    public File getTestResultsFolder() {
-        return new File(getBuildDir(), "test-results");
-    }
-
-    public File getTestReportFolder() {
-        return new File(getBuildDir(), "reports/tests");
-    }
-
-    @NonNull
-    public File getTmpFolder() {
-        return new File(getIntermediatesDir(), "tmp");
-    }
-
-    @NonNull
-    public File getOutputsDir() {
-        return new File(getBuildDir(), FD_OUTPUTS);
-    }
-
     public boolean isActive(OptionalCompilationStep step) {
         return optionalCompilationSteps.contains(step);
-    }
-
-    @NonNull
-    public File getJacocoAgentOutputDirectory() {
-        return new File(getIntermediatesDir(), "jacoco");
-    }
-
-    @NonNull
-    public File getJacocoAgent() {
-        return new File(getJacocoAgentOutputDirectory(), "jacocoagent.jar");
     }
 
     public void setLintChecks(@NonNull Configuration lintChecks) {

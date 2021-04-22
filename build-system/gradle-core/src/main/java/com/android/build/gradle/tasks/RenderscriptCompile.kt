@@ -44,7 +44,6 @@ import com.google.common.collect.Sets
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
-import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
@@ -297,10 +296,10 @@ abstract class RenderscriptCompile : NdkTask() {
 
             task.targetApi.setDisallowChanges(creationConfig.renderscriptTargetApi)
 
-            task.supportMode.setDisallowChanges(renderscript.renderscriptSupportModeEnabled)
+            task.supportMode.setDisallowChanges(renderscript.supportModeEnabled)
             task.useAndroidX = creationConfig.services.projectOptions.get(BooleanOption.USE_ANDROID_X)
-            task.ndkMode.setDisallowChanges(renderscript.renderscriptNdkModeEnabled)
-            task.optimLevel.setDisallowChanges(renderscript.renderscriptOptimLevel)
+            task.ndkMode.setDisallowChanges(renderscript.ndkModeEnabled)
+            task.optimLevel.setDisallowChanges(renderscript.optimLevel)
 
             task.sourceDirs =
                 creationConfig.services.fileCollection(Callable { variantSources.renderscriptSourceList })

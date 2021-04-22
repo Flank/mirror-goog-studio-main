@@ -21,6 +21,7 @@ import com.android.SdkConstants.PLATFORM_WINDOWS
 import com.google.common.annotations.VisibleForTesting
 import java.lang.Character.isWhitespace
 import kotlin.math.abs
+import kotlin.math.min
 
 const val ZERO_ALLOC_TOKENIZER_END_OF_TOKEN = Int.MAX_VALUE
 const val ZERO_ALLOC_TOKENIZER_END_OF_COMMAND = Int.MIN_VALUE
@@ -33,7 +34,7 @@ const val ZERO_ALLOC_TOKENIZER_END_OF_COMMAND = Int.MIN_VALUE
  * The first element of the buffer is a generation counter. If the buffer
  * is shared between multiple parses each parse will increment the generation.
  * If a buffer is used with an older [TokenizedCommandLine] then that's a
- * bug in the calling code so an exception will be thrown. 
+ * bug in the calling code so an exception will be thrown.
  *
  * After the first element, the buffer consists of indexes of characters within
  * the original [commandLine] delimited by [ZERO_ALLOC_TOKENIZER_END_OF_TOKEN]
@@ -86,12 +87,22 @@ class TokenizedCommandLine(
      *             ^
      *             write
      *
+     * When the parameter [returnFirstExtra] is true, this function returns the first string value
+     * of the first parameter after [token]; this requires an extra string allocation. When
+     * [returnFirstExtra] is false, null is returned; no extra string allocation is needed in this
+     * case.
      */
-    fun removeTokenGroup(token: String, extra: Int, matchPrefix: Boolean = false) {
+    fun removeTokenGroup(
+        token: String,
+        extra: Int,
+        matchPrefix: Boolean = false,
+        returnFirstExtra: Boolean = false) : String? {
         checkGeneration()
         invalidate()
         var read = 1
         var write = 1
+        var firstExtra : String? = null
+
         do {
             // Check invariants:
             //   write point can't move past read pointer
@@ -104,6 +115,14 @@ class TokenizedCommandLine(
             // If token matches the one pointed to be read pointer then skip it and also
             // skip any extra tokens.
             if (tokenMatches(token, read, matchPrefix)) {
+                if (returnFirstExtra) {
+                    firstExtra = if (matchPrefix) {
+                        tokenStartingAt(read + token.length)
+                    } else {
+                        tokenStartingAt(nextTokenAfter(read))
+                    }
+                }
+
                 var count = 0
                 while(count != extra + 1 && !isEndOfCommand(read)) {
                     read = nextTokenAfter(read)
@@ -119,6 +138,21 @@ class TokenizedCommandLine(
             }
         } while (!isEndOfCommand(read))
         indexes[write] = ZERO_ALLOC_TOKENIZER_END_OF_COMMAND
+        return firstExtra
+    }
+
+    private fun tokenStartingAt(start : Int) : String {
+        checkGeneration()
+        val token = StringBuilder()
+        for(read in start until indexes.size) {
+            when (val offset = indexes[read]) {
+                ZERO_ALLOC_TOKENIZER_END_OF_COMMAND -> break
+                ZERO_ALLOC_TOKENIZER_END_OF_TOKEN -> break
+                else ->
+                    token.append(commandLine[offset])
+            }
+        }
+        return token.trim().toString()
     }
 
     /**
@@ -210,7 +244,7 @@ class TokenizedCommandLine(
         val length = commandLine.length // Calculate length once
         var c: Char?
         var offset = 1 // One because first element is generation
-        
+
         while(i < length && isWhitespace(commandLine[i])) i++
 
         while (i < length) {
@@ -467,7 +501,7 @@ class TokenizedCommandLine(
         val length2 = other.length
         if (length1 == 0 && length2 == 0) return true
         if (length1 != length2) return false
-        
+
         // It's okay for indexes size to be different. What matters
         // is that they both have the same values up to ZERO_ALLOC_TOKENIZER_END_OF_COMMAND
         for (i in 1 until length1) {
@@ -475,14 +509,14 @@ class TokenizedCommandLine(
         }
         return true
     }
-    
+
     fun toString(separator: String): String {
         checkGeneration()
         var i = 1
         if (isEndOfCommand(i)) return ""
         val sb = StringBuilder()
         while(!isEndOfCommand(i + 1)) {
-            sb.append(charAt(i) ?: separator) 
+            sb.append(charAt(i) ?: separator)
             ++i
         }
         return sb.toString()
@@ -496,7 +530,7 @@ class TokenizedCommandLine(
         toStringValue = toString(" ")
         return toStringValue!!
     }
-    
+
     private fun invalidate() {
         toStringValue = null
     }

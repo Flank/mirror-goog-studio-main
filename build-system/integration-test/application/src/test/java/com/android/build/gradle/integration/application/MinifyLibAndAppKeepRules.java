@@ -19,37 +19,30 @@ package com.android.build.gradle.integration.application;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.testutils.truth.PathSubject.assertThat;
 
+import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.runner.FilterableParameterized;
+import com.android.build.gradle.integration.common.fixture.LoggingLevel;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.BooleanOption;
-import com.android.build.gradle.options.OptionalBooleanOption;
-import com.android.builder.model.CodeShrinker;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
 import java.io.File;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /**
  * Test that keep rules are applied properly when the main app references classes from the library
  * project.
  */
-@RunWith(FilterableParameterized.class)
 public class MinifyLibAndAppKeepRules {
-
-    @Parameterized.Parameters(name = "codeShrinker = {0}")
-    public static CodeShrinker[] data() {
-        // enable for R8 once http://b/36847655 is fixed
-        return new CodeShrinker[] {CodeShrinker.PROGUARD};
-    }
-
-    @Parameterized.Parameter() public CodeShrinker codeShrinker;
 
     @Rule
     public GradleTestProject project =
@@ -92,11 +85,7 @@ public class MinifyLibAndAppKeepRules {
                         "    }\n" +
                         "}");
 
-        project.executor()
-                .with(
-                        OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8,
-                        codeShrinker == CodeShrinker.R8)
-                .run(":app:assembleRelease");
+        project.executor().run(":app:assembleRelease");
         assertThat(project.getSubproject("app").getApk("release"))
                 .containsClass("LNoPackage;");
     }
@@ -121,28 +110,30 @@ public class MinifyLibAndAppKeepRules {
                         + "    }\n"
                         + "}");
 
-        project.executor()
-                .with(
-                        OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8,
-                        codeShrinker == CodeShrinker.R8)
-                .run(":app:assembleRelease");
+        GradleBuildResult buildResult =
+                project.executor().withLoggingLevel(LoggingLevel.DEBUG).run(":app:assembleRelease");
         assertThat(confOutput).exists();
 
-        // file path for libraryjar can be surrounded by single quotes on Windows.
-        List<String> libraryJars =
-                Files.readLines(confOutput, Charsets.UTF_8)
-                        .stream()
-                        .filter(i -> i.startsWith("-libraryjar"))
-                        .map(i -> {
-                            String filePathPossiblyWithQuotes = i.substring(i.indexOf(' ') + 1);
-                            String filePathWithoutQuotes = filePathPossiblyWithQuotes.replace("\'","");
-                            return new File(filePathWithoutQuotes).getName();
-                        })
-                        .collect(Collectors.toList());
+        String libraryClasspath = null;
+        Pattern pattern = Pattern.compile("\\[R8]\\sLibrary\\sclasses:\\s\\[(.*)]");
+        try (Scanner scanner = buildResult.getStdout()) {
+            while (scanner.hasNextLine()) {
+                String s = scanner.nextLine();
+                Matcher matcher = pattern.matcher(s);
+                if (matcher.find()) {
+                    libraryClasspath = matcher.group(1);
+                    break;
+                }
+            }
+        }
+        assertThat(libraryClasspath).isNotNull();
 
-        assertThat(libraryJars)
-                .named("keep rules libraryjars")
-                .containsExactly(
+        List<String> libraryNames =
+                Arrays.stream(libraryClasspath.split(","))
+                        .map(f -> new File(f).getName())
+                        .collect(Collectors.toList());
+        ImmutableList<String> expectedFiles =
+                ImmutableList.of(
                         "android.jar",
                         "android.car.jar",
                         "core-lambda-stubs.jar",
@@ -150,5 +141,6 @@ public class MinifyLibAndAppKeepRules {
                         "android.test.mock.jar",
                         "android.test.base.jar",
                         "android.test.runner.jar");
+        assertThat(libraryNames).containsExactlyElementsIn(expectedFiles);
     }
 }

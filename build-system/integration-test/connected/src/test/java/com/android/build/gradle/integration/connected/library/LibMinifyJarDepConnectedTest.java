@@ -17,29 +17,15 @@
 package com.android.build.gradle.integration.connected.library;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.runner.FilterableParameterized;
-import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.connected.utils.EmulatorUtils;
-import com.android.build.gradle.options.OptionalBooleanOption;
-import com.android.builder.model.CodeShrinker;
 import java.io.IOException;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExternalResource;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
-@RunWith(FilterableParameterized.class)
 public class LibMinifyJarDepConnectedTest {
-
-    @Parameterized.Parameters(name = "codeShrinker = {0}")
-    public static CodeShrinker[] getShrinkers() {
-        return new CodeShrinker[] {CodeShrinker.PROGUARD, CodeShrinker.R8};
-    }
-
-    @Parameterized.Parameter public CodeShrinker codeShrinker;
 
     @ClassRule public static final ExternalResource EMULATOR = EmulatorUtils.getEmulator();
 
@@ -51,12 +37,6 @@ public class LibMinifyJarDepConnectedTest {
 
     @Before
     public void setUp() throws IOException, InterruptedException {
-        if (codeShrinker == CodeShrinker.PROGUARD) {
-            TestFileUtils.searchAndReplace(
-                    project.getSubproject("app").getBuildFile(),
-                    "testProguardFiles \'config_test.pro\'",
-                    "testProguardFiles getDefaultProguardFile('proguard-android.txt'), \"config_test.pro\"");
-        }
         // fail fast if no response
         project.addAdbTimeout();
         // run the uninstall tasks in order to (1) make sure nothing is installed at the beginning
@@ -66,10 +46,6 @@ public class LibMinifyJarDepConnectedTest {
 
     @Test
     public void connectedCheck() throws IOException, InterruptedException {
-        project.executor()
-                .with(
-                        OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8,
-                        codeShrinker == CodeShrinker.R8)
-                .run("connectedAndroidTest");
+        project.executor().run("connectedAndroidTest");
     }
 }

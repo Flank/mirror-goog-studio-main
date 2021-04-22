@@ -1,0 +1,126 @@
+> VariantDependencies:
+   - name                 = "debug"
+   > mainArtifact:
+      - compileDependencies:
+         - GraphItem:
+            - artifactAddress      = __local_aars__:{PROJECT}/lib/libs/foo.jar{F}:unspecified@jar
+            - requestedCoordinates = (null)
+            - dependencies         = []
+      - runtimeDependencies:
+         - GraphItem:
+            - artifactAddress      = __local_aars__:{PROJECT}/lib/libs/foo.jar{F}:unspecified@jar
+            - requestedCoordinates = (null)
+            - dependencies         = []
+   < mainArtifact
+   > androidTestArtifact:
+      - compileDependencies:
+         - GraphItem:
+            - artifactAddress      = __local_aars__:{PROJECT}/lib/libs/foo.jar{F}:unspecified@jar
+            - requestedCoordinates = (null)
+            - dependencies         = []
+         - GraphItem:
+            - artifactAddress      = {BUILD_0}@@:lib::debug
+            - requestedCoordinates = (null)
+            - dependencies         = []
+      - runtimeDependencies:
+         - GraphItem:
+            - artifactAddress      = {BUILD_0}@@:lib::debug
+            - requestedCoordinates = (null)
+            - dependencies         = []
+         - GraphItem:
+            - artifactAddress      = __local_aars__:{PROJECT}/lib/libs/foo.jar{F}:unspecified@jar
+            - requestedCoordinates = (null)
+            - dependencies         = []
+   < androidTestArtifact
+   > unitTestArtifact:
+      - compileDependencies:
+         - GraphItem:
+            - artifactAddress      = __local_aars__:{PROJECT}/lib/libs/foo.jar{F}:unspecified@jar
+            - requestedCoordinates = (null)
+            - dependencies         = []
+         - GraphItem:
+            - artifactAddress      = {BUILD_0}@@:lib::debug
+            - requestedCoordinates = (null)
+            - dependencies         = []
+      - runtimeDependencies:
+         - GraphItem:
+            - artifactAddress      = {BUILD_0}@@:lib::debug
+            - requestedCoordinates = (null)
+            - dependencies         = []
+         - GraphItem:
+            - artifactAddress      = __local_aars__:{PROJECT}/lib/libs/foo.jar{F}:unspecified@jar
+            - requestedCoordinates = (null)
+            - dependencies         = []
+   < unitTestArtifact
+   - testFixturesArtifact = (null)
+< VariantDependencies
+> GlobalLibraryMap:
+   > libraries:
+      > library:
+         - type                = PROJECT
+         - artifactAddress     = {BUILD_0}@@:app::debug
+         - artifact            = (null)
+         - buildId             = {BUILD_0}
+         - projectPath         = ":app"
+         - variant             = "debug"
+         - compileJarFiles     = (null)
+         - runtimeJarFiles     = (null)
+         - manifest            = (null)
+         - resFolder           = (null)
+         - resStaticLibrary    = (null)
+         - assetsFolder        = (null)
+         - jniFolder           = (null)
+         - aidlFolder          = (null)
+         - renderscriptFolder  = (null)
+         - proguardRules       = (null)
+         - lintJar             = (null)
+         - externalAnnotations = (null)
+         - publicResources     = (null)
+         - symbolFile          = (null)
+      < library
+      > library:
+         - type                = PROJECT
+         - artifactAddress     = {BUILD_0}@@:lib::debug
+         - artifact            = (null)
+         - buildId             = {BUILD_0}
+         - projectPath         = ":lib"
+         - variant             = "debug"
+         - compileJarFiles     = (null)
+         - runtimeJarFiles     = (null)
+         - manifest            = (null)
+         - resFolder           = (null)
+         - resStaticLibrary    = (null)
+         - assetsFolder        = (null)
+         - jniFolder           = (null)
+         - aidlFolder          = (null)
+         - renderscriptFolder  = (null)
+         - proguardRules       = (null)
+         - lintJar             = (null)
+         - externalAnnotations = (null)
+         - publicResources     = (null)
+         - symbolFile          = (null)
+      < library
+      > library:
+         - type                = JAVA_LIBRARY
+         - artifactAddress     = __local_aars__:{PROJECT}/lib/libs/foo.jar{F}:unspecified@jar
+         - artifact            = {PROJECT}/lib/libs/foo.jar{F}
+         - buildId             = null
+         - projectPath         = (null)
+         - variant             = (null)
+         - compileJarFiles     = (null)
+         - runtimeJarFiles     = (null)
+         - manifest            = (null)
+         - resFolder           = (null)
+         - resStaticLibrary    = (null)
+         - assetsFolder        = (null)
+         - jniFolder           = (null)
+         - aidlFolder          = (null)
+         - renderscriptFolder  = (null)
+         - proguardRules       = (null)
+         - lintJar             = (null)
+         - externalAnnotations = (null)
+         - publicResources     = (null)
+         - symbolFile          = (null)
+      < library
+   < libraries
+< GlobalLibraryMap

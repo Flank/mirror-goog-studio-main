@@ -104,13 +104,25 @@ class GradleAdbManagerTest {
 
     @Test
     fun getId_loadsIdCorrectly() {
+        // Unix style adb output.
+        setAdbOutput(
+            listOf(
+                "someDeviceIdHere",
+                "OK"
+            )
+        )
+        var id = adbManager.getId("emulator-5554")
+        assertThat(id).isEqualTo("someDeviceIdHere")
+
+        // Windows adb output.
         setAdbOutput(
                 listOf(
                         "someDeviceIdHere",
+                        "",
                         "OK"
                 )
         )
-        val id = adbManager.getId("emulator-5554")
+        id = adbManager.getId("emulator-5554")
         assertThat(id).isEqualTo("someDeviceIdHere")
     }
 

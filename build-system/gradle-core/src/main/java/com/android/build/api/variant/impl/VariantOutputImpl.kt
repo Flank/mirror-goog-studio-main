@@ -22,6 +22,7 @@ import com.android.build.api.variant.VariantOutputConfiguration
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import java.io.File
 import java.io.Serializable
@@ -36,7 +37,7 @@ data class VariantOutputImpl(
     @get:Input
     override val enabled: Property<Boolean>,
 
-    @get:Input
+    @get:Internal
     val variantOutputConfiguration: VariantOutputConfigurationImpl,
 
     // private APG APIs.
@@ -46,7 +47,7 @@ data class VariantOutputImpl(
     val fullName: String,
     @get:Input
     val outputFileName: Property<String>
-) : VariantOutput, VariantOutputConfiguration by variantOutputConfiguration {
+) : VariantOutput, VariantOutputConfiguration {
 
     @get:Internal
     override val enable = enabled
@@ -92,4 +93,12 @@ data class VariantOutputImpl(
 
     fun getFilter(filterType: FilterConfiguration.FilterType): FilterConfiguration? =
         filters.firstOrNull { it.filterType == filterType }
+
+    @get:Input
+    override val outputType: VariantOutputConfiguration.OutputType
+        get() = variantOutputConfiguration.outputType
+
+    @get:Nested
+    override val filters: Collection<FilterConfigurationImpl>
+        get() = variantOutputConfiguration.filters
 }

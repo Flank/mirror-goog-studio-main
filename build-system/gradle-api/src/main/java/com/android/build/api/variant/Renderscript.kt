@@ -22,13 +22,13 @@ import org.gradle.api.provider.Property
 @Incubating
 interface Renderscript {
     /** Returns the renderscript support mode.  */
-    val renderscriptSupportModeEnabled: Property<Boolean>
+    val supportModeEnabled: Property<Boolean>
 
     /** Returns the renderscript BLAS support mode.  */
-    val renderscriptSupportModeBlasEnabled: Property<Boolean>
+    val supportModeBlasEnabled: Property<Boolean>
 
     /** Returns the renderscript NDK mode.  */
-    val renderscriptNdkModeEnabled: Property<Boolean>
+    val ndkModeEnabled: Property<Boolean>
 
-    val renderscriptOptimLevel: Property<Int>
+    val optimLevel: Property<Int>
 }

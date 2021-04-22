@@ -166,8 +166,13 @@ public class DeployerRunnerTest {
         assertTrue(device.getApps().isEmpty());
         DeployerRunner runner = new DeployerRunner(cacheDb, dexDB, service);
         Path file = TestUtils.resolveWorkspacePath(BASE + "sample.apk");
+        Path installersPath = DeployerTestUtils.prepareInstaller().toPath();
         String[] args = {
-            "install", "com.example.helloworld", file.toString(), "--force-full-install"
+            "install",
+            "com.example.helloworld",
+            file.toString(),
+            "--force-full-install",
+            "--installers-path=" + installersPath.toString()
         };
         int retcode = runner.run(args, logger);
         assertEquals(0, retcode);
@@ -180,6 +185,33 @@ public class DeployerRunnerTest {
                 "DDMLIB_UPLOAD",
                 "DDMLIB_INSTALL");
         assertFalse(device.hasFile("/data/local/tmp/sample.apk"));
+    }
+
+    @Test
+    @ApiLevel.InRange(min = 28)
+    public void testInstallCoroutineDebuggerSuccessful() throws Exception {
+        AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
+
+        assertTrue(device.getApps().isEmpty());
+        DeployerRunner runner = new DeployerRunner(cacheDb, dexDB, service);
+        Path file = TestUtils.resolveWorkspacePath(BASE + "sample.apk");
+        Path installersPath = DeployerTestUtils.prepareInstaller().toPath();
+        String[] args = {
+            "install",
+            "com.example.helloworld",
+            file.toString(),
+            "--installers-path=" + installersPath.toString()
+        };
+        int retcode = runner.run(args, logger);
+        assertEquals(0, retcode);
+        assertEquals(1, device.getApps().size());
+
+        assertInstalled("com.example.helloworld", file);
+        // file should be there after app install
+        assertTrue(
+                device.hasFile(
+                        Sites.appCodeCache("com.example.helloworld")
+                                + "coroutine_debugger_agent.so"));
     }
 
     @Test
@@ -227,8 +259,8 @@ public class DeployerRunnerTest {
                     "pm install-create -r -t -S ${size:com.example.helloworld}",
                     "pm install-write -S ${size:com.example.helloworld} 1 0_sample -",
                     "pm install-commit 1");
-        } else {
-            String packageCommand = device.getApi() < 28 ? "dump" : "path";
+        } else if (device.getApi() < 28) {
+            String packageCommand = "dump";
             assertMetrics(
                     runner.getMetrics(),
                     "DELTAINSTALL:DUMP_UNKNOWN_PACKAGE",
@@ -249,6 +281,35 @@ public class DeployerRunnerTest {
                     "cmd package install-create -r -t -S ${size:com.example.helloworld}",
                     "cmd package install-write -S ${size:com.example.helloworld} 1 0_sample -",
                     "cmd package install-commit 1");
+        } else {
+            String packageCommand = "path";
+            assertMetrics(
+                    runner.getMetrics(),
+                    "DELTAINSTALL:DUMP_UNKNOWN_PACKAGE",
+                    "INSTALL:OK",
+                    "DDMLIB_UPLOAD",
+                    "DDMLIB_INSTALL");
+            assertHistory(
+                    device,
+                    "getprop",
+                    INSTALLER_INVOCATION, // dump com.example.helloworld
+                    AdbInstallerTest.RM_DIR,
+                    AdbInstallerTest.MK_DIR,
+                    AdbInstallerTest.CHMOD,
+                    INSTALLER_INVOCATION, // dump com.example.helloworld
+                    "/system/bin/run-as com.example.helloworld id -u",
+                    String.format(
+                            "/system/bin/cmd package %s com.example.helloworld", packageCommand),
+                    "cmd package install-create -r -t -S ${size:com.example.helloworld}",
+                    "cmd package install-write -S ${size:com.example.helloworld} 1 0_sample -",
+                    "cmd package install-commit 1",
+                    "/data/local/tmp/.studio/bin/installer -version=$VERSION",
+                    "/system/bin/run-as com.example.helloworld cp -F /data/local/tmp/.studio/tmp/$VERSION/coroutine_debugger_agent.so "
+                            + Sites.appCodeCache("com.example.helloworld")
+                            + "coroutine_debugger_agent.so",
+                    "cp -F /data/local/tmp/.studio/tmp/$VERSION/coroutine_debugger_agent.so "
+                            + Sites.appCodeCache("com.example.helloworld")
+                            + "coroutine_debugger_agent.so");
         }
     }
 
@@ -263,7 +324,11 @@ public class DeployerRunnerTest {
         Path installersPath = DeployerTestUtils.prepareInstaller().toPath();
 
         String[] args = {
-            "install", "com.example.simpleapp", file.toString(), "--force-full-install"
+            "install",
+            "com.example.simpleapp",
+            file.toString(),
+            "--force-full-install",
+            "--installers-path=" + installersPath.toString()
         };
 
         assertEquals(0, runner.run(args, logger));
@@ -296,8 +361,8 @@ public class DeployerRunnerTest {
                     "INSTALL:OK",
                     "DDMLIB_UPLOAD",
                     "DDMLIB_INSTALL");
-        } else {
-            String packageCommand = device.getApi() < 28 ? "dump" : "path";
+        } else if (device.getApi() < 28) {
+            String packageCommand = "dump";
             assertHistory(
                     device,
                     "getprop",
@@ -312,6 +377,25 @@ public class DeployerRunnerTest {
                             "/system/bin/cmd package %s com.example.simpleapp", packageCommand),
                     "am force-stop com.example.simpleapp");
             assertMetrics(runner.getMetrics(), "INSTALL:SKIPPED_INSTALL");
+        } else {
+            String packageCommand = "path";
+            assertHistory(
+                    device,
+                    "getprop",
+                    INSTALLER_INVOCATION,
+                    "/system/bin/run-as com.example.simpleapp id -u",
+                    "id -u",
+                    String.format(
+                            "/system/bin/cmd package %s com.example.simpleapp", packageCommand),
+                    "am force-stop com.example.simpleapp",
+                    "/data/local/tmp/.studio/bin/installer -version=$VERSION",
+                    "/system/bin/run-as com.example.simpleapp cp -F /data/local/tmp/.studio/tmp/$VERSION/coroutine_debugger_agent.so "
+                            + Sites.appCodeCache("com.example.simpleapp")
+                            + "coroutine_debugger_agent.so",
+                    "cp -F /data/local/tmp/.studio/tmp/$VERSION/coroutine_debugger_agent.so "
+                            + Sites.appCodeCache("com.example.simpleapp")
+                            + "coroutine_debugger_agent.so");
+            assertMetrics(runner.getMetrics(), "INSTALL:SKIPPED_INSTALL");
         }
     }
 
@@ -325,7 +409,11 @@ public class DeployerRunnerTest {
         Path installersPath = DeployerTestUtils.prepareInstaller().toPath();
 
         String[] args = {
-            "install", "com.example.simpleapp", file.toString(), "--force-full-install"
+            "install",
+            "com.example.simpleapp",
+            file.toString(),
+            "--force-full-install",
+            "--installers-path=" + installersPath.toString()
         };
 
         assertEquals(0, runner.run(args, logger));
@@ -359,8 +447,8 @@ public class DeployerRunnerTest {
                     "INSTALL:OK",
                     "DDMLIB_UPLOAD",
                     "DDMLIB_INSTALL");
-        } else {
-            String packageCommand = device.getApi() < 28 ? "dump" : "path";
+        } else if (device.getApi() < 28) {
+            String packageCommand = "dump";
             assertHistory(
                     device,
                     "getprop",
@@ -382,6 +470,32 @@ public class DeployerRunnerTest {
                     "DELTAINSTALL_UPLOAD",
                     "DELTAINSTALL_INSTALL",
                     "DELTAINSTALL:SUCCESS");
+        } else {
+            String packageCommand = "path";
+            assertHistory(
+                    device,
+                    "getprop",
+                    INSTALLER_INVOCATION, // dump
+                    "/system/bin/run-as com.example.simpleapp id -u",
+                    "id -u",
+                    String.format(
+                            "/system/bin/cmd package %s com.example.simpleapp", packageCommand),
+                    INSTALLER_INVOCATION, // deltainstall
+                    "/system/bin/cmd package install-create -t -r",
+                    "cmd package install-write -S ${size:com.example.simpleapp} 2 base.apk",
+                    "/system/bin/cmd package install-commit 2",
+                    "/data/local/tmp/.studio/bin/installer -version=$VERSION",
+                    "/system/bin/run-as com.example.simpleapp cp -F /data/local/tmp/.studio/tmp/$VERSION/coroutine_debugger_agent.so "
+                            + Sites.appCodeCache("com.example.simpleapp")
+                            + "coroutine_debugger_agent.so",
+                    "cp -F /data/local/tmp/.studio/tmp/$VERSION/coroutine_debugger_agent.so "
+                            + Sites.appCodeCache("com.example.simpleapp")
+                            + "coroutine_debugger_agent.so");
+            assertMetrics(
+                    runner.getMetrics(),
+                    "DELTAINSTALL_UPLOAD",
+                    "DELTAINSTALL_INSTALL",
+                    "DELTAINSTALL:SUCCESS");
         }
     }
 
@@ -394,7 +508,13 @@ public class DeployerRunnerTest {
         Path v2 = TestUtils.resolveWorkspacePath(BASE + "apks/simple+ver.apk");
         Path installersPath = DeployerTestUtils.prepareInstaller().toPath();
 
-        String[] args = {"install", "com.example.simpleapp", v2.toString(), "--force-full-install"};
+        String[] args = {
+            "install",
+            "com.example.simpleapp",
+            v2.toString(),
+            "--force-full-install",
+            "--installers-path=" + installersPath.toString()
+        };
 
         assertEquals(0, runner.run(args, logger));
         assertInstalled("com.example.simpleapp", v2);
@@ -445,8 +565,8 @@ public class DeployerRunnerTest {
                     runner.getMetrics(),
                     "DELTAINSTALL:API_NOT_SUPPORTED",
                     "INSTALL:INSTALL_FAILED_VERSION_DOWNGRADE");
-        } else {
-            String packageCommand = device.getApi() < 28 ? "dump" : "path";
+        } else if (device.getApi() < 28) {
+            String packageCommand = "dump";
             assertHistory(
                     device,
                     "getprop",
@@ -454,6 +574,25 @@ public class DeployerRunnerTest {
                     AdbInstallerTest.RM_DIR,
                     AdbInstallerTest.MK_DIR,
                     AdbInstallerTest.CHMOD,
+                    INSTALLER_INVOCATION, // dump com.example.simpleapp
+                    "/system/bin/run-as com.example.simpleapp id -u",
+                    "id -u",
+                    String.format(
+                            "/system/bin/cmd package %s com.example.simpleapp", packageCommand),
+                    INSTALLER_INVOCATION, // deltainstall
+                    "/system/bin/cmd package install-create -t -r",
+                    "cmd package install-write -S ${size:com.example.simpleapp} 2 base.apk",
+                    "/system/bin/cmd package install-commit 2");
+            assertMetrics(
+                    runner.getMetrics(),
+                    "DELTAINSTALL_UPLOAD",
+                    "DELTAINSTALL_INSTALL",
+                    "DELTAINSTALL:ERROR.INSTALL_FAILED_VERSION_DOWNGRADE");
+        } else {
+            String packageCommand = "path";
+            assertHistory(
+                    device,
+                    "getprop",
                     INSTALLER_INVOCATION, // dump com.example.simpleapp
                     "/system/bin/run-as com.example.simpleapp id -u",
                     "id -u",
@@ -554,7 +693,8 @@ public class DeployerRunnerTest {
             "com.example.simpleapp",
             base.toString(),
             split.toString(),
-            "--force-full-install"
+            "--force-full-install",
+            "--installers-path=" + installersPath.toString()
         };
 
         int code = runner.run(args, logger);
@@ -613,8 +753,8 @@ public class DeployerRunnerTest {
                         runner.getMetrics(),
                         "DELTAINSTALL:API_NOT_SUPPORTED",
                         "INSTALL:INSTALL_FAILED_INVALID_APK");
-            } else {
-                String packageCommand = device.getApi() < 28 ? "dump" : "path";
+            } else if (device.getApi() < 28) {
+                String packageCommand = "dump";
                 assertHistory(
                         device,
                         "getprop",
@@ -622,6 +762,26 @@ public class DeployerRunnerTest {
                         AdbInstallerTest.RM_DIR,
                         AdbInstallerTest.MK_DIR,
                         AdbInstallerTest.CHMOD,
+                        INSTALLER_INVOCATION, // dump com.example.simpleapp
+                        "/system/bin/run-as com.example.simpleapp id -u",
+                        "id -u",
+                        String.format(
+                                "/system/bin/cmd package %s com.example.simpleapp", packageCommand),
+                        INSTALLER_INVOCATION, // deltainstall
+                        "/system/bin/cmd package install-create -t -r",
+                        "cmd package install-write -S ${size:com.example.simpleapp:split_split_01.apk} 2 split_split_01.apk",
+                        "cmd package install-write -S ${size:com.example.simpleapp:base.apk} 2 base.apk",
+                        "/system/bin/cmd package install-commit 2");
+                assertMetrics(
+                        runner.getMetrics(),
+                        "DELTAINSTALL_UPLOAD",
+                        "DELTAINSTALL_INSTALL",
+                        "DELTAINSTALL:ERROR.INSTALL_FAILED_INVALID_APK");
+            } else {
+                String packageCommand = "path";
+                assertHistory(
+                        device,
+                        "getprop",
                         INSTALLER_INVOCATION, // dump com.example.simpleapp
                         "/system/bin/run-as com.example.simpleapp id -u",
                         "id -u",
@@ -656,7 +816,8 @@ public class DeployerRunnerTest {
             "com.example.simpleapp",
             base.toString(),
             split.toString(),
-            "--force-full-install"
+            "--force-full-install",
+            "--installers-path=" + installersPath.toString()
         };
 
         int code = runner.run(args, logger);
@@ -717,8 +878,8 @@ public class DeployerRunnerTest {
                         "INSTALL:OK",
                         "DDMLIB_UPLOAD",
                         "DDMLIB_INSTALL");
-            } else {
-                String packageCommand = device.getApi() < 28 ? "dump" : "path";
+            } else if (device.getApi() < 28) {
+                String packageCommand = "dump";
                 assertHistory(
                         device,
                         "getprop",
@@ -735,6 +896,32 @@ public class DeployerRunnerTest {
                         "/system/bin/cmd package install-create -t -r -p com.example.simpleapp",
                         "cmd package install-write -S ${size:com.example.simpleapp:split_split_01.apk} 2 split_split_01.apk",
                         "/system/bin/cmd package install-commit 2");
+                assertMetrics(
+                        runner.getMetrics(),
+                        "DELTAINSTALL_UPLOAD",
+                        "DELTAINSTALL_INSTALL",
+                        "DELTAINSTALL:SUCCESS");
+            } else {
+                String packageCommand = "path";
+                assertHistory(
+                        device,
+                        "getprop",
+                        INSTALLER_INVOCATION, // dump com.example.simpleapp
+                        "/system/bin/run-as com.example.simpleapp id -u",
+                        "id -u",
+                        String.format(
+                                "/system/bin/cmd package %s com.example.simpleapp", packageCommand),
+                        INSTALLER_INVOCATION, // detalinstall
+                        "/system/bin/cmd package install-create -t -r -p com.example.simpleapp",
+                        "cmd package install-write -S ${size:com.example.simpleapp:split_split_01.apk} 2 split_split_01.apk",
+                        "/system/bin/cmd package install-commit 2",
+                        "/data/local/tmp/.studio/bin/installer -version=$VERSION",
+                        "/system/bin/run-as com.example.simpleapp cp -F /data/local/tmp/.studio/tmp/$VERSION/coroutine_debugger_agent.so "
+                                + Sites.appCodeCache("com.example.simpleapp")
+                                + "coroutine_debugger_agent.so",
+                        "cp -F /data/local/tmp/.studio/tmp/$VERSION/coroutine_debugger_agent.so "
+                                + Sites.appCodeCache("com.example.simpleapp")
+                                + "coroutine_debugger_agent.so");
                 assertMetrics(
                         runner.getMetrics(),
                         "DELTAINSTALL_UPLOAD",
@@ -759,7 +946,8 @@ public class DeployerRunnerTest {
             "com.example.simpleapp",
             base.toString(),
             split.toString(),
-            "--force-full-install"
+            "--force-full-install",
+            "--installers-path=" + installersPath.toString()
         };
 
         int code = runner.run(args, logger);
@@ -822,8 +1010,8 @@ public class DeployerRunnerTest {
                         "INSTALL:OK",
                         "DDMLIB_UPLOAD",
                         "DDMLIB_INSTALL");
-            } else {
-                String packageCommand = device.getApi() < 28 ? "dump" : "path";
+            } else if (device.getApi() < 28) {
+                String packageCommand = "dump";
                 assertHistory(
                         device,
                         "getprop",
@@ -841,6 +1029,34 @@ public class DeployerRunnerTest {
                         "cmd package install-write -S ${size:com.example.simpleapp:split_split_01.apk} 2 1_split -",
                         "cmd package install-write -S ${size:com.example.simpleapp:split_split_02.apk} 2 2_split_ -",
                         "cmd package install-commit 2");
+                assertMetrics(
+                        runner.getMetrics(),
+                        "DELTAINSTALL:CANNOT_GENERATE_DELTA",
+                        "INSTALL:OK",
+                        "DDMLIB_UPLOAD",
+                        "DDMLIB_INSTALL");
+            } else {
+                String packageCommand = "path";
+                assertHistory(
+                        device,
+                        "getprop",
+                        INSTALLER_INVOCATION, // dump com.example.simpleapp
+                        "/system/bin/run-as com.example.simpleapp id -u",
+                        "id -u",
+                        String.format(
+                                "/system/bin/cmd package %s com.example.simpleapp", packageCommand),
+                        "cmd package install-create -r -t -S ${size:com.example.simpleapp}",
+                        "cmd package install-write -S ${size:com.example.simpleapp:base.apk} 2 0_simple -",
+                        "cmd package install-write -S ${size:com.example.simpleapp:split_split_01.apk} 2 1_split -",
+                        "cmd package install-write -S ${size:com.example.simpleapp:split_split_02.apk} 2 2_split_ -",
+                        "cmd package install-commit 2",
+                        "/data/local/tmp/.studio/bin/installer -version=$VERSION",
+                        "/system/bin/run-as com.example.simpleapp cp -F /data/local/tmp/.studio/tmp/$VERSION/coroutine_debugger_agent.so "
+                                + Sites.appCodeCache("com.example.simpleapp")
+                                + "coroutine_debugger_agent.so",
+                        "cp -F /data/local/tmp/.studio/tmp/$VERSION/coroutine_debugger_agent.so "
+                                + Sites.appCodeCache("com.example.simpleapp")
+                                + "coroutine_debugger_agent.so");
                 assertMetrics(
                         runner.getMetrics(),
                         "DELTAINSTALL:CANNOT_GENERATE_DELTA",
@@ -868,7 +1084,8 @@ public class DeployerRunnerTest {
             base.toString(),
             split1.toString(),
             split2.toString(),
-            "--force-full-install"
+            "--force-full-install",
+            "--installers-path=" + installersPath.toString()
         };
 
         int code = runner.run(args, logger);
@@ -928,8 +1145,8 @@ public class DeployerRunnerTest {
                         "INSTALL:OK",
                         "DDMLIB_UPLOAD",
                         "DDMLIB_INSTALL");
-            } else {
-                String packageCommand = device.getApi() < 28 ? "dump" : "path";
+            } else if (device.getApi() < 28) {
+                String packageCommand = "dump";
                 assertHistory(
                         device,
                         "getprop",
@@ -952,6 +1169,33 @@ public class DeployerRunnerTest {
                         "INSTALL:OK",
                         "DDMLIB_UPLOAD",
                         "DDMLIB_INSTALL");
+            } else {
+                String packageCommand = "path";
+                assertHistory(
+                        device,
+                        "getprop",
+                        INSTALLER_INVOCATION, // dump com.example.simpleapp
+                        "/system/bin/run-as com.example.simpleapp id -u",
+                        "id -u",
+                        String.format(
+                                "/system/bin/cmd package %s com.example.simpleapp", packageCommand),
+                        "cmd package install-create -r -t -S ${size:com.example.simpleapp}",
+                        "cmd package install-write -S ${size:com.example.simpleapp:base.apk} 2 0_simple -",
+                        "cmd package install-write -S ${size:com.example.simpleapp:split_split_01.apk} 2 1_split -",
+                        "cmd package install-commit 2",
+                        "/data/local/tmp/.studio/bin/installer -version=$VERSION",
+                        "/system/bin/run-as com.example.simpleapp cp -F /data/local/tmp/.studio/tmp/$VERSION/coroutine_debugger_agent.so "
+                                + Sites.appCodeCache("com.example.simpleapp")
+                                + "coroutine_debugger_agent.so",
+                        "cp -F /data/local/tmp/.studio/tmp/$VERSION/coroutine_debugger_agent.so "
+                                + Sites.appCodeCache("com.example.simpleapp")
+                                + "coroutine_debugger_agent.so");
+                assertMetrics(
+                        runner.getMetrics(),
+                        "DELTAINSTALL:CANNOT_GENERATE_DELTA",
+                        "INSTALL:OK",
+                        "DDMLIB_UPLOAD",
+                        "DDMLIB_INSTALL");
             }
         }
     }
@@ -966,7 +1210,11 @@ public class DeployerRunnerTest {
         Path installersPath = DeployerTestUtils.prepareInstaller().toPath();
 
         String[] args = {
-            "install", "com.example.simpleapp", file.toString(), "--force-full-install"
+            "install",
+            "com.example.simpleapp",
+            file.toString(),
+            "--force-full-install",
+            "--installers-path=" + installersPath.toString()
         };
 
         assertEquals(0, runner.run(args, logger));
@@ -1000,8 +1248,8 @@ public class DeployerRunnerTest {
                     "INSTALL:OK",
                     "DDMLIB_UPLOAD",
                     "DDMLIB_INSTALL");
-        } else {
-            String packageCommand = device.getApi() < 28 ? "dump" : "path";
+        } else if (device.getApi() < 28) {
+            String packageCommand = "dump";
             assertHistory(
                     device,
                     "getprop",
@@ -1018,6 +1266,32 @@ public class DeployerRunnerTest {
                     "/system/bin/cmd package install-create -t -r",
                     "cmd package install-write -S ${size:com.example.simpleapp} 2 base.apk",
                     "/system/bin/cmd package install-commit 2");
+            assertMetrics(
+                    runner.getMetrics(),
+                    "DELTAINSTALL_UPLOAD",
+                    "DELTAINSTALL_INSTALL",
+                    "DELTAINSTALL:SUCCESS");
+        } else {
+            String packageCommand = "path";
+            assertHistory(
+                    device,
+                    "getprop",
+                    INSTALLER_INVOCATION, // dump com.example.simpleapp
+                    "/system/bin/run-as com.example.simpleapp id -u",
+                    "id -u",
+                    String.format(
+                            "/system/bin/cmd package %s com.example.simpleapp", packageCommand),
+                    INSTALLER_INVOCATION, // deltainstall
+                    "/system/bin/cmd package install-create -t -r",
+                    "cmd package install-write -S ${size:com.example.simpleapp} 2 base.apk",
+                    "/system/bin/cmd package install-commit 2",
+                    "/data/local/tmp/.studio/bin/installer -version=$VERSION",
+                    "/system/bin/run-as com.example.simpleapp cp -F /data/local/tmp/.studio/tmp/$VERSION/coroutine_debugger_agent.so "
+                            + Sites.appCodeCache("com.example.simpleapp")
+                            + "coroutine_debugger_agent.so",
+                    "cp -F /data/local/tmp/.studio/tmp/$VERSION/coroutine_debugger_agent.so "
+                            + Sites.appCodeCache("com.example.simpleapp")
+                            + "coroutine_debugger_agent.so");
             assertMetrics(
                     runner.getMetrics(),
                     "DELTAINSTALL_UPLOAD",
@@ -1041,7 +1315,8 @@ public class DeployerRunnerTest {
             "com.example.simpleapp",
             base.toString(),
             split.toString(),
-            "--force-full-install"
+            "--force-full-install",
+            "--installers-path=" + installersPath.toString()
         };
 
         int code = runner.run(args, logger);
@@ -1102,8 +1377,8 @@ public class DeployerRunnerTest {
                         "INSTALL:OK",
                         "DDMLIB_UPLOAD",
                         "DDMLIB_INSTALL");
-            } else {
-                String packageCommand = device.getApi() < 28 ? "dump" : "path";
+            } else if (device.getApi() < 28) {
+                String packageCommand = "dump";
                 assertHistory(
                         device,
                         "getprop",
@@ -1120,6 +1395,32 @@ public class DeployerRunnerTest {
                         "/system/bin/cmd package install-create -t -r -p com.example.simpleapp",
                         "cmd package install-write -S ${size:com.example.simpleapp:base.apk} 2 base.apk",
                         "/system/bin/cmd package install-commit 2");
+                assertMetrics(
+                        runner.getMetrics(),
+                        "DELTAINSTALL_UPLOAD",
+                        "DELTAINSTALL_INSTALL",
+                        "DELTAINSTALL:SUCCESS");
+            } else {
+                String packageCommand = "path";
+                assertHistory(
+                        device,
+                        "getprop",
+                        INSTALLER_INVOCATION, // dump com.example.simpleapp
+                        "/system/bin/run-as com.example.simpleapp id -u",
+                        "id -u",
+                        String.format(
+                                "/system/bin/cmd package %s com.example.simpleapp", packageCommand),
+                        INSTALLER_INVOCATION, // deltainstal
+                        "/system/bin/cmd package install-create -t -r -p com.example.simpleapp",
+                        "cmd package install-write -S ${size:com.example.simpleapp:base.apk} 2 base.apk",
+                        "/system/bin/cmd package install-commit 2",
+                        "/data/local/tmp/.studio/bin/installer -version=$VERSION",
+                        "/system/bin/run-as com.example.simpleapp cp -F /data/local/tmp/.studio/tmp/$VERSION/coroutine_debugger_agent.so "
+                                + Sites.appCodeCache("com.example.simpleapp")
+                                + "coroutine_debugger_agent.so",
+                        "cp -F /data/local/tmp/.studio/tmp/$VERSION/coroutine_debugger_agent.so "
+                                + Sites.appCodeCache("com.example.simpleapp")
+                                + "coroutine_debugger_agent.so");
                 assertMetrics(
                         runner.getMetrics(),
                         "DELTAINSTALL_UPLOAD",
@@ -1339,7 +1640,11 @@ public class DeployerRunnerTest {
         Path installersPath = DeployerTestUtils.prepareInstaller().toPath();
 
         String[] args = {
-            "install", "com.example.simpleapp", file.toString(), "--force-full-install"
+            "install",
+            "com.example.simpleapp",
+            file.toString(),
+            "--force-full-install",
+            "--installers-path=" + installersPath.toString()
         };
 
         assertEquals(0, runner.run(args, logger));
@@ -1365,7 +1670,7 @@ public class DeployerRunnerTest {
         if (device.getApi() < 26) {
             assertEquals(CANNOT_SWAP_BEFORE_API_26.ordinal(), retcode);
             assertMetrics(runner.getMetrics()); // No metrics
-        } else if (device.getApi() < 30) {
+        } else if (device.getApi() < 28) {
             assertEquals(DUMP_UNKNOWN_PROCESS.ordinal(), retcode);
             assertHistory(
                     device,
@@ -1374,6 +1679,34 @@ public class DeployerRunnerTest {
                     AdbInstallerTest.RM_DIR,
                     AdbInstallerTest.MK_DIR,
                     AdbInstallerTest.CHMOD,
+                    INSTALLER_INVOCATION, // dump com.example.simpleapp
+                    "/system/bin/run-as com.example.simpleapp id -u",
+                    "id -u",
+                    "/system/bin/cmd package "
+                            + (device.getApi() < 28 ? "dump" : "path")
+                            + " com.example.simpleapp",
+                    INSTALLER_INVOCATION, // deltapreinstall
+                    "/system/bin/cmd package install-create -t -r --dont-kill",
+                    "cmd package install-write -S ${size:com.example.simpleapp} 2 base.apk",
+                    "cmd package install-abandon 2");
+            assertMetrics(
+                    runner.getMetrics(),
+                    "DELTAPREINSTALL_WRITE",
+                    ":Success",
+                    ":Success",
+                    ":Success",
+                    "PARSE_PATHS:Success",
+                    "DUMP:Success",
+                    "DIFF:Success",
+                    "PREINSTALL:Success",
+                    "VERIFY:Success",
+                    "COMPARE:Success",
+                    "SWAP:Failed");
+        } else if (device.getApi() < 30) {
+            assertEquals(DUMP_UNKNOWN_PROCESS.ordinal(), retcode);
+            assertHistory(
+                    device,
+                    "getprop",
                     INSTALLER_INVOCATION, // dump com.example.simpleapp
                     "/system/bin/run-as com.example.simpleapp id -u",
                     "id -u",
@@ -1413,7 +1746,11 @@ public class DeployerRunnerTest {
         Path installersPath = DeployerTestUtils.prepareInstaller().toPath();
 
         String[] args = {
-            "install", "com.example.simpleapp", file.toString(), "--force-full-install"
+            "install",
+            "com.example.simpleapp",
+            file.toString(),
+            "--force-full-install",
+            "--installers-path=" + installersPath.toString()
         };
 
         assertEquals(0, runner.run(args, logger));
@@ -1445,7 +1782,7 @@ public class DeployerRunnerTest {
         if (device.getApi() < 26) {
             assertEquals(CANNOT_SWAP_BEFORE_API_26.ordinal(), retcode);
             assertMetrics(runner.getMetrics()); // No metrics
-        } else if (device.getApi() < 30) {
+        } else if (device.getApi() < 28) {
             assertEquals(NO_ERROR.ordinal(), retcode);
             assertHistory(
                     device,
@@ -1457,9 +1794,47 @@ public class DeployerRunnerTest {
                     INSTALLER_INVOCATION, // dump com.example.simpleapp
                     "/system/bin/run-as com.example.simpleapp id -u",
                     "id -u",
-                    "/system/bin/cmd package "
-                            + (device.getApi() < 28 ? "dump" : "path")
-                            + " com.example.simpleapp",
+                    "/system/bin/cmd package dump com.example.simpleapp",
+                    INSTALLER_INVOCATION, // deltapreinstall
+                    "/system/bin/cmd package install-create -t -r --dont-kill",
+                    "cmd package install-write -S ${size:com.example.simpleapp} 2 base.apk",
+                    INSTALLER_INVOCATION, // swap
+                    "/system/bin/run-as com.example.simpleapp cp -rF /data/local/tmp/.studio/tmp/$VERSION/ "
+                            + Sites.appStudio("com.example.simpleapp"),
+                    "cp -rF /data/local/tmp/.studio/tmp/$VERSION/ "
+                            + Sites.appStudio("com.example.simpleapp"),
+                    "/system/bin/run-as com.example.simpleapp /data/data/com.example.simpleapp/code_cache/install_server-$VERSION com.example.simpleapp",
+                    "/data/data/com.example.simpleapp/code_cache/install_server-$VERSION com.example.simpleapp",
+                    "/system/bin/run-as com.example.simpleapp cp -n /data/local/tmp/.studio/tmp/$VERSION/install_server /data/data/com.example.simpleapp/code_cache/install_server-$VERSION",
+                    "cp -n /data/local/tmp/.studio/tmp/$VERSION/install_server /data/data/com.example.simpleapp/code_cache/install_server-$VERSION",
+                    "/system/bin/run-as com.example.simpleapp /data/data/com.example.simpleapp/code_cache/install_server-$VERSION com.example.simpleapp",
+                    "/data/data/com.example.simpleapp/code_cache/install_server-$VERSION com.example.simpleapp",
+                    "/system/bin/cmd activity attach-agent 10001 /data/data/com.example.simpleapp/code_cache/.studio/agent.so=irsocket-0",
+                    "/system/bin/cmd package install-commit 2");
+            assertMetrics(
+                    runner.getMetrics(),
+                    "DELTAPREINSTALL_WRITE",
+                    ":Success",
+                    ":Success",
+                    ":Success",
+                    "PARSE_PATHS:Success",
+                    "DUMP:Success",
+                    "DIFF:Success",
+                    "PREINSTALL:Success",
+                    "VERIFY:Success",
+                    "COMPARE:Success",
+                    "SWAP:Success");
+            assertRetransformed(
+                    logcat, "android.app.ActivityThread", "dalvik.system.DexPathList$Element");
+        } else if (device.getApi() < 30) {
+            assertEquals(NO_ERROR.ordinal(), retcode);
+            assertHistory(
+                    device,
+                    "getprop",
+                    INSTALLER_INVOCATION, // dump com.example.simpleapp
+                    "/system/bin/run-as com.example.simpleapp id -u",
+                    "id -u",
+                    "/system/bin/cmd package path com.example.simpleapp",
                     INSTALLER_INVOCATION, // deltapreinstall
                     "/system/bin/cmd package install-create -t -r --dont-kill",
                     "cmd package install-write -S ${size:com.example.simpleapp} 2 base.apk",
@@ -1529,7 +1904,11 @@ public class DeployerRunnerTest {
         Path installersPath = DeployerTestUtils.prepareInstaller().toPath();
 
         String[] args = {
-            "install", "com.example.simpleapp", oldApk.toString(), "--force-full-install"
+            "install",
+            "com.example.simpleapp",
+            oldApk.toString(),
+            "--force-full-install",
+            "--installers-path=" + installersPath.toString()
         };
 
         assertEquals(0, runner.run(args, logger));
@@ -1604,7 +1983,11 @@ public class DeployerRunnerTest {
         Path installersPath = DeployerTestUtils.prepareInstaller().toPath();
 
         String[] args = {
-            "install", "com.example.simpleapp", oldApk.toString(), "--force-full-install"
+            "install",
+            "com.example.simpleapp",
+            oldApk.toString(),
+            "--force-full-install",
+            "--installers-path=" + installersPath.toString()
         };
 
         assertEquals(0, runner.run(args, logger));
@@ -1645,7 +2028,11 @@ public class DeployerRunnerTest {
         Path installersPath = DeployerTestUtils.prepareInstaller().toPath();
 
         String[] args = {
-            "install", "com.example.simpleapp", file.toString(), "--force-full-install"
+            "install",
+            "com.example.simpleapp",
+            file.toString(),
+            "--force-full-install",
+            "--installers-path=" + installersPath.toString()
         };
 
         assertEquals(0, runner.run(args, logger));
@@ -1676,7 +2063,7 @@ public class DeployerRunnerTest {
         if (device.getApi() < 26) {
             assertEquals(CANNOT_SWAP_BEFORE_API_26.ordinal(), retcode);
             assertMetrics(runner.getMetrics()); // No metrics
-        } else if (device.getApi() < 30) {
+        } else if (device.getApi() < 28) {
             assertEquals(CANNOT_SWAP_RESOURCE.ordinal(), retcode);
             assertHistory(
                     device,
@@ -1685,6 +2072,32 @@ public class DeployerRunnerTest {
                     AdbInstallerTest.RM_DIR,
                     AdbInstallerTest.MK_DIR,
                     AdbInstallerTest.CHMOD,
+                    INSTALLER_INVOCATION, // dump com.example.simpleapp
+                    "/system/bin/run-as com.example.simpleapp id -u",
+                    "id -u",
+                    "/system/bin/cmd package "
+                            + (device.getApi() < 28 ? "dump" : "path")
+                            + " com.example.simpleapp",
+                    INSTALLER_INVOCATION, // deltainstall
+                    "/system/bin/cmd package install-create -t -r --dont-kill",
+                    "cmd package install-write -S ${size:com.example.simpleapp} 2 base.apk",
+                    "cmd package install-abandon 2");
+            assertMetrics(
+                    runner.getMetrics(),
+                    "DELTAPREINSTALL_WRITE",
+                    ":Success",
+                    ":Success",
+                    ":Success",
+                    "PARSE_PATHS:Success",
+                    "DUMP:Success",
+                    "DIFF:Success",
+                    "PREINSTALL:Success",
+                    "VERIFY:Failed");
+        } else if (device.getApi() < 30) {
+            assertEquals(CANNOT_SWAP_RESOURCE.ordinal(), retcode);
+            assertHistory(
+                    device,
+                    "getprop",
                     INSTALLER_INVOCATION, // dump com.example.simpleapp
                     "/system/bin/run-as com.example.simpleapp id -u",
                     "id -u",
@@ -1722,7 +2135,11 @@ public class DeployerRunnerTest {
         Path installersPath = DeployerTestUtils.prepareInstaller().toPath();
 
         String[] args = {
-            "install", "com.example.simpleapp", file.toString(), "--force-full-install"
+            "install",
+            "com.example.simpleapp",
+            file.toString(),
+            "--force-full-install",
+            "--installers-path=" + installersPath.toString()
         };
 
         assertEquals(0, runner.run(args, logger));
@@ -1754,7 +2171,7 @@ public class DeployerRunnerTest {
         if (device.getApi() < 26) {
             assertEquals(CANNOT_SWAP_BEFORE_API_26.ordinal(), retcode);
             assertMetrics(runner.getMetrics()); // No metrics
-        } else if (device.getApi() < 30) {
+        } else if (device.getApi() < 28) {
             assertEquals(NO_ERROR.ordinal(), retcode);
             assertHistory(
                     device,
@@ -1763,6 +2180,46 @@ public class DeployerRunnerTest {
                     AdbInstallerTest.RM_DIR,
                     AdbInstallerTest.MK_DIR,
                     AdbInstallerTest.CHMOD,
+                    INSTALLER_INVOCATION, // dump com.example.simpleapp
+                    "/system/bin/run-as com.example.simpleapp id -u",
+                    "id -u",
+                    "/system/bin/cmd package dump com.example.simpleapp",
+                    INSTALLER_INVOCATION, // deltapreinstall
+                    "/system/bin/cmd package install-create -t -r --dont-kill",
+                    "cmd package install-write -S ${size:com.example.simpleapp} 2 base.apk",
+                    INSTALLER_INVOCATION, // swap
+                    "/system/bin/run-as com.example.simpleapp cp -rF /data/local/tmp/.studio/tmp/$VERSION/ "
+                            + Sites.appStudio("com.example.simpleapp"),
+                    "cp -rF /data/local/tmp/.studio/tmp/$VERSION/ "
+                            + Sites.appStudio("com.example.simpleapp"),
+                    "/system/bin/run-as com.example.simpleapp /data/data/com.example.simpleapp/code_cache/install_server-$VERSION com.example.simpleapp",
+                    "/data/data/com.example.simpleapp/code_cache/install_server-$VERSION com.example.simpleapp",
+                    "/system/bin/run-as com.example.simpleapp cp -n /data/local/tmp/.studio/tmp/$VERSION/install_server /data/data/com.example.simpleapp/code_cache/install_server-$VERSION",
+                    "cp -n /data/local/tmp/.studio/tmp/$VERSION/install_server /data/data/com.example.simpleapp/code_cache/install_server-$VERSION",
+                    "/system/bin/run-as com.example.simpleapp /data/data/com.example.simpleapp/code_cache/install_server-$VERSION com.example.simpleapp",
+                    "/data/data/com.example.simpleapp/code_cache/install_server-$VERSION com.example.simpleapp",
+                    "/system/bin/cmd activity attach-agent 10001 /data/data/com.example.simpleapp/code_cache/.studio/agent.so=irsocket-0",
+                    "/system/bin/cmd package install-commit 2");
+            assertMetrics(
+                    runner.getMetrics(),
+                    "DELTAPREINSTALL_WRITE",
+                    ":Success",
+                    ":Success",
+                    ":Success",
+                    "PARSE_PATHS:Success",
+                    "DUMP:Success",
+                    "DIFF:Success",
+                    "PREINSTALL:Success",
+                    "VERIFY:Success",
+                    "COMPARE:Success",
+                    "SWAP:Success");
+            assertRetransformed(
+                    logcat, "android.app.ActivityThread", "dalvik.system.DexPathList$Element");
+        } else if (device.getApi() < 30) {
+            assertEquals(NO_ERROR.ordinal(), retcode);
+            assertHistory(
+                    device,
+                    "getprop",
                     INSTALLER_INVOCATION, // dump com.example.simpleapp
                     "/system/bin/run-as com.example.simpleapp id -u",
                     "id -u",

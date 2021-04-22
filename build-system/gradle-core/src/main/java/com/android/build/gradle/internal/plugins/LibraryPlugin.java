@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.plugins;
 import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
 import com.android.build.api.component.impl.TestComponentImpl;
-import com.android.build.api.component.impl.TestFixturesComponentImpl;
+import com.android.build.api.component.impl.TestFixturesImpl;
 import com.android.build.api.dsl.SdkComponents;
 import com.android.build.api.extension.LibraryAndroidComponentsExtension;
 import com.android.build.api.extension.impl.LibraryAndroidComponentsExtensionImpl;
@@ -51,6 +51,7 @@ import javax.inject.Inject;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.component.SoftwareComponentFactory;
+import org.gradle.api.reflect.TypeOf;
 import org.gradle.build.event.BuildEventsListenerRegistry;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
@@ -81,19 +82,25 @@ public class LibraryPlugin
                 dslServices.newDecoratedInstance(
                         LibraryExtensionImpl.class, dslServices, dslContainers);
         if (projectServices.getProjectOptions().get(BooleanOption.USE_NEW_DSL_INTERFACES)) {
+            // noinspection unchecked,rawtypes: Hacks to make the parameterized types make sense
+            Class<com.android.build.api.dsl.LibraryExtension> instanceType =
+                    (Class) LibraryExtension.class;
             LibraryExtension android =
                     (LibraryExtension)
-                            project.getExtensions()
-                                    .create(
-                                            com.android.build.api.dsl.LibraryExtension.class,
-                                            "android",
-                                            LibraryExtension.class,
-                                            dslServices,
-                                            globalScope,
-                                            buildOutputs,
-                                            dslContainers.getSourceSetManager(),
-                                            extraModelInfo,
-                                            libraryExtension);
+                            (Object)
+                                    project.getExtensions()
+                                            .create(
+                                                    new TypeOf<
+                                                            com.android.build.api.dsl
+                                                                    .LibraryExtension>() {},
+                                                    "android",
+                                                    instanceType,
+                                                    dslServices,
+                                                    globalScope,
+                                                    buildOutputs,
+                                                    dslContainers.getSourceSetManager(),
+                                                    extraModelInfo,
+                                                    libraryExtension);
             project.getExtensions()
                     .add(LibraryExtension.class, "_internal_legacy_android_extension", android);
             return android;
@@ -116,7 +123,10 @@ public class LibraryPlugin
     protected LibraryAndroidComponentsExtension createComponentExtension(
             @NonNull DslServices dslServices,
             @NonNull
-                    VariantApiOperationsRegistrar<LibraryVariantBuilderImpl, LibraryVariantImpl>
+                    VariantApiOperationsRegistrar<
+                            com.android.build.api.dsl.CommonExtension<?, ?, ?, ?>,
+                            LibraryVariantBuilderImpl,
+                            LibraryVariantImpl>
                             variantApiOperationsRegistrar) {
         SdkComponents sdkComponents =
                 dslServices.newInstance(
@@ -166,7 +176,7 @@ public class LibraryPlugin
     protected LibraryTaskManager createTaskManager(
             @NonNull List<ComponentInfo<LibraryVariantBuilderImpl, LibraryVariantImpl>> variants,
             @NonNull List<TestComponentImpl> testComponents,
-            @NonNull List<TestFixturesComponentImpl> testFixturesComponents,
+            @NonNull List<TestFixturesImpl> testFixturesComponents,
             boolean hasFlavors,
             @NonNull ProjectOptions projectOptions,
             @NonNull GlobalScope globalScope,

@@ -75,7 +75,7 @@ abstract class BundleAar : Zip(), VariantAwareTask {
 
     /**
      * Package artifacts similar to [LibraryCreationAction] without aidl, merged proguard,
-     * renderscript, jni, lint jar, prefab package and aar metadata.
+     * renderscript, jni, lint jar, prefab package.
      */
     class TestFixturesCreationAction(
         creationConfig: ComponentCreationConfig
@@ -170,6 +170,14 @@ abstract class BundleAar : Zip(), VariantAwareTask {
             task.from(
                 creationConfig.artifacts.get(InternalArtifactType.LIBRARY_ASSETS),
                 prependToCopyPath(SdkConstants.FD_ASSETS))
+            task.from(
+                artifacts.get(InternalArtifactType.AAR_METADATA)
+            ) {
+                it.rename(
+                    AarMetadataTask.AAR_METADATA_FILE_NAME,
+                    AarMetadataTask.AAR_METADATA_ENTRY_PATH
+                )
+            }
             task.localAarDeps.from(
                 creationConfig.variantScope.getLocalFileDependencies {
                     it.name.toLowerCase(Locale.US).endsWith(SdkConstants.DOT_AAR)

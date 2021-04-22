@@ -27,21 +27,12 @@ import org.gradle.api.Incubating
  * Only the Android Gradle Plugin should create instances of this interface.
  */
 @Incubating
-interface ApplicationExtension<
-        AndroidSourceSetT : AndroidSourceSet,
-        BuildTypeT : ApplicationBuildType<SigningConfigT>,
-        DefaultConfigT : ApplicationDefaultConfig<SigningConfigT>,
-        ProductFlavorT : ApplicationProductFlavor<SigningConfigT>,
-        SigningConfigT : ApkSigningConfig> :
+interface ApplicationExtension :
     CommonExtension<
-            AndroidSourceSetT,
             ApplicationBuildFeatures,
-            BuildTypeT,
-            DefaultConfigT,
-            ProductFlavorT,
-            SigningConfigT,
-            ApplicationVariantBuilder,
-            ApplicationVariant>,
+            ApplicationBuildType,
+            ApplicationDefaultConfig,
+            ApplicationProductFlavor>,
     ApkExtension,
     TestedExtension {
     // TODO(b/140406102)

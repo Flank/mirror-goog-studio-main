@@ -123,6 +123,7 @@ import com.intellij.psi.PsiType
 import com.intellij.psi.util.PsiTreeUtil
 import org.jetbrains.uast.UAnnotated
 import org.jetbrains.uast.UAnnotation
+import org.jetbrains.uast.UArrayAccessExpression
 import org.jetbrains.uast.UBinaryExpression
 import org.jetbrains.uast.UBinaryExpressionWithType
 import org.jetbrains.uast.UCallExpression
@@ -157,6 +158,7 @@ import org.jetbrains.uast.getContainingUMethod
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.isUastChildOf
 import org.jetbrains.uast.java.JavaUAnnotation
+import org.jetbrains.uast.util.isAssignment
 import org.jetbrains.uast.util.isConstructorCall
 import org.jetbrains.uast.util.isInstanceCheck
 import org.jetbrains.uast.util.isMethodCall
@@ -630,7 +632,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
         }
     }
 
-    override fun getApplicableUastTypes(): List<Class<out UElement>>? {
+    override fun getApplicableUastTypes(): List<Class<out UElement>> {
         return listOf(
             USimpleNameReferenceExpression::class.java,
             ULocalVariable::class.java,
@@ -643,7 +645,8 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             UForEachExpression::class.java,
             UClassLiteralExpression::class.java,
             USwitchExpression::class.java,
-            UCallableReferenceExpression::class.java
+            UCallableReferenceExpression::class.java,
+            UArrayAccessExpression::class.java
         )
     }
 
@@ -1905,9 +1908,55 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             checkCast(initializer, initializerType, interfaceType)
         }
 
+        override fun visitArrayAccessExpression(node: UArrayAccessExpression) {
+            val receiver = node.receiver
+            val type = receiver.getExpressionType() ?: return
+            if (type !is PsiClassType) { // for normal arrays this is typically PsiArrayType
+                return
+            }
+
+            // No UAST accessor method to find the corresponding get/set methods; see
+            // https://youtrack.jetbrains.com/issue/KT-46045
+            // Instead we'll search ourselves.
+            val clz = type.resolve() ?: return
+            val parent = node.uastParent as? UBinaryExpression
+            val setter = parent != null && parent.isAssignment()
+            if (setter) {
+                for (method in clz.findMethodsByName("set", true)) {
+                    val parameters = method.parameterList
+                    // Here we can also check that the referenced type in the assignment
+                    // is the same as getParameter(1) but this is probably overkill;
+                    // once KT-46045 this will be moot
+                    if (parameters.parametersCount == 2 &&
+                        parameters.getParameter(0)?.type == PsiType.INT
+                    ) {
+                        visitCall(method, null, node)
+                        break
+                    }
+                }
+            } else {
+                for (method in clz.findMethodsByName("get", true)) {
+                    val parameters = method.parameterList
+                    if (parameters.parametersCount == 1 &&
+                        parameters.getParameter(0)?.type == PsiType.INT
+                    ) {
+                        visitCall(method, null, node)
+                        break
+                    }
+                }
+            }
+        }
+
         override fun visitBinaryExpression(node: UBinaryExpression) {
+            // Overloaded operators
+            val method = node.resolveOperator()
+            if (method != null) {
+                visitCall(method, null, node)
+            }
+
             val operator = node.operator
             if (operator is UastBinaryOperator.AssignOperator) {
+                // Plain assignment: check casts
                 val rExpression = node.rightOperand
                 val rhsType = rExpression.getExpressionType() as? PsiClassType ?: return
 
@@ -1921,11 +1970,6 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 }
 
                 checkCast(rExpression, rhsType, interfaceType)
-            } else if (operator === UastBinaryOperator.OTHER) {
-                val method = node.resolveOperator()
-                if (method != null) {
-                    visitCall(method, null, node)
-                }
             }
         }
 

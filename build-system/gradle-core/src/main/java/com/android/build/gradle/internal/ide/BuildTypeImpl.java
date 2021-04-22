@@ -119,7 +119,6 @@ final class BuildTypeImpl extends BaseConfigImpl implements BuildType, Serializa
     }
 
     @Nullable
-    @Override
     public SigningConfig getSigningConfig() {
         return null;
     }

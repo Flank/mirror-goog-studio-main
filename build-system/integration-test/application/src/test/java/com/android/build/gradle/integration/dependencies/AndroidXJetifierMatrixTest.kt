@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.dependencies
 import com.android.build.gradle.integration.common.fixture.ANDROIDX_VERSION
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.ModelContainer
+import com.android.build.gradle.integration.common.fixture.SUPPORT_LIB_VERSION
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.options.BooleanOption
@@ -78,12 +79,49 @@ class AndroidXJetifierMatrixTest {
         )
     }
 
+    private fun addSupportLibDependencies() {
+        project.projectDir.resolve("mavenRepo").also {
+            FileUtils.mkdirs(it)
+            MavenRepoGenerator(
+                    listOf(
+                            // Set up the libraries such that they have some shared dependencies to
+                            // check that AGP can handle that case (it should show only one path for
+                            // each dependency in the error message).
+                            MavenRepoGenerator.Library(
+                                    "depends-on-support-lib:lib1:1.0",
+                                    TestInputsGenerator.jarWithEmptyClasses(listOf()),
+                                    "com.android.support:support-annotations:$SUPPORT_LIB_VERSION",
+                            ),
+                            MavenRepoGenerator.Library(
+                                    "depends-on-support-lib:lib2:1.0",
+                                    TestInputsGenerator.jarWithEmptyClasses(listOf()),
+                                    "com.android.support:support-annotations:$SUPPORT_LIB_VERSION",
+                                    "com.android.support:collections:$SUPPORT_LIB_VERSION",
+                            )
+                    )
+            ).generate(it.toPath())
+        }
+        TestFileUtils.appendToFile(
+                project.buildFile,
+                """
+                repositories {
+                    maven { url 'mavenRepo' }
+                }
+                dependencies {
+                    implementation 'depends-on-support-lib:lib1:1.0'
+                    implementation 'depends-on-support-lib:lib2:1.0'
+                }
+                """.trimIndent()
+        )
+    }
+
     private fun expectSyncIssue(
             model: ModelContainer<AndroidProject>,
             type: IssueReporter.Type,
             severity: IssueReporter.Severity,
             message: String,
-            data: String? = null) {
+            data: String? = null
+    ) {
         val syncIssues = model.onlyModelSyncIssues
         assertThat(syncIssues).hasSize(1)
         val syncIssue = syncIssues.single()
@@ -106,7 +144,7 @@ class AndroidXJetifierMatrixTest {
                 model,
                 IssueReporter.Type.ANDROID_X_PROPERTY_NOT_ENABLED,
                 IssueReporter.Severity.ERROR,
-                message = "Configuration `debugRuntimeClasspath` uses AndroidX dependencies, but the `android.useAndroidX` property is not enabled.\n" +
+                message = "Configuration `debugRuntimeClasspath` contains AndroidX dependencies, but the `android.useAndroidX` property is not enabled, which may cause runtime issues.\n" +
                         "Set `android.useAndroidX=true` in the `gradle.properties` file and retry.\n" +
                         "The following AndroidX dependencies are detected:\n" +
                         "debugRuntimeClasspath -> depends-on-androidx:lib1:1.0 -> androidx.annotation:annotation:$ANDROIDX_VERSION\n" +
@@ -118,6 +156,8 @@ class AndroidXJetifierMatrixTest {
 
     @Test
     fun `AndroidX=false, Jetifier=false, AndroidX dependencies not present, expect no issues`() {
+        addSupportLibDependencies()
+
         val model = project.model()
                 .with(BooleanOption.USE_ANDROID_X, false)
                 .with(BooleanOption.ENABLE_JETIFIER, false)
@@ -139,5 +179,39 @@ class AndroidXJetifierMatrixTest {
                         " ${BooleanOption.USE_ANDROID_X.propertyName}=true" +
                         " in your gradle.properties file."
         )
+    }
+
+    @Test
+    fun `AndroidX=true, Jetifier=false, support library dependencies present, expect sync issue`() {
+        addSupportLibDependencies()
+
+        val model = project.model()
+                .with(BooleanOption.USE_ANDROID_X, true)
+                .with(BooleanOption.ENABLE_JETIFIER, false)
+                .ignoreSyncIssues().fetchAndroidProjects()
+        expectSyncIssue(
+                model,
+                IssueReporter.Type.ANDROID_X_PROPERTY_NOT_ENABLED,
+                IssueReporter.Severity.WARNING,
+                message = "Your project has set `android.useAndroidX=true`, but configuration `debugRuntimeClasspath` still contains legacy support libraries, which may cause runtime issues.\n" +
+                        "This behavior will not be allowed in Android Gradle plugin 8.0.\n" +
+                        "Please use only AndroidX dependencies or set `android.enableJetifier=true` in the `gradle.properties` file to migrate your project to AndroidX (see https://developer.android.com/jetpack/androidx/migrate for more info).\n" +
+                        "The following legacy support libraries are detected:\n" +
+                        "debugRuntimeClasspath -> depends-on-support-lib:lib1:1.0 -> com.android.support:support-annotations:28.0.0\n" +
+                        "debugRuntimeClasspath -> depends-on-support-lib:lib2:1.0 -> com.android.support:collections:28.0.0",
+                data = "debugRuntimeClasspath -> depends-on-support-lib:lib1:1.0 -> com.android.support:support-annotations:$SUPPORT_LIB_VERSION," +
+                        "debugRuntimeClasspath -> depends-on-support-lib:lib2:1.0 -> com.android.support:collections:$SUPPORT_LIB_VERSION"
+        )
+    }
+
+    @Test
+    fun `AndroidX=true, Jetifier=false, support library dependencies not present, expect no issues`() {
+        addAndroidXDependencies()
+
+        val model = project.model()
+                .with(BooleanOption.USE_ANDROID_X, true)
+                .with(BooleanOption.ENABLE_JETIFIER, false)
+                .ignoreSyncIssues().fetchAndroidProjects()
+        assertThat(model.onlyModelSyncIssues).isEmpty()
     }
 }

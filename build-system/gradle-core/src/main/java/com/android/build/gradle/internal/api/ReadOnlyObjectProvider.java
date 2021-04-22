@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.dsl.ApkSigningConfig;
 import com.android.builder.model.BuildType;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SigningConfig;
@@ -47,11 +48,10 @@ public class ReadOnlyObjectProvider {
     @NonNull
     private final Map<ProductFlavor, ProductFlavor> readOnlyFlavors = Maps.newIdentityHashMap();
 
-    /**
-     * Map of read-only SigningConfig. This maps the normal config to the read-only version.
-     */
+    /** Map of read-only SigningConfig. This maps the normal config to the read-only version. */
     @NonNull
-    private final Map<SigningConfig, SigningConfig> readOnlySigningConfig = Maps.newIdentityHashMap();
+    private final Map<ApkSigningConfig, SigningConfig> readOnlySigningConfig =
+            Maps.newIdentityHashMap();
 
     /**
      * Returns an read-only version of the default config.
@@ -105,11 +105,12 @@ public class ReadOnlyObjectProvider {
 
     /**
      * Returns an read-only version of a signing config.
+     *
      * @param signingConfig the signing config.
      * @return an read-only version.
      */
     @Nullable
-    public SigningConfig getSigningConfig(@Nullable SigningConfig signingConfig) {
+    public SigningConfig getSigningConfig(@Nullable ApkSigningConfig signingConfig) {
         if (signingConfig == null) {
             return null;
         }

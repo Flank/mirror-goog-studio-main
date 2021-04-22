@@ -22,17 +22,14 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
-import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType;
 import com.android.build.gradle.integration.common.fixture.LoggingLevel;
 import com.android.build.gradle.integration.common.fixture.TestVersions;
-import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.truth.ScannerSubject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.scope.ArtifactTypeUtil;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
-import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.ide.common.process.ProcessException;
 import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.Dex;
@@ -52,21 +49,12 @@ import java.util.Scanner;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /** Assemble tests for multiDex. */
-@RunWith(FilterableParameterized.class)
 public class MultiDexTest {
-
-    enum MainDexListTool {
-        D8,
-        R8,
-    }
 
     @Rule
     public GradleTestProject project =
@@ -74,19 +62,12 @@ public class MultiDexTest {
 
     @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
-    @Parameterized.Parameters(name = "mainDexListTool = {0}")
-    public static Object[] data() {
-        return MainDexListTool.values();
-    }
-
-    @Parameterized.Parameter public MainDexListTool tool;
-
     @Test
     public void checkBuildWithoutKeepRuntimeAnnotatedClasses() throws Exception {
         TestFileUtils.appendToFile(
                 project.getBuildFile(), "\nandroid.dexOptions.keepRuntimeAnnotatedClasses false");
 
-        executor()
+        project.executor()
                 .run("assembleDebug", "makeApkFromBundleForIcsDebug", "assembleAndroidTest");
 
         List<String> mandatoryClasses =
@@ -137,7 +118,7 @@ public class MultiDexTest {
     public void checkApplicationNameAdded() throws IOException, InterruptedException {
         // noinspection ResultOfMethodCallIgnored
         FileUtils.join(project.getProjectDir(), "src/ics/AndroidManifest.xml").delete();
-        executor().run("processIcsDebugManifest");
+        project.executor().run("processIcsDebugManifest");
         assertThat(
                         FileUtils.join(
                                 project.getProjectDir(),
@@ -163,39 +144,23 @@ public class MultiDexTest {
     }
 
     @Test
-    public void checkProguard() throws Exception {
-        Assume.assumeTrue(tool == MainDexListTool.D8);
-        checkMinifiedBuild("proguard");
-    }
-
-    @Test
     public void checkShrinker() throws Exception {
-        Assume.assumeTrue(tool == MainDexListTool.R8);
-        checkMinifiedBuild("r8");
-    }
+        project.executor().run(StringHelper.appendCapitalized("assemble", "r8"));
+        assertMainDexContains("r8", ImmutableList.of());
 
-    public void checkMinifiedBuild(String buildType) throws Exception {
-        executor().run(StringHelper.appendCapitalized("assemble", buildType));
-        checkShrunkApk(buildType);
-    }
+        commonApkChecks("r8");
 
-    private void checkShrunkApk(String buildType) throws Exception {
-        assertMainDexContains(buildType, ImmutableList.of());
-
-        commonApkChecks(buildType);
-
-        assertThat(project.getApk(ApkType.of(buildType, true), "ics"))
+        assertThat(project.getApk(ApkType.of("r8", true), "ics"))
                 .doesNotContainClass("Lcom/android/tests/basic/NotUsed;");
-        assertThat(project.getApk(ApkType.of(buildType, true), "ics"))
+        assertThat(project.getApk(ApkType.of("r8", true), "ics"))
                 .doesNotContainClass("Lcom/android/tests/basic/DeadCode;");
     }
 
     /** Regression test for b/133727918. */
     @Test
     public void checkLegacyMultidexR8() throws Exception {
-        Assume.assumeTrue(tool == MainDexListTool.R8);
         GradleBuildResult result =
-                executor()
+                project.executor()
                         .withLoggingLevel(LoggingLevel.DEBUG)
                         .run(StringHelper.appendCapitalized("assemble", "icsR8"));
 
@@ -226,7 +191,7 @@ public class MultiDexTest {
                         + TestVersions.SUPPORT_LIB_VERSION
                         + "'\n"
                         + "}");
-        executor().run("assembleLollipopDebugAndroidTest");
+        project.executor().run("assembleLollipopDebugAndroidTest");
         // it should contain 2 dex files, one for sources, one for the external lib
         assertThat(project.getTestApk("lollipop")).contains("classes.dex");
         assertThat(project.getTestApk("lollipop")).contains("classes2.dex");
@@ -235,7 +200,7 @@ public class MultiDexTest {
     @Test
     public void checkLegacyMultiDexAndroidTest()
             throws IOException, InterruptedException, ProcessException {
-        executor().run("assembleIcsDebugAndroidTest");
+        project.executor().run("assembleIcsDebugAndroidTest");
 
         Apk testApk = project.getTestApk("ics");
         assertThat(testApk).contains("classes.dex");
@@ -273,7 +238,7 @@ public class MultiDexTest {
         Files.createDirectories(instrumentationPath.getParent());
         Files.write(instrumentationPath, instrumentation.getBytes());
 
-        executor().run("assembleIcsDebugAndroidTest");
+        project.executor().run("assembleIcsDebugAndroidTest");
 
         Apk testApk = project.getTestApk("ics");
         assertThat(testApk).containsMainClass("Lexample/OtherClass;");
@@ -314,11 +279,5 @@ public class MultiDexTest {
                         .filter(c -> !c.startsWith("Landroid/support/multidex"))
                         .collect(Collectors.toSet());
         assertThat(nonMultidexSupportClasses).containsExactlyElementsIn(mandatoryClasses);
-    }
-
-    @NonNull
-    private GradleTaskExecutor executor() {
-        return project.executor()
-                .with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, tool == MainDexListTool.R8);
     }
 }

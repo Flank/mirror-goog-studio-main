@@ -183,6 +183,8 @@ InternalArtifactType<T : FileSystemLocation>(
     object SYMBOL_LIST_WITH_PACKAGE_NAME: InternalArtifactType<RegularFile>(FILE), Replaceable
     //Resources defined within the current module.
     object LOCAL_ONLY_SYMBOL_LIST: InternalArtifactType<RegularFile>(FILE), Replaceable
+    // Merged package aware R files from dependencies, used for workaround for b/183423660
+    object MERGED_DEPENDENCIES_SYMBOL_LIST: InternalArtifactType<RegularFile>(FILE), Replaceable
     // Partial R.txt directory
     object LOCAL_ONLY_PARTIAL_SYMBOL_DIRECTORY: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     // public.txt output This file might not exist if the project does not declare any public resources.
@@ -376,7 +378,7 @@ InternalArtifactType<T : FileSystemLocation>(
     // APK Set archive with APKs generated from a bundle.
     object APKS_FROM_BUNDLE: InternalArtifactType<RegularFile>(FILE), Replaceable
     // output of ExtractApks applied to APKS_FROM_BUNDLE and a device config.
-    object EXTRACTED_APKS: InternalArtifactType<Directory>(DIRECTORY), Replaceable
+    object EXTRACTED_APKS: InternalArtifactType<Directory>(DIRECTORY), Replaceable, ContainsMany
     // Universal APK from the bundle
     object UNIVERSAL_APK: InternalArtifactType<RegularFile>(FILE, Category.OUTPUTS)
     // The manifest meant to be consumed by the bundle.

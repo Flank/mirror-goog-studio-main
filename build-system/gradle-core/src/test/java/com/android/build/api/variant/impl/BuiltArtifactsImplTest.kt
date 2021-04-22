@@ -142,7 +142,7 @@ class BuiltArtifactsImplTest {
                     variantOutputConfiguration = VariantOutputConfigurationImpl(
                         isUniversal = false,
                         filters = listOf(
-                            FilterConfiguration(FilterConfiguration.FilterType.DENSITY, "xhdpi")
+                            FilterConfigurationImpl(FilterConfiguration.FilterType.DENSITY, "xhdpi")
                         ))
                 ),
                 BuiltArtifactImpl.make(
@@ -152,7 +152,7 @@ class BuiltArtifactsImplTest {
                     variantOutputConfiguration = VariantOutputConfigurationImpl(
                         isUniversal = false,
                         filters = listOf(
-                            FilterConfiguration(FilterConfiguration.FilterType.DENSITY, "xxhdpi")
+                            FilterConfigurationImpl(FilterConfiguration.FilterType.DENSITY, "xxhdpi")
                         ))
                 ),
                 BuiltArtifactImpl.make(
@@ -162,7 +162,7 @@ class BuiltArtifactsImplTest {
                     variantOutputConfiguration = VariantOutputConfigurationImpl(
                         isUniversal = false,
                         filters = listOf(
-                            FilterConfiguration(FilterConfiguration.FilterType.DENSITY, "xxxhdpi")
+                            FilterConfigurationImpl(FilterConfiguration.FilterType.DENSITY, "xxxhdpi")
                         ))
                 )
             )
@@ -517,7 +517,7 @@ class BuiltArtifactsImplTest {
             variantOutputConfiguration = VariantOutputConfigurationImpl(
                 isUniversal = false,
                 filters = listOf(
-                    FilterConfiguration(FilterConfiguration.FilterType.DENSITY, densityValue)
+                    FilterConfigurationImpl(FilterConfiguration.FilterType.DENSITY, densityValue)
                 )),
             attributes = attributes
         )

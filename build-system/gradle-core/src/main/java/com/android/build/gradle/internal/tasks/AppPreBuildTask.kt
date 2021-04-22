@@ -95,7 +95,7 @@ abstract class AppPreBuildTask : NonIncrementalTask() {
                 creationConfig.variantDependencies.getArtifactCollection(RUNTIME_CLASSPATH, ALL, MANIFEST)
 
             task.fakeOutputDirectory = File(
-                creationConfig.globalScope.intermediatesDir,
+                creationConfig.services.projectInfo.getIntermediatesDir(),
                 "prebuild/${creationConfig.dirName}"
             )
         }

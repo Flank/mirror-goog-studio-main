@@ -135,6 +135,6 @@ class ModelContainerV2(
      */
     val rootInfoMap: Map<String, ModelInfo>
         get() {
-            return infoMaps[rootBuildId] ?: throw RuntimeException("failed to find project map for root build id")
+            return infoMaps[rootBuildId] ?: throw RuntimeException("failed to find project map for root build id: $rootBuildId\nMap = $infoMaps")
         }
 }

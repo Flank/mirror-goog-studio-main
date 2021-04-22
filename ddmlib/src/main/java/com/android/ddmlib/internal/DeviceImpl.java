@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ddmlib.internal;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.GuardedBy;
+import com.android.annotations.concurrency.Slow;
 import com.android.ddmlib.AdbCommandRejectedException;
 import com.android.ddmlib.AdbHelper;
 import com.android.ddmlib.AndroidDebugBridge;
@@ -52,6 +52,7 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.Atomics;
+import com.google.common.util.concurrent.ListenableFuture;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -329,7 +330,7 @@ public final class DeviceImpl implements IDevice {
 
     @NonNull
     @Override
-    public Future<String> getSystemProperty(@NonNull String name) {
+    public ListenableFuture<String> getSystemProperty(@NonNull String name) {
         return mPropFetcher.getProperty(name);
     }
 
@@ -365,21 +366,24 @@ public final class DeviceImpl implements IDevice {
                     }
                 }
                 return false;
+            case SHELL_V2:
+                return getAdbFeatures().contains("shell_v2");
             default:
                 return false;
         }
     }
 
     @NonNull
+    @Slow
     Set<String> getAdbFeatures() {
         if (mAdbFeatures != null) {
             return mAdbFeatures;
         }
 
         try {
-            String response = AdbHelper.getFeatures(AndroidDebugBridge.getSocketAddress(), this);
+            String response = AdbHelper.getFeatures(this);
             mAdbFeatures = new HashSet<>(Arrays.asList(response.split(",")));
-            response = AdbHelper.getHostFeatures(AndroidDebugBridge.getSocketAddress(), this);
+            response = AdbHelper.getHostFeatures();
             // We want features supported by both device and host.
             mAdbFeatures.retainAll(Arrays.asList(response.split(",")));
         } catch (TimeoutException | AdbCommandRejectedException | IOException e) {
@@ -537,11 +541,8 @@ public final class DeviceImpl implements IDevice {
         return mState == DeviceState.BOOTLOADER;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see com.android.ddmlib.IDevice#getSyncService()
-     */
     @Override
+    @Nullable
     public SyncService getSyncService()
             throws TimeoutException, AdbCommandRejectedException, IOException {
         SyncService syncService = new SyncService(AndroidDebugBridge.getSocketAddress(), this);
@@ -927,11 +928,20 @@ public final class DeviceImpl implements IDevice {
         synchronized (mProfileableClients) {
             mProfileableClients.clear();
             mProfileableClients.addAll(newClientList);
-            // TODO(shukang): Retrieve package names asynchronously if needed. For example,
-            // track-app service doesn't provide package names.
             Collections.sort(
                     mProfileableClients,
                     Comparator.comparingInt(c -> c.getProfileableClientData().getPid()));
+        }
+    }
+
+    void updateProfileableClientName(int pid, @NonNull String name) {
+        synchronized (mProfileableClients) {
+            for (ProfileableClientImpl client : mProfileableClients) {
+                if (client.getProfileableClientData().getPid() == pid) {
+                    client.getProfileableClientData().setProcessName(name);
+                    break;
+                }
+            }
         }
     }
 
@@ -1004,38 +1014,49 @@ public final class DeviceImpl implements IDevice {
     }
 
     @Override
-    public void pushFile(String local, String remote)
+    public void push(@NonNull String[] local, @NonNull String remote)
             throws IOException, AdbCommandRejectedException, TimeoutException, SyncException {
-        SyncService sync = null;
-        try {
-            String targetFileName = getFileName(local);
-
-            Log.d(
-                    targetFileName,
-                    String.format(
-                            "Uploading %1$s onto device '%2$s'",
-                            targetFileName, getSerialNumber()));
-
-            sync = getSyncService();
-            if (sync != null) {
-                String message =
-                        String.format("Uploading file onto device '%1$s'", getSerialNumber());
-                Log.d(LOG_TAG, message);
-                sync.pushFile(local, remote, SyncService.getNullProgressMonitor());
-            } else {
-                throw new IOException("Unable to open sync connection!");
+        Log.d(
+                String.join(", ", local),
+                String.format("Uploading %1$s onto device '%2$s'", remote, getSerialNumber()));
+        try (SyncService sync = getSyncService()) {
+            if (sync == null) {
+                throw new IOException("Unable to open sync connection");
             }
+            String message = String.format("Uploading file onto device '%1$s'", getSerialNumber());
+            Log.d(LOG_TAG, message);
+            sync.push(local, remote, SyncService.getNullProgressMonitor());
         } catch (TimeoutException e) {
             Log.e(LOG_TAG, "Error during Sync: timeout.");
             throw e;
-
         } catch (SyncException | IOException e) {
             Log.e(LOG_TAG, String.format("Error during Sync: %1$s", e.getMessage()));
             throw e;
-        } finally {
-            if (sync != null) {
-                sync.close();
+        }
+    }
+
+    @Override
+    public void pushFile(@NonNull String local, @NonNull String remote)
+            throws IOException, AdbCommandRejectedException, TimeoutException, SyncException {
+        String targetFileName = getFileName(local);
+        Log.d(
+                targetFileName,
+                String.format(
+                        "Uploading %1$s onto device '%2$s'", targetFileName, getSerialNumber()));
+
+        try (SyncService sync = getSyncService()) {
+            if (sync == null) {
+                throw new IOException("Unable to open sync connection");
             }
+            String message = String.format("Uploading file onto device '%1$s'", getSerialNumber());
+            Log.d(LOG_TAG, message);
+            sync.pushFile(local, remote, SyncService.getNullProgressMonitor());
+        } catch (TimeoutException e) {
+            Log.e(LOG_TAG, "Error during Sync: timeout.");
+            throw e;
+        } catch (SyncException | IOException e) {
+            Log.e(LOG_TAG, String.format("Error during Sync: %1$s", e.getMessage()));
+            throw e;
         }
     }
 

@@ -28,8 +28,8 @@ import com.android.build.gradle.integration.common.truth.ModelContainerSubject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.integration.common.utils.getOutputByName
 import com.android.build.gradle.integration.common.utils.getVariantByName
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.options.BooleanOption
-import com.android.build.gradle.options.OptionalBooleanOption
 import com.android.build.gradle.options.StringOption
 import com.android.builder.model.AppBundleProjectBuildOutput
 import com.android.builder.model.AppBundleVariantBuildOutput
@@ -313,24 +313,9 @@ class DynamicAppTest {
     }
 
     @Test
-    fun `test unsigned bundleRelease task with proguard`() {
-        val bundleTaskName = getBundleTaskName("release")
-        project.executor().with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, false).run("app:$bundleTaskName")
-
-        val bundleFile = getApkFolderOutput("release").bundleFile
-        assertThat(bundleFile).exists()
-
-        Zip(bundleFile).use {
-            assertThat(it.entries.map { it.toString() }).containsExactly(*releaseUnsignedContent)
-            val dex = Dex(it.getEntry("base/dex/classes.dex")!!)
-            assertThat(dex).containsClass("Landroid/support/multidex/MultiDexApplication;")
-        }
-    }
-
-    @Test
     fun `test unsigned bundleRelease task with r8`() {
         val bundleTaskName = getBundleTaskName("release")
-        project.executor().with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, true).run("app:$bundleTaskName")
+        project.executor().run("app:$bundleTaskName")
 
         val bundleFile = getApkFolderOutput("release").bundleFile
         assertThat(bundleFile).exists()
@@ -347,7 +332,7 @@ class DynamicAppTest {
         project.getSubproject("app").projectDir.resolve("proguard-rules.pro")
             .writeText("-dontobfuscate")
         val bundleTaskName = getBundleTaskName("release")
-        project.executor().with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, true).run("app:$bundleTaskName")
+        project.executor().run("app:$bundleTaskName")
 
         val bundleFile = getApkFolderOutput("release").bundleFile
         assertThat(bundleFile).exists()
@@ -558,13 +543,13 @@ class DynamicAppTest {
             val apkFromBundleModel = BuiltArtifactsLoaderImpl.loadFromFile(
                 File(postApkFromBundleTaskModelFile)
             )
-            assertThat(apkFromBundleModel!!.elements).hasSize(1)
+            assertThat(apkFromBundleModel!!.elements).hasSize(2)
             val singleOutput = apkFromBundleModel.elements.first()
             assertThat(singleOutput).isNotNull()
             assertThat(singleOutput.outputFile).isNotNull()
             assertThat(File(singleOutput.outputFile)).exists()
-            // 2 files, the apk and the output listing file.
-            assertThat(File(singleOutput.outputFile).listFiles()).hasLength(2)
+            //assert it is a FILE type
+            assertThat(File(singleOutput.outputFile)).isFile()
         }
         val appModel = rootBuildModelMap[":app"]
         val variantsBuildInformation = appModel?.variantsBuildInformation
@@ -1145,6 +1130,65 @@ class DynamicAppTest {
                 "feature2-xxhdpi.apk")
         val baseApk: File = apkFolder.listFiles().first { it.name == "base-master.apk" }
         assertThat(ApkSubject.getManifestContent(baseApk.toPath()).joinToString()).contains("local_testing_dir")
+    }
+
+    @Test
+    fun `generate correct output-metadata`() {
+        val apkFromBundleTaskName = getApkFromBundleTaskName("debug")
+
+        // -------------
+        // build apks for API 27
+        // create a small json file with device filtering
+        val jsonFile = getJsonFile(27)
+        project
+                .executor()
+                .with(StringOption.IDE_APK_SELECT_CONFIG, jsonFile.toString())
+                .with(StringOption.IDE_INSTALL_DYNAMIC_MODULES_LIST, "_ALL_")
+                .with(BooleanOption.ENABLE_LOCAL_TESTING, true)
+                .run("app:$apkFromBundleTaskName")
+
+        val outputMetadataFile =
+                FileUtils.join(
+                        project.getSubproject("app").buildDir,
+                        "intermediates",
+                        InternalArtifactType
+                                .APK_FROM_BUNDLE_IDE_MODEL.getFolderName(),
+                        "debug",
+                        "output-metadata.json")
+        var apkFolder = getApkFolderOutput("debug").apkFolder
+        assertThat(outputMetadataFile).isFile()
+
+        //make sure that metadata.json file is properly deleted
+        var apkFileArray = apkFolder.list() ?: fail("No files at $apkFolder")
+        assertThat(apkFileArray.toList()).named("APK List when extract instant is true").doesNotContain("metadata.json")
+        assertThat(outputMetadataFile).contains("\"attributes\": [\n" +
+                "        {\n" +
+                "          \"key\": \"deliveryType\",\n" +
+                "          \"value\": \"INSTALL_TIME\"\n" +
+                "        }\n" +
+                "      ],\n" +
+                "      \"outputFile\": \"../../extracted_apks/debug/base-xxhdpi.apk\"")
+        assertThat(outputMetadataFile).contains("\"attributes\": [\n" +
+                "        {\n" +
+                "          \"key\": \"deliveryType\",\n" +
+                "          \"value\": \"INSTALL_TIME\"\n" +
+                "        }\n" +
+                "      ],\n" +
+                "      \"outputFile\": \"../../extracted_apks/debug/base-master.apk\"")
+        assertThat(outputMetadataFile).contains("\"attributes\": [\n" +
+                "        {\n" +
+                "          \"key\": \"deliveryType\",\n" +
+                "          \"value\": \"ON_DEMAND\"\n" +
+                "        }\n" +
+                "      ],\n" +
+                "      \"outputFile\": \"../../extracted_apks/debug/feature1-master.apk\"")
+        assertThat(outputMetadataFile).contains("\"attributes\": [\n" +
+                "        {\n" +
+                "          \"key\": \"deliveryType\",\n" +
+                "          \"value\": \"ON_DEMAND\"\n" +
+                "        }\n" +
+                "      ],\n" +
+                "      \"outputFile\": \"../../extracted_apks/debug/feature2-master.apk\"")
     }
 
     // Regression test for https://issuetracker.google.com/171462060

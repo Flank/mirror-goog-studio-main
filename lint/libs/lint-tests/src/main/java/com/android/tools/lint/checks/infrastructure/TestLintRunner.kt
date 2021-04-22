@@ -341,9 +341,11 @@ class TestLintRunner(private val task: TestLintTask) {
             }
             client.task = this
 
-            client.pathVariables.add("TEST_ROOT", tempDir)
-            rootDirectory?.let { client.pathVariables.add("ROOT", it) }
-            client.pathVariables.normalize()
+            if (!client.pathVariables.any()) { // otherwise test is responsible on its own
+                client.pathVariables.add("TEST_ROOT", tempDir, false)
+                rootDirectory?.let { client.pathVariables.add("ROOT", it) }
+                client.pathVariables.normalize()
+            }
 
             return client
         }

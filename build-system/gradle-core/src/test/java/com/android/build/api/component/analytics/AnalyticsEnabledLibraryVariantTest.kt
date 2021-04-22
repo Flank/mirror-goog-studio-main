@@ -49,19 +49,6 @@ class AnalyticsEnabledLibraryVariantTest {
     }
 
     @Test
-    fun getApplicationId() {
-        Mockito.`when`(delegate.applicationId).thenReturn(FakeGradleProvider("myApp"))
-        Truth.assertThat(proxy.applicationId.get()).isEqualTo("myApp")
-
-        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
-        Truth.assertThat(
-            stats.variantApiAccess.variantPropertiesAccessList.first().type
-        ).isEqualTo(VariantPropertiesMethodType.READ_ONLY_APPLICATION_ID_VALUE)
-        Mockito.verify(delegate, Mockito.times(1))
-            .applicationId
-    }
-
-    @Test
     fun getPackagingOptions() {
         val packagingOptions = Mockito.mock(Packaging::class.java)
         val jniLibsPackagingOptions = Mockito.mock(JniLibsPackaging::class.java)

@@ -21,11 +21,10 @@ import com.android.build.api.dsl.DependenciesInfo
 
 /**
  * DSL options for specifying whether to include SDK dependency information in APKs and Bundles.
- *
- * This also implements the variant version to allow re-using the same object if possible.
  */
-open class DependenciesInfoImpl : DependenciesInfo, com.android.build.api.variant.DependenciesInfo {
+open class DependenciesInfoImpl : DependenciesInfo {
 
   override var includeInApk: Boolean = true
+
   override var includeInBundle: Boolean = true
 }

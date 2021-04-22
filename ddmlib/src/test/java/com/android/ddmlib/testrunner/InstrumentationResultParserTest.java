@@ -380,8 +380,8 @@ public class InstrumentationResultParserTest extends TestCase {
         mMockListener.testFailed(
                 TEST_ID,
                 "Test failed to run to completion. Reason: "
-                        + "'Test run failed to complete. Expected 1 tests, received 0'. "
-                        + "Check device logcat for details");
+                        + "'Test run failed to complete. Expected 1 tests, received 0. " + ON_ERROR
+                        + "'. Check device logcat for details");
         mMockListener.testEnded(TEST_ID, Collections.emptyMap());
         mMockListener.testRunFailed(
                 "Test run failed to complete. Expected 1 tests, received 0. " + ON_ERROR);
@@ -411,8 +411,8 @@ public class InstrumentationResultParserTest extends TestCase {
         mMockListener.testFailed(
                 TEST_ID,
                 "Test failed to run to completion. Reason: "
-                        + "'Test run failed to complete. Expected 1 tests, received 0'. "
-                        + "Check device logcat for details");
+                        + "'Test run failed to complete. Expected 1 tests, received 0. " + ON_ERROR
+                        + "'. Check device logcat for details");
         mMockListener.testEnded(TEST_ID, Collections.emptyMap());
         mMockListener.testRunFailed(
                 "Test run failed to complete. Expected 1 tests, received 0. " + ON_ERROR);

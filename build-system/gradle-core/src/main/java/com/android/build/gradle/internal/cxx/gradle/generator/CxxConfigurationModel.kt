@@ -172,7 +172,8 @@ fun tryCreateConfigurationParameters(
     projectOptions: ProjectOptions,
     variant: VariantImpl) : CxxConfigurationParameters? {
     val global = variant.globalScope
-    val project = variant.services.projectInfo.getProject()
+    val projectInfo = variant.services.projectInfo
+    val project = projectInfo.getProject()
 
     val (buildSystem, makeFile, buildStagingFolder) =
         getProjectPath(global.extension.externalNativeBuild)
@@ -184,7 +185,7 @@ fun tryCreateConfigurationParameters(
         buildStagingFolder,
         project.buildDir
     )
-    val cxxCacheFolder = join(global.intermediatesDir, "cxx")
+    val cxxCacheFolder = join(projectInfo.getIntermediatesDir(), "cxx")
     fun option(option: BooleanOption) = variant.services.projectOptions.get(option)
     fun option(option: StringOption) = variant.services.projectOptions.get(option)
 
@@ -264,7 +265,7 @@ fun tryCreateConfigurationParameters(
         ndkPath = global.extension.ndkPath,
         cmakeVersion = global.extension.externalNativeBuild.cmake.version,
         splitsAbiFilterSet = global.extension.splits.abiFilters,
-        intermediatesFolder = global.intermediatesDir,
+        intermediatesFolder = projectInfo.getIntermediatesDir(),
         gradleModulePathName = project.path,
         isBuildOnlyTargetAbiEnabled = option(BUILD_ONLY_TARGET_ABI),
         ideBuildTargetAbi = option(IDE_BUILD_TARGET_ABI),

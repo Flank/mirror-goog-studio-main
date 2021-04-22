@@ -72,7 +72,8 @@ abstract class GlobalLibraryBuildService: BuildService<GlobalLibraryBuildService
         } else {
             val jarFiles = localJarRoot.listFiles { _, name -> name.endsWith(SdkConstants.DOT_JAR) }
             if (!jarFiles.isNullOrEmpty()) {
-                ImmutableList.copyOf(jarFiles)
+                // Sort by name, rather than relying on the file system iteration order
+                ImmutableList.copyOf(jarFiles.sortedBy(File::getName))
             } else ImmutableList.of()
         }
     }

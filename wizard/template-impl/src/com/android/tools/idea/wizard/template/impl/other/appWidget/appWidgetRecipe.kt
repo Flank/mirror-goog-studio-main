@@ -22,14 +22,19 @@ import com.android.tools.idea.wizard.template.RecipeExecutor
 import com.android.tools.idea.wizard.template.camelCaseToUnderlines
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
 import com.android.tools.idea.wizard.template.impl.activities.common.addViewBindingSupport
+import com.android.tools.idea.wizard.template.impl.other.appWidget.res.drawable_v21.appWidgetBackgroundXml
+import com.android.tools.idea.wizard.template.impl.other.appWidget.res.drawable_v21.appWidgetInnerViewBackgroundXml
 import com.android.tools.idea.wizard.template.impl.other.appWidget.res.layout.appwidgetConfigureXml
 import com.android.tools.idea.wizard.template.impl.other.appWidget.res.layout.appwidgetXml
 import com.android.tools.idea.wizard.template.impl.other.appWidget.res.values.attrsXml
 import com.android.tools.idea.wizard.template.impl.other.appWidget.res.values.colorsXml
 import com.android.tools.idea.wizard.template.impl.other.appWidget.res.values.dimensXml
 import com.android.tools.idea.wizard.template.impl.other.appWidget.res.values.stringsXml
+import com.android.tools.idea.wizard.template.impl.other.appWidget.res.values.stylesXml
+import com.android.tools.idea.wizard.template.impl.other.appWidget.res.values_v21.stylesXml as stylesXmlV21
+import com.android.tools.idea.wizard.template.impl.other.appWidget.res.values_v31.stylesXml as stylesXmlV31
 import com.android.tools.idea.wizard.template.impl.other.appWidget.res.values.themesXml
-import com.android.tools.idea.wizard.template.impl.other.appWidget.res.values_night.themesXml as themesXmlNight
+import com.android.tools.idea.wizard.template.impl.other.appWidget.res.values_v31.themesXml as themesXmlV31
 import com.android.tools.idea.wizard.template.impl.other.appWidget.res.xml.appwidgetInfoXml
 import com.android.tools.idea.wizard.template.impl.other.appWidget.src.app_package.appWidgetConfigureActivityJava
 import com.android.tools.idea.wizard.template.impl.other.appWidget.src.app_package.appWidgetConfigureActivityKt
@@ -56,6 +61,8 @@ fun RecipeExecutor.appWidgetRecipe(
   mergeXml(androidManifestXml(className, configurable, layoutName, packageName), manifestOut.resolve("AndroidManifest.xml"))
 
   copy(File("example_appwidget_preview.png"), resOut.resolve("drawable-nodpi/example_appwidget_preview.png"))
+  save(appWidgetBackgroundXml(), resOut.resolve("drawable-v21/app_widget_background.xml"))
+  save(appWidgetInnerViewBackgroundXml(), resOut.resolve("drawable-v21/app_widget_inner_view_background.xml"))
   save(appwidgetXml(moduleData.themesData), resOut.resolve("layout/${layoutName}.xml"))
 
   if (configurable) {
@@ -87,7 +94,17 @@ fun RecipeExecutor.appWidgetRecipe(
   mergeXml(colorsXml(), resOut.resolve("values/colors.xml"))
   mergeXml(dimensXml(), resOut.resolve("values/dimens.xml"))
   mergeXml(themesXml(moduleData.themesData), resOut.resolve("values/themes.xml"))
-  mergeXml(themesXmlNight(moduleData.themesData), resOut.resolve("values-night/themes.xml"))
+  mergeXml(stylesXml(moduleData.themesData), resOut.resolve("values/styles.xml"))
+  mergeXml(stylesXmlV21(moduleData.themesData), resOut.resolve("values-v21/styles.xml"))
+  if (moduleData.apis.targetApi.api >= 31) {
+    // android:clipToOutline is only available with S SDK
+    mergeXml(stylesXmlV31(moduleData.themesData), resOut.resolve("values-v31/styles.xml"))
+    // Restrict to generate the themes for v31 because
+    // @android:dimen/system_app_widget_background_radius and @android:dimen/system_app_widget_internal_padding are only available
+    // with S SDK
+    mergeXml(themesXmlV31(moduleData.themesData, forDarkMode = false), resOut.resolve("values-v31/themes.xml"))
+    mergeXml(themesXmlV31(moduleData.themesData, forDarkMode = true), resOut.resolve("values-night-v31/themes.xml"))
+  }
 
   val appWidget = when (projectData.language) {
     Language.Java -> appWidgetJava(projectData.applicationPackage, className, configurable, layoutName, packageName)

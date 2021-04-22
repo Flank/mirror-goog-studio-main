@@ -6,7 +6,7 @@
         message="Avoid using `org.gradle.api.Project.exec` as it is incompatible with Gradle instant execution.">
         <location
             file="src/main/java/com/android/build/gradle/internal/ide/v2/NativeModelBuilder.kt"
-            line="55"/>
+            line="59"/>
     </issue>
 
     <issue
@@ -71,14 +71,6 @@
         <location
             file="src/main/java/com/android/build/gradle/internal/tasks/BundleReportDependenciesTask.kt"
             line="110"/>
-    </issue>
-
-    <issue
-        id="UseValueOf"
-        message="Use `Integer.valueOf(libraries.size)` instead">
-        <location
-            file="src/main/java/com/android/build/gradle/internal/tasks/PerModuleReportDependenciesTask.kt"
-            line="102"/>
     </issue>
 
     <issue
@@ -190,7 +182,7 @@
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
             file="src/main/java/com/android/build/gradle/internal/ide/SourceProviderImpl.java"
-            line="161"/>
+            line="169"/>
     </issue>
 
     <issue
@@ -198,7 +190,7 @@
         message="Avoid using common ForkJoinPool, directly or indirectly (for example via CompletableFuture). It has a limited set of threads on some machines which leads to hangs. See `go/do-not-freeze`.">
         <location
             file="src/main/java/com/android/build/gradle/internal/tasks/BundleToApkTask.kt"
-            line="99"/>
+            line="100"/>
     </issue>
 
     <issue
@@ -230,7 +222,7 @@
         message="Avoid using new ForkJoinPool instances when possible. Prefer using the IntelliJ application pool via `com.intellij.openapi.application.Application#executeOnPooledThread`, or for the Android Gradle Plugin use `com.android.build.gradle.internal.tasks.Workers`. See `go/do-not-freeze`.">
         <location
             file="src/main/java/com/android/build/gradle/internal/tasks/DexMergingTask.kt"
-            line="810"/>
+            line="802"/>
     </issue>
 
 </issues>

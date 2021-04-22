@@ -21,7 +21,6 @@ import org.gradle.api.Incubating
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
-import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import java.io.Serializable
 
@@ -29,7 +28,7 @@ import java.io.Serializable
  * Parent interface for all types of variants.
  */
 @Incubating
-interface Variant : Component {
+interface Variant : Component, HasAndroidResources {
 
     /**
      * Gets the minimum supported SDK Version for this variant.
@@ -47,13 +46,6 @@ interface Variant : Component {
     val targetSdkVersion: AndroidVersion
 
     /**
-     * Variant's application ID as present in the final manifest file of the APK.
-     *
-     * Some type of variants allows this to be writeable but for some it's only read-only.
-     */
-    val applicationId: Provider<String>
-
-    /**
      * The namespace of the generated R and BuildConfig classes. Also, the namespace used to resolve
      * any relative class names that are declared in the AndroidManifest.xml.
      *
@@ -67,16 +59,6 @@ interface Variant : Component {
      * Variant's [BuildConfigField] which will be generated in the BuildConfig class.
      */
     val buildConfigFields: MapProperty<String, BuildConfigField<out Serializable>>
-
-    /**
-     * Make a [ResValue.Key] to interact with [resValues]'s [MapProperty]
-     */
-    fun makeResValueKey(type: String, name: String): ResValue.Key
-
-    /**
-     * Variant's [ResValue] which will be generated.
-     */
-    val resValues: MapProperty<ResValue.Key, ResValue>
 
     /**
      * [MapProperty] of the variant's manifest placeholders.
@@ -97,13 +79,7 @@ interface Variant : Component {
      * Variant's cmake [ExternalNativeBuild], initialized by merging the product flavor values or
      * null if no cmake external build is configured for this variant.
      */
-    val externalCmake: ExternalNativeBuild?
-
-    /**
-     * Variant's ndk-build [ExternalNativeBuild], initialized by merging the product flavor values
-     * or null if no ndk-build external build is configured for this variant.
-     */
-    val externalNdkBuild: ExternalNativeBuild?
+    val externalNativeBuild: ExternalNativeBuild?
 
     /**
      * Variant's [UnitTest], or null if the unit tests for this variant are disabled.
@@ -117,11 +93,6 @@ interface Variant : Component {
      * @return the registered object or null.
      */
     fun <T> getExtension(type: Class<T>): T?
-
-    /**
-     * Variant's is pseudo locales enabled, initialized by the corresponding DSL elements.
-     */
-    val isPseudoLocalesEnabled: Property<Boolean>
 
     /**
      * List of proguard configuration files for this variant. The list is initialized from the

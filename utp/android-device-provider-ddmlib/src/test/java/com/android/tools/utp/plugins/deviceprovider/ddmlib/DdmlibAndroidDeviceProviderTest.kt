@@ -81,9 +81,11 @@ class DdmlibAndroidDeviceProviderTest {
 
     @Test
     fun deviceFound() {
+        val mockDevice = mock<IDevice>()
+        `when`(mockDevice.serialNumber).thenReturn("serial-1234")
         `when`(mockDeviceFinder.findDevice(
                 eq("serial-1234"),
-                anyInt(), anyLong(), anyLong(), anyLong())).thenReturn(mock<IDevice>())
+                anyInt(), anyLong(), anyLong(), anyLong())).thenReturn(mockDevice)
         val provider = createProvider("serial-1234")
 
         val controller = provider.provideDevice()

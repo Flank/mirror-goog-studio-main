@@ -30,7 +30,7 @@ import static org.gradle.api.attributes.Bundling.BUNDLING_ATTRIBUTE;
 import static org.gradle.api.attributes.Bundling.EXTERNAL;
 import static org.gradle.api.attributes.Category.CATEGORY_ATTRIBUTE;
 import static org.gradle.api.attributes.LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE;
-import static org.gradle.internal.component.external.model.TestFixturesSupport.TEST_FIXTURES_FEATURE_NAME;
+import static org.gradle.api.attributes.java.TargetJvmEnvironment.TARGET_JVM_ENVIRONMENT_ATTRIBUTE;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -44,6 +44,7 @@ import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType;
 import com.android.build.gradle.internal.services.StringCachingBuildService;
+import com.android.build.gradle.internal.testFixtures.TestFixturesUtil;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.VariantType;
@@ -61,7 +62,6 @@ import java.util.Set;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ConfigurationContainer;
-import org.gradle.api.artifacts.ProjectDependency;
 import org.gradle.api.artifacts.ResolutionStrategy;
 import org.gradle.api.artifacts.dsl.DependencyHandler;
 import org.gradle.api.attributes.Attribute;
@@ -70,11 +70,10 @@ import org.gradle.api.attributes.Bundling;
 import org.gradle.api.attributes.Category;
 import org.gradle.api.attributes.LibraryElements;
 import org.gradle.api.attributes.Usage;
+import org.gradle.api.attributes.java.TargetJvmEnvironment;
 import org.gradle.api.capabilities.Capability;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.Provider;
-import org.gradle.internal.component.external.model.ProjectDerivedCapability;
-import org.gradle.internal.component.external.model.ProjectTestFixtures;
 
 /**
  * Object that represents the dependencies of variant.
@@ -204,6 +203,8 @@ public class VariantDependenciesBuilder {
         final Usage apiUsage = factory.named(Usage.class, Usage.JAVA_API);
         final Usage runtimeUsage = factory.named(Usage.class, Usage.JAVA_RUNTIME);
         final Usage reverseMetadataUsage = factory.named(Usage.class, "android-reverse-meta-data");
+        final TargetJvmEnvironment jvmEnvironment =
+                factory.named(TargetJvmEnvironment.class, TargetJvmEnvironment.ANDROID);
 
         String variantName = variantDslInfo.getComponentIdentity().getName();
         VariantType variantType = variantDslInfo.getVariantType();
@@ -229,11 +230,7 @@ public class VariantDependenciesBuilder {
             }
 
             if (testFixturesEnabled) {
-                ProjectDependency dependency =
-                        (ProjectDependency)
-                                dependencies.add(
-                                        compileClasspath.getName(), dependencies.create(project));
-                dependency.capabilities(new ProjectTestFixtures(project));
+                dependencies.add(compileClasspath.getName(), dependencies.testFixtures(project));
             }
 
             compileClasspath.getDependencies().add(dependencies.create(project));
@@ -252,6 +249,7 @@ public class VariantDependenciesBuilder {
         final AttributeContainer compileAttributes = compileClasspath.getAttributes();
         applyVariantAttributes(compileAttributes, buildType, consumptionFlavorMap);
         compileAttributes.attribute(Usage.USAGE_ATTRIBUTE, apiUsage);
+        compileAttributes.attribute(TARGET_JVM_ENVIRONMENT_ATTRIBUTE, jvmEnvironment);
 
         Configuration annotationProcessor =
                 configurations.maybeCreate(variantName + "AnnotationProcessorClasspath");
@@ -274,11 +272,7 @@ public class VariantDependenciesBuilder {
         runtimeClasspath.setExtendsFrom(runtimeClasspaths);
         if (testedVariant != null) {
             if (testFixturesEnabled) {
-                ProjectDependency dependency =
-                        (ProjectDependency)
-                                dependencies.add(
-                                        runtimeClasspath.getName(), dependencies.create(project));
-                dependency.capabilities(new ProjectTestFixtures(project));
+                dependencies.add(runtimeClasspath.getName(), dependencies.testFixtures(project));
             }
             if (testedVariant.getVariantDslInfo().getVariantType().isAar()
                     || !variantDslInfo.getVariantType().isApk()) {
@@ -292,6 +286,7 @@ public class VariantDependenciesBuilder {
         final AttributeContainer runtimeAttributes = runtimeClasspath.getAttributes();
         applyVariantAttributes(runtimeAttributes, buildType, consumptionFlavorMap);
         runtimeAttributes.attribute(Usage.USAGE_ATTRIBUTE, runtimeUsage);
+        runtimeAttributes.attribute(TARGET_JVM_ENVIRONMENT_ATTRIBUTE, jvmEnvironment);
 
         if (projectOptions.get(BooleanOption.USE_DEPENDENCY_CONSTRAINTS)) {
             Provider<StringCachingBuildService> stringCachingService =
@@ -556,8 +551,7 @@ public class VariantDependenciesBuilder {
         checkOldConfigurations(configurations, "_" + variantName + "Publish", runtimeClasspathName);
 
         if (variantType.isTestFixturesComponent()) {
-            Capability capability =
-                    new ProjectDerivedCapability(project, TEST_FIXTURES_FEATURE_NAME);
+            Capability capability = TestFixturesUtil.getTestFixturesCapabilityForProject(project);
             elements.forEach(
                     (publishedConfigType, configuration) ->
                             configuration.getOutgoing().capability(capability));

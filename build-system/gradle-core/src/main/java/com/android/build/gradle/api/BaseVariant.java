@@ -475,7 +475,9 @@ public interface BaseVariant {
      *
      * @param task the task
      * @param sourceFolders the source folders where the generated source code is.
+     * @deprecated Use {@link #registerJavaGeneratingTask(TaskProvider, File...)}
      */
+    @Deprecated
     void registerJavaGeneratingTask(@NonNull Task task, @NonNull File... sourceFolders);
 
     /**
@@ -491,8 +493,45 @@ public interface BaseVariant {
      *
      * @param task the task
      * @param sourceFolders the source folders where the generated source code is.
+     * @deprecated Use {@link #registerJavaGeneratingTask(TaskProvider, Collection<File>)}
      */
+    @Deprecated
     void registerJavaGeneratingTask(@NonNull Task task, @NonNull Collection<File> sourceFolders);
+
+    /**
+     * Adds to the variant a task that generates Java source code.
+     *
+     * <p>This will make the generate[Variant]Sources task depend on this task and add the new
+     * source folders as compilation inputs.
+     *
+     * <p>The new source folders are also added to the model.
+     *
+     * <p>N.B. This method also supports adding generated Kotlin sources, but this behavior may
+     * change in the future. Future versions of AGP or Kotlin Gradle plugin may not support this.
+     *
+     * @param taskProvider the task provider
+     * @param sourceFolders the source folders where the generated source code is.
+     */
+    void registerJavaGeneratingTask(
+            @NonNull TaskProvider<? extends Task> taskProvider, @NonNull File... sourceFolders);
+
+    /**
+     * Adds to the variant a task that generates Java source code.
+     *
+     * <p>This will make the generate[Variant]Sources task depend on this task and add the new
+     * source folders as compilation inputs.
+     *
+     * <p>The new source folders are also added to the model.
+     *
+     * <p>N.B. This method also supports adding generated Kotlin sources, but this behavior may
+     * change in the future. Future versions of AGP or Kotlin Gradle plugin may not support this.
+     *
+     * @param taskProvider the task provider
+     * @param sourceFolders the source folders where the generated source code is.
+     */
+    void registerJavaGeneratingTask(
+            @NonNull TaskProvider<? extends Task> taskProvider,
+            @NonNull Collection<File> sourceFolders);
 
     /**
      * Register the output of an external annotation processor.

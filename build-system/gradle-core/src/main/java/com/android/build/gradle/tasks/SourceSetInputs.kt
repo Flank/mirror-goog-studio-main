@@ -91,8 +91,8 @@ abstract class SourceSetInputs {
             )
         }
         if (mergeResourcesTask.outputDir.isPresent) {
-            mergeResourcesOutputDir
-                .setDisallowChanges(paths.defaultMergeResourcesOutputDir.absolutePath)
+            mergeResourcesOutputDir.setDisallowChanges(
+                    creationConfig.artifacts.getOutputPath(InternalArtifactType.MERGED_RES).path)
         }
         mergeResourcesTask.incrementalFolder.get().asFile.let {
             incrementalMergedDir.setDisallowChanges(it.absolutePath)
@@ -106,7 +106,6 @@ abstract class SourceSetInputs {
         )
 
         return resourceSourceSets.asSequence()
-            .plus(librarySourceSets.files)
             .plus(extraGeneratedResDir.files)
             .plus(uncreatedSourceSets.map(::File))
             .plus(additionalSourceSets.map(::File)).toList()

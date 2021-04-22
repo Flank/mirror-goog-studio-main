@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.dsl
 
+import com.android.build.api.dsl.ApkSigningConfig
 import com.android.build.api.dsl.BuildFeatures
 import com.android.build.api.dsl.ComposeOptions
 import com.android.build.api.dsl.DefaultConfig
@@ -23,8 +24,7 @@ import com.android.build.api.dsl.Installation
 import com.android.build.api.dsl.Lint
 import com.android.build.api.dsl.SdkComponents
 import com.android.build.api.dsl.TestCoverage
-import com.android.build.api.variant.VariantBuilder
-import com.android.build.api.variant.Variant
+import com.android.build.gradle.ProguardFiles
 import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.internal.CompileOptions
 import com.android.build.gradle.internal.coverage.JacocoOptions
@@ -32,28 +32,26 @@ import com.android.build.gradle.internal.plugins.DslContainerProvider
 import com.android.build.gradle.internal.services.DslServices
 import com.android.builder.core.LibraryRequest
 import com.android.builder.core.ToolsRevisionUtils
+import com.android.builder.errors.IssueReporter
 import com.android.repository.Revision
 import java.util.function.Supplier
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
+import java.io.File
 
 /** Internal implementation of the 'new' DSL interface */
 abstract class CommonExtensionImpl<
         BuildFeaturesT : BuildFeatures,
         BuildTypeT : com.android.build.api.dsl.BuildType,
         DefaultConfigT : DefaultConfig,
-        ProductFlavorT : com.android.build.api.dsl.ProductFlavor,
-        VariantBuilderT : VariantBuilder,
-        VariantT : Variant>(
+        ProductFlavorT : com.android.build.api.dsl.ProductFlavor>(
             protected val dslServices: DslServices,
             dslContainers: DslContainerProvider<DefaultConfigT, BuildTypeT, ProductFlavorT, SigningConfig>
         ) : InternalCommonExtension<
         BuildFeaturesT,
         BuildTypeT,
         DefaultConfigT,
-        ProductFlavorT,
-        VariantBuilderT,
-        VariantT> {
+        ProductFlavorT> {
 
     private val sourceSetManager = dslContainers.sourceSetManager
 
@@ -148,6 +146,14 @@ abstract class CommonExtensionImpl<
         compileSdkVersion = "$vendor:$name:$version"
     }
 
+    override fun compileSdkVersion(apiLevel: Int) {
+        compileSdk = apiLevel
+    }
+
+    override fun compileSdkVersion(version: String) {
+        compileSdkPreview = version
+    }
+
     override val composeOptions: ComposeOptionsImpl =
         dslServices.newInstance(ComposeOptionsImpl::class.java, dslServices)
 
@@ -155,8 +161,12 @@ abstract class CommonExtensionImpl<
         action.invoke(composeOptions)
     }
 
-    override fun buildTypes(action: Action<in NamedDomainObjectContainer<BuildTypeT>>) {
-        action.execute(buildTypes)
+    override fun buildTypes(action: Action<in NamedDomainObjectContainer<BuildType>>) {
+        action.execute(buildTypes as NamedDomainObjectContainer<BuildType>)
+    }
+
+    override fun buildTypes(action: NamedDomainObjectContainer<BuildTypeT>.() -> Unit) {
+        action.invoke(buildTypes)
     }
 
     override fun NamedDomainObjectContainer<BuildTypeT>.debug(action: BuildTypeT.() -> Unit) {
@@ -178,8 +188,12 @@ abstract class CommonExtensionImpl<
         action.invoke(dataBinding)
     }
 
-    override fun defaultConfig(action: Action<DefaultConfigT>) {
-        action.execute(defaultConfig)
+    override fun defaultConfig(action: Action<com.android.build.gradle.internal.dsl.DefaultConfig>) {
+        action.execute(defaultConfig as com.android.build.gradle.internal.dsl.DefaultConfig)
+    }
+
+    override fun defaultConfig(action: DefaultConfigT.() -> Unit) {
+        action.invoke(defaultConfig)
     }
 
     override val externalNativeBuild: ExternalNativeBuild =
@@ -222,18 +236,26 @@ abstract class CommonExtensionImpl<
         action.invoke(packagingOptions)
     }
 
-    override fun productFlavors(action: Action<NamedDomainObjectContainer<ProductFlavorT>>) {
-        action.execute(productFlavors)
+    override fun productFlavors(action: Action<NamedDomainObjectContainer<ProductFlavor>>) {
+        action.execute(productFlavors as NamedDomainObjectContainer<ProductFlavor>)
+    }
+
+    override fun productFlavors(action: NamedDomainObjectContainer<ProductFlavorT>.() -> Unit) {
+        action.invoke(productFlavors)
     }
 
     override fun signingConfigs(action: Action<NamedDomainObjectContainer<SigningConfig>>) {
         action.execute(signingConfigs)
     }
 
+    override fun signingConfigs(action: NamedDomainObjectContainer<out ApkSigningConfig>.() -> Unit) {
+        action.invoke(signingConfigs)
+    }
+
     override val sourceSets: NamedDomainObjectContainer<AndroidSourceSet>
         get() = sourceSetManager.sourceSetsContainer
 
-    override fun sourceSets(action: NamedDomainObjectContainer<AndroidSourceSet>.() -> Unit) {
+    override fun sourceSets(action: NamedDomainObjectContainer<out com.android.build.api.dsl.AndroidSourceSet>.() -> Unit) {
         sourceSetManager.executeAction(action)
     }
 
@@ -260,11 +282,31 @@ abstract class CommonExtensionImpl<
             buildToolsRevision = Revision.parseRevision(version, Revision.Precision.MICRO)
         }
 
+    override fun buildToolsVersion(buildToolsVersion: String) {
+        this.buildToolsVersion = buildToolsVersion
+    }
+
+    override fun flavorDimensions(vararg dimensions: String) {
+        flavorDimensions.clear()
+        flavorDimensions.addAll(dimensions)
+    }
+
     override fun useLibrary(name: String) {
         useLibrary(name, true)
     }
 
     override fun useLibrary(name: String, required: Boolean) {
         libraryRequests.add(LibraryRequest(name, required))
+    }
+
+    override fun getDefaultProguardFile(name: String): File {
+        if (!ProguardFiles.KNOWN_FILE_NAMES.contains(name)) {
+            dslServices
+                .issueReporter
+                .reportError(
+                    IssueReporter.Type.GENERIC, ProguardFiles.UNKNOWN_FILENAME_MESSAGE
+                )
+        }
+        return ProguardFiles.getDefaultProguardFile(name, dslServices.buildDirectory)
     }
 }

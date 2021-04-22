@@ -47,8 +47,6 @@ import com.android.tools.idea.wizard.template.impl.activities.responsiveActivity
 import com.android.tools.idea.wizard.template.impl.activities.responsiveActivity.res.values.dimens
 import com.android.tools.idea.wizard.template.impl.activities.responsiveActivity.res.values_w600dp.dimens as dimensW600dp
 import com.android.tools.idea.wizard.template.impl.activities.responsiveActivity.res.values_w936dp.dimens as dimensW936dp
-import com.android.tools.idea.wizard.template.impl.activities.responsiveActivity.res.values.integers
-import com.android.tools.idea.wizard.template.impl.activities.responsiveActivity.res.values_w600dp.integers as integersW600dp
 import com.android.tools.idea.wizard.template.impl.activities.responsiveActivity.res.values.strings
 import com.android.tools.idea.wizard.template.impl.activities.responsiveActivity.src.mainActivityJava
 import com.android.tools.idea.wizard.template.impl.activities.responsiveActivity.src.mainActivityKt
@@ -107,8 +105,6 @@ fun RecipeExecutor.generateResponsiveActivity(
   mergeXml(dimens(), resOut.resolve("values/dimens.xml"))
   mergeXml(dimensW600dp(), resOut.resolve("values-w600dp/dimens.xml"))
   mergeXml(dimensW936dp(), resOut.resolve("values-w936dp/dimens.xml"))
-  mergeXml(integers(), resOut.resolve("values/integers.xml"))
-  mergeXml(integersW600dp(), resOut.resolve("values-w600dp/integers.xml"))
   mergeXml(bottomNavigationMenu(), resOut.resolve("menu/bottom_navigation.xml"))
   mergeXml(navigationDrawerMenu(), resOut.resolve("menu/navigation_drawer.xml"))
   mergeXml(overflowMenu(), resOut.resolve("menu/overflow.xml"))

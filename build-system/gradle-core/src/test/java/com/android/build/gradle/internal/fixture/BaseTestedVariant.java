@@ -372,6 +372,20 @@ public interface BaseTestedVariant extends BaseVariant, TestedVariant {
         }
 
         @Override
+        public void registerJavaGeneratingTask(
+                @NonNull TaskProvider<? extends Task> taskProvider,
+                @NonNull File... sourceFolders) {
+            variant.registerJavaGeneratingTask(taskProvider, sourceFolders);
+        }
+
+        @Override
+        public void registerJavaGeneratingTask(
+                @NonNull TaskProvider<? extends Task> taskProvider,
+                @NonNull Collection<File> sourceFolders) {
+            variant.registerJavaGeneratingTask(taskProvider, sourceFolders);
+        }
+
+        @Override
         public void registerExternalAptJavaOutput(@NonNull ConfigurableFileTree folder) {
             variant.registerExternalAptJavaOutput(folder);
         }

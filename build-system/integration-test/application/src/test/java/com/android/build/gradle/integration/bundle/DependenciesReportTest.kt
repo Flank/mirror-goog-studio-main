@@ -31,7 +31,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
-import java.nio.charset.Charset
 import java.util.Base64
 import java.util.zip.ZipFile
 import kotlin.test.fail
@@ -45,6 +44,9 @@ class DependenciesReportTest {
     val app =  MinimalSubProject.app("com.example.app")
                   .withFile("local.jar", TestInputsGenerator.jarWithClasses(listOf()))
 
+    val lib =  MinimalSubProject.lib("com.example.lib")
+                  .withFile("local_in_lib.jar", TestInputsGenerator.jarWithEmptyClasses(listOf("com/example/LibClass")))
+
     // Add both 1.0.0 and 1.0.1 so that androidx.core.core dependencies will be 1.0.0 and 1.0.1
     // We want to test that only the resolved 1.0.1 dependency gets added. Fragment implicitly tries
     // to pull in 1.0.0 of androidx.core.
@@ -54,6 +56,11 @@ class DependenciesReportTest {
             .dependency(app, "androidx.fragment:fragment:1.0.0")
             .dependency(app, "androidx.core:core:1.0.1")
             .fileDependency(app, "local.jar")
+            .subproject(":lib", lib)
+            .dependency(app, lib)
+            .dependency(lib, "androidx.core:core:1.0.1")
+            .dependency(lib, "androidx.collection:collection:1.0.0")
+            .fileDependency(lib, "local_in_lib.jar")
             .build()
     @get:Rule
     val project = GradleTestProject.builder()
@@ -71,20 +78,36 @@ class DependenciesReportTest {
         ZipFile(bundle).use {
             val dependenciesFile = it.getEntry("BUNDLE-METADATA/com.android.tools.build.libraries/dependencies.pb")
             val deps = AppDependencies.parseFrom(it.getInputStream(dependenciesFile))
-            val mavenLib = deps.libraryList.stream()
+            val libraryList = deps.libraryList.toList()
+            val mavenLib = libraryList.stream()
                 .filter { library -> library.hasMavenLibrary() }
                 .filter { library -> library.mavenLibrary.groupId.equals("androidx.core") &&
                                      library.mavenLibrary.artifactId.equals("core") }
                 .collect(toImmutableList())
-            val fileLib = deps.libraryList.stream()
+            val fileLib = libraryList.stream()
                 .filter { library -> !library.hasMavenLibrary() }
                 .collect(toImmutableList())
             assertThat(mavenLib).hasSize(1)
             assertThat(mavenLib.get(0).mavenLibrary.version).isEqualTo("1.0.1")
             val base64EncodedDigest = Base64.getEncoder().encodeToString(mavenLib.get(0).digests.sha256.toByteArray())
             assertThat(base64EncodedDigest).isEqualTo("sakFIsIsrYxft6T5Ekk9vN5GPGo3tBSN+5QjdjRg+Zg=")
-            assertThat(fileLib).hasSize(1)
+            assertThat(fileLib).hasSize(2)
             assertThat(fileLib.get(0).digests.sha256).isNotEmpty()
+            assertThat(fileLib.get(1).digests.sha256).isNotEmpty()
+
+            val moduleDependenciesList = deps.moduleDependenciesList
+            assertThat(moduleDependenciesList).hasSize(1)
+            assertThat(moduleDependenciesList.first().moduleName).isEqualTo("base")
+            // This collection should include every Library on which a Project has a direct dependency
+            val directModuleDependencies = moduleDependenciesList.first().dependencyIndexList
+                .map { depIndex -> libraryList[depIndex] }
+
+            // 3 artifacts -- androidx.core, androidx.fragment, and androidx.collection
+            assertThat(directModuleDependencies.filter { lib -> lib.hasMavenLibrary() }).hasSize(3)
+
+            // 2 jars -- local.jar and local_in_lib.jar
+            assertThat(directModuleDependencies.filter { lib -> !lib.hasMavenLibrary() }).hasSize(2)
+
         }
     }
 

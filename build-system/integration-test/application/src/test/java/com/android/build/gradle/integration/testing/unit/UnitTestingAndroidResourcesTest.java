@@ -33,6 +33,7 @@ import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.JavaArtifact;
+import com.android.builder.model.SyncIssue;
 import com.android.builder.model.Variant;
 import com.android.tools.build.apkzlib.utils.IOExceptionFunction;
 import com.android.utils.SdkUtils;
@@ -141,6 +142,7 @@ public class UnitTestingAndroidResourcesTest {
         AndroidProject model =
                 project.model()
                         .with(BooleanOption.USE_RELATIVE_PATH_IN_TEST_CONFIG, true)
+                        .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING) // Bug 184745958
                         .fetchAndroidProjects()
                         .getOnlyModelMap()
                         .get(":");

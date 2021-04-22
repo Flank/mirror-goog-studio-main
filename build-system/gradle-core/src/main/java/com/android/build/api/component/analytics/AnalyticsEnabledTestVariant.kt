@@ -18,8 +18,9 @@ package com.android.build.api.component.analytics
 
 import com.android.build.api.component.UnitTest
 import com.android.build.api.variant.AndroidResources
+import com.android.build.api.variant.GeneratesApk
 import com.android.build.api.variant.ApkPackaging
-import com.android.build.api.variant.Dexing
+import com.android.build.api.variant.Renderscript
 import com.android.build.api.variant.TestVariant
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
@@ -28,23 +29,17 @@ import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import javax.inject.Inject
 
-open class AnalyticsEnabledTestVariant @Inject constructor(
+class AnalyticsEnabledTestVariant @Inject constructor(
     override val delegate: TestVariant,
     stats: GradleBuildVariant.Builder,
     objectFactory: ObjectFactory
 ): AnalyticsEnabledVariant(delegate, stats, objectFactory), TestVariant {
+
     override val applicationId: Property<String>
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
                 VariantPropertiesMethodType.APPLICATION_ID_VALUE
             return delegate.applicationId
-        }
-
-    override val androidResources: AndroidResources
-        get() {
-            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-                VariantPropertiesMethodType.AAPT_OPTIONS_VALUE
-            return delegate.androidResources
         }
 
     override val testedApplicationId: Provider<String>
@@ -82,35 +77,22 @@ open class AnalyticsEnabledTestVariant @Inject constructor(
             return delegate.testLabel
         }
 
-    private val userVisiblePackagingOptions: ApkPackaging by lazy {
-        objectFactory.newInstance(
-            AnalyticsEnabledApkPackaging::class.java,
-            delegate.packaging,
-            stats
-        )
-    }
-
-    override val packaging: ApkPackaging
-        get() {
-            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-                VariantPropertiesMethodType.PACKAGING_OPTIONS_VALUE
-            return userVisiblePackagingOptions
-        }
-
     override val unitTest: UnitTest? = null
 
-    private val userVisibleDexing: Dexing by lazy {
-        objectFactory.newInstance(
-            Dexing::class.java,
-            delegate.dexing,
-            stats
+    private val generatesApk: GeneratesApk by lazy {
+        AnalyticsEnabledGeneratesApk(
+                delegate,
+                stats,
+                objectFactory
         )
     }
 
-    override val dexing: Dexing
-        get() {
-            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-                VariantPropertiesMethodType.DEXING_VALUE
-            return userVisibleDexing
-        }
+    override val androidResources: AndroidResources
+        get() = generatesApk.androidResources
+
+    override val renderscript: Renderscript?
+        get() = generatesApk.renderscript
+
+    override val packaging: ApkPackaging
+        get() = generatesApk.packaging
 }

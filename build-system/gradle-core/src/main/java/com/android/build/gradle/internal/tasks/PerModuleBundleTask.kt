@@ -36,7 +36,6 @@ import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.files.NativeLibraryAbiPredicate
-import com.android.builder.model.CodeShrinker
 import com.android.builder.packaging.JarCreator
 import com.android.builder.packaging.JarMerger
 import org.gradle.api.file.ConfigurableFileCollection
@@ -270,7 +269,7 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
                 )
             )
             task.javaResFiles.from(
-                if (creationConfig.codeShrinker == CodeShrinker.R8) {
+                if (creationConfig.minifiedEnabled) {
                     creationConfig.services.fileCollection(
                         artifacts.get(InternalArtifactType.SHRUNK_JAVA_RES)
                     )

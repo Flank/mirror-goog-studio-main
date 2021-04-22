@@ -228,7 +228,8 @@ public class OverdrawDetector extends LayoutDetector implements SourceCodeScanne
             return manifestTheme;
         }
 
-        Project project = context.getMainProject();
+        Project project =
+                context.isGlobalAnalysis() ? context.getMainProject() : context.getProject();
         int apiLevel = project.getTargetSdk();
         if (apiLevel == -1) {
             apiLevel = project.getMinSdk();

@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.api.artifact.MultipleArtifact
 import com.android.build.api.transform.QualifiedContent
 import com.android.build.api.transform.QualifiedContent.Scope.PROVIDED_ONLY
 import com.android.build.api.transform.QualifiedContent.Scope.TESTED_CODE
@@ -28,12 +29,13 @@ import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.SyncOptions
-import com.android.builder.model.CodeShrinker
 import com.android.builder.multidex.D8MainDexList
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logging
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
@@ -45,6 +47,7 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
+import java.io.File
 
 /**
  * A task calculating the main dex list for bundle using D8.
@@ -60,14 +63,14 @@ abstract class D8BundleMainDexListTask : NonIncrementalTask() {
     abstract val aaptGeneratedRules: RegularFileProperty
 
     @get:Optional
-    @get:InputFile
+    @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE)
-    abstract val userMultidexProguardRules: RegularFileProperty
+    abstract val userMultidexProguardRules: ListProperty<RegularFile>
 
     @get:Optional
     @get:InputFile
     @get:PathSensitive(PathSensitivity.NONE)
-    abstract val userMultidexKeepFile: RegularFileProperty
+    abstract val userMultidexKeepFile: Property<File>
 
     @get:Classpath
     abstract val bootClasspath: ConfigurableFileCollection
@@ -92,9 +95,7 @@ abstract class D8BundleMainDexListTask : NonIncrementalTask() {
         ) { params ->
             params.initializeFromAndroidVariantTask(this)
             params.proguardRules.from(aaptGeneratedRules)
-            userMultidexProguardRules.orNull?.let { userRules ->
-                params.proguardRules.from(userRules)
-            }
+            params.proguardRules.from(userMultidexProguardRules.get())
             params.programDexFiles.from(baseDexDirs, featureDexDirs)
             params.libraryClasses.from(libraryClasses)
             params.bootClasspath.from(bootClasspath)
@@ -110,7 +111,7 @@ abstract class D8BundleMainDexListTask : NonIncrementalTask() {
             abstract val programDexFiles: ConfigurableFileCollection
             abstract val libraryClasses: ConfigurableFileCollection
             abstract val bootClasspath: ConfigurableFileCollection
-            abstract val userMultidexKeepFile: RegularFileProperty
+            abstract val userMultidexKeepFile: Property<File>
             abstract val output: RegularFileProperty
             abstract val errorFormat: Property<SyncOptions.ErrorFormatMode>
         }
@@ -136,7 +137,7 @@ abstract class D8BundleMainDexListTask : NonIncrementalTask() {
                 )
             )
 
-            parameters.userMultidexKeepFile.asFile.orNull?.let {
+            parameters.userMultidexKeepFile.orNull?.let {
                 mainDexClasses.addAll(it.readLines())
             }
 
@@ -184,8 +185,10 @@ abstract class D8BundleMainDexListTask : NonIncrementalTask() {
                 task.aaptGeneratedRules
             )
 
-            task.userMultidexProguardRules.setDisallowChanges(creationConfig.dexing.multiDexKeepProguard)
-            task.userMultidexKeepFile.setDisallowChanges(creationConfig.dexing.multiDexKeepFile)
+            task.userMultidexProguardRules.setDisallowChanges(
+                creationConfig.artifacts.getAll(MultipleArtifact.MULTIDEX_KEEP_PROGUARD)
+            )
+            task.userMultidexKeepFile.setDisallowChanges(creationConfig.multiDexKeepFile)
             task.bootClasspath.from(creationConfig.variantScope.bootClasspath).disallowChanges()
             task.errorFormat
                 .setDisallowChanges(
@@ -196,15 +199,13 @@ abstract class D8BundleMainDexListTask : NonIncrementalTask() {
             task.baseDexDirs.from(
                 creationConfig.artifacts.getAll(InternalMultipleArtifactType.DEX))
 
-            if (creationConfig.codeShrinker != CodeShrinker.PROGUARD) {
-                task.featureDexDirs.from(
-                    creationConfig.variantDependencies.getArtifactFileCollection(
-                        AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
-                        AndroidArtifacts.ArtifactScope.ALL,
-                        AndroidArtifacts.ArtifactType.FEATURE_PUBLISHED_DEX
-                    )
+            task.featureDexDirs.from(
+                creationConfig.variantDependencies.getArtifactFileCollection(
+                    AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
+                    AndroidArtifacts.ArtifactScope.ALL,
+                    AndroidArtifacts.ArtifactType.FEATURE_PUBLISHED_DEX
                 )
-            }
+            )
         }
     }
 }

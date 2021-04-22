@@ -115,6 +115,12 @@ public interface ILayoutLog {
      */
     String TAG_INFO = "info";
 
+    /** Tag for reporting the creation of an instance of Thread in the preview. */
+    String TAG_THREAD_CREATION = "thread-creation";
+
+    /** Errors reported during the inflate process (like classes not found). */
+    String TAG_INFLATE = "INFLATE";
+
     /**
      * Logs a warning.
      *

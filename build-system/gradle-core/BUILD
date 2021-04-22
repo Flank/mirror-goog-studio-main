@@ -88,11 +88,10 @@ kotlin_library(
         "//tools/base/third_party:com.sun.istack_istack-commons-runtime",
         "//tools/base/third_party:commons-io_commons-io",  # TODO: remove?
         "//tools/base/third_party:net.sf.jopt-simple_jopt-simple",
-        "//tools/base/third_party:net.sf.proguard_proguard-gradle",
         "//tools/base/third_party:org.apache.commons_commons-compress",  # TODO: remove?
         "//tools/base/third_party:org.apache.httpcomponents_httpmime",
         "//tools/base/third_party:org.bouncycastle_bcpkix-jdk15on",
-        "//tools/base/third_party:org.codehaus.groovy_groovy-all",
+        "//tools/base/third_party:org.codehaus.groovy_groovy-all",  # required by //tools/base/build-system:gradle-api
         "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
         "//tools/base/third_party:org.jetbrains_annotations",
         "//tools/base/third_party:org.ow2.asm_asm",
@@ -201,7 +200,7 @@ kotlin_test(
         "//tools/base/third_party:io.grpc_grpc-testing",
         "//tools/base/third_party:junit_junit",
         "//tools/base/third_party:nl.jqno.equalsverifier_equalsverifier",
-        "//tools/base/third_party:org.codehaus.groovy_groovy-all",
+        "//tools/base/third_party:org.codehaus.groovy_groovy-all",  # required by //tools/base/build-system:gradle-api
         "//tools/base/third_party:org.jacoco_org.jacoco.core",
         "//tools/base/third_party:org.jacoco_org.jacoco.report",
         "//tools/base/third_party:org.jetbrains.kotlin_kotlin-reflect",

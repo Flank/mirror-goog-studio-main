@@ -72,7 +72,7 @@ See https://d.android.com/r/tools/test-apk-dependency-conflicts.html for details
                 }
             )
             task.fakeOutputDirectory = File(
-                creationConfig.globalScope.intermediatesDir,
+                creationConfig.services.projectInfo.getIntermediatesDir(),
                 "prebuild/${creationConfig.dirName}"
             )
             task.projectPath.setDisallowChanges(task.project.path)

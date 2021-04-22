@@ -27,21 +27,12 @@ import org.gradle.api.Incubating
  * Only the Android Gradle Plugin should create instances of this interface.
  */
 @Incubating
-interface TestExtension<
-        AndroidSourceSetT : AndroidSourceSet,
-        BuildTypeT : TestBuildType<SigningConfigT>,
-        DefaultConfigT : TestDefaultConfig<SigningConfigT>,
-        ProductFlavorT : TestProductFlavor<SigningConfigT>,
-        SigningConfigT : ApkSigningConfig> :
+interface TestExtension :
     CommonExtension<
-            AndroidSourceSetT,
             TestBuildFeatures,
-            BuildTypeT,
-            DefaultConfigT,
-            ProductFlavorT,
-            SigningConfigT,
-            TestVariantBuilder,
-            TestVariant> {
+            TestBuildType,
+            TestDefaultConfig,
+            TestProductFlavor> {
     // TODO(b/140406102)
     /**
      * The Gradle path of the project that this test project tests.

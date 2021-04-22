@@ -40,6 +40,8 @@ class BuildConfigApiTests: VariantApiBaseTest(
                 buildFile =
                         // language=kotlin
                     """
+            import com.android.build.api.variant.BuildConfigField
+
             plugins {
                     id("com.android.application")
                     kotlin("android")
@@ -48,11 +50,12 @@ class BuildConfigApiTests: VariantApiBaseTest(
             android {
                 ${testingElements.addCommonAndroidBuildLogic()}
             }
+
             androidComponents {
                 onVariants {
-                    it.addBuildConfigField("FloatValue", "\"1f\"", "Float Value")
-                    it.addBuildConfigField("LongValue", "\"1L\"", "Long Value")
-                    it.addBuildConfigField("VariantName", "\"${'$'}{name}\"", "Variant Name")
+                    it.buildConfigFields.put("FloatValue", BuildConfigField("Float", "1f", "Float Value" ))
+                    it.buildConfigFields.put("LongValue", BuildConfigField("Long", "1L", "Long Value" ))
+                    it.buildConfigFields.put("VariantName", BuildConfigField("String", "\", ${'$'}, {name}\"", "Variant Name" ))
                 }
             }
                 """.trimIndent()
@@ -102,7 +105,7 @@ The added field is used in the MainActivity.kt file.
                 // make sure our minSdkVersion reset has been recorded.
                 variantPropertiesAccessList.forEach {
                     Truth.assertThat(it.type).isEqualTo(
-                        VariantPropertiesMethodType.ADD_BUILD_CONFIG_FIELD_VALUE)
+                        VariantPropertiesMethodType.BUILD_CONFIG_FIELDS_VALUE)
                 }
             }
         }

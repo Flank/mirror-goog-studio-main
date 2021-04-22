@@ -19,6 +19,7 @@ package com.android.ide.common.resources.usage
 import com.android.ide.common.resources.usage.ResourceUsageModel.Resource
 import com.android.resources.ResourceType
 import com.google.common.truth.Truth.assertThat
+import org.junit.Assert.fail
 import org.junit.Test
 
 class ResourceStoreTest {
@@ -103,5 +104,24 @@ class ResourceStoreTest {
         store1.merge(store2)
         val merged2 = ResourceStore.serialize(store1)
         assertThat(merged2).isEqualTo(merged)
+    }
+
+    @Test
+    fun testTypes() {
+        for (type in ResourceType.values()) {
+            val store = ResourceStore(supportMultipackages = true)
+            try {
+                store.addResource(Resource("test.pkg", type, type.name, -1))
+                val serialized = ResourceStore.serialize(store, false)
+                ResourceStore.deserialize(serialized)
+            } catch (e: Throwable) {
+                fail("Failed deserializing resource type $type")
+            }
+        }
+
+        // 185057616: UnusedResourceDetector fails on 7.0.0-alpha14
+        ResourceStore.deserialize(
+            "P;dimen[name1_ref(E),name0_ref(E),name0(E,test.pkg)],sample[name1(E,test.pkg)];2^1,3^0;;;"
+        )
     }
 }

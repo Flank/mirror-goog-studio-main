@@ -19,6 +19,6 @@ package com.android.build.api.dsl
 import org.gradle.api.Incubating
 
 @Incubating
-interface TestProductFlavor<SigningConfigT : ApkSigningConfig> :
-    TestBaseFlavor<SigningConfigT>,
+interface TestProductFlavor :
+    TestBaseFlavor,
     ProductFlavor

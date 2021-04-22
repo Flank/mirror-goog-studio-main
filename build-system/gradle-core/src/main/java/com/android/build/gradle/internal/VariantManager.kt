@@ -15,6 +15,7 @@
  */
 package com.android.build.gradle.internal
 
+import com.android.SdkConstants
 import com.android.build.gradle.internal.core.VariantDslInfoBuilder.Companion.getBuilder
 import com.android.build.gradle.internal.core.VariantDslInfoBuilder.Companion.computeSourceSetName
 import com.android.build.api.variant.impl.VariantBuilderImpl
@@ -33,10 +34,11 @@ import com.android.build.gradle.internal.profile.AnalyticsConfiguratorService
 import com.android.build.gradle.internal.dependency.VariantDependenciesBuilder
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.AndroidTest
-import com.android.build.api.component.TestFixturesComponent
+import com.android.build.api.component.TestFixtures
 import com.android.build.api.component.UnitTest
 import com.android.build.api.component.impl.TestComponentImpl
-import com.android.build.api.component.impl.TestFixturesComponentImpl
+import com.android.build.api.component.impl.TestFixturesImpl
+import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.extension.VariantExtensionConfig
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.HasAndroidTestBuilder
@@ -70,6 +72,7 @@ import com.android.build.gradle.internal.services.VariantApiServices
 import com.android.build.gradle.internal.services.VariantApiServicesImpl
 import com.android.build.gradle.internal.services.VariantPropertiesApiServicesImpl
 import com.android.build.gradle.internal.services.getBuildService
+import com.android.build.gradle.internal.testFixtures.testFixturesFeatureName
 import com.android.build.gradle.internal.variant.ComponentInfo
 import com.android.build.gradle.internal.variant.DimensionCombination
 import com.android.build.gradle.internal.variant.DimensionCombinator
@@ -103,7 +106,11 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
         private val project: Project,
         private val projectOptions: ProjectOptions,
         private val extension: BaseExtension,
-        private val variantApiOperationsRegistrar: VariantApiOperationsRegistrar<VariantBuilder, Variant>,
+        private val variantApiOperationsRegistrar: VariantApiOperationsRegistrar<
+                CommonExtension<*, *, *, *>,
+                VariantBuilder,
+                Variant,
+                >,
         private val variantFactory: VariantFactory<VariantBuilderT, VariantT>,
         private val variantInputModel: VariantInputModel<DefaultConfig, BuildType, ProductFlavor, SigningConfig>,
         private val projectServices: ProjectServices) {
@@ -141,7 +148,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
     /**
      * Returns a list of all test fixtures components.
      */
-    val testFixturesComponents: MutableList<TestFixturesComponentImpl> = Lists.newArrayList()
+    val testFixturesComponents: MutableList<TestFixturesImpl> = Lists.newArrayList()
 
     /**
      * Creates the variants.
@@ -237,6 +244,14 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
             return testBuildTypeData
         }
 
+    enum class NativeBuiltType { CMAKE, NDK_BUILD }
+
+    fun configuredNativeBuilder(): NativeBuiltType? {
+        if (extension.externalNativeBuild.ndkBuild.path != null) return NativeBuiltType.NDK_BUILD
+        if (extension.externalNativeBuild.cmake.path != null) return NativeBuiltType.CMAKE
+        return null;
+    }
+
     private fun createVariant(
             dimensionCombination: DimensionCombination,
             buildTypeData: BuildTypeData<BuildType>,
@@ -266,7 +281,8 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                 dslServices,
                 variantPropertiesApiServices,
                 dslNamespaceProvider,
-                dslTestNamespace)
+                dslTestNamespace,
+                configuredNativeBuilder())
 
         // We must first add the flavors to the variant config, in order to get the proper
         // variant-specific and multi-flavor name as we add/create the variant providers later.
@@ -431,7 +447,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
         buildTypeData: BuildTypeData<BuildType>,
         productFlavorDataList: List<ProductFlavorData<ProductFlavor>>,
         mainComponentInfo: VariantComponentInfo<VariantBuilderT, VariantT>
-    ): TestFixturesComponentImpl {
+    ): TestFixturesImpl {
         val testFixturesVariantType = VariantTypeImpl.TEST_FIXTURES
         val testFixturesSourceSet = variantInputModel.defaultConfigData.testFixturesSourceSet!!
         @Suppress("DEPRECATION") val dslServices = globalScope.dslServices
@@ -448,9 +464,9 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                 testFixturesVariantType.requiresManifest) { canParseManifest() },
             dslServices,
             variantPropertiesApiServices,
-            // todo: will this cause problems?
             variantPropertiesApiServices.provider {
-                mainComponentInfo.variant.variantDslInfo.namespace.get() + ".testFixtures"
+                mainComponentInfo.variant.variantDslInfo.namespace.get() + "." +
+                        testFixturesFeatureName
             }
         )
         val productFlavorList = mainComponentInfo.variant.variantDslInfo.productFlavorList
@@ -581,11 +597,16 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
         )
 
         val userVisibleVariant =
-            testFixturesComponent.createUserVisibleVariantObject<TestFixturesComponent>(
+            testFixturesComponent.createUserVisibleVariantObject<TestFixtures>(
                 projectServices, variantApiOperationsRegistrar, apiAccessStats)
         // todo: execute the actions registered at the extension level.
 //        mainComponentInfo.variantApiOperationsRegistrar.testFixturesOperations
 //            .executeOperations(userVisibleVariant)
+
+        // register testFixtures component to the main variant
+        mainComponentInfo
+            .variant
+            .testFixturesComponent = testFixturesComponent
 
         return testFixturesComponent
     }
@@ -950,7 +971,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                     it
                         .setIsDebug(buildType.isDebuggable)
                         .setMinSdkVersion(AnalyticsUtil.toProto(variantInfo.variant.minSdkVersion))
-                        .setMinifyEnabled(variant.codeShrinker != null)
+                        .setMinifyEnabled(variant.minifiedEnabled)
                         .setUseMultidex(variant.isMultiDexEnabled)
                         .setUseLegacyMultidex(variant.dexingType.isLegacyMultiDexMode())
                         .setVariantType(variant.variantType.analyticsVariantType)
@@ -959,8 +980,9 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                         .setCoreLibraryDesugaringEnabled(variant.isCoreLibraryDesugaringEnabled)
                         .testExecution = AnalyticsUtil.toProto(globalScope.extension.testOptions.getExecutionEnum())
 
-                    variant.codeShrinker?.let { codeShrinker ->
-                        variantAnalytics.codeShrinker = AnalyticsUtil.toProto(codeShrinker)
+                    if (variant.minifiedEnabled) {
+                        // If code shrinker is used, it can only be R8
+                        variantAnalytics.codeShrinker = GradleBuildVariant.CodeShrinkerTool.R8
                     }
                     if (variantDslInfo.targetSdkVersion.apiLevel > 0) {
                         variantAnalytics.targetSdkVersion =
@@ -1038,8 +1060,6 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
     }
 
     companion object {
-
-        val SHRINKER_ATTR: Attribute<String> = Attribute.of("codeShrinker", String::class.java)
 
         /**
          * Returns a modified name.

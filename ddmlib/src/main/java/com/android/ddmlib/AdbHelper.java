@@ -908,28 +908,21 @@ public final class AdbHelper {
     }
 
     /**
-     * Queries a set of supported features from the device.
+     * Queries a set of supported features from the host or from a device.
      *
-     * @param adbSockAddr the socket address to connect to adb
-     * @param device the device on which to do the port forwarding
      * @throws TimeoutException in case of timeout on the connection.
      * @throws AdbCommandRejectedException if adb rejects the command
      * @throws IOException in case of I/O error on the connection.
      */
     @Slow
-    static String queryFeatures(InetSocketAddress adbSockAddr, IDevice device, String adbCommand)
+    @NonNull
+    static String queryFeatures(@NonNull String adbFeaturesRequest)
             throws TimeoutException, AdbCommandRejectedException, IOException {
 
-        SocketChannel adbChan = null;
-        try {
-            adbChan = SocketChannel.open(adbSockAddr);
+        try (SocketChannel adbChan = AndroidDebugBridge.openConnection()) {
             adbChan.configureBlocking(false);
 
-            byte[] request =
-                    formAdbRequest(
-                            String.format(
-                                    "host-serial:%1$s:%2$s", //$NON-NLS-1$
-                                    device.getSerialNumber(), adbCommand));
+            byte[] request = formAdbRequest(adbFeaturesRequest);
 
             write(adbChan, request);
 
@@ -940,39 +933,36 @@ public final class AdbHelper {
             }
 
             return resp.message;
-        } finally {
-            if (adbChan != null) {
-                adbChan.close();
-            }
         }
     }
 
     /**
      * Queries a set of supported features from the device.
      *
-     * @param adbSockAddr the socket address to connect to adb
      * @param device the device on which to do the port forwarding
      * @throws TimeoutException in case of timeout on the connection.
      * @throws AdbCommandRejectedException if adb rejects the command
      * @throws IOException in case of I/O error on the connection.
      */
-    public static String getFeatures(InetSocketAddress adbSockAddr, IDevice device)
+    @Slow
+    @NonNull
+    public static String getFeatures(@NonNull IDevice device)
             throws TimeoutException, AdbCommandRejectedException, IOException {
-        return queryFeatures(adbSockAddr, device, "features");
+        return queryFeatures(String.format("host-serial:%1$s:features", device.getSerialNumber()));
     }
 
     /**
      * Queries a set of supported features from the ADB host.
      *
-     * @param adbSockAddr the socket address to connect to adb
-     * @param device the device on which to do the port forwarding
      * @throws TimeoutException in case of timeout on the connection.
      * @throws AdbCommandRejectedException if adb rejects the command
      * @throws IOException in case of I/O error on the connection.
      */
-    public static String getHostFeatures(InetSocketAddress adbSockAddr, IDevice device)
+    @Slow
+    @NonNull
+    public static String getHostFeatures()
             throws TimeoutException, AdbCommandRejectedException, IOException {
-        return queryFeatures(adbSockAddr, device, "host-features");
+        return queryFeatures("host:host-features");
     }
 
     /**

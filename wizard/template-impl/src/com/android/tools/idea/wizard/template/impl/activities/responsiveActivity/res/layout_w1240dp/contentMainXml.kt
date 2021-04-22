@@ -43,12 +43,11 @@ fun contentMainXml(
         android:id="@+id/fab"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="48dp"
-        android:layout_marginStart="8dp"
-        app:srcCompat="@android:drawable/ic_dialog_email"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toEndOf="@id/nav_view"
-        />
+        android:layout_marginEnd="@dimen/fab_margin"
+        android:layout_marginBottom="16dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:srcCompat="@android:drawable/ic_dialog_email" />
 
     <fragment
         android:id="@+id/$navHostFragmentId"

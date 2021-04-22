@@ -172,7 +172,7 @@ class PrivateApiDetector : Detector(), SourceCodeScanner {
 
     // ---- Implements JavaPsiScanner ----
 
-    override fun getApplicableMethodNames(): List<String>? =
+    override fun getApplicableMethodNames(): List<String> =
         listOf(
             FOR_NAME,
             LOAD_CLASS,
@@ -181,11 +181,12 @@ class PrivateApiDetector : Detector(), SourceCodeScanner {
             GET_DECLARED_FIELD
         )
 
-    override fun getApplicableReferenceNames(): List<String>? = KOTLIN_REFLECTION_METHODS
+    override fun getApplicableReferenceNames(): List<String> = KOTLIN_REFLECTION_METHODS
 
     override fun visitMethodCall(context: JavaContext, node: UCallExpression, method: PsiMethod) {
         val evaluator = context.evaluator
-        if (LOAD_CLASS == method.name) {
+        val name = method.name
+        if (LOAD_CLASS == name) {
             if (evaluator.isMemberInClass(method, "java.lang.ClassLoader") ||
                 evaluator.isMemberInClass(method, "dalvik.system.DexFile")
             ) {
@@ -195,10 +196,10 @@ class PrivateApiDetector : Detector(), SourceCodeScanner {
             if (!evaluator.isMemberInClass(method, "java.lang.Class")) {
                 return
             }
-            if (GET_DECLARED_METHOD == method.name) {
-                checkGetDeclaredMethod(context, node)
-            } else {
-                checkLoadClass(context, node)
+            when (name) {
+                GET_DECLARED_METHOD -> checkGetDeclaredMethod(context, node)
+                GET_DECLARED_FIELD -> checkGetDeclaredField(context, node)
+                else -> checkLoadClass(context, node)
             }
         }
     }
@@ -224,31 +225,75 @@ class PrivateApiDetector : Detector(), SourceCodeScanner {
         val methodName = ConstantEvaluator.evaluateString(context, arguments[0], false)
 
         val aClass = context.evaluator.findClass(cls)
-        if (aClass != null && aClass.findMethodsByName(methodName, true).isNotEmpty()) {
+        if (aClass != null && methodName != null && aClass.findMethodsByName(methodName, true).isNotEmpty()) {
+            // Hidden and deleted methods aren't part of android.jar, so use the private API database directly
+            val desc = getMethodDescriptor(arguments, context, methodName) ?: return
+            val restriction = apiDatabase?.getMethodRestriction(cls, methodName, desc)
+            if (restriction != null) {
+                reportIssue(context, restriction, methodName, call)
+            }
+
             return
         }
 
         val targetSdk = context.project.targetSdk
-        val location = context.getLocation(call)
         if (targetSdk < AndroidVersion.VersionCodes.O) {
-            if (!(cls.startsWith("com.android.") || cls.startsWith("android."))) {
-                return
-            }
-            context.report(PRIVATE_API, call, location, ERROR_MESSAGE)
+            reportUnknownMember(cls, context, call)
         } else if (methodName != null) {
             // When targetSDK is at least 28, we perform stricter checks against the API deny list.
-            val argTypes =
-                if (arguments.size >= 2) arguments.subList(1, arguments.size)
-                    .mapNotNull { getJavaClassType(it) }
-                    .toTypedArray()
-                else
-                    emptyArray()
-
-            val desc = context.evaluator
-                .constructMethodDescription(method = methodName, argumentTypes = argTypes) ?: return
-
+            val desc = getMethodDescriptor(arguments, context, methodName) ?: return
             val restriction = apiDatabase?.getMethodRestriction(cls, methodName, desc)
+            // if restriction is Restriction.UNKNOWN, Consider calling
+            //   reportUnknownMember(cls, context, call)
+            // instead of reportIssue to flag unknown methods as suspicious.
             reportIssue(context, restriction, methodName, call)
+        }
+    }
+
+    private fun getMethodDescriptor(
+        arguments: List<UExpression>,
+        context: JavaContext,
+        methodName: String
+    ): String? {
+        val argTypes =
+            if (arguments.size >= 2) arguments.subList(1, arguments.size)
+                .mapNotNull { getJavaClassType(it) }
+                .toTypedArray()
+            else
+                emptyArray()
+        return context.evaluator.constructMethodDescription(method = methodName, argumentTypes = argTypes)
+    }
+
+    private fun checkGetDeclaredField(context: JavaContext, call: UCallExpression) {
+        val cls = getJavaClassFromMemberLookup(call) ?: return
+
+        val arguments = call.valueArguments
+        if (arguments.isEmpty()) {
+            return
+        }
+        val fieldName = ConstantEvaluator.evaluateString(context, arguments[0], false)
+
+        val aClass = context.evaluator.findClass(cls)
+        if (aClass != null && fieldName != null && aClass.findFieldByName(fieldName, true) != null) {
+            // Hidden and deleted methods aren't part of android.jar, so use the private API database directly
+            val restriction = apiDatabase?.getFieldRestriction(cls, fieldName)
+            if (restriction != null) {
+                reportIssue(context, restriction, fieldName, call)
+            }
+
+            return
+        }
+
+        val targetSdk = context.project.targetSdk
+        if (targetSdk < AndroidVersion.VersionCodes.O) {
+            reportUnknownMember(cls, context, call)
+        } else if (fieldName != null) {
+            // When targetSDK is at least 28, we perform stricter checks against the API deny list.
+            val restriction = apiDatabase?.getFieldRestriction(cls, fieldName)
+            // if restriction is Restriction.UNKNOWN, Consider calling
+            //   reportUnknownMember(cls, context, call)
+            // instead of reportIssue to flag unknown methods as suspicious.
+            reportIssue(context, restriction, fieldName, call)
         }
     }
 
@@ -424,5 +469,17 @@ class PrivateApiDetector : Detector(), SourceCodeScanner {
             Restriction.MAYBE -> warning()
             else -> return // nothing to report
         }
+    }
+
+    private fun reportUnknownMember(
+        cls: String,
+        context: JavaContext,
+        call: UCallExpression
+    ) {
+        if (!(cls.startsWith("com.android.") || cls.startsWith("android."))) {
+            return
+        }
+        val location = context.getLocation(call)
+        context.report(PRIVATE_API, call, location, ERROR_MESSAGE)
     }
 }

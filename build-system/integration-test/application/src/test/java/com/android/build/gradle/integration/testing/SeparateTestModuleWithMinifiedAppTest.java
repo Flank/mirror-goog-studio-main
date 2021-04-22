@@ -20,26 +20,13 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.options.OptionalBooleanOption;
-import com.android.builder.model.CodeShrinker;
 import com.android.testutils.apk.Apk;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /** Test for a separate test module run against the minified app. */
-@RunWith(FilterableParameterized.class)
 public class SeparateTestModuleWithMinifiedAppTest {
-
-    @Parameterized.Parameters(name = "codeShrinker = {0}")
-    public static CodeShrinker[] getShrinkers() {
-        return new CodeShrinker[] {CodeShrinker.PROGUARD, CodeShrinker.R8};
-    }
-
-    @Parameterized.Parameter public CodeShrinker codeShrinker;
 
     @Rule
     public GradleTestProject project = GradleTestProject.builder()
@@ -63,9 +50,6 @@ public class SeparateTestModuleWithMinifiedAppTest {
 
         GradleBuildResult result =
                 project.executor()
-                        .with(
-                                OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8,
-                                codeShrinker == CodeShrinker.R8)
                         .expectFailure()
                         .run("clean", ":test:assembleDebug");
         assertThat(result.getFailureMessage())
@@ -75,11 +59,7 @@ public class SeparateTestModuleWithMinifiedAppTest {
 
     @Test
     public void checkMappingsApplied() throws Exception {
-        project.executor()
-                .with(
-                        OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8,
-                        codeShrinker == CodeShrinker.R8)
-                .run("clean", ":test:assembleMinified");
+        project.executor().run("clean", ":test:assembleMinified");
 
         GradleTestProject testProject = project.getSubproject("test");
 

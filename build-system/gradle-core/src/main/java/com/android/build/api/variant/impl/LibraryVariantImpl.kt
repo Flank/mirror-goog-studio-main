@@ -20,6 +20,7 @@ import com.android.build.api.component.AndroidTest
 import com.android.build.api.component.Component
 import com.android.build.api.component.analytics.AnalyticsEnabledLibraryVariant
 import com.android.build.api.component.impl.ConsumableCreationConfigImpl
+import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.InstrumentationParameters
@@ -44,7 +45,6 @@ import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.builder.dexing.DexingType
-import com.android.builder.model.CodeShrinker
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.provider.Provider
 import javax.inject.Inject
@@ -132,7 +132,7 @@ open class  LibraryVariantImpl @Inject constructor(
 
     override fun <T : Component> createUserVisibleVariantObject(
         projectServices: ProjectServices,
-        operationsRegistrar: VariantApiOperationsRegistrar<out VariantBuilder, out Variant>,
+        operationsRegistrar: VariantApiOperationsRegistrar<out CommonExtension<*, *, *, *>, out VariantBuilder, out Variant>,
         stats: GradleBuildVariant.Builder?
     ): T =
         if (stats == null) {
@@ -145,8 +145,8 @@ open class  LibraryVariantImpl @Inject constructor(
             ) as T
         }
 
-    override val codeShrinker: CodeShrinker?
-        get() = delegate.getCodeShrinker()
+    override val minifiedEnabled: Boolean
+        get() = variantDslInfo.getPostProcessingOptions().codeShrinkerEnabled()
 
     override fun getNeedsMergedJavaResStream(): Boolean = delegate.getNeedsMergedJavaResStream()
 

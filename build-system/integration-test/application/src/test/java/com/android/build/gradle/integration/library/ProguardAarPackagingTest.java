@@ -6,10 +6,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.EmptyAndroidTestApp;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
-import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.options.OptionalBooleanOption;
-import com.android.builder.model.CodeShrinker;
 import com.android.utils.FileUtils;
 import com.google.common.base.Joiner;
 import java.io.File;
@@ -18,14 +15,11 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /**
  * Integration test to check that libraries included directly as jar files are correctly handled
- * when using proguard or R8.
+ * when using R8.
  */
-@RunWith(FilterableParameterized.class)
 public class ProguardAarPackagingTest {
 
     public static GradleProject testApp = HelloWorldApp.noBuildFile();
@@ -76,13 +70,6 @@ public class ProguardAarPackagingTest {
     @ClassRule
     public static GradleTestProject libraryInJarProject =
             GradleTestProject.builder().withName("libInJar").fromTestApp(libraryInJar).create();
-
-    @Parameterized.Parameter public CodeShrinker shrinker;
-
-    @Parameterized.Parameters(name = "shrinker={0}")
-    public static CodeShrinker[] getSetups() {
-        return CodeShrinker.values();
-    }
 
     @BeforeClass
     public static void setUp() throws IOException, InterruptedException {
@@ -139,10 +126,7 @@ public class ProguardAarPackagingTest {
 
     @Test
     public void checkDebugAarPackaging() throws Exception {
-        androidProject
-                .executor()
-                .with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, shrinker == CodeShrinker.R8)
-                .run("assembleDebug");
+        androidProject.executor().run("assembleDebug");
 
         androidProject.testAar(
                 "debug",
@@ -157,10 +141,7 @@ public class ProguardAarPackagingTest {
 
     @Test
     public void checkReleaseAarPackaging() throws Exception {
-        androidProject
-                .executor()
-                .with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, shrinker == CodeShrinker.R8)
-                .run("assembleRelease");
+        androidProject.executor().run("assembleRelease");
 
         androidProject.testAar(
                 "release",

@@ -21,6 +21,8 @@ import com.android.build.api.variant.Variant
 import org.gradle.api.Action
 import org.gradle.api.Incubating
 import org.gradle.api.NamedDomainObjectContainer
+import org.gradle.api.plugins.ExtensionAware
+import java.io.File
 
 /**
  * Common extension properties for the Android Application. Library and Dynamic Feature Plugins.
@@ -29,14 +31,10 @@ import org.gradle.api.NamedDomainObjectContainer
  * Only the Android Gradle Plugin should create instances of this interface.
  */
 interface CommonExtension<
-        AndroidSourceSetT : AndroidSourceSet,
         BuildFeaturesT : BuildFeatures,
         BuildTypeT : BuildType,
         DefaultConfigT : DefaultConfig,
-        ProductFlavorT : ProductFlavor,
-        SigningConfigT : ApkSigningConfig,
-        VariantBuilderT : VariantBuilder,
-        VariantT : Variant> {
+        ProductFlavorT : ProductFlavor> {
 
     /**
      * Specifies options for the Android Asset Packaging Tool (AAPT).
@@ -158,7 +156,7 @@ interface CommonExtension<
      * @see [BuildType
      */
     @get:Incubating
-    val buildTypes: NamedDomainObjectContainer<BuildTypeT>
+    val buildTypes: NamedDomainObjectContainer<out BuildTypeT>
 
     /**
      * Encapsulates all build type configurations for this project.
@@ -166,7 +164,7 @@ interface CommonExtension<
      * For more information about the properties you can configure in this block, see [BuildType]
      */
     @Incubating
-    fun buildTypes(action: Action<in NamedDomainObjectContainer<BuildTypeT>>)
+    fun buildTypes(action: NamedDomainObjectContainer<BuildTypeT>.() -> Unit)
 
     /**
      * Shortcut extension method to allow easy access to the predefined `debug` [BuildType]
@@ -362,7 +360,7 @@ interface CommonExtension<
      * @see [ProductFlavor]
      */
     @get:Incubating
-    val productFlavors: NamedDomainObjectContainer<ProductFlavorT>
+    val productFlavors: NamedDomainObjectContainer<out ProductFlavorT>
 
     /**
      * Encapsulates all product flavors configurations for this project.
@@ -371,7 +369,7 @@ interface CommonExtension<
      * see [ProductFlavor]
      */
     @Incubating
-    fun productFlavors(action: Action<NamedDomainObjectContainer<ProductFlavorT>>)
+    fun productFlavors(action: NamedDomainObjectContainer<ProductFlavorT>.() -> Unit)
 
 
     /**
@@ -396,7 +394,7 @@ interface CommonExtension<
      * For more information about the properties you can configure in this block, see [DefaultConfig].
      */
     @Incubating
-    fun defaultConfig(action: Action<DefaultConfigT>)
+    fun defaultConfig(action: DefaultConfigT.() -> Unit)
 
 
     /**
@@ -417,7 +415,7 @@ interface CommonExtension<
      * @see [ApkSigningConfig]
      */
     @get:Incubating
-    val signingConfigs: NamedDomainObjectContainer<SigningConfigT>
+    val signingConfigs: NamedDomainObjectContainer<out ApkSigningConfig>
 
     /**
      * Encapsulates signing configurations that you can apply to
@@ -427,8 +425,7 @@ interface CommonExtension<
      * see [ApkSigningConfig].
      */
     @Incubating
-    fun signingConfigs(action: Action<NamedDomainObjectContainer<SigningConfigT>>)
-
+    fun signingConfigs(action: NamedDomainObjectContainer<out ApkSigningConfig>.() -> Unit)
 
     /**
      * Specifies options for external native build using [CMake](https://cmake.org/) or
@@ -521,7 +518,7 @@ interface CommonExtension<
      * information about the properties you can configure in this block, see [AndroidSourceSet].
      */
     @get:Incubating
-    val sourceSets: NamedDomainObjectContainer<AndroidSourceSetT>
+    val sourceSets: NamedDomainObjectContainer<out AndroidSourceSet>
 
     /**
      * Encapsulates source set configurations for all variants.
@@ -530,7 +527,7 @@ interface CommonExtension<
      * information about the properties you can configure in this block, see [AndroidSourceSet].
      */
     @Incubating
-    fun sourceSets(action: NamedDomainObjectContainer<AndroidSourceSetT>.() -> Unit)
+    fun sourceSets(action: NamedDomainObjectContainer<out AndroidSourceSet>.() -> Unit)
 
     /**
      * Specifies the names of product flavor dimensions for this project.
@@ -601,6 +598,10 @@ interface CommonExtension<
      */
     @get:Incubating
     val flavorDimensions: MutableList<String>
+
+    @Incubating
+    @Deprecated("Replaced by flavorDimensions property")
+    fun flavorDimensions(vararg dimensions: String)
 
     /**
      * Specifies this project's resource prefix to Android Studio for editor features, such as Lint
@@ -710,6 +711,10 @@ interface CommonExtension<
     @set:Incubating
     var buildToolsVersion: String
 
+    @Incubating
+    @Deprecated("Replaced by buildToolsVersion property")
+    fun buildToolsVersion(buildToolsVersion: String)
+
     /**
      * Includes the specified library to the classpath.
      *
@@ -792,6 +797,14 @@ interface CommonExtension<
 
     fun compileSdkAddon(vendor: String, name: String, version: Int)
 
+    @Incubating
+    @Deprecated("Replaced by compileSdk")
+    fun compileSdkVersion(apiLevel: Int)
+
+    @Incubating
+    @Deprecated("Replaced by compileSdk")
+    fun compileSdkVersion(version: String)
+
     /**
      * The namespace of the generated R and BuildConfig classes. Also, the namespace used to resolve
      * any relative class names that are declared in the AndroidManifest.xml.
@@ -801,4 +814,7 @@ interface CommonExtension<
      * in the AndroidManifest.xml.
      */
     var namespace: String?
+
+    @Incubating
+    fun getDefaultProguardFile(name: String): File
 }

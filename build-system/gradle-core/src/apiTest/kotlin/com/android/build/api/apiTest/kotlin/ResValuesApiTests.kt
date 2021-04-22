@@ -33,6 +33,8 @@ class ResValuesApiTests: VariantApiBaseTest(
                 buildFile =
                         // language=kotlin
                     """
+            import com.android.build.api.variant.ResValue
+
             plugins {
                     id("com.android.application")
                     kotlin("android")
@@ -41,9 +43,11 @@ class ResValuesApiTests: VariantApiBaseTest(
             android {
                 ${testingElements.addCommonAndroidBuildLogic()}
             }
+
             androidComponents {
-                onVariants {
-                    it.addResValue("VariantName", "string", name, "Variant Name")
+                onVariants { variant ->
+                    variant.resValues.put(variant.makeResValueKey("string", "VariantName"),
+                        ResValue(name, "Variant Name"))
                 }
             }
                 """.trimIndent()
@@ -106,6 +110,7 @@ The added field is used in the MainActivity.kt file.
             import org.gradle.api.tasks.OutputFile
             import org.gradle.api.tasks.TaskAction
             import com.android.build.api.artifact.SingleArtifact
+            import com.android.build.api.variant.ResValue
 
             ${testingElements.getGitVersionTask()}
 
@@ -121,11 +126,11 @@ The added field is used in the MainActivity.kt file.
                 ${testingElements.addCommonAndroidBuildLogic()}
             }
             androidComponents {
-                onVariants {
-                    it.addResValue( "GitVersion", "string", gitVersionProvider.map {  task ->
-                            task.gitVersionOutputFile.get().asFile.readText(Charsets.UTF_8)
-                        },
-                        "git version")
+                onVariants { variant ->
+                    variant.resValues.put(variant.makeResValueKey("string", "GitVersion"),
+                        gitVersionProvider.map {  task ->
+                            ResValue(task.gitVersionOutputFile.get().asFile.readText(Charsets.UTF_8), "git version")
+                        })
                 }
             }""".trimIndent()
                 testingElements.addManifest(this)

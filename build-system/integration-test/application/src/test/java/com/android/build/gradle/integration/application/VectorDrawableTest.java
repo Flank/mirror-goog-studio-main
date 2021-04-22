@@ -19,15 +19,18 @@ package com.android.build.gradle.integration.application;
 import static com.android.build.gradle.integration.common.truth.ApkSubject.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertWithMessage;
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.searchRegexAndReplace;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_RES;
 import static com.android.testutils.truth.PathSubject.assertThat;
 import static com.google.common.base.Charsets.UTF_8;
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.AssumeBuildToolsUtil;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.internal.scope.ArtifactTypeUtil;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.VectorDrawablesOptions;
 import com.android.testutils.TestUtils;
@@ -90,10 +93,7 @@ public class VectorDrawableTest {
                         project.getProjectDir(),
                         "build/generated/res/pngs/debug/drawable-hdpi/special_heart.png");
         assertThat(generatedPng).doesNotExist();
-        File pngToUse =
-                new File(
-                        project.getProjectDir(),
-                        "build/intermediates/res/merged/debug/drawable-hdpi_special_heart.png.flat");
+        File pngToUse = new File(getMergedResDir(), "drawable-hdpi_special_heart.png.flat");
         assertThat(pngToUse).exists();
 
         // Check XHDPI.
@@ -101,10 +101,7 @@ public class VectorDrawableTest {
                 new File(
                         project.getProjectDir(),
                         "build/generated/res/pngs/debug/drawable-xhdpi/special_heart.png");
-        pngToUse =
-                new File(
-                        project.getProjectDir(),
-                        "build/intermediates/res/merged/debug/drawable-xhdpi_special_heart.png.flat");
+        pngToUse = new File(getMergedResDir(), "drawable-xhdpi_special_heart.png.flat");
         assertThat(pngToUse).exists();
         assertThat(generatedPng).exists();
 
@@ -141,13 +138,9 @@ public class VectorDrawableTest {
         assertThat(apk).doesNotContainResource("drawable-hdpi-v4/heart_copy.png");
         assertThat(apk).doesNotContainResource("drawable-xhdpi-v4/heart_copy.png");
 
-        File intermediatesXml =
-                project.file(
-                        "build/intermediates/res/merged/debug/"
-                                + "drawable-anydpi-v21_heart.arsc.flat");
+        File intermediatesXml = new File(getMergedResDir(), "drawable-anydpi-v21_heart.arsc.flat");
 
-        File intermediatesHdpiPng =
-                project.file("build/intermediates/res/merged/debug/drawable-hdpi_heart.png.flat");
+        File intermediatesHdpiPng = new File(getMergedResDir(), "drawable-hdpi_heart.png.flat");
 
         long xmlTimestamp = intermediatesXml.lastModified();
         long pngTimestamp = intermediatesHdpiPng.lastModified();
@@ -177,8 +170,7 @@ public class VectorDrawableTest {
     @Test
     public void incrementalBuildDeleteXml() throws Exception {
         project.executor().run("assembleDebug");
-        File intermediatesIconPng =
-                project.file("build/intermediates/res/merged/debug/drawable_icon.png.flat");
+        File intermediatesIconPng = new File(getMergedResDir(), "drawable_icon.png.flat");
 
         long timestamp = intermediatesIconPng.lastModified();
 
@@ -202,10 +194,7 @@ public class VectorDrawableTest {
     @Test
     public void incrementalBuildDeletePng() throws Exception {
         project.executor().run("assembleDebug");
-        File intermediatesXml =
-                project.file(
-                        "build/intermediates/res/merged/debug/"
-                                + "drawable-anydpi-v21_heart.arsc.flat");
+        File intermediatesXml = new File(getMergedResDir(), "drawable-anydpi-v21_heart.arsc.flat");
 
         long xmlTimestamp = intermediatesXml.lastModified();
 
@@ -215,11 +204,7 @@ public class VectorDrawableTest {
                         "build/generated/res/pngs/debug/drawable-hdpi/special_heart.png");
         File originalPng =
                 new File(project.getProjectDir(), "src/main/res/drawable-hdpi/special_heart.png");
-        File pngToUse =
-                new File(
-                        project.getProjectDir(),
-                        "build/intermediates/res/merged/debug/"
-                                + "drawable-hdpi_special_heart.png.flat");
+        File pngToUse = new File(getMergedResDir(), "drawable-hdpi_special_heart.png.flat");
 
         assertThat(generatedPng).doesNotExist();
         assertThat(pngToUse).exists();
@@ -237,10 +222,7 @@ public class VectorDrawableTest {
     @Test
     public void incrementalBuildAddPng() throws Exception {
         project.executor().run("assembleDebug");
-        File intermediatesXml =
-                project.file(
-                        "build/intermediates/res/merged/debug/"
-                                + "drawable-anydpi-v21_heart.xml.flat");
+        File intermediatesXml = new File(getMergedResDir(), "drawable-anydpi-v21_heart.xml.flat");
 
         assertThat(intermediatesXml).exists();
         long xmlTimestamp = intermediatesXml.lastModified();
@@ -249,11 +231,7 @@ public class VectorDrawableTest {
                 new File(
                         project.getProjectDir(),
                         "build/generated/res/pngs/debug/drawable-xhdpi/special_heart.png");
-        File pngToUse =
-                new File(
-                        project.getProjectDir(),
-                        "build/intermediates/res/merged/debug/"
-                                + "drawable-xhdpi_special_heart.png.flat");
+        File pngToUse = new File(getMergedResDir(), "drawable-xhdpi_special_heart.png.flat");
         assertThat(pngToUse).exists();
         assertThat(generatedPng).exists();
 
@@ -276,19 +254,12 @@ public class VectorDrawableTest {
     @Test
     public void incrementalBuildModifyXml() throws Exception {
         project.executor().run("assembleDebug");
-        File intermediatesIconPng =
-                project.file("build/intermediates/res/merged/debug/drawable_icon.png.flat");
+        File intermediatesIconPng = new File(getMergedResDir(), "drawable_icon.png.flat");
 
         long timestamp = intermediatesIconPng.lastModified();
 
-        File heartPngToUse =
-                new File(
-                        project.getProjectDir(),
-                        "build/intermediates/res/merged/debug/drawable-hdpi_heart.png.flat");
-        File iconPngToUse =
-                new File(
-                        project.getProjectDir(),
-                        "build/intermediates/res/merged/debug/drawable_icon.png.flat");
+        File heartPngToUse = new File(getMergedResDir(), "drawable-hdpi_heart.png.flat");
+        File iconPngToUse = new File(getMergedResDir(), "drawable_icon.png.flat");
 
         String oldHashCode = FileUtils.sha1(heartPngToUse);
         long heartPngModified = heartPngToUse.lastModified();
@@ -314,8 +285,7 @@ public class VectorDrawableTest {
     @Test
     public void incrementalBuildReplaceVectorDrawableWithBitmapAlias() throws Exception {
         project.executor().run("assembleDebug");
-        File intermediatesIconPng =
-                project.file("build/intermediates/res/merged/debug/drawable_icon.png.flat");
+        File intermediatesIconPng = new File(getMergedResDir(), "drawable_icon.png.flat");
 
         long timestamp = intermediatesIconPng.lastModified();
 
@@ -337,10 +307,7 @@ public class VectorDrawableTest {
         assertThat(apk).doesNotContainResource("drawable-xhdpi-v4/heart.png");
         assertThat(apk).doesNotContainResource("drawable-xhdpi/heart.png");
 
-        File heartXmlToUse =
-                new File(
-                        project.getProjectDir(),
-                        "build/intermediates/res/merged/debug/drawable_heart.xml.flat");
+        File heartXmlToUse = new File(getMergedResDir(), "drawable_heart.xml.flat");
         assertThat(heartXmlToUse).exists();
         assertThat(intermediatesIconPng).wasModifiedAt(timestamp);
     }
@@ -357,8 +324,7 @@ public class VectorDrawableTest {
                                 + "android:src=\"@drawable/icon\" />");
 
         project.executor().run("clean", "assembleDebug");
-        File intermediatesIconPng =
-                project.file("build/intermediates/res/merged/debug/drawable_icon.png.flat");
+        File intermediatesIconPng = new File(getMergedResDir(), "drawable_icon.png.flat");
 
         long timestamp = intermediatesIconPng.lastModified();
 
@@ -371,10 +337,7 @@ public class VectorDrawableTest {
         assertThat(apk).doesNotContainResource("drawable-xhdpi-v4/heart.png");
         assertThat(apk).doesNotContainResource("drawable-xhdpi/heart.png");
 
-        File heartXmlToUse =
-                new File(
-                        project.getProjectDir(),
-                        "build/intermediates/res/merged/debug/drawable_heart.xml.flat");
+        File heartXmlToUse = new File(getMergedResDir(), "drawable_heart.xml.flat");
         assertThat(heartXmlToUse).exists();
 
         Files.asCharSink(heartXml, UTF_8).write(vectorDrawable);
@@ -631,6 +594,12 @@ public class VectorDrawableTest {
                         + "https://developer.android.com"
                         + "/guide/topics/graphics/vector-drawable-resources"
         );
+    }
+
+    @NonNull
+    private File getMergedResDir() {
+        return new File(
+                ArtifactTypeUtil.getOutputDir(MERGED_RES.INSTANCE, project.getBuildDir()), "debug");
     }
 
     private static void assertPngGenerationDisabled(Apk apk) throws Exception {

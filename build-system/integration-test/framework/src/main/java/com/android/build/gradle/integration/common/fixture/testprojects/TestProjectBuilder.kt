@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.common.fixture.testprojects
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.TestProject
+import com.android.testutils.MavenRepoGenerator
 
 /**
  * Creates a [TestProject] with the provided configuration action
@@ -101,6 +102,11 @@ interface SubProjectBuilder {
      * This will fails if no android plugins were added.
      */
     fun android(action: AndroidProjectBuilder.() -> Unit)
+
+    /**
+     * Configures dependencies of the project
+     */
+    fun dependencies(action: DependenciesBuilder.() -> Unit)
 }
 
 interface AndroidProjectBuilder {
@@ -145,4 +151,37 @@ interface ProductFlavorBuilder {
     val name: String
     var isDefault: Boolean?
     var dimension: String?
+}
+
+interface DependenciesBuilder {
+
+    /**
+     * adds a dependency in the implementation scope.
+     *
+     * The instance being passed as a parameter must be:
+     * - a String: for maven coordinates. Should not be quoted.
+     * - result of [project] for sub-project dependency
+     * - result of [localJar] for on-the-fly created local jars
+     * - a [MavenRepoGenerator.Library] for on-the-fly created external AARs.
+     */
+    fun implementation(dependency: Any)
+
+    /**
+     * Creates a [LocalJarBuilder] to be passed to [implementation] (or any other scope)
+     */
+    fun localJar(action: LocalJarBuilder.() -> Unit) : LocalJarBuilder
+
+    /**
+     * Creates a [ProjectDependencyBuilder] to be passed to [implementation] (or any other scope)
+     */
+    fun project(path: String): ProjectDependencyBuilder
+}
+
+interface LocalJarBuilder {
+    var name: String
+    fun addClass(className: String)
+}
+
+interface ProjectDependencyBuilder {
+    val path: String
 }

@@ -121,10 +121,12 @@ class DataBindingCompilerArguments constructor(
     @get:Input
     var isNonTransitiveR: Boolean,
 
-    // Package-aware R.txt files from our dependencies - they contain the package of the module/lib
-    // and a list of resources defined in that module/lib. Used for generating non-transitive or
-    // resource namespace aware R class references.
-    // See [com.android.ide.common.symbols.SymbolIo] for read/write instructions.
+    // TODO(183423660): Remove after KAPT issue is fixed.
+    @get:Optional
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.NONE)
+    val mergedDependenciesRFile: Provider<RegularFile>?,
+
     @get:Optional
     @get:InputFiles
     @get:Classpath
@@ -161,7 +163,8 @@ class DataBindingCompilerArguments constructor(
             isEnabledForTests = isEnabledForTests,
             isEnableV2 = isEnableV2,
             localR = localRFile?.orNull?.asFile,
-            dependenciesRFiles = dependenciesLocalRFiles?.files?.toList()
+            dependenciesRFiles = dependenciesLocalRFiles?.files?.toList(),
+            mergedDependenciesRFile = mergedDependenciesRFile?.orNull?.asFile
         ).toMap()
 
         // Don't need to sort the returned list as the order shouldn't matter to Gradle.
@@ -176,7 +179,8 @@ class DataBindingCompilerArguments constructor(
         fun createArguments(
             creationConfig: ComponentCreationConfig,
             enableDebugLogs: Boolean,
-            printEncodedErrorLogs: Boolean
+            printEncodedErrorLogs: Boolean,
+            isKaptPluginApplied: Boolean
         ): DataBindingCompilerArguments {
             val globalScope = creationConfig.globalScope
             val artifacts = creationConfig.artifacts
@@ -188,12 +192,19 @@ class DataBindingCompilerArguments constructor(
                         artifacts.get(InternalArtifactType.LOCAL_ONLY_SYMBOL_LIST)
                     else null
 
+            // TODO(183423660): Re-enable this fully and removed merged dependencies R file after
+            //  KAPT bug is fixed
             val dependenciesLocalRFiles =
-                    if (isNonTransitiveR)
+                    if (isNonTransitiveR && !isKaptPluginApplied)
                         creationConfig.variantDependencies.getArtifactFileCollection(
                                 AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                                 AndroidArtifacts.ArtifactScope.ALL,
                                 AndroidArtifacts.ArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME)
+                    else null
+
+            val mergedDependenciesRFile =
+                    if (isNonTransitiveR && isKaptPluginApplied)
+                        artifacts.get(InternalArtifactType.MERGED_DEPENDENCIES_SYMBOL_LIST)
                     else null
 
             return DataBindingCompilerArguments(
@@ -226,8 +237,9 @@ class DataBindingCompilerArguments constructor(
                 isEnabledForTests = globalScope.extension.dataBinding.isEnabledForTests,
                 isEnableV2 = true,
                 isNonTransitiveR = isNonTransitiveR,
+                mergedDependenciesRFile = mergedDependenciesRFile,
                 dependenciesLocalRFiles = dependenciesLocalRFiles,
-                localRFile = localRFile,
+                localRFile = localRFile
             )
         }
 

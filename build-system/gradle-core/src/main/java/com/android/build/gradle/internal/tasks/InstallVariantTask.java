@@ -84,7 +84,10 @@ public abstract class InstallVariantTask extends NonIncrementalTask {
         final ILogger iLogger = new LoggerWrapper(getLogger());
         DeviceProvider deviceProvider =
                 new ConnectedDeviceProvider(
-                        getBuildTools().adbExecutable(), getTimeOutInMs(), iLogger);
+                        getBuildTools().adbExecutable(),
+                        getTimeOutInMs(),
+                        iLogger,
+                        System.getenv("ANDROID_SERIAL"));
         deviceProvider.use(
                 () -> {
                     BuiltArtifactsImpl builtArtifacts =

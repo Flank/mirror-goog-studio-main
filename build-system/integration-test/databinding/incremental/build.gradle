@@ -25,7 +25,6 @@ dependencies {
     testImplementation libs.apache_commons_lang
     testImplementation libs.google_api_client
     testImplementation libs.google_storage_client
-    testImplementation libs.groovy
     testImplementation libs.junit
     testImplementation libs.protobuf
     testImplementation libs.protobuf_util

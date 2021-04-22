@@ -126,9 +126,8 @@ abstract class PackageBundleTask : NonIncrementalTask() {
     lateinit var bundleOptions: BundleOptions
         private set
 
-    @get:Nested
-    lateinit var bundleFlags: BundleFlags
-        private set
+    @get:Input
+    abstract val compressNativeLibs: Property<Boolean>
 
     @get:Nested
     @get:Optional
@@ -165,7 +164,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
             it.nativeDebugMetadataFiles.from(nativeDebugMetadataFiles)
             it.aaptOptionsNoCompress.set(aaptOptionsNoCompress)
             it.bundleOptions.set(bundleOptions)
-            it.bundleFlags.set(bundleFlags)
+            it.compressNativeLibs.set(compressNativeLibs)
             it.assetPackOptionsForAssetPackBundle.set(assetPackOptionsForAssetPackBundle)
             it.bundleFile.set(bundleFile)
             it.bundleDeps.set(bundleDeps)
@@ -186,7 +185,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
         abstract val nativeDebugMetadataFiles: ConfigurableFileCollection
         abstract val aaptOptionsNoCompress: ListProperty<String>
         abstract val bundleOptions: Property<BundleOptions>
-        abstract val bundleFlags: Property<BundleFlags>
+        abstract val compressNativeLibs: Property<Boolean>
         abstract val assetPackOptionsForAssetPackBundle: Property<AssetPackOptionsForAssetPackBundle>
         abstract val bundleFile: RegularFileProperty
         abstract val bundleDeps: RegularFileProperty
@@ -247,7 +246,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
             }
 
             val uncompressNativeLibrariesConfig = Config.UncompressNativeLibraries.newBuilder()
-                .setEnabled(parameters.bundleFlags.get().enableUncompressedNativeLibs)
+                .setEnabled(!parameters.compressNativeLibs.get())
 
             val bundleOptimizations = Config.Optimizations.newBuilder()
                 .setSplitsConfig(splitsConfig)
@@ -391,11 +390,6 @@ abstract class PackageBundleTask : NonIncrementalTask() {
         val defaultDeviceTier: String?
     ) : Serializable
 
-    data class BundleFlags(
-        @get:Input
-        val enableUncompressedNativeLibs: Boolean = false
-    ) : Serializable
-
     data class AssetPackOptionsForAssetPackBundle(
         @get:Input
         val versionCodes: List<Int>,
@@ -436,7 +430,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
             )
             task.appMetadata
             task.bundleOptions = assetPackBundle.convert();
-            task.bundleFlags = BundleFlags()
+            task.compressNativeLibs.setDisallowChanges(true)
             task.assetPackOptionsForAssetPackBundle.set(
                 AssetPackOptionsForAssetPackBundle(
                     versionCodes = assetPackBundle.versionCodes.toList(),
@@ -454,7 +448,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
     /**
      * CreateAction for a Task that will pack the bundle artifact.
      */
-    class CreationAction(componentProperties: ApplicationVariantImpl) :
+    class CreationAction(private val componentProperties: ApplicationVariantImpl) :
         VariantTaskCreationAction<PackageBundleTask, ApplicationVariantImpl>(
             componentProperties
         ) {
@@ -520,9 +514,15 @@ abstract class PackageBundleTask : NonIncrementalTask() {
             task.bundleOptions =
                 ((creationConfig.globalScope.extension as BaseAppModuleExtension).bundle).convert()
 
-            task.bundleFlags = BundleFlags(
-                enableUncompressedNativeLibs = creationConfig.services.projectOptions[BooleanOption.ENABLE_UNCOMPRESSED_NATIVE_LIBS_IN_BUNDLE]
+            task.compressNativeLibs.set(
+                componentProperties.packaging.jniLibs.useLegacyPackagingFromBundle
             )
+            // TODO(b/132103049, b/174695257) Deprecate the BooleanOption with instructions to use
+            //  the DSL instead.
+            if (!creationConfig.services.projectOptions[BooleanOption.ENABLE_UNCOMPRESSED_NATIVE_LIBS_IN_BUNDLE]) {
+                task.compressNativeLibs.set(true)
+            }
+            task.compressNativeLibs.disallowChanges()
 
             if (creationConfig.needsMainDexListForBundle) {
                 creationConfig.artifacts.setTaskInputToFinalProduct(

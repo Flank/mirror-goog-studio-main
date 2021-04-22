@@ -16,6 +16,7 @@
 package com.android.build.gradle.internal.core
 
 import com.android.build.api.component.ComponentIdentity
+import com.android.build.api.dsl.ApkSigningConfig
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.ResValue
 import com.android.build.api.variant.impl.ResValueKeyImpl
@@ -23,11 +24,13 @@ import com.android.build.gradle.ProguardFiles
 import com.android.build.gradle.api.JavaCompileOptions
 import com.android.build.gradle.internal.PostprocessingFeatures
 import com.android.build.gradle.internal.ProguardFileType
+import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.core.MergedFlavor.Companion.mergeFlavors
 import com.android.build.gradle.internal.dsl.BaseFlavor
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.BuildType.PostProcessingConfiguration
 import com.android.build.gradle.internal.dsl.CoreExternalNativeBuildOptions
+import com.android.build.gradle.internal.dsl.CoreExternalNativeCmakeOptions
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
@@ -37,6 +40,7 @@ import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.variant.DimensionCombination
 import com.android.build.gradle.options.IntegerOption
 import com.android.build.gradle.options.StringOption
+import com.android.build.gradle.options.Version
 import com.android.builder.core.AbstractProductFlavor
 import com.android.builder.core.DefaultApiVersion
 import com.android.builder.core.VariantType
@@ -46,7 +50,6 @@ import com.android.builder.errors.IssueReporter
 import com.android.builder.model.ApiVersion
 import com.android.builder.model.BaseConfig
 import com.android.builder.model.ClassField
-import com.android.builder.model.CodeShrinker
 import com.android.builder.model.VectorDrawablesOptions
 import com.android.sdklib.AndroidVersion
 import com.android.utils.combineAsCamelCase
@@ -92,7 +95,8 @@ open class VariantDslInfoImpl internal constructor(
     private val services: VariantPropertiesApiServices,
     private val buildDirectory: DirectoryProperty,
     private val dslNamespaceProvider: Provider<String>?,
-    private val dslTestNamespace: String?
+    private val dslTestNamespace: String?,
+    override val nativeBuildSystem: VariantManager.NativeBuiltType?,
 ): VariantDslInfo, DimensionCombination {
 
     override val buildType: String?
@@ -286,21 +290,37 @@ open class VariantDslInfoImpl internal constructor(
             // testApplicationId, if present. This allows the test project to not have a manifest if
             // all is declared in the DSL.
             // TODO(b/170945282, b/172361895) Remove this special case - users should use namespace
-            //  DSL instead of testApplicationId DSL for this.
+            //  DSL instead of testApplicationId DSL for this... currently a warning
             variantType.isSeparateTestProject -> {
                 if (dslNamespaceProvider != null) {
                     dslNamespaceProvider
                 } else {
                     val testAppIdFromFlavors =
-                            productFlavorList.asSequence().map { it.testApplicationId }
-                                    .firstOrNull { it != null }
-                                    ?: defaultConfig.testApplicationId
+                        productFlavorList.asSequence().map { it.testApplicationId }
+                            .firstOrNull { it != null }
+                            ?: defaultConfig.testApplicationId
 
                     dataProvider.manifestData.map {
                         it.packageName
-                                ?: testAppIdFromFlavors
+                                ?: testAppIdFromFlavors?.also {
+                                    val message =
+                                        "Namespace not specified. Please specify a namespace for " +
+                                                "the generated R and BuildConfig classes via " +
+                                                "android.namespace in the test module's " +
+                                                "build.gradle file. Currently, this test module " +
+                                                "uses the testApplicationId " +
+                                                "($testAppIdFromFlavors) as its namespace, but " +
+                                                "version ${Version.VERSION_8_0} of the Android " +
+                                                "Gradle Plugin will require that a namespace be " +
+                                                "specified explicitly like so:\n\n" +
+                                                "android {\n" +
+                                                "    namespace '$testAppIdFromFlavors'\n" +
+                                                "}\n\n"
+                                    services.issueReporter
+                                        .reportWarning(IssueReporter.Type.GENERIC, message)
+                                }
                                 ?: throw RuntimeException(
-                                        "Package Name not found in ${dataProvider.manifestLocation}"
+                                    getMissingPackageNameErrorMessage(dataProvider.manifestLocation)
                                 )
                     }
                 }
@@ -319,10 +339,18 @@ open class VariantDslInfoImpl internal constructor(
             ?: dataProvider.manifestData.map {
                 it.packageName
                     ?: throw RuntimeException(
-                        "Package Name not found in ${dataProvider.manifestLocation}"
+                        getMissingPackageNameErrorMessage(dataProvider.manifestLocation)
                     )
             }
     }
+
+    private fun getMissingPackageNameErrorMessage(manifestLocation: String): String =
+        "Package Name not found in $manifestLocation, and namespace not specified. Please " +
+                "specify a namespace for the generated R and BuildConfig classes via " +
+                "android.namespace in the module's build.gradle file like so:\n\n" +
+                "android {\n" +
+                "    namespace 'com.example.namespace'\n" +
+                "}\n\n"
 
     override val testNamespace: String? = dslTestNamespace ?: dslNamespaceProvider?.let { "${it.get()}.test" }
 
@@ -739,7 +767,7 @@ open class VariantDslInfoImpl internal constructor(
             // cast builder.SigningConfig to dsl.SigningConfig because MergedFlavor merges
             // dsl.SigningConfig of ProductFlavor objects
             val dslSigningConfig: SigningConfig? =
-                    buildTypeObj.signingConfig ?: (mergedFlavor.signingConfig as SigningConfig?)
+                (buildTypeObj.signingConfig ?: mergedFlavor.signingConfig) as SigningConfig?
             signingConfigOverride?.let {
                 // use enableV1 and enableV2 from the DSL if the override values are null
                 if (it.enableV1Signing == null) {
@@ -991,10 +1019,7 @@ open class VariantDslInfoImpl internal constructor(
 
                 override fun getPostprocessingFeatures(): PostprocessingFeatures? = null
 
-                override fun getCodeShrinker() = when {
-                    !buildTypeObj.isMinifyEnabled -> null
-                    else -> CodeShrinker.R8
-                }
+                override fun codeShrinkerEnabled() = buildTypeObj.isMinifyEnabled
 
                 override fun resourcesShrinkingEnabled(): Boolean = buildTypeObj.isShrinkResources
             }
@@ -1099,9 +1124,6 @@ open class VariantDslInfoImpl internal constructor(
     @Suppress("OverridingDeprecatedMember", "DEPRECATION")
     override val isCrunchPngsDefault: Boolean
         get() = buildTypeObj.isCrunchPngsDefault
-
-    override val isMinifyEnabled: Boolean
-        get() = buildTypeObj.isMinifyEnabled
 
     override val isRenderscriptDebuggable: Boolean
         get() = buildTypeObj.isRenderscriptDebuggable

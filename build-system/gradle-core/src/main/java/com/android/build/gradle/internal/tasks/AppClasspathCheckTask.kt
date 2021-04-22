@@ -99,7 +99,7 @@ dependencies {
                 }
             )
             task.fakeOutputDirectory = FileUtils.join(
-                creationConfig.globalScope.intermediatesDir,
+                creationConfig.services.projectInfo.getIntermediatesDir(),
                 name,
                 creationConfig.dirName
             )

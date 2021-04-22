@@ -23,6 +23,7 @@ import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestPr
 import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 
@@ -86,6 +87,7 @@ class NamespacedApplicationLightRClassesTest {
     @get:Rule
     val project = GradleTestProject.builder().fromTestApp(testApp).create()
 
+    @Ignore("b/160949546")
     @Test
     fun testResourcesCompiled() {
         project.executor()

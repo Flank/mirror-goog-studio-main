@@ -214,35 +214,40 @@ abstract class LintPlugin : Plugin<Project> {
         }
 
         javaConvention.sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME) { mainSourceSet ->
-            project.configurations.getByName(mainSourceSet.runtimeElementsConfigurationName) { configuration ->
-                val androidLintCategory = projectServices.objectFactory.named(Category::class.java, "android-lint")
-                publishArtifactToConfiguration(
-                    configuration,
-                    artifacts.get(InternalArtifactType.LINT_MODEL),
-                    AndroidArtifacts.ArtifactType.LINT_MODEL,
-                    AndroidAttributes(category = androidLintCategory)
-                )
-                publishArtifactToConfiguration(
-                    configuration,
-                    artifacts.get(InternalArtifactType.LINT_PARTIAL_RESULTS),
-                    AndroidArtifacts.ArtifactType.LINT_PARTIAL_RESULTS,
-                    AndroidAttributes(category = androidLintCategory)
-                )
-                // We don't want to publish the lint models or partial results to repositories.
-                // Remove them.
-                project.components.all { component: SoftwareComponent ->
-                    if (component.name == "java" && component is AdhocComponentWithVariants) {
-                        component.withVariantsFromConfiguration(configuration) { variant: ConfigurationVariantDetails ->
-                            val category =
-                                variant.configurationVariant.attributes.getAttribute(Category.CATEGORY_ATTRIBUTE)
-                            if (category == androidLintCategory) {
-                                variant.skip()
+            listOf(
+                mainSourceSet.runtimeElementsConfigurationName,
+                mainSourceSet.apiElementsConfigurationName
+            ).forEach { configurationName ->
+                project.configurations.getByName(configurationName) { configuration ->
+                    val androidLintCategory =
+                        projectServices.objectFactory.named(Category::class.java, "android-lint")
+                    publishArtifactToConfiguration(
+                        configuration,
+                        artifacts.get(InternalArtifactType.LINT_MODEL),
+                        AndroidArtifacts.ArtifactType.LINT_MODEL,
+                        AndroidAttributes(category = androidLintCategory)
+                    )
+                    publishArtifactToConfiguration(
+                        configuration,
+                        artifacts.get(InternalArtifactType.LINT_PARTIAL_RESULTS),
+                        AndroidArtifacts.ArtifactType.LINT_PARTIAL_RESULTS,
+                        AndroidAttributes(category = androidLintCategory)
+                    )
+                    // We don't want to publish the lint models or partial results to repositories.
+                    // Remove them.
+                    project.components.all { component: SoftwareComponent ->
+                        if (component.name == "java" && component is AdhocComponentWithVariants) {
+                            component.withVariantsFromConfiguration(configuration) { variant: ConfigurationVariantDetails ->
+                                val category =
+                                    variant.configurationVariant.attributes.getAttribute(Category.CATEGORY_ATTRIBUTE)
+                                if (category == androidLintCategory) {
+                                    variant.skip()
+                                }
                             }
                         }
                     }
                 }
             }
-
         }
     }
 

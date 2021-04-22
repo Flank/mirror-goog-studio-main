@@ -79,6 +79,7 @@
             * {PROJECT}/src/test/shaders{!}
          - mlModelsDirectories = (null)
       < unitTestSourceProvider
+      - testFixturesSourceProvider = (null)
    < defaultConfig
    > buildTypes:
       > debug:
@@ -154,6 +155,7 @@
                * {PROJECT}/src/testDebug/shaders{!}
             - mlModelsDirectories = (null)
          < unitTestSourceProvider
+         - testFixturesSourceProvider = (null)
       < debug
       > release:
          > sourceProvider:
@@ -228,6 +230,7 @@
                * {PROJECT}/src/testRelease/shaders{!}
             - mlModelsDirectories = (null)
          < unitTestSourceProvider
+         - testFixturesSourceProvider = (null)
       < release
    < buildTypes
    - productFlavors  = []
@@ -323,6 +326,7 @@
             - mockablePlatformJar       = {GRADLE_CACHE}/{CHECKSUM}/transformed/android.jar{F}
             - runtimeResourceFolder     = {PROJECT}/build/intermediates/java_res/debugUnitTest/out{!}
          < unitTestArtifact
+         - testFixturesArtifact   = (null)
          - testedTargetVariant    = (null)
       < variant(debug)
       > variant(release):
@@ -382,6 +386,7 @@
             - mockablePlatformJar       = {GRADLE_CACHE}/{CHECKSUM}/transformed/android.jar{F}
             - runtimeResourceFolder     = {PROJECT}/build/intermediates/java_res/releaseUnitTest/out{!}
          < unitTestArtifact
+         - testFixturesArtifact   = (null)
          - testedTargetVariant    = (null)
       < variant(release)
    < variants

@@ -26,9 +26,7 @@ import com.android.build.gradle.integration.common.truth.ModelContainerSubject
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.integration.common.utils.getOutputByName
-import com.android.builder.model.CodeShrinker
 import com.android.build.gradle.options.BooleanOption
-import com.android.build.gradle.options.OptionalBooleanOption
 import com.android.builder.internal.packaging.ApkCreatorType
 import com.android.builder.internal.packaging.ApkCreatorType.APK_FLINGER
 import com.android.builder.internal.packaging.ApkCreatorType.APK_Z_FILE_CREATOR
@@ -42,7 +40,6 @@ import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils
 import com.android.utils.Pair
 import com.google.common.truth.Truth
-import org.junit.Assume
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -53,7 +50,7 @@ import java.nio.file.Files
 import kotlin.test.fail
 
 /**
- * Tests using Proguard/R8 to shrink and obfuscate code in a project with features.
+ * Tests using R8 to shrink and obfuscate code in a project with features.
  *
  * Project roughly structured as follows (see implementation below for exact structure) :
  *
@@ -71,20 +68,16 @@ import kotlin.test.fail
  * </pre>
  */
 @RunWith(FilterableParameterized::class)
-class MinifyFeaturesTest(
-    val codeShrinker: CodeShrinker,
-    val apkCreatorType: ApkCreatorType) {
+class MinifyFeaturesTest(val apkCreatorType: ApkCreatorType) {
 
     companion object {
 
         @JvmStatic
-        @Parameterized.Parameters(name = "{0}, {1}")
+        @Parameterized.Parameters(name = "{0}")
         fun getConfigurations(): Collection<Array<Enum<*>>> =
             listOf(
-                arrayOf(CodeShrinker.PROGUARD, APK_Z_FILE_CREATOR),
-                arrayOf(CodeShrinker.R8, APK_Z_FILE_CREATOR),
-                arrayOf(CodeShrinker.PROGUARD, APK_FLINGER),
-                arrayOf(CodeShrinker.R8, APK_FLINGER)
+                arrayOf(APK_Z_FILE_CREATOR),
+                arrayOf(APK_FLINGER),
             )
     }
 
@@ -587,30 +580,27 @@ class MinifyFeaturesTest(
             override val isSigned: Boolean = true
         }
 
-        val executor = project.executor()
-            .with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, codeShrinker == CodeShrinker.R8)
-
-        executor.run("assembleMinified")
+        project.executor().run("assembleMinified")
 
         // check aapt_rules.txt merging
         val aaptProguardFile =
-            FileUtils.join(
-                project.getSubproject("baseModule").intermediatesDir,
-                "aapt_proguard_file",
-                "minified",
-                SdkConstants.FN_AAPT_RULES)
+                FileUtils.join(
+                        project.getSubproject("baseModule").intermediatesDir,
+                        "aapt_proguard_file",
+                        "minified",
+                        SdkConstants.FN_AAPT_RULES)
         assertThat(aaptProguardFile).exists()
         assertThat(aaptProguardFile)
-            .doesNotContain("-keep class com.example.lib2.FooView")
+                .doesNotContain("-keep class com.example.lib2.FooView")
         val mergedAaptProguardFile =
-            FileUtils.join(
-                project.getSubproject("baseModule").intermediatesDir,
-                "merged_aapt_proguard_file",
-                "minified",
-                SdkConstants.FN_MERGED_AAPT_RULES)
+                FileUtils.join(
+                        project.getSubproject("baseModule").intermediatesDir,
+                        "merged_aapt_proguard_file",
+                        "minified",
+                        SdkConstants.FN_MERGED_AAPT_RULES)
         assertThat(mergedAaptProguardFile).exists()
         assertThat(mergedAaptProguardFile)
-            .contains("-keep class com.example.lib2.FooView")
+                .contains("-keep class com.example.lib2.FooView")
 
         project.getSubproject("baseModule").getApk(apkType).use { apk ->
             assertThat(apk.file).exists()
@@ -628,32 +618,23 @@ class MinifyFeaturesTest(
             assertThat(apk).doesNotContainClass("Lcom/example/lib2/a;")
             assertThat(apk).doesNotContainClass("Lcom/example/otherFeature1/Main;")
             assertThat(apk).doesNotContainClass("Lcom/example/otherFeature2/Main;")
-            // we split java resources back to features if using R8, but not if using proguard
-            when (codeShrinker) {
-                CodeShrinker.R8 -> {
-                    assertThat(apk).doesNotContainJavaResource("other_java_res_1.txt")
-                    assertThat(apk).doesNotContainJavaResource("other_java_res_2.txt")
-                    assertThat(apk).doesNotContainJavaResource("lib2_java_res.txt")
-                }
-                CodeShrinker.PROGUARD -> {
-                    assertThat(apk).containsJavaResource("other_java_res_1.txt")
-                    assertThat(apk).containsJavaResource("other_java_res_2.txt")
-                    assertThat(apk).containsJavaResource("lib2_java_res.txt")
-                }
-            }
+            // we split java resources back to features
+            assertThat(apk).doesNotContainJavaResource("other_java_res_1.txt")
+            assertThat(apk).doesNotContainJavaResource("other_java_res_2.txt")
+            assertThat(apk).doesNotContainJavaResource("lib2_java_res.txt")
         }
 
         project.getSubproject(":foo:otherFeature1").getApk(apkType).use { apk ->
             assertThat(apk.file).exists()
             assertThat(apk).containsClass("Lcom/example/otherFeature1/Main;")
             assertThat(apk).containsClass(
-                "Lcom/example/otherFeature1/EmptyClassToKeep;"
+                    "Lcom/example/otherFeature1/EmptyClassToKeep;"
             )
             assertThat(apk).containsClass("Lcom/example/lib2/EmptyClassToKeep;")
             assertThat(apk).containsClass("Lcom/example/lib2/FooView;")
             assertThat(apk).containsClass("Lcom/example/lib2/a;")
             assertThat(apk).doesNotContainClass(
-                "Lcom/example/otherFeature1/EmptyClassToRemove;"
+                    "Lcom/example/otherFeature1/EmptyClassToRemove;"
             )
             assertThat(apk).doesNotContainClass("Lcom/example/lib2/EmptyClassToRemove;")
             assertThat(apk).doesNotContainClass("Lcom/example/lib1/EmptyClassToKeep;")
@@ -661,17 +642,9 @@ class MinifyFeaturesTest(
             assertThat(apk).doesNotContainClass("Lcom/example/lib1/a;")
             assertThat(apk).doesNotContainClass("Lcom/example/baseModule/Main;")
             assertThat(apk).doesNotContainClass("Lcom/example/otherFeature2/Main;")
-            // we split java resources back to features if using R8, but not if using proguard
-            when (codeShrinker) {
-                CodeShrinker.R8 -> {
-                    assertThat(apk).containsJavaResource("other_java_res_1.txt")
-                    assertThat(apk).containsJavaResource("lib2_java_res.txt")
-                }
-                CodeShrinker.PROGUARD -> {
-                    assertThat(apk).doesNotContainJavaResource("other_java_res_1.txt")
-                    assertThat(apk).doesNotContainJavaResource("lib2_java_res.txt")
-                }
-            }
+            // we split java resources back to features
+            assertThat(apk).containsJavaResource("other_java_res_1.txt")
+            assertThat(apk).containsJavaResource("lib2_java_res.txt")
         }
 
         project.getSubproject(otherFeature2GradlePath).getApk(apkType).use { apk ->
@@ -681,46 +654,28 @@ class MinifyFeaturesTest(
             assertThat(apk).doesNotContainClass("Lcom/example/lib2/EmptyClassToKeep;")
             assertThat(apk).doesNotContainClass("Lcom/example/baseModule/Main;")
             assertThat(apk).doesNotContainClass("Lcom/example/otherFeature1/Main;")
-            // we split java resources back to features if using R8, but not if using proguard
-            when (codeShrinker) {
-                CodeShrinker.R8 -> {
-                    assertThat(apk).containsJavaResource("other_java_res_2.txt")
-                }
-                CodeShrinker.PROGUARD -> {
-                    assertThat(apk).doesNotContainJavaResource("other_java_res_2.txt")
-                }
-            }
+            // we split java resources back to features
+            assertThat(apk).containsJavaResource("other_java_res_2.txt")
         }
     }
 
     @Test
     fun testBundleIsMinified() {
-        val executor = project.executor()
-            .with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, codeShrinker == CodeShrinker.R8)
-        executor.run("bundleMinified")
+        project.executor().run("bundleMinified")
 
         val bundleFile = getApkFolderOutput("minified", ":baseModule").bundleFile
         assertThat(bundleFile).exists()
 
         Aab(bundleFile).use {
-            // Check that java resources are packaged as expected. We split java resources back to
-            // features if using R8, but not if using proguard
-            val expectedJavaRes = when (codeShrinker) {
-                CodeShrinker.R8 -> listOf(
+            // Check that java resources are packaged as expected.
+            // We split java resources back to features
+            val expectedJavaRes = listOf(
                     "/base/root/base_java_res.txt",
                     "/base/root/lib1_java_res.txt",
                     "/otherFeature1/root/lib2_java_res.txt",
                     "/otherFeature1/root/other_java_res_1.txt",
                     "/otherFeature2/root/other_java_res_2.txt"
-                )
-                CodeShrinker.PROGUARD -> listOf(
-                    "/base/root/base_java_res.txt",
-                    "/base/root/lib1_java_res.txt",
-                    "/base/root/lib2_java_res.txt",
-                    "/base/root/other_java_res_1.txt",
-                    "/base/root/other_java_res_2.txt"
-                )
-            }
+            )
             Truth.assertThat(it.entries.map { entry -> entry.toString() })
                 .containsAtLeastElementsIn(expectedJavaRes)
             // check base classes
@@ -788,7 +743,6 @@ class MinifyFeaturesTest(
 
     @Test
     fun testMinifyEnabledSyncError() {
-        Assume.assumeTrue(codeShrinker == CodeShrinker.R8)
         project.getSubproject(":foo:otherFeature1")
             .buildFile
             .appendText("android.buildTypes.minified.minifyEnabled true")
@@ -801,7 +755,6 @@ class MinifyFeaturesTest(
 
     @Test
     fun testDefaultProguardFilesSyncError() {
-        Assume.assumeTrue(codeShrinker == CodeShrinker.R8)
         project.getSubproject(otherFeature2GradlePath)
             .buildFile
             .appendText(
@@ -823,15 +776,12 @@ class MinifyFeaturesTest(
     }
 
     // Tests new shrinker rules filtering done by FilterShrinkerRulesTransform to select only rules
-    // targeted to specific R8 or Proguard versions.
+    // targeted to specific R8 versions.
     @Test
     fun appTestExtractedJarKeepRules() {
         AssumeUtil.assumeNotWindows()  // b/146571219
 
-        val executor = project.executor()
-            .with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, codeShrinker == CodeShrinker.R8)
-
-        executor.run("assembleMinified")
+        project.executor().run("assembleMinified")
 
         val classContent = "package example;\n" + "public class ToBeKept { }"
         val toBeKept = project.getSubproject("baseModule").mainSrcDir.toPath().resolve("example/ToBeKept.java")
@@ -864,9 +814,7 @@ class MinifyFeaturesTest(
                     + "}"
         )
 
-        project.executor()
-            .with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, codeShrinker == CodeShrinker.R8)
-            .run("assembleMinified")
+        project.executor().run("assembleMinified")
 
         val apkType = GradleTestProject.ApkType.of("minified", true)
 
@@ -879,19 +827,16 @@ class MinifyFeaturesTest(
     /** Regression test for https://issuetracker.google.com/79090176 */
     @Test
     fun testMinifyEnabledToggling() {
-        val executor = project.executor()
-            .with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, codeShrinker == CodeShrinker.R8)
-
         // first run with minifyEnabled true
-        executor.run("assembleMinified")
+        project.executor().run("assembleMinified")
 
         // then run with minifyEnabled false
         TestFileUtils.searchAndReplace(
-            project.getSubproject(":baseModule").buildFile,
-            "minifyEnabled true",
-            "minifyEnabled false"
+                project.getSubproject(":baseModule").buildFile,
+                "minifyEnabled true",
+                "minifyEnabled false"
         )
-        executor.run("assembleMinified")
+        project.executor().run("assembleMinified")
     }
 
     private fun getApkFolderOutput(

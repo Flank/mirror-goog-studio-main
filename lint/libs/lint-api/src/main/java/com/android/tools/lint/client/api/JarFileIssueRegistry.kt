@@ -18,6 +18,7 @@ package com.android.tools.lint.client.api
 
 import com.android.SdkConstants
 import com.android.SdkConstants.DOT_CLASS
+import com.android.SdkConstants.VALUE_FALSE
 import com.android.tools.lint.detector.api.CURRENT_API
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.Project
@@ -118,7 +119,9 @@ private constructor(
             val registryMap = try {
                 findRegistries(client, jarFiles)
             } catch (e: IOException) {
-                client.log(e, "Could not load custom lint check jar files: ${e.message}")
+                if (logJarProblems()) {
+                    client.log(e, "Could not load custom lint check jar files: ${e.message}")
+                }
                 return emptyList()
             }
 
@@ -134,7 +137,9 @@ private constructor(
                     val registry = get(client, registryClass, jarFile, currentProject) ?: continue
                     registries.add(registry)
                 } catch (e: Throwable) {
-                    client.log(e, "Could not load custom lint check jar file %1\$s", jarFile)
+                    if (logJarProblems()) {
+                        client.log(e, "Could not load custom lint check jar file %1\$s", jarFile)
+                    }
                 }
             }
 
@@ -217,7 +222,9 @@ private constructor(
                     return verifier.describeFirstIncompatibleReference()
                 }
             } catch (verifierBug: Throwable) {
-                client.log(verifierBug, "Error verifying bytecode in $jarFile")
+                if (logJarProblems()) {
+                    client.log(verifierBug, "Error verifying bytecode in $jarFile")
+                }
             }
             return null
         }
@@ -353,7 +360,9 @@ The Lint API version currently running is $CURRENT_API (${describeApi(CURRENT_AP
                                 }
                             }
                         } catch (e: Throwable) {
-                            client.log(e, null)
+                            if (logJarProblems()) {
+                                client.log(e, null)
+                            }
                         }
                     }
                 } catch (e: Throwable) {
@@ -400,7 +409,9 @@ The Lint API version currently running is $CURRENT_API (${describeApi(CURRENT_AP
 
                 registry
             } catch (e: Throwable) {
-                client.log(e, "Could not load custom lint check jar file %1\$s", jarFile)
+                if (logJarProblems()) {
+                    client.log(e, "Could not load custom lint check jar file %1\$s", jarFile)
+                }
                 null
             }
         }
@@ -447,10 +458,12 @@ The Lint API version currently running is $CURRENT_API (${describeApi(CURRENT_AP
                     if (inferredVendor != null) {
                         inferredVendor
                     } else {
-                        client.log(
-                            Severity.WARNING, null,
-                            "$registryClass in $jarFile does not specify a vendor; see IssueRegistry#vendor"
-                        )
+                        if (logJarProblems()) {
+                            client.log(
+                                Severity.WARNING, null,
+                                "$registryClass in $jarFile does not specify a vendor; see IssueRegistry#vendor"
+                            )
+                        }
 
                         Vendor(identifier = identifier)
                     }
@@ -515,14 +528,16 @@ The Lint API version currently running is $CURRENT_API (${describeApi(CURRENT_AP
                                 }
                             }
                         } else {
-                            client.log(
-                                Severity.ERROR, null,
-                                "Custom lint rule jar %1\$s does not contain a valid " +
-                                    "registry manifest key (%2\$s).\n" +
-                                    "Either the custom jar is invalid, or it uses an outdated " +
-                                    "API not supported this lint client",
-                                jarFile.path, MF_LINT_REGISTRY
-                            )
+                            if (logJarProblems()) {
+                                client.log(
+                                    Severity.ERROR, null,
+                                    "Custom lint rule jar %1\$s does not contain a valid " +
+                                        "registry manifest key (%2\$s).\n" +
+                                        "Either the custom jar is invalid, or it uses an outdated " +
+                                        "API not supported this lint client",
+                                    jarFile.path, MF_LINT_REGISTRY
+                                )
+                            }
                         }
                     }
                 }
@@ -592,10 +607,12 @@ The Lint API version currently running is $CURRENT_API (${describeApi(CURRENT_AP
                                     }
                                 }
                             } catch (e: Throwable) {
-                                client.log(
-                                    Severity.ERROR, e,
-                                    "Failed to prefetch $name from $file"
-                                )
+                                if (logJarProblems()) {
+                                    client.log(
+                                        Severity.ERROR, e,
+                                        "Failed to prefetch $name from $file"
+                                    )
+                                }
                             }
                         }
                     }
@@ -610,5 +627,7 @@ The Lint API version currently running is $CURRENT_API (${describeApi(CURRENT_AP
                 }
             }
         }
+
+        private fun logJarProblems(): Boolean = System.getProperty("android.lint.log-jar-problems") != VALUE_FALSE
     }
 }

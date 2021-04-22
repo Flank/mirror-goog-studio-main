@@ -39,6 +39,15 @@ class GradleAdbManagerImpl(private val subprocessComponent: SubprocessComponent)
                     "id"
             )
 
+    private fun getAdbCloseArgs(serial: String): List<String> =
+            listOf(
+                    adbPath,
+                    "-s",
+                    serial,
+                    "emu",
+                    "kill"
+            )
+
     /**
      * Returns the serials of all active devices on adb.
      */
@@ -71,11 +80,18 @@ class GradleAdbManagerImpl(private val subprocessComponent: SubprocessComponent)
                 environment = System.getenv(),
                 stdoutProcessor = { line ->
                     val trimmed = line.trim()
-                    if (trimmed != "OK") {
+                    if (trimmed.isNotEmpty() && trimmed != "OK") {
                         id = trimmed
                     }
                 }
         )
         return id
+    }
+
+    override fun closeDevice(deviceSerial: String) {
+        subprocessComponent.subprocess().execute(
+                args = getAdbCloseArgs(deviceSerial),
+                environment = System.getenv()
+        )
     }
 }

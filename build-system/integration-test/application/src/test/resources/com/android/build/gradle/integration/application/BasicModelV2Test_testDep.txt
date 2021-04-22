@@ -1,5 +1,5 @@
 > VariantDependencies:
-   - name = "debug"
+   - name                 = "debug"
    > mainArtifact:
       > compileDependencies:
          - GraphItem:
@@ -770,6 +770,7 @@
             - dependencies         = []
       < runtimeDependencies
    < unitTestArtifact
+   - testFixturesArtifact = (null)
 < VariantDependencies
 > GlobalLibraryMap:
    > libraries:

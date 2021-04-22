@@ -141,7 +141,6 @@ fun addComposeArgsToKotlinCompile(
                 "-Xplugin=${compilerExtension.files.first().absolutePath}",
                 "-XXLanguage:+NonParenthesizedAnnotationsOnFunctionalTypes",
                 "-P", "plugin:androidx.compose.plugins.idea:enabled=true",
-                "-P", "plugin:androidx.compose.compiler.plugins.kotlin:suppressKotlinVersionCompatibilityCheck=true",
                 "-Xallow-unstable-dependencies"
         )
         if (debuggable) {

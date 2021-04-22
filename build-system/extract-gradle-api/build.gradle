@@ -1,10 +1,12 @@
 configurations {
-    apiJar
+    apiJars
 }
+
 dependencies {
-    apiJar gradleApi()
+    apiJars gradleApi() // Note that gradleApi() returns multiple jars
 }
-task copyApiJar(type: Copy) {
-    from configurations.apiJar
+
+task copyGradleApiJars(type: Copy) {
+    from configurations.apiJars
     into System.env["BUILD_DIR"]
 }

@@ -140,6 +140,11 @@ data class CxxVariantModel(
      *  all ABIs in a variant.
      */
     val optimizationTag : String,
+
+    /**
+     * Whether to invoke build tool with verbosity (for example, ninja -v).
+     */
+    val verboseMakefile: Boolean?
 )
 
 /**

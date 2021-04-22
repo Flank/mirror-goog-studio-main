@@ -724,7 +724,7 @@ class CleanupDetector : Detector(), SourceCodeScanner {
                     "its data to persistent storage immediately, whereas " +
                     "`apply` will handle it in the background"
                 )
-            val location = context.getLocation(node)
+            val location = context.getCallLocation(node, includeReceiver = false, includeArguments = true)
             val fix = LintFix.create()
                 .name("Replace commit() with apply()")
                 .replace()

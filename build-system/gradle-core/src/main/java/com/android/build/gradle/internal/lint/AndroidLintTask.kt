@@ -284,13 +284,13 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         for (model in dynamicFeatureLintModels) {
             models.add(model.absolutePath)
         }
-        for (model in mainDependencyLintModels) {
+        for (model in mainDependencyLintModels.files) {
             models.add(model.absolutePath)
         }
-        for (model in androidTestDependencyLintModels) {
+        for (model in androidTestDependencyLintModels.files) {
             models.add(model.absolutePath)
         }
-        for (model in unitTestDependencyLintModels) {
+        for (model in unitTestDependencyLintModels.files) {
             models.add(model.absolutePath)
         }
 
@@ -346,7 +346,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
             get() = creationConfig.services.projectOptions.get(USE_LINT_PARTIAL_ANALYSIS)
 
         override fun handleProvider(taskProvider: TaskProvider<AndroidLintTask>) {
-            registerLintReportArtifacts(taskProvider, creationConfig.artifacts, creationConfig.name, creationConfig.globalScope.reportsDir)
+            registerLintReportArtifacts(taskProvider, creationConfig.artifacts, creationConfig.name, creationConfig.services.projectInfo.getReportsDir())
         }
 
         override fun configureOutputSettings(task: AndroidLintTask) {
@@ -452,6 +452,15 @@ abstract class AndroidLintTask : NonIncrementalTask() {
                         AndroidArtifacts.ArtifactType.LINT
                     )
             )
+            task.lintRulesJar.from(
+                creationConfig
+                    .variantDependencies
+                    .getArtifactFileCollection(
+                        AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
+                        AndroidArtifacts.ArtifactScope.ALL,
+                        AndroidArtifacts.ArtifactType.LINT
+                    )
+            )
             task.lintRulesJar.disallowChanges()
             task.fatalOnly.setDisallowChanges(fatalOnly)
             task.autoFix.setDisallowChanges(autoFix)
@@ -515,10 +524,24 @@ abstract class AndroidLintTask : NonIncrementalTask() {
                         AndroidArtifacts.ArtifactType.LINT_MODEL
                     )
                 )
+                task.mainDependencyLintModels.from(
+                    creationConfig.variantDependencies.getArtifactFileCollection(
+                        AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
+                        AndroidArtifacts.ArtifactScope.PROJECT,
+                        AndroidArtifacts.ArtifactType.LINT_MODEL
+                    )
+                )
                 variant.androidTest?.let {
                     task.androidTestDependencyLintModels.from(
                         it.variantDependencies.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
+                            AndroidArtifacts.ArtifactScope.PROJECT,
+                            AndroidArtifacts.ArtifactType.LINT_MODEL
+                        )
+                    )
+                    task.androidTestDependencyLintModels.from(
+                        it.variantDependencies.getArtifactFileCollection(
+                            AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                             AndroidArtifacts.ArtifactScope.PROJECT,
                             AndroidArtifacts.ArtifactType.LINT_MODEL
                         )
@@ -532,11 +555,25 @@ abstract class AndroidLintTask : NonIncrementalTask() {
                             AndroidArtifacts.ArtifactType.LINT_MODEL
                         )
                     )
+                    task.unitTestDependencyLintModels.from(
+                        it.variantDependencies.getArtifactFileCollection(
+                            AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
+                            AndroidArtifacts.ArtifactScope.PROJECT,
+                            AndroidArtifacts.ArtifactType.LINT_MODEL
+                        )
+                    )
                 }
                 if (reportOnly) {
                     task.dependencyPartialResults.from(
                         creationConfig.variantDependencies.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
+                            AndroidArtifacts.ArtifactScope.PROJECT,
+                            AndroidArtifacts.ArtifactType.LINT_PARTIAL_RESULTS
+                        )
+                    )
+                    task.dependencyPartialResults.from(
+                        creationConfig.variantDependencies.getArtifactFileCollection(
+                            AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                             AndroidArtifacts.ArtifactScope.PROJECT,
                             AndroidArtifacts.ArtifactType.LINT_PARTIAL_RESULTS
                         )

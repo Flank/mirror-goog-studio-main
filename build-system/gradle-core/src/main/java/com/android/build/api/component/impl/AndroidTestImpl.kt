@@ -16,11 +16,13 @@
 
 package com.android.build.api.component.impl
 
+import com.android.build.api.artifact.MultipleArtifact
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.AndroidTest
 import com.android.build.api.component.Component
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.analytics.AnalyticsEnabledAndroidTest
+import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.*
 import com.android.build.api.variant.impl.*
@@ -42,7 +44,6 @@ import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.build.gradle.options.IntegerOption
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import com.android.builder.dexing.DexingType
-import com.android.builder.model.CodeShrinker
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
@@ -82,6 +83,15 @@ open class AndroidTestImpl @Inject constructor(
     taskCreationServices,
     globalScope
 ), AndroidTest, AndroidTestCreationConfig {
+
+    init {
+        variantDslInfo.multiDexKeepProguard?.let {
+            artifacts.getArtifactContainer(MultipleArtifact.MULTIDEX_KEEP_PROGUARD)
+                    .addInitialProvider(
+                            taskCreationServices.regularFile(internalServices.provider { it })
+                    )
+        }
+    }
 
     private val delegate by lazy { AndroidTestCreationConfigImpl(
         this,
@@ -133,15 +143,13 @@ open class AndroidTestImpl @Inject constructor(
         )
     }
 
-    override val dexing: Dexing by lazy {
-        internalServices.newInstance(Dexing::class.java).also {
-            it.multiDexKeepFile.set(variantDslInfo.multiDexKeepFile)
-            it.multiDexKeepProguard.set(variantDslInfo.multiDexKeepProguard)
-        }
-    }
-
     override val minifiedEnabled: Boolean
-        get() = variantDslInfo.isMinifyEnabled
+        get() {
+            return when {
+                testedConfig.variantType.isAar -> false
+                else -> variantDslInfo.getPostProcessingOptions().codeShrinkerEnabled()
+            }
+        }
 
     override val instrumentationRunner: Property<String> =
         internalServices.propertyOf(
@@ -189,6 +197,17 @@ open class AndroidTestImpl @Inject constructor(
             }
     }
 
+    override fun makeResValueKey(type: String, name: String): ResValue.Key =
+            ResValueKeyImpl(type, name)
+
+    override val resValues: MapProperty<ResValue.Key, ResValue> by lazy {
+        internalServices.mapPropertyOf(
+                ResValue.Key::class.java,
+                ResValue::class.java,
+                variantDslInfo.getResValues()
+        )
+    }
+
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------
@@ -215,14 +234,6 @@ open class AndroidTestImpl @Inject constructor(
 
     override val isTestCoverageEnabled: Boolean
         get() = variantDslInfo.isTestCoverageEnabled
-
-    override val resValues: MapProperty<ResValue.Key, ResValue> by lazy {
-        internalServices.mapPropertyOf(
-            ResValue.Key::class.java,
-            ResValue::class.java,
-            variantDslInfo.getResValues()
-        )
-    }
 
     override val renderscriptTargetApi: Int
         get() = testedVariant.variantBuilder.renderscriptTargetApi
@@ -260,7 +271,7 @@ open class AndroidTestImpl @Inject constructor(
 
     override fun <T : Component> createUserVisibleVariantObject(
             projectServices: ProjectServices,
-            operationsRegistrar: VariantApiOperationsRegistrar<out VariantBuilder, out Variant>,
+            operationsRegistrar: VariantApiOperationsRegistrar<out CommonExtension<*, *, *, *>,out VariantBuilder, out Variant>,
             stats: GradleBuildVariant.Builder?
     ): T =
         if (stats == null) {
@@ -277,9 +288,6 @@ open class AndroidTestImpl @Inject constructor(
 
     override val advancedProfilingTransforms: List<String> = emptyList()
 
-    override val codeShrinker: CodeShrinker?
-        get() = delegate.getCodeShrinker()
-
     override fun getNeedsMergedJavaResStream(): Boolean =
         delegate.getNeedsMergedJavaResStream()
 
@@ -287,5 +295,11 @@ open class AndroidTestImpl @Inject constructor(
 
     override val dslSigningConfig: com.android.build.gradle.internal.dsl.SigningConfig? =
         variantDslInfo.signingConfig
+
+    // ---------------------------------------------------------------------------------------------
+    // DO NOT USE, Deprecated DSL APIs.
+    // ---------------------------------------------------------------------------------------------
+
+    override val multiDexKeepFile = variantDslInfo.multiDexKeepFile
 }
 

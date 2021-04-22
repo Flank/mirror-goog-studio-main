@@ -21,7 +21,7 @@ import static org.junit.Assert.assertNotNull;
 
 import com.android.annotations.NonNull;
 import com.android.build.api.component.impl.ComponentImpl;
-import com.android.build.api.component.impl.TestComponentImpl;
+import com.android.build.api.dsl.ApkSigningConfig;
 import com.android.build.api.variant.impl.ApplicationVariantBuilderImpl;
 import com.android.build.api.variant.impl.ApplicationVariantImpl;
 import com.android.build.api.variant.impl.SigningConfigImpl;
@@ -442,7 +442,7 @@ public class AppPluginInternalTest {
                         .getBuildTypes()
                         .get(BuilderConstants.DEBUG)
                         .getBuildType();
-        SigningConfig signingConfig = buildType.getSigningConfig();
+        ApkSigningConfig signingConfig = buildType.getSigningConfig();
         TestCase.assertEquals(
                 plugin.getVariantInputModel().getSigningConfigs().get(BuilderConstants.DEBUG),
                 signingConfig);

@@ -77,10 +77,16 @@ class SettingsJsonPropertiesGoldenFileTest {
                             result += "## " + macro.ref
                             result += macro.description
                             if (ndkBuildExample == null) {
-                                result += "- example: $example"
+                                if (example.isNotBlank()) {
+                                    result += "- example: $example"
+                                }
                             } else {
-                                result += "- cmake example: $example"
-                                result += "- ndk-build example: $ndkBuildExample"
+                                if (example.isNotBlank()) {
+                                    result += "- cmake example: $example"
+                                }
+                                if (ndkBuildExample.isNotBlank()) {
+                                    result += "- ndk-build example: $ndkBuildExample"
+                                }
                             }
                             result += "- environment: ${macro.environment.environment}"
                             result += ""

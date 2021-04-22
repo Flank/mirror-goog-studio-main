@@ -67,8 +67,8 @@ class CmakeVariantApiTest {
 
             androidComponents {
                 onVariants(selector().all(), {
-                    it.externalCmake.abiFilters.empty()
-                    it.externalCmake.abiFilters.add("x86_64")
+                    it.externalNativeBuild.abiFilters.empty()
+                    it.externalNativeBuild.abiFilters.add("x86_64")
                 })
             }
         """.trimIndent())
@@ -130,8 +130,8 @@ class CmakeVariantApiTest {
 
             androidComponents {
                 onVariants(selector().all(), {
-                    it.externalCmake.getCFlags().add("-DTEST_C_FLAG2")
-                    it.externalCmake.getCppFlags().add("-DTEST_CPP_FLAG2")
+                    it.externalNativeBuild.getCFlags().add("-DTEST_C_FLAG2")
+                    it.externalNativeBuild.getCppFlags().add("-DTEST_CPP_FLAG2")
                 })
             }
         """.trimIndent())
@@ -193,7 +193,7 @@ class CmakeVariantApiTest {
 
             androidComponents {
                 onVariants(selector().all(), {
-                    it.externalCmake.arguments.add("-DANDROID_ARM_NEON=TRUE")
+                    it.externalNativeBuild.arguments.add("-DANDROID_ARM_NEON=TRUE")
                 })
             }
         """.trimIndent())

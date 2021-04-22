@@ -25,4 +25,4 @@ class TestVariantCreationConfigImpl(
     projectOptions: ProjectOptions,
     globalScope: GlobalScope,
     variantDslInfo: VariantDslInfo
-) : AbstractApkTestCreationConfigImpl(config, projectOptions, globalScope, variantDslInfo)
+) : ApkCreationConfigImpl(config, projectOptions, globalScope, variantDslInfo)

@@ -19,9 +19,6 @@ package com.android.build.gradle.internal.component
 import com.android.build.api.variant.Renderscript
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.builder.dexing.DexingType
-import com.android.builder.model.CodeShrinker
-import org.gradle.api.file.RegularFile
-import org.gradle.api.provider.ListProperty
 
 /**
  * CreationConfig for variants that produces an artifact that is directly install-able to devices
@@ -32,7 +29,7 @@ interface ConsumableCreationConfig: VariantCreationConfig {
 
     val dexingType: DexingType
 
-    val codeShrinker: CodeShrinker?
+    val minifiedEnabled: Boolean
 
     /** Returns whether we need to create a stream from the merged java resources */
     fun getNeedsMergedJavaResStream(): Boolean

@@ -19,7 +19,7 @@ package com.android.build.api.dsl
 import org.gradle.api.Incubating
 
 @Incubating
-interface TestVariantDimension<SigningConfigT : ApkSigningConfig> :
+interface TestVariantDimension :
     VariantDimension {
     /**
      * Returns whether multi-dex is enabled.
@@ -29,5 +29,5 @@ interface TestVariantDimension<SigningConfigT : ApkSigningConfig> :
     var multiDexEnabled: Boolean?
 
     /** The associated signing config or null if none are set on the variant dimension. */
-    var signingConfig: SigningConfigT?
+    var signingConfig: ApkSigningConfig?
 }

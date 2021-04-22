@@ -59,6 +59,7 @@ class DdmlibcontrollerTest {
     fun setUp() {
         initMocks(this)
 
+        `when`(mockDevice.serialNumber).thenReturn("serial-1234")
         `when`(mockDevice.version).thenReturn(AndroidVersion(22))
 
         controller = DdmlibAndroidDeviceController()

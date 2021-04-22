@@ -23,6 +23,7 @@ import com.google.testing.platform.api.device.Device
 import com.google.testing.platform.api.device.DeviceController
 import com.google.testing.platform.proto.api.core.TestArtifactProto.Artifact
 import com.google.testing.platform.proto.api.core.TestArtifactProto.ArtifactType.ANDROID_APK
+import com.google.testing.platform.runtime.android.device.AndroidDevice
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
@@ -40,11 +41,18 @@ class DdmlibAndroidDeviceController : DeviceController {
     }
 
     private lateinit var controlledDevice: DdmlibAndroidDevice
+    private lateinit var androidDevice: AndroidDevice
 
-    override fun getDevice(): DdmlibAndroidDevice = controlledDevice
+    override fun getDevice(): AndroidDevice = androidDevice
 
     override fun setDevice(device: Device) {
         controlledDevice = device as DdmlibAndroidDevice
+        androidDevice = AndroidDevice(
+                serial = controlledDevice.serial,
+                type = requireNotNull(controlledDevice.type),
+                port = controlledDevice.port,
+                properties = controlledDevice.properties
+        )
     }
 
     override fun install(artifact: Artifact): Int {

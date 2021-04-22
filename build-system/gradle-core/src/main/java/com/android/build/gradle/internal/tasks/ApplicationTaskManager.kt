@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.component.impl.TestComponentImpl
-import com.android.build.api.component.impl.TestFixturesComponentImpl
+import com.android.build.api.component.impl.TestFixturesImpl
 import com.android.build.api.variant.impl.ApplicationVariantBuilderImpl
 import com.android.build.api.variant.impl.ApplicationVariantImpl
 import com.android.build.gradle.BaseExtension
@@ -45,14 +45,14 @@ import java.io.File
 import java.util.stream.Collectors
 
 class ApplicationTaskManager(
-    variants: List<ComponentInfo<ApplicationVariantBuilderImpl, ApplicationVariantImpl>>,
-    testComponents: List<TestComponentImpl>,
-    testFixturesComponents: List<TestFixturesComponentImpl>,
-    hasFlavors: Boolean,
-    projectOptions: ProjectOptions,
-    globalScope: GlobalScope,
-    extension: BaseExtension,
-    projectInfo: ProjectInfo
+        variants: List<ComponentInfo<ApplicationVariantBuilderImpl, ApplicationVariantImpl>>,
+        testComponents: List<TestComponentImpl>,
+        testFixturesComponents: List<TestFixturesImpl>,
+        hasFlavors: Boolean,
+        projectOptions: ProjectOptions,
+        globalScope: GlobalScope,
+        extension: BaseExtension,
+        projectInfo: ProjectInfo
 ) : AbstractAppTaskManager<ApplicationVariantBuilderImpl, ApplicationVariantImpl>(
     variants,
     testComponents,
@@ -237,8 +237,8 @@ class ApplicationTaskManager(
         taskFactory.register(PerModuleBundleTask.CreationAction(variant))
 
         val debuggable = variantInfo.variantBuilder.debuggable
-        val includeSdkInfoInApk = variantInfo.variantBuilder.dependenciesInfo.includeInApk
-        val includeSdkInfoInBundle = variantInfo.variantBuilder.dependenciesInfo.includeInBundle
+        val includeSdkInfoInApk = variantInfo.variantBuilder.dependenciesInfo.includedInApk
+        val includeSdkInfoInBundle = variantInfo.variantBuilder.dependenciesInfo.includedInBundle
         if (!debuggable) {
             taskFactory.register(PerModuleReportDependenciesTask.CreationAction(variant))
         }

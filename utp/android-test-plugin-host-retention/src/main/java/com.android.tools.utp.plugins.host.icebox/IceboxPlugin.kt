@@ -32,6 +32,7 @@ import com.google.testing.platform.proto.api.core.TestCaseProto
 import com.google.testing.platform.proto.api.core.TestResultProto.TestResult
 import com.google.testing.platform.proto.api.core.TestStatusProto.TestStatus
 import com.google.testing.platform.proto.api.core.TestSuiteResultProto.TestSuiteResult
+import com.google.testing.platform.runtime.android.device.AndroidDevice
 import io.grpc.ManagedChannelBuilder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -53,7 +54,8 @@ import java.io.FileOutputStream
  */
 class IceboxPlugin @VisibleForTesting constructor(
         private val iceboxCallerFactory:
-            (ManagedChannelBuilder<*>, String, CoroutineScope) -> IceboxCaller
+            (ManagedChannelBuilder<*>, String, CoroutineScope) -> IceboxCaller,
+        private val grpcInfoFinder: GrpcInfoFinder = GrpcInfoFinder()
 ) : HostPlugin {
     /** No-arg primary constructor for [AutoService] */
     constructor() : this({ mcb, token, cs -> IceboxCaller(mcb, token, cs) })
@@ -99,13 +101,14 @@ class IceboxPlugin @VisibleForTesting constructor(
     // called in beforeEach or beforeAll.
     fun setupIcebox(deviceController: DeviceController) {
         this.deviceController = deviceController
+        val grpcInfo = getGrpcInfo()
         printedWarning = false
         iceboxCaller = iceboxCallerFactory(
             ManagedChannelBuilder.forAddress(
                 iceboxPluginConfig.emulatorGrpcAddress,
-                iceboxPluginConfig.emulatorGrpcPort
+                grpcInfo.port
             ).usePlaintext(),
-            iceboxPluginConfig.emulatorGrpcToken,
+            grpcInfo.token?:"",
             CoroutineScope(Dispatchers.Default)
         )
         failureSnapshotId = 0
@@ -220,4 +223,18 @@ class IceboxPlugin @VisibleForTesting constructor(
     override fun canRun(): Boolean = true
 
     override fun cancel(): Boolean = false
+
+    /**
+     * Returns the grpc info for the attached device.
+     *
+     * First attempts to find the Grpc info from the provided configuration proto.
+     * If not specified, attempts to determine the Grpc info from the device serial.
+     */
+    private fun getGrpcInfo(): EmulatorGrpcInfo {
+        if (iceboxPluginConfig.emulatorGrpcPort != 0) {
+            return EmulatorGrpcInfo(
+                    iceboxPluginConfig.emulatorGrpcPort, iceboxPluginConfig.emulatorGrpcToken)
+        }
+        return grpcInfoFinder.findInfo(deviceController.getDevice().serial)
+    }
 }

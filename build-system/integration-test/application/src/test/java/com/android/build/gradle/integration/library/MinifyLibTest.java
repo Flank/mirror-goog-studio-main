@@ -22,41 +22,22 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.testutils.truth.PathSubject.assertThat;
 
-import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
-import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelContainer;
-import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.truth.ModelContainerSubject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.builder.model.AndroidProject;
-import com.android.builder.model.CodeShrinker;
 import com.android.builder.model.SyncIssue;
 import com.android.testutils.apk.Apk;
 import com.android.utils.FileUtils;
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /** Assemble tests for minifyLib. */
-@RunWith(FilterableParameterized.class)
 public class MinifyLibTest {
-    @Parameterized.Parameters(name = "codeShrinker = {0}")
-    public static List<Object[]> data() {
-        return Arrays.asList(
-                new Object[][] {
-                    {CodeShrinker.PROGUARD}, {CodeShrinker.R8},
-                });
-    }
-
-    @Parameterized.Parameter public CodeShrinker codeShrinker;
 
     @Rule
     public GradleTestProject project =
@@ -64,7 +45,7 @@ public class MinifyLibTest {
 
     @Test
     public void consumerProguardFile() throws Exception {
-        getExecutor().run(":app:assembleDebug");
+        project.executor().run(":app:assembleDebug");
         Apk apk = project.getSubproject(":app").getApk(DEBUG);
         assertThatApk(apk).containsClass("Lcom/android/tests/basic/StringProvider;");
         assertThatApk(apk).containsClass("Lcom/android/tests/basic/UnusedClass;");
@@ -75,7 +56,7 @@ public class MinifyLibTest {
         TestFileUtils.appendToFile(
                 project.getSubproject(":app").getBuildFile(),
                 "\nandroid.buildTypes.debug.minifyEnabled true");
-        getExecutor().run(":app:assembleDebug");
+        project.executor().run(":app:assembleDebug");
 
         assertThat(project.getIntermediateFile("default_proguard_files/global")).doesNotExist();
         assertThat(
@@ -94,9 +75,6 @@ public class MinifyLibTest {
 
         ModelContainer<AndroidProject> container =
                 project.model()
-                        .with(
-                                OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8,
-                                codeShrinker == CodeShrinker.R8)
                         .ignoreSyncIssues()
                         .fetchAndroidProjects();
         ModelContainerSubject.assertThat(container)
@@ -112,14 +90,9 @@ public class MinifyLibTest {
     public void shrinkingTheLibrary() throws Exception {
         enableLibShrinking();
 
-        GradleBuildResult result = getExecutor().run(":app:assembleDebug");
+        GradleBuildResult result = project.executor().run(":app:assembleDebug");
 
-
-        if (codeShrinker == CodeShrinker.R8) {
-            assertThat(result.getTask(":app:minifyDebugWithR8")).didWork();
-        } else {
-            assertThat(result.getTask(":app:minifyDebugWithProguard")).didWork();
-        }
+        assertThat(result.getTask(":app:minifyDebugWithR8")).didWork();
 
         Apk apk = project.getSubproject(":app").getApk(DEBUG);
         assertThat(apk).containsClass("Lcom/android/tests/basic/StringProvider;");
@@ -138,7 +111,7 @@ public class MinifyLibTest {
                         + "        multiDexEnabled true\n"
                         + "    }\n"
                         + "}");
-        getExecutor().run(":lib:assembleDebug");
+        project.executor().run(":lib:assembleDebug");
     }
 
     /**
@@ -161,16 +134,10 @@ public class MinifyLibTest {
                 project.getSubproject(":app").getBuildFile(),
                 "api project(':lib')",
                 "androidTestImplementation project\\(':lib'\\)");
-        GradleBuildResult result = getExecutor().run(":app:assembleAndroidTest");
+        GradleBuildResult result = project.executor().run(":app:assembleAndroidTest");
 
-        if (codeShrinker == CodeShrinker.R8) {
-            assertThat(result.getTask(":app:minifyDebugWithR8")).didWork();
-            assertThat(result.getTask(":app:minifyDebugAndroidTestWithR8")).didWork();
-        } else {
-            assertThat(result.getTask(":app:minifyDebugWithProguard")).didWork();
-            assertThat(result.getTask(":app:minifyDebugAndroidTestWithProguard")).didWork();
-        }
-
+        assertThat(result.getTask(":app:minifyDebugWithR8")).didWork();
+        assertThat(result.getTask(":app:minifyDebugAndroidTestWithR8")).didWork();
 
         Apk apk = project.getSubproject(":app").getApk(ANDROIDTEST_DEBUG);
         assertThat(apk).exists();
@@ -187,7 +154,7 @@ public class MinifyLibTest {
         File config = project.getSubproject(":lib").file("config.pro");
         FileUtils.deleteIfExists(config);
         TestFileUtils.appendToFile(config, "");
-        getExecutor().run(":lib:assembleDebug");
+        project.executor().run(":lib:assembleDebug");
     }
 
     private void enableLibShrinking() throws IOException {
@@ -208,13 +175,5 @@ public class MinifyLibTest {
                         + "        proguardFiles getDefaultProguardFile('proguard-android.txt')\n"
                         + "    }\n"
                         + "}\n");
-    }
-
-    @NonNull
-    private GradleTaskExecutor getExecutor() {
-        return project.executor()
-                .with(
-                        OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8,
-                        codeShrinker == CodeShrinker.R8);
     }
 }

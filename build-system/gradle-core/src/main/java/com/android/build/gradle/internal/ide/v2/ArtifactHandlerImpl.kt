@@ -53,14 +53,15 @@ class ArtifactHandlerImpl(
         coordinatesSupplier: () -> MavenCoordinates,
         addressSupplier: () -> String
     ): Library {
-        val apiJar = FileUtils.join(folder, FD_JARS, FN_API_JAR)
+        val apiJar = FileUtils.join(folder, FN_API_JAR)
         val runtimeJar = FileUtils.join(folder, FD_JARS, FN_CLASSES_JAR)
+        val runtimeJarFiles = listOf(runtimeJar) + localJavaLibraries
         return LibraryImpl(
             type = LibraryType.ANDROID_LIBRARY,
             artifactAddress = addressSupplier(),
             manifest = File(folder, FN_ANDROID_MANIFEST_XML),
-            compileJarFiles = listOf(if (apiJar.isFile) apiJar else runtimeJar) + localJavaLibraries,
-            runtimeJarFiles = listOf(runtimeJar) + localJavaLibraries,
+            compileJarFiles = if (apiJar.isFile) listOf(apiJar) else runtimeJarFiles,
+            runtimeJarFiles = runtimeJarFiles,
             resFolder = File(folder, FD_RES),
             resStaticLibrary = null, //FIXME
             assetsFolder = File(folder, FD_ASSETS),

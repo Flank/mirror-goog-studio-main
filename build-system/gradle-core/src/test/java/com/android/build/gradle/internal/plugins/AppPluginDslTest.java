@@ -26,11 +26,9 @@ import com.android.build.gradle.internal.fixture.TestConstants;
 import com.android.build.gradle.internal.fixture.TestProjects;
 import com.android.build.gradle.internal.fixture.VariantChecker;
 import com.android.build.gradle.internal.fixture.VariantCheckers;
-import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.build.gradle.tasks.MergeResources;
 import groovy.util.Eval;
 import java.util.Arrays;
-import org.gradle.api.JavaVersion;
 import org.gradle.api.Project;
 import org.junit.Before;
 import org.junit.Rule;
@@ -41,8 +39,6 @@ import org.junit.rules.TemporaryFolder;
 public class AppPluginDslTest {
     public static final String PROGUARD_DEBUG = "minifyDebugWithProguard";
     public static final String R8_DEBUG = "minifyDebugWithR8";
-    public static final String PROGUARD_DEBUG_ANDROID_TEST = "minifyDebugAndroidTestWithProguard";
-    public static final String PROGUARD_RELEASE = "minifyReleaseWithProguard";
     public static final String R8_RELEASE = "minifyReleaseWithR8";
     public static final String R8_DEBUG_ANDROID_TEST = "minifyDebugAndroidTestWithR8";
 
@@ -177,17 +173,6 @@ public class AppPluginDslTest {
     }
 
     @Test
-    public void testPostprocessingBlock_noFeatures() throws Exception {
-        BuildType release = android.getBuildTypes().getByName("release");
-        release.getPostprocessing().setCodeShrinker("proguard");
-        release.getPostprocessing().setRemoveUnusedCode(false);
-
-        plugin.createAndroidTasks();
-
-        assertThat(project.getTasks().getNames()).doesNotContain(PROGUARD_RELEASE);
-    }
-
-    @Test
     public void testPostprocessingBlock_default() throws Exception {
         BuildType release = android.getBuildTypes().getByName("release");
         release.getPostprocessing().setRemoveUnusedCode(true);
@@ -232,7 +217,7 @@ public class AppPluginDslTest {
     @Test
     public void testPostprocessingBlock_mixingDsls_newOld() throws Exception {
         BuildType release = android.getBuildTypes().getByName("release");
-        release.getPostprocessing().setCodeShrinker("proguard");
+        release.getPostprocessing().setCodeShrinker("r8");
 
         try {
             release.setMinifyEnabled(true);
@@ -283,27 +268,10 @@ public class AppPluginDslTest {
     }
 
     @Test
-    public void testShrinkerChoice_oldDsl_noInstantRun() throws Exception {
-        project =
-                TestProjects.builder(projectDirectory.newFolder("oldDsl_instantRun").toPath())
-                        .withPlugin(pluginType)
-                        .withProperty(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, false)
-                        .build();
-        initFieldsFromProject();
-        android.getBuildTypes().getByName("debug").setMinifyEnabled(true);
-
-        plugin.createAndroidTasks();
-
-        assertThat(project.getTasks().getNames()).contains(PROGUARD_DEBUG);
-        assertThat(project.getTasks().getNames()).doesNotContain(R8_DEBUG);
-    }
-
-    @Test
     public void testShrinkerChoice_oldDsl_r8Flag() throws Exception {
         project =
                 TestProjects.builder(projectDirectory.newFolder("oldDsl").toPath())
                         .withPlugin(pluginType)
-                        .withProperty(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, true)
                         .build();
         initFieldsFromProject();
 
@@ -321,7 +289,6 @@ public class AppPluginDslTest {
         project =
                 TestProjects.builder(projectDirectory.newFolder("oldDsl").toPath())
                         .withPlugin(pluginType)
-                        .withProperty(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, true)
                         .build();
         initFieldsFromProject();
 
@@ -341,22 +308,6 @@ public class AppPluginDslTest {
         plugin.createAndroidTasks();
 
         assertThat(project.getTasks().getNames()).contains(DEFAULT_DEBUG);
-    }
-
-    @Test
-    public void testApkShrinker_oldDsl_proguard() throws Exception {
-        project =
-                TestProjects.builder(projectDirectory.newFolder("oldDsl_proguard").toPath())
-                        .withPlugin(pluginType)
-                        .withProperty(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, false)
-                        .build();
-        initFieldsFromProject();
-        android.getBuildTypes().getByName("debug").setMinifyEnabled(true);
-
-        plugin.createAndroidTasks();
-
-        assertThat(project.getTasks().getNames()).contains(PROGUARD_DEBUG);
-        assertThat(project.getTasks().getNames()).contains(PROGUARD_DEBUG_ANDROID_TEST);
     }
 
     @Test
@@ -409,23 +360,6 @@ public class AppPluginDslTest {
         assertThat(android.getDefaultConfig().getMinSdkVersion().getApiString())
                 .named("android.defaultConfig.minSdkVersion.apiLevel")
                 .isEqualTo("P");
-    }
-
-    /** Regression test for b/120196378. */
-    @Test
-    public void testApkShrinker_useProguard_r8() throws Exception {
-        project =
-                TestProjects.builder(projectDirectory.newFolder("useProguardFalse").toPath())
-                        .withPlugin(pluginType)
-                        .withProperty(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, false)
-                        .build();
-        initFieldsFromProject();
-        BuildType buildType = android.getBuildTypes().getByName("debug");
-        buildType.setMinifyEnabled(true);
-        android.getCompileOptions().setSourceCompatibility(JavaVersion.VERSION_1_8);
-        android.getCompileOptions().setTargetCompatibility(JavaVersion.VERSION_1_8);
-
-        plugin.createAndroidTasks();
     }
 
     @Test

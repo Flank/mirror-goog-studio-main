@@ -16,11 +16,8 @@
 
 package com.android.build.gradle.internal.component
 
-import com.android.build.api.variant.AarMetadata
 import org.gradle.api.provider.MapProperty
 
-interface LibraryCreationConfig: VariantCreationConfig {
+interface LibraryCreationConfig: VariantCreationConfig, AarCreationConfig {
     val manifestPlaceholders: MapProperty<String, String>
-
-    val aarMetadata: AarMetadata
 }

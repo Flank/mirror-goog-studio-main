@@ -56,7 +56,7 @@ class NativeTransport {
     public static native void sendGetLibraryCompatibilityInfoResponse(
             int commandId, Object[] results, int length);
 
-    public static native void sendCrashEvent(String inspectorId, String errorMessage);
+    public static native void sendDisposedEvent(String inspectorId, String errorMessage);
 
     public static native void sendRawEventData(String inspectorId, byte[] eventData, int length);
 

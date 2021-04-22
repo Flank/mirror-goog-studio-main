@@ -65,14 +65,7 @@ public class AppInspectionService {
     private static final String INSPECTOR_ID_MISSING_ERROR =
             "Argument inspectorId must not be null";
 
-    private CrashListener mCrashListener =
-            new CrashListener() {
-                @Override
-                public void onInspectorCrashed(String inspectorId, String message) {
-                    sendCrashEvent(inspectorId, message);
-                    doDispose(inspectorId);
-                }
-            };
+    private final CrashListener mCrashListener = this::doDispose;
 
     private final CompatibilityChecker mCompatibilityChecker = new CompatibilityChecker();
 
@@ -206,10 +199,15 @@ public class AppInspectionService {
     }
 
     private void doDispose(String inspectorId) {
+        doDispose(inspectorId, null);
+    }
+
+    private void doDispose(String inspectorId, String errorMessage) {
         removeHooks(inspectorId, mEntryTransforms);
         removeHooks(inspectorId, mExitTransforms);
         InspectorBridge inspector = mInspectorBridges.remove(inspectorId);
         if (inspector != null) {
+            sendDisposedEvent(inspectorId, errorMessage);
             inspector.disposeInspector();
         }
     }

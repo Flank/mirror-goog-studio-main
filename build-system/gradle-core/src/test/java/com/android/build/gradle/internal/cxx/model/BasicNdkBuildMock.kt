@@ -40,11 +40,11 @@ open class BasicNdkBuildMock : BasicModuleModelMock() {
     val abi by lazy { createCxxAbiModel(sdkComponents, configurationParameters, variant, Abi.X86) }
 
     init {
-        Mockito.doReturn(makeSetProperty(setOf())).`when`(externalNativeNdkBuildOptions).abiFilters
-        Mockito.doReturn(makeListProperty(listOf("APP_STL=c++_shared"))).`when`(externalNativeNdkBuildOptions).arguments
-        Mockito.doReturn(makeListProperty(listOf("-DC_FLAG_DEFINED"))).`when`(externalNativeNdkBuildOptions).cFlags
-        Mockito.doReturn(makeListProperty(listOf("-DCPP_FLAG_DEFINED"))).`when`(externalNativeNdkBuildOptions).cppFlags
-        Mockito.doReturn(makeSetProperty(setOf())).`when`(externalNativeNdkBuildOptions).targets
+        Mockito.doReturn(makeSetProperty(setOf())).`when`(variantExternalNativeBuild).abiFilters
+        Mockito.doReturn(makeListProperty(listOf("APP_STL=c++_shared"))).`when`(variantExternalNativeBuild).arguments
+        Mockito.doReturn(makeListProperty(listOf("-DC_FLAG_DEFINED"))).`when`(variantExternalNativeBuild).cFlags
+        Mockito.doReturn(makeListProperty(listOf("-DCPP_FLAG_DEFINED"))).`when`(variantExternalNativeBuild).cppFlags
+        Mockito.doReturn(makeSetProperty(setOf())).`when`(variantExternalNativeBuild).targets
         val makefile = FileUtils.join(allPlatformsProjectRootDir, "Android.mk")
         Mockito.doReturn(makefile).`when`(ndkBuild).path
         projectRootDir.mkdirs()

@@ -141,7 +141,7 @@ public class FullBackupContentDetector extends ResourceXmlDetector {
                 continue;
             }
             for (String includePath : included) {
-                if (excludePath.startsWith(includePath)) {
+                if (excludePath.startsWith(includePath) || includePath.equals(".")) {
                     if (excludePath.equals(includePath)) {
                         Attr pathNode = exclude.getAttributeNode(ATTR_PATH);
                         assert pathNode != null;

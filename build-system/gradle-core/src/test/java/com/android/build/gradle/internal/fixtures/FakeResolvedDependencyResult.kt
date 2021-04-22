@@ -36,12 +36,19 @@ class FakeResolvedDependencyResult(
     override fun getResolvedVariant(): ResolvedVariantResult? = null
 }
 
-internal fun createComponent(group: String, name: String, version: String) =
-        FakeResolvedComponentResult(
-                id = FakeModuleComponentIdentifier(group = group, module = name, version = version),
-                dependents = mutableSetOf(),
-                dependencies = mutableSetOf()
-        )
+internal fun createProjectComponent(displayName: String) =
+    FakeResolvedComponentResult(
+        id = FakeProjectComponentIdentifier(displayName = displayName),
+        dependents = mutableSetOf(),
+        dependencies = mutableSetOf()
+    )
+
+internal fun createModuleComponent(group: String, name: String, version: String) =
+    FakeResolvedComponentResult(
+        id = FakeModuleComponentIdentifier(group = group, module = name, version = version),
+        dependents = mutableSetOf(),
+        dependencies = mutableSetOf()
+    )
 
 @Suppress("UNCHECKED_CAST")
 internal fun addDependencyEdge(a: ResolvedComponentResult, b: ResolvedComponentResult) {

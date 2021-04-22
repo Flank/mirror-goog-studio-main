@@ -1,0 +1,4 @@
+include ':app'
+include ':lib'
+include ':lib2'
+include ':javaLib'

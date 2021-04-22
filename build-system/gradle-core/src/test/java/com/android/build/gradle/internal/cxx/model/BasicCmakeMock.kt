@@ -41,11 +41,11 @@ open class BasicCmakeMock(createFakeNinja : Boolean = true) : BasicModuleModelMo
     val abi by lazy { createCxxAbiModel(sdkComponents, configurationParameters, variant, Abi.X86) }
 
     init {
-        doReturn(makeSetProperty(setOf())).`when`(externalNativeCmakeOptions).abiFilters
-        doReturn(makeListProperty(listOf("-DCMAKE_ARG=1"))).`when`(externalNativeCmakeOptions).arguments
-        doReturn(makeListProperty(listOf("-DC_FLAG_DEFINED"))).`when`(externalNativeCmakeOptions).cFlags
-        doReturn(makeListProperty(listOf("-DCPP_FLAG_DEFINED"))).`when`(externalNativeCmakeOptions).cppFlags
-        doReturn(makeSetProperty(setOf<String>())).`when`(externalNativeCmakeOptions).targets
+        doReturn(makeSetProperty(setOf())).`when`(variantExternalNativeBuild).abiFilters
+        doReturn(makeListProperty(listOf("-DCMAKE_ARG=1"))).`when`(variantExternalNativeBuild).arguments
+        doReturn(makeListProperty(listOf("-DC_FLAG_DEFINED"))).`when`(variantExternalNativeBuild).cFlags
+        doReturn(makeListProperty(listOf("-DCPP_FLAG_DEFINED"))).`when`(variantExternalNativeBuild).cppFlags
+        doReturn(makeSetProperty(setOf<String>())).`when`(variantExternalNativeBuild).targets
         val makefile = join(allPlatformsProjectRootDir, "CMakeLists.txt")
         doReturn(makefile).`when`(cmake).path
         projectRootDir.mkdirs()

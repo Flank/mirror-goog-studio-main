@@ -57,24 +57,16 @@ import org.gradle.api.services.BuildServiceParameters
  */
 @ThreadSafe
 abstract class SymbolTableBuildService @VisibleForTesting internal constructor(cacheBuilderSpec: CacheBuilderSpec) :
-    BuildService<SymbolTableBuildService.Parameters>, AutoCloseable {
+    BuildService<BuildServiceParameters.None>, AutoCloseable {
 
     @Suppress("unused") // Called by Gradle
     @Inject
     constructor() : this(cacheBuilderSpec = SOFT_VALUES)
 
-    abstract class Parameters : BuildServiceParameters {
-        abstract val cacheEnabled: Property<Boolean>
-    }
-
     fun loadClasspath(files: Iterable<File>): List<SymbolTable> {
         val stopwatch = Stopwatch.createStarted()
         logger.log(logLevel, "SymbolTableBuildService: loadClasspath started")
-        if (parameters.cacheEnabled.get()) {
-            getSymbolTablesCached(files)
-        } else {
-            loadSymbolTablesNonCached(files)
-        }.also { result ->
+        getSymbolTablesCached(files).also { result ->
             logger.log(
                 logLevel,
                 "SymbolTableBuildService: loadClasspath took {} to return {} tables",
@@ -87,28 +79,7 @@ abstract class SymbolTableBuildService @VisibleForTesting internal constructor(c
 
     protected val logger: Logger = Logging.getLogger(SymbolTableBuildService::class.java)
 
-    val logLevel: LogLevel = when {
-        BooleanOption.ENABLE_SYMBOL_TABLE_CACHING.defaultValue != parameters.cacheEnabled.get() -> {
-            LogLevel.INFO // Log more loudly if the flag is manually enabled.
-        }
-        else -> LogLevel.DEBUG
-    }
-
-    /**
-     * Loads the given symbol tables directly from the given files.
-     *
-     * [Symbol] instances will still be shared in this invocation, but neither [Symbol] nor
-     * [SymbolTable] instances will be cached between invocations.
-     */
-    private fun loadSymbolTablesNonCached(files: Iterable<File>): List<SymbolTable> {
-        val symbolIo = SymbolIo()
-        val result = ImmutableList.builder<SymbolTable>().also {
-            for (file in files) {
-                it.add(symbolIo.readSymbolListWithPackageName(file.toPath()))
-            }
-        }.build()
-        return result
-    }
+    private val logLevel: LogLevel =  LogLevel.DEBUG
 
     /**
      * We keep a soft reference to the strong interner used by symbol IO.
@@ -170,7 +141,7 @@ abstract class SymbolTableBuildService @VisibleForTesting internal constructor(c
      * Loads the given symbol tables using the cache.
      *
      * [SymbolTable]s will be returned from the in-memory cache if present, and only loaded from
-     * disk if they are not alrealy cached.
+     * disk if they are not already cached.
      * [Symbol] instances will be interned and shared across invocations.
      */
     private fun getSymbolTablesCached(files: Iterable<File>): List<SymbolTable> {
@@ -192,16 +163,12 @@ abstract class SymbolTableBuildService @VisibleForTesting internal constructor(c
         dropSymbolTables()
     }
 
-    class RegistrationAction(project: Project, private val projectOptions: ProjectOptions) :
-        ServiceRegistrationAction<SymbolTableBuildService, Parameters>(
+    class RegistrationAction(project: Project) :
+        ServiceRegistrationAction<SymbolTableBuildService, BuildServiceParameters.None>(
             project,
             SymbolTableBuildService::class.java
         ) {
-        override fun configure(parameters: Parameters) {
-            parameters.cacheEnabled.setDisallowChanges(
-                projectOptions.getProvider(BooleanOption.ENABLE_SYMBOL_TABLE_CACHING)
-            )
-        }
+        override fun configure(parameters: BuildServiceParameters.None) {}
     }
 
     companion object {

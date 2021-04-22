@@ -42,10 +42,9 @@ class ProcessTestManifestTest {
                     variant.maxSdk = 29
                     variant.targetSdk = 22
                 })
-                androidTests(selector().all(), { androidTest ->
-                    androidTest.packaging.jniLibs.useLegacyPackaging.set(false)
-                })
             }
+
+            android.packagingOptions.jniLibs.useLegacyPackaging = false
         """.trimIndent())
         FileUtils.createFile(
             project.file("src/androidTest/java/com/example/helloworld/TestReceiver.java"),

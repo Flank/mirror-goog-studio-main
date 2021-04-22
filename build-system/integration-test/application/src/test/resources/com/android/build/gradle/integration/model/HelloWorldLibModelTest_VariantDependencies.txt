@@ -1,5 +1,5 @@
 > VariantDependencies:
-   - name = "debug"
+   - name                 = "debug"
    - mainArtifact:
       - compileDependencies = []
       - runtimeDependencies = []
@@ -27,6 +27,7 @@
             - requestedCoordinates = (null)
             - dependencies         = []
    < unitTestArtifact
+   - testFixturesArtifact = (null)
 < VariantDependencies
 > GlobalLibraryMap:
    > libraries:

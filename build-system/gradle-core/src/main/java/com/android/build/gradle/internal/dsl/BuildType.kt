@@ -15,6 +15,7 @@
  */
 package com.android.build.gradle.internal.dsl
 
+import com.android.build.api.dsl.ApkSigningConfig
 import com.android.build.api.dsl.ApplicationBuildType
 import com.android.build.api.dsl.DynamicFeatureBuildType
 import com.android.build.api.dsl.LibraryBuildType
@@ -28,7 +29,6 @@ import com.android.builder.core.BuilderConstants
 import com.android.builder.errors.IssueReporter
 import com.android.builder.internal.ClassFieldImpl
 import com.android.builder.model.BaseConfig
-import com.android.builder.model.CodeShrinker
 import com.google.common.collect.Iterables
 import org.gradle.api.Action
 import org.gradle.api.Incubating
@@ -44,10 +44,11 @@ abstract class BuildType @Inject constructor(
     private val dslServices: DslServices
 ) :
     AbstractBuildType(), CoreBuildType, Serializable,
-    ApplicationBuildType<SigningConfig>,
-    LibraryBuildType<SigningConfig>,
+    VariantDimensionBinaryCompatibilityFix,
+    ApplicationBuildType,
+    LibraryBuildType,
     DynamicFeatureBuildType,
-    TestBuildType<SigningConfig> {
+    TestBuildType {
 
     /**
      * Name of this build type.
@@ -120,13 +121,13 @@ abstract class BuildType @Inject constructor(
 
     override val matchingFallbacks: MutableList<String> = mutableListOf()
 
-    fun setMatchingFallbacks(fallbacks: List<String>) {
+    override fun setMatchingFallbacks(fallbacks: List<String>) {
         val newFallbacks = ArrayList(fallbacks)
         matchingFallbacks.clear()
         matchingFallbacks.addAll(newFallbacks)
     }
 
-    fun setMatchingFallbacks(vararg fallbacks: String) {
+    override fun setMatchingFallbacks(vararg fallbacks: String) {
         matchingFallbacks.clear()
         for (fallback in fallbacks) {
             matchingFallbacks.add(fallback)
@@ -178,15 +179,23 @@ abstract class BuildType @Inject constructor(
     }
 
     /** The signing configuration. e.g.: `signingConfig signingConfigs.myConfig`  */
-    override var signingConfig: SigningConfig? = null
+    override var signingConfig: ApkSigningConfig? = null
 
     override fun setSigningConfig(signingConfig: com.android.builder.model.SigningConfig?): com.android.builder.model.BuildType {
         this.signingConfig = signingConfig as SigningConfig?
         return this
     }
 
+    fun setSigningConfig(signingConfig: SigningConfig?) {
+        this.signingConfig = signingConfig
+    }
+
     fun setSigningConfig(signingConfig: Any?) {
         this.signingConfig = signingConfig as SigningConfig?
+    }
+
+    override fun _internal_getSigingConfig(): ApkSigningConfig? {
+        return signingConfig
     }
 
     override var isEmbedMicroApp: Boolean = true
@@ -575,7 +584,6 @@ abstract class BuildType @Inject constructor(
             that.dslChecksEnabled = false
         }
         try {
-            this.signingConfig = that.signingConfig as SigningConfig?
             return super.initWith(that) as BuildType
         } finally {
             dslChecksEnabled = true

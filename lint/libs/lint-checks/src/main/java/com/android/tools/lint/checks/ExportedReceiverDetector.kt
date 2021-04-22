@@ -8,11 +8,15 @@ import com.android.SdkConstants.TAG_INTENT_FILTER
 import com.android.SdkConstants.TAG_PROVIDER
 import com.android.SdkConstants.TAG_RECEIVER
 import com.android.SdkConstants.TAG_SERVICE
+import com.android.sdklib.AndroidVersion.VersionCodes.S
 import com.android.tools.lint.detector.api.Category
+import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
+import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.LintFix
+import com.android.tools.lint.detector.api.LintMap
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.XmlContext
@@ -29,14 +33,22 @@ class ExportedReceiverDetector : Detector(), XmlScanner {
         val exported = element.getAttributeNodeNS(ANDROID_URI, ATTR_EXPORTED)
         if (intentFilter != null && exported == null) {
             val fix = LintFix.create().set().todo(ANDROID_URI, ATTR_EXPORTED).build()
-            context.report(
+            val incident = Incident(
                 ISSUE,
                 element,
                 context.getNameLocation(element),
                 "When using intent filters, please specify `android:exported` as well",
                 fix
             )
+            context.report(incident, map())
         }
+    }
+
+    override fun filterIncident(context: Context, incident: Incident, map: LintMap): Boolean {
+        if (context.mainProject.targetSdk >= S) {
+            incident.overrideSeverity(Severity.ERROR)
+        }
+        return true
     }
 
     companion object {

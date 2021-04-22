@@ -26,7 +26,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.component.ComponentBuilder;
 import com.android.build.api.component.impl.TestComponentImpl;
-import com.android.build.api.component.impl.TestFixturesComponentImpl;
+import com.android.build.api.component.impl.TestFixturesImpl;
 import com.android.build.api.dsl.CommonExtension;
 import com.android.build.api.dsl.TestedExtension;
 import com.android.build.api.extension.AndroidComponentsExtension;
@@ -127,6 +127,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+
 import org.gradle.api.JavaVersion;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Plugin;
@@ -148,13 +149,16 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 /** Base class for all Android plugins */
 public abstract class BasePlugin<
                 AndroidComponentsT extends
-                        AndroidComponentsExtension<? extends ComponentBuilder, ? extends Variant>,
+                        AndroidComponentsExtension<
+                                ? extends CommonExtension<?, ?, ?, ?>,
+                                ? extends ComponentBuilder,
+                                ? extends Variant>,
                 VariantBuilderT extends VariantBuilderImpl,
                 VariantT extends VariantImpl>
         implements Plugin<Project> {
 
     private BaseExtension extension;
-    private AndroidComponentsExtension<? extends ComponentBuilder, ? extends Variant>
+    private AndroidComponentsExtension<? extends CommonExtension<?, ?, ?, ?>, ? extends ComponentBuilder, ? extends Variant>
             androidComponentsExtension;
 
     private VariantManager<VariantBuilderT, VariantT> variantManager;
@@ -186,6 +190,11 @@ public abstract class BasePlugin<
 
     @NonNull private final BuildEventsListenerRegistry listenerRegistry;
 
+    private final VariantApiOperationsRegistrar<
+            CommonExtension<?, ?, ?, ?>,
+            VariantBuilderT,
+            VariantT> variantApiOperations = new VariantApiOperationsRegistrar<>();
+
     public BasePlugin(
             @NonNull ToolingModelBuilderRegistry registry,
             @NonNull SoftwareComponentFactory componentFactory,
@@ -212,7 +221,7 @@ public abstract class BasePlugin<
     protected abstract AndroidComponentsT createComponentExtension(
             @NonNull DslServices dslServices,
             @NonNull
-                    VariantApiOperationsRegistrar<VariantBuilderT, VariantT>
+                    VariantApiOperationsRegistrar<CommonExtension<?, ?, ?, ?>, VariantBuilderT, VariantT>
                             variantApiOperationsRegistrar);
 
     @NonNull
@@ -226,7 +235,7 @@ public abstract class BasePlugin<
     protected abstract TaskManager<VariantBuilderT, VariantT> createTaskManager(
             @NonNull List<ComponentInfo<VariantBuilderT, VariantT>> variants,
             @NonNull List<TestComponentImpl> testComponents,
-            @NonNull List<TestFixturesComponentImpl> testFixturesComponents,
+            @NonNull List<TestFixturesImpl> testFixturesComponents,
             boolean hasFlavors,
             @NonNull ProjectOptions projectOptions,
             @NonNull GlobalScope globalScope,
@@ -412,7 +421,7 @@ public abstract class BasePlugin<
                                         .provider(() -> extension.getBuildToolsRevision()))
                         .execute();
 
-        new SymbolTableBuildService.RegistrationAction(project, projectOptions).execute();
+        new SymbolTableBuildService.RegistrationAction(project).execute();
         new ClassesHierarchyBuildService.RegistrationAction(project).execute();
         new LintFixBuildService.RegistrationAction(project).execute();
 
@@ -461,7 +470,7 @@ public abstract class BasePlugin<
 
         createLintClasspathConfiguration(project);
 
-        createAndroidJdkImageConfiguration(project);
+        createAndroidJdkImageConfiguration(project, globalScope);
     }
 
     /** Creates a lint class path Configuration for the given project */
@@ -477,11 +486,22 @@ public abstract class BasePlugin<
     }
 
     /** Creates the androidJdkImage configuration */
-    public static void createAndroidJdkImageConfiguration(@NonNull Project project) {
+    public static void createAndroidJdkImageConfiguration(
+            @NonNull Project project, @NonNull GlobalScope globalScope) {
         Configuration config = project.getConfigurations().create(CONFIG_NAME_ANDROID_JDK_IMAGE);
         config.setVisible(false);
         config.setCanBeConsumed(false);
         config.setDescription("Configuration providing JDK image for compiling Java 9+ sources");
+
+        project.getDependencies()
+                .add(
+                        CONFIG_NAME_ANDROID_JDK_IMAGE,
+                        project.files(
+                                globalScope
+                                        .getVersionedSdkLoader()
+                                        .flatMap(
+                                                VersionedSdkLoader
+                                                        ::getCoreForSystemModulesProvider)));
     }
 
     private void configureExtension() {
@@ -510,8 +530,6 @@ public abstract class BasePlugin<
 
         globalScope.setExtension(extension);
 
-        VariantApiOperationsRegistrar<VariantBuilderT, VariantT> variantApiOperations =
-                new VariantApiOperationsRegistrar<>();
         androidComponentsExtension = createComponentExtension(dslServices, variantApiOperations);
 
         variantManager =
@@ -690,6 +708,10 @@ public abstract class BasePlugin<
 
         extension.disableWrite();
 
+        variantApiOperations.executeDslFinalizationBlocks(
+                (CommonExtension<?, ?, ?, ?>) extension
+        );
+
         GradleBuildProject.Builder projectBuilder =
                 configuratorService.getProjectBuilder(project.getPath());
 
@@ -774,7 +796,7 @@ public abstract class BasePlugin<
         }
 
         // now publish all testFixtures components artifacts.
-        for (TestFixturesComponentImpl testFixturesComponent :
+        for (TestFixturesImpl testFixturesComponent :
                 variantManager.getTestFixturesComponents()) {
             testFixturesComponent.publishBuildArtifacts();
         }

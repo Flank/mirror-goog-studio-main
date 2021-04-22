@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.plugins;
 
 import com.android.annotations.NonNull;
 import com.android.build.api.component.impl.TestComponentImpl;
-import com.android.build.api.component.impl.TestFixturesComponentImpl;
+import com.android.build.api.component.impl.TestFixturesImpl;
 import com.android.build.api.dsl.ApplicationExtension;
 import com.android.build.api.dsl.SdkComponents;
 import com.android.build.api.extension.ApplicationAndroidComponentsExtension;
@@ -53,6 +53,7 @@ import javax.inject.Inject;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.component.SoftwareComponentFactory;
+import org.gradle.api.reflect.TypeOf;
 import org.gradle.build.event.BuildEventsListenerRegistry;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
@@ -106,13 +107,15 @@ public class AppPlugin
         ApplicationExtensionImpl applicationExtension =
                 dslServices.newDecoratedInstance(ApplicationExtensionImpl.class, dslServices, dslContainers);
         if (projectServices.getProjectOptions().get(BooleanOption.USE_NEW_DSL_INTERFACES)) {
+            // noinspection unchecked,rawtypes: Hacks to make the parameterized types make sense
+            Class<ApplicationExtension> instanceType = (Class) BaseAppModuleExtension.class;
             BaseAppModuleExtension android =
                     (BaseAppModuleExtension)
                             project.getExtensions()
                                     .create(
-                                            ApplicationExtension.class,
+                                            new TypeOf<ApplicationExtension>() {},
                                             "android",
-                                            BaseAppModuleExtension.class,
+                                            instanceType,
                                             dslServices,
                                             globalScope,
                                             buildOutputs,
@@ -145,8 +148,10 @@ public class AppPlugin
             @NonNull DslServices dslServices,
             @NonNull
                     VariantApiOperationsRegistrar<
-                                    ApplicationVariantBuilderImpl, ApplicationVariantImpl>
-                            variantApiOperationsRegistrar) {
+                            com.android.build.api.dsl.CommonExtension<?, ?, ?, ?>,
+                            ApplicationVariantBuilderImpl,
+                            ApplicationVariantImpl>
+                        variantApiOperationsRegistrar) {
         SdkComponents sdkComponents =
                 dslServices.newInstance(
                         SdkComponentsImpl.class,
@@ -174,7 +179,7 @@ public class AppPlugin
                     List<ComponentInfo<ApplicationVariantBuilderImpl, ApplicationVariantImpl>>
                             variants,
             @NonNull List<TestComponentImpl> testComponents,
-            @NonNull List<TestFixturesComponentImpl> testFixturesComponents,
+            @NonNull List<TestFixturesImpl> testFixturesComponents,
             boolean hasFlavors,
             @NonNull ProjectOptions projectOptions,
             @NonNull GlobalScope globalScope,

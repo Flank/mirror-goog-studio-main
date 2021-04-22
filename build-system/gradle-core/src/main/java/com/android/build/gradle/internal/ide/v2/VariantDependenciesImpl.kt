@@ -27,7 +27,8 @@ data class VariantDependenciesImpl(
     override val name: String,
     override val mainArtifact: ArtifactDependencies,
     override val androidTestArtifact: ArtifactDependencies?,
-    override val unitTestArtifact: ArtifactDependencies?
+    override val unitTestArtifact: ArtifactDependencies?,
+    override val testFixturesArtifact: ArtifactDependencies?
 ) : VariantDependencies, Serializable {
     companion object {
         @JvmStatic

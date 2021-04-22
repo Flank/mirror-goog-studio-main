@@ -47,7 +47,7 @@ abstract class TestComponentImpl @Inject constructor(
     artifacts: ArtifactsImpl,
     variantScope: VariantScope,
     variantData: BaseVariantData,
-    override val testedVariant: VariantImpl,
+    val testedVariant: VariantImpl,
     transformManager: TransformManager,
     variantPropertiesApiServices: VariantPropertiesApiServices,
     taskCreationServices: TaskCreationServices,
@@ -81,6 +81,6 @@ abstract class TestComponentImpl @Inject constructor(
         variantDslInfo.testedVariant?.testNamespace?.let { internalServices.provider { it } }
             ?: internalServices.providerOf(String::class.java, variantDslInfo.applicationId)
 
-    override val isPseudoLocalesEnabled: Property<Boolean> =
+    override val pseudoLocalesEnabled: Property<Boolean> =
             internalServices.newPropertyBackingDeprecatedApi(Boolean::class.java, variantDslInfo.isPseudoLocalesEnabled)
 }

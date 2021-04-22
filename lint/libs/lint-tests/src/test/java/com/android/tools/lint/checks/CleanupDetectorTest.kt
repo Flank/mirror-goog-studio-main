@@ -961,7 +961,7 @@ class CleanupDetectorTest : AbstractCheckTest() {
             """
             src/test/pkg/SharedPrefsTest.java:16: Warning: Consider using apply() instead; commit writes its data to persistent storage immediately, whereas apply will handle it in the background [ApplySharedPref]
                     editor.commit();
-                    ~~~~~~~~~~~~~~~
+                           ~~~~~~~~
             src/test/pkg/SharedPrefsTest.java:54: Warning: SharedPreferences.edit() without a corresponding commit() or apply() call [CommitPrefEdits]
                     SharedPreferences.Editor editor = preferences.edit();
                                                       ~~~~~~~~~~~~~~~~~~
@@ -1054,6 +1054,34 @@ class CleanupDetectorTest : AbstractCheckTest() {
                     """
             ).indented()
         ).run().expect(expected)
+    }
+
+    fun testSharedPrefsApplyLocation() {
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                import android.content.SharedPreferences
+
+                class AuthenticatedWebViewActivity {
+                    lateinit var webViewUrlSharedPrefs: SharedPreferences
+                    fun test() {
+                        webViewUrlSharedPrefs.edit()
+                            .putString("key", "value")
+                            .commit()
+                    }
+                }
+                """
+            )
+        ).run().expect(
+            """
+            src/test/pkg/AuthenticatedWebViewActivity.kt:11: Warning: Consider using apply() instead; commit writes its data to persistent storage immediately, whereas apply will handle it in the background [ApplySharedPref]
+                                        .commit()
+                                         ~~~~~~~~
+            0 errors, 1 warnings
+            """
+        )
     }
 
     fun test2() {
@@ -1288,7 +1316,7 @@ class CleanupDetectorTest : AbstractCheckTest() {
             """
             src/test/pkg/SharedPrefsTest8.java:11: Warning: Consider using apply() instead; commit writes its data to persistent storage immediately, whereas apply will handle it in the background [ApplySharedPref]
                     editor.commit();
-                    ~~~~~~~~~~~~~~~
+                           ~~~~~~~~
             0 errors, 1 warnings
             """
         lint().files(manifest().minSdk(11), sharedPrefsTest8).run().expect(expected)
@@ -1304,9 +1332,9 @@ class CleanupDetectorTest : AbstractCheckTest() {
     fun testChainedCalls() {
         val expected =
             """
-            src/test/pkg/Chained.java:8: Warning: Consider using apply() instead; commit writes its data to persistent storage immediately, whereas apply will handle it in the background [ApplySharedPref]
-                    PreferenceManager
-                    ^
+            src/test/pkg/Chained.java:12: Warning: Consider using apply() instead; commit writes its data to persistent storage immediately, whereas apply will handle it in the background [ApplySharedPref]
+                            .commit();
+                             ~~~~~~~~
             src/test/pkg/Chained.java:24: Warning: SharedPreferences.edit() without a corresponding commit() or apply() call [CommitPrefEdits]
                     PreferenceManager
                     ^

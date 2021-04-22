@@ -16,10 +16,13 @@
 
 package com.android.build.gradle.internal.dsl
 
+import com.android.build.api.dsl.ApkSigningConfig
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.variant.VariantBuilder
 import com.android.build.api.variant.Variant
 import com.android.build.gradle.api.AndroidSourceSet
+import org.gradle.api.Action
+import org.gradle.api.NamedDomainObjectContainer
 import com.android.build.gradle.internal.CompileOptions as CompileOptionsImpl
 import com.android.build.gradle.internal.coverage.JacocoOptions as JacocoOptionsImpl
 import com.android.build.gradle.internal.dsl.AaptOptions as AaptOptionsImpl
@@ -40,18 +43,12 @@ interface InternalCommonExtension<
         BuildFeaturesT : com.android.build.api.dsl.BuildFeatures,
         BuildTypeT : com.android.build.api.dsl.BuildType,
         DefaultConfigT : com.android.build.api.dsl.DefaultConfig,
-        ProductFlavorT : com.android.build.api.dsl.ProductFlavor,
-        VariantBuilderT : VariantBuilder,
-        VariantT : Variant> :
+        ProductFlavorT : com.android.build.api.dsl.ProductFlavor> :
     CommonExtension<
-        AndroidSourceSet,
         BuildFeaturesT,
         BuildTypeT,
         DefaultConfigT,
-        ProductFlavorT,
-        SigningConfig,
-        VariantBuilderT,
-        VariantT>, Lockable {
+        ProductFlavorT>, Lockable {
 
     override val aaptOptions: AaptOptionsImpl
 
@@ -65,4 +62,10 @@ interface InternalCommonExtension<
     override val externalNativeBuild: ExternalNativeBuildImpl
     override val testOptions: TestOptionsImpl
     override val splits: SplitsImpl
+    override val signingConfigs: NamedDomainObjectContainer<SigningConfig>
+
+    fun buildTypes(action: Action<in NamedDomainObjectContainer<BuildType>>)
+    fun productFlavors(action: Action<NamedDomainObjectContainer<ProductFlavor>>)
+    fun defaultConfig(action: Action<DefaultConfig>)
+    fun signingConfigs(action: Action<NamedDomainObjectContainer<SigningConfig>>)
 }

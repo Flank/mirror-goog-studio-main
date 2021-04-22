@@ -19,6 +19,7 @@ import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.Component
 import com.android.build.api.component.UnitTest
 import com.android.build.api.component.impl.ComponentImpl
+import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.BuildConfigField
@@ -28,6 +29,7 @@ import com.android.build.api.variant.Packaging
 import com.android.build.api.variant.ResValue
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
+import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
@@ -51,7 +53,6 @@ import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.provider.Provider
 import java.io.Serializable
 
 abstract class VariantImpl(
@@ -132,21 +133,24 @@ abstract class VariantImpl(
     }
 
 
-    override val externalCmake: ExternalNativeBuild? by lazy {
-        variantDslInfo.externalNativeBuildOptions.externalNativeCmakeOptions?.let {
-            ExternalCmakeImpl(
-                    it,
-                    variantPropertiesApiServices
-            )
-        }
-    }
-
-    override val externalNdkBuild: ExternalNativeBuild? by lazy {
-        variantDslInfo.externalNativeBuildOptions.externalNativeNdkBuildOptions?.let {
-            ExternalNdkBuildImpl(
-                    it,
-                    variantPropertiesApiServices
-            )
+    override val externalNativeBuild: ExternalNativeBuild? by lazy {
+        variantDslInfo.nativeBuildSystem?.let { nativeBuildType ->
+            when(nativeBuildType) {
+                VariantManager.NativeBuiltType.CMAKE ->
+                    variantDslInfo.externalNativeBuildOptions.externalNativeCmakeOptions?.let {
+                        ExternalCmakeImpl(
+                                it,
+                                variantPropertiesApiServices
+                        )
+                    }
+                VariantManager.NativeBuiltType.NDK_BUILD ->
+                    variantDslInfo.externalNativeBuildOptions.externalNativeNdkBuildOptions?.let {
+                        ExternalNdkBuildImpl(
+                                it,
+                                variantPropertiesApiServices
+                        )
+                    }
+            }
         }
     }
 
@@ -166,6 +170,8 @@ abstract class VariantImpl(
     // ---------------------------------------------------------------------------------------------
 
     val testComponents = mutableMapOf<VariantType, ComponentImpl>()
+    var testFixturesComponent: ComponentImpl? = null
+
     val externalExtensions: Map<Class<*>, Any>? by lazy {
         variantBuilder.getRegisteredExtensions()
     }
@@ -202,7 +208,7 @@ abstract class VariantImpl(
 
     abstract override fun <T : Component> createUserVisibleVariantObject(
             projectServices: ProjectServices,
-            operationsRegistrar: VariantApiOperationsRegistrar<out VariantBuilder, out Variant>,
+            operationsRegistrar: VariantApiOperationsRegistrar<out CommonExtension<*, *, *, *>, out VariantBuilder, out Variant>,
             stats: GradleBuildVariant.Builder?): T
 
     override var unitTest: UnitTest? = null
@@ -214,7 +220,7 @@ abstract class VariantImpl(
         sourceSets: ImmutableList.Builder<ConfigurableFileTree>
     ) {
         renderscript?.let {
-            if (!it.renderscriptNdkModeEnabled.get()
+            if (!it.ndkModeEnabled.get()
                 && taskContainer.renderscriptCompileTask != null
             ) {
                 val rsFC = artifacts.get(InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR)
@@ -223,6 +229,6 @@ abstract class VariantImpl(
         }
     }
 
-    override val isPseudoLocalesEnabled: Property<Boolean> =
+    override val pseudoLocalesEnabled: Property<Boolean> =
         internalServices.newPropertyBackingDeprecatedApi(Boolean::class.java, variantDslInfo.isPseudoLocalesEnabled)
 }

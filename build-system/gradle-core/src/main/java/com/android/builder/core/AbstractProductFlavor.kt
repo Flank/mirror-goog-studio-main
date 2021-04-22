@@ -15,6 +15,7 @@
  */
 package com.android.builder.core
 
+import com.android.build.api.dsl.ApkSigningConfig
 import com.android.builder.internal.BaseConfigImpl
 import com.android.builder.model.ApiVersion
 import com.android.builder.model.BaseConfig
@@ -209,14 +210,10 @@ abstract class AbstractProductFlavor(
         return this
     }
 
-    private var _signingConfig: SigningConfig? = null
-
-    /** Signing config used by this product flavor. e.g.: `signingConfig = signingConfigs.myConfig` */
-    override val signingConfig: SigningConfig?
-        get() = _signingConfig
+    open var signingConfig: ApkSigningConfig? = null
 
     fun setSigningConfig(signingConfig: SigningConfig?): ProductFlavor {
-        _signingConfig = signingConfig
+        this.signingConfig = signingConfig as com.android.build.gradle.internal.dsl.SigningConfig?
         return this
     }
 
@@ -511,8 +508,6 @@ abstract class AbstractProductFlavor(
             testHandleProfiling
         )
         testFunctionalTest = chooseNotNull(overlay.testFunctionalTest, testFunctionalTest)
-        // should this be a copy instead?
-        _signingConfig = chooseNotNull(overlay.signingConfig, signingConfig)
         wearAppUnbundled = chooseNotNull(overlay.wearAppUnbundled,
             wearAppUnbundled
         )
@@ -537,6 +532,8 @@ abstract class AbstractProductFlavor(
             }
             missingDimensionSelections!!.putAll(
                     overlay.missingDimensionStrategies)
+            // should this be a copy instead?
+            setSigningConfig(chooseNotNull(overlay.signingConfig, signingConfig) as SigningConfig?)
         }
         // no need to merge missingDimensionStrategies, it's not queried from the merged flavor.
 // TODO this should all be clean up with the new variant DSL/API in 3.1
@@ -566,8 +563,6 @@ abstract class AbstractProductFlavor(
             testInstrumentationRunnerArguments.putAll(thatProductFlavor.testInstrumentationRunnerArguments)
             testHandleProfiling = thatProductFlavor.testHandleProfiling
             testFunctionalTest = thatProductFlavor.testFunctionalTest
-            // should this be a copy instead?
-            _signingConfig = thatProductFlavor.signingConfig
             wearAppUnbundled = thatProductFlavor.wearAppUnbundled
             addResourceConfigurations(thatProductFlavor.resourceConfigurations)
             addManifestPlaceholders(thatProductFlavor.manifestPlaceholders)
@@ -580,6 +575,8 @@ abstract class AbstractProductFlavor(
         if (that is AbstractProductFlavor) {
             // the objects inside the map are immutable, so it's fine to keep them.
             missingDimensionSelections = Maps.newHashMap(that.missingDimensionStrategies)
+            // should this be a copy instead?
+            setSigningConfig(that.signingConfig as SigningConfig?)
         }
     }
 

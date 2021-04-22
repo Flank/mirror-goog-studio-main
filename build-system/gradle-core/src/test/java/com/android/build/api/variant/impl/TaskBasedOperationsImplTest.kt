@@ -407,7 +407,7 @@ class TaskBasedOperationsImplTest {
             variantOutputConfiguration = VariantOutputConfigurationImpl(
                 isUniversal = false,
                 filters = listOf(
-                    FilterConfiguration(FilterConfiguration.FilterType.DENSITY, densityValue)
+                    FilterConfigurationImpl(FilterConfiguration.FilterType.DENSITY, densityValue)
                 ))
         )
 

@@ -2,6 +2,7 @@ load("//tools/base/bazel:coverage.bzl", "coverage_java_test")
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 load("//tools/base/bazel:utils.bzl", "java_jarjar")
 load("//tools/base/bazel:proto.bzl", "PROTOC_VERSION")
+load("@bazel_skylib//lib:selects.bzl", "selects")
 
 exports_files(["jarjar_rules.txt"])
 
@@ -393,6 +394,12 @@ java_jarjar(
 )
 
 config_setting(
+    name = "host_linux",
+    values = {"host_cpu": "linux"},
+    visibility = ["//visibility:public"],
+)
+
+config_setting(
     name = "host_darwin",
     values = {"host_cpu": "darwin"},
     visibility = ["//visibility:public"],
@@ -449,6 +456,35 @@ config_setting(
 config_setting(
     name = "kotlin_no_use_ir",
     values = {"define": "kotlin_no_use_ir=true"},
+    visibility = ["//visibility:public"],
+)
+
+selects.config_setting_group(
+    name = "target_android",
+    match_any = [
+        "@//tools/base/bazel:android_cpu_x86",
+        "@//tools/base/bazel:android_cpu_x86_64",
+        "@//tools/base/bazel:android_cpu_arm",
+        "@//tools/base/bazel:android_cpu_arm_64",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+selects.config_setting_group(
+    name = "host_un*x",
+    match_any = [
+        ":host_linux",
+        ":host_darwin",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+selects.config_setting_group(
+    name = "target_android_host_un*x",
+    match_all = [
+        ":target_android",
+        ":host_un*x",
+    ],
     visibility = ["//visibility:public"],
 )
 

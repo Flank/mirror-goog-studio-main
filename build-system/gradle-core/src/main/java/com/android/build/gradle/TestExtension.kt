@@ -1,6 +1,7 @@
 package com.android.build.gradle
 
 import com.android.build.api.dsl.TestBuildFeatures
+import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.api.ApplicationVariant
 import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.api.BaseVariantOutput
@@ -8,7 +9,10 @@ import com.android.build.gradle.api.ViewBindingOptions
 import com.android.build.gradle.internal.ExtraModelInfo
 import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.dependency.SourceSetManager
+import com.android.build.gradle.internal.dsl.BuildType
+import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.InternalTestExtension
+import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.TestExtensionImpl
 import com.android.build.gradle.internal.dsl.ViewBindingOptionsImpl
 import com.android.build.gradle.internal.scope.GlobalScope
@@ -36,6 +40,17 @@ open class TestExtension(
     false
 ), TestAndroidConfig,
     InternalTestExtension by publicExtensionImpl {
+
+    // Overrides to make the parameterized types match, due to BaseExtension being part of
+    // the previous public API and not wanting to paramerterize that.
+    override val buildTypes: NamedDomainObjectContainer<BuildType>
+        get() = publicExtensionImpl.buildTypes as NamedDomainObjectContainer<BuildType>
+    override val defaultConfig: DefaultConfig
+        get() = publicExtensionImpl.defaultConfig as DefaultConfig
+    override val productFlavors: NamedDomainObjectContainer<ProductFlavor>
+        get() = publicExtensionImpl.productFlavors as NamedDomainObjectContainer<ProductFlavor>
+    override val sourceSets: NamedDomainObjectContainer<AndroidSourceSet>
+        get() = publicExtensionImpl.sourceSets
 
     private val applicationVariantList: DomainObjectSet<ApplicationVariant> =
         dslServices.domainObjectSet(ApplicationVariant::class.java)

@@ -41,10 +41,7 @@ class OptionVersionTest {
          *  - Tracking bug for AGP 7.1: TBD
          *  - Tracking bug for AGP 7.0: 171996591
          */
-        private val KNOWN_VIOLATING_DEPRECATED_OPTIONS: List<Option<*>> = listOf(
-                BooleanOption.ENABLE_JVM_RESOURCE_COMPILER,
-                OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8
-        )
+        private val KNOWN_VIOLATING_DEPRECATED_OPTIONS: List<Option<*>> = listOf()
 
         private fun getStableVersionIgnoringDotReleases(versionString: String): GradleVersion {
             // Normalize the version string first (e.g., "7.0" => "7.0.0")

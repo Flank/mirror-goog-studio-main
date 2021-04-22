@@ -18,6 +18,7 @@ package com.android.build.api.artifact
 
 import org.gradle.api.Incubating
 import org.gradle.api.file.FileSystemLocation
+import org.gradle.api.file.RegularFile
 
 /**
  * Public [Artifact] for Android Gradle plugin.
@@ -32,5 +33,19 @@ sealed class MultipleArtifact<FileTypeT : FileSystemLocation>(
     kind: ArtifactKind<FileTypeT>,
     category: Category
 ) : Artifact.Multiple<FileTypeT>(kind, category) {
-    // there are no public multiple artifact types at this time.
+
+    /**
+     * Text files with additional ProGuard rules to be used to determine which classes are compiled
+     * into the main dex file.
+     *
+     * If set, rules from these files are used in combination with the default rules used by the
+     * build system.
+     *
+     * Initialized from DSL [com.android.build.api.dsl.VariantDimension.multiDexKeepProguard]
+     */
+    @Incubating
+    object MULTIDEX_KEEP_PROGUARD:
+            MultipleArtifact<RegularFile>(FILE, Category.SOURCES),
+            Transformable,
+            Replaceable
 }

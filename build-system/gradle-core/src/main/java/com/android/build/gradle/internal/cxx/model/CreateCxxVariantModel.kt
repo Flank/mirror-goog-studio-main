@@ -73,6 +73,7 @@ fun createCxxVariantModel(
                 soFolder = join(intermediates, ifCMake { "obj" } ?: "obj/local"),
                 soRepublishFolder = join(intermediatesBase, ifCMake { "obj" } ?: "obj/local"),
                 stlType = determineUsedStl(arguments).argumentName,
+                verboseMakefile = null,
                 optimizationTag = run {
                     /**
                      * Choose the optimization level to use when the user hasn't specified one

@@ -118,9 +118,6 @@ interface ProductFlavor : BaseConfig, DimensionAware {
      */
     val resourceConfigurations: Collection<String>
 
-    /** The associated signing config or null if none are set on the product flavor.*/
-    val signingConfig: SigningConfig?
-
     val vectorDrawables: VectorDrawablesOptions
     /**
      *  Whether to enable unbundling mode for embedded wear app.

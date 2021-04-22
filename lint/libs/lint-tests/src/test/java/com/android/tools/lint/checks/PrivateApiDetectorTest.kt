@@ -24,6 +24,48 @@ class PrivateApiDetectorTest : AbstractCheckTest() {
         return PrivateApiDetector()
     }
 
+    fun testFields() {
+        lint().files(
+            manifest().minSdk(20).targetSdk(28),
+            java(
+                """
+                package test.pkg;
+
+                import android.content.Context;
+                import android.telephony.TelephonyManager;
+
+                import java.lang.reflect.Field;
+
+                public class TestReflection {
+                    public void test(Context context, int subId) {
+                        try {
+                            TelephonyManager tm = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+                            Field deniedField = TelephonyManager.class.getDeclaredField("NETWORK_SELECTION_MODE_MANUAL"); // ERROR 1
+                            Object o1 = deniedField.get(tm);
+                            Field allowedField = TelephonyManager.class.getDeclaredField("PHONE_TYPE_CDMA"); // OK
+                            Object o2 = allowedField.get(tm);
+                            Field maybeField = TelephonyManager.class.getDeclaredField("OTASP_NEEDED"); // ERROR 2
+                            Object o3 = maybeField.get(tm);
+                        } catch (ReflectiveOperationException e) {
+                            throw new IllegalStateException(e);
+                        }
+                    }
+                }
+               """
+            ).indented()
+        ).run().expect(
+            """
+            src/test/pkg/TestReflection.java:12: Error: Reflective access to NETWORK_SELECTION_MODE_MANUAL is forbidden when targeting API 28 and above [BlockedPrivateApi]
+                        Field deniedField = TelephonyManager.class.getDeclaredField("NETWORK_SELECTION_MODE_MANUAL"); // ERROR 1
+                                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            src/test/pkg/TestReflection.java:16: Error: Reflective access to OTASP_NEEDED will throw an exception when targeting API 28 and above [SoonBlockedPrivateApi]
+                        Field maybeField = TelephonyManager.class.getDeclaredField("OTASP_NEEDED"); // ERROR 2
+                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            2 errors, 0 warnings
+            """
+        )
+    }
+
     fun testForNameOnInternalClass() {
         val expected =
             """
@@ -582,5 +624,51 @@ class PrivateApiDetectorTest : AbstractCheckTest() {
             """
             ).indented()
         ).run().expect(expected)
+    }
+
+    fun test140895401() {
+        lint().files(
+            manifest().minSdk(20).targetSdk(28),
+            java(
+                """
+                package test.pkg;
+
+                import android.content.Context;
+                import android.telephony.TelephonyManager;
+
+                import java.lang.reflect.Method;
+
+                public class TestReflection {
+                    public void test(Context context, int subId) {
+                        try {
+                            TelephonyManager tm = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+                            Method setNetworkSelectionModeAutomatic =
+                                    TelephonyManager.class.getDeclaredMethod("setNetworkSelectionModeAutomatic", int.class); // Error 1
+                            setNetworkSelectionModeAutomatic.invoke(tm, subId);
+
+                            Method getDataEnabled = TelephonyManager.class.getDeclaredMethod("getDataEnabled"); // OK: it's allow-listed
+                            getDataEnabled.invoke(tm);
+                            Method getNetworkSelectionMode = TelephonyManager.class.getDeclaredMethod("getNetworkSelectionMode"); // Error 2
+                            getNetworkSelectionMode.invoke(tm);
+
+                            Class<?> systemProperties = Class.forName("android.os.SystemProperties"); // Error 3
+                        } catch (ReflectiveOperationException e) {
+                            throw new IllegalStateException(e);
+                        }
+                    }
+                }
+               """
+            ).indented()
+        ).run().expect(
+            """
+            src/test/pkg/TestReflection.java:18: Error: Reflective access to getNetworkSelectionMode is forbidden when targeting API 28 and above [BlockedPrivateApi]
+                        Method getNetworkSelectionMode = TelephonyManager.class.getDeclaredMethod("getNetworkSelectionMode"); // Error 2
+                                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            src/test/pkg/TestReflection.java:21: Warning: Accessing internal APIs via reflection is not supported and may not work on all devices or in the future [PrivateApi]
+                        Class<?> systemProperties = Class.forName("android.os.SystemProperties"); // Error 3
+                                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            1 errors, 1 warnings
+            """
+        )
     }
 }

@@ -21,14 +21,20 @@ import static org.junit.Assert.fail;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
+import com.android.testutils.ignore.IgnoreTestRule;
+import com.android.testutils.ignore.IgnoreWithCondition;
+import com.android.testutils.ignore.OnWindows;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import org.gradle.tooling.BuildException;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
 public class GradleTestProjectTest {
+
+    @Rule public IgnoreTestRule ignoreTests = new IgnoreTestRule();
 
     @Test
     public void smokeTest() throws Throwable {
@@ -42,6 +48,7 @@ public class GradleTestProjectTest {
                 });
     }
 
+    @IgnoreWithCondition(reason = "b/184293759", condition = OnWindows.class)
     @Test
     public void checkAssertionHandling() throws Throwable {
         HelloWorldApp helloWorldApp = HelloWorldApp.forPlugin("com.android.application");
@@ -68,6 +75,7 @@ public class GradleTestProjectTest {
         }
     }
 
+    @IgnoreWithCondition(reason = "b/184293759", condition = OnWindows.class)
     @Test
     public void checkBuildFailureHandling() throws Throwable {
         HelloWorldApp helloWorldApp = HelloWorldApp.forPlugin("com.android.application");
@@ -90,6 +98,7 @@ public class GradleTestProjectTest {
         }
     }
 
+    @IgnoreWithCondition(reason = "b/184293759", condition = OnWindows.class)
     @Test
     public void checkModelFailureHandling() throws Throwable {
         HelloWorldApp helloWorldApp = HelloWorldApp.forPlugin("com.android.application_typo");

@@ -18,15 +18,14 @@ package com.android.build.gradle.internal.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.builder.core.AbstractProductFlavor;
 import com.android.builder.model.ApiVersion;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.model.VectorDrawablesOptions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import java.io.File;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -155,9 +154,12 @@ public class ReadOnlyProductFlavor extends ReadOnlyBaseConfig implements Product
     }
 
     @Nullable
-    @Override
     public SigningConfig getSigningConfig() {
-        return readOnlyObjectProvider.getSigningConfig(productFlavor.getSigningConfig());
+        if (!(productFlavor instanceof AbstractProductFlavor)) {
+            return null;
+        }
+        return readOnlyObjectProvider.getSigningConfig(
+                ((AbstractProductFlavor) productFlavor).getSigningConfig());
     }
 
     @NonNull

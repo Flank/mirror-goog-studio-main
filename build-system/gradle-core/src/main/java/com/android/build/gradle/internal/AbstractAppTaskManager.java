@@ -18,12 +18,11 @@ package com.android.build.gradle.internal;
 
 import static com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC;
-import static com.android.builder.model.CodeShrinker.R8;
 
 import com.android.annotations.NonNull;
 import com.android.build.api.component.impl.ComponentImpl;
 import com.android.build.api.component.impl.TestComponentImpl;
-import com.android.build.api.component.impl.TestFixturesComponentImpl;
+import com.android.build.api.component.impl.TestFixturesImpl;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.ScopeType;
 import com.android.build.api.variant.impl.VariantBuilderImpl;
@@ -80,7 +79,7 @@ public abstract class AbstractAppTaskManager<
     protected AbstractAppTaskManager(
             @NonNull List<ComponentInfo<VariantBuilderT, VariantT>> variants,
             @NonNull List<TestComponentImpl> testComponents,
-            @NonNull List<TestFixturesComponentImpl> testFixturesComponents,
+            @NonNull List<TestFixturesImpl> testFixturesComponents,
             boolean hasFlavors,
             @NonNull ProjectOptions projectOptions,
             @NonNull GlobalScope globalScope,
@@ -269,12 +268,9 @@ public abstract class AbstractAppTaskManager<
     protected Set<ScopeType> getJavaResMergingScopes(
             @NonNull ComponentCreationConfig creationConfig,
             @NonNull QualifiedContent.ContentType contentType) {
-        boolean usesR8 =
-                creationConfig instanceof ConsumableCreationConfig
-                        && ((ConsumableCreationConfig) creationConfig).getCodeShrinker() == R8;
         if (creationConfig.getVariantScope().consumesFeatureJars()
                 && contentType == RESOURCES
-                && !usesR8) {
+                && !(creationConfig instanceof ConsumableCreationConfig)) {
             return TransformManager.SCOPE_FULL_WITH_FEATURES;
         }
         return TransformManager.SCOPE_FULL_PROJECT;
@@ -320,8 +316,6 @@ public abstract class AbstractAppTaskManager<
             basicCreateMergeResourcesTask(
                     variant,
                     MergeType.PACKAGE,
-                    variant.getPaths()
-                            .getIntermediateDir(InternalArtifactType.PACKAGED_RES.INSTANCE),
                     false,
                     false,
                     false,

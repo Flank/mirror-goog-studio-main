@@ -220,7 +220,8 @@ message TraceMetadataRow {
   string name = 1;
   // How many expected values are associated with this key,
   // typically this is "single" can be "multi"
-  // See: https://github.com/google/perfetto/blob/31f297b260df8ab33e372fc81d612fecb4bcf9e7/src/trace_processor/storage/metadata.h
+  // See:
+  // https://github.com/google/perfetto/blob/31f297b260df8ab33e372fc81d612fecb4bcf9e7/src/trace_processor/storage/metadata.h
   string key_type = 2;
   oneof value {
     int64 int64_value = 3;
@@ -355,5 +356,8 @@ message AndroidFrameEventsResult {
     int64 duration_nanoseconds = 3;
     // A number to associate events of various phases to the same frame.
     int32 frame_number = 4;
+    // Depth of the event along the vertical axis, useful for laying out async
+    // slices.
+    int32 depth = 5;
   }
 }

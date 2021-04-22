@@ -115,7 +115,13 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
             it.variantName.set(variantName)
             it.aaptFriendlyManifestOutputFile.set(aaptFriendlyManifestOutputFile)
             it.namespaced.set(isNamespaced)
-            it.mainManifest.set(mainManifest.getOrElse(createTempLibraryManifest()))
+            it.mainManifest.set(
+                    if (mainManifest.isPresent()) {
+                        mainManifest.get()
+                    } else {
+                        createTempLibraryManifest()
+                    }
+            )
             it.manifestOverlays.set(manifestOverlays)
             it.packageOverride.set(packageOverride)
             it.minSdkVersion.set(minSdkVersion)
@@ -310,7 +316,7 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
                 ProcessLibraryManifest::reportFile
             )
                 .atLocation(
-                    FileUtils.join(creationConfig.globalScope.outputsDir, "logs")
+                    FileUtils.join(creationConfig.services.projectInfo.getOutputsDir(), "logs")
                         .absolutePath
                 )
                 .withName("manifest-merger-" + creationConfig.baseName + "-report.txt")

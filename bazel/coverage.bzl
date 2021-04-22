@@ -53,7 +53,7 @@ def coverage_baseline(name, srcs, jar = None, tags = None):
         srcs = [name + "_coverage.baseline.srcs"],
         outs = [name + ".coverage.baseline.srcs.filtered"],
         tags = tags,
-        cmd = "python $(location @cov//:ignore_files_filter) <$< >$@",
+        cmd = "python3 $(location @cov//:ignore_files_filter) <$< >$@",
         visibility = ["@baseline//:__pkg__"],
     )
 

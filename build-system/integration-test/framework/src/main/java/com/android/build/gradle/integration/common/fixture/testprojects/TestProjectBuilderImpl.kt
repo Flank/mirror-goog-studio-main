@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.common.fixture.testprojects
 
 import com.android.build.gradle.integration.common.fixture.TestProject
+import com.android.testutils.MavenRepoGenerator
 import com.android.utils.FileUtils
 import java.io.File
 
@@ -43,6 +44,16 @@ internal class TestProjectBuilderImpl: TestProjectBuilder, TestProject {
         }
     }
 
+    val mavenRepoGenerator: MavenRepoGenerator?
+        get() {
+            val allLibraries = rootProject.dependencies.externalLibraries +
+                    subprojects.values.flatMap { it.dependencies.externalLibraries }
+            if (allLibraries.isEmpty()) {
+                return null
+            }
+            return MavenRepoGenerator(allLibraries)
+        }
+
     // --- TestProject ---
 
     override fun write(projectDir: File, buildScriptContent: String?) {
@@ -54,6 +65,18 @@ internal class TestProjectBuilderImpl: TestProjectBuilder, TestProject {
 
             FileUtils.mkdirs(dir)
             project.write(dir, buildFileType, null)
+        }
+
+        // write settings.gradle
+        if (subprojects.isNotEmpty()) {
+            val file = File(projectDir, "settings.gradle")
+            val sb = StringBuilder()
+
+            for (project in subprojects.keys) {
+                sb.append("include '$project'\n")
+            }
+
+            file.writeText(sb.toString())
         }
     }
 

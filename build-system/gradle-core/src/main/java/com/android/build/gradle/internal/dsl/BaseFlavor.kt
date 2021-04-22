@@ -15,6 +15,7 @@
  */
 package com.android.build.gradle.internal.dsl
 
+import com.android.build.api.dsl.ApkSigningConfig
 import com.android.build.api.dsl.ApplicationBaseFlavor
 import com.android.build.api.dsl.DynamicFeatureBaseFlavor
 import com.android.build.api.dsl.LibraryBaseFlavor
@@ -38,10 +39,10 @@ import org.gradle.api.Action
 abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
     AbstractProductFlavor(name),
     CoreProductFlavor,
-    ApplicationBaseFlavor<SigningConfig>,
+    ApplicationBaseFlavor,
     DynamicFeatureBaseFlavor,
-    LibraryBaseFlavor<SigningConfig>,
-    TestBaseFlavor<SigningConfig> {
+    LibraryBaseFlavor,
+    TestBaseFlavor {
 
     /** Encapsulates per-variant configurations for the NDK, such as ABI filters.  */
     override val ndk: NdkOptions = dslServices.newInstance(NdkOptions::class.java)
@@ -75,7 +76,7 @@ abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
             setMinSdkVersion(value)
         }
 
-    override var targetSdk: Int?
+    override var targetSdk:Int?
         get() = targetSdkVersion?.apiLevel
         set(value) {
             if (value == null) targetSdkVersion = null
@@ -87,7 +88,7 @@ abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
             setTargetSdkVersion(value)
         }
 
-    fun setMinSdkVersion(minSdkVersion: Int) {
+    override fun setMinSdkVersion(minSdkVersion: Int) {
         setMinSdkVersion(DefaultApiVersion(minSdkVersion))
     }
 
@@ -96,11 +97,11 @@ abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
      *
      * See [uses-sdk element documentation](http://developer.android.com/guide/topics/manifest/uses-sdk-element.html).
      */
-    open fun minSdkVersion(minSdkVersion: Int) {
+    override fun minSdkVersion(minSdkVersion: Int) {
         setMinSdkVersion(minSdkVersion)
     }
 
-    open fun setMinSdkVersion(minSdkVersion: String?) {
+    override fun setMinSdkVersion(minSdkVersion: String?) {
         setMinSdkVersion(getApiVersion(minSdkVersion))
     }
 
@@ -109,7 +110,7 @@ abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
      *
      * See [uses-sdk element documentation](http://developer.android.com/guide/topics/manifest/uses-sdk-element.html).
      */
-    open fun minSdkVersion(minSdkVersion: String?) {
+    override fun minSdkVersion(minSdkVersion: String?) {
         setMinSdkVersion(minSdkVersion)
     }
 
@@ -124,11 +125,11 @@ abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
      * See [
  * uses-sdk element documentation](http://developer.android.com/guide/topics/manifest/uses-sdk-element.html).
      */
-    open fun targetSdkVersion(targetSdkVersion: Int) {
+    override fun targetSdkVersion(targetSdkVersion: Int) {
         setTargetSdkVersion(targetSdkVersion)
     }
 
-    fun setTargetSdkVersion(targetSdkVersion: String?) {
+    override fun setTargetSdkVersion(targetSdkVersion: String?) {
         setTargetSdkVersion(getApiVersion(targetSdkVersion))
     }
 
@@ -138,7 +139,7 @@ abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
      * See [
  * uses-sdk element documentation](http://developer.android.com/guide/topics/manifest/uses-sdk-element.html).
      */
-    open fun targetSdkVersion(targetSdkVersion: String?) {
+    override fun targetSdkVersion(targetSdkVersion: String?) {
         setTargetSdkVersion(targetSdkVersion)
     }
 
@@ -148,7 +149,7 @@ abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
      * See [
  * uses-sdk element documentation](http://developer.android.com/guide/topics/manifest/uses-sdk-element.html).
      */
-    open fun maxSdkVersion(maxSdkVersion: Int) {
+    override fun maxSdkVersion(maxSdkVersion: Int) {
         setMaxSdkVersion(maxSdkVersion)
     }
 
@@ -164,7 +165,7 @@ abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
      * ./gradlew connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.foo=bar
      * ```
      */
-    fun testInstrumentationRunnerArgument(key: String, value: String) {
+    override fun testInstrumentationRunnerArgument(key: String, value: String) {
         testInstrumentationRunnerArguments[key] = value
     }
 
@@ -180,14 +181,18 @@ abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
      * ./gradlew connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.foo=bar
      * ```
      */
-    open fun testInstrumentationRunnerArguments(args: Map<String, String>) {
+    override fun testInstrumentationRunnerArguments(args: Map<String, String>) {
         testInstrumentationRunnerArguments.putAll(args)
     }
 
     /** Signing config used by this product flavor.  */
-    override var signingConfig: SigningConfig?
-        get() = super.signingConfig as SigningConfig?
-        set(value) { super.setSigningConfig(value) }
+    override var signingConfig: ApkSigningConfig?
+        get() = super.signingConfig
+        set(value) { super.signingConfig = value }
+
+    fun setSigningConfig(signingConfig: com.android.build.gradle.internal.dsl.SigningConfig?) {
+        this.signingConfig = signingConfig
+    }
 
     // -- DSL Methods. TODO remove once the instantiator does what I expect it to do.
     override fun buildConfigField(
@@ -383,7 +388,7 @@ abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
      * To learn more, see
      * [Remove unused alternative resources](https://d.android.com/studio/build/shrink-code.html#unused-alt-resources).
      */
-    fun resConfig(config: String) {
+    override fun resConfig(config: String) {
         addResourceConfiguration(config)
     }
 
@@ -422,7 +427,7 @@ abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
      * To learn more, see
      * [Remove unused alternative resources](https://d.android.com/studio/build/shrink-code.html#unused-alt-resources).
      */
-    fun resConfigs(vararg config: String) {
+    override fun resConfigs(vararg config: String) {
         addResourceConfigurations(*config)
     }
 
@@ -461,7 +466,7 @@ abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
      * To learn more, see
      * [Remove unused alternative resources](https://d.android.com/studio/build/shrink-code.html#unused-alt-resources).
      */
-    fun resConfigs(config: Collection<String>) {
+    override fun resConfigs(config: Collection<String>) {
         addResourceConfigurations(config)
     }
 

@@ -16,12 +16,12 @@
 
 package com.android.build.gradle.integration.application;
 
-
+import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_RES;
 import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.ImageHelper;
-import com.android.builder.model.AndroidProject;
+import com.android.build.gradle.internal.scope.ArtifactTypeUtil;
 import com.android.testutils.apk.Apk;
 import java.io.File;
 import java.io.IOException;
@@ -41,7 +41,9 @@ public class Overlay2Test {
         int GREEN = ImageHelper.GREEN;
 
         File resOutput =
-                project.file("build/" + AndroidProject.FD_INTERMEDIATES + "/res/merged/one/debug");
+                new File(
+                        ArtifactTypeUtil.getOutputDir(MERGED_RES.INSTANCE, project.getBuildDir()),
+                        "oneDebug");
         assertThat(new File(resOutput, "drawable_no_overlay.png.flat")).exists();
         assertThat(new File(resOutput, "drawable_type_overlay.png.flat")).exists();
         assertThat(new File(resOutput, "drawable_flavor_overlay.png.flat")).exists();

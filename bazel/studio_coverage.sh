@@ -1,6 +1,8 @@
 #!/bin/bash -x
 # Invoked by Android Build Launchcontrol for continuous builds.
 
+readonly BAZEL_EXITCODE_TEST_FAILURES=3
+
 readonly dist_dir="$1"
 readonly build_number="$2"
 
@@ -9,6 +11,30 @@ if [[ $build_number =~ ^[0-9]+$ ]]; then
 fi
 
 readonly script_dir="$(dirname "$0")"
+
+collect_and_exit() {
+  local -r exit_code=$1
+
+  if [[ -d "${dist_dir}" ]]; then
+    "${script_dir}/bazel" \
+    run //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector \
+    --config=rcache \
+    -- \
+    -bes "${dist_dir}/bazel-${build_number}.bes" \
+    -testlogs "${dist_dir}/logs/junit"
+  fi
+
+  if [[ $? -ne 0 ]]; then
+    echo "Bazel logs-collector failed!"
+    exit $?
+  fi
+
+  # Test failures in postsubmit runs are processed by ATP from logs/junit.
+  if [[ $postsubmit && $exit_code == $BAZEL_EXITCODE_TEST_FAILURES ]]; then
+    exit 0
+  fi
+  exit $exit_code
+}
 
 # Clean up existing results so obsolete data cannot cause issues
 # --max_idle_secs is only effective at bazel server startup time so it needs to be in the first call
@@ -45,7 +71,7 @@ fi
   -- \
   @cov//:all.suite \
   @baseline//... \
-  || exit $?
+  || collect_and_exit $?
 
 # Generate another UUID for the report invocation
 readonly report_invocation_id="$(uuidgen)"
@@ -92,4 +118,4 @@ if [[ -d "${dist_dir}" ]]; then
   fi
 fi
 
-exit 0
+collect_and_exit 0

@@ -21,8 +21,8 @@ import com.android.build.api.variant.AndroidResources
 import com.android.build.api.variant.ApplicationVariant
 import com.android.build.api.variant.DependenciesInfo
 import com.android.build.api.variant.ApkPackaging
-import com.android.build.api.variant.Dexing
 import com.android.build.api.variant.JniLibsApkPackaging
+import com.android.build.api.variant.Renderscript
 import com.android.build.api.variant.ResourcesPackaging
 import com.android.build.api.variant.SigningConfig
 import com.android.build.api.variant.VariantOutput
@@ -31,7 +31,6 @@ import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.common.truth.Truth
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
-import org.gradle.api.file.RegularFileProperty
 import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mock
@@ -94,10 +93,10 @@ class AnalyticsEnabledApplicationVariantTest {
     }
 
     @Test
-    fun getAaptOptions() {
-        val aaptOptions = Mockito.mock(AndroidResources::class.java)
-        Mockito.`when`(delegate.androidResources).thenReturn(aaptOptions)
-        Truth.assertThat(proxy.androidResources).isEqualTo(aaptOptions)
+    fun getAndroidResources() {
+        val androidResources = Mockito.mock(AndroidResources::class.java)
+        Mockito.`when`(delegate.androidResources).thenReturn(androidResources)
+        Truth.assertThat(proxy.androidResources).isEqualTo(androidResources)
 
         Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
         Truth.assertThat(
@@ -122,13 +121,27 @@ class AnalyticsEnabledApplicationVariantTest {
     }
 
     @Test
-    fun getPackagingOptions() {
-        val packagingOptions = Mockito.mock(ApkPackaging::class.java)
+    fun getRenderscript() {
+        val renderscript = Mockito.mock(Renderscript::class.java)
+        Mockito.`when`(delegate.renderscript).thenReturn(renderscript)
+        // simulate a user configuring packaging options for jniLibs and resources
+        proxy.renderscript
+
+        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
+        Truth.assertThat(
+                stats.variantApiAccess.variantPropertiesAccessList.first().type
+        ).isEqualTo(VariantPropertiesMethodType.RENDERSCRIPT_VALUE)
+        Mockito.verify(delegate, Mockito.times(1)).renderscript
+    }
+
+    @Test
+    fun getApkPackaging() {
+        val apkPackaging = Mockito.mock(ApkPackaging::class.java)
         val jniLibsApkPackagingOptions = Mockito.mock(JniLibsApkPackaging::class.java)
         val resourcesPackagingOptions = Mockito.mock(ResourcesPackaging::class.java)
-        Mockito.`when`(packagingOptions.jniLibs).thenReturn(jniLibsApkPackagingOptions)
-        Mockito.`when`(packagingOptions.resources).thenReturn(resourcesPackagingOptions)
-        Mockito.`when`(delegate.packaging).thenReturn(packagingOptions)
+        Mockito.`when`(apkPackaging.jniLibs).thenReturn(jniLibsApkPackagingOptions)
+        Mockito.`when`(apkPackaging.resources).thenReturn(resourcesPackagingOptions)
+        Mockito.`when`(delegate.packaging).thenReturn(apkPackaging)
         // simulate a user configuring packaging options for jniLibs and resources
         proxy.packaging.jniLibs
         proxy.packaging.resources
@@ -167,32 +180,5 @@ class AnalyticsEnabledApplicationVariantTest {
             )
         )
         Mockito.verify(delegate, Mockito.times(1)).androidTest
-    }
-
-    @Test
-    fun getDexingConfig() {
-        val dexing = Mockito.mock(Dexing::class.java)
-        val multiDexKeepFile = Mockito.mock(RegularFileProperty::class.java)
-        Mockito.`when`(dexing.multiDexKeepFile).thenReturn(multiDexKeepFile)
-        val multiDexKeepProguard = Mockito.mock(RegularFileProperty::class.java)
-        Mockito.`when`(dexing.multiDexKeepProguard).thenReturn(multiDexKeepProguard)
-        Mockito.`when`(delegate.dexing).thenReturn(dexing)
-
-        proxy.dexing.let {
-            Truth.assertThat(it.multiDexKeepFile).isEqualTo(multiDexKeepFile)
-            Truth.assertThat(it.multiDexKeepProguard).isEqualTo(multiDexKeepProguard)
-        }
-
-        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(3)
-        Truth.assertThat(
-            stats.variantApiAccess.variantPropertiesAccessList.map { it.type }
-        ).containsExactlyElementsIn(
-            listOf(
-                VariantPropertiesMethodType.DEXING_VALUE,
-                VariantPropertiesMethodType.MULTI_DEX_KEEP_FILE_VALUE,
-                VariantPropertiesMethodType.MULTI_DEX_KEEP_PROGUARD_VALUE,
-            )
-        )
-        Mockito.verify(delegate, Mockito.times(1)).dexing
     }
 }

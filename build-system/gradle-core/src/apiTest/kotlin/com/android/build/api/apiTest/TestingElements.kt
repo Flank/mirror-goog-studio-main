@@ -107,12 +107,12 @@ class TestingElements(val language: ScriptingLanguage) {
     }
 
     fun addCommonAndroidBuildLogic() =
-                """
-                compileSdkVersion(29)
-                defaultConfig {
-                    minSdkVersion(21)
-                    targetSdkVersion(29)
-                }"""
+    """
+    compileSdkVersion(29)
+    defaultConfig {
+        minSdkVersion(21)
+        targetSdkVersion(29)
+    }"""
 
     fun addManifest(builder: VariantApiBaseTest.GivenBuilder) {
         builder.manifest =

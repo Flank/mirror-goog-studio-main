@@ -17,6 +17,7 @@
 package com.android.ddmlib;
 
 import com.android.annotations.NonNull;
+import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -108,9 +109,9 @@ public interface IShellEnabledDevice {
      * Do a potential asynchronous query for a system property.
      *
      * @param name the name of the value to return.
-     * @return a {@link java.util.concurrent.Future} which can be used to retrieve value of property. Future#get() can
-     *         return null if property can not be retrieved.
+     * @return a {@link ListenableFuture ListenableFuture.} {@link Future#get() get} may return
+     *     null.
      */
     @NonNull
-    Future<String> getSystemProperty(@NonNull String name);
+    ListenableFuture<String> getSystemProperty(@NonNull String name);
 }

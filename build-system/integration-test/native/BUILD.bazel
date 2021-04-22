@@ -10,7 +10,6 @@ DATA = [
     "//prebuilts/studio/sdk:platforms/android-24_build_only",
     "//prebuilts/studio/sdk:platforms/latest",
     "//prebuilts/studio/sdk:platforms/latest-preview",
-    "//prebuilts/tools/common/kotlin-plugin:Kotlin/kotlinc/build.txt",
     "//tools/base/build-system:gradle-distrib",
     "//tools/base/build-system/aapt2:aapt2_for_tests",
 ]
@@ -55,7 +54,7 @@ DEPS = [
     "//tools/base/third_party:com.google.protobuf_protobuf-java-util",
     "//tools/base/third_party:com.google.truth_truth",
     "//tools/base/third_party:org.apache.commons_commons-compress",
-    "//tools/base/third_party:org.codehaus.groovy_groovy-all",
+    "//tools/base/third_party:org.codehaus.groovy_groovy-all",  # required by //tools/base/build-system:gradle-api
     "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
     "//tools/base/third_party:org.jetbrains.kotlin_kotlin-test",
     "//tools/base/third_party:org.mockito_mockito-core",

@@ -30,7 +30,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactTyp
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.PROCESSED_JAR
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.ANNOTATION_PROCESSOR
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
-import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.builder.errors.IssueReporter
 import com.android.sdklib.AndroidTargetHash
 import com.android.utils.FileUtils
@@ -77,12 +76,6 @@ fun JavaCompile.configureProperties(creationConfig: ComponentCreationConfig, tas
         checkNotNull(task.project.configurations.findByName(CONFIG_NAME_ANDROID_JDK_IMAGE)) {
             "The $CONFIG_NAME_ANDROID_JDK_IMAGE configuration must exist for Java 9+ sources."
         }
-        task.project.dependencies.add(
-            CONFIG_NAME_ANDROID_JDK_IMAGE,
-            task.project.files(
-                globalScope.versionedSdkLoader.flatMap { it.coreForSystemModulesProvider }
-            )
-        )
         val jdkImage = getJdkImageFromTransform(creationConfig.services.projectInfo.getProject())
 
         this.options.compilerArgumentProviders.add(JdkImageInput(jdkImage))

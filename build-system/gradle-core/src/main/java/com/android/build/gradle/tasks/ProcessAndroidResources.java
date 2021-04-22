@@ -88,7 +88,7 @@ public abstract class ProcessAndroidResources extends IncrementalTask {
     protected static boolean generatesProguardOutputFile(
             @NonNull ComponentCreationConfig creationConfig) {
         return (creationConfig instanceof ConsumableCreationConfig
-                        && ((ConsumableCreationConfig) creationConfig).getCodeShrinker() != null)
+                        && ((ConsumableCreationConfig) creationConfig).getMinifiedEnabled())
                 || creationConfig.getVariantType().isDynamicFeature();
     }
 }

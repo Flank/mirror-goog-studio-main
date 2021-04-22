@@ -30,7 +30,7 @@ import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
 import java.io.File
 
-private const val LOCAL_AAR_GROUPID = "__local_aars__"
+const val LOCAL_AAR_GROUPID = "__local_aars__"
 
 /** Build service used to cache maven coordinates for libraries. */
 abstract class MavenCoordinatesCacheBuildService :

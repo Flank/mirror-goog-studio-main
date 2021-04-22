@@ -100,7 +100,7 @@ internal class BuiltArtifactTypeAdapter: CommonBuiltArtifactTypeAdapter<BuiltArt
     @Throws(IOException::class)
     override fun read(reader: JsonReader): BuiltArtifactImpl {
         var outputType: String? = null
-        val filters = ImmutableList.Builder<FilterConfiguration>()
+        val filters = ImmutableList.Builder<FilterConfigurationImpl>()
         val attributes = mutableMapOf<String, String>()
         return super.read(reader,
             { attributeName: String ->
@@ -128,7 +128,7 @@ internal class BuiltArtifactTypeAdapter: CommonBuiltArtifactTypeAdapter<BuiltArt
     }
 
     @Throws(IOException::class)
-    private fun readFilters(reader: JsonReader, filters: ImmutableList.Builder<FilterConfiguration>) {
+    private fun readFilters(reader: JsonReader, filters: ImmutableList.Builder<FilterConfigurationImpl>) {
 
         reader.beginArray()
         while (reader.hasNext()) {
@@ -142,7 +142,7 @@ internal class BuiltArtifactTypeAdapter: CommonBuiltArtifactTypeAdapter<BuiltArt
                 }
             }
             if (filterType != null && value != null) {
-                filters.add(FilterConfiguration(filterType, value))
+                filters.add(FilterConfigurationImpl(filterType, value))
             }
             reader.endObject()
         }

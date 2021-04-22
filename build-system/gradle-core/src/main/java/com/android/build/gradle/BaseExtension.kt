@@ -174,7 +174,7 @@ abstract class BaseExtension protected constructor(
         buildToolsVersion = version
     }
 
-    fun flavorDimensions(vararg dimensions: String) {
+    open fun flavorDimensions(vararg dimensions: String) {
         checkWritability()
         flavorDimensionList.clear()
         flavorDimensionList.addAll(dimensions)
@@ -430,7 +430,7 @@ abstract class BaseExtension protected constructor(
             return adbExecutable
         }
 
-    fun getDefaultProguardFile(name: String): File {
+    open fun getDefaultProguardFile(name: String): File {
         if (!ProguardFiles.KNOWN_FILE_NAMES.contains(name)) {
             dslServices
                 .issueReporter
@@ -468,13 +468,9 @@ abstract class BaseExtension protected constructor(
         action.execute(composeOptions)
     }
 
-    open fun compileSdkVersion(version: String) {
-        this.compileSdkVersion = version
-    }
+    abstract fun compileSdkVersion(version: String)
 
-    open fun compileSdkVersion(apiLevel: Int) {
-        compileSdkVersion("android-$apiLevel")
-    }
+    abstract fun compileSdkVersion(apiLevel: Int)
 
     // Kept for binary and source compatibility until the old DSL interfaces can go away.
     abstract override val flavorDimensionList: MutableList<String>

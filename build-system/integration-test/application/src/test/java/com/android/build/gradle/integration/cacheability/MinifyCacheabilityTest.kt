@@ -17,7 +17,6 @@
 package com.android.build.gradle.integration.cacheability
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.DID_WORK
 import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.FAILED
 import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.FROM_CACHE
@@ -25,26 +24,17 @@ import com.android.build.gradle.integration.common.truth.TaskStateList.Execution
 import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.UP_TO_DATE
 import com.android.build.gradle.integration.common.utils.CacheabilityTestHelper
 import com.android.build.gradle.options.BooleanOption
-import com.android.build.gradle.options.OptionalBooleanOption
-import com.android.builder.model.CodeShrinker
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 
 /**
  * Similar to [CacheabilityTest], but targeting builds with `minifyEnabled=true` to verify a
  * different set of tasks.
  */
-@RunWith(FilterableParameterized::class)
-class MinifyCacheabilityTest (val shrinker: CodeShrinker) {
+class MinifyCacheabilityTest {
 
     companion object {
-        @JvmStatic
-        @Parameterized.Parameters(name = "shrinker = {0}")
-        fun testParameters(): Array<CodeShrinker> = arrayOf(CodeShrinker.PROGUARD, CodeShrinker.R8)
-
         private const val GRADLE_BUILD_CACHE_DIR = "gradle-build-cache"
     }
 
@@ -78,19 +68,12 @@ class MinifyCacheabilityTest (val shrinker: CodeShrinker) {
             ":mergeMinifiedJavaResource",
             ":mergeMinifiedJniLibFolders",
             ":mergeMinifiedShaders",
+            ":minifyMinifiedWithR8",
             ":processMinifiedManifestForPackage",
             ":validateSigningMinified",
             ":writeMinifiedAppMetadata",
             ":writeMinifiedSigningConfigVersions"
-        ).plus(
-            if (shrinker == CodeShrinker.R8) {
-                setOf(":minifyMinifiedWithR8")
-            } else {
-                setOf(
-                    ":mergeDexMinified",
-                    ":minifyMinifiedWithProguard"
-                )
-            }
+
         ).plus(
             if (BooleanOption.GENERATE_MANIFEST_CLASS.defaultValue) {
                 setOf(":generateMinifiedManifestClass")
@@ -106,12 +89,6 @@ class MinifyCacheabilityTest (val shrinker: CodeShrinker) {
             ":processMinifiedMainManifest",
             ":processMinifiedManifest",
             ":processMinifiedResources"
-        ).plus(
-            if (shrinker == CodeShrinker.PROGUARD) {
-                setOf(":dexBuilderMinified")
-            } else {
-                emptySet()
-            }
         ).plus(
                 if (BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP.defaultValue) {
                     setOf(":mapMinifiedSourceSetPaths")
@@ -155,9 +132,6 @@ class MinifyCacheabilityTest (val shrinker: CodeShrinker) {
         val buildCacheDir = buildCacheDirRoot.root.resolve(GRADLE_BUILD_CACHE_DIR)
 
         CacheabilityTestHelper(projectCopy1, projectCopy2, buildCacheDir)
-            .useCustomExecutor {
-                it.with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, shrinker == CodeShrinker.R8)
-            }
             .runTasks(
                 "clean",
                 "assembleMinified")

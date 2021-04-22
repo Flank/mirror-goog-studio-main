@@ -242,13 +242,15 @@ class PublishingSpecs {
                 runtime(LIBRARY_JAVA_RES, ArtifactType.JAVA_RES)
                 runtime(CONSUMER_PROGUARD_DIR, ArtifactType.UNFILTERED_PROGUARD_RULES)
                 runtime(LIBRARY_JNI, ArtifactType.JNI)
-                runtime(LINT_PUBLISH_JAR, ArtifactType.LINT)
                 runtime(NAVIGATION_JSON, ArtifactType.NAVIGATION_JSON)
                 runtime(COMPILED_LOCAL_RESOURCES, ArtifactType.COMPILED_DEPENDENCIES_RESOURCES)
                 runtime(AAR_METADATA, ArtifactType.AAR_METADATA)
-                runtime(LINT_MODEL, ArtifactType.LINT_MODEL)
-                runtime(LINT_PARTIAL_RESULTS, ArtifactType.LINT_PARTIAL_RESULTS)
-                runtime(
+                // Publish LINT, LINT_MODEL, LINT_PARTIAL_RESULTS, and LOCAL_AAR_FOR_LINT to
+                // API_AND_RUNTIME_ELEMENTS to support compileOnly module dependencies.
+                output(LINT_PUBLISH_JAR, ArtifactType.LINT)
+                output(LINT_MODEL, ArtifactType.LINT_MODEL)
+                output(LINT_PARTIAL_RESULTS, ArtifactType.LINT_PARTIAL_RESULTS)
+                output(
                     com.android.build.api.artifact.SingleArtifact.AAR,
                     ArtifactType.LOCAL_AAR_FOR_LINT)
             }
@@ -284,6 +286,12 @@ class PublishingSpecs {
                 runtime(LIBRARY_JAVA_RES, ArtifactType.JAVA_RES)
                 runtime(NAVIGATION_JSON, ArtifactType.NAVIGATION_JSON)
                 runtime(COMPILED_LOCAL_RESOURCES, ArtifactType.COMPILED_DEPENDENCIES_RESOURCES)
+                runtime(AAR_METADATA, ArtifactType.AAR_METADATA)
+                // Publish LOCAL_AAR_FOR_LINT to API_AND_RUNTIME_ELEMENTS to support compileOnly
+                // module dependencies.
+                output(
+                    com.android.build.api.artifact.SingleArtifact.AAR,
+                    ArtifactType.LOCAL_AAR_FOR_LINT)
             }
 
             // Publishing will be done manually from the lint standalone plugin for now.

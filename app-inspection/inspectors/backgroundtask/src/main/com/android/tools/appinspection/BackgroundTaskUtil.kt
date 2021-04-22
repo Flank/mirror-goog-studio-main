@@ -16,6 +16,9 @@
 
 package com.android.tools.appinspection
 
+import androidx.inspection.Connection
+import backgroundtask.inspection.BackgroundTaskInspectorProtocol.BackgroundTaskEvent
+import backgroundtask.inspection.BackgroundTaskInspectorProtocol.Event
 import java.util.concurrent.atomic.AtomicLong
 
 object BackgroundTaskUtil {
@@ -25,5 +28,19 @@ object BackgroundTaskUtil {
     /** Generates a unique energy event ID.  */
     fun nextId(): Long {
         return atomicLong.incrementAndGet()
+    }
+
+    fun Connection.sendBackgroundTaskEvent(
+        taskId: Long,
+        eventCompleter: (BackgroundTaskEvent.Builder) -> BackgroundTaskEvent.Builder
+    ) {
+        val initialBackgroundTaskEventBuilder = BackgroundTaskEvent.newBuilder()
+            .setTaskId(taskId)
+        val backgroundTaskEvent = eventCompleter(initialBackgroundTaskEventBuilder).build()
+        val eventBuilder = Event.newBuilder().apply {
+            this.backgroundTaskEvent = backgroundTaskEvent
+            timestamp = System.nanoTime()
+        }
+        sendEvent(eventBuilder.build().toByteArray())
     }
 }

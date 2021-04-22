@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.services
 
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.Directory
+import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import java.io.File
 
@@ -27,6 +28,9 @@ class TaskCreationServicesImpl(
     BaseServicesImpl(projectServices), TaskCreationServices {
 
     override fun file(file: Any): File = projectServices.fileResolver(file)
+
+    override fun regularFile(file: Provider<File>): Provider<RegularFile> =
+            projectServices.projectLayout.file(file)
 
     override fun fileCollection(): ConfigurableFileCollection =
         projectServices.objectFactory.fileCollection()

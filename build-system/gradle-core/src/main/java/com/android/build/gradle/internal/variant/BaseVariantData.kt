@@ -39,8 +39,8 @@ import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.FileCollection
 import org.gradle.api.logging.Logging
 import org.gradle.api.resources.TextResource
+import org.gradle.api.tasks.TaskProvider
 import java.io.File
-import java.util.Arrays
 import java.util.Collections
 import java.util.HashSet
 
@@ -126,16 +126,6 @@ abstract class BaseVariantData(
 
     open fun registerJavaGeneratingTask(
         task: Task,
-        vararg generatedSourceFolders: File
-    ) {
-        registerJavaGeneratingTask(
-            task,
-            Arrays.asList(*generatedSourceFolders)
-        )
-    }
-
-    open fun registerJavaGeneratingTask(
-        task: Task,
         generatedSourceFolders: Collection<File>
     ) {
         @Suppress("DEPRECATION")
@@ -147,6 +137,24 @@ abstract class BaseVariantData(
 
         for (f in generatedSourceFolders) {
             val fileTree = services.fileTree(f).builtBy(task)
+            fileTrees.add(fileTree)
+        }
+        addJavaSourceFoldersToModel(generatedSourceFolders)
+    }
+
+    open fun registerJavaGeneratingTask(
+        taskProvider: TaskProvider<out Task>,
+        generatedSourceFolders: Collection<File>
+    ) {
+        taskContainer.sourceGenTask.dependsOn(taskProvider)
+
+        val fileTrees =
+            extraGeneratedSourceFileTrees ?: mutableListOf<ConfigurableFileTree>().also {
+                extraGeneratedSourceFileTrees = it
+            }
+
+        for (f in generatedSourceFolders) {
+            val fileTree = services.fileTree(f).builtBy(taskProvider)
             fileTrees.add(fileTree)
         }
         addJavaSourceFoldersToModel(generatedSourceFolders)

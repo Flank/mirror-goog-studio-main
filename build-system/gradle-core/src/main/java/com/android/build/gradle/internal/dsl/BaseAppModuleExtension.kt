@@ -20,6 +20,7 @@ import com.android.build.api.dsl.ApplicationBuildFeatures
 import com.android.build.api.dsl.ComposeOptions
 import com.android.build.api.dsl.DependenciesInfo
 import com.android.build.gradle.AppExtension
+import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.api.ViewBindingOptions
 import com.android.build.gradle.internal.ExtraModelInfo
@@ -47,6 +48,17 @@ open class BaseAppModuleExtension(
     extraModelInfo,
     true
 ), InternalApplicationExtension by publicExtensionImpl {
+
+    // Overrides to make the parameterized types match, due to BaseExtension being part of
+    // the previous public API and not wanting to paramerterize that.
+    override val buildTypes: NamedDomainObjectContainer<BuildType>
+        get() = publicExtensionImpl.buildTypes as NamedDomainObjectContainer<BuildType>
+    override val defaultConfig: DefaultConfig
+        get() = publicExtensionImpl.defaultConfig as DefaultConfig
+    override val productFlavors: NamedDomainObjectContainer<ProductFlavor>
+        get() = publicExtensionImpl.productFlavors as NamedDomainObjectContainer<ProductFlavor>
+    override val sourceSets: NamedDomainObjectContainer<AndroidSourceSet>
+        get() = publicExtensionImpl.sourceSets
 
     override val viewBinding: ViewBindingOptions =
         dslServices.newInstance(

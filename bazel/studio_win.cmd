@@ -44,17 +44,6 @@ echo "Called with the following:  OUTDIR=%OUTDIR%, DISTDIR=%DISTDIR%, BUILDNUMBE
 set TARGETS=
 for /f %%i in (%SCRIPTDIR%targets.win) do set TARGETS=!TARGETS! %%i
 
-for /f %%e in ('%SCRIPTDIR%bazel.cmd info execution_root') do set EXECROOT=%%e
-set EXECROOT=%EXECROOT:/=\%
-@rem Removing host executable runfiles as a workaround to http://b/160885823
-dir %EXECROOT%\bazel-out\host\bin\tools\base\bazel\kotlinc.exe.runfiles
-dir %EXECROOT%\bazel-out\host\bin\tools\base\bazel\formc.exe.runfiles
-del /F /Q /S %EXECROOT%\bazel-out\host\bin\tools\base\bazel\kotlinc.exe.runfiles > NUL
-del /F /Q /S %EXECROOT%\bazel-out\host\bin\tools\base\bazel\formc.exe.runfiles > NUL
-@echo Runfile contents after being deleted
-dir %EXECROOT%\bazel-out\host\bin\tools\base\bazel\kotlinc.exe.runfiles
-dir %EXECROOT%\bazel-out\host\bin\tools\base\bazel\formc.exe.runfiles
-
 @echo studio_win.cmd time: %time%
 @rem Run Bazel
 CALL %SCRIPTDIR%bazel.cmd ^

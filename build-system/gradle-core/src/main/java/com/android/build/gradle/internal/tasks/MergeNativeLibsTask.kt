@@ -41,7 +41,6 @@ import org.gradle.api.file.FileVisitDetails
 import org.gradle.api.file.ReproducibleFileVisitor
 import org.gradle.api.logging.Logging
 import org.gradle.api.provider.ListProperty
-import org.gradle.api.provider.Provider
 import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
@@ -361,7 +360,7 @@ fun getProjectNativeLibs(
 
     // add renderscript compilation output if support mode is enabled.
     if (renderscript != null) {
-        nativeLibs.from(renderscript.renderscriptSupportModeEnabled.map {
+        nativeLibs.from(renderscript.supportModeEnabled.map {
             if (it) {
                 val rsFileCollection: ConfigurableFileCollection =
                     creationConfig.services.fileCollection(artifacts.get(RENDERSCRIPT_LIB))
@@ -372,7 +371,7 @@ fun getProjectNativeLibs(
             }
         })
 
-        nativeLibs.from(renderscript.renderscriptSupportModeBlasEnabled.map {
+        nativeLibs.from(renderscript.supportModeBlasEnabled.map {
             if (it) {
                 buildTools.supportBlasLibFolderProvider().map { rsBlasLib ->
                     if (!rsBlasLib.isDirectory) {

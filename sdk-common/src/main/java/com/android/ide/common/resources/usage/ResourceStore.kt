@@ -497,7 +497,13 @@ class ResourceStore(val supportMultipackages: Boolean = false) {
                 }
                 val typeEnd = s.indexOf('[', offset)
                 assert(typeEnd != -1)
-                type = ResourceType.fromClassName(s.substring(offset, typeEnd))!!
+                val typeString = s.substring(offset, typeEnd)
+                val fromClassName = ResourceType.fromClassName(typeString)
+                    // Must be a synthetic resource like PUBLIC, which are
+                    // excluded from the reverse name lookup. Fortunately, this
+                    // is not common.
+                    ?: ResourceType.values().first { it.getName() == typeString }
+                type = fromClassName
                 offset = typeEnd + 1
 
                 // Read in resources

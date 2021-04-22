@@ -20,41 +20,24 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static org.junit.Assert.assertNotNull;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.options.BooleanOption;
-import com.android.build.gradle.options.OptionalBooleanOption;
-import com.android.builder.model.CodeShrinker;
 import com.android.testutils.apk.Apk;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /**
  * Tests that ensure that java resources files accessed with a relative or absolute path are
  * packaged correctly.
  */
-@RunWith(FilterableParameterized.class)
 public class MinifyLibAndAppWithJavaResTest {
-
-    @Parameterized.Parameters(name = "codeShrinker = {0}")
-    public static CodeShrinker[] data() {
-        return new CodeShrinker[] {CodeShrinker.PROGUARD, CodeShrinker.R8};
-    }
 
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder().fromTestProject("minifyLibWithJavaRes").create();
 
-    @Parameterized.Parameter() public CodeShrinker codeShrinker;
-
     @Test
     public void testDebugPackaging() throws Exception {
-        project.executor()
-                .with(
-                        OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8,
-                        codeShrinker == CodeShrinker.R8)
-                .run(":app:assembleDebug");
+        project.executor().run(":app:assembleDebug");
         Apk debugApk = project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG);
         assertNotNull(debugApk);
         // check that resources with relative path lookup code have a matching obfuscated package
@@ -70,9 +53,6 @@ public class MinifyLibAndAppWithJavaResTest {
     @Test
     public void testReleasePackaging() throws Exception {
         project.executor()
-                .with(
-                        OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8,
-                        codeShrinker == CodeShrinker.R8)
                 // http://b/149978740
                 .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
                 .run(":app:assembleRelease");
@@ -86,12 +66,7 @@ public class MinifyLibAndAppWithJavaResTest {
 
         // check that resources with relative path lookup code have a matching obfuscated
         // package name.
-        if (codeShrinker == CodeShrinker.PROGUARD) {
-            assertThat(releaseApk).contains("com/android/tests/b/resources.properties");
-            assertThat(releaseApk).contains("com/android/tests/a/resources.properties");
-        } else {
-            assertThat(releaseApk).contains("b/resources.properties");
-            assertThat(releaseApk).contains("c/resources.properties");
-        }
+        assertThat(releaseApk).contains("b/resources.properties");
+        assertThat(releaseApk).contains("c/resources.properties");
     }
 }

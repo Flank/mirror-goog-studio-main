@@ -78,6 +78,10 @@ Any changes here will affect most C/C++ users.
         {
           "name": "CMAKE_BUILD_TYPE",
           "value": "${ndk.variantOptimizationTag}"
+        },
+        {
+          "name": "CMAKE_VERBOSE_MAKEFILE",
+          "value": "${ndk.variantVerboseMakefile}"
         }
       ]
     }

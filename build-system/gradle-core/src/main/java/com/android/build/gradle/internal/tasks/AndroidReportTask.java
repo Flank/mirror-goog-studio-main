@@ -195,11 +195,10 @@ public abstract class AndroidReportTask extends DefaultTask implements AndroidTe
                     "Installs and runs instrumentation tests using all Device Providers.");
             task.setReportType(ReportType.MULTI_FLAVOR);
 
-
-            final String defaultReportsDir = scope.getReportsDir().getAbsolutePath()
-                    + "/" + FD_ANDROID_TESTS;
-            final String defaultResultsDir = scope.getOutputsDir().getAbsolutePath()
-                    + "/" + FD_ANDROID_RESULTS;
+            final String defaultReportsDir =
+                    projectInfo.getReportsDir().getAbsolutePath() + "/" + FD_ANDROID_TESTS;
+            final String defaultResultsDir =
+                    projectInfo.getOutputsDir().getAbsolutePath() + "/" + FD_ANDROID_RESULTS;
 
             final String subfolderName =
                     taskKind == TaskKind.CONNECTED ? "/connected/" : "/devices/";
