@@ -33,7 +33,7 @@ interface RecipeExecutor {
    *                       modified in the same recipe file. E.g. in a case where a build.gradle file is saved and a dependency is added to
    *                       the build.gradle file
    */
-  fun save(source: String, to: File, commitDocument: Boolean = false)
+  fun save(source: String, to: File)
 
   /** Merges the given XML source into the given destination file (or just writes it if the destination file does not exist). */
   fun mergeXml(source: String, to: File)

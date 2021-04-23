@@ -66,8 +66,6 @@ fun RecipeExecutor.automotiveMediaServiceRecipe(
         targetApi = apis.targetApi.apiString,
         useAndroidX = useAndroidX),
       to = projectData.rootDir.resolve(sharedModule).resolve("build.gradle"),
-      // Setting the commitDocument as true because the media dependency needs to be added to the build gradle in the following line
-      commitDocument = true
     )
     addDependency(mavenCoordinate = "com.android.support:support-media-compat:${appCompatVersion}.+",
                   moduleDir = projectData.rootDir.resolve(sharedModule))
