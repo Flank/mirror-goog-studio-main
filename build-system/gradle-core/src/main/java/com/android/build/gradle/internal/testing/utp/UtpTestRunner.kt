@@ -82,6 +82,7 @@ class UtpTestRunner @JvmOverloads constructor(
                                         deviceConnector,
                                         testData,
                                         apks,
+                                        installOptions,
                                         helperApks,
                                         utpDependencies,
                                         versionedSdkLoader,

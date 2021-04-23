@@ -91,7 +91,7 @@ class ManagedDeviceTestRunnerTest {
         `when`(mockTestData.minSdkVersion).thenReturn(AndroidVersionImpl(28))
         `when`(mockTestData.testedApkFinder).thenReturn { _, _ -> listOf(mockAppApk) }
         `when`(mockUtpConfigFactory.createRunnerConfigProtoForManagedDevice(
-                any(), any(), any(), any(), any(), any(),
+                any(), any(), any(), any(), any(), any(), any(),
                 any(), any(), any(), any(), any())).then {
             RunnerConfigProto.RunnerConfig.getDefaultInstance()
         }
@@ -172,6 +172,7 @@ class ManagedDeviceTestRunnerTest {
                 "projectName",
                 "variantName",
                 mockTestData,
+                listOf(),
                 setOf(mockHelperApk),
                 mockLogger)
 

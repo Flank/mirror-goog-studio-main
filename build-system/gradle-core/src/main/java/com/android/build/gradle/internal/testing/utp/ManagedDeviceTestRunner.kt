@@ -47,12 +47,17 @@ class ManagedDeviceTestRunner(
         UtpTestResultListenerServerRunner(it)
     }) {
 
+    /**
+     * @param additionalInstallOptions an additional install options to be used for installing
+     *   app (tested-) APKs and test APK. These options are not used for the test helper APKs.
+     */
     fun runTests(
         managedDevice: UtpManagedDevice,
         outputDirectory: File,
         projectName: String,
         variantName: String,
         testData: StaticTestData,
+        additionalInstallOptions: List<String>,
         helperApks: Set<File>,
         logger: ILogger
     ): Boolean {
@@ -87,6 +92,7 @@ class ManagedDeviceTestRunner(
                             managedDevice,
                             testData,
                             testedApks,
+                            additionalInstallOptions,
                             helperApks,
                             utpDependencies,
                             versionedSdkLoader,

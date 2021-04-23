@@ -76,7 +76,8 @@ const val TEST_LOG_DIR = "testlog"
  */
 class UtpConfigFactory {
 
-    val logger = Logging.getLogger(this.javaClass)
+    private val logger = Logging.getLogger(this.javaClass)
+
     /**
      * Creates a runner config proto which you can pass into the Unified Test Platform's
      * test executor.
@@ -85,6 +86,7 @@ class UtpConfigFactory {
         device: DeviceConnector,
         testData: StaticTestData,
         appApks: Iterable<File>,
+        additionalInstallOptions: Iterable<String>,
         helperApks: Iterable<File>,
         utpDependencies: UtpDependencies,
         versionedSdkLoader: SdkComponentsBuildService.VersionedSdkLoader,
@@ -105,6 +107,7 @@ class UtpConfigFactory {
                     grpcInfo.port,
                     grpcInfo.token,
                     appApks,
+                    additionalInstallOptions,
                     helperApks,
                     testData,
                     utpDependencies,
@@ -127,7 +130,7 @@ class UtpConfigFactory {
         }.build()
     }
 
-    fun createTestResultListener(
+    private fun createTestResultListener(
             utpDependencies: UtpDependencies,
             testResultListenerServerPort: Int,
             resultListenerClientCert: File,
@@ -154,6 +157,7 @@ class UtpConfigFactory {
         device: UtpManagedDevice,
         testData: StaticTestData,
         appApks: Iterable<File>,
+        additionalInstallOptions: Iterable<String>,
         helperApks: Iterable<File>,
         utpDependencies: UtpDependencies,
         versionedSdkLoader: SdkComponentsBuildService.VersionedSdkLoader,
@@ -167,7 +171,8 @@ class UtpConfigFactory {
             addDevice(createGradleManagedDevice(device, testData, utpDependencies))
             addTestFixture(
                 createTestFixture(
-                    null, null, appApks, helperApks, testData, utpDependencies, versionedSdkLoader,
+                    null, null, appApks, additionalInstallOptions, helperApks, testData,
+                    utpDependencies, versionedSdkLoader,
                     outputDir, tmpDir, retentionConfig, useOrchestrator
                 )
             )
@@ -265,6 +270,7 @@ class UtpConfigFactory {
         grpcPort: Int?,
         grpcToken: String?,
         appApks: Iterable<File>,
+        additionalInstallOptions: Iterable<String>,
         helperApks: Iterable<File>,
         testData: StaticTestData,
         utpDependencies: UtpDependencies,
@@ -311,7 +317,8 @@ class UtpConfigFactory {
                 }
                 testDriver = createTestDriver(testData, utpDependencies, useOrchestrator)
             }
-            addHostPlugin(createAndroidTestPlugin(testData, appApks, helperApks, utpDependencies))
+            addHostPlugin(createAndroidTestPlugin(
+                    testData, appApks, additionalInstallOptions, helperApks, utpDependencies))
             addHostPlugin(createAndroidTestDeviceInfoPlugin(utpDependencies))
         }.build()
     }
@@ -410,9 +417,14 @@ class UtpConfigFactory {
         return ANDROID_DRIVER_INSTRUMENTATION.toExtensionProto(utpDependencies, config)
     }
 
+    /**
+     * @param additionalInstallOptions an additional install options to be used for installing
+     *   app (tested-) APKs and test APK. These options are not used for the test helper APKs.
+     */
     private fun createAndroidTestPlugin(
             testData: StaticTestData,
             appApks: Iterable<File>,
+            additionalInstallOptions: Iterable<String>,
             helperApks: Iterable<File>,
             utpDependencies: UtpDependencies
     ): ExtensionProto.Extension {
@@ -424,6 +436,11 @@ class UtpConfigFactory {
                         path = testData.testApk.absolutePath
                     }
                 }
+                additionalInstallOptions.forEach { option ->
+                    addInstallOptionsBuilder().apply {
+                        commandLineParameter = option
+                    }
+                }
             }
             appApks.forEach { appApk ->
                 addTestApksBuilder().apply {
@@ -431,6 +448,11 @@ class UtpConfigFactory {
                         type = TestArtifactProto.ArtifactType.ANDROID_APK
                         sourcePathBuilder.apply {
                             path = appApk.absolutePath
+                        }
+                    }
+                    additionalInstallOptions.forEach { option ->
+                        addInstallOptionsBuilder().apply {
+                            commandLineParameter = option
                         }
                     }
                 }

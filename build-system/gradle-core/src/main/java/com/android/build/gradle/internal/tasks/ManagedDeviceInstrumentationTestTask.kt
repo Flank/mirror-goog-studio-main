@@ -61,12 +61,14 @@ import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.plugins.JavaBasePlugin
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
@@ -143,6 +145,10 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
 
     @get: Nested
     abstract val testData: Property<TestData>
+
+    @get: Optional
+    @get: Input
+    abstract val installOptions: ListProperty<String>
 
     @get: InputFiles
     @get: PathSensitive(PathSensitivity.RELATIVE)
@@ -232,6 +238,7 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
                         projectName,
                         testData.get().flavorName.get(),
                         testData.get().getAsStaticData(),
+                        installOptions.getOrElse(listOf()),
                         buddyApks.files,
                         LoggerWrapper(logger)
                 )
@@ -314,6 +321,7 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
             task.group = JavaBasePlugin.VERIFICATION_GROUP
 
             task.testData.setDisallowChanges(testData)
+            task.installOptions.set(extension.adbOptions.installOptions)
             task.testRunnerFactory.compileSdkVersion.setDisallowChanges(
                 extension.compileSdkVersion
             )

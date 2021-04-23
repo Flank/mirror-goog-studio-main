@@ -104,6 +104,7 @@ class UtpTestRunnerTest {
                 any(StaticTestData::class.java),
                 anyIterable(),
                 anyIterable(),
+                anyIterable(),
                 any(UtpDependencies::class.java),
                 any(SdkComponentsBuildService.VersionedSdkLoader::class.java),
                 any(File::class.java),
