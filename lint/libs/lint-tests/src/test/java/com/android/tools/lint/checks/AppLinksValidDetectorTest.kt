@@ -13,1458 +13,1426 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.tools.lint.checks
 
-package com.android.tools.lint.checks;
+import com.android.tools.lint.detector.api.Detector
+import com.android.tools.lint.detector.api.XmlContext
+import com.android.utils.XmlUtils
+import com.google.common.truth.Truth.assertThat
+import org.w3c.dom.Element
+import java.net.URL
 
-import static com.google.common.truth.Truth.assertThat;
-
-import com.android.tools.lint.checks.AppLinksValidDetector.UriInfo;
-import com.android.tools.lint.detector.api.Detector;
-import com.android.utils.XmlUtils;
-import java.io.IOException;
-import java.net.URL;
-import java.util.List;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.xml.sax.SAXException;
-
-@SuppressWarnings("javadoc")
-public class AppLinksValidDetectorTest extends AbstractCheckTest {
-    @Override
-    protected Detector getDetector() {
-        return new AppLinksValidDetector();
+class AppLinksValidDetectorTest : AbstractCheckTest() {
+    override fun getDetector(): Detector {
+        return AppLinksValidDetector()
     }
 
-    public void testWrongNamespace() {
-        String expected =
-                ""
-                        + "AndroidManifest.xml:12: Error: Validation nodes should be in the tools: namespace to ensure they are removed from the manifest at build time [TestAppLink]\n"
-                        + "            <validation />\n"
-                        + "             ~~~~~~~~~~\n"
-                        + "1 errors, 0 warnings\n";
+    fun testWrongNamespace() {
+        val expected =
+            """
+            AndroidManifest.xml:12: Error: Validation nodes should be in the tools: namespace to ensure they are removed from the manifest at build time [TestAppLink]
+                        <validation />
+                         ~~~~~~~~~~
+            1 errors, 0 warnings
+            """
         lint().files(
-                        xml(
-                                "AndroidManifest.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                        + "    xmlns:tools=\"http://schemas.android.com/tools\""
-                                        + "    package=\"test.pkg\" >\n"
-                                        + "\n"
-                                        + "    <application>\n"
-                                        + "        <activity>\n"
-                                        + "            <intent-filter android:autoVerify=\"true\">\n"
-                                        + "                <data android:scheme=\"http\"\n"
-                                        + "                    android:host=\"example.com\"\n"
-                                        + "                    android:pathPrefix=\"/gizmos\" />\n"
-                                        + "            </intent-filter>\n"
-                                        + "            <validation />\n"
-                                        + "        </activity>\n"
-                                        + "    </application>\n"
-                                        + "\n"
-                                        + "</manifest>\n"))
-                .run()
-                .expect(expected);
+            xml(
+                "AndroidManifest.xml",
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    xmlns:tools="http://schemas.android.com/tools"
+                    package="test.pkg" >
+
+                    <application>
+                        <activity>
+                            <intent-filter android:autoVerify="true">
+                                <data android:scheme="http"
+                                    android:host="example.com"
+                                    android:pathPrefix="/gizmos" />
+                            </intent-filter>
+                            <validation />
+                        </activity>
+                    </application>
+
+                </manifest>
+                """
+            ).indented()
+        ).run().expect(expected)
     }
 
-    public void testMissingTestUrl() {
-        String expected =
-                ""
-                        + "AndroidManifest.xml:12: Error: Expected testUrl attribute [AppLinkUrlError]\n"
-                        + "            <tools:validation />\n"
-                        + "            ~~~~~~~~~~~~~~~~~~~~\n"
-                        + "1 errors, 0 warnings\n";
+    fun testMissingTestUrl() {
+        val expected = """
+            AndroidManifest.xml:12: Error: Expected testUrl attribute [AppLinkUrlError]
+                        <tools:validation />
+                        ~~~~~~~~~~~~~~~~~~~~
+            1 errors, 0 warnings
+            """
         lint().files(
-                        xml(
-                                "AndroidManifest.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                        + "    xmlns:tools=\"http://schemas.android.com/tools\""
-                                        + "    package=\"test.pkg\" >\n"
-                                        + "\n"
-                                        + "    <application>\n"
-                                        + "        <activity>\n"
-                                        + "            <intent-filter android:autoVerify=\"true\">\n"
-                                        + "                <data android:scheme=\"http\"\n"
-                                        + "                    android:host=\"example.com\"\n"
-                                        + "                    android:pathPrefix=\"/gizmos\" />\n"
-                                        + "            </intent-filter>\n"
-                                        + "            <tools:validation />\n"
-                                        + "        </activity>\n"
-                                        + "    </application>\n"
-                                        + "\n"
-                                        + "</manifest>\n"))
-                .run()
-                .expect(expected);
+            xml(
+                "AndroidManifest.xml",
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    xmlns:tools="http://schemas.android.com/tools"
+                    package="test.pkg" >
+
+                    <application>
+                        <activity>
+                            <intent-filter android:autoVerify="true">
+                                <data android:scheme="http"
+                                    android:host="example.com"
+                                    android:pathPrefix="/gizmos" />
+                            </intent-filter>
+                            <tools:validation />
+                        </activity>
+                    </application>
+
+                </manifest>
+                """
+            ).indented()
+        ).run().expect(expected)
     }
 
-    public void testBadTestUrl() {
-        String expected =
-                ""
-                        + "AndroidManifest.xml:12: Error: Invalid test URL: no protocol: no-protocol [TestAppLink]\n"
-                        + "            <tools:validation testUrl=\"no-protocol\"/>\n"
-                        + "                                       ~~~~~~~~~~~\n"
-                        + "AndroidManifest.xml:13: Error: Invalid test URL: unknown protocol: unknown-protocol [TestAppLink]\n"
-                        + "            <tools:validation testUrl=\"unknown-protocol://example.com/gizmos/foo/bar\"/>\n"
-                        + "                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "AndroidManifest.xml:14: Error: Invalid test URL: Invalid host: [FEDC:BA98:7654:3210:GEDC:BA98:7654:3210] [TestAppLink]\n"
-                        + "            <tools:validation testUrl=\"http://[FEDC:BA98:7654:3210:GEDC:BA98:7654:3210]:80/index.html\"/>\n"
-                        + "                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "3 errors, 0 warnings\n";
+    fun testBadTestUrl() {
+        val expected = """
+            AndroidManifest.xml:11: Error: Invalid test URL: no protocol: no-protocol [TestAppLink]
+                        <tools:validation testUrl="no-protocol"/>
+                                                   ~~~~~~~~~~~
+            AndroidManifest.xml:12: Error: Invalid test URL: unknown protocol: unknown-protocol [TestAppLink]
+                        <tools:validation testUrl="unknown-protocol://example.com/gizmos/foo/bar"/>
+                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            AndroidManifest.xml:13: Error: Invalid test URL: Invalid host: [FEDC:BA98:7654:3210:GEDC:BA98:7654:3210] [TestAppLink]
+                        <tools:validation testUrl="http://[FEDC:BA98:7654:3210:GEDC:BA98:7654:3210]:80/index.html"/>
+                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            3 errors, 0 warnings
+            """
         lint().files(
-                        xml(
-                                "AndroidManifest.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                        + "    xmlns:tools=\"http://schemas.android.com/tools\""
-                                        + "    package=\"test.pkg\" >\n"
-                                        + "\n"
-                                        + "    <application>\n"
-                                        + "        <activity>\n"
-                                        + "            <intent-filter android:autoVerify=\"true\">\n"
-                                        + "                <data android:scheme=\"http\"\n"
-                                        + "                    android:host=\"example.com\"\n"
-                                        + "                    android:pathPrefix=\"/gizmos\" />\n"
-                                        + "            </intent-filter>\n"
-                                        + "            <tools:validation testUrl=\"no-protocol\"/>\n"
-                                        + "            <tools:validation testUrl=\"unknown-protocol://example.com/gizmos/foo/bar\"/>\n"
-                                        + "            <tools:validation testUrl=\"http://[FEDC:BA98:7654:3210:GEDC:BA98:7654:3210]:80/index.html\"/>\n"
-                                        + "        </activity>\n"
-                                        + "    </application>\n"
-                                        + "\n"
-                                        + "</manifest>\n"))
-                .run()
-                .expect(expected);
+            xml(
+                "AndroidManifest.xml",
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    xmlns:tools="http://schemas.android.com/tools"    package="test.pkg" >
+
+                    <application>
+                        <activity>
+                            <intent-filter android:autoVerify="true">
+                                <data android:scheme="http"
+                                    android:host="example.com"
+                                    android:pathPrefix="/gizmos" />
+                            </intent-filter>
+                            <tools:validation testUrl="no-protocol"/>
+                            <tools:validation testUrl="unknown-protocol://example.com/gizmos/foo/bar"/>
+                            <tools:validation testUrl="http://[FEDC:BA98:7654:3210:GEDC:BA98:7654:3210]:80/index.html"/>
+                        </activity>
+                    </application>
+
+                </manifest>
+                """
+            ).indented()
+        ).run().expect(expected)
     }
 
-    public void testValidation1() {
-        String expected =
-                ""
-                        + "AndroidManifest.xml:14: Error: Test URL did not match path prefix /gizmos, path literal /literal/path [TestAppLink]\n"
-                        + "            <tools:validation testUrl=\"http://example.com/notmatch/foo/bar\"/>\n"
-                        + "                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "AndroidManifest.xml:15: Error: Test URL did not match host example.com [TestAppLink]\n"
-                        + "            <tools:validation testUrl=\"http://notmatch.com/gizmos/foo/bar\"/>\n"
-                        + "                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "AndroidManifest.xml:16: Error: Test URL did not match scheme http [TestAppLink]\n"
-                        + "            <tools:validation testUrl=\"https://example.com/gizmos/foo/bar\"/>\n"
-                        + "                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "3 errors, 0 warnings\n";
+    fun testValidation1() {
+        val expected =
+            """
+            AndroidManifest.xml:14: Error: Test URL did not match path prefix /gizmos, path literal /literal/path [TestAppLink]
+                        <tools:validation testUrl="http://example.com/notmatch/foo/bar"/>
+                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            AndroidManifest.xml:15: Error: Test URL did not match host example.com [TestAppLink]
+                        <tools:validation testUrl="http://notmatch.com/gizmos/foo/bar"/>
+                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            AndroidManifest.xml:16: Error: Test URL did not match scheme http [TestAppLink]
+                        <tools:validation testUrl="https://example.com/gizmos/foo/bar"/>
+                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            3 errors, 0 warnings
+            """
         lint().files(
-                        xml(
-                                "AndroidManifest.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                        + "    xmlns:tools=\"http://schemas.android.com/tools\""
-                                        + "    package=\"test.pkg\" >\n"
-                                        + "\n"
-                                        + "    <application>\n"
-                                        + "        <activity>\n"
-                                        + "            <intent-filter android:autoVerify=\"true\">\n"
-                                        + "                <data android:scheme=\"http\"\n"
-                                        + "                    android:host=\"example.com\"\n"
-                                        + "                    android:pathPrefix=\"/gizmos\" />\n"
-                                        + "                <data android:path=\"/literal/path\" />\n"
-                                        + "            </intent-filter>\n"
-                                        + "            <tools:validation testUrl=\"http://example.com/gizmos/foo/bar\"/>\n"
-                                        + "            <tools:validation testUrl=\"http://example.com/notmatch/foo/bar\"/>\n"
-                                        + "            <tools:validation testUrl=\"http://notmatch.com/gizmos/foo/bar\"/>\n"
-                                        + "            <tools:validation testUrl=\"https://example.com/gizmos/foo/bar\"/>\n"
-                                        + "            <tools:validation testUrl=\"http://example.com/literal/path\"/>\n"
-                                        + "        </activity>\n"
-                                        + "    </application>\n"
-                                        + "\n"
-                                        + "</manifest>\n"))
-                .run()
-                .expect(expected);
+            xml(
+                "AndroidManifest.xml",
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    xmlns:tools="http://schemas.android.com/tools"
+                    package="test.pkg" >
+
+                    <application>
+                        <activity>
+                            <intent-filter android:autoVerify="true">
+                                <data android:scheme="http"
+                                    android:host="example.com"
+                                    android:pathPrefix="/gizmos" />
+                                <data android:path="/literal/path" />
+                            </intent-filter>
+                            <tools:validation testUrl="http://example.com/gizmos/foo/bar"/>
+                            <tools:validation testUrl="http://example.com/notmatch/foo/bar"/>
+                            <tools:validation testUrl="http://notmatch.com/gizmos/foo/bar"/>
+                            <tools:validation testUrl="https://example.com/gizmos/foo/bar"/>
+                            <tools:validation testUrl="http://example.com/literal/path"/>
+                        </activity>
+                    </application>
+
+                </manifest>
+                """
+            ).indented()
+        ).run().expect(expected)
     }
 
-    public void testValidation2() {
+    fun testValidation2() {
         lint().files(
-                        xml(
-                                "AndroidManifest.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                        + "    xmlns:tools=\"http://schemas.android.com/tools\""
-                                        + "    package=\"com.example.helloworld\" >\n"
-                                        + "\n"
-                                        + "    <application\n"
-                                        + "        android:allowBackup=\"true\"\n"
-                                        + "        android:icon=\"@mipmap/ic_launcher\" >\n"
-                                        + "        <activity android:name=\".MainActivity\" >\n"
-                                        + "            <intent-filter>\n"
-                                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
-                                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
-                                        + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
-                                        + "                <data android:scheme=\"http\" />\n"
-                                        + "                <data android:scheme=\"https\" />\n"
-                                        + "                <data android:host=\"www.twitter.com\" />\n"
-                                        + "                <data android:host=\"twitter.com\" />\n"
-                                        + "                <data android:host=\"*.twitter.com\" />\n"
-                                        + "                <data android:host=\"*twitter.com\" />\n"
-                                        + "                <data android:pathPattern=\"/vioside/.*\" />\n"
-                                        + "            </intent-filter>\n"
-                                        + "            <tools:validation testUrl=\"https://twitter.com/vioside/status/761453456683069440\" />\n"
-                                        + "            <tools:validation testUrl=\"https://www.twitter.com/vioside/status/761453456683069440\" />\n"
-                                        + "        </activity>\n"
-                                        + "    </application>\n"
-                                        + "\n"
-                                        + "</manifest>\n"))
-                .run()
-                .expectClean();
+            xml(
+                "AndroidManifest.xml",
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    xmlns:tools="http://schemas.android.com/tools"
+                    package="com.example.helloworld" >
+
+                    <application
+                        android:allowBackup="true"
+                        android:icon="@mipmap/ic_launcher" >
+                        <activity android:name=".MainActivity" >
+                            <intent-filter>
+                                <action android:name="android.intent.action.VIEW" />
+                                <category android:name="android.intent.category.DEFAULT" />
+                                <category android:name="android.intent.category.BROWSABLE" />
+                                <data android:scheme="http" />
+                                <data android:scheme="https" />
+                                <data android:host="www.twitter.com" />
+                                <data android:host="twitter.com" />
+                                <data android:host="*.twitter.com" />
+                                <data android:host="*twitter.com" />
+                                <data android:pathPattern="/vioside/.*" />
+                            </intent-filter>
+                            <tools:validation testUrl="https://twitter.com/vioside/status/761453456683069440" />
+                            <tools:validation testUrl="https://www.twitter.com/vioside/status/761453456683069440" />
+                        </activity>
+                    </application>
+
+                </manifest>
+                """
+            ).indented()
+        ).run().expectClean()
     }
 
-    public void testHostWildcardMatching() {
-        String expected =
-                ""
-                        + "AndroidManifest.xml:12: Error: Test URL did not match host *.example.com [TestAppLink]\n"
-                        + "            <tools:validation testUrl=\"http://example.com/path/foo/bar\"/>\n"
-                        + "                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "1 errors, 0 warnings\n";
+    fun testHostWildcardMatching() {
+        val expected = """
+            AndroidManifest.xml:12: Error: Test URL did not match host *.example.com [TestAppLink]
+                        <tools:validation testUrl="http://example.com/path/foo/bar"/>
+                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            1 errors, 0 warnings
+            """
         lint().files(
-                        xml(
-                                "AndroidManifest.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                        + "    xmlns:tools=\"http://schemas.android.com/tools\""
-                                        + "    package=\"test.pkg\" >\n"
-                                        + "\n"
-                                        + "    <application>\n"
-                                        + "        <activity>\n"
-                                        + "            <intent-filter android:autoVerify=\"true\">\n"
-                                        + "                <data android:scheme=\"http\"\n"
-                                        + "                    android:host=\"*.example.com\"\n"
-                                        + "                    android:pathPrefix=\"/path\" />\n"
-                                        + "            </intent-filter>\n"
-                                        // Not a match - missing "."
-                                        + "            <tools:validation testUrl=\"http://example.com/path/foo/bar\"/>\n"
-                                        // OK:
-                                        + "            <tools:validation testUrl=\"http://.example.com/path/foo/bar\"/>\n"
-                                        + "            <tools:validation testUrl=\"http://www.example.com/path/foo/bar\"/>\n"
-                                        + "        </activity>\n"
-                                        + "    </application>\n"
-                                        + "\n"
-                                        + "</manifest>\n"))
-                .run()
-                .expect(expected);
+            xml(
+                "AndroidManifest.xml",
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    xmlns:tools="http://schemas.android.com/tools"
+                    package="test.pkg" >
+
+                    <application>
+                        <activity>
+                            <intent-filter android:autoVerify="true">
+                                <data android:scheme="http"
+                                    android:host="*.example.com"
+                                    android:pathPrefix="/path" />
+                            </intent-filter>
+                            <tools:validation testUrl="http://example.com/path/foo/bar"/>
+                            <tools:validation testUrl="http://.example.com/path/foo/bar"/>
+                            <tools:validation testUrl="http://www.example.com/path/foo/bar"/>
+                        </activity>
+                    </application>
+
+                </manifest>
+                """
+            ).indented()
+        ).run().expect(expected)
     }
 
-    public void testPortMatching() {
-        String expected =
-                ""
-                        + "AndroidManifest.xml:25: Error: Test URL did not match port none or did not match port 85 or did not match host android.com [TestAppLink]\n"
-                        + "            <tools:validation testUrl=\"http://example.com:80/path/foo/bar\"/>\n"
-                        + "                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "AndroidManifest.xml:29: Error: Test URL did not match host example.com or did not match port 86 [TestAppLink]\n"
-                        + "            <tools:validation testUrl=\"http://android.com/path/foo/bar\"/>\n"
-                        + "                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "2 errors, 0 warnings\n";
+    fun testPortMatching() {
+        val expected =
+            """
+            AndroidManifest.xml:25: Error: Test URL did not match port none or did not match port 85 or did not match host android.com [TestAppLink]
+                        <tools:validation testUrl="http://example.com:80/path/foo/bar"/>
+                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            AndroidManifest.xml:29: Error: Test URL did not match host example.com or did not match port 86 [TestAppLink]
+                        <tools:validation testUrl="http://android.com/path/foo/bar"/>
+                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            2 errors, 0 warnings
+            """
         lint().files(
-                        xml(
-                                "AndroidManifest.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                        + "    xmlns:tools=\"http://schemas.android.com/tools\""
-                                        + "    package=\"test.pkg\" >\n"
-                                        + "\n"
-                                        + "    <application>\n"
-                                        + "        <activity>\n"
-                                        + "            <intent-filter android:autoVerify=\"true\">\n"
-                                        + "                <data android:scheme=\"http\"\n"
-                                        + "                      android:host=\"example.com\"\n"
-                                        + "                      android:pathPrefix=\"/path\" />\n"
-                                        + "            </intent-filter>\n"
-                                        + "            <intent-filter android:autoVerify=\"true\">\n"
-                                        + "                <data android:scheme=\"http\"\n"
-                                        + "                      android:host=\"example.com\"\n"
-                                        + "                      android:port=\"85\"\n"
-                                        + "                      android:pathPrefix=\"/path\" />\n"
-                                        + "            </intent-filter>\n"
-                                        + "            <intent-filter android:autoVerify=\"true\">\n"
-                                        + "                <data android:scheme=\"http\"\n"
-                                        + "                      android:host=\"android.com\"\n"
-                                        + "                      android:port=\"86\"\n"
-                                        + "                      android:pathPrefix=\"/path\" />\n"
-                                        + "            </intent-filter>\n"
-                                        + "            <tools:validation testUrl=\"http://example.com/path/foo/bar\"/>\n"
-                                        + "            <tools:validation testUrl=\"http://example.com:80/path/foo/bar\"/>\n"
-                                        + "            <tools:validation testUrl=\"http://example.com/path/foo/bar\"/>\n"
-                                        + "            <tools:validation testUrl=\"http://example.com:85/path/foo/bar\"/>\n"
-                                        + "            <tools:validation testUrl=\"http://android.com:86/path/foo/bar\"/>\n"
-                                        + "            <tools:validation testUrl=\"http://android.com/path/foo/bar\"/>\n"
-                                        + "        </activity>\n"
-                                        + "    </application>\n"
-                                        + "\n"
-                                        + "</manifest>\n"))
-                .run()
-                .expect(expected);
+            xml(
+                "AndroidManifest.xml",
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    xmlns:tools="http://schemas.android.com/tools"
+                    package="test.pkg" >
+
+                    <application>
+                        <activity>
+                            <intent-filter android:autoVerify="true">
+                                <data android:scheme="http"
+                                      android:host="example.com"
+                                      android:pathPrefix="/path" />
+                            </intent-filter>
+                            <intent-filter android:autoVerify="true">
+                                <data android:scheme="http"
+                                      android:host="example.com"
+                                      android:port="85"
+                                      android:pathPrefix="/path" />
+                            </intent-filter>
+                            <intent-filter android:autoVerify="true">
+                                <data android:scheme="http"
+                                      android:host="android.com"
+                                      android:port="86"
+                                      android:pathPrefix="/path" />
+                            </intent-filter>
+                            <tools:validation testUrl="http://example.com/path/foo/bar"/>
+                            <tools:validation testUrl="http://example.com:80/path/foo/bar"/>
+                            <tools:validation testUrl="http://example.com/path/foo/bar"/>
+                            <tools:validation testUrl="http://example.com:85/path/foo/bar"/>
+                            <tools:validation testUrl="http://android.com:86/path/foo/bar"/>
+                            <tools:validation testUrl="http://android.com/path/foo/bar"/>
+                        </activity>
+                    </application>
+
+                </manifest>
+                """
+            ).indented()
+        ).run().expect(expected)
     }
 
-    public void testHostAndPortCombination() {
+    fun testHostAndPortCombination() {
         // Host and port must be specified on the same element
-        String expected =
-                ""
-                        + "AndroidManifest.xml:12: Error: The port must be specified in the same <data> element as the host [AppLinkUrlError]\n"
-                        + "                <data android:port=\"80\" />\n"
-                        + "                                    ~~\n"
-                        + "1 errors, 0 warnings\n";
-        //noinspection all // Sample code
+        val expected =
+            """
+            AndroidManifest.xml:11: Error: The port must be specified in the same <data> element as the host [AppLinkUrlError]
+                            <data android:port="80" />
+                                                ~~
+            1 errors, 0 warnings
+            """
         lint().files(
-                        xml(
-                                "AndroidManifest.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                        + "    package=\"test.pkg\" >\n"
-                                        + "    <application>\n"
-                                        + "        <activity>\n"
-                                        + "            <intent-filter>\n"
-                                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
-                                        // OK:
-                                        + "                <data android:scheme=\"http\"/>\n"
-                                        + "                <data android:host=\"example.com\"\n"
-                                        + "                      android:port=\"81\" />\n"
-                                        // Not OK:
-                                        + "                <data android:host=\"example.com\" />\n"
-                                        + "                <data android:port=\"80\" />\n"
-                                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
-                                        + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
-                                        + "            </intent-filter>\n"
-                                        + "        </activity>\n"
-                                        + "    </application>\n"
-                                        + "\n"
-                                        + "</manifest>\n"))
-                .run()
-                .expect(expected);
+            xml(
+                "AndroidManifest.xml",
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="test.pkg" >
+                    <application>
+                        <activity>
+                            <intent-filter>
+                                <action android:name="android.intent.action.VIEW" />
+                                <data android:scheme="http"/>
+                                <data android:host="example.com"
+                                      android:port="81" />
+                                <data android:host="example.com" />
+                                <data android:port="80" />
+                                <category android:name="android.intent.category.DEFAULT" />
+                                <category android:name="android.intent.category.BROWSABLE" />
+                            </intent-filter>
+                        </activity>
+                    </application>
+
+                </manifest>
+                """
+            ).indented()
+        ).run().expect(expected)
     }
 
-    public void testValidPortNumber() {
+    fun testValidPortNumber() {
         // Port numbers must be in the valid range
-        String expected =
-                ""
-                        + "AndroidManifest.xml:9: Error: not a valid port number [AppLinkUrlError]\n"
-                        + "                      android:port=\"-1\" />\n"
-                        + "                                    ~~\n"
-                        + "AndroidManifest.xml:11: Error: not a valid port number [AppLinkUrlError]\n"
-                        + "                      android:port=\"128000\" />\n"
-                        + "                                    ~~~~~~\n"
-                        + "2 errors, 0 warnings\n";
-        //noinspection all // Sample code
+        val expected = """
+            AndroidManifest.xml:8: Error: not a valid port number [AppLinkUrlError]
+                                  android:port="-1" />
+                                                ~~
+            AndroidManifest.xml:10: Error: not a valid port number [AppLinkUrlError]
+                                  android:port="128000" />
+                                                ~~~~~~
+            2 errors, 0 warnings
+            """
         lint().files(
-                        xml(
-                                "AndroidManifest.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                        + "    package=\"test.pkg\" >\n"
-                                        + "    <application>\n"
-                                        + "        <activity>\n"
-                                        + "            <intent-filter>\n"
-                                        + "                <data android:scheme=\"http\"/>\n"
-                                        + "                <data android:host=\"example.com\"\n"
-                                        + "                      android:port=\"-1\" />\n"
-                                        + "                <data android:host=\"example.com\"\n"
-                                        + "                      android:port=\"128000\" />\n"
-                                        + "            </intent-filter>\n"
-                                        + "        </activity>\n"
-                                        + "    </application>\n"
-                                        + "\n"
-                                        + "</manifest>\n"))
-                .run()
-                .expect(expected);
+            xml(
+                "AndroidManifest.xml",
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="test.pkg" >
+                    <application>
+                        <activity>
+                            <intent-filter>
+                                <data android:scheme="http"/>
+                                <data android:host="example.com"
+                                      android:port="-1" />
+                                <data android:host="example.com"
+                                      android:port="128000" />
+                            </intent-filter>
+                        </activity>
+                    </application>
+
+                </manifest>
+                """
+            ).indented()
+        ).run().expect(expected)
     }
 
-    public void testNonEmpty() {
+    fun testNonEmpty() {
         // Attributes are not allowed to be empty
-        String expected =
-                ""
-                        + "AndroidManifest.xml:7: Error: android:scheme cannot be empty [AppLinkUrlError]\n"
-                        + "                <data android:scheme=\"\"\n"
-                        + "                      ~~~~~~~~~~~~~~~~~\n"
-                        + "AndroidManifest.xml:8: Error: android:host cannot be empty [AppLinkUrlError]\n"
-                        + "                      android:host=\"\"\n"
-                        + "                      ~~~~~~~~~~~~~~~\n"
-                        + "AndroidManifest.xml:9: Error: android:port cannot be empty [AppLinkUrlError]\n"
-                        + "                      android:port=\"\"\n"
-                        + "                      ~~~~~~~~~~~~~~~\n"
-                        + "AndroidManifest.xml:10: Error: android:pathPrefix cannot be empty [AppLinkUrlError]\n"
-                        + "                      android:pathPrefix=\"\"\n"
-                        + "                      ~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "AndroidManifest.xml:11: Error: android:path cannot be empty [AppLinkUrlError]\n"
-                        + "                      android:path=\"\"\n"
-                        + "                      ~~~~~~~~~~~~~~~\n"
-                        + "AndroidManifest.xml:12: Error: android:pathPattern cannot be empty [AppLinkUrlError]\n"
-                        + "                      android:pathPattern=\"\"\n"
-                        + "                      ~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "6 errors, 0 warnings\n";
-        //noinspection all // Sample code
+        val expected = """
+            AndroidManifest.xml:6: Error: android:scheme cannot be empty [AppLinkUrlError]
+                            <data android:scheme=""
+                                  ~~~~~~~~~~~~~~~~~
+            AndroidManifest.xml:7: Error: android:host cannot be empty [AppLinkUrlError]
+                                  android:host=""
+                                  ~~~~~~~~~~~~~~~
+            AndroidManifest.xml:8: Error: android:port cannot be empty [AppLinkUrlError]
+                                  android:port=""
+                                  ~~~~~~~~~~~~~~~
+            AndroidManifest.xml:9: Error: android:pathPrefix cannot be empty [AppLinkUrlError]
+                                  android:pathPrefix=""
+                                  ~~~~~~~~~~~~~~~~~~~~~
+            AndroidManifest.xml:10: Error: android:path cannot be empty [AppLinkUrlError]
+                                  android:path=""
+                                  ~~~~~~~~~~~~~~~
+            AndroidManifest.xml:11: Error: android:pathPattern cannot be empty [AppLinkUrlError]
+                                  android:pathPattern=""
+                                  ~~~~~~~~~~~~~~~~~~~~~~
+            6 errors, 0 warnings
+            """
         lint().files(
-                        xml(
-                                "AndroidManifest.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                        + "    package=\"test.pkg\" >\n"
-                                        + "    <application>\n"
-                                        + "        <activity>\n"
-                                        + "            <intent-filter>\n"
-                                        + "                <data android:scheme=\"\"\n"
-                                        + "                      android:host=\"\"\n"
-                                        + "                      android:port=\"\"\n"
-                                        + "                      android:pathPrefix=\"\"\n"
-                                        + "                      android:path=\"\"\n"
-                                        + "                      android:pathPattern=\"\"\n"
-                                        + "                      android:mimeType=\"\"/>\n"
-                                        + "            </intent-filter>\n"
-                                        + "        </activity>\n"
-                                        + "    </application>\n"
-                                        + "\n"
-                                        + "</manifest>\n"))
-                .run()
-                .expect(expected);
+            xml(
+                "AndroidManifest.xml",
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="test.pkg" >
+                    <application>
+                        <activity>
+                            <intent-filter>
+                                <data android:scheme=""
+                                      android:host=""
+                                      android:port=""
+                                      android:pathPrefix=""
+                                      android:path=""
+                                      android:pathPattern=""
+                                      android:mimeType=""/>
+                            </intent-filter>
+                        </activity>
+                    </application>
+
+                </manifest>
+                """
+            ).indented()
+        ).run().expect(expected)
     }
 
-    public void testNoTrailingSchemeColon() {
+    fun testNoTrailingSchemeColon() {
         // There should be no trailing colons for schemes
-        String expected =
-                ""
-                        + "AndroidManifest.xml:7: Error: Don't include trailing colon in the scheme declaration [AppLinkUrlError]\n"
-                        + "                <data android:scheme=\"http:\"/>\n"
-                        + "                                      ~~~~~\n"
-                        + "AndroidManifest.xml:8: Error: Don't include trailing colon in the scheme declaration [AppLinkUrlError]\n"
-                        + "                <data android:scheme=\"https:\"/>\n"
-                        + "                                      ~~~~~~\n"
-                        + "2 errors, 0 warnings\n";
-        //noinspection all // Sample code
+        val expected =
+            """
+            AndroidManifest.xml:6: Error: Don't include trailing colon in the scheme declaration [AppLinkUrlError]
+                            <data android:scheme="http:"/>
+                                                  ~~~~~
+            AndroidManifest.xml:7: Error: Don't include trailing colon in the scheme declaration [AppLinkUrlError]
+                            <data android:scheme="https:"/>
+                                                  ~~~~~~
+            2 errors, 0 warnings
+            """
         lint().files(
-                        xml(
-                                "AndroidManifest.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                        + "    package=\"test.pkg\" >\n"
-                                        + "    <application>\n"
-                                        + "        <activity>\n"
-                                        + "            <intent-filter>\n"
-                                        + "                <data android:scheme=\"http:\"/>\n"
-                                        + "                <data android:scheme=\"https:\"/>\n"
-                                        + "            </intent-filter>\n"
-                                        + "        </activity>\n"
-                                        + "    </application>\n"
-                                        + "\n"
-                                        + "</manifest>\n"))
-                .run()
-                .expect(expected);
+            xml(
+                "AndroidManifest.xml",
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="test.pkg" >
+                    <application>
+                        <activity>
+                            <intent-filter>
+                                <data android:scheme="http:"/>
+                                <data android:scheme="https:"/>
+                            </intent-filter>
+                        </activity>
+                    </application>
+
+                </manifest>
+                """
+            ).indented()
+        ).run().expect(expected)
     }
 
-    public void testWrongHostnameWildcard() {
+    fun testWrongHostnameWildcard() {
         // Wildcard can only be at the beginning
-        String expected =
-                ""
-                        + "AndroidManifest.xml:8: Error: The host wildcard (*) can only be the first character [AppLinkUrlError]\n"
-                        + "                <data android:host=\"example.*.com\"\n"
-                        + "                                    ~~~~~~~~~~~~~\n"
-                        + "1 errors, 0 warnings\n";
-        //noinspection all // Sample code
+        val expected =
+            """
+            AndroidManifest.xml:7: Error: The host wildcard (*) can only be the first character [AppLinkUrlError]
+                            <data android:host="example.*.com"
+                                                ~~~~~~~~~~~~~
+            1 errors, 0 warnings
+            """
         lint().files(
-                        xml(
-                                "AndroidManifest.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                        + "    package=\"test.pkg\" >\n"
-                                        + "    <application>\n"
-                                        + "        <activity>\n"
-                                        + "            <intent-filter>\n"
-                                        + "                <data android:scheme=\"http\"/>\n"
-                                        + "                <data android:host=\"example.*.com\"\n />\n"
-                                        + "            </intent-filter>\n"
-                                        + "        </activity>\n"
-                                        + "    </application>\n"
-                                        + "\n"
-                                        + "</manifest>\n"))
-                .run()
-                .expect(expected);
+            xml(
+                "AndroidManifest.xml",
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="test.pkg" >
+                    <application>
+                        <activity>
+                            <intent-filter>
+                                <data android:scheme="http"/>
+                                <data android:host="example.*.com"
+                 />
+                            </intent-filter>
+                        </activity>
+                    </application>
+
+                </manifest>
+                """
+            ).indented()
+        ).run().expect(expected)
     }
 
-    public void testLowerCase() {
+    fun testLowerCase() {
         // Scheme, host and mime type are all case sensitive and should only use lower case
-        String expected =
-                ""
-                        + "AndroidManifest.xml:8: Error: Scheme matching is case sensitive and should only use lower-case characters [AppLinkUrlError]\n"
-                        + "                <data android:scheme=\"HTTP\"\n"
-                        + "                                      ~~~~\n"
-                        + "AndroidManifest.xml:9: Error: Host matching is case sensitive and should only use lower-case characters [AppLinkUrlError]\n"
-                        + "                      android:host=\"Example.Com\"\n"
-                        + "                                    ~~~~~~~~~~~\n"
-                        + "AndroidManifest.xml:13: Error: Mime-type matching is case sensitive and should only use lower-case characters [AppLinkUrlError]\n"
-                        + "                      android:mimeType=\"MimeType\"/>\n"
-                        + "                                        ~~~~~~~~\n"
-                        + "3 errors, 0 warnings\n";
-        //noinspection all // Sample code
+        val expected =
+            """
+            AndroidManifest.xml:7: Error: Scheme matching is case sensitive and should only use lower-case characters [AppLinkUrlError]
+                            <data android:scheme="HTTP"
+                                                  ~~~~
+            AndroidManifest.xml:8: Error: Host matching is case sensitive and should only use lower-case characters [AppLinkUrlError]
+                                  android:host="Example.Com"
+                                                ~~~~~~~~~~~
+            AndroidManifest.xml:12: Error: Mime-type matching is case sensitive and should only use lower-case characters [AppLinkUrlError]
+                                  android:mimeType="MimeType"/>
+                                                    ~~~~~~~~
+            3 errors, 0 warnings
+            """
         lint().files(
-                        xml(
-                                "AndroidManifest.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                        + "    package=\"test.pkg\" >\n"
-                                        + "    <application>\n"
-                                        + "        <activity>\n"
-                                        + "            <intent-filter>\n"
-                                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
-                                        + "                <data android:scheme=\"HTTP\"\n"
-                                        + "                      android:host=\"Example.Com\"\n"
-                                        + "                      android:pathPrefix=\"/Foo\"\n"
-                                        + "                      android:path=\"/Foo\"\n"
-                                        + "                      android:pathPattern=\"/Foo\"\n"
-                                        + "                      android:mimeType=\"MimeType\"/>\n"
-                                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
-                                        + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
-                                        + "            </intent-filter>\n"
-                                        + "        </activity>\n"
-                                        + "    </application>\n"
-                                        + "\n"
-                                        + "</manifest>\n"))
-                .run()
-                .expect(expected);
+            xml(
+                "AndroidManifest.xml",
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="test.pkg" >
+                    <application>
+                        <activity>
+                            <intent-filter>
+                                <action android:name="android.intent.action.VIEW" />
+                                <data android:scheme="HTTP"
+                                      android:host="Example.Com"
+                                      android:pathPrefix="/Foo"
+                                      android:path="/Foo"
+                                      android:pathPattern="/Foo"
+                                      android:mimeType="MimeType"/>
+                                <category android:name="android.intent.category.DEFAULT" />
+                                <category android:name="android.intent.category.BROWSABLE" />
+                            </intent-filter>
+                        </activity>
+                    </application>
+
+                </manifest>
+                """
+            ).indented()
+        ).run().expect(expected)
     }
 
-    public void testPathsBeginWithSlash() {
+    fun testPathsBeginWithSlash() {
         // Paths should begin with /
-        String expected =
-                ""
-                        + "AndroidManifest.xml:10: Error: android:pathPrefix attribute should start with /, but it is samplePrefix [AppLinkUrlError]\n"
-                        + "                      android:pathPrefix=\"samplePrefix\"\n"
-                        + "                                          ~~~~~~~~~~~~\n"
-                        + "AndroidManifest.xml:11: Error: android:path attribute should start with /, but it is samplePath [AppLinkUrlError]\n"
-                        + "                      android:path=\"samplePath\"\n"
-                        + "                                    ~~~~~~~~~~\n"
-                        + "2 errors, 0 warnings\n";
-        //noinspection all // Sample code
+        val expected =
+            """
+            AndroidManifest.xml:9: Error: android:pathPrefix attribute should start with /, but it is samplePrefix [AppLinkUrlError]
+                                  android:pathPrefix="samplePrefix"
+                                                      ~~~~~~~~~~~~
+            AndroidManifest.xml:10: Error: android:path attribute should start with /, but it is samplePath [AppLinkUrlError]
+                                  android:path="samplePath"
+                                                ~~~~~~~~~~
+            2 errors, 0 warnings
+            """
         lint().files(
-                        xml(
-                                "AndroidManifest.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                        + "    package=\"test.pkg\" >\n"
-                                        + "    <application>\n"
-                                        + "        <activity>\n"
-                                        + "            <intent-filter>\n"
-                                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
-                                        + "                <data android:scheme=\"http\"\n"
-                                        + "                      android:host=\"example.com\"\n"
-                                        + "                      android:pathPrefix=\"samplePrefix\"\n"
-                                        + "                      android:path=\"samplePath\"\n"
-                                        + "                      android:pathPattern=\"samplePattern\"/>\n"
-                                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
-                                        + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
-                                        + "            </intent-filter>\n"
-                                        + "        </activity>\n"
-                                        + "    </application>\n"
-                                        + "\n"
-                                        + "</manifest>\n"))
-                .run()
-                .expect(expected)
-                .expectFixDiffs(
-                        ""
-                                + "Fix for AndroidManifest.xml line 9: Replace with /samplePrefix:\n"
-                                + "@@ -10 +10\n"
-                                + "-                       android:pathPrefix=\"samplePrefix\"\n"
-                                + "+                       android:pathPrefix=\"/samplePrefix\"\n"
-                                + "Fix for AndroidManifest.xml line 10: Replace with /samplePath:\n"
-                                + "@@ -11 +11\n"
-                                + "-                       android:path=\"samplePath\"\n"
-                                + "+                       android:path=\"/samplePath\"\n");
+            xml(
+                "AndroidManifest.xml",
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="test.pkg" >
+                    <application>
+                        <activity>
+                            <intent-filter>
+                                <action android:name="android.intent.action.VIEW" />
+                                <data android:scheme="http"
+                                      android:host="example.com"
+                                      android:pathPrefix="samplePrefix"
+                                      android:path="samplePath"
+                                      android:pathPattern="samplePattern"/>
+                                <category android:name="android.intent.category.DEFAULT" />
+                                <category android:name="android.intent.category.BROWSABLE" />
+                            </intent-filter>
+                        </activity>
+                    </application>
+
+                </manifest>
+                """
+            ).indented()
+        ).run().expect(expected).expectFixDiffs(
+            """
+            Fix for AndroidManifest.xml line 9: Replace with /samplePrefix:
+            @@ -9 +9
+            -                       android:pathPrefix="samplePrefix"
+            +                       android:pathPrefix="/samplePrefix"
+            Fix for AndroidManifest.xml line 10: Replace with /samplePath:
+            @@ -10 +10
+            -                       android:path="samplePath"
+            +                       android:path="/samplePath"
+            """
+        )
     }
 
-    public void testSuppressWithOldId() {
+    fun testSuppressWithOldId() {
         // Make sure that the ignore-issue mechanism works for both the current and the
         // previous issue id
-        //noinspection all // Sample code
         lint().files(
-                        xml(
-                                "AndroidManifest.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                        + "    xmlns:tools=\"http://schemas.android.com/tools\""
-                                        + "    package=\"test.pkg\" >\n"
-                                        + "    <application>\n"
-                                        + "        <activity>\n"
-                                        + "            <intent-filter>\n"
-                                        + "                <data android:scheme=\"http\"\n"
-                                        + "                      android:host=\"example.com\"\n"
-                                        + "                      android:pathPattern=\"foo\""
-                                        + "                      tools:ignore=\"AppLinkUrlError\"/>\n"
-                                        // Previous id
-                                        + "                <data android:scheme=\"http\"\n"
-                                        + "                      android:host=\"example.com\"\n"
-                                        + "                      android:pathPattern=\"foo\""
-                                        + "                      tools:ignore=\"GoogleAppIndexingUrlError\"/>\n"
-                                        + "            </intent-filter>\n"
-                                        + "        </activity>\n"
-                                        + "    </application>\n"
-                                        + "\n"
-                                        + "</manifest>\n"))
-                .run()
-                .expectClean();
+            xml(
+                "AndroidManifest.xml",
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    xmlns:tools="http://schemas.android.com/tools"
+                    package="test.pkg" >
+                    <application>
+                        <activity>
+                            <intent-filter>
+                                <data android:scheme="http"
+                                      android:host="example.com"
+                                      android:pathPattern="foo"
+                                      tools:ignore="AppLinkUrlError"/>
+                                <data android:scheme="http"
+                                      android:host="example.com"
+                                      android:pathPattern="foo"
+                                      tools:ignore="GoogleAppIndexingUrlError"/>
+                            </intent-filter>
+                        </activity>
+                    </application>
+
+                </manifest>
+                """
+            ).indented()
+        ).run().expectClean()
     }
 
-    public void testWrongPathPrefix() {
-        String expected =
-                ""
-                        + "AndroidManifest.xml:19: Error: android:pathPrefix attribute should start with /, but it is gizmos [AppLinkUrlError]\n"
-                        + "                    android:pathPrefix=\"gizmos\" />\n"
-                        + "                                        ~~~~~~\n"
-                        + "1 errors, 0 warnings\n";
-        //noinspection all // Sample code
+    fun testWrongPathPrefix() {
+        val expected =
+            """
+            AndroidManifest.xml:18: Error: android:pathPrefix attribute should start with /, but it is gizmos [AppLinkUrlError]
+                                android:pathPrefix="gizmos" />
+                                                    ~~~~~~
+            1 errors, 0 warnings
+            """
         lint().files(
-                        xml(
-                                "AndroidManifest.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                        + "    package=\"com.example.helloworld\" >\n"
-                                        + "\n"
-                                        + "    <application\n"
-                                        + "        android:allowBackup=\"true\"\n"
-                                        + "        android:icon=\"@mipmap/ic_launcher\"\n"
-                                        + "        android:label=\"@string/app_name\"\n"
-                                        + "        android:theme=\"@style/AppTheme\" >\n"
-                                        + "        <activity\n"
-                                        + "            android:name=\".FullscreenActivity\"\n"
-                                        + "            android:configChanges=\"orientation|keyboardHidden|screenSize\"\n"
-                                        + "            android:label=\"@string/title_activity_fullscreen\"\n"
-                                        + "            android:theme=\"@style/FullscreenTheme\" >\n"
-                                        + "            <intent-filter android:label=\"@string/title_activity_fullscreen\">\n"
-                                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
-                                        + "                <data android:scheme=\"http\"\n"
-                                        + "                    android:host=\"example.com\"\n"
-                                        + "                    android:pathPrefix=\"gizmos\" />\n"
-                                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
-                                        + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
-                                        + "            </intent-filter>\n"
-                                        + "        </activity>\n"
-                                        + "        <meta-data android:name=\"com.google.android.gms.version\" android:value=\"@integer/google_play_services_version\" />\n"
-                                        + "    </application>\n"
-                                        + "\n"
-                                        + "</manifest>\n"))
-                .run()
-                .expect(expected);
+            xml(
+                "AndroidManifest.xml",
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="com.example.helloworld" >
+
+                    <application
+                        android:allowBackup="true"
+                        android:icon="@mipmap/ic_launcher"
+                        android:label="@string/app_name"
+                        android:theme="@style/AppTheme" >
+                        <activity
+                            android:name=".FullscreenActivity"
+                            android:configChanges="orientation|keyboardHidden|screenSize"
+                            android:label="@string/title_activity_fullscreen"
+                            android:theme="@style/FullscreenTheme" >
+                            <intent-filter android:label="@string/title_activity_fullscreen">
+                                <action android:name="android.intent.action.VIEW" />
+                                <data android:scheme="http"
+                                    android:host="example.com"
+                                    android:pathPrefix="gizmos" />
+                                <category android:name="android.intent.category.DEFAULT" />
+                                <category android:name="android.intent.category.BROWSABLE" />
+                            </intent-filter>
+                        </activity>
+                        <meta-data android:name="com.google.android.gms.version" android:value="@integer/google_play_services_version" />
+                    </application>
+
+                </manifest>
+                """
+            ).indented()
+        ).run().expect(expected)
     }
 
-    public void testWrongPort() {
-        String expected =
-                ""
-                        + "AndroidManifest.xml:19: Error: not a valid port number [AppLinkUrlError]\n"
-                        + "                    android:port=\"ABCD\"\n"
-                        + "                                  ~~~~\n"
-                        + "1 errors, 0 warnings\n";
-        //noinspection all // Sample code
+    fun testWrongPort() {
+        val expected = """
+            AndroidManifest.xml:18: Error: not a valid port number [AppLinkUrlError]
+                                android:port="ABCD"
+                                              ~~~~
+            1 errors, 0 warnings
+            """
         lint().files(
-                        xml(
-                                "AndroidManifest.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                        + "    package=\"com.example.helloworld\" >\n"
-                                        + "\n"
-                                        + "    <application\n"
-                                        + "        android:allowBackup=\"true\"\n"
-                                        + "        android:icon=\"@mipmap/ic_launcher\"\n"
-                                        + "        android:label=\"@string/app_name\"\n"
-                                        + "        android:theme=\"@style/AppTheme\" >\n"
-                                        + "        <activity\n"
-                                        + "            android:name=\".FullscreenActivity\"\n"
-                                        + "            android:configChanges=\"orientation|keyboardHidden|screenSize\"\n"
-                                        + "            android:label=\"@string/title_activity_fullscreen\"\n"
-                                        + "            android:theme=\"@style/FullscreenTheme\" >\n"
-                                        + "            <intent-filter android:label=\"@string/title_activity_fullscreen\">\n"
-                                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
-                                        + "                <data android:scheme=\"http\"\n"
-                                        + "                    android:host=\"example.com\"\n"
-                                        + "                    android:port=\"ABCD\"\n"
-                                        + "                    android:pathPrefix=\"/gizmos\" />\n"
-                                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
-                                        + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
-                                        + "            </intent-filter>\n"
-                                        + "        </activity>\n"
-                                        + "        <meta-data android:name=\"com.google.android.gms.version\" android:value=\"@integer/google_play_services_version\" />\n"
-                                        + "    </application>\n"
-                                        + "\n"
-                                        + "</manifest>\n"))
-                .run()
-                .expect(expected);
+            xml(
+                "AndroidManifest.xml",
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="com.example.helloworld" >
+
+                    <application
+                        android:allowBackup="true"
+                        android:icon="@mipmap/ic_launcher"
+                        android:label="@string/app_name"
+                        android:theme="@style/AppTheme" >
+                        <activity
+                            android:name=".FullscreenActivity"
+                            android:configChanges="orientation|keyboardHidden|screenSize"
+                            android:label="@string/title_activity_fullscreen"
+                            android:theme="@style/FullscreenTheme" >
+                            <intent-filter android:label="@string/title_activity_fullscreen">
+                                <action android:name="android.intent.action.VIEW" />
+                                <data android:scheme="http"
+                                    android:host="example.com"
+                                    android:port="ABCD"
+                                    android:pathPrefix="/gizmos" />
+                                <category android:name="android.intent.category.DEFAULT" />
+                                <category android:name="android.intent.category.BROWSABLE" />
+                            </intent-filter>
+                        </activity>
+                        <meta-data android:name="com.google.android.gms.version" android:value="@integer/google_play_services_version" />
+                    </application>
+
+                </manifest>
+                """
+            ).indented()
+        ).run().expect(expected)
     }
 
-    public void testSchemeAndHostMissing() {
-        String expected =
-                ""
-                        + "AndroidManifest.xml:15: Error: Missing URL [AppLinkUrlError]\n"
-                        + "            <intent-filter android:label=\"@string/title_activity_fullscreen\">\n"
-                        + "            ^\n"
-                        + "AndroidManifest.xml:17: Error: At least one host must be specified [AppLinkUrlError]\n"
-                        + "                <data android:pathPrefix=\"/gizmos\" />\n"
-                        + "                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "AndroidManifest.xml:17: Error: At least one scheme must be specified [AppLinkUrlError]\n"
-                        + "                <data android:pathPrefix=\"/gizmos\" />\n"
-                        + "                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "AndroidManifest.xml:17: Error: Missing URL for the intent filter [AppLinkUrlError]\n"
-                        + "                <data android:pathPrefix=\"/gizmos\" />\n"
-                        + "                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "4 errors, 0 warnings\n";
-        //noinspection all // Sample code
+    fun testSchemeAndHostMissing() {
+        val expected = """
+            AndroidManifest.xml:14: Error: Missing URL [AppLinkUrlError]
+                        <intent-filter android:label="@string/title_activity_fullscreen">
+                        ^
+            AndroidManifest.xml:16: Error: At least one host must be specified [AppLinkUrlError]
+                            <data android:pathPrefix="/gizmos" />
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            AndroidManifest.xml:16: Error: At least one scheme must be specified [AppLinkUrlError]
+                            <data android:pathPrefix="/gizmos" />
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            AndroidManifest.xml:16: Error: Missing URL for the intent filter [AppLinkUrlError]
+                            <data android:pathPrefix="/gizmos" />
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            4 errors, 0 warnings
+            """
         lint().files(
-                        xml(
-                                "AndroidManifest.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                        + "    package=\"com.example.helloworld\" >\n"
-                                        + "\n"
-                                        + "    <application\n"
-                                        + "        android:allowBackup=\"true\"\n"
-                                        + "        android:icon=\"@mipmap/ic_launcher\"\n"
-                                        + "        android:label=\"@string/app_name\"\n"
-                                        + "        android:theme=\"@style/AppTheme\" >\n"
-                                        + "        <activity\n"
-                                        + "            android:name=\".FullscreenActivity\"\n"
-                                        + "            android:configChanges=\"orientation|keyboardHidden|screenSize\"\n"
-                                        + "            android:label=\"@string/title_activity_fullscreen\"\n"
-                                        + "            android:theme=\"@style/FullscreenTheme\" >\n"
-                                        + "            <intent-filter android:label=\"@string/title_activity_fullscreen\">\n"
-                                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
-                                        + "                <data android:pathPrefix=\"/gizmos\" />\n"
-                                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
-                                        + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
-                                        + "            </intent-filter>\n"
-                                        + "        </activity>\n"
-                                        + "        <meta-data android:name=\"com.google.android.gms.version\" android:value=\"@integer/google_play_services_version\" />\n"
-                                        + "    </application>\n"
-                                        + "\n"
-                                        + "</manifest>\n"))
-                .run()
-                .expect(expected)
-                .verifyFixes()
-                .window(1)
-                .expectFixDiffs(
-                        ""
-                                + "Fix for AndroidManifest.xml line 15: Set scheme=\"http\":\n"
-                                + "@@ -15 +15\n"
-                                + "              android:theme=\"@style/FullscreenTheme\" >\n"
-                                + "-             <intent-filter android:label=\"@string/title_activity_fullscreen\" >\n"
-                                + "+             <intent-filter\n"
-                                + "+                 android:label=\"@string/title_activity_fullscreen\"\n"
-                                + "+                 android:scheme=\"http\" >\n"
-                                + "                  <action android:name=\"android.intent.action.VIEW\" />\n"
-                                + "Fix for AndroidManifest.xml line 17: Set host:\n"
-                                + "@@ -18 +18\n"
-                                + "  \n"
-                                + "-                 <data android:pathPrefix=\"/gizmos\" />\n"
-                                + "+                 <data\n"
-                                + "+                     android:host=\"[TODO]|\"\n"
-                                + "+                     android:pathPrefix=\"/gizmos\" />\n"
-                                + "  \n"
-                                + "Fix for AndroidManifest.xml line 17: Set scheme=\"http\":\n"
-                                + "@@ -18 +18\n"
-                                + "  \n"
-                                + "-                 <data android:pathPrefix=\"/gizmos\" />\n"
-                                + "+                 <data\n"
-                                + "+                     android:pathPrefix=\"/gizmos\"\n"
-                                + "+                     android:scheme=\"http\" />\n"
-                                + "  \n");
+            xml(
+                "AndroidManifest.xml",
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="com.example.helloworld" >
+
+                    <application
+                        android:allowBackup="true"
+                        android:icon="@mipmap/ic_launcher"
+                        android:label="@string/app_name"
+                        android:theme="@style/AppTheme" >
+                        <activity
+                            android:name=".FullscreenActivity"
+                            android:configChanges="orientation|keyboardHidden|screenSize"
+                            android:label="@string/title_activity_fullscreen"
+                            android:theme="@style/FullscreenTheme" >
+                            <intent-filter android:label="@string/title_activity_fullscreen">
+                                <action android:name="android.intent.action.VIEW" />
+                                <data android:pathPrefix="/gizmos" />
+                                <category android:name="android.intent.category.DEFAULT" />
+                                <category android:name="android.intent.category.BROWSABLE" />
+                            </intent-filter>
+                        </activity>
+                        <meta-data android:name="com.google.android.gms.version" android:value="@integer/google_play_services_version" />
+                    </application>
+
+                </manifest>
+                """
+            ).indented()
+        ).run()
+            .expect(expected)
+            .verifyFixes()
+            .window(1)
+            .expectFixDiffs(
+                """
+                Fix for AndroidManifest.xml line 14: Set scheme="http":
+                @@ -15 +15
+                              android:theme="@style/FullscreenTheme" >
+                -             <intent-filter android:label="@string/title_activity_fullscreen" >
+                +             <intent-filter
+                +                 android:label="@string/title_activity_fullscreen"
+                +                 android:scheme="http" >
+                                  <action android:name="android.intent.action.VIEW" />
+                Fix for AndroidManifest.xml line 16: Set host:
+                @@ -18 +18
+
+                -                 <data android:pathPrefix="/gizmos" />
+                +                 <data
+                +                     android:host="[TODO]|"
+                +                     android:pathPrefix="/gizmos" />
+                Fix for AndroidManifest.xml line 16: Set scheme="http":
+                @@ -18 +18
+
+                -                 <data android:pathPrefix="/gizmos" />
+                +                 <data
+                +                     android:pathPrefix="/gizmos"
+                +                     android:scheme="http" />
+                """
+            )
     }
 
-    public void testMultiData() {
-        //noinspection all // Sample code
+    fun testMultiData() {
         lint().files(
-                        xml(
-                                "AndroidManifest.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                        + "    package=\"com.example.helloworld\" >\n"
-                                        + "\n"
-                                        + "    <application\n"
-                                        + "        android:allowBackup=\"true\"\n"
-                                        + "        android:icon=\"@mipmap/ic_launcher\"\n"
-                                        + "        android:label=\"@string/app_name\"\n"
-                                        + "        android:theme=\"@style/AppTheme\" >\n"
-                                        + "        <activity\n"
-                                        + "            android:name=\".FullscreenActivity\"\n"
-                                        + "            android:configChanges=\"orientation|keyboardHidden|screenSize\"\n"
-                                        + "            android:label=\"@string/title_activity_fullscreen\"\n"
-                                        + "            android:theme=\"@style/FullscreenTheme\" >\n"
-                                        + "            <intent-filter android:label=\"@string/title_activity_fullscreen\">\n"
-                                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
-                                        + "                <data android:scheme=\"http\" />\n"
-                                        + "                <data android:host=\"example.com\" />\n"
-                                        + "                <data android:pathPrefix=\"/gizmos\" />\n"
-                                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
-                                        + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
-                                        + "            </intent-filter>\n"
-                                        + "        </activity>\n"
-                                        + "        <meta-data android:name=\"com.google.android.gms.version\" android:value=\"@integer/google_play_services_version\" />\n"
-                                        + "    </application>\n"
-                                        + "\n"
-                                        + "</manifest>\n"))
-                .run()
-                .expectClean();
+            xml(
+                "AndroidManifest.xml",
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="com.example.helloworld" >
+
+                    <application
+                        android:allowBackup="true"
+                        android:icon="@mipmap/ic_launcher"
+                        android:label="@string/app_name"
+                        android:theme="@style/AppTheme" >
+                        <activity
+                            android:name=".FullscreenActivity"
+                            android:configChanges="orientation|keyboardHidden|screenSize"
+                            android:label="@string/title_activity_fullscreen"
+                            android:theme="@style/FullscreenTheme" >
+                            <intent-filter android:label="@string/title_activity_fullscreen">
+                                <action android:name="android.intent.action.VIEW" />
+                                <data android:scheme="http" />
+                                <data android:host="example.com" />
+                                <data android:pathPrefix="/gizmos" />
+                                <category android:name="android.intent.category.DEFAULT" />
+                                <category android:name="android.intent.category.BROWSABLE" />
+                            </intent-filter>
+                        </activity>
+                        <meta-data android:name="com.google.android.gms.version" android:value="@integer/google_play_services_version" />
+                    </application>
+
+                </manifest>
+                """
+            ).indented()
+        ).run().expectClean()
     }
 
-    public void testMultiIntent() {
-        //noinspection all // Sample code
+    fun testMultiIntent() {
         lint().files(
-                        xml(
-                                "AndroidManifest.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                        + "    package=\"com.example.helloworld\" >\n"
-                                        + "\n"
-                                        + "    <application\n"
-                                        + "        android:allowBackup=\"true\"\n"
-                                        + "        android:icon=\"@mipmap/ic_launcher\"\n"
-                                        + "        android:label=\"@string/app_name\"\n"
-                                        + "        android:theme=\"@style/AppTheme\" >\n"
-                                        + "        <activity\n"
-                                        + "            android:name=\".FullscreenActivity\"\n"
-                                        + "            android:configChanges=\"orientation|keyboardHidden|screenSize\"\n"
-                                        + "            android:label=\"@string/title_activity_fullscreen\"\n"
-                                        + "            android:theme=\"@style/FullscreenTheme\" >\n"
-                                        + "            <intent-filter>\n"
-                                        + "                <action android:name=\"android.intent.action.MAIN\" />\n"
-                                        + "                <category android:name=\"android.intent.category.LAUNCHER\" />\n"
-                                        + "            </intent-filter>\n"
-                                        + "            <intent-filter android:label=\"@string/title_activity_fullscreen\">\n"
-                                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
-                                        + "                <data android:scheme=\"http\"\n"
-                                        + "                    android:host=\"example.com\"\n"
-                                        + "                    android:pathPrefix=\"/gizmos\" />\n"
-                                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
-                                        + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
-                                        + "            </intent-filter>\n"
-                                        + "        </activity>\n"
-                                        + "        <meta-data android:name=\"com.google.android.gms.version\" android:value=\"@integer/google_play_services_version\" />\n"
-                                        + "    </application>\n"
-                                        + "\n"
-                                        + "</manifest>\n"))
-                .run()
-                .expectClean();
+            xml(
+                "AndroidManifest.xml",
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="com.example.helloworld" >
+
+                    <application
+                        android:allowBackup="true"
+                        android:icon="@mipmap/ic_launcher"
+                        android:label="@string/app_name"
+                        android:theme="@style/AppTheme" >
+                        <activity
+                            android:name=".FullscreenActivity"
+                            android:configChanges="orientation|keyboardHidden|screenSize"
+                            android:label="@string/title_activity_fullscreen"
+                            android:theme="@style/FullscreenTheme" >
+                            <intent-filter>
+                                <action android:name="android.intent.action.MAIN" />
+                                <category android:name="android.intent.category.LAUNCHER" />
+                            </intent-filter>
+                            <intent-filter android:label="@string/title_activity_fullscreen">
+                                <action android:name="android.intent.action.VIEW" />
+                                <data android:scheme="http"
+                                    android:host="example.com"
+                                    android:pathPrefix="/gizmos" />
+                                <category android:name="android.intent.category.DEFAULT" />
+                                <category android:name="android.intent.category.BROWSABLE" />
+                            </intent-filter>
+                        </activity>
+                        <meta-data android:name="com.google.android.gms.version" android:value="@integer/google_play_services_version" />
+                    </application>
+
+                </manifest>
+                """
+            ).indented()
+        ).run().expectClean()
     }
 
-    public void testMultiIntentWithError() {
-        String expected =
-                ""
-                        + "AndroidManifest.xml:21: Error: At least one host must be specified [AppLinkUrlError]\n"
-                        + "                <data android:scheme=\"http\"\n"
-                        + "                ^\n"
-                        + "1 errors, 0 warnings\n";
-        //noinspection all // Sample code
+    fun testMultiIntentWithError() {
+        val expected = """
+            AndroidManifest.xml:20: Error: At least one host must be specified [AppLinkUrlError]
+                            <data android:scheme="http"
+                            ^
+            1 errors, 0 warnings
+            """
         lint().files(
-                        xml(
-                                "AndroidManifest.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                        + "    package=\"com.example.helloworld\" >\n"
-                                        + "\n"
-                                        + "    <application\n"
-                                        + "        android:allowBackup=\"true\"\n"
-                                        + "        android:icon=\"@mipmap/ic_launcher\"\n"
-                                        + "        android:label=\"@string/app_name\"\n"
-                                        + "        android:theme=\"@style/AppTheme\" >\n"
-                                        + "        <activity\n"
-                                        + "            android:name=\".FullscreenActivity\"\n"
-                                        + "            android:configChanges=\"orientation|keyboardHidden|screenSize\"\n"
-                                        + "            android:label=\"@string/title_activity_fullscreen\"\n"
-                                        + "            android:theme=\"@style/FullscreenTheme\" >\n"
-                                        + "            <intent-filter>\n"
-                                        + "                <action android:name=\"android.intent.action.MAIN\" />\n"
-                                        + "                <category android:name=\"android.intent.category.LAUNCHER\" />\n"
-                                        + "            </intent-filter>\n"
-                                        + "            <intent-filter android:label=\"@string/title_activity_fullscreen\">\n"
-                                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
-                                        + "                <data android:scheme=\"http\"\n"
-                                        + "                    android:pathPrefix=\"/gizmos\" />\n"
-                                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
-                                        + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
-                                        + "            </intent-filter>\n"
-                                        + "        </activity>\n"
-                                        + "        <meta-data android:name=\"com.google.android.gms.version\" android:value=\"@integer/google_play_services_version\" />\n"
-                                        + "    </application>\n"
-                                        + "\n"
-                                        + "</manifest>\n"))
-                .run()
-                .expect(expected)
-                .verifyFixes()
-                .window(1)
-                .expectFixDiffs(
-                        ""
-                                + "Fix for AndroidManifest.xml line 21: Set host:\n"
-                                + "@@ -24 +24\n"
-                                + "                  <data\n"
-                                + "+                     android:host=\"[TODO]|\"\n"
-                                + "                      android:pathPrefix=\"/gizmos\"\n");
+            xml(
+                "AndroidManifest.xml",
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="com.example.helloworld" >
+
+                    <application
+                        android:allowBackup="true"
+                        android:icon="@mipmap/ic_launcher"
+                        android:label="@string/app_name"
+                        android:theme="@style/AppTheme" >
+                        <activity
+                            android:name=".FullscreenActivity"
+                            android:configChanges="orientation|keyboardHidden|screenSize"
+                            android:label="@string/title_activity_fullscreen"
+                            android:theme="@style/FullscreenTheme" >
+                            <intent-filter>
+                                <action android:name="android.intent.action.MAIN" />
+                                <category android:name="android.intent.category.LAUNCHER" />
+                            </intent-filter>
+                            <intent-filter android:label="@string/title_activity_fullscreen">
+                                <action android:name="android.intent.action.VIEW" />
+                                <data android:scheme="http"
+                                    android:pathPrefix="/gizmos" />
+                                <category android:name="android.intent.category.DEFAULT" />
+                                <category android:name="android.intent.category.BROWSABLE" />
+                            </intent-filter>
+                        </activity>
+                        <meta-data android:name="com.google.android.gms.version" android:value="@integer/google_play_services_version" />
+                    </application>
+
+                </manifest>
+                """
+            ).indented()
+        ).run().expect(expected)
+            .verifyFixes()
+            .window(1)
+            .expectFixDiffs(
+                """
+                Fix for AndroidManifest.xml line 20: Set host:
+                @@ -24 +24
+                                  <data
+                +                     android:host="[TODO]|"
+                                      android:pathPrefix="/gizmos"
+                """
+            )
     }
 
-    public void testNotExported() {
-        String expected =
-                ""
-                        + "AndroidManifest.xml:7: Error: Activity supporting ACTION_VIEW is not exported [AppLinkUrlError]\n"
-                        + "        <activity android:exported=\"false\"\n"
-                        + "        ^\n"
-                        + "1 errors, 0 warnings\n";
-        //noinspection all // Sample code
+    fun testNotExported() {
+        val expected =
+            """
+            AndroidManifest.xml:6: Error: Activity supporting ACTION_VIEW is not exported [AppLinkUrlError]
+                    <activity android:exported="false"
+                    ^
+            1 errors, 0 warnings
+            """
         lint().files(
-                        xml(
-                                "AndroidManifest.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                        + "    package=\"com.example.helloworld\" >\n"
-                                        + "\n"
-                                        + "    <application\n"
-                                        + "        android:theme=\"@style/AppTheme\" >\n"
-                                        + "        <activity android:exported=\"false\"\n"
-                                        + "            android:theme=\"@style/FullscreenTheme\" >\n"
-                                        + "            <intent-filter android:label=\"@string/title_activity_fullscreen\">\n"
-                                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
-                                        + "                <data android:scheme=\"http\"\n"
-                                        + "                    android:host=\"example1.com\"\n"
-                                        + "                    android:pathPrefix=\"/gizmos\" />\n"
-                                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
-                                        + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
-                                        + "            </intent-filter>\n"
-                                        + "            <intent-filter android:label=\"@string/title_activity_fullscreen\"/>\n"
-                                        + "            <intent-filter android:label=\"@string/title_activity_fullscreen\">\n"
-                                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
-                                        + "                <data android:scheme=\"http\"\n"
-                                        + "                    android:host=\"example2.com\"\n"
-                                        + "                    android:pathPrefix=\"/gizmos\" />\n"
-                                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
-                                        + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
-                                        + "            </intent-filter>\n"
-                                        + "        </activity>\n"
-                                        + "        <activity android:exported=\"true\">\n"
-                                        + "            <intent-filter android:label=\"@string/title_activity_fullscreen\">\n"
-                                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
-                                        + "                <data android:scheme=\"http\"\n"
-                                        + "                    android:host=\"example1.com\"\n"
-                                        + "                    android:pathPrefix=\"/gizmos\" />\n"
-                                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
-                                        + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
-                                        + "            </intent-filter>\n"
-                                        + "        </activity>\n"
-                                        + "    </application>\n"
-                                        + "\n"
-                                        + "</manifest>\n"))
-                .run()
-                .expect(expected);
+            xml(
+                "AndroidManifest.xml",
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="com.example.helloworld" >
+
+                    <application
+                        android:theme="@style/AppTheme" >
+                        <activity android:exported="false"
+                            android:theme="@style/FullscreenTheme" >
+                            <intent-filter android:label="@string/title_activity_fullscreen">
+                                <action android:name="android.intent.action.VIEW" />
+                                <data android:scheme="http"
+                                    android:host="example1.com"
+                                    android:pathPrefix="/gizmos" />
+                                <category android:name="android.intent.category.DEFAULT" />
+                                <category android:name="android.intent.category.BROWSABLE" />
+                            </intent-filter>
+                            <intent-filter android:label="@string/title_activity_fullscreen"/>
+                            <intent-filter android:label="@string/title_activity_fullscreen">
+                                <action android:name="android.intent.action.VIEW" />
+                                <data android:scheme="http"
+                                    android:host="example2.com"
+                                    android:pathPrefix="/gizmos" />
+                                <category android:name="android.intent.category.DEFAULT" />
+                                <category android:name="android.intent.category.BROWSABLE" />
+                            </intent-filter>
+                        </activity>
+                        <activity android:exported="true">
+                            <intent-filter android:label="@string/title_activity_fullscreen">
+                                <action android:name="android.intent.action.VIEW" />
+                                <data android:scheme="http"
+                                    android:host="example1.com"
+                                    android:pathPrefix="/gizmos" />
+                                <category android:name="android.intent.category.DEFAULT" />
+                                <category android:name="android.intent.category.BROWSABLE" />
+                            </intent-filter>
+                        </activity>
+                    </application>
+
+                </manifest>
+                """
+            ).indented()
+        ).run().expect(expected)
     }
 
-    public void testOkWithResource() {
-        //noinspection all // Sample code
+    fun testOkWithResource() {
         lint().files(
-                        xml(
-                                "AndroidManifest.xml",
-                                ""
-                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                        + "          package=\"com.example.helloworld\">\n"
-                                        + "\n"
-                                        + "    <application\n"
-                                        + "            android:allowBackup=\"true\"\n"
-                                        + "            android:icon=\"@mipmap/ic_launcher\"\n"
-                                        + "            android:label=\"@string/app_name\"\n"
-                                        + "            android:theme=\"@style/AppTheme\" >\n"
-                                        + "        <activity\n"
-                                        + "                android:name=\".FullscreenActivity\"\n"
-                                        + "                android:configChanges=\"orientation|keyboardHidden|screenSize\"\n"
-                                        + "                android:label=\"@string/title_activity_fullscreen\"\n"
-                                        + "                android:theme=\"@style/FullscreenTheme\" >\n"
-                                        + "            <intent-filter android:label=\"@string/title_activity_fullscreen\">\n"
-                                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
-                                        + "                <data android:scheme=\"http\"\n"
-                                        + "                      android:host=\"example.com\"\n"
-                                        + "                      android:pathPrefix=\"@string/path_prefix\"\n"
-                                        + "                      android:port=\"@string/port\"/>\n"
-                                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
-                                        + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
-                                        + "            </intent-filter>\n"
-                                        + "        </activity>\n"
-                                        + "\n"
-                                        + "        <meta-data android:name=\"com.google.android.gms.version\" android:value=\"@integer/google_play_services_version\" />\n"
-                                        + "    </application>\n"
-                                        + "\n"
-                                        + "</manifest>\n"),
-                        xml(
-                                "res/values/appindexing_strings.xml",
-                                ""
-                                        + "<resources>\n"
-                                        + "    <string name=\"path_prefix\">/pathprefix</string>\n"
-                                        + "    <string name=\"port\">8080</string>\n"
-                                        + "</resources>\n"))
-                .incremental("AndroidManifest.xml")
-                .run()
-                .expectClean();
+            xml(
+                "AndroidManifest.xml",
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                          package="com.example.helloworld">
+
+                    <application
+                            android:allowBackup="true"
+                            android:icon="@mipmap/ic_launcher"
+                            android:label="@string/app_name"
+                            android:theme="@style/AppTheme" >
+                        <activity
+                                android:name=".FullscreenActivity"
+                                android:configChanges="orientation|keyboardHidden|screenSize"
+                                android:label="@string/title_activity_fullscreen"
+                                android:theme="@style/FullscreenTheme" >
+                            <intent-filter android:label="@string/title_activity_fullscreen">
+                                <action android:name="android.intent.action.VIEW" />
+                                <data android:scheme="http"
+                                      android:host="example.com"
+                                      android:pathPrefix="@string/path_prefix"
+                                      android:port="@string/port"/>
+                                <category android:name="android.intent.category.DEFAULT" />
+                                <category android:name="android.intent.category.BROWSABLE" />
+                            </intent-filter>
+                        </activity>
+
+                        <meta-data android:name="com.google.android.gms.version" android:value="@integer/google_play_services_version" />
+                    </application>
+
+                </manifest>
+                """
+            ).indented(),
+            xml(
+                "res/values/appindexing_strings.xml",
+                """
+                <resources>
+                    <string name="path_prefix">/pathprefix</string>
+                    <string name="port">8080</string>
+                </resources>
+                """
+            ).indented()
+        ).incremental("AndroidManifest.xml").run().expectClean()
     }
 
-    public void testWrongWithResource() {
-        String expected =
-                ""
-                        + "AndroidManifest.xml:18: Error: android:pathPrefix attribute should start with /, but it is pathprefix [AppLinkUrlError]\n"
-                        + "                      android:pathPrefix=\"@string/path_prefix\"\n"
-                        + "                                          ~~~~~~~~~~~~~~~~~~~\n"
-                        + "AndroidManifest.xml:19: Error: not a valid port number [AppLinkUrlError]\n"
-                        + "                      android:port=\"@string/port\"/>\n"
-                        + "                                    ~~~~~~~~~~~~\n"
-                        + "2 errors, 0 warnings\n";
-        //noinspection all // Sample code
+    fun testWrongWithResource() {
+        val expected =
+            """
+            AndroidManifest.xml:18: Error: android:pathPrefix attribute should start with /, but it is pathprefix [AppLinkUrlError]
+                                  android:pathPrefix="@string/path_prefix"
+                                                      ~~~~~~~~~~~~~~~~~~~
+            AndroidManifest.xml:19: Error: not a valid port number [AppLinkUrlError]
+                                  android:port="@string/port"/>
+                                                ~~~~~~~~~~~~
+            2 errors, 0 warnings
+            """
         lint().files(
-                        xml(
-                                "AndroidManifest.xml",
-                                ""
-                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                        + "          package=\"com.example.helloworld\">\n"
-                                        + "\n"
-                                        + "    <application\n"
-                                        + "            android:allowBackup=\"true\"\n"
-                                        + "            android:icon=\"@mipmap/ic_launcher\"\n"
-                                        + "            android:label=\"@string/app_name\"\n"
-                                        + "            android:theme=\"@style/AppTheme\" >\n"
-                                        + "        <activity\n"
-                                        + "                android:name=\".FullscreenActivity\"\n"
-                                        + "                android:configChanges=\"orientation|keyboardHidden|screenSize\"\n"
-                                        + "                android:label=\"@string/title_activity_fullscreen\"\n"
-                                        + "                android:theme=\"@style/FullscreenTheme\" >\n"
-                                        + "            <intent-filter android:label=\"@string/title_activity_fullscreen\">\n"
-                                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
-                                        + "                <data android:scheme=\"http\"\n"
-                                        + "                      android:host=\"example.com\"\n"
-                                        + "                      android:pathPrefix=\"@string/path_prefix\"\n"
-                                        + "                      android:port=\"@string/port\"/>\n"
-                                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
-                                        + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
-                                        + "            </intent-filter>\n"
-                                        + "        </activity>\n"
-                                        + "\n"
-                                        + "        <meta-data android:name=\"com.google.android.gms.version\" android:value=\"@integer/google_play_services_version\" />\n"
-                                        + "    </application>\n"
-                                        + "\n"
-                                        + "</manifest>\n"),
-                        xml(
-                                "res/values/appindexing_wrong_strings.xml",
-                                ""
-                                        + "\n"
-                                        + "<resources>\n"
-                                        + "    <string name=\"path_prefix\">pathprefix</string>\n"
-                                        + "    <string name=\"port\">gizmos</string>\n"
-                                        + "</resources>\n"))
-                .incremental("AndroidManifest.xml")
-                .run()
-                .expect(expected);
+            xml(
+                "AndroidManifest.xml",
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                          package="com.example.helloworld">
+
+                    <application
+                            android:allowBackup="true"
+                            android:icon="@mipmap/ic_launcher"
+                            android:label="@string/app_name"
+                            android:theme="@style/AppTheme" >
+                        <activity
+                                android:name=".FullscreenActivity"
+                                android:configChanges="orientation|keyboardHidden|screenSize"
+                                android:label="@string/title_activity_fullscreen"
+                                android:theme="@style/FullscreenTheme" >
+                            <intent-filter android:label="@string/title_activity_fullscreen">
+                                <action android:name="android.intent.action.VIEW" />
+                                <data android:scheme="http"
+                                      android:host="example.com"
+                                      android:pathPrefix="@string/path_prefix"
+                                      android:port="@string/port"/>
+                                <category android:name="android.intent.category.DEFAULT" />
+                                <category android:name="android.intent.category.BROWSABLE" />
+                            </intent-filter>
+                        </activity>
+
+                        <meta-data android:name="com.google.android.gms.version" android:value="@integer/google_play_services_version" />
+                    </application>
+
+                </manifest>
+                """
+            ).indented(),
+            xml(
+                "res/values/appindexing_wrong_strings.xml",
+                """
+                <resources>
+                    <string name="path_prefix">pathprefix</string>
+                    <string name="port">gizmos</string>
+                </resources>
+                """
+            ).indented()
+        ).incremental("AndroidManifest.xml").run().expect(expected)
     }
 
-    public void testNoUrl() {
-        String expected =
-                ""
-                        + "AndroidManifest.xml:15: Error: Missing URL [AppLinkUrlError]\n"
-                        + "            <intent-filter android:label=\"@string/title_activity_fullscreen\">\n"
-                        + "            ^\n"
-                        + "AndroidManifest.xml:17: Error: Missing URL for the intent filter [AppLinkUrlError]\n"
-                        + "                <data />\n"
-                        + "                ~~~~~~~~\n"
-                        + "2 errors, 0 warnings\n";
-        //noinspection all // Sample code
+    fun testNoUrl() {
+        val expected = """
+            AndroidManifest.xml:14: Error: Missing URL [AppLinkUrlError]
+                        <intent-filter android:label="@string/title_activity_fullscreen">
+                        ^
+            AndroidManifest.xml:16: Error: Missing URL for the intent filter [AppLinkUrlError]
+                            <data />
+                            ~~~~~~~~
+            2 errors, 0 warnings
+            """
         lint().files(
-                        xml(
-                                "AndroidManifest.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                        + "    package=\"com.example.helloworld\" >\n"
-                                        + "\n"
-                                        + "    <application\n"
-                                        + "        android:allowBackup=\"true\"\n"
-                                        + "        android:icon=\"@mipmap/ic_launcher\"\n"
-                                        + "        android:label=\"@string/app_name\"\n"
-                                        + "        android:theme=\"@style/AppTheme\" >\n"
-                                        + "        <activity\n"
-                                        + "            android:name=\".FullscreenActivity\"\n"
-                                        + "            android:configChanges=\"orientation|keyboardHidden|screenSize\"\n"
-                                        + "            android:label=\"@string/title_activity_fullscreen\"\n"
-                                        + "            android:theme=\"@style/FullscreenTheme\" >\n"
-                                        + "            <intent-filter android:label=\"@string/title_activity_fullscreen\">\n"
-                                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
-                                        + "                <data />\n"
-                                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
-                                        + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
-                                        + "            </intent-filter>\n"
-                                        + "        </activity>\n"
-                                        + "        <meta-data android:name=\"com.google.android.gms.version\" android:value=\"@integer/google_play_services_version\" />\n"
-                                        + "    </application>\n"
-                                        + "\n"
-                                        + "</manifest>\n"))
-                .run()
-                .expect(expected);
+            xml(
+                "AndroidManifest.xml",
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="com.example.helloworld" >
+
+                    <application
+                        android:allowBackup="true"
+                        android:icon="@mipmap/ic_launcher"
+                        android:label="@string/app_name"
+                        android:theme="@style/AppTheme" >
+                        <activity
+                            android:name=".FullscreenActivity"
+                            android:configChanges="orientation|keyboardHidden|screenSize"
+                            android:label="@string/title_activity_fullscreen"
+                            android:theme="@style/FullscreenTheme" >
+                            <intent-filter android:label="@string/title_activity_fullscreen">
+                                <action android:name="android.intent.action.VIEW" />
+                                <data />
+                                <category android:name="android.intent.category.DEFAULT" />
+                                <category android:name="android.intent.category.BROWSABLE" />
+                            </intent-filter>
+                        </activity>
+                        <meta-data android:name="com.google.android.gms.version" android:value="@integer/google_play_services_version" />
+                    </application>
+
+                </manifest>
+                """
+            ).indented()
+        ).run().expect(expected)
     }
 
-    public void testMimeType() {
-        String expected =
-                ""
-                        + "AndroidManifest.xml:15: Error: Missing URL [AppLinkUrlError]\n"
-                        + "            <intent-filter android:label=\"@string/title_activity_fullscreen\">\n"
-                        + "            ^\n"
-                        + "1 errors, 0 warnings\n";
-        //noinspection all // Sample code
+    fun testMimeType() {
+        val expected = """
+            AndroidManifest.xml:14: Error: Missing URL [AppLinkUrlError]
+                        <intent-filter android:label="@string/title_activity_fullscreen">
+                        ^
+            1 errors, 0 warnings
+            """
         lint().files(
-                        xml(
-                                "AndroidManifest.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                        + "    package=\"com.example.helloworld\" >\n"
-                                        + "\n"
-                                        + "    <application\n"
-                                        + "        android:allowBackup=\"true\"\n"
-                                        + "        android:icon=\"@mipmap/ic_launcher\"\n"
-                                        + "        android:label=\"@string/app_name\"\n"
-                                        + "        android:theme=\"@style/AppTheme\" >\n"
-                                        + "        <activity\n"
-                                        + "            android:name=\".FullscreenActivity\"\n"
-                                        + "            android:configChanges=\"orientation|keyboardHidden|screenSize\"\n"
-                                        + "            android:label=\"@string/title_activity_fullscreen\"\n"
-                                        + "            android:theme=\"@style/FullscreenTheme\" >\n"
-                                        + "            <intent-filter android:label=\"@string/title_activity_fullscreen\">\n"
-                                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
-                                        + "                <data android:mimeType=\"mimetype\" /> "
-                                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
-                                        + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
-                                        + "            </intent-filter>\n"
-                                        + "        </activity>\n"
-                                        + "        <meta-data android:name=\"com.google.android.gms.version\" android:value=\"@integer/google_play_services_version\" />\n"
-                                        + "    </application>\n"
-                                        + "\n"
-                                        + "</manifest>\n"))
-                .run()
-                .expect(expected);
+            xml(
+                "AndroidManifest.xml",
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="com.example.helloworld" >
+
+                    <application
+                        android:allowBackup="true"
+                        android:icon="@mipmap/ic_launcher"
+                        android:label="@string/app_name"
+                        android:theme="@style/AppTheme" >
+                        <activity
+                            android:name=".FullscreenActivity"
+                            android:configChanges="orientation|keyboardHidden|screenSize"
+                            android:label="@string/title_activity_fullscreen"
+                            android:theme="@style/FullscreenTheme" >
+                            <intent-filter android:label="@string/title_activity_fullscreen">
+                                <action android:name="android.intent.action.VIEW" />
+                                <data android:mimeType="mimetype" />                 <category android:name="android.intent.category.DEFAULT" />
+                                <category android:name="android.intent.category.BROWSABLE" />
+                            </intent-filter>
+                        </activity>
+                        <meta-data android:name="com.google.android.gms.version" android:value="@integer/google_play_services_version" />
+                    </application>
+
+                </manifest>
+                """
+            ).indented()
+        ).run().expect(expected)
     }
 
-    public void testDataMissing() {
-        String expected =
-                ""
-                        + "AndroidManifest.xml:15: Error: Missing data element [AppLinkUrlError]\n"
-                        + "            <intent-filter android:label=\"@string/title_activity_fullscreen\">\n"
-                        + "            ^\n"
-                        + "1 errors, 0 warnings\n";
-        //noinspection all // Sample code
+    fun testDataMissing() {
+        val expected = """
+            AndroidManifest.xml:14: Error: Missing data element [AppLinkUrlError]
+                        <intent-filter android:label="@string/title_activity_fullscreen">
+                        ^
+            1 errors, 0 warnings
+            """
         lint().files(
-                        xml(
-                                "AndroidManifest.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                        + "    package=\"com.example.helloworld\" >\n"
-                                        + "\n"
-                                        + "    <application\n"
-                                        + "        android:allowBackup=\"true\"\n"
-                                        + "        android:icon=\"@mipmap/ic_launcher\"\n"
-                                        + "        android:label=\"@string/app_name\"\n"
-                                        + "        android:theme=\"@style/AppTheme\" >\n"
-                                        + "        <activity\n"
-                                        + "            android:name=\".FullscreenActivity\"\n"
-                                        + "            android:configChanges=\"orientation|keyboardHidden|screenSize\"\n"
-                                        + "            android:label=\"@string/title_activity_fullscreen\"\n"
-                                        + "            android:theme=\"@style/FullscreenTheme\" >\n"
-                                        + "            <intent-filter android:label=\"@string/title_activity_fullscreen\">\n"
-                                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
-                                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
-                                        + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
-                                        + "            </intent-filter>\n"
-                                        + "        </activity>\n"
-                                        + "        <meta-data android:name=\"com.google.android.gms.version\" android:value=\"@integer/google_play_services_version\" />\n"
-                                        + "    </application>\n"
-                                        + "\n"
-                                        + "</manifest>\n"))
-                .run()
-                .expect(expected);
+            xml(
+                "AndroidManifest.xml",
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="com.example.helloworld" >
+
+                    <application
+                        android:allowBackup="true"
+                        android:icon="@mipmap/ic_launcher"
+                        android:label="@string/app_name"
+                        android:theme="@style/AppTheme" >
+                        <activity
+                            android:name=".FullscreenActivity"
+                            android:configChanges="orientation|keyboardHidden|screenSize"
+                            android:label="@string/title_activity_fullscreen"
+                            android:theme="@style/FullscreenTheme" >
+                            <intent-filter android:label="@string/title_activity_fullscreen">
+                                <action android:name="android.intent.action.VIEW" />
+                                <category android:name="android.intent.category.DEFAULT" />
+                                <category android:name="android.intent.category.BROWSABLE" />
+                            </intent-filter>
+                        </activity>
+                        <meta-data android:name="com.google.android.gms.version" android:value="@integer/google_play_services_version" />
+                    </application>
+
+                </manifest>
+                """
+            ).indented()
+        ).run().expect(expected)
     }
 
-    public void testNotBrowsable() {
-        String expected =
-                ""
-                        + "AndroidManifest.xml:25: Error: Activity supporting ACTION_VIEW is not set as BROWSABLE [AppLinkUrlError]\n"
-                        + "            <intent-filter android:label=\"@string/title_activity_fullscreen\">\n"
-                        + "            ^\n"
-                        + "1 errors, 0 warnings\n";
-        //noinspection all // Sample code
+    fun testNotBrowsable() {
+        val expected =
+            """
+            AndroidManifest.xml:24: Error: Activity supporting ACTION_VIEW is not set as BROWSABLE [AppLinkUrlError]
+                        <intent-filter android:label="@string/title_activity_fullscreen">
+                        ^
+            1 errors, 0 warnings
+            """
         lint().files(
-                        xml(
-                                "AndroidManifest.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                        + "    package=\"com.example.helloworld\" >\n"
-                                        + "\n"
-                                        + "    <application\n"
-                                        + "        android:allowBackup=\"true\"\n"
-                                        + "        android:icon=\"@mipmap/ic_launcher\"\n"
-                                        + "        android:label=\"@string/app_name\"\n"
-                                        + "        android:theme=\"@style/AppTheme\" >\n"
-                                        + "        <activity\n"
-                                        + "            android:name=\".MainActivity\"\n"
-                                        + "            android:label=\"@string/app_name\" >\n"
-                                        + "            <intent-filter>\n"
-                                        + "                <action android:name=\"android.intent.action.MAIN\" />\n"
-                                        + "\n"
-                                        + "                <category android:name=\"android.intent.category.LAUNCHER\" />\n"
-                                        + "            </intent-filter>\n"
-                                        + "        </activity>\n"
-                                        + "\n"
-                                        + "        <activity\n"
-                                        + "            android:name=\".FullscreenActivity\"\n"
-                                        + "            android:configChanges=\"orientation|keyboardHidden|screenSize\"\n"
-                                        + "            android:label=\"@string/title_activity_fullscreen\"\n"
-                                        + "            android:theme=\"@style/FullscreenTheme\" >\n"
-                                        + "            <intent-filter android:label=\"@string/title_activity_fullscreen\">\n"
-                                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
-                                        + "                <data android:scheme=\"http\"\n"
-                                        + "                    android:host=\"example.com\"\n"
-                                        + "                    android:pathPrefix=\"/gizmos\" />\n"
-                                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
-                                        + "            </intent-filter>\n"
-                                        + "        </activity>\n"
-                                        + "        <meta-data android:name=\"com.google.android.gms.version\" android:value=\"@integer/google_play_services_version\" />\n"
-                                        + "    </application>\n"
-                                        + "\n"
-                                        + "</manifest>\n"))
-                .run()
-                .expect(expected);
+            xml(
+                "AndroidManifest.xml",
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="com.example.helloworld" >
+
+                    <application
+                        android:allowBackup="true"
+                        android:icon="@mipmap/ic_launcher"
+                        android:label="@string/app_name"
+                        android:theme="@style/AppTheme" >
+                        <activity
+                            android:name=".MainActivity"
+                            android:label="@string/app_name" >
+                            <intent-filter>
+                                <action android:name="android.intent.action.MAIN" />
+
+                                <category android:name="android.intent.category.LAUNCHER" />
+                            </intent-filter>
+                        </activity>
+
+                        <activity
+                            android:name=".FullscreenActivity"
+                            android:configChanges="orientation|keyboardHidden|screenSize"
+                            android:label="@string/title_activity_fullscreen"
+                            android:theme="@style/FullscreenTheme" >
+                            <intent-filter android:label="@string/title_activity_fullscreen">
+                                <action android:name="android.intent.action.VIEW" />
+                                <data android:scheme="http"
+                                    android:host="example.com"
+                                    android:pathPrefix="/gizmos" />
+                                <category android:name="android.intent.category.DEFAULT" />
+                            </intent-filter>
+                        </activity>
+                        <meta-data android:name="com.google.android.gms.version" android:value="@integer/google_play_services_version" />
+                    </application>
+
+                </manifest>
+                """
+            ).indented()
+        ).run().expect(expected)
     }
 
-    public void testDataBinding() {
+    fun testDataBinding() {
         // When using data binding don't give incorrect validation messages such as
         // uppercase usage, missing slash prefix etc.
-
-        //noinspection all // Sample code
         lint().files(
-                        xml(
-                                "AndroidManifest.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                        + "    xmlns:tools=\"http://schemas.android.com/tools\""
-                                        + "    package=\"test.pkg\" >\n"
-                                        + "\n"
-                                        + "    <application>\n"
-                                        + "        <activity>\n"
-                                        + "            <intent-filter android:autoVerify=\"true\">\n"
-                                        + "                <data android:scheme=\"@={Schemes.default}\"\n"
-                                        + "                    android:host=\"@{Hosts.lookup}\"\n"
-                                        + "                    android:pathPrefix=\"@{Prefixes.lookup}\" />\n"
-                                        + "            </intent-filter>\n"
-                                        + "            <tools:validation testUrl=\"http://example.com/gizmos/foo/bar\"/>\n"
-                                        + "        </activity>\n"
-                                        + "    </application>\n"
-                                        + "\n"
-                                        + "</manifest>\n"))
-                .run()
-                .expectClean();
+            xml(
+                "AndroidManifest.xml",
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    xmlns:tools="http://schemas.android.com/tools"
+                    package="test.pkg" >
+
+                    <application>
+                        <activity>
+                            <intent-filter android:autoVerify="true">
+                                <data android:scheme="@={Schemes.default}"
+                                    android:host="@{Hosts.lookup}"
+                                    android:pathPrefix="@{Prefixes.lookup}" />
+                            </intent-filter>
+                            <tools:validation testUrl="http://example.com/gizmos/foo/bar"/>
+                        </activity>
+                    </application>
+
+                </manifest>
+                """
+            ).indented()
+        ).run().expectClean()
     }
 
-    public void test37343746() {
+    fun test37343746() {
         // Regression test for https://issuetracker.google.com/issues/37343746
-
-        //noinspection all // Sample code
         lint().files(
-                        xml(
-                                "AndroidManifest.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                        + "    xmlns:tools=\"http://schemas.android.com/tools\""
-                                        + "    package=\"test.pkg\" >\n"
-                                        + "\n"
-                                        + "    <application>\n"
-                                        + "        <activity>\n"
-                                        + "            <intent-filter>\n"
-                                        + "                 <action android:name=\"android.intent.action.PROVIDER_CHANGED\"/>\n"
-                                        + "                 <data android:scheme=\"content\"/>\n"
-                                        + "                 <data android:host=\"${applicationId}.provider\"/>\n"
-                                        + "                 <data android:path=\"/beep/boop\"/>\n"
-                                        + "                 <data android:mimeType=\"*/*\"/>\n"
-                                        + "             </intent-filter>\n"
-                                        + "        </activity>\n"
-                                        + "    </application>\n"
-                                        + "\n"
-                                        + "</manifest>\n"))
-                .run()
-                .expectClean();
+            xml(
+                "AndroidManifest.xml",
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    xmlns:tools="http://schemas.android.com/tools"
+                    package="test.pkg" >
+
+                    <application>
+                        <activity>
+                            <intent-filter>
+                                 <action android:name="android.intent.action.PROVIDER_CHANGED"/>
+                                 <data android:scheme="content"/>
+                                 <data android:host="${"$"}{applicationId}.provider"/>
+                                 <data android:path="/beep/boop"/>
+                                 <data android:mimeType="*/*"/>
+                             </intent-filter>
+                        </activity>
+                    </application>
+
+                </manifest>
+                """
+            ).indented()
+        ).run().expectClean()
     }
 
-    public void test79995047() {
+    fun test79995047() {
         // Regression test for https://issuetracker.google.com/issues/79995047
-
-        //noinspection all // Sample code
         lint().files(
-                        xml(
-                                "AndroidManifest.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                        + "    xmlns:tools=\"http://schemas.android.com/tools\""
-                                        + "    package=\"test.pkg\" >\n"
-                                        + "\n"
-                                        + "    <application>\n"
-                                        + "        <activity>\n"
-                                        + "            <intent-filter>\n"
-                                        + "                <!-- Following https://developer.android.com/guide/topics/providers/content-provider-basics#MIMETypeReference -->\n"
-                                        + "                <data android:mimeType=\"vnd.android.cursor.item/vnd.${applicationId}.item\" /> <!-- OK -->\n"
-                                        + "            </intent-filter>\n"
-                                        + "            <intent-filter>\n"
-                                        // Try with place holder that has capitalized text
-                                        + "                <data android:mimeType=\"vnd.android.cursor.item/vnd.${placeholder}.item\" /> <!-- WARN -->\n"
-                                        + "            </intent-filter>\n"
-                                        + "        </activity>\n"
-                                        + "    </application>\n"
-                                        + "\n"
-                                        + "</manifest>\n"),
-                        gradle(
-                                ""
-                                        + "android {\n"
-                                        + "    defaultConfig {\n"
-                                        + "        manifestPlaceholders = [ placeholder:\"ABC\"]\n"
-                                        + "    }\n"
-                                        + "}\n"))
-                .run()
-                .expect(
-                        ""
-                                + "src/main/AndroidManifest.xml:12: Error: Mime-type matching is case sensitive and should only use lower-case characters (without placeholders, value is vnd.android.cursor.item/vnd.ABCitem) [AppLinkUrlError]\n"
-                                + "                <data android:mimeType=\"vnd.android.cursor.item/vnd.${placeholder}.item\" /> <!-- WARN -->\n"
-                                + "                                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                                + "1 errors, 0 warnings");
+            xml(
+                "AndroidManifest.xml",
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    xmlns:tools="http://schemas.android.com/tools"
+                    package="test.pkg" >
+
+                    <application>
+                        <activity>
+                            <intent-filter>
+                                <!-- Following https://developer.android.com/guide/topics/providers/content-provider-basics#MIMETypeReference -->
+                                <data android:mimeType="vnd.android.cursor.item/vnd.${"$"}{applicationId}.item" /> <!-- OK -->
+                            </intent-filter>
+                            <intent-filter>
+                                <data android:mimeType="vnd.android.cursor.item/vnd.${"$"}{placeholder}.item" /> <!-- WARN -->
+                            </intent-filter>
+                        </activity>
+                    </application>
+
+                </manifest>
+                """
+            ).indented(),
+            gradle(
+                """
+                android {
+                    defaultConfig {
+                        manifestPlaceholders = [ placeholder:"ABC"]
+                    }
+                }
+                """
+            ).indented()
+        ).run().expect(
+            """
+                src/main/AndroidManifest.xml:12: Error: Mime-type matching is case sensitive and should only use lower-case characters (without placeholders, value is vnd.android.cursor.item/vnd.ABCitem) [AppLinkUrlError]
+                                <data android:mimeType="vnd.android.cursor.item/vnd.${"$"}{placeholder}.item" /> <!-- WARN -->
+                                                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                1 errors, 0 warnings
+                """
+        )
     }
 
-    public void test62810553() {
+    fun test62810553() {
         // Regression test for https://issuetracker.google.com/62810553
         lint().files(
-                        xml(
-                                "AndroidManifest.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                        + "    xmlns:tools=\"http://schemas.android.com/tools\""
-                                        + "    package=\"test.pkg\" >\n"
-                                        + "\n"
-                                        + "    <application>\n"
-                                        + "        <activity>\n"
-                                        + "            <intent-filter>\n"
-                                        + "                <data android:scheme=\"myscheme\" android:pathPrefix=\"/path/to/there\"/> <!-- OK -->\n"
-                                        + "            </intent-filter>\n"
-                                        + "        </activity>\n"
-                                        + "    </application>\n"
-                                        + "\n"
-                                        + "</manifest>\n"))
-                .run()
-                .expectClean();
+            xml(
+                "AndroidManifest.xml",
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    xmlns:tools="http://schemas.android.com/tools"
+                    package="test.pkg" >
+
+                    <application>
+                        <activity>
+                            <intent-filter>
+                                <data android:scheme="myscheme" android:pathPrefix="/path/to/there"/> <!-- OK -->
+                            </intent-filter>
+                        </activity>
+                    </application>
+
+                </manifest>
+                """
+            ).indented()
+        ).run().expectClean()
     }
 
-    public void test68322249() {
+    fun test68322249() {
         // Regression test for https://issuetracker.google.com/issues/68322249
-
-        //noinspection all // Sample code
         lint().files(
-                        xml(
-                                "AndroidManifest.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                        + "    xmlns:tools=\"http://schemas.android.com/tools\""
-                                        + "    package=\"test.pkg\" >\n"
-                                        + "\n"
-                                        + "    <application>\n"
-                                        + "        <activity>\n"
-                                        + "            <intent-filter android:autoVerify=\"true\">\n"
-                                        + "                <data\n"
-                                        + "                    android:scheme=\"http\"\n"
-                                        + "                    android:host=\"example.com\"\n"
-                                        + "                    android:pathPrefix=\"${DEEP_LINK_PREFIX}\" />\n"
-                                        + "            </intent-filter>\n"
-                                        + "        </activity>\n"
-                                        + "    </application>\n"
-                                        + "\n"
-                                        + "</manifest>\n"))
-                .run()
-                .expectClean();
+            xml(
+                "AndroidManifest.xml",
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    xmlns:tools="http://schemas.android.com/tools"
+                    package="test.pkg" >
+
+                    <application>
+                        <activity>
+                            <intent-filter android:autoVerify="true">
+                                <data
+                                    android:scheme="http"
+                                    android:host="example.com"
+                                    android:pathPrefix="${"$"}{DEEP_LINK_PREFIX}" />
+                            </intent-filter>
+                        </activity>
+                    </application>
+
+                </manifest>
+                """
+            ).indented()
+        ).run().expectClean()
     }
 
-    public void testStaticValidation() throws IOException, SAXException {
+    fun testStaticValidation() {
         // Usage outside of lint
-        Document document =
-                XmlUtils.parseDocument(
-                        ""
-                                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
-                                + "    package=\"test.pkg\" >\n"
-                                + "\n"
-                                + "    <application>\n"
-                                + "        <activity>\n"
-                                + "            <intent-filter android:autoVerify=\"true\">\n"
-                                + "                <data android:scheme=\"http\"\n"
-                                + "                    android:host=\"example.com\"\n"
-                                + "                    android:pathPrefix=\"/gizmos\" />\n"
-                                + "                <data android:path=\"/literal/path\" />\n"
-                                + "            </intent-filter>\n"
-                                + "            <tools:validation testUrl=\"http://example.com/gizmos/foo/bar\"/>\n"
-                                + "            <tools:validation testUrl=\"http://example.com/notmatch/foo/bar\"/>\n"
-                                + "            <tools:validation testUrl=\"http://notmatch.com/gizmos/foo/bar\"/>\n"
-                                + "            <tools:validation testUrl=\"https://example.com/gizmos/foo/bar\"/>\n"
-                                + "            <tools:validation testUrl=\"http://example.com/literal/path\"/>\n"
-                                + "        </activity>\n"
-                                + "    </application>\n"
-                                + "\n"
-                                + "</manifest>\n",
-                        true);
-        Element root = document.getDocumentElement();
-        Element application = XmlUtils.getFirstSubTag(root);
-        Element activity = XmlUtils.getFirstSubTag(application);
-        assertThat(activity).isNotNull();
+        val document = XmlUtils.parseDocument(
+            """
+            <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:tools="http://schemas.android.com/tools"
+                package="test.pkg" >
 
-        List<UriInfo> infos = AppLinksValidDetector.createUriInfos(activity, null);
+                <application>
+                    <activity>
+                        <intent-filter android:autoVerify="true">
+                            <data android:scheme="http"
+                                android:host="example.com"
+                                android:pathPrefix="/gizmos" />
+                            <data android:path="/literal/path" />
+                        </intent-filter>
+                        <tools:validation testUrl="http://example.com/gizmos/foo/bar"/>
+                        <tools:validation testUrl="http://example.com/notmatch/foo/bar"/>
+                        <tools:validation testUrl="http://notmatch.com/gizmos/foo/bar"/>
+                        <tools:validation testUrl="https://example.com/gizmos/foo/bar"/>
+                        <tools:validation testUrl="http://example.com/literal/path"/>
+                    </activity>
+                </application>
 
-        assertThat(
-                        AppLinksValidDetector.testElement(
-                                new URL("http://example.com/literal/path"), infos))
-                .isNull(); // success
+            </manifest>
+            """,
+            true
+        )
+        val root = document.documentElement
+        val application = XmlUtils.getFirstSubTag(root)
+        val activity = XmlUtils.getFirstSubTag(application)
+        assertThat(activity).isNotNull()
 
-        assertThat(
-                        AppLinksValidDetector.testElement(
-                                new URL("http://example.com/gizmos/foo/bar"), infos))
-                .isNull(); // success
+        val detector = AppLinksValidDetector()
+        fun createUriInfos(activity: Element, context: XmlContext?): List<AppLinksValidDetector.UriInfo> =
+            detector.createUriInfos(activity, context)
+        fun testElement(testUrl: URL, infos: List<AppLinksValidDetector.UriInfo>): String? =
+            detector.testElement(testUrl, infos)
 
-        assertThat(
-                        AppLinksValidDetector.testElement(
-                                new URL("https://example.com/gizmos/foo/bar"), infos))
-                .isEqualTo("Test URL did not match scheme http");
-
-        assertThat(
-                        AppLinksValidDetector.testElement(
-                                new URL("http://example.com/notmatch/foo/bar"), infos))
-                .isEqualTo(
-                        "Test URL did not match path prefix /gizmos, path literal /literal/path");
-
-        assertThat(
-                        AppLinksValidDetector.testElement(
-                                new URL("http://notmatch.com/gizmos/foo/bar"), infos))
-                .isEqualTo("Test URL did not match host example.com");
+        val infos = createUriInfos(activity!!, null)
+        assertThat(testElement(URL("http://example.com/literal/path"), infos)).isNull() // success
+        assertThat(testElement(URL("http://example.com/gizmos/foo/bar"), infos))
+            .isNull() // success
+        assertThat(testElement(URL("https://example.com/gizmos/foo/bar"), infos))
+            .isEqualTo("Test URL did not match scheme http")
+        assertThat(testElement(URL("http://example.com/notmatch/foo/bar"), infos))
+            .isEqualTo("Test URL did not match path prefix /gizmos, path literal /literal/path")
+        assertThat(testElement(URL("http://notmatch.com/gizmos/foo/bar"), infos))
+            .isEqualTo("Test URL did not match host example.com")
     }
 }

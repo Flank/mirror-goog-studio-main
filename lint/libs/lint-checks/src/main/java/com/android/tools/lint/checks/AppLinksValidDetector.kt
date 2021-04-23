@@ -13,456 +13,276 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.tools.lint.checks
 
-package com.android.tools.lint.checks;
-
-import static com.android.SdkConstants.ANDROID_URI;
-import static com.android.SdkConstants.ATTR_EXPORTED;
-import static com.android.SdkConstants.ATTR_HOST;
-import static com.android.SdkConstants.ATTR_MIME_TYPE;
-import static com.android.SdkConstants.ATTR_PATH;
-import static com.android.SdkConstants.ATTR_PATH_PATTERN;
-import static com.android.SdkConstants.ATTR_PATH_PREFIX;
-import static com.android.SdkConstants.ATTR_PORT;
-import static com.android.SdkConstants.ATTR_SCHEME;
-import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
-import static com.android.SdkConstants.PREFIX_THEME_REF;
-import static com.android.SdkConstants.TAG_ACTIVITY;
-import static com.android.SdkConstants.TAG_ACTIVITY_ALIAS;
-import static com.android.SdkConstants.TAG_DATA;
-import static com.android.SdkConstants.TAG_INTENT_FILTER;
-import static com.android.SdkConstants.TOOLS_URI;
-import static com.android.SdkConstants.VALUE_TRUE;
-import static com.android.tools.lint.checks.AndroidPatternMatcher.PATTERN_LITERAL;
-import static com.android.tools.lint.checks.AndroidPatternMatcher.PATTERN_PREFIX;
-import static com.android.tools.lint.checks.AndroidPatternMatcher.PATTERN_SIMPLE_GLOB;
-import static com.android.tools.lint.client.api.ResourceRepositoryScope.ALL_DEPENDENCIES;
-import static com.android.tools.lint.detector.api.Lint.isDataBindingExpression;
-import static com.android.tools.lint.detector.api.Lint.isManifestPlaceHolderExpression;
-import static com.android.tools.lint.detector.api.Lint.resolvePlaceHolders;
-import static com.android.utils.XmlUtils.getFirstSubTagByName;
-import static com.android.utils.XmlUtils.getNextTagByName;
-import static com.android.utils.XmlUtils.getPreviousTagByName;
-import static com.android.utils.XmlUtils.getSubTagsByName;
-import static com.android.xml.AndroidManifest.ATTRIBUTE_NAME;
-import static com.android.xml.AndroidManifest.NODE_ACTION;
-import static com.android.xml.AndroidManifest.NODE_CATEGORY;
-
-import com.android.SdkConstants;
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.ide.common.rendering.api.ResourceNamespace;
-import com.android.ide.common.rendering.api.ResourceValue;
-import com.android.ide.common.resources.ResourceItem;
-import com.android.ide.common.resources.ResourceRepository;
-import com.android.resources.ResourceType;
-import com.android.resources.ResourceUrl;
-import com.android.tools.lint.client.api.LintClient;
-import com.android.tools.lint.detector.api.Category;
-import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Implementation;
-import com.android.tools.lint.detector.api.Issue;
-import com.android.tools.lint.detector.api.LintFix;
-import com.android.tools.lint.detector.api.Location;
-import com.android.tools.lint.detector.api.Project;
-import com.android.tools.lint.detector.api.Scope;
-import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.XmlContext;
-import com.android.tools.lint.detector.api.XmlScanner;
-import com.android.utils.CharSequences;
-import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.regex.Pattern;
-import org.w3c.dom.Attr;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
+import com.android.SdkConstants.ANDROID_URI
+import com.android.SdkConstants.ATTR_EXPORTED
+import com.android.SdkConstants.ATTR_HOST
+import com.android.SdkConstants.ATTR_MIME_TYPE
+import com.android.SdkConstants.ATTR_PATH
+import com.android.SdkConstants.ATTR_PATH_PATTERN
+import com.android.SdkConstants.ATTR_PATH_PREFIX
+import com.android.SdkConstants.ATTR_PORT
+import com.android.SdkConstants.ATTR_SCHEME
+import com.android.SdkConstants.PREFIX_RESOURCE_REF
+import com.android.SdkConstants.PREFIX_THEME_REF
+import com.android.SdkConstants.TAG_ACTIVITY
+import com.android.SdkConstants.TAG_ACTIVITY_ALIAS
+import com.android.SdkConstants.TAG_DATA
+import com.android.SdkConstants.TAG_INTENT_FILTER
+import com.android.SdkConstants.TOOLS_URI
+import com.android.SdkConstants.VALUE_TRUE
+import com.android.ide.common.rendering.api.ResourceNamespace
+import com.android.resources.ResourceType
+import com.android.resources.ResourceUrl
+import com.android.tools.lint.client.api.ResourceRepositoryScope
+import com.android.tools.lint.detector.api.Category
+import com.android.tools.lint.detector.api.Detector
+import com.android.tools.lint.detector.api.Implementation
+import com.android.tools.lint.detector.api.Issue
+import com.android.tools.lint.detector.api.LintFix
+import com.android.tools.lint.detector.api.Location
+import com.android.tools.lint.detector.api.Scope
+import com.android.tools.lint.detector.api.Severity
+import com.android.tools.lint.detector.api.XmlContext
+import com.android.tools.lint.detector.api.XmlScanner
+import com.android.tools.lint.detector.api.isDataBindingExpression
+import com.android.tools.lint.detector.api.isManifestPlaceHolderExpression
+import com.android.tools.lint.detector.api.resolvePlaceHolders
+import com.android.utils.CharSequences
+import com.android.utils.XmlUtils
+import com.android.xml.AndroidManifest
+import com.google.common.base.Joiner
+import com.google.common.collect.Lists
+import org.w3c.dom.Attr
+import org.w3c.dom.Element
+import org.w3c.dom.Node
+import java.net.MalformedURLException
+import java.net.URL
+import java.util.function.Consumer
+import java.util.regex.Pattern
 
 /** Checks for invalid app links URLs */
-public class AppLinksValidDetector extends Detector implements XmlScanner {
-
-    private static final Implementation IMPLEMENTATION =
-            new Implementation(AppLinksValidDetector.class, Scope.MANIFEST_SCOPE);
-
-    /** The main issue discovered by this detector */
-    public static final Issue TEST_URL =
-            Issue.create(
-                    "TestAppLink",
-                    "Unmatched URLs",
-                    "Using one or more `tools:validation testUrl=\"some url\"/>` elements "
-                            + "in your manifest allows the link attributes in your intent filter to be "
-                            + "checked for matches.",
-                    Category.CORRECTNESS,
-                    5,
-                    Severity.FATAL,
-                    IMPLEMENTATION);
-
-    public static final Issue VALIDATION =
-            Issue.create(
-                            "AppLinkUrlError",
-                            "URL not supported by app for Firebase App Indexing",
-                            "Ensure the URL is supported by your app, to get installs and traffic to "
-                                    + "your app from Google Search.",
-                            Category.USABILITY,
-                            5,
-                            Severity.ERROR,
-                            IMPLEMENTATION)
-                    .addMoreInfo("https://g.co/AppIndexing/AndroidStudio");
-
-    /**
-     * Only used for compatibility issue lookup (the driver suppression check takes an issue, not an
-     * id)
-     */
-    private static final Issue _OLD_ISSUE_URL =
-            Issue.create(
-                    "GoogleAppIndexingUrlError",
-                    "?",
-                    "?",
-                    Category.USABILITY,
-                    5,
-                    Severity.ERROR,
-                    IMPLEMENTATION);
-
-    private static final String TAG_VALIDATION = "validation";
-
-    /** Constructs a new {@link AppLinksValidDetector} check */
-    public AppLinksValidDetector() {}
-
-    // ---- Implements XmlScanner ----
-
-    @Override
-    public Collection<String> getApplicableElements() {
-        return Arrays.asList(TAG_ACTIVITY, TAG_ACTIVITY_ALIAS);
+class AppLinksValidDetector : Detector(), XmlScanner {
+    override fun getApplicableElements(): Collection<String> {
+        return listOf(TAG_ACTIVITY, TAG_ACTIVITY_ALIAS)
     }
 
-    private static void reportUrlError(
-            @NonNull XmlContext context,
-            @NonNull Node node,
-            @NonNull Location location,
-            @NonNull String message) {
-        reportUrlError(context, node, location, message, null);
-    }
-
-    private static void reportUrlError(
-            @NonNull XmlContext context,
-            @NonNull Node node,
-            @NonNull Location location,
-            @NonNull String message,
-            @Nullable LintFix quickfixData) {
-        // Validation errors were reported here before
-        if (context.getDriver().isSuppressed(context, _OLD_ISSUE_URL, node)) {
-            return;
-        }
-
-        context.report(VALIDATION, node, location, message, quickfixData);
-    }
-
-    private static void reportTestUrlFailure(
-            @NonNull XmlContext context,
-            @NonNull Node node,
-            @NonNull Location location,
-            @NonNull String message) {
-        context.report(TEST_URL, node, location, message);
-    }
-
-    @Override
-    public void visitElement(@NonNull XmlContext context, @NonNull Element activity) {
-        List<UriInfo> infos = createUriInfos(activity, context);
-
-        Element current = getFirstSubTagByName(activity, TAG_VALIDATION);
+    override fun visitElement(context: XmlContext, element: Element) {
+        val infos = createUriInfos(element, context)
+        var current = XmlUtils.getFirstSubTagByName(element, TAG_VALIDATION)
         while (current != null) {
-            if (TOOLS_URI.equals(current.getNamespaceURI())) {
-                Attr testUrlAttr = current.getAttributeNode("testUrl");
+            if (TOOLS_URI == current.namespaceURI) {
+                val testUrlAttr = current.getAttributeNode("testUrl")
                 if (testUrlAttr == null) {
-                    String message = "Expected `testUrl` attribute";
-                    reportUrlError(context, current, context.getLocation(current), message);
+                    val message = "Expected `testUrl` attribute"
+                    reportUrlError(context, current, context.getLocation(current), message)
                 } else {
-                    String testUrlString = testUrlAttr.getValue();
+                    val testUrlString = testUrlAttr.value
                     try {
-                        URL testUrl = new URL(testUrlString);
-                        String reason = testElement(testUrl, infos);
+                        val testUrl = URL(testUrlString)
+                        val reason = testElement(testUrl, infos)
                         if (reason != null) {
                             reportTestUrlFailure(
-                                    context,
-                                    testUrlAttr,
-                                    context.getValueLocation(testUrlAttr),
-                                    reason);
-                        }
-                    } catch (MalformedURLException e) {
-                        String message = "Invalid test URL: " + e.getLocalizedMessage();
-                        reportTestUrlFailure(
                                 context,
                                 testUrlAttr,
                                 context.getValueLocation(testUrlAttr),
-                                message);
+                                reason
+                            )
+                        }
+                    } catch (e: MalformedURLException) {
+                        val message = "Invalid test URL: " + e.localizedMessage
+                        reportTestUrlFailure(
+                            context,
+                            testUrlAttr,
+                            context.getValueLocation(testUrlAttr),
+                            message
+                        )
                     }
                 }
             } else {
                 reportTestUrlFailure(
-                        context,
-                        current,
-                        context.getNameLocation(current),
-                        "Validation nodes should be in the `tools:` namespace to "
-                                + "ensure they are removed from the manifest at build time");
+                    context,
+                    current,
+                    context.getNameLocation(current),
+                    "Validation nodes should be in the `tools:` namespace to " +
+                        "ensure they are removed from the manifest at build time"
+                )
             }
-            current = getNextTagByName(current, TAG_VALIDATION);
+            current = XmlUtils.getNextTagByName(current, TAG_VALIDATION)
         }
     }
 
+    private fun reportUrlError(
+        context: XmlContext,
+        node: Node,
+        location: Location,
+        message: String,
+        quickfixData: LintFix? = null
+    ) {
+        // Validation errors were reported here before
+        if (context.driver.isSuppressed(context, _OLD_ISSUE_URL, node)) {
+            return
+        }
+        context.report(VALIDATION, node, location, message, quickfixData)
+    }
+
+    private fun reportTestUrlFailure(
+        context: XmlContext,
+        node: Node,
+        location: Location,
+        message: String
+    ) {
+        context.report(TEST_URL, node, location, message)
+    }
+
     /**
-     * Given an activity (or activity alias) element, looks up the intent filters that contain URIs
-     * and creates a list of {@link UriInfo} objects for these
+     * Given an activity (or activity alias) element, looks up the
+     * intent filters that contain URIs and creates a list of [UriInfo]
+     * objects for these
      *
      * @param activity the activity
-     * @param context an <b>optional</b> lint context to pass in; if provided, lint will validate
-     *     the activity attributes and report link-related problems (such as unknown scheme, wrong
-     *     port number etc)
+     * @param context an **optional** lint context to pass in; if
+     *     provided, lint will validate the activity
+     *     attributes and report link-related problems
+     *     (such as unknown scheme, wrong port number etc)
      * @return a list of URI infos, if any
      */
-    @NonNull
-    public static List<UriInfo> createUriInfos(
-            @NonNull Element activity, @Nullable XmlContext context) {
-        Element intent = getFirstSubTagByName(activity, TAG_INTENT_FILTER);
-        List<AppLinksValidDetector.UriInfo> infos = Lists.newArrayList();
+    fun createUriInfos(activity: Element, context: XmlContext?): List<UriInfo> {
+        var intent = XmlUtils.getFirstSubTagByName(activity, TAG_INTENT_FILTER)
+        val infos: MutableList<UriInfo> = Lists.newArrayList()
         while (intent != null) {
-            UriInfo uriInfo = checkIntent(context, intent, activity);
+            val uriInfo = checkIntent(context, intent, activity)
             if (uriInfo != null) {
-                infos.add(uriInfo);
+                infos.add(uriInfo)
             }
-            intent = getNextTagByName(intent, TAG_INTENT_FILTER);
+            intent = XmlUtils.getNextTagByName(intent, TAG_INTENT_FILTER)
         }
-
-        return infos;
+        return infos
     }
 
     /**
-     * Given a test URL and a list of URI infos (previously returned from {@link
-     * #createUriInfos(Element, XmlContext)}) this method checks whether the URL matches, and if so
-     * returns null, otherwise returning the reason for the mismatch.
+     * Given a test URL and a list of URI infos (previously returned
+     * from [createUriInfos]) this method checks whether the URL
+     * matches, and if so returns null, otherwise returning the reason
+     * for the mismatch.
      *
      * @param testUrl the URL to test
      * @param infos the URL information
      * @return null for a match, otherwise the failure reason
      */
-    @Nullable
-    public static String testElement(@NonNull URL testUrl, @NonNull List<UriInfo> infos) {
-        List<String> reasons = null;
-        for (UriInfo info : infos) {
-            String reason = info.match(testUrl);
-            if (reason == null) {
-                return null; // found a match
-            }
-            if (reasons == null) {
-                reasons = Lists.newArrayList();
-            }
+    fun testElement(testUrl: URL, infos: List<UriInfo>): String? {
+        val reasons = mutableListOf<String>()
+        for (info in infos) {
+            val reason = info.match(testUrl) ?: return null // found a match
             if (!reasons.contains(reason)) {
-                reasons.add(reason);
+                reasons.add(reason)
             }
         }
-
-        if (reasons != null) {
-            return "Test URL " + Joiner.on(" or ").join(reasons);
+        return if (reasons.isNotEmpty()) {
+            "Test URL " + Joiner.on(" or ").join(reasons)
         } else {
-            return null;
+            null
         }
     }
 
-    /** URL information from an intent filter */
-    public static class UriInfo {
-        private final List<String> schemes;
-        private final List<String> hosts;
-        private final List<String> ports;
-        private final List<AndroidPatternMatcher> paths;
-
-        public UriInfo(
-                List<String> schemes,
-                List<String> hosts,
-                List<String> ports,
-                List<AndroidPatternMatcher> paths) {
-            this.schemes = schemes;
-            this.hosts = hosts;
-            this.ports = ports;
-            this.paths = paths;
-        }
-
-        /**
-         * Matches a URL against this info, and returns null if successful or the failure reason if
-         * not a match
-         *
-         * @param testUrl the URL to match
-         * @return null for a successful match or the failure reason
-         */
-        @Nullable
-        public String match(@NonNull URL testUrl) {
-
-            // Check schemes
-            if (schemes != null) {
-                boolean schemeOk =
-                        schemes.stream()
-                                .anyMatch(
-                                        scheme ->
-                                                scheme.equals(testUrl.getProtocol())
-                                                        || isSubstituted(scheme));
-                if (!schemeOk) {
-                    return String.format(
-                            "did not match scheme %1$s", Joiner.on(", ").join(schemes));
-                }
-            }
-
-            if (hosts != null) {
-                boolean hostOk =
-                        hosts.stream()
-                                .anyMatch(
-                                        host ->
-                                                matchesHost(testUrl.getHost(), host)
-                                                        || isSubstituted(host));
-                if (!hostOk) {
-                    return String.format("did not match host %1$s", Joiner.on(", ").join(hosts));
-                }
-            }
-
-            // Port matching:
-            boolean portOk = false;
-            if (testUrl.getPort() != -1) {
-                String testPort = Integer.toString(testUrl.getPort());
-                if (ports != null) {
-                    portOk =
-                            ports.stream()
-                                    .anyMatch(port -> testPort.equals(port) || isSubstituted(port));
-                }
-            } else if (ports == null) {
-                portOk = true;
-            }
-            if (!portOk) {
-                String portList = ports == null ? "none" : Joiner.on(", ").join(ports);
-                return String.format("did not match port %1$s", portList);
-            }
-
-            if (paths != null) {
-                String testPath = testUrl.getPath();
-                boolean pathOk =
-                        paths.stream()
-                                .anyMatch(
-                                        matcher ->
-                                                isSubstituted(matcher.getPath())
-                                                        || matcher.match(testPath));
-                if (!pathOk) {
-                    StringBuilder sb = new StringBuilder();
-                    paths.forEach(
-                            matcher -> sb.append("path ").append(matcher.toString()).append(", "));
-                    if (CharSequences.endsWith(sb, ", ", true)) {
-                        sb.setLength(sb.length() - 2);
-                    }
-
-                    String message = String.format("did not match %1$s", sb.toString());
-
-                    if (containsUpperCase(paths) || CharSequences.containsUpperCase(testPath)) {
-                        message += " Note that matching is case sensitive.";
-                    }
-
-                    return message;
-                }
-            }
-            return null; // OK
-        }
-    }
-
-    @Nullable
-    private static UriInfo checkIntent(
-            @Nullable XmlContext context, @NonNull Element intent, @NonNull Element activity) {
-        Element firstData = getFirstSubTagByName(intent, TAG_DATA);
-        boolean actionView = hasActionView(intent);
-        boolean browsable = isBrowsable(intent);
-
+    private fun checkIntent(context: XmlContext?, intent: Element, activity: Element): UriInfo? {
+        val firstData = XmlUtils.getFirstSubTagByName(intent, TAG_DATA)
+        val actionView = hasActionView(intent)
+        val browsable = isBrowsable(intent)
         if (actionView && context != null) {
-            ensureExported(context, activity, intent);
+            ensureExported(context, activity, intent)
         }
-
         if (firstData == null) {
             if (actionView && browsable && context != null) {
                 // If this activity is an ACTION_VIEW action with category BROWSABLE, but doesn't
                 // have data node, it's a likely mistake
                 reportUrlError(
-                        context, intent, context.getLocation(intent), "Missing data element");
+                    context, intent, context.getLocation(intent), "Missing data element"
+                )
             }
-
-            return null;
+            return null
         }
-
-        List<String> schemes = null;
-        List<String> hosts = null;
-        List<String> ports = null;
-        List<AndroidPatternMatcher> paths = null;
-        boolean hasMimeType = false;
-
-        for (Element data = firstData; data != null; data = getNextTagByName(data, TAG_DATA)) {
-
-            Attr mimeType = data.getAttributeNodeNS(ANDROID_URI, ATTR_MIME_TYPE);
+        var schemes: MutableList<String>? = null
+        var hosts: MutableList<String>? = null
+        var ports: MutableList<String>? = null
+        var paths: MutableList<AndroidPatternMatcher>? = null
+        var hasMimeType = false
+        var data = firstData
+        while (data != null) {
+            val mimeType = data.getAttributeNodeNS(ANDROID_URI, ATTR_MIME_TYPE)
             if (mimeType != null) {
-                hasMimeType = true;
+                hasMimeType = true
                 if (context != null) {
-                    String mimeTypeValue = mimeType.getValue();
-                    String resolved =
-                            resolvePlaceHolders(context.getProject(), mimeTypeValue, null);
+                    val mimeTypeValue = mimeType.value
+                    val resolved = resolvePlaceHolders(context.project, mimeTypeValue, null)
                     if (CharSequences.containsUpperCase(resolved)) {
-                        String message =
-                                "Mime-type matching is case sensitive and should only "
-                                        + "use lower-case characters";
+                        var message = (
+                            "Mime-type matching is case sensitive and should only " +
+                                "use lower-case characters"
+                            )
                         if (!CharSequences.containsUpperCase(
-                                resolvePlaceHolders(null, mimeTypeValue, null))) {
+                                resolvePlaceHolders(null, mimeTypeValue, null)
+                            )
+                        ) {
                             // The upper case character is only present in the substituted
                             // manifest place holders, so include them in the message
-                            message += " (without placeholders, value is `" + resolved + "`)";
+                            message += " (without placeholders, value is `$resolved`)"
                         }
                         reportUrlError(
-                                context, mimeType, context.getValueLocation(mimeType), message);
+                            context, mimeType, context.getValueLocation(mimeType), message
+                        )
                     }
                 }
             }
-
-            schemes = addAttribute(context, ATTR_SCHEME, schemes, data);
-            hosts = addAttribute(context, ATTR_HOST, hosts, data);
-            ports = addAttribute(context, ATTR_PORT, ports, data);
-
-            paths = addMatcher(context, ATTR_PATH, PATTERN_LITERAL, paths, data);
-            paths = addMatcher(context, ATTR_PATH_PREFIX, PATTERN_PREFIX, paths, data);
-            paths = addMatcher(context, ATTR_PATH_PATTERN, PATTERN_SIMPLE_GLOB, paths, data);
-            // Platform also has pathAdvancedPattern using type PATTERN_ADVANCED_GLOB but it
-            //  doesn't seem exposed to developers
+            schemes = addAttribute(context, ATTR_SCHEME, schemes, data)
+            hosts = addAttribute(context, ATTR_HOST, hosts, data)
+            ports = addAttribute(context, ATTR_PORT, ports, data)
+            paths = addMatcher(context, ATTR_PATH, AndroidPatternMatcher.PATTERN_LITERAL, paths, data)
+            paths = addMatcher(
+                context,
+                ATTR_PATH_PREFIX,
+                AndroidPatternMatcher.PATTERN_PREFIX,
+                paths,
+                data
+            )
+            paths = addMatcher(
+                context,
+                ATTR_PATH_PATTERN,
+                AndroidPatternMatcher.PATTERN_SIMPLE_GLOB,
+                paths,
+                data
+            )
+            data = XmlUtils.getNextTagByName(data, TAG_DATA)
         }
-
         if (actionView && browsable && schemes == null && !hasMimeType && context != null) {
             // If this activity is an action view, is browsable, but has neither a
             // URL nor mimeType, it may be a mistake and we will report error.
             reportUrlError(
-                    context,
-                    firstData,
-                    context.getLocation(firstData),
-                    "Missing URL for the intent filter");
+                context,
+                firstData,
+                context.getLocation(firstData),
+                "Missing URL for the intent filter"
+            )
         }
-
-        boolean isHttp = false;
-        boolean implicitSchemes = false;
+        var isHttp = false
+        var implicitSchemes = false
         if (schemes == null) {
             if (hasMimeType) {
                 // Per documentation
                 //   https://developer.android.com/guide/topics/manifest/data-element.html
                 // "If the filter has a data type set (the mimeType attribute) but no scheme, the
                 //  content: and file: schemes are assumed."
-                schemes = Lists.newArrayList();
-                schemes.add("content");
-                schemes.add("file");
-                implicitSchemes = true;
+                schemes = Lists.newArrayList()
+                schemes.add("content")
+                schemes.add("file")
+                implicitSchemes = true
             }
         } else {
-            for (String scheme : schemes) {
-                if ("http".equals(scheme) || "https".equals(scheme)) {
-                    isHttp = true;
-                    break;
+            for (scheme in schemes) {
+                if ("http" == scheme || "https" == scheme) {
+                    isHttp = true
+                    break
                 }
             }
         }
@@ -470,74 +290,76 @@ public class AppLinksValidDetector extends Detector implements XmlScanner {
         // Validation
         if (context != null) {
             // At least one scheme must be specified
-            boolean hasScheme = schemes != null;
+            val hasScheme = schemes != null
             if (!hasScheme && (hosts != null || paths != null || ports != null)) {
-                LintFix fix = LintFix.create().set(ANDROID_URI, ATTR_SCHEME, "http").build();
+                val fix = LintFix.create().set(ANDROID_URI, ATTR_SCHEME, "http").build()
                 reportUrlError(
-                        context,
-                        firstData,
-                        context.getLocation(firstData),
-                        "At least one `scheme` must be specified",
-                        fix);
+                    context,
+                    firstData,
+                    context.getLocation(firstData),
+                    "At least one `scheme` must be specified",
+                    fix
+                )
             }
-
-            if (hosts == null
-                    && (paths != null || ports != null)
-                    && (!hasScheme || schemes.contains("http") || schemes.contains("https"))) {
-                LintFix fix = LintFix.create().set().todo(ANDROID_URI, ATTR_HOST).build();
+            if (hosts == null && (paths != null || ports != null) &&
+                (!hasScheme || schemes!!.contains("http") || schemes.contains("https"))
+            ) {
+                val fix = LintFix.create().set().todo(ANDROID_URI, ATTR_HOST).build()
                 reportUrlError(
-                        context,
-                        firstData,
-                        context.getLocation(firstData),
-                        "At least one `host` must be specified",
-                        fix);
+                    context,
+                    firstData,
+                    context.getLocation(firstData),
+                    "At least one `host` must be specified",
+                    fix
+                )
             }
 
             // If this activity is an ACTION_VIEW action, has a http URL but doesn't have
             // BROWSABLE, it may be a mistake and and we will report warning.
             if (actionView && isHttp && !browsable) {
                 reportUrlError(
-                        context,
-                        intent,
-                        context.getLocation(intent),
-                        "Activity supporting ACTION_VIEW is not set as BROWSABLE");
+                    context,
+                    intent,
+                    context.getLocation(intent),
+                    "Activity supporting ACTION_VIEW is not set as BROWSABLE"
+                )
             }
-
             if (actionView && (!hasScheme || implicitSchemes)) {
-                LintFix fix = LintFix.create().set(ANDROID_URI, ATTR_SCHEME, "http").build();
-                reportUrlError(context, intent, context.getLocation(intent), "Missing URL", fix);
+                val fix = LintFix.create().set(ANDROID_URI, ATTR_SCHEME, "http").build()
+                reportUrlError(context, intent, context.getLocation(intent), "Missing URL", fix)
             }
         }
-
-        return new UriInfo(schemes, hosts, ports, paths);
+        return UriInfo(schemes, hosts, ports, paths)
     }
 
-    private static void ensureExported(
-            @NonNull XmlContext context, @NonNull Element activity, @NonNull Element intent) {
-        Attr exported = activity.getAttributeNodeNS(ANDROID_URI, ATTR_EXPORTED);
-        if (exported == null) {
-            return;
-        }
-        if (VALUE_TRUE.equals(exported.getValue())) {
-            return;
+    private fun ensureExported(
+        context: XmlContext,
+        activity: Element,
+        intent: Element
+    ) {
+        val exported = activity.getAttributeNodeNS(ANDROID_URI, ATTR_EXPORTED)
+            ?: return
+        if (VALUE_TRUE == exported.value) {
+            return
         }
 
         // Make sure there isn't some *earlier* intent filter for this activity
         // that also reported this; we don't want duplicate warnings
-        Element prevIntent = getPreviousTagByName(intent, TAG_INTENT_FILTER);
+        var prevIntent = XmlUtils.getPreviousTagByName(intent, TAG_INTENT_FILTER)
         while (prevIntent != null) {
             if (hasActionView(prevIntent)) {
-                return;
+                return
             }
-            prevIntent = getNextTagByName(prevIntent, TAG_INTENT_FILTER);
+            prevIntent = XmlUtils.getNextTagByName(prevIntent, TAG_INTENT_FILTER)
         }
 
         // Report error if the activity supporting action view is not exported.
         reportUrlError(
-                context,
-                activity,
-                context.getLocation(activity),
-                "Activity supporting ACTION_VIEW is not exported");
+            context,
+            activity,
+            context.getLocation(activity),
+            "Activity supporting ACTION_VIEW is not exported"
+        )
     }
 
     /**
@@ -546,16 +368,16 @@ public class AppLinksValidDetector extends Detector implements XmlScanner {
      * @param intent the intent filter
      * @return true if it does
      */
-    static boolean hasActionView(@NonNull Element intent) {
-        for (Element action : getSubTagsByName(intent, NODE_ACTION)) {
-            if (action.hasAttributeNS(ANDROID_URI, ATTRIBUTE_NAME)) {
-                Attr attr = action.getAttributeNodeNS(ANDROID_URI, ATTRIBUTE_NAME);
-                if (attr.getValue().equals("android.intent.action.VIEW")) {
-                    return true;
+    private fun hasActionView(intent: Element): Boolean {
+        for (action in XmlUtils.getSubTagsByName(intent, AndroidManifest.NODE_ACTION)) {
+            if (action.hasAttributeNS(ANDROID_URI, AndroidManifest.ATTRIBUTE_NAME)) {
+                val attr = action.getAttributeNodeNS(ANDROID_URI, AndroidManifest.ATTRIBUTE_NAME)
+                if (attr.value == "android.intent.action.VIEW") {
+                    return true
                 }
             }
         }
-        return false;
+        return false
     }
 
     /**
@@ -564,254 +386,360 @@ public class AppLinksValidDetector extends Detector implements XmlScanner {
      * @param intent the intent filter
      * @return true if it does
      */
-    private static boolean isBrowsable(@NonNull Element intent) {
-        for (Element e : getSubTagsByName(intent, NODE_CATEGORY)) {
-            if (e.hasAttributeNS(ANDROID_URI, ATTRIBUTE_NAME)) {
-                Attr attr = e.getAttributeNodeNS(ANDROID_URI, ATTRIBUTE_NAME);
-                if (attr.getNodeValue().equals("android.intent.category.BROWSABLE")) {
-                    return true;
+    private fun isBrowsable(intent: Element): Boolean {
+        for (e in XmlUtils.getSubTagsByName(intent, AndroidManifest.NODE_CATEGORY)) {
+            if (e.hasAttributeNS(ANDROID_URI, AndroidManifest.ATTRIBUTE_NAME)) {
+                val attr = e.getAttributeNodeNS(ANDROID_URI, AndroidManifest.ATTRIBUTE_NAME)
+                if (attr.nodeValue == "android.intent.category.BROWSABLE") {
+                    return true
                 }
             }
         }
-        return false;
+        return false
     }
 
-    private static boolean containsUpperCase(@Nullable List<AndroidPatternMatcher> matchers) {
-        return matchers != null
-                && matchers.stream().anyMatch(m -> CharSequences.containsUpperCase(m.getPath()));
-    }
-
-    @Nullable
-    private static List<String> addAttribute(
-            @Nullable XmlContext context,
-            @NonNull String attributeName,
-            @Nullable List<String> current,
-            Element data) {
-        Attr attribute = data.getAttributeNodeNS(ANDROID_URI, attributeName);
+    private fun addAttribute(
+        context: XmlContext?,
+        attributeName: String,
+        existing: MutableList<String>?,
+        data: Element
+    ): MutableList<String>? {
+        var current = existing
+        val attribute = data.getAttributeNodeNS(ANDROID_URI, attributeName)
         if (attribute != null) {
-            String value = attribute.getValue();
+            var value = attribute.value
             if (requireNonEmpty(context, attribute, value)) {
-                return current;
+                return current
             }
-
             if (value.startsWith(PREFIX_RESOURCE_REF) || value.startsWith(PREFIX_THEME_REF)) {
-                value = replaceUrlWithValue(context, value);
+                value = replaceUrlWithValue(context, value)
             }
-
             if (current == null) {
-                current = Lists.newArrayListWithCapacity(4);
+                current = Lists.newArrayListWithCapacity(4)
             }
-            current.add(value);
-
-            if (isSubstituted(value)
-                    || value.startsWith(PREFIX_RESOURCE_REF)
-                    || value.startsWith(PREFIX_THEME_REF)) { // already checked but can be nested
-                return current;
+            current!!.add(value)
+            if (isSubstituted(value) ||
+                value.startsWith(PREFIX_RESOURCE_REF) ||
+                value.startsWith(PREFIX_THEME_REF)
+            ) { // already checked but can be nested
+                return current
             }
 
             // Validation
             if (context != null) {
-                validateAttribute(context, attributeName, data, attribute, value);
+                validateAttribute(context, attributeName, data, attribute, value)
             }
         }
-
-        return current;
+        return current
     }
 
-    private static void validateAttribute(
-            @NonNull XmlContext context,
-            @NonNull String attributeName,
-            Element data,
-            Attr attribute,
-            String value) {
+    private fun validateAttribute(
+        context: XmlContext,
+        attributeName: String,
+        data: Element,
+        attribute: Attr,
+        value: String
+    ) {
         // See https://developer.android.com/guide/topics/manifest/data-element.html
-        switch (attributeName) {
-            case ATTR_SCHEME:
-                {
-                    if (value.endsWith(":")) {
-                        reportUrlError(
-                                context,
-                                attribute,
-                                context.getValueLocation(attribute),
-                                "Don't include trailing colon in the `scheme` declaration");
-                    } else if (CharSequences.containsUpperCase(value)) {
-                        reportUrlError(
-                                context,
-                                attribute,
-                                context.getValueLocation(attribute),
-                                "Scheme matching is case sensitive and should only "
-                                        + "use lower-case characters");
-                    }
-
-                    break;
-                }
-            case ATTR_HOST:
-                {
-                    if (value.lastIndexOf('*') > 0) {
-                        reportUrlError(
-                                context,
-                                attribute,
-                                context.getValueLocation(attribute),
-                                "The host wildcard (`*`) can only be the first character");
-                    } else if (CharSequences.containsUpperCase(value)) {
-                        reportUrlError(
-                                context,
-                                attribute,
-                                context.getValueLocation(attribute),
-                                "Host matching is case sensitive and should only "
-                                        + "use lower-case characters");
-                    }
-                    break;
-                }
-
-            case ATTR_PORT:
-                {
-                    try {
-                        int port = Integer.parseInt(value); // might also throw number exc
-                        if (port < 1 || port > 65535) {
-                            throw new NumberFormatException();
-                        }
-                    } catch (NumberFormatException e) {
-                        reportUrlError(
-                                context,
-                                attribute,
-                                context.getValueLocation(attribute),
-                                "not a valid port number");
-                    }
-
-                    // The port *only* takes effect if it's specified on the *same* XML
-                    // element as the host (this isn't true for the other attributes,
-                    // which can be spread out across separate <data> elements)
-                    if (!data.hasAttributeNS(ANDROID_URI, ATTR_HOST)) {
-                        reportUrlError(
-                                context,
-                                attribute,
-                                context.getValueLocation(attribute),
-                                "The port must be specified in the same `<data>` "
-                                        + "element as the `host`");
-                    }
-
-                    break;
-                }
-        }
-    }
-
-    @Nullable
-    private static List<AndroidPatternMatcher> addMatcher(
-            @Nullable XmlContext context,
-            @NonNull String attributeName,
-            int type,
-            @Nullable List<AndroidPatternMatcher> current,
-            Element data) {
-        Attr attribute = data.getAttributeNodeNS(ANDROID_URI, attributeName);
-        if (attribute != null) {
-            String value = attribute.getValue();
-            if (requireNonEmpty(context, attribute, value)) {
-                return current;
-            }
-
-            if (current == null) {
-                current = Lists.newArrayListWithCapacity(4);
-            }
-
-            if (value.startsWith(PREFIX_RESOURCE_REF) || value.startsWith(PREFIX_THEME_REF)) {
-                value = replaceUrlWithValue(context, value);
-            }
-
-            AndroidPatternMatcher matcher = new AndroidPatternMatcher(value, type);
-            current.add(matcher);
-
-            if (context != null
-                    && !value.startsWith("/")
-                    && !isSubstituted(value)
-                    && !value.startsWith(SdkConstants.PREFIX_RESOURCE_REF)
-                    // Only enforce / for path and prefix; for pattern it seems to
-                    // work without
-                    && !attributeName.equals(ATTR_PATH_PATTERN)) {
-                LintFix fix =
-                        LintFix.create()
-                                .replace()
-                                .text(attribute.getValue())
-                                .with("/" + value)
-                                .build();
-                reportUrlError(
+        when (attributeName) {
+            ATTR_SCHEME -> {
+                if (value.endsWith(":")) {
+                    reportUrlError(
                         context,
                         attribute,
                         context.getValueLocation(attribute),
-                        String.format(
-                                "`%1$s` attribute should start with `/`, but it is `" + value + "`",
-                                attribute.getName()),
-                        fix);
+                        "Don't include trailing colon in the `scheme` declaration"
+                    )
+                } else if (CharSequences.containsUpperCase(value)) {
+                    reportUrlError(
+                        context,
+                        attribute,
+                        context.getValueLocation(attribute),
+                        "Scheme matching is case sensitive and should only " +
+                            "use lower-case characters"
+                    )
+                }
+            }
+            ATTR_HOST -> {
+                if (value.lastIndexOf('*') > 0) {
+                    reportUrlError(
+                        context,
+                        attribute,
+                        context.getValueLocation(attribute),
+                        "The host wildcard (`*`) can only be the first character"
+                    )
+                } else if (CharSequences.containsUpperCase(value)) {
+                    reportUrlError(
+                        context,
+                        attribute,
+                        context.getValueLocation(attribute),
+                        "Host matching is case sensitive and should only " +
+                            "use lower-case characters"
+                    )
+                }
+            }
+            ATTR_PORT -> {
+                try {
+                    val port = value.toInt() // might also throw number exc
+                    if (port < 1 || port > 65535) {
+                        throw NumberFormatException()
+                    }
+                } catch (e: NumberFormatException) {
+                    reportUrlError(
+                        context,
+                        attribute,
+                        context.getValueLocation(attribute),
+                        "not a valid port number"
+                    )
+                }
+
+                // The port *only* takes effect if it's specified on the *same* XML
+                // element as the host (this isn't true for the other attributes,
+                // which can be spread out across separate <data> elements)
+                if (!data.hasAttributeNS(ANDROID_URI, ATTR_HOST)) {
+                    reportUrlError(
+                        context,
+                        attribute,
+                        context.getValueLocation(attribute),
+                        "The port must be specified in the same `<data>` " +
+                            "element as the `host`"
+                    )
+                }
             }
         }
-
-        return current;
     }
 
-    private static boolean requireNonEmpty(
-            @Nullable XmlContext context, @NonNull Attr attribute, @Nullable String value) {
-        if (context != null && (value == null || value.isEmpty())) {
-            reportUrlError(
+    private fun addMatcher(
+        context: XmlContext?,
+        attributeName: String,
+        type: Int,
+        matcher: MutableList<AndroidPatternMatcher>?,
+        data: Element
+    ): MutableList<AndroidPatternMatcher>? {
+        var current = matcher
+        val attribute = data.getAttributeNodeNS(ANDROID_URI, attributeName)
+        if (attribute != null) {
+            var value = attribute.value
+            if (requireNonEmpty(context, attribute, value)) {
+                return current
+            }
+            if (current == null) {
+                current = Lists.newArrayListWithCapacity(4)
+            }
+            if (value.startsWith(PREFIX_RESOURCE_REF) || value.startsWith(PREFIX_THEME_REF)) {
+                value = replaceUrlWithValue(context, value)
+            }
+            val currentMatcher = AndroidPatternMatcher(value, type)
+            current?.add(currentMatcher)
+            if (context != null && !value.startsWith("/") &&
+                !isSubstituted(value) &&
+                !value.startsWith(PREFIX_RESOURCE_REF) && // Only enforce / for path and prefix; for pattern it seems to
+                // work without
+                attributeName != ATTR_PATH_PATTERN
+            ) {
+                val fix = LintFix.create()
+                    .replace()
+                    .text(attribute.value)
+                    .with("/$value")
+                    .build()
+                reportUrlError(
                     context,
                     attribute,
-                    context.getLocation(attribute),
-                    String.format("`%1$s` cannot be empty", attribute.getName()));
-            return true;
+                    context.getValueLocation(attribute),
+                    "`${attribute.name}` attribute should start with `/`, but it is `$value`",
+                    fix
+                )
+            }
         }
-        return false;
+        return current
     }
 
-    @NonNull
-    private static String replaceUrlWithValue(@Nullable XmlContext context, @NonNull String str) {
+    private fun requireNonEmpty(
+        context: XmlContext?,
+        attribute: Attr,
+        value: String?
+    ): Boolean {
+        if (context != null && (value == null || value.isEmpty())) {
+            reportUrlError(
+                context,
+                attribute,
+                context.getLocation(attribute),
+                "`${attribute.name}` cannot be empty"
+            )
+            return true
+        }
+        return false
+    }
+
+    private fun replaceUrlWithValue(context: XmlContext?, str: String): String {
         if (context == null) {
-            return str;
+            return str
         }
-        LintClient client = context.getClient();
-        ResourceUrl url = ResourceUrl.parse(str);
-        if (url == null || url.isFramework()) {
-            return str;
+        val client = context.client
+        val url = ResourceUrl.parse(str)
+        if (url == null || url.isFramework) {
+            return str
         }
-        Project project = context.getProject();
-        ResourceRepository resources = client.getResources(project, ALL_DEPENDENCIES);
-        List<ResourceItem> items =
-                resources.getResources(ResourceNamespace.TODO(), ResourceType.STRING, url.name);
+        val project = context.project
+        val resources = client.getResources(project, ResourceRepositoryScope.ALL_DEPENDENCIES)
+        val items = resources.getResources(ResourceNamespace.TODO(), ResourceType.STRING, url.name)
         if (items.isEmpty()) {
-            return str;
+            return str
         }
-        ResourceValue resourceValue = items.get(0).getResourceValue();
-        if (resourceValue == null) {
-            return str;
-        }
-        return resourceValue.getValue() == null ? str : resourceValue.getValue();
+        val resourceValue = items[0].resourceValue ?: return str
+        return if (resourceValue.value == null) str else resourceValue.value!!
     }
 
-    /**
-     * Check whether a given host matches the hostRegex. The hostRegex could be a regular host name,
-     * or it could contain only one '*', such as *.example.com, where '*' matches any string whose
-     * length is at least 1.
-     *
-     * @param actualHost The actual host we want to check.
-     * @param hostPattern The criteria host, which could contain a '*'.
-     * @return Whether the actualHost matches the hostRegex
-     */
-    private static boolean matchesHost(@NonNull String actualHost, @NonNull String hostPattern) {
-        // Per https://developer.android.com/guide/topics/manifest/data-element.html
-        // the asterisk must be the first character
-        if (!hostPattern.startsWith("*")) {
-            return actualHost.equals(hostPattern);
+    /** URL information from an intent filter */
+    class UriInfo(
+        private val schemes: List<String>?,
+        private val hosts: List<String>?,
+        private val ports: List<String>?,
+        private val paths: List<AndroidPatternMatcher>?
+    ) {
+        /**
+         * Matches a URL against this info, and returns null if
+         * successful or the failure reason if not a match
+         *
+         * @param testUrl the URL to match
+         * @return null for a successful match or the failure reason
+         */
+        fun match(testUrl: URL): String? {
+
+            // Check schemes
+            if (schemes != null) {
+                val schemeOk = schemes.any { scheme: String -> scheme == testUrl.protocol || isSubstituted(scheme) }
+                if (!schemeOk) {
+                    return "did not match scheme ${Joiner.on(", ").join(schemes)}"
+                }
+            }
+            if (hosts != null) {
+                val hostOk = hosts.any { host: String -> matchesHost(testUrl.host, host) || isSubstituted(host) }
+                if (!hostOk) {
+                    return "did not match host ${Joiner.on(", ").join(hosts)}"
+                }
+            }
+
+            // Port matching:
+            var portOk = false
+            if (testUrl.port != -1) {
+                val testPort = testUrl.port.toString()
+                if (ports != null) {
+                    portOk = ports.any { port: String -> testPort == port || isSubstituted(port) }
+                }
+            } else if (ports == null) {
+                portOk = true
+            }
+            if (!portOk) {
+                val portList = if (ports == null) "none" else Joiner.on(", ").join(
+                    ports
+                )
+                return "did not match port $portList"
+            }
+            if (paths != null) {
+                val testPath = testUrl.path
+                val pathOk = paths.any { isSubstituted(it.path) || it.match(testPath) }
+                if (!pathOk) {
+                    val sb = StringBuilder()
+                    paths.forEach(
+                        Consumer { matcher: AndroidPatternMatcher ->
+                            sb.append("path ").append(matcher.toString()).append(", ")
+                        }
+                    )
+                    if (CharSequences.endsWith(sb, ", ", true)) {
+                        sb.setLength(sb.length - 2)
+                    }
+                    var message = "did not match $sb"
+                    if (containsUpperCase(paths) || CharSequences.containsUpperCase(testPath)) {
+                        message += " Note that matching is case sensitive."
+                    }
+                    return message
+                }
+            }
+            return null // OK
         }
 
-        try {
-            String pattern = ".*" + Pattern.quote(hostPattern.substring(1));
-            return actualHost.matches(pattern);
-        } catch (Throwable ignore) {
-            // Make sure we don't fail to compile the regex, though with the quote call
-            // above this really shouldn't happen
-            return false;
+        private fun containsUpperCase(matchers: List<AndroidPatternMatcher>?): Boolean {
+            return matchers != null && matchers.any { CharSequences.containsUpperCase(it.path) }
+        }
+
+        /**
+         * Check whether a given host matches the hostRegex. The
+         * hostRegex could be a regular host name, or it could contain
+         * only one '*', such as *.example.com, where '*' matches any
+         * string whose length is at least 1.
+         *
+         * @param actualHost The actual host we want to check.
+         * @param hostPattern The criteria host, which could contain a
+         *     '*'.
+         * @return Whether the actualHost matches the hostRegex
+         */
+        private fun matchesHost(actualHost: String, hostPattern: String): Boolean {
+            // Per https://developer.android.com/guide/topics/manifest/data-element.html
+            // the asterisk must be the first character
+            return if (!hostPattern.startsWith("*")) {
+                actualHost == hostPattern
+            } else try {
+                val pattern = Regex(".*${Pattern.quote(hostPattern.substring(1))}")
+                actualHost.matches(pattern)
+            } catch (ignore: Throwable) {
+                // Make sure we don't fail to compile the regex, though with the quote call
+                // above this really shouldn't happen
+                false
+            }
         }
     }
 
-    private static boolean isSubstituted(@NonNull String expression) {
-        return isDataBindingExpression(expression) || isManifestPlaceHolderExpression(expression);
+    companion object {
+        private val IMPLEMENTATION = Implementation(AppLinksValidDetector::class.java, Scope.MANIFEST_SCOPE)
+
+        @JvmField
+        val TEST_URL = Issue.create(
+            id = "TestAppLink",
+            briefDescription = "Unmatched URLs",
+            explanation = """
+                Using one or more `tools:validation testUrl="some url"/>` elements in your manifest allows \
+                the link attributes in your intent filter to be checked for matches.
+                """,
+            category = Category.CORRECTNESS,
+            priority = 5,
+            severity = Severity.FATAL,
+            implementation = IMPLEMENTATION
+        )
+
+        @JvmField
+        val VALIDATION = Issue.create(
+            id = "AppLinkUrlError",
+            briefDescription = "URL not supported by app for Firebase App Indexing",
+            explanation = """
+                Ensure the URL is supported by your app, to get installs and traffic to your app from \
+                Google Search.""",
+            category = Category.USABILITY,
+            priority = 5,
+            moreInfo = "https://g.co/AppIndexing/AndroidStudio",
+            severity = Severity.ERROR,
+            implementation = IMPLEMENTATION
+        )
+
+        /**
+         * Only used for compatibility issue lookup (the driver
+         * suppression check takes an issue, not an id)
+         */
+        @Suppress("ObjectPropertyName")
+        private val _OLD_ISSUE_URL = Issue.create(
+            id = "GoogleAppIndexingUrlError",
+            briefDescription = "?",
+            explanation = "?",
+            category = Category.USABILITY,
+            priority = 5,
+            severity = Severity.ERROR,
+            implementation = IMPLEMENTATION
+        )
+
+        private const val TAG_VALIDATION = "validation"
+
+        private fun isSubstituted(expression: String): Boolean {
+            return isDataBindingExpression(expression) || isManifestPlaceHolderExpression(expression)
+        }
     }
 }
