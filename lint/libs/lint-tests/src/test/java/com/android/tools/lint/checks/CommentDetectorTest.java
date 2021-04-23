@@ -113,13 +113,7 @@ public class CommentDetectorTest extends AbstractCheckTest {
                                 + "src/test/pkg/Hidden.kt:18: Error: TODO call found; points to code which must be fixed prior to release [StopShip]\n"
                                 + "        TODO(\"This is not yet implemented\")\n"
                                 + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                                + "src/test/pkg/Hidden.kt:5: Warning: Code might be hidden here; found unicode escape sequence which is interpreted as comment end, compiled code follows [EasterEgg]\n"
-                                + "    /* \\u002a\\u002f static { System.out.println(\"I'm executed on class load\"); } \\u002f\\u002a */ \n"
-                                + "       ~~~~~~~~~~~~\n"
-                                + "src/test/pkg/Hidden.kt:6: Warning: Code might be hidden here; found unicode escape sequence which is interpreted as comment end, compiled code follows [EasterEgg]\n"
-                                + "    /* \\u002A\\U002F static { System.out.println(\"I'm executed on class load\"); } \\u002f\\u002a */ \n"
-                                + "       ~~~~~~~~~~~~\n"
-                                + "4 errors, 2 warnings")
+                                + "4 errors, 0 warnings")
                 .expectFixDiffs(
                         ""
                                 + "Fix for src/test/pkg/Hidden.kt line 9: Remove STOPSHIP:\n"
