@@ -26,6 +26,10 @@ java_test(
 java_binary(
     name = "lnzipper",
     main_class = "com.android.tools.bazel.lnzipper.LnZipper",
+    visibility = [
+        "//prebuilts/studio/intellij-sdk:__pkg__",
+        "//tools/adt/idea/studio:__pkg__",
+    ],
     runtime_deps = [
         ":lnzipper_lib",
     ],
