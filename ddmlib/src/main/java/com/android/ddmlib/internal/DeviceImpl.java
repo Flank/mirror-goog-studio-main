@@ -18,7 +18,6 @@ package com.android.ddmlib.internal;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.GuardedBy;
-import com.android.annotations.concurrency.Slow;
 import com.android.ddmlib.AdbCommandRejectedException;
 import com.android.ddmlib.AdbHelper;
 import com.android.ddmlib.AndroidDebugBridge;
@@ -374,7 +373,6 @@ public final class DeviceImpl implements IDevice {
     }
 
     @NonNull
-    @Slow
     Set<String> getAdbFeatures() {
         if (mAdbFeatures != null) {
             return mAdbFeatures;
