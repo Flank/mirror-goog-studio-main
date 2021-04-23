@@ -35,6 +35,7 @@ import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
+import com.android.build.gradle.internal.dsl.DynamicFeatureExtension
 import com.android.build.gradle.internal.errors.SyncIssueReporter
 import com.android.build.gradle.internal.errors.SyncIssueReporterImpl.GlobalSyncIssueService
 import com.android.build.gradle.internal.ide.DependencyFailureHandler
@@ -302,6 +303,7 @@ class ModelBuilder<
             is BaseAppModuleExtension -> extension.compileSdkVersion
             is LibraryExtension -> extension.compileSdkVersion
             is com.android.build.gradle.TestExtension -> extension.compileSdkVersion
+            is DynamicFeatureExtension -> extension.compileSdkVersion
             else -> null
         } ?: "unknown"
 
