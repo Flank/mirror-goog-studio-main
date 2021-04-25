@@ -55,6 +55,10 @@ class ObfuscationMap internal constructor(
     internal fun deobfuscate(type: String): List<String> {
         return obfToOrig[type] ?: listOf(type)
     }
+
+    companion object {
+        val Empty = ObfuscationMap(emptyList())
+    }
 }
 
 fun ObfuscationMap(src: InputStreamReader): ObfuscationMap {
