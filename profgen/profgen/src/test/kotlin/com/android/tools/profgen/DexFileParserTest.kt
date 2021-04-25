@@ -29,7 +29,7 @@ private const val OBJECT = "Ljava/lang/Object;"
 
 class DexFileParserTest {
 
-    private val PATH = "tools/base/profgen/testData/hello.jar"
+    private val PATH = "tools/base/profgen/profgen/testData/hello.jar"
 
     @Test
     fun test() {

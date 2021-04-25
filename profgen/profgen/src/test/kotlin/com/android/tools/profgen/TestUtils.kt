@@ -25,7 +25,7 @@ fun testData(relativePath: String): File {
 }
 
 fun testDataPath(relativePath: String): Path {
-    return workspacePath("tools/base/profgen/testData").resolve(relativePath)
+    return workspacePath("tools/base/profgen/profgen/testData").resolve(relativePath)
 }
 
 fun workspacePath(relativePath: String): Path {
