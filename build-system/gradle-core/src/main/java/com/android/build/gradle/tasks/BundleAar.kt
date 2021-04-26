@@ -123,7 +123,7 @@ abstract class BundleAar : Zip(), VariantAwareTask {
                 artifacts.get(InternalArtifactType.PACKAGED_RES),
                 prependToCopyPath(SdkConstants.FD_RES)
             )
-            if (!creationConfig.globalScope.extension.aaptOptions.namespaced) {
+            if (!creationConfig.services.projectInfo.getExtension().aaptOptions.namespaced) {
                 // In non-namespaced projects bundle the library manifest straight to the AAR.
                 task.from(artifacts.get(SingleArtifact.MERGED_MANIFEST))
             } else {

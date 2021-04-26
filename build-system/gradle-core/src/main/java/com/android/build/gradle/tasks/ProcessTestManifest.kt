@@ -494,7 +494,7 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
                     AndroidArtifacts.ArtifactType.MANIFEST
                 )
             task.placeholdersValues.setDisallowChanges(creationConfig.manifestPlaceholders)
-            if (!creationConfig.globalScope.extension.aaptOptions.namespaced) {
+            if (!creationConfig.services.projectInfo.getExtension().aaptOptions.namespaced) {
                 task.navigationJsons = project.files(
                     creationConfig
                         .variantDependencies

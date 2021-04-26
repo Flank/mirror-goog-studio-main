@@ -428,7 +428,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             createGenerateResValuesTask(testFixturesComponent)
 
             val flags: ImmutableSet<MergeResources.Flag?> =
-                if (globalScope.extension.aaptOptions.namespaced) {
+                if (extension.aaptOptions.namespaced) {
                     Sets.immutableEnumSet(
                         MergeResources.Flag.REMOVE_RESOURCE_NAMESPACES,
                         MergeResources.Flag.PROCESS_VECTOR_DRAWABLES
@@ -484,7 +484,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
 
             // Only verify resources if in Release and not namespaced.
             if (!testFixturesComponent.debuggable &&
-                !globalScope.extension.aaptOptions.namespaced) {
+                !extension.aaptOptions.namespaced) {
                 createVerifyLibraryResTask(testFixturesComponent)
             }
 
@@ -1114,7 +1114,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                 projectInfo.getProjectBaseName())
         val projectOptions = creationConfig.services.projectOptions
         val nonTransitiveR = projectOptions[BooleanOption.NON_TRANSITIVE_R_CLASS]
-        val namespaced: Boolean = creationConfig.globalScope.extension.aaptOptions.namespaced
+        val namespaced: Boolean = projectInfo.getExtension().aaptOptions.namespaced
 
         // TODO(b/138780301): Also use compile time R class in android tests.
         if ((projectOptions[BooleanOption.ENABLE_APP_COMPILE_TIME_R_CLASS] || nonTransitiveR)
@@ -1150,7 +1150,8 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                         && creationConfig
                         .dexingType
                         .needsMainDexList)
-        if (creationConfig.globalScope.extension.aaptOptions.namespaced) {
+        if (creationConfig.services.projectInfo.getExtension()
+                        .aaptOptions.namespaced) {
             // TODO: make sure we generate the proguard rules in the namespaced case.
             NamespacedResourcesTaskManager(taskFactory, creationConfig)
                     .createNamespacedResourceTasks(
@@ -1530,7 +1531,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
     }
 
     protected fun registerRClassTransformStream(variant: ComponentImpl) {
-        if (globalScope.extension.aaptOptions.namespaced) {
+        if (extension.aaptOptions.namespaced) {
             return
         }
         val rClassJar = variant.artifacts

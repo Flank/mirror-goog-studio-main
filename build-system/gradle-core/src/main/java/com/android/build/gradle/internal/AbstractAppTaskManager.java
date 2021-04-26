@@ -35,7 +35,6 @@ import com.android.build.gradle.internal.component.ConsumableCreationConfig;
 import com.android.build.gradle.internal.feature.BundleAllClasses;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.ProjectInfo;
 import com.android.build.gradle.internal.tasks.AnalyticsRecordingTask;
 import com.android.build.gradle.internal.tasks.ApkZipPackagingTask;
@@ -304,7 +303,11 @@ public abstract class AbstractAppTaskManager<
         ProjectOptions projectOptions = variant.getServices().getProjectOptions();
         boolean nonTransitiveR = projectOptions.get(BooleanOption.NON_TRANSITIVE_R_CLASS);
         boolean namespaced =
-                variant.getGlobalScope().getExtension().getAaptOptions().getNamespaced();
+                variant.getServices()
+                        .getProjectInfo()
+                        .getExtension()
+                        .getAaptOptions()
+                        .getNamespaced();
 
         // TODO(b/138780301): Also use compile time R class in android tests.
         if ((projectOptions.get(BooleanOption.ENABLE_APP_COMPILE_TIME_R_CLASS) || nonTransitiveR)

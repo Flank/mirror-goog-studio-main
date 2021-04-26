@@ -148,7 +148,7 @@ class DependencyConfigurator(
         // The aars/jars may need to be processed (e.g., jetified to AndroidX) before they can be
         // used
         val autoNamespaceDependencies =
-            globalScope.extension.aaptOptions.namespaced &&
+            projectServices.projectInfo.getExtension().aaptOptions.namespaced &&
                     projectOptions[BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES]
         val jetifiedAarOutputType = if (autoNamespaceDependencies) {
             AndroidArtifacts.ArtifactType.MAYBE_NON_NAMESPACED_PROCESSED_AAR

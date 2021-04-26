@@ -739,7 +739,7 @@ abstract class BuildFeaturesInput {
         viewBinding.setDisallowChanges(creationConfig.buildFeatures.viewBinding)
         coreLibraryDesugaringEnabled.setDisallowChanges(creationConfig.isCoreLibraryDesugaringEnabled)
         namespacingMode.setDisallowChanges(
-            if (creationConfig.globalScope.extension.aaptOptions.namespaced) {
+            if (creationConfig.services.projectInfo.getExtension().aaptOptions.namespaced) {
                 LintModelNamespacingMode.DISABLED
             } else {
                 LintModelNamespacingMode.REQUIRED

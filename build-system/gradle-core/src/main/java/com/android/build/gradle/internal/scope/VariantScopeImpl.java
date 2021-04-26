@@ -206,7 +206,11 @@ public class VariantScopeImpl implements VariantScope {
         }
         // Otherwise, if set globally, respect that.
         Boolean globalOverride =
-                globalScope.getExtension().getAaptOptions().getCruncherEnabledOverride();
+                baseServices
+                        .getProjectInfo()
+                        .getExtension()
+                        .getAaptOptions()
+                        .getCruncherEnabledOverride();
         if (globalOverride != null) {
             return globalOverride;
         }

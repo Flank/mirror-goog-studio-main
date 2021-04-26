@@ -117,7 +117,7 @@ open class DynamicFeatureVariantImpl @Inject constructor(
 
     override val androidResources: AndroidResources by lazy {
         initializeAaptOptionsFromDsl(
-            globalScope.extension.aaptOptions,
+            taskCreationServices.projectInfo.getExtension().aaptOptions,
             internalServices
         )
     }

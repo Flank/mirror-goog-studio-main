@@ -339,7 +339,7 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
             task.mainSplit.set(project.provider { creationConfig.outputs.getMainSplit() })
             task.mainSplit.disallowChanges()
             task.isNamespaced =
-                creationConfig.globalScope.extension.aaptOptions.namespaced
+                creationConfig.services.projectInfo.getExtension().aaptOptions.namespaced
             task.packageOverride.setDisallowChanges(creationConfig.applicationId)
             manifestPlaceholders?.let {
                 task.manifestPlaceholders.setDisallowChanges(it)

@@ -133,7 +133,7 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
             createGenerateResValuesTask(libraryVariant);
         } else { // Resource processing is disabled.
             // TODO(b/147579629): add a warning for manifests containing resource references.
-            if (globalScope.getExtension().getAaptOptions().getNamespaced()) {
+            if (extension.getAaptOptions().getNamespaced()) {
                 getLogger()
                         .error(
                                 "Disabling resource processing in resource namespace aware "
@@ -183,8 +183,7 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
                     libraryVariant.getServices().getProjectInfo().getProjectBaseName());
 
             // Only verify resources if in Release and not namespaced.
-            if (!libraryVariant.getDebuggable()
-                    && !globalScope.getExtension().getAaptOptions().getNamespaced()) {
+            if (!libraryVariant.getDebuggable() && !extension.getAaptOptions().getNamespaced()) {
                 createVerifyLibraryResTask(libraryVariant);
             }
 
@@ -427,7 +426,11 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
 
     private void createMergeResourcesTasks(@NonNull VariantImpl variant) {
         ImmutableSet<MergeResources.Flag> flags;
-        if (variant.getGlobalScope().getExtension().getAaptOptions().getNamespaced()) {
+        if (variant.getServices()
+                .getProjectInfo()
+                .getExtension()
+                .getAaptOptions()
+                .getNamespaced()) {
             flags =
                     Sets.immutableEnumSet(
                             MergeResources.Flag.REMOVE_RESOURCE_NAMESPACES,

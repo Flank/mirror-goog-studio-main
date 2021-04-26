@@ -801,7 +801,7 @@ public class ModelBuilder<Extension extends BaseExtension>
         }
 
         // The separately compile R class, if applicable.
-        if (!globalScope.getExtension().getAaptOptions().getNamespaced()
+        if (!extension.getAaptOptions().getNamespaced()
                 && component.getBuildFeatures().getAndroidResources()) {
             additionalTestClasses.add(
                     component.getVariantScope().getRJarForUnitTests().get().getAsFile());

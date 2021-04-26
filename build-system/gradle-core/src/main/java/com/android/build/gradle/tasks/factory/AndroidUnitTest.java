@@ -252,7 +252,12 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
 
             // 4. The separately compile R class, if applicable.
             if (creationConfig.getBuildFeatures().getAndroidResources()
-                    && !globalScope.getExtension().getAaptOptions().getNamespaced()) {
+                    && !creationConfig
+                            .getServices()
+                            .getProjectInfo()
+                            .getExtension()
+                            .getAaptOptions()
+                            .getNamespaced()) {
                 collection.from(creationConfig.getVariantScope().getRJarForUnitTests());
             }
 
