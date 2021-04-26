@@ -68,6 +68,7 @@ APPROVED_FLAKY_TESTS = [
     "//tools/base/ddmlib:studio.android.sdktools.ddmlib.integration.tests_tests",  # b/175217297
     "//tools/adt/idea/android-uitests:RunOnEmulatorTest",  # b/181567595
     "//tools/adt/idea/android-uitests:CreateCppKotlinProjectTest",  # b/185998794
+    "//tools/adt/idea/android-uitests:BasicLayoutEditTest",  # b/186225187
 ]
 
 FAILURE_MESSAGE = """Test target {} has flaky set to true.
