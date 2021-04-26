@@ -16,13 +16,15 @@
 
 package com.android.build.gradle.internal.cxx.logging
 
-import com.android.build.gradle.internal.cxx.logging.LoggingLevel.ERROR
-import com.android.build.gradle.internal.cxx.logging.LoggingLevel.INFO
-import com.android.build.gradle.internal.cxx.logging.LoggingLevel.LIFECYCLE
-import com.android.build.gradle.internal.cxx.logging.LoggingLevel.WARN
 import com.android.utils.ILogger
 import com.android.utils.cxx.CxxDiagnosticCode
+import com.google.protobuf.GeneratedMessageV3
 import org.gradle.api.logging.Logging
+import com.android.build.gradle.internal.cxx.logging.LoggingMessage.LoggingLevel.ERROR
+import com.android.build.gradle.internal.cxx.logging.LoggingMessage.LoggingLevel.INFO
+import com.android.build.gradle.internal.cxx.logging.LoggingMessage.LoggingLevel.LIFECYCLE
+import com.android.build.gradle.internal.cxx.logging.LoggingMessage.LoggingLevel.WARN
+import com.android.build.gradle.internal.cxx.string.StringEncoder
 
 /**
  * This file exposes functions for logging where the logger is held in a stack on thread-local
@@ -81,6 +83,13 @@ fun infoln(format: String, vararg args: Any) =
     ThreadLoggingEnvironment.reportFormattedInfoToCurrentLogger(checkedFormat(format, args))
 
 /**
+ * Log a structured message. The function [message] will only be called if there is a logger
+ * that accepts structured messages attached.
+ */
+fun logStructured(message : (StringEncoder) -> GeneratedMessageV3) =
+    ThreadLoggingEnvironment.logStructuredMessageToCurrentLogger(message)
+
+/**
  * If caller from Java side misuses %s-style formatting (too many %s for example), the exception
  * from String.format can be concealed by Gradle's logging system. It will appear as
  * "Invalid format (%s)" with no other indication about the source of the problem. This is not
@@ -108,8 +117,8 @@ private fun checkedFormat(format: String, args: Array<out Any>): String {
  */
 interface LoggingEnvironment : AutoCloseable {
     fun log(message : LoggingMessage)
+    fun logStructured(message : (StringEncoder) -> GeneratedMessageV3) { }
 }
-
 
 /**
  * Logger base class. When used from Java try-with-resources or Kotlin use() function it will
@@ -153,12 +162,13 @@ abstract class ThreadLoggingEnvironment : LoggingEnvironment {
 
             override fun log(message: LoggingMessage) {
                 when(message.level) {
-                    ERROR -> logger.error(message.toString())
-                    WARN -> logger.warn(message.toString())
-                    LIFECYCLE -> logger.lifecycle(message.toString())
-                    INFO -> logger.info(message.toString())
+                    ERROR -> logger.error(message.text())
+                    WARN -> logger.warn(message.text())
+                    LIFECYCLE -> logger.lifecycle(message.text())
+                    INFO -> logger.info(message.text())
                 }
             }
+
             override fun close() {
             }
         }
@@ -220,6 +230,12 @@ abstract class ThreadLoggingEnvironment : LoggingEnvironment {
          */
         fun reportFormattedInfoToCurrentLogger(message: String) =
             logger.log(infoRecordOf(message))
+
+        /**
+         * Log a structured (ProtoBuf) message
+         */
+        fun logStructuredMessageToCurrentLogger(message : (StringEncoder) -> GeneratedMessageV3) =
+            logger.logStructured(message)
 
         /**
          * Throw an exception if the currently registered logger is the

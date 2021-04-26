@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.logging
 
+import com.android.build.gradle.internal.cxx.logging.LoggingMessage.LoggingLevel.INFO
 import java.io.File
 
 /**
@@ -29,15 +30,10 @@ class PassThroughPrefixingLoggingEnvironment(
     val treatAllMessagesAsInfo : Boolean = false)
     : PassThroughDeduplicatingLoggingEnvironment() {
     override fun log(message: LoggingMessage) {
-        val newFile = message.file ?: file
-        val newTag = message.tag ?: tag
-        val newLevel =
-            if (treatAllMessagesAsInfo) LoggingLevel.INFO else message.level
-        super.log(message.copy(
-            level = newLevel,
-            file = newFile,
-            tag = newTag,
-            diagnosticCode = message.diagnosticCode
-        ))
+        val builder = message.toBuilder()
+        if (message.file.isBlank() && file != null) builder.file = file.path
+        if (message.tag.isBlank() &&  tag != null) builder.tag = tag
+        if (treatAllMessagesAsInfo) builder.level = INFO
+        super.log(builder.build())
     }
 }
