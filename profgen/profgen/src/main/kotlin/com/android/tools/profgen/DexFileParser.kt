@@ -39,23 +39,21 @@ private val MAGIC_SUPPORTED_VERSIONS = listOf(
  */
 internal fun parseDexFile(
     bytes: ByteArray,
-    fileName: String,
-    apkFileName: String
+    name: String,
 ): DexFile {
     val crc32 = CRC32().apply { update(bytes) }
     val crc32Checksum = crc32.value
     val byteBuffer = ByteBuffer.wrap(bytes)
-    return parseDexFile(byteBuffer, crc32Checksum, apkFileName, fileName)
+    return parseDexFile(byteBuffer, crc32Checksum, name)
 }
 
 internal fun parseDexFile(
     buffer: ByteBuffer,
     checksum: Long,
-    dexFileName: String,
-    apkFileName: String,
+    name: String,
 ): DexFile {
     val dexHeader = parseHeader(buffer)
-    val dexFile = DexFile(dexHeader, checksum, dexFileName, apkFileName)
+    val dexFile = DexFile(dexHeader, checksum, name)
     parseStringPool(buffer, dexFile)
     parseTypePool(buffer, dexFile)
     parsePrototypePool(buffer, dexFile)

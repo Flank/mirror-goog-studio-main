@@ -76,7 +76,7 @@ enum class ArtProfileSerializer(internal val bytes: ByteArray) {
                             + UINT_32_SIZE // checksum
                             + UINT_32_SIZE) // number of method ids
                 requiredCapacity += (lineHeaderSize
-                        + dexFile.profileKey.utf8Length
+                        + dexFile.name.utf8Length
                         + dexFileData.classes.size * UINT_16_SIZE + hotMethodRegionSize
                         + getMethodBitmapStorageSize(dexFile.header.methodIds.size))
                 dexFileToHotMethodRegionSize[dexFile] = hotMethodRegionSize
@@ -126,12 +126,12 @@ enum class ArtProfileSerializer(internal val bytes: ByteArray) {
             dexData: DexFileData,
             hotMethodRegionSize: Int,
         ) {
-            writeUInt16(dexFile.profileKey.utf8Length)
+            writeUInt16(dexFile.name.utf8Length)
             writeUInt16(dexData.classes.size)
             writeUInt32(hotMethodRegionSize.toLong())
             writeUInt32(dexFile.dexChecksum)
             writeUInt32(dexFile.header.methodIds.size.toLong())
-            writeString(dexFile.profileKey)
+            writeString(dexFile.name)
         }
 
         /**
@@ -337,7 +337,7 @@ enum class ArtProfileSerializer(internal val bytes: ByteArray) {
                         data = Span.Empty,
                     ),
                     dexChecksum = dexChecksum,
-                    profileKey = profileKey,
+                    name = profileKey,
                 )
                 MutableDexFileData(
                     classSetSize = classSetSize,
@@ -471,11 +471,11 @@ enum class ArtProfileSerializer(internal val bytes: ByteArray) {
                 val hotMethodRegionSize = data.methods.size * (
                         UINT_16_SIZE + // method id
                         UINT_16_SIZE ) // inline cache size (should always be 0 for us
-                writeUInt16(dex.profileKey.utf8Length)
+                writeUInt16(dex.name.utf8Length)
                 writeUInt16(data.classes.size)
                 writeUInt32(hotMethodRegionSize.toLong())
                 writeUInt32(dex.dexChecksum)
-                writeString(dex.profileKey)
+                writeString(dex.name)
 
                 for ((id, _) in data.methods) {
                     writeUInt16(id)
@@ -505,7 +505,7 @@ enum class ArtProfileSerializer(internal val bytes: ByteArray) {
                 val dexFile = DexFile(
                     header = DexHeader.Empty,
                     dexChecksum = dexChecksum,
-                    profileKey = profileKey,
+                    name = profileKey,
                 )
                 MutableDexFileData(
                     classSetSize = classSetSize,
@@ -568,11 +568,11 @@ enum class ArtProfileSerializer(internal val bytes: ByteArray) {
         override fun write(os: OutputStream, profileData: Map<DexFile, DexFileData>) = with(os) {
             writeUInt16(profileData.size) // one line is one dex
             for ((dex, data) in profileData) {
-                writeUInt16(dex.profileKey.utf8Length)
+                writeUInt16(dex.name.utf8Length)
                 writeUInt16(data.methods.size)
                 writeUInt16(data.classes.size)
                 writeUInt32(dex.dexChecksum)
-                writeString(dex.profileKey)
+                writeString(dex.name)
 
                 for ((id, _) in data.methods) {
                     writeUInt16(id)
@@ -600,7 +600,7 @@ enum class ArtProfileSerializer(internal val bytes: ByteArray) {
                 val dexFile = DexFile(
                     header = DexHeader.Empty,
                     dexChecksum = dexChecksum,
-                    profileKey = profileKey,
+                    name = profileKey,
                 )
                 val data = MutableDexFileData(
                     classSetSize = classSetSize,

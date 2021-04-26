@@ -17,18 +17,19 @@
 package com.android.tools.profgen
 
 import java.io.File
+import java.io.InputStream
 import java.io.PrintStream
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 
 
-class Apk internal constructor(internal val dexes: List<DexFile>)
+class Apk internal constructor(val dexes: List<DexFile>)
 
 fun Apk(file: File): Apk {
-    return Apk(file.readBytes(), file.name)
+    return Apk(file.readBytes())
 }
 
-fun Apk(bytes: ByteArray, name: String): Apk {
+fun Apk(bytes: ByteArray): Apk {
     return ZipInputStream(bytes.inputStream()).use { zis ->
         val dexes = mutableListOf<DexFile>()
         var zipEntry: ZipEntry? = zis.nextEntry
@@ -38,7 +39,7 @@ fun Apk(bytes: ByteArray, name: String): Apk {
                 zipEntry = zis.nextEntry
                 continue
             }
-            val dex = parseDexFile(zis.readBytes(), fileName, name)
+            val dex = parseDexFile(zis.readBytes(), fileName)
             dexes.add(dex)
             zipEntry = zis.nextEntry
         }
@@ -51,34 +52,23 @@ fun Apk(bytes: ByteArray, name: String): Apk {
  * that profgen needs in order to generate a profile. This means that a lot of information is missing, such as the field
  * pool, all code points, and various bits of information of the class defs.
  */
-internal class DexFile(
-    val header: DexHeader,
+class DexFile internal constructor(
+    internal val header: DexHeader,
     val dexChecksum: Long,
-    val profileKey: String,
+    val name: String,
 ) {
-    constructor(
-        header: DexHeader,
-        dexChecksum: Long,
-        fileName: String,
-        apkFileName: String,
-    ) : this(
-        header,
-        dexChecksum,
-        if (fileName == "classes.dex") {
-            apkFileName
-        } else {
-            "$apkFileName!$fileName"
-        }
-    )
-
-    val stringPool = ArrayList<String>(header.stringIds.size)
-    val typePool = ArrayList<String>(header.typeIds.size)
-    val protoPool = ArrayList<DexPrototype>(header.prototypeIds.size)
-    val methodPool = ArrayList<DexMethod>(header.methodIds.size)
+    internal val stringPool = ArrayList<String>(header.stringIds.size)
+    internal val typePool = ArrayList<String>(header.typeIds.size)
+    internal val protoPool = ArrayList<DexPrototype>(header.prototypeIds.size)
+    internal val methodPool = ArrayList<DexMethod>(header.methodIds.size)
     // we don't really care about any of the details of classes, just what index it corresponds to in the
     // type pool, and we can use the type pool to determine its descriptor, so in this case we only need an IntArray.
-    val classDefPool = IntArray(header.classDefs.size)
+    internal val classDefPool = IntArray(header.classDefs.size)
 }
+
+fun DexFile(file: File): DexFile = DexFile(file.inputStream(), file.name)
+
+fun DexFile(src: InputStream, name: String): DexFile = parseDexFile(src.readBytes(), name)
 
 internal class DexHeader(
     val stringIds: Span,

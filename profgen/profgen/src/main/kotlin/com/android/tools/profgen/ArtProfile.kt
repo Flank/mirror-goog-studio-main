@@ -57,7 +57,10 @@ class ArtProfile internal constructor(
 }
 
 fun ArtProfile(hrp: HumanReadableProfile, obf: ObfuscationMap, apk: Apk): ArtProfile {
-    val dexes = apk.dexes
+    return ArtProfile(hrp, obf, apk.dexes)
+}
+
+fun ArtProfile(hrp: HumanReadableProfile, obf: ObfuscationMap, dexes: List<DexFile>): ArtProfile {
     val profileData = HashMap<DexFile, DexFileData>()
     for (iDex in dexes.indices) {
         val dex = dexes[iDex]
