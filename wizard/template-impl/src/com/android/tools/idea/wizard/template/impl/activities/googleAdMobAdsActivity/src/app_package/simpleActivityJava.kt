@@ -127,7 +127,7 @@ import androidx.annotation.NonNull;
                                         // Make sure to set your reference to null so you don't
                                         // show it a second time.
                                         mInterstitialAd = null;
-                                        Log.d("TAG", "The ad was dismissed.");
+                                        Log.d(TAG, "The ad was dismissed.");
                                     }
 
                                     @Override
@@ -136,13 +136,13 @@ import androidx.annotation.NonNull;
                                         // Make sure to set your reference to null so you don't
                                         // show it a second time.
                                         mInterstitialAd = null;
-                                        Log.d("TAG", "The ad failed to show.");
+                                        Log.d(TAG, "The ad failed to show.");
                                     }
 
                                     @Override
                                     public void onAdShowedFullScreenContent() {
                                         // Called when fullscreen content is shown.
-                                        Log.d("TAG", "The ad was shown.");
+                                        Log.d(TAG, "The ad was shown.");
                                     }
                                 });
                     }
@@ -219,7 +219,7 @@ public class ${activityClass} extends AppCompatActivity {
     // Remove the below line after defining your own ad unit ID.
     private static final String TOAST_TEXT = "Test ads are being shown. "
             + "To show live ads, replace the ad unit ID in res/values/strings.xml with your own ad unit ID.";
-    private static final String TAG = "${activityClass}";
+    private static final String TAG = "${activityClass.take(23)}";
 
     $interstitialVariablesBlock
 ${renderIf(isViewBindingSupported) {"""

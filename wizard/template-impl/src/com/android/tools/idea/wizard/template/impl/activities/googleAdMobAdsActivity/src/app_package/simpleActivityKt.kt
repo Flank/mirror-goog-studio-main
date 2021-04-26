@@ -40,9 +40,13 @@ import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdView
     """
     AdFormat.Interstitial -> """
-import com.google.android.gms.ads.AdListener
+import com.google.android.gms.ads.AdError
 import com.google.android.gms.ads.AdRequest
-import com.google.android.gms.ads.InterstitialAd
+import com.google.android.gms.ads.FullScreenContentCallback
+import com.google.android.gms.ads.LoadAdError
+import com.google.android.gms.ads.MobileAds
+import com.google.android.gms.ads.interstitial.InterstitialAd
+import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
 import android.widget.Button
 import android.widget.TextView
     """
@@ -54,6 +58,7 @@ import android.widget.TextView
     private var interstitialAd: InterstitialAd? = null
     private lateinit var nextLevelButton: Button
     private lateinit var levelTextView: TextView
+    private val TAG = "${activityClass.take(23)}"
   """
   }
 
@@ -66,6 +71,12 @@ import android.widget.TextView
         adView.loadAd(adRequest)
     """
     AdFormat.Interstitial -> """
+        MobileAds.initialize(
+          this
+        ) { }
+        // Load the InterstitialAd and set the adUnitId (defined in values/strings.xml).
+        loadInterstitialAd()
+
         // Create the next level button, which tries to show an interstitial when clicked.
         nextLevelButton = ${findViewById(
           Language.Kotlin,
@@ -80,59 +91,84 @@ import android.widget.TextView
           id = "level")}
         // Create the text view to show the level number.
         currentLevel = START_LEVEL
-
-        // Create the InterstitialAd and set the adUnitId (defined in values/strings.xml).
-        interstitialAd = newInterstitialAd()
-        loadInterstitial()
     """
   }
 
   val interstitialSpecificBlock = renderIf(adFormat == AdFormat.Interstitial) {
     """
-    private fun newInterstitialAd(): InterstitialAd {
-        return InterstitialAd(this).apply {
-            adUnitId = getString(R.string.interstitial_ad_unit_id)
-            adListener = object : AdListener() {
-                override fun onAdLoaded() {
-                    nextLevelButton.isEnabled = true
+    private fun loadInterstitialAd() {
+      val adRequest = AdRequest.Builder().build()
+      InterstitialAd.load(this, getString(R.string.interstitial_ad_unit_id), adRequest,
+        object : InterstitialAdLoadCallback() {
+          override fun onAdLoaded(ad: InterstitialAd) {
+            // The interstitialAd reference will be null until
+            // an ad is loaded.
+            interstitialAd = ad
+            nextLevelButton.setEnabled(true)
+            Toast.makeText(this@${activityClass}, "onAdLoaded()", Toast.LENGTH_SHORT)
+              .show()
+            ad.setFullScreenContentCallback(
+              object : FullScreenContentCallback() {
+                override fun onAdDismissedFullScreenContent() {
+                  // Called when fullscreen content is dismissed.
+                  // Make sure to set your reference to null so you don't
+                  // show it a second time.
+                  interstitialAd = null
+                  Log.d(TAG, "The ad was dismissed.")
                 }
 
-                override fun onAdFailedToLoad(errorCode: Int) {
-                    nextLevelButton.isEnabled = true
+                override fun onAdFailedToShowFullScreenContent(adError: AdError) {
+                  // Called when fullscreen content failed to show.
+                  // Make sure to set your reference to null so you don't
+                  // show it a second time.
+                  interstitialAd = null
+                  Log.d(TAG, "The ad failed to show.")
                 }
 
-                override fun onAdClosed() {
-                    // Proceed to the next level.
-                    goToNextLevel()
+                override fun onAdShowedFullScreenContent() {
+                  // Called when fullscreen content is shown.
+                  Log.d(TAG, "The ad was shown.")
                 }
-            }
-        }
+              })
+          }
+
+          override fun onAdFailedToLoad(loadAdError: LoadAdError) {
+            // Handle the error
+            Log.i(TAG, loadAdError.message)
+            interstitialAd = null
+            nextLevelButton.setEnabled(true)
+            val error: String = String.format(
+              Locale.ENGLISH,
+              "domain: %s, code: %d, message: %s",
+              loadAdError.domain,
+              loadAdError.code,
+              loadAdError.message
+            )
+            Toast.makeText(
+              this@${activityClass},
+              "onAdFailedToLoad() with error: ${'$'}error", Toast.LENGTH_SHORT
+            )
+              .show()
+          }
+        })
     }
 
     private fun showInterstitial() {
         // Show the ad if it"s ready. Otherwise toast and reload the ad.
-        if (interstitialAd?.isLoaded == true) {
-            interstitialAd?.show()
+        if (interstitialAd != null) {
+          interstitialAd!!.show(this)
         } else {
             Toast.makeText(this, "Ad did not load", Toast.LENGTH_SHORT).show()
             goToNextLevel()
         }
     }
 
-    private fun loadInterstitial() {
-        // Disable the next level button and load the ad.
-        nextLevelButton.isEnabled = false
-        val adRequest = AdRequest.Builder()
-                .setRequestAgent("android_studio:ad_template")
-                .build()
-        interstitialAd?.loadAd(adRequest)
-    }
-
     private fun goToNextLevel() {
         // Show the next level and reload the ad to prepare for the level after.
         levelTextView.text = "Level " + (++currentLevel)
-        interstitialAd = newInterstitialAd()
-        loadInterstitial()
+        if (interstitialAd == null) {
+          loadInterstitialAd()
+        }
     }
   """
   }
@@ -148,12 +184,15 @@ package ${escapeKotlinIdentifier(packageName)}
 $importBlock
 
 import android.os.Bundle
+import android.util.Log
 import ${superClassFqcn}
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
 ${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Kotlin)}
 ${renderIf(applicationPackage != null) { "import ${applicationPackage}.R" }}
+
+import java.util.Locale
 
 // Remove the line below after defining your own ad unit ID.
 private const val TOAST_TEXT = "Test ads are being shown. " +
