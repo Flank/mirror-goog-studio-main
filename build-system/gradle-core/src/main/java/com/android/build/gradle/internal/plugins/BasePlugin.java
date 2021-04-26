@@ -55,6 +55,7 @@ import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.attribution.BuildAttributionService;
 import com.android.build.gradle.internal.crash.CrashReporting;
+import com.android.build.gradle.internal.dependency.JacocoInstrumentationService;
 import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.DefaultConfig;
@@ -424,6 +425,7 @@ public abstract class BasePlugin<
         new SymbolTableBuildService.RegistrationAction(project).execute();
         new ClassesHierarchyBuildService.RegistrationAction(project).execute();
         new LintFixBuildService.RegistrationAction(project).execute();
+        new JacocoInstrumentationService.RegistrationAction(project).execute();
 
         projectOptions
                 .getAllOptions()
