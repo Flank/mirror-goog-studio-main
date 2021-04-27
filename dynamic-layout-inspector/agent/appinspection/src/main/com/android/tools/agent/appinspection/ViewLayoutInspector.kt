@@ -36,11 +36,27 @@ import com.android.tools.agent.appinspection.proto.toNode
 import com.android.tools.agent.appinspection.util.ThreadUtils
 import com.android.tools.agent.appinspection.util.compress
 import com.android.tools.idea.protobuf.ByteString
-import layoutinspector.view.inspection.LayoutInspectorViewProtocol.*
+import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Command
+import layoutinspector.view.inspection.LayoutInspectorViewProtocol.ErrorEvent
+import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Event
+import layoutinspector.view.inspection.LayoutInspectorViewProtocol.GetPropertiesCommand
+import layoutinspector.view.inspection.LayoutInspectorViewProtocol.GetPropertiesResponse
+import layoutinspector.view.inspection.LayoutInspectorViewProtocol.LayoutEvent
+import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Point
+import layoutinspector.view.inspection.LayoutInspectorViewProtocol.PropertiesEvent
+import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Response
+import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Screenshot
+import layoutinspector.view.inspection.LayoutInspectorViewProtocol.StartFetchCommand
+import layoutinspector.view.inspection.LayoutInspectorViewProtocol.StartFetchResponse
+import layoutinspector.view.inspection.LayoutInspectorViewProtocol.StopFetchResponse
+import layoutinspector.view.inspection.LayoutInspectorViewProtocol.UpdateScreenshotTypeCommand
+import layoutinspector.view.inspection.LayoutInspectorViewProtocol.UpdateScreenshotTypeResponse
+import layoutinspector.view.inspection.LayoutInspectorViewProtocol.WindowRootsEvent
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicBoolean
 
 private const val LAYOUT_INSPECTION_ID = "layoutinspector.view.inspection"
 
@@ -75,11 +91,122 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
         val scale: Float = 1.0f
     )
 
+    /**
+     * A class which provides [checkRoots] for checking to see if the roots view IDs have changed
+     * since a previous check. Any time roots or added or removed, this class will generate and
+     * send a [WindowRootsEvent].
+     *
+     * While the framework informs us about most screen changes, sometimes a dialog can close
+     * without us being informed, so [start] is provided to spin up a background thread that checks
+     * occasionally. So even though [checkRoots] can be called directly, we still have a backup to
+     * handle updates that the system doesn't tell us about.
+     */
+    private inner class RootsDetector {
+        private var quit = AtomicBoolean(false)
+        private var checkRootsThread: Thread? = null
+
+        /**
+         * A snapshot of the current list of view root IDs.
+         *
+         * We'll occasionally check against these against the current list of roots, generating an
+         * event if they've ever changed.
+         */
+        private var lastRootIds = emptySet<Long>()
+
+        fun start() {
+            stop()
+            quit.set(false)
+
+            checkRootsThread = ThreadUtils.newThread {
+                while (!quit.get()) {
+                    checkRoots()
+                    Thread.sleep(200)
+                }
+            }.also {
+                it.start()
+            }
+        }
+
+        /**
+         * Stop the thread if started by [start]. This method blocks until the thread has finished.
+         */
+        fun stop() {
+            quit.set(true)
+            checkRootsThread?.join()
+            checkRootsThread = null
+        }
+
+        /**
+         * This method checks to see if any views were added or removed since the last time it was
+         * called.
+         *
+         * If anything did change, this method will sends a [WindowRootsEvent] to the host to inform
+         * them. It will also stop any stale roots from capturing and, depending on
+         * [InspectorState.fetchContinuously], may start capturing new roots.
+         */
+        @Synchronized
+        fun checkRoots() {
+            val currRoots =
+                ThreadUtils.runOnMainThread {
+                    getRootViews().associateBy { it.uniqueDrawingId }
+                }.get()
+
+            val currRootIds = currRoots.keys
+            if (lastRootIds.size != currRootIds.size || !lastRootIds.containsAll(currRootIds)) {
+                val removed = lastRootIds.filter { !currRootIds.contains(it) }
+                val added = currRootIds.filter { !lastRootIds.contains(it) }
+                lastRootIds = currRootIds
+                connection.sendEvent {
+                    rootsEvent = WindowRootsEvent.newBuilder().apply {
+                        addAllIds(currRootIds)
+                    }.build()
+                }
+
+                synchronized(stateLock) {
+                    for (toRemove in removed) {
+                        state.contextMap.remove(toRemove)?.handle?.close()
+                    }
+                    if (state.fetchContinuously) {
+                        if (added.isNotEmpty()) {
+                            // The first time we call this method, `lastRootIds` gets initialized
+                            // with views already being captured, so we don't need to start
+                            // capturing them again.
+                            val actuallyAdded = added.toMutableList().apply {
+                                removeAll { id -> state.contextMap.containsKey(id) }
+                            }
+                            if (actuallyAdded.isNotEmpty()) {
+                                ThreadUtils.runOnMainThread {
+                                    for (toAdd in added) {
+                                        startCapturing(currRoots.getValue(toAdd))
+                                    }
+                                }
+                            }
+                        }
+                        else if (removed.isNotEmpty()) {
+                            ThreadUtils.runOnMainThread {
+                                // When a window goes away, we expect remaining views to send a
+                                // signal causing the client to refresh, but this doesn't always
+                                // happen, so to be safe, we force it ourselves.
+                                currRoots.values.forEach { view -> view.invalidate() }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     private class InspectorState {
         /**
          * A mapping of root view IDs to data that should be accessed across multiple threads.
          */
         val contextMap = mutableMapOf<Long, CaptureContext>()
+
+        /**
+         * When true, the inspector will keep generating layout events as the screen changes.
+         * Otherwise, it will only return a single layout snapshot before going back to waiting.
+         */
+        var fetchContinuously: Boolean = false
 
         /**
          * When true, future layout events should exclude System views, only returning trees of
@@ -97,13 +224,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
     @GuardedBy("stateLock")
     private val state = InspectorState()
 
-    /**
-     * A snapshot of the current list of view root IDs.
-     *
-     * We'll occasionally check against these against the current list of roots, generating an
-     * event if they've ever changed.
-     */
-    private var lastRootIds = emptySet<Long>()
+    private val rootsDetector = RootsDetector()
 
     override fun onReceiveCommand(data: ByteArray, callback: CommandCallback) {
         val command = Command.parseFrom(data)
@@ -130,57 +251,9 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
         SynchronousPixelCopy.stopHandler()
     }
 
-    /**
-     * This method checks to see if any views were added or removed since the last time it was
-     * called, returning true if so.
-     *
-     * As side effects, if anything did change, this method will sends a [WindowRootsEvent] to the
-     * host to inform them. It will also stop any stale roots from capturing.
-     *
-     * @param captureNewRoots If this inspector is in continuous capture mode, this should be set
-     *     to true, so that we automatically start capturing newly discovered views as well.
-     */
-    private fun checkRoots(captureNewRoots: Boolean): Boolean {
-        val currRoots =
-            ThreadUtils.runOnMainThread {
-                getRootViews().associateBy { it.uniqueDrawingId }
-            }.get()
-
-        val currRootIds = currRoots.keys
-        if (lastRootIds.size != currRootIds.size || !lastRootIds.containsAll(currRootIds)) {
-            val removed = lastRootIds.filter { !currRootIds.contains(it) }
-            val added = currRootIds.filter { !lastRootIds.contains(it) }
-            lastRootIds = currRootIds
-            connection.sendEvent {
-                rootsEvent = WindowRootsEvent.newBuilder().apply {
-                    addAllIds(currRootIds)
-                }.build()
-            }
-
-            synchronized(stateLock) {
-                for (toRemove in removed) {
-                    state.contextMap.remove(toRemove)?.handle?.close()
-                }
-                if (captureNewRoots && added.isNotEmpty()) {
-                    // The first time we call this method, `lastRootIds` gets initialized with views
-                    // already being captured, so we don't need to start capturing them again.
-                    val actuallyAdded = added.toMutableList().apply {
-                        removeAll { id -> state.contextMap.containsKey(id) }
-                    }
-                    if (actuallyAdded.isNotEmpty()) {
-                        ThreadUtils.runOnMainThread {
-                            for (toAdd in added) {
-                                startCapturing(currRoots.getValue(toAdd), continuous = true)
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return lastRootIds === currRootIds
-    }
 
     private fun forceStopAllCaptures() {
+        rootsDetector.stop()
         synchronized(stateLock) {
             for (context in state.contextMap.values) {
                 context.handle.close()
@@ -189,7 +262,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
         }
     }
 
-    private fun startCapturing(root: View, continuous: Boolean) {
+    private fun startCapturing(root: View) {
         // Starting rendering captures must be called on the View thread or else it throws
         ThreadUtils.assertOnMainThread()
 
@@ -218,9 +291,9 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
                     }
                 }
 
-                // Check roots before sending a layout event, as this may send out a roots event.
-                // We always want layout events to follow up-to-date root events.
-                checkRoots(continuous)
+                // Just in case, always check roots before sending a layout event, as this may send
+                // out a roots event. We always want layout events to follow up-to-date root events.
+                rootsDetector.checkRoots()
 
                 run { // Prepare and send LayoutEvent
                     // Triggers image fetch into `os`
@@ -302,7 +375,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
                         shouldSerialize = { state.screenshotSettings.type == Screenshot.Type.SKP })
                 if (handle != null) {
                     state.contextMap[root.uniqueDrawingId] =
-                        CaptureContext(handle, isLastCapture = (!continuous))
+                        CaptureContext(handle, isLastCapture = (!state.fetchContinuously))
                 }
             }
             root.invalidate() // Force a re-render so we send the current screen
@@ -327,12 +400,16 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
         forceStopAllCaptures()
 
         synchronized(stateLock) {
+            state.fetchContinuously = startFetchCommand.continuous
             state.skipSystemViews = startFetchCommand.skipSystemViews
         }
 
+        if (startFetchCommand.continuous) {
+            rootsDetector.start()
+        }
         ThreadUtils.runOnMainThread {
             for (root in getRootViews()) {
-                startCapturing(root, startFetchCommand.continuous)
+                startCapturing(root)
             }
         }
     }
@@ -381,6 +458,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
             stopFetchResponse = StopFetchResponse.getDefaultInstance()
         }
 
+        rootsDetector.stop()
         synchronized(stateLock) {
             val contextMap = state.contextMap
             for (context in contextMap.values) {

@@ -126,8 +126,6 @@ class ViewLayoutInspectorTest {
 
         ThreadUtils.runOnMainThread { }.get() // Wait for startCommand to finish initializing
 
-        assertThat(eventQueue).isEmpty()
-
         val tree1FakePicture1 = Picture(byteArrayOf(1, 1))
         val tree1FakePicture2 = Picture(byteArrayOf(1, 2))
         val tree1FakePicture3 = Picture(byteArrayOf(1, 3))
@@ -257,6 +255,64 @@ class ViewLayoutInspectorTest {
     }
 
     @Test
+    fun checkRootsThreadIsStartedInContinuousMode() = createViewInspector { viewInspector ->
+        val eventQueue = ArrayBlockingQueue<ByteArray>(1)
+        inspectorRule.connection.eventListeners.add { bytes ->
+            eventQueue.add(bytes)
+        }
+
+        val resourceNames = mutableMapOf<Int, String>()
+        val resources = Resources(resourceNames)
+        val context = Context("view.inspector.test", resources)
+        val tree1 = View(context).apply { setAttachInfo(View.AttachInfo()) }
+        val tree2 = View(context).apply { setAttachInfo(View.AttachInfo()) }
+        val tree3 = View(context).apply { setAttachInfo(View.AttachInfo()) }
+        WindowManagerGlobal.getInstance().rootViews.addAll(listOf(tree1, tree2))
+
+        val startFetchCommand = Command.newBuilder().apply {
+            startFetchCommandBuilder.apply {
+                continuous = true
+            }
+        }.build()
+        viewInspector.onReceiveCommand(
+            startFetchCommand.toByteArray(),
+            inspectorRule.commandCallback
+        )
+
+        // At this point, a check roots thread is running continuously...
+
+        eventQueue.take().let { bytes ->
+            val event = Event.parseFrom(bytes)
+            assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.ROOTS_EVENT)
+            assertThat(event.rootsEvent.idsList).containsExactly(
+                tree1.uniqueDrawingId,
+                tree2.uniqueDrawingId
+            )
+        }
+
+        WindowManagerGlobal.getInstance().rootViews.add(tree3)
+        eventQueue.take().let { bytes ->
+            val event = Event.parseFrom(bytes)
+            assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.ROOTS_EVENT)
+            assertThat(event.rootsEvent.idsList).containsExactly(
+                tree1.uniqueDrawingId,
+                tree2.uniqueDrawingId,
+                tree3.uniqueDrawingId
+            )
+        }
+
+        WindowManagerGlobal.getInstance().rootViews.remove(tree2)
+        eventQueue.take().let { bytes ->
+            val event = Event.parseFrom(bytes)
+            assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.ROOTS_EVENT)
+            assertThat(event.rootsEvent.idsList).containsExactly(
+                tree1.uniqueDrawingId,
+                tree3.uniqueDrawingId
+            )
+        }
+    }
+
+    @Test
     fun nodeBoundsCapturedAsExpected() = createViewInspector { viewInspector ->
         val eventQueue = ArrayBlockingQueue<ByteArray>(2)
         inspectorRule.connection.eventListeners.add { bytes ->
@@ -359,7 +415,6 @@ class ViewLayoutInspectorTest {
         )
 
         ThreadUtils.runOnMainThread { }.get() // Wait for startCommand to finish initializing
-        assertThat(eventQueue).isEmpty()
 
         mainScreen.forcePictureCapture(stubPicture)
         eventQueue.take().let { bytes ->
@@ -633,7 +688,6 @@ class ViewLayoutInspectorTest {
             assertThat(response.specializedCase).isEqualTo(Response.SpecializedCase.START_FETCH_RESPONSE)
         }
         ThreadUtils.runOnMainThread { }.get() // Wait for startCommand to finish initializing
-        assertThat(eventQueue).isEmpty()
 
         run { // Start first by setting type to BITMAP
             val updateScreenshotTypeCommand = Command.newBuilder().apply {
@@ -827,7 +881,6 @@ class ViewLayoutInspectorTest {
             assertThat(response.specializedCase).isEqualTo(Response.SpecializedCase.START_FETCH_RESPONSE)
         }
         ThreadUtils.runOnMainThread { }.get() // Wait for startCommand to finish initializing
-        assertThat(eventQueue).isEmpty()
 
         val updateScreenshotTypeCommand = Command.newBuilder().apply {
             updateScreenshotTypeCommandBuilder.apply {
