@@ -2437,7 +2437,6 @@ public class ManifestMerger2SmallTest {
                     ManifestMerger2.newMerger(
                                     appFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
                             .merge();
-            System.out.println(mergingReport.getLoggingRecords());
             assertThat(mergingReport.getResult()).isEqualTo(MergingReport.Result.SUCCESS);
         } finally {
             assertThat(appFile.delete()).named("appFile was deleted").isTrue();
@@ -2491,7 +2490,6 @@ public class ManifestMerger2SmallTest {
                     ManifestMerger2.newMerger(
                                     appFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
                             .merge();
-            System.out.println(mergingReport.getLoggingRecords());
             assertThat(mergingReport.getResult()).isEqualTo(MergingReport.Result.SUCCESS);
         } finally {
             assertThat(appFile.delete()).named("appFile was deleted").isTrue();
