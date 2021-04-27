@@ -1,7 +1,7 @@
 load("//tools/base/bazel:android.bzl", "ANDROID_COPTS", "ANDROID_LINKOPTS", "android_cc_binary")
 
 # Converts resource/DebugProbesKt.dex to an array in a CC source file.
-# DebugProbesKt.dex is a dexed version of DebugProbesKt.bin, taken from the kotlinx-coroutines-core library jar.
+# DebugProbesKt.dex is a dexed version of DebugProbesKt.bin, taken from the kotlinx-coroutines-core 1.4.x library jar.
 # In order to update DebugProbesKt.dex, the new DebugProbesKt.bin should be taken from kotlinx-coroutines-core and dexed using D8, with minimum API level set to 26.
 genrule(
     name = "DebugProbesKt_dex_generator",
