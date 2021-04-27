@@ -16,6 +16,7 @@
 
 package com.android.tools.profgen
 
+import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -23,15 +24,7 @@ import kotlin.test.assertTrue
 class MutablePrefixTreeTests {
     @Test
     fun testTrie() {
-        val trie = MutablePrefixTree<String>()
-        val items = listOf(
-            "a",
-            "ab",
-            "abc",
-            "abd",
-            "bcd",
-        )
-        for (item in items) trie.put(item, item)
+        val trie = createTestPrefixTree()
 
         val calledItems = mutableListOf<String>()
         val firstOrNull = trie.firstOrNull("a") {
@@ -39,11 +32,31 @@ class MutablePrefixTreeTests {
             assertTrue(it.startsWith("a"), "expected $it to start with 'a'")
             false
         }
-        assertEquals(calledItems.size, 4, "Expected to get called with 4 items prefixed with 'a'")
+        assertEquals(4, calledItems.size, "Expected to get called with 4 items prefixed with 'a'")
         assertEquals(firstOrNull, null)
         assertEquals(
             calledItems,
             listOf("a", "ab", "abc", "abd")
         )
     }
+
+    @Test
+    fun testIterator() {
+        val trie = createTestPrefixTree()
+        assertThat(trie.prefixIterator("ab").asSequence().toSet())
+            .containsExactly("a", "ab", "abc", "abd")
+    }
+}
+
+internal fun createTestPrefixTree(): MutablePrefixTree<String> {
+    val trie = MutablePrefixTree<String>()
+    val items = listOf(
+        "a",
+        "ab",
+        "abc",
+        "abd",
+        "bcd",
+    )
+    for (item in items) trie.put(item, item)
+    return trie
 }

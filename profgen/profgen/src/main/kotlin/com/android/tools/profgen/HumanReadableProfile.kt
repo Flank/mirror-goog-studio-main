@@ -52,13 +52,16 @@ class HumanReadableProfile internal constructor(
     private val fuzzyTypes: MutablePrefixTree<ProfileRule>
 ) {
     internal fun match(method: DexMethod): Int {
-        val exact = exactMethods[method]
-        if (exact != null) return exact
+        var flags = exactMethods[method] ?: 0
+        if (flags == MethodFlags.ALL) return flags
         val target = method.parent
-        val fuzzy = fuzzyMethods.firstOrNull(target) {
-            it.matches(method)
-        }
-        return fuzzy?.flags ?: 0
+        fuzzyMethods.prefixIterator(target).asSequence().takeWhile {
+            if (it.matches(method)) {
+                flags = flags or it.flags
+            }
+            flags != MethodFlags.ALL
+        }.lastOrNull()
+        return flags
     }
 
     internal fun match(type: String): Int {
@@ -124,8 +127,8 @@ internal sealed class Part {
         override fun toString(): String = parsed
     }
     object WildChar : Pattern("[\\w<>\\[\\]]", "?")
-    object WildPart : Pattern("(\\-(?!\\>)|[\\w<>\\[\\]])+", "*")
-    object WildParts : Pattern("(\\-(?!\\>)|[\\w<>/;\\[\\]])+", "**")
+    object WildPart : Pattern("(\\-(?!\\>)|[\\w\\$<>\\[\\]])*", "*")
+    object WildParts : Pattern("(\\-(?!\\>)|[\\w\\$<>/;\\[\\]])*", "**")
 }
 
 internal class Flags(var flags: Int = 0)

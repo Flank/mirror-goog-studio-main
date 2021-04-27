@@ -16,6 +16,10 @@
 
 package com.android.tools.profgen
 
+import com.android.tools.profgen.MethodFlags.ALL
+import com.android.tools.profgen.MethodFlags.POST_STARTUP
+import com.android.tools.profgen.MethodFlags.STARTUP
+import com.android.tools.profgen.MethodFlags.HOT
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 import java.io.ByteArrayInputStream
@@ -58,17 +62,47 @@ class HumanReadableProfileTests {
     @Test
     fun testExactClassMath() {
         val hrp = HumanReadableProfile("Lcom/anything/can/go/here;")
-        assertThat(hrp.match("Lcom/anything/can/go/here;")).isEqualTo(MethodFlags.STARTUP)
+        assertThat(hrp.match("Lcom/anything/can/go/here;")).isEqualTo(STARTUP)
         assertThat(hrp.match("LFoo;")).isEqualTo(0)
     }
 
     @Test
     fun testExactMethodMatch() {
-        val hrp = HumanReadableProfile("HSLcom/anything/can/go/here;->method()I")
-        val matchingMethod = parseDexMethod("Lcom/anything/can/go/here;->method()I")
-        val nonMatchingMethod = parseDexMethod("Lcom/anything/can/go/here;->boo()I")
-        assertThat(hrp.match(matchingMethod)).isEqualTo(MethodFlags.HOT or MethodFlags.STARTUP)
-        assertThat(hrp.match(nonMatchingMethod)).isEqualTo(0)
+        with(HumanReadableProfile("HSLcom/anything/can/go/here;->method()I")) {
+            assertMethodFlags("Lcom/anything/can/go/here;->method()I", HOT or STARTUP)
+            assertMethodFlags("Lcom/anything/can/go/here;->boo()I", 0)
+        }
+    }
+
+    @Test
+    fun testAnyMethodMatch() {
+        with(HumanReadableProfile("PLcom/anything/can/go/here;->**(**)**")) {
+            assertMethodFlags("Lcom/anything/can/go/here;->method()I", POST_STARTUP)
+            assertMethodFlags("Lcom/anything/can/go/here;-><init>()V", POST_STARTUP)
+            assertMethodFlags("Lcom/anything/can/go/here;-><clinit>()V", POST_STARTUP)
+            assertMethodFlags("Lcom/anything/can/go/here;->m([Ljava/lang/Object;)V", POST_STARTUP)
+            assertMethodFlags("Lcom/anything/can/go/here;->method(LFoo$1;)I", POST_STARTUP)
+        }
+    }
+
+    @Test
+    fun testMergedRules() {
+        val hrp = HumanReadableProfile(
+            "HLa/B;->**(**)**",
+            "SLa/B;->foo*(II)**",
+            "PLa/B;->fooExact(II)V",
+            "PLa/*;->foo*Inexact(II)Z",
+        )
+        hrp.assertMethodFlags("La/B;->fooExact(II)V", ALL)
+        hrp.assertMethodFlags("La/B;->foo(II)Z", HOT or STARTUP)
+    }
+
+    @Test
+    fun testMatchFuzzyMethodParams() {
+        with(HumanReadableProfile("SLcom/anything/can/go/here;->method([I*[J)**")) {
+            assertMethodFlags("Lcom/anything/can/go/here;->method()I", 0)
+            assertMethodFlags("Lcom/anything/can/go/here;->method([II[J)I", STARTUP)
+        }
     }
 
     fun assertMatchesItself(vararg lines: String) {
@@ -91,6 +125,9 @@ class HumanReadableProfileTests {
         }
     }
 }
+
+internal fun HumanReadableProfile.assertMethodFlags(method: String, expectedFlags: Int) =
+    assertThat(match(parseDexMethod(method))).isEqualTo(expectedFlags)
 
 internal class LineTestScope(private val hrpLine: String) {
     private val line = parseRule(hrpLine)

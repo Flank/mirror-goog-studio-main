@@ -195,6 +195,9 @@ internal object MethodFlags {
 
     /** Marker flag used to simplify iterations.  */
     const val LAST_FLAG_REGULAR = 1 shl 2
+
+    /** Combined value of flags */
+    const val ALL = HOT or STARTUP or POST_STARTUP
 }
 
 internal fun splitParameters(parameters: String): List<String> {
