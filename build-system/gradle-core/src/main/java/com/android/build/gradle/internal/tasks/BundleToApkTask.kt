@@ -26,7 +26,7 @@ import com.android.build.gradle.internal.signing.SigningConfigDataProvider
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.BooleanOption
 import com.android.tools.build.bundletool.commands.BuildApksCommand
-import com.android.tools.build.bundletool.model.Aapt2Command
+import com.android.tools.build.bundletool.androidtools.Aapt2Command
 import com.android.utils.FileUtils
 import com.google.common.util.concurrent.MoreExecutors
 import org.gradle.api.file.RegularFileProperty

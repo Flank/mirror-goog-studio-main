@@ -59,7 +59,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.android.tools.build_bundletool",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/android/tools/build/bundletool/1.5.0:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/android/tools/build/bundletool/1.6.0:jar",
     visibility = ["//visibility:public"],
     exports = [],
     runtime_deps = [
@@ -211,7 +211,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.google.errorprone_error_prone_annotations",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/errorprone/error_prone_annotations/2.3.2:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/errorprone/error_prone_annotations/2.3.4:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
@@ -235,7 +235,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.google.guava_guava",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/guava/guava/28.1-jre:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/guava/guava/30.1-jre:jar",
     visibility = ["//visibility:public"],
     exports = [
         ":com.google.code.findbugs_jsr305",
@@ -244,7 +244,6 @@ maven_java_library(
         ":com.google.guava_listenablefuture",
         ":com.google.j2objc_j2objc-annotations",
         ":org.checkerframework_checker-qual",
-        ":org.codehaus.mojo_animal-sniffer-annotations",
     ],
 )
 
@@ -383,7 +382,6 @@ maven_java_library(
 maven_java_library(
     name = "com.google.testing.platform_launcher",
     export_artifact = "//prebuilts/tools/common/m2/repository/com/google/testing/platform/launcher/0.0.8-alpha04:jar",
-    neverlink = 1,
     visibility = ["//visibility:public"],
     exports = [],
 )
@@ -1220,7 +1218,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.checkerframework_checker-qual",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/checkerframework/checker-qual/2.8.1:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/checkerframework/checker-qual/3.5.0:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
@@ -1481,7 +1479,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.codehaus.mojo_animal-sniffer-annotations",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/codehaus/mojo/animal-sniffer-annotations/1.18:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/codehaus/mojo/animal-sniffer-annotations/1.17:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
@@ -2204,7 +2202,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.slf4j_slf4j-api",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/slf4j/slf4j-api/1.7.28:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/slf4j/slf4j-api/1.7.30:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
