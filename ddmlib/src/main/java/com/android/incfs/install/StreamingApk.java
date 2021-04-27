@@ -296,7 +296,7 @@ class StreamingApk implements AutoCloseable {
         int totalTreeBlockCount = 0;
 
         long hashBlockCount = 1 + (fileSize - 1) / INCFS_BLOCK_SIZE;
-        for (long i = 0; i < hashBlockCount; i++) {
+        while (hashBlockCount > 1) {
             hashBlockCount = (hashBlockCount + hashPerBlock - 1) / hashPerBlock;
             totalTreeBlockCount += hashBlockCount;
         }
