@@ -1,5 +1,4 @@
 apply plugin: 'com.android.tools.java-library'
-apply plugin: 'com.android.tools.publish'
 apply plugin: 'com.android.tools.kotlin'
 
 dependencies {
@@ -17,9 +16,3 @@ compileKotlin {
     freeCompilerArgs += '-Xopt-in=kotlin.RequiresOptIn'
   }
 }
-
-group = 'com.android.tools'
-version = rootProject.ext.buildVersion
-
-project.ext.pomName = 'Android Tools Profgen'
-project.ext.pomDesc = 'tool to generate ART profiles'
