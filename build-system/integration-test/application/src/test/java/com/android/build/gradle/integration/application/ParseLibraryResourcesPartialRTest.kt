@@ -1,6 +1,5 @@
 package com.android.build.gradle.integration.application
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldLibraryApp
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -21,8 +20,6 @@ class ParseLibraryResourcesPartialRTest {
     @get:Rule
     val project = GradleTestProject.builder()
             .fromTestApp(HelloWorldLibraryApp.create())
-            // http://b/149978740
-            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
             .addGradleProperties(
                     "${BooleanOption.ENABLE_PARTIAL_R_INCREMENTAL_BUILDS.propertyName}=true")
             .create()

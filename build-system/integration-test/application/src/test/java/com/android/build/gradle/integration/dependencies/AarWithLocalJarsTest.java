@@ -19,7 +19,6 @@ package com.android.build.gradle.integration.dependencies;
 import static com.android.testutils.truth.DexSubject.assertThat;
 import static com.android.testutils.truth.PathSubject.assertThat;
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.testutils.apk.Apk;
@@ -46,8 +45,6 @@ public class AarWithLocalJarsTest {
     public static GradleTestProject baseLibrary =
             GradleTestProject.builder()
                     .fromTestProject("repo/baseLibrary")
-                    // maven-publish is not compatible
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .withName("baseLibrary")
                     .create();
 
@@ -55,8 +52,6 @@ public class AarWithLocalJarsTest {
     public static GradleTestProject library =
             GradleTestProject.builder()
                     .fromTestProject("repo/library")
-                    // maven-publish is not compatible
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .withName("library")
                     .create();
 

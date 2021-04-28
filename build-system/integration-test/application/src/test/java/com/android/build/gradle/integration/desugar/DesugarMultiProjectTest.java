@@ -20,13 +20,11 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.build.gradle.integration.desugar.DesugaringProjectConfigurator.configureR8Desugaring;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.BooleanOption;
-import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.testutils.apk.Apk;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
@@ -260,15 +258,9 @@ public class DesugarMultiProjectTest {
 
     @NonNull
     private GradleTaskExecutor executor() {
-        GradleTaskExecutor executor =
-                project.executor()
-                        .with(
-                                BooleanOption.ENABLE_DEXING_DESUGARING_ARTIFACT_TRANSFORM,
-                                tool == Tool.D8_WITH_ARTIFACT_TRANSFORMS);
-        if (tool != Tool.R8) {
-            // https://github.com/gradle/gradle/issues/13200
-            executor.withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF);
-        }
-        return executor;
+        return project.executor()
+                .with(
+                        BooleanOption.ENABLE_DEXING_DESUGARING_ARTIFACT_TRANSFORM,
+                        tool == Tool.D8_WITH_ARTIFACT_TRANSFORMS);
     }
 }

@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.library
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.testutils.truth.PathSubject.assertThat
@@ -75,8 +74,7 @@ class PublishLegacyMultidexLibTest {
 
     @Test
     fun testMultidexSupportNotAddedToPom() {
-        // maven-publish is not compatible
-        project.executor().withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF).run("publish")
+        project.executor().run("publish")
 
         // Check that Multidex support dependency is not added.
         assertThat(project.file("testrepo/com/android/test/lib/0.1/lib-0.1.pom"))

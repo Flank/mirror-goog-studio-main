@@ -20,7 +20,6 @@ import static com.android.build.gradle.integration.common.fixture.TemporaryProje
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -38,11 +37,7 @@ public class NativeSoPackagingFromRemoteAarTest {
 
     @Rule
     public GradleTestProject project =
-            GradleTestProject.builder()
-                    // uploadArchives from Gradle is not compatible
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-                    .fromTestProject("projectWithModules")
-                    .create();
+            GradleTestProject.builder().fromTestProject("projectWithModules").create();
 
     private GradleTestProject appProject;
     private GradleTestProject libProject;
