@@ -36,6 +36,7 @@ kotlin_library(
     bundled_deps = [
         ":proto",
         "//tools/base/mlkit-common:tools.mlkit-common",
+        "//tools/base/profgen/profgen",
     ],
     lint_baseline = "lint_baseline.xml",
     lint_timeout = "long",
