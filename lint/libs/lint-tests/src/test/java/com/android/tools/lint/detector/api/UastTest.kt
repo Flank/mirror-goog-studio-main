@@ -479,10 +479,10 @@ class UastTest : TestCase() {
                 import android.widget.TextView
 
                 public final class Test : android.app.Activity {
-                    public fun Test() = UastEmptyExpression
-                    fun setUi(@org.jetbrains.annotations.NotNull x: int, @org.jetbrains.annotations.NotNull y: int) : void {
+                    private final fun setUi(@org.jetbrains.annotations.NotNull x: int, @org.jetbrains.annotations.NotNull y: int, @null ${'$'}completion: kotlin.coroutines.Continuation<? super kotlin.Unit>) : java.lang.Object {
                         var z: int = x + y
                     }
+                    public fun Test() = UastEmptyExpression
                 }
 
                 """.trimIndent(),
@@ -494,18 +494,20 @@ class UastTest : TestCase() {
                 UFile (package = test.pkg) [package test.pkg...]
                     UImportStatement (isOnDemand = false) [import android.widget.TextView]
                     UClass (name = Test) [public final class Test : android.app.Activity {...}]
-                        UMethod (name = Test) [public fun Test() = UastEmptyExpression]
-                        UMethod (name = setUi) [fun setUi(@org.jetbrains.annotations.NotNull x: int, @org.jetbrains.annotations.NotNull y: int) : void {...}]
+                        UMethod (name = setUi) [private final fun setUi(@org.jetbrains.annotations.NotNull x: int, @org.jetbrains.annotations.NotNull y: int, @null ${'$'}completion: kotlin.coroutines.Continuation<? super kotlin.Unit>) : java.lang.Object {...}]
                             UParameter (name = x) [@org.jetbrains.annotations.NotNull var x: int]
                                 UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]
                             UParameter (name = y) [@org.jetbrains.annotations.NotNull var y: int]
                                 UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]
+                            UParameter (name = ${'$'}completion) [@null var ${'$'}completion: kotlin.coroutines.Continuation<? super kotlin.Unit>]
+                                UAnnotation (fqName = null) [@null]
                             UBlockExpression [{...}] : PsiType:void
                                 UDeclarationsExpression [var z: int = x + y]
                                     ULocalVariable (name = z) [var z: int = x + y]
                                         UBinaryExpression (operator = +) [x + y] : PsiType:int
                                             USimpleNameReferenceExpression (identifier = x) [x] : PsiType:int
                                             USimpleNameReferenceExpression (identifier = y) [y] : PsiType:int
+                        UMethod (name = Test) [public fun Test() = UastEmptyExpression]
 
                 """.trimIndent(),
                 file.asLogTypes()
