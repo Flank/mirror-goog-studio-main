@@ -22,9 +22,9 @@ import com.android.tools.profgen.MethodFlags.STARTUP
 import com.android.tools.profgen.MethodFlags.HOT
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
-import java.io.ByteArrayInputStream
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlin.test.fail
 
 class HumanReadableProfileTests {
     @Test
@@ -158,11 +158,16 @@ internal class LineTestScope(private val hrpLine: String) {
     }
 }
 
+private fun parseRule(
+    line: String
+) = parseRule(line, {_, message -> fail(message)}, RuleFragmentParser(line.length) )!!
+
 internal fun parseDexMethod(line: String): DexMethod {
     return parseRule(line).toDexMethod()
 }
 
-internal fun HumanReadableProfile(vararg strings: String) : HumanReadableProfile {
-    val text = strings.joinToString("\n")
-    return HumanReadableProfile(ByteArrayInputStream(text.toByteArray()).reader())
+private fun HumanReadableProfile(vararg strings: String) : HumanReadableProfile {
+    return HumanReadableProfile(*strings) {
+       _, _, message -> fail(message)
+    }!!
 }
