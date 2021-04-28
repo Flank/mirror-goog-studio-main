@@ -18,8 +18,6 @@ package com.android.build.gradle.internal.dsl
 
 import com.android.build.api.dsl.ApkSigningConfig
 import com.android.build.api.dsl.CommonExtension
-import com.android.build.api.variant.VariantBuilder
-import com.android.build.api.variant.Variant
 import com.android.build.gradle.api.AndroidSourceSet
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer

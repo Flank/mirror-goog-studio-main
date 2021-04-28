@@ -35,6 +35,7 @@ import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.manifest.ManifestDataProvider
+import com.android.build.gradle.internal.publishing.VariantPublishingInfo
 import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.variant.DimensionCombination
@@ -97,6 +98,7 @@ open class VariantDslInfoImpl internal constructor(
     private val dslNamespaceProvider: Provider<String>?,
     private val dslTestNamespace: String?,
     override val nativeBuildSystem: VariantManager.NativeBuiltType?,
+    private val publishingInfo: VariantPublishingInfo?
 ): VariantDslInfo, DimensionCombination {
 
     override val buildType: String?
@@ -1133,6 +1135,9 @@ open class VariantDslInfoImpl internal constructor(
 
     override val isJniDebuggable: Boolean
         get() = buildTypeObj.isJniDebuggable
+
+    override val publishInfo: VariantPublishingInfo?
+        get() = publishingInfo
 
     companion object {
 

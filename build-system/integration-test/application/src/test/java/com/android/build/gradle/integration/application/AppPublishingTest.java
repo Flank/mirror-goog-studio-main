@@ -56,7 +56,128 @@ public class AppPublishingTest {
                         + "    repositories {\n"
                         + "        maven { url 'testrepo' }\n"
                         + "    }\n"
-                        + "}\n"
+                        + "}\n");
+    }
+
+    @After
+    public void cleanUp() {
+        project = null;
+    }
+
+    @Test
+    public void testBundlePublishing() throws Exception {
+        // publish the app as a bundle
+        setUpAabPublishing();
+        project.executor()
+                // http://b/149978740 - building bundle always runs the incompatible task
+                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                .run("publishAppPublicationToMavenRepository");
+
+        // manually check that the app publishing worked.
+        Path testRepo = project.getProjectDir().toPath().resolve("testrepo");
+        Path groupIdFolder = testRepo.resolve("test/densitysplit");
+
+        Path aabFile = groupIdFolder.resolve("app/1.0/app-1.0.aab");
+        assertThat(aabFile).isFile();
+    }
+
+    @Test
+    public void testApkPublishing() throws Exception {
+        // publish the app as an apk.
+        setUpApkPublishing();
+        project.execute("publishAppPublicationToMavenRepository");
+
+        // manually check that the app publishing worked.
+        File testRepo = new File(project.getProjectDir(), "testrepo");
+        File groupIdFolder = FileUtils.join(testRepo, "test", "densitysplit");
+
+        File apkFile = FileUtils.join(groupIdFolder, "app", "1.0", "app-1.0.zip");
+        assertThat(apkFile).isFile();
+
+        try (Zip it = new Zip(apkFile)) {
+            assertThat(it).contains("mapping.txt");
+        }
+    }
+
+    @Test
+    public void testApkPublishingWithNoMapping() throws Exception {
+        setUpApkPublishing();
+        // disable minification to not have mapping files.
+        TestFileUtils.searchAndReplace(
+                project.getBuildFile(), "minifyEnabled true", "minifyEnabled false");
+
+        // publish the app as an apk.
+        project.execute("publishAppPublicationToMavenRepository");
+
+        // manually check that the app publishing worked.
+        File testRepo = new File(project.getProjectDir(), "testrepo");
+        File groupIdFolder = FileUtils.join(testRepo, "test", "densitysplit");
+
+        File aabFile = FileUtils.join(groupIdFolder, "app", "1.0", "app-1.0.zip");
+        assertThat(aabFile).isFile();
+        try (Zip it = new Zip(aabFile)) {
+            assertThat(it).doesNotContain("mapping.txt");
+        }
+    }
+
+    @Test
+    public void testApkPublishingWithoutNewPublishingDsl() throws Exception {
+        setUpLegacyPublishing();
+        project.execute("publishApkPublicationToMavenRepository");
+        File testRepo = new File(project.getProjectDir(), "testrepo");
+        File groupIdFolder = FileUtils.join(testRepo, "test", "densitysplit");
+
+        File apkFile = FileUtils.join(groupIdFolder, "apk", "1.0", "apk-1.0.zip");
+        assertThat(apkFile).isFile();
+    }
+
+    private void setUpApkPublishing() throws Exception {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "android {\n"
+                        + "    publishing {\n"
+                        + "        singleVariant('release') { publishApk() }\n"
+                        + "    }\n"
+                        + "}\n");
+        addNewPublicationDsl();
+    }
+
+    private void setUpAabPublishing() throws Exception {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "android {\n"
+                        + "    publishing {\n"
+                        + "        singleVariant('release')\n"
+                        + "    }\n"
+                        + "}\n");
+        addNewPublicationDsl();
+    }
+
+    private void addNewPublicationDsl() throws Exception {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "afterEvaluate {\n"
+                        + "    publishing {\n"
+                        + "        publications {\n"
+                        + "            app(MavenPublication) {\n"
+                        + "                groupId = 'test.densitysplit'\n"
+                        + "                artifactId = 'app'\n"
+                        + "                version = '1.0'\n"
+                        + "\n"
+                        + "                from components.release\n"
+                        + "            }\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}");
+    }
+
+    private void setUpLegacyPublishing() throws Exception {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
                         + "afterEvaluate {\n"
                         + "    publishing {\n"
                         + "        publications {\n"
@@ -77,75 +198,5 @@ public class AppPublishingTest {
                         + "        }\n"
                         + "    }\n"
                         + "}");
-    }
-
-    @After
-    public void cleanUp() {
-        project = null;
-    }
-
-    @Test
-    public void testBundlePublishing() throws Exception {
-        // publish the app as a bundle and an apk.
-        project.executor()
-                // http://b/149978740 - building bundle always runs the incompatible task
-                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-                .run("publishBundlePublicationToMavenRepository");
-
-        // manually check that the app publishing worked.
-        Path testRepo = project.getProjectDir().toPath().resolve("testrepo");
-        Path groupIdFolder = testRepo.resolve("test/densitysplit");
-
-        Path aabFile = groupIdFolder.resolve("bundle/1.0/bundle-1.0.aab");
-        assertThat(aabFile).isFile();
-
-        Path pomFile = groupIdFolder.resolve("bundle/1.0/bundle-1.0.pom");
-        assertThat(pomFile).isFile();
-        assertThat(pomFile).contains("<packaging>aab</packaging>");
-    }
-
-    @Test
-    public void testApkPublishing() throws Exception {
-        // publish the app as a bundle and an apk.
-        project.execute("publishApkPublicationToMavenRepository");
-
-        // manually check that the app publishing worked.
-        File testRepo = new File(project.getProjectDir(), "testrepo");
-        File groupIdFolder = FileUtils.join(testRepo, "test", "densitysplit");
-
-        File aabFile = FileUtils.join(groupIdFolder, "apk", "1.0", "apk-1.0.zip");
-        assertThat(aabFile).isFile();
-
-        try (Zip it = new Zip(aabFile)) {
-            assertThat(it).contains("mapping.txt");
-        }
-
-        File pomFile = FileUtils.join(groupIdFolder, "apk", "1.0", "apk-1.0.pom");
-        assertThat(pomFile).isFile();
-        assertThat(pomFile).contains("<packaging>zip</packaging>");
-    }
-
-    @Test
-    public void testApkPublishingWithNoMapping() throws Exception {
-        // disable minification to not have mapping files.
-        TestFileUtils.searchAndReplace(
-                project.getBuildFile(), "minifyEnabled true", "minifyEnabled false");
-
-        // publish the app as a bundle and an apk.
-        project.execute("publishApkPublicationToMavenRepository");
-
-        // manually check that the app publishing worked.
-        File testRepo = new File(project.getProjectDir(), "testrepo");
-        File groupIdFolder = FileUtils.join(testRepo, "test", "densitysplit");
-
-        File aabFile = FileUtils.join(groupIdFolder, "apk", "1.0", "apk-1.0.zip");
-        assertThat(aabFile).isFile();
-        try (Zip it = new Zip(aabFile)) {
-            assertThat(it).doesNotContain("mapping.txt");
-        }
-
-        File pomFile = FileUtils.join(groupIdFolder, "apk", "1.0", "apk-1.0.pom");
-        assertThat(pomFile).isFile();
-        assertThat(pomFile).contains("<packaging>zip</packaging>");
     }
 }

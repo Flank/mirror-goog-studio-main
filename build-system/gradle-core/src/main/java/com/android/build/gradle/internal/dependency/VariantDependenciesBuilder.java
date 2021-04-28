@@ -43,6 +43,7 @@ import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType;
+import com.android.build.gradle.internal.publishing.VariantPublishingInfo;
 import com.android.build.gradle.internal.services.StringCachingBuildService;
 import com.android.build.gradle.internal.testFixtures.TestFixturesUtil;
 import com.android.build.gradle.options.BooleanOption;
@@ -374,7 +375,8 @@ public class VariantDependenciesBuilder {
                             buildType,
                             publicationFlavorMap,
                             variantNameAttr,
-                            runtimeUsage);
+                            runtimeUsage,
+                            null);
 
             // always extend from the runtimeClasspath. Let the FilteringSpec handle what
             // should be packaged.
@@ -389,7 +391,8 @@ public class VariantDependenciesBuilder {
                             buildType,
                             publicationFlavorMap,
                             variantNameAttr,
-                            apiUsage);
+                            apiUsage,
+                            null);
 
             // apiElements only extends the api classpaths.
             apiElements.setExtendsFrom(apiClasspaths);
@@ -397,6 +400,7 @@ public class VariantDependenciesBuilder {
         }
 
         if (variantType.getPublishToRepository()) {
+            VariantPublishingInfo variantPublish = variantDslInfo.getPublishInfo();
             // if the variant is a library, we need to make both a runtime and an API
             // configurations, and they both must contain transitive dependencies
             if (variantType.isAar()) {
@@ -406,34 +410,36 @@ public class VariantDependenciesBuilder {
                 Bundling bundling = factory.named(Bundling.class, EXTERNAL);
                 Category category = factory.named(Category.class, Category.LIBRARY);
 
-                Configuration runtimePublication =
-                        createAarPublishingConfiguration(
-                                configurations,
-                                variantName + "RuntimePublication",
-                                "Runtime publication for " + variantName,
-                                runtimeUsage,
-                                libraryElements,
-                                bundling,
-                                category,
-                                null,
-                                null);
-                runtimePublication.extendsFrom(runtimeClasspath);
+                if (variantPublish != null && variantPublish.isAarPublished()) {
+                    Configuration runtimePublication =
+                            createAarPublishingConfiguration(
+                                    configurations,
+                                    variantName + "RuntimePublication",
+                                    "Runtime publication for " + variantName,
+                                    runtimeUsage,
+                                    libraryElements,
+                                    bundling,
+                                    category,
+                                    null,
+                                    null);
+                    runtimePublication.extendsFrom(runtimeClasspath);
 
-                elements.put(RUNTIME_PUBLICATION, runtimePublication);
+                    elements.put(RUNTIME_PUBLICATION, runtimePublication);
 
-                Configuration apiPublication =
-                        createAarPublishingConfiguration(
-                                configurations,
-                                variantName + "ApiPublication",
-                                "API publication for " + variantName,
-                                apiUsage,
-                                libraryElements,
-                                bundling,
-                                category,
-                                null,
-                                null);
-                apiPublication.setExtendsFrom(apiClasspaths);
-                elements.put(API_PUBLICATION, apiPublication);
+                    Configuration apiPublication =
+                            createAarPublishingConfiguration(
+                                    configurations,
+                                    variantName + "ApiPublication",
+                                    "API publication for " + variantName,
+                                    apiUsage,
+                                    libraryElements,
+                                    bundling,
+                                    category,
+                                    null,
+                                    null);
+                    apiPublication.setExtendsFrom(apiClasspaths);
+                    elements.put(API_PUBLICATION, apiPublication);
+                }
 
                 Configuration allApiPublication =
                         createAarPublishingConfiguration(
@@ -465,31 +471,41 @@ public class VariantDependenciesBuilder {
             } else {
                 // For APK, no transitive dependencies, and no api vs runtime configs.
                 // However we have 2 publications, one for bundle, one for Apk
-                Configuration apkPublication =
-                        createPublishingConfig(
-                                configurations,
-                                variantName + "ApkPublication",
-                                "APK publication for " + variantName,
-                                buildType,
-                                publicationFlavorMap,
-                                null /*variantNameAttr*/,
-                                null /*Usage*/);
-                elements.put(APK_PUBLICATION, apkPublication);
-                apkPublication.setVisible(false);
-                apkPublication.setCanBeConsumed(false);
+                if (variantPublish != null && variantPublish.isApkPublished()) {
+                    Configuration apkPublication =
+                            createPublishingConfig(
+                                    configurations,
+                                    variantName + "ApkPublication",
+                                    "APK publication for " + variantName,
+                                    buildType,
+                                    publicationFlavorMap,
+                                    null /*variantNameAttr*/,
+                                    null /*Usage*/,
+                                    factory.named(
+                                            LibraryElements.class,
+                                            AndroidArtifacts.ArtifactType.APK.getType()));
+                    elements.put(APK_PUBLICATION, apkPublication);
+                    apkPublication.setVisible(false);
+                    apkPublication.setCanBeConsumed(false);
+                }
 
-                Configuration aabPublication =
-                        createPublishingConfig(
-                                configurations,
-                                variantName + "AabPublication",
-                                "Bundle Publication for " + variantName,
-                                buildType,
-                                publicationFlavorMap,
-                                null /*variantNameAttr*/,
-                                null /*Usage*/);
-                elements.put(AAB_PUBLICATION, aabPublication);
-                aabPublication.setVisible(false);
-                aabPublication.setCanBeConsumed(false);
+                if (variantPublish != null && variantPublish.isAabPublished()) {
+                    Configuration aabPublication =
+                            createPublishingConfig(
+                                    configurations,
+                                    variantName + "AabPublication",
+                                    "Bundle Publication for " + variantName,
+                                    buildType,
+                                    publicationFlavorMap,
+                                    null /*variantNameAttr*/,
+                                    null /*Usage*/,
+                                    factory.named(
+                                            LibraryElements.class,
+                                            AndroidArtifacts.ArtifactType.BUNDLE.getType()));
+                    elements.put(AAB_PUBLICATION, aabPublication);
+                    aabPublication.setVisible(false);
+                    aabPublication.setCanBeConsumed(false);
+                }
             }
         }
 
@@ -504,7 +520,8 @@ public class VariantDependenciesBuilder {
                             buildType,
                             publicationFlavorMap,
                             variantNameAttr,
-                            reverseMetadataUsage);
+                            reverseMetadataUsage,
+                            null);
             elements.put(REVERSE_METADATA_ELEMENTS, reverseMetadataElements);
         }
 
@@ -582,7 +599,8 @@ public class VariantDependenciesBuilder {
             @NonNull String buildType,
             @NonNull Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> publicationFlavorMap,
             @Nullable VariantAttr variantNameAttr,
-            @Nullable Usage usage) {
+            @Nullable Usage usage,
+            @Nullable LibraryElements libraryElements) {
         Configuration config = configurations.maybeCreate(configName);
         config.setDescription(configDesc);
         config.setCanBeResolved(false);
@@ -597,6 +615,10 @@ public class VariantDependenciesBuilder {
 
         if (usage != null) {
             attrContainer.attribute(Usage.USAGE_ATTRIBUTE, usage);
+        }
+
+        if (libraryElements != null) {
+            attrContainer.attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, libraryElements);
         }
 
         return config;

@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.dsl.CoreExternalNativeBuildOptions
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
+import com.android.build.gradle.internal.publishing.VariantPublishingInfo
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.AbstractProductFlavor
 import com.android.builder.core.VariantType
@@ -314,6 +315,8 @@ interface VariantDslInfo {
     val isJniDebuggable: Boolean
 
     val aarMetadata: MergedAarMetadata
+
+    val publishInfo: VariantPublishingInfo?
 
     ////////////////////////////////////////////////////////////////////////////////////////
     //  APIs below should only be used at CreationConfig/Variant instantiation time       //

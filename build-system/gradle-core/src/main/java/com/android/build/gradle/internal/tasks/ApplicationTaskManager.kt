@@ -111,15 +111,23 @@ class ApplicationTaskManager(
 
         handleMicroApp(variant)
 
-        // do not publish the APK(s) if there are dynamic feature.
-        if (!variant.globalScope.hasDynamicFeatures()) {
+        val publishInfo = variant.variantDslInfo.publishInfo!!
+
+        if (publishInfo.isApkPublished()) {
             createSoftwareComponent(
                 variant,
-                "_apk",
+                publishInfo.getApkComponentName(),
                 PublishedConfigType.APK_PUBLICATION
             )
         }
-        createSoftwareComponent(variant, "_aab", PublishedConfigType.AAB_PUBLICATION)
+
+        if (publishInfo.isAabPublished()) {
+            createSoftwareComponent(
+                variant,
+                publishInfo.getAabComponentName(),
+                PublishedConfigType.AAB_PUBLICATION
+            )
+        }
     }
 
     /** Configure variantData to generate embedded wear application.  */
@@ -276,10 +284,10 @@ class ApplicationTaskManager(
 
     private fun createSoftwareComponent(
         appVariant: ApplicationVariantImpl,
-        suffix: String,
+        componentName: String,
         publication: PublishedConfigType
     ) {
-        val component = globalScope.componentFactory.adhoc(appVariant.name + suffix)
+        val component = globalScope.componentFactory.adhoc(componentName)
         val config = appVariant.variantDependencies.getElements(publication)!!
         component.addVariantsFromConfiguration(config) { }
         project.components.add(component)

@@ -16,8 +16,6 @@
 
 package com.android.build.api.dsl
 
-import com.android.build.api.variant.ApplicationVariantBuilder
-import com.android.build.api.variant.ApplicationVariant
 import org.gradle.api.Incubating
 
 /**
@@ -53,4 +51,18 @@ interface ApplicationExtension :
      * Set of asset pack subprojects to be included in the app's bundle.
      */
     val assetPacks: MutableSet<String>
+
+    /**
+     * Customizes publishing build variant artifacts from app module to a Maven repository.
+     *
+     * For more information about the properties you can configure in this block, see [ApplicationPublishing]
+     */
+    val publishing: ApplicationPublishing
+
+    /**
+     * Customizes publishing build variant artifacts from app module to a Maven repository.
+     *
+     * For more information about the properties you can configure in this block, see [ApplicationPublishing]
+     */
+    fun publishing(action: ApplicationPublishing.() -> Unit)
 }

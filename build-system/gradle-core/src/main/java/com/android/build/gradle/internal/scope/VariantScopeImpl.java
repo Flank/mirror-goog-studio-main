@@ -176,25 +176,22 @@ public class VariantScopeImpl implements VariantScope {
         for (PublishedConfigType configType : PublishedConfigType.values()) {
             if (configTypes.contains(configType)) {
                 Configuration config = variantDependencies.getElements(configType);
-                if (config == null) {
-                    throw new NullPointerException(
-                            "Publishing to "
-                                    + configType
-                                    + " with no "
-                                    + configType
-                                    + " configuration object. VariantType: "
-                                    + variantDslInfo.getVariantType());
-                }
-                if (configType.isPublicationConfig()) {
-                    String classifier = null;
-                    if (configType.isClassifierRequired()) {
-                        classifier = componentIdentity.getName();
-                    } else if (isTestFixturesArtifact) {
-                        classifier = TestFixturesUtil.testFixturesClassifier;
+                if (config != null) {
+                    if (configType.isPublicationConfig()) {
+                        String classifier = null;
+                        if (configType.isClassifierRequired()) {
+                            classifier = componentIdentity.getName();
+                        } else if (isTestFixturesArtifact) {
+                            classifier = TestFixturesUtil.testFixturesClassifier;
+                        }
+                        publishArtifactToDefaultVariant(config, artifact, artifactType, classifier);
+                    } else {
+                        publishArtifactToConfiguration(
+                                config,
+                                artifact,
+                                artifactType,
+                                new AndroidAttributes(null, libraryElements));
                     }
-                    publishArtifactToDefaultVariant(config, artifact, artifactType, classifier);
-                } else {
-                    publishArtifactToConfiguration(config, artifact, artifactType, new AndroidAttributes(null, libraryElements));
                 }
             }
         }

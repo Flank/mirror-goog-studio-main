@@ -250,6 +250,7 @@ com.android.build.gradle.LibraryExtension.getPackagingOptions: com.android.build
 com.android.build.gradle.LibraryExtension.getPrefab: org.gradle.api.NamedDomainObjectContainer<com.android.build.api.dsl.PrefabPackagingOptions> ()
 com.android.build.gradle.LibraryExtension.getProductFlavors: java.util.Collection ()
 com.android.build.gradle.LibraryExtension.getProductFlavors: org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.ProductFlavor> ()
+com.android.build.gradle.LibraryExtension.getPublishing: com.android.build.api.dsl.LibraryPublishing ()
 com.android.build.gradle.LibraryExtension.getResourcePrefix: java.lang.String ()
 com.android.build.gradle.LibraryExtension.getSdkComponents: com.android.build.api.dsl.SdkComponents ()
 com.android.build.gradle.LibraryExtension.getSigningConfigs: java.util.Collection ()
@@ -271,6 +272,8 @@ com.android.build.gradle.LibraryExtension.lock: void ()
 com.android.build.gradle.LibraryExtension.packagingOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.PackagingOptions, kotlin.Unit>)
 com.android.build.gradle.LibraryExtension.productFlavors: void (kotlin.jvm.functions.Function1<? super org.gradle.api.NamedDomainObjectContainer<com.android.build.api.dsl.LibraryProductFlavor>, kotlin.Unit>)
 com.android.build.gradle.LibraryExtension.productFlavors: void (org.gradle.api.Action<org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.ProductFlavor>>)
+com.android.build.gradle.LibraryExtension.publishing: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.LibraryPublishing, kotlin.Unit>)
+com.android.build.gradle.LibraryExtension.publishing: void (org.gradle.api.Action<com.android.build.api.dsl.LibraryPublishing>)
 com.android.build.gradle.LibraryExtension.release: void (org.gradle.api.NamedDomainObjectContainer<com.android.build.api.dsl.LibraryBuildType>, kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.LibraryBuildType, kotlin.Unit>)
 com.android.build.gradle.LibraryExtension.setAidlPackagedList: void (java.util.Collection<java.lang.String>)
 com.android.build.gradle.LibraryExtension.setBuildToolsVersion: void (java.lang.String)
@@ -686,6 +689,13 @@ com.android.build.gradle.internal.dsl.AbiSplitOptions.<init>: com.android.build.
 com.android.build.gradle.internal.dsl.AbiSplitOptions.getAbiFilters: com.google.common.collect.ImmutableSet<java.lang.String> (java.util.Set<java.lang.String>)
 com.android.build.gradle.internal.dsl.AbiSplitOptions.isUniversalApk: boolean ()
 com.android.build.gradle.internal.dsl.AbiSplitOptions.setUniversalApk: void (boolean)
+com.android.build.gradle.internal.dsl.AbstractPublishing
+com.android.build.gradle.internal.dsl.AbstractPublishing$Type extends java.lang.Enum
+com.android.build.gradle.internal.dsl.AbstractPublishing$Type.valueOf: com.android.build.gradle.internal.dsl.AbstractPublishing$Type (java.lang.String)
+com.android.build.gradle.internal.dsl.AbstractPublishing$Type.values: com.android.build.gradle.internal.dsl.AbstractPublishing$Type[] ()
+com.android.build.gradle.internal.dsl.AbstractPublishing.<init>: com.android.build.gradle.internal.dsl.AbstractPublishing<T> (com.android.build.gradle.internal.services.DslServices)
+com.android.build.gradle.internal.dsl.AbstractPublishing.getDslService: com.android.build.gradle.internal.services.DslServices ()
+com.android.build.gradle.internal.dsl.AbstractPublishing.getSingleVariants: java.util.List<T> ()
 com.android.build.gradle.internal.dsl.AdbOptions implements com.android.builder.model.AdbOptions, com.android.build.api.dsl.AdbOptions, com.android.build.api.dsl.Installation
 com.android.build.gradle.internal.dsl.AdbOptions.<init>: com.android.build.gradle.internal.dsl.AdbOptions ()
 com.android.build.gradle.internal.dsl.AdbOptions.getInstallOptions: java.util.Collection<java.lang.String> ()
@@ -790,6 +800,7 @@ com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getPackagingOptions
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getPackagingOptions: com.android.build.gradle.internal.dsl.PackagingOptions ()
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getProductFlavors: java.util.Collection ()
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getProductFlavors: org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.ProductFlavor> ()
+com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getPublishing: com.android.build.api.dsl.ApplicationPublishing ()
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getResourcePrefix: java.lang.String ()
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getSdkComponents: com.android.build.api.dsl.SdkComponents ()
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getSigningConfigs: java.util.Collection ()
@@ -811,6 +822,8 @@ com.android.build.gradle.internal.dsl.BaseAppModuleExtension.lock: void ()
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.packagingOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.PackagingOptions, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.productFlavors: void (kotlin.jvm.functions.Function1<? super org.gradle.api.NamedDomainObjectContainer<com.android.build.api.dsl.ApplicationProductFlavor>, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.productFlavors: void (org.gradle.api.Action<org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.ProductFlavor>>)
+com.android.build.gradle.internal.dsl.BaseAppModuleExtension.publishing: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.ApplicationPublishing, kotlin.Unit>)
+com.android.build.gradle.internal.dsl.BaseAppModuleExtension.publishing: void (org.gradle.api.Action<com.android.build.api.dsl.ApplicationPublishing>)
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.release: void (org.gradle.api.NamedDomainObjectContainer<com.android.build.api.dsl.ApplicationBuildType>, kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.ApplicationBuildType, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.setAssetPacks: void (java.util.Set<java.lang.String>)
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.setBuildToolsVersion: void (java.lang.String)
@@ -1355,6 +1368,7 @@ com.android.build.gradle.internal.dsl.ExternalNativeNdkBuildOptions.targets: voi
 com.android.build.gradle.internal.dsl.InternalApplicationExtension implements com.android.build.api.dsl.ApplicationExtension, com.android.build.gradle.internal.dsl.InternalCommonExtension
 com.android.build.gradle.internal.dsl.InternalApplicationExtension.getAssetPacks: java.util.Set<java.lang.String> ()
 com.android.build.gradle.internal.dsl.InternalApplicationExtension.getDynamicFeatures: java.util.Set<java.lang.String> ()
+com.android.build.gradle.internal.dsl.InternalApplicationExtension.publishing: void (org.gradle.api.Action<com.android.build.api.dsl.ApplicationPublishing>)
 com.android.build.gradle.internal.dsl.InternalApplicationExtension.setAssetPacks: void (java.util.Set<java.lang.String>)
 com.android.build.gradle.internal.dsl.InternalApplicationExtension.setDynamicFeatures: void (java.util.Set<java.lang.String>)
 com.android.build.gradle.internal.dsl.InternalCommonExtension implements com.android.build.api.dsl.CommonExtension, com.android.build.gradle.internal.dsl.Lockable
@@ -1378,6 +1392,7 @@ com.android.build.gradle.internal.dsl.InternalCommonExtension.signingConfigs: vo
 com.android.build.gradle.internal.dsl.InternalDynamicFeatureExtension implements com.android.build.api.dsl.DynamicFeatureExtension, com.android.build.gradle.internal.dsl.InternalCommonExtension
 com.android.build.gradle.internal.dsl.InternalLibraryExtension implements com.android.build.api.dsl.LibraryExtension, com.android.build.gradle.internal.dsl.InternalCommonExtension
 com.android.build.gradle.internal.dsl.InternalLibraryExtension.getAidlPackagedList: java.util.Collection<java.lang.String> ()
+com.android.build.gradle.internal.dsl.InternalLibraryExtension.publishing: void (org.gradle.api.Action<com.android.build.api.dsl.LibraryPublishing>)
 com.android.build.gradle.internal.dsl.InternalLibraryExtension.setAidlPackagedList: void (java.util.Collection<java.lang.String>)
 com.android.build.gradle.internal.dsl.InternalTestExtension implements com.android.build.api.dsl.TestExtension, com.android.build.gradle.internal.dsl.InternalCommonExtension
 com.android.build.gradle.internal.dsl.JavaCompileOptions implements com.android.build.gradle.api.JavaCompileOptions, com.android.build.api.dsl.JavaCompileOptions

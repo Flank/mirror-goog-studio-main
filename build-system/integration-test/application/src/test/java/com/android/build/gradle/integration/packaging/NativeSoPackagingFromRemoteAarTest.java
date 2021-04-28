@@ -72,6 +72,8 @@ public class NativeSoPackagingFromRemoteAarTest {
                         + "group = 'com.example.android.nativepackaging'\n"
                         + "version = '1.0-SNAPSHOT'\n"
                         + "\n"
+                        + "android.publishing.singleVariant('release')\n"
+                        + "\n"
                         + "afterEvaluate {\n"
                         + "    publishing {\n"
                         + "        repositories {\n"

@@ -53,6 +53,10 @@ class PublishLegacyMultidexLibTest {
             defaultConfig {
                 minSdkVersion 19
             }
+
+            publishing {
+                singleVariant("debug")
+            }
         }
 
         afterEvaluate {

@@ -282,7 +282,9 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                 variantPropertiesApiServices,
                 dslNamespaceProvider,
                 dslTestNamespace,
-                configuredNativeBuilder())
+                configuredNativeBuilder(),
+                extension,
+                hasDynamicFeatures = globalScope.hasDynamicFeatures())
 
         // We must first add the flavors to the variant config, in order to get the proper
         // variant-specific and multi-flavor name as we add/create the variant providers later.
@@ -363,6 +365,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
         if (extension is BaseAppModuleExtension) {
             builder.setFeatureList(extension.dynamicFeatures)
         }
+
         val variantDependencies = builder.build()
 
         // Done. Create the (too) many variant objects
@@ -467,7 +470,9 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
             variantPropertiesApiServices.provider {
                 mainComponentInfo.variant.variantDslInfo.namespace.get() + "." +
                         testFixturesFeatureName
-            }
+            },
+            extension = extension,
+            hasDynamicFeatures = globalScope.hasDynamicFeatures()
         )
         val productFlavorList = mainComponentInfo.variant.variantDslInfo.productFlavorList
 
@@ -640,7 +645,9 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                         testSourceSet.manifestFile,
                         variantType.requiresManifest) { canParseManifest() },
                 dslServices,
-                variantPropertiesApiServices)
+                variantPropertiesApiServices,
+                extension = extension,
+                hasDynamicFeatures = globalScope.hasDynamicFeatures())
         variantDslInfoBuilder.testedVariant =
                 testedComponentInfo.variant.variantDslInfo as VariantDslInfoImpl
         val productFlavorList = testedComponentInfo.variant.variantDslInfo.productFlavorList

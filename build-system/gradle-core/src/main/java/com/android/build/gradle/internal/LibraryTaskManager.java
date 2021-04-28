@@ -357,17 +357,9 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
 
         final VariantDependencies variantDependencies = variant.getVariantDependencies();
 
-        AdhocComponentWithVariants component =
-                globalScope.getComponentFactory().adhoc(variant.getName());
-
-        final Configuration apiPub = variantDependencies.getElements(API_PUBLICATION);
-        final Configuration runtimePub = variantDependencies.getElements(RUNTIME_PUBLICATION);
-
-        component.addVariantsFromConfiguration(
-                apiPub, new ConfigurationVariantMapping("compile", false));
-        component.addVariantsFromConfiguration(
-                runtimePub, new ConfigurationVariantMapping("runtime", false));
-        project.getComponents().add(component);
+        if (variant.getVariantDslInfo().getPublishInfo().isAarPublished()) {
+            createComponentForSingleVariantPublishing(variant);
+        }
 
         AdhocComponentWithVariants allVariants =
                 (AdhocComponentWithVariants) project.getComponents().findByName("all");
@@ -382,6 +374,22 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
                 variantDependencies.getElements(ALL_RUNTIME_PUBLICATION);
         allVariants.addVariantsFromConfiguration(
                 allRuntimePub, new ConfigurationVariantMapping("runtime", true));
+    }
+
+    private void createComponentForSingleVariantPublishing(@NonNull VariantImpl variant) {
+        final VariantDependencies variantDependencies = variant.getVariantDependencies();
+
+        AdhocComponentWithVariants component =
+                globalScope.getComponentFactory().adhoc(variant.getName());
+
+        final Configuration apiPub = variantDependencies.getElements(API_PUBLICATION);
+        final Configuration runtimePub = variantDependencies.getElements(RUNTIME_PUBLICATION);
+
+        component.addVariantsFromConfiguration(
+                apiPub, new ConfigurationVariantMapping("compile", false));
+        component.addVariantsFromConfiguration(
+                runtimePub, new ConfigurationVariantMapping("runtime", false));
+        project.getComponents().add(component);
     }
 
     @Override

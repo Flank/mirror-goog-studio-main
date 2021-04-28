@@ -19,15 +19,21 @@ package com.android.build.gradle.internal.core
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.impl.ComponentIdentityImpl
 import com.android.build.gradle.internal.VariantManager
+import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
 import com.android.build.gradle.internal.core.VariantDslInfoBuilder.Companion.getBuilder
+import com.android.build.gradle.internal.dsl.ApplicationPublishingImpl
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.DefaultConfig
+import com.android.build.gradle.internal.dsl.InternalApplicationExtension
+import com.android.build.gradle.internal.dsl.InternalLibraryExtension
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.manifest.ManifestDataProvider
 import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
+import com.android.build.gradle.internal.utils.createPublishingInfoForApp
+import com.android.build.gradle.internal.utils.createPublishingInfoForLibrary
 import com.android.build.gradle.internal.utils.toImmutableList
 import com.android.build.gradle.internal.variant.DimensionCombination
 import com.android.builder.core.VariantType
@@ -58,6 +64,8 @@ class VariantDslInfoBuilder private constructor(
     private val dslNamespaceProvider: Provider<String>?,
     private val dslTestNamespace: String?,
     private val nativeBuildSystem: VariantManager.NativeBuiltType?,
+    private val extension: BaseExtension,
+    private val hasDynamicFeatures: Boolean
 ) {
 
     companion object {
@@ -79,6 +87,8 @@ class VariantDslInfoBuilder private constructor(
             dslNamespaceProvider: Provider<String>? = null,
             dslTestNamespace: String? = null,
             nativeBuildSystem: VariantManager.NativeBuiltType? = null,
+            extension: BaseExtension,
+            hasDynamicFeatures: Boolean
         ): VariantDslInfoBuilder {
             return VariantDslInfoBuilder(
                 dimensionCombination,
@@ -94,6 +104,8 @@ class VariantDslInfoBuilder private constructor(
                 dslNamespaceProvider,
                 dslTestNamespace,
                 nativeBuildSystem,
+                extension,
+                hasDynamicFeatures
             )
         }
 
@@ -283,6 +295,22 @@ class VariantDslInfoBuilder private constructor(
     fun createVariantDslInfo(buildDirectory: DirectoryProperty): VariantDslInfoImpl {
         val flavorList = flavors.map { it.first }
 
+        val publishingInfo = if (extension is InternalLibraryExtension) {
+            createPublishingInfoForLibrary(
+                extension.publishing,
+                dslServices.projectOptions,
+                name
+            )
+        } else if (extension is InternalApplicationExtension) {
+            createPublishingInfoForApp(
+                extension.publishing as ApplicationPublishingImpl,
+                dslServices.projectOptions,
+                name,
+                hasDynamicFeatures,
+                dslServices.issueReporter
+            )
+        } else null
+
         return VariantDslInfoImpl(
             ComponentIdentityImpl(
                 name,
@@ -304,6 +332,7 @@ class VariantDslInfoBuilder private constructor(
             dslNamespaceProvider,
             dslTestNamespace,
             nativeBuildSystem,
+            publishingInfo
         )
     }
 

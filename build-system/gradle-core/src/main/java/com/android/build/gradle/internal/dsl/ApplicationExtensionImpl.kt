@@ -20,10 +20,9 @@ import com.android.build.api.dsl.ApplicationBuildFeatures
 import com.android.build.api.dsl.ApplicationBuildType
 import com.android.build.api.dsl.ApplicationDefaultConfig
 import com.android.build.api.dsl.ApplicationProductFlavor
+import com.android.build.api.dsl.ApplicationPublishing
 import com.android.build.api.dsl.Bundle
 import com.android.build.api.dsl.DependenciesInfo
-import com.android.build.api.variant.ApplicationVariantBuilder
-import com.android.build.api.variant.ApplicationVariant
 import com.android.build.gradle.internal.plugins.DslContainerProvider
 import com.android.build.gradle.internal.services.DslServices
 import org.gradle.api.Action
