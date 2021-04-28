@@ -39,6 +39,7 @@ import com.intellij.psi.PsiArrayType
 import com.intellij.psi.PsiCompiledElement
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiField
+import com.intellij.psi.PsiLiteralExpression
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiModifier
 import com.intellij.psi.PsiModifierListOwner
@@ -440,7 +441,7 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             // we'd be reading out literal values which we don't want to do)
             if (value is PsiField && rangeAnnotation == null) {
                 val initializer = UastFacade.getInitializerBody(value)
-                if (initializer != null) {
+                if (initializer != null && initializer !is ULiteralExpression && initializer.sourcePsi !is PsiLiteralExpression) {
                     checkTypeDefConstant(
                         context, annotation, initializer, errorNode,
                         flag, allAnnotations
