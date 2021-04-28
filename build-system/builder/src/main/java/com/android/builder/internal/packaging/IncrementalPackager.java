@@ -366,7 +366,7 @@ public class IncrementalPackager implements Closeable {
                                 new PackagedFileUpdate(
                                         new RelativeFile(
                                                 change.getFile().getParentFile(), change.getFile()),
-                                        "META-INF/" + SdkConstants.FN_ART_PROFILE,
+                                        "assets/dexopt/" + SdkConstants.FN_BINARY_ART_PROFILE,
                                         change.getFileStatus()))
                 .collect(Collectors.toList());
     }

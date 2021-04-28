@@ -22,6 +22,7 @@ dependencies {
     testImplementation project(':base:zipflinger')
     testCompileOnly(project(':base:profile'))
     testImplementation project(':base:layoutlib-api')
+    testImplementation project(':base:profgen')
 
     testImplementation libs.kotlin_stdlib
     testImplementation libs.kotlin_test

@@ -1183,7 +1183,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             creationConfig
                     .getArtifacts()
                     .setTaskInputToFinalProduct(
-                            InternalArtifactType.MERGED_ART_PROFILE.INSTANCE,
+                            InternalArtifactType.BINARY_ART_PROFILE.INSTANCE,
                             packageAndroidArtifact.getMergedArtProfile());
 
             packageAndroidArtifact
@@ -1294,7 +1294,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         }
 
         @NonNull
-        public FileCollection getDexFolders(@NonNull ApkCreationConfig creationConfig) {
+        public static FileCollection getDexFolders(@NonNull ApkCreationConfig creationConfig) {
             ArtifactsImpl artifacts = creationConfig.getArtifacts();
             if (creationConfig.getVariantScope().consumesFeatureJars()) {
                 return creationConfig
@@ -1329,7 +1329,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         }
 
         @Nullable
-        public FileCollection getFeatureDexFolder(
+        public static FileCollection getFeatureDexFolder(
                 @NonNull ApkCreationConfig creationConfig, @NonNull String projectPath) {
             if (!creationConfig.getVariantType().isDynamicFeature()) {
                 return null;
@@ -1374,7 +1374,8 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         }
 
         @NonNull
-        private FileCollection getDesugarLibDexIfExists(@NonNull ApkCreationConfig creationConfig) {
+        private static FileCollection getDesugarLibDexIfExists(
+                @NonNull ApkCreationConfig creationConfig) {
             if (!creationConfig.getShouldPackageDesugarLibDex()) {
                 return creationConfig.getServices().fileCollection();
             }
