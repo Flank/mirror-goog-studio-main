@@ -90,26 +90,24 @@ message EmptyResponse {}
 // and can be access via profiler::Config::Instance().
 message AgentConfig {
   enum AttachAgentMethod {
-    // The default value results in the JVMTI being initiated when 
+    // The default value results in the JVMTI being initiated when
     // the BEGIN_SESSION command is sent.
     UNSPECIFIED = 0;
     // Triggers JVMTI instrumentation as soon as the agent is initialized.
     INSTANT = 1;
     // Triggers JVMTI instrumentation only when |attach_command| is
-    // received. 
+    // received.
     ON_COMMAND = 2;
   }
   message MemoryConfig {
-    // equivalent to profiler.livealloc flag in Studio.
-    bool use_live_alloc = 1;
     // the maximum depth of allocation stack traces to record.
-    int32 max_stack_depth = 2;
+    int32 max_stack_depth = 1;
     // Enable tracking of creation and deletion of globla JNI references.
-    bool track_global_jni_refs = 3;
+    bool track_global_jni_refs = 2;
     // Path to the app dir: usually /data/app/
-    string app_dir = 4;
+    string app_dir = 3;
     // The allocation sampling rate to use when starting a profiling session.
-    MemoryAllocSamplingData sampling_rate = 5;
+    MemoryAllocSamplingData sampling_rate = 4;
   }
   CommonConfig common = 1;
   MemoryConfig mem = 2;

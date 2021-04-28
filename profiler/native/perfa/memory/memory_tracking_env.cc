@@ -191,7 +191,6 @@ MemoryTrackingEnv* MemoryTrackingEnv::Instance(
 MemoryTrackingEnv::MemoryTrackingEnv(
     jvmtiEnv* jvmti, const AgentConfig::MemoryConfig& mem_config)
     : jvmti_(jvmti),
-      log_live_alloc_count_(mem_config.use_live_alloc()),
       track_global_jni_refs_(mem_config.track_global_jni_refs()),
       is_first_tracking_(true),
       is_live_tracking_(false),
@@ -276,12 +275,10 @@ void MemoryTrackingEnv::Initialize() {
       jvmti_->RunAgentThread(AllocateJavaThread(jvmti_, jni), &AllocDataWorker,
                              this, JVMTI_THREAD_NORM_PRIORITY);
   CheckJvmtiError(jvmti_, error);
-  if (log_live_alloc_count_) {
-    error = jvmti_->RunAgentThread(AllocateJavaThread(jvmti_, jni),
-                                   &AllocCountWorker, this,
-                                   JVMTI_THREAD_NORM_PRIORITY);
-    CheckJvmtiError(jvmti_, error);
-  }
+  error =
+      jvmti_->RunAgentThread(AllocateJavaThread(jvmti_, jni), &AllocCountWorker,
+                             this, JVMTI_THREAD_NORM_PRIORITY);
+  CheckJvmtiError(jvmti_, error);
 }
 
 static bool startsWith(const std::string& str, const std::string& prefix) {

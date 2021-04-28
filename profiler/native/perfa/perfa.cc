@@ -197,9 +197,8 @@ void ProfilerInitializationWorker(jvmtiEnv* jvmti, JNIEnv* jni, void* ptr) {
   AgentConfig* config = static_cast<AgentConfig*>(ptr);
   jclass service =
       jni->FindClass("com/android/tools/profiler/support/ProfilerService");
-  jmethodID initialize = jni->GetStaticMethodID(service, "initialize", "(Z)V");
-  bool log_live_alloc_count = config->mem().use_live_alloc();
-  jni->CallStaticVoidMethod(service, initialize, !log_live_alloc_count);
+  jmethodID initialize = jni->GetStaticMethodID(service, "initialize", "()V");
+  jni->CallStaticVoidMethod(service, initialize);
 }
 
 void InitializePerfa(jvmtiEnv* jvmti_env, JNIEnv* jni_env,

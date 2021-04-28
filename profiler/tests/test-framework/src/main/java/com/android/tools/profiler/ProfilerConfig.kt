@@ -35,7 +35,6 @@ open class ProfilerConfig : TransportRule.Config() {
 
     final override fun initAgentConfig(agentConfig: AgentConfig.Builder) {
         val memConfig = MemoryConfig.newBuilder()
-                .setUseLiveAlloc(true)
                 .setTrackGlobalJniRefs(true)
                 .setAppDir("/")
                 .setMaxStackDepth(50)
@@ -52,4 +51,3 @@ open class ProfilerConfig : TransportRule.Config() {
         transportRule.androidDriver.setProperty("profiler.service.address", transportRule.commonConfig.serviceAddress)
     }
 }
-
