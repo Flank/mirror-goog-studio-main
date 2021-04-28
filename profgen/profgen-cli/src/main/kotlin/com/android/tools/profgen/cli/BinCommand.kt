@@ -19,6 +19,7 @@ package com.android.tools.profgen.cli
 import com.android.tools.profgen.Apk
 import com.android.tools.profgen.ArtProfile
 import com.android.tools.profgen.ArtProfileSerializer
+import com.android.tools.profgen.Diagnostics
 import com.android.tools.profgen.HumanReadableProfile
 import com.android.tools.profgen.ObfuscationMap
 import kotlinx.cli.ArgType
@@ -26,6 +27,7 @@ import kotlinx.cli.ExperimentalCli
 import kotlinx.cli.Subcommand
 import kotlinx.cli.required
 import java.io.File
+import kotlin.system.exitProcess
 
 @ExperimentalCli
 class BinCommand : Subcommand("bin", "Generate Binary Profile") {
@@ -47,7 +49,7 @@ class BinCommand : Subcommand("bin", "Generate Binary Profile") {
         val outFile = File(outPath)
         require(outFile.parentFile.exists()) { "Directory does not exist: ${outFile.parent}" }
 
-        val hrp = HumanReadableProfile(hrpFile)
+        val hrp = readHumanReadableProfileOrExit(hrpFile)
         val apk = Apk(apkFile)
         val obf = if (obfFile != null) ObfuscationMap(obfFile) else ObfuscationMap.Empty
         val profile = ArtProfile(hrp, obf, apk)
@@ -61,7 +63,7 @@ class ValidateCommand : Subcommand("validate", "Validate Profile") {
     override fun execute() {
         val hrpFile = File(hrpPath)
         require(hrpFile.exists()) { "File not found: $hrpPath" }
-        HumanReadableProfile(hrpFile)
+        HumanReadableProfile(hrpFile, StdErrorDiagnostics)
     }
 }
 
@@ -85,10 +87,21 @@ class PrintCommand : Subcommand("print", "Print methods matching profile") {
         val outFile = File(outPath)
         require(outFile.parentFile.exists()) { "Directory does not exist: ${outFile.parent}" }
 
-        val hrp = HumanReadableProfile(hrpFile)
+        val hrp = readHumanReadableProfileOrExit(hrpFile)
         val apk = Apk(apkFile)
         val obf = if (obfFile != null) ObfuscationMap(obfFile) else ObfuscationMap.Empty
         val profile = ArtProfile(hrp, obf, apk)
         profile.print(System.out, obf)
     }
 }
+
+private fun readHumanReadableProfileOrExit(hrpFile: File): HumanReadableProfile {
+    val hrp = HumanReadableProfile(hrpFile, StdErrorDiagnostics)
+    if (hrp == null) {
+        System.err.println("Failed to parse $hrpFile.")
+        exitProcess(-1)
+    }
+    return hrp
+}
+
+private val StdErrorDiagnostics = Diagnostics { System.err.println(it) }

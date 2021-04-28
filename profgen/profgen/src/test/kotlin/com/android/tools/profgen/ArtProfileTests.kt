@@ -4,12 +4,13 @@ import org.junit.Test
 import java.io.ByteArrayOutputStream
 import java.util.zip.CRC32
 import kotlin.test.assertEquals
+import kotlin.test.fail
 
 class ArtProfileTests {
     @Test
     fun testExactMethod() {
         val obf = ObfuscationMap(testData("mapping.txt"))
-        val hrp = HumanReadableProfile(testData("exact-composer-hrp.txt"))
+        val hrp = strictHumanReadableProfile("exact-composer-hrp.txt")
         val apk = Apk(testData("app-release.apk"))
         val profile = ArtProfile(hrp, obf, apk)
         assert(profile.profileData.isNotEmpty())
@@ -18,7 +19,7 @@ class ArtProfileTests {
     @Test
     fun testFuzzyMethods() {
         val obf = ObfuscationMap(testData("mapping.txt"))
-        val hrp = HumanReadableProfile(testData("fuzzy-composer-hrp.txt"))
+        val hrp = strictHumanReadableProfile("fuzzy-composer-hrp.txt")
         val apk = Apk(testData("app-release.apk"))
         val profile = ArtProfile(hrp, obf, apk)
         assert(profile.profileData.isNotEmpty())
@@ -27,7 +28,7 @@ class ArtProfileTests {
     @Test
     fun testSerializationDeserializationForN() {
         val obf = ObfuscationMap(testData("mapping.txt"))
-        val hrp = HumanReadableProfile(testData("fuzzy-composer-hrp.txt"))
+        val hrp = strictHumanReadableProfile("fuzzy-composer-hrp.txt")
         val apk = Apk(testData("app-release.apk"))
         val prof = ArtProfile(hrp, obf, apk)
         assertSerializationIntegrity(prof, ArtProfileSerializer.V0_0_1_N)
@@ -36,7 +37,7 @@ class ArtProfileTests {
     @Test
     fun testSerializationDeserializationForO() {
         val obf = ObfuscationMap(testData("mapping.txt"))
-        val hrp = HumanReadableProfile(testData("fuzzy-composer-hrp.txt"))
+        val hrp = strictHumanReadableProfile("fuzzy-composer-hrp.txt")
         val apk = Apk(testData("app-release.apk"))
         val prof = ArtProfile(hrp, obf, apk)
         assertSerializationIntegrity(prof, ArtProfileSerializer.V0_0_5_O)
@@ -45,7 +46,7 @@ class ArtProfileTests {
     @Test
     fun testSerializationDeserializationForP() {
         val obf = ObfuscationMap(testData("mapping.txt"))
-        val hrp = HumanReadableProfile(testData("fuzzy-composer-hrp.txt"))
+        val hrp = strictHumanReadableProfile("fuzzy-composer-hrp.txt")
         val apk = Apk(testData("app-release.apk"))
         val prof = ArtProfile(hrp, obf, apk)
         assertSerializationIntegrity(prof, ArtProfileSerializer.V0_1_0_P)
@@ -54,7 +55,7 @@ class ArtProfileTests {
     @Test
     fun testTranscodeFromPtoO() {
         val obf = ObfuscationMap(testData("mapping.txt"))
-        val hrp = HumanReadableProfile(testData("fuzzy-composer-hrp.txt"))
+        val hrp = strictHumanReadableProfile("fuzzy-composer-hrp.txt")
         val apk = Apk(testData("app-release.apk"))
         val prof = ArtProfile(hrp, obf, apk)
         assertTranscodeIntegrity(prof, ArtProfileSerializer.V0_1_0_P, ArtProfileSerializer.V0_0_5_O)
@@ -63,7 +64,7 @@ class ArtProfileTests {
     @Test
     fun testTranscodeFromPtoN() {
         val obf = ObfuscationMap(testData("mapping.txt"))
-        val hrp = HumanReadableProfile(testData("fuzzy-composer-hrp.txt"))
+        val hrp = strictHumanReadableProfile("fuzzy-composer-hrp.txt")
         val apk = Apk(testData("app-release.apk"))
         val prof = ArtProfile(hrp, obf, apk)
         assertTranscodeIntegrity(prof, ArtProfileSerializer.V0_1_0_P, ArtProfileSerializer.V0_0_1_N)
@@ -125,3 +126,8 @@ class ArtProfileTests {
     private val ArtProfile.classCount: Int get() = profileData.values.sumBy { it.classes.size }
     private val ArtProfile.methodCount: Int get() = profileData.values.sumBy { it.methods.values.size }
 }
+
+private fun strictHumanReadableProfile(path: String) =
+    HumanReadableProfile(testData(path), strictDiagnostics)!!
+
+private val strictDiagnostics = Diagnostics { error -> fail(error) }

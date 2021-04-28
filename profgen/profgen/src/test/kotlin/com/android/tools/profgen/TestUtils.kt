@@ -17,8 +17,10 @@
 package com.android.tools.profgen
 
 import com.android.testutils.TestUtils
+import java.io.ByteArrayInputStream
 import java.io.File
 import java.nio.file.Path
+import kotlin.test.fail
 
 fun testData(relativePath: String): File {
     return testDataPath(relativePath).toFile()
@@ -30,4 +32,12 @@ fun testDataPath(relativePath: String): Path {
 
 fun workspacePath(relativePath: String): Path {
     return TestUtils.resolveWorkspacePath(relativePath)
+}
+
+fun HumanReadableProfile(
+    vararg strings: String,
+    onError: (Int, Int, String) -> Unit
+) : HumanReadableProfile? {
+    val text = strings.joinToString("\n")
+    return HumanReadableProfile(ByteArrayInputStream(text.toByteArray()).reader(), onError)
 }
