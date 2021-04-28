@@ -51,7 +51,7 @@ fi
 # Generate baseline coverage file lists
 "${script_dir}/bazel" \
   build \
-  --config=dynamic \
+  --config=rcache \
   --build_tag_filters="coverage-sources" \
   -- \
   //tools/... \
@@ -84,7 +84,7 @@ fi
 # Build the lcov file
 "${script_dir}/bazel" \
   build \
-  --config=dynamic \
+  --config=rcache \
   --remote_download_outputs=toplevel \
   --invocation_id=${report_invocation_id} \
   ${auth_options} \
