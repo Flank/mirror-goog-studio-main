@@ -29,9 +29,6 @@ interface RecipeExecutor {
    * Writes text into the given output file.
    * @param source the source of the text
    * @param to the location of the output file
-   * @param commitDocument commit the saved file if set to true. This can be usually false. This is useful when the saved file needs to be
-   *                       modified in the same recipe file. E.g. in a case where a build.gradle file is saved and a dependency is added to
-   *                       the build.gradle file
    */
   fun save(source: String, to: File)
 
