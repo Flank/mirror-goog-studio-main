@@ -192,6 +192,12 @@ dependencies {
     includeInJarSources(project(path:':base:mlkit-common')) {
         transitive = false
     }
+    includeInJar(project(':base:profgen')) {
+        transitive = false
+    }
+    includeInJarSources(project(':base:profgen')) {
+        transitive = false
+    }
     implementation libs.flatbuffers
     implementation libs.tensorflow_lite_metadata
 }
