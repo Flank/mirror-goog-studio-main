@@ -12,6 +12,7 @@ kotlin_library(
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/common:tools.common",
+        "//tools/base/ddmlib:tools.ddmlib",
         "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
         "//tools/base/third_party:org.jetbrains.kotlinx_kotlinx-coroutines-core",
 
@@ -47,6 +48,7 @@ kotlin_test(
         # Test dependencies.
         ":android-test-plugin-host-logcat",
         "//tools/base/common:tools.common",
+        "//tools/base/ddmlib:tools.ddmlib",
         "//tools/base/sdk-common:tools.sdk-common",
         "//tools/base/sdklib:tools.sdklib",
         "//tools/base/testutils:tools.testutils",
