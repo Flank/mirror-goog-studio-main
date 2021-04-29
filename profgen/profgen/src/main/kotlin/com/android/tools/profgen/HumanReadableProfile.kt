@@ -282,10 +282,14 @@ internal fun parseRule(
     var i = 0
     try {
     val flags = Flags().apply { i = parseFlags(line, i) }
+    val targetIndex = i
     i = fragmentParser.parseTarget(line, i)
     val target = fragmentParser.build()
     // check if it has only target class
     if (i == line.length) {
+        if (flags.flags != 0) {
+            throw ParsingException(0, flagsForClassRuleMessage(line.substring(0, targetIndex)))
+        }
         return ProfileRule(flags.flags, target,
             RuleFragment.Empty, RuleFragment.Empty, RuleFragment.Empty)
     }
@@ -300,7 +304,9 @@ internal fun parseRule(
     i = fragmentParser.parseReturnType(line, i)
     val returnType = fragmentParser.build()
     require(i == line.length)
-
+    if (flags.flags == 0) {
+        throw ParsingException(0, emptyFlagsForMethodRuleMessage())
+    }
     return ProfileRule(
         flags = flags.flags,
         target = target,

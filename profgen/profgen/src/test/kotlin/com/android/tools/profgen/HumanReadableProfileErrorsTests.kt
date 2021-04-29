@@ -28,6 +28,19 @@ class HumanReadableProfileErrorsTests {
         assertThat(parseRule("HSPLA;bla")).isEqualTo(
              6 to unexpectedChar('-', 'b')
         )
+        assertThat(parseRule("pack.age.Foo")).isEqualTo(
+            0 to illegalTokenMessage('p', "pack.age.Foo")
+        )
+    }
+
+    @Test
+    fun testIncorrectFlags() {
+        assertThat(parseRule("HSPLFoo;")).isEqualTo(
+            0 to flagsForClassRuleMessage("HSP")
+        )
+        assertThat(parseRule("LFoo;->method()V")).isEqualTo(
+            0 to emptyFlagsForMethodRuleMessage()
+        )
     }
 
     @Test

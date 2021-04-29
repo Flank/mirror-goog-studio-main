@@ -34,7 +34,7 @@ class HumanReadableProfileTests {
     )
 
     @Test
-    fun testSinglePartWildcardInPackageSegment() = forLine("Lcom/*/Foo;->method(II)I") {
+    fun testSinglePartWildcardInPackageSegment() = forLine("HLcom/*/Foo;->method(II)I") {
         assertMatches(
             "Lcom/anything/Foo;->method(II)I",
             "Lcom/can/Foo;->method(II)I",
@@ -50,7 +50,7 @@ class HumanReadableProfileTests {
     }
 
     @Test
-    fun testMultipartWildcard() = forLine("Lcom/**/Foo;->method(II)I") {
+    fun testMultipartWildcard() = forLine("HLcom/**/Foo;->method(II)I") {
         assertMatches("Lcom/anything/can/go/here/Foo;->method(II)I")
         assertDoesNotMatch(
             "Lcom/anything/can/go/here;->method(II)I",
@@ -106,7 +106,8 @@ class HumanReadableProfileTests {
     }
 
     fun assertMatchesItself(vararg lines: String) {
-        for (line in lines) assertMatches(line, line)
+        // to create a correct rule from a method a flag is added to the beginning
+        for (line in lines) assertMatches("H$line", line)
     }
 
     internal fun forLine(hrpLine: String, test: LineTestScope.() -> Unit) = LineTestScope(hrpLine).test()
@@ -163,7 +164,8 @@ private fun parseRule(
 ) = parseRule(line, {_, message -> fail(message)}, RuleFragmentParser(line.length) )!!
 
 internal fun parseDexMethod(line: String): DexMethod {
-    return parseRule(line).toDexMethod()
+    // a bit of the hack, rules require to provide a flags for methods, H is added to beginning
+    return parseRule("H$line").toDexMethod()
 }
 
 private fun HumanReadableProfile(vararg strings: String) : HumanReadableProfile {
