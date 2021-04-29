@@ -680,8 +680,6 @@ public class LocalSdk {
                 platformTools,
                 platformTools.resolve(SdkConstants.FN_AAPT),
                 platformTools.resolve(SdkConstants.FN_AIDL),
-                platformTools.resolve(SdkConstants.FN_DX),
-                platformToolsLib.resolve(SdkConstants.FN_DX_JAR),
                 platformTools.resolve(SdkConstants.FN_RENDERSCRIPT),
                 platformToolsRs.resolve(SdkConstants.FN_FRAMEWORK_INCLUDE),
                 platformToolsRs.resolve(SdkConstants.FN_FRAMEWORK_INCLUDE_CLANG),

@@ -222,13 +222,6 @@ public final class SdkConstants {
     /** Skin layout file */
     public static final String FN_SKIN_LAYOUT = "layout";
 
-    /** dx.jar file */
-    public static final String FN_DX_JAR = "dx.jar";
-
-    /** dx executable (with extension for the current OS) */
-    public static final String FN_DX =
-            "dx" + ext(".bat", "");
-
     /** aapt executable (with extension for the current OS) */
     public static final String FN_AAPT =
             "aapt" + ext(".exe", "");
