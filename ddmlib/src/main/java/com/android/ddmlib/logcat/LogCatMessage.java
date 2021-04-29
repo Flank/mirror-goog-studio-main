@@ -63,34 +63,6 @@ public final class LogCatMessage {
         return mMessage;
     }
 
-    @NonNull
-    public LogLevel getLogLevel() {
-        return mHeader.getLogLevel();
-    }
-
-    public int getPid() {
-        return mHeader.getPid();
-    }
-
-    public int getTid() {
-        return mHeader.getTid();
-    }
-
-    @NonNull
-    public String getAppName() {
-        return mHeader.getAppName();
-    }
-
-    @NonNull
-    public String getTag() {
-        return mHeader.getTag();
-    }
-
-    @NonNull
-    public Instant getTimestamp() {
-        return mHeader.getTimestamp();
-    }
-
     @Override
     public String toString() {
         return mHeader + ": " + mMessage;

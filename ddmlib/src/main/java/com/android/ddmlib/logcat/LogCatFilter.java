@@ -17,7 +17,6 @@ package com.android.ddmlib.logcat;
 
 import com.android.annotations.NonNull;
 import com.android.ddmlib.Log.LogLevel;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -188,24 +187,26 @@ public final class LogCatFilter {
 
     /**
      * Check whether a given message will make it through this filter.
-     * @param m message to check
+     *
+     * @param message message to check
      * @return true if the message matches the filter's conditions.
      */
-    public boolean matches(LogCatMessage m) {
+    public boolean matches(@NonNull LogCatMessage message) {
+        LogCatHeader header = message.getHeader();
         /* filter out messages of a lower priority */
-        if (m.getLogLevel().getPriority() < mLogLevel.getPriority()) {
+        if (header.getLogLevel().getPriority() < mLogLevel.getPriority()) {
             return false;
         }
 
         /* if pid filter is enabled, filter out messages whose pid does not match
          * the filter's pid */
-        if (mCheckPid && !Integer.toString(m.getPid()).equals(mPid)) {
+        if (mCheckPid && !Integer.toString(header.getPid()).equals(mPid)) {
             return false;
         }
 
         /* if app name filter is enabled, filter out messages not matching the app name */
         if (mCheckAppName) {
-            Matcher matcher = mAppNamePattern.matcher(m.getAppName());
+            Matcher matcher = mAppNamePattern.matcher(header.getAppName());
             if (!matcher.find()) {
                 return false;
             }
@@ -213,14 +214,14 @@ public final class LogCatFilter {
 
         /* if tag filter is enabled, filter out messages not matching the tag */
         if (mCheckTag) {
-            Matcher matcher = mTagPattern.matcher(m.getTag());
+            Matcher matcher = mTagPattern.matcher(header.getTag());
             if (!matcher.find()) {
                 return false;
             }
         }
 
         if (mCheckText) {
-            Matcher matcher = mTextPattern.matcher(m.getMessage());
+            Matcher matcher = mTextPattern.matcher(message.getMessage());
             if (!matcher.find()) {
                 return false;
             }

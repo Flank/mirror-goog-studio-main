@@ -99,37 +99,37 @@ public final class LogCatMessageParserTest extends TestCase {
 
     /** Check the log level in a few of the parsed messages. */
     public void testLogLevel() {
-        assertEquals(LogLevel.DEBUG, mParsedMessages.get(0).getLogLevel());
-        assertEquals(LogLevel.ASSERT, mParsedMessages.get(5).getLogLevel());
+        assertEquals(LogLevel.DEBUG, mParsedMessages.get(0).getHeader().getLogLevel());
+        assertEquals(LogLevel.ASSERT, mParsedMessages.get(5).getHeader().getLogLevel());
     }
 
     /** Check the parsed tag. */
     @SuppressWarnings("NewMethodNamingConvention")
     public void testTag() {
-        assertEquals("etag", mParsedMessages.get(1).getTag());
+        assertEquals("etag", mParsedMessages.get(1).getHeader().getTag());
     }
 
     /** Check for empty tag */
     public void testEmptyTag() {
         // Technically, the "Log" API allows the "tag" parameter to be an empty string
-        assertEquals("", mParsedMessages.get(7).getTag());
+        assertEquals("", mParsedMessages.get(7).getHeader().getTag());
     }
 
     /** Check for empty tag */
     public void testTagWithSpace() {
         // Technically, the "Log" API allows the "tag" parameter to be an empty string
-        assertEquals("my tag", mParsedMessages.get(8).getTag());
+        assertEquals("my tag", mParsedMessages.get(8).getHeader().getTag());
     }
 
     /** Check for empty tag */
     public void testTagWithSpaces() {
         // Technically, the "Log" API allows the "tag" parameter to be an empty string
-        assertEquals("my tag with spaces", mParsedMessages.get(9).getTag());
+        assertEquals("my tag with spaces", mParsedMessages.get(9).getHeader().getTag());
     }
 
     /** Check the time field. */
     public void testTime() {
-        Instant timestamp = mParsedMessages.get(6).getTimestamp();
+        Instant timestamp = mParsedMessages.get(6).getHeader().getTimestamp();
         assertEquals("08-11 21:15:35.754", formatTimestamp(timestamp));
     }
 
@@ -140,8 +140,8 @@ public final class LogCatMessageParserTest extends TestCase {
 
     @SuppressWarnings("NewMethodNamingConvention")
     public void testTid() {
-        assertEquals(0x1ef, mParsedMessages.get(0).getTid());
-        assertEquals(234, mParsedMessages.get(1).getTid());
+        assertEquals(0x1ef, mParsedMessages.get(0).getHeader().getTid());
+        assertEquals(234, mParsedMessages.get(1).getHeader().getTid());
     }
 
     public void testTimeAsDate() {
@@ -151,8 +151,8 @@ public final class LogCatMessageParserTest extends TestCase {
     }
 
     public void testPackageName() {
-        assertEquals("com.example.name", mParsedMessages.get(0).getAppName());
-        assertEquals("?", mParsedMessages.get(6).getAppName());
+        assertEquals("com.example.name", mParsedMessages.get(0).getHeader().getAppName());
+        assertEquals("?", mParsedMessages.get(6).getHeader().getAppName());
     }
 
     public void testLinesWithoutHeadersAreIgnored() {

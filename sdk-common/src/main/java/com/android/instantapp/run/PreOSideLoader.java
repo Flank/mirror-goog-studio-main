@@ -23,6 +23,7 @@ import com.android.ddmlib.IDevice;
 import com.android.ddmlib.Log;
 import com.android.ddmlib.SyncException;
 import com.android.ddmlib.TimeoutException;
+import com.android.ddmlib.logcat.LogCatHeader;
 import com.android.instantapp.utils.LogcatService;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
@@ -39,8 +40,11 @@ import java.util.concurrent.atomic.AtomicReference;
  * to the device, making the necessary configurations in DevMan.
  */
 class PreOSideLoader implements InstantAppSideLoader.Installer {
+
     @NonNull private static final String TMP_REMOTE_DIR = "/data/local/tmp/aia/";
+
     @NonNull private final File myZipFile;
+
     @NonNull private final RunListener myListener;
 
     // Timeout for shell commands in milliseconds.
@@ -138,8 +142,9 @@ class PreOSideLoader implements InstantAppSideLoader.Installer {
 
         LogcatService.Listener listener =
                 line -> {
-                    if (line.getTag().compareTo("IapkLoadService") == 0) {
-                        if (line.getLogLevel() == Log.LogLevel.ERROR) {
+                    LogCatHeader header = line.getHeader();
+                    if (header.getTag().compareTo("IapkLoadService") == 0) {
+                        if (header.getLogLevel() == Log.LogLevel.ERROR) {
                             String message = line.getMessage();
                             if (message.contains(installTokenIdentifier)) {
                                 error.set(
@@ -147,7 +152,7 @@ class PreOSideLoader implements InstantAppSideLoader.Installer {
                                                 + " - Please see the Logcat for more information.");
                                 latch.countDown();
                             }
-                        } else if (line.getLogLevel() == Log.LogLevel.INFO) {
+                        } else if (header.getLogLevel() == Log.LogLevel.INFO) {
                             String message = line.getMessage();
                             if (message.contains(installTokenIdentifier)) {
                                 if (message.contains("LOAD_SUCCESS")) {

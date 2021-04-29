@@ -16,12 +16,14 @@
 
 package com.android.ddmlib.logcat;
 
+import static com.android.ddmlib.Log.LogLevel.ERROR;
+import static java.time.Instant.EPOCH;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.concurrency.GuardedBy;
 import com.android.ddmlib.AdbCommandRejectedException;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.IShellOutputReceiver;
-import com.android.ddmlib.Log.LogLevel;
 import com.android.ddmlib.MultiLineReceiver;
 import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.TimeoutException;
@@ -33,19 +35,26 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class LogCatReceiverTask implements Runnable {
+
     private static final String LOGCAT_COMMAND = "logcat -v long"; //$NON-NLS-1$
+
     private static final int DEVICE_POLL_INTERVAL_MSEC = 1000;
 
     private static final LogCatMessage sDeviceDisconnectedMsg =
-            new LogCatMessage(LogLevel.ERROR, "Device disconnected: 1");
+            newLogCatMessage("Device disconnected: 1");
+
     private static final LogCatMessage sConnectionTimeoutMsg =
-            new LogCatMessage(LogLevel.ERROR, "LogCat Connection timed out");
+            newLogCatMessage("LogCat Connection timed out");
+
     private static final LogCatMessage sConnectionErrorMsg =
-            new LogCatMessage(LogLevel.ERROR, "LogCat Connection error");
+            newLogCatMessage("LogCat Connection error");
 
     private final IDevice mDevice;
+
     private final LogCatOutputReceiver mReceiver;
+
     private final LogCatMessageParser mParser;
+
     private final AtomicBoolean mCancelled;
 
     @GuardedBy("this")
@@ -90,6 +99,7 @@ public class LogCatReceiverTask implements Runnable {
     }
 
     private class LogCatOutputReceiver extends MultiLineReceiver {
+
         public LogCatOutputReceiver() {
             setTrimLine(false);
         }
@@ -124,8 +134,13 @@ public class LogCatReceiverTask implements Runnable {
     }
 
     private synchronized void notifyListeners(List<LogCatMessage> messages) {
-        for (LogCatListener l: mListeners) {
+        for (LogCatListener l : mListeners) {
             l.log(messages);
         }
+    }
+
+    @NonNull
+    private static LogCatMessage newLogCatMessage(@NonNull String message) {
+        return new LogCatMessage(new LogCatHeader(ERROR, -1, -1, "", "", EPOCH), message);
     }
 }
