@@ -37,6 +37,12 @@ internal fun consume(char: Char, line: String, start: Int): Int {
     return start + 1
 }
 
+internal fun flagsForClassRuleMessage(flags: String) =
+    "Class rules don't support flags, but '$flags' were specified"
+
+internal fun emptyFlagsForMethodRuleMessage() =
+    "At least one of flags 'H', 'S', 'P' must be specified for a method rule"
+
 internal fun unexpectedChar(expected: Char, actual: Char) =
     "'$expected' is expected, but '$actual' was read"
 
