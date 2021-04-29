@@ -69,8 +69,7 @@ class ArtProfileMultipleLibrariesTest {
 
         for (i in 1..3) {
             val library = project.getSubproject(":lib$i")
-            val androidAssets =
-                    File(library.mainSrcDir.parentFile, SdkConstants.FN_ANDROID_PRIVATE_ASSETS)
+            val androidAssets = library.mainSrcDir.parentFile
             androidAssets.mkdir()
 
             File(androidAssets,

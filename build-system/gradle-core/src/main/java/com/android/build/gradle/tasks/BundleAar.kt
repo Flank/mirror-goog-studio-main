@@ -384,8 +384,7 @@ abstract class BundleAar : Zip(), VariantAwareTask {
             }
             if (creationConfig.services.projectOptions[BooleanOption.ENABLE_ART_PROFILES]) {
                 task.from(
-                        creationConfig.artifacts.get(InternalArtifactType.LIBRARY_ART_PROFILE),
-                        prependToCopyPath(SdkConstants.FN_ANDROID_PRIVATE_ASSETS)
+                        creationConfig.artifacts.get(InternalArtifactType.LIBRARY_ART_PROFILE)
                 )
             }
             task.localAarDeps.from(
