@@ -393,34 +393,6 @@ public class ManifestMerger2 {
                 return mergingReportBuilder.build();
             }
         }
-        // android:exported should have an explicit value for S and above with <intent-filter>,
-        // output an
-        // error message to the user if android:exported is not explicitly specified
-        String targetSdkVersion = finalMergedDocument.getTargetSdkVersion();
-        int targetSdkApi =
-                Character.isDigit(targetSdkVersion.charAt(0))
-                        ? Integer.parseInt(targetSdkVersion)
-                        : SdkVersionInfo.getApiByPreviewName(targetSdkVersion, true);
-        if (targetSdkApi > 30) {
-            NodeList activityList =
-                    finalMergedDocument.getXml().getElementsByTagName(SdkConstants.TAG_ACTIVITY);
-            checkIfExportedIsNeeded(activityList, mergingReportBuilder, loadedMainManifestInfo);
-            if (mergingReportBuilder.hasErrors()) {
-                return mergingReportBuilder.build();
-            }
-            NodeList serviceList =
-                    finalMergedDocument.getXml().getElementsByTagName(SdkConstants.TAG_SERVICE);
-            checkIfExportedIsNeeded(serviceList, mergingReportBuilder, loadedMainManifestInfo);
-            if (mergingReportBuilder.hasErrors()) {
-                return mergingReportBuilder.build();
-            }
-            NodeList receiverList =
-                    finalMergedDocument.getXml().getElementsByTagName(SdkConstants.TAG_RECEIVER);
-            checkIfExportedIsNeeded(receiverList, mergingReportBuilder, loadedMainManifestInfo);
-            if (mergingReportBuilder.hasErrors()) {
-                return mergingReportBuilder.build();
-            }
-        }
 
         if (!mOptionalFeatures.contains(Invoker.Feature.REMOVE_TOOLS_DECLARATIONS)) {
             PostValidator.enforceToolsNamespaceDeclaration(finalMergedDocument);
@@ -449,6 +421,17 @@ public class ManifestMerger2 {
 
         // handle optional features which don't need access to XmlDocument layer.
         processOptionalFeatures(finalMergedDocument.getXml(), mergingReportBuilder);
+
+        // android:exported should have an explicit value for S and above with <intent-filter>,
+        // output an error message to the user if android:exported is not explicitly specified
+        checkExportedDeclaration(finalMergedDocument, mergingReportBuilder);
+
+        if (mergingReportBuilder.hasErrors()) {
+            return mergingReportBuilder.build();
+        }
+
+        mergingReportBuilder.setMergedDocument(
+                MergingReport.MergedManifestKind.MERGED, prettyPrint(finalMergedDocument.getXml()));
 
         // call blame after other optional features handled.
         if (!mOptionalFeatures.contains(Invoker.Feature.SKIP_BLAME)) {
@@ -600,9 +583,6 @@ public class ManifestMerger2 {
             adjustInstantAppFeatureSplitInfo(document, mFeatureName);
             addUsesSplitTagsForDependencies(document, mDependencyFeatureNames);
         }
-
-        mergingReport.setMergedDocument(
-                MergingReport.MergedManifestKind.MERGED, prettyPrint(document));
 
         if (mOptionalFeatures.contains(Invoker.Feature.MAKE_AAPT_SAFE)) {
             createAaptSafeManifest(document, mergingReport);
@@ -1399,10 +1379,37 @@ public class ManifestMerger2 {
         }
     }
 
+    private void checkExportedDeclaration(
+            XmlDocument finalMergedDocument, MergingReport.Builder mergingReportBuilder) {
+        String targetSdkVersion = finalMergedDocument.getTargetSdkVersion();
+        int targetSdkApi =
+                Character.isDigit(targetSdkVersion.charAt(0))
+                        ? Integer.parseInt(targetSdkVersion)
+                        : SdkVersionInfo.getApiByPreviewName(targetSdkVersion, true);
+        if (targetSdkApi > 30) {
+            NodeList activityList =
+                    finalMergedDocument.getXml().getElementsByTagName(SdkConstants.TAG_ACTIVITY);
+            checkIfExportedIsNeeded(activityList, mergingReportBuilder, finalMergedDocument);
+            if (mergingReportBuilder.hasErrors()) {
+                return;
+            }
+            NodeList serviceList =
+                    finalMergedDocument.getXml().getElementsByTagName(SdkConstants.TAG_SERVICE);
+            checkIfExportedIsNeeded(serviceList, mergingReportBuilder, finalMergedDocument);
+            if (mergingReportBuilder.hasErrors()) {
+                return;
+            }
+            NodeList receiverList =
+                    finalMergedDocument.getXml().getElementsByTagName(SdkConstants.TAG_RECEIVER);
+            checkIfExportedIsNeeded(receiverList, mergingReportBuilder, finalMergedDocument);
+            if (mergingReportBuilder.hasErrors()) {
+                return;
+            }
+        }
+    }
+
     private void checkIfExportedIsNeeded(
-            NodeList list,
-            MergingReport.Builder mergingReportBuilder,
-            LoadedManifestInfo loadedMainManifestInfo) {
+            NodeList list, MergingReport.Builder mergingReportBuilder, XmlDocument finalManifest) {
         for (int i = 0; i < list.getLength(); i++) {
             Element element = (Element) list.item(i);
 
@@ -1412,7 +1419,7 @@ public class ManifestMerger2 {
                                             SdkConstants.ANDROID_URI, SdkConstants.ATTR_EXPORTED)
                             == null) {
                 mergingReportBuilder.addMessage(
-                        loadedMainManifestInfo.getXmlDocument().getSourceFile(),
+                        finalManifest.getSourceFile(),
                         MergingReport.Record.Severity.ERROR,
                         String.format(
                                 "android:exported needs to be explicitly specified for <%s>. Apps targeting Android 12 and higher are required to specify an explicit value "
