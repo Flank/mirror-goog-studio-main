@@ -44,4 +44,26 @@ class PublishingSpecsTest {
         assertThat(outputSpec.outputType).isEqualTo(InternalArtifactType.RUNTIME_LIBRARY_CLASSES_DIR)
         assertThat(outputSpec.libraryElements).isEqualTo(LibraryElements.CLASSES)
     }
+
+    @Test
+    fun `assert that library and test fixtures artifacts match`() {
+        // the set of artifacts that are intentionally left out of test fixtures
+        val testFixturesExcludedArtifacts = setOf(
+            AndroidArtifacts.ArtifactType.ART_PROFILE,
+            AndroidArtifacts.ArtifactType.AIDL,
+            AndroidArtifacts.ArtifactType.JNI,
+            AndroidArtifacts.ArtifactType.LINT,
+            AndroidArtifacts.ArtifactType.LINT_MODEL,
+            AndroidArtifacts.ArtifactType.LINT_PARTIAL_RESULTS,
+            AndroidArtifacts.ArtifactType.PREFAB_PACKAGE,
+            AndroidArtifacts.ArtifactType.RENDERSCRIPT,
+            AndroidArtifacts.ArtifactType.UNFILTERED_PROGUARD_RULES,
+        )
+
+        val libraryOutputs = getVariantSpec(VariantTypeImpl.LIBRARY).outputs
+        val testFixturesOutputs = getVariantSpec(VariantTypeImpl.TEST_FIXTURES).outputs
+        assertThat(libraryOutputs.filterNot {
+            testFixturesExcludedArtifacts.contains(it.artifactType)
+        }).containsExactlyElementsIn(testFixturesOutputs)
+    }
 }
