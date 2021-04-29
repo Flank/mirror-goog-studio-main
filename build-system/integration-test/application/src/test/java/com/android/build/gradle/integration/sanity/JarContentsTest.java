@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.sanity;
 
 import com.android.Version;
 import com.android.testutils.TestUtils;
+import com.android.tools.bazel.repolinker.RepoLinker;
 import com.android.utils.FileUtils;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
@@ -30,7 +31,6 @@ import java.io.File;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -53,7 +53,7 @@ public class JarContentsTest {
 
     private static final String EXTERNAL_DEPS = "/com/android/tools/external/";
 
-    private static final String GMAVEN_ZIP = "tools/base/gmaven.zip";
+    private static final String GMAVEN_MANIFEST = "tools/base/gmaven.manifest";
 
     private static final SetMultimap<String, String> EXPECTED;
 
@@ -1473,22 +1473,22 @@ public class JarContentsTest {
 
     @Test
     public void checkTools() throws Exception {
-        checkGroup("com/android/tools", GMAVEN_ZIP);
+        checkGroup("com/android/tools", GMAVEN_MANIFEST);
     }
 
     @Test
     public void checkDataBinding() throws Exception {
-        checkGroup("androidx/databinding/databinding-common", GMAVEN_ZIP);
-        checkGroup("androidx/databinding/databinding-compiler-common", GMAVEN_ZIP);
-        checkGroup("androidx/databinding/databinding-compiler", GMAVEN_ZIP);
+        checkGroup("androidx/databinding/databinding-common", GMAVEN_MANIFEST);
+        checkGroup("androidx/databinding/databinding-compiler-common", GMAVEN_MANIFEST);
+        checkGroup("androidx/databinding/databinding-compiler", GMAVEN_MANIFEST);
         // pre-android X
-        checkGroup("com/android/databinding/baseLibrary", GMAVEN_ZIP);
+        checkGroup("com/android/databinding/baseLibrary", GMAVEN_MANIFEST);
     }
 
-    private void checkGroup(String groupPrefix, String zipLocation) throws Exception {
+    private void checkGroup(String groupPrefix, String manifestLocation) throws Exception {
         List<String> jarNames = new ArrayList<>();
 
-        Path repo = getRepo(zipLocation);
+        Path repo = getRepo(manifestLocation);
         Path androidTools = repo.resolve(groupPrefix);
 
         List<Path> ourJars =
@@ -1681,13 +1681,19 @@ public class JarContentsTest {
         return files;
     }
 
-    private static Path getRepo(String zip) throws IOException {
+    private static Path getRepo(String manifest) throws Exception {
         if (!TestUtils.runningFromBazel()) {
             String customRepo = System.getenv("CUSTOM_REPO");
             return Paths.get(
                     Splitter.on(File.pathSeparatorChar).split(customRepo).iterator().next());
         }
-        return FileSystems.newFileSystem(TestUtils.resolveWorkspacePath(zip), null).getPath("/");
+
+        Path repo = Files.createTempDirectory(null);
+        RepoLinker linker = new RepoLinker();
+        List<String> artifacts = Files.readAllLines(Paths.get(manifest));
+        linker.link(repo, artifacts);
+
+        return repo;
     }
 
     private static class NonClosingInputStream extends FilterInputStream {

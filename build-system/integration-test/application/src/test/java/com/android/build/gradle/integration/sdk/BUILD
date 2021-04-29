@@ -34,11 +34,10 @@ gradle_integration_test(
         "//tools/base/build-system/integration-test:test-projects/commonBuildScript.gradle",
     ],
     maven_repo_manifests = [
+        "//tools/base/build-system:gradle_plugin_no_databinding_repo",
         "//tools/base/build-system/integration-test/application:prebuilts",
     ],
-    maven_repos = [
-        "//tools/base/build-system:gradle_plugin_no_databinding_repo",
-    ],
+    maven_repos = [],
     tags = ["no_test_windows"],  # b/73306170
     deps = [
         "//tools/apksig",

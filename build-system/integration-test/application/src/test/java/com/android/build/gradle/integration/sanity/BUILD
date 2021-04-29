@@ -5,6 +5,7 @@ java_library(
     srcs = glob(["**/*.java"]),
     deps = [
         "//tools/base/annotations",
+        "//tools/base/bazel/repolinker:repo_linker",
         "//tools/base/build-system/builder-model",
         "//tools/base/build-system/integration-test/framework",
         "//tools/base/common:tools.common",
@@ -18,7 +19,7 @@ java_library(
 coverage_java_test(
     name = "tests",
     data = [
-        "//tools/base:gmaven.zip",
+        "//tools/base:gmaven",
     ],
     jvm_flags = [
         "-Dtest.suite.jar=tests.jar",

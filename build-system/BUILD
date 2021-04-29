@@ -204,6 +204,7 @@ maven_repo(
     name = "gradle_plugin_no_databinding_repo",
     artifacts = GRADLE_PLUGIN_NO_DATABINDING_ARTIFACTS,
     include_sources = True,
+    use_zip = False,
     visibility = ["//visibility:public"],
 )
 

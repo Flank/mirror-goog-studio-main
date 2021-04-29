@@ -263,6 +263,7 @@ single_gradle_integration_test_per_source(
     ),
     data = TEST_DATA + OLD_SDKS,
     maven_repo_manifests = [
+        "//tools/base/build-system:gradle_plugin_no_databinding_repo",
         "//tools/base/build-system/integration-test:androidx_latest",
         "//tools/base/build-system/integration-test:gradle_kotlin_dsl_prebuilts",
         "//tools/base/build-system/integration-test:support_library_latest",
@@ -271,7 +272,6 @@ single_gradle_integration_test_per_source(
         "//tools/base/build-system/integration-test/application:prebuilts",
     ],
     maven_repos = [
-        "//tools/base/build-system:gradle_plugin_no_databinding_repo",
         "//tools/base/build-system/previous-versions:3.5.0",
         "//tools/base/third_party/kotlin:kotlin-m2repository",
     ],
@@ -294,12 +294,12 @@ gradle_integration_test(
     ),
     data = TEST_DATA,
     maven_repo_manifests = [
+        "//tools/base/build-system:gradle_plugin_no_databinding_repo",
         "//tools/base/build-system/integration-test:androidx_latest",
         "//tools/base/build-system/integration-test:support_library_latest",
         "//tools/base/build-system/integration-test/application:prebuilts",
     ],
     maven_repos = [
-        "//tools/base/build-system:gradle_plugin_no_databinding_repo",
         "//tools/base/third_party/kotlin:kotlin-m2repository",
     ],
     resources = glob(["src/test/resources/**"]),
@@ -319,12 +319,12 @@ gradle_integration_test(
     ),
     data = TEST_DATA,
     maven_repo_manifests = [
+        "//tools/base/build-system:gradle_plugin_no_databinding_repo",
         "//tools/base/build-system/integration-test:androidx_latest",
         "//tools/base/build-system/integration-test:support_library_latest",
         "//tools/base/build-system/integration-test/application:prebuilts",
     ],
     maven_repos = [
-        "//tools/base/build-system:gradle_plugin_no_databinding_repo",
         "//tools/base/third_party/kotlin:kotlin-m2repository",
     ],
     resources = glob(["src/test/resources/**"]),
@@ -344,12 +344,12 @@ gradle_integration_test(
     ),
     data = TEST_DATA,
     maven_repo_manifests = [
+        "//tools/base/build-system:gradle_plugin_no_databinding_repo",
         "//tools/base/build-system/integration-test:androidx_latest",
         "//tools/base/build-system/integration-test:support_library_latest",
         "//tools/base/build-system/integration-test/application:prebuilts",
     ],
     maven_repos = [
-        "//tools/base/build-system:gradle_plugin_no_databinding_repo",
         "//tools/base/third_party/kotlin:kotlin-m2repository",
     ],
     resources = glob(["src/test/resources/**"]),
@@ -371,12 +371,12 @@ gradle_integration_test(
     ),
     data = TEST_DATA,
     maven_repo_manifests = [
+        "//tools/base/build-system:gradle_plugin_no_databinding_repo",
         "//tools/base/build-system/integration-test:androidx_latest",
         "//tools/base/build-system/integration-test:support_library_latest",
         "//tools/base/build-system/integration-test/application:prebuilts",
     ],
     maven_repos = [
-        "//tools/base/build-system:gradle_plugin_no_databinding_repo",
         "//tools/base/third_party/kotlin:kotlin-m2repository",
     ],
     resources = glob(["src/test/resources/**"]),
@@ -398,12 +398,12 @@ gradle_integration_test(
         "//prebuilts/tools/common/mlkit/testData",
     ],
     maven_repo_manifests = [
+        "//tools/base/build-system:gradle_plugin_no_databinding_repo",
         "//tools/base/build-system/integration-test:androidx_latest",
         "//tools/base/build-system/integration-test:support_library_latest",
         "//tools/base/build-system/integration-test/application:prebuilts",
     ],
     maven_repos = [
-        "//tools/base/build-system:gradle_plugin_no_databinding_repo",
         "//tools/base/third_party/kotlin:kotlin-m2repository",
     ],
     resources = glob(["src/test/resources/**"]),
@@ -423,13 +423,12 @@ single_gradle_integration_test_per_source(
     ),
     data = TEST_DATA,
     maven_repo_manifests = [
+        "//tools/base/build-system:gradle_plugin_no_databinding_repo",
         "//tools/base/build-system/integration-test:dagger_prebuilts",
         "//tools/base/build-system/integration-test:support_library_latest",
         "//tools/base/build-system/integration-test/application:prebuilts",
     ],
-    maven_repos = [
-        "//tools/base/build-system:gradle_plugin_no_databinding_repo",
-    ],
+    maven_repos = [],
     resources = glob(["src/test/resources/**"]),
     deps = TEST_DEPS,
 )
@@ -441,13 +440,13 @@ gradle_integration_test(
     ),
     data = TEST_DATA,
     maven_repo_manifests = [
+        "//tools/base/build-system:gradle_plugin_no_databinding_repo",
         "//tools/base/build-system/integration-test:dagger_prebuilts",
         "//tools/base/build-system/integration-test:support_library_latest",
         "//tools/base/build-system/integration-test/application:prebuilts",
     ],
     #keep sorted
     maven_repos = [
-        "//tools/base/build-system:gradle_plugin_no_databinding_repo",
         "//tools/base/third_party/kotlin:kotlin-m2repository",
     ],
     resources = glob(["src/test/resources/**"]),
@@ -462,6 +461,7 @@ gradle_integration_test(
     srcs = glob(CHECK_ALL_SOURCES),
     data = AUTOMATIC_TEST_DATA,
     maven_repo_manifests = [
+        "//tools/base/build-system:gradle_plugin_no_databinding_repo",
         "//tools/base/build-system/integration-test:androidx_latest",
         "//tools/base/build-system/integration-test:dagger_prebuilts",
         "//tools/base/build-system/integration-test:prefab_repo",
@@ -470,7 +470,6 @@ gradle_integration_test(
     ],
     #keep sorted
     maven_repos = [
-        "//tools/base/build-system:gradle_plugin_no_databinding_repo",
         "//tools/base/third_party/kotlin:kotlin-m2repository",
     ],
     shard_count = 10,  # Keep this in sync with logic in our bazel launcher script and CheckAllRunner.

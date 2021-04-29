@@ -64,11 +64,11 @@ TEST_DATA = [
 
 #keep sorted
 TEST_MAVEN_REPOS = [
-    "//tools/base/build-system:gradle_plugin_no_databinding_repo",
     "//tools/base/third_party/kotlin:kotlin-m2repository",
 ]
 
 TEST_MAVEN_REPO_MANIFESTS = [
+    "//tools/base/build-system:gradle_plugin_no_databinding_repo",
     "//tools/base/build-system/integration-test:androidx_latest",
     "//tools/base/build-system/integration-test:support_library_latest",
     "//tools/base/build-system/integration-test:utp_plugins",

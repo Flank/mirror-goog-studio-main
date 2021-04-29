@@ -14,5 +14,6 @@ maven_repo(
         "//tools/base/testutils:tools.testutils",
     ],
     include_sources = True,
+    use_zip = False,
     visibility = ["//visibility:public"],
 )
