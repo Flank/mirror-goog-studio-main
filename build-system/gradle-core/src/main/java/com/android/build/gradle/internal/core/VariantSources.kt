@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.core
 
 import com.android.SdkConstants
-import com.android.SdkConstants.FN_ANDROID_PRIVATE_ASSETS
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
 import com.android.builder.core.BuilderConstants
 import com.android.builder.core.VariantType
@@ -75,9 +74,9 @@ class VariantSources internal constructor(
         get() {
             // this is really brittle, we need to review where those sources will be located and
             // what we offer to make visible in the SourceProvider interface.
-            // META-INF/art-profile.txt will do for now.
+            // src/main/baseline-prof.txt will do for now.
             val composeFile = File(
-                    File(defaultSourceProvider.manifestFile.parent, FN_ANDROID_PRIVATE_ASSETS),
+                    File(defaultSourceProvider.manifestFile.parent),
                     SdkConstants.FN_ART_PROFILE)
             return if (composeFile.isFile) {
                 composeFile

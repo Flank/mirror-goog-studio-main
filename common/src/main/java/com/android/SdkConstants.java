@@ -224,12 +224,9 @@ public final class SdkConstants {
 
     /** dx.jar file */
     public static final String FN_DX_JAR = "dx.jar";
-
-    /** android private metadata folder */
-    public static final String FN_ANDROID_PRIVATE_ASSETS = "META-INF";
-
+    
     /** name of the art runtime profile in aar files (located in the android private assets) */
-    public static final String FN_ART_PROFILE = "art-profile.txt";
+    public static final String FN_ART_PROFILE = "baseline-prof.txt";
 
     public static final String FN_BINARY_ART_PROFILE = "baseline.prof";
 

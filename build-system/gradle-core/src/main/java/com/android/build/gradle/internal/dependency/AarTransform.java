@@ -196,7 +196,6 @@ public abstract class AarTransform implements TransformAction<AarTransform.Param
                 outputIfExists(
                         FileUtils.join(
                                 input,
-                                SdkConstants.FN_ANDROID_PRIVATE_ASSETS,
                                 SdkConstants.FN_ART_PROFILE),
                         transformOutputs);
                 break;

@@ -40,7 +40,7 @@ import java.nio.file.StandardCopyOption
 class ArtProfileSingleLibraryTest {
 
     companion object {
-        const val aarEntryName = "${SdkConstants.FN_ANDROID_PRIVATE_ASSETS}/${SdkConstants.FN_ART_PROFILE}"
+        const val aarEntryName = SdkConstants.FN_ART_PROFILE
         const val apkEntryName = "assets/dexopt/${SdkConstants.FN_BINARY_ART_PROFILE}"
 
         fun checkAndroidArtifact(
@@ -78,7 +78,7 @@ class ArtProfileSingleLibraryTest {
         )
 
         val library = project.getSubproject(":lib")
-        val androidAssets = File(library.mainSrcDir.parentFile, SdkConstants.FN_ANDROID_PRIVATE_ASSETS)
+        val androidAssets = library.mainSrcDir.parentFile
         androidAssets.mkdir()
 
         val singleFileContent =
