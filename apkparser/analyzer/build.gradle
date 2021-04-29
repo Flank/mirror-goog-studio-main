@@ -32,8 +32,6 @@ dependencies {
     implementation project(':base:sdklib')
     implementation project(':base:annotations')
     implementation project(':base:apkparser:binary-resources')
-    implementation project(':base:lint-api')
-    implementation project(':base:lint-checks')
     implementation files(jardeps)
 
     testImplementation(libs.junit)
