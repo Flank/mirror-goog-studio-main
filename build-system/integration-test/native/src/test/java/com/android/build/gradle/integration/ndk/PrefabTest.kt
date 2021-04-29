@@ -45,6 +45,12 @@ class PrefabTest(private val buildSystem: NativeBuildSystem, val cmakeVersion: S
         .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
         .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF).create()
 
+    @Rule
+    @JvmField
+    val prefabNoDepsProject = GradleTestProject.builder().fromTestProject("prefabNoDeps")
+        .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
+        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF).create()
+
     companion object {
         @Parameterized.Parameters(name = "build system = {0}, cmake = {1}")
         @JvmStatic
@@ -58,8 +64,7 @@ class PrefabTest(private val buildSystem: NativeBuildSystem, val cmakeVersion: S
         )
     }
 
-    @Before
-    fun setUp() {
+    fun setupProject(project: GradleTestProject) {
         val appBuild = project.buildFile.parentFile.resolve("app/build.gradle")
         if (buildSystem == NativeBuildSystem.NDK_BUILD) {
             appBuild.appendText("""
@@ -72,6 +77,12 @@ class PrefabTest(private val buildSystem: NativeBuildSystem, val cmakeVersion: S
                 android.defaultConfig.externalNativeBuild.cmake.arguments.add("-DANDROID_STL=c++_shared")
                 """.trimIndent())
         }
+    }
+
+    @Before
+    fun setUp() {
+        setupProject(project)
+        setupProject(prefabNoDepsProject)
     }
 
     private fun verifyNdkBuildPackage(pkg: String, abiDir: File) {
@@ -144,5 +155,11 @@ class PrefabTest(private val buildSystem: NativeBuildSystem, val cmakeVersion: S
             assertThatApk(apk).contains("lib/${abi.tag}/libjsoncpp.so")
             assertThatApk(apk).contains("lib/${abi.tag}/libssl.so")
         }
+    }
+
+    @Test
+    fun `enabling without prefab AARs doesn't break the build`() {
+        // https://issuetracker.google.com/183634734
+        prefabNoDepsProject.execute("clean", "assembleDebug")
     }
 }

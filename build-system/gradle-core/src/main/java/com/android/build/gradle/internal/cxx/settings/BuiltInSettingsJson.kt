@@ -26,11 +26,11 @@ import com.android.build.gradle.internal.cxx.configure.NdkBuildProperty.NDK_DEBU
 import com.android.build.gradle.internal.cxx.configure.NdkMetaPlatforms
 import com.android.build.gradle.internal.cxx.configure.getNdkBuildProperty
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
+import com.android.build.gradle.internal.cxx.model.buildIsPrefabCapable
 import com.android.build.gradle.internal.cxx.model.determineUsedStlForCmake
 import com.android.build.gradle.internal.cxx.model.determineUsedStlForNdkBuild
 import com.android.build.gradle.internal.cxx.model.ifCMake
 import com.android.build.gradle.internal.cxx.model.ifNdkBuild
-import com.android.build.gradle.internal.cxx.model.shouldGeneratePrefabPackages
 import com.android.build.gradle.internal.cxx.settings.Environment.GRADLE
 import com.android.build.gradle.internal.cxx.settings.Environment.MICROSOFT_BUILT_IN
 import com.android.build.gradle.internal.cxx.settings.Environment.NDK
@@ -72,7 +72,7 @@ const val TRADITIONAL_CONFIGURATION_NAME = "traditional-android-studio-cmake-env
  * This is a CMakeSettings.json file that is equivalent to the environment CMakeServerJsonGenerator
  * traditionally has run.
  */
-fun getCmakeDefaultEnvironment(shouldGeneratePrefabPackages:Boolean): Settings {
+fun getCmakeDefaultEnvironment(buildIsPrefabCapable: Boolean): Settings {
     val variables = mutableListOf(
             SettingsConfigurationVariable(CMAKE_SYSTEM_NAME.name, "Android"),
             SettingsConfigurationVariable(CMAKE_EXPORT_COMPILE_COMMANDS.name, "ON")
@@ -82,7 +82,7 @@ fun getCmakeDefaultEnvironment(shouldGeneratePrefabPackages:Boolean): Settings {
                 SettingsConfigurationVariable(cmake.name, macro.ref)
             }
         })
-    if (shouldGeneratePrefabPackages) {
+    if (buildIsPrefabCapable) {
         // This can be passed a few different ways:
         // https://cmake.org/cmake/help/latest/command/find_package.html#search-procedure
         //
@@ -265,7 +265,7 @@ fun CxxAbiModel.gatherSettingsFromAllLocations() : Settings {
         }
         // TODO this needs to include environment variables as well.
         // Add the synthetic traditional environment.
-        settings += getCmakeDefaultEnvironment(shouldGeneratePrefabPackages())
+        settings += getCmakeDefaultEnvironment(buildIsPrefabCapable())
     }
 
     ifNdkBuild {

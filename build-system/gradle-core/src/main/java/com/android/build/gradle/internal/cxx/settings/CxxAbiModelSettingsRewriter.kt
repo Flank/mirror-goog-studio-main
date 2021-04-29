@@ -47,8 +47,8 @@ import com.android.build.gradle.internal.cxx.model.CxxCmakeModuleModel
 import com.android.build.gradle.internal.cxx.model.CxxModuleModel
 import com.android.build.gradle.internal.cxx.model.CxxProjectModel
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel
+import com.android.build.gradle.internal.cxx.model.buildIsPrefabCapable
 import com.android.build.gradle.internal.cxx.model.ifCMake
-import com.android.build.gradle.internal.cxx.model.shouldGeneratePrefabPackages
 import com.android.build.gradle.internal.cxx.settings.Macro.ENV_THIS_FILE_DIR
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_ABI
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_CMAKE_TOOLCHAIN
@@ -314,7 +314,7 @@ private fun CxxAbiModel.getNdkBuildCommandLine(): List<String> {
     applicationMk?.let {
         result.add("$NDK_APPLICATION_MK=" + it.absolutePath)
     }
-    if (shouldGeneratePrefabPackages()) {
+    if (buildIsPrefabCapable()) {
         if (variant.module.ndkVersion.major < 21) {
             // These cannot be automatically imported prior to NDK r21 which started handling
             // NDK_GRADLE_INJECTED_IMPORT_PATH, but the user can add that search path explicitly

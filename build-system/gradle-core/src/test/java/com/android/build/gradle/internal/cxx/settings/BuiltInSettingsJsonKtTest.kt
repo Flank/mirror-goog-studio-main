@@ -18,10 +18,10 @@ package com.android.build.gradle.internal.cxx.settings
 
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.model.BasicCmakeMock
+import com.android.build.gradle.internal.cxx.model.buildIsPrefabCapable
 import com.android.build.gradle.internal.cxx.model.createCxxAbiModel
 import com.android.build.gradle.internal.cxx.model.createCxxModuleModel
 import com.android.build.gradle.internal.cxx.model.createCxxVariantModel
-import com.android.build.gradle.internal.cxx.model.shouldGeneratePrefabPackages
 import org.junit.Test
 
 class BuiltInSettingsJsonKtTest {
@@ -56,7 +56,7 @@ class BuiltInSettingsJsonKtTest {
     @Test
     fun `Traditional CMakeSettings does not throw when evaluated`() {
         BasicCmakeMock().apply {
-            getCmakeDefaultEnvironment(abi.shouldGeneratePrefabPackages()).toJsonString()
+            getCmakeDefaultEnvironment(abi.buildIsPrefabCapable()).toJsonString()
         }
     }
 }

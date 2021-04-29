@@ -325,7 +325,10 @@ single_gradle_integration_test(
 single_gradle_integration_test(
     name = "PrefabTest",
     srcs = "src/test/java/com/android/build/gradle/integration/ndk/",
-    data = DATA + CMAKE + NDK + ["//tools/base/build-system/integration-test:test-projects/prefabApp"],
+    data = DATA + CMAKE + NDK + [
+        "//tools/base/build-system/integration-test:test-projects/prefabApp",
+        "//tools/base/build-system/integration-test:test-projects/prefabNoDeps",
+    ],
     maven_repo_manifests = MAVEN_REPO_MANIFESTS,
     maven_repos = MAVEN_REPOS,
     deps = DEPS,

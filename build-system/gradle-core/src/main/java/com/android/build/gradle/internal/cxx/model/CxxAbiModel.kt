@@ -287,13 +287,18 @@ val CxxAbiModel.clientQueryFolder: File
 val CxxAbiModel.clientReplyFolder: File
     get() = join(cxxBuildFolder, ".cmake/api/v1/reply")
 
-fun CxxAbiModel.shouldGeneratePrefabPackages(): Boolean {
-    // Prefab will fail if we try to create ARMv5/MIPS/MIPS64 modules. r17 was the first NDK version
-    // that we can guarantee will not be used to use those ABIs.
-    return (variant.module.project.isPrefabEnabled
-            && (variant.prefabPackageDirectoryListFileCollection != null)
-            && variant.module.ndkVersion.major >= 17)
-}
+// True if the build is capable of handling prefab packages. Does not indicate that prefab will
+// actually run. Separate from shouldGeneratePrefabPackages because whether or not prefab actually
+// runs depends on whether or not prefab has any inputs, which cannot be known during configuration
+// time.
+fun CxxAbiModel.buildIsPrefabCapable(): Boolean = variant.module.project.isPrefabEnabled
+        // Prefab will fail if we try to create ARMv5/MIPS/MIPS64 modules. r17 was the first NDK
+        // version that we can guarantee will not be used to use those ABIs.
+        && variant.module.ndkVersion.major >= 17
+
+fun CxxAbiModel.shouldGeneratePrefabPackages(): Boolean = buildIsPrefabCapable()
+        && variant.prefabPackageDirectoryListFileCollection != null
+        && !variant.prefabPackageDirectoryListFileCollection.isEmpty
 
 /**
  * Call [compute] if this is a CMake build.

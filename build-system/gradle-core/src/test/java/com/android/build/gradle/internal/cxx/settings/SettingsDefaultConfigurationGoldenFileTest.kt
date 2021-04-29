@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.cxx.settings
 
 import com.android.build.gradle.internal.cxx.model.BasicCmakeMock
-import com.android.build.gradle.internal.cxx.model.shouldGeneratePrefabPackages
+import com.android.build.gradle.internal.cxx.model.buildIsPrefabCapable
 import com.android.testutils.GoldenFile
 import org.junit.Test
 
@@ -53,7 +53,7 @@ class SettingsDefaultConfigurationGoldenFileTest {
                 result += ""
                 result += "```"
                 BasicCmakeMock().let {
-                    result += getCmakeDefaultEnvironment(it.abi.shouldGeneratePrefabPackages()).toJsonString().lines()
+                    result += getCmakeDefaultEnvironment(it.abi.buildIsPrefabCapable()).toJsonString().lines()
                 }
                 result += "```"
                 result
