@@ -120,6 +120,7 @@ import com.android.build.gradle.internal.tasks.JacocoTask
 import com.android.build.gradle.internal.tasks.L8DexDesugarLibTask
 import com.android.build.gradle.internal.tasks.LibraryAarJarsTask
 import com.android.build.gradle.internal.tasks.LintCompile
+import com.android.build.gradle.internal.tasks.LintModelMetadataTask
 import com.android.build.gradle.internal.tasks.ManagedDeviceCleanTask
 import com.android.build.gradle.internal.tasks.ManagedDeviceInstrumentationTestTask
 import com.android.build.gradle.internal.tasks.ManagedDeviceSetupTask
@@ -553,6 +554,10 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
 
         // Add a task to create the AAR metadata file
         taskFactory.register(AarMetadataTask.CreationAction(testFixturesComponent))
+
+        // Add tasks to write the lint model metadata file and the local lint AAR file
+        taskFactory.register(LintModelMetadataTask.CreationAction(testFixturesComponent))
+        taskFactory.register(BundleAar.TestFixturesLocalLintCreationAction(testFixturesComponent))
 
         // Create a jar with both classes and java resources.  This artifact is not
         // used by the Android application plugin and the task usually don't need to

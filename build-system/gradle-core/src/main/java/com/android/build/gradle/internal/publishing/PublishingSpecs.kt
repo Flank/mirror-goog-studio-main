@@ -289,9 +289,7 @@ class PublishingSpecs {
                 runtime(AAR_METADATA, ArtifactType.AAR_METADATA)
                 // Publish LOCAL_AAR_FOR_LINT to API_AND_RUNTIME_ELEMENTS to support compileOnly
                 // module dependencies.
-                output(
-                    com.android.build.api.artifact.SingleArtifact.AAR,
-                    ArtifactType.LOCAL_AAR_FOR_LINT)
+                output(LOCAL_AAR_FOR_LINT, ArtifactType.LOCAL_AAR_FOR_LINT)
             }
 
             // Publishing will be done manually from the lint standalone plugin for now.
