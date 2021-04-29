@@ -26,6 +26,10 @@
 #include "tools/base/deploy/common/utils.h"
 #include "tools/base/deploy/sites/sites.h"
 
+#define ENABLE_HELPER_CLASS_STARTED 0
+#define ENABLE_HELPER_CLASS_UNCHANGED 1
+#define ENABLE_HELPER_CLASS_FAILED 2
+
 namespace deploy {
 
 const char* LiveLiteral::kSupportClass =
@@ -222,11 +226,44 @@ proto::AgentLiveLiteralUpdateResponse LiveLiteral::Update(
     return response_;
   }
 
-  // Call Support the support class enable() first.
-  jobject package_name = jni_->NewStringUTF(package_name_.c_str());
+  bool needs_recompose = false;
+  jint local_enable = 2;
   JniClass support(jni_, LiveLiteral::kSupportClass);
-  jboolean needs_recompose = support.CallStaticBooleanMethod(
-      "enable", "(Ljava/lang/Class;Ljava/lang/String;)Z", klass, package_name);
+  jobject package_name = jni_->NewStringUTF(package_name_.c_str());
+
+  // From Beta07 and onward, each helper will hold the enabled boolean to
+  // toggle live literal update readiness.
+  for (auto update : request.updates()) {
+    const std::string key = update.key();
+    if (!key.empty()) {
+      continue;
+    }
+    jclass helper = class_finder_.FindInClassLoader(
+        class_finder_.GetApplicationClassLoader(), update.helper_class());
+    if (helper == nullptr) {
+      response_.set_status(proto::AgentLiveLiteralUpdateResponse::ERROR);
+      std::stringstream stream;
+      stream << "Helper " << helper << " not found!";
+      response_.set_extra(stream.str());
+      return response_;
+    }
+    local_enable = support.CallStaticIntMethod(
+        "enableHelperClass", "(Ljava/lang/Class;Ljava/lang/String;)I", helper,
+        package_name);
+  }
+
+  if (local_enable == ENABLE_HELPER_CLASS_STARTED) {
+    // Successfully enabled from a disabled state.
+    needs_recompose = true;
+  } else if (local_enable == ENABLE_HELPER_CLASS_UNCHANGED) {
+    // Successfully enabled from already enabled state.
+    needs_recompose = false;
+  } else if (local_enable == ENABLE_HELPER_CLASS_FAILED) {
+    // No local flag detected. Attempt to enable the older global flag.
+    needs_recompose = support.CallStaticBooleanMethod(
+        "enableGlobal", "(Ljava/lang/Class;Ljava/lang/String;)Z", klass,
+        package_name);
+  }
 
   if (needs_recompose) {
     Recompose recompose(jvmti_, jni_);
