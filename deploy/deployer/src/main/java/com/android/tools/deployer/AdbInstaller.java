@@ -37,6 +37,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Stack;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public class AdbInstaller implements Installer {
     public static final String INSTALLER_BINARY_NAME = "installer";
@@ -332,6 +333,11 @@ public class AdbInstaller implements Installer {
             if (writeRequest(channel, request, timeOutMs)) {
                 response = readResponse(channel, timeOutMs);
             }
+        } catch (TimeoutException e) {
+            // If something timed out, don't call into ddmlib to prepare and push the binary
+            // again (ddmlib default timeout if 30mn). Fail now.
+            String msg = String.format("Device '%s' timed out", adb.getName());
+            throw new IOException(msg);
         } finally {
             channel.unlock();
         }
@@ -368,7 +374,8 @@ public class AdbInstaller implements Installer {
         return response;
     }
 
-    private boolean writeRequest(AdbInstallerChannel channel, ByteBuffer request, long timeOutMs) {
+    private boolean writeRequest(AdbInstallerChannel channel, ByteBuffer request, long timeOutMs)
+            throws TimeoutException {
         try {
             channel.write(request, timeOutMs);
         } catch (IOException e) {

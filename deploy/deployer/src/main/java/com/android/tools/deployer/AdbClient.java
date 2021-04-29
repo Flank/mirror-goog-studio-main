@@ -287,6 +287,10 @@ public class AdbClient {
         return device.getVersion();
     }
 
+    public String getName() {
+        return device.getName();
+    }
+
     public String getSerial() {
         return device.getSerialNumber();
     }

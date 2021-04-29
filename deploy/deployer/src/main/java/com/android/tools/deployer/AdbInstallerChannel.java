@@ -22,6 +22,8 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.ReentrantLock;
 
 /** An abstraction layer over SocketChannel with timeout on both read and write. */
@@ -36,6 +38,13 @@ class AdbInstallerChannel implements AutoCloseable {
     private final SelectionKey writeKey;
 
     private final ReentrantLock lock = new ReentrantLock(true);
+
+    // TCP buffer size on all three platforms we support default to a few hundreds KiB.
+    // Because we work with non-blocking sockets, even a multi-MiB ByteBuffer will be
+    // written in batches that cannot exceed that TCP buffer size. This timeout affects
+    // how long to wait for a socket to be available before EACH write operations.
+    // Is is set so that it can only fails if the other party stops processing data.
+    private static final long PER_WRITE_TIME_OUT = TimeUnit.SECONDS.toMillis(1);
 
     AdbInstallerChannel(SocketChannel c) throws IOException {
         channel = c;
@@ -58,26 +67,29 @@ class AdbInstallerChannel implements AutoCloseable {
      */
     void read(ByteBuffer buffer, long timeOutMs) throws IOException {
         checkLock();
-        while (buffer.remaining() != 0) {
-            readSelector.select(timeOutMs);
-            if (!readKey.isReadable()) {
-                String template = "InstallerChannel: Read %d bytes failed (%d ms)";
-                String msg = String.format(Locale.US, template, buffer.remaining(), timeOutMs);
+        long deadline = System.currentTimeMillis() + timeOutMs;
+        while (true) {
+            // Everything was received
+            if (buffer.remaining() == 0) {
+                break;
+            }
+
+            long timeout = Math.max(0, deadline - System.currentTimeMillis());
+            readSelector.select(timeout);
+
+            int read = channel.read(buffer);
+            if (read == 0 || System.currentTimeMillis() >= deadline) {
+                // Select timed out or deadline expired.
+                String template = "InstallerChannel.select: Timeout on read after %dms";
+                String msg = String.format(Locale.US, template, timeOutMs);
                 throw new IOException(msg);
             }
-            int read = channel.read(buffer);
+
             if (read == -1) {
                 // The socket was remotely closed.
                 break;
             }
         }
-
-        if (buffer.remaining() != 0) {
-            String template = "Unable to read %d bytes (read %d)";
-            String msg = String.format(Locale.US, template, buffer.capacity(), buffer.limit());
-            throw new IOException(msg);
-        }
-
         buffer.rewind();
     }
 
@@ -90,19 +102,32 @@ class AdbInstallerChannel implements AutoCloseable {
      * @throws IOException If buffer cannot be fully written within timeout or if socket was
      *     remotely closed
      */
-    void write(ByteBuffer buffer, long timeOutMs) throws IOException {
+    void write(ByteBuffer buffer, long timeOutMs) throws IOException, TimeoutException {
         checkLock();
-        while (buffer.remaining() != 0) {
-            writeSelector.select(timeOutMs);
-            if (!writeKey.isWritable()) {
-                String template = "InstallerChannel: Write %d bytes failed (%d ms)";
-                String msg = String.format(Locale.US, template, buffer.remaining(), timeOutMs);
-                throw new IOException(msg);
+        long deadline = System.currentTimeMillis() + timeOutMs;
+        while (true) {
+            // Everything was sent
+            if (buffer.remaining() == 0) {
+                break;
             }
+
+            if (System.currentTimeMillis() >= deadline) {
+                throw new TimeoutException("InstallerChannel write timeout");
+            }
+
+            long timeout = Math.min(PER_WRITE_TIME_OUT, deadline - System.currentTimeMillis());
+            timeout = Math.max(0, timeout);
+            writeSelector.select(timeout);
+
             // We cannot detect remote close from write() returned value.
             // If the socket is remotely closed, a IOException: Broken pipe will
             // be thrown.
-            channel.write(buffer);
+            int written = channel.write(buffer);
+
+            // Check for select timeout
+            if (written == 0) {
+                throw new TimeoutException("InstallerChannel write timeout");
+            }
         }
     }
 
