@@ -499,7 +499,7 @@ abstract class VariantInputs {
     abstract val mavenCoordinatesCache: Property<MavenCoordinatesCacheBuildService>
 
     @get:InputFiles
-    @get:PathSensitive(PathSensitivity.ABSOLUTE)
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val dynamicFeatureLintModels: ConfigurableFileCollection
 
     /**
@@ -1115,7 +1115,7 @@ abstract class ArtifactInput {
     abstract val artifactCollectionsInputs: Property<ArtifactCollectionsInputs>
 
     @get:InputFiles
-    @get:PathSensitive(PathSensitivity.ABSOLUTE)
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     @get:Optional
     val projectRuntimeExplodedAarsFileCollection: FileCollection?
         get() = projectRuntimeExplodedAars?.artifactFiles
@@ -1124,7 +1124,7 @@ abstract class ArtifactInput {
     var projectRuntimeExplodedAars: ArtifactCollection? = null
 
     @get:InputFiles
-    @get:PathSensitive(PathSensitivity.ABSOLUTE)
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     @get:Optional
     val projectCompileExplodedAarsFileCollection: FileCollection?
         get() = projectCompileExplodedAars?.artifactFiles
@@ -1133,7 +1133,7 @@ abstract class ArtifactInput {
     var projectCompileExplodedAars: ArtifactCollection? = null
 
     @get:InputFiles
-    @get:PathSensitive(PathSensitivity.ABSOLUTE)
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     @get:Optional
     abstract val projectRuntimeLintModelsFileCollection: ConfigurableFileCollection
 
@@ -1141,7 +1141,7 @@ abstract class ArtifactInput {
     abstract val projectRuntimeLintModels: Property<ArtifactCollection>
 
     @get:InputFiles
-    @get:PathSensitive(PathSensitivity.ABSOLUTE)
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     @get:Optional
     abstract val projectCompileLintModelsFileCollection: ConfigurableFileCollection
 
@@ -1149,7 +1149,7 @@ abstract class ArtifactInput {
     abstract val projectCompileLintModels: Property<ArtifactCollection>
 
     @get:InputFiles
-    @get:PathSensitive(PathSensitivity.ABSOLUTE)
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     @get:Optional
     abstract val baseModuleLintModelFileCollection: ConfigurableFileCollection
 
