@@ -31,6 +31,9 @@ class HumanReadableProfileErrorsTests {
         assertThat(parseRule("pack.age.Foo")).isEqualTo(
             0 to illegalTokenMessage('p', "pack.age.Foo")
         )
+        assertThat(parseRule("HSPLA;->foo()LA;bla")).isEqualTo(
+            16 to unexpectedTextAfterRule("bla")
+        )
     }
 
     @Test

@@ -46,6 +46,9 @@ internal fun emptyFlagsForMethodRuleMessage() =
 internal fun unexpectedChar(expected: Char, actual: Char) =
     "'$expected' is expected, but '$actual' was read"
 
+internal fun unexpectedTextAfterRule(text: String) =
+    "Unexpected text:\"$text\" after the rule."
+
 internal fun unexpectedEnd(expected: Char) = "Rule ended, while '$expected' was expected"
 
 internal fun consume(chars: String, line: String, start: Int): Int {

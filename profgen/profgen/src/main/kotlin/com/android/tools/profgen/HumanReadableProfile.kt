@@ -303,7 +303,9 @@ internal fun parseRule(
     i = consume(CLOSE_PAREN, line, i)
     i = fragmentParser.parseReturnType(line, i)
     val returnType = fragmentParser.build()
-    require(i == line.length)
+    if (i != line.length) {
+        throw ParsingException(i, unexpectedTextAfterRule(line.substring(i)))
+    }
     if (flags.flags == 0) {
         throw ParsingException(0, emptyFlagsForMethodRuleMessage())
     }
