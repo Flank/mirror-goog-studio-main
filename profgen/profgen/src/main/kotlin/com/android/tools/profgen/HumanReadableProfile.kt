@@ -82,7 +82,7 @@ fun HumanReadableProfile(
     val rules = src.readLines().mapIndexedNotNull { lineNumber, line ->
         val errorHandler: (Int, String) -> Unit = { columnNumber, message ->
                 failed = true
-                onError(lineNumber, columnNumber, message)
+                onError(lineNumber, columnNumber, message.withSnippet(line, columnNumber))
             }
         parseRule(line, errorHandler, fragmentParser)
     }
@@ -137,6 +137,10 @@ fun HumanReadableProfile(file: File,  diagnostics: Diagnostics): HumanReadablePr
         }
     }
 }
+
+internal fun String.withSnippet(line: String, column: Int) =
+    "$this\n$line\n${" ".repeat(column)}^"
+
 
 internal sealed class Part {
     class Exact(val value: String) : Part() {
@@ -281,41 +285,41 @@ internal fun parseRule(
 ): ProfileRule? {
     var i = 0
     try {
-    val flags = Flags().apply { i = parseFlags(line, i) }
-    val targetIndex = i
-    i = fragmentParser.parseTarget(line, i)
-    val target = fragmentParser.build()
-    // check if it has only target class
-    if (i == line.length) {
-        if (flags.flags != 0) {
-            throw ParsingException(0, flagsForClassRuleMessage(line.substring(0, targetIndex)))
+        val flags = Flags().apply { i = parseFlags(line, i) }
+        val targetIndex = i
+        i = fragmentParser.parseTarget(line, i)
+        val target = fragmentParser.build()
+        // check if it has only target class
+        if (i == line.length) {
+            if (flags.flags != 0) {
+                throw ParsingException(0, flagsForClassRuleMessage(line.substring(0, targetIndex)))
+            }
+            return ProfileRule(flags.flags, target,
+                RuleFragment.Empty, RuleFragment.Empty, RuleFragment.Empty)
         }
-        return ProfileRule(flags.flags, target,
-            RuleFragment.Empty, RuleFragment.Empty, RuleFragment.Empty)
-    }
-    i = consume(METHOD_SEPARATOR_START, line, i)
-    i = consume(METHOD_SEPARATOR_END, line, i)
-    i = fragmentParser.parseMethodName(line, i)
-    val method = fragmentParser.build()
-    i = consume(OPEN_PAREN, line, i)
-    i = fragmentParser.parseParameters(line, i)
-    val parameters = fragmentParser.build()
-    i = consume(CLOSE_PAREN, line, i)
-    i = fragmentParser.parseReturnType(line, i)
-    val returnType = fragmentParser.build()
-    if (i != line.length) {
-        throw ParsingException(i, unexpectedTextAfterRule(line.substring(i)))
-    }
-    if (flags.flags == 0) {
-        throw ParsingException(0, emptyFlagsForMethodRuleMessage())
-    }
-    return ProfileRule(
-        flags = flags.flags,
-        target = target,
-        method = method,
-        params = parameters,
-        returnType = returnType,
-    )
+        i = consume(METHOD_SEPARATOR_START, line, i)
+        i = consume(METHOD_SEPARATOR_END, line, i)
+        i = fragmentParser.parseMethodName(line, i)
+        val method = fragmentParser.build()
+        i = consume(OPEN_PAREN, line, i)
+        i = fragmentParser.parseParameters(line, i)
+        val parameters = fragmentParser.build()
+        i = consume(CLOSE_PAREN, line, i)
+        i = fragmentParser.parseReturnType(line, i)
+        val returnType = fragmentParser.build()
+        if (i != line.length) {
+            throw ParsingException(i, unexpectedTextAfterRule(line.substring(i)))
+        }
+        if (flags.flags == 0) {
+            throw ParsingException(0, emptyFlagsForMethodRuleMessage())
+        }
+        return ProfileRule(
+            flags = flags.flags,
+            target = target,
+            method = method,
+            params = parameters,
+            returnType = returnType,
+        )
     } catch (ex: ParsingException) {
         onError(ex.index, ex.message!!)
         return null

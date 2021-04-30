@@ -29,7 +29,7 @@ class HumanReadableProfileErrorsTests {
              6 to unexpectedChar('-', 'b')
         )
         assertThat(parseRule("pack.age.Foo")).isEqualTo(
-            0 to illegalTokenMessage('p', "pack.age.Foo")
+            0 to illegalTokenMessage('p')
         )
         assertThat(parseRule("HSPLA;->foo()LA;bla")).isEqualTo(
             16 to unexpectedTextAfterRule("bla")
@@ -53,11 +53,28 @@ class HumanReadableProfileErrorsTests {
         val name = "incorrect-composer-hrp.txt"
         val hrp = HumanReadableProfile(testData(name), diagnostics)
         assertThat(hrp).isNull()
-        val illegalTokenMessage =
-            illegalTokenMessage(';', "HSPLandroidx/compose/runtime/ComposerImp;->foo;**")
         assertThat(errors).containsExactly(
-            "$name:1:47 error: $illegalTokenMessage",
-            "$name:3:64 error: ${unexpectedEnd('(')}"
+            "$name:1:47 error: ${
+                illegalTokenMessage(';').withSnippet(
+                    "HSPLandroidx/compose/runtime/ComposerImp;->foo;**", 46
+                )
+            }",
+            "$name:3:64 error: ${
+                unexpectedEnd('(').withSnippet(
+                    "HSPLandroidx/compose/runtime/ComposerImpl;->startMovableGroup**", 63
+                )
+            }"
+        )
+    }
+
+    @Test
+    fun testWithSnippet() {
+        assertThat("message".withSnippet("rule", 2)).isEqualTo(
+            """
+                message
+                rule
+                  ^
+            """.trimIndent()
         )
     }
 }

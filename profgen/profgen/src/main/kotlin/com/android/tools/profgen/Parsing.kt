@@ -20,11 +20,10 @@ package com.android.tools.profgen
 internal class ParsingException(val index: Int, message: String) : Exception(message)
 
 internal fun illegalToken(line: String, i: Int): Nothing {
-    throw ParsingException(i, illegalTokenMessage(line[i], line))
+    throw ParsingException(i, illegalTokenMessage(line[i]))
 }
 
-internal fun illegalTokenMessage(token: Char, line: String) =
-    "Illegal token $token in line: $line"
+internal fun illegalTokenMessage(token: Char) = "Illegal token '$token'"
 
 internal fun consume(char: Char, line: String, start: Int): Int {
     if (line.length <= start) {
