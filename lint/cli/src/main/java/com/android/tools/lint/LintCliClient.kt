@@ -640,7 +640,7 @@ open class LintCliClient : LintClient {
      * [xmlType]. Defaults to the build folder, possibly with a variant
      * name included.
      */
-    protected open fun getSerializationFile(project: Project, xmlType: XmlFileType): File {
+    open fun getSerializationFile(project: Project, xmlType: XmlFileType): File {
         val variant = project.buildVariant
         val dir = variant?.partialResultsDir
             ?: variant?.module?.buildFolder
@@ -862,15 +862,6 @@ open class LintCliClient : LintClient {
         scope: ResourceRepositoryScope
     ): ResourceRepository {
         return LintResourceRepository.get(this, project, scope)
-    }
-
-    /**
-     * Returns the path to the file containing the cached resource
-     * repository for this project.
-     */
-    open fun getRepositoryFile(project: Project): File {
-        val variantName = project.buildVariant?.name ?: "all"
-        return File(project.dir, "build${File.separator}lint-resources-$variantName.xml")
     }
 
     /** File content cache. */

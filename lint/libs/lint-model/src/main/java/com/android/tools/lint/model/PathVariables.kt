@@ -42,7 +42,10 @@ class PathVariables {
         }
     }
 
-    /** Sorts the variables such that the most specific match is found first */
+    /**
+     * Sorts the variables such that the most specific match is found
+     * first
+     */
     fun sort() {
         pathVariables.sortWith(PATH_COMPARATOR)
     }

@@ -48,6 +48,7 @@ import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.TargetSdkAtLeast
 import com.android.tools.lint.detector.api.TargetSdkLessThan
 import com.android.tools.lint.detector.api.TextFormat
+import com.android.tools.lint.detector.api.assertionsEnabled
 import com.android.utils.XmlUtils
 import com.google.common.annotations.Beta
 import com.google.common.base.Joiner
@@ -440,20 +441,12 @@ open class XmlWriter constructor(
     }
 
     private fun getPath(file: File, project: Project?): String {
-        var absolute = client.flags.isFullPath && !type.relativePaths()
-        val path = client.getDisplayPath(project, file, absolute)
-
-        if (type.variables() && client.pathVariables.any()) {
-            if (!absolute) {
-                val relative = File(path)
-                if (!relative.isAbsolute) {
-                    absolute = false
-                }
-            }
-
-            if (absolute) {
-                return client.pathVariables.toPathString(file, unix = type.unixPaths())
-            }
+        val path: String = if (type.relativePaths() && type.variables() && client.pathVariables.any()) {
+            if (assertionsEnabled()) assert(file.isAbsolute)
+            client.pathVariables.toPathString(file, unix = type.unixPaths())
+        } else {
+            val absolute = !type.relativePaths() && client.flags.isFullPath
+            client.getDisplayPath(project, file, absolute)
         }
 
         return if (type.unixPaths())
