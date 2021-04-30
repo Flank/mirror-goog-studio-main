@@ -49,6 +49,7 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -143,6 +144,11 @@ public class TestLintTask {
         LintClient.setClientName(CLIENT_UNIT_TESTS);
         BuiltinIssueRegistry.reset();
         tempDir = createTempDirectory();
+        try {
+            tempDir = tempDir.getCanonicalFile();
+        } catch (IOException e) {
+            fail(e.toString());
+        }
     }
 
     /** Creates a new lint test task */

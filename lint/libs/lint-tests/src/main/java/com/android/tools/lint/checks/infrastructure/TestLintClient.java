@@ -30,6 +30,7 @@ import static com.android.tools.lint.checks.infrastructure.LintTestUtils.checkTr
 import static java.io.File.separatorChar;
 import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -57,6 +58,7 @@ import com.android.tools.lint.LintResourceRepository;
 import com.android.tools.lint.LintStats;
 import com.android.tools.lint.Reporter;
 import com.android.tools.lint.TextReporter;
+import com.android.tools.lint.XmlFileType;
 import com.android.tools.lint.client.api.CircularDependencyException;
 import com.android.tools.lint.client.api.Configuration;
 import com.android.tools.lint.client.api.ConfigurationHierarchy;
@@ -511,6 +513,40 @@ public class TestLintClient extends LintCliClient {
         }
 
         return false;
+    }
+
+    @Override
+    public void storeState(@NonNull Project project) {
+        super.storeState(project);
+
+        // Make sure we don't have any absolute paths in the serialization files, if any,
+        // as well as checking that all XML files are well-formed while we're at it.
+        String absProjectPath = project.getDir().getAbsolutePath();
+        String absTestRootPath = task.tempDir.getPath();
+        String absHomePrefix = System.getProperty("user.home");
+        String absProjectCanonicalPath = absProjectPath;
+        String absTestRootCanonicalPath = absTestRootPath;
+        try {
+            absProjectCanonicalPath = project.getDir().getCanonicalPath();
+            absTestRootCanonicalPath = task.tempDir.getCanonicalPath();
+        } catch (IOException ignore) {
+        }
+        for (XmlFileType type : XmlFileType.values()) {
+            File serializationFile = getSerializationFile(project, type);
+            if (serializationFile.exists()) {
+                String xml = FilesKt.readText(serializationFile, Charsets.UTF_8);
+                assertNotNull("Not valid XML", XmlUtils.parseDocumentSilently(xml, false));
+
+                // Make sure we don't have any absolute paths to the test root or project
+                // directories
+                // or home directories in the XML
+                assertFalse(xml.contains(absProjectPath));
+                assertFalse(xml.contains(absProjectCanonicalPath));
+                assertFalse(xml.contains(absTestRootPath));
+                assertFalse(xml.contains(absTestRootCanonicalPath));
+                assertFalse(xml.contains(absHomePrefix));
+            }
+        }
     }
 
     @Nullable

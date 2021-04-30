@@ -1019,9 +1019,7 @@ ${action.title}</button>"""
          */
         private var SPLIT_LIMIT = 0
 
-        /**
-         * Maximum number of incidents shown per issue type
-         */
+        /** Maximum number of incidents shown per issue type */
         private var MAX_COUNT = 0
 
         /**
