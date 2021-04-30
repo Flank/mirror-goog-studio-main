@@ -105,4 +105,16 @@ public interface ResourceItem extends Configurable {
     default SingleNamespaceResourceRepository getRepository() {
         throw new UnsupportedOperationException();
     }
+
+    /**
+     * If the package name of the resource's namespace is not null, returns "package:type/name".
+     * Otherwise returns "type/name".
+     */
+    @NonNull
+    default String getQualifiedNameWithType() {
+        String packageName = getNamespace().getPackageName();
+        return packageName == null
+                ? getType().getName() + '/' + getName()
+                : packageName + ':' + getType().getName() + '/' + getName();
+    }
 }
