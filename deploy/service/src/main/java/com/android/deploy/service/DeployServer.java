@@ -26,10 +26,13 @@ import com.android.deploy.service.proto.Deploy;
 import com.android.deploy.service.proto.DeployServiceGrpc;
 import com.android.tools.deployer.DeployMetric;
 import com.android.tools.deployer.DeployerRunner;
+
 import com.google.common.annotations.VisibleForTesting;
+
 import io.grpc.Server;
 import io.grpc.netty.NettyServerBuilder;
 import io.grpc.stub.StreamObserver;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -217,6 +220,7 @@ public class DeployServer extends DeployServiceGrpc.DeployServiceImplBase {
         return Deploy.Client.newBuilder()
                 .setPid(client.getClientData().getPid())
                 .setName(client.getClientData().getPackageName())
+                .setDescription(client.getClientData().getClientDescription())
                 .build();
     }
 

@@ -82,7 +82,16 @@ message Device {
  */
 message Client {
   uint32 pid = 1;
+  // Name of the package.
+  // e.g., com.example.myapp
   string name = 2;
+
+  // Name of the process.
+  // Examples:
+  //   com.example.myapp
+  //   com.example.myapp:myservice
+  //   com.example.myservice
+  string description = 3;
 }
 
 message DeviceRequest {
