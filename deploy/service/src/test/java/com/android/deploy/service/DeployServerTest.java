@@ -17,6 +17,7 @@
 package com.android.deploy.service;
 
 import static com.google.common.truth.Truth.assertThat;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -29,13 +30,19 @@ import com.android.ddmlib.IDevice;
 import com.android.deploy.service.proto.Deploy;
 import com.android.tools.deployer.DeployMetric;
 import com.android.tools.deployer.DeployerRunner;
+
 import io.grpc.stub.StreamObserver;
-import java.util.ArrayList;
-import java.util.Collections;
+
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
+import java.util.ArrayList;
+import java.util.Collections;
+
 public class DeployServerTest {
+    final String packageName = "com.example.myapp";
+    final String processName = "com.example.myapp:process";
+
     @Test
     public void getDevices() {
         AndroidDebugBridge bridge = mock(AndroidDebugBridge.class);
@@ -63,6 +70,8 @@ public class DeployServerTest {
         assertThat(response.getResponse()).isNotNull();
         assertThat(response.getResponse().getClientsCount()).isEqualTo(1);
         assertThat(response.getResponse().getClients(0).getPid()).isEqualTo(1234);
+        assertThat(response.getResponse().getClients(0).getName()).isEqualTo(packageName);
+        assertThat(response.getResponse().getClients(0).getDescription()).isEqualTo(processName);
     }
 
     @Test
@@ -139,17 +148,18 @@ public class DeployServerTest {
         when(device.getName()).thenReturn(serial);
         when(device.isEmulator()).thenReturn(false);
         when(device.getAbis()).thenReturn(Collections.singletonList("armeabi"));
-        Client[] clients = new Client[] {mockClient("Client1")};
+        Client[] clients = new Client[] {mockClient(packageName, processName)};
         when(device.getClients()).thenReturn(clients);
         return device;
     }
 
-    private Client mockClient(@NonNull String clientName) {
+    private Client mockClient(@NonNull String clientName, @NonNull String clientDescription) {
         Client client = mock(Client.class);
         ClientData clientData = mock(ClientData.class);
         when(client.getClientData()).thenReturn(clientData);
         when(clientData.getPid()).thenReturn(1234);
         when(clientData.getPackageName()).thenReturn(clientName);
+        when(clientData.getClientDescription()).thenReturn(clientDescription);
         when(client.getDebuggerListenPort()).thenReturn(4321);
         return client;
     }
