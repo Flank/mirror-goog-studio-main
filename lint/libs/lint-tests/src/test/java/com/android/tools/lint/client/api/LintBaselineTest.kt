@@ -525,14 +525,16 @@ class LintBaselineTest {
     fun testChangedUrl() {
         val baselineFile = temporaryFolder.newFile("baseline.xml")
 
+        val errorMessage = "The attribute android:allowBackup is deprecated from Android 12 and higher and ..."
+
         @Language("XML")
         val baselineContents =
             """<?xml version="1.0" encoding="UTF-8"?>
 <issues format="5" by="lint unittest">
 
     <issue
-        id="AllowBackup"
-        message="On SDK version 23 and up, your app data will be automatically backed up and restored on app install. Consider adding the attribute `android:fullBackupContent` to specify an `@xml` resource which configures which files to backup. More info: https://developer.android.com/training/backup/autosyncapi.html"
+        id="DataExtractionRules"
+        message="$errorMessage"
         errorLine1="    &lt;application"
         errorLine2="    ^">
         <location
@@ -548,9 +550,9 @@ class LintBaselineTest {
 
         assertTrue(
             baseline.findAndMark(
-                ManifestDetector.ALLOW_BACKUP,
+                ManifestDetector.DATA_EXTRACTION_RULES,
                 Location.create(File("src/main/AndroidManifest.xml")),
-                "On SDK version 23 and up, your app data will be automatically backed up and restored on app install. Consider adding the attribute `android:fullBackupContent` to specify an `@xml` resource which configures which files to backup. More info: https://developer.android.com/guide/topics/data/autobackup",
+                errorMessage,
                 Severity.WARNING,
                 null
             )

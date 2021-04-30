@@ -65,7 +65,7 @@ class LintUpToDateTest(private val usePartialAnalysis: Boolean) {
             assertThat(firstRun.getTask(":app:lintAnalyzeDebug")).didWork()
         }
         val lintResults = project.file("app/build/reports/lint-results.txt")
-        assertThat(lintResults).contains("8 errors, 6 warnings")
+        assertThat(lintResults).contains("8 errors, 4 warnings")
 
         val secondRun = getExecutor().run(":app:lintDebug")
         assertThat(secondRun.getTask(":app:lintReportDebug")).wasUpToDate()

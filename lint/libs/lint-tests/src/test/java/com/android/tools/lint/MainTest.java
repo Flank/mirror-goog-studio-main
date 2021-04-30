@@ -727,7 +727,7 @@ public class MainTest extends AbstractCheckTest {
                     "--warning",
                     "FontValidationWarning",
                     "--disable",
-                    "UsesMinSdkAttributes,UnusedResources,AllowBackup",
+                    "UsesMinSdkAttributes,UnusedResources",
                     project.getPath()
                 });
 
@@ -746,9 +746,7 @@ public class MainTest extends AbstractCheckTest {
                 "",
                 ERRNO_SUCCESS,
                 new String[] {
-                    "--disable",
-                    "UsesMinSdkAttributes,UnusedResources,AllowBackup",
-                    project.getPath()
+                    "--disable", "UsesMinSdkAttributes,UnusedResources", project.getPath()
                 });
     }
 
@@ -1011,9 +1009,7 @@ public class MainTest extends AbstractCheckTest {
 
                 // Args
                 new String[] {
-                    "--disable",
-                    "LintError,UsesMinSdkAttributes,ButtonStyle,AllowBackup",
-                    project.getPath()
+                    "--disable", "LintError,UsesMinSdkAttributes,ButtonStyle", project.getPath()
                 });
 
         // WITH --fatalOnly: Only the DuplicateDefinition issue is flagged, since it is fatal.

@@ -43,11 +43,13 @@ import com.android.SdkConstants.TAG_USES_PERMISSION
 import com.android.SdkConstants.TAG_USES_SDK
 import com.android.SdkConstants.TOOLS_URI
 import com.android.SdkConstants.VALUE_FALSE
+import com.android.SdkConstants.VALUE_TRUE
 import com.android.ide.common.rendering.api.ResourceNamespace
 import com.android.ide.common.repository.GradleCoordinate
 import com.android.ide.common.repository.MavenRepositories
 import com.android.ide.common.repository.SdkMavenRepository
 import com.android.resources.ResourceUrl
+import com.android.tools.lint.client.api.LintClient
 import com.android.tools.lint.client.api.ResourceRepositoryScope
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Context
@@ -69,12 +71,15 @@ import com.android.tools.lint.model.LintModelVariant
 import com.android.utils.XmlUtils
 import com.android.utils.iterator
 import com.android.utils.usLocaleCapitalize
+import com.android.utils.visitAttributes
 import com.android.xml.AndroidManifest
+import org.intellij.lang.annotations.Language
 import org.w3c.dom.Attr
 import org.w3c.dom.Document
 import org.w3c.dom.Element
 import org.w3c.dom.Node
 import java.io.File
+import java.io.File.separator
 
 /**
  * Checks for issues in AndroidManifest files such as declaring elements
@@ -202,42 +207,29 @@ class ManifestDetector :
             implementation = IMPLEMENTATION
         )
 
-        /** Documentation URL for app backup. */
-        private const val BACKUP_DOCUMENTATION_URL = "https://developer.android.com/guide/topics/data/autobackup"
-
-        /** Not explicitly defining allowBackup */
+        /** Not specifying data extraction rules */
         @JvmField
-        val ALLOW_BACKUP = Issue.create(
-            "AllowBackup",
-            briefDescription = "AllowBackup/FullBackupContent Problems",
+        val DATA_EXTRACTION_RULES = Issue.create(
+            "DataExtractionRules",
+            briefDescription = "Missing data extraction rules",
             explanation = """
-                The `allowBackup` attribute determines if an application's data can be backed up and restored. \
-                It is documented at https://developer.android.com/reference/android/R.attr.html#allowBackup
+                Before Android 12, the attributes `android:allowBackup` and `android:fullBackupContent` \
+                were used to configure all forms of backup, including cloud backups, device-to-device \
+                transfers and adb backup.
 
-                By default, this flag is set to `true` which means application data can be backed up and \
-                restored by the OS. Setting `allowBackup="false"` opts the application out of being backed up \
-                and so users can't restore data related to it when they go through the device setup wizard.
-
-                Allowing backups may have security consequences for an application. Currently `adb backup` \
-                allows users who have enabled USB debugging to copy application data off of the device. Once \
-                backed up, all application data can be read by the user. `adb restore` allows creation of \
-                application data from a source specified by the user. Following a restore, applications should \
-                not assume that the data, file permissions, and directory permissions were created by the \
-                application itself.
-
-                To fix this warning, decide whether your application should support backup, and explicitly set \
-                `android:allowBackup=(true|false)"`.
-
-                If not set to false, and if targeting API 23 or later, lint will also warn that you should set \
-                `android:fullBackupContent` or `android:fullBackupOnly` to configure auto backup.
+                In Android 12 and higher, these attributes have been deprecated and will only apply \
+                to cloud backups. You should instead use the attribute `android:dataExtractionRules`, \
+                specifying an `@xml` resource that configures which files to back up, for cloud backups \
+                and for device-to-device transfers, separately. If your `minSdkVersion` supports older \
+                versions, you'll still want to specify an `android:fullBackupContent` resource if the default \
+                behavior is not right for your app.
                 """,
             category = Category.SECURITY,
             priority = 3,
-            severity = Severity.WARNING,
+            // TODO: Update once Android 12 documentation moves to permanent home
+            moreInfo = "https://developer.android.com/about/versions/12/features/backup-restore#new-format",
             implementation = IMPLEMENTATION
         )
-            .addMoreInfo(BACKUP_DOCUMENTATION_URL)
-            .addMoreInfo("https://developer.android.com/reference/android/R.attr.html#allowBackup")
 
         /** Conflicting permission names */
         @JvmField
@@ -472,9 +464,11 @@ class ManifestDetector :
 
         // Error message used by quick fix
         const val MISSING_FULL_BACKUP_CONTENT_RESOURCE = "Missing `<full-backup-content>` resource"
+        const val MISSING_EXTRACTION_RESOURCE = "Missing `data-extraction-rules` resource"
 
         private val MIN_WEARABLE_GMS_VERSION = GradleCoordinate.parseVersionOnly("8.2.0")
         private const val PLAY_SERVICES_WEARABLE = GradleDetector.GMS_GROUP_ID + ":play-services-wearable"
+        private const val ATTR_DATA_EXTRACTION_RULES = "dataExtractionRules"
     }
 
     private var seenApplication = false
@@ -560,88 +554,289 @@ class ManifestDetector :
         if (context.project.isLibrary) {
             return
         }
-        if (context.isEnabled(ALLOW_BACKUP)) {
-            val allowBackup = application.getAttributeNS(ANDROID_URI, ATTR_ALLOW_BACKUP)
-            var fullBackupNode =
-                application.getAttributeNodeNS(ANDROID_URI, ATTR_FULL_BACKUP_CONTENT)
-            val client = context.client
-            if (fullBackupNode != null &&
-                fullBackupNode.value.startsWith(PREFIX_RESOURCE_REF)
-            ) {
-                val full = context.isGlobalAnalysis()
-                val project = if (full) context.mainProject else context.project
-                val resources = client.getResources(project, ResourceRepositoryScope.LOCAL_DEPENDENCIES)
-                val url = ResourceUrl.parse(fullBackupNode.value)
-                if (url != null && !url.isFramework &&
-                    !resources.hasResources(ResourceNamespace.TODO(), url.type, url.name)
-                ) {
-                    val sourceFullBackupNode =
-                        application.getAttributeNodeNS(ANDROID_URI, ATTR_FULL_BACKUP_CONTENT)
-                    if (sourceFullBackupNode != null) {
-                        // defined in this file, not merged from other file. Prefer it, since
-                        // we have better source offsets than from manifest merges.
-                        fullBackupNode = sourceFullBackupNode
-                    }
-                    reportFromManifest(
-                        context,
-                        ALLOW_BACKUP,
-                        fullBackupNode,
-                        MISSING_FULL_BACKUP_CONTENT_RESOURCE,
-                        LocationType.VALUE
-                    )
-                }
-            } else if (fullBackupNode == null && VALUE_FALSE != allowBackup &&
-                !application.hasAttributeNS(ANDROID_URI, "fullBackupOnly") &&
-                context.mainProject.targetSdk >= 23
-            ) {
-                var scope: Node? =
-                    application.getAttributeNodeNS(ANDROID_URI, ATTR_ALLOW_BACKUP)
-                if (scope == null) {
-                    scope = application
-                }
-                if (hasGcmReceiver(application)) {
-                    reportFromManifest(
-                        context,
-                        ALLOW_BACKUP,
-                        scope,
-                        "" +
-                            "On SDK version 23 and up, your app data will be automatically " +
-                            "backed up, and restored on app install. Your GCM regid will not " +
-                            "work across restores, so you must ensure that it is excluded " +
-                            "from the back-up set. Use the attribute " +
-                            "`android:fullBackupContent` to specify an `@xml` resource which " +
-                            "configures which files to backup. More info: " +
-                            BACKUP_DOCUMENTATION_URL,
-                        LocationType.NAME
-                    )
-                } else {
-                    reportFromManifest(
-                        context,
-                        ALLOW_BACKUP,
-                        scope,
-                        "" +
-                            "On SDK version 23 and up, your app data will be automatically " +
-                            "backed up and restored on app install. Consider adding the " +
-                            "attribute `android:fullBackupContent` to specify an `@xml` " +
-                            "resource which configures which files to backup, or just " +
-                            "set `android:fullBackupOnly=true`. More info: " +
-                            BACKUP_DOCUMENTATION_URL,
-                        LocationType.NAME
-                    )
-                }
-            }
-            if (allowBackup == null || allowBackup.isEmpty()) {
+        checkBackup(context, application)
+        checkIcon(application, context)
+    }
+
+    private fun checkBackup(context: Context, application: Element) {
+        if (!context.isEnabled(DATA_EXTRACTION_RULES)) {
+            return
+        }
+        val allowBackupNode = application.getAttributeNodeNS(ANDROID_URI, ATTR_ALLOW_BACKUP)
+        val dataExtractionRules = application.getAttributeNodeNS(ANDROID_URI, ATTR_DATA_EXTRACTION_RULES)
+        val fullBackupNode = application.getAttributeNodeNS(ANDROID_URI, ATTR_FULL_BACKUP_CONTENT)
+
+        val project = context.mainProject
+        val min = project.minSdk
+        val target = project.targetSdk
+        if (min < 31 && target >= 31) {
+            if (allowBackupNode?.value == VALUE_FALSE && dataExtractionRules == null) {
+                val fix = createDataExtractionRulesFix(context, fullBackupNode)
                 reportFromManifest(
                     context,
-                    ALLOW_BACKUP,
-                    application,
-                    "Should explicitly set `android:allowBackup` to `true` or " +
-                        "`false` (it's `true` by default, and that can have some security " +
-                        "implications for the application's data)",
-                    LocationType.NAME
+                    DATA_EXTRACTION_RULES,
+                    allowBackupNode,
+                    "The attribute `android:allowBackup` is deprecated from Android 12 and higher and may be removed " +
+                        "in future versions. Consider adding the attribute `android:dataExtractionRules` specifying " +
+                        "an `@xml` resource which configures cloud backups and device transfers on Android 12 " +
+                        "and higher.",
+                    LocationType.VALUE,
+                    fix
+                )
+            } else if (fullBackupNode != null && dataExtractionRules == null) {
+                val fix = createDataExtractionRulesFix(context, fullBackupNode)
+                reportFromManifest(
+                    context,
+                    DATA_EXTRACTION_RULES,
+                    fullBackupNode,
+                    "The attribute `android:fullBackupContent` is deprecated from Android 12 and higher " +
+                        "and may be removed in future versions. Consider adding the attribute " +
+                        "`android:dataExtractionRules` specifying an `@xml` resource which configures cloud " +
+                        "backups and device transfers on Android 12 and higher.",
+                    LocationType.VALUE,
+                    fix
+                )
+            } else if (dataExtractionRules != null && fullBackupNode == null) {
+                reportFromManifest(
+                    context,
+                    DATA_EXTRACTION_RULES,
+                    dataExtractionRules,
+                    "The attribute `android:dataExtractionRules` only applies for Android 12 and higher; since " +
+                        "`minSdkVersion` is API $min you should also set `android:fullBackupContent`",
+                    LocationType.VALUE
+                )
+            }
+        } else if (min >= 31 && dataExtractionRules == null) {
+            if (allowBackupNode != null && fullBackupNode == null && allowBackupNode.value == VALUE_TRUE) {
+                reportFromManifest(
+                    context,
+                    DATA_EXTRACTION_RULES,
+                    allowBackupNode,
+                    "The attribute `android:allowBackup` is deprecated from Android 12 and the default " +
+                        "allows backup",
+                    LocationType.VALUE,
+                    fix().unset(ANDROID_URI, ATTR_ALLOW_BACKUP).build()
+                )
+            } else if (allowBackupNode != null) {
+                val fix = createDataExtractionRulesFix(context, fullBackupNode)
+                reportFromManifest(
+                    context,
+                    DATA_EXTRACTION_RULES,
+                    allowBackupNode,
+                    "The attribute `android:allowBackup` is deprecated from Android 12 and may be " +
+                        "removed in future versions. Consider adding the attribute `android:dataExtractionRules` " +
+                        "specifying an `@xml` resource which configures backups and device transfers on " +
+                        "Android 12 and higher.",
+                    LocationType.VALUE,
+                    fix
+                )
+            }
+            if (fullBackupNode != null) {
+                val fix = createDataExtractionRulesFix(context, fullBackupNode)
+                reportFromManifest(
+                    context,
+                    DATA_EXTRACTION_RULES,
+                    fullBackupNode,
+                    "The attribute `android:fullBackupContent` is deprecated from Android 12 and higher " +
+                        "and may be removed in future versions. Consider adding the attribute " +
+                        "`android:dataExtractionRules` specifying an `@xml` resource which configures backups " +
+                        "and device transfers on Android 12 and higher.",
+                    LocationType.VALUE,
+                    fix
                 )
             }
         }
+        /*
+        // TEMPORARILY DISABLED: According to the backup team, these flags are still consulted
+        // for *cloud* backups. See b/181338786#comment28
+        else if (min >= 31) {
+            assert(dataExtractionRules != null)
+            if (allowBackupNode != null) {
+                reportFromManifest(
+                    context,
+                    DATA_EXTRACTION_RULES,
+                    allowBackupNode,
+                    "This attribute is unused; `dataExtractionRules` will take precedence since `minSdkVersion` is 31 or higher",
+                    LocationType.VALUE,
+                )
+            }
+            if (fullBackupNode != null) {
+                reportFromManifest(
+                    context,
+                    DATA_EXTRACTION_RULES,
+                    fullBackupNode,
+                    "This attribute is unused; `dataExtractionRules` will take precedence since `minSdkVersion` is 31 or higher",
+                    LocationType.VALUE,
+                )
+            }
+        }
+         */
+
+        checkXmlResourceExists(context, fullBackupNode, application, MISSING_FULL_BACKUP_CONTENT_RESOURCE)
+        checkXmlResourceExists(context, dataExtractionRules, application, MISSING_EXTRACTION_RESOURCE)
+    }
+
+    private fun getExtraction(client: LintClient, xmlFile: File): String? {
+        val parser = client.xmlParser
+        val xml = xmlFile.readText()
+        val root = parser.parseXml(xml, xmlFile)?.documentElement ?: return null
+        val first = root.firstChild ?: return null
+        val last = root.lastChild ?: return null
+        val rootStart = parser.getNodeStartOffset(client, xmlFile, root)
+        val firstStart = parser.getNodeStartOffset(client, xmlFile, first)
+        val lastEnd = parser.getNodeEndOffset(client, xmlFile, last)
+        if (rootStart == -1 || firstStart == -1 || lastEnd == -1) {
+            return null
+        }
+        val removeAttributes = mutableListOf<Attr>()
+        val clientSideEncryption = root.visitAttributes {
+            it.name == "requireFlags" && it.value.contains("clientSideEncryption")
+        }
+
+        val prefix = xml.substring(0, rootStart)
+        var childContent = xml.substring(firstStart, lastEnd)
+        if (clientSideEncryption) {
+            for (attr in removeAttributes.reversed()) {
+                val start = parser.getNodeStartOffset(client, xmlFile, attr)
+                val end = parser.getNodeEndOffset(client, xmlFile, attr)
+                if (start != -1 && end != -1) {
+                    childContent = childContent.substring(0, start - firstStart) +
+                        childContent.substring(end - firstStart)
+                }
+            }
+        }
+        val indented = childContent.lines().joinToString("\n") { "    $it" }.removePrefix("    ")
+        var descriptor = prefix + "<data-extraction-rules>\n    <cloud-backup" +
+            (if (clientSideEncryption) " disableIfNoEncryptionCapabilities=\"true\"" else "") +
+            ">\n" +
+            indented.trimEnd().removePrefix("\n") +
+            "\n    </cloud-backup>\n</data-extraction-rules>"
+
+        // Re-parse our modified file to get up to date offsets and insert comments
+        // in the D2D rules
+        parser.parseXml(descriptor, xmlFile)?.documentElement?.let { doc ->
+            val commentOut = mutableListOf<Element>()
+            doc.visitAttributes {
+                if (it.name == "requireFlags" && it.value.contains("deviceToDeviceTransfer")) {
+                    commentOut.add(it.ownerElement)
+                }
+                false
+            }
+
+            for (element in commentOut.reversed()) {
+                val start = parser.getNodeStartOffset(client, xmlFile, element)
+                val end = parser.getNodeEndOffset(client, xmlFile, element)
+                if (start != -1 && end != -1) {
+                    descriptor = descriptor.substring(0, start) + "<!-- " +
+                        descriptor.substring(start, end) + " -->" +
+                        descriptor.substring(end)
+                }
+            }
+        }
+
+        return descriptor
+    }
+
+    @Language("XML")
+    private fun getDataExtractionFileContent(context: Context, fullBackupNode: Attr?): String {
+        // If there's a full backup node use and migrate it
+        fullBackupNode?.value?.let { ResourceUrl.parse(it) }?.let { url ->
+            val client = context.client
+            val project = context.project
+            val resources = client.getResources(project, ResourceRepositoryScope.LOCAL_DEPENDENCIES)
+            val item = resources.getResources(ResourceNamespace.TODO(), url.type, url.name).firstOrNull()?.source
+            item?.toFile()?.let { file -> getExtraction(client, file)?.let { return it } }
+        }
+
+        // Fallback: no previous descriptor, or the descriptor couldn't be read or parsed; just use
+        // a default template:
+
+        @Suppress("UnnecessaryVariable") // here so we can annotate it with @Language("XML")
+        @Language("XML")
+        val descriptor =
+            """
+            <?xml version="1.0" encoding="utf-8"?>
+            <!--
+               Sample data extraction rules file; uncomment and customize as necessary.
+               See https://developer.android.com/about/versions/12/features/backup-restore#new-format
+               for details.
+            -->
+            <data-extraction-rules>
+                <cloud-backup>
+                    <!--
+                    TODO: Use <include> and <exclude> to control what is backed up.
+                    The domain can be file, database, sharedpref, external or root.
+                    Examples:
+
+                    <include domain="file" path="file_to_include"/>
+                    <exclude domain="file" path="file_to_exclude"/>
+                    <include domain="file" path="include_folder"/>
+                    <exclude domain="file" path="include_folder/file_to_exclude"/>
+                    <exclude domain="file" path="exclude_folder"/>
+                    <include domain="file" path="exclude_folder/file_to_include"/>
+
+                    <include domain="sharedpref" path="include_shared_pref1.xml"/>
+                    <include domain="database" path="db_name/file_to_include"/>
+                    <exclude domain="database" path="db_name/include_folder/file_to_exclude"/>
+                    <include domain="external" path="file_to_include"/>
+                    <exclude domain="external" path="file_to_exclude"/>
+                    <include domain="root" path="file_to_include"/>
+                    <exclude domain="root" path="file_to_exclude"/>
+                    -->
+                </cloud-backup>
+                <!--
+                <device-transfer>
+                    <include .../>
+                    <exclude .../>
+                </device-transfer>
+                -->
+            </data-extraction-rules>
+            """.trimIndent()
+
+        return descriptor
+    }
+
+    private fun createDataExtractionRulesFix(context: Context, fullBackupNode: Attr?): LintFix? {
+        val project = context.project
+        val folder = project.resourceFolders.firstOrNull() ?: return null
+        val name = "data_extraction_rules"
+        val file = File(folder, "xml$separator$name")
+        if (file.exists()) {
+            return null
+        }
+
+        val descriptor = getDataExtractionFileContent(context, fullBackupNode)
+        val createFix = fix().newFile(file, descriptor).build()
+        val setAttributeFix = fix().set(ANDROID_URI, ATTR_DATA_EXTRACTION_RULES, "@xml/$name").build()
+        return fix().composite(createFix, setAttributeFix)
+    }
+
+    private fun checkXmlResourceExists(context: Context, node: Attr?, application: Element, message: String) {
+        if (node == null || !node.value.startsWith(PREFIX_RESOURCE_REF)) {
+            return
+        }
+        val full = context.isGlobalAnalysis()
+        val project = if (full) context.mainProject else context.project
+        val resources = context.client.getResources(project, ResourceRepositoryScope.LOCAL_DEPENDENCIES)
+        val url = ResourceUrl.parse(node.value)
+        if (url != null && !url.isFramework &&
+            !resources.hasResources(ResourceNamespace.TODO(), url.type, url.name)
+        ) {
+            // defined in this file, not merged from other file. Prefer it, since
+            // we have better source offsets than from manifest merges.
+            val locationNode = application.getAttributeNodeNS(ANDROID_URI, node.name)
+                ?: node
+            reportFromManifest(
+                context,
+                DATA_EXTRACTION_RULES,
+                locationNode,
+                message,
+                LocationType.VALUE
+            )
+        }
+    }
+
+    private fun checkIcon(application: Element, context: Context) {
         if (!application.hasAttributeNS(ANDROID_URI, ATTR_ICON) &&
             context.isEnabled(APPLICATION_ICON)
         ) {
@@ -895,7 +1090,11 @@ class ManifestDetector :
                             null,
                             false
                         )
-                        if (max != null && GradleCoordinate.COMPARE_PLUS_HIGHER.compare(max, MIN_WEARABLE_GMS_VERSION) > 0) {
+                        if (max != null && GradleCoordinate.COMPARE_PLUS_HIGHER.compare(
+                                max,
+                                MIN_WEARABLE_GMS_VERSION
+                            ) > 0
+                        ) {
                             message = "The `com.google.android.gms.wearable.BIND_LISTENER` " +
                                 "action is deprecated. Please upgrade to the latest available" +
                                 " version of play-services-wearable: `${max.revision}`"
@@ -1118,9 +1317,10 @@ class ManifestDetector :
         }
         checkedUniquePermissions = true
         val mainProject = context.mainProject
-        val mergedManifest = mainProject.mergedManifest // This only happens when there is a parse error, for example if user
-            // is editing the manifest in the IDE and it's currently invalid
-            ?: return
+        val mergedManifest =
+            mainProject.mergedManifest // This only happens when there is a parse error, for example if user
+                // is editing the manifest in the IDE and it's currently invalid
+                ?: return
         lookForNonUniqueNames(context, mainProject, mergedManifest, "permission", TAG_PERMISSION)
         lookForNonUniqueNames(
             context, mainProject, mergedManifest, "permission group", TAG_PERMISSION_GROUP
@@ -1230,52 +1430,6 @@ class ManifestDetector :
         val mc = library.resolvedCoordinates
         val gc = GradleCoordinate.parseVersionOnly(mc.version)
         return GradleCoordinate.COMPARE_PLUS_HIGHER.compare(gc, MIN_WEARABLE_GMS_VERSION) >= 0
-    }
-
-    /**
-     * Returns true if the given application element has a receiver with
-     * an intent filter action for GCM receive
-     */
-    private fun hasGcmReceiver(application: Element): Boolean {
-        val applicationChildren = application.childNodes
-        var i1 = 0
-        val n1 = applicationChildren.length
-        while (i1 < n1) {
-            val applicationChild = applicationChildren.item(i1)
-            if (applicationChild.nodeType == Node.ELEMENT_NODE &&
-                TAG_RECEIVER == applicationChild.nodeName
-            ) {
-                val receiverChildren = applicationChild.childNodes
-                var i2 = 0
-                val n2 = receiverChildren.length
-                while (i2 < n2) {
-                    val receiverChild = receiverChildren.item(i2)
-                    if (receiverChild.nodeType == Node.ELEMENT_NODE &&
-                        TAG_INTENT_FILTER == receiverChild.nodeName
-                    ) {
-                        val filterChildren = receiverChild.childNodes
-                        var i3 = 0
-                        val n3 = filterChildren.length
-                        while (i3 < n3) {
-                            val filterChild = filterChildren.item(i3)
-                            if (filterChild.nodeType == Node.ELEMENT_NODE &&
-                                AndroidManifest.NODE_ACTION == filterChild.nodeName
-                            ) {
-                                val action = filterChild as Element
-                                val name = action.getAttributeNS(ANDROID_URI, ATTR_NAME)
-                                if ("com.google.android.c2dm.intent.RECEIVE" == name) {
-                                    return true
-                                }
-                            }
-                            i3++
-                        }
-                    }
-                    i2++
-                }
-            }
-            i1++
-        }
-        return false
     }
 
     private fun checkMipmapIcon(context: XmlContext, element: Element) {

@@ -51,7 +51,10 @@ class LintVerbosityTest(private val usePartialAnalysis: Boolean) {
                                 lintOptions {
                                     abortOnError false
                                     quiet false
-                                    error 'AllowBackup'
+                                    error 'AccidentalOctal'
+                                }
+                                defaultConfig {
+                                    versionCode 010
                                 }
                             }
                         """.trimIndent()
