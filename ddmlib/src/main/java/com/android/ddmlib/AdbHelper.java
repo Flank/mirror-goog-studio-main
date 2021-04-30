@@ -46,9 +46,6 @@ import java.util.concurrent.TimeUnit;
  */
 public final class AdbHelper {
 
-    // public static final long kOkay = 0x59414b4fL;
-    // public static final long kFail = 0x4c494146L;
-
     static final int WAIT_TIME = 5; // spin-wait sleep, in ms
 
     static final int ADB_HEADER_SIZE = 4;
