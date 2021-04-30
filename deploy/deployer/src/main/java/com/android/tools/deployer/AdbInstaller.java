@@ -36,7 +36,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Stack;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 public class AdbInstaller implements Installer {
@@ -126,7 +125,8 @@ public class AdbInstaller implements Installer {
         Deploy.InstallerRequest.Builder request =
                 buildRequest("installcoroutineagent")
                         .setInstallCoroutineAgentRequest(installCoroutineAgentRequestBuilder);
-        Deploy.InstallerResponse installerResponse = sendInstallerRequest(request.build());
+        Deploy.InstallerResponse installerResponse =
+                sendInstallerRequest(request.build(), Timeouts.CMD_INSTALL_COROUTINE);
         Deploy.InstallCoroutineAgentResponse response =
                 installerResponse.getInstallCoroutineAgentResponse();
         logger.verbose("installer install coroutine agent: " + response.getStatus().toString());
@@ -139,20 +139,20 @@ public class AdbInstaller implements Installer {
         for (String packageName : packageNames) {
             dumpRequestBuilder.addPackageNames(packageName);
         }
-        Deploy.InstallerRequest.Builder request =
+        Deploy.InstallerRequest.Builder req =
                 buildRequest("dump").setDumpRequest(dumpRequestBuilder);
-        Deploy.InstallerResponse installerResponse = sendInstallerRequest(request.build());
-        Deploy.DumpResponse response = installerResponse.getDumpResponse();
+        Deploy.InstallerResponse resp = sendInstallerRequest(req.build(), Timeouts.CMD_DUMP_MS);
+        Deploy.DumpResponse response = resp.getDumpResponse();
         logger.verbose("installer dump: " + response.getStatus().toString());
         return response;
     }
 
     @Override
     public Deploy.SwapResponse swap(Deploy.SwapRequest swapRequest) throws IOException {
-        Deploy.InstallerRequest.Builder request = buildRequest("swap");
-        request.setSwapRequest(swapRequest);
-        Deploy.InstallerResponse installerResponse = sendInstallerRequest(request.build());
-        Deploy.SwapResponse response = installerResponse.getSwapResponse();
+        Deploy.InstallerRequest.Builder req = buildRequest("swap");
+        req.setSwapRequest(swapRequest);
+        Deploy.InstallerResponse resp = sendInstallerRequest(req.build(), Timeouts.CMD_SWAP_MS);
+        Deploy.SwapResponse response = resp.getSwapResponse();
         logger.verbose("installer swap: " + response.getStatus().toString());
         return response;
     }
@@ -160,10 +160,10 @@ public class AdbInstaller implements Installer {
     @Override
     public Deploy.SwapResponse overlaySwap(Deploy.OverlaySwapRequest overlaySwapRequest)
             throws IOException {
-        Deploy.InstallerRequest.Builder request = buildRequest("overlayswap");
-        request.setOverlaySwapRequest(overlaySwapRequest);
-        Deploy.InstallerResponse installerResponse = sendInstallerRequest(request.build());
-        Deploy.SwapResponse response = installerResponse.getSwapResponse();
+        Deploy.InstallerRequest.Builder req = buildRequest("overlayswap");
+        req.setOverlaySwapRequest(overlaySwapRequest);
+        Deploy.InstallerResponse resp = sendInstallerRequest(req.build(), Timeouts.CMD_OSWAP_MS);
+        Deploy.SwapResponse response = resp.getSwapResponse();
         logger.verbose("installer overlayswap: " + response.getStatus().toString());
         return response;
     }
@@ -171,10 +171,10 @@ public class AdbInstaller implements Installer {
     @Override
     public Deploy.OverlayInstallResponse overlayInstall(
             Deploy.OverlayInstallRequest overlayInstallRequest) throws IOException {
-        Deploy.InstallerRequest.Builder request = buildRequest("overlayinstall");
-        request.setOverlayInstall(overlayInstallRequest);
-        Deploy.InstallerResponse installerResponse = sendInstallerRequest(request.build());
-        Deploy.OverlayInstallResponse response = installerResponse.getOverlayInstallResponse();
+        Deploy.InstallerRequest.Builder req = buildRequest("overlayinstall");
+        req.setOverlayInstall(overlayInstallRequest);
+        Deploy.InstallerResponse resp = sendInstallerRequest(req.build(), Timeouts.CMD_OINSTALL_MS);
+        Deploy.OverlayInstallResponse response = resp.getOverlayInstallResponse();
         logger.verbose("installer overlayinstall: " + response.getStatus().toString());
         return response;
     }
@@ -186,10 +186,11 @@ public class AdbInstaller implements Installer {
         // the OID without updating it.
         Deploy.OverlayIdPush overlayIdPushRequest =
                 createOidPushRequest(packageName, oid, oid, false);
-        Deploy.InstallerRequest.Builder request = buildRequest("overlayidpush");
-        request.setOverlayIdPush(overlayIdPushRequest);
-        Deploy.InstallerResponse installerResponse = sendInstallerRequest(request.build());
-        Deploy.OverlayIdPushResponse response = installerResponse.getOverlayidpushResponse();
+        Deploy.InstallerRequest.Builder req = buildRequest("overlayidpush");
+        req.setOverlayIdPush(overlayIdPushRequest);
+        Deploy.InstallerResponse res =
+                sendInstallerRequest(req.build(), Timeouts.CMD_VERIFY_OID_MS);
+        Deploy.OverlayIdPushResponse response = res.getOverlayidpushResponse();
         logger.verbose("installer overlayidpush: " + response.getStatus().toString());
         return response;
     }
@@ -199,7 +200,8 @@ public class AdbInstaller implements Installer {
             throws IOException {
         Deploy.InstallerRequest.Builder request = buildRequest("networktest");
         request.setNetworkTestRequest(testParams);
-        Deploy.InstallerResponse installerResponse = sendInstallerRequest(request.build());
+        Deploy.InstallerResponse installerResponse =
+                sendInstallerRequest(request.build(), Timeouts.CMD_NETTEST);
         return installerResponse.getNetworkTestResponse();
     }
 
@@ -216,20 +218,22 @@ public class AdbInstaller implements Installer {
     @Override
     public Deploy.DeltaPreinstallResponse deltaPreinstall(Deploy.InstallInfo info)
             throws IOException {
-        Deploy.InstallerRequest.Builder request = buildRequest("deltapreinstall");
-        request.setInstallInfoRequest(info);
-        Deploy.InstallerResponse installerResponse = sendInstallerRequest(request.build());
-        Deploy.DeltaPreinstallResponse response = installerResponse.getDeltapreinstallResponse();
+        Deploy.InstallerRequest.Builder req = buildRequest("deltapreinstall");
+        req.setInstallInfoRequest(info);
+        Deploy.InstallerResponse res =
+                sendInstallerRequest(req.build(), Timeouts.CMD_DELTA_PREINSTALL_MS);
+        Deploy.DeltaPreinstallResponse response = res.getDeltapreinstallResponse();
         logger.verbose("installer deltapreinstall: " + response.getStatus().toString());
         return response;
     }
 
     @Override
     public Deploy.DeltaInstallResponse deltaInstall(Deploy.InstallInfo info) throws IOException {
-        Deploy.InstallerRequest.Builder request = buildRequest("deltainstall");
-        request.setInstallInfoRequest(info);
-        Deploy.InstallerResponse installerResponse = sendInstallerRequest(request.build());
-        Deploy.DeltaInstallResponse response = installerResponse.getDeltainstallResponse();
+        Deploy.InstallerRequest.Builder req = buildRequest("deltainstall");
+        req.setInstallInfoRequest(info);
+        Deploy.InstallerResponse res =
+                sendInstallerRequest(req.build(), Timeouts.CMD_DELTA_INSTALL_MS);
+        Deploy.DeltaInstallResponse response = res.getDeltainstallResponse();
         logger.verbose("installer deltainstall: " + response.getStatus().toString());
         return response;
     }
@@ -237,10 +241,10 @@ public class AdbInstaller implements Installer {
     @Override
     public Deploy.LiveLiteralUpdateResponse updateLiveLiterals(
             Deploy.LiveLiteralUpdateRequest liveLiterals) throws IOException {
-        Deploy.InstallerRequest.Builder request = buildRequest("liveliteralupdate");
-        request.setLiveLiteralRequest(liveLiterals);
-        Deploy.InstallerResponse installerResponse = sendInstallerRequest(request.build());
-        Deploy.LiveLiteralUpdateResponse response = installerResponse.getLiveLiteralResponse();
+        Deploy.InstallerRequest.Builder req = buildRequest("liveliteralupdate");
+        req.setLiveLiteralRequest(liveLiterals);
+        Deploy.InstallerResponse res = sendInstallerRequest(req.build(), Timeouts.CMD_UPDATE_LL);
+        Deploy.LiveLiteralUpdateResponse response = res.getLiveLiteralResponse();
         logger.verbose("installer liveliteralupdate: " + response.getStatus().toString());
         return response;
     }
@@ -249,23 +253,18 @@ public class AdbInstaller implements Installer {
     public Deploy.LiveEditResponse liveEdit(Deploy.LiveEditRequest ler) throws IOException {
         Deploy.InstallerRequest.Builder request = buildRequest("liveedit");
         request.setLeRequest(ler);
-        Deploy.InstallerResponse installerResponse = sendInstallerRequest(request.build());
+        Deploy.InstallerResponse installerResponse =
+                sendInstallerRequest(request.build(), Timeouts.CMD_LIVE_EDIT);
         Deploy.LiveEditResponse response = installerResponse.getLeResponse();
         logger.verbose("installer liveEdit: " + response.getStatus().toString());
         return response;
     }
 
-    private Deploy.InstallerResponse sendInstallerRequest(Deploy.InstallerRequest request)
-            throws IOException {
-        return sendInstallerRequest(request, AdbClient.DEFAULT_TIMEOUT, AdbClient.DEFAULT_TIMEUNIT);
-    }
-
     private Deploy.InstallerResponse sendInstallerRequest(
-            Deploy.InstallerRequest request, long timeOut, TimeUnit timeUnit) throws IOException {
+            Deploy.InstallerRequest request, long timeOutMs) throws IOException {
         Trace.begin("./installer " + request.getCommandName());
         long start = System.nanoTime();
-        Deploy.InstallerResponse response =
-                sendInstallerRequest(request, OnFail.RETRY, timeOut, timeUnit);
+        Deploy.InstallerResponse response = sendInstallerRequest(request, OnFail.RETRY, timeOutMs);
         logEvents(response.getEventsList());
         long end = System.nanoTime();
 
@@ -317,15 +316,11 @@ public class AdbInstaller implements Installer {
     // Send content of data into the executable standard input and return a proto buffer
     // object specific to the command.
     private Deploy.InstallerResponse sendInstallerRequest(
-            Deploy.InstallerRequest installerRequest,
-            OnFail onFail,
-            long timeOut,
-            TimeUnit timeUnit)
+            Deploy.InstallerRequest installerRequest, OnFail onFail, long timeOutMs)
             throws IOException {
         ByteBuffer request = wrap(installerRequest);
         Deploy.InstallerResponse response = null;
 
-        long timeOutMs = timeUnit.toMillis(timeOut);
         AdbInstallerChannel channel = channelsProvider.getChannel(adb, getVersion());
 
         channel.lock();
@@ -353,7 +348,7 @@ public class AdbInstaller implements Installer {
             }
             channelsProvider.reset(adb);
             prepare();
-            return sendInstallerRequest(installerRequest, OnFail.DO_NO_RETRY, timeOut, timeUnit);
+            return sendInstallerRequest(installerRequest, OnFail.DO_NO_RETRY, timeOutMs);
         }
 
         // Parse response.
@@ -364,7 +359,7 @@ public class AdbInstaller implements Installer {
             }
             channelsProvider.reset(adb);
             prepare();
-            return sendInstallerRequest(installerRequest, OnFail.DO_NO_RETRY, timeOut, timeUnit);
+            return sendInstallerRequest(installerRequest, OnFail.DO_NO_RETRY, timeOutMs);
         }
 
         if (mode == Mode.ONE_SHOT) {
@@ -453,20 +448,22 @@ public class AdbInstaller implements Installer {
         runShell(
                 new String[] {
                     "rm", "-fr", Deployer.INSTALLER_DIRECTORY, Deployer.INSTALLER_TMP_DIRECTORY
-                });
+                },
+                Timeouts.SHELL_RMFR);
         runShell(
                 new String[] {
                     "mkdir", "-p", Deployer.INSTALLER_DIRECTORY, Deployer.INSTALLER_TMP_DIRECTORY
-                });
+                },
+                Timeouts.SHELL_MKDIR);
 
         // No need to check result here. If something wrong happens, an IOException is thrown.
         adb.push(installerFile.getAbsolutePath(), INSTALLER_PATH);
 
-        runShell(new String[] {"chmod", "+x", INSTALLER_PATH});
+        runShell(new String[] {"chmod", "+x", INSTALLER_PATH}, Timeouts.SHELL_CHMOD);
     }
 
-    private void runShell(String[] cmd) throws IOException {
-        byte[] response = adb.shell(cmd);
+    private void runShell(String[] cmd, long timeOutMs) throws IOException {
+        byte[] response = adb.shell(cmd, timeOutMs);
 
         if (response.length <= 0) {
             return;

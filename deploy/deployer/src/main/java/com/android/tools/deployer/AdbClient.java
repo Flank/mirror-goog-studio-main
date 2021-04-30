@@ -56,9 +56,6 @@ public class AdbClient {
     private final IDevice device;
     private final ILogger logger;
 
-    public static final long DEFAULT_TIMEOUT = 5;
-    public static final TimeUnit DEFAULT_TIMEUNIT = TimeUnit.MINUTES;
-
     public AdbClient(IDevice device, ILogger logger) {
         this.device = device;
         this.logger = logger;
@@ -88,13 +85,12 @@ public class AdbClient {
     }
 
     /** Executes the given command with no stdin and returns stdout as a byte[] */
-    public byte[] shell(String[] parameters) throws IOException {
-        return shell(parameters, null);
+    public byte[] shell(String[] parameters, long timeOutmS) throws IOException {
+        return shell(parameters, null, timeOutmS);
     }
 
-    public byte[] shell(String[] parameters, InputStream input) throws IOException {
-        return shell(
-                parameters, input, DEFAULT_TIMEOUT, DEFAULT_TIMEUNIT);
+    public byte[] shell(String[] parameters, InputStream input, long timeOutmS) throws IOException {
+        return shell(parameters, input, timeOutmS, TimeUnit.MILLISECONDS);
     }
 
     /**
@@ -332,7 +328,7 @@ public class AdbClient {
 
         String response;
         try {
-            byte[] bytes = shell(command);
+            byte[] bytes = shell(command, Timeouts.SHELL_ABORT_INSTALL_MS);
             response = new String(bytes, StandardCharsets.UTF_8);
         } catch (Exception e) {
             response = e.getMessage();
