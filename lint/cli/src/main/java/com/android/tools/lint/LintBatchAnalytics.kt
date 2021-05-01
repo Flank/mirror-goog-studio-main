@@ -24,6 +24,7 @@ import com.android.tools.lint.client.api.LintDriver
 import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Severity
+import com.android.tools.lint.detector.api.getSeverity
 import com.android.utils.NullLogger
 import com.google.wireless.android.sdk.stats.AndroidStudioEvent
 import com.google.wireless.android.sdk.stats.AndroidStudioEvent.EventKind.LINT_SESSION
@@ -191,7 +192,7 @@ class LintBatchAnalytics {
 
         // Also record manual severity overrides specified in lintOptions
         for ((id, severity) in flags.severityOverrides.entries) {
-            recordSeverityOverride(map, id, severity)
+            recordSeverityOverride(map, id, severity.getSeverity(registry.getIssue(id)))
         }
 
         // Also record manually disabled issues since we wouldn't have any

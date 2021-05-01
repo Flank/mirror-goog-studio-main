@@ -23,7 +23,7 @@ import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Issue;
-import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.model.LintModelSeverity;
 import com.google.common.annotations.Beta;
 import com.google.common.collect.Lists;
 import java.io.File;
@@ -47,7 +47,7 @@ public class LintCliFlags {
     private Set<Category> disabledCategories = null;
     private Set<Category> enabledCategories = null;
     private Set<Category> checkCategories = null;
-    private Map<String, Severity> severities;
+    private Map<String, LintModelSeverity> severities;
     private boolean setExitCode;
     private boolean fullPath;
     private boolean showLines = true;
@@ -135,7 +135,7 @@ public class LintCliFlags {
      * @return the severity to use for a given issue id
      */
     @NonNull
-    public Map<String, Severity> getSeverityOverrides() {
+    public Map<String, LintModelSeverity> getSeverityOverrides() {
         return severities == null ? Collections.emptyMap() : severities;
     }
 
@@ -585,7 +585,7 @@ public class LintCliFlags {
      *
      * @param severities map from issue id to severity
      */
-    public void setSeverityOverrides(@NonNull Map<String, Severity> severities) {
+    public void setSeverityOverrides(@NonNull Map<String, LintModelSeverity> severities) {
         this.severities = severities;
     }
 

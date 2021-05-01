@@ -368,7 +368,7 @@ abstract class LintOptionsInput {
             com.android.builder.model.LintOptions.SEVERITY_WARNING -> LintModelSeverity.WARNING
             com.android.builder.model.LintOptions.SEVERITY_INFORMATIONAL -> LintModelSeverity.INFORMATIONAL
             com.android.builder.model.LintOptions.SEVERITY_IGNORE -> LintModelSeverity.IGNORE
-            com.android.builder.model.LintOptions.SEVERITY_DEFAULT_ENABLED -> LintModelSeverity.WARNING
+            com.android.builder.model.LintOptions.SEVERITY_DEFAULT_ENABLED -> LintModelSeverity.DEFAULT_ENABLED
             else -> LintModelSeverity.IGNORE
         }
 

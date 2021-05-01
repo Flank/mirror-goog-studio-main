@@ -16,12 +16,8 @@
 @file:JvmName("SyncOptions")
 package com.android.tools.lint
 
-import com.android.tools.lint.checks.BuiltinIssueRegistry
 import com.android.tools.lint.detector.api.Category.Companion.getCategory
-import com.android.tools.lint.detector.api.Issue
-import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.model.LintModelModule
-import com.android.tools.lint.model.LintModelSeverity as ModelSeverity
 
 // Operations related to syncing LintOptions to lint's internal state
 
@@ -80,40 +76,8 @@ fun syncTo(project: LintModelModule, flags: LintCliFlags) {
     flags.baselineFile = options.baselineFile
     val severityOverrides = options.severityOverrides
     if (severityOverrides != null) {
-        val map: MutableMap<String, Severity> = mutableMapOf()
-        val registry = BuiltinIssueRegistry()
-        for ((id, severityInt) in severityOverrides) {
-            val issue = registry.getIssue(id)
-            val severity = issue?.let { getSeverity(it, severityInt) } ?: Severity.WARNING
-            val category = getCategory(id)
-            if (category != null) {
-                for (current in registry.issues) {
-                    val currentCategory = current.category
-                    if (currentCategory === category || currentCategory.parent === category) {
-                        map[current.id] = severity
-                    }
-                }
-            } else {
-                map[id] = severity
-            }
-        }
-        flags.severityOverrides = map
+        flags.severityOverrides = severityOverrides
     } else {
         flags.severityOverrides = emptyMap()
-    }
-}
-
-private fun getSeverity(
-    issue: Issue,
-    modelSeverity: ModelSeverity
-): Severity {
-    return when (modelSeverity) {
-        ModelSeverity.FATAL -> Severity.FATAL
-        ModelSeverity.ERROR -> Severity.ERROR
-        ModelSeverity.WARNING -> Severity.WARNING
-        ModelSeverity.INFORMATIONAL -> Severity.INFORMATIONAL
-        ModelSeverity.IGNORE -> Severity.IGNORE
-        ModelSeverity.DEFAULT_ENABLED -> issue.defaultSeverity
-        else -> Severity.WARNING
     }
 }
