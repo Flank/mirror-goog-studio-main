@@ -256,7 +256,7 @@ public class ExtractAnnotationsDriver {
                 default:
                     System.err.println(
                             "Unknown flag " + flag + ": Use --help for usage information");
-                    break;
+                    return -1;
             }
         }
 

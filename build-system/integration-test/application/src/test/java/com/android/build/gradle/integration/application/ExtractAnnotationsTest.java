@@ -20,9 +20,9 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.testutils.truth.PathSubject.assertThat;
 import static com.android.testutils.truth.ZipFileSubject.assertThat;
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.truth.ScannerSubject;
 import com.android.testutils.apk.Zip;
 import com.google.common.truth.Truth;
 import java.io.IOException;
@@ -30,7 +30,7 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
-import org.junit.Before;
+import java.util.Scanner;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -44,7 +44,7 @@ import org.junit.Test;
  *     $ ./gradlew :base:build-system:integration-test:application:test -D:base:build-system:integration-test:application:test.single=ExtractAnnotationTest
  * </pre>
  */
-public class ExtractAnnotationTest {
+public class ExtractAnnotationsTest {
 
     @Rule
     public GradleTestProject project =
@@ -52,13 +52,14 @@ public class ExtractAnnotationTest {
                     .fromTestProject("extractAnnotations")
                     .create();
 
-    @Before
-    public void setUp() throws Exception {
-        project.execute("clean", "assembleDebug");
-    }
-
     @Test
     public void checkExtractAnnotation() throws Exception {
+        project.execute("clean", "assembleDebug");
+
+        try (Scanner stderr = project.getBuildResult().getStderr()) {
+            ScannerSubject.assertThat(stderr).doesNotContain("Unknown flag");
+        }
+
         project.getAar(
                 "debug",
                 debugAar -> {
