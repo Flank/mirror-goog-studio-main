@@ -1237,7 +1237,6 @@ class GradleModelMocker @JvmOverloads constructor(
     }
 
     private fun setLintSeverity(id: String, severity: Severity) {
-        flags.severityOverrides[id] = severity
         val severityValue: LintModelSeverity = when (severity) {
             Severity.FATAL -> LintModelSeverity.FATAL
             Severity.ERROR -> LintModelSeverity.ERROR
@@ -1246,6 +1245,7 @@ class GradleModelMocker @JvmOverloads constructor(
             Severity.IGNORE -> LintModelSeverity.IGNORE
             else -> LintModelSeverity.DEFAULT_ENABLED
         }
+        flags.severityOverrides[id] = severityValue
         severityOverrides[id] = severityValue
         updateLintOptions(null, null, severityOverrides, null, null)
     }

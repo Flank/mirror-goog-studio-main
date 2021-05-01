@@ -21,6 +21,7 @@ import com.android.tools.lint.client.api.FlagConfiguration
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.Severity
+import com.android.tools.lint.detector.api.getSeverity
 
 /**
  * Consult the lint.xml file, but override with the --enable
@@ -42,7 +43,7 @@ open class CliConfiguration(
     override fun disabledCategories(): Set<Category>? = flags.disabledCategories
     override fun enabledCategories(): Set<Category>? = flags.enabledCategories
     override fun exactCategories(): Set<Category>? = flags.exactCategories
-    override fun severityOverride(issue: Issue): Severity? = flags.severityOverrides[issue.id]
+    override fun severityOverride(issue: Issue): Severity? = flags.severityOverrides[issue.id]?.getSeverity(issue)
     override fun allowSuppress(): Boolean = flags.allowSuppress
     override fun severityOverrides(): Set<String> = flags.severityOverrides.keys
 }

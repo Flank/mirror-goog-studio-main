@@ -50,9 +50,11 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.SeverityKt;
 import com.android.tools.lint.detector.api.TextFormat;
 import com.android.tools.lint.model.LintModelModule;
 import com.android.tools.lint.model.LintModelSerialization;
+import com.android.tools.lint.model.LintModelSeverity;
 import com.android.tools.lint.model.LintModelVariant;
 import com.android.tools.lint.model.PathVariables;
 import com.android.utils.SdkUtils;
@@ -1512,8 +1514,8 @@ public class Main {
             targetSet.add(id);
         } else {
             assert severity != null;
-            Map<String, Severity> map = new HashMap<>(flags.getSeverityOverrides());
-            map.put(id, severity);
+            Map<String, LintModelSeverity> map = new HashMap<>(flags.getSeverityOverrides());
+            map.put(id, SeverityKt.getModelSeverity(severity));
             flags.setSeverityOverrides(map);
         }
     }
