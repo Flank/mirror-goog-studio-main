@@ -168,12 +168,12 @@ class AsmTransformApiFixFramesTest {
                 // language=kotlin
                 """
             val androidComponentsExt = project.extensions.getByType(AndroidComponentsExtension::class.java)
-            androidComponentsExt.unitTests {
-                    it.transformClassesWith(
+            androidComponentsExt.onVariants {
+                    it.unitTest?.transformClassesWith(
                             FramesBreakingClassVisitorFactory::class.java,
                             InstrumentationScope.PROJECT
                     ) {}
-                    it.setAsmFramesComputationMode($framesMode)
+                    it.unitTest?.setAsmFramesComputationMode($framesMode)
                 }
                 """.trimIndent()
 

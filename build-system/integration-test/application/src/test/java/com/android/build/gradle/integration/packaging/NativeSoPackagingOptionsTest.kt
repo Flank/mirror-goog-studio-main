@@ -63,9 +63,7 @@ class NativeSoPackagingOptionsTest {
                         })
                         onVariants(selector().all(), {
                             packaging.jniLibs.pickFirsts.add('**/variantPickFirst.so')
-                        })
-                        androidTests(selector().all(), {
-                            packaging.jniLibs.excludes.add('**/testExclude.so')
+                            androidTest?.packaging?.jniLibs?.excludes?.add('**/testExclude.so')
                         })
                     }
                     """.trimIndent()
@@ -99,9 +97,7 @@ class NativeSoPackagingOptionsTest {
                     androidComponents {
                         onVariants(selector().all(), {
                             packaging.jniLibs.excludes.add('**/libExclude.so')
-                        })
-                        androidTests(selector().all(), {
-                            packaging.jniLibs.excludes.add('**/testExclude.so')
+                            androidTest?.packaging?.jniLibs?.excludes?.add('**/testExclude.so')
                         })
                     }
                     """.trimIndent()

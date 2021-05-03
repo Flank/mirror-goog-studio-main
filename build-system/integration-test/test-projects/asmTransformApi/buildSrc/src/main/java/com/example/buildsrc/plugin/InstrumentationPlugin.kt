@@ -77,21 +77,18 @@ class InstrumentationPlugin : Plugin<Project> {
                     instrumentedAnnotationDescriptor
                 )
             }
-        }
-
-        androidComponentsExt.unitTests {
-            it.transformClassesWith(
-                AnnotationAddingClassVisitorFactory::class.java,
-                InstrumentationScope.PROJECT
+            it.unitTest?.transformClassesWith(
+                    AnnotationAddingClassVisitorFactory::class.java,
+                    InstrumentationScope.PROJECT
             ) { params ->
                 params.methodNamesToBeAnnotated.setDisallowChanges(
-                    instrumentationExtension.annotationAddingConfig.methodNamesToBeAnnotated
+                        instrumentationExtension.annotationAddingConfig.methodNamesToBeAnnotated
                 )
                 params.interfacesNamesToBeInstrumented.setDisallowChanges(
-                    instrumentationExtension.annotationAddingConfig.interfacesNamesToBeInstrumented
+                        instrumentationExtension.annotationAddingConfig.interfacesNamesToBeInstrumented
                 )
                 params.annotationClassDescriptor.setDisallowChanges(
-                    instrumentedAnnotationDescriptor
+                        instrumentedAnnotationDescriptor
                 )
             }
         }
@@ -115,21 +112,18 @@ class InstrumentationPlugin : Plugin<Project> {
                 )
                 params.interfaceInternalName.setDisallowChanges(instrumentedInterfaceInternalName)
             }
-        }
-
-        androidComponentsExt.unitTests {
-            it.transformClassesWith(
-                InterfaceAddingClassVisitorFactory::class.java,
-                InstrumentationScope.PROJECT
+            it.unitTest?.transformClassesWith(
+                    InterfaceAddingClassVisitorFactory::class.java,
+                    InstrumentationScope.PROJECT
             ) { params ->
                 params.enabled.setDisallowChanges(
-                    instrumentationExtension.interfaceAddingConfig.enabled
+                        instrumentationExtension.interfaceAddingConfig.enabled
                 )
                 params.classesToInstrument.setDisallowChanges(
-                    instrumentationExtension.interfaceAddingConfig.classesToInstrument
+                        instrumentationExtension.interfaceAddingConfig.classesToInstrument
                 )
                 params.interfaceInternalName.setDisallowChanges(
-                    instrumentedInterfaceInternalName
+                        instrumentedInterfaceInternalName
                 )
             }
         }

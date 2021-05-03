@@ -29,8 +29,6 @@ import org.gradle.api.Action
 class VariantApiOperationsRegistrar<CommonExtensionT: CommonExtension<*, *, *, *>, VariantBuilderT: VariantBuilder, VariantT: Variant> {
     internal val variantBuilderOperations = OperationsRegistrar<VariantBuilderT>()
     internal val variantOperations = OperationsRegistrar<VariantT>()
-    internal val unitTestOperations = OperationsRegistrar<UnitTest>()
-    internal val androidTestOperations = OperationsRegistrar<AndroidTest>()
     internal val dslExtensions = mutableListOf<AndroidComponentsExtensionImpl.RegisteredApiExtension<VariantT>>()
     internal val dslFinalizationOperations = mutableListOf<Action<CommonExtensionT>>()
 
