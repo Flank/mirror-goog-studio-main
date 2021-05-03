@@ -441,6 +441,77 @@ class DiffUtilDetectorTest : AbstractCheckTest() {
         ).run().expectClean()
     }
 
+    fun test161584622() {
+        // Regression test for https://issuetracker.google.com/issues/161584622
+        lint().files(
+            kotlin(
+                """
+                package com.example
+
+                interface IModel {
+                    // Workaround from https://issuetracker.google.com/issues/122928037
+                    //override fun equals(other: Any?): Boolean
+                }
+                """
+            ).indented(),
+            kotlin(
+                """
+                package com.example
+
+                data class Model(
+                    val id: String,
+                    val content: String
+                ) : IModel
+                """
+            ).indented(),
+            kotlin(
+                """
+                package com.example
+
+                import androidx.recyclerview.widget.DiffUtil
+
+                class MyDiffUtilCallbackKotlin : DiffUtil.ItemCallback<IModel>() {
+
+                    override fun areItemsTheSame(
+                        oldItem: IModel,
+                        newItem: IModel
+                    ): Boolean =
+                        oldItem is Model && newItem is Model && oldItem.id == newItem.id
+
+                    override fun areContentsTheSame(
+                        oldItem: IModel,
+                        newItem: IModel
+                    ): Boolean =
+                        oldItem is Model && newItem is Model && oldItem == newItem
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package com.example;
+
+                import androidx.recyclerview.widget.DiffUtil;
+
+                public class MyDiffUtilCallbackJava extends DiffUtil.ItemCallback<IModel> {
+
+                    @Override public boolean areItemsTheSame(IModel oldItem, IModel newItem) {
+                        if (oldItem instanceof Model && newItem instanceof Model) {
+                            Model model1 = (Model)oldItem;
+                            Model model2 = (Model)newItem;
+                            return model1.getId().equals(model2.getId());
+                        }
+                        return false;
+                    }
+                    @Override public boolean areContentsTheSame(IModel oldItem, IModel newItem) {
+                        return oldItem instanceof Model && newItem instanceof Model && oldItem.equals(newItem);
+                    }
+                }
+                """
+            ).indented(),
+            *diffUtilStubs
+        ).run().expectClean()
+    }
+
     override fun getDetector(): Detector {
         return DiffUtilDetector()
     }
