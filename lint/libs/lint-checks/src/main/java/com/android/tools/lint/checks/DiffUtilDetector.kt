@@ -27,6 +27,7 @@ import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.isKotlin
 import com.intellij.psi.CommonClassNames.JAVA_LANG_OBJECT
 import com.intellij.psi.PsiClassType
+import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMethod
 import org.jetbrains.uast.UBinaryExpression
 import org.jetbrains.uast.UBinaryExpressionWithType
@@ -37,8 +38,10 @@ import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.UIfExpression
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.UPolyadicExpression
+import org.jetbrains.uast.UQualifiedReferenceExpression
 import org.jetbrains.uast.UastBinaryOperator
 import org.jetbrains.uast.getParentOfType
+import org.jetbrains.uast.tryResolve
 import org.jetbrains.uast.visitor.AbstractUastVisitor
 
 /** Checks related to DiffUtil computation. */
@@ -146,22 +149,52 @@ class DiffUtilDetector : Detector(), SourceCodeScanner {
      * Is this .equals() call within another if check which checks
      * instanceof on a more specific type than we're calling equals on?
      * If so, does that more specific type define its own equals?
+     *
+     * Also handle an implicit check via short circuit evaluation; e.g.
+     * something like "return a is A && b is B && a.equals(b)".
      */
-    private fun withinCastWithEquals(context: JavaContext, node: UCallExpression): Boolean {
+    private fun withinCastWithEquals(context: JavaContext, node: UExpression): Boolean {
+        var parent = node.uastParent
+        if (parent is UQualifiedReferenceExpression) {
+            parent = parent.uastParent
+        }
+        val target: PsiElement? = when (node) {
+            is UCallExpression -> node.receiver?.tryResolve()
+            is UBinaryExpression -> node.leftOperand.tryResolve()
+            else -> null
+        }
+
+        if (parent is UPolyadicExpression && parent.operator == UastBinaryOperator.LOGICAL_AND) {
+            val operands = parent.operands
+            for (operand in operands) {
+                if (operand === node) {
+                    break
+                }
+                if (isCastWithEquals(context, operand, target)) {
+                    return true
+                }
+            }
+        }
         val ifStatement = node.getParentOfType<UElement>(UIfExpression::class.java, false, UMethod::class.java)
             as? UIfExpression ?: return false
         val condition = ifStatement.condition
-        return isCastWithEquals(context, condition)
+        return isCastWithEquals(context, condition, target)
     }
 
-    private fun isCastWithEquals(context: JavaContext, node: UExpression): Boolean {
+    private fun isCastWithEquals(context: JavaContext, node: UExpression, target: PsiElement?): Boolean {
         if (node is UBinaryExpressionWithType) {
+            if (target != null) {
+                val resolved = node.operand.tryResolve()
+                // Unfortunately in some scenarios isEquivalentTo returns false for equal instances
+                //noinspection LintImplPsiEquals
+                if (resolved != null && !(target == resolved || target.isEquivalentTo(resolved))) {
+                    return false
+                }
+            }
             return !defaultEquals(context, node.type as? PsiClassType)
-        } else if (node is UPolyadicExpression) {
+        } else if (node is UPolyadicExpression && node.operator == UastBinaryOperator.LOGICAL_AND) {
             for (operand in node.operands) {
-                // Technically we should require && here as well as check that
-                // the operands being compared is our instance in the if expression
-                if (isCastWithEquals(context, operand)) {
+                if (isCastWithEquals(context, operand, target)) {
                     return true
                 }
             }
@@ -178,6 +211,10 @@ class DiffUtilDetector : Detector(), SourceCodeScanner {
             if (left is PsiClassType && right is PsiClassType) {
                 if (node.operator == UastBinaryOperator.EQUALS) {
                     if (defaultEquals(context, node)) {
+                        if (withinCastWithEquals(context, node)) {
+                            return
+                        }
+
                         val message =
                             "Suspicious equality check: `equals()` is not implemented in ${left.className}"
                         val location = node.operatorIdentifier?.let {
