@@ -98,6 +98,14 @@ interface BuildType : Named, VariantDimension, ExtensionAware {
     var isMinifyEnabled: Boolean
 
     /**
+     * Specifies whether to enable shrinking resources for this build type.
+     *
+     * To learn more, read
+     * [Shrink Your Code and Resources](https://developer.android.com/studio/build/shrink-code.html).
+     */
+    var isShrinkResources: Boolean
+
+    /**
      * Specifies a sorted list of build types that the plugin should try to use when a direct
      * variant match with a local module dependency is not possible.
      *
