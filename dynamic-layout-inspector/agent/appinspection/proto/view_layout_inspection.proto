@@ -87,7 +87,7 @@ message Screenshot {
         NONE = 1;
         // SKP = Skia picture, a format embedded with layout details.
         SKP = 2;
-        // A raw image, useful as a fallback if SKIA parsing fails.
+        // Zipped raw pixel data, used when the more-expensive SKP isn't necessary.
         BITMAP = 3;
     }
     Type type = 1;

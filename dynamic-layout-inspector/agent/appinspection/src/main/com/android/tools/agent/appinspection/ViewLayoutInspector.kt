@@ -36,6 +36,7 @@ import com.android.tools.agent.appinspection.proto.toNode
 import com.android.tools.agent.appinspection.util.ThreadUtils
 import com.android.tools.agent.appinspection.util.compress
 import com.android.tools.idea.protobuf.ByteString
+import com.android.tools.layoutinspector.BitmapType
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Command
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.ErrorEvent
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Event
@@ -111,7 +112,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
          * We'll occasionally check against these against the current list of roots, generating an
          * event if they've ever changed.
          */
-        private var lastRootIds = emptySet<Long>()
+        var lastRootIds = emptySet<Long>()
 
         fun start() {
             stop()
@@ -300,10 +301,16 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
                     // We always have to do this even if we don't use the bytes it gives us,
                     // because otherwise an internal queue backs up
                     command.run()
+
                     val screenshot = when(screenshotSettings.type) {
                         Screenshot.Type.SKP -> ByteString.copyFrom(os.toByteArray())
                         Screenshot.Type.BITMAP -> {
-                            root.takeScreenshot(screenshotSettings.scale)
+                            // If this is the lowest z-index window (the normal case) we can be more
+                            // efficient because we don't need alpha information.
+                            val bitmapType =
+                                if (root.uniqueDrawingId == rootsDetector.lastRootIds.first())
+                                    BitmapType.RGB_565 else BitmapType.ABGR_8888
+                            root.takeScreenshot(screenshotSettings.scale, bitmapType)
                                 ?.toByteArray()
                                 ?.compress()
                                 ?.let { ByteString.copyFrom(it) }
