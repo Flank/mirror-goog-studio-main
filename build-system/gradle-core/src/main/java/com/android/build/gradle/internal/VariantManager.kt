@@ -786,9 +786,6 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
             val userVisibleVariant =
                     androidTest.createUserVisibleVariantObject<AndroidTest>(
                             projectServices, variantApiOperationsRegistrar, apiAccessStats)
-            // execute the actions registered at the extension level.
-            testedComponentInfo.variantApiOperationsRegistrar.androidTestOperations
-                    .executeOperations(userVisibleVariant)
             androidTest
         } else {
             // this is UNIT_TEST
@@ -810,9 +807,6 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
             val userVisibleVariant =
                     unitTest.createUserVisibleVariantObject<UnitTest>(
                             projectServices, variantApiOperationsRegistrar, apiAccessStats)
-            // execute the actions registered at the extension level.
-            testedComponentInfo.variantApiOperationsRegistrar.unitTestOperations
-                    .executeOperations(userVisibleVariant)
             unitTest
         }
 
