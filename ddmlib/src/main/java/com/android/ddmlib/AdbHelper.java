@@ -304,10 +304,17 @@ public final class AdbHelper {
      */
     public static AdbResponse readAdbResponse(SocketChannel chan, boolean readDiagString)
             throws TimeoutException, IOException {
+        return readAdbResponse(chan, readDiagString, DdmPreferences.getTimeOut());
+    }
+
+    private static AdbResponse readAdbResponse(
+            SocketChannel chan, boolean readDiagString, long timeOutMs)
+            throws TimeoutException, IOException {
+        Timeout timeout = new Timeout(timeOutMs);
         AdbResponse resp = new AdbResponse();
 
         byte[] reply = new byte[4];
-        read(chan, reply);
+        read(chan, reply, -1, timeout.remaining());
 
         if (isOkay(reply)) {
             resp.okay = true;
@@ -322,7 +329,7 @@ public final class AdbHelper {
             while (readDiagString) {
                 // length string is in next 4 bytes
                 byte[] lenBuf = new byte[4];
-                read(chan, lenBuf);
+                read(chan, lenBuf, -1, timeout.remaining());
 
                 String lenStr = replyToString(lenBuf);
 
@@ -338,7 +345,7 @@ public final class AdbHelper {
                 }
 
                 byte[] msg = new byte[len];
-                read(chan, msg);
+                read(chan, msg, -1, timeout.remaining());
 
                 resp.message = replyToString(msg);
                 Log.v("ddms", "Got reply '" + replyToString(reply) + "', diag='"
@@ -606,7 +613,10 @@ public final class AdbHelper {
                                     + command); //$NON-NLS-1$
             write(adbChan, request);
 
-            AdbResponse resp = readAdbResponse(adbChan, false /* readDiagString */);
+            long timeOutForResp =
+                    maxTimeToOutputMs > 0 ? maxTimeToOutputMs : DdmPreferences.getTimeOut();
+            AdbResponse resp = readAdbResponse(adbChan, false, timeOutForResp);
+
             if (!resp.okay) {
                 Log.e("ddms", "ADB rejected shell command (" + command + "): " + resp.message);
                 throw new AdbCommandRejectedException(resp.message);
