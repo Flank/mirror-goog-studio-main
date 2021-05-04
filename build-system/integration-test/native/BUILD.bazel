@@ -145,15 +145,6 @@ single_gradle_integration_test(
 )
 
 single_gradle_integration_test(
-    name = "CmakeSettingsSharedBuildTest",
-    srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
-    data = DATA + CMAKE + NDK,
-    maven_repo_manifests = MAVEN_REPO_MANIFESTS,
-    maven_repos = MAVEN_REPOS,
-    deps = DEPS,
-)
-
-single_gradle_integration_test(
     name = "CmakeStlMatrixTest",
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
     data = DATA + CMAKE + NDK,
