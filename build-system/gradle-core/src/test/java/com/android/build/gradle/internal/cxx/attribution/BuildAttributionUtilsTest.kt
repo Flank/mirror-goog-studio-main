@@ -22,7 +22,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 
-class GenerateChromeTraceKtTest {
+class BuildAttributionUtilsTest {
 
     @get:Rule
     val tmp = TemporaryFolder()

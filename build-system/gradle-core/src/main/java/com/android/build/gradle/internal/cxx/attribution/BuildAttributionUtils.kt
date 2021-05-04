@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.cxx.attribution
 
 import com.android.build.gradle.internal.cxx.logging.warnln
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
+import com.android.build.gradle.internal.cxx.model.ninjaLogFile
 import com.android.builder.profile.ChromeTraceJson
 import com.android.builder.profile.TraceEventJson
 import com.google.common.base.Throwables
@@ -48,107 +49,101 @@ fun generateChromeTrace(
 }
 
 fun generateChromeTrace(
+    allTasks : BuildTaskAttributions,
     abiModel: CxxAbiModel,
-    ninjaLogFile: File,
-    linesToSkip: Int,
     buildStartTime: Long,
     extraChromeTraceDir: File
 ) {
-    val attributionKey = AttributionKey.fromAbi(abiModel)
-    try {
-        extraChromeTraceDir.mkdirs()
-        val allTasks = mutableListOf<AttributionTask>()
-        ninjaLogFile.useLines(StandardCharsets.UTF_8) { lines ->
-            lines.drop(linesToSkip).forEach { line ->
-                if (!line.startsWith("# ")) allTasks.collectTask(line, buildStartTime)
-            }
-        }
-
-        generateChromeTrace(
-            extraChromeTraceDir.resolve(
-                "external_native_build-$buildStartTime-${attributionKey.filename}.json.gz"
-            ),
-            mapOf(attributionKey to allTasks)
-        )
-    } catch (e: Throwable) {
-        warnln(
-            "Cannot generate Chrome trace file for $attributionKey. " +
-                    "Exception: ${Throwables.getStackTraceAsString(e)}"
-        )
-    }
+    val attributionKey = abiModel.createAttributionKey()
+    extraChromeTraceDir.mkdirs()
+    generateChromeTrace(
+        extraChromeTraceDir.resolve(
+            "external_native_build-$buildStartTime-${attributionKey.filename}.json.gz"
+        ),
+        mapOf(attributionKey to allTasks)
+    )
 }
 
 fun generateChromeTrace(
     outputFile: File,
-    allAttributions: Map<AttributionKey, List<AttributionTask>>
-) = try {
+    allAttributions: Map<AttributionKey, BuildTaskAttributions>
+) = run {
     val allEvents = mutableListOf<TraceEventJson>()
     allAttributions.entries
-        .sortedBy { (_, tasks) -> tasks.firstOrNull()?.startTimeMs ?: 0 }
+        .sortedBy { (_, tasks) -> tasks.attributionList.firstOrNull()?.startTimeOffsetMs ?: 0 }
         .forEachIndexed { pid, (key, tasksForAnAbi) ->
             allEvents.addProcessNameMetaEvent(pid, key)
             squashTasks(tasksForAnAbi).forEachIndexed { tid, tasks ->
                 allEvents.addThreadNameMetaEvent(pid, tid)
-                tasks.forEach { task ->
-                    allEvents.addTaskEvent(pid, tid, task)
+                tasks.attributionList.forEach { task ->
+                    allEvents.addTaskEvent(pid, tid, tasksForAnAbi.buildStartTimeMs, task)
                 }
             }
         }
+    outputFile.parentFile.mkdirs()
     ChromeTraceJson(allEvents).storeToFile(outputFile)
-} catch (e: Throwable) {
-    warnln(
-        "Cannot output native build attribution in Chrome trace format. " +
-                "Exception: ${Throwables.getStackTraceAsString(e)}"
-    )
 }
 
-private fun readZipContent(file: File): Map<AttributionKey, List<AttributionTask>> {
-    val allAttributions = mutableMapOf<AttributionKey, List<AttributionTask>>()
+private fun readZipContent(file: File): Map<AttributionKey, BuildTaskAttributions> {
+    val allAttributions = mutableMapOf<AttributionKey, BuildTaskAttributions.Builder>()
     val zipFile = ZipFile(file)
     ZipInputStream(FileInputStream(file)).use {
         while (true) {
             val entry = it.nextEntry ?: break
             if (entry.isDirectory) continue
             val (module, variant, abi) = entry.name.split('/', limit = 3)
-            allAttributions[AttributionKey(module, variant, abi)] =
-                mutableListOf<AttributionTask>().apply {
+            allAttributions[createAttributionKey(module, variant, abi)] =
+                BuildTaskAttributions.newBuilder().apply {
                     InputStreamReader(zipFile.getInputStream(entry), StandardCharsets.UTF_8).use { inputStreamReader ->
-                        var startingTimestamp = 0L
                         for (line in inputStreamReader.readLines()) {
                             if (line.startsWith('#')) {
-                                startingTimestamp = line
+                                buildStartTimeMs = line
                                     .dropWhile { c -> !Character.isDigit(c) }
                                     .takeWhile { c -> Character.isDigit(c) }
                                     .toLong()
                             } else {
-                                collectTask(line, startingTimestamp)
+                                collectTask(line)
                             }
                         }
                     }
                 }
         }
     }
-    return allAttributions
+    return allAttributions.map { (key,value) -> key to value.build() }.toMap()
 }
 
-private fun MutableList<AttributionTask>.collectTask(
-    line: String,
-    startingTimestamp: Long
-) {
+private fun BuildTaskAttributions.Builder.collectTask(line: String) {
     val (start, end, _, output) = line.split('\t')
-    val outputFile = File(output)
-    add(
-        AttributionTask(
-            outputFile.name,
-            when (outputFile.extension) {
-                "o" -> OperationType.COMPILE
-                else -> OperationType.LINK
-            },
-            start.toLong() + startingTimestamp,
-            end.toLong() + startingTimestamp,
-            output
-        )
+    addAttribution(
+        BuildTaskAttribution.newBuilder()
+            .setStartTimeOffsetMs(start.toInt())
+            .setEndTimeOffsetMs(end.toInt())
+            .setOutputFile(output)
+            .build()
     )
+}
+
+/**
+ * Create [BuildTaskAttributions] from a .ninja_log file starting at [linesToSkip].
+ */
+fun generateNinjaSourceFileAttribution(
+    abi : CxxAbiModel,
+    linesToSkip: Int,
+    buildStartTime: Long
+) : BuildTaskAttributions {
+    val allTasks = BuildTaskAttributions.newBuilder()
+        .setKey(abi.createAttributionKey())
+        .setBuildFolder(abi.ninjaLogFile.parent)
+        .setNinjaLogStartLine(linesToSkip)
+        .setBuildStartTimeMs(buildStartTime)
+    abi.ninjaLogFile.useLines(StandardCharsets.UTF_8) { lines ->
+        lines.drop(linesToSkip).forEach { line ->
+            if (!line.startsWith("# ")) {
+                allTasks.collectTask(line)
+            }
+        }
+    }
+    return allTasks.build()
 }
 
 /**
@@ -163,7 +158,7 @@ private fun MutableList<TraceEventJson>.addProcessNameMetaEvent(pid: Int, key: A
             0,
             "M",
             name = "process_name",
-            args = mapOf("name" to key.toString())
+            args = mapOf("name" to key.describe)
         )
     )
 }
@@ -189,20 +184,24 @@ private fun MutableList<TraceEventJson>.addThreadNameMetaEvent(pid: Int, tid: In
  * Creates a duration event for a given attribution task. See
  * https://docs.google.com/document/d/1CvAClvFfyA5R-PhYUmn5OOQtYMH4h6I0nSsKchNAySU/preview#heading=h.nso4gcezn7n1
  */
-private fun MutableList<TraceEventJson>.addTaskEvent(pid: Int, tid: Int, task: AttributionTask) {
+private fun MutableList<TraceEventJson>.addTaskEvent(
+    pid: Int,
+    tid: Int,
+    buildStartTimeMs : Long,
+    task: BuildTaskAttribution) {
     add(
         TraceEventJson(
             pid,
             tid,
-            task.startTimeMs * MICROSECOND_IN_MILLISECOND,
+            (buildStartTimeMs + task.startTimeOffsetMs) * MICROSECOND_IN_MILLISECOND,
             "B",
             task.type.toString(),
             task.name,
             task.type.colorName,
-            mapOf("output" to task.output)
+            mapOf("output" to task.outputFile)
         )
     )
-    add(TraceEventJson(pid, tid, task.endTimeMs * MICROSECOND_IN_MILLISECOND, "E"))
+    add(TraceEventJson(pid, tid, (buildStartTimeMs + task.endTimeOffsetMs) * MICROSECOND_IN_MILLISECOND, "E"))
 }
 
 /**
@@ -210,35 +209,46 @@ private fun MutableList<TraceEventJson>.addTaskEvent(pid: Int, tid: Int, task: A
  * tasks are executed concurrently on a multi-core machine. There is no way to reconstruct which
  * CPU thread did what since that information is lost.
  */
-private fun squashTasks(tasks: List<AttributionTask>): List<List<AttributionTask>> {
-    val result = mutableListOf<MutableList<AttributionTask>>()
-    for (task in tasks.sortedBy { it.startTimeMs }) {
+private fun squashTasks(tasks: BuildTaskAttributions): List<BuildTaskAttributions> {
+    val result = mutableListOf<MutableList<BuildTaskAttribution>>()
+    for (task in tasks.attributionList.sortedBy { it.startTimeOffsetMs }) {
         val chosenTrack = result
-            .filter { it.lastOrNull()?.endTimeMs ?: 0 <= task.startTimeMs }
-            .maxBy { it.lastOrNull()?.endTimeMs ?: 0 }
+            .filter { it.lastOrNull()?.endTimeOffsetMs ?: 0 <= task.startTimeOffsetMs }
+            .maxBy { it.lastOrNull()?.endTimeOffsetMs ?: 0 }
         if (chosenTrack == null) {
             result.add(mutableListOf(task))
         } else {
             chosenTrack.add(task)
         }
     }
-    return result
+    return result.map {
+        BuildTaskAttributions.newBuilder()
+            .addAllAttribution(it)
+            .build()
+    }
 }
 
 private val illegalChars = Regex("[:\\\\/\"'|?*<>]")
 
-data class AttributionKey(val module: String, val variant: String, val abi: String) {
-    override fun toString(): String = "$module / $variant / $abi"
-    val filename: String
-        get() = "${module.replace(illegalChars, "_")}-${variant.replace(illegalChars, "_")}-$abi"
+private val AttributionKey.describe: String
+    get() = "$module / $variant / $abi"
 
-    companion object {
-        fun fromAbi(abi: CxxAbiModel): AttributionKey = AttributionKey(
-            abi.variant.module.gradleModulePathName,
-            abi.variant.variantName,
-            abi.abi.tag
-        )
-    }
+private val AttributionKey.filename: String
+    get() = "${module.replace(illegalChars, "_")}-${variant.replace(illegalChars, "_")}-$abi"
+
+private fun createAttributionKey(module : String, variant : String, abi : String) : AttributionKey {
+    return AttributionKey.newBuilder()
+        .setModule(module)
+        .setVariant(variant)
+        .setAbi(abi)
+        .build()
+}
+private fun CxxAbiModel.createAttributionKey() : AttributionKey {
+    return AttributionKey.newBuilder()
+        .setModule(variant.module.gradleModulePathName)
+        .setVariant(variant.variantName)
+        .setAbi(abi.tag)
+        .build()
 }
 
 enum class OperationType {
@@ -253,10 +263,7 @@ enum class OperationType {
         }
 }
 
-data class AttributionTask(
-    val name: String,
-    val type: OperationType,
-    val startTimeMs: Long,
-    val endTimeMs: Long,
-    val output: String
-)
+val BuildTaskAttribution.type : OperationType get() =
+    if (outputFile.endsWith(".o")) OperationType.COMPILE else OperationType.LINK
+
+val BuildTaskAttribution.name : String get() = File(outputFile).name
