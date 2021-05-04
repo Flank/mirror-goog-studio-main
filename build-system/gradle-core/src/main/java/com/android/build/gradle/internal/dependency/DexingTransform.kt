@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.dexing.writeDesugarGraph
 import com.android.build.gradle.internal.errors.MessageReceiverImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.SyncOptions
 import com.android.build.gradle.tasks.toSerializable
 import com.android.builder.dexing.ClassFileEntry
@@ -325,10 +326,16 @@ fun getDexingArtifactConfiguration(creationConfig: ApkCreationConfig): DexingArt
     return DexingArtifactConfiguration(
         minSdk = creationConfig.minSdkVersionWithTargetDeviceApi.getFeatureLevel(),
         isDebuggable = creationConfig.debuggable,
-        enableDesugaring = creationConfig.getJava8LangSupportType() == VariantScope.Java8LangSupport.D8,
+        enableDesugaring =
+            creationConfig.getJava8LangSupportType() == VariantScope.Java8LangSupport.D8,
         enableCoreLibraryDesugaring = creationConfig.isCoreLibraryDesugaringEnabled,
         needsShrinkDesugarLibrary = creationConfig.needsShrinkDesugarLibrary,
-        asmTransformedVariant = if (creationConfig.dependenciesClassesAreInstrumented) creationConfig.name else null
+        asmTransformedVariant =
+            if (creationConfig.dependenciesClassesAreInstrumented) creationConfig.name else null,
+        isCoverageEnabled = creationConfig.variantDslInfo.isTestCoverageEnabled,
+        useTransformInstrumentation =
+            creationConfig.services
+                .projectOptions[BooleanOption.ENABLE_JACOCO_TRANSFORM_INSTRUMENTATION]
     )
 }
 
@@ -338,7 +345,9 @@ data class DexingArtifactConfiguration(
     private val enableDesugaring: Boolean,
     private val enableCoreLibraryDesugaring: Boolean,
     private val needsShrinkDesugarLibrary: Boolean,
-    private val asmTransformedVariant: String?
+    private val asmTransformedVariant: String?,
+    private val isCoverageEnabled: Boolean,
+    private val useTransformInstrumentation: Boolean
 ) {
 
     private val needsClasspath = enableDesugaring && minSdk < AndroidVersion.VersionCodes.N
@@ -365,47 +374,50 @@ data class DexingArtifactConfiguration(
                     parameters.libConfiguration.set(libConfiguration)
                 }
             }
-            when {
-                asmTransformedVariant != null -> {
-                    spec.from.attribute(
-                        ARTIFACT_FORMAT,
-                        AndroidArtifacts.ArtifactType.ASM_INSTRUMENTED_JARS.type
-                    )
+            // There are 2 transform flows for DEX:
+            //   1. CLASSES_DIR -> CLASSES -> DEX
+            //   2. CLASSES_JAR -> CLASSES -> DEX
+            //
+            // For incremental dexing, when requesting DEX the consumer will indicate a
+            // preference for CLASSES_DIR over CLASSES_JAR (see DexMergingTask), otherwise
+            // Gradle will select CLASSES_JAR by default.
+            //
+            // However, there could be an issue if CLASSES_DIR is selected: For Java libraries
+            // using Kotlin, CLASSES_DIR has two separate directories: one for compiled Java
+            // classes and one for compiled Kotlin classes. Classes in one directory may
+            // reference classes in the other directory, but each directory is transformed to
+            // DEX independently. Therefore, if dexing requires a classpath (desugaring is
+            // enabled and minSdk < 24), desugaring may not work correctly.
+            //
+            // Android libraries do not have this issue, as their CLASSES_DIR is one directory
+            // containing both Java and Kotlin classes.
+            //
+            // Therefore, to ensure correctness in all cases, we transform CLASSES to DEX only
+            // when dexing does not require a classpath. Otherwise, we transform CLASSES_JAR to
+            // DEX directly so that CLASSES_DIR will not be selected.
+            val inputArtifact: AndroidArtifacts.ArtifactType =
+                if (isCoverageEnabled
+                    && useTransformInstrumentation
+                    && asmTransformedVariant == null) {
+                    if (!needsClasspath) {
+                        AndroidArtifacts.ArtifactType.JACOCO_CLASSES
+                    } else {
+                        AndroidArtifacts.ArtifactType.JACOCO_CLASSES_JAR
+                    }
+                } else {
+                    when {
+                        asmTransformedVariant != null ->
+                            AndroidArtifacts.ArtifactType.ASM_INSTRUMENTED_JARS
+                        !needsClasspath ->
+                            AndroidArtifacts.ArtifactType.CLASSES
+                        else ->
+                            AndroidArtifacts.ArtifactType.CLASSES_JAR
+                    }
                 }
-                // There are 2 transform flows for DEX:
-                //   1. CLASSES_DIR -> CLASSES -> DEX
-                //   2. CLASSES_JAR -> CLASSES -> DEX
-                //
-                // For incremental dexing, when requesting DEX the consumer will indicate a
-                // preference for CLASSES_DIR over CLASSES_JAR (see DexMergingTask), otherwise
-                // Gradle will select CLASSES_JAR by default.
-                //
-                // However, there could be an issue if CLASSES_DIR is selected: For Java libraries
-                // using Kotlin, CLASSES_DIR has two separate directories: one for compiled Java
-                // classes and one for compiled Kotlin classes. Classes in one directory may
-                // reference classes in the other directory, but each directory is transformed to
-                // DEX independently. Therefore, if dexing requires a classpath (desugaring is
-                // enabled and minSdk < 24), desugaring may not work correctly.
-                //
-                // Android libraries do not have this issue, as their CLASSES_DIR is one directory
-                // containing both Java and Kotlin classes.
-                //
-                // Therefore, to ensure correctness in all cases, we transform CLASSES to DEX only
-                // when dexing does not require a classpath. Otherwise, we transform CLASSES_JAR to
-                // DEX directly so that CLASSES_DIR will not be selected.
-                !needsClasspath -> {
-                    spec.from.attribute(
-                        ARTIFACT_FORMAT,
-                        AndroidArtifacts.ArtifactType.CLASSES.type
-                    )
-                }
-                else -> {
-                    spec.from.attribute(
-                        ARTIFACT_FORMAT,
-                        AndroidArtifacts.ArtifactType.CLASSES_JAR.type
-                    )
-                }
-            }
+            spec.from.attribute(
+                ARTIFACT_FORMAT,
+                inputArtifact.type
+            )
             if (needsShrinkDesugarLibrary) {
                 spec.to.attribute(
                     ARTIFACT_FORMAT,

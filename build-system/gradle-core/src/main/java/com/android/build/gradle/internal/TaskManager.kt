@@ -890,10 +890,17 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                 testedConfig.getDependenciesClassesJarsPostAsmInstrumentation(ArtifactScope.ALL)
             } else {
                 testedConfig
-                        .variantDependencies
-                        .getArtifactFileCollection(ConsumedConfigType.RUNTIME_CLASSPATH,
-                                ArtifactScope.ALL,
-                                AndroidArtifacts.ArtifactType.CLASSES_JAR)
+                    .variantDependencies
+                    .getArtifactFileCollection(
+                        ConsumedConfigType.RUNTIME_CLASSPATH,
+                        ArtifactScope.ALL,
+                        if (creationConfig.services.projectOptions[
+                                    BooleanOption.ENABLE_JACOCO_TRANSFORM_INSTRUMENTATION]) {
+                            AndroidArtifacts.ArtifactType.JACOCO_CLASSES_JAR
+                        } else {
+                            AndroidArtifacts.ArtifactType.CLASSES_JAR
+                        }
+                    )
             }
             transformManager.addStream(
                     OriginalStream.builder("tested-code-deps")
@@ -2190,30 +2197,37 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
     }
 
     fun createJacocoTask(creationConfig: ComponentCreationConfig) {
+
         creationConfig
-                .transformManager
-                .consumeStreams(
-                        ImmutableSet.of(QualifiedContent.Scope.PROJECT),
-                        ImmutableSet.of<QualifiedContent.ContentType>(DefaultContentType.CLASSES))
+            .transformManager
+            .consumeStreams(
+                ImmutableSet.of(QualifiedContent.Scope.PROJECT),
+                ImmutableSet.of<QualifiedContent.ContentType>(DefaultContentType.CLASSES)
+            )
+        val jacocoTransformEnabled =
+            projectOptions[BooleanOption.ENABLE_JACOCO_TRANSFORM_INSTRUMENTATION]
+
         taskFactory.register(JacocoTask.CreationAction(creationConfig))
-        val instrumentedClasses: FileCollection = project.files(
-                creationConfig
-                        .artifacts
-                        .get(JACOCO_INSTRUMENTED_CLASSES),
+
+        val instrumentedClasses: FileCollection =
+            if (jacocoTransformEnabled && creationConfig.variantDslInfo.isTestCoverageEnabled) {
+                // For libraries that can be published,avoid publishing classes
+                // with runtime dependencies on Jacoco.
+                creationConfig.artifacts.getAllClasses()
+            } else {
                 project.files(
-                        creationConfig
-                                .artifacts
-                                .get(
-                                        JACOCO_INSTRUMENTED_JARS))
-                        .asFileTree)
+                    creationConfig.artifacts.get(JACOCO_INSTRUMENTED_CLASSES),
+                    project.files(creationConfig.artifacts.get(JACOCO_INSTRUMENTED_JARS)).asFileTree
+                )
+            }
         creationConfig
-                .transformManager
-                .addStream(
-                        OriginalStream.builder("jacoco-instrumented-classes")
-                                .addContentTypes(DefaultContentType.CLASSES)
-                                .addScope(QualifiedContent.Scope.PROJECT)
-                                .setFileCollection(instrumentedClasses)
-                                .build())
+            .transformManager
+            .addStream(
+                OriginalStream.builder("jacoco-instrumented-classes")
+                    .addContentTypes(DefaultContentType.CLASSES)
+                    .addScope(QualifiedContent.Scope.PROJECT)
+                    .setFileCollection(instrumentedClasses)
+                    .build())
     }
 
     protected fun createDataBindingTasksIfNecessary(creationConfig: ComponentCreationConfig) {

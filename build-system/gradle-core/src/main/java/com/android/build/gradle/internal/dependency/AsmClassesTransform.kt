@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.instrumentation.AsmInstrumentationManag
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.services.ClassesHierarchyBuildService
 import com.android.build.gradle.internal.services.getBuildService
+import com.android.build.gradle.options.BooleanOption
 import org.gradle.api.artifacts.dsl.DependencyHandler
 import org.gradle.api.artifacts.transform.CacheableTransform
 import org.gradle.api.artifacts.transform.InputArtifact
@@ -86,7 +87,12 @@ abstract class AsmClassesTransform : TransformAction<AsmClassesTransform.Paramet
 
                     spec.from.attribute(
                         ARTIFACT_FORMAT,
-                        AndroidArtifacts.ArtifactType.CLASSES_JAR.type
+                        if (creationConfig.variantDslInfo.isTestCoverageEnabled &&
+                            creationConfig.services.projectOptions[BooleanOption.ENABLE_JACOCO_TRANSFORM_INSTRUMENTATION]) {
+                            AndroidArtifacts.ArtifactType.JACOCO_CLASSES_JAR.type
+                        } else {
+                            AndroidArtifacts.ArtifactType.CLASSES_JAR.type
+                        }
                     )
                     spec.to.attribute(
                         ARTIFACT_FORMAT,

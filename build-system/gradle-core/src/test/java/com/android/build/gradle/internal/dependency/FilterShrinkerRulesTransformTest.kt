@@ -187,7 +187,7 @@ private fun createTransform(inputFile: File): FilterShrinkerRulesTransform {
     }
 }
 
-private class FakeTransformOutputs(private val outputDir: File) : TransformOutputs {
+class FakeTransformOutputs(private val outputDir: File) : TransformOutputs {
     val outputFiles = mutableSetOf<File>()
 
     override fun file(p0: Any): File {

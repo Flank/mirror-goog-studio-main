@@ -787,13 +787,21 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
 
             task.getCodeCoverageEnabled()
                     .set(creationConfig.getVariantDslInfo().isTestCoverageEnabled());
+            boolean useJacocoTransformOutputs =
+                    creationConfig
+                                    .getServices()
+                                    .getProjectOptions()
+                                    .get(BooleanOption.ENABLE_JACOCO_TRANSFORM_INSTRUMENTATION)
+                            && creationConfig.getVariantDslInfo().isTestCoverageEnabled();
             task.dependencies =
                     creationConfig
                             .getVariantDependencies()
                             .getArtifactCollection(
                                     AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                                     AndroidArtifacts.ArtifactScope.EXTERNAL,
-                                    AndroidArtifacts.ArtifactType.CLASSES_JAR);
+                                    useJacocoTransformOutputs
+                                            ? AndroidArtifacts.ArtifactType.JACOCO_CLASSES_JAR
+                                            : AndroidArtifacts.ArtifactType.CLASSES_JAR);
 
             String flavorFolder = testData.getFlavorName().get();
             if (!flavorFolder.isEmpty()) {

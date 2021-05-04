@@ -21,8 +21,12 @@ import com.android.build.api.attributes.ProductFlavorAttr
 import com.android.build.api.component.impl.TestComponentImpl
 import com.android.build.api.variant.impl.VariantBuilderImpl
 import com.android.build.api.variant.impl.VariantImpl
+import com.android.build.api.variant.impl.getFeatureLevel
+import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
+import com.android.build.gradle.internal.coverage.JacocoConfigurations
+import com.android.build.gradle.internal.coverage.JacocoOptions
 import com.android.build.gradle.internal.dependency.ANDROID_JDK_IMAGE
 import com.android.build.gradle.internal.dependency.AarResourcesCompilerTransform
 import com.android.build.gradle.internal.dependency.AarToClassTransform
@@ -33,16 +37,17 @@ import com.android.build.gradle.internal.dependency.AndroidXDependencyCheck
 import com.android.build.gradle.internal.dependency.AndroidXDependencySubstitution.replaceOldSupportLibraries
 import com.android.build.gradle.internal.dependency.AsmClassesTransform.Companion.registerAsmTransformForComponent
 import com.android.build.gradle.internal.dependency.ClassesDirToClassesTransform
+import com.android.build.gradle.internal.dependency.CollectClassesTransform
+import com.android.build.gradle.internal.dependency.CollectResourceSymbolsTransform
 import com.android.build.gradle.internal.dependency.EnumerateClassesTransform
 import com.android.build.gradle.internal.dependency.ExtractAarTransform
+import com.android.build.gradle.internal.dependency.ExtractJniTransform
 import com.android.build.gradle.internal.dependency.ExtractProGuardRulesTransform
 import com.android.build.gradle.internal.dependency.FilterShrinkerRulesTransform
 import com.android.build.gradle.internal.dependency.GenericTransformParameters
 import com.android.build.gradle.internal.dependency.IdentityTransform
+import com.android.build.gradle.internal.dependency.JacocoTransform
 import com.android.build.gradle.internal.dependency.JdkImageTransform
-import com.android.build.gradle.internal.dependency.CollectResourceSymbolsTransform
-import com.android.build.gradle.internal.dependency.CollectClassesTransform
-import com.android.build.gradle.internal.dependency.ExtractJniTransform
 import com.android.build.gradle.internal.dependency.JetifyTransform
 import com.android.build.gradle.internal.dependency.LibrarySymbolTableTransform
 import com.android.build.gradle.internal.dependency.MockableJarTransform
@@ -64,7 +69,10 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.res.namespaced.AutoNamespacePreProcessTransform
 import com.android.build.gradle.internal.res.namespaced.AutoNamespaceTransform
 import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.ProjectServices
+import com.android.build.gradle.internal.services.getBuildService
+import com.android.build.gradle.internal.tasks.JacocoTask
 import com.android.build.gradle.internal.utils.getDesugarLibConfig
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.internal.variant.ComponentInfo
@@ -73,6 +81,7 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.options.StringOption
 import com.android.build.gradle.options.SyncOptions
+import com.android.sdklib.AndroidVersion
 import com.google.common.collect.Maps
 import org.gradle.api.ActionConfiguration
 import org.gradle.api.Project
@@ -340,6 +349,31 @@ class DependencyConfigurator(
                 params.generateRClassJar.set(false)
             }
         }
+
+
+        if (projectOptions[BooleanOption.ENABLE_JACOCO_TRANSFORM_INSTRUMENTATION]) {
+            val jacocoTransformParametersConfig: (JacocoTransform.Params) -> Unit = {
+                val jacocoVersion = JacocoOptions.DEFAULT_VERSION
+                val jacocoConfiguration = JacocoConfigurations
+                    .getJacocoAntTaskConfiguration(project, jacocoVersion)
+                it.jacocoInstrumentationService
+                    .set(getBuildService(projectServices.buildServiceRegistry))
+                it.jacocoConfiguration.from(jacocoConfiguration)
+                it.jacocoVersion.setDisallowChanges(jacocoVersion)
+            }
+            registerTransform(
+                JacocoTransform::class.java,
+                AndroidArtifacts.ArtifactType.CLASSES,
+                AndroidArtifacts.ArtifactType.JACOCO_CLASSES,
+                jacocoTransformParametersConfig
+            )
+            registerTransform(
+                JacocoTransform::class.java,
+                AndroidArtifacts.ArtifactType.CLASSES_JAR,
+                AndroidArtifacts.ArtifactType.JACOCO_CLASSES_JAR,
+                jacocoTransformParametersConfig
+            )
+        }
         if (projectOptions[BooleanOption.ENABLE_PROGUARD_RULES_EXTRACTION]) {
             registerTransform(
                 ExtractProGuardRulesTransform::class.java,
@@ -588,7 +622,7 @@ class DependencyConfigurator(
         testComponents: List<TestComponentImpl>
     ): DependencyConfigurator {
         val allComponents: List<ComponentCreationConfig> =
-            variants.map { it.variant as ComponentCreationConfig }.plus(testComponents)
+            variants.map { it.variant }.plus(testComponents)
 
         val dependencies = project.dependencies
 
@@ -605,9 +639,8 @@ class DependencyConfigurator(
                 component
             )
         }
-
         if (projectOptions[BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM]) {
-            for (artifactConfiguration in getDexingArtifactConfigurations(
+            for (artifactConfiguration in  getDexingArtifactConfigurations(
                 allComponents
             )) {
                 artifactConfiguration.registerTransform(

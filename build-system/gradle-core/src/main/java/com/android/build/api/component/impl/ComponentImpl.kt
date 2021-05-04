@@ -747,11 +747,18 @@ abstract class ComponentImpl(
                 )
             }
         } else {
+            val usingJacocoTransform = variantDslInfo.isTestCoverageEnabled &&
+                    services.projectOptions[BooleanOption.ENABLE_JACOCO_TRANSFORM_INSTRUMENTATION]
             variantDependencies.getArtifactFileCollection(
-                    ConsumedConfigType.RUNTIME_CLASSPATH,
-                    scope,
+                ConsumedConfigType.RUNTIME_CLASSPATH,
+                scope,
+                if (usingJacocoTransform) {
+                    AndroidArtifacts.ArtifactType.JACOCO_CLASSES_JAR
+                } else {
                     AndroidArtifacts.ArtifactType.CLASSES_JAR
-            )
+                }
+           )
+
         }
     }
 
