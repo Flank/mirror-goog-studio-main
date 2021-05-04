@@ -248,6 +248,7 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
                     .setPlaceHolderValues(manifestPlaceholders)
                     .addFlavorAndBuildTypeManifests(*manifestOverlays.get().toTypedArray())
                     .addLibraryManifest(generatedTestManifest)
+                    .addAllowNonUniquePackageNames(testApplicationId)
                     .setOverride(ManifestSystemProperty.PACKAGE, testApplicationId)
                     .setOverride(ManifestSystemProperty.MIN_SDK_VERSION, minSdkVersion)
                     .setOverride(ManifestSystemProperty.TARGET_PACKAGE, testedApplicationId)
