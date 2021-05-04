@@ -1,4 +1,5 @@
 apply plugin: 'com.android.tools.java-library'
+apply plugin: 'com.android.tools.kotlin'
 apply plugin: 'com.android.tools.publish'
 apply plugin: 'sdk-java-lib'
 apply plugin: 'com.google.protobuf'
