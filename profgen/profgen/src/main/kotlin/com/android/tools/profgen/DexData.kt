@@ -23,7 +23,7 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 
 
-class Apk internal constructor(val dexes: List<DexFile>)
+class Apk(val dexes: List<DexFile>)
 
 fun Apk(file: File): Apk {
     return Apk(file.readBytes())

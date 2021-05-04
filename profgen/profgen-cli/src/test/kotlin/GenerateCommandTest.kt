@@ -26,7 +26,7 @@ class BinCommandTest {
 
     @Test
     fun test() {
-        val command = BinCommand()
+        val command = GenerateCommand()
         command.parse(arrayOf("--apk", "fake", "--output", "out", "bla"))
         try {
             command.execute()
