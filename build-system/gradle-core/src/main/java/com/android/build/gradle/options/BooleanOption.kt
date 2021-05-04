@@ -158,7 +158,7 @@ enum class BooleanOption(
     ENABLE_BUILD_CONFIG_AS_BYTECODE("android.enableBuildConfigAsBytecode", false, FeatureStage.Experimental),
     ENABLE_SOURCE_SET_PATHS_MAP("android.experimental.enableSourceSetPathsMap", false, FeatureStage.Experimental),
     RELATIVE_COMPILE_LIB_RESOURCES("android.experimental.cacheCompileLibResources", false, FeatureStage.Experimental),
-
+    ENABLE_JACOCO_TRANSFORM_INSTRUMENTATION("android.experimental.enableJacocoTransformInstrumentation", false, FeatureStage.Experimental),
     /** Whether lint should be run in process; the default is a separate process. Primarily useful for debugging lint issues related to AGP. */
     RUN_LINT_IN_PROCESS("android.experimental.runLintInProcess", false, FeatureStage.Experimental),
 
