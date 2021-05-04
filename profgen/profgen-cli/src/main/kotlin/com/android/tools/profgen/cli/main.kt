@@ -23,9 +23,8 @@ import kotlinx.cli.ExperimentalCli
 fun main(args: Array<String>) {
     val parser = ArgParser("profgen")
     parser.subcommands(
-        GenerateCommand(),
+        BinCommand(),
         ValidateCommand(),
-        PrintCommand(),
     )
     parser.parse(args)
 }
