@@ -74,7 +74,7 @@ coverage_java_library(
         "//tools/base/ddmlib:tools.ddmlib",
         "//tools/base/deploy/proto:deploy_java_proto",
         "//tools/base/tracer:tools.tracer",
-        "//tools/base/zipflinger:studio.android.sdktools.zipflinger",
+        "//tools/base/zipflinger",
     ],
 )
 
