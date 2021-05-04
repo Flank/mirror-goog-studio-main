@@ -36,12 +36,9 @@ iml_module(
 
 # Compile ddmlib without any add-ons to ensure it builds on it's own. Once the AGP - ddmlib
 # dependency is reworked, we can move the code around to properly represent the separation.
-kotlin_library(
+java_library(
     name = "ddmlib-base",
-    srcs = glob([
-        "src/main/java/com/android/ddmlib/**/*.java",
-        "src/main/java/com/android/ddmlib/**/*.kt",
-    ]),
+    srcs = glob(["src/main/java/com/android/ddmlib/**/*.java"]),
     resource_strip_prefix = "tools/base/ddmlib",
     visibility = ["//visibility:public"],
     deps = [
