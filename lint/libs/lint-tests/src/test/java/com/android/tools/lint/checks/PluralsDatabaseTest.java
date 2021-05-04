@@ -95,6 +95,9 @@ public class PluralsDatabaseTest extends TestCase {
      * If the lint unit test data/ folder contains a plurals.txt database file, this test will parse
      * that file and ensure that our current database produces exactly the same results as those
      * inferred from the file. If not, it will dump out updated data structures for the database.
+     *
+     * <p>Last update: downloaded icu4c-69_1-data.zip and copied data/misc/plurals.txt into
+     * tools/base/lint/libs/lint-tests/src/test/java/com/android/tools/lint/checks/data
      */
     public void testDatabaseAccurate() {
         List<String> languages = new ArrayList<>(LocaleManager.getLanguageCodes());
