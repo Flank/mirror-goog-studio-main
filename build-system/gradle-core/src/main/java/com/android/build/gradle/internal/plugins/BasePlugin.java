@@ -154,6 +154,7 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** Base class for all Android plugins */
 public abstract class BasePlugin<
+                AndroidT extends CommonExtension<?, ?, ?, ?>,
                 AndroidComponentsT extends
                         AndroidComponentsExtension<
                                 ? extends CommonExtension<?, ?, ?, ?>,
@@ -163,11 +164,11 @@ public abstract class BasePlugin<
                 VariantT extends VariantImpl>
         implements Plugin<Project> {
 
+    // TODO: BaseExtension should be changed into AndroidT
     private BaseExtension extension;
-    private AndroidComponentsExtension<? extends CommonExtension<?, ?, ?, ?>, ? extends ComponentBuilder, ? extends Variant>
-            androidComponentsExtension;
+    private AndroidComponentsT androidComponentsExtension;
 
-    private VariantManager<VariantBuilderT, VariantT> variantManager;
+    private VariantManager<AndroidT, VariantBuilderT, VariantT> variantManager;
     private LegacyVariantInputManager variantInputModel;
 
     protected Project project;
@@ -197,7 +198,7 @@ public abstract class BasePlugin<
     @NonNull private final BuildEventsListenerRegistry listenerRegistry;
 
     private final VariantApiOperationsRegistrar<
-            CommonExtension<?, ?, ?, ?>,
+            AndroidT,
             VariantBuilderT,
             VariantT> variantApiOperations = new VariantApiOperationsRegistrar<>();
 
@@ -227,7 +228,7 @@ public abstract class BasePlugin<
     protected abstract AndroidComponentsT createComponentExtension(
             @NonNull DslServices dslServices,
             @NonNull
-                    VariantApiOperationsRegistrar<CommonExtension<?, ?, ?, ?>, VariantBuilderT, VariantT>
+                    VariantApiOperationsRegistrar<AndroidT, VariantBuilderT, VariantT>
                             variantApiOperationsRegistrar);
 
     @NonNull
@@ -254,7 +255,7 @@ public abstract class BasePlugin<
     protected abstract ProjectType getProjectTypeV2();
 
     @VisibleForTesting
-    public VariantManager<VariantBuilderT, VariantT> getVariantManager() {
+    public VariantManager<AndroidT, VariantBuilderT, VariantT> getVariantManager() {
         return variantManager;
     }
 
@@ -544,7 +545,7 @@ public abstract class BasePlugin<
                         globalScope,
                         project,
                         projectServices.getProjectOptions(),
-                        extension,
+                        (CommonExtension<?, ?, ?, ?>) extension,
                         variantApiOperations,
                         variantFactory,
                         variantInputModel,
@@ -731,7 +732,7 @@ public abstract class BasePlugin<
         extension.disableWrite();
 
         variantApiOperations.executeDslFinalizationBlocks(
-                (CommonExtension<?, ?, ?, ?>) extension
+                (AndroidT) extension
         );
 
         GradleBuildProject.Builder projectBuilder =

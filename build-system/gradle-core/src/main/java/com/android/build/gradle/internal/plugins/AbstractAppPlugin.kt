@@ -13,45 +13,42 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.build.gradle.internal.plugins
 
-package com.android.build.gradle.internal.plugins;
+import com.android.AndroidProjectTypes
+import com.android.build.api.dsl.CommonExtension
+import com.android.build.api.extension.AndroidComponentsExtension
+import com.android.build.api.variant.impl.VariantBuilderImpl
+import com.android.build.api.variant.impl.VariantImpl
+import com.google.wireless.android.sdk.stats.GradleBuildProject
+import org.gradle.api.component.SoftwareComponentFactory
+import org.gradle.build.event.BuildEventsListenerRegistry
+import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
+import javax.inject.Inject
 
-import com.android.AndroidProjectTypes;
-import com.android.annotations.NonNull;
-import com.android.build.api.dsl.CommonExtension;
-import com.android.build.api.extension.AndroidComponentsExtension;
-import com.android.build.api.variant.impl.VariantBuilderImpl;
-import com.android.build.api.variant.impl.VariantImpl;
-import com.google.wireless.android.sdk.stats.GradleBuildProject;
-import javax.inject.Inject;
-import org.gradle.api.component.SoftwareComponentFactory;
-import org.gradle.build.event.BuildEventsListenerRegistry;
-import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
+/** Gradle plugin class for 'application' projects.  */
+abstract class AbstractAppPlugin<
+        AndroidT : CommonExtension<*, *, *, *>,
+        AndroidComponentsT : AndroidComponentsExtension<
+                in AndroidT,
+                in VariantBuilderT,
+                in VariantT>,
+        VariantBuilderT : VariantBuilderImpl,
+        VariantT : VariantImpl>
+@Inject constructor(
+        registry: ToolingModelBuilderRegistry?,
+        componentFactory: SoftwareComponentFactory?,
+        listenerRegistry: BuildEventsListenerRegistry?) : BasePlugin<AndroidT, AndroidComponentsT, VariantBuilderT, VariantT>(
+        registry!!,
+        componentFactory!!,
+        listenerRegistry!!
+) {
 
-/** Gradle plugin class for 'application' projects. */
-public abstract class AbstractAppPlugin<
-                AndroidComponentsT extends
-                        AndroidComponentsExtension<? extends CommonExtension<?, ?, ?, ?>, ? super VariantBuilderT, ? super VariantT>,
-                VariantBuilderT extends VariantBuilderImpl,
-                VariantT extends VariantImpl>
-        extends BasePlugin<AndroidComponentsT, VariantBuilderT, VariantT> {
-
-    @Inject
-    public AbstractAppPlugin(
-            ToolingModelBuilderRegistry registry,
-            SoftwareComponentFactory componentFactory,
-            BuildEventsListenerRegistry listenerRegistry) {
-        super(registry, componentFactory, listenerRegistry);
+    override fun getProjectType(): Int {
+        return AndroidProjectTypes.PROJECT_TYPE_APP
     }
 
-    @Override
-    protected int getProjectType() {
-        return AndroidProjectTypes.PROJECT_TYPE_APP;
-    }
-
-    @NonNull
-    @Override
-    protected GradleBuildProject.PluginType getAnalyticsPluginType() {
-        return GradleBuildProject.PluginType.APPLICATION;
+    override fun getAnalyticsPluginType(): GradleBuildProject.PluginType {
+        return GradleBuildProject.PluginType.APPLICATION
     }
 }

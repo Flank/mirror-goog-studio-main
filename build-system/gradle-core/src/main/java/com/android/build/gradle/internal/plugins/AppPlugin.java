@@ -60,6 +60,7 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 /** Gradle plugin class for 'application' projects, applied on the base application module */
 public class AppPlugin
         extends AbstractAppPlugin<
+                com.android.build.api.dsl.ApplicationExtension,
                 ApplicationAndroidComponentsExtension,
                 ApplicationVariantBuilderImpl,
                 ApplicationVariantImpl> {
@@ -148,7 +149,7 @@ public class AppPlugin
             @NonNull DslServices dslServices,
             @NonNull
                     VariantApiOperationsRegistrar<
-                            com.android.build.api.dsl.CommonExtension<?, ?, ?, ?>,
+                            com.android.build.api.dsl.ApplicationExtension,
                             ApplicationVariantBuilderImpl,
                             ApplicationVariantImpl>
                         variantApiOperationsRegistrar) {

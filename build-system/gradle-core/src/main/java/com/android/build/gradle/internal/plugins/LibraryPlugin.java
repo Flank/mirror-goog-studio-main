@@ -58,7 +58,10 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 /** Gradle plugin class for 'library' projects. */
 public class LibraryPlugin
         extends BasePlugin<
-                LibraryAndroidComponentsExtension, LibraryVariantBuilderImpl, LibraryVariantImpl> {
+                LibraryExtension,
+                LibraryAndroidComponentsExtension,
+                LibraryVariantBuilderImpl,
+                LibraryVariantImpl> {
 
     @Inject
     public LibraryPlugin(
@@ -124,7 +127,7 @@ public class LibraryPlugin
             @NonNull DslServices dslServices,
             @NonNull
                     VariantApiOperationsRegistrar<
-                            com.android.build.api.dsl.CommonExtension<?, ?, ?, ?>,
+                            LibraryExtension,
                             LibraryVariantBuilderImpl,
                             LibraryVariantImpl>
                             variantApiOperationsRegistrar) {

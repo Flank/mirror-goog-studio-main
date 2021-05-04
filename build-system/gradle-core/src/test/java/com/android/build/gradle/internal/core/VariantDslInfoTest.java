@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.core;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.Nullable;
+import com.android.build.api.dsl.CommonExtension;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.DefaultConfig;
@@ -359,7 +360,9 @@ public class VariantDslInfoTest {
 
         builder.addProductFlavor(flavorConfig, new MockSourceProvider("custom"));
 
-        return builder.createVariantDslInfo(Mockito.mock(DirectoryProperty.class));
+        return builder.createVariantDslInfo(
+                Mockito.mock(CommonExtension.class),
+                Mockito.mock(DirectoryProperty.class));
     }
 
     private void initWithInjectedDeviceApi(int deviceApi) {

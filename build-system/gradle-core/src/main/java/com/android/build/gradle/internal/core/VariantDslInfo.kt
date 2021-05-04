@@ -17,6 +17,7 @@ package com.android.build.gradle.internal.core
 
 import com.android.SdkConstants
 import com.android.build.api.component.ComponentIdentity
+import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.ResValue
 import com.android.build.gradle.api.JavaCompileOptions
@@ -49,7 +50,7 @@ import java.io.File
  * Use [VariantDslInfoBuilder] to instantiate.
  *
  */
-interface VariantDslInfo {
+interface VariantDslInfo<CommonExtensionT: CommonExtension<*, *, *, *>> {
 
     val componentIdentity: ComponentIdentity
 
@@ -63,7 +64,12 @@ interface VariantDslInfo {
      *
      * @see VariantType.isTestComponent
      */
-    val testedVariant: VariantDslInfo?
+    val testedVariant: VariantDslInfo<*>?
+
+    /**
+     * Returns the DSL initialized extension object for this plugin.
+     */
+    val dslExtension: CommonExtensionT
 
     /**
      * Returns a full name that includes the given splits name.

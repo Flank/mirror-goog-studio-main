@@ -110,7 +110,7 @@ public class VariantScopeImpl implements VariantScope {
 
     public VariantScopeImpl(
             @NonNull ComponentIdentity componentIdentity,
-            @NonNull VariantDslInfo variantDslInfo,
+            @NonNull VariantDslInfo<?> variantDslInfo,
             @NonNull VariantDependencies variantDependencies,
             @NonNull VariantPathHelper pathHelper,
             @NonNull ArtifactsImpl artifacts,

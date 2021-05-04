@@ -20,7 +20,6 @@ import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
 import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.component.impl.TestFixturesImpl;
-import com.android.build.api.dsl.CommonExtension;
 import com.android.build.api.dsl.SdkComponents;
 import com.android.build.api.extension.TestAndroidComponentsExtension;
 import com.android.build.api.extension.impl.TestAndroidComponentsExtensionImpl;
@@ -60,7 +59,10 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 /** Gradle plugin class for 'test' projects. */
 public class TestPlugin
         extends BasePlugin<
-                TestAndroidComponentsExtension, TestVariantBuilderImpl, TestVariantImpl> {
+                    com.android.build.api.dsl.TestExtension,
+                    TestAndroidComponentsExtension,
+                    TestVariantBuilderImpl,
+                    TestVariantImpl> {
     @Inject
     public TestPlugin(
             ToolingModelBuilderRegistry registry,
@@ -131,11 +133,10 @@ public class TestPlugin
     @Override
     protected TestAndroidComponentsExtension createComponentExtension(
             @NonNull DslServices dslServices,
-            @NonNull
-                    VariantApiOperationsRegistrar<
-                                                CommonExtension<?, ?, ?, ?>,
-                                                TestVariantBuilderImpl,
-                                                TestVariantImpl>
+            @NonNull VariantApiOperationsRegistrar<
+                        com.android.build.api.dsl.TestExtension,
+                        TestVariantBuilderImpl,
+                        TestVariantImpl>
                             variantApiOperationsRegistrar) {
         SdkComponents sdkComponents =
                 dslServices.newInstance(

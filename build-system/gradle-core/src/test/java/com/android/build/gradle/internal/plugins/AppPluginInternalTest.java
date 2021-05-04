@@ -22,6 +22,7 @@ import static org.junit.Assert.assertNotNull;
 import com.android.annotations.NonNull;
 import com.android.build.api.component.impl.ComponentImpl;
 import com.android.build.api.dsl.ApkSigningConfig;
+import com.android.build.api.dsl.ApplicationExtension;
 import com.android.build.api.variant.impl.ApplicationVariantBuilderImpl;
 import com.android.build.api.variant.impl.ApplicationVariantImpl;
 import com.android.build.api.variant.impl.SigningConfigImpl;
@@ -517,7 +518,7 @@ public class AppPluginInternalTest {
 
     public static List<ComponentImpl> getComponents(
             @NonNull
-                    VariantManager<ApplicationVariantBuilderImpl, ApplicationVariantImpl>
+                    VariantManager<ApplicationExtension, ApplicationVariantBuilderImpl, ApplicationVariantImpl>
                             variantManager) {
 
         List<VariantImpl> variants =

@@ -18,6 +18,7 @@ package com.android.build.api.variant.impl
 
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.analytics.AnalyticsEnabledLibraryVariantBuilder
+import com.android.build.api.dsl.LibraryExtension
 import com.android.build.api.variant.LibraryVariantBuilder
 import com.android.build.api.variant.VariantBuilder
 import com.android.build.gradle.internal.core.VariantDslInfo
@@ -27,7 +28,7 @@ import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import javax.inject.Inject
 
 open class LibraryVariantBuilderImpl @Inject constructor(
-    variantDslInfo: VariantDslInfo,
+    variantDslInfo: VariantDslInfo<LibraryExtension>,
     variantConfiguration: ComponentIdentity,
     variantApiServices: VariantApiServices
 ) : VariantBuilderImpl(

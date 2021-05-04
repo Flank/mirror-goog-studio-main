@@ -20,7 +20,6 @@ import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
 import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.component.impl.TestFixturesImpl;
-import com.android.build.api.dsl.CommonExtension;
 import com.android.build.api.dsl.SdkComponents;
 import com.android.build.api.extension.DynamicFeatureAndroidComponentsExtension;
 import com.android.build.api.extension.impl.DynamicFeatureAndroidComponentsExtensionImpl;
@@ -60,6 +59,7 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 /** Gradle plugin class for 'application' projects, applied on an optional APK module */
 public class DynamicFeaturePlugin
         extends AbstractAppPlugin<
+                com.android.build.api.dsl.DynamicFeatureExtension,
                 DynamicFeatureAndroidComponentsExtension,
                 DynamicFeatureVariantBuilderImpl,
                 DynamicFeatureVariantImpl> {
@@ -150,7 +150,7 @@ public class DynamicFeaturePlugin
             @NonNull DslServices dslServices,
             @NonNull
                     VariantApiOperationsRegistrar<
-                                CommonExtension<?, ?, ?, ?>,
+                                com.android.build.api.dsl.DynamicFeatureExtension,
                                 DynamicFeatureVariantBuilderImpl,
                                 DynamicFeatureVariantImpl>
                             variantApiOperationsRegistrar) {

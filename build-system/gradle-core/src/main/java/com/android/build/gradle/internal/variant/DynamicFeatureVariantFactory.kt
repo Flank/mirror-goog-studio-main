@@ -20,6 +20,7 @@ import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.dsl.BuildFeatures
 import com.android.build.api.dsl.DynamicFeatureBuildFeatures
+import com.android.build.api.dsl.DynamicFeatureExtension
 import com.android.build.api.variant.impl.DynamicFeatureVariantBuilderImpl
 import com.android.build.api.variant.impl.DynamicFeatureVariantImpl
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
@@ -51,7 +52,7 @@ internal class DynamicFeatureVariantFactory(
 
     override fun createVariantBuilder(
         componentIdentity: ComponentIdentity,
-        variantDslInfo: VariantDslInfo,
+        variantDslInfo: VariantDslInfo<*>,
         variantApiServices: VariantApiServices
     ): DynamicFeatureVariantBuilderImpl {
         return projectServices
@@ -68,7 +69,7 @@ internal class DynamicFeatureVariantFactory(
             variantBuilder: DynamicFeatureVariantBuilderImpl,
             componentIdentity: ComponentIdentity,
             buildFeatures: BuildFeatureValues,
-            variantDslInfo: VariantDslInfo,
+            variantDslInfo: VariantDslInfo<*>,
             variantDependencies: VariantDependencies,
             variantSources: VariantSources,
             paths: VariantPathHelper,

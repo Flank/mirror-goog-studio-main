@@ -90,7 +90,7 @@ public class VariantDependenciesBuilder {
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
             @NonNull IssueReporter errorReporter,
-            @NonNull VariantDslInfo variantDslInfo) {
+            @NonNull VariantDslInfo<?> variantDslInfo) {
         return new VariantDependenciesBuilder(
                 project, projectOptions, errorReporter, variantDslInfo);
     }
