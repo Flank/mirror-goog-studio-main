@@ -102,7 +102,7 @@ class AndroidTestLogcatPlugin : HostPlugin {
 
     /** Gets current date time on device. */
     private fun getDeviceCurrentTime(deviceController: DeviceController): String? {
-        val dateCommandResult = deviceController.deviceShell(listOf("date", "+%Y-%m-%d\\ %H:%M:%S"))
+        val dateCommandResult = deviceController.deviceShell(listOf("date", "+%m-%d\\ %H:%M:%S"))
         if (dateCommandResult.statusCode != 0 || dateCommandResult.output.isEmpty()) {
             logger.warning("Failed to read device time.")
             return null

@@ -56,7 +56,7 @@ class AndroidTestLogcatPluginTest {
     private lateinit var emptyTestSuiteResult: TestSuiteResult
     private lateinit var environment: Environment
 
-    private val testDeviceTime = "2021-01-01 00:00:00"
+    private val testDeviceTime = "01-01 00:00:00"
     private val logcatOptions = listOf("shell", "logcat", "-v", "threadtime", "-b", "main")
     private val logcatOutputText = """
         04-28 23:18:49.444  1887  1988 I TestRunner: started: (.)
@@ -72,7 +72,7 @@ class AndroidTestLogcatPluginTest {
         androidTestLogcatPlugin = AndroidTestLogcatPlugin()
 
         `when`(mockConfig.environment).thenReturn(environment)
-        `when`(mockDeviceController.deviceShell(listOf("date", "+%Y-%m-%d\\ %H:%M:%S")))
+        `when`(mockDeviceController.deviceShell(listOf("date", "+%m-%d\\ %H:%M:%S")))
                 .thenReturn(CommandResult(0, listOf(testDeviceTime)))
         `when`(mockDeviceController.executeAsync(
                 eq(listOf(
