@@ -80,6 +80,20 @@ final class InspectorContext {
         return mProjectName;
     }
 
+    // Created classloaders are cached for process lifetime here.
+    // Theoretically, starting with Android N classes can be unloaded and
+    // their respective classloaders can be gc-ed.
+    // However, in practice it is hard to guarantee that a reference to class isn't cached somewhere
+    // keeping classloader around. Additionally, there is no guarantee when gc is called, allowing
+    // DexClassLoader to be alive much longer then necessary. Having two DexClassloaders created
+    // from the same jars is a problem, because they start fighting over resources:
+    // second Classloader will fail to loadLibrary(), because
+    // underlying resource isn't closed by first classloader (b/187342510)
+    // To avoid this issue and to avoid multiple copies of same DexClassloader in the memory
+    // they are explicitly cached here.
+    private static final ConcurrentHashMap<String, ClassLoader> sCachedClassLoaders =
+            new ConcurrentHashMap<>();
+
     // TODO: shouldn't know nativePtr
     @SuppressWarnings("rawtypes")
     public String initializeInspector(String dexPath, long nativePtr) {
@@ -87,11 +101,9 @@ final class InspectorContext {
         if (mainClassLoader == null) {
             return "Failed to find a main thread";
         }
-        String optimizedDir = ClassLoaderUtils.optimizedDirectory;
         try {
-            String nativePath = prepareNativeLibraries(dexPath, Build.SUPPORTED_ABIS[0]);
             ClassLoader classLoader =
-                    new DexClassLoader(dexPath, optimizedDir, nativePath, mainClassLoader);
+                    sCachedClassLoaders.computeIfAbsent(dexPath, s -> createClassloader(dexPath));
             ServiceLoader<InspectorFactory> loader =
                     ServiceLoader.load(InspectorFactory.class, classLoader);
             Iterator<InspectorFactory> iterator = loader.iterator();
@@ -114,6 +126,18 @@ final class InspectorContext {
         } catch (Throwable e) {
             e.printStackTrace();
             return "Failed during instantiating inspector with id " + mInspectorId;
+        }
+    }
+
+    private static ClassLoader createClassloader(String dexPath) {
+        ClassLoader mainClassLoader = ClassLoaderUtils.mainThreadClassLoader();
+        String optimizedDir = ClassLoaderUtils.optimizedDirectory;
+        try {
+            String nativePath = prepareNativeLibraries(dexPath, Build.SUPPORTED_ABIS[0]);
+            return new DexClassLoader(dexPath, optimizedDir, nativePath, mainClassLoader);
+        } catch (IOException e) {
+            // can't recover from this IOException so promote it to runtime exception
+            throw new RuntimeException("Failed to create classloader", e);
         }
     }
 
