@@ -18,35 +18,31 @@ package com.android.build.gradle.internal.testing.utp
 
 import com.android.build.api.variant.impl.AndroidVersionImpl
 import com.android.build.gradle.internal.SdkComponentsBuildService
-import com.android.build.gradle.internal.fixtures.FakeConfigurableFileCollection
 import com.android.build.gradle.internal.testing.StaticTestData
-import com.android.ide.common.process.JavaProcessExecutor
-import com.android.ide.common.process.JavaProcessInfo
-import com.android.ide.common.process.ProcessOutputHandler
 import com.android.ide.common.process.ProcessResult
 import com.android.testutils.MockitoKt.any
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidTestResultListenerProto.TestResultEvent
 import com.android.utils.ILogger
-import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.Any
 import com.google.protobuf.TextFormat
 import com.google.testing.platform.proto.api.config.RunnerConfigProto
 import com.google.testing.platform.proto.api.core.TestSuiteResultProto
 import com.google.testing.platform.proto.api.service.ServerConfigProto.ServerConfig
+import java.io.File
+import org.gradle.workers.WorkQueue
+import org.gradle.workers.WorkerExecutor
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import org.mockito.ArgumentCaptor
+import org.mockito.Answers
 import org.mockito.Mock
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
-import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnit
 import org.mockito.junit.MockitoRule
 import org.mockito.quality.Strictness
-import java.io.File
 
 /**
  * Unit tests for [ManagedDeviceTestRunner].
@@ -56,7 +52,8 @@ class ManagedDeviceTestRunnerTest {
             MockitoJUnit.rule().strictness(Strictness.STRICT_STUBS)
     @get:Rule var temporaryFolderRule = TemporaryFolder()
 
-    @Mock lateinit var mockJavaProcessExecutor: JavaProcessExecutor
+    @Mock lateinit var mockWorkerExecutor: WorkerExecutor
+    @Mock lateinit var mockWorkQueue: WorkQueue
     @Mock lateinit var mockVersionedSdkLoader: SdkComponentsBuildService.VersionedSdkLoader
     @Mock lateinit var mockTestData: StaticTestData
     @Mock lateinit var mockAppApk: File
@@ -67,20 +64,8 @@ class ManagedDeviceTestRunnerTest {
     @Mock lateinit var mockManagedDevice: UtpManagedDevice
     @Mock lateinit var mockUtpTestResultListenerServerRunner: UtpTestResultListenerServerRunner
     @Mock lateinit var mockUtpTestResultListenerServerMetadata: UtpTestResultListenerServerMetadata
-
-    private val utpDependencies = object: UtpDependencies() {
-        override val launcher = FakeConfigurableFileCollection(File("/pathToLAUNCHER.jar"))
-        override val core = FakeConfigurableFileCollection(File("/pathToCORE.jar"))
-        override val deviceControllerDdmlib = FakeConfigurableFileCollection(File(""))
-        override val deviceProviderGradle = FakeConfigurableFileCollection(File(""))
-        override val deviceProviderVirtual = FakeConfigurableFileCollection(File(""))
-        override val driverInstrumentation = FakeConfigurableFileCollection(File(""))
-        override val testDeviceInfoPlugin = FakeConfigurableFileCollection(File(""))
-        override val testLogcatPlugin = FakeConfigurableFileCollection(File(""))
-        override val testPlugin = FakeConfigurableFileCollection(File(""))
-        override val testPluginHostRetention = FakeConfigurableFileCollection(File(""))
-        override val testPluginResultListenerGradle = FakeConfigurableFileCollection(File(""))
-    }
+    @Mock(answer = Answers.RETURNS_DEEP_STUBS)
+    private lateinit var mockUtpDependencies: UtpDependencies
 
     private lateinit var runner: ManagedDeviceTestRunner
     private lateinit var capturedTestResultListener: UtpTestResultListener
@@ -100,9 +85,8 @@ class ManagedDeviceTestRunnerTest {
                 .thenReturn(ServerConfig.getDefaultInstance())
         `when`(mockUtpTestResultListenerServerRunner.metadata)
                 .thenReturn(mockUtpTestResultListenerServerMetadata)
-        `when`(mockJavaProcessExecutor.execute(
-                any(JavaProcessInfo::class.java),
-                any(ProcessOutputHandler::class.java))).then {
+        `when`(mockWorkerExecutor.noIsolation()).thenReturn(mockWorkQueue)
+        `when`(mockWorkQueue.await()).then {
             val testSuiteResult = createStubResultProto()
 
             capturedTestResultListener.onTestResultEvent(TestResultEvent.newBuilder().apply {
@@ -136,8 +120,8 @@ class ManagedDeviceTestRunnerTest {
         }
 
         runner = ManagedDeviceTestRunner(
-                mockJavaProcessExecutor,
-                utpDependencies,
+                mockWorkerExecutor,
+                mockUtpDependencies,
                 mockVersionedSdkLoader,
                 mockRetentionConfig,
                 useOrchestrator = false,
@@ -176,18 +160,6 @@ class ManagedDeviceTestRunnerTest {
                 listOf(),
                 setOf(mockHelperApk),
                 mockLogger)
-
-        val captor = ArgumentCaptor.forClass(JavaProcessInfo::class.java)
-        verify(mockJavaProcessExecutor)
-                .execute(captor.capture(), any(ProcessOutputHandler::class.java))
-        assertThat(captor.value.classpath).isEqualTo(utpDependencies.launcher.singleFile.absolutePath)
-        assertThat(captor.value.mainClass).isEqualTo(UtpDependency.LAUNCHER.mainClass)
-        assertThat(captor.value.jvmArgs).hasSize(1)
-        assertThat(captor.value.jvmArgs[0]).startsWith("-Djava.util.logging.config.file=")
-        assertThat(captor.value.args).hasSize(3)
-        assertThat(captor.value.args[0]).isEqualTo(utpDependencies.core.singleFile.absolutePath)
-        assertThat(captor.value.args[1]).startsWith("--proto_config=")
-        assertThat(captor.value.args[2]).startsWith("--proto_server_config=")
 
         val variant = resultDir.resolve("TEST-mockDeviceName-projectName-variantName.xml")
         assertThat(variant).exists()

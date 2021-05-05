@@ -21,7 +21,6 @@ import com.android.build.gradle.internal.testing.BaseTestRunner
 import com.android.build.gradle.internal.testing.CustomTestRunListener
 import com.android.build.gradle.internal.testing.StaticTestData
 import com.android.builder.testing.api.DeviceConnector
-import com.android.ide.common.process.JavaProcessExecutor
 import com.android.ide.common.process.ProcessExecutor
 import com.android.ide.common.workers.ExecutorServiceAdapter
 import com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidTestResultListenerProto.TestResultEvent
@@ -34,6 +33,7 @@ import com.google.testing.platform.proto.api.core.TestSuiteResultProto.TestSuite
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import org.gradle.workers.WorkerExecutor
 
 /**
  * Runs Android Instrumentation tests using UTP (Unified Test Platform).
@@ -41,7 +41,7 @@ import java.io.IOException
 class UtpTestRunner @JvmOverloads constructor(
         splitSelectExec: File?,
         processExecutor: ProcessExecutor,
-        private val javaProcessExecutor: JavaProcessExecutor,
+        private val workerExecutor: WorkerExecutor,
         executor: ExecutorServiceAdapter,
         private val utpDependencies: UtpDependencies,
         private val versionedSdkLoader: SdkComponentsBuildService.VersionedSdkLoader,
@@ -119,12 +119,13 @@ class UtpTestRunner @JvmOverloads constructor(
                     }
                 }
 
+                val workQueue = workerExecutor.noIsolation()
                 runUtpTestSuite(
-                        runnerConfigProtoFile,
-                        configFactory,
-                        utpDependencies,
-                        javaProcessExecutor,
-                        logger)
+                    runnerConfigProtoFile,
+                    configFactory,
+                    utpDependencies,
+                    workQueue)
+                workQueue.await()
 
                 testResultReporters.remove(deviceConnector.serialNumber)
 

@@ -25,7 +25,6 @@ import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.computeAvdName
 import com.android.build.gradle.internal.dsl.EmulatorSnapshots
 import com.android.build.gradle.internal.dsl.ManagedVirtualDevice
-import com.android.build.gradle.internal.process.GradleJavaProcessExecutor
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -54,7 +53,6 @@ import com.android.builder.model.TestOptions
 import com.android.repository.Revision
 import com.android.utils.FileUtils
 import com.google.common.base.Preconditions
-import org.gradle.api.Action
 import org.gradle.api.GradleException
 import org.gradle.api.InvalidUserDataException
 import org.gradle.api.artifacts.ArtifactCollection
@@ -74,11 +72,8 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.options.Option
 import org.gradle.internal.logging.ConsoleRenderer
-import org.gradle.process.ExecOperations
-import org.gradle.process.JavaExecSpec
 import java.io.File
-import java.util.function.Function
-import javax.inject.Inject
+import org.gradle.workers.WorkerExecutor
 
 /**
  * Runs instrumentation tests of a variant on a device defined in the DSL.
@@ -107,18 +102,7 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
         @get: Nested
         abstract val utpDependencies: UtpDependencies
 
-        @Inject
-        open fun getExecOperations(): ExecOperations {
-            throw UnsupportedOperationException("Injected by Gradle.")
-        }
-
-        fun createTestRunner(): ManagedDeviceTestRunner {
-            val javaProcessExecutor =
-                GradleJavaProcessExecutor(
-                        Function { action: Action<in JavaExecSpec?>? ->
-                            getExecOperations().javaexec(action)
-                        }
-                )
+        fun createTestRunner(workerExecutor: WorkerExecutor): ManagedDeviceTestRunner {
 
             Preconditions.checkArgument(
                     unifiedTestPlatform.get(),
@@ -131,7 +115,7 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
             }
 
             return ManagedDeviceTestRunner(
-                    javaProcessExecutor,
+                    workerExecutor,
                     utpDependencies,
                     sdkBuildService.get().sdkLoader(compileSdkVersion, buildToolsRevision),
                     retentionConfig.get(),
@@ -231,7 +215,7 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
             true
         } else {
             try {
-                val runner = testRunnerFactory.createTestRunner()
+                val runner = testRunnerFactory.createTestRunner(workerExecutor)
                 runner.runTests(
                         managedDevice,
                         resultsOutDir,

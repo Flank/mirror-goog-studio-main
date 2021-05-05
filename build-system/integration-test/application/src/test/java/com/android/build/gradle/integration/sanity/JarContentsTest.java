@@ -397,6 +397,7 @@ public class JarContentsTest {
                 "com/android/build/gradle/internal/testFixtures/",
                 "com/android/build/gradle/internal/testing/",
                 "com/android/build/gradle/internal/testing/utp/",
+                "com/android/build/gradle/internal/testing/utp/worker/",
                 "com/android/build/gradle/internal/transforms/",
                 "com/android/build/gradle/internal/utils/",
                 "com/android/build/gradle/internal/variant/",
