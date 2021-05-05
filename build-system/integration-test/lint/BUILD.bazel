@@ -27,6 +27,7 @@ gradle_integration_test(
         "//tools/base/build-system/integration-test:test-projects/lintStandalone",
         "//tools/base/build-system/integration-test:test-projects/lintStandaloneCustomRules",
         "//tools/base/build-system/integration-test:test-projects/lintStandaloneVital",
+        "//tools/base/build-system/integration-test:test-projects/lintSuppress",
     ],
     maven_repo_manifests = [
         "//tools/base/build-system:gradle_plugin_no_databinding_repo",
