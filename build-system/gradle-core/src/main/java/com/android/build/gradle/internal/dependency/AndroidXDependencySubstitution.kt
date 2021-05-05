@@ -41,48 +41,9 @@ object AndroidXDependencySubstitution {
         ).getDependenciesMap(filterOutBaseLibrary = false)
 
     /**
-     * Modified map of the original `androidXMappings`, used by the workaround in
-     * #replaceOldSupportLibraries.
-     */
-    val mappingsForWorkaround = androidXMappings.filterNot { entry ->
-        // The following dependencies may or may not need replacing, so we skip them in the
-        // workaround (the first part of `replaceOldSupportLibraries`), and make the decision
-        // whether to replace them in the second part of that method where there's enough info to
-        // make the decision.
-        entry.key == COM_ANDROID_DATABINDING_BASELIBRARY
-                || entry.key.startsWith(ANDROID_ARCH_)
-    }
-
-    /**
      * Replaces old support libraries with AndroidX.
      */
     fun replaceOldSupportLibraries(project: Project, reasonToReplace: String) {
-        // TODO (AGP): This is a quick fix to work around Gradle bug with dependency
-        // substitution (https://github.com/gradle/gradle/issues/5174). Once Gradle has fixed
-        // this issue, this should be removed.
-        // Note that this complements but does not replace the dependency substitution rules that
-        // follow (in the second part of this method)
-        project.dependencies.components.all { component ->
-            component.allVariants { variant ->
-                variant.withDependencies { metadata ->
-                    val oldDeps = mutableSetOf<String>()
-                    val newDeps = mutableListOf<String>()
-                    metadata.forEach {
-                        val oldDep = "${it.group}:${it.name}"
-                        val newDep = mappingsForWorkaround[oldDep]
-                        if (newDep != null) {
-                            oldDeps.add(oldDep)
-                            newDeps.add(newDep)
-                        }
-                    }
-                    // Can't use metadata.removeAll(Set<DirectDependenciesMetadata>) because of
-                    // bug 161778526.
-                    metadata.removeAll { "${it.group}:${it.name}" in oldDeps }
-                    newDeps.forEach{ metadata.add(it) }
-                }
-            }
-        }
-
         project.configurations.all { configuration ->
             // Apply the rules just before the configurations are resolved because too many rules
             // could significantly impact memory usage and build speed. (Many configurations are not
@@ -108,6 +69,7 @@ object AndroidXDependencySubstitution {
                         // Gradle accepts that form.
                         it.substitute(it.module(entry.key))
                             .using(it.module(entry.value))
+                            .withoutArtifactSelectors() // https://github.com/gradle/gradle/issues/5174#issuecomment-828558594
                             .because(reasonToReplace)
                     }
                 }
