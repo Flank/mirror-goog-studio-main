@@ -38,11 +38,11 @@ import org.junit.Rule;
 import org.junit.Test;
 
 /** Check cmake build with split and injected ABI. */
-public class CmakeInjectedAbiSplitTest {
+public class InjectedAbiSplitTest {
     @Rule
     public GradleTestProject sProject;
 
-    public CmakeInjectedAbiSplitTest() {
+    public InjectedAbiSplitTest() {
         sProject =
                 GradleTestProject.builder()
                         .fromTestApp(HelloWorldJniApp.builder().withCmake().build())

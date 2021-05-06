@@ -31,7 +31,7 @@ import org.junit.Test
 /**
  * Test injected ABI with ndk.abiFilters in a library project.
  */
-class InjectedAbiNativeLibraryTest {
+class InjectedAbiTest {
 
     private val testapp = HelloWorldLibraryApp.create()
 
