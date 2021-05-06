@@ -19,14 +19,13 @@ import com.android.annotations.NonNull;
 import com.android.ddmlib.AdbHelper;
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
+import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 
 public class AdbSocketUtils {
-
-    private static final String EOF_MESSAGE = "EOF";
 
     /**
      * Fills a ByteBuffer by reading data from a socket.
@@ -37,7 +36,7 @@ public class AdbSocketUtils {
         while (buf.remaining() > 0) {
             int count = socket.read(buf);
             if (count < 0) {
-                throw new IOException(EOF_MESSAGE);
+                throw new EOFException("EOF");
             }
         }
     }
@@ -108,12 +107,8 @@ public class AdbSocketUtils {
             buf.rewind();
             try {
                 read(socket, buf);
-            } catch (IOException e) {
-                if (e.getMessage().equals(EOF_MESSAGE)) {
-                    end = true;
-                } else {
-                    throw e;
-                }
+            } catch (EOFException e) {
+                end = true;
             }
             int nullPosition = 0;
             for (; nullPosition < buf.position(); nullPosition++) {
