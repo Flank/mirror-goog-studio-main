@@ -692,7 +692,7 @@ abstract class VariantInputs {
         return DefaultLintModelVariant(
             module,
             name.get(),
-            useSupportLibraryVectorDrawables = false,
+            useSupportLibraryVectorDrawables = mainArtifact.useSupportLibraryVectorDrawables.get(),
             mainArtifact = mainArtifact.toLintModel(dependencyCaches),
             testArtifact = testArtifact.orNull?.toLintModel(dependencyCaches),
             androidTestArtifact = androidTestArtifact.orNull?.toLintModel(dependencyCaches),
@@ -883,6 +883,9 @@ abstract class AndroidArtifactInput : ArtifactInput() {
     @get:Input
     abstract val shrinkable: Property<Boolean>
 
+    @get:Input
+    abstract val useSupportLibraryVectorDrawables: Property<Boolean>
+
     fun initialize(
         componentImpl: ComponentImpl,
         checkDependencies: Boolean,
@@ -895,6 +898,9 @@ abstract class AndroidArtifactInput : ArtifactInput() {
         generatedResourceFolders.setDisallowChanges(ModelBuilder.getGeneratedResourceFolders(componentImpl))
         shrinkable.setDisallowChanges(
             componentImpl is ConsumableCreationConfig && componentImpl.minifiedEnabled
+        )
+        useSupportLibraryVectorDrawables.setDisallowChanges(
+            componentImpl.variantDslInfo.vectorDrawables.useSupportLibrary ?: false
         )
         if (includeClassesOutputDirectories) {
             classesOutputDirectories.from(componentImpl.artifacts.get(InternalArtifactType.JAVAC))
@@ -950,6 +956,7 @@ abstract class AndroidArtifactInput : ArtifactInput() {
         classesOutputDirectories.fromDisallowChanges(sourceSet.output.classesDirs)
         warnIfProjectTreatedAsExternalDependency.setDisallowChanges(false)
         shrinkable.setDisallowChanges(false)
+        useSupportLibraryVectorDrawables.setDisallowChanges(false)
         val variantDependencies = VariantDependencies(
             variantName = sourceSet.name,
             variantType = VariantTypeImpl.JAVA_LIBRARY,
