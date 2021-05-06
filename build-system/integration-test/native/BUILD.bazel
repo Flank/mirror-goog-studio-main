@@ -109,7 +109,8 @@ single_gradle_integration_test(
 )
 
 single_gradle_integration_test(
-    name = "CmakeInjectedAbiSplitTest",
+    name = "InjectedAbiSplitTest",
+    timeout = "long",
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
     data = DATA + CMAKE + NDK,
     maven_repo_manifests = MAVEN_REPO_MANIFESTS,
@@ -191,7 +192,8 @@ single_gradle_integration_test(
 )
 
 single_gradle_integration_test(
-    name = "InjectedAbiNativeLibraryTest",
+    name = "InjectedAbiTest",
+    timeout = "long",
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
     data = DATA + CMAKE + NDK,
     maven_repo_manifests = MAVEN_REPO_MANIFESTS,
