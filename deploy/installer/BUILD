@@ -23,6 +23,7 @@ genrule(
           "$(location //tools/base/deploy/agent/native:android-libswap/arm64-v8a/android-libswap.so) " +
           "$(location //tools/base/deploy/installer:android-installer_raw/arm64-v8a/android-installer_raw) " +
           "$(location //tools/base/deploy/installer:android-install-server/arm64-v8a/android-install-server) " +
+          "$(location //tools/base/debug/coroutine/native/agent:coroutine_debugger_agent/arm64-v8a/coroutine_debugger_agent.so) " +
           "\";" +
           # Java
           "$(location //tools/base/bazel:bin2c) -lang=java -embed=false -variable=com.android.tools.deployer.Version -output=$(location Version.java) $$DEP && " +
