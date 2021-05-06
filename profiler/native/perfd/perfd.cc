@@ -20,6 +20,7 @@
 
 #include "daemon/daemon.h"
 #include "perfd/commands/begin_session.h"
+#include "perfd/commands/discover_profileable.h"
 #include "perfd/commands/end_session.h"
 #include "perfd/commands/get_cpu_core_config.h"
 #include "perfd/common_profiler_component.h"
@@ -94,6 +95,8 @@ int Perfd::Initialize(Daemon* daemon) {
                                  &BeginSession::Create);
   daemon->RegisterCommandHandler(proto::Command::END_SESSION,
                                  &EndSession::Create);
+  daemon->RegisterCommandHandler(proto::Command::DISCOVER_PROFILEABLE,
+                                 &DiscoverProfileable::Create);
   daemon->RegisterCommandHandler(proto::Command::GET_CPU_CORE_CONFIG,
                                  &GetCpuCoreConfig::Create);
   daemon->RegisterCommandHandler(

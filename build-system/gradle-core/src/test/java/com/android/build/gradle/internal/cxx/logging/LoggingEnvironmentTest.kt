@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.logging
 
-import com.android.build.gradle.internal.cxx.logging.LoggingLevel.*
+import com.android.build.gradle.internal.cxx.logging.LoggingMessage.LoggingLevel.*
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 import kotlin.concurrent.thread
@@ -27,10 +27,11 @@ class LoggingEnvironmentTest {
         val messages = mutableListOf<String>()
         override fun log(message: LoggingMessage) {
             messages += when(message.level) {
-                INFO -> "info $tag: $message"
-                LIFECYCLE -> "lifecycle $tag: $message"
-                WARN -> "warn $tag: $message"
-                ERROR -> "error $tag: $message"
+                INFO -> "info $tag: ${message.text()}"
+                LIFECYCLE -> "lifecycle $tag: ${message.text()}"
+                WARN -> "warn $tag: ${message.text()}"
+                ERROR -> "error $tag: ${message.text()}"
+                else -> error("unexpected")
             }
         }
     }

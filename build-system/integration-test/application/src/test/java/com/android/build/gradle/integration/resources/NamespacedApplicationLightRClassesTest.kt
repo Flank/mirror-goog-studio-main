@@ -87,11 +87,9 @@ class NamespacedApplicationLightRClassesTest {
     @get:Rule
     val project = GradleTestProject.builder().fromTestApp(testApp).create()
 
-    @Ignore("b/160949546")
     @Test
     fun testResourcesCompiled() {
         project.executor()
-            .with(BooleanOption.ENABLE_JVM_RESOURCE_COMPILER, false) // b/160949546
             .run(":app:assembleDebug")
 
         // Check library resources

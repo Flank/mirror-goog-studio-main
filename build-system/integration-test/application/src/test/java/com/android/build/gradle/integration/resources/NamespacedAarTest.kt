@@ -117,14 +117,11 @@ class NamespacedAarTest {
 
     @get:Rule val project = GradleTestProject.builder().fromTestApp(testApp).create()
 
-    @Ignore("b/160949546")
     @Test
     fun checkBuilds() {
         project.executor()
-            .with(BooleanOption.ENABLE_JVM_RESOURCE_COMPILER, false) // b/160949546
             .run(":publishedLib:assembleRelease")
         project.executor()
-            .with(BooleanOption.ENABLE_JVM_RESOURCE_COMPILER, false) // b/160949546
             .run(":lib:assembleDebug", ":app:assembleDebug")
 
         run {
@@ -188,6 +185,5 @@ class NamespacedAarTest {
                     """.trimIndent()
             )
         }
-
     }
 }

@@ -222,7 +222,7 @@ public class FontDetectorTest extends AbstractCheckTest {
                         + "1 errors, 0 warnings";
         String expectedFix =
                 ""
-                        + "Fix for res/font/font1.xml line 1: Set fontProviderAuthority=\"com.google.android.gms.fonts\":\n"
+                        + "Fix for res/font/font1.xml line 2: Set missing attributes:\n"
                         + "@@ -3 +3\n"
                         + "+     android:fontProviderAuthority=\"com.google.android.gms.fonts\"\n"
                         + "+     android:fontProviderCerts=\"@array/com_google_android_gms_fonts_certs\"\n"
@@ -254,11 +254,11 @@ public class FontDetectorTest extends AbstractCheckTest {
                         + "1 errors, 0 warnings";
         String expectedFix =
                 ""
-                        + "Fix for res/font/font1.xml line 1: Set fontProviderAuthority:\n"
+                        + "Fix for res/font/font1.xml line 2: Set missing attributes:\n"
                         + "@@ -3 +3\n"
-                        + "+     android:fontProviderAuthority=\"[TODO]|\"\n"
+                        + "+     android:fontProviderAuthority=\"TODO\"\n"
                         + "+     android:fontProviderCerts=\"[TODO]|\"\n"
-                        + "+     android:fontProviderPackage=\"[TODO]|\"\n";
+                        + "+     android:fontProviderPackage=\"TODO\"";
         lint().files(
                         manifest()
                                 .minSdk(
@@ -287,7 +287,7 @@ public class FontDetectorTest extends AbstractCheckTest {
                         + "1 errors, 0 warnings";
         String expectedFix =
                 ""
-                        + "Fix for res/font/font1.xml line 1: Set fontProviderAuthority=\"com.google.android.gms.fonts\":\n"
+                        + "Fix for res/font/font1.xml line 2: Set missing attributes:\n"
                         + "@@ -3 +3\n"
                         + "+     app:fontProviderAuthority=\"com.google.android.gms.fonts\"\n"
                         + "+     app:fontProviderCerts=\"@array/com_google_android_gms_fonts_certs\"\n"
@@ -317,7 +317,7 @@ public class FontDetectorTest extends AbstractCheckTest {
                         + "1 errors, 0 warnings";
         String expectedFix =
                 ""
-                        + "Fix for res/font/font1.xml line 2: Replace with com.google.android.gms.fonts:\n"
+                        + "Fix for res/font/font1.xml line 3: Replace with com.google.android.gms.fonts:\n"
                         + "@@ -3 +3\n"
                         + "-     app:fontProviderAuthority=\"com.google.android.gms.helpme\"\n"
                         + "+     app:fontProviderAuthority=\"com.google.android.gms.fonts\"\n";

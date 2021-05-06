@@ -590,6 +590,9 @@ public class RtlDetector extends LayoutDetector implements SourceCodeScanner {
                                             + "`gravity` attributes: was `%1$s`, expected `%2$s`",
                                     gravitySpec, expectedGravity);
                     Location location = context.getValueLocation(attribute);
+                    Location secondary = context.getValueLocation(gravityNode);
+                    secondary.setMessage("Incompatible direction here");
+                    location.setSecondary(secondary);
                     reportRtl(
                             context,
                             COMPAT,
@@ -598,9 +601,6 @@ public class RtlDetector extends LayoutDetector implements SourceCodeScanner {
                             message,
                             null,
                             APPLIES_REQUIRES_RTL);
-                    Location secondary = context.getValueLocation(gravityNode);
-                    secondary.setMessage("Incompatible direction here");
-                    location.setSecondary(secondary);
                 }
             }
         }

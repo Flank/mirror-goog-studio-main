@@ -38,4 +38,4 @@ protobuf {
 }
 
 project.ext.pomName = 'UTP plugins for Android Tools'
-project.ext.pomDesc = 'A protobuf messages used in a UTP plugin to export additional Android device infomation'
+project.ext.pomDesc = 'A protobuf message used in a UTP plugin to export additional Android device information'

@@ -20,10 +20,11 @@ import com.android.build.gradle.internal.SdkHandler
 import com.android.build.gradle.internal.cxx.RandomInstanceGenerator
 import com.android.build.gradle.internal.cxx.caching.CachingEnvironment
 import com.android.build.gradle.internal.cxx.configure.SdkSourceProperties.Companion.SdkSourceProperty.SDK_PKG_REVISION
-import com.android.build.gradle.internal.cxx.logging.LoggingLevel
+import com.android.build.gradle.internal.cxx.logging.LoggingMessage.LoggingLevel
 import com.android.build.gradle.internal.cxx.logging.LoggingMessage
 import com.android.build.gradle.internal.cxx.logging.PassThroughDeduplicatingLoggingEnvironment
 import com.android.build.gradle.internal.cxx.logging.ThreadLoggingEnvironment
+import com.android.build.gradle.internal.cxx.logging.text
 import com.android.builder.sdk.InstallFailedException
 import com.android.builder.sdk.LicenceNotAcceptedException
 import com.android.repository.Revision
@@ -632,7 +633,7 @@ class NdkLocatorKtTest {
             },
             sdkHandler = null
         )!!.ndk
-        if (log.errors().isNotEmpty()) throw Exception(log.errors()[0].toString())
+        if (log.errors().isNotEmpty()) throw Exception(log.errors()[0].text())
         assertThat(path).isEqualTo("/my/ndk/folder".toSlashFile())
     }
 

@@ -174,6 +174,12 @@ final class InspectorContext {
             mInspector.onDispose();
         } catch (Throwable ignored) {
         }
+        for (WeakReference<CommandCallbackImpl> reference : mIdToCommandCallback.values()) {
+            CommandCallbackImpl callback = reference.get();
+            if (callback != null) {
+                callback.dispose();
+            }
+        }
     }
 
     public interface CrashListener {
@@ -183,7 +189,8 @@ final class InspectorContext {
     enum Status {
         PENDING,
         REPLIED,
-        CANCELLED
+        CANCELLED,
+        DISPOSED,
     }
 
     class CommandCallbackImpl implements Inspector.CommandCallback {
@@ -238,6 +245,13 @@ final class InspectorContext {
                 for (Pair<Executor, Runnable> p : listeners) {
                     p.first.execute(p.second);
                 }
+            }
+        }
+
+        void dispose() {
+            synchronized (mLock) {
+                mStatus = Status.DISPOSED;
+                mIdToCommandCallback.remove(mCommandId);
             }
         }
 

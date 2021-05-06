@@ -65,7 +65,6 @@ class LibraryCacheabilityTest {
                     ":lib:javaPreCompileRelease",
                     ":lib:mergeReleaseConsumerProguardFiles",
                     ":lib:mergeReleaseGeneratedProguardFiles",
-                    ":lib:mergeReleaseJavaResource",
                     ":lib:mergeReleaseJniLibFolders",
                     ":lib:mergeReleaseShaders",
                     ":lib:mergeReleaseResources",
@@ -84,6 +83,7 @@ class LibraryCacheabilityTest {
                  */
                 DID_WORK to setOf(
                     ":lib:bundleReleaseAar" /*Bug 121275773 */,
+                    ":lib:mergeReleaseJavaResource", /* Bug 181142260 */
                     ":lib:prepareLintJarForPublish" /* Bug 120413672 */
                 ).plus(
                         // mapDebugSourceSetPaths is not cacheable but exists to enable the main

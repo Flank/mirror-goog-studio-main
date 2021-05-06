@@ -116,7 +116,7 @@ abstract class CommonExtensionImpl<
         action.invoke(compileOptions)
     }
 
-    protected abstract var compileSdkVersion: String?
+    override abstract var compileSdkVersion: String?
 
     override var compileSdk: Int?
         get() {
@@ -137,9 +137,9 @@ abstract class CommonExtensionImpl<
             else "android-$value"
         }
     override var compileSdkPreview: String?
-        get() = compileSdkVersion
+        get() = compileSdkVersion?.let { if(it.startsWith("android-")) it.removePrefix("android-") else null }
         set(value) {
-            compileSdkVersion = value
+            compileSdkVersion = value?.removePrefix("android-")?.let { "android-$it" }
         }
 
     override fun compileSdkAddon(vendor: String, name: String, version: Int) {
@@ -151,7 +151,7 @@ abstract class CommonExtensionImpl<
     }
 
     override fun compileSdkVersion(version: String) {
-        compileSdkPreview = version
+        compileSdkVersion = version
     }
 
     override val composeOptions: ComposeOptionsImpl =

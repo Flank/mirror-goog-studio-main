@@ -22,7 +22,7 @@ import com.android.tools.lint.detector.api.Incident;
 import java.io.File;
 import java.util.List;
 
-class TestResultState {
+public class TestResultState {
     TestResultState(
             @NonNull TestLintClient client,
             @NonNull File rootDir,

@@ -85,6 +85,7 @@ class UtpTestRunnerTest {
         override val deviceProviderVirtual = FakeConfigurableFileCollection(File(""))
         override val driverInstrumentation = FakeConfigurableFileCollection(File(""))
         override val testDeviceInfoPlugin = FakeConfigurableFileCollection(File(""))
+        override val testLogcatPlugin = FakeConfigurableFileCollection(File(""))
         override val testPlugin = FakeConfigurableFileCollection(File(""))
         override val testPluginHostRetention = FakeConfigurableFileCollection(File(""))
         override val testPluginResultListenerGradle = FakeConfigurableFileCollection(File(""))
@@ -98,11 +99,12 @@ class UtpTestRunnerTest {
         `when`(mockDevice.apiLevel).thenReturn(28)
         `when`(mockDevice.name).thenReturn("mockDeviceName")
         `when`(mockTestData.minSdkVersion).thenReturn(AndroidVersionImpl(28))
-        `when`(mockTestData.testApk).thenReturn(mockTestApk)
         `when`(mockTestData.testedApkFinder).thenReturn { _, _ -> listOf(mockAppApk) }
         `when`(mockUtpConfigFactory.createRunnerConfigProtoForLocalDevice(
                 any(DeviceConnector::class.java),
                 any(StaticTestData::class.java),
+                anyIterable(),
+                anyIterable(),
                 anyIterable(),
                 any(UtpDependencies::class.java),
                 any(SdkComponentsBuildService.VersionedSdkLoader::class.java),

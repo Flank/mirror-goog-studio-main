@@ -20,6 +20,10 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.Log.LogLevel;
+import com.google.common.annotations.VisibleForTesting;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -63,6 +67,19 @@ public class LogCatMessageParser {
     @Nullable
     LogCatHeader mPrevHeader;
 
+    private final int myYear;
+    @NonNull private final ZoneId myZoneId;
+
+    public LogCatMessageParser() {
+        this(ZonedDateTime.now().getYear(), ZoneId.systemDefault());
+    }
+
+    @VisibleForTesting
+    LogCatMessageParser(int year, @NonNull ZoneId zoneId) {
+        myYear = year;
+        myZoneId = zoneId;
+    }
+
     /**
      * Parse a header line into a {@link LogCatHeader} object, or {@code null} if the input line
      * doesn't match the expected format.
@@ -79,7 +96,7 @@ public class LogCatMessageParser {
             return null;
         }
 
-        LogCatTimestamp dateTime = LogCatTimestamp.fromString(matcher.group(1));
+        Instant dateTime = LogCatTimestamp.parse(matcher.group(1), myYear, myZoneId);
         int processId = parseProcessId(matcher.group(2));
         int threadId = parseThreadId(matcher.group(3));
         LogLevel priority = parsePriority(matcher.group(4));

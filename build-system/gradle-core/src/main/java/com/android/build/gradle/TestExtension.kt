@@ -112,10 +112,4 @@ open class TestExtension(
 
     override val testBuildType: String?
         get() = null
-
-    override var compileSdkVersion: String?
-        get() = publicExtensionImpl.compileSdkPreview
-        set(value) {
-            publicExtensionImpl.compileSdkPreview = value
-        }
 }

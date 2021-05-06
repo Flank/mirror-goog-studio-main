@@ -57,11 +57,12 @@ import java.io.File
 import java.util.concurrent.Callable
 import java.util.function.Predicate
 import javax.inject.Inject
+import org.gradle.work.DisableCachingByDefault
 
 /**
  * Task to merge java resources from multiple modules
  */
-@CacheableTask
+@DisableCachingByDefault
 abstract class MergeJavaResourceTask
 @Inject constructor(objects: ObjectFactory) : IncrementalTask() {
 

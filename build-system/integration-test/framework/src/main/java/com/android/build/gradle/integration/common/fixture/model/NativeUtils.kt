@@ -173,16 +173,11 @@ private fun ModelBuilderV2.FetchResult<ModelContainerV2>.hashEquivalents() : Lis
             .mapNotNull { it.nativeModule }
             .flatMap { it.variants }
             .flatMap { it.abis.map { abi -> it to abi } }
-    val segments = abis.map { (variant, abi) ->
-        val segment = findConfigurationSegment(abi.sourceFlagsFile)
-        assert(segment != null) {
-            val abiSegment = findAbiSegment(abi.sourceFlagsFile)
-            val cxxSegment = findCxxSegment(abi.sourceFlagsFile)
-            val intermediates = findIntermediatesSegment(abi.sourceFlagsFile)
-            "Expected to be able to find segment in ${abi.sourceFlagsFile}"
-        }
+    val segments = (abis.map { (variant, abi) ->
         findConfigurationSegment(abi.sourceFlagsFile)!! to "{${variant.name.toUpperCase(Locale.ROOT)}}"
-    }
+    } + abis.map { (variant, abi) ->
+        findConfigurationSegment(abi.symbolFolderIndexFile)!! to "{${variant.name.toUpperCase(Locale.ROOT)}}"
+    }).distinct()
     val configurationAliases = segments
             .map { (segment, alias) ->
                 "/.cxx/$segment" to "/.cxx/$alias"

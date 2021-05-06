@@ -55,6 +55,8 @@ cc_library(
     srcs = [
         "commands/begin_session.cc",
         "commands/begin_session.h",
+        "commands/discover_profileable.cc",
+        "commands/discover_profileable.h",
         "commands/end_session.cc",
         "commands/end_session.h",
         "commands/get_cpu_core_config.cc",

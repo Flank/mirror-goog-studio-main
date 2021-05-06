@@ -20,11 +20,13 @@ import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.gradle_project.ProjectLocation
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
+import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.TestUtils
 import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.io.Resources
 import com.google.common.truth.Truth.assertThat
+import org.junit.Assume
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -106,6 +108,50 @@ class LintModelIntegrationTest(private val usePartialAnalysis: Boolean) {
         if (errors.isNotEmpty()) {
             throw AssertionError(errors.joinToString("\n\n"))
         }
+    }
+
+    @Test
+    fun checkLintModelsForShrinkable() {
+        // Test should pass whether using partial analysis or not, but assume true to save time.
+        Assume.assumeTrue(usePartialAnalysis)
+        TestFileUtils.appendToFile(
+            project.getSubproject("app").buildFile,
+            """
+                android {
+                    buildTypes {
+                        debug {
+                            minifyEnabled true
+                        }
+                    }
+                }
+            """.trimIndent()
+        )
+        // Check lint runs correctly before asserting about the model.
+        getExecutor().expectFailure().run(":app:cleanLintDebug", ":app:lintDebug")
+        val lintResults = project.file("app/build/reports/lint-results.txt")
+        assertThat(lintResults).contains("8 errors, 6 warnings")
+
+        val lintModelDir =
+            project.getSubproject("app")
+                .intermediatesDir.toPath()
+                .resolve("incremental/lintDebug")
+                .toFile()
+
+        val projectModelFile = File(lintModelDir, "module.xml")
+        assertThat(projectModelFile).isFile()
+        assertThat(
+            Files.readAllLines(projectModelFile.toPath())
+                .map { applyReplacements(it, createReplacements(project.location)) }
+                .none { it.contains("neverShrinking") }
+        ).isTrue()
+
+        val variantModelFile = File(lintModelDir, "debug.xml")
+        assertThat(variantModelFile).isFile()
+        assertThat(
+            Files.readAllLines(variantModelFile.toPath())
+                .map { applyReplacements(it, createReplacements(project.location)) }
+                .any { it.contains("shrinking=\"true\"") }
+        ).isTrue()
     }
 
     private val cacheReplace = Regex("""/[a-zA-Z0-9]{32}/""")

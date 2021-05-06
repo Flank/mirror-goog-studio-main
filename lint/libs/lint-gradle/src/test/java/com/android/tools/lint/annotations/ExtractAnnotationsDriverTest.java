@@ -462,6 +462,23 @@ public class ExtractAnnotationsDriverTest {
         assertThat(output).contains("--source-roots <paths>");
     }
 
+    @Test
+    public void testUnknownFlagCausesNonZeroExitCode() throws Exception {
+
+        String[] args = new String[] {"--unknown-flag", "--unknown-flag"};
+
+        PrintStream systemError = System.err;
+        String output;
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            System.setErr(new PrintStream(baos, true, StandardCharsets.UTF_8.name()));
+            assertNotEquals(0, new ExtractAnnotationsDriver().run(args));
+            output = baos.toString(StandardCharsets.UTF_8.name());
+        } finally {
+            System.setErr(systemError);
+        }
+        assertThat(output).contains("Unknown flag --unknown-flag");
+    }
+
     private File createProject(@NonNull TestFile... files) throws IOException {
         File dir = temporaryFolder.newFolder();
 

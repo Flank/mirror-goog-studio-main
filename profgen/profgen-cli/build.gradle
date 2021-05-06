@@ -1,0 +1,20 @@
+apply plugin: 'com.android.tools.java-library'
+apply plugin: 'com.android.tools.kotlin'
+
+dependencies {
+    implementation project(":base:profgen")
+    implementation libs.kotlin_stdlib
+    implementation 'org.jetbrains.kotlinx:kotlinx-cli-jvm:0.3.1'
+
+    testImplementation libs.kotlin_test
+    testImplementation libs.truth
+    testImplementation libs.junit
+    testImplementation project(':base:testutils')
+}
+
+compileKotlin {
+  kotlinOptions {
+    jvmTarget = '1.8'
+    freeCompilerArgs += '-Xopt-in=kotlin.RequiresOptIn'
+  }
+}

@@ -829,7 +829,7 @@
          - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/jars/classes.jar{F}]
          - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/AndroidManifest.xml{F}
          - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/res{!}
-         - resStaticLibrary    = (null)
+         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/res.apk{!}
          - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/assets{!}
          - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/jni{!}
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/aidl{!}
@@ -873,7 +873,7 @@
          - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-core-1.1.1/jars/classes.jar{F}]
          - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-core-1.1.1/AndroidManifest.xml{F}
          - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-core-1.1.1/res{!}
-         - resStaticLibrary    = (null)
+         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-core-1.1.1/res.apk{!}
          - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-core-1.1.1/assets{!}
          - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-core-1.1.1/jni{!}
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-core-1.1.1/aidl{!}
@@ -895,7 +895,7 @@
          - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-1.1.1/jars/classes.jar{F}]
          - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-1.1.1/AndroidManifest.xml{F}
          - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-1.1.1/res{!}
-         - resStaticLibrary    = (null)
+         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-1.1.1/res.apk{!}
          - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-1.1.1/assets{!}
          - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-1.1.1/jni{!}
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-1.1.1/aidl{!}
@@ -917,7 +917,7 @@
          - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/jars/classes.jar{F}]
          - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/AndroidManifest.xml{F}
          - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/res{!}
-         - resStaticLibrary    = (null)
+         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/res.apk{!}
          - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/assets{!}
          - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/jni{!}
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/aidl{!}
@@ -939,7 +939,7 @@
          - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/viewmodel-1.1.1/jars/classes.jar{F}]
          - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewmodel-1.1.1/AndroidManifest.xml{F}
          - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewmodel-1.1.1/res{!}
-         - resStaticLibrary    = (null)
+         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewmodel-1.1.1/res.apk{!}
          - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewmodel-1.1.1/assets{!}
          - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewmodel-1.1.1/jni{!}
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewmodel-1.1.1/aidl{!}
@@ -961,7 +961,7 @@
          - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/jars/classes.jar{F}]
          - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/AndroidManifest.xml{F}
          - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/res{!}
-         - resStaticLibrary    = (null)
+         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/res.apk{!}
          - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/assets{!}
          - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/jni{!}
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/aidl{!}
@@ -983,7 +983,7 @@
          - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/jars/classes.jar{F}]
          - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/AndroidManifest.xml{F}
          - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/res{!}
-         - resStaticLibrary    = (null)
+         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/res.apk{!}
          - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/assets{!}
          - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/jni{!}
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/aidl{!}
@@ -1005,7 +1005,7 @@
          - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/jars/classes.jar{F}]
          - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/AndroidManifest.xml{F}
          - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/res{!}
-         - resStaticLibrary    = (null)
+         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/res.apk{!}
          - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/assets{!}
          - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/jni{!}
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/aidl{!}
@@ -1027,7 +1027,7 @@
          - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/asynclayoutinflater-28.0.0/jars/classes.jar{F}]
          - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/asynclayoutinflater-28.0.0/AndroidManifest.xml{F}
          - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/asynclayoutinflater-28.0.0/res{!}
-         - resStaticLibrary    = (null)
+         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/asynclayoutinflater-28.0.0/res.apk{!}
          - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/asynclayoutinflater-28.0.0/assets{!}
          - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/asynclayoutinflater-28.0.0/jni{!}
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/asynclayoutinflater-28.0.0/aidl{!}
@@ -1071,7 +1071,7 @@
          - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/coordinatorlayout-28.0.0/jars/classes.jar{F}]
          - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/coordinatorlayout-28.0.0/AndroidManifest.xml{F}
          - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/coordinatorlayout-28.0.0/res{D}
-         - resStaticLibrary    = (null)
+         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/coordinatorlayout-28.0.0/res.apk{!}
          - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/coordinatorlayout-28.0.0/assets{!}
          - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/coordinatorlayout-28.0.0/jni{!}
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/coordinatorlayout-28.0.0/aidl{!}
@@ -1093,7 +1093,7 @@
          - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/cursoradapter-28.0.0/jars/classes.jar{F}]
          - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/cursoradapter-28.0.0/AndroidManifest.xml{F}
          - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/cursoradapter-28.0.0/res{!}
-         - resStaticLibrary    = (null)
+         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/cursoradapter-28.0.0/res.apk{!}
          - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/cursoradapter-28.0.0/assets{!}
          - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/cursoradapter-28.0.0/jni{!}
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/cursoradapter-28.0.0/aidl{!}
@@ -1115,7 +1115,7 @@
          - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/customview-28.0.0/jars/classes.jar{F}]
          - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/customview-28.0.0/AndroidManifest.xml{F}
          - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/customview-28.0.0/res{!}
-         - resStaticLibrary    = (null)
+         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/customview-28.0.0/res.apk{!}
          - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/customview-28.0.0/assets{!}
          - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/customview-28.0.0/jni{!}
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/customview-28.0.0/aidl{!}
@@ -1137,7 +1137,7 @@
          - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/documentfile-28.0.0/jars/classes.jar{F}]
          - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/documentfile-28.0.0/AndroidManifest.xml{F}
          - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/documentfile-28.0.0/res{!}
-         - resStaticLibrary    = (null)
+         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/documentfile-28.0.0/res.apk{!}
          - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/documentfile-28.0.0/assets{!}
          - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/documentfile-28.0.0/jni{!}
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/documentfile-28.0.0/aidl{!}
@@ -1159,7 +1159,7 @@
          - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/drawerlayout-28.0.0/jars/classes.jar{F}]
          - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/drawerlayout-28.0.0/AndroidManifest.xml{F}
          - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/drawerlayout-28.0.0/res{!}
-         - resStaticLibrary    = (null)
+         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/drawerlayout-28.0.0/res.apk{!}
          - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/drawerlayout-28.0.0/assets{!}
          - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/drawerlayout-28.0.0/jni{!}
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/drawerlayout-28.0.0/aidl{!}
@@ -1181,7 +1181,7 @@
          - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/interpolator-28.0.0/jars/classes.jar{F}]
          - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/interpolator-28.0.0/AndroidManifest.xml{F}
          - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/interpolator-28.0.0/res{!}
-         - resStaticLibrary    = (null)
+         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/interpolator-28.0.0/res.apk{!}
          - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/interpolator-28.0.0/assets{!}
          - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/interpolator-28.0.0/jni{!}
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/interpolator-28.0.0/aidl{!}
@@ -1203,7 +1203,7 @@
          - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/loader-28.0.0/jars/classes.jar{F}]
          - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/loader-28.0.0/AndroidManifest.xml{F}
          - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/loader-28.0.0/res{!}
-         - resStaticLibrary    = (null)
+         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/loader-28.0.0/res.apk{!}
          - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/loader-28.0.0/assets{!}
          - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/loader-28.0.0/jni{!}
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/loader-28.0.0/aidl{!}
@@ -1225,7 +1225,7 @@
          - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/localbroadcastmanager-28.0.0/jars/classes.jar{F}]
          - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/localbroadcastmanager-28.0.0/AndroidManifest.xml{F}
          - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/localbroadcastmanager-28.0.0/res{!}
-         - resStaticLibrary    = (null)
+         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/localbroadcastmanager-28.0.0/res.apk{!}
          - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/localbroadcastmanager-28.0.0/assets{!}
          - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/localbroadcastmanager-28.0.0/jni{!}
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/localbroadcastmanager-28.0.0/aidl{!}
@@ -1247,7 +1247,7 @@
          - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/print-28.0.0/jars/classes.jar{F}]
          - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/print-28.0.0/AndroidManifest.xml{F}
          - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/print-28.0.0/res{!}
-         - resStaticLibrary    = (null)
+         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/print-28.0.0/res.apk{!}
          - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/print-28.0.0/assets{!}
          - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/print-28.0.0/jni{!}
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/print-28.0.0/aidl{!}
@@ -1269,7 +1269,7 @@
          - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/slidingpanelayout-28.0.0/jars/classes.jar{F}]
          - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/slidingpanelayout-28.0.0/AndroidManifest.xml{F}
          - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/slidingpanelayout-28.0.0/res{!}
-         - resStaticLibrary    = (null)
+         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/slidingpanelayout-28.0.0/res.apk{!}
          - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/slidingpanelayout-28.0.0/assets{!}
          - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/slidingpanelayout-28.0.0/jni{!}
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/slidingpanelayout-28.0.0/aidl{!}
@@ -1313,7 +1313,7 @@
          - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/support-compat-28.0.0/jars/classes.jar{F}]
          - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-compat-28.0.0/AndroidManifest.xml{F}
          - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-compat-28.0.0/res{D}
-         - resStaticLibrary    = (null)
+         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-compat-28.0.0/res.apk{!}
          - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-compat-28.0.0/assets{!}
          - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-compat-28.0.0/jni{!}
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-compat-28.0.0/aidl{D}
@@ -1335,7 +1335,7 @@
          - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-ui-28.0.0/jars/classes.jar{F}]
          - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-ui-28.0.0/AndroidManifest.xml{F}
          - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-ui-28.0.0/res{!}
-         - resStaticLibrary    = (null)
+         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-ui-28.0.0/res.apk{!}
          - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-ui-28.0.0/assets{!}
          - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-ui-28.0.0/jni{!}
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-ui-28.0.0/aidl{!}
@@ -1357,7 +1357,7 @@
          - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-utils-28.0.0/jars/classes.jar{F}]
          - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-utils-28.0.0/AndroidManifest.xml{F}
          - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-utils-28.0.0/res{!}
-         - resStaticLibrary    = (null)
+         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-utils-28.0.0/res.apk{!}
          - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-utils-28.0.0/assets{!}
          - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-utils-28.0.0/jni{!}
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-utils-28.0.0/aidl{!}
@@ -1379,7 +1379,7 @@
          - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/support-fragment-28.0.0/jars/classes.jar{F}]
          - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-fragment-28.0.0/AndroidManifest.xml{F}
          - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-fragment-28.0.0/res{!}
-         - resStaticLibrary    = (null)
+         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-fragment-28.0.0/res.apk{!}
          - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-fragment-28.0.0/assets{!}
          - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-fragment-28.0.0/jni{!}
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-fragment-28.0.0/aidl{!}
@@ -1401,7 +1401,7 @@
          - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/support-media-compat-28.0.0/jars/classes.jar{F}]
          - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-media-compat-28.0.0/AndroidManifest.xml{F}
          - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-media-compat-28.0.0/res{D}
-         - resStaticLibrary    = (null)
+         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-media-compat-28.0.0/res.apk{!}
          - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-media-compat-28.0.0/assets{!}
          - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-media-compat-28.0.0/jni{!}
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-media-compat-28.0.0/aidl{D}
@@ -1423,7 +1423,7 @@
          - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/jars/classes.jar{F}]
          - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/AndroidManifest.xml{F}
          - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/res{!}
-         - resStaticLibrary    = (null)
+         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/res.apk{!}
          - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/assets{!}
          - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/jni{!}
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/aidl{!}
@@ -1445,7 +1445,7 @@
          - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/jars/classes.jar{F}]
          - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/AndroidManifest.xml{F}
          - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/res{!}
-         - resStaticLibrary    = (null)
+         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/res.apk{!}
          - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/assets{!}
          - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/jni{!}
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/aidl{!}
@@ -1467,7 +1467,7 @@
          - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/swiperefreshlayout-28.0.0/jars/classes.jar{F}]
          - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/swiperefreshlayout-28.0.0/AndroidManifest.xml{F}
          - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/swiperefreshlayout-28.0.0/res{!}
-         - resStaticLibrary    = (null)
+         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/swiperefreshlayout-28.0.0/res.apk{!}
          - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/swiperefreshlayout-28.0.0/assets{!}
          - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/swiperefreshlayout-28.0.0/jni{!}
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/swiperefreshlayout-28.0.0/aidl{!}
@@ -1489,7 +1489,7 @@
          - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/versionedparcelable-28.0.0/jars/classes.jar{F}]
          - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/versionedparcelable-28.0.0/AndroidManifest.xml{F}
          - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/versionedparcelable-28.0.0/res{!}
-         - resStaticLibrary    = (null)
+         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/versionedparcelable-28.0.0/res.apk{!}
          - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/versionedparcelable-28.0.0/assets{!}
          - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/versionedparcelable-28.0.0/jni{!}
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/versionedparcelable-28.0.0/aidl{D}
@@ -1511,7 +1511,7 @@
          - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/viewpager-28.0.0/jars/classes.jar{F}]
          - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewpager-28.0.0/AndroidManifest.xml{F}
          - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewpager-28.0.0/res{!}
-         - resStaticLibrary    = (null)
+         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewpager-28.0.0/res.apk{!}
          - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewpager-28.0.0/assets{!}
          - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewpager-28.0.0/jni{!}
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewpager-28.0.0/aidl{!}
@@ -1533,7 +1533,7 @@
          - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/jars/classes.jar{F}]
          - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/AndroidManifest.xml{F}
          - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/res{D}
-         - resStaticLibrary    = (null)
+         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/res.apk{!}
          - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/assets{!}
          - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/jni{!}
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/aidl{!}
@@ -1555,7 +1555,7 @@
          - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-basement-15.0.1/jars/classes.jar{F}]
          - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-basement-15.0.1/AndroidManifest.xml{F}
          - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-basement-15.0.1/res{D}
-         - resStaticLibrary    = (null)
+         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-basement-15.0.1/res.apk{!}
          - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-basement-15.0.1/assets{!}
          - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-basement-15.0.1/jni{!}
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-basement-15.0.1/aidl{!}
@@ -1577,7 +1577,7 @@
          - runtimeJarFiles     = [{GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-tasks-15.0.1/jars/classes.jar{F}]
          - manifest            = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-tasks-15.0.1/AndroidManifest.xml{F}
          - resFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-tasks-15.0.1/res{!}
-         - resStaticLibrary    = (null)
+         - resStaticLibrary    = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-tasks-15.0.1/res.apk{!}
          - assetsFolder        = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-tasks-15.0.1/assets{!}
          - jniFolder           = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-tasks-15.0.1/jni{!}
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-tasks-15.0.1/aidl{!}

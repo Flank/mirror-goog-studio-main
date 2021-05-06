@@ -42,7 +42,10 @@ class PathVariables {
         }
     }
 
-    /** Sorts the variables such that the most specific match is found first */
+    /**
+     * Sorts the variables such that the most specific match is found
+     * first
+     */
     fun sort() {
         pathVariables.sortWith(PATH_COMPARATOR)
     }
@@ -110,10 +113,17 @@ class PathVariables {
         }
 
         val file = File(path)
-        return if (relativeTo != null && !file.isAbsolute) {
-            File(relativeTo, path)
+        if (relativeTo != null && !file.isAbsolute) {
+            // Don't create paths like foo/bar/../something -- instead create foo/something
+            if (path.startsWith("../") || path.startsWith("..\\")) {
+                val parentFile = relativeTo.parentFile
+                if (parentFile != null) {
+                    return File(parentFile, path.substring(3))
+                }
+            }
+            return File(relativeTo, path)
         } else {
-            file
+            return file
         }
     }
 

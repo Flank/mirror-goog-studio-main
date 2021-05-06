@@ -81,7 +81,9 @@ class UtpTestRunner @JvmOverloads constructor(
                                 configFactory.createRunnerConfigProtoForLocalDevice(
                                         deviceConnector,
                                         testData,
-                                        apks.union(helperApks) + testData.testApk,
+                                        apks,
+                                        installOptions,
+                                        helperApks,
                                         utpDependencies,
                                         versionedSdkLoader,
                                         utpOutputDir,

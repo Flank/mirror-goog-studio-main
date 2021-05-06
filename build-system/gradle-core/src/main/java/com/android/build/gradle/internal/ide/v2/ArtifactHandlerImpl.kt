@@ -29,6 +29,7 @@ import com.android.SdkConstants.FN_CLASSES_JAR
 import com.android.SdkConstants.FN_LINT_JAR
 import com.android.SdkConstants.FN_PROGUARD_TXT
 import com.android.SdkConstants.FN_PUBLIC_TXT
+import com.android.SdkConstants.FN_RESOURCE_STATIC_LIBRARY
 import com.android.SdkConstants.FN_RESOURCE_TEXT
 import com.android.build.gradle.internal.ide.dependencies.ArtifactHandler
 import com.android.build.gradle.internal.ide.dependencies.ResolvedArtifact
@@ -63,7 +64,7 @@ class ArtifactHandlerImpl(
             compileJarFiles = if (apiJar.isFile) listOf(apiJar) else runtimeJarFiles,
             runtimeJarFiles = runtimeJarFiles,
             resFolder = File(folder, FD_RES),
-            resStaticLibrary = null, //FIXME
+            resStaticLibrary = File(folder, FN_RESOURCE_STATIC_LIBRARY),
             assetsFolder = File(folder, FD_ASSETS),
             jniFolder = File(folder, FD_JNI),
             aidlFolder = File(folder, FD_AIDL),

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lint>
+    <issue id="UnusedIds" severity="ignore" />
+    <issue id="NewerVersionAvailable" severity="ignore" />
+    <issue id="MissingApplicationIcon" severity="ignore" />
+    <issue id="GradleDependency" severity="ignore" />
+    <issue id="AllowBackup" severity="ignore" />
+    <issue id="UnusedResources" severity="ignore" />
+    <issue id="SyntheticAccessor" severity="ignore" />
+    <issue id="UselessLeaf" severity="ignore" />
+    <issue id="GoogleAppIndexingWarning" severity="ignore" />
+</lint>

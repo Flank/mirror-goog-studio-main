@@ -482,13 +482,17 @@ public class ButtonDetectorTest extends AbstractCheckTest {
                         ""
                                 + "Fix for res/layout/buttonbar.xml line 9: Make borderless:\n"
                                 + "@@ -7 +7\n"
-                                + "+         style=\"?android:attr/buttonBarButtonStyle\"\n"
+                                + "+         style=\"?android:attr/buttonBarStyle\"\n"
                                 + "@@ -11 +12\n"
+                                + "+             style=\"?android:attr/buttonBarButtonStyle\"\n"
+                                + "@@ -16 +18\n"
                                 + "+             style=\"?android:attr/buttonBarButtonStyle\"\n"
                                 + "Fix for res/layout/buttonbar.xml line 14: Make borderless:\n"
                                 + "@@ -7 +7\n"
-                                + "+         style=\"?android:attr/buttonBarButtonStyle\"\n"
+                                + "+         style=\"?android:attr/buttonBarStyle\"\n"
                                 + "@@ -11 +12\n"
+                                + "+             style=\"?android:attr/buttonBarButtonStyle\"\n"
+                                + "@@ -16 +18\n"
                                 + "+             style=\"?android:attr/buttonBarButtonStyle\"");
     }
 

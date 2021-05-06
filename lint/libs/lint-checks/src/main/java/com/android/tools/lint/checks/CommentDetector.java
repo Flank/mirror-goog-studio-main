@@ -28,6 +28,7 @@ import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Incident;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
+import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.LintMap;
 import com.android.tools.lint.detector.api.Location;
@@ -163,6 +164,11 @@ public class CommentDetector extends ResourceXmlDetector
                         if (context instanceof JavaContext && node instanceof UElement) {
                             JavaContext javaContext = (JavaContext) context;
                             UElement javaNode = (UElement) node;
+                            if (Lint.isKotlin(javaNode.getSourcePsi())) {
+                                // The Kotlin compiler does not interpret unicode escapes in the
+                                // same way as javac which leads to the escape mechanism
+                                continue;
+                            }
                             Location location =
                                     javaContext.getRangeLocation(
                                             javaNode, offset + i - 1, ESCAPE_STRING.length());

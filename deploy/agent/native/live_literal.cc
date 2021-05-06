@@ -26,6 +26,10 @@
 #include "tools/base/deploy/common/utils.h"
 #include "tools/base/deploy/sites/sites.h"
 
+#define ENABLE_HELPER_CLASS_STARTED 0
+#define ENABLE_HELPER_CLASS_UNCHANGED 1
+#define ENABLE_HELPER_CLASS_FAILED 2
+
 namespace deploy {
 
 const char* LiveLiteral::kSupportClass =
@@ -222,11 +226,44 @@ proto::AgentLiveLiteralUpdateResponse LiveLiteral::Update(
     return response_;
   }
 
-  // Call Support the support class enable() first.
-  jobject package_name = jni_->NewStringUTF(package_name_.c_str());
+  bool needs_recompose = false;
+  jint local_enable = 2;
   JniClass support(jni_, LiveLiteral::kSupportClass);
-  jboolean needs_recompose = support.CallStaticBooleanMethod(
-      "enable", "(Ljava/lang/Class;Ljava/lang/String;)Z", klass, package_name);
+  jobject package_name = jni_->NewStringUTF(package_name_.c_str());
+
+  // From Beta07 and onward, each helper will hold the enabled boolean to
+  // toggle live literal update readiness.
+  for (auto update : request.updates()) {
+    const std::string key = update.key();
+    if (!key.empty()) {
+      continue;
+    }
+    jclass helper = class_finder_.FindInClassLoader(
+        class_finder_.GetApplicationClassLoader(), update.helper_class());
+    if (helper == nullptr) {
+      response_.set_status(proto::AgentLiveLiteralUpdateResponse::ERROR);
+      std::stringstream stream;
+      stream << "Helper " << helper << " not found!";
+      response_.set_extra(stream.str());
+      return response_;
+    }
+    local_enable = support.CallStaticIntMethod(
+        "enableHelperClass", "(Ljava/lang/Class;Ljava/lang/String;)I", helper,
+        package_name);
+  }
+
+  if (local_enable == ENABLE_HELPER_CLASS_STARTED) {
+    // Successfully enabled from a disabled state.
+    needs_recompose = true;
+  } else if (local_enable == ENABLE_HELPER_CLASS_UNCHANGED) {
+    // Successfully enabled from already enabled state.
+    needs_recompose = false;
+  } else if (local_enable == ENABLE_HELPER_CLASS_FAILED) {
+    // No local flag detected. Attempt to enable the older global flag.
+    needs_recompose = support.CallStaticBooleanMethod(
+        "enableGlobal", "(Ljava/lang/Class;Ljava/lang/String;)Z", klass,
+        package_name);
+  }
 
   if (needs_recompose) {
     Recompose recompose(jvmti_, jni_);
@@ -273,14 +310,14 @@ proto::AgentLiveLiteralUpdateResponse LiveLiteral::Update(
     jobject value = nullptr;
 
     if (update.type() == "Ljava/lang/String;") {
-      Log::V("Live Literal Update with String");
+      LogEvent("Live Literal Update with String");
       value = jni_->NewStringUTF(update.value().c_str());
       live_literal_kt.CallStaticVoidMethod(
           "updateLiveLiteralValue", "(Ljava/lang/String;Ljava/lang/Object;)V",
           jkey, value);
 
     } else if (update.type() == "C") {
-      Log::V("Live Literal Update with Character");
+      LogEvent("Live Literal Update with Character");
       jclass string_class = jni_->FindClass("java/lang/String");
       jmethodID parse_char = jni_->GetMethodID(string_class, "charAt", "(I)C");
       jchar result = jni_->CallCharMethod(
@@ -295,7 +332,7 @@ proto::AgentLiveLiteralUpdateResponse LiveLiteral::Update(
           jkey, value);
 
     } else if (update.type() == "B") {
-      Log::V("Live Literal Update with Byte");
+      LogEvent("Live Literal Update with Byte");
       jclass byte_class = jni_->FindClass("java/lang/Byte");
       jmethodID parse = jni_->GetStaticMethodID(
           byte_class, "valueOf", "(Ljava/lang/String;)Ljava/lang/Byte;");
@@ -305,7 +342,7 @@ proto::AgentLiveLiteralUpdateResponse LiveLiteral::Update(
           "updateLiveLiteralValue", "(Ljava/lang/String;Ljava/lang/Object;)V",
           jkey, value);
     } else if (update.type() == "I") {
-      Log::V("Live Literal Update with Integer");
+      LogEvent("Live Literal Update with Integer");
       jclass int_class = jni_->FindClass("java/lang/Integer");
       jmethodID parse = jni_->GetStaticMethodID(
           int_class, "valueOf", "(Ljava/lang/String;)Ljava/lang/Integer;");
@@ -315,7 +352,7 @@ proto::AgentLiveLiteralUpdateResponse LiveLiteral::Update(
           "updateLiveLiteralValue", "(Ljava/lang/String;Ljava/lang/Object;)V",
           jkey, value);
     } else if (update.type() == "J") {
-      Log::V("Live Literal Update with Long");
+      LogEvent("Live Literal Update with Long");
       jclass long_class = jni_->FindClass("java/lang/Long");
       jmethodID parse = jni_->GetStaticMethodID(
           long_class, "valueOf", "(Ljava/lang/String;)Ljava/lang/Long;");
@@ -325,7 +362,7 @@ proto::AgentLiveLiteralUpdateResponse LiveLiteral::Update(
           "updateLiveLiteralValue", "(Ljava/lang/String;Ljava/lang/Object;)V",
           jkey, value);
     } else if (update.type() == "S") {
-      Log::V("Live Literal Update with Short");
+      LogEvent("Live Literal Update with Short");
       jclass short_class = jni_->FindClass("java/lang/Short");
       jmethodID parse = jni_->GetStaticMethodID(
           short_class, "valueOf", "(Ljava/lang/String;)Ljava/lang/Short;");
@@ -335,7 +372,7 @@ proto::AgentLiveLiteralUpdateResponse LiveLiteral::Update(
           "updateLiveLiteralValue", "(Ljava/lang/String;Ljava/lang/Object;)V",
           jkey, value);
     } else if (update.type() == "F") {
-      Log::V("Live Literal Update with Float");
+      LogEvent("Live Literal Update with Float");
       jclass float_class = jni_->FindClass("java/lang/Float");
       jmethodID parse = jni_->GetStaticMethodID(
           float_class, "valueOf", "(Ljava/lang/String;)Ljava/lang/Float;");
@@ -345,7 +382,7 @@ proto::AgentLiveLiteralUpdateResponse LiveLiteral::Update(
           "updateLiveLiteralValue", "(Ljava/lang/String;Ljava/lang/Object;)V",
           jkey, value);
     } else if (update.type() == "D") {
-      Log::V("Live Literal Update with Double");
+      LogEvent("Live Literal Update with Double");
       jclass double_class = jni_->FindClass("java/lang/Double");
       jmethodID parse = jni_->GetStaticMethodID(
           double_class, "valueOf", "(Ljava/lang/String;)Ljava/lang/Double;");
@@ -355,7 +392,7 @@ proto::AgentLiveLiteralUpdateResponse LiveLiteral::Update(
           "updateLiveLiteralValue", "(Ljava/lang/String;Ljava/lang/Object;)V",
           jkey, value);
     } else if (update.type() == "Z") {
-      Log::V("Live Literal Update with Boolean");
+      LogEvent("Live Literal Update with Boolean");
       jclass bool_class = jni_->FindClass("java/lang/Boolean");
       jmethodID parse = jni_->GetStaticMethodID(
           bool_class, "valueOf", "(Ljava/lang/String;)Ljava/lang/Boolean;");

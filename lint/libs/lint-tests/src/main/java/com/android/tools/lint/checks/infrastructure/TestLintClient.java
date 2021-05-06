@@ -28,8 +28,10 @@ import static com.android.ide.common.rendering.api.ResourceNamespace.RES_AUTO;
 import static com.android.tools.lint.checks.infrastructure.KotlinClasspathKt.findKotlinStdlibPath;
 import static com.android.tools.lint.checks.infrastructure.LintTestUtils.checkTransitiveComparator;
 import static java.io.File.separatorChar;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -53,10 +55,14 @@ import com.android.support.AndroidxNameUtils;
 import com.android.tools.lint.LintCliClient;
 import com.android.tools.lint.LintCliFlags;
 import com.android.tools.lint.LintCliXmlParser;
+import com.android.tools.lint.LintFixPerformer;
 import com.android.tools.lint.LintResourceRepository;
 import com.android.tools.lint.LintStats;
 import com.android.tools.lint.Reporter;
 import com.android.tools.lint.TextReporter;
+import com.android.tools.lint.XmlFileType;
+import com.android.tools.lint.XmlReader;
+import com.android.tools.lint.XmlWriter;
 import com.android.tools.lint.client.api.CircularDependencyException;
 import com.android.tools.lint.client.api.Configuration;
 import com.android.tools.lint.client.api.ConfigurationHierarchy;
@@ -109,6 +115,7 @@ import com.intellij.psi.PsiErrorElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
@@ -126,6 +133,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import kotlin.Pair;
 import kotlin.io.FilesKt;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.kotlin.config.LanguageVersionSettings;
 import org.jetbrains.uast.UFile;
 import org.w3c.dom.Attr;
@@ -511,6 +519,40 @@ public class TestLintClient extends LintCliClient {
         }
 
         return false;
+    }
+
+    @Override
+    public void storeState(@NonNull Project project) {
+        super.storeState(project);
+
+        // Make sure we don't have any absolute paths in the serialization files, if any,
+        // as well as checking that all XML files are well-formed while we're at it.
+        String absProjectPath = project.getDir().getAbsolutePath();
+        String absTestRootPath = task.tempDir.getPath();
+        String absHomePrefix = System.getProperty("user.home");
+        String absProjectCanonicalPath = absProjectPath;
+        String absTestRootCanonicalPath = absTestRootPath;
+        try {
+            absProjectCanonicalPath = project.getDir().getCanonicalPath();
+            absTestRootCanonicalPath = task.tempDir.getCanonicalPath();
+        } catch (IOException ignore) {
+        }
+        for (XmlFileType type : XmlFileType.values()) {
+            File serializationFile = getSerializationFile(project, type);
+            if (serializationFile.exists()) {
+                String xml = FilesKt.readText(serializationFile, Charsets.UTF_8);
+                assertNotNull("Not valid XML", XmlUtils.parseDocumentSilently(xml, false));
+
+                // Make sure we don't have any absolute paths to the test root or project
+                // directories
+                // or home directories in the XML
+                assertFalse(xml.contains(absProjectPath));
+                assertFalse(xml.contains(absProjectCanonicalPath));
+                assertFalse(xml.contains(absTestRootPath));
+                assertFalse(xml.contains(absTestRootCanonicalPath));
+                assertFalse(xml.contains(absHomePrefix));
+            }
+        }
     }
 
     @Nullable
@@ -947,13 +989,6 @@ public class TestLintClient extends LintCliClient {
         Issue issue = incident.getIssue();
         assertNotNull(location);
 
-        if (fix != null && !task.allowExceptions) {
-            Throwable throwable = LintFix.getThrowable(fix, LintDriver.KEY_THROWABLE);
-            if (throwable != null && this.firstThrowable == null) {
-                this.firstThrowable = throwable;
-            }
-        }
-
         // Ensure that we're inside a read action if we might need access to PSI.
         // This is one heuristic; we could add more assertions elsewhere as needed.
         if (context instanceof JavaContext
@@ -1017,6 +1052,10 @@ public class TestLintClient extends LintCliClient {
                 l = l.getSecondary();
             }
         }
+
+        incident = checkIncidentSerialization(incident);
+
+        checkFix(fix, incident);
 
         super.report(context, incident, format);
 
@@ -1093,12 +1132,54 @@ public class TestLintClient extends LintCliClient {
                 }
             }
         }
+    }
+
+    private Incident checkIncidentSerialization(@NotNull Incident incident) {
+        // Check persistence: serialize and deserialize the issue metadata and continue using the
+        // deserialized version. It also catches cases where a detector modifies the incident
+        // after reporting it.
+        try {
+            File xmlFile = File.createTempFile("incident", ".xml");
+            XmlWriter xmlWriter =
+                    new XmlWriter(this, XmlFileType.INCIDENTS, new FileWriter(xmlFile));
+            xmlWriter.writeIncidents(Collections.singletonList(incident), emptyList());
+
+            // Read it back
+            List<Issue> issueList = singletonList(incident.getIssue());
+            //noinspection MissingVendor
+            IssueRegistry registry =
+                    new IssueRegistry() {
+                        @NotNull
+                        @Override
+                        public List<Issue> getIssues() {
+                            return issueList;
+                        }
+                    };
+            XmlReader xmlReader = new XmlReader(this, registry, incident.getProject(), xmlFile);
+            incident = xmlReader.getIncidents().get(0);
+            //noinspection ResultOfMethodCallIgnored
+            xmlFile.delete();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return incident;
+    }
+
+    /** Validity checks for the quickfix associated with the given incident */
+    private void checkFix(LintFix fix, Incident incident) {
+        if (fix != null && !task.allowExceptions) {
+            Throwable throwable = LintFix.getThrowable(fix, LintDriver.KEY_THROWABLE);
+            if (throwable != null && this.firstThrowable == null) {
+                this.firstThrowable = throwable;
+            }
+        }
 
         if (fix instanceof LintFix.ReplaceString) {
             LintFix.ReplaceString replaceFix = (LintFix.ReplaceString) fix;
-            String oldPattern = replaceFix.oldPattern;
-            String oldString = replaceFix.oldString;
-            Location rangeLocation = replaceFix.range != null ? replaceFix.range : location;
+            String oldPattern = replaceFix.getOldPattern();
+            Location range = replaceFix.getRange();
+            String oldString = replaceFix.getOldString();
+            Location rangeLocation = range != null ? range : incident.getLocation();
             String contents = readFile(rangeLocation.getFile()).toString();
             Position start = rangeLocation.getStart();
             Position end = rangeLocation.getEnd();
@@ -1117,7 +1198,7 @@ public class TestLintClient extends LintCliClient {
                                         + "\" in \""
                                         + locationRange
                                         + "\" as suggested in the quickfix for issue "
-                                        + issue
+                                        + incident.getIssue()
                                         + " (text in range was \""
                                         + locationRange
                                         + "\")");
@@ -1132,8 +1213,51 @@ public class TestLintClient extends LintCliClient {
                                     + "\" in \""
                                     + locationRange
                                     + "\" as suggested in the quickfix for issue "
-                                    + issue);
+                                    + incident.getIssue());
                 }
+            }
+
+            File file = range != null ? range.getFile() : incident.getLocation().getFile();
+            if (!file.isFile()) {
+                fail(file + " is not a file. Use fix().createFile instead of fix().replace.");
+            }
+        } else if (fix instanceof LintFix.CreateFileFix) {
+            LintFix.CreateFileFix createFix = (LintFix.CreateFileFix) fix;
+            File file = createFix.getFile();
+            if (createFix.getDelete()) {
+                assertTrue(file + " cannot be deleted; does not exist", file.exists());
+            } else if (file.exists()) {
+                fail("Cannot create file " + file + ": already exists");
+            }
+        }
+
+        // Make sure any source files referenced by the quick fixes are loaded
+        // for subsequent quickfix verifications (since those run after the
+        // test projects have been deleted)
+        if (fix != null) {
+            readFixFiles(incident, fix);
+        }
+    }
+
+    private void readFixFiles(Incident incident, LintFix fix) {
+        if (fix instanceof LintFix.LintFixGroup) {
+            for (LintFix f : ((LintFix.LintFixGroup) fix).getFixes()) {
+                readFixFiles(incident, f);
+            }
+        } else {
+            Location location = LintFixPerformer.Companion.getLocation(incident, fix);
+            File file = location.getFile();
+            if (file.isFile()) {
+                String displayName = fix.getDisplayName();
+                assertTrue(
+                        "Quickfix file paths must be absolute: "
+                                + file
+                                + " from "
+                                + (displayName != null
+                                        ? displayName
+                                        : fix.getClass().getSimpleName()),
+                        file.isAbsolute());
+                getSourceText(file);
             }
         }
     }
@@ -1250,7 +1374,7 @@ public class TestLintClient extends LintCliClient {
             sb.append(String.format(format, args));
         }
         if (exception != null) {
-            sb.append(exception.toString());
+            sb.append(exception);
         }
         System.err.println(sb);
 

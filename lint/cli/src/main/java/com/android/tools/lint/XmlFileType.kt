@@ -67,13 +67,16 @@ enum class XmlFileType(private val typeName: String) {
     PARTIAL_RESULTS("partial"),
 
     /** A file recording the set of configured issues. */
-    CONFIGURED_ISSUES("issues");
+    CONFIGURED_ISSUES("issues"),
+
+    /** The resource repository cache for this module */
+    RESOURCE_REPOSITORY("resources");
 
     /**
      * Should paths in the report always be relative, even if the lint
      * flag turning on absolute paths has been set to true?
      */
-    fun relativePaths(): Boolean = this == BASELINE
+    fun relativePaths(): Boolean = this != REPORT
 
     /** Whether we should use path variables for this file type */
     fun variables(): Boolean = isPersistenceFile()
@@ -82,7 +85,7 @@ enum class XmlFileType(private val typeName: String) {
      * Should all paths be converted to Unix paths (file separator /
      * instead of \ on Windows) ?
      */
-    fun unixPaths(): Boolean = this == BASELINE
+    fun unixPaths(): Boolean = this != REPORT
 
     /**
      * Include issue metadata such as explanation or category in the

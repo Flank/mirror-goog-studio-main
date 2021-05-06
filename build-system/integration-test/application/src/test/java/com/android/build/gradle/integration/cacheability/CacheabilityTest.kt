@@ -65,7 +65,6 @@ class CacheabilityTest {
             TaskInfo(FROM_CACHE, "javaPreCompile", "",
                     listOf("Debug", "DebugUnitTest", "Release", "ReleaseUnitTest")),
             TaskInfo(FROM_CACHE, "merge", "Assets", listOf("Debug", "Release")),
-            TaskInfo(FROM_CACHE, "merge", "JavaResource", listOf("Debug", "Release")),
             TaskInfo(FROM_CACHE, "merge", "JniLibFolders", listOf("Debug", "Release")),
             TaskInfo(FROM_CACHE, "merge", "Shaders", listOf("Debug", "Release")),
             TaskInfo(FROM_CACHE, "mergeDex", "", listOf("Debug", "Release")),
@@ -93,6 +92,8 @@ class CacheabilityTest {
             TaskInfo(DID_WORK, "lintVital", "", listOf("Release")),
             /* Bug 178810169 */
             TaskInfo(DID_WORK, "lintVitalAnalyze", "", listOf("Release")),
+            /* b/181142260 */
+            TaskInfo(DID_WORK, "merge", "JavaResource", listOf("Debug", "Release")),
             /* Bug 141301405 */
             TaskInfo(DID_WORK, "merge", "Resources", listOf("Debug", "Release")),
             /* Bug 74595859 */

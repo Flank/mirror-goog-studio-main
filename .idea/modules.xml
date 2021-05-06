@@ -82,6 +82,7 @@
       <module fileurl="file://$PROJECT_DIR$/testutils/testutils-tests.iml" filepath="$PROJECT_DIR$/testutils/testutils-tests.iml" />
       <module fileurl="file://$PROJECT_DIR$/transport/test-framework/transport-test-framework.iml" filepath="$PROJECT_DIR$/transport/test-framework/transport-test-framework.iml" />
       <module fileurl="file://$PROJECT_DIR$/usb-devices/usb-devices.iml" filepath="$PROJECT_DIR$/usb-devices/usb-devices.iml" />
+      <module fileurl="file://$PROJECT_DIR$/bazel/lnzipper/android.sdktools.base.lnzipper.iml" filepath="$PROJECT_DIR$/bazel/lnzipper/android.sdktools.base.lnzipper.iml" />
     </modules>
   </component>
 </project>

@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.cxx.process
 
 import com.android.build.gradle.internal.cxx.logging.LoggingMessage
 import com.android.build.gradle.internal.cxx.logging.ThreadLoggingEnvironment
+import com.android.build.gradle.internal.cxx.logging.text
 import com.google.common.truth.Truth
 import org.junit.Rule
 import org.junit.Test
@@ -153,7 +154,7 @@ class DefaultProcessOutputHandlerTest {
     class FakeThreadLoggingEnvironment(val messages: MutableList<String>) : ThreadLoggingEnvironment() {
 
         override fun log(message: LoggingMessage) {
-            messages += message.toString()
+            messages += message.text()
         }
 
     }

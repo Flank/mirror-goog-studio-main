@@ -30,7 +30,6 @@ import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationMo
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationParameters
 import com.android.build.gradle.internal.cxx.gradle.generator.tryCreateConfigurationParameters
 import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment
-import com.android.build.gradle.internal.cxx.logging.PassThroughDeduplicatingLoggingEnvironment
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.createCxxAbiModel
 import com.android.build.gradle.internal.cxx.model.createCxxModuleModel
@@ -56,7 +55,6 @@ import com.android.prefs.AndroidLocationsProvider
 import com.android.utils.appendCapitalized
 import org.gradle.api.Task
 import org.gradle.api.tasks.TaskProvider
-import java.io.File
 
 /**
  * Construct gradle tasks for C/C++ configuration and build.
@@ -69,7 +67,9 @@ fun <VariantBuilderT : ComponentBuilderImpl, VariantT : VariantImpl> createCxxTa
         projectOptions: ProjectOptions,
         variants: List<ComponentInfo<VariantBuilderT, VariantT>>) {
     if (variants.isEmpty()) return
-    IssueReporterLoggingEnvironment(issueReporter).use {
+    IssueReporterLoggingEnvironment(
+        issueReporter,
+        variants.first().variant.services.projectInfo.getProject().rootDir).use {
         val configurationParameters = variants
                 .mapNotNull { tryCreateConfigurationParameters(
                     projectOptions,

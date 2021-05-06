@@ -21,6 +21,7 @@ import com.android.testutils.TestUtils
 import com.android.tools.lint.checks.infrastructure.TestFiles.gradle
 import com.android.tools.lint.checks.infrastructure.TestFiles.java
 import com.android.tools.lint.checks.infrastructure.TestFiles.kotlin
+import com.android.tools.lint.checks.infrastructure.TestFiles.source
 import com.android.tools.lint.checks.infrastructure.TestLintTask.lint
 import com.android.tools.lint.client.api.IssueRegistry
 import com.android.tools.lint.client.api.UElementHandler
@@ -33,10 +34,12 @@ import com.android.tools.lint.detector.api.LintFix
 import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
+import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.intellij.psi.PsiMethod
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UImportStatement
 import org.jetbrains.uast.UMethod
+import org.jetbrains.uast.getContainingUClass
 import org.jetbrains.uast.getParentOfType
 import org.junit.Test
 import java.io.File
@@ -155,7 +158,8 @@ class LintFixVerifierTest {
                     // Dummy Gradle File
                     apply plugin: 'java'
                     """
-                ).indented()
+                ).indented(),
+                source("delete_me.txt", "Delete\nThis\nFile")
             )
             .sdkHome(TestUtils.getSdk().toFile())
             .issues(*LintFixVerifierRegistry().issues.toTypedArray())
@@ -177,13 +181,141 @@ class LintFixVerifierTest {
                 @@ -3 +3
                 -    public void oldName() {
                 +    public void renamedMethod() {
-                Fix for src/main/java/test/pkg/Test.java line 5: Update build.gradle:
+                Fix for src/main/java/test/pkg/Test.java line 5: Update files:
+                @@ -3 +3
+                -    public void oldName() {
+                +    public void renamedMethod() {
+                data.bin:
+                @@ -1 +1
+                +   base64: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+                +   AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+                +   AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+                +   AAAAAAAAAAAAAAAAAAAAAAAAAAAA
+                delete_me.txt:
+                @@ -1 +1
+                - Delete
+                - This
+                - File
+                build.gradle:
                 @@ -2 +2
                 - apply plugin: 'java'
                 @@ -3 +2
                 + apply plugin: 'kotlin'
+                new.txt:
+                @@ -1 +1
+                + First line in [new]| file.
+                + Second line.
+                + The End.
                 """
             )
+    }
+
+    @Test
+    fun testMultipleEditOperationsOrder() {
+        // This test makes sure that multiple quickfixes applied to the same file are applied correctly
+        lint()
+            .files(
+                TestFiles.manifest().minSdk(14),
+                java(
+                    """
+                    package androidx;
+
+                    import android.content.res.ColorStateList;
+                    import android.os.Build;
+                    import android.view.View;
+
+                    /**
+                     * Test class containing unsafe method references.
+                     */
+                    @SuppressWarnings("unused")
+                    public class AutofixUnsafeVoidMethodReferenceJava {
+
+                        /**
+                         * Unsafe reference to a new API with an SDK_INT check that satisfies the NewApi lint.
+                         */
+                        void unsafeReferenceWithSdkCheck(View view) {
+                            if (Build.VERSION.SDK_INT > 23) {
+                                ColorStateList tint = new ColorStateList(null, null);
+                                view.setBackgroundTintList(tint);
+                            }
+                        }
+                    }
+                    """
+                ).indented(),
+            )
+            .sdkHome(TestUtils.getSdk().toFile())
+            .issues(ClassVerificationFailureDetector.ISSUE)
+            .testModes(TestMode.DEFAULT)
+            .run()
+            .expect(
+                """
+                src/androidx/AutofixUnsafeVoidMethodReferenceJava.java:19: Error: This call references a method added in API level 21; however, the containing class androidx.AutofixUnsafeVoidMethodReferenceJava is reachable from earlier API levels and will fail run-time class verification. [_ClassVerificationFailure]
+                            view.setBackgroundTintList(tint);
+                                 ~~~~~~~~~~~~~~~~~~~~~
+                1 errors, 0 warnings
+                """
+            ).expectFixDiffs(
+                """
+                Fix for src/androidx/AutofixUnsafeVoidMethodReferenceJava.java line 19: Extract to static inner class:
+                @@ -19 +19
+                -             view.setBackgroundTintList(tint);
+                +             Api21Impl.setBackgroundTintList(view, tint);
+                @@ -22 +22
+                +         @RequiresApi(21)
+                +         static class Api21Impl {
+                +             private Api21Impl() {
+                +                 // This class is non-instantiable.
+                +             }
+                +
+                +         static void setBackgroundTintList(View obj, ColorStateList tint) {
+                +             obj.setBackgroundTintList(tint);
+                +         }
+                """
+            )
+    }
+
+    class ClassVerificationFailureDetector : Detector(), SourceCodeScanner {
+        override fun getApplicableMethodNames(): List<String> = listOf("setBackgroundTintList")
+        @Suppress("BooleanLiteralArgument")
+        override fun visitMethodCall(context: JavaContext, node: UCallExpression, method: PsiMethod) {
+            val part1 = fix()
+                .replace()
+                .range(context.getLocation(node))
+                .with("Api21Impl.setBackgroundTintList(view, tint)")
+                .build()
+            val part2 = fix()
+                .replace()
+                .range(context.getLocation(node.getContainingUClass()!!.lastChild))
+                .beginning()
+                .with(
+                    "        @RequiresApi(21)\n" +
+                        "        static class Api21Impl {\n" +
+                        "            private Api21Impl() {\n" +
+                        "                // This class is non-instantiable.\n" +
+                        "            }\n" +
+                        "\n" +
+                        "        static void setBackgroundTintList(View obj, ColorStateList tint) {\n" +
+                        "            obj.setBackgroundTintList(tint);\n" +
+                        "        }\n"
+                )
+                .build()
+            val fix = fix().name("Extract to static inner class").composite(part1, part2)
+            context.report(
+                ISSUE, context.getCallLocation(node, false, false),
+                "This call references a method added in API level 21; however, the containing class " +
+                    "androidx.AutofixUnsafeVoidMethodReferenceJava is reachable from earlier API levels and " +
+                    "will fail run-time class verification.",
+                fix
+            )
+        }
+
+        companion object {
+            val ISSUE = Issue.create(
+                "_ClassVerificationFailure", "Blah blah", "Blah blah blah",
+                Category.CORRECTNESS, 5, Severity.ERROR,
+                Implementation(ClassVerificationFailureDetector::class.java, Scope.JAVA_FILE_SCOPE)
+            ).setAndroidSpecific(true)
+        }
     }
 
     // Copied from above bug report:
@@ -255,18 +387,18 @@ class LintFixVerifierDetector : Detector(), Detector.UastScanner {
         node: UCallExpression,
         method: PsiMethod
     ) {
+        val parentMethod = node.getParentOfType<UMethod>(
+            UMethod::class.java,
+            false
+        )
+        val fix = fix()
+            .name("Rename Containing Method")
+            .replace()
+            .all()
+            .with("renamedMethod")
+            .range(context.getNameLocation(parentMethod!!))
+            .build()
         if (method.name == "renameMethodNameInstead") {
-            val parentMethod = node.getParentOfType<UMethod>(
-                UMethod::class.java,
-                false
-            )
-            val fix = fix()
-                .name("Rename Containing Method")
-                .replace()
-                .all()
-                .with("renamedMethod")
-                .range(context.getNameLocation(parentMethod!!))
-                .build()
             context.report(
                 ISSUE, context.getLocation(node),
                 "This error has a quickfix which edits parent method name instead", fix
@@ -286,18 +418,49 @@ class LintFixVerifierDetector : Detector(), Detector.UastScanner {
             val start = source.indexOf("java")
             val end = start + 4
             val range = Location.Companion.create(file, source, start, end)
-            val fix = fix()
+
+            // Test modifying a file other than the one containing the incident
+            val gradleFix = fix()
                 .name("Update build.gradle")
                 .replace()
                 .all()
                 .with("kotlin")
                 .range(range)
                 .build()
+
+            // Test creating a new file too
+            val newFileFix = fix()
+                .name("Create file")
+                .newFile(
+                    File(range.file.parentFile, "new.txt"),
+                    "First line in new file.\nSecond line.\nThe End."
+                )
+                .select("(new)")
+                .build()
+
+            // And a new binary
+            val newBinaryFix = fix()
+                .name("Create blob")
+                .newFile(
+                    File(range.file.parentFile, "data.bin"),
+                    ByteArray(150) { 0 }
+                )
+                .build()
+
+            // And delete a file
+            val deleteFix = fix().deleteFile(File(file.parentFile, "delete_me.txt")).build()
+
+            // Test both updating a file separate from the incident location, but also
+            // updating multiple files in a single fix
+            val composite = fix().name("Update files").composite(
+                fix, gradleFix, newFileFix, newBinaryFix, deleteFix
+            )
+
             context.report(
                 ISSUE,
                 context.getLocation(node),
                 "This error has a quickfix which edits something in a separate build.gradle file instead",
-                fix
+                composite
             )
         }
     }

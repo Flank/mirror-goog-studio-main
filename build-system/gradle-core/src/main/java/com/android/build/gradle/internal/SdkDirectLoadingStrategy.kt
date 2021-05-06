@@ -48,7 +48,9 @@ class SdkDirectLoadingStrategy(
     private val platformTargetHashSupplier: String?,
     private val buildToolRevisionSupplier: Revision?,
     private val useAndroidX: Boolean,
-    private val issueReporter: IssueReporter) {
+    private val issueReporter: IssueReporter,
+    private val suppressWarningIfTooNewForVersions: String?,
+) {
 
     companion object {
         // We use Optional<> wrapper since ConcurrentHashMap don't support null values.
@@ -134,6 +136,8 @@ class SdkDirectLoadingStrategy(
         if (platformTools == null || supportTools == null || buildTools == null || platform == null) {
             return null
         }
+
+        warnIfCompileSdkTooNew(platform.targetPlatformVersion, issueReporter, suppressWarningIfTooNewForVersions)
 
         return DirectLoadComponents(
             sdkDirectory,

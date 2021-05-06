@@ -17,7 +17,13 @@
 package com.android.build.gradle.internal.cxx.logging
 
 import com.android.build.gradle.internal.cxx.json.PlainFileGsonTypeAdaptor
+import com.android.build.gradle.internal.cxx.logging.LoggingMessage.LoggingLevel.ERROR
+import com.android.build.gradle.internal.cxx.logging.LoggingMessage.LoggingLevel.INFO
+import com.android.build.gradle.internal.cxx.logging.LoggingMessage.LoggingLevel.LIFECYCLE
+import com.android.build.gradle.internal.cxx.logging.LoggingMessage.LoggingLevel.WARN
+import com.android.build.gradle.internal.cxx.string.StringEncoder
 import com.google.gson.GsonBuilder
+import com.google.protobuf.GeneratedMessageV3
 import java.io.File
 
 /**
@@ -25,7 +31,7 @@ import java.io.File
  * logger.
  */
 open class PassThroughDeduplicatingLoggingEnvironment : ThreadLoggingEnvironment() {
-    private val messages : MutableSet<LoggingMessage> = linkedSetOf() // Linked set to preserve orcer
+    private val messages : MutableSet<LoggingMessage> = linkedSetOf() // Linked set to preserve order
     private val parent : LoggingEnvironment = parentLogger()
 
     override fun log(message: LoggingMessage) {
@@ -34,30 +40,34 @@ open class PassThroughDeduplicatingLoggingEnvironment : ThreadLoggingEnvironment
         messages.add(message)
     }
 
+    override fun logStructured(message: (StringEncoder) -> GeneratedMessageV3) {
+        parent.logStructured(message)
+    }
+
     /**
-     * true if there was atleast one error.
+     * true if there was at least one error.
      */
-    fun hadErrors() = messages.any { it.level == LoggingLevel.ERROR }
+    fun hadErrors() = messages.any { it.level == ERROR }
 
     /**
      * The errors that have been seen so far.
      */
-    val errors get() = messages.filter { it.level == LoggingLevel.ERROR }.map { it.toString() }
+    val errors get() = messages.filter { it.level == ERROR }.map { it.text() }
 
     /**
      * The warnings that have been seen so far.
      */
-    val warnings get() = messages.filter { it.level == LoggingLevel.WARN }.map { it.toString() }
+    val warnings get() = messages.filter { it.level == WARN }.map { it.text() }
 
     /**
      * The lifecycle messages that have been seen so far.
      */
-    val lifecycles get() = messages.filter { it.level == LoggingLevel.LIFECYCLE }.map { it.toString() }
+    val lifecycles get() = messages.filter { it.level == LIFECYCLE }.map { it.text() }
 
     /**
      * The infos that have been seen so far.
      */
-    val infos get() = messages.filter { it.level == LoggingLevel.INFO }.map { it.toString() }
+    val infos get() = messages.filter { it.level == INFO }.map { it.text() }
 
     /**
      * Total message count so far.
@@ -68,8 +78,6 @@ open class PassThroughDeduplicatingLoggingEnvironment : ThreadLoggingEnvironment
      * The logging record so far. Returns an immutable copy.
      */
     val record get() = messages.toList()
-
-
 }
 
 /**

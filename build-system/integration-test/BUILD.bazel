@@ -256,14 +256,15 @@ maven_repo(
     # keep sorted
     artifacts = [
         "//prebuilts/tools/common/m2/repository/com/google/code/gson/gson/2.7:jar",
-        "//prebuilts/tools/common/m2/repository/com/google/testing/platform/android-driver-instrumentation/0.0.8-alpha03:jar",
-        "//prebuilts/tools/common/m2/repository/com/google/testing/platform/android-test-plugin/0.0.8-alpha03:jar",
-        "//prebuilts/tools/common/m2/repository/com/google/testing/platform/core/0.0.8-alpha03:jar",
+        "//prebuilts/tools/common/m2/repository/com/google/testing/platform/android-driver-instrumentation/0.0.8-alpha04:jar",
+        "//prebuilts/tools/common/m2/repository/com/google/testing/platform/android-test-plugin/0.0.8-alpha04:jar",
+        "//prebuilts/tools/common/m2/repository/com/google/testing/platform/core/0.0.8-alpha04:jar",
         "//tools/base/utp/android-device-provider-ddmlib",
         "//tools/base/utp/android-device-provider-gradle",
         "//tools/base/utp/android-device-provider-gradle-proto",
         "//tools/base/utp/android-test-plugin-host-device-info",
         "//tools/base/utp/android-test-plugin-host-device-info-proto",
+        "//tools/base/utp/android-test-plugin-host-logcat",
         "//tools/base/utp/android-test-plugin-host-retention",
         "//tools/base/utp/android-test-plugin-host-retention-proto",
         "//tools/base/utp/android-test-plugin-result-listener-gradle",

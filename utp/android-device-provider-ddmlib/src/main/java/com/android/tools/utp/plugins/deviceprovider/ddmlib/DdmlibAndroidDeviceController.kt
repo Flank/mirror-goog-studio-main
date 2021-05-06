@@ -16,6 +16,7 @@
 
 package com.android.tools.utp.plugins.deviceprovider.ddmlib
 
+import com.android.ddmlib.InstallReceiver
 import com.android.ddmlib.MultiLineReceiver
 import com.google.testing.platform.api.device.CommandHandle
 import com.google.testing.platform.api.device.CommandResult
@@ -83,26 +84,54 @@ class DdmlibAndroidDeviceController : DeviceController {
 
     override fun executeAsync(args: List<String>, processor: (String) -> Unit): CommandHandle {
         var isCancelled = false
-        val receiver = object: MultiLineReceiver() {
-            override fun isCancelled(): Boolean = isCancelled
-            override fun processNewLines(lines: Array<out String>) {
-                lines.forEach(processor)
-            }
-        }
         val deferred = GlobalScope.async {
+            val command = args.first().toLowerCase()
+            val commandArgs = args.subList(1, args.size)
+
             // Setting max timeout to 0 (= indefinite) because we control
             // the timeout by the receiver.isCancelled().
-            controlledDevice.executeShellCommand(
-                    if (args.firstOrNull() == "shell") {
-                        args.subList(1, args.size)
-                    } else {
-                        args
-                    }.joinToString(" "),
-                    receiver,
-                    /*maxTimeout=*/0,
-                    /*maxTimeToOutputResponse=*/0,
-                    TimeUnit.SECONDS
-            )
+            val receiver = when(command) {
+                "shell" -> {
+                    val receiver = object: MultiLineReceiver() {
+                        override fun isCancelled(): Boolean = isCancelled
+                        override fun processNewLines(lines: Array<out String>) {
+                            lines.forEach(processor)
+                        }
+                    }
+                    controlledDevice.executeShellCommand(
+                            commandArgs.joinToString(" "),
+                            receiver,
+                            /*maxTimeout=*/0,
+                            /*maxTimeToOutputResponse=*/0,
+                            TimeUnit.SECONDS
+                    )
+                    receiver
+                }
+                "install" -> {
+                    val installArgs = commandArgs.take(commandArgs.size - 1)
+                    val apkPath = commandArgs.last()
+                    val receiver = object: InstallReceiver() {
+                        override fun isCancelled(): Boolean = isCancelled
+                        override fun processNewLines(lines: Array<out String>) {
+                            super.processNewLines(lines)
+                            lines.forEach(processor)
+                        }
+                    }
+                    controlledDevice.installPackage(
+                            apkPath,
+                            /*reinstall=*/true,
+                            receiver,
+                            /*maxTimeout=*/0,
+                            /*maxTimeToOutputResponse=*/0,
+                            TimeUnit.SECONDS,
+                            *installArgs.toTypedArray()
+                    )
+                    receiver
+                }
+                else -> {
+                    throw UnsupportedOperationException("Unsupported ADB command: $command")
+                }
+            }
             CommandResult(
                     if (receiver.isCancelled) {
                         -1

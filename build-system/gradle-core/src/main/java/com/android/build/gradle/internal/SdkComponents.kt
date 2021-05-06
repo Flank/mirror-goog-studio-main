@@ -30,6 +30,7 @@ import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.IntegerOption
 import com.android.build.gradle.options.ProjectOptions
+import com.android.build.gradle.options.StringOption
 import com.android.builder.errors.IssueReporter
 import com.android.repository.Revision
 import com.android.sdklib.AndroidVersion
@@ -77,6 +78,7 @@ abstract class SdkComponentsBuildService @Inject constructor(
         val enableSdkDownload: Property<Boolean>
         val androidSdkChannel: Property<Int>
         val useAndroidX: Property<Boolean>
+        val suppressWarningUnsupportedCompileSdk: Property<String>
     }
 
     private val sdkSourceSet: SdkLocationSourceSet by lazy {
@@ -89,7 +91,8 @@ abstract class SdkComponentsBuildService @Inject constructor(
         SdkHandler(
             parameters.androidLocationsServices.get(),
             sdkSourceSet,
-            parameters.issueReporter.get()
+            parameters.issueReporter.get(),
+            parameters.suppressWarningUnsupportedCompileSdk.orNull,
         ).also {
             it.setSdkLibData(
                 SdkLibDataFactory(
@@ -149,7 +152,8 @@ abstract class SdkComponentsBuildService @Inject constructor(
                         compileSdkVersion.orNull,
                         buildToolsRevision.orNull,
                         parameters.useAndroidX.get(),
-                        parameters.issueReporter.get()
+                        parameters.issueReporter.get(),
+                        parameters.suppressWarningUnsupportedCompileSdk.orNull
                     )
 
                     SdkLoadingStrategy(
@@ -350,6 +354,7 @@ abstract class SdkComponentsBuildService @Inject constructor(
             parameters.enableSdkDownload.set(projectOptions.get(BooleanOption.ENABLE_SDK_DOWNLOAD))
             parameters.androidSdkChannel.set(projectOptions.get(IntegerOption.ANDROID_SDK_CHANNEL))
             parameters.useAndroidX.set(projectOptions.get(BooleanOption.USE_ANDROID_X))
+            parameters.suppressWarningUnsupportedCompileSdk.set(projectOptions.get(StringOption.SUPPRESS_UNSUPPORTED_COMPILE_SDK))
         }
     }
 }

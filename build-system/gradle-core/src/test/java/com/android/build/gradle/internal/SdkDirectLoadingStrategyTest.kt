@@ -502,7 +502,8 @@ class SdkDirectLoadingStrategyTest {
             platformHash,
             Revision.parseRevision(buildTools),
             true,
-            FakeSyncIssueReporter()
+            FakeSyncIssueReporter(),
+            null
         )
     }
 

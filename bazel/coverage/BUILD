@@ -188,7 +188,7 @@ coverage_report(
     tests = [
         "//tools/adt/idea/app-inspection/inspectors/network/ide:intellij.android.app-inspection.inspectors.network.ide.tests_tests",
         "//tools/adt/idea/app-inspection/inspectors/network/model:intellij.android.app-inspection.inspectors.network.model_tests",
-        "//tools/adt/idea/app-inspection/inspectors/network/view:intellij.android.app-inspection.inspectors.network.view_tests",
+        "//tools/adt/idea/app-inspection/inspectors/network/view:intellij.android.app-inspection.inspectors.network.view.tests_tests",
         "//tools/base/app-inspection/inspectors/network:agent_tests.test",
     ],
 )
@@ -693,7 +693,7 @@ coverage_report(
         "//tools/adt/idea/app-inspection/inspectors/database:intellij.android.app-inspection.inspectors.database.tests_tests",
         "//tools/adt/idea/app-inspection/inspectors/network/ide:intellij.android.app-inspection.inspectors.network.ide.tests_tests",
         "//tools/adt/idea/app-inspection/inspectors/network/model:intellij.android.app-inspection.inspectors.network.model_tests",
-        "//tools/adt/idea/app-inspection/inspectors/network/view:intellij.android.app-inspection.inspectors.network.view_tests",
+        "//tools/adt/idea/app-inspection/inspectors/network/view:intellij.android.app-inspection.inspectors.network.view.tests_tests",
         "//tools/adt/idea/app-inspection/inspectors/workmanager/model:intellij.android.app-inspection.inspectors.workmanager.model_tests",
         "//tools/adt/idea/app-inspection/inspectors/workmanager/view:intellij.android.app-inspection.inspectors.workmanager.view.tests_tests",
         "//tools/adt/idea/assistant:assistant-test_tests",
@@ -704,6 +704,7 @@ coverage_report(
         "//tools/adt/idea/dagger:intellij.android.dagger.tests_tests",
         "//tools/adt/idea/compose-ide-plugin:intellij.android.compose-ide-plugin.tests_tests",
         "//tools/adt/idea/databinding:intellij.android.databinding.tests_tests",
+        "//tools/adt/idea/debuggers:intellij.android.debuggers.tests_tests",
         "//tools/adt/idea/deploy:intellij.android.deploy_tests",
         "//tools/adt/idea/designer:intellij.android.designer.tests_tests",
         "//tools/adt/idea/designer/customview:intellij.android.designer.customview.tests_tests",

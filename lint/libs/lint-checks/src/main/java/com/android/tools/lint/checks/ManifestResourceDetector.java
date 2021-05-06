@@ -169,12 +169,13 @@ public class ManifestResourceDetector extends ResourceXmlDetector {
                     Collections.sort(list);
                     String message = getErrorMessage(Joiner.on(", ").join(list));
                     Location location = context.getValueLocation(attribute);
-                    context.report(ISSUE, attribute, location, message);
+
                     // Secondary locations?
                     // Not relevant when running in the IDE and analyzing a single
                     // file; no point highlighting matches in other files (which
                     // will be cleared when you visit them.
                     if (!context.getDriver().isIsolated()) {
+                        Location curr = location;
                         for (ResourceItem item : items) {
                             if (!list.contains(item.getConfiguration().getQualifierString())) {
                                 continue;
@@ -183,11 +184,13 @@ public class ManifestResourceDetector extends ResourceXmlDetector {
                                     client.getXmlParser().getValueLocation(client, item);
                             if (secondary != null) {
                                 secondary.setMessage("This value will not be used");
-                                location.setSecondary(secondary);
-                                location = secondary;
+                                curr.setSecondary(secondary);
+                                curr = secondary;
                             }
                         }
                     }
+
+                    context.report(ISSUE, attribute, location, message);
                 }
             }
         }

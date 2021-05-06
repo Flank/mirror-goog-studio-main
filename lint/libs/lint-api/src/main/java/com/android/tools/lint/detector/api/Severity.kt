@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.detector.api
 
+import com.android.tools.lint.model.LintModelSeverity
 import com.google.common.annotations.Beta
 import java.util.Locale
 
@@ -116,5 +117,26 @@ enum class Severity constructor(
             // Using "<" instead of ">" here because compareTo is inherited from
             // enum and the severity constants are in descending order of severity
             if (severity1 < severity2) severity1 else severity2
+    }
+}
+
+fun LintModelSeverity.getSeverity(issue: Issue?): Severity {
+    return when (this) {
+        LintModelSeverity.FATAL -> Severity.FATAL
+        LintModelSeverity.ERROR -> Severity.ERROR
+        LintModelSeverity.WARNING -> Severity.WARNING
+        LintModelSeverity.INFORMATIONAL -> Severity.INFORMATIONAL
+        LintModelSeverity.IGNORE -> Severity.IGNORE
+        LintModelSeverity.DEFAULT_ENABLED -> issue?.defaultSeverity ?: Severity.WARNING
+    }
+}
+
+fun Severity.getModelSeverity(): LintModelSeverity {
+    return when (this) {
+        Severity.FATAL -> LintModelSeverity.FATAL
+        Severity.ERROR -> LintModelSeverity.ERROR
+        Severity.WARNING -> LintModelSeverity.WARNING
+        Severity.INFORMATIONAL -> LintModelSeverity.INFORMATIONAL
+        Severity.IGNORE -> LintModelSeverity.IGNORE
     }
 }

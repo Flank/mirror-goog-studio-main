@@ -17,9 +17,12 @@
 package com.android.build.gradle.internal.lint
 
 import com.android.SdkConstants
+import com.android.SdkConstants.MAVEN_ARTIFACT_ID_PROPERTY
+import com.android.SdkConstants.MAVEN_GROUP_ID_PROPERTY
 import com.android.build.gradle.internal.ide.dependencies.ArtifactHandler
 import com.android.build.gradle.internal.ide.dependencies.BuildMapping
 import com.android.build.gradle.internal.ide.dependencies.ResolvedArtifact
+import com.android.build.gradle.internal.tasks.LintModelMetadataTask.Companion.LINT_MODEL_METADATA_ENTRY_PATH
 import com.android.builder.model.MavenCoordinates
 import com.android.ide.common.caching.CreatingCache
 import com.android.tools.lint.model.DefaultLintModelAndroidLibrary
@@ -33,6 +36,7 @@ import com.android.utils.FileUtils
 import org.gradle.api.artifacts.ArtifactCollection
 import java.io.File
 import java.util.Collections
+import java.util.Properties
 
 /**
  * An artifact handler that makes project dependencies into [LintModelExternalLibrary]
@@ -115,7 +119,20 @@ class ExternalLintModelArtifactHandler private constructor(
             externalAnnotations = File(folder, SdkConstants.FN_ANNOTATIONS_ZIP),
             proguardRules = File(folder, SdkConstants.FN_PROGUARD_TXT),
             provided = isProvided,
-            resolvedCoordinates = coordinatesSupplier().toMavenName()
+            resolvedCoordinates =
+                if (File(folder, LINT_MODEL_METADATA_ENTRY_PATH).isFile) {
+                    val properties = Properties()
+                    File(folder, LINT_MODEL_METADATA_ENTRY_PATH).inputStream().use {
+                        properties.load(it)
+                    }
+                    DefaultLintModelMavenName(
+                        groupId = properties.getProperty(MAVEN_GROUP_ID_PROPERTY),
+                        artifactId = properties.getProperty(MAVEN_ARTIFACT_ID_PROPERTY),
+                        version = "unspecified"
+                    )
+                } else {
+                    coordinatesSupplier().toMavenName()
+                }
         )
     }
 

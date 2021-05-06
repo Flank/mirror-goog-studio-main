@@ -64,6 +64,8 @@ interface InternalCommonExtension<
     override val splits: SplitsImpl
     override val signingConfigs: NamedDomainObjectContainer<SigningConfig>
 
+    var compileSdkVersion: String?
+
     fun buildTypes(action: Action<in NamedDomainObjectContainer<BuildType>>)
     fun productFlavors(action: Action<NamedDomainObjectContainer<ProductFlavor>>)
     fun defaultConfig(action: Action<DefaultConfig>)

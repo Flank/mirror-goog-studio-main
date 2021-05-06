@@ -18,6 +18,7 @@ package com.android.builder.core;
 
 import com.android.SdkConstants;
 import com.android.repository.Revision;
+import com.android.sdklib.AndroidVersion;
 
 public class ToolsRevisionUtils {
 
@@ -41,4 +42,13 @@ public class ToolsRevisionUtils {
      * behavior.
      */
     public static final Revision DEFAULT_BUILD_TOOLS_REVISION = MIN_BUILD_TOOLS_REV;
+
+    /**
+     * Maximum recommended compileSdk version.
+     *
+     * <p>The build system will warn if the compile SDK version is greater than this value to
+     * encourage build authors to upgrade the Android Gradle Plugin.
+     */
+    public static final AndroidVersion MAX_RECOMMENDED_COMPILE_SDK_VERSION =
+            new AndroidVersion(30, "S");
 }

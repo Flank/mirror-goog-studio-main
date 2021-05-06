@@ -368,7 +368,7 @@ abstract class LintOptionsInput {
             com.android.builder.model.LintOptions.SEVERITY_WARNING -> LintModelSeverity.WARNING
             com.android.builder.model.LintOptions.SEVERITY_INFORMATIONAL -> LintModelSeverity.INFORMATIONAL
             com.android.builder.model.LintOptions.SEVERITY_IGNORE -> LintModelSeverity.IGNORE
-            com.android.builder.model.LintOptions.SEVERITY_DEFAULT_ENABLED -> LintModelSeverity.WARNING
+            com.android.builder.model.LintOptions.SEVERITY_DEFAULT_ENABLED -> LintModelSeverity.DEFAULT_ENABLED
             else -> LintModelSeverity.IGNORE
         }
 
@@ -716,7 +716,7 @@ abstract class VariantInputs {
             sourceProviders = sourceProviders.get().map { it.toLintModel() } + dynamicFeatureSourceProviders,
             testSourceProviders = testSourceProviders.get().map { it.toLintModel() },
             debuggable = debuggable.get(),
-            shrinkable = false, //FIXME
+            shrinkable = mainArtifact.shrinkable.get(),
             buildFeatures = buildFeatures.toLintModel(),
             libraryResolver = DefaultLintModelLibraryResolver(dependencyCaches.libraryMap),
             partialResultsDir = partialResultsDir
@@ -880,6 +880,9 @@ abstract class AndroidArtifactInput : ArtifactInput() {
     @get:Internal
     abstract val generatedResourceFolders: ListProperty<File>
 
+    @get:Input
+    abstract val shrinkable: Property<Boolean>
+
     fun initialize(
         componentImpl: ComponentImpl,
         checkDependencies: Boolean,
@@ -890,6 +893,9 @@ abstract class AndroidArtifactInput : ArtifactInput() {
         applicationId.setDisallowChanges(componentImpl.applicationId)
         generatedSourceFolders.setDisallowChanges(ModelBuilder.getGeneratedSourceFolders(componentImpl))
         generatedResourceFolders.setDisallowChanges(ModelBuilder.getGeneratedResourceFolders(componentImpl))
+        shrinkable.setDisallowChanges(
+            componentImpl is ConsumableCreationConfig && componentImpl.minifiedEnabled
+        )
         if (includeClassesOutputDirectories) {
             classesOutputDirectories.from(componentImpl.artifacts.get(InternalArtifactType.JAVAC))
 
@@ -943,6 +949,7 @@ abstract class AndroidArtifactInput : ArtifactInput() {
         generatedResourceFolders.setDisallowChanges(listOf())
         classesOutputDirectories.fromDisallowChanges(sourceSet.output.classesDirs)
         warnIfProjectTreatedAsExternalDependency.setDisallowChanges(false)
+        shrinkable.setDisallowChanges(false)
         val variantDependencies = VariantDependencies(
             variantName = sourceSet.name,
             variantType = VariantTypeImpl.JAVA_LIBRARY,

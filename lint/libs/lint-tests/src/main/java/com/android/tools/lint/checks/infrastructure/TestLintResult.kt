@@ -937,8 +937,8 @@ class TestLintResult internal constructor(
          */
         fun getDiff(before: String, after: String, windowSize: Int): String {
             return getDiff(
-                before.split("\n").toTypedArray(),
-                after.split("\n").toTypedArray(),
+                if (before.isEmpty()) emptyArray() else before.split("\n").toTypedArray(),
+                if (after.isEmpty()) emptyArray() else after.split("\n").toTypedArray(),
                 windowSize
             )
         }

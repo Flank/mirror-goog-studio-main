@@ -30,7 +30,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
@@ -91,11 +90,8 @@ public class ConnectedDeviceTest {
 
     @Test
     public void testGetDensityTimeout() throws Exception {
-        @SuppressWarnings("unchecked")
-        ListenableFuture<String> future = Mockito.mock(ListenableFuture.class);
-
-        Mockito.when(future.get(10_000, TimeUnit.MILLISECONDS))
-                .thenThrow(new TimeoutException("Future expected to time out"));
+        ListenableFuture<String> future =
+                Futures.immediateFailedFuture(new TimeoutException("Future expected to time out"));
 
         when(mIDevice.getSystemProperty(IDevice.PROP_DEVICE_DENSITY)).thenReturn(future);
         assertThat(mDevice.getDensity()).isEqualTo(-1);

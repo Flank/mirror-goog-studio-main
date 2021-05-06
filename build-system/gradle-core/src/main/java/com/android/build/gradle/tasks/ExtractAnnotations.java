@@ -71,7 +71,6 @@ import org.gradle.api.tasks.CompileClasspath;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Nested;
-import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
@@ -102,8 +101,6 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
     private FileCollection bootClasspath;
 
     private String encoding;
-
-    private FileCollection classDir;
 
     private ArtifactCollection libraries;
 
@@ -172,21 +169,6 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
         this.encoding = encoding;
     }
 
-    /**
-     * Location of class files. If set, any non-public typedef source retention annotations will be
-     * removed prior to .jar packaging.
-     */
-    @Optional
-    @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
-    public FileCollection getClassDir() {
-        return classDir;
-    }
-
-    public void setClassDir(FileCollection classDir) {
-        this.classDir = classDir;
-    }
-
     @Input
     public abstract Property<String> getStrictTypedefRetention();
 
@@ -212,7 +194,6 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
 
         List<String> args = new ArrayList<>();
         addArgument(args, "--typedef-file", getTypedefFile());
-        addArgument(args, "--class-dir", getClassDir().getFiles());
         addArgument(args, "--output", getOutput());
         addArgument(args, "--sources", sourceFiles);
         addArgument(args, "--source-roots", fileVisitor.sourceRoots);
@@ -368,7 +349,6 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
                             + " variant into the archive file");
             task.setGroup(BasePlugin.BUILD_GROUP);
 
-            task.setClassDir(creationConfig.getArtifacts().getAllClasses());
             Provider<String> strictTypedefRetention =
                     creationConfig
                             .getServices()

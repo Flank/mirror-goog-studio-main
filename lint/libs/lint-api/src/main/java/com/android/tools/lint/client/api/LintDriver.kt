@@ -41,6 +41,8 @@ import com.android.ide.common.resources.configuration.FolderConfiguration.QUALIF
 import com.android.ide.common.util.PathString
 import com.android.resources.ResourceFolderType
 import com.android.sdklib.IAndroidTarget
+import com.android.tools.lint.client.api.LintDriver.DriverMode.ANALYSIS_ONLY
+import com.android.tools.lint.client.api.LintDriver.DriverMode.MERGE
 import com.android.tools.lint.client.api.LintListener.EventType
 import com.android.tools.lint.detector.api.BinaryResourceScanner
 import com.android.tools.lint.detector.api.Category
@@ -132,16 +134,11 @@ import java.io.IOException
 import java.net.URL
 import java.net.URLConnection
 import java.util.ArrayDeque
-import java.util.ArrayList
 import java.util.Arrays
 import java.util.Deque
 import java.util.EnumMap
 import java.util.EnumSet
-import java.util.HashMap
-import java.util.HashSet
 import java.util.IdentityHashMap
-import java.util.LinkedHashMap
-import java.util.LinkedHashSet
 import java.util.function.Predicate
 import java.util.regex.Pattern
 import kotlin.system.measureTimeMillis
@@ -1580,16 +1577,20 @@ class LintDriver(
         val classFolders = project.javaClassFolders
         val classEntries: List<ClassEntry>
         classEntries = if (classFolders.isEmpty()) {
-            val message = String.format(
-                "No `.class` files were found in project \"%1\$s\", " +
-                    "so none of the classfile based checks could be run. " +
-                    "Does the project need to be built first?",
-                project.name
-            )
-            LintClient.report(
-                client = client, issue = IssueRegistry.LINT_ERROR, message = message,
-                project = project, mainProject = main, driver = this
-            )
+            // This should be a lint error only if there are source files
+            val hasSourceFiles: Boolean = project.javaSourceFolders.any { folder -> folder.walk().any { it.isFile } }
+            if (hasSourceFiles) {
+                val message = String.format(
+                    "No `.class` files were found in project \"%1\$s\", " +
+                        "so none of the classfile based checks could be run. " +
+                        "Does the project need to be built first?",
+                    project.name
+                )
+                LintClient.report(
+                    client = client, issue = IssueRegistry.LINT_ERROR, message = message,
+                    project = project, mainProject = main, driver = this
+                )
+            }
             emptyList()
         } else {
             ClassEntry.fromClassPath(client, classFolders, true)
@@ -2476,14 +2477,6 @@ class LintDriver(
             val issue = incident.issue
             val configuration = context.findConfiguration(location.file)
             if (!configuration.isEnabled(issue)) {
-                if (issue.category !== Category.LINT &&
-                    configuration.isEnabled(IssueRegistry.LINT_ERROR)
-                ) {
-                    delegate.log(
-                        null, "Incorrect detector reported disabled issue %1\$s",
-                        issue.toString()
-                    )
-                }
                 return true
             }
 

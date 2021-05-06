@@ -1227,31 +1227,31 @@ class NamespaceRewriterTest {
 
         // Check no extra children were added.
         val noChildren =
-            fixedTable.symbols.get(ResourceType.STYLEABLE, "styleable_no_children")
+            fixedTable.symbols.get(ResourceType.STYLEABLE, "styleable_no_children")!!
         assertThat(noChildren.children).isEmpty()
 
         // Check children with namespaces aren't modified.
         val unchangedRemoteChildren =
-            fixedTable.symbols.get(ResourceType.STYLEABLE, "styleable_unchanged_remote_children")
+            fixedTable.symbols.get(ResourceType.STYLEABLE, "styleable_unchanged_remote_children")!!
         assertThat(unchangedRemoteChildren.children).hasSize(2)
         assertThat(unchangedRemoteChildren.children)
             .containsExactly("android:color", "android:font")
 
         // Check local children (defined as attrs or only under styleables) are not modified.
         val unchangedLocalChildren =
-            fixedTable.symbols.get(ResourceType.STYLEABLE, "styleable_unchanged_local_children")
+            fixedTable.symbols.get(ResourceType.STYLEABLE, "styleable_unchanged_local_children")!!
         assertThat(unchangedLocalChildren.children).hasSize(2)
         assertThat(unchangedLocalChildren.children)
             .containsExactly("local_real_attr", "local_maybe_attr")
 
         // Check that remote child now has a package.
         val changedRemoteChildren =
-            fixedTable.symbols.get(ResourceType.STYLEABLE, "styleable_changed_remote_children")
+            fixedTable.symbols.get(ResourceType.STYLEABLE, "styleable_changed_remote_children")!!
         assertThat(changedRemoteChildren.children).hasSize(1)
         assertThat(changedRemoteChildren.children).containsExactly("com.remote:remote_real_attr")
 
         // And finally check mixed case.
-        val mixed = fixedTable.symbols.get(ResourceType.STYLEABLE, "styleable_mixed")
+        val mixed = fixedTable.symbols.get(ResourceType.STYLEABLE, "styleable_mixed")!!
         assertThat(mixed.children).hasSize(3)
         assertThat(mixed.children)
             .containsExactly("android:color", "local_maybe_attr", "com.remote:remote_real_attr")

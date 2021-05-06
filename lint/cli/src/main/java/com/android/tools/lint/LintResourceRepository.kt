@@ -446,7 +446,7 @@ open class LintResourceRepository constructor(
             return project.getClientProperty<LintResourceRepository>(ResourceRepositoryScope.PROJECT_ONLY)
                 ?: run {
                     // For leaf repositories, try to load from storage
-                    val file = client.getRepositoryFile(project)
+                    val file = client.getSerializationFile(project, XmlFileType.RESOURCE_REPOSITORY)
                     return if (file.isFile) {
                         val serialized = file.readText()
                         LintResourcePersistence.deserialize(serialized, project.dir, project)

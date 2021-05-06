@@ -246,10 +246,10 @@ val CxxAbiModel.compileCommandsJsonFile: File
 /**
  * compile_commands.json.bin file for this ABI. This is equivalent to a compile_commands.json file
  * but more compact.
- * For example, $moduleRootFolder/build/intermediates/cxx/Debug/{hashcode}/meta/armeabi-v7a/compile_commands.json.bin
+ * Note: Should be in the same folder as compile_commands.json because it is derived from that file.
  */
 val CxxAbiModel.compileCommandsJsonBinFile: File
-    get() = join(modelMetadataFolder, "compile_commands.json.bin")
+    get() = compileCommandsJsonFile.resolveSibling("compile_commands.json.bin")
 
 /**
  * additional_project_files.txt file for this ABI. This file contains a newline separated list of

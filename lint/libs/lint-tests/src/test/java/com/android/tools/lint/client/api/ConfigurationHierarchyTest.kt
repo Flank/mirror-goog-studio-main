@@ -187,7 +187,7 @@ class ConfigurationHierarchyTest : AbstractCheckTest() {
         lint()
             .issues(*manifestIssues)
             .projects(main)
-            .rootDirectory(temp.root)
+            .rootDirectory(temp.root.canonicalFile)
             // TODO -- remove this after fixing bug listed below
             .testModes(TestMode.PARTIAL)
             .reportFrom(main)

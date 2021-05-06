@@ -15,44 +15,33 @@
  */
 package com.android.ddmlib.logcat;
 
+import static com.google.common.truth.Truth.assertThat;
+
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.util.concurrent.TimeUnit;
 import junit.framework.TestCase;
 
 public class LogCatTimestampTest extends TestCase {
 
-    public void testParseFromString() throws Exception {
+    private static final int YEAR = 2014;
+    private static final ZoneId ZONE_ID = ZoneId.of("Asia/Yerevan");
+
+    public void testParse() {
         String time = "01-23 12:34:56.789";
-        LogCatTimestamp parsed = LogCatTimestamp.fromString(time);
-        assertEquals(parsed.toString(), time);
+        Instant parsed = LogCatTimestamp.parse(time, YEAR, ZONE_ID);
+        ZonedDateTime expected =
+                ZonedDateTime.of(
+                        YEAR, 1, 23, 12, 34, 56, (int) TimeUnit.MILLISECONDS.toNanos(789), ZONE_ID);
+        assertThat(parsed).isEqualTo(Instant.from(expected));
     }
 
-    public void testTimestampComparisons() throws Exception {
-        LogCatTimestamp lateDec = LogCatTimestamp.fromString("12-31 23:59:59.999");
-        LogCatTimestamp earlyJan = LogCatTimestamp.fromString("01-01 00:00:00.123");
-        LogCatTimestamp midYearMorning1 = LogCatTimestamp.fromString("06-15 06:00:30.000");
-        LogCatTimestamp midYearMorning2 = LogCatTimestamp.fromString("06-15 06:01:20.777");
-        LogCatTimestamp midYearMorning3 = LogCatTimestamp.fromString("06-15 06:01:30.666");
-        LogCatTimestamp midYearMorning4 = LogCatTimestamp.fromString("06-15 06:01:30.888");
-        LogCatTimestamp midYearNextDay = LogCatTimestamp.fromString("06-16 00:00:00.000");
-
-        assertTrue(lateDec.isBefore(earlyJan));
-        assertTrue(earlyJan.isBefore(midYearMorning1));
-        assertTrue(midYearMorning1.isBefore(midYearMorning2));
-        assertTrue(midYearMorning2.isBefore(midYearMorning3));
-        assertTrue(midYearMorning3.isBefore(midYearMorning4));
-        assertTrue(midYearMorning4.isBefore(midYearNextDay));
-
-        assertFalse(midYearNextDay.isBefore(midYearMorning4));
-        assertFalse(midYearMorning4.isBefore(midYearMorning3));
-        assertFalse(midYearMorning3.isBefore(midYearMorning2));
-        assertFalse(midYearMorning2.isBefore(midYearMorning1));
-        assertFalse(midYearMorning1.isBefore(earlyJan));
-        assertFalse(earlyJan.isBefore(lateDec));
-
-        assertFalse(earlyJan.isBefore(earlyJan));
-    }
-
-    public void testTimestampMillisecondsTruncated() throws Exception {
-        LogCatTimestamp msTimestamp = LogCatTimestamp.fromString("01-01 00:00:00.1234");
-        assertEquals(msTimestamp.toString(), "01-01 00:00:00.123");
+    public void testTimestampMillisecondsTruncated() {
+        Instant parsed = LogCatTimestamp.parse("01-01 00:00:00.1234", YEAR, ZONE_ID);
+        ZonedDateTime expected =
+                ZonedDateTime.of(
+                        YEAR, 1, 1, 0, 0, 0, (int) TimeUnit.MILLISECONDS.toNanos(123), ZONE_ID);
+        assertThat(parsed).isEqualTo(Instant.from(expected));
     }
 }

@@ -43,4 +43,4 @@ sourceSets {
 }
 
 project.ext.pomName = 'UTP plugins for Android Tools'
-project.ext.pomDesc = 'A UTP plugin to export additional Android device infomation'
+project.ext.pomDesc = 'A UTP plugin to export additional Android device information'

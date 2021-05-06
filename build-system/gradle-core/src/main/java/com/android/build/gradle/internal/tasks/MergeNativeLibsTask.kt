@@ -62,11 +62,12 @@ import java.io.Serializable
 import java.nio.file.PathMatcher
 import java.nio.file.Paths
 import java.util.function.Predicate
+import org.gradle.work.DisableCachingByDefault
 
 /**
  * Task to merge native libs from a project and possibly its dependencies
  */
-@CacheableTask
+@DisableCachingByDefault
 abstract class MergeNativeLibsTask : NonIncrementalTask() {
 
     @get:InputFiles

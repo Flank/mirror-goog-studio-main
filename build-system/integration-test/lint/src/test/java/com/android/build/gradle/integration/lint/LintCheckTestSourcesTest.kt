@@ -69,7 +69,7 @@ class LintCheckTestSourcesTest(private val usePartialAnalysis: Boolean) {
                         testBuildType "release"
                         lintOptions {
                             abortOnError false
-                            error 'StopShip'
+                            enable 'StopShip'
                             textOutput file("lint-results.txt")
                             checkDependencies true
                         }
@@ -84,7 +84,7 @@ class LintCheckTestSourcesTest(private val usePartialAnalysis: Boolean) {
                     android {
                         testBuildType "release"
                         lintOptions {
-                            error 'StopShip'
+                            enable 'StopShip'
                         }
                     }
                 """.trimIndent()
@@ -97,7 +97,7 @@ class LintCheckTestSourcesTest(private val usePartialAnalysis: Boolean) {
                     apply plugin: 'com.android.lint'
 
                     lintOptions {
-                        error 'StopShip'
+                        enable 'StopShip'
                     }
                 """.trimIndent()
             )

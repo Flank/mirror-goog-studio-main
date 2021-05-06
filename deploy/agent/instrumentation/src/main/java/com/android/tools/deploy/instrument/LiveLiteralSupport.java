@@ -25,6 +25,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
@@ -103,7 +104,7 @@ public class LiveLiteralSupport {
      * @return True if this invocation enabled Live Literal from inactive to active state. False
      *     otherwise.
      */
-    public static boolean enable(Class<?> liveLiteralKtClass, String targetApplicationId) {
+    public static boolean enableGlobal(Class<?> liveLiteralKtClass, String targetApplicationId) {
         applicationId = targetApplicationId;
         try {
             Field enabled = liveLiteralKtClass.getDeclaredField("isLiveLiteralsEnabled");
@@ -114,16 +115,43 @@ public class LiveLiteralSupport {
                 enableMethod.invoke(liveLiteralKtClass);
                 return true;
             }
-        } catch (NoSuchFieldException e) {
-            e.printStackTrace();
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
+        } catch (NoSuchFieldException | NoSuchMethodException ignored) {
         } catch (InvocationTargetException e) {
             e.printStackTrace();
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         }
         return false;
+    }
+
+    /**
+     * For performance reasons, the runtime will start checking for literal update request until the
+     * helper has the enabled flag is set to true.
+     *
+     * <p>This will only be called by the main thread so there is no need for synchronization.
+     *
+     * <p>Note we are sticking to just int values for return status to keep JNI code simpler since
+     * it will only be invoked from JNI.
+     *
+     * @return 0 if the flag exists and Live Literal went from inactive ot active state. 1 if the
+     *     flag exists and Live Literal has already been enabled. 2 if the flag no longer exists,
+     *     presumably using a compose version that no longer has the global flag.
+     */
+    public static int enableHelperClass(Class helperClass, String targetApplicationId) {
+        applicationId = targetApplicationId;
+        try {
+            Field enabled = helperClass.getDeclaredField("enabled");
+            enabled.setAccessible(true);
+            boolean started = enabled.getBoolean(helperClass);
+            if (started) {
+                return 1;
+            } else {
+                enabled.set(helperClass, true);
+                return 0;
+            }
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            return 2;
+        }
     }
 
     /**
@@ -223,7 +251,7 @@ public class LiveLiteralSupport {
         try (ObjectInputStream in =
                 new ObjectInputStream(Files.newInputStream(Paths.get(mappingFile)))) {
             initMap.putAll((HashMap) in.readObject());
-        } catch (FileNotFoundException e) {
+        } catch (FileNotFoundException | NoSuchFileException e) {
             // Just use the empty map created.
         } catch (IOException e) {
             e.printStackTrace();

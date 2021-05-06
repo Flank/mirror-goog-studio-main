@@ -189,7 +189,12 @@ public class ValueXmlHelper {
                             String number = s.substring(i + (hex ? 3 : 2), end);
                             try {
                                 int unicodeValue = Integer.parseInt(number, hex ? 16 : 10);
-                                sb.append((char) unicodeValue);
+                                if (unicodeValue <= Character.MAX_VALUE) {
+                                    sb.append((char)unicodeValue);
+                                } else {
+                                    sb.append(Character.highSurrogate(unicodeValue));
+                                    sb.append(Character.lowSurrogate(unicodeValue));
+                                }
                                 i = end;
                                 continue;
                             } catch (NumberFormatException e) {

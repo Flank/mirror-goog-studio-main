@@ -57,6 +57,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.LINT_PARTIAL
 import com.android.build.gradle.internal.scope.InternalArtifactType.LINT_PUBLISH_JAR
 import com.android.build.gradle.internal.scope.InternalArtifactType.LINT_VITAL_LINT_MODEL
 import com.android.build.gradle.internal.scope.InternalArtifactType.LINT_VITAL_PARTIAL_RESULTS
+import com.android.build.gradle.internal.scope.InternalArtifactType.LOCAL_AAR_FOR_LINT
 import com.android.build.gradle.internal.scope.InternalArtifactType.MANIFEST_METADATA
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_JAVA_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.METADATA_FEATURE_DECLARATION
@@ -250,9 +251,7 @@ class PublishingSpecs {
                 output(LINT_PUBLISH_JAR, ArtifactType.LINT)
                 output(LINT_MODEL, ArtifactType.LINT_MODEL)
                 output(LINT_PARTIAL_RESULTS, ArtifactType.LINT_PARTIAL_RESULTS)
-                output(
-                    com.android.build.api.artifact.SingleArtifact.AAR,
-                    ArtifactType.LOCAL_AAR_FOR_LINT)
+                output(LOCAL_AAR_FOR_LINT, ArtifactType.LOCAL_AAR_FOR_LINT)
             }
 
             variantSpec(VariantTypeImpl.TEST_FIXTURES) {
