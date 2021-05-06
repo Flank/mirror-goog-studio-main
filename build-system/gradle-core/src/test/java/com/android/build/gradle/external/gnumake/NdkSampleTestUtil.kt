@@ -49,6 +49,6 @@ internal fun checkAllCommandsRecognized(
             .filter { !classifiableCommandExecutables.contains(it) }
             .toSet()
 
-        error("Could not classify ${unclassifiedExecutables}")
+        error("Could not classify $unclassifiedExecutables")
     }
 }

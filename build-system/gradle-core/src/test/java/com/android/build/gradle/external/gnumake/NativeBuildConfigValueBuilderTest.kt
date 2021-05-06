@@ -126,7 +126,8 @@ class NativeBuildConfigValueBuilderTest {
                 "c"
               ],
               "cppFileExtensions": []
-            }""".trimIndent()
+            }""".trimIndent(),
+            compileCommandsJsonBinFile
         )
     }
 
@@ -176,7 +177,8 @@ class NativeBuildConfigValueBuilderTest {
                 "c"
               ],
               "cppFileExtensions": []
-            }"""
+            }""",
+            compileCommandsJsonBinFile
         )
     }
 
@@ -224,7 +226,8 @@ class NativeBuildConfigValueBuilderTest {
                 "c"
               ],
               "cppFileExtensions": []
-            }"""
+            }""",
+            compileCommandsJsonBinFile
         )
     }
 
@@ -283,7 +286,8 @@ class NativeBuildConfigValueBuilderTest {
                 "c"
               ],
               "cppFileExtensions": []
-            }"""
+            }""",
+            compileCommandsJsonBinFile
         )
     }
 
@@ -342,7 +346,8 @@ class NativeBuildConfigValueBuilderTest {
                 "S"
               ],
               "cppFileExtensions": []
-            }"""
+            }""",
+            compileCommandsJsonBinFile
         )
     }
 
@@ -403,8 +408,8 @@ class NativeBuildConfigValueBuilderTest {
               ],
               "cppFileExtensions": []
             }""".trimIndent(),
-            skipProcessingCompilerFlags = true,
-            compileCommandsJsonBinFile = compileCommandsJsonBinFile
+            compileCommandsJsonBinFile = compileCommandsJsonBinFile,
+            skipProcessingCompilerFlags = true
         )
         val entries = mutableListOf<CompileCommandJsonEntry>()
         streamCompileCommands(compileCommandsJsonBinFile) { sourceFile: File, compiler: File, flags: List<String>, workingDirectory: File ->
@@ -463,8 +468,8 @@ class NativeBuildConfigValueBuilderTest {
               ],
               "cppFileExtensions": []
             }""",
-            skipProcessingCompilerFlags = true,
-            compileCommandsJsonBinFile = compileCommandsJsonBinFile
+            compileCommandsJsonBinFile = compileCommandsJsonBinFile,
+            skipProcessingCompilerFlags = true
         )
         val entries = mutableListOf<CompileCommandJsonEntry>()
         streamCompileCommands(compileCommandsJsonBinFile) { sourceFile: File, compiler: File, flags: List<String>, workingDirectory: File ->
@@ -522,8 +527,8 @@ class NativeBuildConfigValueBuilderTest {
               ],
               "cppFileExtensions": []
             }""",
-            skipProcessingCompilerFlags = true,
-            compileCommandsJsonBinFile = compileCommandsJsonBinFile
+            compileCommandsJsonBinFile = compileCommandsJsonBinFile,
+            skipProcessingCompilerFlags = true
         )
         val entries = mutableListOf<CompileCommandJsonEntry>()
         streamCompileCommands(compileCommandsJsonBinFile) { sourceFile: File, compiler: File, flags: List<String>, workingDirectory: File ->
@@ -587,8 +592,8 @@ class NativeBuildConfigValueBuilderTest {
               ],
               "cppFileExtensions": []
             }""",
-            skipProcessingCompilerFlags = true,
-            compileCommandsJsonBinFile = compileCommandsJsonBinFile
+            compileCommandsJsonBinFile = compileCommandsJsonBinFile,
+            skipProcessingCompilerFlags = true
         )
         val entries = mutableListOf<CompileCommandJsonEntry>()
         streamCompileCommands(compileCommandsJsonBinFile) { sourceFile: File, compiler: File, flags: List<String>, workingDirectory: File ->
@@ -621,13 +626,17 @@ class NativeBuildConfigValueBuilderTest {
         private fun assertThatNativeBuildConfigEquals(
             commands: String,
             expected: String,
+            compileCommandsJsonBinFile: File,
             skipProcessingCompilerFlags: Boolean = false,
-            compileCommandsJsonBinFile: File? = null
         ) {
             var expected = expected
             val projectPath = File("/projects/MyProject/jni/Android.mk")
             val actualValue =
-                NativeBuildConfigValueBuilder(projectPath, projectPath.parentFile).apply {
+                NativeBuildConfigValueBuilder(
+                    projectPath,
+                    projectPath.parentFile,
+                    compileCommandsJsonBinFile
+                ).apply {
                     setCommands(
                         Arrays.asList("echo", "build", "command"),
                         Arrays.asList("echo", "clean", "command"),
@@ -635,7 +644,6 @@ class NativeBuildConfigValueBuilderTest {
                         commands
                     )
                     this.skipProcessingCompilerFlags = skipProcessingCompilerFlags
-                    this.compileCommandsJsonBinFile = compileCommandsJsonBinFile
                 }.build()
             if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS) {
                 expected = expected.replace("/", "\\\\")
