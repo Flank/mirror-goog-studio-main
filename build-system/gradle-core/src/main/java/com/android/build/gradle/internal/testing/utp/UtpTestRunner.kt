@@ -33,6 +33,7 @@ import com.google.testing.platform.proto.api.core.TestSuiteResultProto.TestSuite
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import java.util.concurrent.ConcurrentHashMap
 import org.gradle.workers.WorkerExecutor
 
 /**
@@ -51,7 +52,8 @@ class UtpTestRunner @JvmOverloads constructor(
         private val configFactory: UtpConfigFactory = UtpConfigFactory())
     : BaseTestRunner(splitSelectExec, processExecutor, executor), UtpTestResultListener {
 
-    private val testResultReporters: MutableMap<String, UtpTestResultListener> = mutableMapOf()
+    private val testResultReporters: ConcurrentHashMap<String, UtpTestResultListener> =
+        ConcurrentHashMap()
 
     override fun scheduleTests(
             projectName: String,
@@ -66,9 +68,11 @@ class UtpTestRunner @JvmOverloads constructor(
             additionalTestOutputDir: File?,
             coverageDir: File,
             logger: ILogger): MutableList<TestResult> {
-        return UtpTestResultListenerServerRunner(this).use { resultListenerServerRunner ->
+        UtpTestResultListenerServerRunner(this).use { resultListenerServerRunner ->
             val resultListenerServerMetadata = resultListenerServerRunner.metadata
-            apksForDevice.map { (deviceConnector, apks) ->
+            val workQueue = workerExecutor.noIsolation()
+
+            val postProcessCallback = apksForDevice.map { (deviceConnector, apks) ->
                 val utpOutputDir = File(resultsDir, deviceConnector.name).apply {
                     if (!exists()) {
                         mkdirs()
@@ -119,48 +123,58 @@ class UtpTestRunner @JvmOverloads constructor(
                     }
                 }
 
-                val workQueue = workerExecutor.noIsolation()
                 runUtpTestSuite(
                     runnerConfigProtoFile,
                     configFactory,
                     utpDependencies,
                     workQueue)
-                workQueue.await()
 
-                testResultReporters.remove(deviceConnector.serialNumber)
+                val postProcessFunc: () -> TestResult = {
+                    testResultReporters.remove(deviceConnector.serialNumber)
 
-                val testResultPbFile = File(utpOutputDir, "test-result.pb")
-                resultsProto.writeTo(testResultPbFile.outputStream())
+                    val testResultPbFile = File(utpOutputDir, "test-result.pb")
+                    resultsProto.writeTo(testResultPbFile.outputStream())
 
-                try {
-                    FileUtils.deleteRecursivelyIfExists(utpOutputDir.resolve(TEST_LOG_DIR))
-                    FileUtils.deleteRecursivelyIfExists(utpTmpDir)
-                } catch (e: IOException) {
-                    logger.warning("Failed to cleanup temporary directories: $e")
-                }
+                    try {
+                        FileUtils.deleteRecursivelyIfExists(utpOutputDir.resolve(TEST_LOG_DIR))
+                        FileUtils.deleteRecursivelyIfExists(utpTmpDir)
+                    } catch (e: IOException) {
+                        logger.warning("Failed to cleanup temporary directories: $e")
+                    }
 
-                if (resultsProto.hasPlatformError()) {
-                    logger.error(null, "Platform error occurred when running the UTP test suite")
-                }
-                logger.quiet("\nTest results saved as ${testResultPbFile.toURI()}. " +
-                        "Inspect these results in Android Studio by selecting Run > Import Tests " +
-                        "From File from the menu bar and importing test-result.pb.")
-                val testFailed = resultsProto.hasPlatformError() ||
-                        resultsProto.testResultList.any { testCaseResult ->
-                            testCaseResult.testStatus == TestStatusProto.TestStatus.FAILED
-                                    || testCaseResult.testStatus == TestStatusProto.TestStatus.ERROR
+                    if (resultsProto.hasPlatformError()) {
+                        logger.error(null, "Platform error occurred when running the UTP test suite")
+                    }
+                    logger.quiet(
+                        "\nTest results saved as ${testResultPbFile.toURI()}. " +
+                                "Inspect these results in Android Studio by selecting Run > Import Tests " +
+                                "From File from the menu bar and importing test-result.pb."
+                    )
+                    val testFailed = resultsProto.hasPlatformError() ||
+                            resultsProto.testResultList.any { testCaseResult ->
+                                testCaseResult.testStatus == TestStatusProto.TestStatus.FAILED
+                                        || testCaseResult.testStatus == TestStatusProto.TestStatus.ERROR
+                            }
+                    TestResult().apply {
+                        testResult = if (testFailed) {
+                            TestResult.Result.FAILED
+                        } else {
+                            TestResult.Result.SUCCEEDED
                         }
-                TestResult().apply {
-                    testResult = if (testFailed) {
-                        TestResult.Result.FAILED
-                    } else {
-                        TestResult.Result.SUCCEEDED
                     }
                 }
+                postProcessFunc
+            }
+
+            workQueue.await()
+
+            return postProcessCallback.map {
+                it()
             }.toMutableList()
         }
     }
 
+    @Synchronized
     override fun onTestResultEvent(testResultEvent: TestResultEvent) {
         testResultReporters[testResultEvent.deviceId]?.onTestResultEvent(testResultEvent)
         utpTestResultListener?.onTestResultEvent(testResultEvent)
