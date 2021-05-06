@@ -15,15 +15,19 @@
  */
 package com.android.build.gradle.internal.dsl
 
+import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.internal.fixture.TestProjects
+import com.android.build.gradle.internal.fixtures.FakeSyncIssueReporter
 import com.android.build.gradle.internal.plugins.AppPlugin
+import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.services.createDslServices
 import com.android.builder.core.AbstractBuildType
 import com.android.builder.core.BuilderConstants
 import com.android.sdklib.SdkVersionInfo
 import com.android.testutils.internal.CopyOfTester
 import com.google.common.collect.ImmutableMap
+import com.google.common.truth.Truth
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Assert
@@ -64,6 +68,30 @@ class BuildTypeTest {
     }
 
     @Test
+    fun testBuildConfigOverride() {
+        val debugBuildType = dslServices.newInstance(BuildType::class.java, "someBuildType", dslServices)
+
+        Truth.assertThat(debugBuildType).isNotNull()
+        debugBuildType.buildConfigField("String", "name", "sensitiveValue")
+        debugBuildType.buildConfigField("String", "name", "sensitiveValue")
+        val messages = (dslServices.issueReporter as FakeSyncIssueReporter).messages
+        Truth.assertThat(messages).hasSize(1)
+        Truth.assertThat(messages[0]).doesNotContain("sensitiveValue")
+    }
+
+    @Test
+    fun testResValueOverride() {
+        val debugBuildType = dslServices.newInstance(BuildType::class.java, "someBuildType", dslServices)
+
+        Truth.assertThat(debugBuildType).isNotNull()
+        debugBuildType.resValue("String", "name", "sensitiveValue")
+        debugBuildType.resValue("String", "name", "sensitiveValue")
+        val messages = (dslServices.issueReporter as FakeSyncIssueReporter).messages
+        Truth.assertThat(messages).hasSize(1)
+        Truth.assertThat(messages[0]).doesNotContain("sensitiveValue")
+    }
+
+    @Test
     fun testInitWith() {
         CopyOfTester.assertAllGettersCalled(
             BuildType::class.java,
@@ -72,22 +100,21 @@ class BuildTypeTest {
                 // Extensions are not copied as AGP doesn't manage them
                 "getExtensions",
                 "isZipAlignEnabled\$annotations"
-            ),
-            { original: BuildType ->
-                val copy = dslServices.newInstance(BuildType::class.java, original.name, dslServices)
-                copy.initWith(original)
-                // Ndk and ndkConfig refer to the same object
-                original.ndk
-                // Manually call getters that don't need to be copied.
-                original.postProcessingConfiguration
-                // Covered by original.isDefault
-                original.getIsDefault()
-                // Uses the private _isDefault
-                original.isShrinkResources
-                // Covered by _useProguard
-                original.isUseProguard
-            }
-        )
+            )
+        ) { original: BuildType ->
+            val copy = dslServices.newInstance(BuildType::class.java, original.name, dslServices)
+            copy.initWith(original)
+            // Ndk and ndkConfig refer to the same object
+            original.ndk
+            // Manually call getters that don't need to be copied.
+            original.postProcessingConfiguration
+            // Covered by original.isDefault
+            original.getIsDefault()
+            // Uses the private _isDefault
+            original.isShrinkResources
+            // Covered by _useProguard
+            original.isUseProguard
+        }
     }
 
     private fun getBuildTypeWithName(name: String): com.android.builder.model.BuildType {

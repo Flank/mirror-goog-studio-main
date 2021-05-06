@@ -253,8 +253,8 @@ abstract class BuildType @Inject constructor(
         val alreadyPresent = buildConfigFields[name]
         if (alreadyPresent != null) {
             val message = String.format(
-                "BuildType(%s): buildConfigField '%s' value is being replaced: %s -> %s",
-                getName(), name, alreadyPresent.value, value
+                "BuildType(%s): buildConfigField '%s' value is being replaced.",
+                getName(), name
             )
             dslServices.issueReporter.reportWarning(
                 IssueReporter.Type.GENERIC,
@@ -272,8 +272,8 @@ abstract class BuildType @Inject constructor(
         val alreadyPresent = resValues[name]
         if (alreadyPresent != null) {
             val message = String.format(
-                "BuildType(%s): resValue '%s' value is being replaced: %s -> %s",
-                getName(), name, alreadyPresent.value, value
+                "BuildType(%s): resValue '%s' value is being replaced.",
+                getName(), name
             )
             dslServices.issueReporter.reportWarning(
                 IssueReporter.Type.GENERIC,
