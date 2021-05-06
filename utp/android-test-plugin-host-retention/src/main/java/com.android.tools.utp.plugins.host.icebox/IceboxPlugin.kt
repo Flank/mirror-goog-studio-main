@@ -177,11 +177,12 @@ class IceboxPlugin @VisibleForTesting constructor(
                 iceboxPluginConfig.snapshotCompression,
                 emulatorSnapshotName
         )
-        // We need to count the failures so that we know which snapshot it corresponds to.
-        failureSnapshotId = failureSnapshotId + 1
 
         // Add the artifact to testResult
         if (snapshotFile.exists()) {
+            // We need to count the failures so that we know which snapshot it corresponds to.
+            // It might miscount because currently we do not support all kinds of failures.
+            failureSnapshotId = failureSnapshotId + 1
             remainSnapshotNumber = remainSnapshotNumber - 1
             val iceboxInfo = IceboxOutput.newBuilder()
                     .setAppPackage(iceboxPluginConfig.appPackage)
