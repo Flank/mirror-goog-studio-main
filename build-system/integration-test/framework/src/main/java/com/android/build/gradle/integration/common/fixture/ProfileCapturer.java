@@ -20,6 +20,7 @@ package com.android.build.gradle.integration.common.fixture;
 import com.android.annotations.NonNull;
 import com.android.builder.utils.ExceptionRunnable;
 import com.google.common.base.Preconditions;
+import com.google.wireless.android.sdk.stats.AndroidStudioEvent;
 import com.google.wireless.android.sdk.stats.GradleBuildProfile;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -65,6 +66,19 @@ public final class ProfileCapturer {
         this.poller = new DirectoryPoller(dir, ".rawproto");
     }
 
+    public ProfileCapturer(@NonNull GradleTestProject project, @NonNull String extension)
+            throws IOException {
+        Path dir = project.getProfileDirectory();
+        Preconditions.checkArgument(
+                dir != null,
+                "Profile output must be enabled by the GradleTestProject to use "
+                        + "ProfileCapturer. "
+                        + "Use GradleTestProjectBuilder::enableProfileOutput to do so."); // FIXME
+        // more
+        // information
+        this.poller = new DirectoryPoller(dir, extension);
+    }
+
     public ProfileCapturer(@NonNull Path dir) throws IOException {
         this.poller = new DirectoryPoller(dir, ".rawproto");
     }
@@ -73,6 +87,13 @@ public final class ProfileCapturer {
         poller.poll();
         r.run();
         return findNewProfiles();
+    }
+
+    public Collection<AndroidStudioEvent> captureAndroidEvent(ExceptionRunnable r)
+            throws Exception {
+        poller.poll();
+        r.run();
+        return findNewAndroidStudioEvents();
     }
 
     @NonNull
@@ -86,6 +107,22 @@ public final class ProfileCapturer {
         List<GradleBuildProfile> results = new ArrayList<>(lastPoll.size());
         for (Path path : lastPoll) {
             results.add(GradleBuildProfile.parseFrom(Files.readAllBytes(path)));
+        }
+        return results;
+    }
+
+    @NonNull
+    public Collection<AndroidStudioEvent> findNewAndroidStudioEvents() throws IOException {
+        lastPoll = poller.poll();
+
+        if (lastPoll.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<AndroidStudioEvent> results = new ArrayList<>(lastPoll.size());
+
+        for (Path path : lastPoll) {
+            results.add(AndroidStudioEvent.parseFrom(Files.readAllBytes(path)));
         }
         return results;
     }
