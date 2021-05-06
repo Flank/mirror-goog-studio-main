@@ -14,25 +14,25 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.publishing
-
-import com.android.build.gradle.internal.dsl.AbstractPublishing
+package com.android.build.api.dsl
 
 /**
- * A data class wraps publishing info related to a software component.
+ * Multi variant publishing options.
  */
-data class ComponentPublishingInfo(
-    val componentName: String,
-    val type: AbstractPublishing.Type,
-    val attributesConfig: AttributesConfig? = null,
-    val isClassifierRequired: Boolean = false
-) {
+interface MultipleVariants {
 
     /**
-     * Configs for attributes to be added to the variant.
+     * Publish all the variants to the component.
      */
-    data class AttributesConfig(
-        val buildType: String?,
-        val flavorDimensions: Set<String>
-    )
+    fun allVariants()
+
+    /**
+     * Publish variants to the component based on the specified build types.
+     */
+    fun includeBuildTypeValues(vararg buildTypes: String)
+
+    /**
+     * Publish variants to the component based on the specified product flavor dimension and values.
+     */
+    fun includeFlavorDimensionAndValues(dimension: String, vararg values: String)
 }

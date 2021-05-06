@@ -51,6 +51,7 @@ import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType
+import com.android.build.gradle.internal.publishing.PublishedConfigSpec
 import com.android.build.gradle.internal.scope.BuildArtifactSpec.Companion.get
 import com.android.build.gradle.internal.scope.BuildArtifactSpec.Companion.has
 import com.android.build.gradle.internal.scope.BuildFeatureValues
@@ -451,16 +452,36 @@ abstract class ComponentImpl(
             val artifactProvider = artifacts.get(buildArtifactType)
             val artifactContainer = artifacts.getArtifactContainer(buildArtifactType)
             if (!artifactContainer.needInitialProducer().get()) {
-                variantScope
-                    .publishIntermediateArtifact(
-                        artifactProvider,
-                        outputSpec.artifactType,
-                        outputSpec.publishedConfigTypes,
-                        outputSpec.libraryElements?.let {
-                            internalServices.named(LibraryElements::class.java, it)
-                        },
-                        variantType.isTestFixturesComponent
-                    )
+                val isPublicationConfigs =
+                    outputSpec.publishedConfigTypes.any { it.isPublicationConfig }
+
+                if (isPublicationConfigs) {
+                    val components = variantDslInfo.publishInfo!!.components
+                    for(component in components) {
+                        variantScope
+                            .publishIntermediateArtifact(
+                                artifactProvider,
+                                outputSpec.artifactType,
+                                outputSpec.publishedConfigTypes.map {
+                                    PublishedConfigSpec(it, component) }.toSet(),
+                                outputSpec.libraryElements?.let {
+                                    internalServices.named(LibraryElements::class.java, it)
+                                },
+                                variantType.isTestFixturesComponent
+                            )
+                    }
+                } else {
+                    variantScope
+                        .publishIntermediateArtifact(
+                            artifactProvider,
+                            outputSpec.artifactType,
+                            outputSpec.publishedConfigTypes.map { PublishedConfigSpec(it) }.toSet(),
+                            outputSpec.libraryElements?.let {
+                                internalServices.named(LibraryElements::class.java, it)
+                            },
+                            variantType.isTestFixturesComponent
+                        )
+                }
             }
         }
     }

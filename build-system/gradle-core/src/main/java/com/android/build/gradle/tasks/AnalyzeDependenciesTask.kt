@@ -20,6 +20,7 @@ import com.android.SdkConstants
 import com.android.build.api.artifact.SingleArtifact
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.publishing.PublishedConfigSpec
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -210,7 +211,7 @@ abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
 
             task.apiDirectDependenciesConfiguration = creationConfig
                 .variantDependencies
-                .getElements(AndroidArtifacts.PublishedConfigType.API_ELEMENTS)
+                .getElements(PublishedConfigSpec(AndroidArtifacts.PublishedConfigType.API_ELEMENTS))
 
             task.allDirectDependencies = creationConfig
                 .variantDependencies

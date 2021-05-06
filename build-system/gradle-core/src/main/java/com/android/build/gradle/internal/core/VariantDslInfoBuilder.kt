@@ -28,6 +28,7 @@ import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.InternalApplicationExtension
 import com.android.build.gradle.internal.dsl.InternalLibraryExtension
+import com.android.build.gradle.internal.dsl.LibraryPublishingImpl
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.manifest.ManifestDataProvider
@@ -69,6 +70,7 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
     private val hasDynamicFeatures: Boolean,
     private val properties: Map<String, Any>,
     private val enableTestFixtures: Boolean,
+    private val testFixtureMainVariantName: String?
 ) {
 
     companion object {
@@ -94,6 +96,7 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
             hasDynamicFeatures: Boolean,
             properties: Map<String, Any> = mapOf(),
             enableTestFixtures: Boolean = false,
+            testFixtureMainVariantName: String? = null
         ): VariantDslInfoBuilder<T> {
             return VariantDslInfoBuilder(
                 dimensionCombination,
@@ -112,7 +115,8 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
                 extension,
                 hasDynamicFeatures,
                 properties,
-                enableTestFixtures
+                enableTestFixtures,
+                testFixtureMainVariantName
             )
         }
 
@@ -307,9 +311,15 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
 
         val publishingInfo = if (extension is InternalLibraryExtension) {
             createPublishingInfoForLibrary(
-                extension.publishing,
+                extension.publishing as LibraryPublishingImpl,
                 dslServices.projectOptions,
-                name
+                name,
+                buildType,
+                flavorList,
+                extension.buildTypes,
+                extension.productFlavors,
+                testFixtureMainVariantName,
+                dslServices.issueReporter
             )
         } else if (extension is InternalApplicationExtension) {
             createPublishingInfoForApp(

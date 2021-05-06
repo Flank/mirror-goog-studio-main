@@ -19,4 +19,15 @@ package com.android.build.api.dsl
 /**
  * Maven publishing DSL object for configuring options related to publishing AAR.
  */
-interface LibraryPublishing : Publishing<LibrarySingleVariant>
+interface LibraryPublishing : Publishing<LibrarySingleVariant> {
+
+    /**
+     * Publish multiple variants to a component.
+     */
+    fun multipleVariants(componentName: String, action: MultipleVariants.() -> Unit)
+
+    /**
+     * Publish multiple variants to the default component.
+     */
+    fun multipleVariants(action: MultipleVariants.() -> Unit)
+}

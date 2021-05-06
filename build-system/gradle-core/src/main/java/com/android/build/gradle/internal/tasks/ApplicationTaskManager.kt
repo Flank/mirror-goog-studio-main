@@ -24,9 +24,11 @@ import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.AbstractAppTaskManager
 import com.android.build.gradle.internal.component.AndroidTestCreationConfig
 import com.android.build.gradle.internal.component.ApkCreationConfig
+import com.android.build.gradle.internal.dsl.AbstractPublishing
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType
+import com.android.build.gradle.internal.publishing.PublishedConfigSpec
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.ProjectInfo
@@ -113,19 +115,16 @@ class ApplicationTaskManager(
 
         val publishInfo = variant.variantDslInfo.publishInfo!!
 
-        if (publishInfo.isApkPublished()) {
-            createSoftwareComponent(
-                variant,
-                publishInfo.getApkComponentName(),
+        for (component in publishInfo.components) {
+            val configType = if (component.type == AbstractPublishing.Type.APK) {
                 PublishedConfigType.APK_PUBLICATION
-            )
-        }
-
-        if (publishInfo.isAabPublished()) {
+            } else {
+                PublishedConfigType.AAB_PUBLICATION
+            }
             createSoftwareComponent(
                 variant,
-                publishInfo.getAabComponentName(),
-                PublishedConfigType.AAB_PUBLICATION
+                component.componentName,
+                configType
             )
         }
     }
@@ -288,7 +287,7 @@ class ApplicationTaskManager(
         publication: PublishedConfigType
     ) {
         val component = globalScope.componentFactory.adhoc(componentName)
-        val config = appVariant.variantDependencies.getElements(publication)!!
+        val config = appVariant.variantDependencies.getElements(PublishedConfigSpec(publication, componentName, false))!!
         component.addVariantsFromConfiguration(config) { }
         project.components.add(component)
     }

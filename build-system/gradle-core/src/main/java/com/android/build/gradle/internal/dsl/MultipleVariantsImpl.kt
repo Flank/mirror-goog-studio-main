@@ -16,11 +16,28 @@
 
 package com.android.build.gradle.internal.dsl
 
-import com.android.build.api.dsl.LibrarySingleVariant
+import com.android.build.api.dsl.MultipleVariants
 import com.android.build.gradle.internal.services.DslServices
 import javax.inject.Inject
 
-abstract class LibrarySingleVariantImpl @Inject constructor(
+abstract class MultipleVariantsImpl @Inject constructor(
     dslServices: DslServices,
-    override val variantName: String
-) : LibrarySingleVariant
+    val componentName: String,
+) : MultipleVariants {
+
+    internal abstract var allVariants: Boolean
+    internal abstract var includedBuildTypes: MutableSet<String>
+    internal val includedFlavorDimensionAndValues: MutableMap<String, Set<String>> = mutableMapOf()
+
+    override fun allVariants() {
+        allVariants = true
+    }
+
+    override fun includeBuildTypeValues(vararg buildTypes: String) {
+        this.includedBuildTypes.addAll(buildTypes)
+    }
+
+    override fun includeFlavorDimensionAndValues(dimension: String, vararg values: String) {
+        this.includedFlavorDimensionAndValues[dimension] = mutableSetOf<String>().also { it.addAll(values) }
+    }
+}

@@ -31,6 +31,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactTyp
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.PACKAGED_DEPENDENCIES
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType
+import com.android.build.gradle.internal.publishing.PublishedConfigSpec
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.VariantType
@@ -64,7 +65,7 @@ class VariantDependencies internal constructor(
     val runtimeClasspath: Configuration,
     private val sourceSetRuntimeConfigurations: Collection<Configuration>,
     val sourceSetImplementationConfigurations: Collection<Configuration>,
-    private val elements: Map<PublishedConfigType, Configuration>,
+    private val elements: Map<PublishedConfigSpec, Configuration>,
     private val providedClasspath: Configuration,
     val annotationProcessorConfiguration: Configuration,
     private val reverseMetadataValuesConfiguration: Configuration?,
@@ -92,8 +93,8 @@ class VariantDependencies internal constructor(
         return builder.build()
     }
 
-    fun getElements(configType: PublishedConfigType): Configuration? {
-        return elements[configType]
+    fun getElements(configSpec: PublishedConfigSpec): Configuration? {
+        return elements[configSpec]
     }
 
     override fun toString(): String {

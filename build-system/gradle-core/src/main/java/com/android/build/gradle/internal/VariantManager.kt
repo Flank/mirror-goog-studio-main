@@ -483,7 +483,8 @@ class VariantManager<CommonExtensionT: CommonExtension<*, *, *, *>, VariantBuild
                         testFixturesFeatureName
             },
             extension = extension,
-            hasDynamicFeatures = globalScope.hasDynamicFeatures()
+            hasDynamicFeatures = globalScope.hasDynamicFeatures(),
+            testFixtureMainVariantName = mainComponentInfo.variant.name
         )
         val productFlavorList = mainComponentInfo.variant.variantDslInfo.productFlavorList
 

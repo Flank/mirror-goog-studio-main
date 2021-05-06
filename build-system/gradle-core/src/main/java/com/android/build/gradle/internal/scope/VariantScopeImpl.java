@@ -48,6 +48,7 @@ import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.packaging.JarCreatorType;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType;
+import com.android.build.gradle.internal.publishing.PublishedConfigSpec;
 import com.android.build.gradle.internal.publishing.PublishingSpecs;
 import com.android.build.gradle.internal.services.BaseServices;
 import com.android.build.gradle.internal.testFixtures.TestFixturesUtil;
@@ -72,6 +73,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -159,7 +161,7 @@ public class VariantScopeImpl implements VariantScope {
      *
      * @param artifact Provider of File or FileSystemLocation to be published.
      * @param artifactType the artifact type.
-     * @param configTypes the PublishedConfigType. (e.g. api, runtime, etc)
+     * @param configSpecs the PublishedConfigSpec.
      * @param libraryElements the artifact's library elements
      * @param isTestFixturesArtifact whether the artifact is from a test fixtures component
      */
@@ -167,31 +169,30 @@ public class VariantScopeImpl implements VariantScope {
     public void publishIntermediateArtifact(
             @NonNull Provider<?> artifact,
             @NonNull ArtifactType artifactType,
-            @NonNull Collection<PublishedConfigType> configTypes,
+            @NonNull Set<PublishedConfigSpec> configSpecs,
             @Nullable LibraryElements libraryElements,
             boolean isTestFixturesArtifact) {
 
-        Preconditions.checkState(!configTypes.isEmpty());
+        Preconditions.checkState(!configSpecs.isEmpty());
 
-        for (PublishedConfigType configType : PublishedConfigType.values()) {
-            if (configTypes.contains(configType)) {
-                Configuration config = variantDependencies.getElements(configType);
-                if (config != null) {
-                    if (configType.isPublicationConfig()) {
-                        String classifier = null;
-                        if (configType.isClassifierRequired()) {
-                            classifier = componentIdentity.getName();
-                        } else if (isTestFixturesArtifact) {
-                            classifier = TestFixturesUtil.testFixturesClassifier;
-                        }
-                        publishArtifactToDefaultVariant(config, artifact, artifactType, classifier);
-                    } else {
-                        publishArtifactToConfiguration(
-                                config,
-                                artifact,
-                                artifactType,
-                                new AndroidAttributes(null, libraryElements));
+        for (PublishedConfigSpec configSpec : configSpecs) {
+            Configuration config = variantDependencies.getElements(configSpec);
+            PublishedConfigType configType = configSpec.getConfigType();
+            if (config != null) {
+                if (configType.isPublicationConfig()) {
+                    String classifier = null;
+                    if (configSpec.isClassifierRequired()) {
+                        classifier = componentIdentity.getName();
+                    } else if (isTestFixturesArtifact) {
+                        classifier = TestFixturesUtil.testFixturesClassifier;
                     }
+                    publishArtifactToDefaultVariant(config, artifact, artifactType, classifier);
+                } else {
+                    publishArtifactToConfiguration(
+                            config,
+                            artifact,
+                            artifactType,
+                            new AndroidAttributes(null, libraryElements));
                 }
             }
         }

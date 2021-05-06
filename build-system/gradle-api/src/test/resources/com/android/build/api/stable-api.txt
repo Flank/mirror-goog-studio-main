@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-276ce0112f01e0136fa21bbac36c77518f16e34bc8932378d0cf0fa3323a9491
+1459976165d4199b94a5d1ca639b33f9fd36a8933a75006f47a1c7aad4303626
 -------------------------------------------------------------------------
 com.android.build.api.artifact.Artifact implements java.io.Serializable
 com.android.build.api.artifact.Artifact$Appendable
@@ -113,8 +113,14 @@ com.android.build.api.dsl.CommonExtension.testCoverage: void (kotlin.jvm.functio
 com.android.build.api.dsl.CompileOptions
 com.android.build.api.dsl.DataBinding
 com.android.build.api.dsl.LibraryPublishing implements com.android.build.api.dsl.Publishing
+com.android.build.api.dsl.LibraryPublishing.multipleVariants: void (java.lang.String, kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.MultipleVariants, kotlin.Unit>)
+com.android.build.api.dsl.LibraryPublishing.multipleVariants: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.MultipleVariants, kotlin.Unit>)
 com.android.build.api.dsl.LibrarySingleVariant implements com.android.build.api.dsl.SingleVariant
 com.android.build.api.dsl.Lint
+com.android.build.api.dsl.MultipleVariants
+com.android.build.api.dsl.MultipleVariants.allVariants: void ()
+com.android.build.api.dsl.MultipleVariants.includeBuildTypeValues: void (java.lang.String[])
+com.android.build.api.dsl.MultipleVariants.includeFlavorDimensionAndValues: void (java.lang.String, java.lang.String[])
 com.android.build.api.dsl.Publishing
 com.android.build.api.dsl.Publishing.singleVariant: void (java.lang.String)
 com.android.build.api.dsl.Publishing.singleVariant: void (java.lang.String, kotlin.jvm.functions.Function1<? super SingleVariantT, kotlin.Unit>)
