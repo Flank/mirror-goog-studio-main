@@ -22,6 +22,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.EmptyAndroidTestApp
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldLibraryApp
+import com.android.build.gradle.integration.library.ArtProfileSingleLibraryTest.Companion.aabEntryName
 import com.android.build.gradle.integration.library.ArtProfileSingleLibraryTest.Companion.aarEntryName
 import com.android.build.gradle.integration.library.ArtProfileSingleLibraryTest.Companion.apkEntryName
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -89,6 +90,7 @@ class ArtProfileMultipleLibrariesTest {
                     ":lib2:bundleReleaseAar",
                     ":lib3:bundleReleaseAar",
                     ":app:assembleRelease",
+                    ":app:bundleRelease",
                 )
         Truth.assertThat(result.failedTasks).isEmpty()
 
@@ -143,9 +145,16 @@ class ArtProfileMultipleLibrariesTest {
                 ArtProfile(ByteArrayInputStream(binaryProfile.readBytes()))
         ).isNotNull()
 
-        // check packaging.
+        // check APK packaging.
         project.getSubproject(":app").getApk(GradleTestProject.ApkType.RELEASE).also {
             ArtProfileSingleLibraryTest.checkAndroidArtifact(tempFolder, it, apkEntryName) { fileContent ->
+                Truth.assertThat(ArtProfile(ByteArrayInputStream(fileContent))).isNotNull()
+            }
+        }
+
+        // check Bundle packaging.
+        project.getSubproject(":app").getBundle(GradleTestProject.ApkType.RELEASE).also {
+            ArtProfileSingleLibraryTest.checkAndroidArtifact(tempFolder, it, aabEntryName) { fileContent ->
                 Truth.assertThat(ArtProfile(ByteArrayInputStream(fileContent))).isNotNull()
             }
         }

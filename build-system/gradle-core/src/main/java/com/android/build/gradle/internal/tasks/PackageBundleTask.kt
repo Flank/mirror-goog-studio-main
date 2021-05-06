@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.SdkConstants
 import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.dsl.AssetPackBundleExtension
@@ -143,6 +144,11 @@ abstract class PackageBundleTask : NonIncrementalTask() {
     @get:Input
     abstract val bundleNeedsFusedStandaloneConfig: Property<Boolean>
 
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:Optional
+    abstract val binaryArtProfile: RegularFileProperty
+
     companion object {
         const val MIN_SDK_FOR_SPLITS = 21
     }
@@ -171,6 +177,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
             it.bundleNeedsFusedStandaloneConfig.set(bundleNeedsFusedStandaloneConfig)
             it.appMetadata.set(appMetadata)
             it.abiFilters.set(abiFilters)
+            it.binaryArtProfiler.set(binaryArtProfile)
         }
     }
 
@@ -192,6 +199,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
         abstract val bundleNeedsFusedStandaloneConfig: Property<Boolean>
         abstract val appMetadata: RegularFileProperty
         abstract val abiFilters: SetProperty<String>
+        abstract val binaryArtProfiler: RegularFileProperty
     }
 
     abstract class BundleToolWorkAction : ProfileAwareWorkAction<Params>() {
@@ -305,6 +313,14 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                 .setBundleConfig(bundleConfig.build())
                 .setOutputPath(bundleFile.toPath())
                 .setModulesPaths(builder.build())
+
+            if (parameters.binaryArtProfiler.isPresent) {
+                command.addMetadataFile(
+                        SdkConstants.FN_BINART_ART_PROFILE_FOLDER_IN_APK.replace('/', '.'),
+                        SdkConstants.FN_BINARY_ART_PROFILE,
+                        parameters.binaryArtProfiler.get().asFile.toPath(),
+                )
+            }
 
             parameters.bundleDeps.asFile.orNull?.let {
                 command.addMetadataFile(
@@ -550,6 +566,10 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                 InternalArtifactType.APP_METADATA,
                 task.appMetadata
             )
+
+            creationConfig.artifacts.setTaskInputToFinalProduct(
+                InternalArtifactType.BINARY_ART_PROFILE,
+                task.binaryArtProfile)
         }
     }
 }
