@@ -4082,10 +4082,10 @@ class GradleDetectorTest : AbstractCheckTest() {
             .run()
             .expect(
                 """
-                build.gradle:7: Warning: JCenter is at end of life [JcenterRepositoryObsolete]
+                build.gradle:7: Warning: JCenter Maven repository is no longer receiving updates: newer library versions may be available elsewhere [JcenterRepositoryObsolete]
                         jcenter()
                         ~~~~~~~~~
-                build.gradle:14: Warning: JCenter is at end of life [JcenterRepositoryObsolete]
+                build.gradle:14: Warning: JCenter Maven repository is no longer receiving updates: newer library versions may be available elsewhere [JcenterRepositoryObsolete]
                         jcenter()
                         ~~~~~~~~~
                 0 errors, 2 warnings
@@ -4136,10 +4136,10 @@ class GradleDetectorTest : AbstractCheckTest() {
             .run()
             .expect(
                 """
-                build.gradle.kts:5: Warning: JCenter is at end of life [JcenterRepositoryObsolete]
+                build.gradle.kts:5: Warning: JCenter Maven repository is no longer receiving updates: newer library versions may be available elsewhere [JcenterRepositoryObsolete]
                         jcenter()
                         ~~~~~~~~~
-                build.gradle.kts:12: Warning: JCenter is at end of life [JcenterRepositoryObsolete]
+                build.gradle.kts:12: Warning: JCenter Maven repository is no longer receiving updates: newer library versions may be available elsewhere [JcenterRepositoryObsolete]
                         jcenter()
                         ~~~~~~~~~
                 0 errors, 2 warnings
@@ -4184,7 +4184,7 @@ class GradleDetectorTest : AbstractCheckTest() {
             .run()
             .expect(
                 """
-                build.gradle:2: Warning: JCenter is at end of life [JcenterRepositoryObsolete]
+                build.gradle:2: Warning: JCenter Maven repository is no longer receiving updates: newer library versions may be available elsewhere [JcenterRepositoryObsolete]
                     jcenter {
                     ^
                 0 errors, 1 warnings
@@ -4227,7 +4227,7 @@ class GradleDetectorTest : AbstractCheckTest() {
             .run()
             .expect(
                 """
-                build.gradle.kts:2: Warning: JCenter is at end of life [JcenterRepositoryObsolete]
+                build.gradle.kts:2: Warning: JCenter Maven repository is no longer receiving updates: newer library versions may be available elsewhere [JcenterRepositoryObsolete]
                     jcenter {
                     ^
                 0 errors, 1 warnings
