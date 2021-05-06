@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.model.v2.models.AndroidProject
 import com.android.testutils.apk.AndroidArchive
+import com.android.testutils.apk.Zip
 import com.android.tools.profgen.ArtProfile
 import com.android.tools.profgen.HumanReadableProfile
 import com.android.utils.FileUtils
@@ -41,11 +42,12 @@ class ArtProfileSingleLibraryTest {
 
     companion object {
         const val aarEntryName = SdkConstants.FN_ART_PROFILE
-        const val apkEntryName = "assets/dexopt/${SdkConstants.FN_BINARY_ART_PROFILE}"
+        const val apkEntryName = "${SdkConstants.FN_BINART_ART_PROFILE_FOLDER_IN_APK}/${SdkConstants.FN_BINARY_ART_PROFILE}"
+        val aabEntryName = "BUNDLE-METADATA/${SdkConstants.FN_BINART_ART_PROFILE_FOLDER_IN_APK.replace('/', '.')}/${SdkConstants.FN_BINARY_ART_PROFILE}"
 
         fun checkAndroidArtifact(
                 tempFolder: TemporaryFolder,
-                target: AndroidArchive,
+                target: Zip,
                 entryName: String,
                 expected: (ByteArray) -> Unit) {
             target.getEntry(entryName)?.let {
