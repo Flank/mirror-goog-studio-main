@@ -69,7 +69,7 @@ private class Receiver : MultiLineReceiver() {
     override fun isCancelled() = false
 }
 
-private const val MDNS_TLS_SUFFIX = "_adb-tls-connect._tcp."
+private val MDNS_AUTO_CONNECT_TLS_REGEX = Regex(".*_adb-tls-connect\\._tcp\\.?")
 
 private const val MDNS_UNENCRYPTED_SUFFIX = "_adb._tcp."
 
@@ -95,7 +95,7 @@ val IDevice.isMdnsAutoConnectUnencrypted : Boolean
     get() = isMdnsAutoConnectUnencrypted(this.serialNumber)
 
 fun isMdnsAutoConnectTls(serialNumber: String): Boolean {
-    return serialNumber.endsWith(MDNS_TLS_SUFFIX)
+    return MDNS_AUTO_CONNECT_TLS_REGEX.matches(serialNumber)
 }
 
 fun isMdnsAutoConnectUnencrypted(serialNumber: String): Boolean {
