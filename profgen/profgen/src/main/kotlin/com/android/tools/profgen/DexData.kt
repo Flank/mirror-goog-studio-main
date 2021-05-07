@@ -162,7 +162,7 @@ internal class MutableDexFileData(
     val methods: MutableMap<Int, MethodData>,
 )
 
-internal class MethodData(var flags: Int) {
+internal data class MethodData(var flags: Int) {
     inline val isHot: Boolean get() = isFlagSet(MethodFlags.HOT)
     @Suppress("NOTHING_TO_INLINE")
     inline fun isFlagSet(flag: Int): Boolean {

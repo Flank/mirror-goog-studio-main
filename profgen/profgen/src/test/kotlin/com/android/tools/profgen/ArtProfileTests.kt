@@ -1,5 +1,6 @@
 package com.android.tools.profgen
 
+import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 import java.io.ByteArrayOutputStream
 import java.util.zip.CRC32
@@ -68,6 +69,25 @@ class ArtProfileTests {
         val apk = Apk(testData("app-release.apk"))
         val prof = ArtProfile(hrp, obf, apk)
         assertTranscodeIntegrity(prof, ArtProfileSerializer.V0_1_0_P, ArtProfileSerializer.V0_0_1_N)
+    }
+
+    @Test
+    fun testCompareAgainstProfmanProfile() {
+        val golden = ArtProfile(testData("com.example.countdown.prof"))!!
+        val hrp = HumanReadableProfile(
+            testData("com.example.countdown-hrp.txt"), strictDiagnostics)!!
+        val profgen =
+            ArtProfile(hrp, ObfuscationMap.Empty, Apk(testData("app-release.apk")))
+
+        assertThat(golden.profileData.size).isEqualTo(profgen.profileData.size)
+        val (goldenDexFile, goldenDexData) = golden.profileData.toList().first()
+        val (profgenDexFile, profgenDexData) = profgen.profileData.toList().first()
+        assertThat(profgenDexData.classes).isEqualTo(goldenDexData.classes)
+        assertThat(profgenDexData.methods).isEqualTo(goldenDexData.methods)
+        assertThat(goldenDexFile.dexChecksum).isEqualTo(profgenDexFile.dexChecksum)
+        assertThat(goldenDexFile.dexChecksum).isEqualTo(profgenDexFile.dexChecksum)
+        assertThat(goldenDexFile.header.methodIds.size)
+            .isEqualTo(profgenDexFile.header.methodIds.size)
     }
 
     private fun assertSerializationIntegrity(prof: ArtProfile, serializer: ArtProfileSerializer) {
