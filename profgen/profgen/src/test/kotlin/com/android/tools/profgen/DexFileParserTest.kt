@@ -14,13 +14,9 @@
  * limitations under the License.
  */
 
-package com.android.tools.profgen.com.android.tools.profgen
+package com.android.tools.profgen
 
 import com.android.testutils.TestUtils
-import com.android.tools.profgen.Apk
-import com.android.tools.profgen.DexMethod
-import com.android.tools.profgen.DexPrototype
-import com.android.tools.profgen.splitParameters
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
@@ -61,5 +57,9 @@ class DexFileParserTest {
         assertThat(splitParameters("IJ")).isEqualTo(listOf("I", "J"))
         assertThat(splitParameters("La/C;")).isEqualTo(listOf("La/C;"))
         assertThat(splitParameters("LB;La/C;")).isEqualTo(listOf("LB;", "La/C;"))
+
+        assertThat(splitParameters("[I[[La/B;IJ[B")).isEqualTo(
+            listOf("[I", "[[La/B;", "I", "J", "[B")
+        )
     }
 }

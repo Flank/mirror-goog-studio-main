@@ -207,7 +207,8 @@ internal fun splitParameters(parameters: String): List<String> {
     for (c in parameters) {
         currentParam.append(c)
         inClassName = if (inClassName) c != ';' else c == 'L'
-        if (!inClassName) {
+        // add a parameter if we're no longer in class and not in array start
+        if (!inClassName && c != '[') {
             result.add(currentParam.toString())
             currentParam.clear()
         }
