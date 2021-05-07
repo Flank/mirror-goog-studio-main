@@ -24,7 +24,6 @@ def gradle_integration_test(
         maven_repo_manifests = [],
         resources = [],
         runtime_deps = [],
-        shard_count = None,
         tags = [],
         timeout = "eternal",
         lint_baseline = None,
@@ -73,7 +72,6 @@ def gradle_integration_test(
             "-Dtest.android.build.gradle.integration.repos=" + repo_file_names,
         ],
         resources = resources,
-        shard_count = shard_count,
         tags = [
             "block-network",
             "cpu:3",
@@ -91,7 +89,6 @@ def single_gradle_integration_test(name, deps, data, maven_repos, srcs = "", run
         srcs = native.glob([srcs + name + ".java", srcs + name + ".kt"]),
         deps = deps,
         data = data,
-        shard_count = None,
         maven_repos = maven_repos,
         runtime_deps = runtime_deps,
         tags = tags,

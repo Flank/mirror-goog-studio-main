@@ -86,6 +86,7 @@ single_gradle_integration_test(
     data = DATA + CMAKE + NDK,
     maven_repo_manifests = MAVEN_REPO_MANIFESTS,
     maven_repos = MAVEN_REPOS,
+    shard_count = 2,
     deps = DEPS,
 )
 
@@ -331,6 +332,7 @@ single_gradle_integration_test(
     data = DATA + CMAKE + NDK + ["//tools/base/build-system/integration-test:test-projects/prefabPublishing"],
     maven_repo_manifests = MAVEN_REPO_MANIFESTS,
     maven_repos = MAVEN_REPOS,
+    shard_count = 2,
     deps = DEPS,
 )
 
