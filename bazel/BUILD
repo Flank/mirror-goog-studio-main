@@ -300,6 +300,7 @@ java_library(
     deps = [
         ":utils",
         "//tools/base/annotations",
+        "//tools/base/bazel/repolinker:repo_linker",
         "//tools/base/build-system:gradle-tooling-api",
         "//tools/base/common:tools.common",
         "//tools/base/testutils:tools.testutils",

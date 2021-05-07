@@ -22,11 +22,11 @@ import java.util.List;
 
 class GradleW {
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws Exception {
         System.exit(new GradleW().run(Arrays.asList(args)));
     }
 
-    private int run(List<String> args) throws IOException {
+    private int run(List<String> args) throws Exception {
         Path logFile = null;
         File gradleFile = null;
         File distribution = null;

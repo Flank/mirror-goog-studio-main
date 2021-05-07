@@ -1,3 +1,20 @@
+load(":maven.bzl", "MavenRepoInfo")
+
+def _merge_repo_manifests(ctx):
+    """Generates the manifest and collects all necessary input files for maven_repo manifests."""
+    manifest = ctx.actions.declare_file(ctx.label.name + ".repo.manifest")
+    manifest_args = []
+    manifest_inputs = [manifest]
+
+    for repo in ctx.attr.repo_manifests:
+        artifacts = repo[MavenRepoInfo].artifacts
+        manifest_args += [artifact.path + ("," + classifier if classifier else "") for artifact, classifier in artifacts]
+        manifest_inputs += [artifact for artifact, _ in artifacts]
+
+    ctx.actions.write(manifest, "\n".join(manifest_args))
+
+    return (manifest, manifest_inputs)
+
 def _gradle_build_impl(ctx):
     # TODO (b/182291459) --singlejar is a workaround for the Windows classpath jar bug.
     # This argument should be removed once the underlying problem is fixed.
@@ -18,8 +35,11 @@ def _gradle_build_impl(ctx):
     if ctx.attr.max_workers > 0:
         args += ["--max_workers", str(ctx.attr.max_workers)]
 
+    manifest, manifest_inputs = _merge_repo_manifests(ctx)
+    args += ["--repo", manifest.path]
+
     ctx.actions.run(
-        inputs = ctx.files.data + ctx.files.repos + [ctx.file.build_file, ctx.file._gradlew_deploy, distribution],
+        inputs = ctx.files.data + ctx.files.repos + manifest_inputs + [ctx.file.build_file, ctx.file._gradlew_deploy, distribution],
         outputs = outputs,
         mnemonic = "gradlew",
         arguments = args,
@@ -38,6 +58,9 @@ _gradle_build_rule = rule(
             allow_single_file = True,
         ),
         "repos": attr.label_list(allow_files = True),
+        # TODO (b/148081564) repos should become the default for manifests and zip file targets should
+        # go in repo_zips once the migration to manifests is complete.
+        "repo_manifests": attr.label_list(providers = [MavenRepoInfo]),
         "output_log": attr.output(),
         "distribution": attr.label(allow_files = True),
         "max_workers": attr.int(default = 0, doc = "Max number of workers, 0 or negative means unset (Gradle will use the default: number of CPU cores)."),
@@ -67,6 +90,7 @@ def gradle_build(
         output_file_source = None,
         output_files = {},
         repos = [],
+        repo_manifests = [],
         tasks = [],
         max_workers = 0,
         tags = []):
@@ -95,6 +119,7 @@ def gradle_build(
         output_file_destinations = output_file_destinations,
         output_log = name + ".log",
         repos = repos,
+        repo_manifests = repo_manifests,
         tags = tags,
         tasks = tasks,
         max_workers = max_workers,
