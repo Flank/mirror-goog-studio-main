@@ -25,7 +25,11 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Class to parse raw output of {@code adb logcat -v long} to {@link LogCatMessage} objects. */
+/**
+ * Class to parse raw output of {@code adb logcat -v long} to {@link LogCatMessage} objects.
+ *
+ * <p>TODO(187522636): Remove this class?
+ */
 public class LogCatMessageParser {
 
     @Nullable
@@ -46,12 +50,12 @@ public class LogCatMessageParser {
      * Parse a header line into a {@link LogCatHeader} object, or {@code null} if the input line
      * doesn't match the expected format.
      *
-     * @param line   raw text that should be the header line from logcat -v long
+     * @param line raw text that should be the header line from logcat -v long
      * @param device device from which these log messages have been received
      * @return a {@link LogCatHeader} which represents the passed in text
      */
     @Nullable
-    public LogCatHeader processLogHeader(@NonNull String line, @Nullable IDevice device) {
+    private LogCatHeader processLogHeader(@NonNull String line, @Nullable IDevice device) {
         LogCatHeader header = mHeaderParser.parseHeader(line, device);
         if (header == null) {
             return null;
