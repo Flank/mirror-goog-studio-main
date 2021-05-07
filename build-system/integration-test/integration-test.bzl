@@ -25,7 +25,7 @@ def gradle_integration_test(
         resources = [],
         runtime_deps = [],
         tags = [],
-        timeout = "eternal",
+        timeout = "long",
         lint_baseline = None,
         **kwargs):
     lib_name = name + ".testlib"
@@ -138,6 +138,9 @@ def single_gradle_integration_test_per_source(
         target_name = name + "__" + test_name
         split_targets.append(target_name)
 
+        timeout = kwargs.pop("timeout", "long")
+        if target_name in eternal_target_names:
+            timeout = "eternal"
         gradle_integration_test(
             name = target_name,
             srcs = [src],
@@ -148,7 +151,7 @@ def single_gradle_integration_test_per_source(
             maven_repos = maven_repos,
             runtime_deps = runtime_deps,
             tags = tags + (["very_flaky"] if test_name in very_flaky_targets else []),
-            timeout = "eternal" if target_name in eternal_target_names else "long",
+            timeout = timeout,
             **kwargs
         )
     if num_flaky_applied != len(flaky_targets):

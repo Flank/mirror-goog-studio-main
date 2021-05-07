@@ -55,7 +55,6 @@ TEST_DATA = [
 
 gradle_integration_test(
     name = "tests",
-    timeout = "eternal",
     srcs = glob(
         [
             "**/*.java",
