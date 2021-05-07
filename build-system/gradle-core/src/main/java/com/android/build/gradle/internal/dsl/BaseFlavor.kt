@@ -206,20 +206,16 @@ abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
             if (BuilderConstants.MAIN == flavorName) {
                 dslServices.logger
                     .info(
-                        "DefaultConfig: buildConfigField '{}' value is being replaced: {} -> {}",
+                        "DefaultConfig: buildConfigField '{}' value is being replaced.",
                         name,
-                        alreadyPresent.value,
-                        value
                     )
             } else {
                 dslServices.logger
                     .info(
                         "ProductFlavor({}): buildConfigField '{}' " +
-                                "value is being replaced: {} -> {}",
+                                "value is being replaced.",
                         flavorName,
                         name,
-                        alreadyPresent.value,
-                        value
                     )
             }
         }
@@ -233,19 +229,15 @@ abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
             if (BuilderConstants.MAIN == flavorName) {
                 dslServices.logger
                     .info(
-                        "DefaultConfig: resValue '{}' value is being replaced: {} -> {}",
+                        "DefaultConfig: resValue '{}' value is being replaced.",
                         name,
-                        alreadyPresent.value,
-                        value
                     )
             } else {
                 dslServices.logger
                     .info(
-                        "ProductFlavor({}): resValue '{}' value is being replaced: {} -> {}",
+                        "ProductFlavor({}): resValue '{}' value is being replaced.",
                         flavorName,
                         name,
-                        alreadyPresent.value,
-                        value
                     )
             }
         }
