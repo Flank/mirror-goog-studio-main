@@ -430,6 +430,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 WearStandaloneAppDetector.INVALID_WEAR_FEATURE_ATTRIBUTE,
                 WearStandaloneAppDetector.WEAR_STANDALONE_APP_ISSUE,
                 WebViewApiAvailabilityDetector.ISSUE,
+                WebViewClientDetector.PROCEEDS_ON_RECEIVED_SSL_ERROR,
                 WebViewDetector.ISSUE,
                 WorkManagerDetector.ISSUE,
                 WrongCallDetector.ISSUE,
