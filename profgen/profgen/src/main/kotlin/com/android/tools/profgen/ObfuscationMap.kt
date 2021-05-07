@@ -104,6 +104,10 @@ fun ObfuscationMap(file: File): ObfuscationMap {
  */
 internal class TypeMap(private val mapping: Map<String, String>) {
     operator fun get(value: String): String {
+        if (value[0] == '[') {
+            val index = value.indexOfFirst { it != '[' }
+            return "[".repeat(index) + get(value.substring(index))
+        }
         if (value[0] != 'L') return value
         return mapping[value] ?: value
     }
