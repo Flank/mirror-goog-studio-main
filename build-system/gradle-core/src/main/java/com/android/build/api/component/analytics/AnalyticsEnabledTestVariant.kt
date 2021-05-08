@@ -29,7 +29,7 @@ import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import javax.inject.Inject
 
-class AnalyticsEnabledTestVariant @Inject constructor(
+open class AnalyticsEnabledTestVariant @Inject constructor(
     override val delegate: TestVariant,
     stats: GradleBuildVariant.Builder,
     objectFactory: ObjectFactory
