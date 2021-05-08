@@ -25,7 +25,7 @@ import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Provider
 
-class AnalyticsEnabledGeneratesApk(
+open class AnalyticsEnabledGeneratesApk(
         val delegate: GeneratesApk,
         val stats: GradleBuildVariant.Builder,
         val objectFactory: ObjectFactory,
