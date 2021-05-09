@@ -23,7 +23,6 @@ import com.android.build.gradle.internal.fixture.TestConstants
 import com.android.build.gradle.internal.fixture.TestProjects
 import com.android.build.gradle.internal.packaging.defaultExcludes
 import com.android.build.gradle.internal.packaging.defaultMerges
-import com.android.builder.errors.EvalIssueException
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
 import com.google.common.truth.StringSubject
@@ -451,6 +450,14 @@ class KotlinDslTest {
         android.apply {
             compileSdkVersion(TestConstants.COMPILE_SDK_VERSION)
             compileSdkVersion("android-${TestConstants.COMPILE_SDK_VERSION}")
+        }
+    }
+
+    @Test
+    fun `compatibility for enabling shrinking`() {
+        android.buildTypes.forEach {
+            it.isMinifyEnabled = true
+            it.isShrinkResources = true
         }
     }
 }
