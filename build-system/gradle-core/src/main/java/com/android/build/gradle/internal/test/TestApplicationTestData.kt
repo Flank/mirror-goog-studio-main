@@ -36,7 +36,7 @@ class TestApplicationTestData constructor(
     componentImpl: ComponentImpl,
     creationConfig: TestVariantCreationConfig,
     testApkDir: Provider<Directory>,
-    testedApksDir: FileCollection?
+    testedApksDir: FileCollection
 ) : AbstractTestDataImpl(
     providerFactory,
     componentImpl,
@@ -49,6 +49,8 @@ class TestApplicationTestData constructor(
 
     override val libraryType = creationConfig.services.provider { false }
 
+    override val testedApplicationId: Provider<String> =
+        testedApksDir.elements.map { BuiltArtifactsLoaderImpl().load(it.single())?.applicationId!! }
     override fun findTestedApks(
         deviceConfigProvider: DeviceConfigProvider,
         logger: ILogger

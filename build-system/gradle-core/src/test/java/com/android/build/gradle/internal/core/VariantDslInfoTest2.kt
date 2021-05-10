@@ -662,6 +662,7 @@ class VariantDslInfoTest2 :
             dslNamespaceProvider = given.namespace,
             dslTestNamespace = given.testNamespace,
             nativeBuildSystem = null,
+            properties = mapOf(),
         )
 
         return instantiateResult().also {

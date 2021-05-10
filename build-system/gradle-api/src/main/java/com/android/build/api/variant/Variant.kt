@@ -104,4 +104,12 @@ interface Variant : Component, HasAndroidResources {
      * [com.android.build.api.dsl.VariantDimension.testProguardFiles] for test related variants.
      */
     val proguardFiles: ListProperty<RegularFile>
+
+    /**
+     * Additional per variant properties.
+     *
+     * Initialized from [com.android.build.api.dsl.CommonExtension.properties]
+     */
+    val properties: MapProperty<String, Any>
+
 }
