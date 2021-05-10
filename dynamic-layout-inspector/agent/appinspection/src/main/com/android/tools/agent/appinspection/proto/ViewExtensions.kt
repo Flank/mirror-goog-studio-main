@@ -31,6 +31,7 @@ import com.android.tools.agent.appinspection.proto.property.PropertyCache
 import com.android.tools.agent.appinspection.proto.property.SimplePropertyReader
 import com.android.tools.agent.appinspection.proto.resource.convert
 import com.android.tools.agent.appinspection.util.ThreadUtils
+import layoutinspector.view.inspection.LayoutInspectorViewProtocol
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.AppContext
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Bounds
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.GetPropertiesResponse
@@ -186,9 +187,11 @@ fun View.createAppContext(stringTable: StringTable): AppContext {
         createResource(stringTable, context.themeResId)?.let { themeResource ->
             theme = themeResource
         }
-        configuration = context.resources.configuration.convert(stringTable)
     }.build()
 }
+
+fun View.createConfiguration(stringTable: StringTable) =
+    context.resources.configuration.convert(stringTable)
 
 fun View.createGetPropertiesResponse(): GetPropertiesResponse {
     val stringTable = StringTable()

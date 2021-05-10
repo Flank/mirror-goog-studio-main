@@ -140,7 +140,6 @@ message Configuration {
 // device's Configuration.
 message AppContext {
     Resource theme = 1;
-    Configuration configuration = 2;
 }
 
 // Handles properties whose values are bit flags, e.g. "top|left"
@@ -240,11 +239,12 @@ message LayoutEvent {
     // A collection of all text referenced by other fields in this message
     repeated StringEntry strings = 1;
     AppContext app_context = 2;
-    ViewNode root_view = 3;
+    Configuration configuration = 3;
+    ViewNode root_view = 4;
     // The offset of the root view from the origin of the surface. Will always be 0,0 for
     // the main window, but can be positive for floating windows (e.g. dialogs).
-    Point root_offset = 4;
-    Screenshot screenshot = 5;
+    Point root_offset = 5;
+    Screenshot screenshot = 6;
 }
 
 message ConfigurationEvent {

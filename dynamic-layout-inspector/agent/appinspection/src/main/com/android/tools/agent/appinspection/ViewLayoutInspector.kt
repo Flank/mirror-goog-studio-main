@@ -30,6 +30,7 @@ import com.android.tools.agent.appinspection.framework.takeScreenshot
 import com.android.tools.agent.appinspection.framework.toByteArray
 import com.android.tools.agent.appinspection.proto.StringTable
 import com.android.tools.agent.appinspection.proto.createAppContext
+import com.android.tools.agent.appinspection.proto.createConfiguration
 import com.android.tools.agent.appinspection.proto.createGetPropertiesResponse
 import com.android.tools.agent.appinspection.proto.createPropertyGroup
 import com.android.tools.agent.appinspection.proto.toNode
@@ -38,6 +39,7 @@ import com.android.tools.agent.appinspection.util.compress
 import com.android.tools.idea.protobuf.ByteString
 import com.android.tools.layoutinspector.BitmapType
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Command
+import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Configuration
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.ErrorEvent
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Event
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.GetPropertiesCommand
@@ -227,6 +229,8 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
 
     private val rootsDetector = RootsDetector()
 
+    private var previousConfig = Configuration.getDefaultInstance()
+
     override fun onReceiveCommand(data: ByteArray, callback: CommandCallback) {
         val command = Command.parseFrom(data)
         when (command.specializedCase) {
@@ -326,6 +330,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
 
                     val stringTable = StringTable()
                     val appContext = root.createAppContext(stringTable)
+                    val configuration = root.createConfiguration(stringTable)
 
                     val (rootView, rootOffset) = ThreadUtils.runOnMainThread {
                         val rootView = root.toNode(stringTable, skipSystemViews)
@@ -339,6 +344,10 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
                         layoutEvent = LayoutEvent.newBuilder().apply {
                             addAllStrings(stringTable.toStringEntries())
                             this.appContext = appContext
+                            if (configuration != previousConfig) {
+                                previousConfig = configuration
+                                this.configuration = configuration
+                            }
                             this.rootView = rootView
                             this.rootOffset = Point.newBuilder().apply {
                                 x = rootOffset[0]
