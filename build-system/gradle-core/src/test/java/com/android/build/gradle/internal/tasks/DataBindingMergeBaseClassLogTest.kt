@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.tasks
 import android.databinding.tool.DataBindingBuilder.BINDING_CLASS_LIST_SUFFIX
 import android.databinding.tool.DataBindingBuilder.INCREMENTAL_BINDING_CLASSES_LIST_DIR
 import android.databinding.tool.DataBindingBuilder.INCREMENTAL_BIN_AAR_DIR
+import android.databinding.tool.util.FileUtil
 import com.android.build.gradle.internal.fixtures.FakeGradleProperty
 import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.build.gradle.internal.profile.AnalyticsService
@@ -28,7 +29,6 @@ import com.android.ide.common.resources.FileStatus
 import com.google.common.collect.ImmutableList
 import com.google.common.truth.Truth.assertThat
 import org.apache.commons.io.FileUtils
-import org.apache.commons.io.filefilter.TrueFileFilter
 import org.gradle.api.Project
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
@@ -178,13 +178,12 @@ class DataBindingMergeBaseClassLogTest {
         }
     }
 
-    private fun collectOutputs(): Set<String> {
-        return FileUtils.listFiles(expectedOutFolder, TrueFileFilter.TRUE, TrueFileFilter.TRUE)
-                .map(File::getName).toSet()
+    private fun collectOutputs(): List<String> {
+        return FileUtil.listAndSortFiles(expectedOutFolder).map(File::getName)
     }
 
     private fun findOutputFile(name: String): File {
-        return FileUtils.listFiles(expectedOutFolder, TrueFileFilter.TRUE, TrueFileFilter.TRUE).first { it.name == name }
+        return FileUtil.listAndSortFiles(expectedOutFolder).first { it.name == name }
 
     }
 

@@ -17,12 +17,12 @@
 package com.android.build.gradle.internal.tasks.databinding
 
 import android.databinding.tool.DataBindingBuilder
+import android.databinding.tool.util.FileUtil
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.tasks.AndroidVariantTask
 import com.android.ide.common.resources.FileStatus
 import org.apache.commons.io.FileUtils
 import org.apache.commons.io.filefilter.IOFileFilter
-import org.apache.commons.io.filefilter.TrueFileFilter
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
@@ -57,7 +57,7 @@ open class DataBindingMergeBaseClassLogDelegate(
             .union(externalClassLog)
             .filter { it.exists() }
             .forEach { folder ->
-                FileUtils.listFiles(
+                FileUtil.listAndSortFiles(
                     folder,
                     object : IOFileFilter {
                         override fun accept(file: File): Boolean {
@@ -67,8 +67,7 @@ open class DataBindingMergeBaseClassLogDelegate(
                         override fun accept(dir: File, name: String): Boolean {
                             return isClassListFile(name)
                         }
-                    },
-                    TrueFileFilter.INSTANCE
+                    }
                 ).forEach { file ->
                     submit(workers, file, FileStatus.NEW)
                 }
