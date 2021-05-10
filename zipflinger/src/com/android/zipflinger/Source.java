@@ -94,11 +94,11 @@ public abstract class Source {
         return crc;
     }
 
-    long getCompressedSize() {
+    public long getCompressedSize() {
         return compressedSize;
     }
 
-    long getUncompressedSize() {
+    public long getUncompressedSize() {
         return uncompressedSize;
     }
 
