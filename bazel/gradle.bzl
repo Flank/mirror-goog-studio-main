@@ -1,5 +1,7 @@
 def _gradle_build_impl(ctx):
-    args = []
+    # TODO (b/182291459) --singlejar is a workaround for the Windows classpath jar bug.
+    # This argument should be removed once the underlying problem is fixed.
+    args = ["--singlejar"]
     outputs = [ctx.outputs.output_log]
     args += ["--log_file", ctx.outputs.output_log.path]
     args += ["--gradle_file", ctx.file.build_file.path]
@@ -17,7 +19,7 @@ def _gradle_build_impl(ctx):
         args += ["--max_workers", str(ctx.attr.max_workers)]
 
     ctx.actions.run(
-        inputs = ctx.files.data + ctx.files.repos + [ctx.file.build_file, distribution],
+        inputs = ctx.files.data + ctx.files.repos + [ctx.file.build_file, ctx.file._gradlew_deploy, distribution],
         outputs = outputs,
         mnemonic = "gradlew",
         arguments = args,
@@ -44,6 +46,13 @@ _gradle_build_rule = rule(
             cfg = "host",
             default = Label("//tools/base/bazel:gradlew"),
             allow_files = True,
+        ),
+        # TODO (b/182291459) gradlew_deploy.jar is needed for the --singlejar flag.
+        # This should be removed once the underlying problem is fixed.
+        "_gradlew_deploy": attr.label(
+            cfg = "host",
+            default = Label("//tools/base/bazel:gradlew_deploy.jar"),
+            allow_single_file = True,
         ),
     },
     implementation = _gradle_build_impl,
