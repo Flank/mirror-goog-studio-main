@@ -22,7 +22,6 @@
 #include "agent/agent.h"
 #include "commands/app_inspection_agent_command.h"
 #include "commands/echo_agent_command.h"
-#include "commands/layoutinspector_agent_command.h"
 #include "jvmti.h"
 #include "jvmti/jvmti_helper.h"
 #include "perfa/perfa.h"
@@ -87,11 +86,6 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
 
   // Echo example agent.
   EchoAgentCommand::RegisterAgentEchoCommandHandler(vm);
-
-  // Resource inspector agent.
-  if (DeviceInfo::feature_level() >= DeviceInfo::Q) {
-    LayoutInspectorAgentCommand::RegisterAgentLayoutInspectorCommandHandler(vm);
-  }
 
   // App Inspection agent.
   AppInspectionAgentCommand::RegisterAppInspectionCommandHandler(vm);

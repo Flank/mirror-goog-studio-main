@@ -24,7 +24,6 @@ import "cpu_data.proto";
 import "echo.proto";
 import "energy_data.proto";
 import "interaction_data.proto";
-import "layout_inspector.proto";
 import "memory_data.proto";
 import "network_data.proto";
 import "user_counter_data.proto";
@@ -114,10 +113,6 @@ message Event {
     // Demo echo event = 1000
     ECHO = 1000;
 
-    // Layout inspector prefix = 1100.
-    // group_id: specific event type
-    LAYOUT_INSPECTOR = 1101;
-
     // App inspection prefix = 1200.
     APP_INSPECTION_EVENT = 1201;
     APP_INSPECTION_RESPONSE = 1202;
@@ -142,11 +137,6 @@ message Event {
     // Energy Profiler Prefix = 400
 
     // Event Profiler Prefix = 500
-
-    // Layout inspector prefix = 1100
-    LAYOUT_INSPECTOR_ERROR = 1100;
-    COMPONENT_TREE = 1101;
-    PROPERTIES = 1102;
 
     // App inspection prefix = 1200
   }
@@ -233,9 +223,6 @@ message Event {
 
     // Echo Event Prefix = 1000
     echo.EchoData echo = 1000;
-
-    // Layout inspector prefix = 1100;
-    layoutinspector.LayoutInspectorEvent layout_inspector_event = 1100;
 
     // App inspection prefix = 1200;
     app_inspection.AppInspectionEvent app_inspection_event = 1200;

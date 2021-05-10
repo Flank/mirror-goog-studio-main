@@ -23,7 +23,6 @@ import "app_inspection.proto";
 import "common.proto";
 import "cpu_data.proto";
 import "echo.proto";
-import "layout_inspector.proto";
 import "memory_data.proto";
 
 message Command {
@@ -108,9 +107,6 @@ message Command {
 
     // Sample Echo Command starts at 1000;
     echo.EchoData echo_data = 1000;
-
-    // Layout editor starts at 1100;
-    layoutinspector.LayoutInspectorCommand layout_inspector = 1100;
 
     // App inspection prefix = 1200
     app_inspection.AppInspectionCommand app_inspection_command = 1200;
