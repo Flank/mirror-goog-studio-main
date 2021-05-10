@@ -67,6 +67,13 @@ class HumanReadableProfileTests {
     }
 
     @Test
+    fun testFuzzyClassMatch() {
+        val hrp = HumanReadableProfile("Lcom/**")
+        assertThat(hrp.match("Lcom/anything/can/go/here;")).isEqualTo(STARTUP)
+        assertThat(hrp.match("LFoo;")).isEqualTo(0)
+    }
+
+    @Test
     fun testComments() {
         val hrp = HumanReadableProfile(
                 "# Test Comment",

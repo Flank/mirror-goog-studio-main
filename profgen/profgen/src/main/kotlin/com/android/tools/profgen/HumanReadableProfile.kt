@@ -298,8 +298,13 @@ internal fun parseRule(
             if (flags.flags != 0) {
                 throw ParsingException(0, flagsForClassRuleMessage(line.substring(0, targetIndex)))
             }
-            return ProfileRule(flags.flags, target,
-                RuleFragment.Empty, RuleFragment.Empty, RuleFragment.Empty)
+            return ProfileRule(
+                    MethodFlags.STARTUP,
+                    target,
+                    RuleFragment.Empty,
+                    RuleFragment.Empty,
+                    RuleFragment.Empty
+            )
         }
         i = consume(METHOD_SEPARATOR_START, line, i)
         i = consume(METHOD_SEPARATOR_END, line, i)
