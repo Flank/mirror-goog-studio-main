@@ -25,7 +25,7 @@ class SharedPrefsDetectorTest : AbstractCheckTest() {
         lint().files(
             kotlin(
                 """
-                package test.pkg;
+                package test.pkg
 
                 import android.content.SharedPreferences
                 import android.os.Build
@@ -62,7 +62,7 @@ class SharedPrefsDetectorTest : AbstractCheckTest() {
         lint().files(
             kotlin(
                 """
-                package test.pkg;
+                package test.pkg
 
                 import android.content.SharedPreferences
                 import android.os.Build
@@ -83,5 +83,28 @@ class SharedPrefsDetectorTest : AbstractCheckTest() {
             0 errors, 1 warnings
             """
         )
+    }
+
+    fun test187437289() {
+        // Regression test for
+        // 187437289: MutatingSharedPrefs false positive
+        lint().files(
+            kotlin(
+                """
+                package com.example.myapplication
+
+                class SharedPrefsTest {
+                    fun test(sharedPrefs: android.content.SharedPreferences) {
+                        val modified = mutableSetOf<String>().apply {
+                            sharedPrefs.getStringSet("key", null)
+                                ?.let { old ->
+                                    addAll(old)
+                                }
+                        }
+                    }
+                }
+                """
+            ).indented()
+        ).run().expectClean()
     }
 }
