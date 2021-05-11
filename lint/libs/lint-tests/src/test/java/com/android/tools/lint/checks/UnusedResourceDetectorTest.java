@@ -1537,6 +1537,13 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "    android:orientation=\"vertical\" android:layout_width=\"match_parent\"\n"
                                         + "    android:layout_height=\"match_parent\" />\n"),
                         xml(
+                                "src/main/res/layout/activity_method_import.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    android:orientation=\"vertical\" android:layout_width=\"match_parent\"\n"
+                                        + "    android:layout_height=\"match_parent\" />\n"),
+                        xml(
                                 "src/main/res/layout/activity_ignored.xml",
                                 ""
                                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
@@ -1571,6 +1578,22 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "public class MethodReferenceActivity {\n"
                                         + "    public void test(LayoutInflater inflater){\n"
                                         + "        ActivityMethodReferenceBinding::inflate;\n"
+                                        + "    }\n"
+                                        + "}\n"),
+
+                        // View Binding usage here will reference activity_method_import.xml
+                        java(
+                                ""
+                                        + "package my.pkg;\n"
+                                        + "\n"
+                                        + "import android.view.LayoutInflater;\n"
+                                        + "import static my.pkg.databinding.ActivityMethodImportBinding.inflate;\n"
+                                        // + "import
+                                        // my.pkg.databinding.ActivityMethodImportBinding;\n"
+                                        + "\n"
+                                        + "public class MethodImportActivity {\n"
+                                        + "    public void test(LayoutInflater inflater){\n"
+                                        + "        inflate(inflater);\n"
                                         + "    }\n"
                                         + "}\n"),
 
@@ -1621,6 +1644,17 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "}\n"),
                         java(
                                 ""
+                                        + "package my.pkg.databinding;\n"
+                                        + "\n"
+                                        + "import android.view.LayoutInflater;\n"
+                                        + "\n"
+                                        + "public final class ActivityMethodImportBinding implements androidx.viewbinding.ViewBinding {\n"
+                                        + "  public static ActivityMethodImportBinding inflate(LayoutInflater inflater) {\n"
+                                        + "    return this;\n"
+                                        + "  }\n"
+                                        + "}\n"),
+                        java(
+                                ""
                                         + "package androidx.viewbinding;\n"
                                         + "public interface ViewBinding {\n"
                                         + "}"))
@@ -1662,6 +1696,13 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
                                         + "    android:orientation=\"vertical\" android:layout_width=\"match_parent\"\n"
                                         + "    android:layout_height=\"match_parent\" />\n"),
+                        xml(
+                                "src/main/res/layout/activity_method_import.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    android:orientation=\"vertical\" android:layout_width=\"match_parent\"\n"
+                                        + "    android:layout_height=\"match_parent\" />\n"),
 
                         // View Binding usage here will reference activity_dot_syntax.xml
                         kotlin(
@@ -1691,6 +1732,20 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "    }\n"
                                         + "}\n"),
 
+                        // View Binding usage here will reference activity_method_import.xml
+                        kotlin(
+                                ""
+                                        + "package my.pkg\n"
+                                        + "\n"
+                                        + "import android.view.LayoutInflater\n"
+                                        + "import my.pkg.databinding.ActivityMethodImportBinding.inflate\n"
+                                        + "\n"
+                                        + "class MethodImportActivity {\n"
+                                        + "    fun test(inflater: LayoutInflater){\n"
+                                        + "        inflate(inflater)\n"
+                                        + "    }\n"
+                                        + "}\n"),
+
                         // Here we provide code that would have been generated for view binding /
                         // provided by the view binding lirary
                         java(
@@ -1712,6 +1767,17 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "\n"
                                         + "public final class ActivityMethodReferenceBinding implements androidx.viewbinding.ViewBinding {\n"
                                         + "  public static ActivityMethodReferenceBinding inflate(LayoutInflater inflater) {\n"
+                                        + "    return this;\n"
+                                        + "  }\n"
+                                        + "}\n"),
+                        java(
+                                ""
+                                        + "package my.pkg.databinding;\n"
+                                        + "\n"
+                                        + "import android.view.LayoutInflater;\n"
+                                        + "\n"
+                                        + "public final class ActivityMethodImportBinding implements androidx.viewbinding.ViewBinding {\n"
+                                        + "  public static ActivityMethodImportBinding inflate(LayoutInflater inflater) {\n"
                                         + "    return this;\n"
                                         + "  }\n"
                                         + "}\n"),
