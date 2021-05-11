@@ -71,8 +71,12 @@ class VariantDependencies internal constructor(
     val wearAppConfiguration: Configuration?,
     private val testedVariant: VariantImpl?,
     private val project: Project,
-    private val projectOptions: ProjectOptions
+    private val projectOptions: ProjectOptions,
+    isSelfInstrumenting: Boolean,
 ) {
+
+    // Never exclude artifacts for self-instrumenting, test-only modules.
+    private val avoidExcludingArtifacts = variantType.isSeparateTestProject && isSelfInstrumenting
 
     init {
         check(!variantType.isTestComponent || testedVariant != null) {
@@ -209,6 +213,7 @@ class VariantDependencies internal constructor(
 
     private fun isArtifactTypeExcluded(artifactType: AndroidArtifacts.ArtifactType): Boolean {
         return when {
+            avoidExcludingArtifacts -> false
             variantType.isDynamicFeature ->
                 artifactType != PACKAGED_DEPENDENCIES
                         && artifactType != APKS_FROM_BUNDLE

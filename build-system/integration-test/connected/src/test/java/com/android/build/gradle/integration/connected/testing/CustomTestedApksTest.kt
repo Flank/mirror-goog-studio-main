@@ -15,13 +15,12 @@
  */
 package com.android.build.gradle.integration.connected.testing
 
-import com.android.SdkConstants
-import com.android.build.api.variant.BuiltArtifactsLoader
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile
+import com.android.build.gradle.integration.common.truth.TruthHelper
 import com.android.build.gradle.integration.connected.utils.getEmulator
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.builder.model.v2.models.AndroidProject
@@ -30,14 +29,11 @@ import com.android.testutils.TestInputsGenerator
 import com.android.testutils.generateAarWithContent
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth
-import junit.framework.Assert.fail
-import junit.framework.TestFailure
 import org.junit.Before
 import org.junit.ClassRule
 import org.junit.Rule
 import org.junit.Test
 import java.io.File
-import java.lang.RuntimeException
 
 class CustomTestedApksTest {
 
@@ -48,7 +44,8 @@ class CustomTestedApksTest {
                 "aar",
                 generateAarWithContent(
                     packageName = "com.example.library",
-                    mainJar = TestInputsGenerator.jarWithEmptyClasses(listOf("com/example/library/MyClass"))
+                    mainJar = TestInputsGenerator.jarWithEmptyClasses(listOf("com/example/library/MyClass")),
+                    resources = mapOf("layout/lib_layout.xml" to """<LinearLayout/>""".toByteArray())
                 )
             )
         )
@@ -197,6 +194,11 @@ class CustomTestedApksTest {
         Truth.assertThat(manifestFile.exists()).isTrue()
         Truth.assertThat(manifestFile.readText()).contains("" +
                 "android:targetPackage=\"com.example.app.benchmark\" />")
+
+        val testOnlyApk =
+            project.getSubproject("test").getApk(GradleTestProject.ApkType.of("benchmark", true));
+        TruthHelper.assertThat(testOnlyApk).containsClass("Lcom/example/library/MyClass;")
+        TruthHelper.assertThat(testOnlyApk).containsResource("layout/lib_layout.xml")
     }
 
     companion object {
