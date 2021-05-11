@@ -87,7 +87,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
         var isLastCapture: Boolean = false
     )
 
-    private class ScreenshotSettings(
+    private data class ScreenshotSettings(
         val type: Screenshot.Type,
         val scale: Float = 1.0f
     )
@@ -425,26 +425,16 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
         updateScreenshotTypeCommand: UpdateScreenshotTypeCommand,
         callback: CommandCallback
     ) {
-        var changed = false
+        var changed: Boolean
         synchronized(stateLock) {
-            state.screenshotSettings = ScreenshotSettings(
-                updateScreenshotTypeCommand.type.let {
-                    if (it == Screenshot.Type.UNKNOWN || it == state.screenshotSettings.type) {
-                        state.screenshotSettings.type
-                    } else {
-                        changed = true
-                        it
-                    }
-                },
-                updateScreenshotTypeCommand.scale.let {
-                    if (it <= 0f || it == state.screenshotSettings.scale) {
-                        state.screenshotSettings.scale
-                    } else {
-                        changed = true
-                        it
-                    }
-                }
-            )
+            val oldSettings = state.screenshotSettings
+            val newSettings = updateScreenshotTypeCommand.let {
+                ScreenshotSettings(
+                    it.type.takeIf { type -> type != Screenshot.Type.UNKNOWN } ?: oldSettings.type,
+                    it.scale.takeIf { scale -> scale > 0f } ?: oldSettings.scale)
+            }
+            changed = (oldSettings != newSettings)
+            state.screenshotSettings = newSettings
         }
         callback.reply {
             updateScreenshotTypeResponse = UpdateScreenshotTypeResponse.getDefaultInstance()
