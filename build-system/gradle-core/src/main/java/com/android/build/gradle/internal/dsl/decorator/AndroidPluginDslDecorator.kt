@@ -22,10 +22,12 @@ import com.android.build.api.dsl.AssetPackBundleExtension
 import com.android.build.api.dsl.BundleDeviceTier
 import com.android.build.api.dsl.BundleTexture
 import com.android.build.api.dsl.LibraryPublishing
+import com.android.build.api.dsl.CompileOptions
 import com.android.build.api.dsl.SigningConfig
 import com.android.build.gradle.internal.dsl.AaptOptions
 import com.android.build.gradle.internal.dsl.ApplicationPublishingImpl
 import com.android.build.gradle.internal.dsl.LibraryPublishingImpl
+import org.gradle.api.JavaVersion
 
 /** The list of all the supported property types for the production AGP */
 val AGP_SUPPORTED_PROPERTY_TYPES: List<SupportedPropertyType> = listOf(
@@ -33,12 +35,14 @@ val AGP_SUPPORTED_PROPERTY_TYPES: List<SupportedPropertyType> = listOf(
     SupportedPropertyType.Var.Boolean,
     SupportedPropertyType.Var.NullableBoolean,
     SupportedPropertyType.Var.Int,
+    SupportedPropertyType.Var.Enum(JavaVersion::class.java),
     SupportedPropertyType.Collection.List,
     SupportedPropertyType.Collection.Set,
     SupportedPropertyType.Block(AndroidResources::class.java, AaptOptions::class.java),
     SupportedPropertyType.Block(AssetPackBundleExtension::class.java),
     SupportedPropertyType.Block(BundleTexture::class.java),
     SupportedPropertyType.Block(BundleDeviceTier::class.java),
+    SupportedPropertyType.Block(CompileOptions::class.java, com.android.build.gradle.internal.CompileOptions::class.java),
     SupportedPropertyType.Block(SigningConfig::class.java),
     SupportedPropertyType.Block(ApplicationPublishing::class.java, ApplicationPublishingImpl::class.java),
     SupportedPropertyType.Block(LibraryPublishing::class.java, LibraryPublishingImpl::class.java)

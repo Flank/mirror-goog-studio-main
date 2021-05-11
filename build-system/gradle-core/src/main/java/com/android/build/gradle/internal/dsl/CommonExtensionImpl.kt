@@ -109,13 +109,6 @@ abstract class CommonExtensionImpl<
         action(buildFeatures)
     }
 
-    override val compileOptions: CompileOptions =
-        dslServices.newInstance(CompileOptions::class.java)
-
-    override fun compileOptions(action: com.android.build.api.dsl.CompileOptions.() -> Unit) {
-        action.invoke(compileOptions)
-    }
-
     override abstract var compileSdkVersion: String?
 
     override var compileSdk: Int?
