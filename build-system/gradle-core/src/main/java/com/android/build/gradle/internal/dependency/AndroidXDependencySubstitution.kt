@@ -135,6 +135,6 @@ object AndroidXDependencySubstitution {
 
     private const val COM_ANDROID_SUPPORT = "com.android.support"
     private const val COM_ANDROID_DATABINDING = "com.android.databinding"
-    private const val COM_ANDROID_DATABINDING_BASELIBRARY = "com.android.databinding:baseLibrary"
+    internal const val COM_ANDROID_DATABINDING_BASELIBRARY = "com.android.databinding:baseLibrary"
     private const val ANDROID_ARCH_ = "android.arch."
 }

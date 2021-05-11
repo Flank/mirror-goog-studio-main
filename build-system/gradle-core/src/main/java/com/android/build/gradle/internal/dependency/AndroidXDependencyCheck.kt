@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.dependency
 
+import com.android.build.gradle.internal.dependency.AndroidXDependencySubstitution.COM_ANDROID_DATABINDING_BASELIBRARY
 import com.android.build.gradle.internal.utils.getModuleComponents
 import com.android.build.gradle.internal.utils.getPathFromRoot
 import com.android.build.gradle.options.BooleanOption
@@ -54,7 +55,7 @@ object AndroidXDependencyCheck {
             }
 
             val androidXDependencies =
-                    resolvableDependencies.resolutionResult.getModuleComponents() {
+                    resolvableDependencies.resolutionResult.getModuleComponents {
                         AndroidXDependencySubstitution.isAndroidXDependency("${it.group}:${it.module}:${it.version}")
                     }
             val pathsToAndroidXDependencies = androidXDependencies.map {
@@ -100,8 +101,11 @@ object AndroidXDependencyCheck {
             }
 
             val supportLibDependencies =
-                    resolvableDependencies.resolutionResult.getModuleComponents() {
-                        AndroidXDependencySubstitution.isLegacySupportLibDependency("${it.group}:${it.module}:${it.version}")
+                    resolvableDependencies.resolutionResult.getModuleComponents {
+                        val componentId = "${it.group}:${it.module}:${it.version}"
+                        AndroidXDependencySubstitution.isLegacySupportLibDependency(componentId)
+                                // com.android.databinding:baseLibrary is an exception (see bug 187448822)
+                                && !componentId.startsWith(COM_ANDROID_DATABINDING_BASELIBRARY)
                     }
             if (supportLibDependencies.isNotEmpty()) {
                 project.extensions.extraProperties.set(issueReported, true)
