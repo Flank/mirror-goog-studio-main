@@ -25,6 +25,7 @@ import com.intellij.pom.java.LanguageLevel
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiRecursiveElementVisitor
 import com.intellij.psi.PsiTypeParameter
+import junit.framework.AssertionFailedError
 import junit.framework.TestCase
 import org.jetbrains.kotlin.asJava.elements.KotlinLightTypeParameterBuilder
 import org.jetbrains.kotlin.asJava.unwrapped
@@ -37,6 +38,7 @@ import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UFile
 import org.jetbrains.uast.ULocalVariable
+import org.jetbrains.uast.UReferenceExpression
 import org.jetbrains.uast.toUElement
 import org.jetbrains.uast.util.isAssignment
 import org.jetbrains.uast.visitor.AbstractUastVisitor
@@ -1334,6 +1336,58 @@ class UastTest : TestCase() {
                 """.trimIndent(),
                 file.asLogTypes(indent = "  ").trim()
             )
+        }
+    }
+
+    fun testResolveLambdaVar() { // See KT-46628
+        val source = kotlin(
+            """
+            package test.pkg
+
+            fun test1(s: String?) {
+                s?.let {
+                    println(it)
+                }
+            }
+
+            fun test2(s: String?) {
+                s?.let { it ->
+                    println(it)
+                }
+            }
+
+            fun test3(s: String?) {
+                s?.let { t ->
+                    println(t)
+                }
+            }
+            """
+        ).indented()
+
+        check(
+            source
+        ) { file ->
+            try {
+                file.accept(object : AbstractUastVisitor() {
+                    override fun visitCallExpression(node: UCallExpression): Boolean {
+                        val argument = node.valueArguments.firstOrNull()
+                        (argument as? UReferenceExpression)?.let {
+                            val resolved = argument.resolve()
+                            assertNotNull(
+                                "Couldn't resolve `${argument.sourcePsi?.text ?: argument.asSourceString()}`",
+                                resolved
+                            )
+                        }
+
+                        return super.visitCallExpression(node)
+                    }
+                })
+                // When we get this failure, KT-46628 has been fixed and we can remove
+                // local workarounds, such as the one in DataflowAnalyzer.
+                fail("Expected unresolved error: see KT-46628")
+            } catch (failure: AssertionFailedError) {
+                assertEquals("Couldn't resolve `it`", failure.message)
+            }
         }
     }
 }
