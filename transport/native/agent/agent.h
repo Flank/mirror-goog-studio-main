@@ -37,10 +37,10 @@
 
 namespace profiler {
 
-// Function call back that returns the true/false status if the agent is
-// connected to daemon. Each time the status changes this callback gets called
-// with the new (current) state of the connection.
-using DaemonStatusChanged = std::function<void(bool)>;
+// Function call back that returns the true/false status if the callback should
+// be removed after execution. Each time the status changes this callback gets
+// called with the new (current) state of the connection as the argument.
+using DaemonStatusChanged = std::function<bool(bool)>;
 
 // Function that handles a Command forwarded from daemon.
 using CommandHandler = std::function<void(const proto::Command*)>;
