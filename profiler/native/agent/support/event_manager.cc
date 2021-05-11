@@ -73,7 +73,7 @@ void EventManager::EnqueueActivityEvent(
       }});
 }
 
-void EventManager::PerfdStateChanged(bool becomes_alive) {
+bool EventManager::PerfdStateChanged(bool becomes_alive) {
   if (becomes_alive) {
     lock_guard<mutex> guard(activity_cache_mutex_);
     for (const auto& map : hash_activity_cache_) {
@@ -81,5 +81,8 @@ void EventManager::PerfdStateChanged(bool becomes_alive) {
     }
     hash_activity_cache_.clear();
   }
+  // The return value determines whether to remove this callback. Always returns
+  // false as this is always needed in case the daemon restarts.
+  return false;
 }
 }  // namespace profiler
