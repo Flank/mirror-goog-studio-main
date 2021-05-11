@@ -19,10 +19,13 @@ import com.android.build.gradle.internal.cxx.cmake.TargetDataItem.Artifacts
 import com.android.build.gradle.internal.cxx.cmake.TargetDataItem.CompileGroups
 import com.android.build.gradle.internal.cxx.cmake.TargetDataItem.Dependencies
 import com.android.build.gradle.internal.cxx.cmake.TargetDataItem.Link
+import com.android.build.gradle.internal.cxx.cmake.TargetDataItem.Paths
 import com.android.build.gradle.internal.cxx.cmake.TargetDataItem.Source
 import com.android.build.gradle.internal.cxx.cmake.TargetDataItem.SourceGroups
 import com.android.build.gradle.internal.cxx.cmake.TargetDataItem.Type
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty
+import com.android.build.gradle.internal.cxx.configure.convertCMakeToCompileCommandsBin
+import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons.writeNativeBuildConfigValueToJsonFile
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValue
 import com.android.build.gradle.internal.cxx.json.NativeLibraryValue
 import com.android.build.gradle.internal.cxx.json.NativeToolchainValue
@@ -34,6 +37,7 @@ import com.google.gson.stream.JsonToken
 import java.io.Closeable
 import java.io.File
 import java.io.FileReader
+import java.lang.RuntimeException
 
 /**
  * CMake file-api reply directory is laid out as follows:
@@ -70,13 +74,16 @@ private fun findCmakeQueryApiIndexFile(replyFolder: File) : File? {
 
 
 /**
- * Information about a single source file. [path] should be a full path, [sourceGroup] is usually
- * "Source Files" or "Header Files", and [compileGroup] contains flags, defines, and other
- * information relevant to a single source or header file.
+ * Information about a single source file.
  */
 data class CmakeFileApiSourceFile(
-    val path : File,
+    // Path to the root sources folder
+    val rootSourceFolder : File,
+    // Path to a particular source file, if not absolute then relative to [rootSourceFolder]
+    val sourcePath : String,
+    // A type for this file. For example, "Source Files" or "Header Files"
     val sourceGroup : String,
+    // Contains flags, defines, and other information relevant to a single source or header file
     val compileGroup : TargetCompileGroupData?
 )
 
@@ -132,6 +139,7 @@ fun readCmakeFileApiReply(
     val targetIdToOutputs = mutableMapOf<String, MutableSet<String>>()
     var compileGroups : List<TargetCompileGroupData>? = null
     var sourceGroups : List<String>? = null
+    var paths : Paths? = null
     val targetIdToNativeLibraryValue = mutableMapOf<String, NativeLibraryValue>()
     val languageToExtensionMap = mutableMapOf<String, MutableSet<String>>()
     val codeModel = index.getIndexObject("codemodel", replyFolder, CmakeFileApiCodeModelDataV2::class.java)!!
@@ -165,6 +173,7 @@ fun readCmakeFileApiReply(
                         is CompileGroups -> compileGroups = item.compileGroups
                         is SourceGroups -> sourceGroups = item.sourceGroups
                         is Link -> targetIdToLink[item.targetId] = item
+                        is Paths -> paths = item
                         is Source -> {
                             // This relies on "compileGroups" arriving before "sources". Without this
                             // assumption we'd need to scan source files twice, first to find compileGroups
@@ -177,18 +186,17 @@ fun readCmakeFileApiReply(
                                         // No compile group probably means the sourceGroup is "Header Files"
                                         null
                                     }
-                            val sourceFile = rootSourceFolder.resolve(item.path)
-
                             // Record the file extension for each language seen.
                             if (compileGroup != null) {
                                 languageToExtensionMap.computeIfAbsent(compileGroup.language) {
                                     mutableSetOf()
-                                }.add(sourceFile.extension)
+                                }.add(File(item.path).extension)
                             }
 
                             sourceFlagAction(
                                     CmakeFileApiSourceFile(
-                                            path = sourceFile,
+                                            rootSourceFolder = rootSourceFolder,
+                                            sourcePath = item.path,
                                             sourceGroup = sourceGroup,
                                             compileGroup = compileGroup
                                     )
@@ -284,6 +292,7 @@ private class TargetDataStream(
                                 readSingleStringObjectList("id")))
                         "sourceGroups" -> yield(SourceGroups(
                                 readSingleStringObjectList("name")))
+                        "paths" -> yield(readPaths())
                         "sources" -> yieldAll(streamSources())
                         "type" -> yield(Type(reader.nextString()))
                         else -> reader.skipValue()
@@ -358,6 +367,23 @@ private class TargetDataStream(
         }
         reader.endObject()
         return Link(targetId, commandFragments, language, sysroot)
+    }
+
+    private fun readPaths() : Paths {
+        reader.beginObject()
+        lateinit var build : String
+        lateinit var source: String
+        while (reader.hasNext()) {
+            when(reader.nextName()) {
+                "build" -> build = reader.nextString()
+                "source" -> source = reader.nextString()
+                else -> reader.skipValue()
+            }
+        }
+        reader.endObject()
+        return Paths(
+            build = build,
+            source = source)
     }
 
     private fun readCommandFragments() : List<CommandFragmentData> = sequence {
@@ -465,3 +491,43 @@ private class TargetDataStream(
 private val GSON = GsonBuilder()
     .setPrettyPrinting()
     .create()
+
+/**
+ * Convert a CMake file API reply folder into the metadata that
+ * we need to provide Intellisense, caching, etc.
+ */
+fun parseCmakeFileApiReply(
+    replyFolder : File,
+    additionalFiles : File,
+    androidGradleBuildJsonFile : File,
+    compileCommandsJsonFile : File,
+    compileCommandsJsonBinFile : File,
+    buildTargetsCommand : List<String>) {
+    try {
+        val extra = mutableSetOf<String>()
+        val config = readCmakeFileApiReply(replyFolder) { source ->
+            if (source.sourceGroup == "Source Files") {
+            } else {
+                extra += source.rootSourceFolder.resolve(source.sourcePath).absolutePath
+            }
+        }
+        additionalFiles.writeText(extra.joinToString("\n"))
+
+        // Write the ninja build command, possibly with user settings from CMakeSettings.json.
+        config.buildTargetsCommandComponents = buildTargetsCommand
+
+        writeNativeBuildConfigValueToJsonFile(
+            androidGradleBuildJsonFile,
+            config
+        )
+
+        // Write compile_commands.json.bin
+        convertCMakeToCompileCommandsBin(
+            compileCommandsJsonFile,
+            compileCommandsJsonBinFile,
+        )
+    } catch (e : Exception) {
+        // Give the user a way to open a constructive bug
+        throw RuntimeException("Please open a bug with zip of ${compileCommandsJsonFile.parentFile.absoluteFile}", e)
+    }
+}

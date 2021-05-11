@@ -1,0 +1,1121 @@
+{
+	"artifacts" :
+	[
+		{
+			"path" : "Binaries/Tests/MMIOTest"
+		}
+	],
+	"backtrace" : 2,
+	"backtraceGraph" :
+	{
+		"commands" :
+		[
+			"add_executable",
+			"add_dolphin_test",
+			"target_link_libraries",
+			"add_compile_options",
+			"check_and_add_flag",
+			"add_definitions",
+			"include_directories"
+		],
+		"files" :
+		[
+			"Source/UnitTests/CMakeLists.txt",
+			"Source/UnitTests/Core/CMakeLists.txt",
+			"CMake/CheckAndAddFlag.cmake",
+			"CMakeLists.txt",
+			"Source/CMakeLists.txt"
+		],
+		"nodes" :
+		[
+			{
+				"file" : 1
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 1,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 14,
+				"parent" : 1
+			},
+			{
+				"command" : 2,
+				"file" : 0,
+				"line" : 19,
+				"parent" : 1
+			},
+			{
+				"file" : 3
+			},
+			{
+				"command" : 4,
+				"file" : 3,
+				"line" : 213,
+				"parent" : 4
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 54,
+				"parent" : 5
+			},
+			{
+				"command" : 4,
+				"file" : 3,
+				"line" : 227,
+				"parent" : 4
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 54,
+				"parent" : 7
+			},
+			{
+				"command" : 4,
+				"file" : 3,
+				"line" : 260,
+				"parent" : 4
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 54,
+				"parent" : 9
+			},
+			{
+				"command" : 4,
+				"file" : 3,
+				"line" : 261,
+				"parent" : 4
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 54,
+				"parent" : 11
+			},
+			{
+				"command" : 4,
+				"file" : 3,
+				"line" : 263,
+				"parent" : 4
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 54,
+				"parent" : 13
+			},
+			{
+				"command" : 4,
+				"file" : 3,
+				"line" : 264,
+				"parent" : 4
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 54,
+				"parent" : 15
+			},
+			{
+				"command" : 4,
+				"file" : 3,
+				"line" : 266,
+				"parent" : 4
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 54,
+				"parent" : 17
+			},
+			{
+				"file" : 4
+			},
+			{
+				"command" : 4,
+				"file" : 4,
+				"line" : 76,
+				"parent" : 19
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 54,
+				"parent" : 20
+			},
+			{
+				"command" : 4,
+				"file" : 4,
+				"line" : 84,
+				"parent" : 19
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 54,
+				"parent" : 22
+			},
+			{
+				"command" : 4,
+				"file" : 4,
+				"line" : 85,
+				"parent" : 19
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 54,
+				"parent" : 24
+			},
+			{
+				"command" : 4,
+				"file" : 4,
+				"line" : 86,
+				"parent" : 19
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 54,
+				"parent" : 26
+			},
+			{
+				"command" : 4,
+				"file" : 4,
+				"line" : 87,
+				"parent" : 19
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 54,
+				"parent" : 28
+			},
+			{
+				"command" : 4,
+				"file" : 4,
+				"line" : 89,
+				"parent" : 19
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 54,
+				"parent" : 30
+			},
+			{
+				"command" : 4,
+				"file" : 4,
+				"line" : 90,
+				"parent" : 19
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 54,
+				"parent" : 32
+			},
+			{
+				"command" : 4,
+				"file" : 4,
+				"line" : 91,
+				"parent" : 19
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 54,
+				"parent" : 34
+			},
+			{
+				"command" : 4,
+				"file" : 4,
+				"line" : 92,
+				"parent" : 19
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 54,
+				"parent" : 36
+			},
+			{
+				"command" : 4,
+				"file" : 4,
+				"line" : 106,
+				"parent" : 19
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 54,
+				"parent" : 38
+			},
+			{
+				"command" : 5,
+				"file" : 3,
+				"line" : 380,
+				"parent" : 4
+			},
+			{
+				"command" : 5,
+				"file" : 3,
+				"line" : 102,
+				"parent" : 4
+			},
+			{
+				"command" : 5,
+				"file" : 3,
+				"line" : 550,
+				"parent" : 4
+			},
+			{
+				"command" : 5,
+				"file" : 3,
+				"line" : 545,
+				"parent" : 4
+			},
+			{
+				"command" : 5,
+				"file" : 3,
+				"line" : 451,
+				"parent" : 4
+			},
+			{
+				"command" : 5,
+				"file" : 3,
+				"line" : 721,
+				"parent" : 4
+			},
+			{
+				"command" : 5,
+				"file" : 3,
+				"line" : 502,
+				"parent" : 4
+			},
+			{
+				"command" : 5,
+				"file" : 3,
+				"line" : 364,
+				"parent" : 4
+			},
+			{
+				"command" : 5,
+				"file" : 3,
+				"line" : 497,
+				"parent" : 4
+			},
+			{
+				"command" : 5,
+				"file" : 3,
+				"line" : 495,
+				"parent" : 4
+			},
+			{
+				"command" : 5,
+				"file" : 3,
+				"line" : 193,
+				"parent" : 4
+			},
+			{
+				"command" : 5,
+				"file" : 3,
+				"line" : 257,
+				"parent" : 4
+			},
+			{
+				"command" : 5,
+				"file" : 3,
+				"line" : 413,
+				"parent" : 4
+			},
+			{
+				"command" : 5,
+				"file" : 3,
+				"line" : 414,
+				"parent" : 4
+			},
+			{
+				"command" : 5,
+				"file" : 3,
+				"line" : 211,
+				"parent" : 4
+			},
+			{
+				"command" : 5,
+				"file" : 4,
+				"line" : 113,
+				"parent" : 19
+			},
+			{
+				"command" : 5,
+				"file" : 4,
+				"line" : 112,
+				"parent" : 19
+			},
+			{
+				"command" : 6,
+				"file" : 3,
+				"line" : 763,
+				"parent" : 4
+			},
+			{
+				"command" : 6,
+				"file" : 3,
+				"line" : 723,
+				"parent" : 4
+			},
+			{
+				"command" : 6,
+				"file" : 3,
+				"line" : 508,
+				"parent" : 4
+			},
+			{
+				"command" : 6,
+				"file" : 3,
+				"line" : 510,
+				"parent" : 4
+			},
+			{
+				"command" : 6,
+				"file" : 3,
+				"line" : 584,
+				"parent" : 4
+			},
+			{
+				"command" : 6,
+				"file" : 3,
+				"line" : 643,
+				"parent" : 4
+			},
+			{
+				"command" : 6,
+				"file" : 3,
+				"line" : 684,
+				"parent" : 4
+			},
+			{
+				"command" : 6,
+				"file" : 3,
+				"line" : 751,
+				"parent" : 4
+			},
+			{
+				"command" : 6,
+				"file" : 3,
+				"line" : 776,
+				"parent" : 4
+			},
+			{
+				"command" : 6,
+				"file" : 3,
+				"line" : 809,
+				"parent" : 4
+			},
+			{
+				"command" : 6,
+				"file" : 3,
+				"line" : 826,
+				"parent" : 4
+			}
+		]
+	},
+	"compileGroups" :
+	[
+		{
+			"compileCommandFragments" :
+			[
+				{
+					"fragment" : "-g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -O2 -g -DNDEBUG -fPIE"
+				},
+				{
+					"backtrace" : 6,
+					"fragment" : "-march=armv8-a+crc"
+				},
+				{
+					"backtrace" : 8,
+					"fragment" : "-fdiagnostics-color"
+				},
+				{
+					"backtrace" : 10,
+					"fragment" : "-fno-strict-aliasing"
+				},
+				{
+					"backtrace" : 12,
+					"fragment" : "-fno-exceptions"
+				},
+				{
+					"backtrace" : 14,
+					"fragment" : "-fvisibility-inlines-hidden"
+				},
+				{
+					"backtrace" : 16,
+					"fragment" : "-fvisibility=hidden"
+				},
+				{
+					"backtrace" : 18,
+					"fragment" : "-fomit-frame-pointer"
+				},
+				{
+					"backtrace" : 21,
+					"fragment" : "-Wall"
+				},
+				{
+					"backtrace" : 23,
+					"fragment" : "-Wtype-limits"
+				},
+				{
+					"backtrace" : 25,
+					"fragment" : "-Wsign-compare"
+				},
+				{
+					"backtrace" : 27,
+					"fragment" : "-Wignored-qualifiers"
+				},
+				{
+					"backtrace" : 29,
+					"fragment" : "-Wuninitialized"
+				},
+				{
+					"backtrace" : 31,
+					"fragment" : "-Wshadow"
+				},
+				{
+					"backtrace" : 33,
+					"fragment" : "-Winit-self"
+				},
+				{
+					"backtrace" : 35,
+					"fragment" : "-Wmissing-declarations"
+				},
+				{
+					"backtrace" : 37,
+					"fragment" : "-Wmissing-variable-declarations"
+				},
+				{
+					"backtrace" : 39,
+					"fragment" : "-Werror=format"
+				},
+				{
+					"fragment" : "-std=c++17"
+				}
+			],
+			"defines" :
+			[
+				{
+					"backtrace" : 40,
+					"define" : "ANDROID"
+				},
+				{
+					"backtrace" : 41,
+					"define" : "DATA_DIR=\"/usr/local/share/dolphin-emu/\""
+				},
+				{
+					"backtrace" : 3,
+					"define" : "FMT_LOCALE"
+				},
+				{
+					"backtrace" : 42,
+					"define" : "HAS_OPENGL"
+				},
+				{
+					"backtrace" : 43,
+					"define" : "HAS_VULKAN"
+				},
+				{
+					"backtrace" : 44,
+					"define" : "HAVE_EGL=1"
+				},
+				{
+					"backtrace" : 3,
+					"define" : "LZMA_API_STATIC"
+				},
+				{
+					"backtrace" : 45,
+					"define" : "SFML_STATIC"
+				},
+				{
+					"backtrace" : 46,
+					"define" : "USE_ANALYTICS=1"
+				},
+				{
+					"backtrace" : 47,
+					"define" : "USE_GDBSTUB"
+				},
+				{
+					"backtrace" : 48,
+					"define" : "USE_MEMORYWATCHER=1"
+				},
+				{
+					"backtrace" : 49,
+					"define" : "USE_PIPES=1"
+				},
+				{
+					"backtrace" : 50,
+					"define" : "_ARCH_64=1"
+				},
+				{
+					"backtrace" : 51,
+					"define" : "_DEFAULT_SOURCE"
+				},
+				{
+					"backtrace" : 52,
+					"define" : "_FILE_OFFSET_BITS=64"
+				},
+				{
+					"backtrace" : 53,
+					"define" : "_LARGEFILE_SOURCE"
+				},
+				{
+					"backtrace" : 54,
+					"define" : "_M_ARM_64=1"
+				},
+				{
+					"backtrace" : 55,
+					"define" : "__STDC_CONSTANT_MACROS"
+				},
+				{
+					"backtrace" : 56,
+					"define" : "__STDC_LIMIT_MACROS"
+				}
+			],
+			"includes" :
+			[
+				{
+					"backtrace" : 57,
+					"path" : "/{PROJECT}/Externals/curl/include"
+				},
+				{
+					"backtrace" : 58,
+					"path" : "/{PROJECT}/Externals/SFML/include"
+				},
+				{
+					"backtrace" : 59,
+					"path" : "/{PROJECT}/Source/Core"
+				},
+				{
+					"backtrace" : 60,
+					"path" : "/{PROJECT}/Source/Android"
+				},
+				{
+					"backtrace" : 61,
+					"path" : "/{PROJECT}/Externals/enet/include"
+				},
+				{
+					"backtrace" : 62,
+					"path" : "/{PROJECT}/External/minizip"
+				},
+				{
+					"backtrace" : 63,
+					"path" : "/{PROJECT}/Externals/soundtouch"
+				},
+				{
+					"backtrace" : 64,
+					"path" : "/{PROJECT}/Externals/mbedtls/include"
+				},
+				{
+					"backtrace" : 65,
+					"path" : "/{PROJECT}/Externals/libiconv-1.14/include"
+				},
+				{
+					"backtrace" : 66,
+					"path" : "/{PROJECT}/Externals/picojson"
+				},
+				{
+					"backtrace" : 67,
+					"path" : "/{PROJECT}/Source/Android/app/.cxx/RelWithDebInfo/262v3q4o/arm64-v8a/Source/Core"
+				},
+				{
+					"backtrace" : 3,
+					"path" : "/{PROJECT}/Externals/fmt/include"
+				},
+				{
+					"backtrace" : 3,
+					"path" : "/{PROJECT}/Externals/minizip/."
+				},
+				{
+					"backtrace" : 3,
+					"path" : "/{PROJECT}/Externals/cubeb/include"
+				},
+				{
+					"backtrace" : 3,
+					"path" : "/{PROJECT}/Source/Android/app/.cxx/RelWithDebInfo/262v3q4o/arm64-v8a/exports"
+				},
+				{
+					"backtrace" : 3,
+					"path" : "/{PROJECT}/Externals/bzip2"
+				},
+				{
+					"backtrace" : 3,
+					"path" : "/{PROJECT}/Externals/liblzma/api"
+				},
+				{
+					"backtrace" : 3,
+					"path" : "/{PROJECT}/Externals/zstd/lib"
+				},
+				{
+					"backtrace" : 3,
+					"path" : "/{PROJECT}/Externals/pugixml/."
+				},
+				{
+					"backtrace" : 3,
+					"path" : "/{PROJECT}/Externals/cpp-optparse/."
+				},
+				{
+					"backtrace" : 3,
+					"isSystem" : true,
+					"path" : "/{PROJECT}/Externals/rangeset/include"
+				},
+				{
+					"backtrace" : 3,
+					"isSystem" : true,
+					"path" : "/{PROJECT}/Externals/gtest/include"
+				}
+			],
+			"language" : "CXX",
+			"sourceIndexes" :
+			[
+				0
+			],
+			"sysroot" :
+			{
+				"path" : "/{SDK}/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/sysroot"
+			}
+		}
+	],
+	"dependencies" :
+	[
+		{
+			"backtrace" : 3,
+			"id" : "cubeb::@6ea19969518fdc86ca9a"
+		},
+		{
+			"backtrace" : 3,
+			"id" : "cpp-optparse::@8b1b526ed897ca1b5f98"
+		},
+		{
+			"backtrace" : 3,
+			"id" : "sfml-system::@2ac3de1cd4e37053a0ec"
+		},
+		{
+			"backtrace" : 3,
+			"id" : "sfml-network::@2ac3de1cd4e37053a0ec"
+		},
+		{
+			"backtrace" : 3,
+			"id" : "mbedcrypto::@732912fcc58a0dc9a42e"
+		},
+		{
+			"backtrace" : 3,
+			"id" : "mbedx509::@732912fcc58a0dc9a42e"
+		},
+		{
+			"backtrace" : 3,
+			"id" : "mbedtls::@732912fcc58a0dc9a42e"
+		},
+		{
+			"backtrace" : 3,
+			"id" : "curl::@b093635c521e302827eb"
+		},
+		{
+			"backtrace" : 3,
+			"id" : "iconv::@1569e4131ab53f97a747"
+		},
+		{
+			"backtrace" : 3,
+			"id" : "gtest_main::@b145bd6ea16d0490767d"
+		},
+		{
+			"backtrace" : 3,
+			"id" : "gtest::@b145bd6ea16d0490767d"
+		},
+		{
+			"backtrace" : 3,
+			"id" : "audiocommon::@017974ccde8a39b3a821"
+		},
+		{
+			"backtrace" : 3,
+			"id" : "uicommon::@ae1587772a74627bbcb2"
+		},
+		{
+			"backtrace" : 3,
+			"id" : "common::@9141e9f836bd500e1b01"
+		},
+		{
+			"backtrace" : 3,
+			"id" : "core::@ca4b04e15e5407d68ad6"
+		},
+		{
+			"backtrace" : 3,
+			"id" : "discio::@2983cf837c571654fa51"
+		},
+		{
+			"backtrace" : 3,
+			"id" : "inputcommon::@b23540f05ce090a8b659"
+		},
+		{
+			"id" : "unittests_stubhost::@02969707d2e8af0d2b6d"
+		},
+		{
+			"backtrace" : 3,
+			"id" : "imgui::@468b56d3be233a1c008d"
+		},
+		{
+			"backtrace" : 3,
+			"id" : "fmt::@b954ac15050c24475b56"
+		},
+		{
+			"backtrace" : 3,
+			"id" : "glslang::@4848656d14c7a14e7112"
+		},
+		{
+			"backtrace" : 3,
+			"id" : "pugixml::@9b79c4054cdd0fec4840"
+		},
+		{
+			"backtrace" : 3,
+			"id" : "enet::@3f5dfd7365014ec88a01"
+		},
+		{
+			"backtrace" : 3,
+			"id" : "xxhash::@7230e27978e4664644c4"
+		},
+		{
+			"backtrace" : 3,
+			"id" : "bzip2::@7ac223ab49f6f72a65be"
+		},
+		{
+			"backtrace" : 3,
+			"id" : "lzma::@ff2fb7602ae4d07c3a16"
+		},
+		{
+			"backtrace" : 3,
+			"id" : "zstd::@60784aa8e634a98820a3"
+		},
+		{
+			"backtrace" : 3,
+			"id" : "minizip::@60722d79459882e1fa56"
+		},
+		{
+			"backtrace" : 3,
+			"id" : "lzo2::@dfbf75e4d3a882b42e1e"
+		},
+		{
+			"backtrace" : 3,
+			"id" : "png::@c3b138158b8761823a27"
+		},
+		{
+			"backtrace" : 3,
+			"id" : "FreeSurround::@8075e14656e5b339a912"
+		},
+		{
+			"backtrace" : 3,
+			"id" : "SoundTouch::@6947d0c891ccfdbf13d2"
+		}
+	],
+	"folder" :
+	{
+		"name" : "Tests"
+	},
+	"id" : "MMIOTest::@2b47b887fbd1520e0220",
+	"link" :
+	{
+		"commandFragments" :
+		[
+			{
+				"fragment" : "-g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -O2 -g -DNDEBUG",
+				"role" : "flags"
+			},
+			{
+				"fragment" : "-Wl,--exclude-libs,libgcc.a -Wl,--exclude-libs,libgcc_real.a -Wl,--exclude-libs,libatomic.a -static-libstdc++ -Wl,--build-id -Wl,--fatal-warnings -Wl,--no-undefined -Qunused-arguments -Wl,--gc-sections",
+				"role" : "flags"
+			},
+			{
+				"backtrace" : 3,
+				"fragment" : "../../Core/Core/libcore.a",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 3,
+				"fragment" : "../../Core/UICommon/libuicommon.a",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 3,
+				"fragment" : "../../../Externals/gtest/libgtest_main.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../Core/VideoBackends/Null/libvideonull.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../Core/VideoBackends/OGL/libvideoogl.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../Core/VideoBackends/Software/libvideosoftware.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../Core/VideoBackends/Vulkan/libvideovulkan.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../Core/VideoCommon/libvideocommon.a",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 3,
+				"fragment" : "../../Core/Core/libcore.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../Core/VideoBackends/Null/libvideonull.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../Core/VideoBackends/OGL/libvideoogl.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../Core/VideoBackends/Software/libvideosoftware.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../Core/VideoBackends/Vulkan/libvideovulkan.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../Core/VideoCommon/libvideocommon.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../Core/AudioCommon/libaudiocommon.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/{SDK}/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-android/21/libOpenSLES.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../../Externals/soundtouch/libSoundTouch.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../../Externals/FreeSurround/libFreeSurround.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../../Externals/cubeb/libcubeb.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lOpenSLES",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../Core/DiscIO/libdiscio.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../../Externals/bzip2/libbzip2.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../../Externals/liblzma/liblzma.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../../Externals/zstd/libzstd.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../Core/InputCommon/libinputcommon.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../../Externals/SFML/libsfml-network.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../../Externals/SFML/libsfml-system.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../../Externals/LZO/liblzo2.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../../Externals/glslang/libglslang.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../../Externals/xxhash/libxxhash.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../../Externals/imgui/libimgui.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../Core/Common/libcommon.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../Android/jni/AndroidCommon/libandroidcommon.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../Core/Common/libcommon.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../Android/jni/AndroidCommon/libandroidcommon.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../../Externals/enet/libenet.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../../Externals/curl/lib/libcurl.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../../Externals/mbedtls/library/libmbedtls.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../../Externals/mbedtls/library/libmbedx509.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../../Externals/mbedtls/library/libmbedcrypto.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lz",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../../Externals/libiconv-1.14/libiconv.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../../Externals/libpng/libpng.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lEGL",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-landroid",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-llog",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-Wl,--no-warn-mismatch",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-Wl,--whole-archive",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-Wl,--no-whole-archive",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../../Externals/pugixml/libpugixml.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../../Externals/fmt/libfmt.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../../Externals/cpp-optparse/libcpp-optparse.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../../Externals/minizip/libminizip.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/{SDK}/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-android/libz.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../../Externals/gtest/libgtest.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-pthread",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-latomic -lm",
+				"role" : "libraries"
+			}
+		],
+		"language" : "CXX",
+		"sysroot" :
+		{
+			"path" : "/{SDK}/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/sysroot"
+		}
+	},
+	"name" : "MMIOTest",
+	"nameOnDisk" : "MMIOTest",
+	"paths" :
+	{
+		"build" : "Source/UnitTests/Core",
+		"source" : "Source/UnitTests/Core"
+	},
+	"sourceGroups" :
+	[
+		{
+			"name" : "Source Files",
+			"sourceIndexes" :
+			[
+				0
+			]
+		},
+		{
+			"name" : "Object Libraries",
+			"sourceIndexes" :
+			[
+				1
+			]
+		}
+	],
+	"sources" :
+	[
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "Source/UnitTests/Core/MMIOTest.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 2,
+			"isGenerated" : true,
+			"path" : "Source/Android/app/.cxx/RelWithDebInfo/262v3q4o/arm64-v8a/Source/UnitTests/CMakeFiles/unittests_stubhost.dir/StubHost.cpp.o",
+			"sourceGroupIndex" : 1
+		}
+	],
+	"type" : "EXECUTABLE"
+}

@@ -18,14 +18,15 @@ package com.android.build.gradle.tasks
 
 
 import com.android.build.gradle.external.cmake.CmakeUtils
-import com.android.build.gradle.internal.cxx.cmake.readCmakeFileApiReply
+import com.android.build.gradle.internal.cxx.cmake.parseCmakeFileApiReply
 import com.android.build.gradle.internal.cxx.gradle.generator.NativeBuildOutputLevel
-import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons.writeNativeBuildConfigValueToJsonFile
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel
 import com.android.build.gradle.internal.cxx.model.additionalProjectFilesIndexFile
 import com.android.build.gradle.internal.cxx.model.clientQueryFolder
 import com.android.build.gradle.internal.cxx.model.clientReplyFolder
+import com.android.build.gradle.internal.cxx.model.compileCommandsJsonBinFile
+import com.android.build.gradle.internal.cxx.model.compileCommandsJsonFile
 import com.android.build.gradle.internal.cxx.model.getBuildCommandArguments
 import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.cxx.model.metadataGenerationCommandFile
@@ -73,25 +74,20 @@ internal class CmakeQueryMetadataGenerator(
           .logFullStdout(variant.module.nativeBuildOutputLevel == NativeBuildOutputLevel.VERBOSE)
           .execute(ops::exec)
 
-        val config = abi.additionalProjectFilesIndexFile.bufferedWriter(StandardCharsets.UTF_8).use { additionalProjectFileWriter ->
-            readCmakeFileApiReply(abi.clientReplyFolder) {
-                when (it.sourceGroup) {
-                    "Source Files" -> {
-                        // TODO(152223150) populate compile_commands.json.bin and stop generating compile_commands.json
-                    }
-                    else -> additionalProjectFileWriter.appendln(it.path.absolutePath)
-                }
-            }
-        }
-
-        // Write the ninja build command, possibly with user settings from CMakeSettings.json.
-        config.buildTargetsCommandComponents =
-          CmakeUtils.getBuildTargetsCommand(
+        // Build expected metadata
+        val buildTargetsCommand = CmakeUtils.getBuildTargetsCommand(
             variant.module.cmake!!.cmakeExe!!,
             abi.cxxBuildFolder,
             abi.getBuildCommandArguments()
-          )
-        writeNativeBuildConfigValueToJsonFile(abi.jsonFile, config)
+        )
+        parseCmakeFileApiReply(
+            replyFolder = abi.clientReplyFolder,
+            additionalFiles = abi.additionalProjectFilesIndexFile,
+            androidGradleBuildJsonFile = abi.jsonFile,
+            compileCommandsJsonFile = abi.compileCommandsJsonFile,
+            compileCommandsJsonBinFile = abi.compileCommandsJsonBinFile,
+            buildTargetsCommand = buildTargetsCommand
+        )
     }
 
     override fun getProcessBuilder(abi: CxxAbiModel): ProcessInfoBuilder {

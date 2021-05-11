@@ -1,0 +1,515 @@
+{
+	"archive" : {},
+	"artifacts" :
+	[
+		{
+			"path" : "Externals/gtest/libgtest_main.a"
+		}
+	],
+	"backtrace" : 3,
+	"backtraceGraph" :
+	{
+		"commands" :
+		[
+			"add_library",
+			"cxx_library_with_type",
+			"cxx_library",
+			"target_link_libraries",
+			"add_compile_options",
+			"check_and_add_flag",
+			"add_definitions",
+			"include_directories"
+		],
+		"files" :
+		[
+			"Externals/gtest/cmake/internal_utils.cmake",
+			"Externals/gtest/CMakeLists.txt",
+			"CMake/CheckAndAddFlag.cmake",
+			"CMakeLists.txt"
+		],
+		"nodes" :
+		[
+			{
+				"file" : 1
+			},
+			{
+				"command" : 2,
+				"file" : 1,
+				"line" : 99,
+				"parent" : 0
+			},
+			{
+				"command" : 1,
+				"file" : 0,
+				"line" : 184,
+				"parent" : 1
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 157,
+				"parent" : 2
+			},
+			{
+				"command" : 3,
+				"file" : 1,
+				"line" : 100,
+				"parent" : 0
+			},
+			{
+				"file" : 3
+			},
+			{
+				"command" : 5,
+				"file" : 3,
+				"line" : 213,
+				"parent" : 5
+			},
+			{
+				"command" : 4,
+				"file" : 2,
+				"line" : 54,
+				"parent" : 6
+			},
+			{
+				"command" : 5,
+				"file" : 3,
+				"line" : 227,
+				"parent" : 5
+			},
+			{
+				"command" : 4,
+				"file" : 2,
+				"line" : 54,
+				"parent" : 8
+			},
+			{
+				"command" : 5,
+				"file" : 3,
+				"line" : 260,
+				"parent" : 5
+			},
+			{
+				"command" : 4,
+				"file" : 2,
+				"line" : 54,
+				"parent" : 10
+			},
+			{
+				"command" : 5,
+				"file" : 3,
+				"line" : 261,
+				"parent" : 5
+			},
+			{
+				"command" : 4,
+				"file" : 2,
+				"line" : 54,
+				"parent" : 12
+			},
+			{
+				"command" : 5,
+				"file" : 3,
+				"line" : 263,
+				"parent" : 5
+			},
+			{
+				"command" : 4,
+				"file" : 2,
+				"line" : 54,
+				"parent" : 14
+			},
+			{
+				"command" : 5,
+				"file" : 3,
+				"line" : 264,
+				"parent" : 5
+			},
+			{
+				"command" : 4,
+				"file" : 2,
+				"line" : 54,
+				"parent" : 16
+			},
+			{
+				"command" : 5,
+				"file" : 3,
+				"line" : 266,
+				"parent" : 5
+			},
+			{
+				"command" : 4,
+				"file" : 2,
+				"line" : 54,
+				"parent" : 18
+			},
+			{
+				"command" : 6,
+				"file" : 3,
+				"line" : 380,
+				"parent" : 5
+			},
+			{
+				"command" : 6,
+				"file" : 3,
+				"line" : 102,
+				"parent" : 5
+			},
+			{
+				"command" : 6,
+				"file" : 3,
+				"line" : 550,
+				"parent" : 5
+			},
+			{
+				"command" : 6,
+				"file" : 3,
+				"line" : 545,
+				"parent" : 5
+			},
+			{
+				"command" : 6,
+				"file" : 3,
+				"line" : 451,
+				"parent" : 5
+			},
+			{
+				"command" : 6,
+				"file" : 3,
+				"line" : 721,
+				"parent" : 5
+			},
+			{
+				"command" : 6,
+				"file" : 3,
+				"line" : 502,
+				"parent" : 5
+			},
+			{
+				"command" : 6,
+				"file" : 3,
+				"line" : 364,
+				"parent" : 5
+			},
+			{
+				"command" : 6,
+				"file" : 3,
+				"line" : 497,
+				"parent" : 5
+			},
+			{
+				"command" : 6,
+				"file" : 3,
+				"line" : 495,
+				"parent" : 5
+			},
+			{
+				"command" : 6,
+				"file" : 3,
+				"line" : 193,
+				"parent" : 5
+			},
+			{
+				"command" : 6,
+				"file" : 3,
+				"line" : 257,
+				"parent" : 5
+			},
+			{
+				"command" : 6,
+				"file" : 3,
+				"line" : 413,
+				"parent" : 5
+			},
+			{
+				"command" : 6,
+				"file" : 3,
+				"line" : 414,
+				"parent" : 5
+			},
+			{
+				"command" : 6,
+				"file" : 3,
+				"line" : 211,
+				"parent" : 5
+			},
+			{
+				"command" : 7,
+				"file" : 3,
+				"line" : 763,
+				"parent" : 5
+			},
+			{
+				"command" : 7,
+				"file" : 3,
+				"line" : 723,
+				"parent" : 5
+			},
+			{
+				"command" : 7,
+				"file" : 3,
+				"line" : 508,
+				"parent" : 5
+			},
+			{
+				"command" : 7,
+				"file" : 3,
+				"line" : 510,
+				"parent" : 5
+			},
+			{
+				"command" : 7,
+				"file" : 3,
+				"line" : 584,
+				"parent" : 5
+			},
+			{
+				"command" : 7,
+				"file" : 3,
+				"line" : 643,
+				"parent" : 5
+			},
+			{
+				"command" : 7,
+				"file" : 3,
+				"line" : 684,
+				"parent" : 5
+			},
+			{
+				"command" : 7,
+				"file" : 3,
+				"line" : 751,
+				"parent" : 5
+			},
+			{
+				"command" : 7,
+				"file" : 3,
+				"line" : 776,
+				"parent" : 5
+			},
+			{
+				"command" : 7,
+				"file" : 3,
+				"line" : 809,
+				"parent" : 5
+			},
+			{
+				"command" : 7,
+				"file" : 3,
+				"line" : 826,
+				"parent" : 5
+			},
+			{
+				"command" : 7,
+				"file" : 1,
+				"line" : 74,
+				"parent" : 0
+			}
+		]
+	},
+	"compileGroups" :
+	[
+		{
+			"compileCommandFragments" :
+			[
+				{
+					"fragment" : "-g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -O2 -g -DNDEBUG -fPIC"
+				},
+				{
+					"fragment" : "-g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security    -DGTEST_HAS_PTHREAD=1  "
+				},
+				{
+					"backtrace" : 7,
+					"fragment" : "-march=armv8-a+crc"
+				},
+				{
+					"backtrace" : 9,
+					"fragment" : "-fdiagnostics-color"
+				},
+				{
+					"backtrace" : 11,
+					"fragment" : "-fno-strict-aliasing"
+				},
+				{
+					"backtrace" : 13,
+					"fragment" : "-fno-exceptions"
+				},
+				{
+					"backtrace" : 15,
+					"fragment" : "-fvisibility-inlines-hidden"
+				},
+				{
+					"backtrace" : 17,
+					"fragment" : "-fvisibility=hidden"
+				},
+				{
+					"backtrace" : 19,
+					"fragment" : "-fomit-frame-pointer"
+				}
+			],
+			"defines" :
+			[
+				{
+					"backtrace" : 20,
+					"define" : "ANDROID"
+				},
+				{
+					"backtrace" : 21,
+					"define" : "DATA_DIR=\"/usr/local/share/dolphin-emu/\""
+				},
+				{
+					"backtrace" : 22,
+					"define" : "HAS_OPENGL"
+				},
+				{
+					"backtrace" : 23,
+					"define" : "HAS_VULKAN"
+				},
+				{
+					"backtrace" : 24,
+					"define" : "HAVE_EGL=1"
+				},
+				{
+					"backtrace" : 25,
+					"define" : "SFML_STATIC"
+				},
+				{
+					"backtrace" : 26,
+					"define" : "USE_ANALYTICS=1"
+				},
+				{
+					"backtrace" : 27,
+					"define" : "USE_GDBSTUB"
+				},
+				{
+					"backtrace" : 28,
+					"define" : "USE_MEMORYWATCHER=1"
+				},
+				{
+					"backtrace" : 29,
+					"define" : "USE_PIPES=1"
+				},
+				{
+					"backtrace" : 30,
+					"define" : "_ARCH_64=1"
+				},
+				{
+					"backtrace" : 31,
+					"define" : "_DEFAULT_SOURCE"
+				},
+				{
+					"backtrace" : 32,
+					"define" : "_FILE_OFFSET_BITS=64"
+				},
+				{
+					"backtrace" : 33,
+					"define" : "_LARGEFILE_SOURCE"
+				},
+				{
+					"backtrace" : 34,
+					"define" : "_M_ARM_64=1"
+				}
+			],
+			"includes" :
+			[
+				{
+					"backtrace" : 35,
+					"path" : "/{PROJECT}/Externals/curl/include"
+				},
+				{
+					"backtrace" : 36,
+					"path" : "/{PROJECT}/Externals/SFML/include"
+				},
+				{
+					"backtrace" : 37,
+					"path" : "/{PROJECT}/Source/Core"
+				},
+				{
+					"backtrace" : 38,
+					"path" : "/{PROJECT}/Source/Android"
+				},
+				{
+					"backtrace" : 39,
+					"path" : "/{PROJECT}/Externals/enet/include"
+				},
+				{
+					"backtrace" : 40,
+					"path" : "/{PROJECT}/External/minizip"
+				},
+				{
+					"backtrace" : 41,
+					"path" : "/{PROJECT}/Externals/soundtouch"
+				},
+				{
+					"backtrace" : 42,
+					"path" : "/{PROJECT}/Externals/mbedtls/include"
+				},
+				{
+					"backtrace" : 43,
+					"path" : "/{PROJECT}/Externals/libiconv-1.14/include"
+				},
+				{
+					"backtrace" : 44,
+					"path" : "/{PROJECT}/Externals/picojson"
+				},
+				{
+					"backtrace" : 45,
+					"path" : "/{PROJECT}/Source/Android/app/.cxx/RelWithDebInfo/262v3q4o/arm64-v8a/Source/Core"
+				},
+				{
+					"backtrace" : 46,
+					"path" : "/{PROJECT}/Externals/gtest"
+				},
+				{
+					"backtrace" : 46,
+					"isSystem" : true,
+					"path" : "/{PROJECT}/Externals/gtest/include"
+				}
+			],
+			"language" : "CXX",
+			"sourceIndexes" :
+			[
+				0
+			],
+			"sysroot" :
+			{
+				"path" : "/{SDK}/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/sysroot"
+			}
+		}
+	],
+	"dependencies" :
+	[
+		{
+			"backtrace" : 4,
+			"id" : "gtest::@b145bd6ea16d0490767d"
+		}
+	],
+	"id" : "gtest_main::@b145bd6ea16d0490767d",
+	"name" : "gtest_main",
+	"nameOnDisk" : "libgtest_main.a",
+	"paths" :
+	{
+		"build" : "Externals/gtest",
+		"source" : "Externals/gtest"
+	},
+	"sourceGroups" :
+	[
+		{
+			"name" : "Source Files",
+			"sourceIndexes" :
+			[
+				0
+			]
+		}
+	],
+	"sources" :
+	[
+		{
+			"backtrace" : 3,
+			"compileGroupIndex" : 0,
+			"path" : "Externals/gtest/src/gtest_main.cc",
+			"sourceGroupIndex" : 0
+		}
+	],
+	"type" : "STATIC_LIBRARY"
+}

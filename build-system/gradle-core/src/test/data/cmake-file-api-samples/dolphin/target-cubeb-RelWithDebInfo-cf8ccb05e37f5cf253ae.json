@@ -1,0 +1,809 @@
+{
+	"archive" : {},
+	"artifacts" :
+	[
+		{
+			"path" : "Externals/cubeb/libcubeb.a"
+		}
+	],
+	"backtrace" : 1,
+	"backtraceGraph" :
+	{
+		"commands" :
+		[
+			"add_library",
+			"install",
+			"add_compile_options",
+			"check_and_add_flag",
+			"add_definitions",
+			"target_compile_definitions",
+			"include_directories",
+			"target_include_directories",
+			"target_sources"
+		],
+		"files" :
+		[
+			"Externals/cubeb/CMakeLists.txt",
+			"CMake/CheckAndAddFlag.cmake",
+			"CMakeLists.txt"
+		],
+		"nodes" :
+		[
+			{
+				"file" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 40,
+				"parent" : 0
+			},
+			{
+				"command" : 1,
+				"file" : 0,
+				"line" : 80,
+				"parent" : 0
+			},
+			{
+				"file" : 2
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 213,
+				"parent" : 3
+			},
+			{
+				"command" : 2,
+				"file" : 1,
+				"line" : 49,
+				"parent" : 4
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 227,
+				"parent" : 3
+			},
+			{
+				"command" : 2,
+				"file" : 1,
+				"line" : 49,
+				"parent" : 6
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 260,
+				"parent" : 3
+			},
+			{
+				"command" : 2,
+				"file" : 1,
+				"line" : 49,
+				"parent" : 8
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 261,
+				"parent" : 3
+			},
+			{
+				"command" : 2,
+				"file" : 1,
+				"line" : 49,
+				"parent" : 10
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 263,
+				"parent" : 3
+			},
+			{
+				"command" : 2,
+				"file" : 1,
+				"line" : 49,
+				"parent" : 12
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 264,
+				"parent" : 3
+			},
+			{
+				"command" : 2,
+				"file" : 1,
+				"line" : 49,
+				"parent" : 14
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 266,
+				"parent" : 3
+			},
+			{
+				"command" : 2,
+				"file" : 1,
+				"line" : 49,
+				"parent" : 16
+			},
+			{
+				"command" : 4,
+				"file" : 2,
+				"line" : 380,
+				"parent" : 3
+			},
+			{
+				"command" : 4,
+				"file" : 2,
+				"line" : 102,
+				"parent" : 3
+			},
+			{
+				"command" : 5,
+				"file" : 0,
+				"line" : 54,
+				"parent" : 0
+			},
+			{
+				"command" : 5,
+				"file" : 0,
+				"line" : 53,
+				"parent" : 0
+			},
+			{
+				"command" : 4,
+				"file" : 2,
+				"line" : 550,
+				"parent" : 3
+			},
+			{
+				"command" : 4,
+				"file" : 2,
+				"line" : 545,
+				"parent" : 3
+			},
+			{
+				"command" : 4,
+				"file" : 2,
+				"line" : 451,
+				"parent" : 3
+			},
+			{
+				"command" : 5,
+				"file" : 0,
+				"line" : 52,
+				"parent" : 0
+			},
+			{
+				"command" : 5,
+				"file" : 0,
+				"line" : 55,
+				"parent" : 0
+			},
+			{
+				"command" : 4,
+				"file" : 2,
+				"line" : 502,
+				"parent" : 3
+			},
+			{
+				"command" : 5,
+				"file" : 0,
+				"line" : 178,
+				"parent" : 0
+			},
+			{
+				"command" : 4,
+				"file" : 2,
+				"line" : 364,
+				"parent" : 3
+			},
+			{
+				"command" : 4,
+				"file" : 2,
+				"line" : 497,
+				"parent" : 3
+			},
+			{
+				"command" : 5,
+				"file" : 0,
+				"line" : 170,
+				"parent" : 0
+			},
+			{
+				"command" : 4,
+				"file" : 2,
+				"line" : 495,
+				"parent" : 3
+			},
+			{
+				"command" : 4,
+				"file" : 2,
+				"line" : 193,
+				"parent" : 3
+			},
+			{
+				"command" : 4,
+				"file" : 2,
+				"line" : 257,
+				"parent" : 3
+			},
+			{
+				"command" : 4,
+				"file" : 2,
+				"line" : 413,
+				"parent" : 3
+			},
+			{
+				"command" : 4,
+				"file" : 2,
+				"line" : 414,
+				"parent" : 3
+			},
+			{
+				"command" : 4,
+				"file" : 2,
+				"line" : 211,
+				"parent" : 3
+			},
+			{
+				"command" : 6,
+				"file" : 2,
+				"line" : 508,
+				"parent" : 3
+			},
+			{
+				"command" : 6,
+				"file" : 2,
+				"line" : 510,
+				"parent" : 3
+			},
+			{
+				"command" : 6,
+				"file" : 2,
+				"line" : 584,
+				"parent" : 3
+			},
+			{
+				"command" : 6,
+				"file" : 2,
+				"line" : 643,
+				"parent" : 3
+			},
+			{
+				"command" : 6,
+				"file" : 2,
+				"line" : 684,
+				"parent" : 3
+			},
+			{
+				"command" : 7,
+				"file" : 0,
+				"line" : 48,
+				"parent" : 0
+			},
+			{
+				"command" : 7,
+				"file" : 0,
+				"line" : 51,
+				"parent" : 0
+			},
+			{
+				"command" : 7,
+				"file" : 0,
+				"line" : 61,
+				"parent" : 0
+			},
+			{
+				"command" : 2,
+				"file" : 1,
+				"line" : 54,
+				"parent" : 4
+			},
+			{
+				"command" : 2,
+				"file" : 1,
+				"line" : 54,
+				"parent" : 6
+			},
+			{
+				"command" : 2,
+				"file" : 1,
+				"line" : 54,
+				"parent" : 8
+			},
+			{
+				"command" : 2,
+				"file" : 1,
+				"line" : 54,
+				"parent" : 10
+			},
+			{
+				"command" : 2,
+				"file" : 1,
+				"line" : 54,
+				"parent" : 12
+			},
+			{
+				"command" : 2,
+				"file" : 1,
+				"line" : 54,
+				"parent" : 14
+			},
+			{
+				"command" : 2,
+				"file" : 1,
+				"line" : 54,
+				"parent" : 16
+			},
+			{
+				"command" : 8,
+				"file" : 0,
+				"line" : 168,
+				"parent" : 0
+			},
+			{
+				"command" : 8,
+				"file" : 0,
+				"line" : 176,
+				"parent" : 0
+			}
+		]
+	},
+	"compileGroups" :
+	[
+		{
+			"compileCommandFragments" :
+			[
+				{
+					"fragment" : "-g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -Wall -Wextra -Wno-unused-parameter -O2 -g -DNDEBUG -fPIC -fvisibility=hidden"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-march=armv8-a+crc"
+				},
+				{
+					"backtrace" : 7,
+					"fragment" : "-fdiagnostics-color"
+				},
+				{
+					"backtrace" : 9,
+					"fragment" : "-fno-strict-aliasing"
+				},
+				{
+					"backtrace" : 11,
+					"fragment" : "-fno-exceptions"
+				},
+				{
+					"backtrace" : 13,
+					"fragment" : "-fvisibility-inlines-hidden"
+				},
+				{
+					"backtrace" : 15,
+					"fragment" : "-fvisibility=hidden"
+				},
+				{
+					"backtrace" : 17,
+					"fragment" : "-fomit-frame-pointer"
+				},
+				{
+					"fragment" : "-std=gnu99"
+				}
+			],
+			"defines" :
+			[
+				{
+					"backtrace" : 18,
+					"define" : "ANDROID"
+				},
+				{
+					"backtrace" : 19,
+					"define" : "DATA_DIR=\"/usr/local/share/dolphin-emu/\""
+				},
+				{
+					"backtrace" : 20,
+					"define" : "EXPORT="
+				},
+				{
+					"backtrace" : 21,
+					"define" : "FLOATING_POINT"
+				},
+				{
+					"backtrace" : 22,
+					"define" : "HAS_OPENGL"
+				},
+				{
+					"backtrace" : 23,
+					"define" : "HAS_VULKAN"
+				},
+				{
+					"backtrace" : 24,
+					"define" : "HAVE_EGL=1"
+				},
+				{
+					"backtrace" : 25,
+					"define" : "OUTSIDE_SPEEX"
+				},
+				{
+					"backtrace" : 26,
+					"define" : "RANDOM_PREFIX=speex"
+				},
+				{
+					"backtrace" : 27,
+					"define" : "USE_ANALYTICS=1"
+				},
+				{
+					"backtrace" : 28,
+					"define" : "USE_AUDIOTRACK"
+				},
+				{
+					"backtrace" : 29,
+					"define" : "USE_GDBSTUB"
+				},
+				{
+					"backtrace" : 30,
+					"define" : "USE_MEMORYWATCHER=1"
+				},
+				{
+					"backtrace" : 31,
+					"define" : "USE_OPENSL"
+				},
+				{
+					"backtrace" : 32,
+					"define" : "USE_PIPES=1"
+				},
+				{
+					"backtrace" : 33,
+					"define" : "_ARCH_64=1"
+				},
+				{
+					"backtrace" : 34,
+					"define" : "_DEFAULT_SOURCE"
+				},
+				{
+					"backtrace" : 35,
+					"define" : "_FILE_OFFSET_BITS=64"
+				},
+				{
+					"backtrace" : 36,
+					"define" : "_LARGEFILE_SOURCE"
+				},
+				{
+					"backtrace" : 37,
+					"define" : "_M_ARM_64=1"
+				}
+			],
+			"includes" :
+			[
+				{
+					"backtrace" : 38,
+					"path" : "/{PROJECT}/Source/Core"
+				},
+				{
+					"backtrace" : 39,
+					"path" : "/{PROJECT}/Source/Android"
+				},
+				{
+					"backtrace" : 40,
+					"path" : "/{PROJECT}/Externals/enet/include"
+				},
+				{
+					"backtrace" : 41,
+					"path" : "/{PROJECT}/External/minizip"
+				},
+				{
+					"backtrace" : 42,
+					"path" : "/{PROJECT}/Externals/soundtouch"
+				},
+				{
+					"backtrace" : 43,
+					"path" : "/{PROJECT}/Externals/cubeb/include"
+				},
+				{
+					"backtrace" : 44,
+					"path" : "/{PROJECT}/Externals/cubeb/src"
+				},
+				{
+					"backtrace" : 45,
+					"path" : "/{PROJECT}/Source/Android/app/.cxx/RelWithDebInfo/262v3q4o/arm64-v8a/exports"
+				}
+			],
+			"language" : "C",
+			"sourceIndexes" :
+			[
+				0,
+				5,
+				7,
+				8
+			],
+			"sysroot" :
+			{
+				"path" : "/{SDK}/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/sysroot"
+			}
+		},
+		{
+			"compileCommandFragments" :
+			[
+				{
+					"fragment" : "-g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -Wall -Wextra -Wno-unused-parameter -O2 -g -DNDEBUG -fPIC -fvisibility=hidden -fvisibility-inlines-hidden"
+				},
+				{
+					"backtrace" : 46,
+					"fragment" : "-march=armv8-a+crc"
+				},
+				{
+					"backtrace" : 47,
+					"fragment" : "-fdiagnostics-color"
+				},
+				{
+					"backtrace" : 48,
+					"fragment" : "-fno-strict-aliasing"
+				},
+				{
+					"backtrace" : 49,
+					"fragment" : "-fno-exceptions"
+				},
+				{
+					"backtrace" : 50,
+					"fragment" : "-fvisibility-inlines-hidden"
+				},
+				{
+					"backtrace" : 51,
+					"fragment" : "-fvisibility=hidden"
+				},
+				{
+					"backtrace" : 52,
+					"fragment" : "-fomit-frame-pointer"
+				},
+				{
+					"fragment" : "-std=gnu++11"
+				}
+			],
+			"defines" :
+			[
+				{
+					"backtrace" : 18,
+					"define" : "ANDROID"
+				},
+				{
+					"backtrace" : 19,
+					"define" : "DATA_DIR=\"/usr/local/share/dolphin-emu/\""
+				},
+				{
+					"backtrace" : 20,
+					"define" : "EXPORT="
+				},
+				{
+					"backtrace" : 21,
+					"define" : "FLOATING_POINT"
+				},
+				{
+					"backtrace" : 22,
+					"define" : "HAS_OPENGL"
+				},
+				{
+					"backtrace" : 23,
+					"define" : "HAS_VULKAN"
+				},
+				{
+					"backtrace" : 24,
+					"define" : "HAVE_EGL=1"
+				},
+				{
+					"backtrace" : 25,
+					"define" : "OUTSIDE_SPEEX"
+				},
+				{
+					"backtrace" : 26,
+					"define" : "RANDOM_PREFIX=speex"
+				},
+				{
+					"backtrace" : 27,
+					"define" : "USE_ANALYTICS=1"
+				},
+				{
+					"backtrace" : 28,
+					"define" : "USE_AUDIOTRACK"
+				},
+				{
+					"backtrace" : 29,
+					"define" : "USE_GDBSTUB"
+				},
+				{
+					"backtrace" : 30,
+					"define" : "USE_MEMORYWATCHER=1"
+				},
+				{
+					"backtrace" : 31,
+					"define" : "USE_OPENSL"
+				},
+				{
+					"backtrace" : 32,
+					"define" : "USE_PIPES=1"
+				},
+				{
+					"backtrace" : 33,
+					"define" : "_ARCH_64=1"
+				},
+				{
+					"backtrace" : 34,
+					"define" : "_DEFAULT_SOURCE"
+				},
+				{
+					"backtrace" : 35,
+					"define" : "_FILE_OFFSET_BITS=64"
+				},
+				{
+					"backtrace" : 36,
+					"define" : "_LARGEFILE_SOURCE"
+				},
+				{
+					"backtrace" : 37,
+					"define" : "_M_ARM_64=1"
+				}
+			],
+			"includes" :
+			[
+				{
+					"backtrace" : 38,
+					"path" : "/{PROJECT}/Source/Core"
+				},
+				{
+					"backtrace" : 39,
+					"path" : "/{PROJECT}/Source/Android"
+				},
+				{
+					"backtrace" : 40,
+					"path" : "/{PROJECT}/Externals/enet/include"
+				},
+				{
+					"backtrace" : 41,
+					"path" : "/{PROJECT}/External/minizip"
+				},
+				{
+					"backtrace" : 42,
+					"path" : "/{PROJECT}/Externals/soundtouch"
+				},
+				{
+					"backtrace" : 43,
+					"path" : "/{PROJECT}/Externals/cubeb/include"
+				},
+				{
+					"backtrace" : 44,
+					"path" : "/{PROJECT}/Externals/cubeb/src"
+				},
+				{
+					"backtrace" : 45,
+					"path" : "/{PROJECT}/Source/Android/app/.cxx/RelWithDebInfo/262v3q4o/arm64-v8a/exports"
+				}
+			],
+			"language" : "CXX",
+			"sourceIndexes" :
+			[
+				1,
+				2,
+				3,
+				4
+			],
+			"sysroot" :
+			{
+				"path" : "/{SDK}/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/sysroot"
+			}
+		}
+	],
+	"dependencies" :
+	[
+		{
+			"id" : "speex::@6ea19969518fdc86ca9a"
+		}
+	],
+	"id" : "cubeb::@6ea19969518fdc86ca9a",
+	"install" :
+	{
+		"destinations" :
+		[
+			{
+				"backtrace" : 2,
+				"path" : "lib"
+			}
+		],
+		"prefix" :
+		{
+			"path" : "/usr/local"
+		}
+	},
+	"name" : "cubeb",
+	"nameOnDisk" : "libcubeb.a",
+	"paths" :
+	{
+		"build" : "Externals/cubeb",
+		"source" : "Externals/cubeb"
+	},
+	"sourceGroups" :
+	[
+		{
+			"name" : "Source Files",
+			"sourceIndexes" :
+			[
+				0,
+				1,
+				2,
+				3,
+				4,
+				5,
+				7,
+				8
+			]
+		},
+		{
+			"name" : "Object Libraries",
+			"sourceIndexes" :
+			[
+				6
+			]
+		}
+	],
+	"sources" :
+	[
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Externals/cubeb/src/cubeb.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 1,
+			"path" : "Externals/cubeb/src/cubeb_mixer.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 1,
+			"path" : "Externals/cubeb/src/cubeb_resampler.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 1,
+			"path" : "Externals/cubeb/src/cubeb_panner.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 1,
+			"path" : "Externals/cubeb/src/cubeb_log.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Externals/cubeb/src/cubeb_strings.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"isGenerated" : true,
+			"path" : "Source/Android/app/.cxx/RelWithDebInfo/262v3q4o/arm64-v8a/Externals/cubeb/CMakeFiles/speex.dir/src/speex/resample.c.o",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 53,
+			"compileGroupIndex" : 0,
+			"path" : "Externals/cubeb/src/cubeb_opensl.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 54,
+			"compileGroupIndex" : 0,
+			"path" : "Externals/cubeb/src/cubeb_audiotrack.c",
+			"sourceGroupIndex" : 0
+		}
+	],
+	"type" : "STATIC_LIBRARY"
+}

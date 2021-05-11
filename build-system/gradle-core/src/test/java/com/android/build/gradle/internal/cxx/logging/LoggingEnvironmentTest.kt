@@ -38,14 +38,15 @@ class LoggingEnvironmentTest {
 
     @Test
     fun testEnvironmentIsPerThread() {
+        lateinit var thread1Messages : List<String>
+        lateinit var thread2Messages : List<String>
         val thread1 = thread {
             TestLoggingEnvironment("thread 1").use { logger ->
                 errorln("error")
                 warnln("warn")
                 lifecycleln("lifecycle")
                 infoln("info")
-                assertThat(logger.messages).containsExactly("error thread 1: error",
-                    "warn thread 1: warn", "lifecycle thread 1: lifecycle", "info thread 1: info")
+                thread1Messages = logger.messages
             }
         }
         val thread2 = thread {
@@ -54,12 +55,15 @@ class LoggingEnvironmentTest {
                 warnln("warn")
                 lifecycleln("lifecycle")
                 infoln("info")
-                assertThat(logger.messages).containsExactly("error thread 2: error",
-                    "warn thread 2: warn", "lifecycle thread 1: lifecycle", "info thread 2: info")
+                thread2Messages = logger.messages
             }
         }
         thread1.join()
         thread2.join()
+        assertThat(thread1Messages).containsExactly("error thread 1: C/C++: error",
+            "warn thread 1: C/C++: warn", "lifecycle thread 1: C/C++: lifecycle", "info thread 1: C/C++: info")
+        assertThat(thread2Messages).containsExactly("error thread 2: C/C++: error",
+            "warn thread 2: C/C++: warn", "lifecycle thread 2: C/C++: lifecycle", "info thread 2: C/C++: info")
     }
 
     @Test

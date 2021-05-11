@@ -28,6 +28,7 @@ import com.android.build.gradle.external.cmake.server.receiver.InteractiveMessag
 import com.android.build.gradle.external.cmake.server.receiver.ServerReceiver
 import com.android.build.gradle.internal.cxx.cmake.makeCmakeMessagePathsAbsolute
 import com.android.build.gradle.internal.cxx.cmake.parseLinkLibraries
+import com.android.build.gradle.internal.cxx.configure.convertCMakeToCompileCommandsBin
 import com.android.build.gradle.internal.cxx.configure.getCmakeBinaryOutputPath
 import com.android.build.gradle.internal.cxx.configure.getCmakeGenerator
 import com.android.build.gradle.internal.cxx.configure.onlyKeepCmakeServerArguments
@@ -44,6 +45,8 @@ import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel
 import com.android.build.gradle.internal.cxx.model.additionalProjectFilesIndexFile
 import com.android.build.gradle.internal.cxx.model.cmakeServerLogFile
+import com.android.build.gradle.internal.cxx.model.compileCommandsJsonBinFile
+import com.android.build.gradle.internal.cxx.model.compileCommandsJsonFile
 import com.android.build.gradle.internal.cxx.model.getBuildCommandArguments
 import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.ide.common.process.ProcessException
@@ -262,13 +265,16 @@ internal class CmakeServerExternalNativeJsonGenerator(
      */
     @Throws(IOException::class)
     private fun generateAndroidGradleBuild(
-        config: CxxAbiModel, cmakeServer: Server
+        abi: CxxAbiModel, cmakeServer: Server
     ) {
         val nativeBuildConfigValue =
-            getNativeBuildConfigValue(config, cmakeServer)
+            getNativeBuildConfigValue(abi, cmakeServer)
         AndroidBuildGradleJsons.writeNativeBuildConfigValueToJsonFile(
-            config.jsonFile, nativeBuildConfigValue
+            abi.jsonFile, nativeBuildConfigValue
         )
+        convertCMakeToCompileCommandsBin(
+            abi.compileCommandsJsonFile,
+            abi.compileCommandsJsonBinFile)
     }
 
     /**

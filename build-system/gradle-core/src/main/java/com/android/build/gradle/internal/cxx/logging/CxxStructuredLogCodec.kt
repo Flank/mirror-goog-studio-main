@@ -234,5 +234,31 @@ fun streamCxxStructuredLog(
     }
 }
 
+/**
+ * Given a [logFolder], read combined structured log files and return, in
+ * chronological order, the records of a particular type (the type returned
+ * by [decode] function).
+ */
+inline fun <reified Encoded, Decoded> readStructuredLogs(
+    logFolder : File,
+    crossinline decode: (Encoded, StringDecoder) -> Decoded) : List<Decoded> {
+    val logs = logFolder.walk().asIterable()
+        .filter { it.isFile }
+        .filter { it.extension == "bin" }
+        .sortedBy { it.name }
+    val events = mutableListOf<Pair<Long, Decoded>>()
+    for(log in logs) {
+        streamCxxStructuredLog(log) {
+                strings,
+                timestamp,
+                event ->
+            if (event is Encoded) {
+                events.add(timestamp to decode(event, strings))
+            }
+        }
+    }
+    return events.sortedBy { it.first }.map { it.second }
+}
+
 
 

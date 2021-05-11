@@ -30,8 +30,6 @@ import com.android.build.gradle.internal.cxx.model.CxxVariantModel
 import com.android.build.gradle.internal.cxx.model.PrefabConfigurationState
 import com.android.build.gradle.internal.cxx.model.PrefabConfigurationState.Companion.fromJson
 import com.android.build.gradle.internal.cxx.model.buildFileIndexFile
-import com.android.build.gradle.internal.cxx.model.compileCommandsJsonBinFile
-import com.android.build.gradle.internal.cxx.model.compileCommandsJsonFile
 import com.android.build.gradle.internal.cxx.model.getBuildCommandArguments
 import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.cxx.model.jsonGenerationLoggingRecordFile
@@ -50,15 +48,9 @@ import com.android.build.gradle.internal.profile.AnalyticsUtil
 import com.android.ide.common.process.ProcessException
 import com.android.ide.common.process.ProcessInfoBuilder
 import com.android.utils.FileUtils
-import com.android.utils.TokenizedCommandLineMap
-import com.android.utils.cxx.CompileCommandsEncoder
 import com.android.utils.cxx.CxxDiagnosticCode.METADATA_GENERATION_FAILURE
-import com.android.utils.cxx.STRIP_FLAGS_WITHOUT_ARG
-import com.android.utils.cxx.STRIP_FLAGS_WITH_ARG
-import com.android.utils.cxx.STRIP_FLAGS_WITH_IMMEDIATE_ARG
 import com.google.common.base.Charsets
 import com.google.common.collect.Lists
-import com.google.gson.stream.JsonReader
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import com.google.wireless.android.sdk.stats.GradleBuildVariant.NativeBuildConfigInfo
 import com.google.wireless.android.sdk.stats.GradleBuildVariant.NativeBuildConfigInfo.GenerationOutcome
@@ -288,7 +280,6 @@ abstract class ExternalNativeJsonGenerator internal constructor(
                     time("generate-extra-metadata-files") {
                         generateSymbolFolderIndexFile(abi)
                         generateBuildFilesIndex(abi, variantBuilder)
-                        generateCompileCommandsJsonBin(abi)
                     }
                     infoln("JSON generation completed without problems")
                 } catch (e: GradleException) {
@@ -340,81 +331,6 @@ abstract class ExternalNativeJsonGenerator internal constructor(
             ).buildFiles.joinToString(System.lineSeparator()),
             StandardCharsets.UTF_8
         )
-    }
-
-    private fun generateCompileCommandsJsonBin(abi : CxxAbiModel) {
-        val json = abi.compileCommandsJsonFile
-        val bin = abi.compileCommandsJsonBinFile
-        // lastModified return 0L when the file doesn't exist so
-        // file existence check is implied here.
-        if (json.isFile) {
-            if (json.lastModified() == bin.lastModified()) return
-        } else {
-            // The compile_commands.json.bin file may exist without there being
-            // a source compile_commands.json file. When this comment was written
-            // it always happens for the ndk-build metadata generator. The reason
-            // is that that generator can write directly to
-            // compile_commands.json.bin without needing an intermediary copy of
-            // that same information in compile_commands.json.
-            return
-        }
-        JsonReader(json.reader(StandardCharsets.UTF_8)).use { reader ->
-            CompileCommandsEncoder(bin).use { encoder ->
-                val interner =
-                    TokenizedCommandLineMap<Triple<String, List<String>, String?>>(raw = false) { tokens, sourceFile ->
-                        tokens.removeTokenGroup(sourceFile, 0)
-
-                        for (flag in STRIP_FLAGS_WITH_ARG) {
-                            tokens.removeTokenGroup(flag, 1)
-                        }
-                        for (flag in STRIP_FLAGS_WITH_IMMEDIATE_ARG) {
-                            tokens.removeTokenGroup(flag, 0, matchPrefix = true)
-                        }
-                        for (flag in STRIP_FLAGS_WITHOUT_ARG) {
-                            tokens.removeTokenGroup(flag, 0)
-                        }
-                    }
-                reader.beginArray()
-                while (reader.hasNext()) {
-                    reader.beginObject()
-                    lateinit var directory: String
-                    lateinit var command: String
-                    lateinit var sourceFile: String
-                    while (reader.hasNext()) {
-                        when (reader.nextName()) {
-                            "directory" -> directory = reader.nextString()
-                            "command" -> command = reader.nextString()
-                            "file" -> sourceFile = reader.nextString()
-                            // swallow other optional fields
-                            else -> reader.skipValue()
-                        }
-                    }
-                    reader.endObject()
-                    val (compiler, flags, output) = interner.computeIfAbsent(command, sourceFile) {
-                        // Find the output file (for example, probably something.o)
-                        val outputFile =
-                            it.removeTokenGroup("-o", 1, returnFirstExtra = true) ?:
-                            it.removeTokenGroup("--output=", 0, matchPrefix = true, returnFirstExtra = true) ?:
-                            it.removeTokenGroup("--output", 1, returnFirstExtra = true) ?:
-                            error("Could not determine output file from ${it.toTokenList()}")
-                        val tokenList = it.toTokenList()
-                        Triple(tokenList[0], tokenList.subList(1, tokenList.size), outputFile)
-                    }
-                    assert(output != null)
-
-                    encoder.writeCompileCommand(
-                        File(sourceFile),
-                        File(compiler),
-                        flags,
-                        File(directory),
-                        File(output)
-                    )
-                }
-                reader.endArray()
-            }
-        }
-        // Set timestamp of bin file to exactly timestamp of compile_commands.json
-        bin.setLastModified(json.lastModified())
     }
 
     abstract fun getProcessBuilder(abi: CxxAbiModel): ProcessInfoBuilder

@@ -17,13 +17,12 @@
 package com.android.utils.cxx
 
 import com.android.utils.cxx.Sections.CompileCommands
-import com.android.utils.cxx.Sections.FlagLists
+import com.android.utils.cxx.Sections.StringLists
 import com.android.utils.cxx.Sections.StringTable
 import java.io.File
 import java.io.RandomAccessFile
 import java.nio.Buffer
 import java.nio.ByteBuffer
-import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
 
 /**
@@ -56,23 +55,30 @@ import java.nio.channels.FileChannel
  *   - string-length: int32
  *   - content: utf8-bytes (one byte per string-length)
  *
- * flag-lists-section [FlagLists]:
- * - num-flag-lists: int32
- * - flag-lists (one per num-flag-lists):
+ * string-lists-section [StringLists]:
+ * - num-string-lists: int32
+ * - string-lists (one per num-string-lists):
  *   - list-length: int32
  *   - list: int32 (one element per list-length, index into string-table-section)
  *
  * compile-commands-section [CompileCommands]:
  * - num-messages: int32
+ * - num-file-messages: int32
  * - messages (one per num-messages):
  *   - message-type: byte ([COMPILE_COMMAND_CONTEXT_MESSAGE] or [COMPILE_COMMAND_FILE_MESSAGE])
  *   - file-context-message [COMPILE_COMMAND_CONTEXT_MESSAGE]:
  *     - compiler: int32 (index into string-table-section)
- *     - flags: int32 (index into flag-lists-section)
+ *     - flags: int32 (index into string-lists-section)
  *     - working-directory: int32 (index into string-table-section)
+ *     - target: int32 (index into string-table-section)
  *   - file-message [COMPILE_COMMAND_FILE_MESSAGE]:
  *     - source-file-path: int32 (index into string-table-section)
+ *     - output-file-path: int32 (index into string-table-section)
  *
+ *  Version history:
+ *  - V2 added num-file-messages
+ *  - V2 added file-message/output-file-path
+ *  - V2 added file-context-message/target
  */
 private const val MAGIC = "C/C++ Build Metadata\u001a"
 private const val VERSION = 2
@@ -86,10 +92,10 @@ private const val BYTEBUFFER_WINDOW_SIZE = 1024 * 32
  */
 private enum class Sections {
     StringTable,
-    FlagLists,
+    StringLists,
     CompileCommands;
     companion object {
-        private val map = values().map { Pair(it.ordinal, it) }.toMap()
+        private val map = values().associateBy { it.ordinal }
         fun getByValue(value: Int) = map[value]
     }
 }
@@ -107,15 +113,17 @@ class CompileCommandsEncoder(
     private var bufferStartPosition = 0L
     private var map = ByteBuffer.allocate(initialBufferSize)
     private val stringTableIndexEntry : Long
-    private val flagListsIndexEntry : Long
+    private val stringListsIndexEntry : Long
     private val compileCommandsIndexEntry : Long
     private val countOfSourceMessagesOffset : Long
     private val stringTable = mutableMapOf<String, Int>()
-    private val flagsTable = mutableMapOf<List<Int>, Int>()
+    private val stringListTable = mutableMapOf<List<Int>, Int>()
     private var countOfSourceMessages = 0
     private var lastCompilerWritten = -1
     private var lastFlagsWritten = -1
+    private var lastTargetWritten = -1
     private var lastWorkingDirectoryWritten = -1
+    private var countOfSourceFiles = 0
 
     init {
 
@@ -138,9 +146,10 @@ class CompileCommandsEncoder(
         encodeInt(3) // Number of sections
         compileCommandsIndexEntry = writeSectionIndexEntry(CompileCommands)
         stringTableIndexEntry = writeSectionIndexEntry(StringTable)
-        flagListsIndexEntry = writeSectionIndexEntry(FlagLists)
+        stringListsIndexEntry = writeSectionIndexEntry(StringLists)
         countOfSourceMessagesOffset = ras.filePointer + map.position().toLong()
         encodeInt(0) // Reserve for count of source messages
+        encodeInt(0) // Reserve for count of files
     }
 
     /**
@@ -206,17 +215,17 @@ class CompileCommandsEncoder(
         }
 
     /**
-     * Intern a flags list and return it's unique index.
+     * Intern a string list and return it's unique index.
      */
-    private fun intern(flags: List<Int>) = flagsTable.computeIfAbsent(flags) {
-        flagsTable.size
+    private fun intern(strings: List<Int>) = stringListTable.computeIfAbsent(strings) {
+        stringListTable.size
     }
 
     /**
      * Write a section index entry with offset initially set to zero:
      *
      * section-index (one per num-sections):
-     * - section-type: int32 ([Sections] StringTable, FlagLists, CompileCommands)
+     * - section-type: int32 ([Sections] StringTable, StringLists, CompileCommands)
      * - offset: int64 (offset into this file of that section)
      *
      */
@@ -230,8 +239,8 @@ class CompileCommandsEncoder(
     /**
      * Write a new compile command. This will be one or two messages.
      *
-     * First, if compiler, flags, or working directory has changed since last time then write a
-     * [COMPILE_COMMAND_CONTEXT_MESSAGE] with that information.
+     * First, if compiler, flags, target, or working directory has changed since
+     * last time then write a [COMPILE_COMMAND_CONTEXT_MESSAGE] with that information.
      *
      * Then, write the [COMPILE_COMMAND_FILE_MESSAGE] with just the path to the source file.
      *
@@ -239,8 +248,9 @@ class CompileCommandsEncoder(
      *   - message-type: byte ([COMPILE_COMMAND_CONTEXT_MESSAGE] or [COMPILE_COMMAND_FILE_MESSAGE])
      *   - file-context-message [COMPILE_COMMAND_CONTEXT_MESSAGE]:
      *     - compiler: int32 (index into string-table-section)
-     *     - flags: int32 (index into flag-lists-section)
+     *     - flags: int32 (index into string-lists-section)
      *     - working-directory: int32 (index into string-table-section)
+     *     - targets: int32 (index into string-lists-section)
      *   - file-message [COMPILE_COMMAND_FILE_MESSAGE]:
      *     - source-file-path: int32 (index into string-table-section)
      */
@@ -249,40 +259,46 @@ class CompileCommandsEncoder(
         compiler: File,
         flags: List<String>,
         workingDirectory: File,
-        outputFile: File) {
+        outputFile: File,
+        target: String
+    ) {
         val compilerIndex = intern(compiler.path)
         val flagsIndex = intern(flags.map { intern(it) })
         val workingDirectoryIndex = intern(workingDirectory.path)
-        val outputFileIndex = intern(outputFile.path)
+        val targetIndex = intern(target)
         if (compilerIndex != lastCompilerWritten ||
                 flagsIndex != lastFlagsWritten ||
-                workingDirectoryIndex != lastWorkingDirectoryWritten) {
+                workingDirectoryIndex != lastWorkingDirectoryWritten ||
+                targetIndex != lastTargetWritten) {
             // Encode file context
             encodeByte(COMPILE_COMMAND_CONTEXT_MESSAGE)
             encodeInt(compilerIndex)
             encodeInt(flagsIndex)
             encodeInt(workingDirectoryIndex)
-            encodeInt(outputFileIndex) // Version 2 and up
+            encodeInt(targetIndex)
             lastCompilerWritten = compilerIndex
             lastFlagsWritten = flagsIndex
             lastWorkingDirectoryWritten = workingDirectoryIndex
+            lastTargetWritten = targetIndex
             ++countOfSourceMessages
         }
 
         // Encode the file
         encodeByte(COMPILE_COMMAND_FILE_MESSAGE)
         encodeInt(intern(sourceFile.path))
+        encodeInt(intern(outputFile.path)) // Version 2 and up
         ++countOfSourceMessages
+        ++countOfSourceFiles
     }
 
     /**
      * On close, write the final information needed to complete the file.
      * - string-table-section
-     * - flag-lists-section
+     * - string-lists-section
      * - File offset of compile-commands-section
      * - Number of compile-commands-section messages
      * - File offset of string-table-section
-     * - File offset of flag-lists-section
+     * - File offset of string-lists-section
      */
     override fun close() {
         // Write the string table
@@ -292,14 +308,14 @@ class CompileCommandsEncoder(
             .sortedBy { (_, index) -> index }
             .forEach { (string, _) -> encodeUTF8(string) }
 
-        // Write the flags lists
-        val offsetOfFlagLists = bufferStartPosition + map.position()
-        encodeInt(flagsTable.size)
-        flagsTable.toList()
+        // Write the strings lists
+        val offsetOfStringListsTable = bufferStartPosition + map.position()
+        encodeInt(stringListTable.size)
+        stringListTable.toList()
             .sortedBy { (_, index) -> index }
-            .forEach { (flags, _) ->
-                encodeInt(flags.size)
-                flags.forEach { flag -> encodeInt(flag) }
+            .forEach { (strings, _) ->
+                encodeInt(strings.size)
+                strings.forEach { id -> encodeInt(id) }
             }
 
         // Flush remaining bytes in buffer.
@@ -312,6 +328,7 @@ class CompileCommandsEncoder(
         // Write the number of source file messages
         ras.seek(countOfSourceMessagesOffset)
         ras.writeInt(countOfSourceMessages)
+        ras.writeInt(countOfSourceFiles)
         ras.seek(compileCommandsIndexEntry + Int.SIZE_BYTES)
         ras.writeLong(countOfSourceMessagesOffset)
 
@@ -319,9 +336,9 @@ class CompileCommandsEncoder(
         ras.seek(stringTableIndexEntry + Int.SIZE_BYTES)
         ras.writeLong(offsetOfStringTable)
 
-        // Write the offset of flags table
-        ras.seek(flagListsIndexEntry + Int.SIZE_BYTES)
-        ras.writeLong(offsetOfFlagLists)
+        // Write the offset of string lists table
+        ras.seek(stringListsIndexEntry + Int.SIZE_BYTES)
+        ras.writeLong(offsetOfStringListsTable)
 
         ras.fd.sync()
 
@@ -333,13 +350,17 @@ class CompileCommandsEncoder(
 
 /**
  * Read [MAGIC] and [VERSION] and return the position immediately after.
+ * Returns Pair(0, 0) if this isn't a compile_commands.json.bin file.
  */
-private fun MappedByteBuffer.positionAfterMagicAndVersion(file: File) : Pair<Int, Int> {
+private fun ByteBuffer.positionAfterMagicAndVersion() : Pair<Int, Int> {
     (this as Buffer).position(0)
     MAGIC.forEach { expected ->
+        if (!hasRemaining()) {
+            return 0 to 0
+        }
         val actual = get()
         if (actual != expected.toByte()) {
-            error("$file is not a valid C/C++ Build Metadata file")
+            return 0 to 0
         }
     }
     val version = int // Version
@@ -349,7 +370,7 @@ private fun MappedByteBuffer.positionAfterMagicAndVersion(file: File) : Pair<Int
 /**
  * Leave the buffer pointer set at the beginning of [section]
  */
-private fun MappedByteBuffer.seekSection(start: Int, section: Sections) {
+private fun ByteBuffer.seekSection(start: Int, section: Sections) {
     val buffer: Buffer = this
     buffer.position(start)
     val indexSize = int
@@ -366,7 +387,7 @@ private fun MappedByteBuffer.seekSection(start: Int, section: Sections) {
 /**
  * Read a UTF8 string.
  */
-private fun MappedByteBuffer.readUTF8() : String {
+private fun ByteBuffer.readUTF8() : String {
     val bytes = ByteArray(int)
     get(bytes)
     return String(bytes, Charsets.UTF_8)
@@ -375,7 +396,7 @@ private fun MappedByteBuffer.readUTF8() : String {
 /**
  * Read the string table.
  */
-private fun MappedByteBuffer.readStringTable(start: Int) : Array<String?> {
+private fun ByteBuffer.readStringTable(start: Int) : Array<String?> {
     seekSection(start, StringTable)
     val count = int
     return (listOf(null) + (0 until count)
@@ -384,10 +405,12 @@ private fun MappedByteBuffer.readStringTable(start: Int) : Array<String?> {
 }
 
 /**
- * Read the flags table.
+ * Read the string lists table.
  */
-private fun MappedByteBuffer.readFlagsTable(start: Int, strings : Array<String?>) : Array<List<String>> {
-    seekSection(start, FlagLists)
+private fun ByteBuffer.readStringListsTable(
+    start: Int,
+    strings : Array<String?>) : Array<List<String>> {
+    seekSection(start, StringLists)
     val count = int
     return (0 until count)
             .map {
@@ -413,47 +436,54 @@ fun streamCompileCommands(file: File,
         compiler:File,
         flags:List<String>,
         workingDirectory:File) -> Unit) {
-    streamCompileCommandsImpl(file) { sourceFile, compiler, flags, workingDirectory, _ ->
-        action(sourceFile, compiler, flags, workingDirectory)
+    streamCompileCommandsImpl(file) { command ->
+        action(command.sourceFile, command.compiler, command.flags, command.workingDirectory)
     }
 }
 
+data class CompileCommand(
+        val sourceFile:File,
+        val compiler:File,
+        val flags:List<String>,
+        val workingDirectory:File,
+        val outputFile:File,
+        val target:String,
+        val sourceFileIndex:Int,
+        val sourceFileCount:Int)
+
 /**
- * Same as [streamCompileCommands] but also emits 'outputFile' which is the .o. The caller is
- * responsible for checking whether this compile_commands.json.bin supports 'outputFile'.
+ * Stream compile_commands.json.bin file, returning all information from V2
+ * format.
  */
-fun streamCompileCommandsWithOutputFile(file: File,
-    action : (
-        sourceFile:File,
-        compiler:File,
-        flags:List<String>,
-        workingDirectory:File,
-        outputFile:File) -> Unit) {
-    assert(compileCommandsFileSupportsOutputFile(file)) {
-        "Caller is responsible for checking whether '$file' supports streaming output file"
+fun streamCompileCommandsV2(file: File, action : CompileCommand.() -> Unit) {
+    assert(readVersion(file) >= 2) {
+        "Caller is responsible for checking whether '$file' supports version 2"
     }
-    streamCompileCommandsImpl(file) { sourceFile, compiler, flags, workingDirectory, outputFile ->
-        action(sourceFile, compiler, flags, workingDirectory, outputFile!!)
+    streamCompileCommandsImpl(file) { command ->
+        action(command)
     }
 }
 
+// These are fallback placeholder values to use when a V1 file is read.
+// They shouldn't be able to leak into V2. Give them easily searchable
+// string values in case a bug allows them to leak.
+private val VERSION_FALLBACK_OUTPUT_FILE = File("compile-commands-fallback-output-file")
+private const val VERSION_FALLBACK_TARGET = "compile-commands-fallback-targets-list"
+
 /**
- * Same as [streamCompileCommands] but also emits 'outputFile' which is the .o  (always null for
- * version 1, never null for version 2+). The caller is responsible for handling outputFile==null
- * case.
+ * Implementation class that streams all information for the current version.
+ * When earlier-than-current files are read in, fallback nonsense values are used.
  */
-private fun streamCompileCommandsImpl(file: File,
-        action : (
-            sourceFile:File,
-            compiler:File,
-            flags:List<String>,
-            workingDirectory:File,
-            outputFile:File?) -> Unit) {
-    RandomAccessFile(file, "r").use { ras ->
-        val map = ras.channel.map(FileChannel.MapMode.READ_ONLY, 0, file.length())
-        val (start, version) = map.positionAfterMagicAndVersion(file)
+private fun streamCompileCommandsImpl(file: File, action : (CompileCommand) -> Unit) {
+    FileChannel.open(file.toPath()).use { fc ->
+        val map = ByteBuffer.allocate(file.length().toInt())
+        fc.read(map)
+        val (start, version) = map.positionAfterMagicAndVersion()
+        if (start == 0 || version == 0) {
+            error("$file is not a valid C/C++ Build Metadata file")
+        }
         val strings = map.readStringTable(start)
-        val flags = map.readFlagsTable(start, strings)
+        val stringLists = map.readStringListsTable(start, strings)
         val internedFiles = mutableMapOf<Int, File>()
         fun internFile(index: Int) : File? {
             return if (index == 0) null
@@ -463,28 +493,38 @@ private fun streamCompileCommandsImpl(file: File,
         }
         map.seekSection(start, CompileCommands)
         val sourceMessagesCount = map.int
+        val sourceFilesCount = if (version >= 2) map.int else -1
         lateinit var lastCompiler: File
         var lastFlags = listOf<String>()
         var lastWorkingDirectory = File("")
-        var lastOutputFile: File? = null
+        var lastTarget = ""
+        var sourceFileIndex = 0
         repeat(sourceMessagesCount) {
             when(map.get()) {
                 COMPILE_COMMAND_CONTEXT_MESSAGE -> {
                     lastCompiler = File(strings[map.int]!!)
-                    lastFlags = flags[map.int]
+                    lastFlags = stringLists[map.int]
                     lastWorkingDirectory = internFile(map.int)!!
-                    if (version >= 2) {
-                        lastOutputFile = internFile(map.int)!!
-                    }
+                    lastTarget = if (version >= 2) {
+                        strings[map.int]!!
+                    } else VERSION_FALLBACK_TARGET
                 }
                 COMPILE_COMMAND_FILE_MESSAGE -> {
-                    action(
-                        internFile(map.int)!!,
-                        lastCompiler,
-                        lastFlags,
-                        lastWorkingDirectory,
-                        lastOutputFile
-                    )
+                    val sourceFile = internFile(map.int)!!
+                    val outputFile = if (version >= 2) {
+                        internFile(map.int)!!
+                    } else VERSION_FALLBACK_OUTPUT_FILE
+                    action(CompileCommand(
+                        sourceFile = sourceFile,
+                        compiler = lastCompiler,
+                        flags = lastFlags,
+                        workingDirectory = lastWorkingDirectory,
+                        outputFile = outputFile,
+                        target = lastTarget,
+                        sourceFileIndex = sourceFileIndex,
+                        sourceFileCount = sourceFilesCount
+                    ))
+                    ++sourceFileIndex
                 }
                 else -> error("Unexpected")
             }
@@ -493,13 +533,22 @@ private fun streamCompileCommandsImpl(file: File,
 }
 
 /**
- * Return true if the given compile_commands.json.bin file supports streaming output (.o) file.
+ * Return true iff the given compile_commands.json.bin is the latest
+ * version supported by the code in this class.
  */
-fun compileCommandsFileSupportsOutputFile(file: File) : Boolean {
-    RandomAccessFile(file, "r").use { ras ->
-        val map = ras.channel.map(FileChannel.MapMode.READ_ONLY, 0, file.length())
-        val (_, version) = map.positionAfterMagicAndVersion(file)
-        return version >= 2
+fun compileCommandsFileIsCurrentVersion(file: File) : Boolean {
+    return readVersion(file) == VERSION
+}
+
+/**
+ * Read only the version number from a compile_commands.json.bin file.
+ */
+private fun readVersion(file: File) : Int {
+    FileChannel.open(file.toPath()).use { fc ->
+        val map = ByteBuffer.allocate(MAGIC.length + Int.SIZE_BYTES)
+        fc.read(map)
+        val (_, version) = map.positionAfterMagicAndVersion()
+        return version
     }
 }
 
