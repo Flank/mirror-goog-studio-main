@@ -19,11 +19,13 @@ package com.android.tools.appinspection
 import android.app.AlarmManager
 import android.app.AlarmManager.OnAlarmListener
 import android.app.PendingIntent
-import android.util.Log
 import androidx.inspection.Connection
 import androidx.inspection.InspectorEnvironment
 import backgroundtask.inspection.BackgroundTaskInspectorProtocol
-import backgroundtask.inspection.BackgroundTaskInspectorProtocol.*
+import backgroundtask.inspection.BackgroundTaskInspectorProtocol.AlarmCancelled
+import backgroundtask.inspection.BackgroundTaskInspectorProtocol.AlarmFired
+import backgroundtask.inspection.BackgroundTaskInspectorProtocol.AlarmListener
+import backgroundtask.inspection.BackgroundTaskInspectorProtocol.AlarmSet
 import com.android.tools.appinspection.BackgroundTaskUtil.sendBackgroundTaskEvent
 import java.util.concurrent.ConcurrentHashMap
 
@@ -66,14 +68,14 @@ internal class AlarmHandler(
                 val listenerTag = args[7] as String?
                 when {
                     operation != null -> {
-                        taskId = operationIdMap.getOrPut(operation, { BackgroundTaskUtil.nextId() })
+                        taskId = operationIdMap.getOrPut(operation) { BackgroundTaskUtil.nextId() }
                         this.operation = BackgroundTaskInspectorProtocol.PendingIntent.newBuilder()
                             .setCreatorPackage(operation.creatorPackage)
                             .setCreatorUid(operation.creatorUid)
                             .build()
                     }
                     listener != null -> {
-                        taskId = listenerIdMap.getOrPut(listener, { BackgroundTaskUtil.nextId() })
+                        taskId = listenerIdMap.getOrPut(listener) { BackgroundTaskUtil.nextId() }
                         this.listener = AlarmListener.newBuilder()
                             .setTag(listenerTag)
                             .build()
