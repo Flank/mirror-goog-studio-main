@@ -79,6 +79,7 @@ import com.google.common.io.Files;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiMember;
+import com.intellij.psi.PsiMethod;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
@@ -88,6 +89,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.jetbrains.uast.UCallExpression;
 import org.jetbrains.uast.UCallableReferenceExpression;
 import org.jetbrains.uast.UElement;
 import org.jetbrains.uast.USimpleNameReferenceExpression;
@@ -717,7 +719,9 @@ public class UnusedResourceDetector extends ResourceXmlDetector
     @Override
     public List<Class<? extends UElement>> getApplicableUastTypes() {
         return Arrays.asList(
-                USimpleNameReferenceExpression.class, UCallableReferenceExpression.class);
+                USimpleNameReferenceExpression.class,
+                UCallableReferenceExpression.class,
+                UCallExpression.class);
     }
 
     @Nullable
@@ -730,6 +734,22 @@ public class UnusedResourceDetector extends ResourceXmlDetector
         }
 
         return new UElementHandler() {
+            @Override
+            public void visitCallExpression(@NonNull UCallExpression node) {
+                PsiMethod resolved = node.resolve();
+                if (resolved != null) {
+                    PsiClass psiClass = resolved.getContainingClass();
+                    if (psiClass != null) {
+                        String resourceName = bindingClasses.get(psiClass.getName());
+                        if (resourceName != null
+                                && isBindingClass(context.getEvaluator(), psiClass)) {
+                            ResourceUsageModel.markReachable(
+                                    model.getResource(ResourceType.LAYOUT, resourceName));
+                        }
+                    }
+                }
+            }
+
             @Override
             public void visitSimpleNameReferenceExpression(
                     @NonNull USimpleNameReferenceExpression expression) {
@@ -750,14 +770,6 @@ public class UnusedResourceDetector extends ResourceXmlDetector
                 }
             }
 
-            private boolean isBindingClass(JavaEvaluator evaluator, PsiClass binding) {
-                return evaluator.extendsClass(binding, "android.databinding.ViewDataBinding", true)
-                        || evaluator.extendsClass(
-                                binding, "androidx.databinding.ViewDataBinding", true)
-                        || evaluator.extendsClass(
-                                binding, "androidx.viewbinding.ViewBinding", true);
-            }
-
             @Override
             public void visitCallableReferenceExpression(
                     @NonNull UCallableReferenceExpression node) {
@@ -773,6 +785,14 @@ public class UnusedResourceDetector extends ResourceXmlDetector
                         }
                     }
                 }
+            }
+
+            private boolean isBindingClass(JavaEvaluator evaluator, PsiClass binding) {
+                return evaluator.extendsClass(binding, "android.databinding.ViewDataBinding", true)
+                        || evaluator.extendsClass(
+                                binding, "androidx.databinding.ViewDataBinding", true)
+                        || evaluator.extendsClass(
+                                binding, "androidx.viewbinding.ViewBinding", true);
             }
         };
     }
