@@ -35,6 +35,7 @@ import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.api.variant.impl.getFeatureLevel
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.api.AndroidSourceSet
+import com.android.build.gradle.internal.attribution.CheckJetifierBuildService
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ApplicationCreationConfig
 import com.android.build.gradle.internal.component.ComponentCreationConfig
@@ -90,9 +91,9 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_R_CL
 import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
 import com.android.build.gradle.internal.scope.ProjectInfo
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.scope.publishArtifactToConfiguration
 import com.android.build.gradle.internal.scope.getDirectories
 import com.android.build.gradle.internal.scope.getRegularFiles
+import com.android.build.gradle.internal.scope.publishArtifactToConfiguration
 import com.android.build.gradle.internal.services.AndroidLocationsBuildService
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.AarMetadataTask
@@ -103,6 +104,7 @@ import com.android.build.gradle.internal.tasks.BundleLibraryClassesJar
 import com.android.build.gradle.internal.tasks.BundleLibraryJavaRes
 import com.android.build.gradle.internal.tasks.CheckAarMetadataTask
 import com.android.build.gradle.internal.tasks.CheckDuplicateClassesTask
+import com.android.build.gradle.internal.tasks.CheckJetifierTask
 import com.android.build.gradle.internal.tasks.CheckProguardFiles
 import com.android.build.gradle.internal.tasks.CompressAssetsTask
 import com.android.build.gradle.internal.tasks.D8BundleMainDexListTask
@@ -2717,6 +2719,12 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             }
         }
         createDependencyAnalyzerTask()
+
+        val checkJetifierBuildService =
+            CheckJetifierBuildService.RegistrationAction(project, projectOptions).execute()
+        taskFactory.register(
+            CheckJetifierTask.CreationAction(globalScope, projectOptions, checkJetifierBuildService)
+        )
     }
 
     protected fun createDependencyAnalyzerTask() {

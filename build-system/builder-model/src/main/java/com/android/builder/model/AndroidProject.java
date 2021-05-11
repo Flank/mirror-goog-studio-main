@@ -132,6 +132,9 @@ public interface AndroidProject {
      */
     String PROPERTY_ATTRIBUTION_FILE_LOCATION = "android.injected.attribution.file.location";
 
+    /** Absolute path to a file containing the result of the `CheckJetifier` task. */
+    String PROPERTY_CHECK_JETIFIER_RESULT_FILE = "android.injected.checkJetifier.resultFile";
+
     /**
      * Comma separated list of on-demand dynamic modules or instant app modules names that are
      * selected by the user for installation on the device during deployment.

@@ -1,5 +1,7 @@
 package com.android.build.gradle.integration.common.fixture.app;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.integration.common.fixture.GradleProject;
@@ -91,6 +93,11 @@ public class MultiModuleTestProject implements TestProject {
     public static class Builder {
 
         private BiMap<String, GradleProject> projects = HashBiMap.create();
+
+        @NonNull
+        public Builder subproject(@NonNull GradleProject testProject) {
+            return subproject(checkNotNull(testProject.getPath()), testProject);
+        }
 
         @NonNull
         public Builder subproject(@NonNull String name, @NonNull GradleProject testProject) {

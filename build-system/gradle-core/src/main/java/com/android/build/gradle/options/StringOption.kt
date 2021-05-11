@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.options
 
-import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.builder.model.AndroidProject
 
 enum class StringOption(
@@ -32,6 +31,9 @@ enum class StringOption(
     IDE_BUILD_TARGET_ABI(AndroidProject.PROPERTY_BUILD_ABI, ApiStage.Stable),
 
     IDE_ATTRIBUTION_FILE_LOCATION(AndroidProject.PROPERTY_ATTRIBUTION_FILE_LOCATION, ApiStage.Stable),
+
+    /** Absolute path to a file containing the result of the `CheckJetifier` task. */
+    IDE_CHECK_JETIFIER_RESULT_FILE(AndroidProject.PROPERTY_CHECK_JETIFIER_RESULT_FILE, ApiStage.Stable),
 
     // Signing options
     IDE_SIGNING_STORE_TYPE(AndroidProject.PROPERTY_SIGNING_STORE_TYPE, ApiStage.Stable),
