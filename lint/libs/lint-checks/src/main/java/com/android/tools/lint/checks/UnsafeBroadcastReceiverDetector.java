@@ -313,7 +313,6 @@ public class UnsafeBroadcastReceiverDetector extends Detector
             case "android.intent.action.ACTION_POWER_CONNECTED":
             case "android.intent.action.ACTION_POWER_DISCONNECTED":
             case "android.intent.action.ACTION_PREFERRED_ACTIVITY_CHANGED":
-            case "android.intent.action.ACTION_RADIO_OFF":
             case "android.intent.action.ACTION_SET_RADIO_CAPABILITY_DONE":
             case "android.intent.action.ACTION_SET_RADIO_CAPABILITY_FAILED":
             case "android.intent.action.ACTION_SHUTDOWN":
