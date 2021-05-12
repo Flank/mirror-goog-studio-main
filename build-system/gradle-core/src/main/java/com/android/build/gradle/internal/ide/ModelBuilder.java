@@ -738,14 +738,13 @@ public class ModelBuilder<Extension extends BaseExtension>
         if (extension instanceof TestAndroidConfig) {
             TestAndroidConfig testConfig = (TestAndroidConfig) extension;
 
-            // to get the target variant we need to get the result of the dependency resolution
             ArtifactCollection apkArtifacts =
                     component
                             .getVariantDependencies()
                             .getArtifactCollection(
-                                    AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
+                                    AndroidArtifacts.ConsumedConfigType.PROVIDED_CLASSPATH,
                                     AndroidArtifacts.ArtifactScope.ALL,
-                                    AndroidArtifacts.ArtifactType.MANIFEST_METADATA);
+                                    AndroidArtifacts.ArtifactType.APK);
 
             // while there should be single result, if the variant matching is broken, then
             // we need to support this.
@@ -768,7 +767,6 @@ public class ModelBuilder<Extension extends BaseExtension>
                         .registerIssues(syncIssueReporter);
             }
         }
-
         return ImmutableList.of();
     }
 
