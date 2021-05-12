@@ -34,6 +34,7 @@ import org.junit.ClassRule
 import org.junit.Rule
 import org.junit.Test
 import java.io.File
+import kotlin.test.fail
 
 class CustomTestedApksTest {
 
@@ -179,7 +180,14 @@ class CustomTestedApksTest {
 
     @Test
     fun connectedCheckInstalls() {
-        project.executor().run(":test:connectedCheck")
+        val appModel = project.executeAndReturnModel(":test:connectedCheck")
+
+        val testVariant = appModel.onlyModelMap[":test"]?.variants?.first()
+            ?: fail("cannot get test Variant")
+        val testedTargetVariants = testVariant.testedTargetVariants
+        Truth.assertThat(testedTargetVariants.size).isEqualTo(1)
+        Truth.assertThat(testedTargetVariants.first().targetProjectPath).isEqualTo(":app")
+        Truth.assertThat(testedTargetVariants.first().targetVariant).isEqualTo("benchmark")
 
         // check the benchmark manifest file, it should self instrument itself.
         val packagedManifestFolder = FileUtils.join(project.getSubproject("test").buildDir,
