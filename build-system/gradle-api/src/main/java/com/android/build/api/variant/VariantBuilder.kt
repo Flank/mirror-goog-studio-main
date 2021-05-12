@@ -17,13 +17,11 @@
 package com.android.build.api.variant
 
 import com.android.build.api.component.ComponentBuilder
-import org.gradle.api.Incubating
 
 /**
  * Variant object that contains properties that must be set during configuration time as it
  * changes the build flow for the variant.
  */
-@Incubating
 interface VariantBuilder: ComponentBuilder {
 
     /**

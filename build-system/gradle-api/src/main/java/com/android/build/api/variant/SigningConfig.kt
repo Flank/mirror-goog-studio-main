@@ -16,13 +16,11 @@
 
 package com.android.build.api.variant
 
-import org.gradle.api.Incubating
 import org.gradle.api.provider.Property
 
 /**
  * Defines a variant's signing config.
  */
-@Incubating
 interface SigningConfig {
     /**
      * Enable signing using JAR Signature Scheme (aka v1 signing).

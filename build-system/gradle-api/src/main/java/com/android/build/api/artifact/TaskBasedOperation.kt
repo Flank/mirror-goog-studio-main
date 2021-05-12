@@ -16,7 +16,6 @@
 
 package com.android.build.api.artifact
 
-import org.gradle.api.Incubating
 import org.gradle.api.Task
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileSystemLocation
@@ -33,7 +32,6 @@ import org.gradle.api.provider.ListProperty
  * Each operation should indicate through the methods of this interface which method can be used
  * to set or retrieve the [Task] inputs and outputs.
  */
-@Incubating
 interface TaskBasedOperation<TaskT: Task> {
 
     /**

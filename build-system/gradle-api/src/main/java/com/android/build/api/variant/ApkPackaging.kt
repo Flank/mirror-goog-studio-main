@@ -16,12 +16,9 @@
 
 package com.android.build.api.variant
 
-import org.gradle.api.Incubating
-
 /**
  * Defines an APK variant's packaging options.
  */
-@Incubating
 interface ApkPackaging : Packaging {
 
     /** PackagingOptions for dex files. Initialized from the corresponding DSL. */

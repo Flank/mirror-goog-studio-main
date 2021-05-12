@@ -18,7 +18,5 @@ package com.android.build.api.component
 
 import com.android.build.api.variant.GeneratesAar
 import com.android.build.api.variant.HasAndroidResources
-import org.gradle.api.Incubating
 
-@Incubating
 interface TestFixtures: GeneratesAar, HasAndroidResources, Component

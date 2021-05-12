@@ -16,13 +16,11 @@
 
 package com.android.build.api.variant
 
-import org.gradle.api.Incubating
 import org.gradle.api.provider.ListProperty
 
 /**
  * Defines a variant's aapt options.
  */
-@Incubating
 interface AndroidResources {
 
     /**

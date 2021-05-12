@@ -16,7 +16,6 @@
 
 package com.android.build.api.artifact
 
-import org.gradle.api.Incubating
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.file.RegularFile
 
@@ -28,7 +27,6 @@ import org.gradle.api.file.RegularFile
  * All methods in [Artifacts] should be supported with any subclass of this
  * class.
  */
-@Incubating
 sealed class MultipleArtifact<FileTypeT : FileSystemLocation>(
     kind: ArtifactKind<FileTypeT>,
     category: Category
@@ -43,7 +41,6 @@ sealed class MultipleArtifact<FileTypeT : FileSystemLocation>(
      *
      * Initialized from DSL [com.android.build.api.dsl.VariantDimension.multiDexKeepProguard]
      */
-    @Incubating
     object MULTIDEX_KEEP_PROGUARD:
             MultipleArtifact<RegularFile>(FILE, Category.SOURCES),
             Transformable,

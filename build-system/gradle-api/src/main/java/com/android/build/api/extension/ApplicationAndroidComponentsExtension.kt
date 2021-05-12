@@ -19,7 +19,6 @@ package com.android.build.api.extension
 import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.api.variant.ApplicationVariant
 import com.android.build.api.variant.ApplicationVariantBuilder
-import org.gradle.api.Incubating
 
 /**
  * Extension for Application module variant.
@@ -27,6 +26,5 @@ import org.gradle.api.Incubating
  * An application module is created when a build script is applying the 'com.android.application'
  * plugin.
  */
-@Incubating
 interface ApplicationAndroidComponentsExtension:
         AndroidComponentsExtension<ApplicationExtension, ApplicationVariantBuilder, ApplicationVariant>

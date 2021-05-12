@@ -17,7 +17,6 @@
 package com.android.build.api.variant
 
 import com.android.build.api.artifact.Artifact
-import org.gradle.api.Incubating
 import org.gradle.api.file.Directory
 import org.gradle.workers.WorkParameters
 import java.io.File
@@ -63,10 +62,8 @@ import java.io.Serializable
  * This [BuiltArtifacts] will abstract access to these produced files and provided some metadata
  * associated with each file to be able to identify filters, version code or version name.
  */
-@Incubating
 interface BuiltArtifacts {
 
-    @Incubating
     companion object {
         /**
          * Current version of the metadata file.
@@ -110,7 +107,6 @@ interface BuiltArtifacts {
      * Specialized version  of Gradle's [WorkParameters] so we can retrieve the output file
      * generated when transforming an instance of [BuiltArtifacts] into a new one.
      */
-    @Incubating
     interface TransformParams: WorkParameters, Serializable {
         /**
          * Result of the work item submission must be made available through this field.

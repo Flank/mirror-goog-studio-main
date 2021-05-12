@@ -16,7 +16,6 @@
 
 package com.android.build.api.artifact
 
-import org.gradle.api.Incubating
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.file.RegularFile
@@ -29,7 +28,6 @@ import org.gradle.api.file.RegularFile
  * All methods in the [Artifacts] class should be supported with any subclass of this
  * class.
  */
-@Incubating
 sealed class SingleArtifact<T : FileSystemLocation>(
     kind: ArtifactKind<T>,
     category: Category = Category.INTERMEDIATES,
@@ -46,7 +44,6 @@ sealed class SingleArtifact<T : FileSystemLocation>(
      * invoked from Android Studio. In such cases, the APKs are not suitable for deployment to
      * Play Store.
      */
-    @Incubating
     object APK:
         SingleArtifact<Directory>(DIRECTORY),
         Transformable,
@@ -64,13 +61,11 @@ sealed class SingleArtifact<T : FileSystemLocation>(
      * For each module, unit test and android test variants will not have a manifest file
      * available.
      */
-    @Incubating
     object MERGED_MANIFEST:
         SingleArtifact<RegularFile>(FILE, Category.INTERMEDIATES, "AndroidManifest.xml"),
         Replaceable,
         Transformable
 
-    @Incubating
     object OBFUSCATION_MAPPING_FILE:
         SingleArtifact<RegularFile>(FILE, Category.OUTPUTS, "mapping.txt") {
             override fun getFolderName(): String = "mapping"
@@ -80,12 +75,13 @@ sealed class SingleArtifact<T : FileSystemLocation>(
      * The final Bundle ready for consumption at Play Store.
      * This is only valid for the base module.
      */
-    @Incubating
     object BUNDLE:
         SingleArtifact<RegularFile>(FILE, Category.OUTPUTS),
         Transformable
 
-    @Incubating
+    /**
+     * The final AAR file as it would be published.
+     */
     object AAR:
         SingleArtifact<RegularFile>(FILE),
         Transformable
@@ -105,6 +101,5 @@ sealed class SingleArtifact<T : FileSystemLocation>(
      *
      * See [Choose resources to make public](https://developer.android.com/studio/projects/android-library.html#PrivateResources).
      */
-    @Incubating
     object PUBLIC_ANDROID_RESOURCES_LIST: SingleArtifact<RegularFile>(FILE)
 }

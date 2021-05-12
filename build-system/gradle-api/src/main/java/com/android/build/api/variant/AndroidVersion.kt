@@ -16,11 +16,9 @@
 
 package com.android.build.api.variant
 
-import org.gradle.api.Incubating
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Optional
 
-@Incubating
 interface AndroidVersion {
 
     /**
