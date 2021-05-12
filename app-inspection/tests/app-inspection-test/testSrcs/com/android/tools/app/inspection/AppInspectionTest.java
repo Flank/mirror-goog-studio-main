@@ -77,7 +77,7 @@ public final class AppInspectionTest {
     }
 
     @Test
-    public void createNativeThenDispose() throws Exception {
+    public void createNativeThenRestart() throws Exception {
         String onDevicePath = injectInspectorDex();
         assertCreateInspectorResponseStatus(
                 appInspectionRule.sendCommandAndGetResponse(
@@ -90,6 +90,16 @@ public final class AppInspectionTest {
                         disposeInspector("test.native.inspector")),
                 Status.SUCCESS);
         appInspectionRule.assertInput(EXPECTED_INSPECTOR_DISPOSED);
+        assertThat(appInspectionRule.consumeCollectedEvent().hasDisposedEvent()).isTrue();
+        // check that it can be successfully restarted
+        assertCreateInspectorResponseStatus(
+                appInspectionRule.sendCommandAndGetResponse(
+                        createInspector("test.native.inspector", onDevicePath)),
+                SUCCESS);
+        assertDisposeInspectorResponseStatus(
+                appInspectionRule.sendCommandAndGetResponse(
+                        disposeInspector("test.native.inspector")),
+                Status.SUCCESS);
         assertThat(appInspectionRule.consumeCollectedEvent().hasDisposedEvent()).isTrue();
     }
 

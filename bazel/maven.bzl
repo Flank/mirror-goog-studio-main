@@ -325,6 +325,10 @@ def maven_aar(name, aar, pom, visibility = None):
         source = pom,
     )
 
+MavenRepoInfo = provider(fields = {
+    "artifacts": "A list of tuples (artifact: File, classifier: string) for each artifact in the Maven repo",
+})
+
 def _collect_pom_provider(pom, jars, clsjars):
     collected = [(pom, None)]
     collected += [(jar, None) for jar in jars.to_list()]
@@ -401,7 +405,7 @@ _maven_repo = rule(
 def _maven_repo_list_impl(ctx):
     artifacts = _collect_artifacts(ctx.attr.artifacts, ctx.attr.include_sources)
     inputs = [artifact for artifact, _ in artifacts]
-    args = [artifact.short_path + "," + classifier if classifier else artifact.short_path for artifact, classifier in artifacts]
+    args = [artifact.short_path + ("," + classifier if classifier else "") for artifact, classifier in artifacts]
 
     # Generate unpacked artifact list.
     # This artifact list contains every artifact in the repository, separated by newlines. The order
@@ -414,7 +418,10 @@ def _maven_repo_list_impl(ctx):
     ctx.actions.write(ctx.outputs.manifest, "\n".join(args))
 
     runfiles = ctx.runfiles(files = [ctx.outputs.manifest] + inputs)
-    return [DefaultInfo(runfiles = runfiles)]
+    return [
+        DefaultInfo(runfiles = runfiles),
+        MavenRepoInfo(artifacts = artifacts),
+    ]
 
 _maven_repo_list = rule(
     attrs = {
@@ -429,6 +436,12 @@ _maven_repo_list = rule(
 
 # Creates a maven repo with the given artifacts and all their transitive
 # dependencies.
+#
+# When use_zip = False, the rule exposes a MavenRepoInfo provider and outputs a manifest file. The
+# manifest file contains relative runfile paths, when are available only during bazel run/test
+# (see https://docs.bazel.build/versions/master/skylark/rules.html#runfiles-location).
+# If the repo is used as part of a Bazel rule, the provider should be used instead to obtain the
+# full paths to each of the artifacts.
 #
 # Usage:
 # maven_repo(

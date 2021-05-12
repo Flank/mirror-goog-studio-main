@@ -773,7 +773,7 @@ open class GradleDetector : Detector(), GradleScanner {
             maybeReportAgpVersionIssue(context)
         }
         if (statement == "jcenter" && parent == "repositories") {
-            val message = "JCenter is at end of life"
+            val message = "JCenter Maven repository is no longer receiving updates: newer library versions may be available elsewhere"
             val replaceFix = fix().name("Replace with mavenCentral")
                 .replace().text("jcenter").with("mavenCentral").build()
             val deleteFix = fix().name("Delete this repository declaration")
@@ -2762,16 +2762,12 @@ open class GradleDetector : Detector(), GradleScanner {
         @JvmField
         val JCENTER_REPOSITORY_OBSOLETE = Issue.create(
             id = "JcenterRepositoryObsolete",
-            briefDescription = "The JCenter Maven repository is obsolete from 1st May 2021",
+            briefDescription = "JCenter Maven repository is read-only",
             explanation = """
-                JFrog announced that the JCenter Maven repository would reach end of service \
-                and would no longer be available from 1st May 2021; no new submissions would be \
-                accepted from 28th February 2021, and there might be accessibility problems due \
-                to maintenance windows before the end of service date.
-
-                We recommend configuring Gradle to retrieve Java artifacts using `mavenCentral` \
-                instead.
-                """,
+                The JCenter Maven repository is no longer accepting submissions of Maven \
+                artifacts since 31st March 2021.  Ensure that the project is configured \
+                to search in repositories with the latest versions of its dependencies.
+            """,
             category = Category.CORRECTNESS,
             priority = 8,
             severity = Severity.WARNING,

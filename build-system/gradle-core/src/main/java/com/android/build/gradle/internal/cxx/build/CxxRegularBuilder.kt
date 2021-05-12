@@ -17,7 +17,9 @@
 package com.android.build.gradle.internal.cxx.build
 
 import com.android.build.gradle.internal.core.Abi
+import com.android.build.gradle.internal.cxx.attribution.encode
 import com.android.build.gradle.internal.cxx.attribution.generateChromeTrace
+import com.android.build.gradle.internal.cxx.attribution.generateNinjaSourceFileAttribution
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel
 import com.android.build.gradle.internal.cxx.gradle.generator.NativeBuildOutputLevel
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons
@@ -25,14 +27,15 @@ import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValueMini
 import com.android.build.gradle.internal.cxx.json.NativeLibraryValueMini
 import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.logging.infoln
-import com.android.build.gradle.internal.cxx.logging.lifecycleln
+import com.android.build.gradle.internal.cxx.logging.logStructured
+import com.android.build.gradle.internal.cxx.model.CxxAbiModel
+import com.android.build.gradle.internal.cxx.model.ifCMake
 import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.cxx.model.ninjaLogFile
 import com.android.build.gradle.internal.cxx.model.objFolder
 import com.android.build.gradle.internal.cxx.process.createProcessOutputJunction
 import com.android.build.gradle.internal.cxx.settings.BuildSettingsConfiguration
 import com.android.build.gradle.internal.cxx.settings.getEnvironmentVariableMap
-import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.ide.common.process.ProcessInfoBuilder
 import com.android.utils.FileUtils
 import com.android.utils.cxx.CxxDiagnosticCode
@@ -70,6 +73,7 @@ class CxxRegularBuilder(val configurationModel: CxxConfigurationModel) : CxxBuil
 
     /** Represents a single build step that, when executed, builds one or more libraries.  */
     private class BuildStep(
+            val abi: CxxAbiModel,
             val buildCommandComponents: List<String>,
             val libraries: List<NativeLibraryValueMini>,
             val outputFolder: File
@@ -93,11 +97,14 @@ class CxxRegularBuilder(val configurationModel: CxxConfigurationModel) : CxxBuil
 
         for (miniConfigIndex in miniConfigs.indices) {
             val config = miniConfigs[miniConfigIndex]
+
             infoln("evaluate miniconfig")
             if (config.libraries.isEmpty()) {
                 infoln("no libraries")
                 continue
             }
+            val abi = (configurationModel.activeAbis + configurationModel.unusedAbis)
+                .single { it.abi.tag == config.libraries.values.first().abi }
 
             val librariesToBuild = findLibrariesToBuild(config)
             if (librariesToBuild.isEmpty()) {
@@ -118,6 +125,7 @@ class CxxRegularBuilder(val configurationModel: CxxConfigurationModel) : CxxBuil
                         )
                 buildSteps.add(
                         BuildStep(
+                                abi,
                                 buildTargetsCommand,
                                 librariesToBuild,
                                 abis[miniConfigIndex].jsonFile
@@ -130,6 +138,7 @@ class CxxRegularBuilder(val configurationModel: CxxConfigurationModel) : CxxBuil
                 for (libraryValue in librariesToBuild) {
                     buildSteps.add(
                             BuildStep(
+                                    abi,
                                     libraryValue.buildCommandComponents!!,
                                     listOf(libraryValue),
                                     abis[miniConfigIndex].jsonFile.parentFile
@@ -330,6 +339,7 @@ class CxxRegularBuilder(val configurationModel: CxxConfigurationModel) : CxxBuil
 
             val logFileSuffix: String
             val abiName = buildStep.libraries[0].abi
+            val abi = buildStep.abi
             if (buildStep.libraries.size > 1) {
                 logFileSuffix = "targets"
                 val targetNames = buildStep
@@ -344,34 +354,15 @@ class CxxRegularBuilder(val configurationModel: CxxConfigurationModel) : CxxBuil
                 infoln("Build $logFileSuffix")
             }
 
-            abis
-                    .firstOrNull { abiModel -> abiModel.abi.tag == abiName }
-                    ?.let {
-                        applyBuildSettings(it.buildSettings, processBuilder)
-                    }
+            applyBuildSettings(abi.buildSettings, processBuilder)
 
-            val generateChromeTraces =
-                    abis
-                            .filter { it.variant.module.buildSystem == NativeBuildSystem.CMAKE}
-                            .firstOrNull { it.abi.tag == abiName }
-                            ?.let { abiModel ->
-                                abiModel.variant.module.project.chromeTraceJsonFolder?.let { traceFolder ->
-                                    val ninjaFile = abiModel.ninjaLogFile
-                                    val lineToSkip =
-                                            if (ninjaFile.canRead()) ninjaFile.readLines().size else 0
-                                    val buildStartTime = Clock.systemUTC().millis()
-                                    val m = fun() {
-                                        generateChromeTrace(
-                                                abiModel,
-                                                ninjaFile,
-                                                lineToSkip,
-                                                buildStartTime,
-                                                traceFolder
-                                        )
-                                    }
-                                    m
-                                }
-                            }
+            val buildStartTime = Clock.systemUTC().millis()
+
+            // Count of .ninja_log lines off core
+            // (as opposed to reading the file entirely into memory)
+            val linesToSkip = if (abi.ninjaLogFile.isFile) {
+                abi.ninjaLogFile.useLines { it.count() }
+            } else 0
 
             createProcessOutputJunction(
                     buildStep.outputFolder.resolve("android_gradle_build_command_$logFileSuffix.txt"),
@@ -384,7 +375,37 @@ class CxxRegularBuilder(val configurationModel: CxxConfigurationModel) : CxxBuil
                     .logFullStdout(abis.firstOrNull()?.variant?.module?.nativeBuildOutputLevel == NativeBuildOutputLevel.VERBOSE)
                     .execute(ops::exec)
 
-            generateChromeTraces?.invoke()
+            // Build attribution reporting based on .ninja_log
+            // This is best-effort because it appears that ninja does not guarantee
+            // that the log file is written.
+            //
+            // There's no existing way to track C++ build time for ndk-build.
+            abi.ifCMake {
+                // Lazy because we only need to generate if the user has requested
+                // chrome tracing or structured logging.
+                val attributions by lazy {
+                    generateNinjaSourceFileAttribution(
+                        abi,
+                        linesToSkip,
+                        buildStartTime
+                    ).toBuilder()
+                        .addAllLibrary(buildStep.libraries.map { it.artifactName })
+                        .build()
+                }
+
+                // If the user has requested chrome tracing, then generate it
+                abi.variant.module.project.chromeTraceJsonFolder?.let { traceFolder ->
+                    generateChromeTrace(
+                        attributions,
+                        abi,
+                        buildStartTime,
+                        traceFolder
+                    )
+                }
+
+                // If the user has requested structured logging, then log it
+                logStructured { encoder -> attributions.encode(encoder) }
+            }
         }
     }
 

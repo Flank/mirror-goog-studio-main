@@ -9,6 +9,7 @@ load("//tools/adt/idea/studio:studio.bzl", "studio_data")
 genrule(
     name = "version",
     srcs = [
+        # This should be a list of all binaries that determine our current version.
         "//tools/base/deploy/agent/native:android-libswap/arm64-v8a/android-libswap.so",
         "//tools/base/deploy/installer:android-installer_raw/arm64-v8a/android-installer_raw",
         "//tools/base/deploy/installer:android-install-server/arm64-v8a/android-install-server",
@@ -18,16 +19,10 @@ genrule(
         "Version.java",
         "version.raw",
     ],
-    cmd = "DEP=\"" +
-          # This should be a list of all binaries that determine our current version.
-          "$(location //tools/base/deploy/agent/native:android-libswap/arm64-v8a/android-libswap.so) " +
-          "$(location //tools/base/deploy/installer:android-installer_raw/arm64-v8a/android-installer_raw) " +
-          "$(location //tools/base/deploy/installer:android-install-server/arm64-v8a/android-install-server) " +
-          "\";" +
-          # Java
-          "$(location //tools/base/bazel:bin2c) -lang=java -embed=false -variable=com.android.tools.deployer.Version -output=$(location Version.java) $$DEP && " +
-          # Raw
-          "$(location //tools/base/bazel:bin2c) -lang=raw -output=$(location version.raw) $$DEP",
+    cmd =  # Java
+        "$(location //tools/base/bazel:bin2c) -lang=java -embed=false -variable=com.android.tools.deployer.Version -output=$(location Version.java) $(SRCS) && " +
+        # Raw
+        "$(location //tools/base/bazel:bin2c) -lang=raw -output=$(location version.raw) $(SRCS)",
     tags = ["no_windows"],
     tools = [
         "//tools/base/bazel:bin2c",

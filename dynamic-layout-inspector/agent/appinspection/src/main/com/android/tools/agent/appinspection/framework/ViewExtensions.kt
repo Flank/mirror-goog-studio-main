@@ -18,12 +18,14 @@ package com.android.tools.agent.appinspection.framework
 
 import android.content.res.Resources
 import android.graphics.Bitmap
+import android.graphics.Rect
 import android.util.Log
 import android.view.PixelCopy
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import com.android.tools.agent.appinspection.util.ThreadUtils
+import com.android.tools.layoutinspector.BitmapType
 import java.util.Stack
 import kotlin.math.roundToInt
 
@@ -90,16 +92,17 @@ fun View.isSystemView(): Boolean {
  *
  * This method may return null if the app runs out of memory or has a reflection issue.
  */
-fun View.takeScreenshot(scale: Float): Bitmap? {
-    // We use RGB_565 here since we get significantly better framerate in the inspector with
-    // smaller payloads.
+fun View.takeScreenshot(scale: Float, bitmapType: BitmapType): Bitmap? {
     val bitmap = Bitmap.createBitmap(
         (width * scale).roundToInt(),
         (height * scale).roundToInt(),
-        Bitmap.Config.RGB_565
+        bitmapType.toBitmapConfig()
     )
     return try {
-        val resultCode = SynchronousPixelCopy().request(viewRootImpl.mSurface, bitmap)
+        val location = IntArray(2)
+        getLocationInSurface(location)
+        val bounds = Rect(location[0], location[1], width + location[0], height + location[1])
+        val resultCode = SynchronousPixelCopy().request(viewRootImpl.mSurface, bounds, bitmap)
         if (resultCode == PixelCopy.SUCCESS) {
             bitmap
         } else {

@@ -90,7 +90,7 @@ import java.util.concurrent.Callable
 abstract class ComponentImpl(
     open val componentIdentity: ComponentIdentity,
     override val buildFeatures: BuildFeatureValues,
-    override val variantDslInfo: VariantDslInfo,
+    override val variantDslInfo: VariantDslInfo<*>,
     override val variantDependencies: VariantDependencies,
     override val variantSources: VariantSources,
     override val paths: VariantPathHelper,
@@ -570,7 +570,7 @@ abstract class ComponentImpl(
 
     /** Returns the path(s) to compiled R classes (R.jar). */
     fun getCompiledRClasses(configType: ConsumedConfigType): FileCollection {
-        return if (globalScope.extension.aaptOptions.namespaced) {
+        return if (services.projectInfo.getExtension().aaptOptions.namespaced) {
             internalServices.fileCollection().also { fileCollection ->
                 val namespacedRClassJar = artifacts.get(COMPILE_R_CLASS_JAR)
                 val fileTree = internalServices.fileTree(namespacedRClassJar).builtBy(namespacedRClassJar)

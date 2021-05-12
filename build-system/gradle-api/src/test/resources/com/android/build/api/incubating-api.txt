@@ -225,6 +225,8 @@ com.android.build.api.dsl.ApplicationExtension.getAssetPacks: java.util.Set<java
 com.android.build.api.dsl.ApplicationExtension.getBundle: com.android.build.api.dsl.Bundle ()
 com.android.build.api.dsl.ApplicationExtension.getDependenciesInfo: com.android.build.api.dsl.DependenciesInfo ()
 com.android.build.api.dsl.ApplicationExtension.getDynamicFeatures: java.util.Set<java.lang.String> ()
+com.android.build.api.dsl.ApplicationExtension.getPublishing: com.android.build.api.dsl.ApplicationPublishing ()
+com.android.build.api.dsl.ApplicationExtension.publishing: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.ApplicationPublishing, kotlin.Unit>)
 com.android.build.api.dsl.ApplicationProductFlavor implements com.android.build.api.dsl.ApplicationBaseFlavor, com.android.build.api.dsl.ProductFlavor
 com.android.build.api.dsl.ApplicationProductFlavor.isDefault: boolean ()
 com.android.build.api.dsl.ApplicationProductFlavor.setDefault: void (boolean)
@@ -274,6 +276,9 @@ com.android.build.api.dsl.BaseFlavor.getVectorDrawables: com.android.build.api.d
 com.android.build.api.dsl.BaseFlavor.getWearAppUnbundled: java.lang.Boolean ()
 com.android.build.api.dsl.BaseFlavor.minSdkVersion: void (int)
 com.android.build.api.dsl.BaseFlavor.minSdkVersion: void (java.lang.String)
+com.android.build.api.dsl.BaseFlavor.missingDimensionStrategy: void (java.lang.String, java.lang.String)
+com.android.build.api.dsl.BaseFlavor.missingDimensionStrategy: void (java.lang.String, java.lang.String[])
+com.android.build.api.dsl.BaseFlavor.missingDimensionStrategy: void (java.lang.String, java.util.List<java.lang.String>)
 com.android.build.api.dsl.BaseFlavor.resConfig: void (java.lang.String)
 com.android.build.api.dsl.BaseFlavor.resConfigs: void (java.lang.String[])
 com.android.build.api.dsl.BaseFlavor.resConfigs: void (java.util.Collection<java.lang.String>)
@@ -401,6 +406,7 @@ com.android.build.api.dsl.CommonExtension.getNdkPath: java.lang.String ()
 com.android.build.api.dsl.CommonExtension.getNdkVersion: java.lang.String ()
 com.android.build.api.dsl.CommonExtension.getPackagingOptions: com.android.build.api.dsl.PackagingOptions ()
 com.android.build.api.dsl.CommonExtension.getProductFlavors: org.gradle.api.NamedDomainObjectContainer<? extends ProductFlavorT> ()
+com.android.build.api.dsl.CommonExtension.getProperties: java.util.Map<java.lang.String, java.lang.Object> ()
 com.android.build.api.dsl.CommonExtension.getResourcePrefix: java.lang.String ()
 com.android.build.api.dsl.CommonExtension.getSdkComponents: com.android.build.api.dsl.SdkComponents ()
 com.android.build.api.dsl.CommonExtension.getSigningConfigs: org.gradle.api.NamedDomainObjectContainer<? extends com.android.build.api.dsl.ApkSigningConfig> ()
@@ -571,6 +577,8 @@ com.android.build.api.dsl.LibraryDefaultConfig implements com.android.build.api.
 com.android.build.api.dsl.LibraryExtension implements com.android.build.api.dsl.CommonExtension, com.android.build.api.dsl.TestedExtension
 com.android.build.api.dsl.LibraryExtension.getAidlPackagedList: java.util.Collection<java.lang.String> ()
 com.android.build.api.dsl.LibraryExtension.getPrefab: org.gradle.api.NamedDomainObjectContainer<com.android.build.api.dsl.PrefabPackagingOptions> ()
+com.android.build.api.dsl.LibraryExtension.getPublishing: com.android.build.api.dsl.LibraryPublishing ()
+com.android.build.api.dsl.LibraryExtension.publishing: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.LibraryPublishing, kotlin.Unit>)
 com.android.build.api.dsl.LibraryProductFlavor implements com.android.build.api.dsl.LibraryBaseFlavor, com.android.build.api.dsl.ProductFlavor
 com.android.build.api.dsl.LibraryProductFlavor.isDefault: boolean ()
 com.android.build.api.dsl.LibraryProductFlavor.setDefault: void (boolean)
@@ -838,10 +846,6 @@ com.android.build.api.dsl.VectorDrawables.getGeneratedDensities: java.util.Set<j
 com.android.build.api.dsl.VectorDrawables.getUseSupportLibrary: java.lang.Boolean ()
 com.android.build.api.dsl.VectorDrawables.setUseSupportLibrary: void (java.lang.Boolean)
 com.android.build.api.extension.AndroidComponentsExtension
-com.android.build.api.extension.AndroidComponentsExtension.androidTest: void (com.android.build.api.extension.VariantSelector, kotlin.jvm.functions.Function1<? super com.android.build.api.component.AndroidTest, kotlin.Unit>)
-com.android.build.api.extension.AndroidComponentsExtension.androidTest: void (com.android.build.api.extension.VariantSelector, org.gradle.api.Action<com.android.build.api.component.AndroidTest>)
-com.android.build.api.extension.AndroidComponentsExtension.androidTests: void (com.android.build.api.extension.VariantSelector, kotlin.jvm.functions.Function1<? super com.android.build.api.component.AndroidTest, kotlin.Unit>)
-com.android.build.api.extension.AndroidComponentsExtension.androidTests: void (com.android.build.api.extension.VariantSelector, org.gradle.api.Action<com.android.build.api.component.AndroidTest>)
 com.android.build.api.extension.AndroidComponentsExtension.beforeVariants: void (com.android.build.api.extension.VariantSelector, kotlin.jvm.functions.Function1<? super VariantBuilderT, kotlin.Unit>)
 com.android.build.api.extension.AndroidComponentsExtension.beforeVariants: void (com.android.build.api.extension.VariantSelector, org.gradle.api.Action<VariantBuilderT>)
 com.android.build.api.extension.AndroidComponentsExtension.finalizeDSl: void (org.gradle.api.Action<DslExtensionT>)
@@ -852,10 +856,6 @@ com.android.build.api.extension.AndroidComponentsExtension.onVariants: void (com
 com.android.build.api.extension.AndroidComponentsExtension.onVariants: void (com.android.build.api.extension.VariantSelector, org.gradle.api.Action<VariantT>)
 com.android.build.api.extension.AndroidComponentsExtension.registerExtension: void (com.android.build.api.extension.DslExtension, kotlin.jvm.functions.Function1<? super com.android.build.api.extension.VariantExtensionConfig<VariantT>, ? extends com.android.build.api.variant.VariantExtension>)
 com.android.build.api.extension.AndroidComponentsExtension.selector: com.android.build.api.extension.VariantSelector ()
-com.android.build.api.extension.AndroidComponentsExtension.unitTest: void (com.android.build.api.extension.VariantSelector, kotlin.jvm.functions.Function1<? super com.android.build.api.component.UnitTest, kotlin.Unit>)
-com.android.build.api.extension.AndroidComponentsExtension.unitTest: void (com.android.build.api.extension.VariantSelector, org.gradle.api.Action<com.android.build.api.component.UnitTest>)
-com.android.build.api.extension.AndroidComponentsExtension.unitTests: void (com.android.build.api.extension.VariantSelector, kotlin.jvm.functions.Function1<? super com.android.build.api.component.UnitTest, kotlin.Unit>)
-com.android.build.api.extension.AndroidComponentsExtension.unitTests: void (com.android.build.api.extension.VariantSelector, org.gradle.api.Action<com.android.build.api.component.UnitTest>)
 com.android.build.api.extension.ApplicationAndroidComponentsExtension implements com.android.build.api.extension.AndroidComponentsExtension
 com.android.build.api.extension.DslExtension
 com.android.build.api.extension.DslExtension$Builder
@@ -1046,6 +1046,7 @@ com.android.build.api.variant.Variant.getMinSdkVersion: com.android.build.api.va
 com.android.build.api.variant.Variant.getNamespace: org.gradle.api.provider.Provider<java.lang.String> ()
 com.android.build.api.variant.Variant.getPackaging: com.android.build.api.variant.Packaging ()
 com.android.build.api.variant.Variant.getProguardFiles: org.gradle.api.provider.ListProperty<org.gradle.api.file.RegularFile> ()
+com.android.build.api.variant.Variant.getProperties: org.gradle.api.provider.MapProperty<java.lang.String, java.lang.Object> ()
 com.android.build.api.variant.Variant.getTargetSdkVersion: com.android.build.api.variant.AndroidVersion ()
 com.android.build.api.variant.Variant.getUnitTest: com.android.build.api.component.UnitTest ()
 com.android.build.api.variant.VariantBuilder implements com.android.build.api.component.ComponentBuilder

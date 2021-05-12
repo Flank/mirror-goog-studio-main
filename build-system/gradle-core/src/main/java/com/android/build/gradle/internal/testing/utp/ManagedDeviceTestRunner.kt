@@ -21,7 +21,6 @@ import com.android.build.gradle.internal.testing.CustomTestRunListener
 import com.android.build.gradle.internal.testing.StaticTestData
 import com.android.builder.testing.api.DeviceException
 import com.android.builder.testing.api.TestException
-import com.android.ide.common.process.JavaProcessExecutor
 import com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidTestResultListenerProto.TestResultEvent
 import com.android.utils.FileUtils
 import com.android.utils.ILogger
@@ -31,12 +30,13 @@ import com.google.testing.platform.proto.api.core.TestSuiteResultProto.TestSuite
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import org.gradle.workers.WorkerExecutor
 
 /**
  * Runs Android Instrumentation tests on a managed device through UTP (Unified Test Platform).
  */
 class ManagedDeviceTestRunner(
-    private val javaProcessExecutor: JavaProcessExecutor,
+    private val workerExecutor: WorkerExecutor,
     private val utpDependencies: UtpDependencies,
     private val versionedSdkLoader: SdkComponentsBuildService.VersionedSdkLoader,
     private val retentionConfig: RetentionConfig,
@@ -103,12 +103,15 @@ class ManagedDeviceTestRunner(
                             resultListenerServerRunner.metadata).writeTo(writer)
                 }
             }
+
+            val workQueue = workerExecutor.noIsolation()
             runUtpTestSuite(
                     runnerConfigProtoFile,
                     configFactory,
                     utpDependencies,
-                    javaProcessExecutor,
-                    logger)
+                    workQueue)
+            workQueue.await()
+
             resultsProto.writeTo(File(utpOutputDir, "test-result.pb").outputStream())
 
             try {

@@ -21,6 +21,8 @@ import com.android.build.api.dsl.LibraryBuildType
 import com.android.build.api.dsl.LibraryDefaultConfig
 import com.android.build.api.dsl.LibraryExtension
 import com.android.build.api.dsl.LibraryProductFlavor
+import com.android.build.api.dsl.LibraryPublishing
+import org.gradle.api.Action
 
 /** See [InternalCommonExtension] */
 interface InternalLibraryExtension :
@@ -32,4 +34,5 @@ interface InternalLibraryExtension :
             LibraryProductFlavor> {
 
     override var aidlPackagedList: MutableCollection<String>
+    fun publishing(action: Action<LibraryPublishing>)
 }

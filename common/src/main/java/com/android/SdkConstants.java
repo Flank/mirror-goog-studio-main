@@ -222,17 +222,11 @@ public final class SdkConstants {
     /** Skin layout file */
     public static final String FN_SKIN_LAYOUT = "layout";
 
-    /** dx.jar file */
-    public static final String FN_DX_JAR = "dx.jar";
-    
     /** name of the art runtime profile in aar files (located in the android private assets) */
     public static final String FN_ART_PROFILE = "baseline-prof.txt";
 
+    public static final String FN_BINART_ART_PROFILE_FOLDER_IN_APK = "assets/dexopt";
     public static final String FN_BINARY_ART_PROFILE = "baseline.prof";
-
-    /** dx executable (with extension for the current OS) */
-    public static final String FN_DX =
-            "dx" + ext(".bat", "");
 
     /** aapt executable (with extension for the current OS) */
     public static final String FN_AAPT =

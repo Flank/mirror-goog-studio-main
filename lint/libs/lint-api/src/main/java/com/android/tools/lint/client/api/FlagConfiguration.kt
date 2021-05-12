@@ -197,7 +197,7 @@ open class FlagConfiguration(configurations: ConfigurationHierarchy) : Configura
                 enabledCategories.contains(category) ||
                     category.parent != null && enabledCategories.contains(category.parent)
                 ) ||
-            isCheckAllWarnings() && !neverEnabledImplicitly(issue)
+            severity != Severity.IGNORE && isCheckAllWarnings() && !neverEnabledImplicitly(issue)
         ) {
             return getVisibleSeverity(issue, severity, source, visibleDefault)
         }

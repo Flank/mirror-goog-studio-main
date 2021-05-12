@@ -79,11 +79,6 @@ public class ManifestMerger2 {
     private static final String SPLIT_IN_DYNAMIC_FEATURE =
             "https://d.android.com/r/studio-ui/dynamic-delivery/dynamic-feature-manifest";
 
-    private static final List<String> ALLOWED_NON_UNIQUE_PACKAGE_NAMES =
-            ImmutableList.of(
-                    "androidx.test" // TODO(b/151171905)
-                    );
-
     @NonNull
     private final File mManifestFile;
 
@@ -113,6 +108,7 @@ public class ManifestMerger2 {
     @NonNull private final ImmutableList<File> mNavigationJsons;
     @NonNull private final DocumentModel<ManifestModel.NodeTypes> mModel;
     @NonNull private final ImmutableList<String> mDependencyFeatureNames;
+    @NonNull private final ImmutableList<String> mAllowedNonUniquePackageNames;
 
     private ManifestMerger2(
             @NonNull ILogger logger,
@@ -129,7 +125,8 @@ public class ManifestMerger2 {
             @NonNull FileStreamProvider fileStreamProvider,
             @NonNull ImmutableList<File> navigationFiles,
             @NonNull ImmutableList<File> navigationJsons,
-            @NonNull ImmutableList<String> dependencyFeatureNames) {
+            @NonNull ImmutableList<String> dependencyFeatureNames,
+            @NonNull ImmutableList<String> allowedNonUniquePackageNames) {
         this.mSystemPropertyResolver = systemPropertiesResolver;
         this.mPlaceHolderValues = placeHolderValues;
         this.mManifestFile = mainManifestFile;
@@ -149,6 +146,7 @@ public class ManifestMerger2 {
                 new ManifestModel(
                         mOptionalFeatures.contains(
                                 Invoker.Feature.HANDLE_VALUE_CONFLICTS_AUTOMATICALLY));
+        this.mAllowedNonUniquePackageNames = allowedNonUniquePackageNames;
     }
 
     /**
@@ -212,6 +210,7 @@ public class ManifestMerger2 {
         checkUniquePackageName(
                 loadedMainManifestInfo,
                 loadedLibraryDocuments,
+                mAllowedNonUniquePackageNames,
                 mergingReportBuilder,
                 mOptionalFeatures.contains(Invoker.Feature.ENFORCE_UNIQUE_PACKAGE_NAME));
 
@@ -394,34 +393,6 @@ public class ManifestMerger2 {
                 return mergingReportBuilder.build();
             }
         }
-        // android:exported should have an explicit value for S and above with <intent-filter>,
-        // output an
-        // error message to the user if android:exported is not explicitly specified
-        String targetSdkVersion = finalMergedDocument.getTargetSdkVersion();
-        int targetSdkApi =
-                Character.isDigit(targetSdkVersion.charAt(0))
-                        ? Integer.parseInt(targetSdkVersion)
-                        : SdkVersionInfo.getApiByPreviewName(targetSdkVersion, true);
-        if (targetSdkApi > 30) {
-            NodeList activityList =
-                    finalMergedDocument.getXml().getElementsByTagName(SdkConstants.TAG_ACTIVITY);
-            checkIfExportedIsNeeded(activityList, mergingReportBuilder, loadedMainManifestInfo);
-            if (mergingReportBuilder.hasErrors()) {
-                return mergingReportBuilder.build();
-            }
-            NodeList serviceList =
-                    finalMergedDocument.getXml().getElementsByTagName(SdkConstants.TAG_SERVICE);
-            checkIfExportedIsNeeded(serviceList, mergingReportBuilder, loadedMainManifestInfo);
-            if (mergingReportBuilder.hasErrors()) {
-                return mergingReportBuilder.build();
-            }
-            NodeList receiverList =
-                    finalMergedDocument.getXml().getElementsByTagName(SdkConstants.TAG_RECEIVER);
-            checkIfExportedIsNeeded(receiverList, mergingReportBuilder, loadedMainManifestInfo);
-            if (mergingReportBuilder.hasErrors()) {
-                return mergingReportBuilder.build();
-            }
-        }
 
         if (!mOptionalFeatures.contains(Invoker.Feature.REMOVE_TOOLS_DECLARATIONS)) {
             PostValidator.enforceToolsNamespaceDeclaration(finalMergedDocument);
@@ -450,6 +421,17 @@ public class ManifestMerger2 {
 
         // handle optional features which don't need access to XmlDocument layer.
         processOptionalFeatures(finalMergedDocument.getXml(), mergingReportBuilder);
+
+        // android:exported should have an explicit value for S and above with <intent-filter>,
+        // output an error message to the user if android:exported is not explicitly specified
+        checkExportedDeclaration(finalMergedDocument, mergingReportBuilder);
+
+        if (mergingReportBuilder.hasErrors()) {
+            return mergingReportBuilder.build();
+        }
+
+        mergingReportBuilder.setMergedDocument(
+                MergingReport.MergedManifestKind.MERGED, prettyPrint(finalMergedDocument.getXml()));
 
         // call blame after other optional features handled.
         if (!mOptionalFeatures.contains(Invoker.Feature.SKIP_BLAME)) {
@@ -601,9 +583,6 @@ public class ManifestMerger2 {
             adjustInstantAppFeatureSplitInfo(document, mFeatureName);
             addUsesSplitTagsForDependencies(document, mDependencyFeatureNames);
         }
-
-        mergingReport.setMergedDocument(
-                MergingReport.MergedManifestKind.MERGED, prettyPrint(document));
 
         if (mOptionalFeatures.contains(Invoker.Feature.MAKE_AAPT_SAFE)) {
             createAaptSafeManifest(document, mergingReport);
@@ -1250,6 +1229,7 @@ public class ManifestMerger2 {
     private static void checkUniquePackageName(
             @NonNull LoadedManifestInfo mainPackage,
             @NonNull List<LoadedManifestInfo> libraries,
+            @NonNull List<String> allowedNonUniquePackageNames,
             @NonNull MergingReport.Builder mergingReportBuilder,
             boolean strictUniquePackageNameCheck) {
         Multimap<String, LoadedManifestInfo> uniquePackageNameMap = ArrayListMultimap.create();
@@ -1288,16 +1268,20 @@ public class ManifestMerger2 {
                             mergingReportBuilder.addMessage(
                                     info.getXmlDocument().getSourceFile(),
                                     getNonUniquePackageSeverity(
-                                            e.getKey(), strictUniquePackageNameCheck),
+                                            allowedNonUniquePackageNames,
+                                            e.getKey(),
+                                            strictUniquePackageNameCheck),
                                     repeatedPackageErrors);
                         });
     }
 
     /** Returns the correct logging severity for a clashing package name. */
     private static MergingReport.Record.Severity getNonUniquePackageSeverity(
-            String packageName, boolean strictMode) {
+            @NonNull List<String> allowedNonUniquePackageNames,
+            String packageName,
+            boolean strictMode) {
         // If we've allowed a library package to be non-unique, only report in info.
-        if (ALLOWED_NON_UNIQUE_PACKAGE_NAMES.contains(packageName))
+        if (allowedNonUniquePackageNames.contains(packageName))
             return MergingReport.Record.Severity.INFO;
 
         return strictMode
@@ -1395,10 +1379,37 @@ public class ManifestMerger2 {
         }
     }
 
+    private void checkExportedDeclaration(
+            XmlDocument finalMergedDocument, MergingReport.Builder mergingReportBuilder) {
+        String targetSdkVersion = finalMergedDocument.getTargetSdkVersion();
+        int targetSdkApi =
+                Character.isDigit(targetSdkVersion.charAt(0))
+                        ? Integer.parseInt(targetSdkVersion)
+                        : SdkVersionInfo.getApiByPreviewName(targetSdkVersion, true);
+        if (targetSdkApi > 30) {
+            NodeList activityList =
+                    finalMergedDocument.getXml().getElementsByTagName(SdkConstants.TAG_ACTIVITY);
+            checkIfExportedIsNeeded(activityList, mergingReportBuilder, finalMergedDocument);
+            if (mergingReportBuilder.hasErrors()) {
+                return;
+            }
+            NodeList serviceList =
+                    finalMergedDocument.getXml().getElementsByTagName(SdkConstants.TAG_SERVICE);
+            checkIfExportedIsNeeded(serviceList, mergingReportBuilder, finalMergedDocument);
+            if (mergingReportBuilder.hasErrors()) {
+                return;
+            }
+            NodeList receiverList =
+                    finalMergedDocument.getXml().getElementsByTagName(SdkConstants.TAG_RECEIVER);
+            checkIfExportedIsNeeded(receiverList, mergingReportBuilder, finalMergedDocument);
+            if (mergingReportBuilder.hasErrors()) {
+                return;
+            }
+        }
+    }
+
     private void checkIfExportedIsNeeded(
-            NodeList list,
-            MergingReport.Builder mergingReportBuilder,
-            LoadedManifestInfo loadedMainManifestInfo) {
+            NodeList list, MergingReport.Builder mergingReportBuilder, XmlDocument finalManifest) {
         for (int i = 0; i < list.getLength(); i++) {
             Element element = (Element) list.item(i);
 
@@ -1408,7 +1419,7 @@ public class ManifestMerger2 {
                                             SdkConstants.ANDROID_URI, SdkConstants.ATTR_EXPORTED)
                             == null) {
                 mergingReportBuilder.addMessage(
-                        loadedMainManifestInfo.getXmlDocument().getSourceFile(),
+                        finalManifest.getSourceFile(),
                         MergingReport.Record.Severity.ERROR,
                         String.format(
                                 "android:exported needs to be explicitly specified for <%s>. Apps targeting Android 12 and higher are required to specify an explicit value "
@@ -1489,6 +1500,10 @@ public class ManifestMerger2 {
 
         @NonNull
         private final ImmutableList.Builder<String> mDependencyFetureNamesBuilder =
+                new ImmutableList.Builder<>();
+
+        @NonNull
+        private final ImmutableList.Builder<String> mAllowedNonUniquePackageNames =
                 new ImmutableList.Builder<>();
 
         /**
@@ -1856,6 +1871,17 @@ public class ManifestMerger2 {
         }
 
         /**
+         * specifies a list of packages names that are allowed to appear in more than one libraries.
+         *
+         * @param name the package names
+         * @return itself
+         */
+        public Invoker addAllowNonUniquePackageNames(String name) {
+            this.mAllowedNonUniquePackageNames.add(name);
+            return this;
+        }
+
+        /**
          * Perform the merging and return the result.
          *
          * @return an instance of {@link MergingReport} that will give access to all the logging and
@@ -1881,6 +1907,7 @@ public class ManifestMerger2 {
 
             FileStreamProvider fileStreamProvider = mFileStreamProvider != null
                     ? mFileStreamProvider : new FileStreamProvider();
+            addAllowNonUniquePackageNames("androidx.test"); // TODO(b/151171905)
             ManifestMerger2 manifestMerger =
                     new ManifestMerger2(
                             mLogger,
@@ -1897,7 +1924,9 @@ public class ManifestMerger2 {
                             fileStreamProvider,
                             mNavigationFilesBuilder.build(),
                             mNavigationJsonsBuilder.build(),
-                            mDependencyFetureNamesBuilder.build());
+                            mDependencyFetureNamesBuilder.build(),
+                            mAllowedNonUniquePackageNames.build());
+
             return manifestMerger.merge();
         }
     }

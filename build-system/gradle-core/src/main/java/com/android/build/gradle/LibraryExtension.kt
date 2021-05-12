@@ -17,6 +17,7 @@ package com.android.build.gradle
 
 import com.android.build.api.dsl.LibraryBuildFeatures
 import com.android.build.gradle.api.AndroidSourceSet
+import com.android.build.api.dsl.LibraryPublishing
 import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.api.LibraryVariant
@@ -27,6 +28,7 @@ import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.InternalLibraryExtension
 import com.android.build.gradle.internal.dsl.LibraryExtensionImpl
+import com.android.build.gradle.internal.dsl.LibraryPublishingImpl
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.ViewBindingOptionsImpl
 import com.android.build.gradle.internal.scope.GlobalScope

@@ -22,11 +22,15 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 import org.junit.Assert.*
+import java.util.logging.Logger.getLogger
 
 @RunWith(AndroidJUnit4::class)
 class ExampleInstrumentedTest {
+    private val logger = getLogger("TestLogger")
+
     @Test
     fun useAppContext() {
+        logger.info("test logs")
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
         assertEquals("com.example.android.kotlin", appContext.packageName)
     }

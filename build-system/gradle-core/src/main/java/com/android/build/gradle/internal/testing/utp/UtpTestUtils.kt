@@ -17,25 +17,22 @@
 package com.android.build.gradle.internal.testing.utp
 
 import com.android.build.gradle.internal.dsl.TestOptions
+import com.android.build.gradle.internal.testing.utp.worker.RunUtpWorkAction
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
-import com.android.ide.common.process.JavaProcessExecutor
-import com.android.ide.common.process.LoggedProcessOutputHandler
-import com.android.ide.common.process.ProcessInfoBuilder
-import com.android.utils.ILogger
 import com.google.common.io.Files
 import java.io.File
 import java.io.FileOutputStream
+import org.gradle.workers.WorkQueue
 
 /**
  * Runs the given runner config on the Unified Test Platform server.
  */
-internal fun runUtpTestSuite(
+fun runUtpTestSuite(
     runnerConfigFile: File,
     configFactory: UtpConfigFactory,
     utpDependencies: UtpDependencies,
-    javaProcessExecutor: JavaProcessExecutor,
-    logger: ILogger
+    workQueue: WorkQueue
 ) {
     val serverConfigProtoFile = File.createTempFile("serverConfig", ".pb").also { file ->
         FileOutputStream(file).use { writer ->
@@ -49,17 +46,12 @@ internal fun runUtpTestSuite(
                 java.util.logging.ConsoleHandler.level=WARNING
             """.trimIndent())
     }
-    val javaProcessInfo = ProcessInfoBuilder().apply {
-        setClasspath(utpDependencies.launcher.singleFile.absolutePath)
-        setMain(UtpDependency.LAUNCHER.mainClass)
-        addArgs(utpDependencies.core.singleFile.absolutePath)
-        addArgs("--proto_config=${runnerConfigFile.absolutePath}")
-        addArgs("--proto_server_config=${serverConfigProtoFile.absolutePath}")
-        addJvmArg("-Djava.util.logging.config.file=${loggingPropertiesFile.absolutePath}")
-    }.createJavaProcess()
-
-    javaProcessExecutor.execute(javaProcessInfo, LoggedProcessOutputHandler(logger)).apply {
-        rethrowFailure()
+    workQueue.submit(RunUtpWorkAction::class.java) { params ->
+        params.launcherJar.set(utpDependencies.launcher.singleFile)
+        params.coreJar.set(utpDependencies.core.singleFile)
+        params.runnerConfig.set(runnerConfigFile)
+        params.serverConfig.set(serverConfigProtoFile)
+        params.loggingProperties.set(loggingPropertiesFile)
     }
 }
 

@@ -39,7 +39,6 @@ import com.android.build.gradle.internal.SdkComponentsBuildService;
 import com.android.build.gradle.internal.SdkComponentsKt;
 import com.android.build.gradle.internal.component.VariantCreationConfig;
 import com.android.build.gradle.internal.dsl.EmulatorSnapshots;
-import com.android.build.gradle.internal.process.GradleJavaProcessExecutor;
 import com.android.build.gradle.internal.process.GradleProcessExecutor;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
@@ -69,7 +68,6 @@ import com.android.builder.model.TestOptions;
 import com.android.builder.testing.api.DeviceConnector;
 import com.android.builder.testing.api.DeviceException;
 import com.android.builder.testing.api.DeviceProvider;
-import com.android.ide.common.process.JavaProcessExecutor;
 import com.android.ide.common.workers.ExecutorServiceAdapter;
 import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
@@ -112,6 +110,7 @@ import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.options.Option;
 import org.gradle.internal.logging.ConsoleRenderer;
 import org.gradle.process.ExecOperations;
+import org.gradle.workers.WorkerExecutor;
 
 /** Run instrumentation tests for a given variant */
 public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTask
@@ -176,12 +175,11 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
         public abstract BuildToolsExecutableInput getBuildTools();
 
         TestRunner createTestRunner(
+                WorkerExecutor workerExecutor,
                 ExecutorServiceAdapter executorServiceAdapter,
                 @Nullable UtpTestResultListener utpTestResultListener) {
             GradleProcessExecutor gradleProcessExecutor =
                     new GradleProcessExecutor(getExecOperations()::exec);
-            JavaProcessExecutor javaProcessExecutor =
-                    new GradleJavaProcessExecutor(getExecOperations()::javaexec);
 
             if (getUnifiedTestPlatform().get()) {
                 boolean useOrchestrator =
@@ -190,7 +188,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                 return new UtpTestRunner(
                         getBuildTools().splitSelectExecutable().getOrNull(),
                         gradleProcessExecutor,
-                        javaProcessExecutor,
+                        workerExecutor,
                         executorServiceAdapter,
                         getUtpDependencies(),
                         getSdkBuildService()
@@ -329,6 +327,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                                 TestRunner testRunner =
                                         getTestRunnerFactory()
                                                 .createTestRunner(
+                                                        getWorkerExecutor(),
                                                         getExecutorServiceAdapter(),
                                                         utpTestResultListener);
                                 Collection<String> extraArgs =

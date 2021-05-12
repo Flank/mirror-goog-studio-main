@@ -25,6 +25,7 @@ import com.android.build.gradle.integration.common.fixture.ModelBuilderV2.Native
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
 import com.android.build.gradle.integration.common.fixture.model.cartesianOf
 import com.android.build.gradle.integration.common.fixture.model.dump
+import com.android.build.gradle.integration.common.fixture.model.enableCxxStructuredLogging
 import com.android.build.gradle.integration.common.fixture.model.findAbiSegment
 import com.android.build.gradle.integration.common.fixture.model.findConfigurationSegment
 import com.android.build.gradle.integration.common.fixture.model.findCxxSegment
@@ -32,6 +33,7 @@ import com.android.build.gradle.integration.common.fixture.model.goldenBuildProd
 import com.android.build.gradle.integration.common.fixture.model.goldenConfigurationFlags
 import com.android.build.gradle.integration.common.fixture.model.readAsFileIndex
 import com.android.build.gradle.integration.common.fixture.model.readCompileCommandsJsonBin
+import com.android.build.gradle.integration.common.fixture.model.readStructuredLogs
 import com.android.build.gradle.integration.common.fixture.model.recoverExistingCxxAbiModels
 import com.android.build.gradle.integration.common.truth.TruthHelper
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
@@ -39,6 +41,7 @@ import com.android.build.gradle.integration.common.truth.TruthHelper.assertThatA
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.integration.common.utils.ZipHelper
 import com.android.build.gradle.internal.core.Abi
+import com.android.build.gradle.internal.cxx.attribution.decodeBuildTaskAttributions
 import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_VERSION
 import com.android.build.gradle.internal.cxx.configure.OFF_STAGE_CMAKE_VERSION
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons
@@ -595,7 +598,7 @@ apply plugin: 'com.android.application'
     }
 
     @Test
-    fun generatedChromeTraceFileContainsNativeBuildInformation() {
+    fun `build attributions are captured in chrome trace log`() {
         project.executor()
             .with(BooleanOption.ENABLE_PROFILE_JSON, true)
             .run("clean", "assembleDebug")
@@ -603,6 +606,21 @@ apply plugin: 'com.android.application'
         val traceFile = traceFolder.listFiles()!!.first { it.name.endsWith("json.gz") }
         Truth.assertThat(InputStreamReader(GZIPInputStream(FileInputStream(traceFile))).readText())
             .contains("CMakeFiles/hello-jni.dir/src/main/cxx/hello-jni.c.o")
+    }
+
+    @Test
+    fun `build attributions are captured in structured log`() {
+        enableCxxStructuredLogging(project)
+        project.executor().run("assembleDebug")
+        println(project.readStructuredLogs(::decodeBuildTaskAttributions))
+        val events = project.readStructuredLogs(::decodeBuildTaskAttributions)
+            .flatMap { it.attributionList }
+            .groupBy { File(it.outputFile).name }
+            .map { group -> group.key to group.value.count() }
+            .toMap()
+        assertThat(events).hasSize(2) // One for .o and one for .so
+        assertThat(events["hello-jni.c.o"]).isEqualTo(2) // One each for two ABIs
+        assertThat(events["libhello-jni.so"]).isEqualTo(2) // One each for two ABIs
     }
 
     @Test

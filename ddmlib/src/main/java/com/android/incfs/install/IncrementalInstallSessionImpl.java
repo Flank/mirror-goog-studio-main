@@ -18,6 +18,7 @@ package com.android.incfs.install;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.google.common.base.Charsets;
+import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -217,7 +218,7 @@ class IncrementalInstallSessionImpl implements AutoCloseable {
                         final int count = mConnection.read(buffer, WAIT_TIME_MS);
                         buffer.flip();
                         if (count < 0) {
-                            throw new IOException("EOF");
+                            throw new EOFException("EOF");
                         }
                     }
 

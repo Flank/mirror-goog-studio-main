@@ -95,6 +95,18 @@ class DeviceUtilsTest {
         Truth.assertThat(isTls).isFalse()
     }
 
+    @Test
+    fun testIsMdnsAutoConnectTlsTrueForSerialNumberThatDoesntEndWithDot() {
+        // Prepare
+        setUpDeviceSerialNumber("adb-86UX00F4R-cYuns7._adb-tls-connect._tcp")
+
+        // Act
+        val isTls = device.isMdnsAutoConnectTls
+
+        // Assert
+        Truth.assertThat(isTls).isTrue()
+    }
+
     private fun setUpDeviceSerialNumber(serialNumber: String) {
         Mockito.`when`(
             device.serialNumber

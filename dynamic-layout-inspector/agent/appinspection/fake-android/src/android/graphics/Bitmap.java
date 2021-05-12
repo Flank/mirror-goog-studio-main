@@ -25,22 +25,25 @@ public final class Bitmap {
 
     private final int mWidth;
     private final int mHeight;
+    private final Config config;
 
     @VisibleForTesting public final byte[] bytes;
 
-    private Bitmap(int width, int height) {
+    private Bitmap(int width, int height, Config config) {
         mWidth = width;
         mHeight = height;
         bytes = new byte[mWidth * mHeight];
+        this.config = config;
     }
 
     public enum Config {
         RGB_565,
+        ARGB_8888
     }
 
     @NonNull
     public static Bitmap createBitmap(int width, int height, Config config) {
-        return new Bitmap(width, height);
+        return new Bitmap(width, height, config);
     }
 
     public int getWidth() {
@@ -55,9 +58,14 @@ public final class Bitmap {
         return bytes.length;
     }
 
+    public Config getConfig() {
+        return config;
+    }
+
     public void copyPixelsToBuffer(@NonNull Buffer buffer) {
-        // Ignore the inspection, as this call is only used in tests
+        // Ignore the inspection, as this call is only used in tests. Leave space for the actual
+        // header (BitmapUtils.BITMAP_HEADER_SIZE)
         //noinspection SuspiciousSystemArraycopy
-        System.arraycopy(bytes, 0, buffer.array(), 0, bytes.length);
+        System.arraycopy(bytes, 0, buffer.array(), 9, bytes.length);
     }
 }

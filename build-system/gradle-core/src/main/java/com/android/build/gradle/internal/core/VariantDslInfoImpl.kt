@@ -17,6 +17,7 @@ package com.android.build.gradle.internal.core
 
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.dsl.ApkSigningConfig
+import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.ResValue
 import com.android.build.api.variant.impl.ResValueKeyImpl
@@ -30,11 +31,11 @@ import com.android.build.gradle.internal.dsl.BaseFlavor
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.BuildType.PostProcessingConfiguration
 import com.android.build.gradle.internal.dsl.CoreExternalNativeBuildOptions
-import com.android.build.gradle.internal.dsl.CoreExternalNativeCmakeOptions
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.manifest.ManifestDataProvider
+import com.android.build.gradle.internal.publishing.VariantPublishingInfo
 import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.variant.DimensionCombination
@@ -77,8 +78,9 @@ import java.util.concurrent.Callable
  * Use [VariantDslInfoBuilder] to instantiate.
  *
  */
-open class VariantDslInfoImpl internal constructor(
+open class VariantDslInfoImpl<CommonExtensionT: CommonExtension<*, *, *, *>> internal constructor(
     override val componentIdentity: ComponentIdentity,
+    override val dslExtension: CommonExtensionT,
     override val variantType: VariantType,
     private val defaultConfig: DefaultConfig,
     /**
@@ -88,7 +90,7 @@ open class VariantDslInfoImpl internal constructor(
     /** The list of product flavors. Items earlier in the list override later items.  */
     override val productFlavorList: List<ProductFlavor>,
     private val signingConfigOverride: SigningConfig? = null,
-    private val testedVariantImpl: VariantDslInfoImpl? = null,
+    private val testedVariantImpl: VariantDslInfoImpl<*>? = null,
     val dataProvider: ManifestDataProvider,
     @Deprecated("Only used for merged flavor")
     private val dslServices: DslServices,
@@ -97,7 +99,9 @@ open class VariantDslInfoImpl internal constructor(
     private val dslNamespaceProvider: Provider<String>?,
     private val dslTestNamespace: String?,
     override val nativeBuildSystem: VariantManager.NativeBuiltType?,
-): VariantDslInfo, DimensionCombination {
+    private val publishingInfo: VariantPublishingInfo?,
+    override val properties: Map<String, Any>,
+): VariantDslInfo<CommonExtensionT>, DimensionCombination {
 
     override val buildType: String?
         get() = componentIdentity.buildType
@@ -119,7 +123,7 @@ open class VariantDslInfoImpl internal constructor(
      *
      * @see VariantType.isTestComponent
      */
-    override val testedVariant: VariantDslInfo?
+    override val testedVariant: VariantDslInfo<*>?
         get() = testedVariantImpl
 
     private val mergedNdkConfig = MergedNdkConfig()
@@ -566,7 +570,7 @@ open class VariantDslInfoImpl internal constructor(
      */
     override val instrumentationRunnerArguments: Map<String, String>
         get() {
-            val variantDslInfo: VariantDslInfoImpl =
+            val variantDslInfo: VariantDslInfoImpl<*> =
                 if (variantType.isTestComponent) {
                     testedVariantImpl!!
                 } else {
@@ -1133,6 +1137,9 @@ open class VariantDslInfoImpl internal constructor(
 
     override val isJniDebuggable: Boolean
         get() = buildTypeObj.isJniDebuggable
+
+    override val publishInfo: VariantPublishingInfo?
+        get() = publishingInfo
 
     companion object {
 

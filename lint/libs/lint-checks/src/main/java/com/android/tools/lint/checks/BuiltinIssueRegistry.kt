@@ -79,6 +79,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 AppCompatCustomViewDetector.ISSUE,
                 AppCompatResourceDetector.ISSUE,
                 AppLinksAutoVerifyDetector.ISSUE,
+                AppLinksValidDetector.INTENT_FILTER_UNIQUE_DATA_ATTRIBUTES,
                 AppLinksValidDetector.TEST_URL,
                 AppLinksValidDetector.VALIDATION,
                 ArraySizeDetector.INCONSISTENT,

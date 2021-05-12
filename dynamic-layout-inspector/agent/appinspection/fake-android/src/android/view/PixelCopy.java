@@ -17,6 +17,7 @@
 package android.view;
 
 import android.graphics.Bitmap;
+import android.graphics.Rect;
 import android.os.Handler;
 import androidx.annotation.NonNull;
 
@@ -29,6 +30,7 @@ public class PixelCopy {
 
     public static void request(
             @NonNull Surface source,
+            @NonNull Rect srcRect,
             @NonNull Bitmap dest,
             @NonNull OnPixelCopyFinishedListener listener,
             @NonNull Handler listenerThread) {

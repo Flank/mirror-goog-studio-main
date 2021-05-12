@@ -87,7 +87,7 @@ message Screenshot {
         NONE = 1;
         // SKP = Skia picture, a format embedded with layout details.
         SKP = 2;
-        // A raw image, useful as a fallback if SKIA parsing fails.
+        // Zipped raw pixel data, used when the more-expensive SKP isn't necessary.
         BITMAP = 3;
     }
     Type type = 1;
@@ -139,11 +139,8 @@ message Configuration {
 // Various data about the current app, which can be used to resolve resource references for the
 // device's Configuration.
 message AppContext {
-    int32 api_level = 1;
-    int32 api_code_name = 2;
-    int32 app_package_name = 3;
-    Resource theme = 4;
-    Configuration configuration = 5;
+    Resource theme = 1;
+    Configuration configuration = 2;
 }
 
 // Handles properties whose values are bit flags, e.g. "top|left"
@@ -250,6 +247,10 @@ message LayoutEvent {
     Screenshot screenshot = 5;
 }
 
+message ConfigurationEvent {
+    Configuration configuration = 1;
+}
+
 // An event fired whenever a new root is added or an old root is removed.
 // Host is guaranteed to receive this at least once before the first |LayoutEvent|
 message WindowRootsEvent {
@@ -296,5 +297,6 @@ message Event {
         WindowRootsEvent roots_event = 2;
         LayoutEvent layout_event = 3;
         PropertiesEvent properties_event = 4;
+        ConfigurationEvent configuration_event = 5;
     }
 }

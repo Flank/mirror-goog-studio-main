@@ -19,11 +19,14 @@ package com.android.build.gradle.integration.manifest
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.truth.ApkSubject.getManifestContent
+import com.android.build.gradle.integration.common.truth.ScannerSubject
+import com.android.build.gradle.integration.common.truth.forEachLine
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils
 import org.junit.Assert.fail
 import org.junit.Rule
 import org.junit.Test
+import java.util.Scanner
 
 class ProcessTestManifestTest {
     @JvmField @Rule
@@ -212,6 +215,31 @@ class ProcessTestManifestTest {
         assertThat(manifestContent).contains("android:supportsRtl=\"true\"")
         // merged from androidTestFlavor1
         assertThat(manifestContent).contains("android:allowBackup=\"true\"")
+    }
+
+    @Test
+    fun testNonUniquePackageNames() {
+        project.buildFile.appendText("""
+            android {
+                namespace "allowedNonUnique"
+            }
+        """.trimIndent())
+        FileUtils.createFile(
+                project.file("src/androidTest/AndroidManifest.xml"),
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="allowedNonUnique.test">
+                    <application
+                        android:isGame="false">
+                    </application>
+                </manifest>
+            """.trimIndent())
+        val result = project.executor().run("processDebugAndroidTestManifest")
+        val manifestContent = project.file("build/intermediates/packaged_manifests/debugAndroidTest/AndroidManifest.xml")
+        result.stdout.use {
+            ScannerSubject.assertThat(it).doesNotContain("Package name 'allowedNonUnique.test' used in:")
+        }
+
     }
 
     private fun assertManifestContentContainsString(

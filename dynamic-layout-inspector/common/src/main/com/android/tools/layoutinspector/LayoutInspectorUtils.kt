@@ -41,31 +41,6 @@ object LayoutInspectorUtils {
     private val versionMapUnmarshaller =
         JAXBContext.newInstance(VersionMap::class.java).createUnmarshaller()
 
-    fun createImage8888(bytes: ByteBuffer, width: Int, height: Int): BufferedImage {
-        val intArray = IntArray(width * height)
-        bytes.order(ByteOrder.LITTLE_ENDIAN).asIntBuffer().get(intArray)
-        val buffer = DataBufferInt(intArray, width * height)
-        val model = SinglePixelPackedSampleModel(DataBuffer.TYPE_INT, width, height, intArrayOf(0xff0000, 0xff00, 0xff, 0xff000000.toInt()))
-        val raster = Raster.createWritableRaster(model, buffer, Point(0, 0))
-        val colorModel = DirectColorModel(
-            ColorSpace.getInstance(ColorSpace.CS_sRGB),
-            32, 0xff0000, 0xff00, 0xff, 0xff000000.toInt(), false, DataBuffer.TYPE_INT)
-        @Suppress("UndesirableClassUsage")
-        return BufferedImage(colorModel, raster, false, null)
-    }
-
-    fun createImage565(bytes: ByteBuffer, width: Int, height: Int): BufferedImage {
-        val shortArray = ShortArray(width * height)
-        bytes.order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().get(shortArray)
-        val buffer = DataBufferShort(shortArray, width * height)
-        val model = SinglePixelPackedSampleModel(DataBuffer.TYPE_USHORT, width, height, intArrayOf(0x1f.shl(11), 0x3f.shl(5), 0x1f))
-        val raster = Raster.createWritableRaster(model, buffer, Point(0, 0))
-        val colorModel = DirectColorModel(
-            16, 0x1f.shl(11), 0x3f.shl(5), 0x1f)
-        @Suppress("UndesirableClassUsage")
-        return BufferedImage(colorModel, raster, false, null)
-    }
-
     fun buildTree(
       node: SkiaParser.InspectorView,
       images: Map<Int, ByteString>,
@@ -79,7 +54,7 @@ object LayoutInspectorUtils {
         return if (image?.isEmpty == false) {
             val width = if (node.width > 0) node.width else drawIdToRequest[node.id]?.width ?: return null
             val height = if (node.height > 0) node.height else drawIdToRequest[node.id]?.height ?: return null
-            SkiaViewNode(node.id, createImage8888(image.asReadOnlyByteBuffer(), width, height))
+            SkiaViewNode(node.id, BitmapType.ARGB_8888.createImage(image.asReadOnlyByteBuffer(), width, height))
         }
         else {
             SkiaViewNode(node.id, node.childrenList.mapNotNull { buildTree(it, images, isInterrupted, drawIdToRequest) })

@@ -2393,6 +2393,7 @@ public class ManifestMerger2SmallTest {
         String appInput =
                 ""
                         + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
                         + "    package=\"com.example.myapplication\">\n"
                         + "    <uses-sdk\n"
                         + "        android:minSdkVersion=\"16\"\n"
@@ -2420,9 +2421,8 @@ public class ManifestMerger2SmallTest {
                         + "            </intent-filter>\n"
                         + "         </service>\n"
                         + "         <receiver android:directBootAware=\"true\"\n"
-                        + "             android:exported=\"true\""
                         + "             android:name=\".MainActivity\">"
-                        + "             <intent-filter>\n"
+                        + "             <intent-filter tools:node=\"remove\">\n"
                         + "                 <action android:name=\"android.intent.action.MAIN\" />\n"
                         + "\n"
                         + "                 <category android:name=\"android.intent.category.LAUNCHER\" />\n"
@@ -2436,8 +2436,10 @@ public class ManifestMerger2SmallTest {
             MergingReport mergingReport =
                     ManifestMerger2.newMerger(
                                     appFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
+                            .withFeatures(Feature.REMOVE_TOOLS_DECLARATIONS)
                             .merge();
-            assertThat(mergingReport.getResult()).isEqualTo(MergingReport.Result.SUCCESS);
+            System.out.println(mergingReport.getLoggingRecords().toString());
+            assertThat(mergingReport.getResult()).isEqualTo(MergingReport.Result.WARNING);
         } finally {
             assertThat(appFile.delete()).named("appFile was deleted").isTrue();
         }

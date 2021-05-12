@@ -33,6 +33,9 @@ import com.android.tools.agent.appinspection.testutils.MainLooperRule
 import com.android.tools.agent.appinspection.testutils.inspection.InspectorRule
 import com.android.tools.agent.appinspection.util.ThreadUtils
 import com.android.tools.agent.appinspection.util.decompress
+import com.android.tools.layoutinspector.BITMAP_HEADER_SIZE
+import com.android.tools.layoutinspector.BitmapType
+import com.android.tools.layoutinspector.toBytes
 import com.google.common.truth.Truth.assertThat
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Command
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Event
@@ -518,6 +521,115 @@ class ViewLayoutInspectorTest {
         }
     }
 
+
+    @Test
+    fun correctBitmapTypesCaptured() = createViewInspector { viewInspector ->
+        val eventQueue = ArrayBlockingQueue<ByteArray>(2)
+        inspectorRule.connection.eventListeners.add { bytes ->
+            eventQueue.add(bytes)
+        }
+
+        val resourceNames = mutableMapOf<Int, String>()
+        val resources = Resources(resourceNames)
+        val context = Context("view.inspector.test", resources)
+        val mainScreen = ViewGroup(context).apply {
+            setAttachInfo(View.AttachInfo())
+            width = 400
+            height = 800
+        }
+        val floatingDialog = ViewGroup(context).apply {
+            setAttachInfo(View.AttachInfo())
+            width = 300
+            height = 200
+        }
+        val fakeBitmapHeader = byteArrayOf(1, 2, 3) // trailed by 0s
+        val floatingFakeBitmapHeader = byteArrayOf(3, 2, 1) // trailed by 0s
+
+        WindowManagerGlobal.getInstance().rootViews.addAll(listOf(mainScreen, floatingDialog))
+
+        val startFetchCommand = Command.newBuilder().apply {
+            startFetchCommandBuilder.apply {
+                continuous = true
+            }
+        }.build()
+        viewInspector.onReceiveCommand(
+            startFetchCommand.toByteArray(),
+            inspectorRule.commandCallback
+        )
+
+        ThreadUtils.runOnMainThread { }.get() // Wait for startCommand to finish initializing
+
+        mainScreen.viewRootImpl = ViewRootImpl()
+        mainScreen.viewRootImpl.mSurface = Surface()
+        mainScreen.viewRootImpl.mSurface.bitmapBytes = fakeBitmapHeader
+        mainScreen.forcePictureCapture(Picture(byteArrayOf(1)))
+
+        eventQueue.take().let { bytes ->
+            val event = Event.parseFrom(bytes)
+            assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.ROOTS_EVENT)
+        }
+        eventQueue.take().let { bytes ->
+            val event = Event.parseFrom(bytes)
+            assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.LAYOUT_EVENT)
+
+            event.layoutEvent.screenshot.let { screenshot ->
+                assertThat(screenshot.type).isEqualTo(Screenshot.Type.BITMAP)
+                val decompressedBytes = screenshot.bytes.toByteArray().decompress()
+
+                // The full screenshot byte array is width * height
+                assertThat(decompressedBytes.size).isEqualTo(
+                    BITMAP_HEADER_SIZE + mainScreen.width * mainScreen.height)
+                // Check the bitmap header
+                assertThat(decompressedBytes.take(BITMAP_HEADER_SIZE)).isEqualTo(
+                    ((mainScreen.width).toBytes() + (mainScreen.height).toBytes() +
+                            BitmapType.RGB_565.byteVal).asList()
+                )
+                // Check the first few bytes to make sure they match our header,
+                // that's enough to know that all the data went through correctly.
+                assertThat(
+                    decompressedBytes
+                        .drop(BITMAP_HEADER_SIZE)
+                        .take(fakeBitmapHeader.size)
+                ).isEqualTo(
+                    fakeBitmapHeader.asList()
+                )
+            }
+        }
+
+        floatingDialog.viewRootImpl = ViewRootImpl()
+        floatingDialog.viewRootImpl.mSurface = Surface()
+        floatingDialog.viewRootImpl.mSurface.bitmapBytes = floatingFakeBitmapHeader
+        floatingDialog.forcePictureCapture(Picture(byteArrayOf(2)))
+
+        eventQueue.take().let { bytes ->
+            val event = Event.parseFrom(bytes)
+            assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.LAYOUT_EVENT)
+
+            event.layoutEvent.screenshot.let { screenshot ->
+                assertThat(screenshot.type).isEqualTo(Screenshot.Type.BITMAP)
+                val decompressedBytes = screenshot.bytes.toByteArray().decompress()
+
+                // The full screenshot byte array is width * height
+                assertThat(decompressedBytes.size).isEqualTo(
+                    BITMAP_HEADER_SIZE + floatingDialog.width * floatingDialog.height)
+                // Check the bitmap header
+                assertThat(decompressedBytes.take(BITMAP_HEADER_SIZE)).isEqualTo(
+                    ((floatingDialog.width).toBytes() + (floatingDialog.height).toBytes() +
+                            BitmapType.ABGR_8888.byteVal).asList()
+                )
+                // Check the first few bytes to make sure they match our header,
+                // that's enough to know that all the data went through correctly.
+                assertThat(
+                    decompressedBytes
+                        .drop(BITMAP_HEADER_SIZE)
+                        .take(floatingFakeBitmapHeader.size)
+                ).isEqualTo(
+                    floatingFakeBitmapHeader.asList()
+                )
+            }
+        }
+    }
+
     // TODO: Add test for testing snapshot mode (which will require adding more support for fetching
     //  view properties in fake-android.
 
@@ -721,11 +833,21 @@ class ViewLayoutInspectorTest {
                     val decompressedBytes = screenshot.bytes.toByteArray().decompress()
 
                     // The full screenshot byte array is width * height
-                    assertThat(decompressedBytes.size)
-                        .isEqualTo((8 + root.width * scale * root.height * scale).toInt())
+                    assertThat(decompressedBytes.size).isEqualTo(
+                        (BITMAP_HEADER_SIZE + root.width * scale * root.height * scale).toInt())
+                    // Check the bitmap header
+                    assertThat(decompressedBytes.take(BITMAP_HEADER_SIZE)).isEqualTo(
+                        ((root.width * scale).toInt().toBytes() +
+                                (root.height * scale).toInt().toBytes() +
+                                BitmapType.RGB_565.byteVal).asList()
+                    )
                     // Check the first few bytes to make sure they match our header,
                     // that's enough to know that all the data went through correctly.
-                    assertThat(decompressedBytes.take(fakeBitmapHeader.size)).isEqualTo(
+                    assertThat(
+                        decompressedBytes
+                            .drop(BITMAP_HEADER_SIZE)
+                            .take(fakeBitmapHeader.size)
+                    ).isEqualTo(
                         fakeBitmapHeader.asList()
                     )
                 }
@@ -749,8 +871,8 @@ class ViewLayoutInspectorTest {
                     assertThat(screenshot.type).isEqualTo(Screenshot.Type.BITMAP)
                     val decompressedBytes = screenshot.bytes.toByteArray().decompress()
                     // verify the newly scaled size
-                    assertThat(decompressedBytes.size)
-                        .isEqualTo((8 + root.width * scale2 * root.height * scale2).toInt())
+                    assertThat(decompressedBytes.size).isEqualTo(
+                        (BITMAP_HEADER_SIZE + root.width * scale2 * root.height * scale2).toInt())
                 }
             }
 
@@ -837,8 +959,14 @@ class ViewLayoutInspectorTest {
                     assertThat(screenshot.type).isEqualTo(Screenshot.Type.BITMAP)
                     val decompressedBytes = screenshot.bytes.toByteArray().decompress()
                     // verify the scaled size
-                    assertThat(decompressedBytes.size)
-                        .isEqualTo((8 + root.width * scale2 * root.height * scale2).toInt())
+                    assertThat(decompressedBytes.size).isEqualTo(
+                        (BITMAP_HEADER_SIZE + root.width * scale2 * root.height * scale2).toInt())
+                    // Check the bitmap header
+                    assertThat(decompressedBytes.take(BITMAP_HEADER_SIZE)).isEqualTo(
+                        ((root.width * scale2).toInt().toBytes() +
+                                (root.height * scale2).toInt().toBytes() +
+                                BitmapType.RGB_565.byteVal).asList()
+                    )
                 }
             }
         }

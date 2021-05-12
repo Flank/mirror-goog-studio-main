@@ -101,11 +101,11 @@ import java.util.stream.Collectors
 
 /** Class to create, manage variants.  */
 @Suppress("UnstableApiUsage")
-class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImpl>(
+class VariantManager<CommonExtensionT: CommonExtension<*, *, *, *>, VariantBuilderT : VariantBuilderImpl, VariantT : VariantImpl>(
         private val globalScope: GlobalScope,
         private val project: Project,
         private val projectOptions: ProjectOptions,
-        private val extension: BaseExtension,
+        private val dslExtension: CommonExtensionT,
         private val variantApiOperationsRegistrar: VariantApiOperationsRegistrar<
                 CommonExtension<*, *, *, *>,
                 VariantBuilder,
@@ -167,8 +167,12 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
         computeVariants(buildFeatureValues, dslNamespace, dslTestNamespace)
     }
 
+    // TODO : Should return CommonExtensionT instead of BaseExtension
+    val extension: BaseExtension
+        get() = dslExtension as BaseExtension
+
     private fun getFlavorSelection(
-            variantDslInfo: VariantDslInfo): Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> {
+            variantDslInfo: VariantDslInfo<*>): Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> {
         val factory = project.objects
         return variantDslInfo.missingDimensionStrategies.entries.stream()
                 .collect(
@@ -267,7 +271,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
         @Suppress("DEPRECATION") val dslServices = globalScope.dslServices
         val defaultConfig = variantInputModel.defaultConfigData
         val defaultConfigSourceProvider = defaultConfig.sourceSet
-        val variantDslInfoBuilder = getBuilder(
+        val variantDslInfoBuilder = getBuilder<CommonExtensionT>(
                 dimensionCombination,
                 variantType,
                 defaultConfig.defaultConfig,
@@ -282,7 +286,11 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                 variantPropertiesApiServices,
                 dslNamespaceProvider,
                 dslTestNamespace,
-                configuredNativeBuilder())
+                configuredNativeBuilder(),
+                extension,
+                hasDynamicFeatures = globalScope.hasDynamicFeatures(),
+                (extension as CommonExtension<*, *, *, *>).properties
+        )
 
         // We must first add the flavors to the variant config, in order to get the proper
         // variant-specific and multi-flavor name as we add/create the variant providers later.
@@ -291,6 +299,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                     productFlavorData.productFlavor, productFlavorData.sourceSet)
         }
         val variantDslInfo = variantDslInfoBuilder.createVariantDslInfo(
+                dslExtension,
                 project.layout.buildDirectory)
         val componentIdentity = variantDslInfo.componentIdentity
 
@@ -361,8 +370,9 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                 .setFlavorSelection(getFlavorSelection(variantDslInfo))
                 .addSourceSets(variantSourceSets)
         if (extension is BaseAppModuleExtension) {
-            builder.setFeatureList(extension.dynamicFeatures)
+            builder.setFeatureList((extension as BaseAppModuleExtension).dynamicFeatures)
         }
+
         val variantDependencies = builder.build()
 
         // Done. Create the (too) many variant objects
@@ -420,7 +430,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
 
     private fun createCompoundSourceSets(
             productFlavorList: List<ProductFlavorData<ProductFlavor>>,
-            variantDslInfoBuilder: VariantDslInfoBuilder) {
+            variantDslInfoBuilder: VariantDslInfoBuilder<CommonExtensionT>) {
         val variantType = variantDslInfoBuilder.variantType
         if (productFlavorList.isNotEmpty() /* && !variantConfig.getType().isSingleBuildType()*/) {
             val variantSourceSet = variantInputModel
@@ -451,7 +461,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
         val testFixturesVariantType = VariantTypeImpl.TEST_FIXTURES
         val testFixturesSourceSet = variantInputModel.defaultConfigData.testFixturesSourceSet!!
         @Suppress("DEPRECATION") val dslServices = globalScope.dslServices
-        val variantDslInfoBuilder = getBuilder(
+        val variantDslInfoBuilder = getBuilder<CommonExtensionT>(
             dimensionCombination,
             testFixturesVariantType,
             variantInputModel.defaultConfigData.defaultConfig,
@@ -467,7 +477,9 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
             variantPropertiesApiServices.provider {
                 mainComponentInfo.variant.variantDslInfo.namespace.get() + "." +
                         testFixturesFeatureName
-            }
+            },
+            extension = extension,
+            hasDynamicFeatures = globalScope.hasDynamicFeatures()
         )
         val productFlavorList = mainComponentInfo.variant.variantDslInfo.productFlavorList
 
@@ -483,6 +495,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
             }
         }
         val variantDslInfo = variantDslInfoBuilder.createVariantDslInfo(
+            dslExtension,
             project.layout.buildDirectory
         )
         val apiAccessStats = mainComponentInfo.stats
@@ -628,7 +641,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
         // The constructor does a runtime check on the instances so we should be safe.
         val testSourceSet = variantInputModel.defaultConfigData.getTestSourceSet(variantType)
         @Suppress("DEPRECATION") val dslServices = globalScope.dslServices
-        val variantDslInfoBuilder = getBuilder(
+        val variantDslInfoBuilder = getBuilder<CommonExtensionT>(
                 dimensionCombination,
                 variantType,
                 variantInputModel.defaultConfigData.defaultConfig,
@@ -640,9 +653,11 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                         testSourceSet.manifestFile,
                         variantType.requiresManifest) { canParseManifest() },
                 dslServices,
-                variantPropertiesApiServices)
+                variantPropertiesApiServices,
+                extension = extension,
+                hasDynamicFeatures = globalScope.hasDynamicFeatures())
         variantDslInfoBuilder.testedVariant =
-                testedComponentInfo.variant.variantDslInfo as VariantDslInfoImpl
+                testedComponentInfo.variant.variantDslInfo as VariantDslInfoImpl<*>
         val productFlavorList = testedComponentInfo.variant.variantDslInfo.productFlavorList
 
         // We must first add the flavors to the variant builder, in order to get the proper
@@ -656,6 +671,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
             }
         }
         val variantDslInfo = variantDslInfoBuilder.createVariantDslInfo(
+                dslExtension,
                 project.layout.buildDirectory)
         val apiAccessStats = testedComponentInfo.stats
         if (variantType.isApk
@@ -779,9 +795,6 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
             val userVisibleVariant =
                     androidTest.createUserVisibleVariantObject<AndroidTest>(
                             projectServices, variantApiOperationsRegistrar, apiAccessStats)
-            // execute the actions registered at the extension level.
-            testedComponentInfo.variantApiOperationsRegistrar.androidTestOperations
-                    .executeOperations(userVisibleVariant)
             androidTest
         } else {
             // this is UNIT_TEST
@@ -803,9 +816,6 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
             val userVisibleVariant =
                     unitTest.createUserVisibleVariantObject<UnitTest>(
                             projectServices, variantApiOperationsRegistrar, apiAccessStats)
-            // execute the actions registered at the extension level.
-            testedComponentInfo.variantApiOperationsRegistrar.unitTestOperations
-                    .executeOperations(userVisibleVariant)
             unitTest
         }
 

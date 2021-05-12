@@ -21,6 +21,7 @@ import com.android.build.api.component.Component
 import com.android.build.api.component.analytics.AnalyticsEnabledLibraryVariant
 import com.android.build.api.component.impl.ConsumableCreationConfigImpl
 import com.android.build.api.dsl.CommonExtension
+import com.android.build.api.dsl.LibraryExtension
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.InstrumentationParameters
@@ -52,7 +53,7 @@ import javax.inject.Inject
 open class  LibraryVariantImpl @Inject constructor(
         override val variantBuilder: LibraryVariantBuilderImpl,
         buildFeatureValues: BuildFeatureValues,
-        variantDslInfo: VariantDslInfo,
+        variantDslInfo: VariantDslInfo<LibraryExtension>,
         variantDependencies: VariantDependencies,
         variantSources: VariantSources,
         paths: VariantPathHelper,

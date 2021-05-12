@@ -39,6 +39,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -184,6 +185,17 @@ public class NdkSampleTest {
                 .toFile();
     }
 
+    @NonNull
+    private static File getJsonBinFile(@NonNull File testPath, int operatingSystem) {
+        Path folder = TestUtils.resolveWorkspacePath(TEST_DATA_FOLDER);
+        return folder.resolve(
+                        testPath.getName()
+                                + "."
+                                + getOsName(operatingSystem)
+                                + "-compile_commands.json.bin")
+                .toFile();
+    }
+
     private NativeBuildConfigValues checkJson(String path) throws IOException {
         return checkJson(path, SdkConstants.PLATFORM_LINUX);
     }
@@ -198,6 +210,8 @@ public class NdkSampleTest {
 
         // Get the baseline config
         File baselineJsonFile = getJsonFile(androidMkPath, operatingSystem);
+        File compileCommandsJsonBin =
+                TestUtils.getTestOutputDir().resolve("compile_commands.json.bin").toFile();
 
         // Build the expected result
         OsFileConventions fileConventions = getPathHandlingPolicy(operatingSystem);
@@ -206,7 +220,10 @@ public class NdkSampleTest {
         for (String variantName : variantConfigs.keySet()) {
             NativeBuildConfigValueBuilder builder =
                     new NativeBuildConfigValueBuilder(
-                            androidMkPath, new File("{executeFromHere}"), fileConventions);
+                            androidMkPath,
+                            new File("{executeFromHere}"),
+                            compileCommandsJsonBin,
+                            fileConventions);
             File variantBuildOutputFile =
                     getVariantBuildOutputFile(androidMkPath, variantName, operatingSystem);
             String variantBuildOutputText = Joiner.on('\n')

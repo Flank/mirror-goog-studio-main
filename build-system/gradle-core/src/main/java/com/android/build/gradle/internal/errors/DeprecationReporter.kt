@@ -76,6 +76,12 @@ interface DeprecationReporter {
                     "what you actually intended, use `checkOnly`; otherwise switch to `enable`."
         ),
 
+        DEFAULT_PUBLISH_CONFIG(
+            Version.VERSION_8_0,
+    "The support for publishing artifacts with Maven Plugin is removed, " +
+            "please migrate Maven Publish Plugin. See " +
+            "https://developer.android.com/studio/build/maven-publish-plugin for more information."
+        ),
         ;
 
         fun getDeprecationTargetMessage(): String {

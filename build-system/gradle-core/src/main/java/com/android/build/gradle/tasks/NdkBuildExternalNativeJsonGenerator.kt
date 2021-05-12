@@ -121,7 +121,8 @@ internal class NdkBuildExternalNativeJsonGenerator(
         val builder =
           NativeBuildConfigValueBuilder(
             makeFile,
-            variant.module.moduleRootFolder
+            variant.module.moduleRootFolder,
+            abi.compileCommandsJsonBinFile
           )
             .setCommands(
                     commandLine,
@@ -130,7 +131,6 @@ internal class NdkBuildExternalNativeJsonGenerator(
               buildOutput
             )
         builder.skipProcessingCompilerFlags = true
-        builder.compileCommandsJsonBinFile = abi.compileCommandsJsonBinFile
         val buildConfig = builder.build()
         applicationMk?.let {
             infoln("found application make file %s", it.absolutePath)

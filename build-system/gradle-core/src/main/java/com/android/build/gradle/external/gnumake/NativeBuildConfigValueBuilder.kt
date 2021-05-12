@@ -27,7 +27,6 @@ import com.android.utils.cxx.extractFlagArgument
 import com.android.utils.cxx.stripArgsForIde
 import com.google.common.collect.Lists
 import com.google.common.collect.Sets
-import com.google.common.io.Files
 import java.io.File
 import java.util.ArrayList
 import java.util.HashMap
@@ -58,7 +57,8 @@ import java.util.HashSet
 class NativeBuildConfigValueBuilder internal constructor(
     private val androidMk: File,
     private var executionRootPath: File,
-    fileConventions: OsFileConventions
+    private val compileCommandsJsonBinFile: File,
+    fileConventions: OsFileConventions = AbstractOsFileConventions.createForCurrentHost()
 ) {
     private val toolChainToCCompiler: MutableMap<String, String> = HashMap()
     private val toolChainToCppCompiler: MutableMap<String, String> = HashMap()
@@ -75,30 +75,10 @@ class NativeBuildConfigValueBuilder internal constructor(
     var skipProcessingCompilerFlags = false
 
     /**
-     * Location of compile_commands.json.bin used with V2 native models. If non-null the file will
-     * be generated as a side effect during [build].
-     */
-    var compileCommandsJsonBinFile: File? = null
-
-    /**
      * Notes on implementation details: This is an implicit writer that generates the
-     * compile_commands.json.bin. This is used by implementation of the [build] method. It's created
-     * in [build] if [compileCommandsJsonBinFile] is set. If it's nonnull, callees of [build] will
-     * output compile commands to it.
+     * compile_commands.json.bin. This is used by implementation of the [build] method.
      */
-    private var compileCommandsEncoder: CompileCommandsEncoder? = null
-
-    /**
-     * Constructs a NativeBuildConfigValueBuilder which can be used to build a [ ].
-     *
-     *
-     * projectRootPath -- file path to the project that contains an ndk-build project (
-     */
-    constructor(androidMk: File, executionRootPath: File) : this(
-        androidMk,
-        executionRootPath,
-        AbstractOsFileConventions.createForCurrentHost()
-    )
+    private lateinit var compileCommandsEncoder: CompileCommandsEncoder
 
     /** Set the commands and variantName for the NativeBuildConfigValue being built.  */
     fun setCommands(
@@ -134,25 +114,12 @@ class NativeBuildConfigValueBuilder internal constructor(
     }
 
     /**
-     * Skips processing compiler flags so that the generated [NativeBuildConfigValue] won't contain
-     * any native compiler flags.
-     */
-    fun skipProcessingCompilerFlags() {
-        skipProcessingCompilerFlags = true
-    }
-
-    /**
      * Builds the [NativeBuildConfigValue] from the given information.
      */
     fun build(): NativeBuildConfigValue {
-        val compileCommandsJsonBinFile = this.compileCommandsJsonBinFile
-        return if (compileCommandsJsonBinFile == null) {
+        return CompileCommandsEncoder(compileCommandsJsonBinFile).use { encoder ->
+            compileCommandsEncoder = encoder
             buildImpl()
-        } else {
-            CompileCommandsEncoder(compileCommandsJsonBinFile).use { encoder ->
-                compileCommandsEncoder = encoder
-                buildImpl()
-            }
         }
     }
 
@@ -198,8 +165,7 @@ class NativeBuildConfigValueBuilder internal constructor(
                 HashMap()
             for (command in output.commandInputs) {
                 val compilerCommand = command.command.executable
-                val extension =
-                    Files.getFileExtension(command.onlyInput)
+                val extension = File(command.onlyInput).extension
                 when {
                     NativeSourceFileExtensions.C_FILE_EXTENSIONS.contains(extension) -> {
                         cFileExtensions.add(extension)
@@ -279,21 +245,21 @@ class NativeBuildConfigValueBuilder internal constructor(
             value.artifactName = output.artifactName
             value.toolchain = output.toolchain
             value.output = fileConventions.toFile(output.outputFileName)
-            compileCommandsEncoder?.let { encoder ->
-                val workingDirPath = executionRootPath.absolutePath
-                for (commandInput in output.commandInputs) {
-                    val command = commandInput.command
-                    val output = extractFlagArgument("-o", "--output", command.escapedFlags)
-                    assert(output != null)
-                    encoder.writeCompileCommand(
-                        fileConventions.toFile(commandInput.onlyInput),
-                        File(command.executable),
-                        stripArgsForIde(commandInput.onlyInput, command.escapedFlags),
-                        File(workingDirPath),
-                        File(output)
-                    )
-                }
+
+            val workingDirPath = executionRootPath.absolutePath
+            for (commandInput in output.commandInputs) {
+                val command = commandInput.command
+                val output = extractFlagArgument("-o", "--output", command.escapedFlags)
+                assert(output != null)
+                compileCommandsEncoder.writeCompileCommand(
+                    fileConventions.toFile(commandInput.onlyInput),
+                    File(command.executable),
+                    stripArgsForIde(commandInput.onlyInput, command.escapedFlags),
+                    File(workingDirPath),
+                    File(output)
+                )
             }
+
             if (skipProcessingCompilerFlags) continue
             val nativeSourceFiles = ArrayList<NativeSourceFileValue>()
             value.files = nativeSourceFiles

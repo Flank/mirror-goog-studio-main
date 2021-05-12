@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.scope
 
+import com.android.build.gradle.BaseExtension
 import com.android.builder.core.BuilderConstants
 import com.android.builder.model.AndroidProject
 import com.google.common.base.Preconditions
@@ -70,5 +71,9 @@ class ProjectInfo(project: Project) {
 
     fun getJacocoAgent(): File {
         return File(getJacocoAgentOutputDirectory(), "jacocoagent.jar")
+    }
+
+    fun getExtension(): BaseExtension {
+        return getProject().extensions.getByName("android") as BaseExtension
     }
 }

@@ -558,7 +558,7 @@ class ModelBuilder<
             classesFolders.add(component.artifacts.get(UNIT_TEST_CONFIG_DIRECTORY).get().asFile)
         }
         // The separately compile R class, if applicable.
-        if (!globalScope.extension.aaptOptions.namespaced) {
+        if (!component.services.projectInfo.getExtension().aaptOptions.namespaced) {
             variantScope.rJarForUnitTests.orNull?.let { classesFolders.add(it.asFile) }
         }
 

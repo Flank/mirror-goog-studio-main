@@ -17,6 +17,7 @@ package com.android.build.api.variant.impl
 
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.analytics.AnalyticsEnabledApplicationVariantBuilder
+import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.api.variant.ApplicationVariantBuilder
 import com.android.build.api.variant.DependenciesInfo
 import com.android.build.api.variant.DependenciesInfoBuilder
@@ -29,7 +30,7 @@ import org.gradle.api.Action
 import javax.inject.Inject
 
 open class ApplicationVariantBuilderImpl @Inject constructor(
-    variantDslInfo: VariantDslInfo,
+    variantDslInfo: VariantDslInfo<ApplicationExtension>,
     dslDependencyInfo: com.android.build.api.dsl.DependenciesInfo,
     variantConfiguration: ComponentIdentity,
     variantApiServices: VariantApiServices

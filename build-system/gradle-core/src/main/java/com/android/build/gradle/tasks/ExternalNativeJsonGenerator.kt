@@ -343,28 +343,37 @@ abstract class ExternalNativeJsonGenerator internal constructor(
     }
 
     private fun generateCompileCommandsJsonBin(abi : CxxAbiModel) {
-        val interner =
-            TokenizedCommandLineMap<Triple<String, List<String>, String?>>(raw = false) { tokens, sourceFile ->
-                tokens.removeTokenGroup(sourceFile, 0)
-
-                for (flag in STRIP_FLAGS_WITH_ARG) {
-                    tokens.removeTokenGroup(flag, 1)
-                }
-                for (flag in STRIP_FLAGS_WITH_IMMEDIATE_ARG) {
-                    tokens.removeTokenGroup(flag, 0, matchPrefix = true)
-                }
-                for (flag in STRIP_FLAGS_WITHOUT_ARG) {
-                    tokens.removeTokenGroup(flag, 0)
-                }
-            }
-        if (!abi.compileCommandsJsonFile.exists()
-            || (abi.compileCommandsJsonBinFile.exists()
-                    && abi.compileCommandsJsonBinFile.lastModified() >= abi.compileCommandsJsonFile.lastModified())
-        ) {
+        val json = abi.compileCommandsJsonFile
+        val bin = abi.compileCommandsJsonBinFile
+        // lastModified return 0L when the file doesn't exist so
+        // file existence check is implied here.
+        if (json.isFile) {
+            if (json.lastModified() == bin.lastModified()) return
+        } else {
+            // The compile_commands.json.bin file may exist without there being
+            // a source compile_commands.json file. When this comment was written
+            // it always happens for the ndk-build metadata generator. The reason
+            // is that that generator can write directly to
+            // compile_commands.json.bin without needing an intermediary copy of
+            // that same information in compile_commands.json.
             return
         }
-        JsonReader(abi.compileCommandsJsonFile.reader(StandardCharsets.UTF_8)).use { reader ->
-            CompileCommandsEncoder(abi.compileCommandsJsonBinFile).use { encoder ->
+        JsonReader(json.reader(StandardCharsets.UTF_8)).use { reader ->
+            CompileCommandsEncoder(bin).use { encoder ->
+                val interner =
+                    TokenizedCommandLineMap<Triple<String, List<String>, String?>>(raw = false) { tokens, sourceFile ->
+                        tokens.removeTokenGroup(sourceFile, 0)
+
+                        for (flag in STRIP_FLAGS_WITH_ARG) {
+                            tokens.removeTokenGroup(flag, 1)
+                        }
+                        for (flag in STRIP_FLAGS_WITH_IMMEDIATE_ARG) {
+                            tokens.removeTokenGroup(flag, 0, matchPrefix = true)
+                        }
+                        for (flag in STRIP_FLAGS_WITHOUT_ARG) {
+                            tokens.removeTokenGroup(flag, 0)
+                        }
+                    }
                 reader.beginArray()
                 while (reader.hasNext()) {
                     reader.beginObject()
@@ -404,6 +413,8 @@ abstract class ExternalNativeJsonGenerator internal constructor(
                 reader.endArray()
             }
         }
+        // Set timestamp of bin file to exactly timestamp of compile_commands.json
+        bin.setLastModified(json.lastModified())
     }
 
     abstract fun getProcessBuilder(abi: CxxAbiModel): ProcessInfoBuilder

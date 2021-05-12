@@ -86,6 +86,7 @@ single_gradle_integration_test(
     data = DATA + CMAKE + NDK,
     maven_repo_manifests = MAVEN_REPO_MANIFESTS,
     maven_repos = MAVEN_REPOS,
+    shard_count = 2,
     deps = DEPS,
 )
 
@@ -108,7 +109,8 @@ single_gradle_integration_test(
 )
 
 single_gradle_integration_test(
-    name = "CmakeInjectedAbiSplitTest",
+    name = "InjectedAbiSplitTest",
+    timeout = "long",
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
     data = DATA + CMAKE + NDK,
     maven_repo_manifests = MAVEN_REPO_MANIFESTS,
@@ -136,15 +138,6 @@ single_gradle_integration_test(
 
 single_gradle_integration_test(
     name = "CmakeSettingsTest",
-    srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
-    data = DATA + CMAKE + NDK,
-    maven_repo_manifests = MAVEN_REPO_MANIFESTS,
-    maven_repos = MAVEN_REPOS,
-    deps = DEPS,
-)
-
-single_gradle_integration_test(
-    name = "CmakeSettingsSharedBuildTest",
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
     data = DATA + CMAKE + NDK,
     maven_repo_manifests = MAVEN_REPO_MANIFESTS,
@@ -199,7 +192,8 @@ single_gradle_integration_test(
 )
 
 single_gradle_integration_test(
-    name = "InjectedAbiNativeLibraryTest",
+    name = "InjectedAbiTest",
+    timeout = "long",
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
     data = DATA + CMAKE + NDK,
     maven_repo_manifests = MAVEN_REPO_MANIFESTS,
@@ -340,6 +334,7 @@ single_gradle_integration_test(
     data = DATA + CMAKE + NDK + ["//tools/base/build-system/integration-test:test-projects/prefabPublishing"],
     maven_repo_manifests = MAVEN_REPO_MANIFESTS,
     maven_repos = MAVEN_REPOS,
+    shard_count = 2,
     deps = DEPS,
 )
 

@@ -19,6 +19,8 @@ package com.android.build.gradle.internal.core;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.Nullable;
+import com.android.build.api.dsl.CommonExtension;
+import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.DefaultConfig;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
@@ -45,6 +47,7 @@ import com.android.sdklib.AndroidVersion;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
+import java.util.Collections;
 import java.util.List;
 import kotlin.Pair;
 import org.gradle.api.file.DirectoryProperty;
@@ -352,11 +355,16 @@ public class VariantDslInfoTest {
                         variantPropertiesApiServices,
                         namespace,
                         testNamespace,
-                        null /* BuildType */);
+                        null, /* BuildType */
+                        Mockito.mock(BaseExtension.class),
+                        false,
+                        Collections.emptyMap());
 
         builder.addProductFlavor(flavorConfig, new MockSourceProvider("custom"));
 
-        return builder.createVariantDslInfo(Mockito.mock(DirectoryProperty.class));
+        return builder.createVariantDslInfo(
+                Mockito.mock(CommonExtension.class),
+                Mockito.mock(DirectoryProperty.class));
     }
 
     private void initWithInjectedDeviceApi(int deviceApi) {

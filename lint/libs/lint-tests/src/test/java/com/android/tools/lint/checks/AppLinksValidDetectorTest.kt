@@ -27,6 +27,123 @@ class AppLinksValidDetectorTest : AbstractCheckTest() {
         return AppLinksValidDetector()
     }
 
+    fun testIntentFilterDataDeclaration() {
+        lint().files(
+            manifest(
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="com.example.helloworld" >
+                    <activity android:name="com.example.Activity">
+                        <intent-filter>
+                            <data android:scheme="https" android:host="example.com"/>
+                            <data android:scheme="http" android:host="example.org"/>
+                        </intent-filter>
+                    </activity>
+                    <receiver android:name="com.example.Receiver">
+                        <intent-filter>
+                            <data android:scheme="https"/>
+                            <data
+                                android:host="example.com"
+                                android:path="/path"
+                                android:scheme="https"
+                                />
+                        </intent-filter>
+                    </receiver>
+                    <service android:name="com.example.Service">
+                        <intent-filter>
+                            <data android:scheme="https"/>
+                            <!-- Don't warn on only host and port -->
+                            <data android:host="example.com" android:port="40"/>
+                            <data android:host="example.com" android:port="41" android:path="/sub"/>
+                        </intent-filter>
+                    </service>
+                    <provider android:name="com.example.Provider">
+                        <intent-filter>
+                            <data android:scheme="https"/>
+                            <data android:host="example.com" android:mimeType="image/jpeg"/>
+                        </intent-filter>
+                    </provider>
+                    <activity android:name="com.example.Activity2">
+                        <intent-filter>
+                            <data android:scheme="https" android:host="example.com"/>
+                            <!-- Don't warn on multiple attributes of only path variants-->
+                            <data
+                                android:pathPrefix="/prefix"
+                                android:path="/path"
+                                android:pathPattern="/pattern/*"
+                                />
+                        </intent-filter>
+                    </activity>
+                    <activity android:name="com.example.Activity3">
+                        <intent-filter>
+                            <!-- Don't warn on only 1 data tag -->
+                            <data android:scheme="https" android:host="example.com"/>
+                        </intent-filter>
+                    </activity>
+                </manifest>
+                """
+            ).indented()
+        )
+            .issues(AppLinksValidDetector.INTENT_FILTER_UNIQUE_DATA_ATTRIBUTES)
+            .run()
+            .expect(
+                """
+                AndroidManifest.xml:5: Warning: Consider splitting data tag into multiple tags with individual attributes to avoid confusion [IntentFilterUniqueDataAttributes]
+                            <data android:scheme="https" android:host="example.com"/>
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                AndroidManifest.xml:6: Warning: Consider splitting data tag into multiple tags with individual attributes to avoid confusion [IntentFilterUniqueDataAttributes]
+                            <data android:scheme="http" android:host="example.org"/>
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                AndroidManifest.xml:12: Warning: Consider splitting data tag into multiple tags with individual attributes to avoid confusion [IntentFilterUniqueDataAttributes]
+                            <data
+                            ^
+                AndroidManifest.xml:24: Warning: Consider splitting data tag into multiple tags with individual attributes to avoid confusion [IntentFilterUniqueDataAttributes]
+                            <data android:host="example.com" android:port="41" android:path="/sub"/>
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                AndroidManifest.xml:30: Warning: Consider splitting data tag into multiple tags with individual attributes to avoid confusion [IntentFilterUniqueDataAttributes]
+                            <data android:host="example.com" android:mimeType="image/jpeg"/>
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                0 errors, 5 warnings
+                """
+            )
+            .verifyFixes()
+            .robot(true)
+            .expectFixDiffs(
+                """
+                Fix for AndroidManifest.xml line 5: Replace with <data android:scheme="https"/>...:
+                @@ -5 +5
+                -             <data android:scheme="https" android:host="example.com"/>
+                +             <data android:scheme="https"/>
+                +             <data android:host="example.com"/>
+                Fix for AndroidManifest.xml line 6: Replace with <data android:scheme="http"/>...:
+                @@ -6 +6
+                -             <data android:scheme="http" android:host="example.org"/>
+                +             <data android:scheme="http"/>
+                +             <data android:host="example.org"/>
+                Fix for AndroidManifest.xml line 12: Replace with <data android:scheme="https"/>...:
+                @@ -12 +12
+                -             <data
+                -                 android:host="example.com"
+                -                 android:path="/path"
+                -                 android:scheme="https"
+                -                 />
+                +             <data android:scheme="https"/>
+                +             <data android:host="example.com"/>
+                +             <data android:path="/path"/>
+                Fix for AndroidManifest.xml line 24: Replace with <data android:host="example.com" android:port="41"/>...:
+                @@ -24 +24
+                -             <data android:host="example.com" android:port="41" android:path="/sub"/>
+                +             <data android:host="example.com" android:port="41"/>
+                +             <data android:path="/sub"/>
+                Fix for AndroidManifest.xml line 30: Replace with <data android:host="example.com"/>...:
+                @@ -30 +30
+                -             <data android:host="example.com" android:mimeType="image/jpeg"/>
+                +             <data android:host="example.com"/>
+                +             <data android:mimeType="image/jpeg"/>
+                """
+            )
+    }
+
     fun testWrongNamespace() {
         val expected =
             """
@@ -592,6 +709,8 @@ class AppLinksValidDetectorTest : AbstractCheckTest() {
                                       android:host="example.com"
                                       android:pathPattern="foo"
                                       tools:ignore="AppLinkUrlError"/>
+                            </intent-filter>
+                            <intent-filter>
                                 <data android:scheme="http"
                                       android:host="example.com"
                                       android:pathPattern="foo"

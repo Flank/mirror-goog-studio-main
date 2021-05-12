@@ -22,6 +22,7 @@ import com.android.build.api.component.Component
 import com.android.build.api.component.analytics.AnalyticsEnabledTestVariant
 import com.android.build.api.component.impl.TestVariantCreationConfigImpl
 import com.android.build.api.dsl.CommonExtension
+import com.android.build.api.dsl.TestExtension
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.AndroidResources
 import com.android.build.api.variant.AndroidVersion
@@ -35,6 +36,7 @@ import com.android.build.gradle.internal.component.TestVariantCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
+import com.android.build.gradle.internal.dsl.ModulePropertyKeys
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.BuildFeatureValues
@@ -57,7 +59,7 @@ import javax.inject.Inject
 open class TestVariantImpl @Inject constructor(
         override val variantBuilder: TestVariantBuilderImpl,
         buildFeatureValues: BuildFeatureValues,
-        variantDslInfo: VariantDslInfo,
+        variantDslInfo: VariantDslInfo<TestExtension>,
         variantDependencies: VariantDependencies,
         variantSources: VariantSources,
         paths: VariantPathHelper,
@@ -107,12 +109,20 @@ open class TestVariantImpl @Inject constructor(
 
     override val androidResources: AndroidResources by lazy {
         initializeAaptOptionsFromDsl(
-            globalScope.extension.aaptOptions,
+            taskCreationServices.projectInfo.getExtension().aaptOptions,
             internalServices
         )
     }
 
-    override val testedApplicationId: Provider<String> = calculateTestedApplicationId(variantDependencies)
+    // TODO: We should keep this (for the manifest) but just fix the test runner to get the
+    //         tested application id from the APK metadata file for uninstalling.
+    override val testedApplicationId: Provider<String> by lazy {
+        if (ModulePropertyKeys.SELF_INSTRUMENTING.getValueAsBoolean(properties.get())) {
+            applicationId
+        } else {
+            calculateTestedApplicationId(variantDependencies)
+        }
+    }
 
     override val minifiedEnabled: Boolean
         get() = variantDslInfo.getPostProcessingOptions().codeShrinkerEnabled()

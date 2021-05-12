@@ -248,6 +248,7 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
                     .setPlaceHolderValues(manifestPlaceholders)
                     .addFlavorAndBuildTypeManifests(*manifestOverlays.get().toTypedArray())
                     .addLibraryManifest(generatedTestManifest)
+                    .addAllowNonUniquePackageNames(testApplicationId)
                     .setOverride(ManifestSystemProperty.PACKAGE, testApplicationId)
                     .setOverride(ManifestSystemProperty.MIN_SDK_VERSION, minSdkVersion)
                     .setOverride(ManifestSystemProperty.TARGET_PACKAGE, testedApplicationId)
@@ -493,7 +494,7 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
                     AndroidArtifacts.ArtifactType.MANIFEST
                 )
             task.placeholdersValues.setDisallowChanges(creationConfig.manifestPlaceholders)
-            if (!creationConfig.globalScope.extension.aaptOptions.namespaced) {
+            if (!creationConfig.services.projectInfo.getExtension().aaptOptions.namespaced) {
                 task.navigationJsons = project.files(
                     creationConfig
                         .variantDependencies

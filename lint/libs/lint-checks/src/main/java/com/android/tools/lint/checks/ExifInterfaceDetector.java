@@ -18,6 +18,7 @@ package com.android.tools.lint.checks;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.client.api.UElementHandler;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Detector;
@@ -97,20 +98,24 @@ public class ExifInterfaceDetector extends Detector implements SourceCodeScanner
         }
 
         Location location = context.getLocation(locationNode);
-        String message = getErrorMessage();
+        String message = getErrorMessage(context.getEvaluator());
         context.report(ISSUE, reference, location, message);
     }
 
     private static void replace(@NonNull JavaContext context, @NonNull PsiElement reference) {
         Location location = context.getLocation(reference);
-        String message = getErrorMessage();
+        String message = getErrorMessage(context.getEvaluator());
         context.report(ISSUE, reference, location, message);
     }
 
     @NonNull
-    private static String getErrorMessage() {
-        return "Avoid using `android.media.ExifInterface`; use "
-                + "`android.support.media.ExifInterface` from the support library instead";
+    private static String getErrorMessage(JavaEvaluator evaluator) {
+        PsiClass supportClass = evaluator.findClass("android.support.media.ExifInterface");
+        return "Avoid using `android.media.ExifInterface`; use `"
+                + (supportClass != null
+                        ? "android.support.media.ExifInterface` from the support library"
+                        : "androidx.media.ExifInterface`")
+                + " instead";
     }
 
     @Override

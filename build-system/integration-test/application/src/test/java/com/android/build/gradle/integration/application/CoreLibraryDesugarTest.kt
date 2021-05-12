@@ -81,8 +81,12 @@ class CoreLibraryDesugarTest {
     private val usedDesugarClass2 = "Lj$/time/Month;"
     private val usedDesugarClass3 = "Lj$/time/LocalTime;"
     private val unusedDesugarClass = "Lj$/time/Year;"
-    private val unObfuscatedClass = "Lj$/util/stream/StreamSupport;"
-    private val obfuscatedClass = "Lj$/util/stream/e;"
+    // Class java.util.stream.StreamOpFlag is selected as it is package private, and used
+    // indirectly by the test.
+    private val unObfuscatedClass = "Lj$/util/stream/StreamOpFlag;"
+    // Use name 'a', to indirectly check that no minification (obfuscation) happens, as 'a'
+    // is the first name to be selected by R8 when minifying.
+    private val obfuscatedClass = "Lj$/util/stream/a;"
     private val desugarConfigClass = "Lj$/time/TimeConversions;"
 
     private fun setUpTestProject(): TestProject {

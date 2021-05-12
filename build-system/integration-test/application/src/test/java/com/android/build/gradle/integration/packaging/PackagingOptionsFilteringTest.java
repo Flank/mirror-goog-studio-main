@@ -436,8 +436,10 @@ public class PackagingOptionsFilteringTest {
         appendBuild(app, "    onVariants(selector().withName('release'), {");
         appendBuild(app, "        packaging.resources.excludes.add('**/*.releaseExclude')");
         appendBuild(app, "    })");
-        appendBuild(app, "    androidTests(selector().all(), {");
-        appendBuild(app, "        packaging.resources.excludes.add('**/*.testExclude')");
+        appendBuild(app, "    onVariants(selector().all(), {");
+        appendBuild(
+                app,
+                "        androidTest?.packaging?.resources?.excludes?.add('**/*.testExclude')");
         appendBuild(app, "    })");
         appendBuild(app, "}");
 
@@ -445,9 +447,9 @@ public class PackagingOptionsFilteringTest {
         appendBuild(lib, "androidComponents {");
         appendBuild(lib, "    onVariants(selector().all(), {");
         appendBuild(lib, "        packaging.resources.excludes.add('**/*.libExclude')");
-        appendBuild(lib, "    })");
-        appendBuild(lib, "    androidTests(selector().all(), {");
-        appendBuild(lib, "        packaging.resources.excludes.add('**/*.testExclude')");
+        appendBuild(
+                lib,
+                "        androidTest?.packaging?.resources?.excludes?.add('**/*.testExclude')");
         appendBuild(lib, "    })");
         appendBuild(lib, "}");
 

@@ -42,4 +42,18 @@ interface LibraryExtension :
      * container of Prefab options
      */
     val prefab: NamedDomainObjectContainer<PrefabPackagingOptions>
+
+    /**
+     * Customizes publishing build variant artifacts from library module to a Maven repository.
+     *
+     * For more information about the properties you can configure in this block, see [LibraryPublishing]
+     */
+    val publishing: LibraryPublishing
+
+    /**
+     * Customizes publishing build variant artifacts from library module to a Maven repository.
+     *
+     * For more information about the properties you can configure in this block, see [LibraryPublishing]
+     */
+    fun publishing(action: LibraryPublishing.() -> Unit)
 }

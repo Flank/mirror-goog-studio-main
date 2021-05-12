@@ -127,8 +127,15 @@ public class PropertyFetcherTest extends TestCase {
      * Test that getProperty works as expected when queries made in different states
      */
     public void testGetProperty() throws Exception {
+        // Device latency
+        final int deviceLatencyMillis = 500;
+
+        // Property fetcher latency should be much lower than device latency, but is not
+        // zero (see b/155630484)
+        final int propertyFetchMaxCacheLatencyMillis = deviceLatencyMillis / 2;
+
         IDevice mockDevice = DeviceTest.createMockDevice();
-        DeviceTest.injectShellResponse(mockDevice, GETPROP_RESPONSE);
+        DeviceTest.injectShellResponse(mockDevice, GETPROP_RESPONSE, deviceLatencyMillis);
         EasyMock.replay(mockDevice);
 
         PropertyFetcher fetcher = new PropertyFetcher(mockDevice);
@@ -138,10 +145,14 @@ public class PropertyFetcherTest extends TestCase {
         Future<String> fetchingFuture = fetcher.getProperty("ro.secure");
 
         assertEquals("480", unpopulatedFuture.get());
-        // do queries with short timeout to ensure props already available
-        assertEquals("1", fetchingFuture.get(1, TimeUnit.MILLISECONDS));
-        assertEquals("480", fetcher.getProperty("ro.sf.lcd_density").get(1,
-                TimeUnit.MILLISECONDS));
+        // do queries with short timeout to ensure props already available (i.e. don't run the query
+        // on the device again)
+        assertEquals(
+                "1", fetchingFuture.get(propertyFetchMaxCacheLatencyMillis, TimeUnit.MILLISECONDS));
+        assertEquals(
+                "480",
+                fetcher.getProperty("ro.sf.lcd_density")
+                        .get(propertyFetchMaxCacheLatencyMillis, TimeUnit.MILLISECONDS));
     }
 
     /**

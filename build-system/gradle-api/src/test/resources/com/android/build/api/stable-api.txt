@@ -4,12 +4,15 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-aa2f39953f355dc2bc2043b4ddd78a7c1d3806d3db4a486178e748ee962bdc3f
+9a22ee9d3a06cd783d35587803135c1783d755c44a63c879dacf3539f56f8480
 -------------------------------------------------------------------------
 com.android.build.api.attributes.BuildTypeAttr implements org.gradle.api.Named
 com.android.build.api.attributes.BuildTypeAttr$Companion
 com.android.build.api.attributes.ProductFlavorAttr implements org.gradle.api.Named
 com.android.build.api.dsl.AndroidResources
+com.android.build.api.dsl.ApplicationPublishing implements com.android.build.api.dsl.Publishing
+com.android.build.api.dsl.ApplicationSingleVariant implements com.android.build.api.dsl.SingleVariant
+com.android.build.api.dsl.ApplicationSingleVariant.publishApk: void ()
 com.android.build.api.dsl.CommonExtension
 com.android.build.api.dsl.CommonExtension.androidResources: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.AndroidResources, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.compileOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.CompileOptions, kotlin.Unit>)
@@ -30,7 +33,14 @@ com.android.build.api.dsl.CommonExtension.setNamespace: void (java.lang.String)
 com.android.build.api.dsl.CommonExtension.testCoverage: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.TestCoverage, kotlin.Unit>)
 com.android.build.api.dsl.CompileOptions
 com.android.build.api.dsl.DataBinding
+com.android.build.api.dsl.LibraryPublishing implements com.android.build.api.dsl.Publishing
+com.android.build.api.dsl.LibrarySingleVariant implements com.android.build.api.dsl.SingleVariant
 com.android.build.api.dsl.Lint
+com.android.build.api.dsl.Publishing
+com.android.build.api.dsl.Publishing.singleVariant: void (java.lang.String)
+com.android.build.api.dsl.Publishing.singleVariant: void (java.lang.String, kotlin.jvm.functions.Function1<? super SingleVariantT, kotlin.Unit>)
+com.android.build.api.dsl.SingleVariant
+com.android.build.api.dsl.SingleVariant.getVariantName: java.lang.String ()
 com.android.build.api.dsl.TestCoverage
 com.android.build.api.dsl.TestCoverage.getJacocoVersion: java.lang.String ()
 com.android.build.api.dsl.TestCoverage.setJacocoVersion: void (java.lang.String)

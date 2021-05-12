@@ -20,6 +20,7 @@ import static com.android.ide.common.rendering.api.Result.Status.NOT_IMPLEMENTED
 
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 
 /**
@@ -144,6 +145,16 @@ public abstract class Bridge {
      */
     public boolean isRtl(String locale) {
         return false;
+    }
+
+    /**
+     * Returns a mock view displaying the given label. This mock view should be created by passing
+     * the provided arguments to its constructor.
+     */
+    public Object createMockView(String label, Class<?>[] signature, Object[] args)
+            throws NoSuchMethodException, InstantiationException, IllegalAccessException,
+                    InvocationTargetException {
+        return null;
     }
 
     public static boolean hasNativeCrash() {

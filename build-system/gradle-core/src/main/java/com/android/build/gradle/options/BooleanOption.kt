@@ -128,7 +128,6 @@ enum class BooleanOption(
     ENABLE_NEW_RESOURCE_SHRINKER("android.experimental.enableNewResourceShrinker", false, FeatureStage.Experimental),
     ENABLE_NEW_RESOURCE_SHRINKER_PRECISE("android.experimental.enableNewResourceShrinker.preciseShrinking", false, FeatureStage.Experimental),
     ENABLE_LOCAL_TESTING("android.bundletool.enableLocalTesting", false, FeatureStage.Experimental),
-    INCLUDE_REPOSITORIES_IN_DEPENDENCY_REPORT("android.bundletool.includeRepositoriesInDependencyReport", false, FeatureStage.Experimental),
 
     /** When set R classes are treated as compilation classpath in libraries, rather than runtime classpath, with values set to 0. */
     ENABLE_ADDITIONAL_ANDROID_TEST_OUTPUT("android.enableAdditionalTestOutput", true, FeatureStage.Experimental),
@@ -159,6 +158,8 @@ enum class BooleanOption(
     ENABLE_SOURCE_SET_PATHS_MAP("android.experimental.enableSourceSetPathsMap", false, FeatureStage.Experimental),
     RELATIVE_COMPILE_LIB_RESOURCES("android.experimental.cacheCompileLibResources", false, FeatureStage.Experimental),
     ENABLE_JACOCO_TRANSFORM_INSTRUMENTATION("android.experimental.enableJacocoTransformInstrumentation", false, FeatureStage.Experimental),
+    DISABLE_AUTOMATIC_COMPONENT_CREATION("android.disableAutomaticComponentCreation", false, FeatureStage.Experimental),
+
     /** Whether lint should be run in process; the default is a separate process. Primarily useful for debugging lint issues related to AGP. */
     RUN_LINT_IN_PROCESS("android.experimental.runLintInProcess", false, FeatureStage.Experimental),
 
@@ -190,6 +191,9 @@ enum class BooleanOption(
     ENABLE_RESOURCE_OPTIMIZATIONS("android.enableResourceOptimizations", true, FeatureStage.SoftlyEnforced(VERSION_8_0)),
 
     ENABLE_R_TXT_RESOURCE_SHRINKING("android.enableRTxtResourceShrinking", true, FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.VERSION_8_0)),
+
+    INCLUDE_REPOSITORIES_IN_DEPENDENCY_REPORT("android.bundletool.includeRepositoriesInDependencyReport", true, FeatureStage.SoftlyEnforced(VERSION_8_0)),
+
     /* -------------------
      * DEPRECATED FEATURES
      */

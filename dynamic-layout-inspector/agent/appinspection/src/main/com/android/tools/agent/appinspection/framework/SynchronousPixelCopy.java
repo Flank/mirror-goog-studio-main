@@ -17,6 +17,7 @@
 package com.android.tools.agent.appinspection.framework;
 
 import android.graphics.Bitmap;
+import android.graphics.Rect;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.view.PixelCopy;
@@ -57,10 +58,10 @@ public class SynchronousPixelCopy implements OnPixelCopyFinishedListener {
 
     private int mStatus = -1;
 
-    public int request(Surface source, Bitmap dest) throws InterruptedException {
+    public int request(Surface source, Rect srcRect, Bitmap dest) throws InterruptedException {
         synchronized (this) {
             Handler handler = ensureHandlerStarted();
-            PixelCopy.request(source, dest, this, handler);
+            PixelCopy.request(source, srcRect, dest, this, handler);
             return getResultLocked();
         }
     }

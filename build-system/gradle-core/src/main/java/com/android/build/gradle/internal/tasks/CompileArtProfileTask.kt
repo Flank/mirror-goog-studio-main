@@ -65,9 +65,6 @@ abstract class CompileArtProfileTask: NonIncrementalTask() {
     @get: OutputFile
     abstract val binaryArtProfile: RegularFileProperty
 
-    @get: Input
-    abstract val minSdkVersion: Property<Int>
-
     abstract class CompileArtProfileWorkAction:
             ProfileAwareWorkAction<CompileArtProfileWorkAction.Parameters>() {
 
@@ -75,12 +72,10 @@ abstract class CompileArtProfileTask: NonIncrementalTask() {
             abstract val mergedArtProfile: RegularFileProperty
             abstract val dexFolders: ConfigurableFileCollection
             abstract val obfuscationMappingFile: RegularFileProperty
-            abstract val minSdkVersion: Property<Int>
             abstract val outputFile: RegularFileProperty
         }
 
         override fun run() {
-            val artProfileSerializer = getArtProfileSerializer(parameters) ?: return
             val diagnostics = Diagnostics {
                     error -> throw RuntimeException("Error parsing baseline-prof.txt : $error")
             }
@@ -102,28 +97,9 @@ abstract class CompileArtProfileTask: NonIncrementalTask() {
                         DexFile(it)
                     }
             )
+            // the P compiler is always used, the server side will transcode if necessary.
             parameters.outputFile.get().asFile.outputStream().use {
-                artProfile.save(it, artProfileSerializer)
-            }
-        }
-
-        companion object {
-
-            fun getArtProfileSerializer(
-                    parameters: Parameters
-            ): ArtProfileSerializer? {
-
-                val minSdkVersion = parameters.minSdkVersion.get()
-                if (minSdkVersion < AndroidVersion.VersionCodes.N) {
-                    return null
-                }
-                if (minSdkVersion < AndroidVersion.VersionCodes.O) {
-                    return ArtProfileSerializer.V0_0_1_N
-                }
-                if (minSdkVersion < AndroidVersion.VersionCodes.P) {
-                    return ArtProfileSerializer.V0_0_5_O
-                }
-                return ArtProfileSerializer.V0_1_0_P
+                artProfile.save(it, ArtProfileSerializer.V0_1_0_P)
             }
         }
     }
@@ -137,7 +113,6 @@ abstract class CompileArtProfileTask: NonIncrementalTask() {
             it.mergedArtProfile.set(mergedArtProfile)
             it.dexFolders.from(dexFolders)
             it.obfuscationMappingFile.set(obfuscationMappingFile)
-            it.minSdkVersion.set(minSdkVersion.get())
             it.outputFile.set(binaryArtProfile)
         }
     }
@@ -182,7 +157,6 @@ abstract class CompileArtProfileTask: NonIncrementalTask() {
             task.obfuscationMappingFile.setDisallowChanges(
                     creationConfig.artifacts.get(SingleArtifact.OBFUSCATION_MAPPING_FILE)
             )
-            task.minSdkVersion.setDisallowChanges(creationConfig.minSdkVersion.apiLevel)
         }
     }
 }

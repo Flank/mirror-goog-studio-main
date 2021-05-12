@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.core
 
 import com.android.build.api.component.ComponentIdentity
+import com.android.build.api.dsl.CommonExtension
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.ProductFlavor
@@ -647,8 +648,10 @@ class VariantDslInfoTest2 :
     override fun defaultWhen(given: GivenData): ResultData? {
         val componentIdentity = Mockito.mock(ComponentIdentity::class.java)
         Mockito.`when`(componentIdentity.name).thenReturn("compIdName")
-        val variantDslInfo = VariantDslInfoImpl(
+        val dslExtension = Mockito.mock(CommonExtension::class.java)
+        val variantDslInfo = VariantDslInfoImpl<CommonExtension<*, *, *, *>>(
             componentIdentity = componentIdentity,
+            dslExtension = dslExtension,
             variantType = given.variantType,
             defaultConfig = given.defaultConfig,
             buildTypeObj = given.buildType,
@@ -662,6 +665,8 @@ class VariantDslInfoTest2 :
             dslNamespaceProvider = given.namespace,
             dslTestNamespace = given.testNamespace,
             nativeBuildSystem = null,
+            publishingInfo = null,
+            properties = mapOf(),
         )
 
         return instantiateResult().also {
@@ -697,14 +702,14 @@ class VariantDslInfoTest2 :
     }
 
     /** optional conversion action from variantDslInfo to result Builder. */
-    private var convertAction: (ResultData.(variantInfo: VariantDslInfo) -> Unit)? = null
+    private var convertAction: (ResultData.(variantInfo: VariantDslInfo<*>) -> Unit)? = null
 
     /**
      * registers a custom conversion from variantDslInfo to ResultBuilder.
      * This avoid having to use when {} which requires implementing all that defaultWhen()
      * does.
      */
-    private fun convertToResult(action: ResultData.(variantInfo: VariantDslInfo) -> Unit) {
+    private fun convertToResult(action: ResultData.(variantInfo: VariantDslInfo<*>) -> Unit) {
         convertAction = action
     }
 
@@ -726,7 +731,7 @@ class VariantDslInfoTest2 :
 
         var testNamespace: String? = null
 
-        var testedVariantDslInfoImpl: VariantDslInfoImpl? = null
+        var testedVariantDslInfoImpl: VariantDslInfoImpl<*>? = null
 
         /** default Config values */
         val defaultConfig: DefaultConfig = DefaultConfig(BuilderConstants.MAIN, dslServices)

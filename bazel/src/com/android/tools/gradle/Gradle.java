@@ -2,6 +2,7 @@ package com.android.tools.gradle;
 
 import com.android.annotations.NonNull;
 import com.android.testutils.TestUtils;
+import com.android.tools.bazel.repolinker.RepoLinker;
 import com.android.utils.FileUtils;
 import com.google.common.base.MoreObjects;
 import java.io.BufferedInputStream;
@@ -70,8 +71,16 @@ public class Gradle implements Closeable {
         createInitScript(initScript, repoDir);
     }
 
-    public void addRepo(@NonNull File repo) throws IOException {
-        unzip(repo, getRepoDir());
+    public void addRepo(@NonNull File repo) throws Exception {
+        String name = repo.getName();
+        if (name.endsWith(".zip")) {
+            unzip(repo, getRepoDir());
+        } else if (name.endsWith(".manifest")) {
+            List<String> artifacts = Files.readAllLines(repo.toPath());
+            new RepoLinker().link(getRepoDir().toPath(), artifacts);
+        } else {
+            throw new IllegalArgumentException("Unknown repo type " + name);
+        }
     }
 
     public void addArgument(@NonNull String argument) {

@@ -499,7 +499,7 @@ abstract class VariantInputs {
     abstract val mavenCoordinatesCache: Property<MavenCoordinatesCacheBuildService>
 
     @get:InputFiles
-    @get:PathSensitive(PathSensitivity.ABSOLUTE)
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val dynamicFeatureLintModels: ConfigurableFileCollection
 
     /**
@@ -692,7 +692,7 @@ abstract class VariantInputs {
         return DefaultLintModelVariant(
             module,
             name.get(),
-            useSupportLibraryVectorDrawables = false,
+            useSupportLibraryVectorDrawables = mainArtifact.useSupportLibraryVectorDrawables.get(),
             mainArtifact = mainArtifact.toLintModel(dependencyCaches),
             testArtifact = testArtifact.orNull?.toLintModel(dependencyCaches),
             androidTestArtifact = androidTestArtifact.orNull?.toLintModel(dependencyCaches),
@@ -739,7 +739,7 @@ abstract class BuildFeaturesInput {
         viewBinding.setDisallowChanges(creationConfig.buildFeatures.viewBinding)
         coreLibraryDesugaringEnabled.setDisallowChanges(creationConfig.isCoreLibraryDesugaringEnabled)
         namespacingMode.setDisallowChanges(
-            if (creationConfig.globalScope.extension.aaptOptions.namespaced) {
+            if (creationConfig.services.projectInfo.getExtension().aaptOptions.namespaced) {
                 LintModelNamespacingMode.DISABLED
             } else {
                 LintModelNamespacingMode.REQUIRED
@@ -883,6 +883,9 @@ abstract class AndroidArtifactInput : ArtifactInput() {
     @get:Input
     abstract val shrinkable: Property<Boolean>
 
+    @get:Input
+    abstract val useSupportLibraryVectorDrawables: Property<Boolean>
+
     fun initialize(
         componentImpl: ComponentImpl,
         checkDependencies: Boolean,
@@ -895,6 +898,9 @@ abstract class AndroidArtifactInput : ArtifactInput() {
         generatedResourceFolders.setDisallowChanges(ModelBuilder.getGeneratedResourceFolders(componentImpl))
         shrinkable.setDisallowChanges(
             componentImpl is ConsumableCreationConfig && componentImpl.minifiedEnabled
+        )
+        useSupportLibraryVectorDrawables.setDisallowChanges(
+            componentImpl.variantDslInfo.vectorDrawables.useSupportLibrary ?: false
         )
         if (includeClassesOutputDirectories) {
             classesOutputDirectories.from(componentImpl.artifacts.get(InternalArtifactType.JAVAC))
@@ -950,6 +956,7 @@ abstract class AndroidArtifactInput : ArtifactInput() {
         classesOutputDirectories.fromDisallowChanges(sourceSet.output.classesDirs)
         warnIfProjectTreatedAsExternalDependency.setDisallowChanges(false)
         shrinkable.setDisallowChanges(false)
+        useSupportLibraryVectorDrawables.setDisallowChanges(false)
         val variantDependencies = VariantDependencies(
             variantName = sourceSet.name,
             variantType = VariantTypeImpl.JAVA_LIBRARY,
@@ -964,7 +971,8 @@ abstract class AndroidArtifactInput : ArtifactInput() {
             wearAppConfiguration = null,
             testedVariant = null,
             project = project,
-            projectOptions = projectOptions
+            projectOptions = projectOptions,
+            isSelfInstrumenting = false,
         )
         artifactCollectionsInputs.setDisallowChanges(ArtifactCollectionsInputs(
             variantDependencies = variantDependencies,
@@ -1076,7 +1084,8 @@ abstract class JavaArtifactInput : ArtifactInput() {
             wearAppConfiguration = null,
             testedVariant = null,
             project = project,
-            projectOptions = projectOptions
+            projectOptions = projectOptions,
+            isSelfInstrumenting = false,
         )
         artifactCollectionsInputs.setDisallowChanges(
             ArtifactCollectionsInputs(
@@ -1115,7 +1124,7 @@ abstract class ArtifactInput {
     abstract val artifactCollectionsInputs: Property<ArtifactCollectionsInputs>
 
     @get:InputFiles
-    @get:PathSensitive(PathSensitivity.ABSOLUTE)
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     @get:Optional
     val projectRuntimeExplodedAarsFileCollection: FileCollection?
         get() = projectRuntimeExplodedAars?.artifactFiles
@@ -1124,7 +1133,7 @@ abstract class ArtifactInput {
     var projectRuntimeExplodedAars: ArtifactCollection? = null
 
     @get:InputFiles
-    @get:PathSensitive(PathSensitivity.ABSOLUTE)
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     @get:Optional
     val projectCompileExplodedAarsFileCollection: FileCollection?
         get() = projectCompileExplodedAars?.artifactFiles
@@ -1133,7 +1142,7 @@ abstract class ArtifactInput {
     var projectCompileExplodedAars: ArtifactCollection? = null
 
     @get:InputFiles
-    @get:PathSensitive(PathSensitivity.ABSOLUTE)
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     @get:Optional
     abstract val projectRuntimeLintModelsFileCollection: ConfigurableFileCollection
 
@@ -1141,7 +1150,7 @@ abstract class ArtifactInput {
     abstract val projectRuntimeLintModels: Property<ArtifactCollection>
 
     @get:InputFiles
-    @get:PathSensitive(PathSensitivity.ABSOLUTE)
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     @get:Optional
     abstract val projectCompileLintModelsFileCollection: ConfigurableFileCollection
 
@@ -1149,7 +1158,7 @@ abstract class ArtifactInput {
     abstract val projectCompileLintModels: Property<ArtifactCollection>
 
     @get:InputFiles
-    @get:PathSensitive(PathSensitivity.ABSOLUTE)
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     @get:Optional
     abstract val baseModuleLintModelFileCollection: ConfigurableFileCollection
 

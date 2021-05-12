@@ -135,7 +135,7 @@ abstract class BaseExtension protected constructor(
         set(_) {
             dslServices.deprecationReporter.reportObsoleteUsage(
                     "defaultPublishConfig",
-                    DeprecationReporter.DeprecationTarget.VERSION_8_0
+                    DeprecationReporter.DeprecationTarget.DEFAULT_PUBLISH_CONFIG
             )
         }
 

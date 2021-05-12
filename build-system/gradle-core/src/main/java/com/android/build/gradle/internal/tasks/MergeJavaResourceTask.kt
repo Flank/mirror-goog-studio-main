@@ -267,7 +267,7 @@ abstract class MergeJavaResourceTask
             task.cacheDir = File(task.intermediateDir, "zip-cache")
             task.incrementalStateFile = File(task.intermediateDir, "merge-state")
             if (creationConfig is ApkCreationConfig) {
-                task.noCompress.set(creationConfig.globalScope.extension.aaptOptions.noCompress)
+                task.noCompress.set(creationConfig.services.projectInfo.getExtension().aaptOptions.noCompress)
             }
             task.noCompress.disallowChanges()
         }
@@ -311,7 +311,7 @@ fun getProjectJavaRes(
     )
     javaRes.from(creationConfig.variantData.allPreJavacGeneratedBytecode)
     javaRes.from(creationConfig.variantData.allPostJavacGeneratedBytecode)
-    if (creationConfig.globalScope.extension.aaptOptions.namespaced) {
+    if (creationConfig.services.projectInfo.getExtension().aaptOptions.namespaced) {
         javaRes.from(creationConfig.artifacts.get(RUNTIME_R_CLASS_CLASSES))
     }
     if (creationConfig.packageJacocoRuntime) {

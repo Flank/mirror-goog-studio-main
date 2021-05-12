@@ -21,6 +21,7 @@ import com.android.build.gradle.integration.common.truth.ScannerSubject.Companio
 import com.android.build.gradle.integration.connected.utils.getEmulator
 import com.android.testutils.TestUtils
 import com.android.testutils.truth.PathSubject.assertThat
+import com.google.common.truth.Truth.assertThat
 import org.junit.Before
 import org.junit.ClassRule
 import org.junit.Rule
@@ -37,6 +38,7 @@ class UtpConnectedTest {
         @JvmField
         val EMULATOR = getEmulator()
 
+        const val LOGCAT = "build/outputs/androidTest-results/connected/emulator-5554 - 10/logcat-com.example.android.kotlin.ExampleInstrumentedTest-useAppContext.txt"
         const val TEST_REPORT = "build/reports/androidTests/connected/com.example.android.kotlin.html"
         const val TEST_RESULT_PB = "build/outputs/androidTest-results/connected/emulator-5554 - 10/test-result.pb"
         const val ENABLE_UTP_TEST_REPORT_PROPERTY = "com.android.tools.utp.GradleAndroidProjectResolverExtension.enable"
@@ -157,5 +159,20 @@ class UtpConnectedTest {
         }
         assertThat(project.file(testReportPath)).exists()
         assertThat(project.file(testResultPbPath)).exists()
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun connectedAndroidTestWithLogcat() {
+        val testTaskName = ":app:connectedAndroidTest"
+        val testLogcatPath = "app/$LOGCAT"
+
+        project.executor().run(testTaskName)
+
+        assertThat(project.file(testLogcatPath)).exists()
+        val logcatText = project.file(testLogcatPath).readText()
+        assertThat(logcatText).contains("TestRunner: started: useAppContext(com.example.android.kotlin.ExampleInstrumentedTest)")
+        assertThat(logcatText).contains("TestLogger: test logs")
+        assertThat(logcatText).contains("TestRunner: finished: useAppContext(com.example.android.kotlin.ExampleInstrumentedTest)")
     }
 }

@@ -59,14 +59,14 @@ interface VariantFactory<VariantBuilderT : VariantBuilderImpl, VariantT : Varian
 
     fun createVariantBuilder(
             componentIdentity: ComponentIdentity,
-            variantDslInfo: VariantDslInfo,
+            variantDslInfo: VariantDslInfo<*>,
             variantApiServices: VariantApiServices): VariantBuilderT
 
     fun createVariant(
             variantBuilder: VariantBuilderT,
             componentIdentity: ComponentIdentity,
             buildFeatures: BuildFeatureValues,
-            variantDslInfo: VariantDslInfo,
+            variantDslInfo: VariantDslInfo<*>,
             variantDependencies: VariantDependencies,
             variantSources: VariantSources,
             paths: VariantPathHelper,
@@ -80,7 +80,7 @@ interface VariantFactory<VariantBuilderT : VariantBuilderImpl, VariantT : Varian
     fun createTestFixtures(
         componentIdentity: ComponentIdentity,
         buildFeatures: BuildFeatureValues,
-        variantDslInfo: VariantDslInfo,
+        variantDslInfo: VariantDslInfo<*>,
         variantDependencies: VariantDependencies,
         variantSources: VariantSources,
         paths: VariantPathHelper,
@@ -95,7 +95,7 @@ interface VariantFactory<VariantBuilderT : VariantBuilderImpl, VariantT : Varian
     fun createUnitTest(
             componentIdentity: ComponentIdentity,
             buildFeatures: BuildFeatureValues,
-            variantDslInfo: VariantDslInfo,
+            variantDslInfo: VariantDslInfo<*>,
             variantDependencies: VariantDependencies,
             variantSources: VariantSources,
             paths: VariantPathHelper,
@@ -110,7 +110,7 @@ interface VariantFactory<VariantBuilderT : VariantBuilderImpl, VariantT : Varian
     fun createAndroidTest(
             componentIdentity: ComponentIdentity,
             buildFeatures: BuildFeatureValues,
-            variantDslInfo: VariantDslInfo,
+            variantDslInfo: VariantDslInfo<*>,
             variantDependencies: VariantDependencies,
             variantSources: VariantSources,
             paths: VariantPathHelper,
@@ -124,7 +124,7 @@ interface VariantFactory<VariantBuilderT : VariantBuilderImpl, VariantT : Varian
 
     fun createVariantData(
             componentIdentity: ComponentIdentity,
-            variantDslInfo: VariantDslInfo,
+            variantDslInfo: VariantDslInfo<*>,
             variantDependencies: VariantDependencies,
             variantSources: VariantSources,
             paths: VariantPathHelper,

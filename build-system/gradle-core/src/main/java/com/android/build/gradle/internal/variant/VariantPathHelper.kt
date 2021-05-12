@@ -32,7 +32,7 @@ import java.util.Locale
 
 class VariantPathHelper(
     val buildDirectory: DirectoryProperty,
-    private val variantDslInfo: VariantDslInfo,
+    private val variantDslInfo: VariantDslInfo<*>,
     private val dslServices: DslServices
 ) {
 

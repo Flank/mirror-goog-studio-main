@@ -401,7 +401,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
                         AndroidArtifacts.ArtifactType.FEATURE_NAME
                     )
             }
-            if (!globalScope.extension.aaptOptions.namespaced) {
+            if (!creationConfig.services.projectInfo.getExtension().aaptOptions.namespaced) {
                 task.navigationJsons = project.files(
                     creationConfig.artifacts.get(NAVIGATION_JSON),
                     creationConfig

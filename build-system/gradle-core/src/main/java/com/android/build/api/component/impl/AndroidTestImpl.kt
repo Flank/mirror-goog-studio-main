@@ -55,7 +55,7 @@ import javax.inject.Inject
 open class AndroidTestImpl @Inject constructor(
     componentIdentity: ComponentIdentity,
     buildFeatureValues: BuildFeatureValues,
-    variantDslInfo: VariantDslInfo,
+    variantDslInfo: VariantDslInfo<*>,
     variantDependencies: VariantDependencies,
     variantSources: VariantSources,
     paths: VariantPathHelper,
@@ -130,7 +130,7 @@ open class AndroidTestImpl @Inject constructor(
 
     override val androidResources: AndroidResources by lazy {
         initializeAaptOptionsFromDsl(
-                globalScope.extension.aaptOptions,
+                taskCreationServices.projectInfo.getExtension().aaptOptions,
                 variantPropertiesApiServices
         )
     }
@@ -207,6 +207,11 @@ open class AndroidTestImpl @Inject constructor(
                 variantDslInfo.getResValues()
         )
     }
+
+    override val properties: MapProperty<String, Any> = internalServices.mapPropertyOf(
+            String::class.java,
+            Any::class.java,
+            variantDslInfo.properties)
 
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API

@@ -352,6 +352,24 @@ class LintDynamicFeatureTest(private val usePartialAnalysis: Boolean) {
         assertThat(project.buildResult.tasks).doesNotContain(":feature2:lintFixDebug")
     }
 
+    // Regression test for b/186772704 and b/187319075
+    @Test
+    fun testNoMisplacedOutputFiles() {
+        TestFileUtils.appendToFile(
+            project.getSubproject(":app").buildFile,
+            "\n\nbuildDir 'foo'\n\n"
+        )
+        project.getExecutor().run("app:clean", ":app:lintDebug")
+        val defaultAppBuildDir = File(project.getSubproject(":app").projectDir, "build")
+        assertThat(!defaultAppBuildDir.exists() || defaultAppBuildDir.walk().none { it.isFile })
+            .isTrue()
+        val appBuildDir = File(project.getSubproject(":app").projectDir, "foo")
+        assertThat(appBuildDir).exists()
+        if (usePartialAnalysis) {
+            appBuildDir.listFiles()?.forEach { assertThat(it).isDirectory() }
+        }
+    }
+
     private fun GradleTestProject.getExecutor(): GradleTaskExecutor =
         this.executor().with(BooleanOption.USE_LINT_PARTIAL_ANALYSIS, usePartialAnalysis)
 }

@@ -67,6 +67,26 @@ class HumanReadableProfileTests {
     }
 
     @Test
+    fun testFuzzyClassMatch() {
+        val hrp = HumanReadableProfile("Lcom/**")
+        assertThat(hrp.match("Lcom/anything/can/go/here;")).isEqualTo(STARTUP)
+        assertThat(hrp.match("LFoo;")).isEqualTo(0)
+    }
+
+    @Test
+    fun testComments() {
+        val hrp = HumanReadableProfile(
+                "# Test Comment",
+                "# Test Comment",
+                "Lcom/anything/can/go/here;",
+                "# Test Comment",
+                "# Test Comment",
+        )
+        assertThat(hrp.match("Lcom/anything/can/go/here;")).isEqualTo(MethodFlags.STARTUP)
+        assertThat(hrp.match("LFoo;")).isEqualTo(0)
+    }
+
+    @Test
     fun testExactMethodMatch() {
         with(HumanReadableProfile("HSLcom/anything/can/go/here;->method()I")) {
             assertMethodFlags("Lcom/anything/can/go/here;->method()I", HOT or STARTUP)
@@ -113,7 +133,7 @@ class HumanReadableProfileTests {
     internal fun forLine(hrpLine: String, test: LineTestScope.() -> Unit) = LineTestScope(hrpLine).test()
 
     fun assertMatches(hrpLine: String, vararg matches: String) {
-        val line = parseRule(hrpLine)
+        val line = parseRule(hrpLine) ?: error("Line didn't parse successfully")
         for (it in matches) {
             val method = parseDexMethod(it)
             assertTrue(
@@ -137,7 +157,7 @@ internal class LineTestScope(private val hrpLine: String) {
         for (it in lines) {
             val method = parseDexMethod(it)
             assertTrue(
-                line.matches(method),
+                line!!.matches(method),
                 """Expected match.
                 Line : $hrpLine
                 Match: $it
@@ -149,7 +169,7 @@ internal class LineTestScope(private val hrpLine: String) {
         for (it in lines) {
             val method = parseDexMethod(it)
             assertFalse(
-                line.matches(method),
+                line!!.matches(method),
                 """Expected not to match.
                 Line : $hrpLine
                 Match: $it

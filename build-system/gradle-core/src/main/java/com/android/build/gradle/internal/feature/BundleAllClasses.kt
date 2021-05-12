@@ -171,7 +171,7 @@ abstract class BundleAllClasses : NonIncrementalTask() {
                     creationConfig.variantData.allPreJavacGeneratedBytecode,
                     creationConfig.variantData.allPostJavacGeneratedBytecode
                 )
-                if (creationConfig.globalScope.extension.aaptOptions.namespaced) {
+                if (creationConfig.services.projectInfo.getExtension().aaptOptions.namespaced) {
                     task.inputJars.from(
                         creationConfig.artifacts.get(
                             InternalArtifactType.COMPILE_R_CLASS_JAR

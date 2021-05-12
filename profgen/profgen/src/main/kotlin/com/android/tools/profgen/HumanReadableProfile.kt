@@ -285,6 +285,10 @@ internal fun parseRule(
 ): ProfileRule? {
     var i = 0
     try {
+        if (line[i] == COMMENT_START) {
+            // If the line starts with a comment, the entire line gets skipped
+            return null
+        }
         val flags = Flags().apply { i = parseFlags(line, i) }
         val targetIndex = i
         i = fragmentParser.parseTarget(line, i)
@@ -294,8 +298,13 @@ internal fun parseRule(
             if (flags.flags != 0) {
                 throw ParsingException(0, flagsForClassRuleMessage(line.substring(0, targetIndex)))
             }
-            return ProfileRule(flags.flags, target,
-                RuleFragment.Empty, RuleFragment.Empty, RuleFragment.Empty)
+            return ProfileRule(
+                    MethodFlags.STARTUP,
+                    target,
+                    RuleFragment.Empty,
+                    RuleFragment.Empty,
+                    RuleFragment.Empty
+            )
         }
         i = consume(METHOD_SEPARATOR_START, line, i)
         i = consume(METHOD_SEPARATOR_END, line, i)

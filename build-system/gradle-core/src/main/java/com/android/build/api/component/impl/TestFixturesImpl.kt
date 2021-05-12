@@ -53,7 +53,7 @@ import javax.inject.Inject
 open class TestFixturesImpl @Inject constructor(
     componentIdentity: ComponentIdentity,
     buildFeatureValues: BuildFeatureValues,
-    variantDslInfo: VariantDslInfo,
+    variantDslInfo: VariantDslInfo<*>,
     variantDependencies: VariantDependencies,
     variantSources: VariantSources,
     paths: VariantPathHelper,

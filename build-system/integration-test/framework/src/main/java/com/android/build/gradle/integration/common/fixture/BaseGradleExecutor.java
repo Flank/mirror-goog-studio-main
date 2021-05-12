@@ -55,6 +55,7 @@ import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import kotlin.io.FilesKt;
 import org.apache.commons.io.output.TeeOutputStream;
 import org.gradle.tooling.CancellationTokenSource;
 import org.gradle.tooling.ConfigurableLauncher;
@@ -303,7 +304,7 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
 
         for (File buildFile :
                 FileUtils.find(rootProject.getProjectDir(), Pattern.compile("build\\.gradle"))) {
-            if (Files.readAllLines(buildFile.toPath()).stream()
+            if (FilesKt.readLines(buildFile, Charsets.UTF_8).stream()
                     .anyMatch(
                             s ->
                                     s.contains("apply plugin: 'kotlin'")

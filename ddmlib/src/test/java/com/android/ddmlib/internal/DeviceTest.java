@@ -97,10 +97,20 @@ public class DeviceTest extends TestCase {
     @SuppressWarnings("unchecked")
     public static void injectShellResponse(IDevice mockDevice, final String response)
             throws Exception {
+        injectShellResponse(mockDevice, response, 50);
+    }
+
+    /**
+     * Helper method that sets the mock device to return the given response on a shell command. The
+     * {@code delayMillis} parameter allows simulating device latency, by delaying the response
+     */
+    @SuppressWarnings("unchecked")
+    public static void injectShellResponse(
+            IDevice mockDevice, final String response, int delayMillis) throws Exception {
         IAnswer<Object> shellAnswer =
                 () -> {
                     // insert small delay to simulate latency
-                    Thread.sleep(50);
+                    Thread.sleep(delayMillis);
                     IShellOutputReceiver receiver =
                             (IShellOutputReceiver) EasyMock.getCurrentArguments()[1];
                     byte[] inputData = response.getBytes();

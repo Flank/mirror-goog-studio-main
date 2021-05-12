@@ -183,10 +183,6 @@ fun View.createResource(stringTable: StringTable, resourceId: Int): Resource? {
 
 fun View.createAppContext(stringTable: StringTable): AppContext {
     return AppContext.newBuilder().apply {
-        apiLevel = Build.VERSION.SDK_INT
-        apiCodeName = stringTable.put(Build.VERSION.CODENAME)
-        appPackageName = stringTable.put(context.packageName)
-
         createResource(stringTable, context.themeResId)?.let { themeResource ->
             theme = themeResource
         }
