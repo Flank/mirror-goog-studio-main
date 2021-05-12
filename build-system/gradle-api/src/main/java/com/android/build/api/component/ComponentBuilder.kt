@@ -16,13 +16,10 @@
 
 package com.android.build.api.component
 
-import org.gradle.api.Incubating
-
 /**
  * Component object that contains properties that must be set during configuration time as it
  * changes the build flow for the variant.
  */
-@Incubating
 interface ComponentBuilder: ComponentIdentity {
 
     /**

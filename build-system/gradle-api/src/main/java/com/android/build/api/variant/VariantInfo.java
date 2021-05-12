@@ -18,7 +18,6 @@ package com.android.build.api.variant;
 
 import com.android.annotations.NonNull;
 import com.google.common.collect.ImmutableList;
-import org.gradle.api.Incubating;
 
 /**
  * Information about the variant being built.
@@ -27,7 +26,6 @@ import org.gradle.api.Incubating;
  *
  * <p>Immutable, no access to tasks
  */
-@Incubating
 public interface VariantInfo {
 
     /** Returns the name of the variant. This is composed of the build types and flavors */

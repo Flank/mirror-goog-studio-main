@@ -17,14 +17,12 @@
 package com.android.build.api.extension
 
 import com.android.build.api.component.ComponentIdentity
-import org.gradle.api.Incubating
 import java.util.regex.Pattern
 
 /**
  * Selector to reduce the number of variants that are of interests when calling any of the
  * variant API like [AndroidComponentsExtension.beforeVariants].
  */
-@Incubating
 interface VariantSelector {
     /**
      * Creates a [VariantSelector] of [ComponentIdentity]that includes all the variants for the

@@ -16,8 +16,6 @@
 
 package com.android.build.api.variant
 
-import org.gradle.api.Incubating
-
 /**
  * Marker type for [Variant] extension objects.
  *
@@ -25,5 +23,4 @@ import org.gradle.api.Incubating
  * [com.android.build.api.extension.AndroidComponentsExtension.registerExtension] API and can be
  * retrieved from a [Variant] instance using the [Variant.getExtension] API.
  */
-@Incubating
 interface VariantExtension

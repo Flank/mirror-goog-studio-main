@@ -15,14 +15,12 @@
  */
 package com.android.build.api.variant
 
-import org.gradle.api.Incubating
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 
 /**
  * [Variant] for test-only modules.
  */
-@Incubating
 interface TestVariant: GeneratesTestApk, Variant {
     /**
      * Variant's application ID as present in the final manifest file of the APK.

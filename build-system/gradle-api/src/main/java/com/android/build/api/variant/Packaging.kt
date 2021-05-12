@@ -16,12 +16,9 @@
 
 package com.android.build.api.variant
 
-import org.gradle.api.Incubating
-
 /**
  * Defines a variant's packaging options.
  */
-@Incubating
 interface Packaging {
 
     /** PackagingOptions for native libraries. Initialized from the corresponding DSL. */

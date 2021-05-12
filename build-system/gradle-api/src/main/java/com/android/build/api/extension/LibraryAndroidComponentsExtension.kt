@@ -19,13 +19,11 @@ package com.android.build.api.extension
 import com.android.build.api.dsl.LibraryExtension
 import com.android.build.api.variant.LibraryVariant
 import com.android.build.api.variant.LibraryVariantBuilder
-import org.gradle.api.Incubating
 
 /**
  * Extension for Library module variant.
  *
  * A library module is created when a build script is applying the 'com.android.library' plugin.
  */
-@Incubating
 interface LibraryAndroidComponentsExtension:
         AndroidComponentsExtension<LibraryExtension, LibraryVariantBuilder, LibraryVariant>

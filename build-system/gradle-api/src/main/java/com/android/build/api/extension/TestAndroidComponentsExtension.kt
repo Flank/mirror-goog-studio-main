@@ -19,13 +19,11 @@ package com.android.build.api.extension
 import com.android.build.api.dsl.TestExtension
 import com.android.build.api.variant.TestVariant
 import com.android.build.api.variant.TestVariantBuilder
-import org.gradle.api.Incubating
 
 /**
  * Extension for Test module variant.
  *
  * A test module is created when a build script is applying the 'com.android.test' plugin.
  */
-@Incubating
 interface TestAndroidComponentsExtension:
         AndroidComponentsExtension<TestExtension, TestVariantBuilder, TestVariant>

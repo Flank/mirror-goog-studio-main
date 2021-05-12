@@ -18,7 +18,6 @@ package com.android.build.api.artifact
 
 import com.android.build.api.variant.BuiltArtifact
 import com.android.build.api.variant.BuiltArtifacts
-import org.gradle.api.Incubating
 import org.gradle.api.Task
 import org.gradle.api.file.Directory
 import org.gradle.workers.WorkAction
@@ -97,7 +96,6 @@ import java.util.function.Supplier
  * ```
  *
  */
-@Incubating
 interface ArtifactTransformationRequest<TaskT: Task> {
 
     /**

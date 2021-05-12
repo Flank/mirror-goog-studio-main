@@ -16,12 +16,9 @@
 
 package com.android.build.api.variant
 
-import org.gradle.api.Incubating
-
 /**
  * Represents a built artifact that is present in the file system.
  */
-@Incubating
 interface BuiltArtifact: VariantOutputConfiguration {
 
     /**

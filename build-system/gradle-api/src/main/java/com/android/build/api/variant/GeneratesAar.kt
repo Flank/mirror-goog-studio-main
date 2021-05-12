@@ -16,10 +16,6 @@
 
 package com.android.build.api.variant
 
-import org.gradle.api.Incubating
-import org.gradle.api.component.Component
-
-@Incubating
 interface GeneratesAar {
 
     /**

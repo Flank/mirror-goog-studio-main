@@ -16,15 +16,11 @@
 
 package com.android.build.api.variant
 
-import org.gradle.api.Incubating
-
-@Incubating
 interface VariantOutputConfiguration {
     /**
      * Type of package file, either the main APK or a full split APK file containing resources for a
      * particular split dimension.
      */
-    @Incubating
     enum class OutputType {
         SINGLE,
         ONE_OF_MANY,

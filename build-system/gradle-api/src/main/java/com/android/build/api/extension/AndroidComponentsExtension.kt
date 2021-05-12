@@ -17,16 +17,13 @@
 package com.android.build.api.extension
 
 import com.android.build.api.AndroidPluginVersion
-import com.android.build.api.component.AndroidTest
 import com.android.build.api.component.ComponentBuilder
-import com.android.build.api.component.UnitTest
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.SdkComponents
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
 import com.android.build.api.variant.VariantExtension
 import org.gradle.api.Action
-import org.gradle.api.Incubating
 
 /**
  * Generic extension for Android Gradle Plugin related components.
@@ -36,7 +33,6 @@ import org.gradle.api.Incubating
  *
  * @param VariantBuilderT the [ComponentBuilder] type produced by this variant.
  */
-@Incubating
 interface AndroidComponentsExtension<
         DslExtensionT: CommonExtension<*, *, *, *>,
         VariantBuilderT: VariantBuilder,
@@ -65,7 +61,6 @@ interface AndroidComponentsExtension<
     /**
      * The version of the Android Gradle Plugin currently in use.
      */
-    @get:Incubating
     val pluginVersion: AndroidPluginVersion
 
     /**

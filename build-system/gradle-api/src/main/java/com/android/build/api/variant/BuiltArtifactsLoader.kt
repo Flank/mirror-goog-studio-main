@@ -16,7 +16,6 @@
 
 package com.android.build.api.variant
 
-import org.gradle.api.Incubating
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
 
@@ -39,7 +38,6 @@ import org.gradle.api.file.FileCollection
  * Implementation of this interface can be obtained from
  * [com.android.build.api.artifact.Artifacts.getBuiltArtifactsLoader]
  */
-@Incubating
 interface BuiltArtifactsLoader {
 
     /**

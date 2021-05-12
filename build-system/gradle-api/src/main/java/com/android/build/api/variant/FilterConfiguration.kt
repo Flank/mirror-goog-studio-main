@@ -16,13 +16,9 @@
 
 package com.android.build.api.variant
 
-import org.gradle.api.Incubating
-import java.io.Serializable
-
 /**
  * Immutable filter configuration.
  */
-@Incubating
 interface FilterConfiguration {
 
     /**
@@ -37,7 +33,6 @@ interface FilterConfiguration {
     val identifier: String
 
     /** Split dimension type  */
-    @Incubating
     enum class FilterType {
         DENSITY,
         ABI,
