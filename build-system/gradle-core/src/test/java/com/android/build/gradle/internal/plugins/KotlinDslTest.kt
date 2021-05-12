@@ -460,4 +460,18 @@ class KotlinDslTest {
             it.isShrinkResources = true
         }
     }
+
+    @Test
+    fun `compatibility for missingDimensionStrategy on productFlavor`() {
+        android.productFlavors.create("example").apply {
+            missingDimensionStrategy("minApi", "minApi18", "minApi23")
+        }
+    }
+
+    @Test
+    fun `compatibility for missingDimensionStrategy on defaultConfig`() {
+        android.defaultConfig.apply {
+            missingDimensionStrategy("minApi", "minApi18", "minApi23")
+        }
+    }
 }
