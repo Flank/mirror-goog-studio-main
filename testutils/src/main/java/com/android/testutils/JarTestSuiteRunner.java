@@ -70,6 +70,7 @@ public class JarTestSuiteRunner extends Suite {
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.TYPE)
     public @interface ExcludeClasses {
+
         Class<?>[] value();
     }
 
@@ -79,7 +80,8 @@ public class JarTestSuiteRunner extends Suite {
 
     private final boolean isBazelIntegrationTestsSuite;
 
-    public JarTestSuiteRunner(Class<?> suiteClass, RunnerBuilder builder) throws InitializationError, ClassNotFoundException, IOException {
+    public JarTestSuiteRunner(Class<?> suiteClass, RunnerBuilder builder)
+            throws InitializationError, ClassNotFoundException, IOException {
         super(new DelegatingRunnerBuilder(builder), suiteClass, getTestClasses(suiteClass));
         isBazelIntegrationTestsSuite =
                 suiteClass
@@ -145,7 +147,8 @@ public class JarTestSuiteRunner extends Suite {
         }
     }
 
-    private static Class<?>[] getTestClasses(Class<?> suiteClass) throws ClassNotFoundException, IOException {
+    private static Class<?>[] getTestClasses(Class<?> suiteClass)
+            throws ClassNotFoundException, IOException {
         List<Class<?>> testClasses = new ArrayList<>();
         String name = System.getProperty("test.suite.jar");
         if (name == null) {
@@ -221,20 +224,30 @@ public class JarTestSuiteRunner extends Suite {
     }
 
     /** Putatively temporary mechanism to avoid running certain classes. */
-    private static Set<String> classNamesToExclude(Class<?> suiteClass, List<Class<?>> testClasses) {
-        Set<String> testClassNames = testClasses.stream().map(Class::getCanonicalName).collect(Collectors.toSet());
+    private static Set<String> classNamesToExclude(
+            Class<?> suiteClass, List<Class<?>> testClasses) {
+        Set<String> testClassNames =
+                testClasses.stream().map(Class::getCanonicalName).collect(Collectors.toSet());
         Set<String> excludeClassNames = new HashSet<>();
         ExcludeClasses annotation = suiteClass.getAnnotation(ExcludeClasses.class);
         if (annotation != null) {
             for (Class<?> classToExclude : annotation.value()) {
                 String className = classToExclude.getCanonicalName();
                 if (!excludeClassNames.add(className)) {
-                    throw new RuntimeException(String.format(
-                      "on %s, %s value duplicated: %s", suiteClass.getSimpleName(), ExcludeClasses.class.getSimpleName(), className));
+                    throw new RuntimeException(
+                            String.format(
+                                    "on %s, %s value duplicated: %s",
+                                    suiteClass.getSimpleName(),
+                                    ExcludeClasses.class.getSimpleName(),
+                                    className));
                 }
                 if (!testClassNames.contains(className)) {
-                    throw new RuntimeException(String.format(
-                      "on %s, %s value not found: %s", suiteClass.getSimpleName(), ExcludeClasses.class.getSimpleName(), className));
+                    throw new RuntimeException(
+                            String.format(
+                                    "on %s, %s value not found: %s",
+                                    suiteClass.getSimpleName(),
+                                    ExcludeClasses.class.getSimpleName(),
+                                    className));
                 }
             }
         }
@@ -250,7 +263,8 @@ public class JarTestSuiteRunner extends Suite {
                 ZipEntry ze;
                 while ((ze = zis.getNextEntry()) != null) {
                     if (ze.getName().endsWith(".class")) {
-                        String className = ze.getName().replaceAll("/", ".").replaceAll(".class$", "");
+                        String className =
+                                ze.getName().replaceAll("/", ".").replaceAll(".class$", "");
                         Class<?> aClass = loader.loadClass(className);
                         if (seemsLikeJUnit4(aClass) || seemsLikeJUnit3(aClass)) {
                             testClasses.add(aClass);
@@ -258,7 +272,8 @@ public class JarTestSuiteRunner extends Suite {
                     }
                 }
             } catch (ZipException e) {
-                System.err.println("Error while opening jar " + file.getName() + " : " + e.getMessage());
+                System.err.println(
+                        "Error while opening jar " + file.getName() + " : " + e.getMessage());
             }
         }
         return testClasses;
@@ -296,7 +311,8 @@ public class JarTestSuiteRunner extends Suite {
 
     private static boolean seemsLikeJUnit4(Class<?> aClass) {
         Predicate<Method> hasTestAnnotation = method -> method.isAnnotationPresent(Test.class);
-        return aClass.isAnnotationPresent(RunWith.class)
-                || Arrays.stream(aClass.getMethods()).anyMatch(hasTestAnnotation);
+        return (aClass.isAnnotationPresent(RunWith.class)
+                        || Arrays.stream(aClass.getMethods()).anyMatch(hasTestAnnotation))
+                && !Modifier.isAbstract(aClass.getModifiers());
     }
 }
