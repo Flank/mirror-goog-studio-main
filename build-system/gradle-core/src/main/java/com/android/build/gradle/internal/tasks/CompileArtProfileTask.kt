@@ -106,7 +106,7 @@ abstract class CompileArtProfileTask: NonIncrementalTask() {
 
     override fun doTaskAction() {
         // if we do not have a merged human readable profile, just return.
-        if (!mergedArtProfile.isPresent) return
+        if (!mergedArtProfile.isPresent || !mergedArtProfile.get().asFile.exists()) return
 
         workerExecutor.noIsolation().submit(CompileArtProfileWorkAction::class.java) {
             it.initializeFromAndroidVariantTask(this)
