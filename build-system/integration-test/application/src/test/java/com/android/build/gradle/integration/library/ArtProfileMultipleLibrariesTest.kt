@@ -56,17 +56,48 @@ class ArtProfileMultipleLibrariesTest {
     ).create()
 
     @Test
-    fun testMultipleLibraryComposeMerging() {
+    fun testMultipleLibraryArtProfileMerging() {
+        testMultipleLibrariesAndOptionalApplicationArtProfileMerging(false)
+    }
 
-        project.getSubproject(":app").buildFile.appendText(
+    @Test
+    fun testMultipleLibraryWithApplicationArtProfileMerging() {
+        testMultipleLibrariesAndOptionalApplicationArtProfileMerging(true)
+    }
+
+    private fun testMultipleLibrariesAndOptionalApplicationArtProfileMerging(
+        addApplicationProfile: Boolean
+    ) {
+
+        val app = project.getSubproject(":app").also {
+            it.buildFile.appendText(
                 """
-                    android {
-                        defaultConfig {
-                            minSdkVersion = 28
+                        android {
+                            defaultConfig {
+                                minSdkVersion = 28
+                            }
                         }
-                    }
+                    """.trimIndent()
+            )
+        }
+
+        val applicationFileContent =
+            """
+                    HSPLcom/google/Foo;->appMethod(II)I
+                    HSPLcom/google/Foo;->appMethod-name-with-hyphens(II)I
                 """.trimIndent()
-        )
+
+        if (addApplicationProfile) {
+            val appAndroidAssets = app.mainSrcDir.parentFile
+            appAndroidAssets.mkdir()
+
+            File(
+                appAndroidAssets,
+                SdkConstants.FN_ART_PROFILE
+            ).writeText(
+                applicationFileContent
+            )
+        }
 
         for (i in 1..3) {
             val library = project.getSubproject(":lib$i")
@@ -118,6 +149,9 @@ class ArtProfileMultipleLibrariesTest {
                     Truth.assertThat(fileContent).isEqualTo(expectedFileContent.toByteArray())
                 }
             }
+        }
+        if (addApplicationProfile) {
+            finalFileContent = finalFileContent.plus("$applicationFileContent\n")
         }
 
         val mergedFile = FileUtils.join(
