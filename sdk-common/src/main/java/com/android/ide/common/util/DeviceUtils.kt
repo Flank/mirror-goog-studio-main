@@ -69,7 +69,7 @@ private class Receiver : MultiLineReceiver() {
     override fun isCancelled() = false
 }
 
-private val MDNS_AUTO_CONNECT_TLS_REGEX = Regex(".*_adb-tls-connect\\._tcp\\.?")
+private val MDNS_AUTO_CONNECT_TLS_REGEX = Regex("adb-(.*)-.*\\._adb-tls-connect\\._tcp\\.?")
 
 private const val MDNS_UNENCRYPTED_SUFFIX = "_adb._tcp."
 
@@ -93,6 +93,35 @@ val IDevice.isMdnsAutoConnectTls : Boolean
  */
 val IDevice.isMdnsAutoConnectUnencrypted : Boolean
     get() = isMdnsAutoConnectUnencrypted(this.serialNumber)
+
+/**
+ * If this device is identified with 86UX00F4R, returns true for an argument like
+ * adb-86UX00F4R-cYuns7._adb-tls-connect._tcp and vice versa
+ */
+fun IDevice.isSameAsDeviceWith(key: String): Boolean {
+    if (serialNumber == key) {
+        return true
+    }
+
+    if (isMdnsAutoConnectTls(key)) {
+        if (isMdnsAutoConnectTls(serialNumber)) {
+            return false
+        }
+
+        return areForSameDevice(key, serialNumber)
+    }
+
+    if (!isMdnsAutoConnectTls(serialNumber)) {
+        return false
+    }
+
+    return areForSameDevice(serialNumber, key)
+}
+
+fun areForSameDevice(domainName: String, serialNumber: String): Boolean {
+    assert(isMdnsAutoConnectTls(domainName))
+    return MDNS_AUTO_CONNECT_TLS_REGEX.find(domainName)!!.groupValues[1] == serialNumber
+}
 
 fun isMdnsAutoConnectTls(serialNumber: String): Boolean {
     return MDNS_AUTO_CONNECT_TLS_REGEX.matches(serialNumber)

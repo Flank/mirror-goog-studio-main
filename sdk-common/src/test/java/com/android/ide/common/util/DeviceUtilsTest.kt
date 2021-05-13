@@ -107,6 +107,68 @@ class DeviceUtilsTest {
         Truth.assertThat(isTls).isTrue()
     }
 
+    @Test
+    fun testIsSameAsDeviceWithSerialNumberEqualsKey() {
+        // Prepare
+        setUpDeviceSerialNumber("serialNumber1")
+
+        // Act
+        val sameAsDeviceWith = device.isSameAsDeviceWith("serialNumber1")
+
+        // Assert
+        Truth.assertThat(sameAsDeviceWith).isTrue()
+    }
+
+    @Test
+    fun testIsSameAsDeviceWithSerialNumberIsMdnsAutoConnectTls() {
+        // Prepare
+        setUpDeviceSerialNumber("adb-serialNumber1-cYuns7._adb-tls-connect._tcp")
+
+        // Act
+        val sameAsDeviceWith =
+            device.isSameAsDeviceWith("adb-serialNumber2-cYuns7._adb-tls-connect._tcp")
+
+        // Assert
+        Truth.assertThat(sameAsDeviceWith).isFalse()
+    }
+
+    @Test
+    fun testIsSameAsDeviceWithKeyIsMdnsAutoConnectTls() {
+        // Prepare
+        setUpDeviceSerialNumber("serialNumber1")
+
+        // Act
+        val sameAsDeviceWith =
+            device.isSameAsDeviceWith("adb-serialNumber1-cYuns7._adb-tls-connect._tcp")
+
+        // Assert
+        Truth.assertThat(sameAsDeviceWith).isTrue()
+    }
+
+    @Test
+    fun testIsSameAsDeviceWithSerialNumberIsntMdnsAutoConnectTls() {
+        // Prepare
+        setUpDeviceSerialNumber("serialNumber1")
+
+        // Act
+        val sameAsDeviceWith = device.isSameAsDeviceWith("serialNumber2")
+
+        // Assert
+        Truth.assertThat(sameAsDeviceWith).isFalse()
+    }
+
+    @Test
+    fun testIsSameAsDeviceWith() {
+        // Prepare
+        setUpDeviceSerialNumber("adb-serialNumber1-cYuns7._adb-tls-connect._tcp")
+
+        // Act
+        val sameAsDeviceWith = device.isSameAsDeviceWith("serialNumber1")
+
+        // Assert
+        Truth.assertThat(sameAsDeviceWith).isTrue()
+    }
+
     private fun setUpDeviceSerialNumber(serialNumber: String) {
         Mockito.`when`(
             device.serialNumber
