@@ -252,7 +252,7 @@ public class AppInspectionService {
     }
 
     private static String createLabel(Class origin, String method) {
-        return origin.getCanonicalName() + "->" + method;
+        return origin.getName() + "->" + method;
     }
 
     public static void addEntryHook(

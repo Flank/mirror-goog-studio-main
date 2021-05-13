@@ -33,7 +33,7 @@ namespace {
 static std::string ConvertClass(JNIEnv* env, jclass cls) {
   jclass classClass = env->FindClass("java/lang/Class");
   jmethodID mid =
-      env->GetMethodID(classClass, "getCanonicalName", "()Ljava/lang/String;");
+      env->GetMethodID(classClass, "getName", "()Ljava/lang/String;");
 
   jstring strObj = (jstring)env->CallObjectMethod(cls, mid);
 

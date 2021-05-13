@@ -26,6 +26,18 @@ import java.util.List;
 /** A fake activity that tracks multiple to-do lists. */
 @SuppressWarnings("unused") // Accessed via reflection by perf-test
 public final class TodoActivity extends TransportTestActivity {
+    public final class InnerItem {
+        @NonNull
+        public TodoItem newItem() {
+            if (activeGroup == null) {
+                newGroup();
+            }
+            TodoItem item = new TodoItem("Item #" + (activeGroup.getItems().size() + 1));
+            activeGroup.addItem(item);
+            return item;
+        }
+    }
+
     private final List<TodoGroup> groups = new ArrayList<TodoGroup>();
     @Nullable private TodoGroup activeGroup = null;
 
@@ -77,6 +89,12 @@ public final class TodoActivity extends TransportTestActivity {
         TodoItem item = new TodoItem(name);
         activeGroup.addItem(item);
         return item;
+    }
+
+    /** Returns same result with [newItem()] but delegates [InnerItem.newItem(String)]. */
+    @NonNull
+    public TodoItem newInnerItem() {
+        return new InnerItem().newItem();
     }
 
     public void newCustomNamedItem() {

@@ -33,6 +33,7 @@ import test.inspector.api.TodoInspectorApi;
 public final class TodoInspector extends TestInspector {
     private static final String CLASS_TODO_GROUP = "com.activity.todo.TodoGroup";
     private static final String CLASS_TODO_ITEM = "com.activity.todo.TodoItem";
+    private static final String CLASS_TODO_INNER_ITEM = "com.activity.todo.TodoActivity$InnerItem";
     private static final String CLASS_TODO_ACTIVITY = "com.activity.todo.TodoActivity";
     private static final String CLASS_STRING = "java.lang.String";
     private static final String SIGNATURE_TODO_GROUP = toSignature(CLASS_TODO_GROUP);
@@ -50,6 +51,7 @@ public final class TodoInspector extends TestInspector {
     }
 
     private final Class<?> classItem;
+    private final Class<?> classItemInner;
     private final Class<?> classGroup;
     private final Class<?> classActivity;
     private boolean isDisposed;
@@ -59,12 +61,36 @@ public final class TodoInspector extends TestInspector {
 
         try {
             classItem = forName(CLASS_TODO_ITEM);
+            classItemInner = forName(CLASS_TODO_INNER_ITEM);
             classGroup = forName(CLASS_TODO_GROUP);
             classActivity = forName(CLASS_TODO_ACTIVITY);
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
         ArtTooling artTooling = environment.artTooling();
+        artTooling.registerEntryHook(
+                classItemInner,
+                "newItem()" + SIGNATURE_TODO_ITEM,
+                new EntryHook() {
+                    @Override
+                    public void onEntry(@Nullable Object self, @NonNull List<Object> params) {
+                        getConnection()
+                                .sendEvent(TodoInspectorApi.Event.TODO_ITEM_CREATING.toByteArray());
+                    }
+                });
+
+        artTooling.registerExitHook(
+                classItemInner,
+                "newItem()" + SIGNATURE_TODO_ITEM,
+                new ExitHook<Object>() {
+                    @Override
+                    public Object onExit(Object returnValue) {
+                        getConnection()
+                                .sendEvent(TodoInspectorApi.Event.TODO_ITEM_CREATED.toByteArray());
+                        return returnValue;
+                    }
+                });
+
         artTooling.registerEntryHook(
                 classActivity,
                 "newGroup()" + SIGNATURE_TODO_GROUP,
