@@ -28,7 +28,7 @@ readonly script_name="$(basename "$0")"
 readonly invocation_id=$(uuidgen | tr A-F a-f)
 
 readonly config_options="--config=local --config=release --config=resultstore"
-readonly target_filters="qa_sanity,ui_test,-qa_unreliable,-no_mac,-no_test_mac,-requires_emulator"
+readonly target_filters="qa_smoke,ui_test,-qa_unreliable,-no_mac,-no_test_mac,-requires_emulator"
 
 # Use test strategy to run 1 test at a time after all build dependencies are built
 "${script_dir}/../bazel" \

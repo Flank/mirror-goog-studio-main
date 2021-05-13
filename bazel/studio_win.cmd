@@ -27,7 +27,7 @@ IF "%DETECT_FLAKES%"=="--detect_flakes" (
   SET CONDITIONAL_FLAGS=!NOCACHE! !FLAKY_ATTEMPTS!
 )
 
-set TESTTAGFILTERS=-no_windows,-no_test_windows,-qa_sanity,-qa_fast,-qa_unreliable,-perfgate
+set TESTTAGFILTERS=-no_windows,-no_test_windows,-qa_smoke,-qa_fast,-qa_unreliable,-perfgate
 
 @rem The current directory the executing script is in.
 set SCRIPTDIR=%~dp0

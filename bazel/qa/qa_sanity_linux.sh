@@ -19,7 +19,7 @@ readonly crostini_timestamp_file="/buildbot/lastrun.out"
 if [[ $lsb_release == "crostini" ]]; then
   # don't use any remote cached items, some items built on Linux may not be compatible. b/172365127
   config_options="--config=resultstore"
-  target_filters=qa_sanity,ui_test,-qa_unreliable,-no_linux,-no_test_linux,-requires_emulator,-no_crostini
+  target_filters=qa_smoke,ui_test,-qa_unreliable,-no_linux,-no_test_linux,-requires_emulator,-no_crostini
 
   current_time=$(date +"%s")
 
@@ -104,14 +104,14 @@ else #Executes normally on linux as before
   # Generate a UUID for use as the bazel invocation id
   readonly invocation_id="$(uuidgen)"
 
-  # The sanity tests are ran in 2 groups.
+  # The smoke tests are ran in 2 groups.
   # The first group is all the tests that do not use an Android emulator.
   # The second group is all the tests that use the Android emulator.
   # We need to run in 2 groups because the 2 sets of tests run with different
   # options.
 
   # Run Bazel tests - no emulator tests should run here
-  target_filters=qa_sanity,ui_test,-qa_unreliable,-no_linux,-no_test_linux,-requires_emulator
+  target_filters=qa_smoke,ui_test,-qa_unreliable,-no_linux,-no_test_linux,-requires_emulator
   "${script_dir}/../bazel" \
     --max_idle_secs=60 \
     test \

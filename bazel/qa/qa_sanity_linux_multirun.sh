@@ -18,9 +18,9 @@ readonly script_name="$(basename "$0")"
 config_options="--config=remote"
 runs_per_test=1000
 
-readonly invocation_id_sanity_longrunning="$(uuidgen)"
+readonly invocation_id_smoke_longrunning="$(uuidgen)"
 
-target_filters=qa_sanity,ui_psq,-qa_unreliable,-no_linux,-no_test_linux,-requires_emulator
+target_filters=qa_smoke,ui_psq,-qa_unreliable,-no_linux,-no_test_linux,-requires_emulator
 "${script_dir}/../bazel" \
   --max_idle_secs=60 \
   test \
@@ -29,7 +29,7 @@ target_filters=qa_sanity,ui_psq,-qa_unreliable,-no_linux,-no_test_linux,-require
   --jobs=200 \
   --keep_going \
   ${config_options} \
-  --invocation_id=${invocation_id_sanity_longrunning} \
+  --invocation_id=${invocation_id_smoke_longrunning} \
   --define=meta_android_build_number=${build_number} \
   --build_tag_filters=${target_filters} \
   --test_tag_filters=${target_filters} \
@@ -59,10 +59,10 @@ target_filters=qa_sanity,ui_psq,-qa_unreliable,-no_linux,-no_test_linux,-require
   //tools/adt/idea/android-uitests:QuickFixForJniTest \
   //tools/adt/idea/android-uitests:RunOnEmulatorTest
 
-readonly bazel_status_sanity_longrunning=$?
+readonly bazel_status_smoke_longrunning=$?
 
 if [[ -d "${dist_dir}" ]]; then
-  echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${invocation_id_sanity_longrunning}'\" />" > "${dist_dir}"/upsalite_test_results.html
+  echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${invocation_id_smoke_longrunning}'\" />" > "${dist_dir}"/upsalite_test_results.html
 
   readonly testlogs_dir="$("${script_dir}/../bazel" info bazel-testlogs ${config_options})"
   mkdir "${dist_dir}"/testlogs
@@ -75,12 +75,12 @@ fi
 # Exit code 0: successful test run
 # Exit code 3: tests failed or timed out, ignore for manual review
 # Exit code 4: No tests found, check filters (maybe)
-case $bazel_status_sanity_longrunning in
+case $bazel_status_smoke_longrunning in
   [034])
     exit 0
     ;;
   *)
-    exit $bazel_status_sanity_longrunning
+    exit $bazel_status_smoke_longrunning
     ;;
 esac
 
