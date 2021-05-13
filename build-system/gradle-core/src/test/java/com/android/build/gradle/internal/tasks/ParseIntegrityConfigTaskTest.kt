@@ -16,9 +16,11 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.api.dsl.Bundle
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.dsl.BundleOptions
+import com.android.build.gradle.internal.dsl.decorator.androidPluginDslDecorator
 import com.android.build.gradle.internal.fixtures.FakeGradleProperty
 import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.build.gradle.internal.fixtures.FakeProviderFactory
@@ -26,11 +28,11 @@ import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.services.createDslServices
 import com.android.build.gradle.internal.services.createProjectServices
 import com.android.build.gradle.internal.services.createTaskCreationServices
 import com.android.build.gradle.internal.services.getBuildServiceName
-import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.VariantType
 import com.android.bundle.AppIntegrityConfigOuterClass.AppIntegrityConfig
@@ -159,6 +161,10 @@ class ParseIntegrityConfigTaskTest {
         assertThat(config.enabled).isFalse()
     }
 
+    private interface BundleWrapper {
+        val bundle: Bundle
+    }
+
     @Test
     fun testConfigureTask() {
         val configDirectory = project.projectDir.resolve("test_config")
@@ -166,7 +172,9 @@ class ParseIntegrityConfigTaskTest {
         val configXML = configDirectory.resolve(configFileName)
         FileUtils.writeToFile(configXML, "<IntegrityConfig/>")
 
-        val bundleOptions = dslServices.newInstance(BundleOptions::class.java, dslServices)
+        val bundleOptions = androidPluginDslDecorator.decorate(BundleWrapper::class.java)
+            .getDeclaredConstructor(DslServices::class.java)
+            .newInstance(dslServices).bundle as BundleOptions
         bundleOptions.integrityConfigDir.set(configDirectory)
         val componentProperties = createScopeFromBundleOptions(bundleOptions)
 

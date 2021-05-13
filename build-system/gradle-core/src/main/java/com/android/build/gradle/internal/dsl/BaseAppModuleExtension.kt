@@ -80,7 +80,7 @@ open class BaseAppModuleExtension(
         publicExtensionImpl.dependenciesInfo(action)
     }
 
-    override val bundle: BundleOptions = publicExtensionImpl.bundle
+    override val bundle: BundleOptions = publicExtensionImpl.bundle as BundleOptions
 
     fun bundle(action: Action<BundleOptions>) {
         action.execute(bundle)

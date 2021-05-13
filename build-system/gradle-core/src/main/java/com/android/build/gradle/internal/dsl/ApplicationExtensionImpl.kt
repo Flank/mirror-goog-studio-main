@@ -60,10 +60,4 @@ abstract class ApplicationExtensionImpl @Inject constructor(
     fun dependenciesInfo(action: Action<DependenciesInfo>) {
         action.execute(dependenciesInfo)
     }
-
-    override val bundle = dslServices.newInstance(BundleOptions::class.java, dslServices)
-
-    override fun bundle(action: Bundle.() -> Unit) {
-        action.invoke(bundle)
-    }
 }
