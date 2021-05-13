@@ -130,7 +130,7 @@ class ExtractNativeDebugMetadataTaskTest {
             } else {
                 armeabiNativeLib
             }
-            val path = FileUtils.relativePossiblyNonExistingPath(nativeLib, File(inputDir, "lib"))
+            val path = nativeLib.toRelativeString(File(inputDir, "lib"))
             val outputFile = File(outputDir, "$path.dbg")
             assertThat(processInfo.args)
                 .containsExactly(
@@ -182,7 +182,7 @@ class ExtractNativeDebugMetadataTaskTest {
             } else {
                 armeabiNativeLib
             }
-            val path = FileUtils.relativePossiblyNonExistingPath(nativeLib, File(inputDir, "lib"))
+            val path = nativeLib.toRelativeString(File(inputDir, "lib"))
             val outputFile = File(outputDir, "$path.dbg")
             assertThat(processInfo.args)
                 .containsExactly(
@@ -234,7 +234,7 @@ class ExtractNativeDebugMetadataTaskTest {
             } else {
                 armeabiNativeLib
             }
-            val path = FileUtils.relativePossiblyNonExistingPath(nativeLib, File(inputDir, "lib"))
+            val path = nativeLib.toRelativeString(File(inputDir, "lib"))
             val outputFile = File(outputDir, "$path.sym")
             assertThat(processInfo.args)
                 .containsExactly(

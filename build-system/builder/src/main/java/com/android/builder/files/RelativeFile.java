@@ -22,7 +22,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import java.io.File;
-
+import kotlin.io.FilesKt;
 
 /**
  * Representation of a file with respect to a base directory. A {@link RelativeFile} contains
@@ -57,8 +57,7 @@ public class RelativeFile {
     public RelativeFile(@NonNull File base, @NonNull File file) {
         this(
                 file,
-                FileUtils.toSystemIndependentPath(
-                        FileUtils.relativePossiblyNonExistingPath(file, base)),
+                FileUtils.toSystemIndependentPath(FilesKt.toRelativeString(file, base)),
                 Type.DIRECTORY);
 
         Preconditions.checkArgument(

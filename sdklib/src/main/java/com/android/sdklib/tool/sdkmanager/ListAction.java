@@ -25,11 +25,10 @@ import com.android.repository.api.RepoPackage;
 import com.android.repository.api.UpdatablePackage;
 import com.android.repository.impl.meta.RepositoryPackages;
 import com.android.repository.impl.meta.RevisionType;
-import com.android.repository.io.FileOpUtils;
-import com.android.utils.FileUtils;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Function;
@@ -188,8 +187,7 @@ class ListAction extends SdkAction {
                 "Location",
                 p -> {
                     Path path = getRepoManager().getLocalPath();
-                    return FileUtils.relativePossiblyNonExistingPath(
-                            FileOpUtils.toFile(p.getLocation()), FileOpUtils.toFile(path));
+                    return Objects.requireNonNull(path).relativize(p.getLocation()).toString();
                 },
                 9999,
                 0);

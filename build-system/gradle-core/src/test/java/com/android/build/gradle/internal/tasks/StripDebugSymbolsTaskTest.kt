@@ -115,14 +115,14 @@ class StripDebugSymbolsTaskTest {
         for (processInfo in execOperations.capturedExecutions) {
             assertThat(processInfo.executable).isEqualTo(fakeExe.absolutePath)
             if (processInfo.args.contains(x86Foo.toString())) {
-                val path = FileUtils.relativePossiblyNonExistingPath(x86Foo, inputDir)
+                val path = x86Foo.toRelativeString(inputDir)
                 val outputFile = File(outputDir, path)
                 assertThat(processInfo.args)
                     .containsExactly(
                         "--strip-unneeded", "-o", outputFile.toString(), x86Foo.toString()
                     )
             } else {
-                val path = FileUtils.relativePossiblyNonExistingPath(armeabiFoo, inputDir)
+                val path = armeabiFoo.toRelativeString(inputDir)
                 val outputFile = File(outputDir, path)
                 assertThat(processInfo.args)
                     .containsExactly(
@@ -132,14 +132,13 @@ class StripDebugSymbolsTaskTest {
         }
 
         // Check that all files are in outputDir, even doNotStrip files
-        val x86FooPath = FileUtils.relativePossiblyNonExistingPath(x86Foo, inputDir)
+        val x86FooPath = x86Foo.toRelativeString(inputDir)
         assertThat(File(outputDir, x86FooPath)).exists()
-        val x86DoNotStripPath = FileUtils.relativePossiblyNonExistingPath(x86DoNotStrip, inputDir)
+        val x86DoNotStripPath = x86DoNotStrip.toRelativeString(inputDir)
         assertThat(File(outputDir, x86DoNotStripPath)).exists()
-        val armeabiFooPath = FileUtils.relativePossiblyNonExistingPath(armeabiFoo, inputDir)
+        val armeabiFooPath = armeabiFoo.toRelativeString(inputDir)
         assertThat(File(outputDir, armeabiFooPath)).exists()
-        val armeabiDoNotStripPath =
-            FileUtils.relativePossiblyNonExistingPath(armeabiDoNotStrip, inputDir)
+        val armeabiDoNotStripPath = armeabiDoNotStrip.toRelativeString(inputDir)
         assertThat(File(outputDir, armeabiDoNotStripPath)).exists()
     }
 
@@ -166,7 +165,7 @@ class StripDebugSymbolsTaskTest {
         assertThat(execOperations.capturedExecutions).named("number of invocations").hasSize(1)
         val execSpec = execOperations.capturedExecutions.single()
         assertThat(execSpec.executable).isEqualTo(fakeExe.absolutePath)
-        val x86FooPath = FileUtils.relativePossiblyNonExistingPath(x86Foo, inputDir)
+        val x86FooPath = x86Foo.toRelativeString(inputDir)
         val x86FooOutputFile = File(outputDir, x86FooPath)
         assertThat(execSpec.args)
             .containsExactly(
@@ -175,14 +174,13 @@ class StripDebugSymbolsTaskTest {
 
         // Check that NEW files are in outputDir,
         assertThat(x86FooOutputFile).exists()
-        val armeabiDoNotStripPath =
-            FileUtils.relativePossiblyNonExistingPath(armeabiDoNotStrip, inputDir)
+        val armeabiDoNotStripPath = armeabiDoNotStrip.toRelativeString(inputDir)
         assertThat(File(outputDir, armeabiDoNotStripPath)).exists()
 
         // Check that other outputs are *not* in outputDir (since they weren't in changedInputs)
-        val x86DoNotStripPath = FileUtils.relativePossiblyNonExistingPath(x86DoNotStrip, inputDir)
+        val x86DoNotStripPath = x86DoNotStrip.toRelativeString(inputDir)
         assertThat(File(outputDir, x86DoNotStripPath)).doesNotExist()
-        val armeabiFooPath = FileUtils.relativePossiblyNonExistingPath(armeabiFoo, inputDir)
+        val armeabiFooPath = armeabiFoo.toRelativeString(inputDir)
         assertThat(File(outputDir, armeabiFooPath)).doesNotExist()
     }
 }
