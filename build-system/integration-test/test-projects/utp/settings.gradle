@@ -1,1 +1,1 @@
-include 'app', 'appWithTestFailures'
+include 'app', 'appWithTestFailures', 'testOnlyModule'
