@@ -20,11 +20,16 @@ package com.android.ide.common.resources
 import com.android.SdkConstants
 import com.android.SdkConstants.DOT_9PNG
 import com.android.ide.common.resources.usage.ResourceUsageModel.Resource
+import com.android.ide.common.util.PathString
+import com.android.ide.common.util.toPathString
 import com.android.resources.ResourceType
 import com.android.utils.SdkUtils
+import java.io.File
 import java.util.Collections
 import java.util.IdentityHashMap
 import java.util.function.Consumer
+
+private val RESOURCE_PROTOCOLS = arrayOf("apk", "jar", "file")
 
 /**
  * Replicates the key flattening done by AAPT. If the passed key contains '.', '-' or ':', they
@@ -77,7 +82,7 @@ fun isInvalidResourceFieldNameCharacter(c: Char): Boolean {
  * The returned string is not guaranteed to be a valid resource name, it should be checked by [FileResourceNameValidator] before being used.
  * If the resource type is known, it's preferable to validate the full filename (including extension) first.
  */
-fun fileNameToResourceName(fileName: String): String? {
+fun fileNameToResourceName(fileName: String): String {
   val lastExtension = fileName.lastIndexOf('.')
   return when {
     lastExtension <= 0 -> fileName
@@ -130,6 +135,30 @@ fun findUnusedResources(
     // Don't flag known service keys read by library
     .filterNot { SdkUtils.isServiceKey(it.name) }
     .toList()
+}
+
+/**
+ * Converts a file resource path from [String] to [PathString]. The supported formats:
+ * - file path, e.g. "/foo/bar/res/layout/my_layout.xml"
+ * - file URL, e.g. "file:///foo/bar/res/layout/my_layout.xml"
+ * - URL of a zipped element inside an APK file, e.g. "apk:///foo/bar/res.apk!/res/layout/my_layout.xml"
+ *
+ * @param resourcePath the file resource path to convert
+ * @return the converted resource path, or null if the `resourcePath` doesn't point to a file resource
+ */
+fun toFileResourcePathString(resourcePath: String): PathString? {
+  for (protocol in RESOURCE_PROTOCOLS) {
+    if (resourcePath.startsWith(protocol) && resourcePath.length > protocol.length && resourcePath[protocol.length] == ':') {
+      var prefixLength = protocol.length + 1
+      if (resourcePath.startsWith("//", prefixLength)) {
+        prefixLength += "//".length
+      }
+      return PathString(protocol, resourcePath.substring(prefixLength))
+    }
+  }
+
+  val file = File(resourcePath)
+  return if (file.isFile) file.toPathString() else null
 }
 
 /**

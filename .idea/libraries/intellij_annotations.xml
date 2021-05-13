@@ -1,11 +1,11 @@
 <component name="libraryTable">
   <library name="intellij-annotations">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/jetbrains/annotations/13.0/annotations-13.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/jetbrains/annotations/16.0.2/annotations-16.0.2.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/jetbrains/annotations/13.0/annotations-13.0-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/jetbrains/annotations/16.0.2/annotations-16.0.2-sources.jar!/" />
     </SOURCES>
   </library>
 </component>
