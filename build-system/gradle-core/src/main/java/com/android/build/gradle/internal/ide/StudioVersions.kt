@@ -50,7 +50,7 @@ internal fun verifyIDEIsNotOld(injectedVersion: String?, minRequiredVersion: Maj
         return
     }
     val parsedInjected = parseVersion(injectedVersion)
-        ?: throw InvalidUserDataException("Invalid injected android support version '$injectedVersion', expected to be of the form 'w.x.y.z'")
+        ?: throw InvalidUserDataException("Unrecognized Android Studio (or Android Support plugin for IntelliJ IDEA) version '$injectedVersion', please retry with version $minRequiredVersion or newer.")
 
     // the injected version is something like 203.7148.57.2031.SNAPSHOT in the tests, which is not the case
     // in product. so just ignore it.
