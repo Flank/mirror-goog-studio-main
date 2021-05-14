@@ -1399,15 +1399,16 @@ com.android.build.gradle.internal.dsl.LanguageSplitOptions.setAuto: void (boolea
 com.android.build.gradle.internal.dsl.LanguageSplitOptions.setEnable: void (boolean)
 com.android.build.gradle.internal.dsl.LanguageSplitOptions.setInclude: void (java.util.List<java.lang.String>)
 com.android.build.gradle.internal.dsl.LintOptions implements com.android.builder.model.LintOptions, com.android.build.api.dsl.LintOptions, com.android.build.api.dsl.Lint, java.io.Serializable
+com.android.build.gradle.internal.dsl.LintOptions$Companion
+com.android.build.gradle.internal.dsl.LintOptions$Companion.<init>: com.android.build.gradle.internal.dsl.LintOptions$Companion (kotlin.jvm.internal.DefaultConstructorMarker)
+com.android.build.gradle.internal.dsl.LintOptions$Companion.create: com.android.builder.model.LintOptions (com.android.build.gradle.internal.dsl.LintOptions)
 com.android.build.gradle.internal.dsl.LintOptions.<init>: com.android.build.gradle.internal.dsl.LintOptions (com.android.build.gradle.internal.services.DslServices)
-com.android.build.gradle.internal.dsl.LintOptions.<init>: com.android.build.gradle.internal.dsl.LintOptions (java.util.Set<java.lang.String>, java.util.Set<java.lang.String>, java.util.Set<java.lang.String>, java.io.File, boolean, java.io.File, boolean, java.io.File, boolean, java.io.File, boolean, java.io.File, boolean, boolean, boolean, boolean, boolean, boolean, boolean, boolean, boolean, boolean, boolean, boolean, boolean, boolean, java.io.File, java.util.Map<java.lang.String, java.lang.Integer>)
 com.android.build.gradle.internal.dsl.LintOptions.baseline: void (java.io.File)
 com.android.build.gradle.internal.dsl.LintOptions.baseline: void (java.lang.String)
 com.android.build.gradle.internal.dsl.LintOptions.check: void (java.lang.String)
 com.android.build.gradle.internal.dsl.LintOptions.check: void (java.lang.String[])
 com.android.build.gradle.internal.dsl.LintOptions.checkOnly: void (java.lang.String)
 com.android.build.gradle.internal.dsl.LintOptions.checkOnly: void (java.lang.String[])
-com.android.build.gradle.internal.dsl.LintOptions.create: com.android.builder.model.LintOptions (com.android.build.gradle.internal.dsl.LintOptions)
 com.android.build.gradle.internal.dsl.LintOptions.disable: void (java.lang.String)
 com.android.build.gradle.internal.dsl.LintOptions.disable: void (java.lang.String[])
 com.android.build.gradle.internal.dsl.LintOptions.enable: void (java.lang.String)

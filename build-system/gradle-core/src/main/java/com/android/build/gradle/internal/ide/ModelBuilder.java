@@ -329,7 +329,7 @@ public class ModelBuilder<Extension extends BaseExtension>
         }
 
         LintOptions lintOptions =
-                com.android.build.gradle.internal.dsl.LintOptions.create(
+                com.android.build.gradle.internal.dsl.LintOptions.Companion.create(
                         extension.getLintOptions());
 
         AaptOptions aaptOptions = AaptOptionsImpl.create(extension.getAaptOptions());
