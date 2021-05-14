@@ -90,7 +90,9 @@ fun readCmakeFileApiReply(
     sourceFlagAction: (CmakeFileApiSourceFile) -> Unit
 ) : NativeBuildConfigValue {
     val indexFile = findCmakeQueryApiIndexFile(replyFolder)!!
-    val index = GSON.fromJson(FileReader(indexFile), IndexData::class.java)
+    val index = FileReader(indexFile).use { reader ->
+        GSON.fromJson(reader, IndexData::class.java)
+    }
     val config = NativeBuildConfigValue()
 
     // Read CMake cache properties

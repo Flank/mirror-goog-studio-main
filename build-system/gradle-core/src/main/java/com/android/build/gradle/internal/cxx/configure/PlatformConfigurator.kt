@@ -332,7 +332,9 @@ class PlatformConfigurator(private val ndkRoot: File) {
         androidVersion: AndroidVersion? ): Int {
         val ndkMetaPlatformsFile = NdkMetaPlatforms.jsonFile(ndkRoot)
         val ndkMetaPlatforms = if (ndkMetaPlatformsFile.isFile) {
-            NdkMetaPlatforms.fromReader(FileReader(ndkMetaPlatformsFile))
+            FileReader(ndkMetaPlatformsFile).use { reader ->
+                NdkMetaPlatforms.fromReader(reader)
+            }
         } else {
             null
         }

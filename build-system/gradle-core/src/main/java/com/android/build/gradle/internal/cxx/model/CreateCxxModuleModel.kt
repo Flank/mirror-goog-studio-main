@@ -65,7 +65,9 @@ fun createCxxModuleModel(
 
     val ndkMetaPlatformsFile = NdkMetaPlatforms.jsonFile(ndkFolder)
     val ndkMetaPlatforms = if (ndkMetaPlatformsFile.isFile) {
-        NdkMetaPlatforms.fromReader(FileReader(ndkMetaPlatformsFile))
+        FileReader(ndkMetaPlatformsFile).use { reader ->
+            NdkMetaPlatforms.fromReader(reader)
+        }
     } else {
         null
     }
