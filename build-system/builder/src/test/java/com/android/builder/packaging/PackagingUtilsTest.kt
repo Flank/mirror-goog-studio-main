@@ -16,6 +16,7 @@
 
 package com.android.builder.packaging
 
+import com.android.SdkConstants
 import com.android.tools.build.apkzlib.zfile.NativeLibrariesPackagingMode
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
@@ -87,6 +88,18 @@ class PackagingUtilsTest {
                 assertThatTest("MyFile.idk").isFalse()
                 assertThatTest("subFolder/MyFile.idk").isFalse()
             }
+    }
+
+    @Test
+    fun testGetNoCompressPredicateWithExtensions_withFileNames() {
+         PackagingUtils.getNoCompressPredicate(listOf(),
+            NativeLibrariesPackagingMode.COMPRESSED,
+            DexPackagingMode.COMPRESSED).run {
+                assertThatTest("baseline.prof").isTrue()
+                assertThatTest("assets/dexopt/baseline.prof").isTrue()
+                assertThatTest("assets/baseline.prof/morestuff").isFalse()
+                assertThatTest("assets/baseline.profx").isFalse()
+         }
     }
 
     @Test

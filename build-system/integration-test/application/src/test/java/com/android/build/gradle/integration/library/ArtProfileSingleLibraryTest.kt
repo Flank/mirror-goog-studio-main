@@ -36,6 +36,8 @@ import java.io.ByteArrayInputStream
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
+import java.util.jar.JarFile
+import java.util.zip.ZipEntry
 
 class ArtProfileSingleLibraryTest {
 
@@ -179,6 +181,11 @@ class ArtProfileSingleLibraryTest {
         project.getSubproject(":app").getApk(GradleTestProject.ApkType.RELEASE).also {
             checkAndroidArtifact(tempFolder, it, apkEntryName) { fileContent ->
                 Truth.assertThat(ArtProfile(ByteArrayInputStream(fileContent))).isNotNull()
+            }
+            JarFile(it.file.toFile()).use { jarFile ->
+                val artProfileEntry = jarFile.getEntry(
+                    "${SdkConstants.FN_BINART_ART_PROFILE_FOLDER_IN_APK}/${SdkConstants.FN_BINARY_ART_PROFILE}")
+                Truth.assertThat(artProfileEntry.method).isEqualTo(ZipEntry.STORED)
             }
         }
     }
