@@ -21,12 +21,17 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject.Com
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.integration.connected.utils.getEmulator
 import com.android.testutils.truth.PathSubject.assertThat
+import com.google.testing.platform.proto.api.core.TestArtifactProto
 import com.google.testing.platform.proto.api.core.TestResultProto
 import com.google.testing.platform.proto.api.core.TestSuiteResultProto
 import java.io.File
+import java.io.FileInputStream
 import java.io.IOException
-import java.nio.charset.Charset
+import java.io.InputStream
 import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
 import org.gradle.tooling.BuildException
 import org.junit.Before
 import org.junit.ClassRule
@@ -87,7 +92,9 @@ class FailureRetentionConnectedTest {
             project.executor()
                 .withArguments(
                     listOf(
-                        "-Dandroid.emulator.home=${System.getProperty("user.dir")}/.android"
+                        "-Dandroid.emulator.home=${System.getProperty("user.dir")}/.android",
+                        "-Pandroid.testInstrumentationRunnerArguments.class=" +
+                                "com.example.android.kotlin.ExampleInstrumentedTest"
                     )
                 )
                 .run("connectedAndroidTest")
@@ -110,11 +117,30 @@ class FailureRetentionConnectedTest {
                 .withArguments(
                     listOf(
                         "-Dandroid.emulator.home=${System.getProperty("user.dir")}/.android",
+                        "-Pandroid.testInstrumentationRunnerArguments.class=" +
+                                "com.example.android.kotlin.ExampleInstrumentedTest"
                     )
                 )
                 .run("connectedAndroidTest")
         }
         validateFailureOutputs()
+    }
+
+    private fun validateSnapshotArtifact(path: String) {
+        assertThat(File(path)).exists()
+        FileInputStream(path).use { inputStream ->
+            TarArchiveInputStream(inputStream).use { tarInputStream ->
+                var hasSnapshotPb = false
+                var entry: TarArchiveEntry?
+                while (tarInputStream.nextTarEntry.also { entry = it } != null) {
+                    if (entry!!.name == "snapshot.pb") {
+                        hasSnapshotPb = true
+                        break
+                    }
+                }
+                assertTrue(hasSnapshotPb, "Snapshot file ${path} corrupted")
+            }
+        }
     }
 
     private fun validateIceboxArtifacts(testResult: TestResultProto.TestResult) {
@@ -126,7 +152,7 @@ class FailureRetentionConnectedTest {
         testResult.outputArtifactList.first {
             it.label.label == "icebox.snapshot" && it.label.namespace == "android"
         }.also { artifact ->
-            assertThat(File(artifact.sourcePath.path)).exists()
+            validateSnapshotArtifact(artifact.sourcePath.path)
         }
     }
 
@@ -147,5 +173,55 @@ class FailureRetentionConnectedTest {
         }.also {
             validateIceboxArtifacts(it)
         }
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun connectedAndroidTestWithUncaughtExceptions() {
+        assertFailsWith<BuildException> {
+            project.executor()
+                .withArguments(
+                    listOf(
+                        "-Dandroid.emulator.home=${System.getProperty("user.dir")}/.android",
+                        "-Pandroid.testInstrumentationRunnerArguments.class=" +
+                                "com.example.android.kotlin.UncaughtExceptionInstrumentedTest"
+                    )
+                )
+                .run("connectedAndroidTest")
+        }
+        val connectedDir = project.projectDir
+            .resolve("app/build/outputs/androidTest-results/connected/emulator-5554 - 10")
+        val testResultFile = connectedDir.resolve("test-result.pb")
+        assertThat(testResultFile).exists()
+        val testSuiteResultProto = TestSuiteResultProto.TestSuiteResult.parseFrom(
+            testResultFile.inputStream())
+        var snapshotArtifact: TestArtifactProto.Artifact? = null
+
+        testSuiteResultProto.testResultList.first {
+            it.testCase.testMethod == "uncaughtExceptionTest"
+        }.also { testResult ->
+            snapshotArtifact = testResult.outputArtifactList.firstOrNull {
+                it.label.label == "icebox.snapshot" && it.label.namespace == "android"
+            }
+        }
+        // TODO(b/188572060): Re-enable the following assert once the bug is fixed.
+        // Snapshot should not be taken for non-supported type of exceptions however due
+        // to synchronization issues between UTP test listener and emulator state,
+        // it occasionally attaches the snapshot to a wrong test case.
+        // assertThat(snapshotArtifact).isNull()
+        testSuiteResultProto.testResultList.first {
+            it.testCase.testMethod == "assertFailureTest"
+        }.also { testResult ->
+            val newSnapshotArtifact = testResult.outputArtifactList.firstOrNull {
+                it.label.label == "icebox.snapshot" && it.label.namespace == "android"
+            }
+            // The snapshot artifact might be assigned to the wrong failure. But there must be only
+            // 1 snapshot artifact. (That is, until we add support for uncaught exceptions.)
+            assertTrue((snapshotArtifact != null) xor (newSnapshotArtifact != null))
+            if (snapshotArtifact == null) {
+                snapshotArtifact = newSnapshotArtifact
+            }
+        }
+        validateSnapshotArtifact(snapshotArtifact!!.sourcePath.path)
     }
 }
