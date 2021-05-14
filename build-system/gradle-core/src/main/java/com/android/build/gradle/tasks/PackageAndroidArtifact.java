@@ -175,6 +175,12 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
     @Optional
     public abstract RegularFileProperty getAppMetadata();
 
+    @InputFiles
+    @Incremental
+    @PathSensitive(PathSensitivity.RELATIVE)
+    @Optional
+    public abstract RegularFileProperty getMergedArtProfile();
+
     @OutputDirectory
     public abstract DirectoryProperty getIncrementalFolder();
 
@@ -470,6 +476,18 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                         .getAppMetadataFiles()
                         .set(new SerializableInputChanges(ImmutableList.of(), ImmutableSet.of()));
             }
+
+            if (getMergedArtProfile().isPresent()) {
+                parameter
+                        .getMergedArtProfile()
+                        .set(
+                                IncrementalChangesUtils.getChangesInSerializableForm(
+                                        changes, getMergedArtProfile()));
+            } else {
+                parameter
+                        .getMergedArtProfile()
+                        .set(new SerializableInputChanges(ImmutableList.of(), ImmutableList.of()));
+            }
             parameter.getManifestType().set(manifestType);
             parameter.getSigningConfigData().set(signingConfigData.convertToParams());
             parameter
@@ -654,6 +672,9 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
         @Optional
         public abstract RegularFileProperty getDependencyDataFile();
+
+        @Optional
+        public abstract Property<SerializableInputChanges> getMergedArtProfile();
     }
 
     /**
@@ -718,6 +739,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             @NonNull Map<RelativeFile, FileStatus> changedAndroidResources,
             @NonNull Map<RelativeFile, FileStatus> changedNLibs,
             @NonNull Collection<SerializableChange> changedAppMetadata,
+            @NonNull Collection<SerializableChange> artProfile,
             @NonNull SplitterParams params)
             throws IOException {
 
@@ -800,8 +822,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                         .withSigning(
                                 params.getSigningConfigData().get().resolve(),
                                 SigningConfigUtils.loadSigningConfigVersions(
-                                        params.getSigningConfigVersionsFile().get().getAsFile()
-                                ),
+                                        params.getSigningConfigVersionsFile().get().getAsFile()),
                                 params.getMinSdkVersion().get(),
                                 dependencyData)
                         .withCreatedBy(params.getCreatedBy().get())
@@ -823,6 +844,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                         .withChangedAndroidResources(changedAndroidResources)
                         .withChangedNativeLibs(changedNLibs)
                         .withChangedAppMetadata(changedAppMetadata)
+                        .withChangedArtProfile(artProfile)
                         .build()) {
             packager.updateFiles();
         }
@@ -999,6 +1021,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                         changedAndroidResources,
                         changedJniLibs,
                         params.getAppMetadataFiles().get().getChanges(),
+                        params.getMergedArtProfile().get().getChanges(),
                         params);
 
                 /*
@@ -1156,6 +1179,12 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                         InternalArtifactType.APP_METADATA.INSTANCE,
                         packageAndroidArtifact.getAppMetadata());
             }
+
+            creationConfig
+                    .getArtifacts()
+                    .setTaskInputToFinalProduct(
+                            InternalArtifactType.MERGED_ART_PROFILE.INSTANCE,
+                            packageAndroidArtifact.getMergedArtProfile());
 
             packageAndroidArtifact
                     .getAssets()

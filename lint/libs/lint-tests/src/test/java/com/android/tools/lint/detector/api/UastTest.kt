@@ -25,6 +25,7 @@ import com.intellij.pom.java.LanguageLevel
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiRecursiveElementVisitor
 import com.intellij.psi.PsiTypeParameter
+import junit.framework.AssertionFailedError
 import junit.framework.TestCase
 import org.jetbrains.kotlin.asJava.elements.KotlinLightTypeParameterBuilder
 import org.jetbrains.kotlin.asJava.unwrapped
@@ -37,6 +38,7 @@ import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UFile
 import org.jetbrains.uast.ULocalVariable
+import org.jetbrains.uast.UReferenceExpression
 import org.jetbrains.uast.toUElement
 import org.jetbrains.uast.util.isAssignment
 import org.jetbrains.uast.visitor.AbstractUastVisitor
@@ -477,10 +479,10 @@ class UastTest : TestCase() {
                 import android.widget.TextView
 
                 public final class Test : android.app.Activity {
-                    public fun Test() = UastEmptyExpression
-                    fun setUi(@org.jetbrains.annotations.NotNull x: int, @org.jetbrains.annotations.NotNull y: int) : void {
+                    private final fun setUi(@org.jetbrains.annotations.NotNull x: int, @org.jetbrains.annotations.NotNull y: int, @null ${'$'}completion: kotlin.coroutines.Continuation<? super kotlin.Unit>) : java.lang.Object {
                         var z: int = x + y
                     }
+                    public fun Test() = UastEmptyExpression
                 }
 
                 """.trimIndent(),
@@ -492,18 +494,20 @@ class UastTest : TestCase() {
                 UFile (package = test.pkg) [package test.pkg...]
                     UImportStatement (isOnDemand = false) [import android.widget.TextView]
                     UClass (name = Test) [public final class Test : android.app.Activity {...}]
-                        UMethod (name = Test) [public fun Test() = UastEmptyExpression]
-                        UMethod (name = setUi) [fun setUi(@org.jetbrains.annotations.NotNull x: int, @org.jetbrains.annotations.NotNull y: int) : void {...}]
+                        UMethod (name = setUi) [private final fun setUi(@org.jetbrains.annotations.NotNull x: int, @org.jetbrains.annotations.NotNull y: int, @null ${'$'}completion: kotlin.coroutines.Continuation<? super kotlin.Unit>) : java.lang.Object {...}]
                             UParameter (name = x) [@org.jetbrains.annotations.NotNull var x: int]
                                 UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]
                             UParameter (name = y) [@org.jetbrains.annotations.NotNull var y: int]
                                 UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]
+                            UParameter (name = ${'$'}completion) [@null var ${'$'}completion: kotlin.coroutines.Continuation<? super kotlin.Unit>]
+                                UAnnotation (fqName = null) [@null]
                             UBlockExpression [{...}] : PsiType:void
                                 UDeclarationsExpression [var z: int = x + y]
                                     ULocalVariable (name = z) [var z: int = x + y]
                                         UBinaryExpression (operator = +) [x + y] : PsiType:int
                                             USimpleNameReferenceExpression (identifier = x) [x] : PsiType:int
                                             USimpleNameReferenceExpression (identifier = y) [y] : PsiType:int
+                        UMethod (name = Test) [public fun Test() = UastEmptyExpression]
 
                 """.trimIndent(),
                 file.asLogTypes()
@@ -1334,6 +1338,58 @@ class UastTest : TestCase() {
                 """.trimIndent(),
                 file.asLogTypes(indent = "  ").trim()
             )
+        }
+    }
+
+    fun testResolveLambdaVar() { // See KT-46628
+        val source = kotlin(
+            """
+            package test.pkg
+
+            fun test1(s: String?) {
+                s?.let {
+                    println(it)
+                }
+            }
+
+            fun test2(s: String?) {
+                s?.let { it ->
+                    println(it)
+                }
+            }
+
+            fun test3(s: String?) {
+                s?.let { t ->
+                    println(t)
+                }
+            }
+            """
+        ).indented()
+
+        check(
+            source
+        ) { file ->
+            try {
+                file.accept(object : AbstractUastVisitor() {
+                    override fun visitCallExpression(node: UCallExpression): Boolean {
+                        val argument = node.valueArguments.firstOrNull()
+                        (argument as? UReferenceExpression)?.let {
+                            val resolved = argument.resolve()
+                            assertNotNull(
+                                "Couldn't resolve `${argument.sourcePsi?.text ?: argument.asSourceString()}`",
+                                resolved
+                            )
+                        }
+
+                        return super.visitCallExpression(node)
+                    }
+                })
+                // When we get this failure, KT-46628 has been fixed and we can remove
+                // local workarounds, such as the one in DataflowAnalyzer.
+                fail("Expected unresolved error: see KT-46628")
+            } catch (failure: AssertionFailedError) {
+                assertEquals("Couldn't resolve `it`", failure.message)
+            }
         }
     }
 }

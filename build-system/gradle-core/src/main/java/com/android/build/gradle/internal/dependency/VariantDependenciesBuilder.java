@@ -40,6 +40,7 @@ import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
 import com.android.build.gradle.internal.attributes.VariantAttr;
 import com.android.build.gradle.internal.core.VariantDslInfo;
+import com.android.build.gradle.internal.dsl.ModulePropertyKeys;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType;
@@ -557,6 +558,9 @@ public class VariantDependenciesBuilder {
                             configuration.getOutgoing().capability(capability));
         }
 
+        boolean isSelfInstrumenting =
+                ModulePropertyKeys.SELF_INSTRUMENTING.getValueAsBoolean(
+                        variantDslInfo.getProperties());
         return new VariantDependencies(
                 variantName,
                 variantDslInfo.getVariantType(),
@@ -571,7 +575,8 @@ public class VariantDependenciesBuilder {
                 wearApp,
                 testedVariant,
                 project,
-                projectOptions);
+                projectOptions,
+                isSelfInstrumenting);
     }
 
     @NonNull

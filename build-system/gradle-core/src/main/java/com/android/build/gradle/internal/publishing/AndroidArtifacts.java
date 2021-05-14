@@ -147,6 +147,10 @@ public class AndroidArtifacts {
     public static final String TYPE_MOCKABLE_JAR = "android-mockable-jar";
     public static final Attribute<Boolean> MOCKABLE_JAR_RETURN_DEFAULT_VALUES =
             Attribute.of("returnDefaultValues", Boolean.class);
+
+    // jetpack compose related types
+    public static final String TYPE_ART_PROFILE = "android-art-profile";
+
     // attr info extracted from the platform android.jar
     public static final String TYPE_PLATFORM_ATTR = "android-platform-attr";
 
@@ -463,6 +467,9 @@ public class AndroidArtifacts {
         REVERSE_METADATA_NATIVE_DEBUG_METADATA(TYPE_REVERSE_METADATA_NATIVE_DEBUG_METADATA),
         // The .so.sym files containing the symbol tables from the corresponding .so files
         REVERSE_METADATA_NATIVE_SYMBOL_TABLES(TYPE_REVERSE_METADATA_NATIVE_SYMBOL_TABLES),
+
+        // art profile in human readable format
+        ART_PROFILE(TYPE_ART_PROFILE),
 
         // types for querying only. Not publishable.
 

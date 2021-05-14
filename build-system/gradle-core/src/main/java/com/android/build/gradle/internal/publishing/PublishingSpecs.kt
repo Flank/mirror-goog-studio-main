@@ -246,6 +246,7 @@ class PublishingSpecs {
                 runtime(NAVIGATION_JSON, ArtifactType.NAVIGATION_JSON)
                 runtime(COMPILED_LOCAL_RESOURCES, ArtifactType.COMPILED_DEPENDENCIES_RESOURCES)
                 runtime(AAR_METADATA, ArtifactType.AAR_METADATA)
+                runtime(InternalArtifactType.LIBRARY_ART_PROFILE, ArtifactType.ART_PROFILE)
                 // Publish LINT, LINT_MODEL, LINT_PARTIAL_RESULTS, and LOCAL_AAR_FOR_LINT to
                 // API_AND_RUNTIME_ELEMENTS to support compileOnly module dependencies.
                 output(LINT_PUBLISH_JAR, ArtifactType.LINT)

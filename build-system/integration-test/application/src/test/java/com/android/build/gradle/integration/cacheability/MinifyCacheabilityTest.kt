@@ -104,7 +104,7 @@ class MinifyCacheabilityTest {
             ":mergeMinifiedNativeDebugMetadata",
             ":mergeMinifiedNativeLibs",
             ":processMinifiedJavaRes",
-            ":stripMinifiedDebugSymbols"
+            ":stripMinifiedDebugSymbols",
         ),
         FAILED to setOf()
     )

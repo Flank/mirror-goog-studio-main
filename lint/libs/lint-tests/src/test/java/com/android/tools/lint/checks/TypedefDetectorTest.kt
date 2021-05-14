@@ -1500,4 +1500,36 @@ class TypedefDetectorTest : AbstractCheckTest() {
             """
         )
     }
+
+    fun testZeroAlias() {
+        lint().files(
+            java(
+                """
+                package test.pkg;
+
+                import android.app.PendingIntent;
+                import android.content.Context;
+                import android.content.Intent;
+
+                public class Test {
+                    public static final int UNRELATED = 0;
+                    public void test(Intent intent, Context context) {
+                        PendingIntent.getActivity(context, 0, intent,
+                                PendingIntent.FLAG_IMMUTABLE |
+                                Intent.FILL_IN_SELECTOR |
+                                PendingIntent.FLAG_MUTABLE |
+                                Test.UNRELATED, null);
+                    }
+                }
+                """
+            ).indented()
+        ).run().expect(
+            """
+            src/test/pkg/Test.java:14: Error: Must be one or more of: PendingIntent.FLAG_ONE_SHOT, PendingIntent.FLAG_NO_CREATE, PendingIntent.FLAG_CANCEL_CURRENT, PendingIntent.FLAG_UPDATE_CURRENT, PendingIntent.FLAG_IMMUTABLE, Intent.FILL_IN_ACTION, Intent.FILL_IN_DATA, Intent.FILL_IN_CATEGORIES, Intent.FILL_IN_COMPONENT, Intent.FILL_IN_PACKAGE, Intent.FILL_IN_SOURCE_BOUNDS, Intent.FILL_IN_SELECTOR, Intent.FILL_IN_CLIP_DATA [WrongConstant]
+                            Test.UNRELATED, null);
+                            ~~~~~~~~~~~~~~
+            1 errors, 0 warnings
+            """
+        )
+    }
 }

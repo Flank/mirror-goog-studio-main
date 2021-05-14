@@ -16,15 +16,12 @@
 
 package com.android.sdklib;
 
-import static com.android.SdkConstants.FD_LIB;
 import static com.android.SdkConstants.FN_AAPT;
 import static com.android.SdkConstants.FN_AAPT2;
 import static com.android.SdkConstants.FN_AIDL;
 import static com.android.SdkConstants.FN_BCC_COMPAT;
 import static com.android.SdkConstants.FN_CORE_LAMBDA_STUBS;
 import static com.android.SdkConstants.FN_DEXDUMP;
-import static com.android.SdkConstants.FN_DX;
-import static com.android.SdkConstants.FN_DX_JAR;
 import static com.android.SdkConstants.FN_JACK;
 import static com.android.SdkConstants.FN_JACK_COVERAGE_PLUGIN;
 import static com.android.SdkConstants.FN_JACK_JACOCO_REPORTER;
@@ -49,8 +46,6 @@ import static com.android.sdklib.BuildToolInfo.PathId.BCC_COMPAT;
 import static com.android.sdklib.BuildToolInfo.PathId.CORE_LAMBDA_STUBS;
 import static com.android.sdklib.BuildToolInfo.PathId.DAEMON_AAPT2;
 import static com.android.sdklib.BuildToolInfo.PathId.DEXDUMP;
-import static com.android.sdklib.BuildToolInfo.PathId.DX;
-import static com.android.sdklib.BuildToolInfo.PathId.DX_JAR;
 import static com.android.sdklib.BuildToolInfo.PathId.JACK;
 import static com.android.sdklib.BuildToolInfo.PathId.JACK_COVERAGE_PLUGIN;
 import static com.android.sdklib.BuildToolInfo.PathId.JACK_JACOCO_REPORTER;
@@ -93,20 +88,11 @@ import java.util.regex.Pattern;
  */
 public class BuildToolInfo {
 
-    /**
-     * First version with native multi-dex support.
-     */
-    public static final int SDK_LEVEL_FOR_MULTIDEX_NATIVE_SUPPORT = 21;
-
     public enum PathId {
         /** OS Path to the target's version of the aapt tool. */
         AAPT("1.0.0"),
         /** OS Path to the target's version of the aidl tool. */
         AIDL("1.0.0"),
-        /** OS Path to the target's version of the dx tool. */
-        DX("1.0.0"),
-        /** OS Path to the target's version of the dx.jar file. */
-        DX_JAR("1.0.0"),
         /** OS Path to the llvm-rs-cc binary for Renderscript. */
         LLVM_RS_CC("1.0.0"),
         /** OS Path to the Renderscript include folder. */
@@ -203,16 +189,6 @@ public class BuildToolInfo {
             return revision.compareTo(minRevision) >= 0
                     && (removalRevision == null || revision.compareTo(removalRevision) < 0);
         }
-
-        @VisibleForTesting
-        public Revision getMinRevision() {
-            return minRevision;
-        }
-
-        @VisibleForTesting
-        public Revision getRemovalRevision() {
-            return removalRevision;
-        }
     }
 
     /**
@@ -249,8 +225,6 @@ public class BuildToolInfo {
             @NonNull Path mainPath,
             @NonNull Path aapt,
             @NonNull Path aidl,
-            @NonNull Path dx,
-            @NonNull Path dxJar,
             @NonNull Path llmvRsCc,
             @NonNull Path androidRs,
             @NonNull Path androidRsClang,
@@ -267,8 +241,6 @@ public class BuildToolInfo {
 
         result.add(AAPT, aapt);
         result.add(AIDL, aidl);
-        result.add(DX, dx);
-        result.add(DX_JAR, dxJar);
         result.add(LLVM_RS_CC, llmvRsCc);
         result.add(ANDROID_RS, androidRs);
         result.add(ANDROID_RS_CLANG, androidRsClang);
@@ -356,8 +328,6 @@ public class BuildToolInfo {
         add(AAPT2, FN_AAPT2);
         add(DAEMON_AAPT2, FN_AAPT2);
         add(AIDL, FN_AIDL);
-        add(DX, FN_DX);
-        add(DX_JAR, FD_LIB + File.separator + FN_DX_JAR);
         add(LLVM_RS_CC, FN_RENDERSCRIPT);
         add(ANDROID_RS, OS_FRAMEWORK_RS);
         add(ANDROID_RS_CLANG, OS_FRAMEWORK_RS_CLANG);

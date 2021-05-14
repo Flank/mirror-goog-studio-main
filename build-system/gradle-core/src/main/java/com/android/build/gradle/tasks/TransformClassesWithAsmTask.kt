@@ -124,30 +124,30 @@ abstract class TransformClassesWithAsmTask : NewIncrementalTask() {
     lateinit var incrementalFolder: File
         private set
 
-    @Transient
-    private val classesHierarchyResolver: Lazy<ClassesHierarchyResolver> = lazy {
-        classesHierarchyBuildService.get().getClassesHierarchyResolverBuilder()
+    override fun doTaskAction(inputChanges: InputChanges) {
+        val classesHierarchyResolver = classesHierarchyBuildService.get()
+            .getClassesHierarchyResolverBuilder()
             .addProjectSources(inputClassesDir.files)
             .addProjectSources(inputJarsWithIdentity.inputJars.files)
             .addDependenciesSources(runtimeClasspath.files)
             .addDependenciesSources(bootClasspath.files)
             .build()
-    }
-
-    override fun doTaskAction(inputChanges: InputChanges) {
         if (inputChanges.isIncremental) {
-            doIncrementalTaskAction(inputChanges)
+            doIncrementalTaskAction(inputChanges, classesHierarchyResolver)
         } else {
-            doFullTaskAction(inputChanges)
+            doFullTaskAction(inputChanges, classesHierarchyResolver)
         }
     }
 
-    private fun doFullTaskAction(inputChanges: InputChanges) {
+    private fun doFullTaskAction(
+        inputChanges: InputChanges,
+        classesHierarchyResolver: ClassesHierarchyResolver
+    ) {
         incrementalFolder.mkdirs()
         FileUtils.deleteDirectoryContents(classesOutputDir.get().asFile)
         FileUtils.deleteDirectoryContents(incrementalFolder)
 
-        getInstrumentationManager().use { instrumentationManager ->
+        getInstrumentationManager(classesHierarchyResolver).use { instrumentationManager ->
             inputClassesDir.files.filter(File::exists).forEach {
                 instrumentationManager.instrumentClassesFromDirectoryToDirectory(
                     it,
@@ -158,10 +158,13 @@ abstract class TransformClassesWithAsmTask : NewIncrementalTask() {
             processJars(instrumentationManager, inputChanges, false)
         }
 
-        updateIncrementalState(emptySet())
+        updateIncrementalState(emptySet(), classesHierarchyResolver)
     }
 
-    private fun doIncrementalTaskAction(inputChanges: InputChanges) {
+    private fun doIncrementalTaskAction(
+        inputChanges: InputChanges,
+        classesHierarchyResolver: ClassesHierarchyResolver
+    ) {
         val previouslyQueriedClasses = incrementalFolder.listFiles()!!.map {
             it.name.removeSuffix(DOT_JSON)
         }.toSet()
@@ -175,17 +178,17 @@ abstract class TransformClassesWithAsmTask : NewIncrementalTask() {
                     val classDataFromLastBuild =
                         loadClassData(File(incrementalFolder, className + DOT_JSON))!!
                     val currentClassData =
-                        classesHierarchyResolver.value.maybeLoadClassDataForClass(className)
+                        classesHierarchyResolver.maybeLoadClassDataForClass(className)
 
                     // the class data changed so we need to run the full task action
                     if (classDataFromLastBuild != currentClassData) {
-                        doFullTaskAction(inputChanges)
+                        doFullTaskAction(inputChanges, classesHierarchyResolver)
                         return
                     }
                 }
         }
 
-        getInstrumentationManager().use { instrumentationManager ->
+        getInstrumentationManager(classesHierarchyResolver).use { instrumentationManager ->
             val classesChanges = inputChanges.getFileChanges(inputClassesDir).toSerializable()
 
             classesChanges.removedFiles.plus(classesChanges.modifiedFiles).forEach {
@@ -206,11 +209,14 @@ abstract class TransformClassesWithAsmTask : NewIncrementalTask() {
             processJars(instrumentationManager, inputChanges, true)
         }
 
-        updateIncrementalState(previouslyQueriedClasses)
+        updateIncrementalState(previouslyQueriedClasses, classesHierarchyResolver)
     }
 
-    private fun updateIncrementalState(previouslyQueriedClasses: Set<String>) {
-        classesHierarchyResolver.value.queriedProjectClasses.forEach { classData ->
+    private fun updateIncrementalState(
+        previouslyQueriedClasses: Set<String>,
+        classesHierarchyResolver: ClassesHierarchyResolver
+    ) {
+        classesHierarchyResolver.queriedProjectClasses.forEach { classData ->
             // we know that the data of the classes in previouslyQueriedClasses didn't change so
             // just save the classes that weren't queried before
             if (!previouslyQueriedClasses.contains(classData.className)) {
@@ -302,11 +308,13 @@ abstract class TransformClassesWithAsmTask : NewIncrementalTask() {
         }
     }
 
-    private fun getInstrumentationManager(): AsmInstrumentationManager {
+    private fun getInstrumentationManager(
+        classesHierarchyResolver: ClassesHierarchyResolver
+    ): AsmInstrumentationManager {
         return AsmInstrumentationManager(
                 visitors = visitorsList.get(),
                 apiVersion = asmApiVersion.get(),
-                classesHierarchyResolver = classesHierarchyResolver.value,
+                classesHierarchyResolver = classesHierarchyResolver,
                 framesComputationMode = framesComputationMode.get(),
                 profilingTransforms = profilingTransforms.getOrElse(emptyList())
         )

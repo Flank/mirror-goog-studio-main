@@ -39,7 +39,7 @@ import com.intellij.psi.PsiManager
 import com.intellij.util.io.URLUtil.JAR_SEPARATOR
 import org.jetbrains.kotlin.asJava.classes.FacadeCache
 import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys
-import org.jetbrains.kotlin.cli.common.KOTLIN_COMPILER_ENVIRONMENT_KEEPALIVE_PROPERTY
+import org.jetbrains.kotlin.cli.common.CompilerSystemProperties
 import org.jetbrains.kotlin.cli.common.messages.GradleStyleMessageRenderer
 import org.jetbrains.kotlin.cli.common.messages.PrintingMessageCollector
 import org.jetbrains.kotlin.cli.jvm.compiler.CliBindingTrace
@@ -160,7 +160,7 @@ class UastEnvironment private constructor(
             // application lifecycle ourselves. (It turns out that the Kotlin Gradle plugin already
             // sets the keepalive property to true anyway, which is picked up by Lint if running in
             // the same Gradle daemon process. So setting the property here ensures consistency.)
-            System.setProperty(KOTLIN_COMPILER_ENVIRONMENT_KEEPALIVE_PROPERTY, "true")
+            CompilerSystemProperties.KOTLIN_COMPILER_ENVIRONMENT_KEEPALIVE_PROPERTY.value = "true"
 
             // Disable the check for broken plugins, otherwise PluginManagerCore fails due to
             // missing the brokenPlugins.txt file. See commit 256bd8d594 in the Kotlin compiler.

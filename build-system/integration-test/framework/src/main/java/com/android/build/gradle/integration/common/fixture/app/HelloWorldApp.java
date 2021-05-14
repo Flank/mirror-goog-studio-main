@@ -38,11 +38,15 @@ public class HelloWorldApp extends GradleProject {
 
     public static final String APP_ID = "com.example.helloworld";
 
+    private final String appId;
+
     protected TestSourceFile getSource() {
         return new TestSourceFile(
-                "src/main/java/com/example/helloworld",
+                "src/main/java/" + appId.replace('.', '/'),
                 "HelloWorld.java",
-                "package com.example.helloworld;\n"
+                "package "
+                        + appId
+                        + ";\n"
                         + "\n"
                         + "import android.app.Activity;\n"
                         + "import android.os.Bundle;\n"
@@ -93,7 +97,9 @@ public class HelloWorldApp extends GradleProject {
                 "AndroidManifest.xml",
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                         + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "      package=\"com.example.helloworld\"\n"
+                        + "      package=\""
+                        + appId
+                        + "\"\n"
                         + "      android:versionCode=\"1\"\n"
                         + "      android:versionName=\"1.0\">\n"
                         + "\n"
@@ -111,9 +117,11 @@ public class HelloWorldApp extends GradleProject {
 
     protected TestSourceFile getAndroidTestSource() {
         return new TestSourceFile(
-                "src/androidTest/java/com/example/helloworld",
+                "src/androidTest/java/" + appId.replace('.', '/'),
                 "HelloWorldTest.java",
-                "package com.example.helloworld;\n"
+                "package "
+                        + appId
+                        + ";\n"
                         + "\n"
                         + "import android.support.test.filters.MediumTest;\n"
                         + "import android.support.test.rule.ActivityTestRule;\n"
@@ -148,6 +156,11 @@ public class HelloWorldApp extends GradleProject {
     }
 
     protected HelloWorldApp() {
+        this(APP_ID);
+    }
+
+    protected HelloWorldApp(String appId) {
+        this.appId = appId;
         addFiles(
                 getSource(),
                 getResValuesSource(),
@@ -156,12 +169,12 @@ public class HelloWorldApp extends GradleProject {
                 getAndroidTestSource());
     }
 
-    protected HelloWorldApp(String plugin) {
-        this(plugin, TestVersions.SUPPORT_LIB_MIN_SDK);
+    protected HelloWorldApp(String appId, String plugin) {
+        this(appId, plugin, TestVersions.SUPPORT_LIB_MIN_SDK);
     }
 
-    protected HelloWorldApp(String plugin, int minSdkVersion) {
-        this();
+    protected HelloWorldApp(String appId, String plugin, int minSdkVersion) {
+        this(appId);
 
         TestSourceFile buildFile =
                 new TestSourceFile(
@@ -192,15 +205,19 @@ public class HelloWorldApp extends GradleProject {
     }
 
     public static HelloWorldApp noBuildFile() {
-        return new HelloWorldApp();
+        return new HelloWorldApp(APP_ID);
+    }
+
+    public static HelloWorldApp noBuildFile(String appId) {
+        return new HelloWorldApp(appId);
     }
 
     public static HelloWorldApp forPlugin(String plugin) {
-        return new HelloWorldApp(plugin);
+        return new HelloWorldApp(APP_ID, plugin);
     }
 
     public static HelloWorldApp forPluginWithMinSdkVersion(String plugin, int minSdkVersion) {
-        return new HelloWorldApp(plugin, minSdkVersion);
+        return new HelloWorldApp(APP_ID, plugin, minSdkVersion);
     }
 
     @Override

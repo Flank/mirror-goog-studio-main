@@ -159,6 +159,9 @@ class PerModuleReportDependenciesTaskTest {
         project.repositories.add(ivyRepoMock("ivy1", "fakeUrl2"))
         project.repositories.add(mavenRepoMock("maven2", "file://fakeUrl3"))
         project.repositories.add(ivyRepoMock("ivy2", "fakeUrl4"))
+        PerModuleReportDependenciesTask.CreationAction.run {
+            task.projectRepositories.set(project.repositories.toInternalRepoMetadataList())
+        }
 
         // Test-specific Project configuration -- Build a fake dependency graph
         val rootComponent = createProjectComponent("root_module")

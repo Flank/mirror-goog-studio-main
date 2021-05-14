@@ -91,8 +91,6 @@ public class PlatformLoader implements SdkLoader {
                         mTreeLocation.toPath(),
                         hostTools.resolve(FN_AAPT),
                         hostTools.resolve(FN_AIDL),
-                        mTreeLocation.toPath().resolve("prebuilts/sdk/tools/dx"),
-                        mTreeLocation.toPath().resolve("prebuilts/sdk/tools/lib/dx.jar"),
                         hostTools.resolve(FN_RENDERSCRIPT),
                         mTreeLocation.toPath().resolve("prebuilts/sdk/renderscript/include"),
                         mTreeLocation.toPath().resolve("prebuilts/sdk/renderscript/clang-include"),

@@ -156,6 +156,7 @@ import org.jetbrains.uast.expressions.UInjectionHost
 import org.jetbrains.uast.getContainingUClass
 import org.jetbrains.uast.getContainingUMethod
 import org.jetbrains.uast.getParentOfType
+import org.jetbrains.uast.getQualifiedName
 import org.jetbrains.uast.isUastChildOf
 import org.jetbrains.uast.java.JavaUAnnotation
 import org.jetbrains.uast.util.isAssignment
@@ -2231,6 +2232,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                     if (parent is UQualifiedReferenceExpression) {
                         val receiver = parent.receiver
                         val specificOwner = receiver.getExpressionType()?.canonicalText
+                            ?: (receiver as? UReferenceExpression)?.getQualifiedName()
                         val specificApi = if (specificOwner != null)
                             apiDatabase.getFieldVersion(specificOwner, name)
                         else

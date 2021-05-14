@@ -20,6 +20,7 @@ import com.android.SdkConstants
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.builder.dexing.isProguardRule
 import org.gradle.api.tasks.TaskProvider
 
@@ -56,6 +57,6 @@ class MergeGeneratedProguardFilesCreationAction(
             isProguardRule(f.relativeTo(baseFolder).invariantSeparatorsPath)
         }
 
-        task.inputFiles = proguardFiles
+        task.inputFiles.fromDisallowChanges(proguardFiles)
     }
 }

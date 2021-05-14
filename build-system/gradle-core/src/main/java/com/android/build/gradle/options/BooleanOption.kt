@@ -128,7 +128,6 @@ enum class BooleanOption(
     ENABLE_NEW_RESOURCE_SHRINKER("android.experimental.enableNewResourceShrinker", false, FeatureStage.Experimental),
     ENABLE_NEW_RESOURCE_SHRINKER_PRECISE("android.experimental.enableNewResourceShrinker.preciseShrinking", false, FeatureStage.Experimental),
     ENABLE_LOCAL_TESTING("android.bundletool.enableLocalTesting", false, FeatureStage.Experimental),
-    INCLUDE_REPOSITORIES_IN_DEPENDENCY_REPORT("android.bundletool.includeRepositoriesInDependencyReport", false, FeatureStage.Experimental),
 
     /** When set R classes are treated as compilation classpath in libraries, rather than runtime classpath, with values set to 0. */
     ENABLE_ADDITIONAL_ANDROID_TEST_OUTPUT("android.enableAdditionalTestOutput", true, FeatureStage.Experimental),
@@ -168,6 +167,8 @@ enum class BooleanOption(
 
     ENABLE_TEST_FIXTURES("android.experimental.enableTestFixtures", false, FeatureStage.Experimental),
 
+    ENABLE_ART_PROFILES("android.experimental.enableArtProfiles", false, FeatureStage.Experimental),
+
     /* ------------------------
      * SOFTLY-ENFORCED FEATURES
      */
@@ -188,6 +189,9 @@ enum class BooleanOption(
     ENABLE_RESOURCE_OPTIMIZATIONS("android.enableResourceOptimizations", true, FeatureStage.SoftlyEnforced(VERSION_8_0)),
 
     ENABLE_R_TXT_RESOURCE_SHRINKING("android.enableRTxtResourceShrinking", true, FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.VERSION_8_0)),
+
+    INCLUDE_REPOSITORIES_IN_DEPENDENCY_REPORT("android.bundletool.includeRepositoriesInDependencyReport", true, FeatureStage.SoftlyEnforced(VERSION_8_0)),
+
     /* -------------------
      * DEPRECATED FEATURES
      */

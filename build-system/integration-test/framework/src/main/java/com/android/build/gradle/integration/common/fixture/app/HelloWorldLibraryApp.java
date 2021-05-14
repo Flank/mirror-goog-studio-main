@@ -21,6 +21,8 @@ import com.android.build.gradle.integration.common.fixture.GradleProject;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TestProject;
 import com.google.common.collect.ImmutableMap;
+import java.util.Map;
+import java.util.function.BiConsumer;
 
 /**
  * Simple test application with an Android library that prints "hello world!".
@@ -32,8 +34,21 @@ public class HelloWorldLibraryApp extends MultiModuleTestProject implements Test
     }
 
     public HelloWorldLibraryApp() {
-        super(ImmutableMap.of(":app", new EmptyAndroidTestApp(), ":lib", HelloWorldApp.noBuildFile()));
+        this(
+                ImmutableMap.of(
+                        ":app", new EmptyAndroidTestApp(), ":lib", HelloWorldApp.noBuildFile()));
+    }
 
+    public HelloWorldLibraryApp(Map<String, ? extends TestProject> projectMap) {
+        super(projectMap);
+
+        StringBuilder projectDependencies = new StringBuilder();
+        projectMap.forEach(
+                (BiConsumer<String, TestProject>)
+                        (s, testProject) -> {
+                            if (s.equals(":app")) return;
+                            projectDependencies.append("    implementation project('" + s + "')\n");
+                        });
         GradleProject app = (GradleProject) getSubproject(":app");
         app.addFile(
                 new TestSourceFile(
@@ -41,7 +56,7 @@ public class HelloWorldLibraryApp extends MultiModuleTestProject implements Test
                         "apply plugin: 'com.android.application'\n"
                                 + "\n"
                                 + "dependencies {\n"
-                                + "    implementation project(':lib')\n"
+                                + projectDependencies.toString()
                                 + "}\n"
                                 + "\n"
                                 + "android {\n"
@@ -73,17 +88,21 @@ public class HelloWorldLibraryApp extends MultiModuleTestProject implements Test
 "    </application>\n" +
 "</manifest>\n"));
 
-        GradleProject lib = (GradleProject) getSubproject(":lib");
-        lib.addFile(
-                new TestSourceFile(
-                        "build.gradle",
-                        "apply plugin: 'com.android.library'\n"
-                                + "\n"
-                                + "android {\n"
-                                + "     compileSdkVersion "
-                                + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-                                + "\n"
-                                + "}\n"));
-
+        projectMap.forEach(
+                (BiConsumer<String, TestProject>)
+                        (s, testProject) -> {
+                            if (s.equals(":app")) return;
+                            GradleProject lib = (GradleProject) getSubproject(s);
+                            lib.addFile(
+                                    new TestSourceFile(
+                                            "build.gradle",
+                                            "apply plugin: 'com.android.library'\n"
+                                                    + "\n"
+                                                    + "android {\n"
+                                                    + "     compileSdkVersion "
+                                                    + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                                                    + "\n"
+                                                    + "}\n"));
+                        });
     }
 }

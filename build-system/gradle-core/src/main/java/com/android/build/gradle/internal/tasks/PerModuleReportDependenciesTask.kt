@@ -33,16 +33,23 @@ import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.component.ComponentIdentifier
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
+import org.gradle.api.artifacts.dsl.RepositoryHandler
+import org.gradle.api.artifacts.repositories.ArtifactRepository
 import org.gradle.api.artifacts.repositories.IvyArtifactRepository
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.initialization.resolve.RepositoriesMode
+import org.gradle.api.internal.GradleInternal
 import org.gradle.api.internal.artifacts.result.ResolvedComponentResultInternal
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
@@ -71,7 +78,15 @@ abstract class PerModuleReportDependenciesTask : NonIncrementalTask() {
     @get:Input
     abstract val includeRepositoryInfo: Property<Boolean>
 
-    //FIXME repositories aren't fully represented in Inputs
+    @get:Nested
+    abstract val projectRepositories: ListProperty<InternalRepositoryMetadata>
+
+    // Intermediate data class, for use with @Nested
+    sealed class InternalRepositoryMetadata(@get:Input val name: String) {
+
+        class Maven(name: String, @get:Input val url: URI) : InternalRepositoryMetadata(name)
+        class Ivy(name: String, @get:Input val url: URI) : InternalRepositoryMetadata(name)
+    }
 
     private fun getFileDigest(file: File): ByteString {
         return ByteString.copyFrom(MessageDigest.getInstance("SHA-256").digest(file.readBytes()))
@@ -98,10 +113,6 @@ abstract class PerModuleReportDependenciesTask : NonIncrementalTask() {
             }
 
         // Declare local classes used for intermediate data representations
-        abstract class InternalRepositoryMetadata(val name: String)
-        class InternalMavenRepoMetadata(name: String, val url: URI): InternalRepositoryMetadata(name)
-        class InternalIvyRepoMetadata(name: String, val url: URI): InternalRepositoryMetadata(name)
-
         class InternalGraphNode(
             val id: ComponentIdentifier,
             val neighborIdList: List<ComponentIdentifier>,
@@ -130,29 +141,9 @@ abstract class PerModuleReportDependenciesTask : NonIncrementalTask() {
             val libDepIndices: List<Int>,
         )
 
-
-        fun MavenArtifactRepository.isLocalRepo() = url.scheme == "file"
-        fun IvyArtifactRepository.isLocalRepo() = url.scheme == "file"
-        // FIXME project usage in taskAction
-        // Build an intermediate list of InternalRepositoryMetadata objects
-        // If the includeRepositoryInfo flag is not set, just return an empty list -- all subsequent
-        //   operations on intermediateRepositories will be no-ops with empty/null results
-        val intermediateRepositories = if (includeRepositoryInfo.get()) {
-            project.repositories.asSequence()
-                .mapNotNull { repo ->
-                    when {
-                        repo is MavenArtifactRepository && !repo.isLocalRepo() ->
-                            InternalMavenRepoMetadata(repo.name, repo.url)
-                        repo is IvyArtifactRepository && !repo.isLocalRepo() ->
-                            InternalIvyRepoMetadata(repo.name, repo.url)
-                        else -> null // Drop any other types of repositories, such as flatDirectory
-                    }
-                }.toList()
-        } else listOf()
-
         // Build a map of repoName->Index
         val repoNameToIndexMap =
-            intermediateRepositories.associateIndexed { index, it -> it.name to index }
+            projectRepositories.get().associateIndexed { index, it -> it.name to index }
 
         // Build the graph representation, partitioning into "Project" and "Library" nodes
         //   and removing all edges (dependencies) that point to Projects
@@ -235,12 +226,12 @@ abstract class PerModuleReportDependenciesTask : NonIncrementalTask() {
                     addAllLibraryDepIndex(libDepObj.libDepIndices)
                 }
             }
-            intermediateRepositories.forEach { repoObj ->
+            projectRepositories.get().forEach { repoObj ->
                 addRepositoriesBuilder().apply {
                     when (repoObj) {
-                        is InternalMavenRepoMetadata ->
+                        is InternalRepositoryMetadata.Maven ->
                             mavenRepoBuilder.url = repoObj.url.toString()
-                        is InternalIvyRepoMetadata ->
+                        is InternalRepositoryMetadata.Ivy ->
                             ivyRepoBuilder.url = repoObj.url.toString()
                     }
                 }
@@ -260,8 +251,27 @@ abstract class PerModuleReportDependenciesTask : NonIncrementalTask() {
     ) : VariantTaskCreationAction<PerModuleReportDependenciesTask, ApkCreationConfig>(
         creationConfig
     ) {
+
+        companion object {
+
+            internal fun Iterable<ArtifactRepository>.toInternalRepoMetadataList() =
+                mapNotNull { repo ->
+                    when (repo) {
+                        is MavenArtifactRepository ->
+                            InternalRepositoryMetadata.Maven(repo.name, repo.url)
+                                .takeUnless { it.url.scheme == "file" }
+                        is IvyArtifactRepository ->
+                            InternalRepositoryMetadata.Ivy(repo.name, repo.url)
+                                .takeUnless { it.url.scheme == "file" }
+                        else ->
+                            return@mapNotNull null // Drop any other types of repositories, such as flatDirectory
+                    }
+                }
+        }
+
         override val name: String = computeTaskName("collect", "Dependencies")
-        override val type: Class<PerModuleReportDependenciesTask> = PerModuleReportDependenciesTask::class.java
+        override val type: Class<PerModuleReportDependenciesTask> =
+            PerModuleReportDependenciesTask::class.java
 
         override fun handleProvider(
             taskProvider: TaskProvider<PerModuleReportDependenciesTask>
@@ -279,15 +289,40 @@ abstract class PerModuleReportDependenciesTask : NonIncrementalTask() {
         ) {
             super.configure(task)
             task.runtimeClasspathName.set(creationConfig.variantDependencies.runtimeClasspath.name)
-            task.runtimeClasspathArtifacts = creationConfig.variantDependencies.getArtifactCollection(
-                AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
-                AndroidArtifacts.ArtifactScope.EXTERNAL,
-                // Query for JAR instead of PROCESSED_JAR as this task works with unprocessed (a/j)ars
-                AndroidArtifacts.ArtifactType.AAR_OR_JAR
-            )
+            task.runtimeClasspathArtifacts =
+                creationConfig.variantDependencies.getArtifactCollection(
+                    AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
+                    AndroidArtifacts.ArtifactScope.EXTERNAL,
+                    // Query for JAR instead of PROCESSED_JAR as this task works with unprocessed (a/j)ars
+                    AndroidArtifacts.ArtifactType.AAR_OR_JAR
+                )
 
             task.includeRepositoryInfo
                 .set(creationConfig.services.projectOptions[BooleanOption.INCLUDE_REPOSITORIES_IN_DEPENDENCY_REPORT])
+
+            val projectRepositories = task.project.repositories
+
+            val repositoryHandlerProvider: Provider<RepositoryHandler> = try {
+                // this is using private Gradle APIs, so it may break in the future Gradle versions
+                val dependencyResolutionManagement = (task.project.gradle as GradleInternal)
+                    .settings
+                    .dependencyResolutionManagement
+
+                // If repositoriesMode == PREFER_PROJECT, prioritize projectRepositories
+                dependencyResolutionManagement.repositoriesMode.map {
+                    if (it == RepositoriesMode.PREFER_PROJECT && projectRepositories.isNotEmpty())
+                        projectRepositories
+                    else
+                        dependencyResolutionManagement.repositories
+                }
+            } catch (ignored: Throwable) {
+                // fall back to using projectRepositories
+                creationConfig
+                    .services
+                    .provider { projectRepositories }
+            }
+
+            task.projectRepositories.setDisallowChanges(repositoryHandlerProvider.map { it.toInternalRepoMetadataList() })
 
             if (creationConfig is DynamicFeatureCreationConfig) {
                 task.moduleName.setDisallowChanges(creationConfig.featureName)

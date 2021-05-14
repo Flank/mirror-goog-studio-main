@@ -19,6 +19,7 @@ package com.android.tools.lint.checks
 import com.android.tools.lint.detector.api.getMethodName
 import com.android.tools.lint.detector.api.skipParentheses
 import com.intellij.psi.PsiClassType
+import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiField
 import com.intellij.psi.PsiLocalVariable
 import com.intellij.psi.PsiPrimitiveType
@@ -80,8 +81,8 @@ abstract class DataFlowAnalyzer(
     ) {
     }
 
-    protected val references: MutableSet<PsiVariable> = mutableSetOf()
-    protected val instances: MutableSet<UElement> = mutableSetOf()
+    protected val references: MutableSet<PsiElement> = LinkedHashSet()
+    protected val instances: MutableSet<UElement> = LinkedHashSet()
 
     init {
         if (references.isEmpty()) {
@@ -108,7 +109,29 @@ abstract class DataFlowAnalyzer(
                 matched = true
             } else {
                 val resolved = receiver.tryResolve()
-                if (resolved != null) {
+                if (resolved == null && receiver is USimpleNameReferenceExpression) {
+                    // Work around UAST bug where resolving in a lambda doesn't work; KT-46628.
+                    if (receiver.identifier == "it") {
+                        var curr: UElement = receiver
+                        while (true) {
+                            val lambda = curr.getParentOfType(ULambdaExpression::class.java, true) ?: break
+                            val valueParameters = lambda.valueParameters
+                            if (valueParameters.any { parameter ->
+                                val javaPsi = parameter.javaPsi
+                                val sourcePsi = parameter.sourcePsi
+                                javaPsi != null && references.contains(javaPsi) ||
+                                    sourcePsi != null && references.contains(sourcePsi)
+                            }
+                            ) {
+                                // We found the variable
+                                matched = true
+                                break
+                            }
+
+                            curr = lambda
+                        }
+                    }
+                } else if (resolved != null) {
                     if (references.contains(resolved)) {
                         matched = true
                     }
@@ -120,12 +143,12 @@ abstract class DataFlowAnalyzer(
                 // Kotlin 1.3.50 may add another layer UImplicitReturnExpression
                 ?: node.uastParent?.uastParent?.uastParent as? ULambdaExpression
             if (lambda != null && lambda.uastParent is UCallExpression &&
-                isKotlinScopingFunction(lambda.uastParent as UCallExpression)
+                isScopingThis(lambda.uastParent as UCallExpression)
             ) {
                 if (instances.contains(node)) {
                     matched = true
                 }
-            } else if (getMethodName(node) == "with") {
+            } else if (isScopingThis(node)) {
                 val args = node.valueArguments
                 if (args.size == 2 && instances.contains(args[0]) &&
                     args[1] is ULambdaExpression
@@ -135,8 +158,11 @@ abstract class DataFlowAnalyzer(
                     if (body is UBlockExpression) {
                         for (expression in body.expressions) {
                             if (expression is UReturnExpression) {
+                                // The with or apply call is returned
                                 expression.returnExpression?.let(instances::add)
                             } else {
+                                // When we have with(X) { statementList }, and X is a tracked instance, also treat
+                                // each of the statements in the body as being invoked on the instance
                                 instances.add(expression)
                             }
                         }
@@ -162,10 +188,22 @@ abstract class DataFlowAnalyzer(
                 }
             }
 
-            if (isKotlinScopingFunction(node)) {
-                (node.valueArguments.lastOrNull() as? ULambdaExpression)?.let {
-                    val body = it.body
-                    instances.add(body)
+            val lambda = node.valueArguments.lastOrNull() as? ULambdaExpression
+            if (lambda != null) {
+                if (isScopingIt(node)) {
+                    // If we have X.let { Y }, and X is a tracked instance, we should now
+                    // also track references to the "it" variable (or whatever the lambda
+                    // variable is called). Same case for X.also { Y }.
+                    if (lambda.valueParameters.size == 1) {
+                        val resolved = receiver?.tryResolve()
+                        if (resolved != null && references.contains(resolved)) {
+                            val lambdaVar = lambda.valueParameters.first()
+                            instances.add(lambdaVar)
+                            addVariableReference(lambdaVar)
+                        }
+                    }
+                } else if (isScopingThis(node)) {
+                    val body = lambda.body
                     if (body is UBlockExpression) {
                         for (expression in body.expressions) {
                             if (expression is UReturnExpression) {
@@ -193,15 +231,6 @@ abstract class DataFlowAnalyzer(
         }
 
         return super.visitCallExpression(node)
-    }
-
-    private fun isKotlinScopingFunction(node: UCallExpression): Boolean {
-        val methodName = getMethodName(node)
-        return methodName == "apply" ||
-            methodName == "run" ||
-            methodName == "with" ||
-            methodName == "also" ||
-            methodName == "let"
     }
 
     override fun afterVisitVariable(node: UVariable) {
@@ -234,7 +263,7 @@ abstract class DataFlowAnalyzer(
     }
 
     protected fun addVariableReference(node: UVariable) {
-        (node.sourcePsi as? PsiVariable)?.let { references.add(it) }
+        node.sourcePsi?.let { references.add(it) }
         (node.javaPsi as? PsiVariable)?.let { references.add(it) }
     }
 
@@ -254,6 +283,7 @@ abstract class DataFlowAnalyzer(
         super.afterVisitSwitchClauseExpression(node)
     }
 
+    @Suppress("UnstableApiUsage") // yield is still experimental
     override fun afterVisitYieldExpression(node: UYieldExpression) {
         val element: UElement? = node.expression
         if (element != null && instances.contains(element)) {
@@ -393,11 +423,7 @@ abstract class DataFlowAnalyzer(
 
         // Kotlin stdlib functions also return "this" but for various reasons
         // don't have the right return type
-        val name = call.methodName
-        if ((name == "also" || name == "apply") &&
-            // See libraries/stdlib/jvm/build/stdlib-declarations.json
-            containingClass.qualifiedName == "kotlin.StandardKt__StandardKt"
-        ) {
+        if (isReturningContext(call)) {
             return true
         }
 
@@ -412,13 +438,6 @@ abstract class DataFlowAnalyzer(
     }
 
     companion object {
-        /**
-         * Returns the variable the expression is assigned to, if any.
-         */
-        fun getVariableElement(rhs: UCallExpression): PsiVariable? {
-            return getVariableElement(rhs, allowChainedCalls = false, allowFields = false)
-        }
-
         fun getVariableElement(
             rhs: UCallExpression,
             allowChainedCalls: Boolean,
@@ -482,5 +501,55 @@ abstract class DataFlowAnalyzer(
 
             return null
         }
+    }
+
+    /**
+     * Returns true if the given call represents a Kotlin
+     * scope function where the object reference is this. See
+     * https://kotlinlang.org/docs/scope-functions.html#function-selection
+     */
+    private fun isScopingThis(node: UCallExpression): Boolean {
+        val name = getMethodName(node)
+        if (name == "run" || name == "with" || name == "apply") {
+            return isScopingFunction(node)
+        }
+        return false
+    }
+
+    /**
+     * Returns true if the given call represents a Kotlin scope function
+     * where the object reference is the lambda variable `it`; see
+     * https://kotlinlang.org/docs/scope-functions.html#function-selection
+     */
+    private fun isScopingIt(node: UCallExpression): Boolean {
+        val name = getMethodName(node)
+        if (name == "let" || name == "also") {
+            return isScopingFunction(node)
+        }
+        return false
+    }
+
+    /**
+     * Returns true if the given call represents a Kotlin scope
+     * function where the return value is the context object; see
+     * https://kotlinlang.org/docs/scope-functions.html#function-selection
+     */
+    private fun isReturningContext(node: UCallExpression): Boolean {
+        val name = getMethodName(node)
+        if (name == "apply" || name == "also") {
+            return isScopingFunction(node)
+        }
+        return false
+    }
+
+    /**
+     * Returns true if the given node appears to be one of the scope
+     * functions. Only checks parent class; caller should intend that
+     * it's actually one of let, with, apply, etc.
+     */
+    private fun isScopingFunction(node: UCallExpression): Boolean {
+        val called = node.resolve() ?: return true
+        // See libraries/stdlib/jvm/build/stdlib-declarations.json
+        return called.containingClass?.qualifiedName == "kotlin.StandardKt__StandardKt"
     }
 }

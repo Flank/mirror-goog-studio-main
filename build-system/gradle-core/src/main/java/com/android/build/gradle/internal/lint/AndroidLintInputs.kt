@@ -971,7 +971,8 @@ abstract class AndroidArtifactInput : ArtifactInput() {
             wearAppConfiguration = null,
             testedVariant = null,
             project = project,
-            projectOptions = projectOptions
+            projectOptions = projectOptions,
+            isSelfInstrumenting = false,
         )
         artifactCollectionsInputs.setDisallowChanges(ArtifactCollectionsInputs(
             variantDependencies = variantDependencies,
@@ -1083,7 +1084,8 @@ abstract class JavaArtifactInput : ArtifactInput() {
             wearAppConfiguration = null,
             testedVariant = null,
             project = project,
-            projectOptions = projectOptions
+            projectOptions = projectOptions,
+            isSelfInstrumenting = false,
         )
         artifactCollectionsInputs.setDisallowChanges(
             ArtifactCollectionsInputs(
