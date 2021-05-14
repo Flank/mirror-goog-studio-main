@@ -1051,7 +1051,7 @@ open class GradleDetector : Detector(), GradleScanner {
             checkSupportLibraries(context, dependency, version, newerVersion, cookie)
         }
 
-        if (newerVersion != null && newerVersion > version) {
+        if (newerVersion != null && version > GradleVersion(0, 0, 0) && newerVersion > version) {
             val versionString = newerVersion.toString()
             val message = getNewerVersionAvailableMessage(dependency, versionString, null)
             val fix = if (!isResolved) getUpdateDependencyFix(revision, versionString) else null
@@ -2114,7 +2114,7 @@ open class GradleDetector : Detector(), GradleScanner {
         minor: Int,
         micro: Int
     ): GradleVersion? {
-        return if (!version1.isAtLeast(major, minor, micro)) {
+        return if (version1 > GradleVersion(0, 0, 0) && !version1.isAtLeast(major, minor, micro)) {
             GradleVersion(major, minor, micro)
         } else null
     }
@@ -2124,7 +2124,7 @@ open class GradleDetector : Detector(), GradleScanner {
         major: Int,
         minor: Int
     ): GradleVersion? {
-        return if (!version1.isAtLeast(major, minor, 0)) {
+        return if (version1 > GradleVersion(0, 0, 0) && !version1.isAtLeast(major, minor, 0)) {
             GradleVersion(major, minor)
         } else null
     }
@@ -2133,7 +2133,7 @@ open class GradleDetector : Detector(), GradleScanner {
         version1: GradleVersion,
         version2: GradleVersion
     ): GradleVersion? {
-        return if (version1 < version2) {
+        return if (version1 > GradleVersion(0, 0, 0) && version1 < version2) {
             version2
         } else null
     }

@@ -132,7 +132,7 @@ abstract class DeprecatedSdkRegistry(
      */
     fun getVersionInfo(dependency: GradleCoordinate): DeprecatedLibrary? {
         val library = findDeclaration(dependency) ?: return null
-        val currentVersion = dependency.version ?: return null
+        val currentVersion = dependency.version?.takeIf { it > GradleVersion(0, 0, 0) } ?: return null
 
         for (versionElement in library) {
             if (versionElement.tagName == TAG_VERSIONS) { // Tolerate future extra tags
