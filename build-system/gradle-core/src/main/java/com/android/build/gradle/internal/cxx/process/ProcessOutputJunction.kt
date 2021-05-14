@@ -33,6 +33,7 @@ import org.gradle.process.ExecSpec
 import org.gradle.process.JavaExecSpec
 import java.io.File
 import java.io.IOException
+import java.nio.file.Files
 
 /**
  * This is a builder-style class that composes multiple output streams and invoke process with
@@ -85,11 +86,11 @@ class ProcessOutputJunction(
         execOperations: (Action<in BaseExecSpec?>) -> ExecResult
     ) {
         commandFile.parentFile.mkdirs()
-        commandFile.delete()
+        Files.deleteIfExists(commandFile.toPath())
         infoln(process.toString())
         commandFile.writeText(process.toString())
-        stderrFile.delete()
-        stdoutFile.delete()
+        Files.deleteIfExists(stderrFile.toPath())
+        Files.deleteIfExists(stdoutFile.toPath())
         try {
             val proc =
                 if (isJavaProcess) process.createJavaProcess() else process.createProcess()

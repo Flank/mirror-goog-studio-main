@@ -451,9 +451,7 @@ internal fun hardLinkOrCopy(source: File, destination: File) {
         return
     }
 
-    if (destination.exists()) {
-        destination.delete()
-    }
+    Files.deleteIfExists(destination.toPath())
 
     // CMake can report runtime files that it doesn't later produce.
     // Don't try to copy these. Also, don't warn because hard-link/copy

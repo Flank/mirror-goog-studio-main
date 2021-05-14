@@ -26,6 +26,7 @@ import com.google.common.base.Charsets
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.PrintStream
+import java.nio.file.Files
 
 /**
  * This file exposes functions for caching where the information about where the cache is held
@@ -253,7 +254,7 @@ class CachingEnvironment(
         writeJsonFile(valueFile, value)
         writeJsonFile(keyFile, key)
         // Don't leave dangling exception file from a prior run
-        if (exceptionFile.exists()) exceptionFile.delete()
+        Files.deleteIfExists(exceptionFile.toPath())
     }
 
     /**
