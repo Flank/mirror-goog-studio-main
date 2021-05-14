@@ -1,7 +1,8 @@
 load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
+load("//tools/base/sdklib:sdk.bzl", "sdk_java_binary")
 
 kotlin_library(
-    name = "profgen-cli",
+    name = "profgen-cli-lib",
     srcs = glob([
         "src/main/kotlin/**/*.kt",
     ]),
@@ -11,17 +12,24 @@ kotlin_library(
     ],
 )
 
+sdk_java_binary(
+    name = "profgen",
+    main_class = "com.android.tools.profgen.cli.MainKt",
+    visibility = ["//visibility:public"],
+    runtime_deps = ["profgen-cli-lib"],
+)
+
 kotlin_test(
     name = "tests",
     srcs = glob([
         "src/test/kotlin/**/*.kt",
     ]),
     data = glob(["testData/**"]),
-    friends = [":profgen-cli"],
+    friends = [":profgen-cli-lib"],
     jvm_flags = ["-Dtest.suite.jar=tests.jar"],
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
-        ":profgen-cli",
+        ":profgen-cli-lib",
         "//prebuilts/tools/common/m2/repository/com/google/truth/truth/0.42:jar",
         "//prebuilts/tools/common/m2/repository/junit/junit/4.12:jar",
         "//tools/base/testutils:tools.testutils",
