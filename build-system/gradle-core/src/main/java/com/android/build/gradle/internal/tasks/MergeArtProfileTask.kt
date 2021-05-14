@@ -25,25 +25,31 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.fromDisallowChanges
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
-import org.gradle.api.tasks.SkipWhenEmpty
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
 
 abstract class MergeArtProfileTask: MergeFileTask() {
 
-    @get:PathSensitive(PathSensitivity.RELATIVE)
-    @get:InputFiles
-    @get:SkipWhenEmpty
+    @get:[InputFiles PathSensitive(PathSensitivity.RELATIVE)]
     abstract override val inputFiles: ConfigurableFileCollection
+
+    @get:[InputFile PathSensitive(PathSensitivity.RELATIVE)]
+    @get:Optional
+    abstract val profileSource: RegularFileProperty
 
     @TaskAction
     override fun doTaskAction() {
         workerExecutor.noIsolation().submit(MergeFilesWorkAction::class.java) {
             it.initializeFromAndroidVariantTask(this)
             it.inputFiles.from(inputFiles)
+            if (profileSource.isPresent) {
+                it.inputFiles.from(profileSource)
+            }
             it.outputFile.set(outputFile)
         }
     }
@@ -87,6 +93,9 @@ abstract class MergeArtProfileTask: MergeFileTask() {
                             AndroidArtifacts.ArtifactType.ART_PROFILE
                     )
             task.inputFiles.fromDisallowChanges(aarProfilesArtifactCollection.artifactFiles)
+
+            task.profileSource.set(creationConfig.variantSources.artProfileIfExists)
+            task.profileSource.disallowChanges()
         }
     }
 }

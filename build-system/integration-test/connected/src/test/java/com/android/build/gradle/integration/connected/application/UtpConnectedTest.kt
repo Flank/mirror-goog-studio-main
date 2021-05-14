@@ -175,4 +175,17 @@ class UtpConnectedTest {
         assertThat(logcatText).contains("TestLogger: test logs")
         assertThat(logcatText).contains("TestRunner: finished: useAppContext(com.example.android.kotlin.ExampleInstrumentedTest)")
     }
+
+    @Test
+    @Throws(Exception::class)
+    fun connectedAndroidTestFromTestOnlyModule() {
+        val testTaskName = ":testOnlyModule:connectedAndroidTest"
+        val testReportPath = "testOnlyModule/$TEST_REPORT"
+        val testResultPbPath = "testOnlyModule/$TEST_RESULT_PB"
+
+        project.executor().run(testTaskName)
+
+        assertThat(project.file(testReportPath)).exists()
+        assertThat(project.file(testResultPbPath)).exists()
+    }
 }

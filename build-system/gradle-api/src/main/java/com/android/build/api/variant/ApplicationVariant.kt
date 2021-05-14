@@ -17,13 +17,11 @@
 package com.android.build.api.variant
 
 import com.android.build.api.component.AndroidTest
-import org.gradle.api.Incubating
 import org.gradle.api.provider.Property
 
 /**
  * Properties for the main Variant of an application.
  */
-@Incubating
 interface ApplicationVariant : GeneratesApk, Variant {
 
     /**

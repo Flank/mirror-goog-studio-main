@@ -16,11 +16,9 @@
 
 package com.android.build.api.variant
 
-import org.gradle.api.Incubating
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.SetProperty
 
-@Incubating
 interface ExternalNativeBuild {
 
     /**

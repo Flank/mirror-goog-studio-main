@@ -33,6 +33,7 @@ import com.android.utils.StdLogger
 import org.gradle.api.file.Directory
 import org.gradle.api.provider.Provider
 import java.io.File
+import java.util.concurrent.ConcurrentHashMap
 import java.nio.file.Path
 import kotlin.math.min
 
@@ -40,14 +41,17 @@ private const val MAX_SYSTEM_IMAGE_RETRIES = 4;
 private const val BASE_RETRY_DELAY_SECONDS = 2L;
 private const val MAX_RETRY_DELAY_SECONDS = 10L;
 
+private val snapshotLocks: ConcurrentHashMap<String, Any> = ConcurrentHashMap()
+
 /**
  * Manages AVDs for the Avd build service inside the Android Gradle Plugin.
  */
 class AvdManager(
-    avdFolder: File,
+    private val avdFolder: File,
     private val versionedSdkLoader: Provider<SdkComponentsBuildService.VersionedSdkLoader>,
     private val sdkHandler: AndroidSdkHandler,
-    private val androidLocationsProvider: AndroidLocationsProvider
+    private val androidLocationsProvider: AndroidLocationsProvider,
+    private val snapshotHandler: AvdSnapshotHandler
 ) {
 
     private val sdkDirectory: File
@@ -115,6 +119,31 @@ class AvdManager(
             logger
         )
         return newInfo?.configFile ?: error("AVD could not be created.")
+    }
+
+    fun loadSnapshotIfNeeded(deviceName: String) {
+        val lock = snapshotLocks.computeIfAbsent(deviceName) {
+            Any()
+        }
+        synchronized(lock) {
+            val emulatorProvider = versionedSdkLoader.get().emulatorDirectoryProvider
+            val emulatorExecutable = snapshotHandler.getEmulatorExecutable(emulatorProvider)
+
+            if (snapshotHandler.checkSnapshotLoadable(
+                    deviceName,
+                    emulatorExecutable,
+                    avdFolder,
+                    logger
+                )
+            ) {
+                logger.verbose("Snapshot already exists for device $deviceName")
+                return
+            }
+
+            logger.verbose("Creating snapshot for $deviceName")
+            snapshotHandler.generateSnapshot(deviceName, emulatorExecutable, avdFolder, logger)
+            logger.verbose("Verified snapshot created for: $deviceName.")
+        }
     }
 
     /**

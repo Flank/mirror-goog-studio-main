@@ -300,8 +300,9 @@ public class Deployer {
             throws DeployerException {
         Deploy.Arch arch = adb.getArchFromApk(apk);
         try {
-            installer.installCoroutineAgent(packageName, arch);
-            return true;
+            Deploy.InstallCoroutineAgentResponse response =
+                    installer.installCoroutineAgent(packageName, arch);
+            return response.getStatus() == Deploy.InstallCoroutineAgentResponse.Status.OK;
         } catch (IOException e) {
             logger.error(e, null);
             return false;

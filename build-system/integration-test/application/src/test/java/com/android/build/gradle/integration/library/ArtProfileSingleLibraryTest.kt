@@ -23,7 +23,6 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldLibrary
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.model.v2.models.AndroidProject
-import com.android.testutils.apk.AndroidArchive
 import com.android.testutils.apk.Zip
 import com.android.tools.profgen.ArtProfile
 import com.android.tools.profgen.HumanReadableProfile
@@ -67,23 +66,54 @@ class ArtProfileSingleLibraryTest {
     val project = GradleTestProject.builder().fromTestApp(HelloWorldLibraryApp.create()).create()
 
     @Test
-    fun testSingleLibraryComposeMerging() {
+    fun testSingleLibraryArtProfileMerging() {
+        testSingleLibraryWithOptionalApplicationArtProfileMerging(false)
+    }
 
-        project.getSubproject(":app").buildFile.appendText(
+    @Test
+    fun testSingleLibraryWithApplicationArtProfilesMerging() {
+        testSingleLibraryWithOptionalApplicationArtProfileMerging(true)
+    }
+
+    private fun testSingleLibraryWithOptionalApplicationArtProfileMerging(
+        addApplicationProfile: Boolean
+    ) {
+
+        val app = project.getSubproject(":app").also {
+            it.buildFile.appendText(
                 """
-                    android {
-                        defaultConfig {
-                            minSdkVersion = 28
+                        android {
+                            defaultConfig {
+                                minSdkVersion = 28
+                            }
                         }
-                    }
+                    """.trimIndent()
+            )
+        }
+
+        val applicationFileContent =
+            """
+                    HSPLcom/google/Foo;->appMethod(II)I
+                    HSPLcom/google/Foo;->appMethod-name-with-hyphens(II)I
                 """.trimIndent()
-        )
+
+        if (addApplicationProfile) {
+            val appAndroidAssets = app.mainSrcDir.parentFile
+            appAndroidAssets.mkdir()
+
+            File(
+                appAndroidAssets,
+                SdkConstants.FN_ART_PROFILE
+            ).writeText(
+                applicationFileContent
+            )
+        }
 
         val library = project.getSubproject(":lib")
         val androidAssets = library.mainSrcDir.parentFile
         androidAssets.mkdir()
 
-        val singleFileContent =
+        val libraryFileContent =
                 """
                     HSPLcom/google/Foo;->method(II)I
                     HSPLcom/google/Foo;->method-name-with-hyphens(II)I
@@ -91,7 +121,7 @@ class ArtProfileSingleLibraryTest {
 
         File(androidAssets,
                 SdkConstants.FN_ART_PROFILE).writeText(
-                singleFileContent
+                libraryFileContent
         )
 
         val result = project.executor()
@@ -107,12 +137,12 @@ class ArtProfileSingleLibraryTest {
                 "release",
                 SdkConstants.FN_ART_PROFILE,
         )
-        Truth.assertThat(libFile.readText()).isEqualTo(singleFileContent)
+        Truth.assertThat(libFile.readText()).isEqualTo(libraryFileContent)
 
         // check packaging.
         project.getSubproject(":lib").getAar("release") {
             checkAndroidArtifact(tempFolder, it, aarEntryName) { fileContent ->
-                Truth.assertThat(fileContent).isEqualTo(singleFileContent.toByteArray())
+                Truth.assertThat(fileContent).isEqualTo(libraryFileContent.toByteArray())
             }
         }
 
@@ -123,7 +153,11 @@ class ArtProfileSingleLibraryTest {
                 "release",
                 SdkConstants.FN_ART_PROFILE,
         )
-        Truth.assertThat(mergedFile.readText()).isEqualTo(singleFileContent)
+        val expectedContent = if (addApplicationProfile) {
+            "$libraryFileContent\n$applicationFileContent\n"
+        } else libraryFileContent
+
+        Truth.assertThat(mergedFile.readText()).isEqualTo(expectedContent)
         Truth.assertThat(
                 HumanReadableProfile(mergedFile) {
                     fail(it)

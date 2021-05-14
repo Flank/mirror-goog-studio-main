@@ -16,13 +16,10 @@
 
 package com.android.build.api.variant
 
-import org.gradle.api.Incubating
-
 /**
  * Interface for ndk-build per-variant info.
  *
  * see [com.android.build.api.dsl.ExternalNativeNdkBuildOptions] for expanded documentation
  * on each of these fields.
  */
-@Incubating
 interface ExternalNdkBuild: ExternalNativeBuild

@@ -16,13 +16,11 @@
 
 package com.android.build.api.variant
 
-import org.gradle.api.Incubating
 import org.gradle.api.provider.SetProperty
 
 /**
  * Defines a variant's packaging options for native library (.so) files.
  */
-@Incubating
 interface JniLibsPackaging {
 
     /**

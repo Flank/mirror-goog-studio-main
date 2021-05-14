@@ -16,12 +16,9 @@
 
 package com.android.build.api.variant
 
-import org.gradle.api.Incubating
-
 /**
  * Interface that mark the potential existence of android tests associated with a variant.
  */
-@Incubating
 interface HasAndroidTestBuilder {
 
     /**

@@ -16,13 +16,11 @@
 
 package com.android.build.api.variant
 
-import org.gradle.api.Incubating
 import org.gradle.api.provider.Property
 
 /**
  * Defines an APK variant's packaging options for dex files.
  */
-@Incubating
 interface DexPackagingOptions {
 
     /**

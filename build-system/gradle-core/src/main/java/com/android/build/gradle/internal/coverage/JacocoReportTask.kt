@@ -149,14 +149,14 @@ abstract class JacocoReportTask : NonIncrementalTask() {
 
         override fun configure(task: JacocoReportTask) {
             super.configure(task)
-            task.classFileCollection.setFrom(creationConfig.artifacts.getAllClasses())
             task.jacocoClasspath.setFrom(jacocoAntConfiguration)
             task.outputReportDir.set(creationConfig.paths.coverageReportDir)
             task.outputReportDir.disallowChanges()
             task.reportName.setDisallowChanges(creationConfig.testedConfig.name)
-            task.sourceFolders.setFrom(
-                creationConfig.services.fileCollection(creationConfig.testedConfig.javaSources))
             task.tabWidth.setDisallowChanges(4)
+
+            task.classFileCollection.setFrom(creationConfig.testedConfig.artifacts.getAllClasses())
+            task.sourceFolders.setFrom(creationConfig.services.fileCollection(creationConfig.testedConfig.javaSources))
         }
     }
 

@@ -16,14 +16,12 @@
 
 package com.android.build.api.variant
 
-import org.gradle.api.Incubating
 import org.gradle.api.provider.Provider
 
 /**
  * Cross cutting interface for [com.android.build.api.component.Component] subtypes that are
  * producing APK files.
  */
-@Incubating
 interface GeneratesApk {
 
     /**

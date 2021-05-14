@@ -22,6 +22,7 @@ import com.google.common.truth.Truth
 import org.gradle.api.Project
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.testfixtures.ProjectBuilder
 import org.gradle.workers.WorkerExecutor
 import org.junit.Before
@@ -40,6 +41,7 @@ internal class MergeArtProfileTaskTest {
     private lateinit var outputFile: File
     private lateinit var project: Project
     private lateinit var inputFiles: ConfigurableFileCollection
+    private lateinit var artProfileSourceFile: RegularFileProperty
 
     abstract class MergeArtProfileTaskForTest @Inject constructor(
             testWorkerExecutor: WorkerExecutor,
@@ -51,12 +53,14 @@ internal class MergeArtProfileTaskTest {
     fun setUp() {
         project = ProjectBuilder.builder().withProjectDir(temporaryFolder.root).build()
         inputFiles = project.files()
+        artProfileSourceFile = project.objects.fileProperty()
         task = project.tasks.register(
                 "appMetadataTask",
                 MergeArtProfileTaskForTest::class.java,
                 FakeGradleWorkExecutor(project.objects, temporaryFolder.newFolder()),
         ).get()
         task.inputFiles.from(inputFiles)
+        task.profileSource.set(artProfileSourceFile)
         task.analyticsService.set(FakeNoOpAnalyticsService())
         outputFile = temporaryFolder.newFile()
         task.outputFile.set(outputFile)
@@ -79,6 +83,22 @@ internal class MergeArtProfileTaskTest {
         Truth.assertThat(task.outputFile.get().asFile.readText()).isEqualTo(singleFile.readText())
     }
 
+    @Test
+    fun testSingleFileWithApplicationSource() {
+        val singleFile = temporaryFolder.newFile().also {
+            it.writeText("file 1 - line 1")
+        }
+        inputFiles.from(singleFile)
+        artProfileSourceFile.set(
+            temporaryFolder.newFile().also {
+                it.writeText("source-file 1 - line 1")
+            }
+        )
+        task.taskAction()
+        Truth.assertThat(task.outputFile.get().asFile.readText()).isEqualTo(
+            "${singleFile.readText()}\n${artProfileSourceFile.asFile.get().readText()}\n"
+        )
+    }
 
     @Test
     fun testMultipleFiles() {

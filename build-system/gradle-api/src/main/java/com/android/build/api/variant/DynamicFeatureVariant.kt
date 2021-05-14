@@ -16,10 +16,7 @@
 package com.android.build.api.variant
 
 import com.android.build.api.component.AndroidTest
-import org.gradle.api.Incubating
-import org.gradle.api.provider.Provider
 
-@Incubating
 interface DynamicFeatureVariant : Variant, GeneratesApk {
 
     /**

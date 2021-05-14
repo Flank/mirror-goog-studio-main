@@ -15,9 +15,7 @@
  */
 package com.android.build.api.variant
 
-import org.gradle.api.Incubating
 /**
  * [VariantBuilder] type for tests associated with a module.
  */
-@Incubating
 interface TestVariantBuilder: VariantBuilder

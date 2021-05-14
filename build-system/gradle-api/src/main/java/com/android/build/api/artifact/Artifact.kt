@@ -16,7 +16,6 @@
 
 package com.android.build.api.artifact
 
-import org.gradle.api.Incubating
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.file.RegularFile
@@ -36,7 +35,6 @@ import java.io.Serializable
  * An artifact must be one of the supported [ArtifactKind] and must be provided when the constructor is called.
  * ArtifactKind also defines the specific [FileSystemLocation] subclass used.
  */
-@Incubating
 abstract class Artifact<T: FileSystemLocation>(
     val kind: ArtifactKind<T>,
     val category: Category
@@ -62,7 +60,6 @@ abstract class Artifact<T: FileSystemLocation>(
     /**
      * Supported [ArtifactKind]
      */
-    @Incubating
     companion object {
         /**
          * [ArtifactKind] for [RegularFile]
@@ -81,7 +78,6 @@ abstract class Artifact<T: FileSystemLocation>(
      * Defines the kind of artifact type. this will be used to determine the output file location
      * for instance.
      */
-    @Incubating
     enum class Category {
         /* Source artifacts */
         SOURCES,
@@ -101,7 +97,6 @@ abstract class Artifact<T: FileSystemLocation>(
      * Consumers of artifact types with multiple instances must consume a collection of
      * [FileSystemLocation].
      */
-    @Incubating
     abstract class Multiple<FileTypeT: FileSystemLocation>(
         kind: ArtifactKind<FileTypeT>,
         category: Category
@@ -112,7 +107,6 @@ abstract class Artifact<T: FileSystemLocation>(
      * Denotes a single [FileSystemLocation] instance of this artifact type at a given time.
      * Single artifact types can be transformed or replaced but never appended.
      */
-    @Incubating
     abstract class Single<FileTypeT: FileSystemLocation>(
         kind: ArtifactKind<FileTypeT>,
         category: Category
@@ -128,7 +122,6 @@ abstract class Artifact<T: FileSystemLocation>(
      * If producing an artifact type annotated with this marker interface, content should be
      * written using the [com.android.build.api.variant.BuiltArtifacts.save] methods.
      */
-    @Incubating
     interface ContainsMany
 
     /**
@@ -139,7 +132,6 @@ abstract class Artifact<T: FileSystemLocation>(
      * Due to the additive behavior of the append scenario, an [Appendable] must be a
      * [Multiple].
      */
-    @Incubating
     interface Appendable
 
     /**
@@ -147,7 +139,6 @@ abstract class Artifact<T: FileSystemLocation>(
      *
      * Either a [Single] or [Multiple] artifact type can be transformed.
      */
-    @Incubating
     interface Transformable
 
     /**
@@ -156,7 +147,6 @@ abstract class Artifact<T: FileSystemLocation>(
      * artifact type, you will need to transform it by combining all the inputs into a single output
      * instance.
      */
-    @Incubating
     interface Replaceable
 }
 

@@ -22,17 +22,25 @@ import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.prefs.AndroidLocationsSingleton
 import com.android.repository.testframework.MockFileOp
 import com.android.sdklib.repository.AndroidSdkHandler
+import com.android.utils.ILogger
 import com.google.common.truth.Truth.assertThat
+import java.io.File
+import java.nio.file.Files
+import java.nio.file.Path
+import org.gradle.api.file.Directory
+import org.gradle.api.provider.Provider
 import org.junit.Assume.assumeTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.mockito.ArgumentMatchers.anyString
+import org.mockito.ArgumentMatchers.eq
+import org.mockito.Mockito
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.times
+import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
-import java.nio.file.Files
-import java.nio.file.Path
 
 @RunWith(JUnit4::class)
 class AvdManagerTest {
@@ -44,6 +52,8 @@ class AvdManagerTest {
     private lateinit var emulatorFolder: Path
     private lateinit var androidPrefsFolder: Path
     private lateinit var avdFolder: Path
+    private lateinit var snapshotHandler: AvdSnapshotHandler
+    private lateinit var versionedSdkLoader: SdkComponentsBuildService.VersionedSdkLoader
 
     @Before
     fun setup() {
@@ -61,14 +71,17 @@ class AvdManagerTest {
         avdFolder = fileOp.toPath("/avd")
         Files.createDirectories(avdFolder)
 
-        val versionedSdkLoader = setupVersionedSdkLoader()
+        snapshotHandler = mock(AvdSnapshotHandler::class.java)
+
+        versionedSdkLoader = setupVersionedSdkLoader()
         val sdkHandler = setupSdkHandler()
 
         manager = AvdManager(
             fileOp.toFile(avdFolder),
             FakeGradleProvider(versionedSdkLoader),
             sdkHandler,
-            AndroidLocationsSingleton
+            AndroidLocationsSingleton,
+            snapshotHandler
         )
     }
 
@@ -166,6 +179,70 @@ class AvdManagerTest {
         assertThat(allAvds.first()).isEqualTo("device2")
     }
 
+    @Test
+    fun testSnapshotCreation() {
+        //TODO(b/169661721): add support for windows.
+        assumeTrue(SdkConstants.currentPlatform() != SdkConstants.PLATFORM_WINDOWS)
+
+        `when`(snapshotHandler.getEmulatorExecutable(versionedSdkLoader.emulatorDirectoryProvider))
+            .thenReturn(fileOp.toFile(emulatorFolder.resolve("emulator")))
+        `when`(
+            snapshotHandler.checkSnapshotLoadable(
+                anyString(),
+                any(File::class.java),
+                any(File::class.java),
+                any(ILogger::class.java),
+                anyString()))
+            .thenReturn(false)
+
+        manager.createOrRetrieveAvd(
+            FakeGradleProvider(FakeGradleDirectory(fileOp.toFile(systemImageFolder))),
+            "system-images;android-29;default;x86",
+            "device1",
+            "Pixel 2")
+
+        manager.loadSnapshotIfNeeded("device1")
+
+        verify(snapshotHandler)
+            .generateSnapshot(
+                anyString(),
+                any(File::class.java),
+                any(File::class.java),
+                any(ILogger::class.java))
+    }
+
+    @Test
+    fun testSnapshotSkippedIfValid() {
+        //TODO(b/169661721): add support for windows.
+        assumeTrue(SdkConstants.currentPlatform() != SdkConstants.PLATFORM_WINDOWS)
+
+        `when`(snapshotHandler.getEmulatorExecutable(versionedSdkLoader.emulatorDirectoryProvider))
+            .thenReturn(fileOp.toFile(emulatorFolder.resolve("emulator")))
+        `when`(
+            snapshotHandler.checkSnapshotLoadable(
+                anyString(),
+                any(File::class.java),
+                any(File::class.java),
+                any(ILogger::class.java),
+                anyString()))
+            .thenReturn(true)
+
+        manager.createOrRetrieveAvd(
+            FakeGradleProvider(FakeGradleDirectory(fileOp.toFile(systemImageFolder))),
+            "system-images;android-29;default;x86",
+            "device1",
+            "Pixel 2")
+
+        manager.loadSnapshotIfNeeded("device1")
+
+        verify(snapshotHandler, times(0))
+            .generateSnapshot(
+                anyString(),
+                any(File::class.java),
+                any(File::class.java),
+                any(ILogger::class.java))
+    }
+
     private fun setupVersionedSdkLoader(): SdkComponentsBuildService.VersionedSdkLoader =
         mock(SdkComponentsBuildService.VersionedSdkLoader::class.java).also {
             `when`(it.sdkDirectoryProvider)
@@ -213,4 +290,7 @@ class AvdManagerTest {
                     </ns3:sdk-sys-img>
                     """.trimIndent().toByteArray())
     }
+
+    // to fix "cannot be null" issues with argument matchers
+    private fun <T> any(type: Class<T>): T = Mockito.any<T>(type)
 }
