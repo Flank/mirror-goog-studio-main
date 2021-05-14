@@ -17,15 +17,20 @@
 package com.android.build.gradle.integration.lint;
 
 import static com.android.build.gradle.integration.common.truth.GradleTaskSubject.assertThat;
+import static com.android.testutils.truth.PathSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.BooleanOption;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
+import java.nio.file.Files;
+import java.util.Arrays;
+import java.util.List;
 import kotlin.io.FilesKt;
 import kotlin.text.Charsets;
 import org.jetbrains.annotations.NotNull;
@@ -140,6 +145,34 @@ public class LintDependencyModelTest {
             // checkDependencies because the inputs are not modeled correctly in that case.
             GradleBuildResult secondResult = getExecutor().run(":app:lintDebug");
             assertThat(secondResult.findTask(":app:lintDebug")).didWork();
+        }
+    }
+
+    // Regression test for b/187964502
+    @Test
+    public void testMultipleJavaModuleDependencies() throws Exception {
+        TestFileUtils.searchAndReplace(
+                project.getSubproject("app").getBuildFile(),
+                "checkDependencies true",
+                "checkDependencies false");
+
+        getExecutor().run(":app:lintDebug");
+
+        File lintModelDir =
+                project.getSubproject("app")
+                        .getIntermediatesDir()
+                        .toPath()
+                        .resolve("incremental/lintDebug")
+                        .toFile();
+        assertThat(lintModelDir).isDirectory();
+
+        File librariesModelFile = new File(lintModelDir, "debug-mainArtifact-libraries.xml");
+        assertThat(librariesModelFile).isFile();
+        List<String> expectedJarNames =
+                Arrays.asList("javalib.jar", "javalib2.jar", "indirectlib.jar", "indirectlib2.jar");
+        for (String jarName : expectedJarNames) {
+            assertThat(String.join("\n", Files.readAllLines(librariesModelFile.toPath())))
+                    .contains(jarName);
         }
     }
 
