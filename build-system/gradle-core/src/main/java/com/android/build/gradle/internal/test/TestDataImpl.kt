@@ -34,14 +34,12 @@ import java.io.File
  * Implementation of [TestData] on top of a [AndroidTestCreationConfig]
  */
 class TestDataImpl(
-    providerFactory: ProviderFactory,
-    componentImpl: ComponentImpl,
+    namespace: Provider<String>,
     testConfig: AndroidTestCreationConfig,
     testApkDir: Provider<Directory>,
     testedApksDir: FileCollection?
 ) : AbstractTestDataImpl(
-    providerFactory,
-    componentImpl,
+    namespace,
     testConfig,
     testConfig,
     testConfig.variantSources,

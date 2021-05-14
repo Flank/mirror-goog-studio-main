@@ -32,14 +32,12 @@ import java.util.stream.Collectors
 
 /** Implementation of [TestData] for separate test modules.  */
 class TestApplicationTestData constructor(
-    providerFactory: ProviderFactory,
-    componentImpl: ComponentImpl,
+    namespace: Provider<String>,
     creationConfig: TestVariantCreationConfig,
     testApkDir: Provider<Directory>,
     testedApksDir: FileCollection
 ) : AbstractTestDataImpl(
-    providerFactory,
-    componentImpl,
+    namespace,
     creationConfig,
     creationConfig,
     creationConfig.variantSources,
