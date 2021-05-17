@@ -16,13 +16,13 @@
 
 package com.android.build.api.variant.impl
 
+import com.android.build.api.dsl.PackagingOptions
 import com.android.build.api.variant.JniLibsApkPackaging
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.sdklib.AndroidVersion.VersionCodes.M
-import org.gradle.api.provider.Provider
 
 class JniLibsApkPackagingImpl(
-    dslPackagingOptions: com.android.build.gradle.internal.dsl.PackagingOptions,
+    dslPackagingOptions: PackagingOptions,
     variantPropertiesApiServices: VariantPropertiesApiServices,
     minSdk: Int
 ) : JniLibsPackagingImpl(dslPackagingOptions, variantPropertiesApiServices),

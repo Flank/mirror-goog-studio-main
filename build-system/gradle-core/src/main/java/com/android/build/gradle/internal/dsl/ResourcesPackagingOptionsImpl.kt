@@ -17,35 +17,25 @@
 package com.android.build.gradle.internal.dsl
 
 import com.android.build.api.dsl.ResourcesPackagingOptions
+import com.android.build.gradle.internal.dsl.decorator.annotation.WithLazyInitialization
 import com.android.build.gradle.internal.packaging.defaultExcludes
 import com.android.build.gradle.internal.packaging.defaultMerges
+import javax.inject.Inject
 
-open class ResourcesPackagingOptionsImpl : ResourcesPackagingOptions {
+abstract class ResourcesPackagingOptionsImpl
+@Inject @WithLazyInitialization("lazyInit") constructor() : ResourcesPackagingOptions {
 
-    override val excludes: MutableSet<String> = defaultExcludes.toMutableSet()
+    protected fun lazyInit() {
+        setExcludes(defaultExcludes)
+        setMerges(defaultMerges)
+    }
 
     // support excludes += 'foo' syntax in groovy
-    fun setExcludes(patterns: Set<String>) {
-        val newExcludes = patterns.toList()
-        excludes.clear()
-        excludes.addAll(newExcludes)
-    }
-
-    override val pickFirsts: MutableSet<String> = mutableSetOf()
+    abstract fun setExcludes(patterns: Set<String>)
 
     // support pickFirsts += 'foo' syntax in groovy
-    fun setPickFirsts(patterns: Set<String>) {
-        val newPickFirsts = patterns.toList()
-        pickFirsts.clear()
-        pickFirsts.addAll(newPickFirsts)
-    }
-
-    override val merges: MutableSet<String> = defaultMerges.toMutableSet()
+    abstract fun setPickFirsts(patterns: Set<String>)
 
     // support merges += 'foo' syntax in groovy
-    fun setMerges(patterns: Set<String>) {
-        val newMerges = patterns.toList()
-        merges.clear()
-        merges.addAll(newMerges)
-    }
+    abstract fun setMerges(patterns: Set<String>)
 }

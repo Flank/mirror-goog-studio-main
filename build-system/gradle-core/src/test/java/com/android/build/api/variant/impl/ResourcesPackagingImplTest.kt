@@ -16,7 +16,8 @@
 
 package com.android.build.api.variant.impl
 
-import com.android.build.gradle.internal.dsl.PackagingOptions
+import com.android.build.api.dsl.PackagingOptions
+import com.android.build.gradle.internal.dsl.decorator.androidPluginDslDecorator
 import com.android.build.gradle.internal.packaging.defaultExcludes
 import com.android.build.gradle.internal.packaging.defaultMerges
 import com.android.build.gradle.internal.services.DslServices
@@ -35,9 +36,16 @@ class ResourcesPackagingImplTest {
     private val dslServices: DslServices = createDslServices(projectServices)
     private val variantPropertiesApiServices = createVariantPropertiesApiServices(projectServices)
 
+    interface PackagingOptionsWrapper {
+        val packagingOptions: PackagingOptions
+    }
+
     @Before
     fun setUp() {
-        dslPackagingOptions = PackagingOptions(dslServices)
+        dslPackagingOptions = androidPluginDslDecorator.decorate(PackagingOptionsWrapper::class.java)
+            .getDeclaredConstructor(DslServices::class.java)
+            .newInstance(dslServices)
+            .packagingOptions
     }
 
     @Test

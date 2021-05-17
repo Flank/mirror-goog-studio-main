@@ -19,9 +19,9 @@ package com.android.build.gradle.internal.dsl
 import com.android.build.api.dsl.DexPackagingOptions
 import com.android.build.api.dsl.JniLibsPackagingOptions
 import com.android.build.api.dsl.ResourcesPackagingOptions
+import com.android.build.gradle.internal.dsl.decorator.annotation.WithLazyInitialization
 import com.android.build.gradle.internal.packaging.defaultExcludes
 import com.android.build.gradle.internal.packaging.defaultMerges
-import com.android.build.gradle.internal.services.DslServices
 import org.gradle.api.Action
 import javax.inject.Inject
 
@@ -142,88 +142,37 @@ import javax.inject.Inject
  * }
  * </pre>
  */
-open class PackagingOptions @Inject constructor(dslServices: DslServices) :
+abstract class PackagingOptions
+@Inject @WithLazyInitialization("lazyInit") constructor() :
     com.android.builder.model.PackagingOptions,
     com.android.build.api.dsl.PackagingOptions {
 
-    override val excludes: MutableSet<String> = defaultExcludes.toMutableSet()
-
-    fun setExcludes(patterns: Set<String>) {
-        val newExcludes = patterns.toList()
-        excludes.clear()
-        excludes.addAll(newExcludes)
+    protected fun lazyInit() {
+        setExcludes(defaultExcludes)
+        setMerges(defaultMerges)
     }
+
+    abstract fun setExcludes(patterns: Set<String>)
 
     override fun exclude(pattern: String) {
         excludes.add(pattern);
     }
 
-    override val pickFirsts: MutableSet<String> = mutableSetOf()
-
-    fun setPickFirsts(patterns: Set<String>) {
-        val newPickFirsts = patterns.toList()
-        pickFirsts.clear()
-        pickFirsts.addAll(newPickFirsts)
-    }
+    abstract fun setPickFirsts(patterns: Set<String>)
 
     override fun pickFirst(pattern: String) {
         pickFirsts.add(pattern);
     }
 
-    override val merges: MutableSet<String> = defaultMerges.toMutableSet()
-
-    fun setMerges(patterns: Set<String>) {
-        val newMerges = patterns.toList()
-        merges.clear()
-        merges.addAll(newMerges)
-    }
+    abstract fun setMerges(patterns: Set<String>)
 
     override fun merge(pattern: String) {
         merges.add(pattern);
     }
 
-    override val doNotStrip: MutableSet<String> = mutableSetOf()
-
-    fun setDoNotStrip(patterns: Set<String>) {
-        val newDoNotStrip = patterns.toList()
-        doNotStrip.clear()
-        doNotStrip.addAll(newDoNotStrip)
-    }
+    abstract fun setDoNotStrip(patterns: Set<String>)
 
     override fun doNotStrip(pattern: String) {
         doNotStrip.add(pattern);
-    }
-
-    override val dex: DexPackagingOptions =
-        dslServices.newInstance(DexPackagingOptionsImpl::class.java)
-
-    override fun dex(action: DexPackagingOptions.() -> Unit) {
-        action.invoke(dex)
-    }
-
-    fun dex(action: Action<DexPackagingOptions>) {
-        action.execute(dex)
-    }
-
-    override val jniLibs: JniLibsPackagingOptions =
-        dslServices.newInstance(JniLibsPackagingOptionsImpl::class.java)
-
-    override fun jniLibs(action: JniLibsPackagingOptions.() -> Unit) {
-        action.invoke(jniLibs)
-    }
-
-    fun jniLibs(action: Action<JniLibsPackagingOptions>) {
-        action.execute(jniLibs)
-    }
-
-    override val resources: ResourcesPackagingOptions =
-        dslServices.newInstance(ResourcesPackagingOptionsImpl::class.java)
-
-    override fun resources(action: ResourcesPackagingOptions.() -> Unit) {
-        action.invoke(resources)
-    }
-
-    fun resources(action: Action<ResourcesPackagingOptions>) {
-        action.execute(resources)
     }
 }

@@ -27,6 +27,10 @@ import com.android.build.api.dsl.BundleLanguage
 import com.android.build.api.dsl.BundleTexture
 import com.android.build.api.dsl.LibraryPublishing
 import com.android.build.api.dsl.CompileOptions
+import com.android.build.api.dsl.DexPackagingOptions
+import com.android.build.api.dsl.JniLibsPackagingOptions
+import com.android.build.api.dsl.PackagingOptions
+import com.android.build.api.dsl.ResourcesPackagingOptions
 import com.android.build.api.dsl.SigningConfig
 import com.android.build.gradle.internal.dsl.AaptOptions
 import com.android.build.gradle.internal.dsl.ApplicationPublishingImpl
@@ -36,7 +40,9 @@ import com.android.build.gradle.internal.dsl.BundleOptionsDensity
 import com.android.build.gradle.internal.dsl.BundleOptionsDeviceTier
 import com.android.build.gradle.internal.dsl.BundleOptionsLanguage
 import com.android.build.gradle.internal.dsl.BundleOptionsTexture
+import com.android.build.gradle.internal.dsl.JniLibsPackagingOptionsImpl
 import com.android.build.gradle.internal.dsl.LibraryPublishingImpl
+import com.android.build.gradle.internal.dsl.ResourcesPackagingOptionsImpl
 import org.gradle.api.JavaVersion
 
 /** The list of all the supported property types for the production AGP */
@@ -45,10 +51,14 @@ val AGP_SUPPORTED_PROPERTY_TYPES: List<SupportedPropertyType> = listOf(
     SupportedPropertyType.Var.Boolean,
     SupportedPropertyType.Var.NullableBoolean,
     SupportedPropertyType.Var.Int,
+
     SupportedPropertyType.Var.Enum(JavaVersion::class.java),
+
     SupportedPropertyType.Collection.List,
     SupportedPropertyType.Collection.Set,
+
     SupportedPropertyType.Block(AndroidResources::class.java, AaptOptions::class.java),
+    SupportedPropertyType.Block(ApplicationPublishing::class.java, ApplicationPublishingImpl::class.java),
     SupportedPropertyType.Block(AssetPackBundleExtension::class.java),
     SupportedPropertyType.Block(Bundle::class.java, BundleOptions::class.java),
     SupportedPropertyType.Block(BundleAbi::class.java, BundleOptionsAbi::class.java),
@@ -57,9 +67,12 @@ val AGP_SUPPORTED_PROPERTY_TYPES: List<SupportedPropertyType> = listOf(
     SupportedPropertyType.Block(BundleLanguage::class.java, BundleOptionsLanguage::class.java),
     SupportedPropertyType.Block(BundleTexture::class.java, BundleOptionsTexture::class.java),
     SupportedPropertyType.Block(CompileOptions::class.java, com.android.build.gradle.internal.CompileOptions::class.java),
+    SupportedPropertyType.Block(DexPackagingOptions::class.java),
+    SupportedPropertyType.Block(JniLibsPackagingOptions::class.java, JniLibsPackagingOptionsImpl::class.java),
+    SupportedPropertyType.Block(LibraryPublishing::class.java, LibraryPublishingImpl::class.java),
+    SupportedPropertyType.Block(PackagingOptions::class.java, com.android.build.gradle.internal.dsl.PackagingOptions::class.java),
+    SupportedPropertyType.Block(ResourcesPackagingOptions::class.java, ResourcesPackagingOptionsImpl::class.java),
     SupportedPropertyType.Block(SigningConfig::class.java),
-    SupportedPropertyType.Block(ApplicationPublishing::class.java, ApplicationPublishingImpl::class.java),
-    SupportedPropertyType.Block(LibraryPublishing::class.java, LibraryPublishingImpl::class.java)
 )
 
 /**

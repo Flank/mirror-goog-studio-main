@@ -222,13 +222,6 @@ abstract class CommonExtensionImpl<
         action.invoke(lintOptions)
     }
 
-    override val packagingOptions: PackagingOptions =
-        dslServices.newInstance(PackagingOptions::class.java, dslServices)
-
-    override fun packagingOptions(action: com.android.build.api.dsl.PackagingOptions.() -> Unit) {
-        action.invoke(packagingOptions)
-    }
-
     override fun productFlavors(action: Action<NamedDomainObjectContainer<ProductFlavor>>) {
         action.execute(productFlavors as NamedDomainObjectContainer<ProductFlavor>)
     }

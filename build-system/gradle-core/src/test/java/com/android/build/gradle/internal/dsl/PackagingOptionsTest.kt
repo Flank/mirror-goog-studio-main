@@ -16,6 +16,7 @@
 package com.android.build.gradle.internal.dsl
 
 import com.android.build.api.dsl.PackagingOptions
+import com.android.build.gradle.internal.dsl.decorator.androidPluginDslDecorator
 import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.services.createDslServices
 import com.google.common.collect.Sets
@@ -29,9 +30,16 @@ class PackagingOptionsTest {
     private lateinit var packagingOptions: PackagingOptions
     private val dslServices: DslServices = createDslServices()
 
+    interface PackagingOptionsWrapper {
+        val packagingOptions: PackagingOptions
+    }
+
     @Before
     fun init() {
-        packagingOptions = PackagingOptions(dslServices)
+        packagingOptions  = androidPluginDslDecorator.decorate(PackagingOptionsWrapper::class.java)
+            .getDeclaredConstructor(DslServices::class.java)
+            .newInstance(dslServices)
+            .packagingOptions
     }
 
     @Test

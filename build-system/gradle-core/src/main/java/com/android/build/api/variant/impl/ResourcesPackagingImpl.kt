@@ -16,45 +16,36 @@
 
 package com.android.build.api.variant.impl
 
+import com.android.build.api.dsl.PackagingOptions
 import com.android.build.api.variant.ResourcesPackaging
 import com.android.build.gradle.internal.packaging.defaultExcludes
 import com.android.build.gradle.internal.packaging.defaultMerges
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
-import java.util.concurrent.Callable
 
 open class ResourcesPackagingImpl(
-    private val dslPackagingOptions: com.android.build.gradle.internal.dsl.PackagingOptions,
+    private val dslPackagingOptions: PackagingOptions,
     variantPropertiesApiServices: VariantPropertiesApiServices
 ) : ResourcesPackaging {
 
     override val excludes =
-        variantPropertiesApiServices.setPropertyOf(
-            String::class.java,
-            Callable<Collection<String>> { getBaseExcludes() }
-        )
+        variantPropertiesApiServices.setPropertyOf(String::class.java) { getBaseExcludes() }
 
     override val pickFirsts =
-        variantPropertiesApiServices.setPropertyOf(
-            String::class.java,
-            Callable<Collection<String>> {
-                dslPackagingOptions.pickFirsts.union(dslPackagingOptions.resources.pickFirsts)
-            }
-        )
+        variantPropertiesApiServices.setPropertyOf(String::class.java) {
+            dslPackagingOptions.pickFirsts.union(dslPackagingOptions.resources.pickFirsts)
+        }
 
     override val merges =
-        variantPropertiesApiServices.setPropertyOf(
-            String::class.java,
+        variantPropertiesApiServices.setPropertyOf(String::class.java) {
             // the union of dslPackagingOptions.merges and dslPackagingOptions.resources.merges,
             // minus the default patterns removed from either of them.
-            Callable<Collection<String>> {
-                dslPackagingOptions.merges
-                    .union(dslPackagingOptions.resources.merges)
-                    .minus(
-                        defaultMerges.subtract(dslPackagingOptions.merges)
-                            .union(defaultMerges.subtract(dslPackagingOptions.resources.merges))
-                    )
-            }
-        )
+            dslPackagingOptions.merges
+                .union(dslPackagingOptions.resources.merges)
+                .minus(
+                    defaultMerges.subtract(dslPackagingOptions.merges)
+                        .union(defaultMerges.subtract(dslPackagingOptions.resources.merges))
+                )
+        }
 
     // the union of dslPackagingOptions.excludes and dslPackagingOptions.resources.excludes, minus
     // the default patterns removed from either of them.

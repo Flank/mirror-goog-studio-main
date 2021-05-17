@@ -16,22 +16,19 @@
 
 package com.android.build.api.variant.impl
 
+import com.android.build.api.dsl.PackagingOptions
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
-import java.util.concurrent.Callable
 
 class ResourcesApkPackagingImpl(
-    dslPackagingOptions: com.android.build.gradle.internal.dsl.PackagingOptions,
+    dslPackagingOptions: PackagingOptions,
     variantPropertiesApiServices: VariantPropertiesApiServices
 ) : ResourcesPackagingImpl(dslPackagingOptions, variantPropertiesApiServices) {
 
     override val excludes =
-        variantPropertiesApiServices.setPropertyOf(
-            String::class.java,
-            Callable<Collection<String>> {
-                // exclude .kotlin_module files from APKs (b/152898926)
-                getBaseExcludes().plus("/META-INF/*.kotlin_module")
-            }
-        )
+        variantPropertiesApiServices.setPropertyOf(String::class.java) {
+            // exclude .kotlin_module files from APKs (b/152898926)
+            getBaseExcludes().plus("/META-INF/*.kotlin_module")
+        }
 }
 
 
