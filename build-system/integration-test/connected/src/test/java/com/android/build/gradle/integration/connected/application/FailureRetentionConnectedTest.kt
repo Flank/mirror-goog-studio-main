@@ -101,7 +101,6 @@ class FailureRetentionConnectedTest {
         validateFailureOutputs()
     }
 
-    @Ignore("b/184536229")
     @Test
     @Throws(Exception::class)
     fun connectedAndroidTestWithOrchestratorAndFailures() {
