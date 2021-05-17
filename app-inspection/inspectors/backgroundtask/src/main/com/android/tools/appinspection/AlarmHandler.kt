@@ -58,33 +58,35 @@ internal class AlarmHandler(
             }
 
             var taskId = -1L
-            val alarmSet = AlarmSet.newBuilder().apply {
-                this.type = AlarmSet.Type.forNumber(type)
-                triggerMs = args[1] as Long
-                windowMs = args[2] as Long
-                intervalMs = args[3] as Long
-                val operation = args[5] as PendingIntent?
-                val listener = args[6] as OnAlarmListener?
-                val listenerTag = args[7] as String?
-                when {
-                    operation != null -> {
-                        taskId = operationIdMap.getOrPut(operation) { BackgroundTaskUtil.nextId() }
-                        this.operation = BackgroundTaskInspectorProtocol.PendingIntent.newBuilder()
-                            .setCreatorPackage(operation.creatorPackage)
-                            .setCreatorUid(operation.creatorUid)
-                            .build()
-                    }
-                    listener != null -> {
-                        taskId = listenerIdMap.getOrPut(listener) { BackgroundTaskUtil.nextId() }
-                        this.listener = AlarmListener.newBuilder()
-                            .setTag(listenerTag)
-                            .build()
-                    }
-                    else -> throw IllegalStateException("Invalid alarm: neither operation or listener is set.")
-                }
-            }.build()
             connection.sendBackgroundTaskEvent(taskId) {
-                it.setAlarmSet(alarmSet)
+                alarmSetBuilder.apply {
+                    this.type = AlarmSet.Type.forNumber(type)
+                    triggerMs = args[1] as Long
+                    windowMs = args[2] as Long
+                    intervalMs = args[3] as Long
+                    val operation = args[5] as PendingIntent?
+                    val listener = args[6] as OnAlarmListener?
+                    val listenerTag = args[7] as String?
+                    when {
+                        operation != null -> {
+                            taskId =
+                                operationIdMap.getOrPut(operation) { BackgroundTaskUtil.nextId() }
+                            this.operation =
+                                BackgroundTaskInspectorProtocol.PendingIntent.newBuilder()
+                                    .setCreatorPackage(operation.creatorPackage)
+                                    .setCreatorUid(operation.creatorUid)
+                                    .build()
+                        }
+                        listener != null -> {
+                            taskId =
+                                listenerIdMap.getOrPut(listener) { BackgroundTaskUtil.nextId() }
+                            this.listener = AlarmListener.newBuilder()
+                                .setTag(listenerTag)
+                                .build()
+                        }
+                        else -> throw IllegalStateException("Invalid alarm: neither operation or listener is set.")
+                    }
+                }
             }
         }
 
@@ -95,7 +97,7 @@ internal class AlarmHandler(
             val operation = args[0] as PendingIntent
             val taskId = operationIdMap[operation] ?: return@registerEntryHook
             connection.sendBackgroundTaskEvent(taskId) {
-                it.setAlarmCancelled(AlarmCancelled.getDefaultInstance())
+                alarmCancelled = AlarmCancelled.getDefaultInstance()
             }
         }
 
@@ -106,7 +108,7 @@ internal class AlarmHandler(
             val listener = args[0] as OnAlarmListener
             val taskId = listenerIdMap[listener] ?: return@registerEntryHook
             connection.sendBackgroundTaskEvent(taskId) {
-                it.setAlarmCancelled(AlarmCancelled.getDefaultInstance())
+                alarmCancelled = AlarmCancelled.getDefaultInstance()
             }
         }
 
@@ -117,7 +119,7 @@ internal class AlarmHandler(
             val listener = args[0] as OnAlarmListener
             val taskId = listenerIdMap[listener] ?: return@registerEntryHook
             connection.sendBackgroundTaskEvent(taskId) {
-                it.setAlarmFired(AlarmFired.getDefaultInstance())
+                alarmFired = AlarmFired.getDefaultInstance()
             }
         }
     }
@@ -125,7 +127,7 @@ internal class AlarmHandler(
     fun sendIntentAlarmFiredIfExists(pendingIntent: PendingIntent) {
         val taskId = operationIdMap[pendingIntent] ?: return
         connection.sendBackgroundTaskEvent(taskId) {
-            it.setAlarmFired(AlarmFired.getDefaultInstance())
+            alarmFired = AlarmFired.getDefaultInstance()
         }
     }
 }
