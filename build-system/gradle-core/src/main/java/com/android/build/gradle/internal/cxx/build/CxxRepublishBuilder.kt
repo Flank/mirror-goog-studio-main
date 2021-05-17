@@ -20,10 +20,11 @@ import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons.getNativeBuildMiniConfigs
 import com.android.build.gradle.internal.cxx.logging.infoln
-import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.utils.FileUtils.join
+import org.gradle.caching.internal.controller.BuildCacheController
 import org.gradle.process.ExecOperations
 import java.io.File
+import org.gradle.internal.hash.FileHasher
 
 /**
  * A CxxBuilder that symlinks (or copies) files from [soFolder] to [soRepublishFolder].
@@ -33,7 +34,10 @@ class CxxRepublishBuilder(val model: CxxConfigurationModel) : CxxBuilder {
     // There is no folder that has .o files for the entire variant.
     override val objFolder: File get() = model.variant.soFolder
     override val soFolder: File get() = model.variant.soFolder
-    override fun build(ops: ExecOperations) {
+    override fun build(
+        ops: ExecOperations,
+        fileHasher: FileHasher,
+        buildCacheController: BuildCacheController) {
         infoln("link or copy build outputs to republish point")
         val variant = model.variant
         val abis = model.activeAbis
