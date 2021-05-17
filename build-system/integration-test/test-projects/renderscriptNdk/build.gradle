@@ -28,7 +28,6 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     androidTestImplementation "com.android.support.test:runner:${project.testSupportLibVersion}"
     androidTestImplementation "com.android.support.test:rules:${project.testSupportLibVersion}"
-    implementation files('libs/renderscript-v8.jar')
 }
 
 android {
