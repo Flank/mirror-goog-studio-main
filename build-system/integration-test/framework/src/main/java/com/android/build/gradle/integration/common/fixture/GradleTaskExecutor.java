@@ -43,8 +43,6 @@ import org.gradle.tooling.events.OperationType;
 /** A Gradle tooling api build builder. */
 public final class GradleTaskExecutor extends BaseGradleExecutor<GradleTaskExecutor> {
 
-    @Nullable private final String buildToolsVersion;
-
     private boolean isExpectingFailure = false;
     private boolean queryOutputModel = false;
 
@@ -59,7 +57,6 @@ public final class GradleTaskExecutor extends BaseGradleExecutor<GradleTaskExecu
                 gradleTestProject.getProfileDirectory(),
                 gradleTestProject.getHeapSize(),
                 gradleTestProject.getWithConfigurationCaching());
-        buildToolsVersion = gradleTestProject.getBuildToolsVersion();
     }
 
     /**
@@ -105,9 +102,6 @@ public final class GradleTaskExecutor extends BaseGradleExecutor<GradleTaskExecu
         List<String> args = Lists.newArrayList();
         args.addAll(getArguments());
 
-        if (buildToolsVersion != null) {
-            args.add("-PCUSTOM_BUILDTOOLS=" + buildToolsVersion);
-        }
         if (!isExpectingFailure) {
             args.add("--stacktrace");
         }

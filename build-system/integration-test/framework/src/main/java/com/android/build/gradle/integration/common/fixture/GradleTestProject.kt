@@ -97,7 +97,6 @@ class GradleTestProject @JvmOverloads internal constructor(
     private val gradleProperties: Collection<String>,
     val heapSize: MemoryRequirement,
     private val compileSdkVersion: String = DEFAULT_COMPILE_SDK_VERSION,
-    val buildToolsVersion: String?,
     private val profileDirectory: Path?,
     // CMake's version to be used
     private val cmakeVersion: String?,
@@ -414,7 +413,6 @@ class GradleTestProject @JvmOverloads internal constructor(
             gradleProperties = ImmutableList.of(),
             heapSize = rootProject.heapSize,
             compileSdkVersion = rootProject.compileSdkVersion,
-            buildToolsVersion = rootProject.buildToolsVersion,
             profileDirectory = rootProject.profileDirectory,
             cmakeVersion = rootProject.cmakeVersion,
             withCmakeDirInLocalProp = rootProject.withCmakeDirInLocalProp,

@@ -52,7 +52,6 @@ public final class GradleTestProjectBuilder {
     @Nullable private TestProject testProject = null;
     @Nullable private String targetGradleVersion;
     @Nullable private String compileSdkVersion;
-    @Nullable private String buildToolsVersion;
     @NonNull private List<String> gradleProperties = Lists.newArrayList();
     @Nullable private String heapSize;
     @Nullable private String metaspace;
@@ -158,7 +157,6 @@ public final class GradleTestProjectBuilder {
                 gradleProperties,
                 memoryRequirement,
                 (compileSdkVersion != null ? compileSdkVersion : DEFAULT_COMPILE_SDK_VERSION),
-                buildToolsVersion,
                 profileDirectory,
                 cmakeVersion,
                 withCmakeDirInLocalProp,
@@ -430,11 +428,6 @@ public final class GradleTestProjectBuilder {
 
     public GradleTestProjectBuilder withCompileSdkVersion(@Nullable String compileSdkVersion) {
         this.compileSdkVersion = compileSdkVersion;
-        return this;
-    }
-
-    public GradleTestProjectBuilder withBuildToolsVersion(String buildToolsVersion) {
-        this.buildToolsVersion = buildToolsVersion;
         return this;
     }
 
