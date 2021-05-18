@@ -104,8 +104,11 @@ void MemoryRequestHandler::PopulateEvents(NativeAllocationContext* batch) {
     frame->set_line_number(line_number);
   }
 
+  // Captures using the "all_heaps" config contain allocations from Art.
+  // This heap is currently misleading for developers due to b/183123125.
   auto alloc = processor_->ExecuteQuery(
-      "select ts, count, size, callsite_id from heap_profile_allocation");
+      "SELECT ts, count, size, callsite_id FROM heap_profile_allocation "
+      "WHERE heap_name != 'com.android.art'");
   while (alloc.Next()) {
     auto timestamp = GetLongOrDefault(alloc.Get(0), 0);
     auto count = GetLongOrDefault(alloc.Get(1), 0);
