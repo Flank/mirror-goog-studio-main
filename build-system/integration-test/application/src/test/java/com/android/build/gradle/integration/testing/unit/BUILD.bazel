@@ -66,10 +66,9 @@ gradle_integration_test(
         "//tools/base/build-system/integration-test/application/src/test/java/com/android/build/gradle/integration/testing/unit:prebuilts",
         "//tools/base/build-system/integration-test:support_library_latest",
         "//tools/base/build-system/integration-test:androidx_latest",
-    ],
-    maven_repos = [
         "//tools/base/third_party/kotlin:kotlin-m2repository",
     ],
+    maven_repos = [],
     resources = glob(["src/test/resources/**"]),
     shard_count = 4,
     tags = [
