@@ -52,6 +52,7 @@ function copy_bazel_artifacts() {
   cp -a ${bin_dir}/tools/base/sdklib/commandlinetools_*.zip ${artifacts_dir}
   cp -a ${bin_dir}/tools/base/ddmlib/libtools.ddmlib.jar ${artifacts_dir}/ddmlib.jar
   cp -a ${bin_dir}/tools/base/ddmlib/libincfs.jar ${artifacts_dir}
+  cp -a ${bin_dir}/tools/base/deploy/deployer/deployer.runner_deploy.jar ${artifacts_dir}/deployer.jar
   cp -a ${bin_dir}/tools/base/profiler/native/trace_processor_daemon/trace_processor_daemon ${artifacts_dir}
   cp -a ${bin_dir}/tools/vendor/google/game-tools/packaging/game-tools-linux.tar.gz ${artifacts_dir}
   cp -a ${bin_dir}/tools/vendor/google/game-tools/packaging/game-tools-win.zip ${artifacts_dir}

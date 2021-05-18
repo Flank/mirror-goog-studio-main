@@ -34,6 +34,18 @@ public class FakeDeviceLibrary {
 
     public FakeDevice build(DeviceId id) throws IOException {
         FakeDevice device = new FakeDevice(id);
+        addShellCommands(id, device);
+        return device;
+    }
+
+    public FakeDevice build(DeviceId id, String manufacturer, String model, String serial)
+            throws IOException {
+        FakeDevice device = new FakeDevice(id.version(), id.api(), manufacturer, model, serial);
+        addShellCommands(id, device);
+        return device;
+    }
+
+    private static void addShellCommands(DeviceId id, FakeDevice device) {
         switch (id) {
             case API_19:
                 device.getShell().addCommand(new BasicPm());
@@ -67,7 +79,5 @@ public class FakeDeviceLibrary {
         device.getShell().addCommand(new Ls());
         device.getShell().addCommand(new Stat());
         device.getShell().addCommand(new Xargs());
-
-        return device;
     }
 }

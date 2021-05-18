@@ -51,13 +51,17 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class FakeDevice {
-
+    // TODO: Delete these or at least make them non-public, once the odd usage in
+    // TerminateAdbIfNotUsedTest is fixed.
     public static final String MANUFACTURER = "Manufacturer";
     public static final String MODEL = "Model";
-    private static final String ABI = "x86";
 
+    private static final String ABI = "x86";
     private final String version;
     private final int api;
+    private final String manufacturer;
+    private final String model;
+    private final String serial;
     private final Shell shell;
     private final Map<String, String> props;
     private final Map<String, String> env;
@@ -82,12 +86,20 @@ public class FakeDevice {
     }
 
     public FakeDevice(String version, int api) throws IOException {
+        this(version, api, "Manufacturer", "Model", UUID.randomUUID().toString());
+    }
+
+    public FakeDevice(String version, int api, String manufacturer, String model, String serial)
+            throws IOException {
         this.version = version;
         this.api = api;
+        this.manufacturer = manufacturer;
+        this.model = model;
+        this.serial = serial;
         this.shell = new Shell();
         this.props = new TreeMap<>();
-        this.props.put("ro.product.manufacturer", MANUFACTURER);
-        this.props.put("ro.product.model", MODEL);
+        this.props.put("ro.product.manufacturer", manufacturer);
+        this.props.put("ro.product.model", model);
         this.props.put("ro.product.cpu.abilist", ABI);
         this.props.put("ro.build.version.release", version);
         this.props.put("ro.build.version.sdk", String.valueOf(api));
@@ -156,9 +168,9 @@ public class FakeDevice {
     public void connectTo(FakeAdbServer server) throws ExecutionException, InterruptedException {
         deviceState =
                 server.connectDevice(
-                                UUID.randomUUID().toString(),
-                                MANUFACTURER,
-                                MODEL,
+                                serial,
+                                manufacturer,
+                                model,
                                 version,
                                 String.valueOf(api),
                                 DeviceState.HostConnectionType.USB)

@@ -26,15 +26,27 @@ import com.android.utils.ILogger;
 import com.android.utils.StdLogger;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
-import java.io.*;
-import java.util.ArrayList;
+import java.io.File;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class DeployerRunner {
+
+    private static final int SUCCESS = 0;
+
+    // These values are > 1000 in order to prevent collision with the DeployerException.Error
+    // ordinal that is returned if a DeployerException is thrown during deployment.
+    private static final int ERR_SPECIFIED_DEVICE_NOT_FOUND = 1002;
+    private static final int ERR_NO_MATCHING_DEVICE = 1003;
+    private static final int ERR_BAD_ARGS = 1004;
 
     private static final String DEX_DB_PATH = "/tmp/studio_dex.db";
     private static final String DEPLOY_DB_PATH = "/tmp/studio_deploy.db";
@@ -45,16 +57,15 @@ public class DeployerRunner {
     private final UIService service;
 
     // Run it from bazel with the following command:
-    // bazel run :deployer.runner org.wikipedia.alpha PATH_TO_APK1 PATH_TO_APK2
+    // bazel run :deployer.runner INSTALL --device=<target device> <package name> <apk 1> <apk 2>
+    // ... <apk N>
     public static void main(String[] args) {
         Trace.start();
         Trace.begin("main");
-        int errorcode = tracedMain(args, new StdLogger(StdLogger.Level.VERBOSE));
+        int errorCode = tracedMain(args, new StdLogger(StdLogger.Level.VERBOSE));
         Trace.end();
         Trace.flush();
-        if (errorcode != 0) {
-            System.exit(errorcode);
-        }
+        System.exit(errorCode);
     }
 
     public static int tracedMain(String[] args, ILogger logger) {
@@ -81,41 +92,52 @@ public class DeployerRunner {
     }
 
     public int run(String[] args, ILogger logger) {
+        if (args.length < 3) {
+            logger.info(
+                    "Usage: %s {install | codeswap | fullswap} [--device=<name>] packageName baseApk [splitApk1, splitApk2, ...]");
+            return ERR_BAD_ARGS;
+        }
+
         try {
-            AndroidDebugBridge bridge = initDebugBridge();
-            Trace.begin("getDevice()");
-            IDevice device = getDevice(bridge);
-            if (device == null) {
-                logger.error(null, "%s", "No device found.");
-                return -2;
+            DeployRunnerParameters parameters = DeployRunnerParameters.parse(args);
+            Map<String, IDevice> devices = waitForDevices(parameters.getTargetDevices(), logger);
+
+            if (devices.isEmpty()) {
+                logger.error(null, "No device connected to ddmlib");
+                return ERR_NO_MATCHING_DEVICE;
             }
-            Trace.end();
-            return run(device, args, logger);
+
+            for (String expectedDevice : parameters.getTargetDevices()) {
+                if (!devices.containsKey(expectedDevice)) {
+                    logger.error(null, "Could not find specified device: %s", expectedDevice);
+                    return ERR_SPECIFIED_DEVICE_NOT_FOUND;
+                }
+            }
+
+            for (IDevice device : devices.values()) {
+                int status = run(device, parameters, logger);
+                if (status != SUCCESS) {
+                    logger.error(null, "Error deploying to device: %s", device.getName());
+                    return status;
+                }
+            }
+
+            return SUCCESS;
         } finally {
             AndroidDebugBridge.terminate();
         }
     }
 
+    // Left in to support how DeployService calls us.
     public int run(IDevice device, String[] args, ILogger logger) {
-        // Check that we have the parameters we need to run.
-        if (args.length < 2) {
-            logger.info("Usage: DeployerRunner packageName [packageBase,packageSplit1,...]");
-            return -1;
-        }
+        return run(device, DeployRunnerParameters.parse(args), logger);
+    }
 
-        DeployRunnerParameters parameters = DeployRunnerParameters.parse(args);
-        String packageName = parameters.get(0);
-
-        ArrayList<String> apks = new ArrayList<>();
-        for (int i = 1; i < parameters.size(); i++) {
-            apks.add(parameters.get(i));
-        }
-
+    private int run(IDevice device, DeployRunnerParameters parameters, ILogger logger) {
         EnumSet<ChangeType> optimisticInstallSupport = EnumSet.noneOf(ChangeType.class);
         if (parameters.isOptimisticInstall()) {
             optimisticInstallSupport.add(ChangeType.DEX);
             optimisticInstallSupport.add(ChangeType.NATIVE_LIBRARY);
-            optimisticInstallSupport.add(ChangeType.RESOURCE);
         }
 
         metrics.getDeployMetrics().clear();
@@ -158,11 +180,15 @@ public class DeployerRunner {
                 if (parameters.isForceFullInstall()) {
                     installMode = Deployer.InstallMode.FULL;
                 }
-                deployer.install(packageName, apks, options.build(), installMode);
+                deployer.install(
+                        parameters.getApplicationId(),
+                        parameters.getApks(),
+                        options.build(),
+                        installMode);
             } else if (parameters.getCommand() == DeployRunnerParameters.Command.FULLSWAP) {
-                deployer.fullSwap(apks, Canceller.NO_OP);
+                deployer.fullSwap(parameters.getApks(), Canceller.NO_OP);
             } else if (parameters.getCommand() == DeployRunnerParameters.Command.CODESWAP) {
-                deployer.codeSwap(apks, ImmutableMap.of(), Canceller.NO_OP);
+                deployer.codeSwap(parameters.getApks(), ImmutableMap.of(), Canceller.NO_OP);
             } else {
                 throw new RuntimeException("UNKNOWN command");
             }
@@ -175,32 +201,58 @@ public class DeployerRunner {
         } finally {
             service.shutdown();
         }
-        return 0;
+        return SUCCESS;
     }
 
     public List<DeployMetric> getMetrics() {
         return metrics.getDeployMetrics();
     }
 
-    private IDevice getDevice(AndroidDebugBridge bridge) {
-        IDevice[] devices = bridge.getDevices();
-        if (devices.length < 1) {
-            return null;
-        }
-        return devices[0];
-    }
+    private Map<String, IDevice> waitForDevices(List<String> targetDevices, ILogger logger) {
+        try (Trace unused = Trace.begin("waitForDevices()")) {
+            int expectedDevices = targetDevices.isEmpty() ? 1 : targetDevices.size();
+            CountDownLatch latch = new CountDownLatch(expectedDevices);
+            ConcurrentHashMap<String, IDevice> devices = new ConcurrentHashMap<>();
 
-    private AndroidDebugBridge initDebugBridge() {
-        AndroidDebugBridge.init(AdbInitOptions.DEFAULT);
-        AndroidDebugBridge bridge = AndroidDebugBridge.createBridge();
-        while (!bridge.hasInitialDeviceList()) {
+            AndroidDebugBridge.IDeviceChangeListener listener =
+                    new AndroidDebugBridge.IDeviceChangeListener() {
+                        @Override
+                        public void deviceConnected(IDevice device) {
+                            if (targetDevices.isEmpty()
+                                    || targetDevices.contains(device.getName())) {
+                                logger.info("FOUND DEVICE: " + device.getName());
+                                devices.put(device.getName(), device);
+                                latch.countDown();
+                            }
+                        }
+
+                        @Override
+                        public void deviceDisconnected(IDevice device) {}
+
+                        @Override
+                        public void deviceChanged(IDevice device, int changeMask) {}
+                    };
+
+            AndroidDebugBridge.init(AdbInitOptions.DEFAULT);
+            AndroidDebugBridge.addDeviceChangeListener(listener);
+
+            // This needs to be done *after* we add the listener, or else we risk missing devices.
+            if (AndroidDebugBridge.createBridge(5, TimeUnit.SECONDS) == null) {
+                logger.error(null, "Could not create debug bridge");
+                return Collections.emptyMap();
+            }
+
             try {
-                Thread.sleep(100);
+                if (latch.await(30, TimeUnit.SECONDS)) {
+                    return devices;
+                }
+                return Collections.emptyMap();
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                return Collections.emptyMap();
+            } finally {
+                AndroidDebugBridge.removeDeviceChangeListener(listener);
             }
         }
-        return bridge;
     }
 
     static class CommandLineService implements UIService {
