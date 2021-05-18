@@ -30,7 +30,6 @@ import com.android.build.gradle.internal.cxx.configure.ndkMetaAbisFile
 import com.android.build.gradle.internal.cxx.configure.trySymlinkNdk
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationParameters
 import com.android.build.gradle.internal.cxx.timing.time
-import com.android.build.gradle.internal.services.AndroidLocationsBuildService
 import com.android.build.gradle.tasks.NativeBuildSystem.CMAKE
 import com.android.prefs.AndroidLocationsProvider
 import com.android.utils.FileUtils.join
@@ -150,7 +149,7 @@ fun createCxxModuleModel(
                     )
                 }
                 .toMap(),
-        nativeBuildOutputLevel = configurationParameters.nativeBuildOutputLevel,
+        outputOptions = configurationParameters.outputOptions,
     )
 }
 

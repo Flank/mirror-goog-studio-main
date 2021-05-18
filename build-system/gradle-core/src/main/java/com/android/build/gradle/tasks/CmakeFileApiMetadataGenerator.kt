@@ -19,7 +19,6 @@ package com.android.build.gradle.tasks
 
 import com.android.build.gradle.external.cmake.CmakeUtils
 import com.android.build.gradle.internal.cxx.cmake.parseCmakeFileApiReply
-import com.android.build.gradle.internal.cxx.gradle.generator.NativeBuildOutputLevel
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel
 import com.android.build.gradle.internal.cxx.model.additionalProjectFilesIndexFile
@@ -28,6 +27,7 @@ import com.android.build.gradle.internal.cxx.model.clientReplyFolder
 import com.android.build.gradle.internal.cxx.model.compileCommandsJsonBinFile
 import com.android.build.gradle.internal.cxx.model.compileCommandsJsonFile
 import com.android.build.gradle.internal.cxx.model.getBuildCommandArguments
+import com.android.build.gradle.internal.cxx.model.ifLogNativeConfigureToLifecycle
 import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.cxx.model.metadataGenerationCommandFile
 import com.android.build.gradle.internal.cxx.model.metadataGenerationStderrFile
@@ -39,7 +39,6 @@ import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import com.google.wireless.android.sdk.stats.GradleNativeAndroidModule
 import org.gradle.api.tasks.Internal
 import org.gradle.process.ExecOperations
-import java.nio.charset.StandardCharsets
 
 /**
  * Invoke CMake to generate ninja project. Along the way, generate android_gradle_build.json from
@@ -71,7 +70,7 @@ internal class CmakeQueryMetadataGenerator(
           "${variant.variantName}|${abi.abi.tag} :")
           .logStderr()
           .logStdout()
-          .logFullStdout(variant.module.nativeBuildOutputLevel == NativeBuildOutputLevel.VERBOSE)
+          .logFullStdout(variant.ifLogNativeConfigureToLifecycle { true } ?: false)
           .execute(ops::exec)
 
         // Build expected metadata

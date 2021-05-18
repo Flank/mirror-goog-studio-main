@@ -17,11 +17,6 @@
 package com.android.build.gradle.internal.cxx.model
 
 import com.android.build.gradle.internal.core.Abi
-import com.android.build.gradle.internal.cxx.configure.*
-import com.android.build.gradle.internal.cxx.configure.getProperty
-import com.android.build.gradle.internal.cxx.logging.errorln
-import com.android.build.gradle.internal.cxx.logging.warnln
-import com.android.build.gradle.internal.ndk.Stl
 import com.android.build.gradle.tasks.NativeBuildSystem
 import org.gradle.api.file.FileCollection
 import java.io.File
@@ -181,5 +176,23 @@ val CxxVariantModel.isNdkBuild
  * Call [compute] if this is an ndk-build build.
  */
 fun <T> CxxVariantModel.ifNdkBuild(compute : () -> T?) =
-        if (isNdkBuild) compute() else null
+    if (isNdkBuild) compute() else null
+
+/**
+ * Call [compute] if logging native clean to lifecycle
+ */
+fun <T> CxxVariantModel.ifLogNativeCleanToLifecycle(compute : () -> T?) =
+    module.ifLogNativeCleanToLifecycle(compute)
+
+/**
+ * Call [compute] if logging native configure to lifecycle
+ */
+fun <T> CxxVariantModel.ifLogNativeConfigureToLifecycle(compute : () -> T?) =
+    module.ifLogNativeConfigureToLifecycle(compute)
+
+/**
+ * Call [compute] if logging native build to lifecycle
+ */
+fun <T> CxxVariantModel.ifLogNativeBuildToLifecycle(compute : () -> T?) =
+    module.ifLogNativeBuildToLifecycle(compute)
 

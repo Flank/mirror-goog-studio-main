@@ -21,7 +21,6 @@ import com.android.build.gradle.internal.cxx.attribution.encode
 import com.android.build.gradle.internal.cxx.attribution.generateChromeTrace
 import com.android.build.gradle.internal.cxx.attribution.generateNinjaSourceFileAttribution
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel
-import com.android.build.gradle.internal.cxx.gradle.generator.NativeBuildOutputLevel
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValueMini
 import com.android.build.gradle.internal.cxx.json.NativeLibraryValueMini
@@ -30,6 +29,7 @@ import com.android.build.gradle.internal.cxx.logging.infoln
 import com.android.build.gradle.internal.cxx.logging.logStructured
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.ifCMake
+import com.android.build.gradle.internal.cxx.model.ifLogNativeBuildToLifecycle
 import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.cxx.model.ninjaLogFile
 import com.android.build.gradle.internal.cxx.model.objFolder
@@ -372,7 +372,7 @@ class CxxRegularBuilder(val configurationModel: CxxConfigurationModel) : CxxBuil
                     "")
                     .logStderr()
                     .logStdout()
-                    .logFullStdout(abis.firstOrNull()?.variant?.module?.nativeBuildOutputLevel == NativeBuildOutputLevel.VERBOSE)
+                    .logFullStdout(abi.ifLogNativeBuildToLifecycle { true } ?: false)
                     .execute(ops::exec)
 
             // Build attribution reporting based on .ninja_log

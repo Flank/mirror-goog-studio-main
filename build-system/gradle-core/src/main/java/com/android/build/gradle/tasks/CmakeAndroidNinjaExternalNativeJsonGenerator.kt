@@ -17,7 +17,6 @@
 package com.android.build.gradle.tasks
 
 import com.android.build.gradle.internal.cxx.configure.convertCMakeToCompileCommandsBin
-import com.android.build.gradle.internal.cxx.gradle.generator.NativeBuildOutputLevel
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValue
 import com.android.build.gradle.internal.cxx.json.PlainFileGsonTypeAdaptor
 import com.android.build.gradle.internal.cxx.logging.errorln
@@ -27,6 +26,7 @@ import com.android.build.gradle.internal.cxx.model.CxxVariantModel
 import com.android.build.gradle.internal.cxx.model.compileCommandsJsonBinFile
 import com.android.build.gradle.internal.cxx.model.compileCommandsJsonFile
 import com.android.build.gradle.internal.cxx.model.getBuildCommandArguments
+import com.android.build.gradle.internal.cxx.model.ifLogNativeConfigureToLifecycle
 import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.cxx.model.metadataGenerationCommandFile
 import com.android.build.gradle.internal.cxx.model.metadataGenerationStderrFile
@@ -74,7 +74,7 @@ internal class CmakeAndroidNinjaExternalNativeJsonGenerator(
             logPrefix)
             .logStderr()
             .logStdout()
-            .logFullStdout(variant.module.nativeBuildOutputLevel == NativeBuildOutputLevel.VERBOSE)
+            .logFullStdout(variant.ifLogNativeConfigureToLifecycle { true } ?: false)
             .execute(ops::exec)
 
         postProcessForkCmakeOutput(abi)
