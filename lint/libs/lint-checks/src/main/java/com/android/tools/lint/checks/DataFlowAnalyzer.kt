@@ -53,6 +53,7 @@ import org.jetbrains.uast.kotlin.KotlinUSwitchEntry
 import org.jetbrains.uast.kotlin.expressions.KotlinUElvisExpression
 import org.jetbrains.uast.tryResolve
 import org.jetbrains.uast.util.isAssignment
+import org.jetbrains.uast.util.isMethodCall
 import org.jetbrains.uast.visitor.AbstractUastVisitor
 
 /** Helper class for analyzing data flow. */
@@ -174,6 +175,13 @@ abstract class DataFlowAnalyzer(
         if (matched) {
             if (!initial.contains(node)) {
                 receiver(node)
+
+                if ((node.methodName == "apply" || node.methodName == "also") &&
+                    node.uastParent?.uastParent?.isMethodCall() == true
+                ) {
+                    // The node is being passed as an argument to a method
+                    argument(node.uastParent?.uastParent as UCallExpression, node)
+                }
             }
             if (returnsSelf(node)) {
                 instances.add(node)
