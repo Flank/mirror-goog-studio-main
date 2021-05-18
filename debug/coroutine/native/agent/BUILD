@@ -25,6 +25,8 @@ cc_binary(
     name = "coroutine_debugger_agent.so",
     srcs = [
         "agent.cc",
+        "jni_utils.cc",
+        "jni_utils.h",
         ":DebugProbesKt.cc",
         ":DebugProbesKt.h",
     ],

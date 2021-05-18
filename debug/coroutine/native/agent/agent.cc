@@ -1,4 +1,5 @@
 #include "tools/base/debug/coroutine/native/agent/DebugProbesKt.h"
+#include "tools/base/debug/coroutine/native/agent/jni_utils.h"
 #include "tools/base/transport/native/jvmti/jvmti_helper.h"
 #include "tools/base/transport/native/utils/log.h"
 
@@ -110,6 +111,19 @@ int installDebugProbes(JNIEnv* jni) {
   // invoke install method
   jmethodID install = jni->GetMethodID(klass, "install", "()V");
   jni->CallVoidMethod(debug_probes_impl_obj, install);
+
+  if (jni->ExceptionOccurred()) {
+    Log::D(Log::Tag::COROUTINE_DEBUGGER,
+           "DebugProbesImpl#install threw an exception.");
+    std::unique_ptr<jniutils::StackTrace> stackTrace =
+        jniutils::getExceptionStackTrace(jni);
+    if (stackTrace != nullptr) {
+      std::string stringStackTrace =
+          jniutils::stackTraceToString(move(stackTrace));
+      Log::D(Log::Tag::COROUTINE_DEBUGGER, "%s", stringStackTrace.c_str());
+    }
+    return -1;
+  }
 
   Log::D(Log::Tag::COROUTINE_DEBUGGER, "DebugProbesImpl#install called.");
   return 0;
