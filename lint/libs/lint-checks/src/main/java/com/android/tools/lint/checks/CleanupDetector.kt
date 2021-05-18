@@ -242,7 +242,6 @@ class CleanupDetector : Detector(), SourceCodeScanner {
                 if (isCleanup(call)) {
                     recycled.set(true)
                 }
-                super.receiver(call)
             }
 
             private fun isCleanup(call: UCallExpression): Boolean {
@@ -316,19 +315,22 @@ class CleanupDetector : Detector(), SourceCodeScanner {
 
         if (!recycled.get() && !escapes.get()) {
             val className = recycleType.substring(recycleType.lastIndexOf('.') + 1)
-            val message: String
-            message = if (RECYCLE == recycleName) {
-                String.format(
-                    "This `%1\$s` should be recycled after use with `#recycle()`",
-                    className
-                )
-            } else if (START == recycleName) {
-                "This animation should be started with `#start()`"
-            } else {
-                String.format(
-                    "This `%1\$s` should be freed up after use with `#%2\$s()`",
-                    className, recycleName
-                )
+            val message = when (recycleName) {
+                RECYCLE -> {
+                    String.format(
+                        "This `%1\$s` should be recycled after use with `#recycle()`",
+                        className
+                    )
+                }
+                START -> {
+                    "This animation should be started with `#start()`"
+                }
+                else -> {
+                    String.format(
+                        "This `%1\$s` should be freed up after use with `#%2\$s()`",
+                        className, recycleName
+                    )
+                }
             }
 
             var locationNode: UElement? = node.methodIdentifier

@@ -2107,6 +2107,25 @@ class CleanupDetectorTest : AbstractCheckTest() {
         )
     }
 
+    fun testAnimatorApply() {
+        lint().files(
+            kotlin(
+                """
+                import android.animation.AnimatorSet
+                import android.animation.ValueAnimator
+
+                fun main() {
+                  AnimatorSet().apply {
+                    playTogether(
+                      ValueAnimator.ofFloat().apply { }
+                    )
+                  }.start()
+                }
+                """
+            ).indented()
+        ).run().expectClean()
+    }
+
     fun testNotNullAssertionOperator() {
         // 165534909: Recycle for Cursor closed with `use` in Kotlin
         lint().files(
