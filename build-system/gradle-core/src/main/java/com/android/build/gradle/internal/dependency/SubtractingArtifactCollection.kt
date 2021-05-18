@@ -22,7 +22,6 @@ import org.gradle.api.artifacts.component.ComponentArtifactIdentifier
 import org.gradle.api.artifacts.component.ComponentIdentifier
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
 import org.gradle.api.model.ObjectFactory
-import org.gradle.api.specs.Spec
 import java.io.File
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
@@ -72,7 +71,7 @@ class SubtractingArtifactCollection(
         var artifactResults: Lazy<MutableSet<ResolvedArtifactResult>> = lazy { initArtifactResult() }
 
         @Transient
-        private var artifactFileSet: Lazy<Set<File>> = lazy { initArtifactFileSet() }
+        private var removedFiles: Lazy<Set<File>> = lazy { initRemovedFiles() }
 
         @Transient
         var fileCollection = lazy { initFileCollection() }
@@ -92,14 +91,25 @@ class SubtractingArtifactCollection(
             return ImmutableSet.copyOf(mainArtifacts.artifacts.filter { !removed.contains(it!!.id) })
         }
 
-        private fun initArtifactFileSet() = ImmutableSet.builder<File>().apply {
-            for (artifact in artifactResults.value) {
-                add(artifact.file)
+        /**
+         * Because of http://b/187353303 and https://github.com/gradle/gradle/issues/17213, removed
+         * artifact set is being computed. This is computed by adding:
+         * - removed files
+         * - resolved artifact's file if that resolved artifact is not in the final result: this is
+         * needed as with desugaring the output location will be different if the classpath differs.
+         */
+        private fun initRemovedFiles() = ImmutableSet.builder<File>().apply {
+            addAll(removedArtifacts.artifactFiles.files)
+
+            mainArtifacts.artifacts.forEach {
+                if (it !in artifactResults.value) {
+                    add(it.file)
+                }
             }
         }.build()
 
         private fun initFileCollection() = objectFactory.fileCollection().from(
-            mainArtifacts.artifactFiles.filter { f -> artifactFileSet.value.contains(f) }
+            mainArtifacts.artifactFiles.filter { it !in removedFiles.value }
         ).builtBy(mainArtifacts.artifactFiles, removedArtifacts.artifactFiles)
 
         private fun writeObject(objectOutputStream: ObjectOutputStream) {
@@ -109,7 +119,7 @@ class SubtractingArtifactCollection(
         private fun readObject(objectInputStream: ObjectInputStream) {
             objectInputStream.defaultReadObject()
             artifactResults = lazy { initArtifactResult() }
-            artifactFileSet = lazy { initArtifactFileSet() }
+            removedFiles = lazy { initRemovedFiles() }
             fileCollection = lazy { initFileCollection() }
         }
     }
