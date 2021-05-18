@@ -70,7 +70,7 @@ class ArtifactHandlerImpl(
             aidlFolder = File(folder, FD_AIDL),
             renderscriptFolder = File(folder, FD_RENDERSCRIPT),
             proguardRules = File(folder, FN_PROGUARD_TXT),
-            lintJar = File(folder, FN_LINT_JAR),
+            lintJar = FileUtils.join(folder, FD_JARS, FN_LINT_JAR),
             externalAnnotations = File(folder, FN_ANNOTATIONS_ZIP),
             publicResources = File(folder, FN_PUBLIC_TXT),
             symbolFile = File(folder, FN_RESOURCE_TEXT),

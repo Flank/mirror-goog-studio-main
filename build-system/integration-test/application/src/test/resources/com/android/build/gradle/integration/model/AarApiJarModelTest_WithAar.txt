@@ -80,7 +80,7 @@
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/aidl{!}
          - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/rs{!}
          - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/proguard.txt{!}
-         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/lint.jar{!}
+         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/jars/lint.jar{!}
          - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/annotations.zip{!}
          - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/public.txt{!}
          - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/R.txt{!}

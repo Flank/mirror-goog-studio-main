@@ -835,7 +835,7 @@
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/aidl{!}
          - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/rs{!}
          - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/proguard.txt{!}
-         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/lint.jar{!}
+         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/jars/lint.jar{!}
          - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/annotations.zip{!}
          - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/public.txt{!}
          - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/R.txt{F}
@@ -879,7 +879,7 @@
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-core-1.1.1/aidl{!}
          - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-core-1.1.1/rs{!}
          - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-core-1.1.1/proguard.txt{!}
-         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-core-1.1.1/lint.jar{!}
+         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-core-1.1.1/jars/lint.jar{!}
          - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-core-1.1.1/annotations.zip{!}
          - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-core-1.1.1/public.txt{!}
          - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-core-1.1.1/R.txt{F}
@@ -901,7 +901,7 @@
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-1.1.1/aidl{!}
          - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-1.1.1/rs{!}
          - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-1.1.1/proguard.txt{!}
-         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-1.1.1/lint.jar{!}
+         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-1.1.1/jars/lint.jar{!}
          - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-1.1.1/annotations.zip{!}
          - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-1.1.1/public.txt{!}
          - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/livedata-1.1.1/R.txt{F}
@@ -923,7 +923,7 @@
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/aidl{!}
          - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/rs{!}
          - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/proguard.txt{F}
-         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/lint.jar{!}
+         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/jars/lint.jar{!}
          - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/annotations.zip{!}
          - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/public.txt{!}
          - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/runtime-1.1.1/R.txt{F}
@@ -945,7 +945,7 @@
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewmodel-1.1.1/aidl{!}
          - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewmodel-1.1.1/rs{!}
          - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewmodel-1.1.1/proguard.txt{F}
-         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewmodel-1.1.1/lint.jar{!}
+         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewmodel-1.1.1/jars/lint.jar{!}
          - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewmodel-1.1.1/annotations.zip{!}
          - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewmodel-1.1.1/public.txt{!}
          - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewmodel-1.1.1/R.txt{F}
@@ -967,7 +967,7 @@
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/aidl{!}
          - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/rs{!}
          - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/proguard.txt{F}
-         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/lint.jar{!}
+         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/jars/lint.jar{!}
          - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/annotations.zip{!}
          - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/public.txt{!}
          - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/monitor-1.0.2/R.txt{F}
@@ -989,7 +989,7 @@
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/aidl{!}
          - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/rs{!}
          - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/proguard.txt{F}
-         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/lint.jar{!}
+         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/jars/lint.jar{!}
          - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/annotations.zip{!}
          - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/public.txt{!}
          - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/rules-1.0.2/R.txt{F}
@@ -1011,7 +1011,7 @@
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/aidl{!}
          - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/rs{!}
          - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/proguard.txt{F}
-         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/lint.jar{!}
+         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/jars/lint.jar{!}
          - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/annotations.zip{!}
          - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/public.txt{!}
          - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/runner-1.0.2/R.txt{F}
@@ -1033,7 +1033,7 @@
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/asynclayoutinflater-28.0.0/aidl{!}
          - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/asynclayoutinflater-28.0.0/rs{!}
          - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/asynclayoutinflater-28.0.0/proguard.txt{!}
-         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/asynclayoutinflater-28.0.0/lint.jar{!}
+         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/asynclayoutinflater-28.0.0/jars/lint.jar{!}
          - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/asynclayoutinflater-28.0.0/annotations.zip{!}
          - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/asynclayoutinflater-28.0.0/public.txt{!}
          - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/asynclayoutinflater-28.0.0/R.txt{F}
@@ -1077,7 +1077,7 @@
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/coordinatorlayout-28.0.0/aidl{!}
          - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/coordinatorlayout-28.0.0/rs{!}
          - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/coordinatorlayout-28.0.0/proguard.txt{F}
-         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/coordinatorlayout-28.0.0/lint.jar{!}
+         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/coordinatorlayout-28.0.0/jars/lint.jar{!}
          - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/coordinatorlayout-28.0.0/annotations.zip{F}
          - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/coordinatorlayout-28.0.0/public.txt{F}
          - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/coordinatorlayout-28.0.0/R.txt{F}
@@ -1099,7 +1099,7 @@
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/cursoradapter-28.0.0/aidl{!}
          - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/cursoradapter-28.0.0/rs{!}
          - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/cursoradapter-28.0.0/proguard.txt{!}
-         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/cursoradapter-28.0.0/lint.jar{!}
+         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/cursoradapter-28.0.0/jars/lint.jar{!}
          - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/cursoradapter-28.0.0/annotations.zip{!}
          - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/cursoradapter-28.0.0/public.txt{!}
          - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/cursoradapter-28.0.0/R.txt{F}
@@ -1121,7 +1121,7 @@
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/customview-28.0.0/aidl{!}
          - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/customview-28.0.0/rs{!}
          - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/customview-28.0.0/proguard.txt{!}
-         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/customview-28.0.0/lint.jar{!}
+         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/customview-28.0.0/jars/lint.jar{!}
          - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/customview-28.0.0/annotations.zip{!}
          - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/customview-28.0.0/public.txt{!}
          - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/customview-28.0.0/R.txt{F}
@@ -1143,7 +1143,7 @@
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/documentfile-28.0.0/aidl{!}
          - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/documentfile-28.0.0/rs{!}
          - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/documentfile-28.0.0/proguard.txt{!}
-         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/documentfile-28.0.0/lint.jar{!}
+         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/documentfile-28.0.0/jars/lint.jar{!}
          - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/documentfile-28.0.0/annotations.zip{!}
          - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/documentfile-28.0.0/public.txt{!}
          - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/documentfile-28.0.0/R.txt{F}
@@ -1165,7 +1165,7 @@
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/drawerlayout-28.0.0/aidl{!}
          - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/drawerlayout-28.0.0/rs{!}
          - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/drawerlayout-28.0.0/proguard.txt{!}
-         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/drawerlayout-28.0.0/lint.jar{!}
+         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/drawerlayout-28.0.0/jars/lint.jar{!}
          - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/drawerlayout-28.0.0/annotations.zip{F}
          - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/drawerlayout-28.0.0/public.txt{!}
          - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/drawerlayout-28.0.0/R.txt{F}
@@ -1187,7 +1187,7 @@
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/interpolator-28.0.0/aidl{!}
          - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/interpolator-28.0.0/rs{!}
          - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/interpolator-28.0.0/proguard.txt{!}
-         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/interpolator-28.0.0/lint.jar{!}
+         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/interpolator-28.0.0/jars/lint.jar{!}
          - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/interpolator-28.0.0/annotations.zip{!}
          - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/interpolator-28.0.0/public.txt{!}
          - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/interpolator-28.0.0/R.txt{F}
@@ -1209,7 +1209,7 @@
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/loader-28.0.0/aidl{!}
          - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/loader-28.0.0/rs{!}
          - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/loader-28.0.0/proguard.txt{!}
-         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/loader-28.0.0/lint.jar{!}
+         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/loader-28.0.0/jars/lint.jar{!}
          - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/loader-28.0.0/annotations.zip{!}
          - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/loader-28.0.0/public.txt{!}
          - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/loader-28.0.0/R.txt{F}
@@ -1231,7 +1231,7 @@
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/localbroadcastmanager-28.0.0/aidl{!}
          - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/localbroadcastmanager-28.0.0/rs{!}
          - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/localbroadcastmanager-28.0.0/proguard.txt{!}
-         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/localbroadcastmanager-28.0.0/lint.jar{!}
+         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/localbroadcastmanager-28.0.0/jars/lint.jar{!}
          - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/localbroadcastmanager-28.0.0/annotations.zip{!}
          - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/localbroadcastmanager-28.0.0/public.txt{!}
          - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/localbroadcastmanager-28.0.0/R.txt{F}
@@ -1253,7 +1253,7 @@
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/print-28.0.0/aidl{!}
          - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/print-28.0.0/rs{!}
          - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/print-28.0.0/proguard.txt{!}
-         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/print-28.0.0/lint.jar{!}
+         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/print-28.0.0/jars/lint.jar{!}
          - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/print-28.0.0/annotations.zip{F}
          - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/print-28.0.0/public.txt{!}
          - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/print-28.0.0/R.txt{F}
@@ -1275,7 +1275,7 @@
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/slidingpanelayout-28.0.0/aidl{!}
          - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/slidingpanelayout-28.0.0/rs{!}
          - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/slidingpanelayout-28.0.0/proguard.txt{!}
-         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/slidingpanelayout-28.0.0/lint.jar{!}
+         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/slidingpanelayout-28.0.0/jars/lint.jar{!}
          - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/slidingpanelayout-28.0.0/annotations.zip{!}
          - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/slidingpanelayout-28.0.0/public.txt{!}
          - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/slidingpanelayout-28.0.0/R.txt{F}
@@ -1319,7 +1319,7 @@
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-compat-28.0.0/aidl{D}
          - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-compat-28.0.0/rs{!}
          - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-compat-28.0.0/proguard.txt{F}
-         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-compat-28.0.0/lint.jar{!}
+         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-compat-28.0.0/jars/lint.jar{!}
          - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-compat-28.0.0/annotations.zip{F}
          - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-compat-28.0.0/public.txt{F}
          - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-compat-28.0.0/R.txt{F}
@@ -1341,7 +1341,7 @@
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-ui-28.0.0/aidl{!}
          - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-ui-28.0.0/rs{!}
          - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-ui-28.0.0/proguard.txt{!}
-         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-ui-28.0.0/lint.jar{!}
+         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-ui-28.0.0/jars/lint.jar{!}
          - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-ui-28.0.0/annotations.zip{!}
          - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-ui-28.0.0/public.txt{!}
          - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-ui-28.0.0/R.txt{F}
@@ -1363,7 +1363,7 @@
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-utils-28.0.0/aidl{!}
          - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-utils-28.0.0/rs{!}
          - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-utils-28.0.0/proguard.txt{!}
-         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-utils-28.0.0/lint.jar{!}
+         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-utils-28.0.0/jars/lint.jar{!}
          - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-utils-28.0.0/annotations.zip{!}
          - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-utils-28.0.0/public.txt{!}
          - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-core-utils-28.0.0/R.txt{F}
@@ -1385,7 +1385,7 @@
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-fragment-28.0.0/aidl{!}
          - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-fragment-28.0.0/rs{!}
          - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-fragment-28.0.0/proguard.txt{!}
-         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-fragment-28.0.0/lint.jar{!}
+         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-fragment-28.0.0/jars/lint.jar{!}
          - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-fragment-28.0.0/annotations.zip{F}
          - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-fragment-28.0.0/public.txt{!}
          - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-fragment-28.0.0/R.txt{F}
@@ -1407,7 +1407,7 @@
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-media-compat-28.0.0/aidl{D}
          - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-media-compat-28.0.0/rs{!}
          - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-media-compat-28.0.0/proguard.txt{F}
-         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-media-compat-28.0.0/lint.jar{!}
+         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-media-compat-28.0.0/jars/lint.jar{!}
          - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-media-compat-28.0.0/annotations.zip{F}
          - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-media-compat-28.0.0/public.txt{F}
          - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-media-compat-28.0.0/R.txt{F}
@@ -1429,7 +1429,7 @@
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/aidl{!}
          - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/rs{!}
          - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/proguard.txt{!}
-         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/lint.jar{!}
+         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/jars/lint.jar{!}
          - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/annotations.zip{!}
          - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/public.txt{!}
          - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v13-28.0.0/R.txt{F}
@@ -1451,7 +1451,7 @@
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/aidl{!}
          - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/rs{!}
          - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/proguard.txt{!}
-         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/lint.jar{!}
+         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/jars/lint.jar{!}
          - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/annotations.zip{!}
          - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/public.txt{!}
          - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/support-v4-28.0.0/R.txt{F}
@@ -1473,7 +1473,7 @@
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/swiperefreshlayout-28.0.0/aidl{!}
          - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/swiperefreshlayout-28.0.0/rs{!}
          - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/swiperefreshlayout-28.0.0/proguard.txt{!}
-         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/swiperefreshlayout-28.0.0/lint.jar{!}
+         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/swiperefreshlayout-28.0.0/jars/lint.jar{!}
          - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/swiperefreshlayout-28.0.0/annotations.zip{F}
          - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/swiperefreshlayout-28.0.0/public.txt{!}
          - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/swiperefreshlayout-28.0.0/R.txt{F}
@@ -1495,7 +1495,7 @@
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/versionedparcelable-28.0.0/aidl{D}
          - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/versionedparcelable-28.0.0/rs{!}
          - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/versionedparcelable-28.0.0/proguard.txt{F}
-         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/versionedparcelable-28.0.0/lint.jar{!}
+         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/versionedparcelable-28.0.0/jars/lint.jar{!}
          - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/versionedparcelable-28.0.0/annotations.zip{!}
          - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/versionedparcelable-28.0.0/public.txt{!}
          - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/versionedparcelable-28.0.0/R.txt{F}
@@ -1517,7 +1517,7 @@
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewpager-28.0.0/aidl{!}
          - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewpager-28.0.0/rs{!}
          - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewpager-28.0.0/proguard.txt{!}
-         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewpager-28.0.0/lint.jar{!}
+         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewpager-28.0.0/jars/lint.jar{!}
          - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewpager-28.0.0/annotations.zip{!}
          - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewpager-28.0.0/public.txt{!}
          - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/viewpager-28.0.0/R.txt{F}
@@ -1539,7 +1539,7 @@
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/aidl{!}
          - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/rs{!}
          - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/proguard.txt{F}
-         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/lint.jar{!}
+         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/jars/lint.jar{!}
          - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/annotations.zip{!}
          - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/public.txt{!}
          - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-base-15.0.1/R.txt{F}
@@ -1561,7 +1561,7 @@
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-basement-15.0.1/aidl{!}
          - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-basement-15.0.1/rs{!}
          - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-basement-15.0.1/proguard.txt{F}
-         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-basement-15.0.1/lint.jar{!}
+         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-basement-15.0.1/jars/lint.jar{!}
          - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-basement-15.0.1/annotations.zip{!}
          - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-basement-15.0.1/public.txt{!}
          - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-basement-15.0.1/R.txt{F}
@@ -1583,7 +1583,7 @@
          - aidlFolder          = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-tasks-15.0.1/aidl{!}
          - renderscriptFolder  = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-tasks-15.0.1/rs{!}
          - proguardRules       = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-tasks-15.0.1/proguard.txt{!}
-         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-tasks-15.0.1/lint.jar{!}
+         - lintJar             = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-tasks-15.0.1/jars/lint.jar{!}
          - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-tasks-15.0.1/annotations.zip{!}
          - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-tasks-15.0.1/public.txt{!}
          - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/play-services-tasks-15.0.1/R.txt{F}
