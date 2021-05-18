@@ -23,4 +23,23 @@ option java_outer_classname = 'AndroidTestCoverageConfigProto';
 
 // A configuration of AndroidTestCoverage plugin.
 message AndroidTestCoverageConfig {
+    // A path to the coverage file on device.
+    oneof test_coverage_path_on_device {
+        // A file path to a single coverage file.
+        // Note: this mode must be used for HOST android test execution.
+        string single_coverage_file = 1;
+
+        // A path to a directory that contains multiple coverage files.
+        // Note: this mode must be used for Android test orchestrator.
+        string multiple_coverage_files_in_directory = 2;
+    }
+
+    // A package name to be used to copy test coverage files from a device
+    // to a host machine. If this is empty, shell commands are executed
+    // without wrapping with run-as command. You need to set this package
+    // name if you use package private directory in a test coverage path.
+    string run_as_package_name = 3;
+
+    // A path to the output directory on a host machine.
+    string output_directory_on_host = 4;
 }

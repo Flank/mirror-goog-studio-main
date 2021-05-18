@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.connected.application
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.builder
 import com.android.build.gradle.integration.common.truth.ScannerSubject.Companion.assertThat
+import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.integration.connected.utils.getEmulator
 import com.android.testutils.TestUtils
 import com.android.testutils.truth.PathSubject.assertThat
@@ -41,6 +42,7 @@ class UtpConnectedTest {
         const val LOGCAT = "build/outputs/androidTest-results/connected/emulator-5554 - 10/logcat-com.example.android.kotlin.ExampleInstrumentedTest-useAppContext.txt"
         const val TEST_REPORT = "build/reports/androidTests/connected/com.example.android.kotlin.html"
         const val TEST_RESULT_PB = "build/outputs/androidTest-results/connected/emulator-5554 - 10/test-result.pb"
+        const val TEST_COV_XML = "build/reports/coverage/androidTest/debug/report.xml"
         const val ENABLE_UTP_TEST_REPORT_PROPERTY = "com.android.tools.utp.GradleAndroidProjectResolverExtension.enable"
     }
 
@@ -57,6 +59,37 @@ class UtpConnectedTest {
         // run the uninstall tasks in order to (1) make sure nothing is installed at the beginning
         // of each test and (2) check the adb connection before taking the time to build anything.
         project.execute("uninstallAll")
+    }
+
+    private fun enableAndroidTestOrchestrator(subProjectName: String) {
+        val subProject = project.getSubproject(subProjectName)
+        TestFileUtils.appendToFile(
+            subProject.buildFile,
+            """
+            android.testOptions.execution 'ANDROIDX_TEST_ORCHESTRATOR'
+            // Orchestrator requires some setup time and it usually takes
+            // about an minute. Increase the timeout for running "am instrument" command
+            // to 3 minutes.
+            android.adbOptions.timeOutInMs=180000
+
+            android.defaultConfig.testInstrumentationRunnerArguments clearPackageData: 'true'
+
+            dependencies {
+              androidTestUtil 'androidx.test:orchestrator:1.4.0-alpha06'
+
+              // UTP enables useTestStorageService when test-service is available on device.
+              androidTestUtil 'androidx.test.services:test-services:1.4.0-alpha06'
+            }
+            """.trimIndent())
+    }
+
+    private fun enableCodeCoverage(subProjectName: String) {
+        val subProject = project.getSubproject(subProjectName)
+        TestFileUtils.appendToFile(
+            subProject.buildFile,
+            """
+            android.buildTypes.debug.testCoverageEnabled true
+            """.trimIndent())
     }
 
     @Test
@@ -86,6 +119,28 @@ class UtpConnectedTest {
 
     @Test
     @Throws(Exception::class)
+    fun connectedAndroidTestWithCodeCoverage() {
+        val testTaskName = ":app:connectedCheck"
+        val testReportPath = "app/$TEST_REPORT"
+        val testResultPbPath = "app/$TEST_RESULT_PB"
+        val testCoverageXmlPath = "app/$TEST_COV_XML"
+
+        enableCodeCoverage("app")
+
+        project.executor().run(testTaskName)
+
+        assertThat(project.file(testReportPath)).exists()
+        assertThat(project.file(testResultPbPath)).exists()
+        assertThat(project.file(testCoverageXmlPath)).contains(
+            """<method name="stubFuncForTestingCodeCoverage" desc="()V" line="9">"""
+        )
+        assertThat(project.file(testCoverageXmlPath)).contains(
+            """<counter type="INSTRUCTION" missed="3" covered="5"/>"""
+        )
+    }
+
+    @Test
+    @Throws(Exception::class)
     fun connectedAndroidTestWithTestFailures() {
         val testTaskName = ":appWithTestFailures:connectedAndroidTest"
         val testReportPath = "appWithTestFailures/$TEST_REPORT"
@@ -94,6 +149,44 @@ class UtpConnectedTest {
         project.executor().expectFailure().run(testTaskName)
         assertThat(project.file(testReportPath)).exists()
         assertThat(project.file(testResultPbPath)).exists()
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun connectedAndroidTestWithOrchestrator() {
+        val testTaskName = ":app:connectedAndroidTest"
+        val testReportPath = "app/$TEST_REPORT"
+        val testResultPbPath = "app/$TEST_RESULT_PB"
+
+        enableAndroidTestOrchestrator("app")
+
+        project.executor().run(testTaskName)
+
+        assertThat(project.file(testReportPath)).exists()
+        assertThat(project.file(testResultPbPath)).exists()
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun connectedAndroidTestWithOrchestratorAndCodeCoverage() {
+        val testTaskName = ":app:connectedCheck"
+        val testReportPath = "app/$TEST_REPORT"
+        val testResultPbPath = "app/$TEST_RESULT_PB"
+        val testCoverageXmlPath = "app/$TEST_COV_XML"
+
+        enableAndroidTestOrchestrator("app")
+        enableCodeCoverage("app")
+
+        project.executor().run(testTaskName)
+
+        assertThat(project.file(testReportPath)).exists()
+        assertThat(project.file(testResultPbPath)).exists()
+        assertThat(project.file(testCoverageXmlPath)).contains(
+            """<method name="stubFuncForTestingCodeCoverage" desc="()V" line="9">"""
+        )
+        assertThat(project.file(testCoverageXmlPath)).contains(
+            """<counter type="INSTRUCTION" missed="3" covered="5"/>"""
+        )
     }
 
     @Test

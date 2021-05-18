@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.testing.utp
 
 import com.android.tools.utp.plugins.deviceprovider.gradle.proto.GradleManagedAndroidDeviceProviderProto
+import com.android.tools.utp.plugins.host.coverage.proto.AndroidTestCoverageConfigProto
 import com.android.tools.utp.plugins.host.icebox.proto.IceboxPluginProto
 import com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidTestResultListenerConfigProto
 import com.google.common.truth.Truth
@@ -30,6 +31,7 @@ import com.google.testing.platform.proto.api.core.PathProto
 private val protoPrinter: ProtoPrinter = ProtoPrinter(listOf(
     AndroidDevicePluginProto.AndroidDevicePlugin::class.java,
     AndroidInstrumentationDriverProto.AndroidInstrumentationDriver::class.java,
+    AndroidTestCoverageConfigProto.AndroidTestCoverageConfig::class.java,
     GradleAndroidTestResultListenerConfigProto.GradleAndroidTestResultListenerConfig::class.java,
     GradleManagedAndroidDeviceProviderProto.GradleManagedAndroidDeviceProviderConfig::class.java,
     IceboxPluginProto.IceboxPlugin::class.java,
@@ -47,7 +49,7 @@ fun assertRunnerConfigProto(
     instrumentationArgs: Map<String, String> = mapOf(),
     iceboxConfig: String = "",
     useGradleManagedDeviceProvider: Boolean = false,
-    isTestCoverageEnabled: Boolean = false,
+    testCoverageConfig: String = "",
 ) {
     val deviceProviderProto = if (useGradleManagedDeviceProvider) { """
         label {
@@ -98,7 +100,7 @@ fun assertRunnerConfigProto(
         """
     }
 
-    val testCoveragePluginProto = if (isTestCoverageEnabled) { """
+    val testCoveragePluginProto = if (testCoverageConfig.isNotBlank()) { """
         host_plugin {
           label {
             label: "ANDROID_TEST_COVERAGE_PLUGIN"
@@ -109,6 +111,9 @@ fun assertRunnerConfigProto(
           }
           config {
             type_url: "type.googleapis.com/com.android.tools.utp.plugins.host.coverage.proto.AndroidTestCoverageConfig"
+            value {
+              ${"\n" + testCoverageConfig.trimIndent().prependIndent(" ".repeat(14))}
+            }
           }
         }
         """

@@ -97,6 +97,7 @@ class UtpConfigFactory {
         outputDir: File,
         tmpDir: File,
         retentionConfig: RetentionConfig,
+        coverageOutputDir: File,
         useOrchestrator: Boolean,
         testResultListenerServerPort: Int,
         resultListenerClientCert: File,
@@ -119,7 +120,9 @@ class UtpConfigFactory {
                     outputDir,
                     tmpDir,
                     retentionConfig,
-                    useOrchestrator
+                    useOrchestrator,
+                    device.name,
+                    coverageOutputDir
                 )
             )
             singleDeviceExecutor = createSingleDeviceExecutor(device.serialNumber)
@@ -168,16 +171,24 @@ class UtpConfigFactory {
         outputDir: File,
         tmpDir: File,
         retentionConfig: RetentionConfig,
+        // coverageOutputDir: File,  // TODO(b/188836495): setup coverage output dir in task.
         useOrchestrator: Boolean,
         testResultListenerServerMetadata: UtpTestResultListenerServerMetadata,
     ): RunnerConfigProto.RunnerConfig {
+        // TODO(b/188836495): Remove this check.
+        val coverageOutputDir = File("")
+        if (testData.isTestCoverageEnabled) {
+            logger.error("Test coverage is not supported in managed device yet.")
+        }
+
         return RunnerConfigProto.RunnerConfig.newBuilder().apply {
             addDevice(createGradleManagedDevice(device, utpDependencies))
             addTestFixture(
                 createTestFixture(
                     null, null, appApks, additionalInstallOptions, helperApks, testData,
                     utpDependencies, versionedSdkLoader,
-                    outputDir, tmpDir, retentionConfig, useOrchestrator
+                    outputDir, tmpDir, retentionConfig, useOrchestrator,
+                    device.deviceName, coverageOutputDir
                 )
             )
             singleDeviceExecutor = createSingleDeviceExecutor(device.id)
@@ -276,7 +287,9 @@ class UtpConfigFactory {
         outputDir: File,
         tmpDir: File,
         retentionConfig: RetentionConfig,
-        useOrchestrator: Boolean
+        useOrchestrator: Boolean,
+        deviceName: String,
+        coverageOutputDir: File,
     ): FixtureProto.TestFixture {
         return FixtureProto.TestFixture.newBuilder().apply {
             testFixtureIdBuilder.apply {
@@ -320,7 +333,9 @@ class UtpConfigFactory {
             addHostPlugin(createAndroidTestDeviceInfoPlugin(utpDependencies))
             addHostPlugin(createAndroidTestLogcatPlugin(utpDependencies))
             if (testData.isTestCoverageEnabled) {
-                addHostPlugin(createAndroidTestCoveragePlugin(utpDependencies))
+                addHostPlugin(createAndroidTestCoveragePlugin(
+                    deviceName, coverageOutputDir, useOrchestrator, testData, utpDependencies
+                ))
             }
         }.build()
     }
@@ -412,6 +427,18 @@ class UtpConfigFactory {
                 }
                 instrumentationArgsBuilder.apply {
                     putAllArgsMap(testData.instrumentationRunnerArguments)
+
+                    if (testData.isTestCoverageEnabled) {
+                        putArgsMap("coverage", "true")
+                        val testCoverageArgName = if (useOrchestrator) {
+                            "coverageFilePath"
+                        } else {
+                            "coverageFile"
+                        }
+                        putArgsMap(
+                            testCoverageArgName,
+                            testData.getTestCoverageFilePath(useOrchestrator))
+                    }
                 }
             }
             this.useOrchestrator = useOrchestrator
@@ -477,11 +504,44 @@ class UtpConfigFactory {
 
     /**
      * Creates and configures AndroidTestCoverage UTP plugin.
+     *
+     * It specifies two paths, a directory or file path to writes test coverage files on device and
+     * a destination directory on a host. This logic used to be implemented in SimpleTestRunnable
+     * and this new implementation is compatible with it (a drop-in replacemant).
      */
     private fun createAndroidTestCoveragePlugin(
+        deviceName: String,
+        coverageOutputDir: File,
+        useOrchestrator: Boolean,
+        testData: StaticTestData,
         utpDependencies:UtpDependencies): ExtensionProto.Extension {
+        val coverageFilePath = testData.getTestCoverageFilePath(useOrchestrator)
+
         return ANDROID_TEST_COVERAGE_PLUGIN.toExtensionProto(
             utpDependencies, AndroidTestCoverageConfig::newBuilder) {
+            if (useOrchestrator) {
+                multipleCoverageFilesInDirectory = coverageFilePath
+            } else {
+                singleCoverageFile = coverageFilePath
+            }
+            outputDirectoryOnHost = "${coverageOutputDir.absolutePath}/${deviceName}/"
+            runAsPackageName = testData.testedApplicationId
+        }
+    }
+
+    private fun StaticTestData.getTestCoverageFilePath(useOrchestrator: Boolean): String {
+        val customCoveragePath =
+            instrumentationRunnerArguments.getOrDefault("coverageFilePath", "")
+        return when {
+            customCoveragePath.isNotBlank() -> {
+                customCoveragePath
+            }
+            useOrchestrator -> {
+                "/data/data/${testedApplicationId}/coverage_data/"
+            }
+            else -> {
+                "/data/data/${testedApplicationId}/coverage.ec"
+            }
         }
     }
 
