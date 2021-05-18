@@ -1201,22 +1201,6 @@ allprojects { proj ->
     }
 
     /**
-     * @Deprecated do not use. Use [GradleTaskExecutor.run] or [ ][GradleTaskExecutor.run] instead.
-     */
-    @Deprecated("")
-    fun executeConnectedCheck() {
-        _buildResult = executor().executeConnectedCheck()
-    }
-
-    /**
-     * @Deprecated do not use. Use [GradleTaskExecutor.run] or [ ][GradleTaskExecutor.run] instead.
-     */
-    @Deprecated("")
-    fun executeConnectedCheck(arguments: List<String>) {
-        _buildResult = executor().withArguments(arguments).executeConnectedCheck()
-    }
-
-    /**
      * Runs gradle on the project, and returns the project model. Throws exception on failure.
      *
      * @param tasks Variadic list of tasks to execute.

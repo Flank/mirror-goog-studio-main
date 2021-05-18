@@ -75,18 +75,6 @@ public final class GradleTaskExecutor extends BaseGradleExecutor<GradleTaskExecu
         return this;
     }
 
-    /**
-     * Call connected check.
-     *
-     * <p>Uses deviceCheck in the background to support the device pool.
-     *
-     * <p>@Deprecated do not use. Use {@link #run(String...)} or {@link #run(List)} instead.
-     */
-    @Deprecated
-    public GradleBuildResult executeConnectedCheck() throws IOException, InterruptedException {
-        return run("deviceCheck");
-    }
-
     /** Execute the specified tasks */
     public GradleBuildResult run(@NonNull String... tasks)
             throws IOException, InterruptedException {
