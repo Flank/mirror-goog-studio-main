@@ -1,0 +1,15 @@
+filegroup(
+    name = "agp_gradle_build_root_build_file",
+    srcs = ["build.gradle"],
+    visibility = ["//tools/base/build-system:__pkg__"],
+)
+
+filegroup(
+    name = "agp_gradle_build_files",
+    srcs = [
+        "settings.gradle",
+        "gradle.properties",
+        ":agp_gradle_build_root_build_file",
+    ],
+    visibility = ["//tools/base/build-system:__pkg__"],
+)

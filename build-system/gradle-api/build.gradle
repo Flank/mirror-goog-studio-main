@@ -4,7 +4,6 @@ apply plugin: 'com.android.tools.publish'
 apply plugin: 'org.jetbrains.dokka'
 
 configurations {
-    provided
     additionalDokkaClasspath
 }
 
@@ -23,8 +22,9 @@ dependencies {
     implementation libs.kotlin_stdlib
     api libs.asm
 
-    provided gradleApi()
-    provided project(':base:builder-model') // Only present for legacy reasons.
+    compileOnly project(':base:annotations')
+    compileOnly gradleApi()
+    compileOnly project(':base:builder-model') // Only present for legacy reasons.
 
     testImplementation libs.junit
     testImplementation libs.kotlin_test
@@ -44,14 +44,8 @@ compileKotlin {
     }
 }
 
-sourceSets {
-    main {
-        compileClasspath += configurations.provided
-    }
-}
-
 javadoc {
-  classpath += configurations.provided
+  classpath += configurations.compileOnly
   options.links("http://docs.oracle.com/javase/8/docs/api/", "https://docs.gradle.org/current/javadoc/")
 }
 

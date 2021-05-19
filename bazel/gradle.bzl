@@ -32,6 +32,7 @@ def _gradle_build_impl(ctx):
         args += ["--task", task]
     if ctx.attr.max_workers > 0:
         args += ["--max_workers", str(ctx.attr.max_workers)]
+    args += ["-P" + key + "=" + value for key, value in ctx.attr.gradle_properties.items()]
 
     manifest, manifest_inputs = _merge_repo_manifests(ctx)
     args += ["--repo", manifest.path]
@@ -59,6 +60,7 @@ _gradle_build_rule = rule(
         "output_log": attr.output(),
         "distribution": attr.label(allow_files = True),
         "max_workers": attr.int(default = 0, doc = "Max number of workers, 0 or negative means unset (Gradle will use the default: number of CPU cores)."),
+        "gradle_properties": attr.string_dict(),
         "_gradlew": attr.label(
             executable = True,
             cfg = "host",
@@ -87,6 +89,7 @@ def gradle_build(
         repos = [],
         tasks = [],
         max_workers = 0,
+        gradle_properties = {},
         tags = []):
     output_file_destinations = []
     output_file_sources = []
@@ -112,6 +115,7 @@ def gradle_build(
         output_file_sources = output_file_sources,
         output_file_destinations = output_file_destinations,
         output_log = name + ".log",
+        gradle_properties = gradle_properties,
         repos = repos,
         tags = tags,
         tasks = tasks,

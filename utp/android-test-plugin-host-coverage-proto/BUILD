@@ -16,3 +16,9 @@ maven_pom(
     group = "com.android.tools.utp",
     source = "//tools/buildSrc/base:base_version",
 )
+
+filegroup(
+    name = "agp_gradle_build_files",
+    srcs = glob(["src/main/proto/*.proto"]) + ["build.gradle"],
+    visibility = ["//tools/base/build-system:__pkg__"],
+)

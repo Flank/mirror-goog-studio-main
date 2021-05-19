@@ -190,3 +190,9 @@ java_test(
         "//tools/base/zipflinger",
     ],
 )
+
+filegroup(
+    name = "agp_gradle_build_files",
+    srcs = glob(["src/**/*.java"]) + ["build.gradle"],
+    visibility = ["//tools/base/build-system:__pkg__"],
+)

@@ -351,3 +351,30 @@ exports_files(
     srcs = ["studio-checks/empty_baseline.xml"],
     visibility = ["//visibility:public"],
 )
+
+filegroup(
+    name = "agp_gradle_build_files",
+    srcs = glob([
+        "libs/lint-model/src/main/**/*.java",
+        "libs/lint-model/src/main/**/*.kt",
+        "libs/lint-model/src/main/resources/**",
+        "libs/lint-api/src/main/**/*.java",
+        "libs/lint-api/src/main/**/*.kt",
+        "libs/lint-api/src/main/resources/**",
+        "libs/lint-gradle/src/main/**/*.java",
+        "libs/lint-gradle/src/main/**/*.kt",
+        "libs/lint-gradle/src/main/resources/**",
+        "libs/lint-checks/src/main/**/*.java",
+        "libs/lint-checks/src/main/**/*.kt",
+        "libs/lint-checks/src/main/resources/**",
+    ]) + [
+        "libs/lint-model/build.gradle",
+        "libs/lint-api/build.gradle",
+        "libs/lint-gradle/build.gradle",
+        "libs/lint-checks/build.gradle",
+        "libs/intellij-core/build.gradle",
+        "libs/kotlin-compiler/build.gradle",
+        "libs/uast/build.gradle",
+    ],
+    visibility = ["//tools/base/build-system:__pkg__"],
+)
