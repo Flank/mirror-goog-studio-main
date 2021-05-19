@@ -33,7 +33,7 @@ TEST_DATA = [
     "//prebuilts/studio/sdk:platforms/android-27_build_only",
     "//prebuilts/studio/sdk:platforms/latest",
     "//tools/base/build-system:gradle-distrib",
-    "//tools/base/build-system:gradle_plugin_repo.zip",
+    "//tools/base/build-system:gradle_plugin_repo",
     "//tools/base/build-system/integration-test:dagger_prebuilts",
     "//tools/base/build-system/integration-test:gradle_kotlin_dsl_prebuilts",
     "//tools/base/build-system/integration-test:support_library_latest",
@@ -71,7 +71,7 @@ coverage_java_test(
         "-Dfile.encoding=UTF-8",
         "-Dsun.jnu.encoding=UTF-8",
         "-Dmaven.repo.local=/tmp/localMavenRepo",  # For gradle publishing, writing to ~/.m2
-        "-Dtest.android.build.gradle.integration.repos=tools/base/build-system/gradle_plugin_repo.zip,tools/base/build-system/integration-test/databinding/prebuilts.manifest,tools/base/third_party/kotlin/kotlin-m2repository.manifest,tools/data-binding/data_binding_runtime.zip,tools/base/build-system/integration-test/support_library_latest.manifest,tools/base/build-system/integration-test/dagger_prebuilts.manifest,tools/base/build-system/integration-test/gradle_kotlin_dsl_prebuilts.manifest",
+        "-Dtest.android.build.gradle.integration.repos=tools/base/build-system/gradle_plugin_repo.manifest,tools/base/build-system/integration-test/databinding/prebuilts.manifest,tools/base/third_party/kotlin/kotlin-m2repository.manifest,tools/data-binding/data_binding_runtime.zip,tools/base/build-system/integration-test/support_library_latest.manifest,tools/base/build-system/integration-test/dagger_prebuilts.manifest,tools/base/build-system/integration-test/gradle_kotlin_dsl_prebuilts.manifest",
     ],
     shard_count = 8,
     tags = [
