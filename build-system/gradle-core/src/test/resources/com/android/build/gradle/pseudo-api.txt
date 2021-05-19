@@ -692,8 +692,6 @@ com.android.build.gradle.internal.dsl.AarMetadata.setMinCompileSdk: void (java.l
 com.android.build.gradle.internal.dsl.AbiSplitOptions extends com.android.build.gradle.internal.dsl.SplitOptions implements com.android.build.api.dsl.AbiSplit
 com.android.build.gradle.internal.dsl.AbiSplitOptions.<init>: com.android.build.gradle.internal.dsl.AbiSplitOptions ()
 com.android.build.gradle.internal.dsl.AbiSplitOptions.getAbiFilters: com.google.common.collect.ImmutableSet<java.lang.String> (java.util.Set<java.lang.String>)
-com.android.build.gradle.internal.dsl.AbiSplitOptions.isUniversalApk: boolean ()
-com.android.build.gradle.internal.dsl.AbiSplitOptions.setUniversalApk: void (boolean)
 com.android.build.gradle.internal.dsl.AbstractPublishing
 com.android.build.gradle.internal.dsl.AbstractPublishing$Type extends java.lang.Enum
 com.android.build.gradle.internal.dsl.AbstractPublishing$Type.valueOf: com.android.build.gradle.internal.dsl.AbstractPublishing$Type (java.lang.String)
@@ -1146,11 +1144,8 @@ com.android.build.gradle.internal.dsl.DefaultConfig.<init>: com.android.build.gr
 com.android.build.gradle.internal.dsl.DensitySplitOptions extends com.android.build.gradle.internal.dsl.SplitOptions implements com.android.build.api.dsl.DensitySplit
 com.android.build.gradle.internal.dsl.DensitySplitOptions.<init>: com.android.build.gradle.internal.dsl.DensitySplitOptions ()
 com.android.build.gradle.internal.dsl.DensitySplitOptions.compatibleScreens: void (java.lang.String[])
-com.android.build.gradle.internal.dsl.DensitySplitOptions.getCompatibleScreens: java.util.Set<java.lang.String> ()
-com.android.build.gradle.internal.dsl.DensitySplitOptions.isStrict: boolean ()
 com.android.build.gradle.internal.dsl.DensitySplitOptions.setAuto: void (boolean)
 com.android.build.gradle.internal.dsl.DensitySplitOptions.setCompatibleScreens: void (java.util.List<java.lang.String>)
-com.android.build.gradle.internal.dsl.DensitySplitOptions.setStrict: void (boolean)
 com.android.build.gradle.internal.dsl.DeviceGroup implements com.android.build.api.dsl.DeviceGroup
 com.android.build.gradle.internal.dsl.DeviceGroup.<init>: com.android.build.gradle.internal.dsl.DeviceGroup (com.android.build.gradle.internal.services.DslServices, java.lang.String)
 com.android.build.gradle.internal.dsl.DeviceGroup.getName: java.lang.String ()
@@ -1623,23 +1618,16 @@ com.android.build.gradle.internal.dsl.SigningConfigFactory.<init>: com.android.b
 com.android.build.gradle.internal.dsl.SigningConfigFactory.create: com.android.build.gradle.internal.dsl.SigningConfig (java.lang.String)
 com.android.build.gradle.internal.dsl.SigningConfigFactory.create: java.lang.Object (java.lang.String)
 com.android.build.gradle.internal.dsl.SplitOptions implements com.android.build.api.dsl.SplitOptions
+com.android.build.gradle.internal.dsl.SplitOptions.<init>: com.android.build.gradle.internal.dsl.SplitOptions ()
 com.android.build.gradle.internal.dsl.SplitOptions.exclude: void (java.lang.String[])
 com.android.build.gradle.internal.dsl.SplitOptions.getApplicableFilters: java.util.Set<java.lang.String> ()
 com.android.build.gradle.internal.dsl.SplitOptions.include: void (java.lang.String[])
-com.android.build.gradle.internal.dsl.SplitOptions.isEnable: boolean ()
 com.android.build.gradle.internal.dsl.SplitOptions.reset: void ()
-com.android.build.gradle.internal.dsl.SplitOptions.setEnable: void (boolean)
 com.android.build.gradle.internal.dsl.Splits implements com.android.build.api.dsl.Splits
 com.android.build.gradle.internal.dsl.Splits.<init>: com.android.build.gradle.internal.dsl.Splits (com.android.build.gradle.internal.services.DslServices)
-com.android.build.gradle.internal.dsl.Splits.abi: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.AbiSplit, kotlin.Unit>)
-com.android.build.gradle.internal.dsl.Splits.abi: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.AbiSplitOptions>)
-com.android.build.gradle.internal.dsl.Splits.density: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.DensitySplit, kotlin.Unit>)
-com.android.build.gradle.internal.dsl.Splits.density: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.DensitySplitOptions>)
-com.android.build.gradle.internal.dsl.Splits.getAbi: com.android.build.api.dsl.AbiSplit ()
 com.android.build.gradle.internal.dsl.Splits.getAbi: com.android.build.gradle.internal.dsl.AbiSplitOptions ()
 com.android.build.gradle.internal.dsl.Splits.getAbiFilters: java.util.Collection ()
 com.android.build.gradle.internal.dsl.Splits.getAbiFilters: java.util.Set<java.lang.String> ()
-com.android.build.gradle.internal.dsl.Splits.getDensity: com.android.build.api.dsl.DensitySplit ()
 com.android.build.gradle.internal.dsl.Splits.getDensity: com.android.build.gradle.internal.dsl.DensitySplitOptions ()
 com.android.build.gradle.internal.dsl.Splits.getDensityFilters: java.util.Collection ()
 com.android.build.gradle.internal.dsl.Splits.getDensityFilters: java.util.Set<java.lang.String> ()

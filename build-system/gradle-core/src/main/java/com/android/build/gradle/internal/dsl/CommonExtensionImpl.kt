@@ -245,13 +245,6 @@ abstract class CommonExtensionImpl<
         sourceSetManager.executeAction(action)
     }
 
-    override val splits: Splits =
-        dslServices.newInstance(Splits::class.java, dslServices)
-
-    override fun splits(action: com.android.build.api.dsl.Splits.() -> Unit) {
-        action.invoke(splits)
-    }
-
     override val testOptions: TestOptions =
         dslServices.newInstance(TestOptions::class.java, dslServices)
 
