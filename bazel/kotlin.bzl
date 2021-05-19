@@ -59,6 +59,7 @@ def kotlin_compile(ctx, name, srcs, deps, friends, out, jre):
     args.add("-jvm-target", "1.8")
     args.add("-api-version", "1.3")  # b/166582569
     args.add("-Xjvm-default=enable")
+    args.add("-no-stdlib")
 
     # Dependency jars may be compiled with a new kotlinc IR backend.
     args.add("-Xallow-unstable-dependencies")

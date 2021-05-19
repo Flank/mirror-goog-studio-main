@@ -5,6 +5,7 @@ iml_module(
     srcs = ["src"],
     iml_files = ["friends.impl.iml"],
     visibility = ["//visibility:public"],
+    deps = ["//prebuilts/tools/common/kotlin-plugin-ij:Kotlin/kotlinc/lib/kotlin-stdlib"],
 )
 
 iml_module(
