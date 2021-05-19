@@ -210,6 +210,8 @@ class PublishingSpecs {
             variantSpec(VariantTypeImpl.LIBRARY) {
                 publish(com.android.build.api.artifact.SingleArtifact.AAR, ArtifactType.AAR)
 
+                source(InternalArtifactType.SOURCE_JAR, ArtifactType.SOURCES_JAR)
+
                 api(AIDL_PARCELABLE, ArtifactType.AIDL)
                 api(RENDERSCRIPT_HEADERS, ArtifactType.RENDERSCRIPT)
                 api(COMPILE_LIBRARY_CLASSES_JAR, ArtifactType.CLASSES_JAR)
@@ -346,6 +348,7 @@ class PublishingSpecs {
         fun runtime(taskOutputType: Artifact.Single<out FileSystemLocation>, artifactType: ArtifactType, libraryElements: String? = null)
         fun reverseMetadata(taskOutputType: Artifact.Single<out FileSystemLocation>, artifactType: ArtifactType)
         fun publish(taskOutputType: Artifact.Single<out FileSystemLocation>, artifactType: ArtifactType)
+        fun source(taskOutputType: Artifact.Single<out FileSystemLocation>, artifactType: ArtifactType)
     }
 }
 
@@ -356,6 +359,9 @@ private val REVERSE_METADATA_ELEMENTS_ONLY: ImmutableList<PublishedConfigType> =
     REVERSE_METADATA_ELEMENTS)
 private val API_AND_RUNTIME_PUBLICATION: ImmutableList<PublishedConfigType> =
     ImmutableList.of(API_PUBLICATION, RUNTIME_PUBLICATION)
+private val SOURCE_PUBLICATION: ImmutableList<PublishedConfigType> = ImmutableList.of(
+    PublishedConfigType.SOURCE_PUBLICATION
+)
 private val APK_PUBLICATION: ImmutableList<PublishedConfigType> = ImmutableList.of(
     PublishedConfigType.APK_PUBLICATION)
 private val AAB_PUBLICATION: ImmutableList<PublishedConfigType> = ImmutableList.of(
@@ -443,6 +449,10 @@ private open class VariantSpecBuilderImpl (
         throw RuntimeException("This VariantSpecBuilder does not support publish. VariantType is $variantType")
     }
 
+    override fun source(taskOutputType: Artifact.Single<*>, artifactType: ArtifactType) {
+        throw RuntimeException("This VariantSpecBuilder does not support source. VariantType is $variantType")
+    }
+
     fun toSpec(parentSpec: PublishingSpecs.VariantSpec? = null): PublishingSpecs.VariantSpec {
         return VariantPublishingSpecImpl(
                 variantType,
@@ -463,6 +473,10 @@ private class LibraryVariantSpecBuilder(variantType: VariantType): VariantSpecBu
 
     override fun publish(taskOutputType: Artifact.Single<*>, artifactType: ArtifactType) {
         outputs.add(OutputSpecImpl(taskOutputType, artifactType, API_AND_RUNTIME_PUBLICATION))
+    }
+
+    override fun source(taskOutputType: Artifact.Single<*>, artifactType: ArtifactType) {
+        outputs.add(OutputSpecImpl(taskOutputType, artifactType, SOURCE_PUBLICATION))
     }
 }
 

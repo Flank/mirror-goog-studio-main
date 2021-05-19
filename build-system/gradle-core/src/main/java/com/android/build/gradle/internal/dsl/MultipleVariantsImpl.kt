@@ -23,7 +23,7 @@ import javax.inject.Inject
 abstract class MultipleVariantsImpl @Inject constructor(
     dslServices: DslServices,
     val componentName: String,
-) : MultipleVariants {
+) : MultipleVariants, PublishingOptionsImpl() {
 
     internal abstract var allVariants: Boolean
     internal abstract var includedBuildTypes: MutableSet<String>

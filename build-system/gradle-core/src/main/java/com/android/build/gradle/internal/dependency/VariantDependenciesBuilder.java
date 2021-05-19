@@ -24,6 +24,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Publ
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.REVERSE_METADATA_ELEMENTS;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.RUNTIME_PUBLICATION;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.SOURCE_PUBLICATION;
 import static org.gradle.api.attributes.Bundling.BUNDLING_ATTRIBUTE;
 import static org.gradle.api.attributes.Bundling.EXTERNAL;
 import static org.gradle.api.attributes.Category.CATEGORY_ATTRIBUTE;
@@ -69,6 +70,7 @@ import org.gradle.api.attributes.Attribute;
 import org.gradle.api.attributes.AttributeContainer;
 import org.gradle.api.attributes.Bundling;
 import org.gradle.api.attributes.Category;
+import org.gradle.api.attributes.DocsType;
 import org.gradle.api.attributes.LibraryElements;
 import org.gradle.api.attributes.Usage;
 import org.gradle.api.attributes.java.TargetJvmEnvironment;
@@ -404,12 +406,15 @@ public class VariantDependenciesBuilder {
                 // if the variant is a library, we need to make both a runtime and an API
                 // configurations, and they both must contain transitive dependencies
                 if (variantType.isAar()) {
-                    LibraryElements libraryElements =
+                    LibraryElements aar =
                             factory.named(
                                     LibraryElements.class,
                                     AndroidArtifacts.ArtifactType.AAR.getType());
+                    LibraryElements jar = factory.named(LibraryElements.class, LibraryElements.JAR);
                     Bundling bundling = factory.named(Bundling.class, EXTERNAL);
-                    Category category = factory.named(Category.class, Category.LIBRARY);
+                    Category library = factory.named(Category.class, Category.LIBRARY);
+                    Category documentation = factory.named(Category.class, Category.DOCUMENTATION);
+                    DocsType sources = factory.named(DocsType.class, DocsType.SOURCES);
 
                     for (ComponentPublishingInfo component : variantPublish.getComponents()) {
 
@@ -433,7 +438,7 @@ public class VariantDependenciesBuilder {
                                 StringHelper.usLocaleCapitalize(component.getComponentName());
 
                         Configuration apiPublication =
-                                createAarPublishingConfiguration(
+                                createLibraryPublishingConfiguration(
                                         configurations,
                                         variantName
                                                 + "Variant"
@@ -443,9 +448,10 @@ public class VariantDependenciesBuilder {
                                                 + "component API publication for "
                                                 + variantName,
                                         apiUsage,
-                                        libraryElements,
+                                        aar,
                                         bundling,
-                                        category,
+                                        library,
+                                        null,
                                         buildTypeAttribute,
                                         flavorAttributes);
                         apiPublication.setExtendsFrom(apiClasspaths);
@@ -454,7 +460,7 @@ public class VariantDependenciesBuilder {
                                 apiPublication);
 
                         Configuration runtimePublication =
-                                createAarPublishingConfiguration(
+                                createLibraryPublishingConfiguration(
                                         configurations,
                                         variantName
                                                 + "Variant"
@@ -464,15 +470,40 @@ public class VariantDependenciesBuilder {
                                                 + "Runtime publication for "
                                                 + variantName,
                                         runtimeUsage,
-                                        libraryElements,
+                                        aar,
                                         bundling,
-                                        category,
+                                        library,
+                                        null,
                                         buildTypeAttribute,
                                         flavorAttributes);
                         runtimePublication.extendsFrom(runtimeClasspath);
                         elements.put(
                                 new PublishedConfigSpec(RUNTIME_PUBLICATION, component),
                                 runtimePublication);
+
+                        if (component.getWithSourcesJar()) {
+                            Configuration sourcePublication =
+                                    createLibraryPublishingConfiguration(
+                                            configurations,
+                                            variantName
+                                                    + "Variant"
+                                                    + capitalizedComponentName
+                                                    + "SourcePublication",
+                                            capitalizedComponentName
+                                                    + "Source publication for"
+                                                    + variantName,
+                                            runtimeUsage,
+                                            jar,
+                                            bundling,
+                                            documentation,
+                                            sources,
+                                            buildTypeAttribute,
+                                            flavorAttributes);
+
+                            elements.put(
+                                    new PublishedConfigSpec(SOURCE_PUBLICATION, component),
+                                    sourcePublication);
+                        }
                     }
                 } else {
                     // For APK, no transitive dependencies, and no api vs runtime configs.
@@ -649,7 +680,7 @@ public class VariantDependenciesBuilder {
     }
 
     @NonNull
-    private Configuration createAarPublishingConfiguration(
+    private Configuration createLibraryPublishingConfiguration(
             @NonNull ConfigurationContainer configurations,
             @NonNull String configName,
             @NonNull String configDesc,
@@ -657,6 +688,7 @@ public class VariantDependenciesBuilder {
             @NonNull LibraryElements libraryElements,
             @NonNull Bundling bundling,
             @NonNull Category category,
+            @Nullable DocsType docsType,
             @Nullable String buildType,
             @Nullable Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> publicationFlavorMap) {
         Configuration config = configurations.maybeCreate(configName);
@@ -672,6 +704,9 @@ public class VariantDependenciesBuilder {
         attrContainer.attribute(LIBRARY_ELEMENTS_ATTRIBUTE, libraryElements);
         attrContainer.attribute(BUNDLING_ATTRIBUTE, bundling);
         attrContainer.attribute(CATEGORY_ATTRIBUTE, category);
+        if (docsType != null) {
+            attrContainer.attribute(DocsType.DOCS_TYPE_ATTRIBUTE, docsType);
+        }
 
         if (buildType != null) {
             Preconditions.checkNotNull(publicationFlavorMap);

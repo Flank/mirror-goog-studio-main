@@ -28,8 +28,10 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import org.gradle.api.JavaVersion
+import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.FileTree
 import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Provider
@@ -116,11 +118,7 @@ class JavaCompileCreationAction(
         // Lombok want to run via JavaCompile (see https://youtrack.jetbrains.com/issue/KT-7112).
         task.configurePropertiesForAnnotationProcessing(creationConfig)
 
-        // Wrap sources in Callable to evaluate them just before execution, b/117161463.
-        val sourcesToCompile = Callable { listOf(creationConfig.javaSources) }
-        // Include only java sources, otherwise we hit b/144249620.
-        val javaSourcesFilter = PatternSet().include("**/*.java")
-        task.source = task.project.files(sourcesToCompile).asFileTree.matching(javaSourcesFilter)
+        task.source = computeJavaSource(creationConfig, task.project)
 
         task.options.compilerArgumentProviders.add(
             JavaCompileOptionsForRoom(
@@ -250,6 +248,14 @@ private fun JavaCompile.recordAnnotationProcessors(
             annotationProcessors, projectPath, variantName, analyticsService.get()
         )
     }
+}
+
+fun computeJavaSource(creationConfig: ComponentCreationConfig, project: Project): FileTree {
+    // Wrap sources in Callable to evaluate them just before execution, b/117161463.
+    val sourcesToCompile = Callable { listOf(creationConfig.javaSources) }
+    // Include only java sources, otherwise we hit b/144249620.
+    val javaSourcesFilter = PatternSet().include("**/*.java")
+    return project.files(sourcesToCompile).asFileTree.matching(javaSourcesFilter)
 }
 
 private const val AP_GENERATED_SOURCES_DIR_NAME = "out"

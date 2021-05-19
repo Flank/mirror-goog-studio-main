@@ -147,7 +147,8 @@ class TaskMethodModifiersAndAnnotationsTest {
                 "com.android.build.gradle.tasks.RenderscriptCompile::setImportDirs",
                 "com.android.build.gradle.tasks.RenderscriptCompile::setObjOutputDir",
                 "com.android.build.gradle.tasks.ShaderCompile::setDefaultArgs",
-                "com.android.build.gradle.tasks.ShaderCompile::setScopedArgs"
+                "com.android.build.gradle.tasks.ShaderCompile::setScopedArgs",
+                "com.android.build.gradle.tasks.SourceJarTask::setVariantName"
             )
 
         val classPath = ClassPath.from(this.javaClass.classLoader)
