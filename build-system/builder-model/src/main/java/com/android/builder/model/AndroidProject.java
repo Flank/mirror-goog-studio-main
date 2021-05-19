@@ -217,6 +217,26 @@ public interface AndroidProject {
     String getGroupId();
 
     /**
+     * Returns the namespace of the main artifact.
+     *
+     * <p>This is here rather than on {@link AndroidArtifact} because this is common to all
+     * artifacts as it cannot be changed per variants.
+     */
+    @NonNull
+    String getNamespace();
+
+    /**
+     * Returns the namespace of the AndroidTest artifact.
+     *
+     * <p>This is here rather than on {@link AndroidArtifact} because this is common to all
+     * artifacts as it cannot be changed per variants.
+     *
+     * <p>If there are no AndroidTest components, this returns null.
+     */
+    @Nullable
+    String getAndroidTestNamespace();
+
+    /**
      * Returns the {@link ProductFlavorContainer} for the 'main' default config.
      *
      * @return the product flavor.

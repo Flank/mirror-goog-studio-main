@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-4f74357dde78070c96c604ccd740f28e2357119d1c9ddeddbdb8590ff5c0f9b1
+1c3950f872ae449ba0318dcd6aad86636fc7fa5127cb9dc387e49e66a4adf831
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -69,6 +69,7 @@ com.android.builder.model.AndroidLibrary.isOptional: boolean ()
 com.android.builder.model.AndroidLibrary.isProvided: boolean ()
 com.android.builder.model.AndroidProject
 com.android.builder.model.AndroidProject.getAaptOptions: com.android.builder.model.AaptOptions ()
+com.android.builder.model.AndroidProject.getAndroidTestNamespace: java.lang.String ()
 com.android.builder.model.AndroidProject.getApiVersion: int ()
 com.android.builder.model.AndroidProject.getBootClasspath: java.util.Collection<java.lang.String> ()
 com.android.builder.model.AndroidProject.getBuildFolder: java.io.File ()
@@ -89,6 +90,7 @@ com.android.builder.model.AndroidProject.getLintOptions: com.android.builder.mod
 com.android.builder.model.AndroidProject.getLintRuleJars: java.util.List<java.io.File> ()
 com.android.builder.model.AndroidProject.getModelVersion: java.lang.String ()
 com.android.builder.model.AndroidProject.getName: java.lang.String ()
+com.android.builder.model.AndroidProject.getNamespace: java.lang.String ()
 com.android.builder.model.AndroidProject.getNativeToolchains: java.util.Collection<com.android.builder.model.NativeToolchain> ()
 com.android.builder.model.AndroidProject.getNdkVersion: java.lang.String ()
 com.android.builder.model.AndroidProject.getPluginGeneration: int ()
