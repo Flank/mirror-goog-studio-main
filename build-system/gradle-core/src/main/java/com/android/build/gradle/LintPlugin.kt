@@ -17,10 +17,12 @@ package com.android.build.gradle
 
 import com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION
 import com.android.build.api.artifact.impl.ArtifactsImpl
+import com.android.build.api.dsl.Lint
 import com.android.build.api.extension.impl.DslLifecycleComponentsOperationsRegistrar
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.dependency.AndroidAttributes
+import com.android.build.gradle.internal.dsl.LintImpl
 import com.android.build.gradle.internal.dsl.LintOptions
 import com.android.build.gradle.internal.dsl.decorator.androidPluginDslDecorator
 import com.android.build.gradle.internal.errors.DeprecationReporterImpl
@@ -74,7 +76,7 @@ import javax.inject.Inject
  */
 abstract class LintPlugin : Plugin<Project> {
     private lateinit var projectServices: ProjectServices
-    private var dslServices: DslServicesImpl? = null
+    private lateinit var dslServices: DslServicesImpl
     private var lintOptions: LintOptions? = null
     private val dslOperationsRegistrar = DslLifecycleComponentsOperationsRegistrar<LintOptions>()
 
@@ -92,7 +94,7 @@ abstract class LintPlugin : Plugin<Project> {
             project.providers.provider { null }
         )
 
-        createExtension(project)
+        createExtension(project, dslServices)
         withJavaPlugin(project) { registerTasks(project) }
     }
     private fun registerTasks(project: Project) {
@@ -282,11 +284,13 @@ abstract class LintPlugin : Plugin<Project> {
         }
     }
 
-    private fun createExtension(project: Project) {
+    private fun createExtension(project: Project, dslServices: DslServicesImpl) {
+        val lintImplClass = androidPluginDslDecorator.decorate(LintImpl::class.java)
+        val newLintExtension = project.extensions.create(Lint::class.java, "lint", lintImplClass, dslServices)
         val decoratedLintOptionsClass =
             androidPluginDslDecorator.decorate(LintOptions::class.java)
         lintOptions =
-            project.extensions.create("lintOptions", decoratedLintOptionsClass, dslServices)
+            project.extensions.create("lintOptions", decoratedLintOptionsClass, dslServices, newLintExtension)
         project.extensions.create(
             "lintLifecycle",
             LintLifecycleExtensionImpl::class.java,

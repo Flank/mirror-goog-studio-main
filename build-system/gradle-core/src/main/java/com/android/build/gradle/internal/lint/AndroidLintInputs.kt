@@ -363,20 +363,8 @@ abstract class LintOptionsInput {
         lintConfig.disallowChanges()
         lintOptions.baselineFile?.let { baselineFile.set(it) }
         baselineFile.disallowChanges()
-        severityOverrides.setDisallowChanges(
-            lintOptions.severityOverrides?.mapValues { getSeverity(it.value) } ?: mapOf())
+        severityOverrides.setDisallowChanges(lintOptions.severityOverridesMap)
     }
-
-    private fun getSeverity(severity: Int): LintModelSeverity =
-        when (severity) {
-            com.android.builder.model.LintOptions.SEVERITY_FATAL -> LintModelSeverity.FATAL
-            com.android.builder.model.LintOptions.SEVERITY_ERROR -> LintModelSeverity.ERROR
-            com.android.builder.model.LintOptions.SEVERITY_WARNING -> LintModelSeverity.WARNING
-            com.android.builder.model.LintOptions.SEVERITY_INFORMATIONAL -> LintModelSeverity.INFORMATIONAL
-            com.android.builder.model.LintOptions.SEVERITY_IGNORE -> LintModelSeverity.IGNORE
-            com.android.builder.model.LintOptions.SEVERITY_DEFAULT_ENABLED -> LintModelSeverity.DEFAULT_ENABLED
-            else -> LintModelSeverity.IGNORE
-        }
 
     fun toLintModel(): LintModelLintOptions {
         return DefaultLintModelLintOptions(

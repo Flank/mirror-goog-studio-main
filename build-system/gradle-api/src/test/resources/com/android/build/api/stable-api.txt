@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-4050a30acfe3481b83a6830a6feac6d170a1a7c0501a5b3dcbaa4347159c5cd1
+1b4c432694ce67ad0d449541b21397980e5bd50b34ddf3f14bb75a9ffe950bef
 -------------------------------------------------------------------------
 com.android.build.api.AndroidPluginVersion implements java.lang.Comparable
 com.android.build.api.AndroidPluginVersion.<init>: com.android.build.api.AndroidPluginVersion (int, int)
@@ -205,6 +205,8 @@ com.android.build.api.dsl.LibraryPublishing.multipleVariants: void (kotlin.jvm.f
 com.android.build.api.dsl.LibrarySingleVariant implements com.android.build.api.dsl.SingleVariant
 com.android.build.api.dsl.LibraryVariantDimension implements com.android.build.api.dsl.VariantDimension
 com.android.build.api.dsl.Lint
+com.android.build.api.dsl.Lint$DefaultImpls
+com.android.build.api.dsl.LintOptions$DefaultImpls
 com.android.build.api.dsl.MultipleVariants implements com.android.build.api.dsl.PublishingOptions
 com.android.build.api.dsl.MultipleVariants.allVariants: void ()
 com.android.build.api.dsl.MultipleVariants.includeBuildTypeValues: void (java.lang.String[])
