@@ -57,7 +57,6 @@ public final class GradleTestProjectBuilder {
     @Nullable private String heapSize;
     @Nullable private String metaspace;
     @Nullable private Path profileDirectory;
-    @Nullable private File testDir = null;
     private boolean withDependencyChecker = true;
     private BaseGradleExecutor.ConfigurationCaching withConfigurationCaching =
             BaseGradleExecutor.ConfigurationCaching.ON;
@@ -84,7 +83,7 @@ public final class GradleTestProjectBuilder {
     private boolean withAndroidGradlePlugin = true;
     private boolean withKotlinGradlePlugin = false;
     private boolean withPluginManagementBlock = false;
-    // list of included builds, relative to the main testDir
+    // list of included builds, relative to the main projectDir
     private List<String> withIncludedBuilds = Lists.newArrayList();
 
     /** Whether or not to output the log of the last build result when a test fails */
@@ -248,7 +247,7 @@ public final class GradleTestProjectBuilder {
 
     /**
      * Sets a custom directory for the Gradle build cache (not the Android Gradle build cache). The
-     * path can be absolute or relative to testDir.
+     * path can be absolute or relative to projectDir.
      */
     public GradleTestProjectBuilder withGradleBuildCacheDirectory(
             @NonNull File gradleBuildCacheDirectory) {
@@ -293,11 +292,6 @@ public final class GradleTestProjectBuilder {
 
     public GradleTestProjectBuilder withKotlinGradlePlugin(boolean withKotlinGradlePlugin) {
         this.withKotlinGradlePlugin = withKotlinGradlePlugin;
-        return this;
-    }
-
-    public GradleTestProjectBuilder withTestDir(File testDir) {
-        this.testDir = testDir;
         return this;
     }
 
