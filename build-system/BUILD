@@ -288,6 +288,7 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlinx/kotlinx-coroutines-core-common/1.3.6:jar",
         "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlinx/kotlinx-coroutines-core/1.3.6:jar",
     ],
+    use_zip = False,
     visibility = ["//prebuilts/studio/buildbenchmarks:__subpackages__"],
 )
 

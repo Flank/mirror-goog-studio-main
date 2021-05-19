@@ -271,11 +271,10 @@ single_gradle_integration_test_per_source(
         "//tools/base/build-system/integration-test:utp_plugins",
         "//tools/base/build-system/integration-test:dagger_prebuilts",
         "//tools/base/build-system/integration-test/application:prebuilts",
+        "//tools/base/build-system/previous-versions:3.5.0",
         "//tools/base/third_party/kotlin:kotlin-m2repository",
     ],
-    maven_repos = [
-        "//tools/base/build-system/previous-versions:3.5.0",
-    ],
+    maven_repos = [],
     resources = glob(["src/test/resources/**"]),
     very_flaky_targets = [
         "GradlePluginMemoryLeakTest",  # b/153972155
