@@ -997,7 +997,7 @@ class ViewLayoutInspectorTest {
 
         val startFetchCommand = Command.newBuilder().apply {
             startFetchCommandBuilder.apply {
-                continuous = true
+                continuous = false
             }
         }.build()
         viewInspector.onReceiveCommand(
