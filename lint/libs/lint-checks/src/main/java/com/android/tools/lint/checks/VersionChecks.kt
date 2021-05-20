@@ -619,7 +619,7 @@ class VersionChecks(
                 val name = identifier.name
                 val version = getMinSdkVersionFromMethodName(name)
                 if (version != -1) {
-                    return atMost(version)
+                    return (if (and) ::atMost else ::above)(version)
                 }
             }
             return null
