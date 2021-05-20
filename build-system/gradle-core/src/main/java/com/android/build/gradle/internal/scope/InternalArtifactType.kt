@@ -496,6 +496,10 @@ InternalArtifactType<T : FileSystemLocation>(
     object MERGED_ART_PROFILE: InternalArtifactType<RegularFile>(FILE)
     object LIBRARY_ART_PROFILE: InternalArtifactType<RegularFile>(FILE)
 
+    // binary art profile artifacts.
+    object BINARY_ART_PROFILE: InternalArtifactType<RegularFile>(FILE)
+
+
     override fun getFolderName(): String {
         return folderName ?: super.getFolderName()
     }

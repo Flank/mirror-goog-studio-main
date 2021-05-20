@@ -17,16 +17,13 @@
 package com.android.build.api.extension
 
 import com.android.build.api.AndroidPluginVersion
-import com.android.build.api.component.AndroidTest
 import com.android.build.api.component.ComponentBuilder
-import com.android.build.api.component.UnitTest
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.SdkComponents
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
 import com.android.build.api.variant.VariantExtension
 import org.gradle.api.Action
-import org.gradle.api.Incubating
 
 /**
  * Generic extension for Android Gradle Plugin related components.
@@ -36,7 +33,6 @@ import org.gradle.api.Incubating
  *
  * @param VariantBuilderT the [ComponentBuilder] type produced by this variant.
  */
-@Incubating
 interface AndroidComponentsExtension<
         DslExtensionT: CommonExtension<*, *, *, *>,
         VariantBuilderT: VariantBuilder,
@@ -65,7 +61,6 @@ interface AndroidComponentsExtension<
     /**
      * The version of the Android Gradle Plugin currently in use.
      */
-    @get:Incubating
     val pluginVersion: AndroidPluginVersion
 
     /**
@@ -156,97 +151,6 @@ interface AndroidComponentsExtension<
             selector: VariantSelector = selector().all(),
             callback: Action<VariantT>
     )
-
-    /**
-     * Allow for registration of a [callback] to be called with instances of type [UnitTest]
-     * once the list of [com.android.build.api.artifact.Artifact] has been determined.
-     *
-     * At this stage, access to the DSL objects is disallowed.
-     *
-     * Because the list of artifacts (including private ones) is final, one cannot change the build
-     * flow anymore as [org.gradle.api.Task]s are now expecting those artifacts as inputs. However
-     * users can modify such artifacts by replacing or transforming them, see [com.android.build.api.artifact.Artifacts]
-     * for details.
-     *
-     * Code executing in the [callback] also has access to the [UnitTest] information which is used
-     * to configure [org.gradle.api.Task] inputs. Such information represented as
-     * [org.gradle.api.provider.Property] can still be modified ensuring that all
-     * [org.gradle.api.Task]s created by the Android Gradle Plugin use the updated value.
-     */
-    @Deprecated("Will be removed in 4.2-beta6")
-    fun unitTests(
-            selector: VariantSelector = selector().all(),
-            callback: Action<UnitTest>)
-
-    /**
-     * [Action] based version of the [unitTests] above.
-     */
-    @Deprecated("Will be removed in 4.2-beta6")
-    fun unitTests(
-            selector: VariantSelector = selector().all(),
-            callback: (UnitTest) -> Unit)
-
-    /**
-     * Allow for registration of a [callback] to be called with instances of type [AndroidTest]
-     * once the list of [com.android.build.api.artifact.Artifact] has been determined.
-     *
-     * At this stage, access to the DSL objects is disallowed.
-     *
-     * Because the list of artifacts (including private ones) is final, one cannot change the build
-     * flow anymore as [org.gradle.api.Task]s are now expecting those artifacts as inputs. However
-     * users can modify such artifacts by replacing or transforming them, see [com.android.build.api.artifact.Artifacts]
-     * for details.
-     *
-     * Code executing in the [callback] also has access to the [AndroidTest] information which is used
-     * to configure [org.gradle.api.Task] inputs. Such information represented as
-     * [org.gradle.api.provider.Property] can still be modified ensuring that all
-     * [org.gradle.api.Task]s created by the Android Gradle Plugin use the updated value.
-     */
-    @Deprecated("Will be removed in 4.2-beta6")
-    fun androidTests(
-            selector: VariantSelector = selector().all(),
-            callback: Action<AndroidTest>)
-
-    /**
-     * [Action] based version of the [AndroidTest] above.
-     */
-    @Deprecated("Will be removed in 4.2-beta6")
-    fun androidTests(
-            selector: VariantSelector = selector().all(),
-            callback: (AndroidTest) -> Unit)
-
-    @Deprecated("Will be removed in 4.2-beta5",
-        replaceWith = ReplaceWith("unitTests(selector, callback)"))
-    fun unitTest(
-        selector: VariantSelector = selector().all(),
-        callback: Action<UnitTest>) {
-        unitTests(selector, callback)
-    }
-
-    @Deprecated("Will be removed in 4.2-beta5",
-        replaceWith = ReplaceWith("unitTests(selector, callback)"))
-    fun unitTest(
-        selector: VariantSelector = selector().all(),
-        callback: (UnitTest) -> Unit) {
-        unitTests(selector, callback)
-    }
-
-    @Deprecated("Will be removed in 4.2-beta5",
-        replaceWith = ReplaceWith("androidTests(selector, callback)")
-    )
-    fun androidTest(
-        selector: VariantSelector = selector().all(),
-        callback: Action<AndroidTest>) {
-        androidTests(selector, callback)
-    }
-
-    @Deprecated("Will be removed in 4.2-beta5",
-        replaceWith = ReplaceWith("androidTests(selector, callback)"))
-    fun androidTest(
-        selector: VariantSelector = selector().all(),
-        callback: (AndroidTest) -> Unit) {
-        androidTests(selector, callback)
-    }
 
     /**
      * Register an Android Gradle Plugin DSL extension.

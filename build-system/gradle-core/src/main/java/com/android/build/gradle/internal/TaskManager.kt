@@ -20,6 +20,7 @@ import com.android.SdkConstants
 import com.android.SdkConstants.DATA_BINDING_KTX_LIB_ARTIFACT
 import com.android.SdkConstants.DOT_JAR
 import com.android.build.api.artifact.Artifact.Single
+import com.android.build.api.artifact.MultipleArtifact
 import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.component.impl.AndroidTestImpl
 import com.android.build.api.component.impl.ComponentImpl
@@ -90,6 +91,8 @@ import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
 import com.android.build.gradle.internal.scope.ProjectInfo
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.scope.publishArtifactToConfiguration
+import com.android.build.gradle.internal.scope.getDirectories
+import com.android.build.gradle.internal.scope.getRegularFiles
 import com.android.build.gradle.internal.services.AndroidLocationsBuildService
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.AarMetadataTask
@@ -1164,7 +1167,11 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                                     .addScope(QualifiedContent.Scope.PROJECT)
                                     .setFileCollection(rFiles)
                                     .build())
-            creationConfig.artifacts.appendToAllClasses(rFiles)
+            creationConfig
+                    .artifacts
+                    .appendTo(
+                            MultipleArtifact.ALL_CLASSES_DIRS,
+                            creationConfig.artifacts.get(RUNTIME_R_CLASS_CLASSES));
             return
         }
         createNonNamespacedResourceTasks(
@@ -1230,12 +1237,10 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                             LinkAndroidResForBundleTask.CreationAction(
                                     creationConfig))
                 }
-                creationConfig
-                        .artifacts
-                        .appendToAllClasses(
-                                project.files(
-                                        artifacts.get(
-                                                COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR)))
+                artifacts.appendTo(
+                        MultipleArtifact.ALL_CLASSES_JARS,
+                        artifacts.get(COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR));
+
                 if (!creationConfig.debuggable &&
                         !creationConfig.variantType.isForTesting &&
                          projectOptions[BooleanOption.ENABLE_RESOURCE_OPTIMIZATIONS]) {
@@ -1344,7 +1349,44 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         }
     }
 
-    protected abstract fun postJavacCreation(creationConfig: ComponentCreationConfig)
+    protected open fun postJavacCreation(creationConfig: ComponentCreationConfig) {
+        creationConfig
+                .artifacts
+                .appendAll(
+                        MultipleArtifact.ALL_CLASSES_JARS,
+                        creationConfig.variantData.allPreJavacGeneratedBytecode.getRegularFiles(
+                                project.layout.projectDirectory
+                        ));
+
+        creationConfig
+                .artifacts
+                .appendAll(
+                        MultipleArtifact.ALL_CLASSES_DIRS,
+                        creationConfig.variantData.allPreJavacGeneratedBytecode.getDirectories(
+                            project.layout.projectDirectory
+                        ));
+
+        creationConfig
+                .artifacts
+                .appendAll(
+                        MultipleArtifact.ALL_CLASSES_JARS,
+                        creationConfig.variantData.allPostJavacGeneratedBytecode.getRegularFiles(
+                            project.layout.projectDirectory
+                        ));
+
+        creationConfig
+                .artifacts
+                .appendAll(
+                        MultipleArtifact.ALL_CLASSES_DIRS,
+                        creationConfig.variantData.allPostJavacGeneratedBytecode.getDirectories(
+                            project.layout.projectDirectory
+                        ));
+        creationConfig
+                .artifacts
+                .appendTo(
+                        MultipleArtifact.ALL_CLASSES_DIRS,
+                        creationConfig.artifacts.get(JAVAC));
+    }
 
     /**
      * Creates the task for creating *.class files using javac. These tasks are created regardless
@@ -1785,8 +1827,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         val isLibrary = testedVariant.variantType.isAar
         val testData: AbstractTestDataImpl = if (testedVariant.variantType.isDynamicFeature) {
             BundleTestDataImpl(
-                    project.providers,
-                    androidTestProperties,
+                    androidTestProperties.namespace,
                     androidTestProperties,
                     androidTestProperties.artifacts.get(SingleArtifact.APK),
                     getFeatureName(project.path),
@@ -1799,8 +1840,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             val testedApkFileCollection =
                     project.files(testedVariant.artifacts.get(SingleArtifact.APK))
             TestDataImpl(
-                    project.providers,
-                    androidTestProperties,
+                    androidTestProperties.namespace,
                     androidTestProperties,
                     androidTestProperties.artifacts.get(SingleArtifact.APK),
                     if (isLibrary) null else testedApkFileCollection)

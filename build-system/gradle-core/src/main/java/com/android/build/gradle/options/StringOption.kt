@@ -62,6 +62,11 @@ enum class StringOption(
     // Native
     NATIVE_BUILD_OUTPUT_LEVEL(AndroidProject.PROPERTY_NATIVE_BUILD_OUTPUT_LEVEL, ApiStage.Stable),
 
+    // AGP suggests it should be upgraded if the compile sdk is newer than the version it was tested
+    // with. This option allows developers to suppress that warning.
+    // e.g. android.suppressUnsupportedCompileSdk=S,31,32
+    SUPPRESS_UNSUPPORTED_COMPILE_SDK("android.suppressUnsupportedCompileSdk", ApiStage.Stable),
+
     /* -----------------
      * EXPERIMENTAL APIs
      */
@@ -80,7 +85,6 @@ enum class StringOption(
     AAPT2_FROM_MAVEN_VERSION_OVERRIDE("android.aapt2Version", ApiStage.Experimental),
 
     SUPPRESS_UNSUPPORTED_OPTION_WARNINGS("android.suppressUnsupportedOptionWarnings", ApiStage.Experimental),
-    SUPPRESS_UNSUPPORTED_COMPILE_SDK("android.suppressUnsupportedCompileSdk", ApiStage.Experimental),
 
     // User-specified path to Prefab jar to return from getPrefabFromMaven.
     PREFAB_CLASSPATH("android.prefabClassPath", ApiStage.Experimental),

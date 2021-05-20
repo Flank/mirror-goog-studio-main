@@ -73,9 +73,20 @@ class HumanReadableProfile internal constructor(
     }
 }
 
-fun HumanReadableProfile(src: InputStreamReader): HumanReadableProfile {
+fun HumanReadableProfile(
+    src: InputStreamReader,
+    onError: (Int, Int, String) -> Unit
+): HumanReadableProfile? {
+    var failed = false
     val fragmentParser = RuleFragmentParser(80)
-    val rules = src.readLines().map { parseRule(it, fragmentParser) }
+    val rules = src.readLines().mapIndexedNotNull { lineNumber, line ->
+        val errorHandler: (Int, String) -> Unit = { columnNumber, message ->
+                failed = true
+                onError(lineNumber, columnNumber, message)
+            }
+        parseRule(line, errorHandler, fragmentParser)
+    }
+    if (failed) return null
     val exactMethods = mutableMapOf<DexMethod, Int>()
     val exactTypes =  mutableSetOf<String>()
     val fuzzyMethods = MutablePrefixTree<ProfileRule>()
@@ -115,8 +126,16 @@ internal fun ProfileRule.toDexMethod(): DexMethod {
     )
 }
 
-fun HumanReadableProfile(file: File): HumanReadableProfile {
-    return file.reader().use { HumanReadableProfile(it) }
+fun interface Diagnostics {
+    fun onError(error: String)
+}
+
+fun HumanReadableProfile(file: File,  diagnostics: Diagnostics): HumanReadableProfile? {
+    return file.reader().use {
+        HumanReadableProfile(it) { line, column, error ->
+            diagnostics.onError("${file.name}:${line + 1}:${column + 1} error: $error")
+        }
+    }
 }
 
 internal sealed class Part {
@@ -255,13 +274,22 @@ internal class ProfileRule(
 }
 
 // line ::= flags target '->' method '(' params ')' type '\n'
-internal fun parseRule(line: String, fragmentParser: RuleFragmentParser = RuleFragmentParser(line.length)): ProfileRule {
+internal fun parseRule(
+    line: String,
+    onError: (Int, String) -> Unit,
+    fragmentParser: RuleFragmentParser
+): ProfileRule? {
     var i = 0
+    try {
     val flags = Flags().apply { i = parseFlags(line, i) }
+    val targetIndex = i
     i = fragmentParser.parseTarget(line, i)
     val target = fragmentParser.build()
     // check if it has only target class
     if (i == line.length) {
+        if (flags.flags != 0) {
+            throw ParsingException(0, flagsForClassRuleMessage(line.substring(0, targetIndex)))
+        }
         return ProfileRule(flags.flags, target,
             RuleFragment.Empty, RuleFragment.Empty, RuleFragment.Empty)
     }
@@ -275,8 +303,12 @@ internal fun parseRule(line: String, fragmentParser: RuleFragmentParser = RuleFr
     i = consume(CLOSE_PAREN, line, i)
     i = fragmentParser.parseReturnType(line, i)
     val returnType = fragmentParser.build()
-    require(i == line.length)
-
+    if (i != line.length) {
+        throw ParsingException(i, unexpectedTextAfterRule(line.substring(i)))
+    }
+    if (flags.flags == 0) {
+        throw ParsingException(0, emptyFlagsForMethodRuleMessage())
+    }
     return ProfileRule(
         flags = flags.flags,
         target = target,
@@ -284,6 +316,10 @@ internal fun parseRule(line: String, fragmentParser: RuleFragmentParser = RuleFr
         params = parameters,
         returnType = returnType,
     )
+    } catch (ex: ParsingException) {
+        onError(ex.index, ex.message!!)
+        return null
+    }
 }
 
 // flags ::= ( 'H' | 'S' | 'P' )+

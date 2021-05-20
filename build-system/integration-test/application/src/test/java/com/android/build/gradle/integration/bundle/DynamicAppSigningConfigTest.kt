@@ -124,11 +124,11 @@ class DynamicAppSigningConfigTest {
                         signingConfig.enableV3Signing.set(true)
                         signingConfig.enableV4Signing.set(true)
                     })
-                    androidTests(selector().all(), {
-                        signingConfig.enableV1Signing.set(true)
-                        signingConfig.enableV2Signing.set(true)
-                        signingConfig.enableV3Signing.set(true)
-                        signingConfig.enableV4Signing.set(true)
+                    onVariants(selector().all(), {
+                        it.androidTest?.signingConfig?.enableV1Signing?.set(true)
+                        it.androidTest?.signingConfig?.enableV2Signing?.set(true)
+                        it.androidTest?.signingConfig?.enableV3Signing?.set(true)
+                        it.androidTest?.signingConfig?.enableV4Signing?.set(true)
                     })
                 }
             """.trimIndent()

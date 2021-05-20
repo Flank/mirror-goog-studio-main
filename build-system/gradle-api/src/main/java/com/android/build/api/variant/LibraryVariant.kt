@@ -16,11 +16,8 @@
 package com.android.build.api.variant
 
 import com.android.build.api.component.AndroidTest
-import org.gradle.api.Incubating
-import org.gradle.api.provider.Provider
 
 /** [Variant] for Library projects */
-@Incubating
 interface LibraryVariant : Variant, GeneratesAar {
 
     /**

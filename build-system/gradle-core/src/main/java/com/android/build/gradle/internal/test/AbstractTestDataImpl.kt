@@ -16,11 +16,9 @@
 package com.android.build.gradle.internal.test
 
 import com.android.SdkConstants
-import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.gradle.internal.component.InstrumentedTestCreationConfig
 import com.android.build.gradle.internal.component.TestCreationConfig
 import com.android.build.gradle.internal.core.VariantSources
-import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.tasks.databinding.DATA_BINDING_TRIGGER_CLASS
 import com.android.build.gradle.internal.testing.StaticTestData
 import com.android.build.gradle.internal.testing.TestData
@@ -31,9 +29,8 @@ import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Provider
-import org.gradle.api.provider.ProviderFactory
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
@@ -46,8 +43,8 @@ import java.util.zip.ZipFile
  * and separate module test projects.
  */
 abstract class AbstractTestDataImpl(
-        providerFactory: ProviderFactory,
-        componentImpl: ComponentImpl,
+        @get:Input
+        val namespace: Provider<String>,
         creationConfig: TestCreationConfig,
         instrumentedTestCreationConfig: InstrumentedTestCreationConfig,
         variantSources: VariantSources,
@@ -116,30 +113,33 @@ abstract class AbstractTestDataImpl(
         )
     }
 
-    private val namespace = componentImpl.namespace
-
-    override val hasTests: Provider<Boolean> = componentImpl.artifacts.getAllClasses()
-            .minus(componentImpl.getCompiledRClasses(AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH))
-            .minus(componentImpl.getCompiledBuildConfig()).elements.map { testClasses ->
+    override fun hasTests(
+        allClasses: FileCollection,
+        rClasses: FileCollection,
+        buildConfig: FileCollection
+    ): Provider<Boolean> =
+        allClasses
+            .minus(rClasses)
+            .minus(buildConfig).elements.map { testClasses ->
                 val namespaceDir = namespace.get().replace('.', '/')
                 val DATA_BINDER_MAPPER_IMPL = "DataBinderMapperImpl"
                 val ignoredPaths = setOf(
-                        "${namespaceDir}/${SdkConstants.FN_BUILD_CONFIG_BASE}${SdkConstants.DOT_CLASS}",
-                        "${namespaceDir}/${SdkConstants.FN_MANIFEST_BASE}${SdkConstants.DOT_CLASS}",
-                        "${namespaceDir}/${DATA_BINDING_TRIGGER_CLASS}${SdkConstants.DOT_CLASS}",
-                        "${namespaceDir}/$DATA_BINDER_MAPPER_IMPL${SdkConstants.DOT_CLASS}",
+                    "${namespaceDir}/${SdkConstants.FN_BUILD_CONFIG_BASE}${SdkConstants.DOT_CLASS}",
+                    "${namespaceDir}/${SdkConstants.FN_MANIFEST_BASE}${SdkConstants.DOT_CLASS}",
+                    "${namespaceDir}/${DATA_BINDING_TRIGGER_CLASS}${SdkConstants.DOT_CLASS}",
+                    "${namespaceDir}/$DATA_BINDER_MAPPER_IMPL${SdkConstants.DOT_CLASS}",
                 )
                 val regexIgnoredPaths = setOf(
-                        "androidx/databinding/.*\\${SdkConstants.DOT_CLASS}".toRegex(), // Classes in androidx/databinding
-                        "${namespaceDir}/$DATA_BINDER_MAPPER_IMPL\\\$.*\\${SdkConstants.DOT_CLASS}".toRegex(), // DataBinderMapplerImpl inner classes
-                        ".*/BR${SdkConstants.DOT_CLASS}".toRegex(), // BR.class files
+                    "androidx/databinding/.*\\${SdkConstants.DOT_CLASS}".toRegex(), // Classes in androidx/databinding
+                    "${namespaceDir}/$DATA_BINDER_MAPPER_IMPL\\\$.*\\${SdkConstants.DOT_CLASS}".toRegex(), // DataBinderMapplerImpl inner classes
+                    ".*/BR${SdkConstants.DOT_CLASS}".toRegex(), // BR.class files
                 )
                 val isNotIgnoredClass = { relativePath: String ->
                     Files.getFileExtension(relativePath)==SdkConstants.EXT_CLASS &&
                             relativePath !in ignoredPaths &&
                             !regexIgnoredPaths.any { it.matches(relativePath) }
                 }
-
+                
                 for (fileSystemLocation in testClasses) {
                     val jarOrDirectory = fileSystemLocation.asFile
                     if (!jarOrDirectory.exists()) {
@@ -148,8 +148,8 @@ abstract class AbstractTestDataImpl(
                     if (jarOrDirectory.isDirectory) {
                         for (file in jarOrDirectory.walk()) {
                             if (isNotIgnoredClass(jarOrDirectory.toPath()
-                                            .relativize(file.toPath())
-                                            .toPathString().portablePath)) {
+                                    .relativize(file.toPath())
+                                    .toPathString().portablePath)) {
                                 return@map true
                             }
                         }

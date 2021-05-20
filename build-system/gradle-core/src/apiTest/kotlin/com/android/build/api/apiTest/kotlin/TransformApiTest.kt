@@ -44,6 +44,13 @@ class TransformApiTest(private val artifact: String, private val plugin: String)
         given {
             tasksToInvoke.add(":module:debugConsumeArtifact")
             addModule(":module") {
+                val versionCodeBlock = if (artifact != "AAR") {
+            """
+                defaultConfig {
+                    versionCode = 3
+                }
+            """
+                } else ""
                 @Suppress("RemoveExplicitTypeArguments")
                 buildFile =
                         // language=kotlin
@@ -88,9 +95,7 @@ class TransformApiTest(private val artifact: String, private val plugin: String)
         }
         android {
             ${testingElements.addCommonAndroidBuildLogic()}
-            defaultConfig {
-                versionCode = 3
-            }
+            $versionCodeBlock
         }
         androidComponents {
             onVariants {

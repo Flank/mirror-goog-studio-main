@@ -20,7 +20,6 @@ import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.HasAndroidResources
 import com.android.build.api.variant.SigningConfig
 import com.android.build.api.variant.GeneratesTestApk
-import org.gradle.api.Incubating
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
@@ -31,7 +30,6 @@ import java.io.Serializable
 /**
  * Properties for the android test Variant of a module.
  */
-@Incubating
 interface AndroidTest : GeneratesTestApk, TestComponent, HasAndroidResources {
 
     /**

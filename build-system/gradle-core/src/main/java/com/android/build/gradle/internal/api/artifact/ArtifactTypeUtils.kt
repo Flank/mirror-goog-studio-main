@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.api.artifact
 
 import com.android.build.api.artifact.Artifact
 import com.android.build.api.artifact.SingleArtifact
-import com.android.build.gradle.internal.scope.AnchorOutputType
 import com.android.build.gradle.internal.scope.BuildArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import java.lang.RuntimeException
@@ -46,10 +45,6 @@ private val internalArtifactMap : Map<String, KClass<out Artifact<*>>> =
         InternalArtifactType::class.sealedSubclasses.associateBy {
                 it.objectInstance?.name() ?: throw RuntimeException("No instance")
         }
-private val anchorArtifactMap : Map<String, KClass<out Artifact<*>>> =
-        AnchorOutputType::class.sealedSubclasses.associateBy {
-                it.objectInstance?.name() ?: "class"
-        }
 
 /**
  * Return the enum of [Artifact] base on the name.
@@ -63,7 +58,6 @@ fun String.toArtifactType() : Artifact<*> =
             sourceArtifactMap[this]?.objectInstance ?:
             buildArtifactMap[this]?.objectInstance  ?:
             internalArtifactMap[this]?.objectInstance ?:
-            anchorArtifactMap[this]?.objectInstance ?:
             throw IllegalArgumentException("'$this' is not a value ArtifactType.")
 
 

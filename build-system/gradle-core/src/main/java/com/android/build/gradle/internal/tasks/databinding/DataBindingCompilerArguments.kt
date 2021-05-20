@@ -133,7 +133,7 @@ class DataBindingCompilerArguments constructor(
     val dependenciesLocalRFiles: FileCollection?,
 
     // Package-aware R.txt file for the given module. Instead of actual package it will contain the
-    // keyword "local". Adittionally, first line is a comment. For generating references to this
+    // keyword "local". Additionally, first line is a comment. For generating references to this
     // local R the default package of this module
     // should be used.
     // See [com.android.ide.common.symbols.SymbolIo] for read/write instructions.

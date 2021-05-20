@@ -62,6 +62,7 @@ kotlin_library(
     deps = [
         "//tools/base/annotations",
         "//tools/base/third_party:com.google.guava_guava",
+        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
     ],
 )
 

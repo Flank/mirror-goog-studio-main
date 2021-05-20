@@ -31,6 +31,7 @@ import static com.android.builder.model.TestOptions.Execution.ANDROID_TEST_ORCHE
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.component.impl.ComponentImpl;
 import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.BuildToolsExecutableInput;
@@ -100,6 +101,7 @@ import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
+import org.gradle.api.tasks.Classpath;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Internal;
@@ -462,7 +464,10 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
      * @return true if there are some tests to run, false otherwise
      */
     private boolean testsFound() {
-        return getTestData().get().getHasTests().get();
+        return getTestData()
+                .get()
+                .hasTests(getClasses(), getRClasses(), getBuildConfigClasses())
+                .get();
     }
 
     @OutputDirectory
@@ -497,6 +502,18 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
 
     @Nested
     public abstract DeviceProviderFactory getDeviceProviderFactory();
+
+    @Classpath
+    @Optional
+    public abstract ConfigurableFileCollection getClasses();
+
+    @Classpath
+    @Optional
+    public abstract ConfigurableFileCollection getBuildConfigClasses();
+
+    @Classpath
+    @Optional
+    public abstract ConfigurableFileCollection getRClasses();
 
     @Option(
             option = "serial",
@@ -810,8 +827,20 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                 task.getBuddyApks().from(androidTestUtil);
             }
 
-            // This task should not be UP-TO-DATE as we don't model the device state as input yet.
+            // This task should never be UP-TO-DATE as we don't model the device state as input yet.
             task.getOutputs().upToDateWhen(it -> false);
+
+            task.getClasses().from(creationConfig.getArtifacts().getAllClasses());
+            task.getClasses().disallowChanges();
+            task.getBuildConfigClasses()
+                    .from(((ComponentImpl) creationConfig).getCompiledBuildConfig());
+            task.getBuildConfigClasses().disallowChanges();
+            task.getRClasses()
+                    .from(
+                            ((ComponentImpl) creationConfig)
+                                    .getCompiledRClasses(
+                                            AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH));
+            task.getRClasses().disallowChanges();
         }
     }
 }

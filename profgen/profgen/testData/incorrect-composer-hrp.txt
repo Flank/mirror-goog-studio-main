@@ -1,0 +1,3 @@
+HSPLandroidx/compose/runtime/ComposerImp;->foo;**
+HSPLandroidx/compose/runtime/ComposerImpl;->startMovableGroup(ILjava/lang/Object;Ljava/lang/String;)V
+HSPLandroidx/compose/runtime/ComposerImpl;->startMovableGroup**

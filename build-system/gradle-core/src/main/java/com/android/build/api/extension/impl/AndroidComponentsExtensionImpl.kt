@@ -77,46 +77,6 @@ abstract class AndroidComponentsExtensionImpl<
     override fun selector(): VariantSelectorImpl =
             dslServices.newInstance(VariantSelectorImpl::class.java) as VariantSelectorImpl
 
-    override fun unitTests(
-            selector: VariantSelector,
-            callback: Action<UnitTest>) {
-        variantApiOperations.unitTestOperations.addOperation(
-                callback,
-                selector
-        )
-    }
-
-    override fun unitTests(
-            selector: VariantSelector,
-            callback: (UnitTest) -> Unit) {
-        variantApiOperations.unitTestOperations.addOperation(
-                {
-                    callback.invoke(it)
-                },
-                selector
-        )
-    }
-
-    override fun androidTests(
-            selector: VariantSelector,
-            callback: Action<AndroidTest>) {
-        variantApiOperations.androidTestOperations.addOperation(
-                callback,
-                selector
-        )
-    }
-
-    override fun androidTests(
-            selector: VariantSelector,
-            callback: (AndroidTest) -> Unit) {
-        variantApiOperations.androidTestOperations.addOperation(
-                {
-                    callback.invoke(it)
-                },
-                selector
-        )
-    }
-
     class RegisteredApiExtension<VariantT: Variant>(
         val dslExtensionTypes: DslExtension,
         val configurator: (variantExtensionConfig: VariantExtensionConfig<VariantT>) -> VariantExtension

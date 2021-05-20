@@ -17,7 +17,6 @@
 package com.android.build.api.artifact
 
 import com.android.build.api.variant.BuiltArtifactsLoader
-import org.gradle.api.Incubating
 import org.gradle.api.Task
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.provider.Provider
@@ -36,10 +35,7 @@ import org.gradle.api.tasks.TaskProvider
  *
  * Artifacts are uniquely defined by their [Artifact] type and public artifact types that can be
  * accessed from third-party plugins or build script are defined in [SingleArtifact]
- *
- * @since 4.1
  */
-@Incubating
 interface Artifacts {
 
     /**

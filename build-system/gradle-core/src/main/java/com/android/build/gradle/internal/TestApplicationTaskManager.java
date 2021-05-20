@@ -31,7 +31,6 @@ import com.android.build.gradle.internal.component.ConsumableCreationConfig;
 import com.android.build.gradle.internal.component.TestCreationConfig;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.ProjectInfo;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
 import com.android.build.gradle.internal.tasks.SigningConfigVersionsWriterTask;
@@ -104,8 +103,7 @@ public class TestApplicationTaskManager
 
         TestApplicationTestData testData =
                 new TestApplicationTestData(
-                        project.getProviders(),
-                        testVariantProperties,
+                        testVariantProperties.getNamespace(),
                         testVariantProperties,
                         testingApk,
                         testedApks);
@@ -135,25 +133,6 @@ public class TestApplicationTaskManager
         if (connectedAndroidTest != null) {
             connectedAndroidTest.dependsOn(instrumentTestTask.getName());
         }
-    }
-
-    @Override
-    protected void postJavacCreation(@NonNull ComponentCreationConfig creationConfig) {
-        creationConfig
-                .getArtifacts()
-                .appendToAllClasses(
-                        creationConfig
-                                .getServices()
-                                .fileCollection(
-                                        creationConfig
-                                                .getArtifacts()
-                                                .get(InternalArtifactType.JAVAC.INSTANCE),
-                                        creationConfig
-                                                .getVariantData()
-                                                .getAllPreJavacGeneratedBytecode(),
-                                        creationConfig
-                                                .getVariantData()
-                                                .getAllPostJavacGeneratedBytecode()));
     }
 
     @Override

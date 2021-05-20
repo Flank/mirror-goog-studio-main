@@ -154,8 +154,9 @@ public class RelativeFileTest {
     public void relativeFileNotEqualsIfDifferentFile() throws Exception {
         File base = temporaryFolder.newFolder("base");
         File relative = new File(base, "relative");
+        File relative2 = new File(base, "relative2");
         RelativeFile rf1 = new RelativeFile(base, relative);
-        RelativeFile rf2 = new RelativeFile(base, new File("relative2"));
+        RelativeFile rf2 = new RelativeFile(base, relative2);
         assertFalse(rf1.equals(rf2));
     }
 

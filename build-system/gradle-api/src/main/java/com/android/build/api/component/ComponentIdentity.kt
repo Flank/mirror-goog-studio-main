@@ -16,14 +16,11 @@
 
 package com.android.build.api.component
 
-import org.gradle.api.Incubating
-
 /**
  * Variant Configuration represents the identify of a variant
  *
  * This is computed from the list of build types and flavors.
  */
-@Incubating
 interface ComponentIdentity {
 
     /**

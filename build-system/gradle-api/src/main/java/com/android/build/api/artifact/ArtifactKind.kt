@@ -16,7 +16,6 @@
 
 package com.android.build.api.artifact
 
-import org.gradle.api.Incubating
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.file.RegularFile
@@ -29,16 +28,13 @@ import kotlin.reflect.KClass
  * As of now, only [RegularFile] represented by [FILE] and [Directory] represented by [DIRECTORY]
  * are supported.
  */
-@Incubating
 sealed class ArtifactKind<T: FileSystemLocation>(): Serializable {
-    @Incubating
     object FILE : ArtifactKind<RegularFile>() {
         override fun dataType(): KClass<RegularFile> {
             return RegularFile::class
         }
     }
 
-    @Incubating
     object DIRECTORY : ArtifactKind<Directory>() {
         override fun dataType(): KClass<Directory> {
             return Directory::class

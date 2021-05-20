@@ -82,7 +82,7 @@ public class FileUtilsTest {
         File f2 = new File(d1, "bar");
         f2.mkdir();
 
-        assertEquals("bar" + File.separator, FileUtils.relativePath(f2, d1));
+        assertEquals("bar", FileUtils.relativePath(f2, d1));
     }
 
     @Test
@@ -215,5 +215,13 @@ public class FileUtilsTest {
                         "playback",
                         "CameraPlaybackGlue$CameraPlaybackHost.class"),
                 FileUtils.relativePossiblyNonExistingPath(fileToProcess, inputDir));
+
+        // Regression test for bug 187970292
+        File baseDir = mTemporaryFolder.newFolder("baseDir");
+        File dirInBaseDir = new File(baseDir, "dirInBaseDir");
+        FileUtils.mkdirs(dirInBaseDir);
+        assertThat(dirInBaseDir.isDirectory()).isTrue();
+        assertThat(FileUtils.relativePossiblyNonExistingPath(dirInBaseDir, baseDir))
+                .isEqualTo("dirInBaseDir");
     }
 }

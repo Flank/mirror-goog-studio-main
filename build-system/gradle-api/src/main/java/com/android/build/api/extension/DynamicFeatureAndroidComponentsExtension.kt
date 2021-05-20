@@ -19,7 +19,6 @@ package com.android.build.api.extension
 import com.android.build.api.dsl.DynamicFeatureExtension
 import com.android.build.api.variant.DynamicFeatureVariant
 import com.android.build.api.variant.DynamicFeatureVariantBuilder
-import org.gradle.api.Incubating
 
 /**
  * Extension for Dynamic Feature module variant.
@@ -27,6 +26,5 @@ import org.gradle.api.Incubating
  * A dynamic feature module is created when a build script is applying the
  * 'com.android.dynamic-feature' plugin.
  */
-@Incubating
 interface DynamicFeatureAndroidComponentsExtension:
         AndroidComponentsExtension<DynamicFeatureExtension, DynamicFeatureVariantBuilder, DynamicFeatureVariant>

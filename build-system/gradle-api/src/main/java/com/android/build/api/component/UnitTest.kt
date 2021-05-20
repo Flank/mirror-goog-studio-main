@@ -16,11 +16,8 @@
 
 package com.android.build.api.component
 
-import org.gradle.api.Incubating
-
 /**
  * Properties for the unit test variant of a module.
  */
-@Incubating
 interface UnitTest : TestComponent {
 }

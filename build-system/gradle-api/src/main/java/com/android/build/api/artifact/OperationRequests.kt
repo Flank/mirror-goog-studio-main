@@ -16,7 +16,6 @@
 
 package com.android.build.api.artifact
 
-import org.gradle.api.Incubating
 import org.gradle.api.Task
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileSystemLocation
@@ -28,7 +27,6 @@ import org.gradle.api.provider.ListProperty
  *
  * [Task] is not consuming existing version of the target [SingleArtifact].
  */
-@Incubating
 interface OutOperationRequest<FileTypeT: FileSystemLocation> {
     /**
      * Initiates an append request to a [Artifact.Multiple] artifact type.
@@ -128,7 +126,6 @@ interface OutOperationRequest<FileTypeT: FileSystemLocation> {
  *
  * [Task] is consuming existing version of the target [SingleArtifact] and producing a new version.
  */
-@Incubating
 interface InAndOutFileOperationRequest {
     /**
      * Initiates a transform request to a single [Artifact.Transformable] artifact type.
@@ -176,7 +173,6 @@ interface InAndOutFileOperationRequest {
               ArtifactTypeT: Artifact.Transformable
 }
 
-@Incubating
 interface CombiningOperationRequest<FileTypeT: FileSystemLocation> {
     /**
      * Initiates a transform request to a multiple [Artifact.Transformable] artifact type.
@@ -230,7 +226,6 @@ interface CombiningOperationRequest<FileTypeT: FileSystemLocation> {
               ArtifactTypeT: Artifact.Transformable
 }
 
-@Incubating
 interface InAndOutDirectoryOperationRequest<TaskT : Task> {
 
     /**
@@ -289,8 +284,8 @@ interface InAndOutDirectoryOperationRequest<TaskT : Task> {
      * The artifact type must be [Artifact.Single], [Artifact.Transformable],
      * and [Artifact.ContainsMany].
      *
-     * For example, let's take a [Task] to transform a list of [org.gradle.api.file.RegularFile] as inputs into
-     * a single output:
+     * For example, let's take a [Task] to transform a list of [org.gradle.api.file.RegularFile] as
+     * inputs into a single output:
      * ```kotlin
      *     abstract class MyTask: DefaultTask() {
      *          @get:InputFiles abstract val inputFolder: DirectoryProperty

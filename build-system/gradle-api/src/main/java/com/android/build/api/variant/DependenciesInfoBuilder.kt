@@ -16,9 +16,6 @@
 
 package com.android.build.api.variant
 
-import org.gradle.api.Incubating
-
-@Incubating
 interface DependenciesInfoBuilder {
     var includedInApk: Boolean
     var includedInBundle: Boolean
