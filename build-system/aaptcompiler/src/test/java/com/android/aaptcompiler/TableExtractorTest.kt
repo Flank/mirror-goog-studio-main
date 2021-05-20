@@ -1214,4 +1214,32 @@ class TableExtractorTest {
     assertThat(
       testParse("""<item name="bar" type="integer" format="fraction">100</item>""")).isFalse()
   }
+
+  @Test
+  fun testParseItemElementValueOnNewLineWithQuotations() {
+    val sample =
+        """<style name="Widget.ImageButton.Custom" parent="android:style/Widget.ImageButton">
+                <item name="customAttr">
+                  "some value"
+                </item>
+           </style>"""
+    assertThat(testParse(sample)).isTrue()
+    val style = getValue("style/Widget.ImageButton.Custom") as Style
+    val item = style.entries[0].value as RawString
+    assertThat(item.value.value()).isEqualTo("some value")
+  }
+
+  @Test
+  fun testParseItemElementWithValueOnNewLineWithNoQuotations() {
+      val sample =
+         """<style name="Widget.ImageButton.Custom" parent="android:style/Widget.ImageButton">
+                <item name="customAttr">
+                    some value
+                </item>
+            </style>"""
+      assertThat(testParse(sample)).isTrue()
+      val style = getValue("style/Widget.ImageButton.Custom") as Style
+      val item = style.entries[0].value as RawString
+      assertThat(item.value.value()).isEqualTo("some value")
+  }
 }
