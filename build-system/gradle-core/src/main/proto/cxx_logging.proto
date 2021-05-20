@@ -12,13 +12,19 @@ option java_multiple_files = true;
  and the caller must keep track of the IDs as they arrive and
  increment a counter.
 
+ The [NewList] message creates a new list with ID equal to one
+ plus the prior ID. The ID itself is not embedded in the message
+ and the caller must keep track of the IDs as they arrive and
+ increment a counter.
+
  The [PayloadHeader] message indicates that a user-defined, delimited payload
  message is arriving next in the stream.
  */
 message StructuredLogRecord {
     oneof Record {
         NewString new_string = 1;
-        PayloadHeader payload_header = 2;
+        NewList new_list = 2;
+        PayloadHeader payload_header = 3;
     }
 }
 
@@ -27,6 +33,13 @@ message StructuredLogRecord {
  */
 message NewString {
     string data = 1;
+}
+
+/**
+ Message that indicates a new string list is seen in the stream.
+ */
+message NewList {
+    repeated int32 data = 1;
 }
 
 /**

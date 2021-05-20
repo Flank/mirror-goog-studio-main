@@ -17,26 +17,43 @@
 package com.android.build.gradle.internal.cxx.string
 
 /**
- * A string to ordinal int table class.
+ * A string and list-of-string to ordinal int table class.
+ * Strings and lists share the same incremented ID counter.
  */
 data class StringTable(
-    private var next : Int = 0,
+    private var nextId : Int = 0,
     private val idToString : MutableMap<Int, String> = mutableMapOf(),
-    private val stringToId : MutableMap<String, Int> = mutableMapOf()
+    private val idToList : MutableMap<Int, List<Int>> = mutableMapOf(),
+    private val stringToId : MutableMap<String, Int> = mutableMapOf(),
+    private val listToId : MutableMap<List<Int>, Int> = mutableMapOf()
 ) : StringEncoder, StringDecoder {
 
     override fun encode(string: String) = getIdCreateIfAbsent(string)
+    override fun encodeList(list: List<String>) = getIdCreateIfAbsent(list.map { encode(it) })
     override fun decode(id: Int) = getString(id)
+    override fun decodeList(id: Int) = getList(id).map { getString(it) }
 
     /**
-     * Given a [String] return its integer ID value. I new ID will be created if necessary and, in
+     * Given a [String] return its integer ID value. A new ID will be created if necessary and, in
      * this case, the [createAction] function will be called.
      */
     fun getIdCreateIfAbsent(string : String, createAction:(Int) -> Unit = { }) : Int {
         return stringToId.computeIfAbsent(string) {
-            idToString[next] = string
-            createAction(next)
-            next++
+            idToString[nextId] = string
+            createAction(nextId)
+            nextId++
+        }
+    }
+
+    /**
+     * Given a list of [Int] return its integer ID value. If this is the first time
+     * this list was seen, then [createAction] will be invoked with its new ID.
+     */
+    fun getIdCreateIfAbsent(list : List<Int>, createAction:(Int) -> Unit = { }) : Int {
+        return listToId.computeIfAbsent(list) {
+            idToList[nextId] = list
+            createAction(nextId)
+            nextId++
         }
     }
 
@@ -45,6 +62,11 @@ data class StringTable(
      * [id] is out of range.
      */
     private fun getString(id : Int) = idToString.getValue(id)
+
+    /**
+     * Return the list of [String] corresponding to the given integer [id].
+     */
+    private fun getList(id : Int) = idToList.getValue(id)
 
     /**
      * Return the id corresponding to the given [string]. Will throw an exception if
@@ -75,8 +97,10 @@ data class StringTable(
 
 interface StringEncoder {
     fun encode(string : String) : Int
+    fun encodeList(list : List<String>) : Int
 }
 
 interface StringDecoder {
     fun decode(id : Int) : String
+    fun decodeList(id : Int) : List<String>
 }

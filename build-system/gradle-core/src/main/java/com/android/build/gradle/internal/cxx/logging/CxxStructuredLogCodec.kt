@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.logging
 
+import com.android.build.gradle.internal.cxx.logging.StructuredLogRecord.RecordCase.NEW_LIST
 import com.android.build.gradle.internal.cxx.logging.StructuredLogRecord.RecordCase.NEW_STRING
 import com.android.build.gradle.internal.cxx.logging.StructuredLogRecord.RecordCase.PAYLOAD_HEADER
 import com.android.build.gradle.internal.cxx.string.StringDecoder
@@ -30,7 +31,6 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.InputStream
-import java.io.OutputStream
 import java.lang.reflect.Method
 
 /**
@@ -60,16 +60,29 @@ import java.lang.reflect.Method
  *
  * If that directory doesn't exist then no per-source-file work is done.
  *
+ * Reflective Payloads
+ * -------------------
+ * Structured logs support payloads of arbitrary protocol buffer type.
+ * This is accomplished by encoding the type name the first time it is
+ * seen. When the structured log is read back, the type is loaded by
+ * name and its 'parseDelimitedFrom' function is invoked using the
+ * stream at the current position.
+ *
+ * If a type was serialized that is not recognized by the current
+ * class loader then [UnknownMessage] is generated and the stream is
+ * forwarded to the next position after that message.
+ *
  * File format
  * -----------
  * header:
  * - magic: C/C++ Structured Log{EOF} [MAGIC]
  * sequence of protobuf record of discriminated union type [StructuredLogRecord]:
  * - [NewString]: a new string. Its ID is just one greater than the last ID (zero relative).
+ * - [NewList]: a new list of string. Its ID is just one greater than the last ID (zero relative).
  * - [PayloadHeader]: indicates a message, in the protobuf delimited format, is coming next.
  */
 private val MAGIC = "C/C++ Structured Log\u001a".toByteArray(Charsets.UTF_8)
-private const val FIRST_STRING_ID = 1 // Reserve 0 for error case
+private const val FIRST_ID = 1 // Reserve 0 for error case
 
 /**
  * Utility class for encoding file changes.
@@ -78,7 +91,7 @@ class CxxStructuredLogEncoder(
     val file : File,
 ) : StringEncoder, AutoCloseable {
     val output: DataOutputStream
-    val strings = StringTable(next = FIRST_STRING_ID)
+    val strings = StringTable(nextId = FIRST_ID)
     init {
         // Create the file if it doesn't already exist.
         if (!file.exists()) {
@@ -89,15 +102,8 @@ class CxxStructuredLogEncoder(
         }
         // Read any existing strings into the string table.
         if (file.exists()) {
-            DataInputStream(FileInputStream(file)).use { input ->
-                val reader = CxxStructuredLogDecoder(input)
-                var record = reader.read()
-                while(record != null) {
-                    if (record.recordCase == NEW_STRING) {
-                        strings.encode(record.newString.data)
-                    }
-                    record = reader.read()
-                }
+            streamCxxStructuredLogUntyped(file, strings) { input,_ ->
+                skipPayload(input)
             }
         }
         output = DataOutputStream(BufferedOutputStream(FileOutputStream(file, true)))
@@ -116,6 +122,27 @@ class CxxStructuredLogEncoder(
                     NewString
                         .newBuilder()
                         .setData(string)
+                        .build())
+                .build()
+                .writeDelimitedTo(output)
+        }
+    }
+
+    /**
+     * Encode a string list as a single int by first encoding each element's
+     * string value and then that whole list of ints is encoded as a single
+     * int.
+     */
+    override fun encodeList(list: List<String>): Int {
+        val intList = list.map { encode(it) }
+        return strings.getIdCreateIfAbsent(intList) {
+            // If this is a new list then send the [NewList] message first.
+            StructuredLogRecord
+                .newBuilder()
+                .setNewList(
+                    NewList
+                        .newBuilder()
+                        .addAllData(intList)
                         .build())
                 .build()
                 .writeDelimitedTo(output)
@@ -183,51 +210,71 @@ class CxxStructuredLogDecoder(private val input : DataInputStream) {
 }
 
 /**
- * Stream all file changes recorded in [file].
+ * Skip a payload starting at the current point in [input].
+ * Return the size of the payload.
+ */
+private fun skipPayload(input : InputStream) : Int {
+    val firstByte = input.read()
+    val size = CodedInputStream.readRawVarint32(firstByte, input)
+    input.skip(size.toLong())
+    return size
+}
+
+/**
+ * Stream all structured log records in [file].
  */
 fun streamCxxStructuredLog(
     file : File,
     consumer : (StringDecoder, Long, GeneratedMessageV3) -> Unit) {
+    val strings = StringTable(nextId = FIRST_ID)
+    val idToClass = mutableMapOf<Int, Method?>()
+    streamCxxStructuredLogUntyped(file, strings) { input, header ->
+        val parseMethod = idToClass.computeIfAbsent(header.typeId) {
+            val typename = strings.decode(header.typeId)
+            val result = try {
+                val type = Class.forName(typename) as Class<GeneratedMessageV3>
+                type.getMethod("parseDelimitedFrom", InputStream::class.java)
+            } catch (e: ClassNotFoundException) {
+                null
+            }
+            result
+        }
+        if (parseMethod == null) {
+            consumer(
+                strings,
+                header.timeStampMs,
+                UnknownMessage
+                    .newBuilder()
+                    .setTypeId(header.typeId)
+                    .setSizeBytes(skipPayload(input))
+                    .build()
+            )
+
+        } else {
+            val payload = parseMethod.invoke(null, input) as GeneratedMessageV3
+            consumer(strings, header.timeStampMs, payload)
+        }
+    }
+}
+
+/**
+ * Stream all record payload headers without instantiating the payloads.
+ * The [consumer] function is expected to read or skip all of the payload
+ * bytes from [InputStream].
+ */
+private fun streamCxxStructuredLogUntyped(
+    file : File,
+    strings : StringTable,
+    consumer : (InputStream, PayloadHeader) -> Unit) {
     DataInputStream(FileInputStream(file)).use { input ->
         val reader = CxxStructuredLogDecoder(input)
         var record = reader.read()
-        val strings = StringTable(next = FIRST_STRING_ID)
-        val idToClass = mutableMapOf<Int, Method?>()
         while(record != null) {
             when(record.recordCase) {
                 NEW_STRING -> strings.encode(record.newString.data)
-                PAYLOAD_HEADER -> {
-                    val header = record.payloadHeader
-                    val parseMethod = idToClass.computeIfAbsent(header.typeId) {
-                        val typename = strings.decode(header.typeId)
-                        val result = try {
-                            val type = Class.forName(typename) as Class<GeneratedMessageV3>
-                            type.getMethod("parseDelimitedFrom", InputStream::class.java)
-                        } catch(e : ClassNotFoundException) {
-                            null
-                        }
-                        result
-                    }
-                    if (parseMethod == null) {
-                        val size = CodedInputStream.newInstance(input).readRawVarint32()
-                        input.skipBytes(size)
-                        consumer(
-                            strings,
-                            header.timeStampMs,
-                            UnknownMessage
-                                .newBuilder()
-                                .setTypeId(header.typeId)
-                                .setSizeBytes(size)
-                                .build())
-
-                    } else {
-                        val payload = parseMethod.invoke(null, input) as GeneratedMessageV3
-                        consumer(strings, header.timeStampMs, payload)
-                    }
-
-                }
-                else ->
-                    error("unrecognized")
+                NEW_LIST -> strings.encodeList(record.newList.dataList.map { strings.decode(it) })
+                PAYLOAD_HEADER -> consumer(input, record.payloadHeader)
+                else -> error("unrecognized ${record.recordCase}")
             }
             record = reader.read()
         }
