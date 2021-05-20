@@ -3,25 +3,7 @@ Incubating Android Gradle Plugin API.
 ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
-com.android.build.api.AndroidPluginVersion implements java.lang.Comparable
-com.android.build.api.AndroidPluginVersion.<init>: com.android.build.api.AndroidPluginVersion (int, int)
-com.android.build.api.AndroidPluginVersion.<init>: com.android.build.api.AndroidPluginVersion (int, int, int)
-com.android.build.api.AndroidPluginVersion.access$getComparator$cp: java.util.Comparator ()
-com.android.build.api.AndroidPluginVersion.access$get_previewType$p: com.android.build.api.AndroidPluginVersion$PreviewType (com.android.build.api.AndroidPluginVersion)
-com.android.build.api.AndroidPluginVersion.alpha: com.android.build.api.AndroidPluginVersion (int)
-com.android.build.api.AndroidPluginVersion.beta: com.android.build.api.AndroidPluginVersion (int)
-com.android.build.api.AndroidPluginVersion.compareTo: int (com.android.build.api.AndroidPluginVersion)
-com.android.build.api.AndroidPluginVersion.compareTo: int (java.lang.Object)
 com.android.build.api.AndroidPluginVersion.dev: com.android.build.api.AndroidPluginVersion ()
-com.android.build.api.AndroidPluginVersion.equals: boolean (java.lang.Object)
-com.android.build.api.AndroidPluginVersion.getMajor: int ()
-com.android.build.api.AndroidPluginVersion.getMicro: int ()
-com.android.build.api.AndroidPluginVersion.getMinor: int ()
-com.android.build.api.AndroidPluginVersion.getPreview: int ()
-com.android.build.api.AndroidPluginVersion.getPreviewType: java.lang.String ()
-com.android.build.api.AndroidPluginVersion.hashCode: int ()
-com.android.build.api.AndroidPluginVersion.rc: com.android.build.api.AndroidPluginVersion (int)
-com.android.build.api.AndroidPluginVersion.toString: java.lang.String ()
 com.android.build.api.artifact.MultipleArtifact$ALL_CLASSES_DIRS extends com.android.build.api.artifact.MultipleArtifact implements com.android.build.api.artifact.Artifact$Appendable, com.android.build.api.artifact.Artifact$Transformable, com.android.build.api.artifact.Artifact$Replaceable
 com.android.build.api.artifact.MultipleArtifact$ALL_CLASSES_JARS extends com.android.build.api.artifact.MultipleArtifact implements com.android.build.api.artifact.Artifact$Appendable, com.android.build.api.artifact.Artifact$Transformable, com.android.build.api.artifact.Artifact$Replaceable
 com.android.build.api.dsl.AaptOptions implements com.android.build.api.dsl.AndroidResources

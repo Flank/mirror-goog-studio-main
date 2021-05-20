@@ -4,8 +4,26 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-1459976165d4199b94a5d1ca639b33f9fd36a8933a75006f47a1c7aad4303626
+931d0589bd9c2df24c4a2351f6eb1badaad867aa86a1252f81bf1ffd5a803a8d
 -------------------------------------------------------------------------
+com.android.build.api.AndroidPluginVersion implements java.lang.Comparable
+com.android.build.api.AndroidPluginVersion.<init>: com.android.build.api.AndroidPluginVersion (int, int)
+com.android.build.api.AndroidPluginVersion.<init>: com.android.build.api.AndroidPluginVersion (int, int, int)
+com.android.build.api.AndroidPluginVersion.access$getComparator$cp: java.util.Comparator ()
+com.android.build.api.AndroidPluginVersion.access$get_previewType$p: com.android.build.api.AndroidPluginVersion$PreviewType (com.android.build.api.AndroidPluginVersion)
+com.android.build.api.AndroidPluginVersion.alpha: com.android.build.api.AndroidPluginVersion (int)
+com.android.build.api.AndroidPluginVersion.beta: com.android.build.api.AndroidPluginVersion (int)
+com.android.build.api.AndroidPluginVersion.compareTo: int (com.android.build.api.AndroidPluginVersion)
+com.android.build.api.AndroidPluginVersion.compareTo: int (java.lang.Object)
+com.android.build.api.AndroidPluginVersion.equals: boolean (java.lang.Object)
+com.android.build.api.AndroidPluginVersion.getMajor: int ()
+com.android.build.api.AndroidPluginVersion.getMicro: int ()
+com.android.build.api.AndroidPluginVersion.getMinor: int ()
+com.android.build.api.AndroidPluginVersion.getPreview: int ()
+com.android.build.api.AndroidPluginVersion.getPreviewType: java.lang.String ()
+com.android.build.api.AndroidPluginVersion.hashCode: int ()
+com.android.build.api.AndroidPluginVersion.rc: com.android.build.api.AndroidPluginVersion (int)
+com.android.build.api.AndroidPluginVersion.toString: java.lang.String ()
 com.android.build.api.artifact.Artifact implements java.io.Serializable
 com.android.build.api.artifact.Artifact$Appendable
 com.android.build.api.artifact.Artifact$Category extends java.lang.Enum
