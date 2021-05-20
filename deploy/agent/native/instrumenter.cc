@@ -26,10 +26,10 @@
 #include <string>
 
 #include "tools/base/deploy/agent/native/crash_logger.h"
-#include "tools/base/deploy/agent/native/instrumentation.jar.cc"
 #include "tools/base/deploy/agent/native/jni/jni_class.h"
 #include "tools/base/deploy/agent/native/jni/jni_util.h"
 #include "tools/base/deploy/agent/native/native_callbacks.h"
+#include "tools/base/deploy/agent/native/runtime.jar.cc"
 #include "tools/base/deploy/agent/native/transforms.h"
 #include "tools/base/deploy/common/io.h"
 #include "tools/base/deploy/common/log.h"
@@ -46,7 +46,7 @@ const char* kDexUtilityClass = "com/android/tools/deploy/instrument/DexUtility";
 const char* kPhaseClass = "com/android/tools/deploy/instrument/Phase";
 
 const std::string kInstrumentationJarName =
-    "instruments-"_s + instrumentation_jar_hash + ".jar";
+    "instruments-"_s + runtime_jar_hash + ".jar";
 
 const std::string MethodHooks::kNoHook = "";
 const std::string kNoCache = "";
@@ -85,7 +85,7 @@ bool WriteJarToDiskIfNecessary(const std::string& jar_path) {
     Log::E("WriteJarToDiskIfNecessary(). Unable to open().");
     return false;
   }
-  int written = write(fd, instrumentation_jar, instrumentation_jar_len);
+  int written = write(fd, runtime_jar, runtime_jar_len);
   if (written == -1) {
     Log::E("WriteJarToDiskIfNecessary(). Unable to write().");
     return false;
@@ -213,7 +213,7 @@ bool Instrument(jvmtiEnv* jvmti, JNIEnv* jni, const std::string& jar,
   // Ensure that the jar hasn't changed since we last instrumented. If it has,
   // fail out for now. This is an important scenario to guard against, since it
   // would likely cause silent failures.
-  jstring jar_hash = jni->NewStringUTF(instrumentation_jar_hash);
+  jstring jar_hash = jni->NewStringUTF(runtime_jar_hash);
   jboolean matches = breadcrumb.CallStaticBooleanMethod(
       "checkHash", "(Ljava/lang/String;)Z", jar_hash);
   jni->DeleteLocalRef(jar_hash);

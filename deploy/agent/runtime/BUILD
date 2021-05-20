@@ -2,7 +2,7 @@ load("//tools/base/bazel:android.bzl", "dex_library")
 load("//tools/base/bazel:coverage.bzl", "coverage_java_library", "coverage_java_test")
 
 coverage_java_library(
-    name = "instrumentation_java",
+    name = "runtime_java",
     srcs = [
         "//tools/base/deploy/sites:Sites.java",
     ] + glob([
@@ -14,25 +14,25 @@ coverage_java_library(
 )
 
 coverage_java_test(
-    name = "instrumentation_java_test",
+    name = "runtime_java_test",
     size = "small",
     srcs = glob(["src/test/java/**/*.java"]),
     jvm_flags = [
-        "-Dtest.suite.jar=instrumentation_java_test.jar",
+        "-Dtest.suite.jar=runtime_java_test.jar",
         "-Ddashboards.enabled=true",
     ],
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
-        ":instrumentation_java",
+        ":runtime_java",
         "//tools/base/testutils:tools.testutils",
         "//tools/base/third_party:junit_junit",
     ],
 )
 
 dex_library(
-    name = "instrumentation",
+    name = "runtime",
     dexer = "D8",
     flags = ["--min-api 26"],
-    jars = [":instrumentation_java"],
+    jars = [":runtime_java"],
     visibility = ["//visibility:public"],
 )

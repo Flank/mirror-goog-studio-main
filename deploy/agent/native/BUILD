@@ -50,8 +50,8 @@ cc_binary(
     ],
     visibility = ["//tools/base/deploy:__subpackages__"],
     deps = [
-        ":instrumentation_header",
         ":jvmti_android",
+        ":runtime_header",
         "//external:slicer",
         "//prebuilts/studio/jdk:jni_headers",
         "//tools/base/deploy/agent/native/jni:agent_jni",
@@ -73,24 +73,24 @@ cc_library(
 )
 
 cc_library(
-    name = "instrumentation_header",
+    name = "runtime_header",
     hdrs = [
-        ":instrumentation.jar.cc",
+        ":runtime.jar.cc",
     ],
 )
 
-# Converts the jar containing instrumentation dex to an array in a CC source file.
+# Converts the jar containing runtime dex to an array in a CC source file.
 genrule(
-    name = "instrumentation_header_generator",
+    name = "runtime_header_generator",
     srcs = [
-        "//tools/base/deploy/agent/instrumentation",
+        "//tools/base/deploy/agent/runtime",
     ],
     outs = [
-        "instrumentation.jar.cc",
+        "runtime.jar.cc",
     ],
-    cmd = "$(location //tools/base/bazel:bin2c) -lang=cxx -variable=instrumentation_jar" +
-          " -output=$(location instrumentation.jar.cc)" +
-          " $(location //tools/base/deploy/agent/instrumentation:instrumentation)",
+    cmd = "$(location //tools/base/bazel:bin2c) -lang=cxx -variable=runtime_jar" +
+          " -output=$(location runtime.jar.cc)" +
+          " $(location //tools/base/deploy/agent/runtime:runtime)",
     tools = [
         "//tools/base/bazel:bin2c",
     ],
