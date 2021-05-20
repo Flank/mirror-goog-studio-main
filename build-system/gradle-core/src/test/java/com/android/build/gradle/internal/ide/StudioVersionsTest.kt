@@ -35,6 +35,17 @@ class StudioVersionsTest {
     fun testInvalidVersionsInjected() {
         assertFailsWith<InvalidUserDataException> {
             verifyIDEIsNotOld("", oldVersion)
+        }.also {
+            assertThat(it).hasMessageThat().startsWith("Unrecognized Android Studio")
+            assertThat(it).hasMessageThat().contains("please retry with version 1.1 or newer.")
+        }
+
+        // Regression test for b/187470273
+        assertFailsWith<InvalidUserDataException> {
+            verifyIDEIsNotOld("202.7660.26.42.7322048", MajorMinorVersion(2020, 3, 1))
+        }.also {
+            assertThat(it).hasMessageThat().startsWith("Unrecognized Android Studio")
+            assertThat(it).hasMessageThat().contains("please retry with version 2020.3.1 or newer.")
         }
     }
 
