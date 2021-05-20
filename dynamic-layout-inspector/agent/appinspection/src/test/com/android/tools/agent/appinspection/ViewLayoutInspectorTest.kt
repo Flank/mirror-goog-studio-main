@@ -1126,16 +1126,19 @@ class ViewLayoutInspectorTest {
                 this.scale = scale.toFloat()
             }
         }.build()
-        val initialInvalidateCount = root.invalidateCount
+        val initialInvalidateCount = ThreadUtils.runOnMainThread { root.invalidateCount }.get()
         viewInspector.onReceiveCommand(
             updateScreenshotTypeCommand.toByteArray(),
             inspectorRule.commandCallback
         )
         responseQueue.take()
 
-        ThreadUtils.runOnMainThread { }.get() // Ensure the kicked-off invalidation is complete
         // Validate that setting the screenshot type and scale caused an invalidation
-        assertThat(root.invalidateCount).isEqualTo(initialInvalidateCount + 1)
+        ThreadUtils.runOnMainThread {
+            // Access root on the main thread. This also ensures this logic runs after the
+            // invalidation call that occurs in ViewLayoutInspector#handleUpdateScreenshotType
+            assertThat(root.invalidateCount).isEqualTo(initialInvalidateCount + 1)
+        }.get()
 
         // Send the same values again and verify that no invalidation happened
         viewInspector.onReceiveCommand(
@@ -1144,8 +1147,9 @@ class ViewLayoutInspectorTest {
         )
         responseQueue.take()
 
-        ThreadUtils.runOnMainThread { }.get() // Ensure the kicked-off invalidation is complete
-        assertThat(root.invalidateCount).isEqualTo(initialInvalidateCount + 1)
+        ThreadUtils.runOnMainThread {
+            assertThat(root.invalidateCount).isEqualTo(initialInvalidateCount + 1)
+        }.get()
 
         // Make another change and verify that in invalidation did happen
         val updateScreenshotTypeCommand2 = Command.newBuilder().apply {
@@ -1159,9 +1163,9 @@ class ViewLayoutInspectorTest {
         )
         responseQueue.take()
 
-        ThreadUtils.runOnMainThread { }.get() // Ensure the kicked-off invalidation is complete
-        assertThat(root.invalidateCount).isEqualTo(initialInvalidateCount + 2)
-
+        ThreadUtils.runOnMainThread {
+            assertThat(root.invalidateCount).isEqualTo(initialInvalidateCount + 2)
+        }.get()
     }
 
         // TODO: Add test for filtering system views and properties
