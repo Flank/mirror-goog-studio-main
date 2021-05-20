@@ -27,5 +27,11 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@{appInput}"/>
+
+        <Button
+                android:id="@id/lib_id"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="The ID was defined in a library"/>
     </LinearLayout>
 </layout>

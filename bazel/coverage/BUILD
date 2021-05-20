@@ -265,12 +265,10 @@ coverage_report(
     srcpath_include = [
         "tools/adt/idea/layout-inspector/src",
         "tools/base/dynamic-layout-inspector/agent/appinspection/src/main",
-        "tools/base/dynamic-layout-inspector/agent/transport/src/main",
     ],
     tests = [
         "//tools/adt/idea/layout-inspector:intellij.android.layout-inspector.tests_tests",
         "//tools/base/dynamic-layout-inspector/agent/appinspection:agent_tests.test",
-        "//tools/base/dynamic-layout-inspector/agent/transport:agent_tests.test",
     ],
 )
 
@@ -825,7 +823,6 @@ coverage_report(
         "//tools/base/deploy/deployer:studio.android.sdktools.deployer_tests",
         "//tools/base/draw9patch:studio.android.sdktools.draw9patch_tests",
         "//tools/base/dynamic-layout-inspector/agent/appinspection:agent_tests.test",
-        "//tools/base/dynamic-layout-inspector/agent/transport:agent_tests.test",
         "//tools/base/fakeadbserver:studio.android.sdktools.fakeadbserver_tests",
         "//tools/base/fakeadbserver:tools.tests",
         "//tools/base/flags:studio.android.sdktools.flags_tests",

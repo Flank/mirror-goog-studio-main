@@ -1,0 +1,8663 @@
+{
+	"entries" :
+	[
+		{
+			"name" : "ALSA_INCLUDE_DIR",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "The ALSA (asound) include directory"
+				}
+			],
+			"type" : "PATH",
+			"value" : "ALSA_INCLUDE_DIR-NOTFOUND"
+		},
+		{
+			"name" : "ALSA_LIBRARY",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "The ALSA (asound) library"
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "ALSA_LIBRARY-NOTFOUND"
+		},
+		{
+			"name" : "ANDROID_ABI",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "No help, variable specified on the command line."
+				}
+			],
+			"type" : "UNINITIALIZED",
+			"value" : "arm64-v8a"
+		},
+		{
+			"name" : "ANDROID_NDK",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "No help, variable specified on the command line."
+				}
+			],
+			"type" : "UNINITIALIZED",
+			"value" : "/{SDK}/ndk/21.4.7075529"
+		},
+		{
+			"name" : "ANDROID_PLATFORM",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "No help, variable specified on the command line."
+				}
+			],
+			"type" : "UNINITIALIZED",
+			"value" : "android-21"
+		},
+		{
+			"name" : "ANDROID_STL",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "No help, variable specified on the command line."
+				}
+			],
+			"type" : "UNINITIALIZED",
+			"value" : "c++_static"
+		},
+		{
+			"name" : "APPROVED_VENDORED_DEPENDENCIES",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Semicolon separated list of approved vendored dependencies. See docstring in CMake/CheckVendoringApproved.cmake."
+				}
+			],
+			"type" : "STRING",
+			"value" : ""
+		},
+		{
+			"name" : "BUILD_DEFINES",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Build defines"
+				}
+			],
+			"type" : "STRING",
+			"value" : ""
+		},
+		{
+			"name" : "BUILD_SHARED_LIBS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Build shared libraries (DLLs)."
+				}
+			],
+			"type" : "BOOL",
+			"value" : "OFF"
+		},
+		{
+			"name" : "BZIP2_INCLUDE_DIR",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a file."
+				}
+			],
+			"type" : "PATH",
+			"value" : "BZIP2_INCLUDE_DIR-NOTFOUND"
+		},
+		{
+			"name" : "BZIP2_LIBRARY_DEBUG",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "BZIP2_LIBRARY_DEBUG-NOTFOUND"
+		},
+		{
+			"name" : "BZIP2_LIBRARY_RELEASE",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "BZIP2_LIBRARY_RELEASE-NOTFOUND"
+		},
+		{
+			"name" : "CCACHE_BIN",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a program."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "CCACHE_BIN-NOTFOUND"
+		},
+		{
+			"name" : "CMAKE_ADDR2LINE",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a program."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "/{SDK}/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/bin/aarch64-linux-android-addr2line"
+		},
+		{
+			"name" : "CMAKE_ANDROID_ARCH_ABI",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "No help, variable specified on the command line."
+				}
+			],
+			"type" : "UNINITIALIZED",
+			"value" : "arm64-v8a"
+		},
+		{
+			"name" : "CMAKE_ANDROID_NDK",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "No help, variable specified on the command line."
+				}
+			],
+			"type" : "UNINITIALIZED",
+			"value" : "/{SDK}/ndk/21.4.7075529"
+		},
+		{
+			"name" : "CMAKE_AR",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Archiver"
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "/{SDK}/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/bin/aarch64-linux-android-ar"
+		},
+		{
+			"name" : "CMAKE_ASM_FLAGS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Flags used by the compiler during all build types."
+				}
+			],
+			"type" : "STRING",
+			"value" : ""
+		},
+		{
+			"name" : "CMAKE_ASM_FLAGS_DEBUG",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Flags used by the compiler during debug builds."
+				}
+			],
+			"type" : "STRING",
+			"value" : ""
+		},
+		{
+			"name" : "CMAKE_ASM_FLAGS_RELEASE",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Flags used by the compiler during release builds."
+				}
+			],
+			"type" : "STRING",
+			"value" : ""
+		},
+		{
+			"name" : "CMAKE_BUILD_TYPE",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Choose the type of build: None Debug Release Coverage ASan ASanDbg MemSan MemSanDbg Check CheckFull"
+				}
+			],
+			"type" : "STRING",
+			"value" : "RelWithDebInfo"
+		},
+		{
+			"name" : "CMAKE_CACHEFILE_DIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "This is the directory where this CMakeCache.txt was created"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "/{PROJECT}/Source/Android/app/.cxx/RelWithDebInfo/262v3q4o/arm64-v8a"
+		},
+		{
+			"name" : "CMAKE_CACHE_MAJOR_VERSION",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Major version of cmake used to create the current loaded cache"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "3"
+		},
+		{
+			"name" : "CMAKE_CACHE_MINOR_VERSION",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Minor version of cmake used to create the current loaded cache"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "18"
+		},
+		{
+			"name" : "CMAKE_CACHE_PATCH_VERSION",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Patch version of cmake used to create the current loaded cache"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "CMAKE_COMMAND",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to CMake executable."
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "/{SDK}/cmake/3.18.1/bin/cmake"
+		},
+		{
+			"name" : "CMAKE_CPACK_COMMAND",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to cpack program executable."
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "/{SDK}/cmake/3.18.1/bin/cpack"
+		},
+		{
+			"name" : "CMAKE_CTEST_COMMAND",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to ctest program executable."
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "/{SDK}/cmake/3.18.1/bin/ctest"
+		},
+		{
+			"name" : "CMAKE_CXX_COMPILER",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "(This variable does not exist and should not be used)"
+				}
+			],
+			"type" : "UNINITIALIZED",
+			"value" : ""
+		},
+		{
+			"name" : "CMAKE_CXX_COMPILER_AR",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "LLVM archiver"
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "CMAKE_CXX_COMPILER_AR-NOTFOUND"
+		},
+		{
+			"name" : "CMAKE_CXX_COMPILER_RANLIB",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Generate index for LLVM archive"
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "CMAKE_CXX_COMPILER_RANLIB-NOTFOUND"
+		},
+		{
+			"name" : "CMAKE_CXX_FLAGS",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Flags used by the compiler during all build types."
+				}
+			],
+			"type" : "STRING",
+			"value" : ""
+		},
+		{
+			"name" : "CMAKE_CXX_FLAGS_DEBUG",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Flags used by the compiler during debug builds."
+				}
+			],
+			"type" : "STRING",
+			"value" : ""
+		},
+		{
+			"name" : "CMAKE_CXX_FLAGS_MINSIZEREL",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Flags used by the CXX compiler during MINSIZEREL builds."
+				}
+			],
+			"type" : "STRING",
+			"value" : "-Os -DNDEBUG"
+		},
+		{
+			"name" : "CMAKE_CXX_FLAGS_RELEASE",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Flags used by the compiler during release builds."
+				}
+			],
+			"type" : "STRING",
+			"value" : ""
+		},
+		{
+			"name" : "CMAKE_CXX_FLAGS_RELWITHDEBINFO",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Flags used by the CXX compiler during RELWITHDEBINFO builds."
+				}
+			],
+			"type" : "STRING",
+			"value" : "-O2 -g -DNDEBUG"
+		},
+		{
+			"name" : "CMAKE_CXX_STANDARD_LIBRARIES",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Libraries linked by default with all C++ applications."
+				}
+			],
+			"type" : "STRING",
+			"value" : "-latomic -lm"
+		},
+		{
+			"name" : "CMAKE_C_COMPILER",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "(This variable does not exist and should not be used)"
+				}
+			],
+			"type" : "UNINITIALIZED",
+			"value" : ""
+		},
+		{
+			"name" : "CMAKE_C_COMPILER_AR",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "LLVM archiver"
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "CMAKE_C_COMPILER_AR-NOTFOUND"
+		},
+		{
+			"name" : "CMAKE_C_COMPILER_RANLIB",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Generate index for LLVM archive"
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "CMAKE_C_COMPILER_RANLIB-NOTFOUND"
+		},
+		{
+			"name" : "CMAKE_C_FLAGS",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Flags used by the compiler during all build types."
+				}
+			],
+			"type" : "STRING",
+			"value" : ""
+		},
+		{
+			"name" : "CMAKE_C_FLAGS_DEBUG",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Flags used by the compiler during debug builds."
+				}
+			],
+			"type" : "STRING",
+			"value" : ""
+		},
+		{
+			"name" : "CMAKE_C_FLAGS_MINSIZEREL",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Flags used by the C compiler during MINSIZEREL builds."
+				}
+			],
+			"type" : "STRING",
+			"value" : "-Os -DNDEBUG"
+		},
+		{
+			"name" : "CMAKE_C_FLAGS_RELEASE",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Flags used by the compiler during release builds."
+				}
+			],
+			"type" : "STRING",
+			"value" : ""
+		},
+		{
+			"name" : "CMAKE_C_FLAGS_RELWITHDEBINFO",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Flags used by the C compiler during RELWITHDEBINFO builds."
+				}
+			],
+			"type" : "STRING",
+			"value" : "-O2 -g -DNDEBUG"
+		},
+		{
+			"name" : "CMAKE_C_STANDARD_LIBRARIES",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Libraries linked by default with all C applications."
+				}
+			],
+			"type" : "STRING",
+			"value" : "-latomic -lm"
+		},
+		{
+			"name" : "CMAKE_DLLTOOL",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a program."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "CMAKE_DLLTOOL-NOTFOUND"
+		},
+		{
+			"name" : "CMAKE_EXE_LINKER_FLAGS",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Flags used by the linker."
+				}
+			],
+			"type" : "STRING",
+			"value" : ""
+		},
+		{
+			"name" : "CMAKE_EXE_LINKER_FLAGS_DEBUG",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Flags used by the linker during DEBUG builds."
+				}
+			],
+			"type" : "STRING",
+			"value" : ""
+		},
+		{
+			"name" : "CMAKE_EXE_LINKER_FLAGS_MINSIZEREL",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Flags used by the linker during MINSIZEREL builds."
+				}
+			],
+			"type" : "STRING",
+			"value" : ""
+		},
+		{
+			"name" : "CMAKE_EXE_LINKER_FLAGS_RELEASE",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Flags used by the linker during RELEASE builds."
+				}
+			],
+			"type" : "STRING",
+			"value" : ""
+		},
+		{
+			"name" : "CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Flags used by the linker during RELWITHDEBINFO builds."
+				}
+			],
+			"type" : "STRING",
+			"value" : ""
+		},
+		{
+			"name" : "CMAKE_EXPORT_COMPILE_COMMANDS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "No help, variable specified on the command line."
+				}
+			],
+			"type" : "UNINITIALIZED",
+			"value" : "ON"
+		},
+		{
+			"name" : "CMAKE_EXTRA_GENERATOR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Name of external makefile project generator."
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "CMAKE_GENERATOR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Name of generator."
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "Ninja"
+		},
+		{
+			"name" : "CMAKE_GENERATOR_INSTANCE",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Generator instance identifier."
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "CMAKE_GENERATOR_PLATFORM",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Name of generator platform."
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "CMAKE_GENERATOR_TOOLSET",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Name of generator toolset."
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "CMAKE_HAVE_LIBC_PTHREAD",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Test CMAKE_HAVE_LIBC_PTHREAD"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "CMAKE_HAVE_PTHREADS_CREATE",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Have library pthreads"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "CMAKE_HAVE_PTHREAD_CREATE",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Have library pthread"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "CMAKE_HAVE_PTHREAD_H",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Have include pthread.h"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "CMAKE_HOME_DIRECTORY",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Source directory with the top level CMakeLists.txt file for this project"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "/{PROJECT}"
+		},
+		{
+			"name" : "CMAKE_INSTALL_BINDIR",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "User executables (bin)"
+				}
+			],
+			"type" : "PATH",
+			"value" : "bin"
+		},
+		{
+			"name" : "CMAKE_INSTALL_DATADIR",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Read-only architecture-independent data (DATAROOTDIR)"
+				}
+			],
+			"type" : "PATH",
+			"value" : ""
+		},
+		{
+			"name" : "CMAKE_INSTALL_DATAROOTDIR",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Read-only architecture-independent data root (share)"
+				}
+			],
+			"type" : "PATH",
+			"value" : "share"
+		},
+		{
+			"name" : "CMAKE_INSTALL_DOCDIR",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Documentation root (DATAROOTDIR/doc/PROJECT_NAME)"
+				}
+			],
+			"type" : "PATH",
+			"value" : ""
+		},
+		{
+			"name" : "CMAKE_INSTALL_INCLUDEDIR",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "C header files (include)"
+				}
+			],
+			"type" : "PATH",
+			"value" : "include"
+		},
+		{
+			"name" : "CMAKE_INSTALL_INFODIR",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Info documentation (DATAROOTDIR/info)"
+				}
+			],
+			"type" : "PATH",
+			"value" : ""
+		},
+		{
+			"name" : "CMAKE_INSTALL_LIBDIR",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Object code libraries (lib)"
+				}
+			],
+			"type" : "PATH",
+			"value" : "lib"
+		},
+		{
+			"name" : "CMAKE_INSTALL_LIBEXECDIR",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Program executables (libexec)"
+				}
+			],
+			"type" : "PATH",
+			"value" : "libexec"
+		},
+		{
+			"name" : "CMAKE_INSTALL_LOCALEDIR",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Locale-dependent data (DATAROOTDIR/locale)"
+				}
+			],
+			"type" : "PATH",
+			"value" : ""
+		},
+		{
+			"name" : "CMAKE_INSTALL_LOCALSTATEDIR",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Modifiable single-machine data (var)"
+				}
+			],
+			"type" : "PATH",
+			"value" : "var"
+		},
+		{
+			"name" : "CMAKE_INSTALL_MANDIR",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Man documentation (DATAROOTDIR/man)"
+				}
+			],
+			"type" : "PATH",
+			"value" : ""
+		},
+		{
+			"name" : "CMAKE_INSTALL_OLDINCLUDEDIR",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "C header files for non-gcc (/usr/include)"
+				}
+			],
+			"type" : "PATH",
+			"value" : "/usr/include"
+		},
+		{
+			"name" : "CMAKE_INSTALL_PREFIX",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Install path prefix, prepended onto install directories."
+				}
+			],
+			"type" : "PATH",
+			"value" : "/usr/local"
+		},
+		{
+			"name" : "CMAKE_INSTALL_RUNSTATEDIR",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Run-time variable data (LOCALSTATEDIR/run)"
+				}
+			],
+			"type" : "PATH",
+			"value" : ""
+		},
+		{
+			"name" : "CMAKE_INSTALL_SBINDIR",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "System admin executables (sbin)"
+				}
+			],
+			"type" : "PATH",
+			"value" : "sbin"
+		},
+		{
+			"name" : "CMAKE_INSTALL_SHAREDSTATEDIR",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Modifiable architecture-independent data (com)"
+				}
+			],
+			"type" : "PATH",
+			"value" : "com"
+		},
+		{
+			"name" : "CMAKE_INSTALL_SO_NO_EXE",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Install .so files without execute permission."
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "0"
+		},
+		{
+			"name" : "CMAKE_INSTALL_SYSCONFDIR",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Read-only single-machine data (etc)"
+				}
+			],
+			"type" : "PATH",
+			"value" : "etc"
+		},
+		{
+			"name" : "CMAKE_LIBRARY_OUTPUT_DIRECTORY",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "No help, variable specified on the command line."
+				}
+			],
+			"type" : "UNINITIALIZED",
+			"value" : "/{PROJECT}/Source/Android/app/build/intermediates/cxx/RelWithDebInfo/262v3q4o/obj/arm64-v8a"
+		},
+		{
+			"name" : "CMAKE_LINKER",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a program."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "/{SDK}/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/bin/aarch64-linux-android-ld"
+		},
+		{
+			"name" : "CMAKE_MAKE_PROGRAM",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "No help, variable specified on the command line."
+				}
+			],
+			"type" : "UNINITIALIZED",
+			"value" : "/{SDK}/cmake/3.18.1/bin/ninja"
+		},
+		{
+			"name" : "CMAKE_MODULE_LINKER_FLAGS",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Flags used by the linker during the creation of modules."
+				}
+			],
+			"type" : "STRING",
+			"value" : ""
+		},
+		{
+			"name" : "CMAKE_MODULE_LINKER_FLAGS_DEBUG",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Flags used by the linker during the creation of modules during DEBUG builds."
+				}
+			],
+			"type" : "STRING",
+			"value" : ""
+		},
+		{
+			"name" : "CMAKE_MODULE_LINKER_FLAGS_MINSIZEREL",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Flags used by the linker during the creation of modules during MINSIZEREL builds."
+				}
+			],
+			"type" : "STRING",
+			"value" : ""
+		},
+		{
+			"name" : "CMAKE_MODULE_LINKER_FLAGS_RELEASE",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Flags used by the linker during the creation of modules during RELEASE builds."
+				}
+			],
+			"type" : "STRING",
+			"value" : ""
+		},
+		{
+			"name" : "CMAKE_MODULE_LINKER_FLAGS_RELWITHDEBINFO",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Flags used by the linker during the creation of modules during RELWITHDEBINFO builds."
+				}
+			],
+			"type" : "STRING",
+			"value" : ""
+		},
+		{
+			"name" : "CMAKE_NM",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a program."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "/{SDK}/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/bin/aarch64-linux-android-nm"
+		},
+		{
+			"name" : "CMAKE_NUMBER_OF_MAKEFILES",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "number of local generators"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "45"
+		},
+		{
+			"name" : "CMAKE_OBJCOPY",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a program."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "/{SDK}/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/bin/aarch64-linux-android-objcopy"
+		},
+		{
+			"name" : "CMAKE_OBJDUMP",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a program."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "/{SDK}/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/bin/aarch64-linux-android-objdump"
+		},
+		{
+			"name" : "CMAKE_OSX_DEPLOYMENT_TARGET",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "STRING",
+			"value" : "10.12.0"
+		},
+		{
+			"name" : "CMAKE_PLATFORM_INFO_INITIALIZED",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Platform information initialized"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "CMAKE_PROJECT_DESCRIPTION",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : ""
+		},
+		{
+			"name" : "CMAKE_PROJECT_HOMEPAGE_URL",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : ""
+		},
+		{
+			"name" : "CMAKE_PROJECT_NAME",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "dolphin-emu"
+		},
+		{
+			"name" : "CMAKE_PROJECT_VERSION",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "0.0.0"
+		},
+		{
+			"name" : "CMAKE_PROJECT_VERSION_MAJOR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "0"
+		},
+		{
+			"name" : "CMAKE_PROJECT_VERSION_MINOR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "0"
+		},
+		{
+			"name" : "CMAKE_PROJECT_VERSION_PATCH",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "0"
+		},
+		{
+			"name" : "CMAKE_PROJECT_VERSION_TWEAK",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : ""
+		},
+		{
+			"name" : "CMAKE_RANLIB",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Ranlib"
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "/{SDK}/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/bin/aarch64-linux-android-ranlib"
+		},
+		{
+			"name" : "CMAKE_READELF",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a program."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "/{SDK}/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/bin/aarch64-linux-android-readelf"
+		},
+		{
+			"name" : "CMAKE_ROOT",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to CMake installation."
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "/{SDK}/cmake/3.18.1/share/cmake-3.18"
+		},
+		{
+			"name" : "CMAKE_RUNTIME_OUTPUT_DIRECTORY",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "No help, variable specified on the command line."
+				}
+			],
+			"type" : "UNINITIALIZED",
+			"value" : "/{PROJECT}/Source/Android/app/build/intermediates/cxx/RelWithDebInfo/262v3q4o/obj/arm64-v8a"
+		},
+		{
+			"name" : "CMAKE_SHARED_LINKER_FLAGS",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Flags used by the linker during the creation of dll's."
+				}
+			],
+			"type" : "STRING",
+			"value" : ""
+		},
+		{
+			"name" : "CMAKE_SHARED_LINKER_FLAGS_DEBUG",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Flags used by the linker during the creation of shared libraries during DEBUG builds."
+				}
+			],
+			"type" : "STRING",
+			"value" : ""
+		},
+		{
+			"name" : "CMAKE_SHARED_LINKER_FLAGS_MINSIZEREL",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Flags used by the linker during the creation of shared libraries during MINSIZEREL builds."
+				}
+			],
+			"type" : "STRING",
+			"value" : ""
+		},
+		{
+			"name" : "CMAKE_SHARED_LINKER_FLAGS_RELEASE",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Flags used by the linker during the creation of shared libraries during RELEASE builds."
+				}
+			],
+			"type" : "STRING",
+			"value" : ""
+		},
+		{
+			"name" : "CMAKE_SHARED_LINKER_FLAGS_RELWITHDEBINFO",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Flags used by the linker during the creation of shared libraries during RELWITHDEBINFO builds."
+				}
+			],
+			"type" : "STRING",
+			"value" : ""
+		},
+		{
+			"name" : "CMAKE_SKIP_INSTALL_RPATH",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "If set, runtime paths are not added when installing shared libraries, but are added when building."
+				}
+			],
+			"type" : "BOOL",
+			"value" : "NO"
+		},
+		{
+			"name" : "CMAKE_SKIP_RPATH",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "If set, runtime paths are not added when using shared libraries."
+				}
+			],
+			"type" : "BOOL",
+			"value" : "NO"
+		},
+		{
+			"name" : "CMAKE_STATIC_LINKER_FLAGS",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Flags used by the linker during the creation of static libraries during all build types."
+				}
+			],
+			"type" : "STRING",
+			"value" : ""
+		},
+		{
+			"name" : "CMAKE_STATIC_LINKER_FLAGS_DEBUG",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Flags used by the linker during the creation of static libraries during DEBUG builds."
+				}
+			],
+			"type" : "STRING",
+			"value" : ""
+		},
+		{
+			"name" : "CMAKE_STATIC_LINKER_FLAGS_MINSIZEREL",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Flags used by the linker during the creation of static libraries during MINSIZEREL builds."
+				}
+			],
+			"type" : "STRING",
+			"value" : ""
+		},
+		{
+			"name" : "CMAKE_STATIC_LINKER_FLAGS_RELEASE",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Flags used by the linker during the creation of static libraries during RELEASE builds."
+				}
+			],
+			"type" : "STRING",
+			"value" : ""
+		},
+		{
+			"name" : "CMAKE_STATIC_LINKER_FLAGS_RELWITHDEBINFO",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Flags used by the linker during the creation of static libraries during RELWITHDEBINFO builds."
+				}
+			],
+			"type" : "STRING",
+			"value" : ""
+		},
+		{
+			"name" : "CMAKE_STRIP",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a program."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "/{SDK}/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/bin/aarch64-linux-android-strip"
+		},
+		{
+			"name" : "CMAKE_SYSTEM_NAME",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "No help, variable specified on the command line."
+				}
+			],
+			"type" : "UNINITIALIZED",
+			"value" : "Android"
+		},
+		{
+			"name" : "CMAKE_SYSTEM_VERSION",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "No help, variable specified on the command line."
+				}
+			],
+			"type" : "UNINITIALIZED",
+			"value" : "21"
+		},
+		{
+			"name" : "CMAKE_TOOLCHAIN_FILE",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "The CMake toolchain file"
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "/{SDK}/ndk/21.4.7075529/build/cmake/android.toolchain.cmake"
+		},
+		{
+			"name" : "CMAKE_UNAME",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "uname command"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "/usr/bin/uname"
+		},
+		{
+			"name" : "CMAKE_VERBOSE_MAKEFILE",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "If this value is on, makefiles will be generated without the .SILENT directive, and all commands will be echoed to the console during the make.  This is useful for debugging only. With Visual Studio IDE projects all commands are done without /nologo."
+				}
+			],
+			"type" : "BOOL",
+			"value" : "FALSE"
+		},
+		{
+			"name" : "COMPILER_HAS_DEPRECATED",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Compiler support for a deprecated attribute"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "COMPILER_HAS_DEPRECATED_ATTR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Test COMPILER_HAS_DEPRECATED_ATTR"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "COMPILER_HAS_HIDDEN_INLINE_VISIBILITY",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Test COMPILER_HAS_HIDDEN_INLINE_VISIBILITY"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "COMPILER_HAS_HIDDEN_VISIBILITY",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Test COMPILER_HAS_HIDDEN_VISIBILITY"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "CPACK_BINARY_DEB",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Enable to build Debian packages"
+				}
+			],
+			"type" : "BOOL",
+			"value" : "OFF"
+		},
+		{
+			"name" : "CPACK_BINARY_FREEBSD",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Enable to build FreeBSD packages"
+				}
+			],
+			"type" : "BOOL",
+			"value" : "OFF"
+		},
+		{
+			"name" : "CPACK_BINARY_IFW",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Enable to build IFW packages"
+				}
+			],
+			"type" : "BOOL",
+			"value" : "OFF"
+		},
+		{
+			"name" : "CPACK_BINARY_NSIS",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Enable to build NSIS packages"
+				}
+			],
+			"type" : "BOOL",
+			"value" : "OFF"
+		},
+		{
+			"name" : "CPACK_BINARY_RPM",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Enable to build RPM packages"
+				}
+			],
+			"type" : "BOOL",
+			"value" : "OFF"
+		},
+		{
+			"name" : "CPACK_BINARY_STGZ",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Enable to build STGZ packages"
+				}
+			],
+			"type" : "BOOL",
+			"value" : "ON"
+		},
+		{
+			"name" : "CPACK_BINARY_TBZ2",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Enable to build TBZ2 packages"
+				}
+			],
+			"type" : "BOOL",
+			"value" : "OFF"
+		},
+		{
+			"name" : "CPACK_BINARY_TGZ",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Enable to build TGZ packages"
+				}
+			],
+			"type" : "BOOL",
+			"value" : "ON"
+		},
+		{
+			"name" : "CPACK_BINARY_TXZ",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Enable to build TXZ packages"
+				}
+			],
+			"type" : "BOOL",
+			"value" : "OFF"
+		},
+		{
+			"name" : "CPACK_BINARY_TZ",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Enable to build TZ packages"
+				}
+			],
+			"type" : "BOOL",
+			"value" : "ON"
+		},
+		{
+			"name" : "CUBEB_INCLUDE_DIR",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a file."
+				}
+			],
+			"type" : "PATH",
+			"value" : "CUBEB_INCLUDE_DIR-NOTFOUND"
+		},
+		{
+			"name" : "CUBEB_LIBRARY",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "CUBEB_LIBRARY-NOTFOUND"
+		},
+		{
+			"name" : "CURL_DIR",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "The directory containing a CMake configuration file for CURL."
+				}
+			],
+			"type" : "PATH",
+			"value" : "CURL_DIR-NOTFOUND"
+		},
+		{
+			"name" : "CURL_INCLUDE_DIR",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a file."
+				}
+			],
+			"type" : "PATH",
+			"value" : "CURL_INCLUDE_DIR-NOTFOUND"
+		},
+		{
+			"name" : "CURL_LIBRARY_DEBUG",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "CURL_LIBRARY_DEBUG-NOTFOUND"
+		},
+		{
+			"name" : "CURL_LIBRARY_RELEASE",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "CURL_LIBRARY_RELEASE-NOTFOUND"
+		},
+		{
+			"name" : "DISTRIBUTOR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Name of the distributor."
+				}
+			],
+			"type" : "STRING",
+			"value" : "None"
+		},
+		{
+			"name" : "DOLPHIN_CXX_FLAGS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Flags used to compile Dolphin-only sources"
+				}
+			],
+			"type" : "BOOL",
+			"value" : "OFF"
+		},
+		{
+			"name" : "DSPTOOL",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Build dsptool"
+				}
+			],
+			"type" : "BOOL",
+			"value" : "OFF"
+		},
+		{
+			"name" : "EGL_INCLUDE_DIRS",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a file."
+				}
+			],
+			"type" : "PATH",
+			"value" : "/{SDK}/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/include"
+		},
+		{
+			"name" : "EGL_LIBRARIES",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "/{SDK}/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-android/21/libEGL.so"
+		},
+		{
+			"name" : "ENABLE_ALSA",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Enables ALSA sound backend"
+				}
+			],
+			"type" : "BOOL",
+			"value" : "ON"
+		},
+		{
+			"name" : "ENABLE_ANALYTICS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Enables opt-in Analytics collection"
+				}
+			],
+			"type" : "BOOL",
+			"value" : "ON"
+		},
+		{
+			"name" : "ENABLE_EGL",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Enables EGL OpenGL Interface"
+				}
+			],
+			"type" : "BOOL",
+			"value" : "ON"
+		},
+		{
+			"name" : "ENABLE_GENERIC",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Enables generic build that should run on any little-endian host"
+				}
+			],
+			"type" : "BOOL",
+			"value" : "OFF"
+		},
+		{
+			"name" : "ENABLE_GPROF",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Enable gprof profiling (must be using Debug build)"
+				}
+			],
+			"type" : "BOOL",
+			"value" : "OFF"
+		},
+		{
+			"name" : "ENABLE_HEADLESS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Enables running Dolphin as a headless variant"
+				}
+			],
+			"type" : "BOOL",
+			"value" : "OFF"
+		},
+		{
+			"name" : "ENABLE_LLVM",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Enables LLVM support, for disassembly"
+				}
+			],
+			"type" : "BOOL",
+			"value" : "ON"
+		},
+		{
+			"name" : "ENABLE_LTO",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Enables Link Time Optimization"
+				}
+			],
+			"type" : "BOOL",
+			"value" : "OFF"
+		},
+		{
+			"name" : "ENABLE_NOGUI",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Enable NoGUI frontend"
+				}
+			],
+			"type" : "BOOL",
+			"value" : "ON"
+		},
+		{
+			"name" : "ENABLE_PULSEAUDIO",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Enables PulseAudio sound backend"
+				}
+			],
+			"type" : "BOOL",
+			"value" : "ON"
+		},
+		{
+			"name" : "ENABLE_QT",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Enable Qt (Default)"
+				}
+			],
+			"type" : "BOOL",
+			"value" : "ON"
+		},
+		{
+			"name" : "ENABLE_SDL",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Enables SDL as a generic controller backend"
+				}
+			],
+			"type" : "BOOL",
+			"value" : "OFF"
+		},
+		{
+			"name" : "ENABLE_TESTS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Enables building the unit tests"
+				}
+			],
+			"type" : "BOOL",
+			"value" : "ON"
+		},
+		{
+			"name" : "ENABLE_VULKAN",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Enables vulkan video backend"
+				}
+			],
+			"type" : "BOOL",
+			"value" : "ON"
+		},
+		{
+			"name" : "ENCODE_FRAMEDUMPS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Encode framedumps in AVI format"
+				}
+			],
+			"type" : "BOOL",
+			"value" : "ON"
+		},
+		{
+			"name" : "FASTLOG",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Enable all logs"
+				}
+			],
+			"type" : "BOOL",
+			"value" : "OFF"
+		},
+		{
+			"name" : "FFmpeg_INCLUDE_avcodec",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a file."
+				}
+			],
+			"type" : "PATH",
+			"value" : "FFmpeg_INCLUDE_avcodec-NOTFOUND"
+		},
+		{
+			"name" : "FFmpeg_INCLUDE_avdevice",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a file."
+				}
+			],
+			"type" : "PATH",
+			"value" : "FFmpeg_INCLUDE_avdevice-NOTFOUND"
+		},
+		{
+			"name" : "FFmpeg_INCLUDE_avfilter",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a file."
+				}
+			],
+			"type" : "PATH",
+			"value" : "FFmpeg_INCLUDE_avfilter-NOTFOUND"
+		},
+		{
+			"name" : "FFmpeg_INCLUDE_avformat",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a file."
+				}
+			],
+			"type" : "PATH",
+			"value" : "FFmpeg_INCLUDE_avformat-NOTFOUND"
+		},
+		{
+			"name" : "FFmpeg_INCLUDE_avutil",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a file."
+				}
+			],
+			"type" : "PATH",
+			"value" : "FFmpeg_INCLUDE_avutil-NOTFOUND"
+		},
+		{
+			"name" : "FFmpeg_INCLUDE_postproc",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a file."
+				}
+			],
+			"type" : "PATH",
+			"value" : "FFmpeg_INCLUDE_postproc-NOTFOUND"
+		},
+		{
+			"name" : "FFmpeg_INCLUDE_swresample",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a file."
+				}
+			],
+			"type" : "PATH",
+			"value" : "FFmpeg_INCLUDE_swresample-NOTFOUND"
+		},
+		{
+			"name" : "FFmpeg_INCLUDE_swscale",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a file."
+				}
+			],
+			"type" : "PATH",
+			"value" : "FFmpeg_INCLUDE_swscale-NOTFOUND"
+		},
+		{
+			"name" : "FFmpeg_LIBRARY_avcodec",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "FFmpeg_LIBRARY_avcodec-NOTFOUND"
+		},
+		{
+			"name" : "FFmpeg_LIBRARY_avdevice",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "FFmpeg_LIBRARY_avdevice-NOTFOUND"
+		},
+		{
+			"name" : "FFmpeg_LIBRARY_avfilter",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "FFmpeg_LIBRARY_avfilter-NOTFOUND"
+		},
+		{
+			"name" : "FFmpeg_LIBRARY_avformat",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "FFmpeg_LIBRARY_avformat-NOTFOUND"
+		},
+		{
+			"name" : "FFmpeg_LIBRARY_avutil",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "FFmpeg_LIBRARY_avutil-NOTFOUND"
+		},
+		{
+			"name" : "FFmpeg_LIBRARY_postproc",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "FFmpeg_LIBRARY_postproc-NOTFOUND"
+		},
+		{
+			"name" : "FFmpeg_LIBRARY_swresample",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "FFmpeg_LIBRARY_swresample-NOTFOUND"
+		},
+		{
+			"name" : "FFmpeg_LIBRARY_swscale",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "FFmpeg_LIBRARY_swscale-NOTFOUND"
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avcodec_CFLAGS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avcodec_CFLAGS_I",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avcodec_CFLAGS_OTHER",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avcodec_FOUND",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avcodec_INCLUDEDIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avcodec_LIBDIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avcodec_LIBS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avcodec_LIBS_L",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avcodec_LIBS_OTHER",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avcodec_LIBS_PATHS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avcodec_MODULE_NAME",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avcodec_PREFIX",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avcodec_STATIC_CFLAGS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avcodec_STATIC_CFLAGS_I",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avcodec_STATIC_CFLAGS_OTHER",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avcodec_STATIC_LIBDIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avcodec_STATIC_LIBS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avcodec_STATIC_LIBS_L",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avcodec_STATIC_LIBS_OTHER",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avcodec_STATIC_LIBS_PATHS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avcodec_VERSION",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avdevice_CFLAGS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avdevice_CFLAGS_I",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avdevice_CFLAGS_OTHER",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avdevice_FOUND",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avdevice_INCLUDEDIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avdevice_LIBDIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avdevice_LIBS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avdevice_LIBS_L",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avdevice_LIBS_OTHER",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avdevice_LIBS_PATHS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avdevice_MODULE_NAME",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avdevice_PREFIX",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avdevice_STATIC_CFLAGS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avdevice_STATIC_CFLAGS_I",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avdevice_STATIC_CFLAGS_OTHER",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avdevice_STATIC_LIBDIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avdevice_STATIC_LIBS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avdevice_STATIC_LIBS_L",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avdevice_STATIC_LIBS_OTHER",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avdevice_STATIC_LIBS_PATHS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avdevice_VERSION",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avfilter_CFLAGS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avfilter_CFLAGS_I",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avfilter_CFLAGS_OTHER",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avfilter_FOUND",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avfilter_INCLUDEDIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avfilter_LIBDIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avfilter_LIBS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avfilter_LIBS_L",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avfilter_LIBS_OTHER",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avfilter_LIBS_PATHS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avfilter_MODULE_NAME",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avfilter_PREFIX",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avfilter_STATIC_CFLAGS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avfilter_STATIC_CFLAGS_I",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avfilter_STATIC_CFLAGS_OTHER",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avfilter_STATIC_LIBDIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avfilter_STATIC_LIBS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avfilter_STATIC_LIBS_L",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avfilter_STATIC_LIBS_OTHER",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avfilter_STATIC_LIBS_PATHS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avfilter_VERSION",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avformat_CFLAGS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avformat_CFLAGS_I",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avformat_CFLAGS_OTHER",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avformat_FOUND",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avformat_INCLUDEDIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avformat_LIBDIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avformat_LIBS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avformat_LIBS_L",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avformat_LIBS_OTHER",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avformat_LIBS_PATHS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avformat_MODULE_NAME",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avformat_PREFIX",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avformat_STATIC_CFLAGS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avformat_STATIC_CFLAGS_I",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avformat_STATIC_CFLAGS_OTHER",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avformat_STATIC_LIBDIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avformat_STATIC_LIBS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avformat_STATIC_LIBS_L",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avformat_STATIC_LIBS_OTHER",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avformat_STATIC_LIBS_PATHS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avformat_VERSION",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avutil_CFLAGS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avutil_CFLAGS_I",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avutil_CFLAGS_OTHER",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avutil_FOUND",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avutil_INCLUDEDIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avutil_LIBDIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avutil_LIBS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avutil_LIBS_L",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avutil_LIBS_OTHER",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avutil_LIBS_PATHS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avutil_MODULE_NAME",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avutil_PREFIX",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avutil_STATIC_CFLAGS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avutil_STATIC_CFLAGS_I",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avutil_STATIC_CFLAGS_OTHER",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avutil_STATIC_LIBDIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avutil_STATIC_LIBS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avutil_STATIC_LIBS_L",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avutil_STATIC_LIBS_OTHER",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avutil_STATIC_LIBS_PATHS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_avutil_VERSION",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_postproc_CFLAGS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_postproc_CFLAGS_I",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_postproc_CFLAGS_OTHER",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_postproc_FOUND",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_postproc_INCLUDEDIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_postproc_LIBDIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_postproc_LIBS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_postproc_LIBS_L",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_postproc_LIBS_OTHER",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_postproc_LIBS_PATHS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_postproc_MODULE_NAME",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_postproc_PREFIX",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_postproc_STATIC_CFLAGS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_postproc_STATIC_CFLAGS_I",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_postproc_STATIC_CFLAGS_OTHER",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_postproc_STATIC_LIBDIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_postproc_STATIC_LIBS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_postproc_STATIC_LIBS_L",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_postproc_STATIC_LIBS_OTHER",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_postproc_STATIC_LIBS_PATHS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_postproc_VERSION",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_swresample_CFLAGS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_swresample_CFLAGS_I",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_swresample_CFLAGS_OTHER",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_swresample_FOUND",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_swresample_INCLUDEDIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_swresample_LIBDIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_swresample_LIBS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_swresample_LIBS_L",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_swresample_LIBS_OTHER",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_swresample_LIBS_PATHS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_swresample_MODULE_NAME",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_swresample_PREFIX",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_swresample_STATIC_CFLAGS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_swresample_STATIC_CFLAGS_I",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_swresample_STATIC_CFLAGS_OTHER",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_swresample_STATIC_LIBDIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_swresample_STATIC_LIBS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_swresample_STATIC_LIBS_L",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_swresample_STATIC_LIBS_OTHER",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_swresample_STATIC_LIBS_PATHS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_swresample_VERSION",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_swscale_CFLAGS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_swscale_CFLAGS_I",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_swscale_CFLAGS_OTHER",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_swscale_FOUND",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_swscale_INCLUDEDIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_swscale_LIBDIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_swscale_LIBS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_swscale_LIBS_L",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_swscale_LIBS_OTHER",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_swscale_LIBS_PATHS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_swscale_MODULE_NAME",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_swscale_PREFIX",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_swscale_STATIC_CFLAGS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_swscale_STATIC_CFLAGS_I",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_swscale_STATIC_CFLAGS_OTHER",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_swscale_STATIC_LIBDIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_swscale_STATIC_LIBS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_swscale_STATIC_LIBS_L",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_swscale_STATIC_LIBS_OTHER",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_swscale_STATIC_LIBS_PATHS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FFmpeg_PKGCONFIG_swscale_VERSION",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FIND_PACKAGE_MESSAGE_DETAILS_EGL",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Details about finding EGL"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "[/{SDK}/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/include][/{SDK}/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-android/21/libEGL.so][v()]"
+		},
+		{
+			"name" : "FIND_PACKAGE_MESSAGE_DETAILS_Git",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Details about finding Git"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "[/usr/local/git/current/bin/git][v2.31.1.607.g51e8a6a459-goog()]"
+		},
+		{
+			"name" : "FIND_PACKAGE_MESSAGE_DETAILS_OpenSLES",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Details about finding OpenSLES"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "[/{SDK}/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-android/21/libOpenSLES.so][/{SDK}/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/include][v()]"
+		},
+		{
+			"name" : "FIND_PACKAGE_MESSAGE_DETAILS_PythonInterp",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Details about finding PythonInterp"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "[/usr/bin/python][v2.7.16()]"
+		},
+		{
+			"name" : "FIND_PACKAGE_MESSAGE_DETAILS_Threads",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Details about finding Threads"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "[TRUE][v()]"
+		},
+		{
+			"name" : "FIND_PACKAGE_MESSAGE_DETAILS_ZLIB",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Details about finding ZLIB"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "[/{SDK}/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-android/libz.a][/{SDK}/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/include][v1.2.7()]"
+		},
+		{
+			"name" : "FLAG_CXX_CXX11",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Test FLAG_CXX_CXX11"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "FLAG_CXX_DIAGNOSTICS_COLOR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Test FLAG_CXX_DIAGNOSTICS_COLOR"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "FLAG_CXX_FOMIT_FRAME_POINTER",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Test FLAG_CXX_FOMIT_FRAME_POINTER"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "FLAG_CXX_FORMAT_WARNING_TO_ERROR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Test FLAG_CXX_FORMAT_WARNING_TO_ERROR"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "FLAG_CXX_GGDB",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Test FLAG_CXX_GGDB"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "FLAG_CXX_HAVE_ARCH_ARMV8",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Test FLAG_CXX_HAVE_ARCH_ARMV8"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "FLAG_CXX_HAVE_WALL",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Test FLAG_CXX_HAVE_WALL"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "FLAG_CXX_IGNORED_QUALIFIERS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Test FLAG_CXX_IGNORED_QUALIFIERS"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "FLAG_CXX_INIT_SELF",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Test FLAG_CXX_INIT_SELF"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "FLAG_CXX_LOGICAL_OP",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Test FLAG_CXX_LOGICAL_OP"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FLAG_CXX_MISSING_DECLARATIONS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Test FLAG_CXX_MISSING_DECLARATIONS"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "FLAG_CXX_MISSING_VARIABLE_DECLARATIONS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Test FLAG_CXX_MISSING_VARIABLE_DECLARATIONS"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "FLAG_CXX_NO_EXCEPTIONS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Test FLAG_CXX_NO_EXCEPTIONS"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "FLAG_CXX_NO_STRICT_ALIASING",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Test FLAG_CXX_NO_STRICT_ALIASING"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "FLAG_CXX_SHADOW",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Test FLAG_CXX_SHADOW"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "FLAG_CXX_SIGN_COMPARE",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Test FLAG_CXX_SIGN_COMPARE"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "FLAG_CXX_TYPE_LIMITS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Test FLAG_CXX_TYPE_LIMITS"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "FLAG_CXX_UNINITIALIZED",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Test FLAG_CXX_UNINITIALIZED"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "FLAG_CXX_VISIBILITY_HIDDEN",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Test FLAG_CXX_VISIBILITY_HIDDEN"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "FLAG_CXX_VISIBILITY_INLINES_HIDDEN",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Test FLAG_CXX_VISIBILITY_INLINES_HIDDEN"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "FLAG_C_CXX11",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Test FLAG_C_CXX11"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FLAG_C_DIAGNOSTICS_COLOR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Test FLAG_C_DIAGNOSTICS_COLOR"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "FLAG_C_FOMIT_FRAME_POINTER",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Test FLAG_C_FOMIT_FRAME_POINTER"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "FLAG_C_FORMAT_WARNING_TO_ERROR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Test FLAG_C_FORMAT_WARNING_TO_ERROR"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "FLAG_C_GGDB",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Test FLAG_C_GGDB"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "FLAG_C_HAVE_ARCH_ARMV8",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Test FLAG_C_HAVE_ARCH_ARMV8"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "FLAG_C_HAVE_WALL",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Test FLAG_C_HAVE_WALL"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "FLAG_C_IGNORED_QUALIFIERS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Test FLAG_C_IGNORED_QUALIFIERS"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "FLAG_C_INIT_SELF",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Test FLAG_C_INIT_SELF"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "FLAG_C_LOGICAL_OP",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Test FLAG_C_LOGICAL_OP"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "FLAG_C_MISSING_DECLARATIONS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Test FLAG_C_MISSING_DECLARATIONS"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "FLAG_C_MISSING_VARIABLE_DECLARATIONS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Test FLAG_C_MISSING_VARIABLE_DECLARATIONS"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "FLAG_C_NO_EXCEPTIONS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Test FLAG_C_NO_EXCEPTIONS"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "FLAG_C_NO_STRICT_ALIASING",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Test FLAG_C_NO_STRICT_ALIASING"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "FLAG_C_SHADOW",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Test FLAG_C_SHADOW"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "FLAG_C_SIGN_COMPARE",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Test FLAG_C_SIGN_COMPARE"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "FLAG_C_TYPE_LIMITS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Test FLAG_C_TYPE_LIMITS"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "FLAG_C_UNINITIALIZED",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Test FLAG_C_UNINITIALIZED"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "FLAG_C_VISIBILITY_HIDDEN",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Test FLAG_C_VISIBILITY_HIDDEN"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "FLAG_C_VISIBILITY_INLINES_HIDDEN",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Test FLAG_C_VISIBILITY_INLINES_HIDDEN"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "FMT_BINARY_DIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "/{PROJECT}/Source/Android/app/.cxx/RelWithDebInfo/262v3q4o/arm64-v8a/Externals/fmt"
+		},
+		{
+			"name" : "FMT_CUDA_TEST",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Generate the cuda-test target."
+				}
+			],
+			"type" : "BOOL",
+			"value" : "OFF"
+		},
+		{
+			"name" : "FMT_DEBUG_POSTFIX",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Debug library postfix."
+				}
+			],
+			"type" : "STRING",
+			"value" : "d"
+		},
+		{
+			"name" : "FMT_DOC",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Generate the doc target."
+				}
+			],
+			"type" : "BOOL",
+			"value" : "OFF"
+		},
+		{
+			"name" : "FMT_FUZZ",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Generate the fuzz target."
+				}
+			],
+			"type" : "BOOL",
+			"value" : "OFF"
+		},
+		{
+			"name" : "FMT_HAS_VARIANT",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Test FMT_HAS_VARIANT"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "FMT_INC_DIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Installation directory for include files, a relative path that will be joined with /usr/local or an absolute path."
+				}
+			],
+			"type" : "STRING",
+			"value" : "include"
+		},
+		{
+			"name" : "FMT_INSTALL",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Generate the install target."
+				}
+			],
+			"type" : "BOOL",
+			"value" : "OFF"
+		},
+		{
+			"name" : "FMT_OS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Include core requiring OS (Windows/Posix) "
+				}
+			],
+			"type" : "BOOL",
+			"value" : "ON"
+		},
+		{
+			"name" : "FMT_PEDANTIC",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Enable extra warnings and expensive tests."
+				}
+			],
+			"type" : "BOOL",
+			"value" : "OFF"
+		},
+		{
+			"name" : "FMT_SOURCE_DIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "/{PROJECT}/Externals/fmt"
+		},
+		{
+			"name" : "FMT_TEST",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Generate the test target."
+				}
+			],
+			"type" : "BOOL",
+			"value" : "OFF"
+		},
+		{
+			"name" : "FMT_WERROR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Halt the compilation with an error on compiler warnings."
+				}
+			],
+			"type" : "BOOL",
+			"value" : "OFF"
+		},
+		{
+			"name" : "GDBSTUB",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Enable gdb stub for remote debugging."
+				}
+			],
+			"type" : "BOOL",
+			"value" : "ON"
+		},
+		{
+			"name" : "GIT_EXECUTABLE",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Git command line client"
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "/usr/local/git/current/bin/git"
+		},
+		{
+			"name" : "HAS_FCNTL",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Have function fcntl"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "HAS_FORMAT_WARNING",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Test HAS_FORMAT_WARNING"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "HAS_GETADDRINFO",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Have function getaddrinfo"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "HAS_GETHOSTBYADDR_R",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Have function gethostbyaddr_r"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "HAS_GETHOSTBYNAME_R",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Have function gethostbyname_r"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "HAS_GETNAMEINFO",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Have function getnameinfo"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "HAS_INET_NTOP",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Have function inet_ntop"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "HAS_INET_PTON",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Have function inet_pton"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "HAS_MSGHDR_FLAGS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Test HAS_MSGHDR_FLAGS"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "HAS_NULLPTR_WARNING",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Test HAS_NULLPTR_WARNING"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "HAS_POLL",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Have function poll"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "HAS_SOCKLEN_T",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "CHECK_TYPE_SIZE: sizeof(socklen_t)"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "4"
+		},
+		{
+			"name" : "HAS_STRINGOP_TRUNCATION_WARNING",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Test HAS_STRINGOP_TRUNCATION_WARNING"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "HAVE_FSEEKO",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Have function fseeko"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "HAVE_HAS_SOCKLEN_T",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Result of TRY_COMPILE"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "TRUE"
+		},
+		{
+			"name" : "HAVE_LZMA_H",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Have include lzma.h"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "HAVE_OFF64_T",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Result of TRY_COMPILE"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "TRUE"
+		},
+		{
+			"name" : "HAVE_STDDEF_H",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Have include stddef.h"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "HAVE_STDINT_H",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Have include stdint.h"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "HAVE_STRTOD_L",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Have symbol strtod_l"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "HAVE_SYS_TYPES_H",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Have include sys/types.h"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "HAVE_UNISTD_H",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Have include unistd.h"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "LIBLZMA_INCLUDE_DIR",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a file."
+				}
+			],
+			"type" : "PATH",
+			"value" : "LIBLZMA_INCLUDE_DIR-NOTFOUND"
+		},
+		{
+			"name" : "LIBLZMA_LIBRARY",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "(This variable does not exist and should not be used)"
+				}
+			],
+			"type" : "UNINITIALIZED",
+			"value" : ""
+		},
+		{
+			"name" : "LIBLZMA_LIBRARY_DEBUG",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "LIBLZMA_LIBRARY_DEBUG-NOTFOUND"
+		},
+		{
+			"name" : "LIBLZMA_LIBRARY_RELEASE",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "LIBLZMA_LIBRARY_RELEASE-NOTFOUND"
+		},
+		{
+			"name" : "LINK_WITH_PTHREAD",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Explicitly link mbed TLS library to pthread."
+				}
+			],
+			"type" : "BOOL",
+			"value" : "OFF"
+		},
+		{
+			"name" : "LINUX_LOCAL_DEV",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Enable relocatable binary"
+				}
+			],
+			"type" : "BOOL",
+			"value" : "OFF"
+		},
+		{
+			"name" : "LLVM_DIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "The directory containing a CMake configuration file for LLVM."
+				}
+			],
+			"type" : "PATH",
+			"value" : "LLVM_DIR-NOTFOUND"
+		},
+		{
+			"name" : "LZO",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "LZO-NOTFOUND"
+		},
+		{
+			"name" : "LZO_INCLUDE",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a file."
+				}
+			],
+			"type" : "PATH",
+			"value" : "LZO_INCLUDE-NOTFOUND"
+		},
+		{
+			"name" : "MBEDCRYPTO_LIBRARY",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "MBEDCRYPTO_LIBRARY-NOTFOUND"
+		},
+		{
+			"name" : "MBEDTLS_INCLUDE_DIR",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a file."
+				}
+			],
+			"type" : "PATH",
+			"value" : "MBEDTLS_INCLUDE_DIR-NOTFOUND"
+		},
+		{
+			"name" : "MBEDTLS_LIBRARY",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "MBEDTLS_LIBRARY-NOTFOUND"
+		},
+		{
+			"name" : "MBEDTLS_VERSION_OK",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Test MBEDTLS_VERSION_OK"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "MBEDX509_LIBRARY",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "MBEDX509_LIBRARY-NOTFOUND"
+		},
+		{
+			"name" : "MINIZIP_CFLAGS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "MINIZIP_CFLAGS_I",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "MINIZIP_CFLAGS_OTHER",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "MINIZIP_FOUND",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "MINIZIP_INCLUDEDIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "MINIZIP_LIBDIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "MINIZIP_LIBS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "MINIZIP_LIBS_L",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "MINIZIP_LIBS_OTHER",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "MINIZIP_LIBS_PATHS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "MINIZIP_MODULE_NAME",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "MINIZIP_PREFIX",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "MINIZIP_STATIC_CFLAGS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "MINIZIP_STATIC_CFLAGS_I",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "MINIZIP_STATIC_CFLAGS_OTHER",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "MINIZIP_STATIC_LIBDIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "MINIZIP_STATIC_LIBS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "MINIZIP_STATIC_LIBS_L",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "MINIZIP_STATIC_LIBS_OTHER",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "MINIZIP_STATIC_LIBS_PATHS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "MINIZIP_VERSION",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "OFF64_T",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "CHECK_TYPE_SIZE: sizeof(off64_t)"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "8"
+		},
+		{
+			"name" : "OPENGL_EGL_INCLUDE_DIR",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a file."
+				}
+			],
+			"type" : "PATH",
+			"value" : "/{SDK}/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/include"
+		},
+		{
+			"name" : "OPENGL_GLX_INCLUDE_DIR",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a file."
+				}
+			],
+			"type" : "PATH",
+			"value" : "OPENGL_GLX_INCLUDE_DIR-NOTFOUND"
+		},
+		{
+			"name" : "OPENGL_INCLUDE_DIR",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a file."
+				}
+			],
+			"type" : "PATH",
+			"value" : "OPENGL_INCLUDE_DIR-NOTFOUND"
+		},
+		{
+			"name" : "OPENGL_egl_LIBRARY",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "/{SDK}/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-android/21/libEGL.so"
+		},
+		{
+			"name" : "OPENGL_gl_LIBRARY",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "OPENGL_gl_LIBRARY-NOTFOUND"
+		},
+		{
+			"name" : "OPENGL_glu_LIBRARY",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "OPENGL_glu_LIBRARY-NOTFOUND"
+		},
+		{
+			"name" : "OPENGL_glx_LIBRARY",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "OPENGL_glx_LIBRARY-NOTFOUND"
+		},
+		{
+			"name" : "OPENGL_opengl_LIBRARY",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "OPENGL_opengl_LIBRARY-NOTFOUND"
+		},
+		{
+			"name" : "OPENGL_xmesa_INCLUDE_DIR",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a file."
+				}
+			],
+			"type" : "PATH",
+			"value" : "OPENGL_xmesa_INCLUDE_DIR-NOTFOUND"
+		},
+		{
+			"name" : "OPENSLES_INCLUDE_DIR",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a file."
+				}
+			],
+			"type" : "PATH",
+			"value" : "/{SDK}/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/include"
+		},
+		{
+			"name" : "OPENSLES_LIBRARY",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "/{SDK}/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-android/21/libOpenSLES.so"
+		},
+		{
+			"name" : "OPROFILING",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Enable profiling"
+				}
+			],
+			"type" : "BOOL",
+			"value" : "OFF"
+		},
+		{
+			"name" : "OpenGL_GL_PREFERENCE",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Linux-only: if GLVND, use the vendor-neutral GL libraries (default). If LEGACY, use the legacy ones (might be necessary to have optirun/primusrun work)"
+				},
+				{
+					"name" : "STRINGS",
+					"value" : "GLVND;LEGACY"
+				}
+			],
+			"type" : "STRING",
+			"value" : "GLVND"
+		},
+		{
+			"name" : "PC_EGL_CFLAGS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PC_EGL_CFLAGS_I",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PC_EGL_CFLAGS_OTHER",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PC_EGL_FOUND",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PC_EGL_INCLUDEDIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PC_EGL_LIBDIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PC_EGL_LIBS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PC_EGL_LIBS_L",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PC_EGL_LIBS_OTHER",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PC_EGL_LIBS_PATHS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PC_EGL_MODULE_NAME",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PC_EGL_PREFIX",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PC_EGL_STATIC_CFLAGS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PC_EGL_STATIC_CFLAGS_I",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PC_EGL_STATIC_CFLAGS_OTHER",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PC_EGL_STATIC_LIBDIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PC_EGL_STATIC_LIBS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PC_EGL_STATIC_LIBS_L",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PC_EGL_STATIC_LIBS_OTHER",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PC_EGL_STATIC_LIBS_PATHS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PC_EGL_VERSION",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PC_SYSTEMD_CFLAGS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PC_SYSTEMD_CFLAGS_I",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PC_SYSTEMD_CFLAGS_OTHER",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PC_SYSTEMD_FOUND",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PC_SYSTEMD_INCLUDEDIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PC_SYSTEMD_LIBDIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PC_SYSTEMD_LIBS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PC_SYSTEMD_LIBS_L",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PC_SYSTEMD_LIBS_OTHER",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PC_SYSTEMD_LIBS_PATHS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PC_SYSTEMD_MODULE_NAME",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PC_SYSTEMD_PREFIX",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PC_SYSTEMD_STATIC_CFLAGS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PC_SYSTEMD_STATIC_CFLAGS_I",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PC_SYSTEMD_STATIC_CFLAGS_OTHER",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PC_SYSTEMD_STATIC_LIBDIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PC_SYSTEMD_STATIC_LIBS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PC_SYSTEMD_STATIC_LIBS_L",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PC_SYSTEMD_STATIC_LIBS_OTHER",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PC_SYSTEMD_STATIC_LIBS_PATHS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PC_SYSTEMD_VERSION",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PKG_CONFIG_EXECUTABLE",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "pkg-config executable"
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "PKG_CONFIG_EXECUTABLE-NOTFOUND"
+		},
+		{
+			"name" : "PNG",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "PNG-NOTFOUND"
+		},
+		{
+			"name" : "PNG_HARDWARE_OPTIMIZATIONS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Enable hardware optimizations for libpng"
+				}
+			],
+			"type" : "BOOL",
+			"value" : "OFF"
+		},
+		{
+			"name" : "PNG_INCLUDE",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a file."
+				}
+			],
+			"type" : "PATH",
+			"value" : "PNG_INCLUDE-NOTFOUND"
+		},
+		{
+			"name" : "PYTHON_EXECUTABLE",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a program."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "/usr/bin/python"
+		},
+		{
+			"name" : "PulseAudio_INCLUDE_DIR",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a file."
+				}
+			],
+			"type" : "PATH",
+			"value" : "PulseAudio_INCLUDE_DIR-NOTFOUND"
+		},
+		{
+			"name" : "PulseAudio_LIBRARIES",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "PulseAudio_LIBRARIES-NOTFOUND"
+		},
+		{
+			"name" : "PulseAudio_PKG_CFLAGS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PulseAudio_PKG_CFLAGS_I",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PulseAudio_PKG_CFLAGS_OTHER",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PulseAudio_PKG_FOUND",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PulseAudio_PKG_INCLUDEDIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PulseAudio_PKG_LIBDIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PulseAudio_PKG_LIBS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PulseAudio_PKG_LIBS_L",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PulseAudio_PKG_LIBS_OTHER",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PulseAudio_PKG_LIBS_PATHS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PulseAudio_PKG_MODULE_NAME",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PulseAudio_PKG_PREFIX",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PulseAudio_PKG_STATIC_CFLAGS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PulseAudio_PKG_STATIC_CFLAGS_I",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PulseAudio_PKG_STATIC_CFLAGS_OTHER",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PulseAudio_PKG_STATIC_LIBDIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PulseAudio_PKG_STATIC_LIBS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PulseAudio_PKG_STATIC_LIBS_L",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PulseAudio_PKG_STATIC_LIBS_OTHER",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PulseAudio_PKG_STATIC_LIBS_PATHS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "PulseAudio_PKG_VERSION",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "SANITIZE_ADDRESS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Enable AddressSanitizer for sanitized targets."
+				}
+			],
+			"type" : "BOOL",
+			"value" : "OFF"
+		},
+		{
+			"name" : "SANITIZE_LINK_STATIC",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Try to link static against sanitizers."
+				}
+			],
+			"type" : "BOOL",
+			"value" : "OFF"
+		},
+		{
+			"name" : "SANITIZE_MEMORY",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Enable MemorySanitizer for sanitized targets."
+				}
+			],
+			"type" : "BOOL",
+			"value" : "OFF"
+		},
+		{
+			"name" : "SANITIZE_THREAD",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Enable ThreadSanitizer for sanitized targets."
+				}
+			],
+			"type" : "BOOL",
+			"value" : "OFF"
+		},
+		{
+			"name" : "SANITIZE_UNDEFINED",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Enable UndefinedBehaviorSanitizer for sanitized targets."
+				}
+			],
+			"type" : "BOOL",
+			"value" : "OFF"
+		},
+		{
+			"name" : "SFML_INCLUDE_DIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a file."
+				}
+			],
+			"type" : "PATH",
+			"value" : "SFML_INCLUDE_DIR-NOTFOUND"
+		},
+		{
+			"name" : "SFML_NETWORK_LIBRARY",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "(This variable does not exist and should not be used)"
+				}
+			],
+			"type" : "UNINITIALIZED",
+			"value" : ""
+		},
+		{
+			"name" : "SFML_NETWORK_LIBRARY_DEBUG",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "SFML_NETWORK_LIBRARY_DEBUG-NOTFOUND"
+		},
+		{
+			"name" : "SFML_NETWORK_LIBRARY_RELEASE",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "SFML_NETWORK_LIBRARY_RELEASE-NOTFOUND"
+		},
+		{
+			"name" : "SFML_SYSTEM_LIBRARY",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "(This variable does not exist and should not be used)"
+				}
+			],
+			"type" : "UNINITIALIZED",
+			"value" : ""
+		},
+		{
+			"name" : "SFML_SYSTEM_LIBRARY_DEBUG",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "SFML_SYSTEM_LIBRARY_DEBUG-NOTFOUND"
+		},
+		{
+			"name" : "SFML_SYSTEM_LIBRARY_RELEASE",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "SFML_SYSTEM_LIBRARY_RELEASE-NOTFOUND"
+		},
+		{
+			"name" : "SUPPORTS_USER_DEFINED_LITERALS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Test SUPPORTS_USER_DEFINED_LITERALS"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "SYSTEMD_FOUND",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "(This variable does not exist and should not be used)"
+				}
+			],
+			"type" : "UNINITIALIZED",
+			"value" : ""
+		},
+		{
+			"name" : "SYSTEMD_INCLUDE_DIRS",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a file."
+				}
+			],
+			"type" : "PATH",
+			"value" : "SYSTEMD_INCLUDE_DIRS-NOTFOUND"
+		},
+		{
+			"name" : "SYSTEMD_LIBRARIES",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "SYSTEMD_LIBRARIES-NOTFOUND"
+		},
+		{
+			"name" : "THREADS_HAVE_PTHREAD_ARG",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Result of TRY_COMPILE"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "TRUE"
+		},
+		{
+			"name" : "USE_ALSA",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Have includes alsa/asoundlib.h"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "USE_AUDIOTRACK",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Have include android/log.h"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "USE_AUDIOUNIT",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Have includes AudioUnit/AudioUnit.h"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "USE_DISCORD_PRESENCE",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Enables Discord Rich Presence, show the current game on Discord"
+				}
+			],
+			"type" : "BOOL",
+			"value" : "ON"
+		},
+		{
+			"name" : "USE_JACK",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Have includes jack/jack.h"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "USE_KAI",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Have includes kai.h"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "USE_OPENSL",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Have include SLES/OpenSLES.h"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "USE_PULSE",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Have includes pulse/pulseaudio.h"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "USE_SHARED_ENET",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Use shared libenet if found rather than Dolphin's soon-to-compatibly-diverge version"
+				}
+			],
+			"type" : "BOOL",
+			"value" : "OFF"
+		},
+		{
+			"name" : "USE_SHARED_MBEDTLS_LIBRARY",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Build mbed TLS shared library."
+				}
+			],
+			"type" : "BOOL",
+			"value" : "OFF"
+		},
+		{
+			"name" : "USE_SNDIO",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Have includes sndio.h"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "USE_STATIC_MBEDTLS_LIBRARY",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Build mbed TLS static library."
+				}
+			],
+			"type" : "BOOL",
+			"value" : "ON"
+		},
+		{
+			"name" : "USE_UPNP",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Enables UPnP port mapping support"
+				}
+			],
+			"type" : "BOOL",
+			"value" : "ON"
+		},
+		{
+			"name" : "USE_WASAPI",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Have includes audioclient.h"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "USE_WINMM",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Have includes windows.h;mmsystem.h"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "ZLIB_INCLUDE_DIR",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a file."
+				}
+			],
+			"type" : "PATH",
+			"value" : "/{SDK}/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/include"
+		},
+		{
+			"name" : "ZLIB_LIBRARY_DEBUG",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "ZLIB_LIBRARY_DEBUG-NOTFOUND"
+		},
+		{
+			"name" : "ZLIB_LIBRARY_RELEASE",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "/{SDK}/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-android/libz.a"
+		},
+		{
+			"name" : "ZSTD_CFLAGS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "ZSTD_CFLAGS_I",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "ZSTD_CFLAGS_OTHER",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "ZSTD_FOUND",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "ZSTD_INCLUDEDIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "ZSTD_LIBDIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "ZSTD_LIBS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "ZSTD_LIBS_L",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "ZSTD_LIBS_OTHER",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "ZSTD_LIBS_PATHS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "ZSTD_MODULE_NAME",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "ZSTD_PREFIX",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "ZSTD_STATIC_CFLAGS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "ZSTD_STATIC_CFLAGS_I",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "ZSTD_STATIC_CFLAGS_OTHER",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "ZSTD_STATIC_LIBDIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "ZSTD_STATIC_LIBS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "ZSTD_STATIC_LIBS_L",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "ZSTD_STATIC_LIBS_OTHER",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "ZSTD_STATIC_LIBS_PATHS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "ZSTD_VERSION",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : ""
+		},
+		{
+			"name" : "_GNUInstallDirs_LAST_CMAKE_INSTALL_PREFIX",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "CMAKE_INSTALL_PREFIX during last run"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "/usr/local"
+		},
+		{
+			"name" : "__pkg_config_checked_FFmpeg_PKGCONFIG_avcodec",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "__pkg_config_checked_FFmpeg_PKGCONFIG_avdevice",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "__pkg_config_checked_FFmpeg_PKGCONFIG_avfilter",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "__pkg_config_checked_FFmpeg_PKGCONFIG_avformat",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "__pkg_config_checked_FFmpeg_PKGCONFIG_avutil",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "__pkg_config_checked_FFmpeg_PKGCONFIG_postproc",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "__pkg_config_checked_FFmpeg_PKGCONFIG_swresample",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "__pkg_config_checked_FFmpeg_PKGCONFIG_swscale",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "__pkg_config_checked_MINIZIP",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "__pkg_config_checked_PC_EGL",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "__pkg_config_checked_PC_SYSTEMD",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "__pkg_config_checked_PulseAudio_PKG",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "__pkg_config_checked_ZSTD",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "androidcommon_LIB_DEPENDS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Dependencies for the target"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "general;android;general;common;general;log;general;-Wl,--no-warn-mismatch;general;-Wl,--whole-archive;general;-Wl,--no-whole-archive;"
+		},
+		{
+			"name" : "audiocommon_LIB_DEPENDS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Dependencies for the target"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "general;OpenSLES::OpenSLES;general;common;general;cubeb;general;SoundTouch;general;FreeSurround;"
+		},
+		{
+			"name" : "bindir",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "bindir"
+				}
+			],
+			"type" : "PATH",
+			"value" : "/usr/local/bin"
+		},
+		{
+			"name" : "bzip2_BINARY_DIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "/{PROJECT}/Source/Android/app/.cxx/RelWithDebInfo/262v3q4o/arm64-v8a/Externals/bzip2"
+		},
+		{
+			"name" : "bzip2_SOURCE_DIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "/{PROJECT}/Externals/bzip2"
+		},
+		{
+			"name" : "common_LIB_DEPENDS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Dependencies for the target"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "general;-pthread;general;enet;general;fmt::fmt;general;mbedtls;general;mbedcrypto;general;mbedx509;general;minizip;general;curl;general;iconv;general;png;general;androidcommon;general;/{SDK}/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-android/21/libEGL.so;"
+		},
+		{
+			"name" : "core_LIB_DEPENDS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Dependencies for the target"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "general;audiocommon;general;common;general;cubeb;general;discio;general;enet;general;inputcommon;general;mbedtls;general;mbedcrypto;general;mbedx509;general;pugixml;general;sfml-network;general;sfml-system;general;videonull;general;videoogl;general;videosoftware;general;fmt::fmt;general;lzo2;general;ZLIB::ZLIB;general;androidcommon;general;videovulkan;"
+		},
+		{
+			"name" : "cubeb_BINARY_DIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "/{PROJECT}/Source/Android/app/.cxx/RelWithDebInfo/262v3q4o/arm64-v8a/Externals/cubeb"
+		},
+		{
+			"name" : "cubeb_LIB_DEPENDS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Dependencies for the target"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "general;OpenSLES;general;log;"
+		},
+		{
+			"name" : "cubeb_SOURCE_DIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "/{PROJECT}/Externals/cubeb"
+		},
+		{
+			"name" : "curl_LIB_DEPENDS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Dependencies for the target"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "general;mbedtls;general;mbedcrypto;general;mbedx509;general;z;"
+		},
+		{
+			"name" : "datadir",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "datadir"
+				}
+			],
+			"type" : "PATH",
+			"value" : "/usr/local/share/dolphin-emu"
+		},
+		{
+			"name" : "discio_LIB_DEPENDS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Dependencies for the target"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "general;common;general;BZip2::BZip2;general;lzma;general;zstd;general;fmt::fmt;general;minizip;general;pugixml;general;ZLIB::ZLIB;"
+		},
+		{
+			"name" : "dolphin-emu_BINARY_DIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "/{PROJECT}/Source/Android/app/.cxx/RelWithDebInfo/262v3q4o/arm64-v8a"
+		},
+		{
+			"name" : "dolphin-emu_SOURCE_DIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "/{PROJECT}"
+		},
+		{
+			"name" : "enet_BINARY_DIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "/{PROJECT}/Source/Android/app/.cxx/RelWithDebInfo/262v3q4o/arm64-v8a/Externals/enet"
+		},
+		{
+			"name" : "enet_SOURCE_DIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "/{PROJECT}/Externals/enet"
+		},
+		{
+			"name" : "fmt_DIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "The directory containing a CMake configuration file for fmt."
+				}
+			],
+			"type" : "PATH",
+			"value" : "fmt_DIR-NOTFOUND"
+		},
+		{
+			"name" : "gtest_BINARY_DIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "/{PROJECT}/Source/Android/app/.cxx/RelWithDebInfo/262v3q4o/arm64-v8a/Externals/gtest"
+		},
+		{
+			"name" : "gtest_LIB_DEPENDS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Dependencies for the target"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "general;-pthread;"
+		},
+		{
+			"name" : "gtest_SOURCE_DIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "/{PROJECT}/Externals/gtest"
+		},
+		{
+			"name" : "gtest_build_samples",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Build gtest's sample programs."
+				}
+			],
+			"type" : "BOOL",
+			"value" : "OFF"
+		},
+		{
+			"name" : "gtest_build_tests",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Build all of gtest's own tests."
+				}
+			],
+			"type" : "BOOL",
+			"value" : "OFF"
+		},
+		{
+			"name" : "gtest_disable_pthreads",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Disable uses of pthreads in gtest."
+				}
+			],
+			"type" : "BOOL",
+			"value" : "OFF"
+		},
+		{
+			"name" : "gtest_force_shared_crt",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Use shared (DLL) run-time lib even when Google Test is built as static lib."
+				}
+			],
+			"type" : "BOOL",
+			"value" : "OFF"
+		},
+		{
+			"name" : "gtest_hide_internal_symbols",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Build gtest with internal symbols hidden in shared libraries."
+				}
+			],
+			"type" : "BOOL",
+			"value" : "OFF"
+		},
+		{
+			"name" : "gtest_main_LIB_DEPENDS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Dependencies for the target"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "general;-pthread;general;gtest;"
+		},
+		{
+			"name" : "has_std_0x_flag",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Test has_std_0x_flag"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "has_std_11_flag",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Test has_std_11_flag"
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "1"
+		},
+		{
+			"name" : "inputcommon_LIB_DEPENDS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Dependencies for the target"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "general;common;general;fmt::fmt;general;png;"
+		},
+		{
+			"name" : "lzma_BINARY_DIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "/{PROJECT}/Source/Android/app/.cxx/RelWithDebInfo/262v3q4o/arm64-v8a/Externals/liblzma"
+		},
+		{
+			"name" : "lzma_SOURCE_DIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "/{PROJECT}/Externals/liblzma"
+		},
+		{
+			"name" : "main_LIB_DEPENDS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Dependencies for the target"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "general;androidcommon;general;common;general;core;general;uicommon;general;android;general;log;general;-Wl,--no-warn-mismatch;general;-Wl,--whole-archive;general;-Wl,--no-whole-archive;"
+		},
+		{
+			"name" : "mandir",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "mandir"
+				}
+			],
+			"type" : "PATH",
+			"value" : "/usr/local/share/man"
+		},
+		{
+			"name" : "mbed TLS_BINARY_DIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "/{PROJECT}/Source/Android/app/.cxx/RelWithDebInfo/262v3q4o/arm64-v8a/Externals/mbedtls"
+		},
+		{
+			"name" : "mbed TLS_SOURCE_DIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "/{PROJECT}/Externals/mbedtls"
+		},
+		{
+			"name" : "mbedtls_LIB_DEPENDS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Dependencies for the target"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "general;mbedx509;"
+		},
+		{
+			"name" : "mbedx509_LIB_DEPENDS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Dependencies for the target"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "general;mbedcrypto;"
+		},
+		{
+			"name" : "minizip_BINARY_DIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "/{PROJECT}/Source/Android/app/.cxx/RelWithDebInfo/262v3q4o/arm64-v8a/Externals/minizip"
+		},
+		{
+			"name" : "minizip_LIB_DEPENDS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Dependencies for the target"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "general;ZLIB::ZLIB;"
+		},
+		{
+			"name" : "minizip_SOURCE_DIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "/{PROJECT}/Externals/minizip"
+		},
+		{
+			"name" : "png_LIB_DEPENDS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Dependencies for the target"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "general;ZLIB::ZLIB;"
+		},
+		{
+			"name" : "pugixml_BINARY_DIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "/{PROJECT}/Source/Android/app/.cxx/RelWithDebInfo/262v3q4o/arm64-v8a/Externals/pugixml"
+		},
+		{
+			"name" : "pugixml_INCLUDE_DIRS",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a file."
+				}
+			],
+			"type" : "PATH",
+			"value" : "pugixml_INCLUDE_DIRS-NOTFOUND"
+		},
+		{
+			"name" : "pugixml_LIBRARIES",
+			"properties" :
+			[
+				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
+					"name" : "HELPSTRING",
+					"value" : "Path to a library."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "pugixml_LIBRARIES-NOTFOUND"
+		},
+		{
+			"name" : "pugixml_SOURCE_DIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "/{PROJECT}/Externals/pugixml"
+		},
+		{
+			"name" : "uicommon_LIB_DEPENDS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Dependencies for the target"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "general;common;general;cpp-optparse;general;minizip;general;pugixml;general;fmt::fmt;"
+		},
+		{
+			"name" : "videocommon_LIB_DEPENDS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Dependencies for the target"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "general;core;general;fmt::fmt;general;png;general;xxhash;general;imgui;"
+		},
+		{
+			"name" : "videonull_LIB_DEPENDS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Dependencies for the target"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "general;common;general;videocommon;"
+		},
+		{
+			"name" : "videoogl_LIB_DEPENDS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Dependencies for the target"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "general;common;general;videocommon;"
+		},
+		{
+			"name" : "videosoftware_LIB_DEPENDS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Dependencies for the target"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "general;common;general;videocommon;"
+		},
+		{
+			"name" : "videovulkan_LIB_DEPENDS",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Dependencies for the target"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "general;common;general;videocommon;general;glslang;general;xxhash;"
+		},
+		{
+			"name" : "xxhash_BINARY_DIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "/{PROJECT}/Source/Android/app/.cxx/RelWithDebInfo/262v3q4o/arm64-v8a/Externals/xxhash"
+		},
+		{
+			"name" : "xxhash_SOURCE_DIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "/{PROJECT}/Externals/xxhash"
+		},
+		{
+			"name" : "zstd_BINARY_DIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "/{PROJECT}/Source/Android/app/.cxx/RelWithDebInfo/262v3q4o/arm64-v8a/Externals/zstd"
+		},
+		{
+			"name" : "zstd_SOURCE_DIR",
+			"properties" :
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "/{PROJECT}/Externals/zstd"
+		}
+	],
+	"kind" : "cache",
+	"version" :
+	{
+		"major" : 2,
+		"minor" : 0
+	}
+}

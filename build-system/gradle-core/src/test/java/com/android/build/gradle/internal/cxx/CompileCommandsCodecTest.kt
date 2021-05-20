@@ -16,12 +16,13 @@
 
 package com.android.build.gradle.internal.cxx
 
+import com.android.build.gradle.internal.cxx.configure.convertCMakeToCompileCommandsBin
 import com.android.testutils.TestResources
 import com.android.utils.cxx.CompileCommandsEncoder
-import com.android.utils.cxx.compileCommandsFileSupportsOutputFile
+import com.android.utils.cxx.compileCommandsFileIsCurrentVersion
 import com.android.utils.cxx.extractFlagArgument
+import com.android.utils.cxx.streamCompileCommandsV2
 import com.android.utils.cxx.streamCompileCommands
-import com.android.utils.cxx.streamCompileCommandsWithOutputFile
 import com.android.utils.cxx.stripArgsForIde
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
@@ -45,34 +46,34 @@ class CompileCommandsCodecTest {
     fun singleFile() {
         val folder = tempFolder.newFolder()
         val out = File(folder, "compile_commands.json.bin")
-        val sourceFile = File("my/source/file.cpp")
-        val compiler = File("clang.exe")
-        val flags = listOf("-a", "-b")
-        val workingDirectory = File("my/working/directory")
-        val output = File("my/output/file.o")
+        val originalSourceFile = File("my/source/file.cpp")
+        val originalCompiler = File("clang.exe")
+        val originalFlags = listOf("-a", "-b")
+        val originalWorkingDirectory = File("my/working/directory")
+        val originalOutput = File("my/output/file.o")
+        val originalTarget = "my-target-name"
         CompileCommandsEncoder(out).use { encoder ->
             encoder.writeCompileCommand(
-                    sourceFile,
-                    compiler,
-                    flags,
-                    workingDirectory,
-                    output
+                originalSourceFile,
+                originalCompiler,
+                originalFlags,
+                originalWorkingDirectory,
+                originalOutput,
+                originalTarget
             )
         }
         println("File size is ${out.length()}")
         // Safety check to make sure we don't write a whole final block
         assertThat(out.length()).isLessThan(1024)
-        streamCompileCommandsWithOutputFile(out) {
-                sourceFileStreamed,
-                compilerStreamed,
-                flagsStreamed,
-                workingDirectoryStreamed,
-                outputStreamed ->
-            assertThat(sourceFileStreamed).isEqualTo(sourceFile)
-            assertThat(compilerStreamed).isEqualTo(compiler)
-            assertThat(flagsStreamed).isEqualTo(flags)
-            assertThat(workingDirectoryStreamed).isEqualTo(workingDirectory)
-            assertThat(outputStreamed).isEqualTo(output)
+        streamCompileCommandsV2(out) {
+            assertThat(sourceFile).isEqualTo(originalSourceFile)
+            assertThat(compiler).isEqualTo(originalCompiler)
+            assertThat(flags).isEqualTo(originalFlags)
+            assertThat(workingDirectory).isEqualTo(originalWorkingDirectory)
+            assertThat(outputFile).isEqualTo(originalOutput)
+            assertThat(target).isEqualTo(originalTarget)
+            assertThat(sourceFileIndex).isEqualTo(0)
+            assertThat(sourceFileCount).isEqualTo(1)
         }
     }
 
@@ -87,22 +88,24 @@ class CompileCommandsCodecTest {
         val flags = listOf("-a", "-b")
         val workingDirectory = File("my/working/directory")
         val output = File("my/output/file.o")
+        val target = "my-target"
         CompileCommandsEncoder(out).use { encoder ->
             encoder.writeCompileCommand(
                 sourceFile,
                 compiler,
                 flags,
                 workingDirectory,
-                output
+                output,
+                target
             )
         }
-        assertThat(compileCommandsFileSupportsOutputFile(out)).isTrue()
+        assertThat(compileCommandsFileIsCurrentVersion(out)).isTrue()
     }
 
     @Test
     fun `check whether compile_commands json bin supports output file for version 1 file`() {
         val version1 = testFile("version_1_compile_commands.json.bin")
-        assertThat(compileCommandsFileSupportsOutputFile(version1)).isFalse()
+        assertThat(compileCommandsFileIsCurrentVersion(version1)).isFalse()
         streamCompileCommands(version1) {
                 _,
                 _,
@@ -112,39 +115,53 @@ class CompileCommandsCodecTest {
     }
 
     @Test
+    fun `check validity of dolphin names`() {
+        val dolphin = testFile("dolphin_compile_commands.json")
+        val folder = tempFolder.newFolder()
+        folder.mkdirs()
+        val dolphinBin = File(folder, "dolphin_compile_commands.json.bin")
+
+        convertCMakeToCompileCommandsBin(dolphin, dolphinBin)
+
+        streamCompileCommandsV2(dolphinBin) {
+            val sourceFileName = sourceFile.name
+            val outputName = outputFile.name
+            assertThat(outputName).isEqualTo("$sourceFileName.o")
+        }
+    }
+
+    @Test
     fun stringLargerThanBufferSize() {
         val folder = tempFolder.newFolder()
         val out = File(folder, "compile_commands.json.bin")
-        val sourceFile = File("my/source/file.cpp")
-        val compiler = File("clang.exe")
-        val flags = listOf("-a", "-b")
-        val workingDirectory = File("my/working/directory")
-        val output = File("my/output/file.o")
+        val originalSourceFile = File("my/source/file.cpp")
+        val originalCompiler = File("clang.exe")
+        val originalFlags = listOf("-a", "-b")
+        val originalWorkingDirectory = File("my/working/directory")
+        val originalOutput = File("my/output/file.o")
+        val originalTarget = "my-target-name"
         // Set the initial buffer size to 1 so that it has to grow
         // to be able to support the size of the strings passed in.
         CompileCommandsEncoder(out, initialBufferSize = 1).use { encoder ->
             encoder.writeCompileCommand(
-                sourceFile,
-                compiler,
-                flags,
-                workingDirectory,
-                output
+                originalSourceFile,
+                originalCompiler,
+                originalFlags,
+                originalWorkingDirectory,
+                originalOutput,
+                originalTarget
             )
         }
         println("File size is ${out.length()}")
         // Safety check to make sure we don't write a whole final block
         assertThat(out.length()).isLessThan(1024)
-        streamCompileCommandsWithOutputFile(out) {
-                sourceFileStreamed,
-                compilerStreamed,
-                flagsStreamed,
-                workingDirectoryStreamed,
-                outputStreamed ->
-            assertThat(sourceFileStreamed).isEqualTo(sourceFile)
-            assertThat(compilerStreamed).isEqualTo(compiler)
-            assertThat(flagsStreamed).isEqualTo(flags)
-            assertThat(workingDirectoryStreamed).isEqualTo(workingDirectory)
-            assertThat(outputStreamed).isEqualTo(output)
+        streamCompileCommandsV2(out) {
+            assertThat(sourceFile).isEqualTo(originalSourceFile)
+            assertThat(compiler).isEqualTo(originalCompiler)
+            assertThat(flags).isEqualTo(originalFlags)
+            assertThat(workingDirectory).isEqualTo(originalWorkingDirectory)
+            assertThat(outputFile).isEqualTo(originalOutput)
+            assertThat(target).isEqualTo(originalTarget)
         }
     }
 
@@ -152,26 +169,29 @@ class CompileCommandsCodecTest {
     fun checkInterning() {
         val folder = tempFolder.newFolder()
         val out = File(folder, "compile_commands.json.bin")
-        val sourceFile1 = File("my/source/file-1.cpp")
-        val sourceFile2 = File("my/source/file-2.cpp")
-        val compiler = File("clang.exe")
-        val flags = listOf("-a", "-b")
-        val workingDirectory = File("my/working/directory")
-        val output = File("my/output/file.o")
+        val originalSourceFile1 = File("my/source/file-1.cpp")
+        val originalSourceFile2 = File("my/source/file-2.cpp")
+        val originalCompiler = File("clang.exe")
+        val originalFlags = listOf("-a", "-b")
+        val originalWorkingDirectory = File("my/working/directory")
+        val originalOutput = File("my/output/file.o")
+        val originalTarget = "my-target-name"
         CompileCommandsEncoder(out).use { encoder ->
             encoder.writeCompileCommand(
-                    sourceFile1,
-                    compiler,
-                    flags,
-                    workingDirectory,
-                    output
+                originalSourceFile1,
+                originalCompiler,
+                originalFlags,
+                originalWorkingDirectory,
+                originalOutput,
+                originalTarget
             )
             encoder.writeCompileCommand(
-                    sourceFile2,
-                    compiler,
-                    flags,
-                    workingDirectory,
-                    output
+                originalSourceFile2,
+                originalCompiler,
+                originalFlags,
+                originalWorkingDirectory,
+                originalOutput,
+                originalTarget
             )
         }
 
@@ -180,28 +200,26 @@ class CompileCommandsCodecTest {
         var lastFlags = listOf("")
         var lastWorkingDirectory = File("")
         var lastOutput = File("")
-        streamCompileCommandsWithOutputFile(out) {
-            sourceFileStreamed,
-                    compilerStreamed,
-                    flagsStreamed,
-                    workingDirectoryStreamed,
-                    outputStreamed ->
+        var lastTarget = ""
+        streamCompileCommandsV2(out) {
             when (count) {
                 0 -> {
-                    assertThat(sourceFileStreamed).isEqualTo(sourceFile1)
+                    assertThat(sourceFile).isEqualTo(originalSourceFile1)
                     // Record first
-                    lastCompiler = compilerStreamed
-                    lastFlags = flagsStreamed
-                    lastWorkingDirectory = workingDirectoryStreamed
-                    lastOutput = outputStreamed!!
+                    lastCompiler = compiler
+                    lastFlags = flags
+                    lastWorkingDirectory = workingDirectory
+                    lastOutput = outputFile
+                    lastTarget = target
                 }
                 1 -> {
-                    assertThat(sourceFileStreamed).isEqualTo(sourceFile2)
+                    assertThat(sourceFile).isEqualTo(originalSourceFile2)
                     // Check for reference equality
-                    assertThat(compilerStreamed === lastCompiler).isTrue()
-                    assertThat(flagsStreamed === lastFlags).isTrue()
-                    assertThat(workingDirectoryStreamed === lastWorkingDirectory).isTrue()
-                    assertThat(outputStreamed === lastOutput).isTrue()
+                    assertThat(compiler === lastCompiler).isTrue()
+                    assertThat(flags === lastFlags).isTrue()
+                    assertThat(workingDirectory === lastWorkingDirectory).isTrue()
+                    assertThat(outputFile === lastOutput).isTrue()
+                    assertThat(target === lastTarget).isTrue()
                 }
                 else -> error("Saw more than two files")
             }
@@ -222,22 +240,25 @@ class CompileCommandsCodecTest {
         val fileCount = 100000
         CompileCommandsEncoder(out).use { encoder ->
             repeat(fileCount) { i ->
+                // Since each string is different, we expect no compression
                 encoder.writeCompileCommand(
-                        sourceFile = File("source-$i.cpp"),
-                        compiler = File("compiler-$i"),
-                        flags = listOf("flags-$i"),
-                        workingDirectory = File("working-dir-$i"),
-                        outputFile = File("output-file-$i")
+                    sourceFile = File("source-$i.cpp"),
+                    compiler = File("compiler-$i"),
+                    flags = listOf("flags-$i"),
+                    workingDirectory = File("working-dir-$i"),
+                    outputFile = File("output-file-$i"),
+                    target = "target-$i"
                 )
             }
         }
-        println("File length ${out.length()}")
+        println("File length ${out.length()}") // Latest observed size was 14.5M
         var streamedFileCount = 0
-        streamCompileCommandsWithOutputFile(out) { sourceFile,compiler,flags,workingDirectory,output ->
+        streamCompileCommandsV2(out) {
             assertThat(sourceFile.path).isEqualTo("source-$streamedFileCount.cpp")
             assertThat(compiler.path).isEqualTo("compiler-$streamedFileCount")
             assertThat(flags).isEqualTo(listOf("flags-$streamedFileCount"))
-            assertThat(output!!.path).isEqualTo("output-file-$streamedFileCount")
+            assertThat(outputFile.path).isEqualTo("output-file-$streamedFileCount")
+            assertThat(target).isEqualTo("target-$streamedFileCount")
             ++streamedFileCount
         }
         assertThat(streamedFileCount).isEqualTo(fileCount)
@@ -367,6 +388,5 @@ class CompileCommandsCodecTest {
                 "app/src/main/cpp/native-lib.o")
                 )
         ).isEqualTo("app/src/main/cpp/native-lib.o")
-
     }
 }

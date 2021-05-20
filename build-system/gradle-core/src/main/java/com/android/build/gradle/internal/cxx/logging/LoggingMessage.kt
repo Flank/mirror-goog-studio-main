@@ -73,6 +73,10 @@ fun EncodedLoggingMessage.decode(decoder : StringDecoder) : LoggingMessage {
         .build()
 }
 
+fun decodeLoggingMessage(
+    encoded : EncodedLoggingMessage,
+    decoder : StringDecoder) = encoded.decode(decoder)
+
 fun LoggingMessage.text() : String {
     val codeHeader = when(diagnosticCode) {
         0 -> "C/C++: "

@@ -39,14 +39,16 @@ class EventManager {
  private:
   explicit EventManager();
 
-  // Helper funciton to enque event without caching the values first.
+  // Helper function to enqueue event without caching the values first.
   void EnqueueActivityEvent(
       const profiler::proto::SendActivityDataRequest& activity);
 
-  // Function callback to listen to perfd state chagnes, this happens on the
-  // heartbeat thread. This thread is not the thread that
-  // CacheAndEnqueuecomponentEvent is run on.
-  void PerfdStateChanged(bool becomes_alive);
+  // Function callback to listen to perfd state changes, this happens on the
+  // heartbeat thread. Always returns false as this callback should be called
+  // every time when perfd state changes during the lifetime of EventManager.
+  // This thread is not the thread that CacheAndEnqueuecomponentEvent is run
+  // on, so a guard on |activity_cache_mutex_| is needed.
+  bool PerfdStateChanged(bool becomes_alive);
 
   // Cached values of active activities. The key is the
   // unique hash of the component, the value being a copy of the

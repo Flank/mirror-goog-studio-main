@@ -39,8 +39,12 @@ class BuildFileBuilder {
             contents.append("apply plugin: '$plugin'")
         }
         if (useKotlin) {
-            contents.append("\n\napply plugin: 'kotlin-android'")
-            contents.append("\napply plugin: 'kotlin-android-extensions'")
+            if (plugin?.contains("android") == true) {
+                contents.append("\n\napply plugin: 'kotlin-android'")
+                contents.append("\napply plugin: 'kotlin-android-extensions'")
+            } else {
+                contents.append("\n\napply plugin: 'kotlin'")
+            }
         }
         if (compileSdkVersion != null) {
             contents.append("\n\nandroid.compileSdkVersion = $compileSdkVersion")

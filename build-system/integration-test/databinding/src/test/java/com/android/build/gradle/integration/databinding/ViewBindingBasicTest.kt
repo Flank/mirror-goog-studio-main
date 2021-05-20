@@ -20,6 +20,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.getOutputDir
+import com.android.build.gradle.options.BooleanOption
 import com.google.common.truth.Truth
 import org.junit.Before
 import org.junit.Rule
@@ -58,5 +59,11 @@ class ViewBindingBasicTest {
         ).listFiles()
         Truth.assertThat(layoutBindingFiles!!).hasLength(1)
         Truth.assertThat(layoutBindingFiles[0].name).isEqualTo("AppLayoutBinding.java")
+    }
+    @Test
+    fun `check non-transitive R classes`() {
+        project.executor()
+                .with(BooleanOption.NON_TRANSITIVE_R_CLASS, true)
+                .run("clean", ":app:assembleDebug")
     }
 }

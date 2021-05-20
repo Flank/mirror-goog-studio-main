@@ -18,8 +18,6 @@
 #include <iostream>
 #include <string>
 
-using layoutinspector::ComponentTreeEvent;
-
 /**
  * Native calls for loading the properties event protobuf.
  */

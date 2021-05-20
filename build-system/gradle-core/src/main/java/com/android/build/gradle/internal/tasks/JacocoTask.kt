@@ -16,10 +16,12 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
+import com.android.build.api.artifact.MultipleArtifact
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.coverage.JacocoConfigurations
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.tasks.toSerializable
@@ -342,18 +344,6 @@ abstract class JacocoTask : NewIncrementalTask() {
                 .on(InternalArtifactType.JACOCO_INSTRUMENTED_JARS)
         }
 
-        internal class FilterJarsOnly : Spec<File> {
-            override fun isSatisfiedBy(file: File): Boolean {
-                return file.name.endsWith(SdkConstants.DOT_JAR)
-            }
-        }
-
-        internal class FilterNonJarsOnly : Spec<File> {
-            override fun isSatisfiedBy(file: File): Boolean {
-                return ! file.name.endsWith(SdkConstants.DOT_JAR)
-            }
-        }
-
         override fun configure(task: JacocoTask) {
             super.configure(task)
             task.jarsWithIdentity
@@ -361,15 +351,13 @@ abstract class JacocoTask : NewIncrementalTask() {
                 .from(
                     creationConfig
                         .artifacts
-                        .getAllClasses()
-                        .filter(FilterJarsOnly())
+                        .getAll(MultipleArtifact.ALL_CLASSES_JARS)
                 )
             task.classesDir
                 .from(
                     creationConfig
                         .artifacts
-                        .getAllClasses()
-                        .filter(FilterNonJarsOnly())
+                        .getAll(MultipleArtifact.ALL_CLASSES_DIRS)
                 )
             task.jacocoAntTaskConfiguration
                 .from(

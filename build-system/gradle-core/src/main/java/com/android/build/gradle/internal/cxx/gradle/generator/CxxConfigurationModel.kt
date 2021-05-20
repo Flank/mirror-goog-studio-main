@@ -86,8 +86,19 @@ data class CxxConfigurationModel(
     val unusedAbis: List<CxxAbiModel>
 )
 
-enum class NativeBuildOutputLevel {
-    QUIET, VERBOSE
+/**
+ * C/C++ logging options passed via -Pandroid.native.buildOutput gradle flag
+ *
+ * This enum is meant to enable different logging subsystems rather than to
+ * supplement or replace Gradle's existing verbosity levels.
+ *
+ * Default (or 'none' logging) is represented by an empty set.
+ */
+enum class NativeBuildOutputOptions {
+    VERBOSE, // Whether to forward the full native build, configure, and clean output to stdout.
+    CONFIGURE_STDOUT, // Whether to forward the full native configure output to stdout.
+    BUILD_STDOUT, // Whether to forward the full native build output to stdout.
+    CLEAN_STDOUT, // Whether to forward the full native clean output to stdout.
 }
 
 /**
@@ -122,7 +133,7 @@ data class CxxConfigurationParameters(
     val implicitBuildTargetSet: Set<String>,
     val variantName: String,
     val nativeVariantConfig: NativeBuildSystemVariantConfig,
-    val nativeBuildOutputLevel: NativeBuildOutputLevel,
+    val outputOptions: Set<NativeBuildOutputOptions>,
 )
 
 /**
@@ -246,6 +257,19 @@ fun tryCreateConfigurationParameters(
     } else {
         null
     }
+    val outputOptions = (option(NATIVE_BUILD_OUTPUT_LEVEL)?:"")
+        .toUpperCase(Locale.US)
+        .split(",")
+        .map { it.trim() }
+        .filter { it.isNotBlank() }
+        .mapNotNull { level ->
+            val result = NativeBuildOutputOptions.values().firstOrNull { "$it" == level }
+            if (result == null) {
+                errorln("$NATIVE_BUILD_OUTPUT_LEVEL contains unrecognized $level")
+            }
+            result
+        }
+        .toSet()
 
     return CxxConfigurationParameters(
         cxxFolder = cxxFolder,
@@ -279,9 +303,7 @@ fun tryCreateConfigurationParameters(
         nativeVariantConfig = createNativeBuildSystemVariantConfig(
             buildSystem, variant, variant.variantDslInfo
         ),
-        nativeBuildOutputLevel = NativeBuildOutputLevel.values()
-            .firstOrNull { it.toString() == option(NATIVE_BUILD_OUTPUT_LEVEL)?.toUpperCase(Locale.US) }
-            ?: NativeBuildOutputLevel.QUIET
+        outputOptions = outputOptions
     )
 }
 

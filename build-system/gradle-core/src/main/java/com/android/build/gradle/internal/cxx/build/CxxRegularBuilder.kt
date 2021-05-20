@@ -20,8 +20,8 @@ import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.attribution.encode
 import com.android.build.gradle.internal.cxx.attribution.generateChromeTrace
 import com.android.build.gradle.internal.cxx.attribution.generateNinjaSourceFileAttribution
+import com.android.build.gradle.internal.cxx.caching.CxxBuildCache
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel
-import com.android.build.gradle.internal.cxx.gradle.generator.NativeBuildOutputLevel
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValueMini
 import com.android.build.gradle.internal.cxx.json.NativeLibraryValueMini
@@ -30,6 +30,7 @@ import com.android.build.gradle.internal.cxx.logging.infoln
 import com.android.build.gradle.internal.cxx.logging.logStructured
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.ifCMake
+import com.android.build.gradle.internal.cxx.model.ifLogNativeBuildToLifecycle
 import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.cxx.model.ninjaLogFile
 import com.android.build.gradle.internal.cxx.model.objFolder
@@ -45,6 +46,8 @@ import com.google.common.base.Strings
 import com.google.common.collect.Lists
 import com.google.common.collect.Sets
 import org.gradle.api.GradleException
+import org.gradle.caching.internal.controller.BuildCacheController
+import org.gradle.internal.hash.FileHasher
 import org.gradle.process.ExecOperations
 import java.io.File
 import java.io.IOException
@@ -73,13 +76,17 @@ class CxxRegularBuilder(val configurationModel: CxxConfigurationModel) : CxxBuil
 
     /** Represents a single build step that, when executed, builds one or more libraries.  */
     private class BuildStep(
-            val abi: CxxAbiModel,
-            val buildCommandComponents: List<String>,
-            val libraries: List<NativeLibraryValueMini>,
-            val outputFolder: File
+        val abi: CxxAbiModel,
+        val buildCommandComponents: List<String>,
+        val libraries: List<NativeLibraryValueMini>,
+        val targetsFromDsl : Set<String>,
+        val outputFolder: File
     )
 
-    override fun build(ops: ExecOperations) {
+    override fun build(
+        ops: ExecOperations,
+        fileHasher: FileHasher,
+        buildCacheController: BuildCacheController) {
         infoln("starting build")
         infoln("reading expected JSONs")
         val miniConfigs = nativeBuildConfigValueMinis
@@ -93,6 +100,7 @@ class CxxRegularBuilder(val configurationModel: CxxConfigurationModel) : CxxBuil
             verifyTargetsExist(miniConfigs)
         }
 
+        val buildCache = CxxBuildCache(buildCacheController, fileHasher)
         val buildSteps = Lists.newArrayList<BuildStep>()
 
         for (miniConfigIndex in miniConfigs.indices) {
@@ -115,41 +123,45 @@ class CxxRegularBuilder(val configurationModel: CxxConfigurationModel) : CxxBuil
             if (config.buildTargetsCommandComponents?.isNotEmpty() == true) {
                 // Build all libraries together in one step, using the names of the artifacts.
                 val artifactNames = librariesToBuild
-                        .mapNotNull { library -> library.artifactName }
-                        .distinct()
-                        .sorted()
+                    .mapNotNull { library -> library.artifactName }
+                    .distinct()
+                    .sorted()
                 val buildTargetsCommand =
-                        substituteBuildTargetsCommand(
-                                config.buildTargetsCommandComponents!!,
-                                artifactNames
-                        )
+                    substituteBuildTargetsCommand(
+                        config.buildTargetsCommandComponents!!,
+                        artifactNames
+                    )
                 buildSteps.add(
-                        BuildStep(
-                                abi,
-                                buildTargetsCommand,
-                                librariesToBuild,
-                                abis[miniConfigIndex].jsonFile
-                                        .parentFile
-                        )
+                    BuildStep(
+                        abi,
+                        buildTargetsCommand,
+                        librariesToBuild,
+                        variant.buildTargetSet,
+                        abis[miniConfigIndex].jsonFile.parentFile
+                    )
                 )
                 infoln("about to build targets " + artifactNames.joinToString(", "))
             } else {
                 // Build each library separately using multiple steps.
                 for (libraryValue in librariesToBuild) {
                     buildSteps.add(
-                            BuildStep(
-                                    abi,
-                                    libraryValue.buildCommandComponents!!,
-                                    listOf(libraryValue),
-                                    abis[miniConfigIndex].jsonFile.parentFile
-                            )
+                        BuildStep(
+                            abi,
+                            libraryValue.buildCommandComponents!!,
+                            listOf(libraryValue),
+                            variant.buildTargetSet,
+                            abis[miniConfigIndex].jsonFile.parentFile
+                        )
                     )
                     infoln("about to build ${libraryValue.buildCommandComponents!!.joinToString(" ")}")
                 }
             }
         }
 
-        executeProcessBatch(ops, buildSteps)
+        executeProcessBatch(
+            buildCache,
+            ops,
+            buildSteps)
 
         infoln("check expected build outputs")
         for (config in miniConfigs) {
@@ -165,7 +177,7 @@ class CxxRegularBuilder(val configurationModel: CxxConfigurationModel) : CxxBuil
                 val output = library.output ?: continue
                 if (!output.exists()) {
                     throw GradleException(
-                            "Expected output file at $output for target ${library.artifactName} but there was none")
+                        "Expected output file at $output for target ${library.artifactName} but there was none")
                 }
                 if (library.abi == null) {
                     throw GradleException("Expected NativeLibraryValue to have non-null abi")
@@ -184,12 +196,12 @@ class CxxRegularBuilder(val configurationModel: CxxConfigurationModel) : CxxBuil
                 //     that was built. This is expected to delete the .so file but it is up to the
                 //     CMakeLists.txt or Android.mk author to ensure this.
                 val abi = Abi.getByName(library.abi!!) ?: throw RuntimeException(
-                        "Unknown ABI seen ${library.abi}"
+                    "Unknown ABI seen ${library.abi}"
                 )
                 val expectedOutputFile = FileUtils.join(
-                        variant.soFolder,
-                        abi.tag,
-                        output.name
+                    variant.soFolder,
+                    abi.tag,
+                    output.name
                 )
                 if (!FileUtils.isSameFile(output, expectedOutputFile)) {
                     infoln("external build set its own library output location for " +
@@ -262,7 +274,7 @@ class CxxRegularBuilder(val configurationModel: CxxConfigurationModel) : CxxBuil
      * field optionally provided by the user, and other criteria.
      */
     private fun findLibrariesToBuild(
-            config: NativeBuildConfigValueMini
+        config: NativeBuildConfigValueMini
     ): List<NativeLibraryValueMini> {
         val librariesToBuild = Lists.newArrayList<NativeLibraryValueMini>()
         val targets = variant.buildTargetSet
@@ -278,8 +290,8 @@ class CxxRegularBuilder(val configurationModel: CxxConfigurationModel) : CxxBuil
             ) {
                 // This can happen when there's an externally referenced library.
                 infoln(
-                        "not building target ${libraryValue.artifactName!!} because there was no " +
-                                "buildCommandComponents for the target, nor a buildTargetsCommandComponents for the config")
+                    "not building target ${libraryValue.artifactName!!} because there was no " +
+                            "buildCommandComponents for the target, nor a buildTargetsCommandComponents for the config")
                 continue
             }
 
@@ -287,8 +299,8 @@ class CxxRegularBuilder(val configurationModel: CxxConfigurationModel) : CxxBuil
                 val output = libraryValue.output
                 if (output == null) {
                     infoln(
-                            "not building target ${libraryValue.artifactName!!} because no targets " +
-                                    "are specified and library build output file is null")
+                        "not building target ${libraryValue.artifactName!!} because no targets " +
+                                "are specified and library build output file is null")
                     continue
                 }
 
@@ -316,8 +328,8 @@ class CxxRegularBuilder(val configurationModel: CxxConfigurationModel) : CxxBuil
         implicitTargets.removeAll(librariesToBuild.map { it.artifactName })
         if (implicitTargets.isNotEmpty()) {
             errorln(
-                    CxxDiagnosticCode.REQUIRED_BUILD_TARGETS_MISSING,
-                    "did not find implicitly required targets: ${implicitTargets.joinToString(", ")}"
+                CxxDiagnosticCode.REQUIRED_BUILD_TARGETS_MISSING,
+                "did not find implicitly required targets: ${implicitTargets.joinToString(", ")}"
             )
         }
         return librariesToBuild
@@ -327,7 +339,10 @@ class CxxRegularBuilder(val configurationModel: CxxConfigurationModel) : CxxBuil
      * Given a list of build steps, execute each. If there is a failure, processing is stopped at
      * that point.
      */
-    private fun executeProcessBatch(ops: ExecOperations, buildSteps: List<BuildStep>) {
+    private fun executeProcessBatch(
+        buildCache: CxxBuildCache,
+        ops: ExecOperations,
+        buildSteps: List<BuildStep>) {
         for (buildStep in buildSteps) {
             val tokens = buildStep.buildCommandComponents
             val processBuilder = ProcessInfoBuilder()
@@ -343,10 +358,10 @@ class CxxRegularBuilder(val configurationModel: CxxConfigurationModel) : CxxBuil
             if (buildStep.libraries.size > 1) {
                 logFileSuffix = "targets"
                 val targetNames = buildStep
-                        .libraries
-                        .stream()
-                        .map { library -> library.artifactName + "_" + library.abi }
-                        .toList()
+                    .libraries
+                    .stream()
+                    .map { library -> library.artifactName + "_" + library.abi }
+                    .toList()
                 infoln("Build multiple targets ${targetNames.joinToString(" ")}")
             } else {
                 Preconditions.checkElementIndex(0, buildStep.libraries.size)
@@ -364,7 +379,8 @@ class CxxRegularBuilder(val configurationModel: CxxConfigurationModel) : CxxBuil
                 abi.ninjaLogFile.useLines { it.count() }
             } else 0
 
-            createProcessOutputJunction(
+            buildCache.cacheBuild(abi, buildStep.targetsFromDsl) {
+                createProcessOutputJunction(
                     buildStep.outputFolder.resolve("android_gradle_build_command_$logFileSuffix.txt"),
                     buildStep.outputFolder.resolve("android_gradle_build_stdout_$logFileSuffix.txt"),
                     buildStep.outputFolder.resolve("android_gradle_build_stderr_$logFileSuffix.txt"),
@@ -372,8 +388,9 @@ class CxxRegularBuilder(val configurationModel: CxxConfigurationModel) : CxxBuil
                     "")
                     .logStderr()
                     .logStdout()
-                    .logFullStdout(abis.firstOrNull()?.variant?.module?.nativeBuildOutputLevel == NativeBuildOutputLevel.VERBOSE)
+                    .logFullStdout(abi.ifLogNativeBuildToLifecycle { true } ?: false)
                     .execute(ops::exec)
+            }
 
             // Build attribution reporting based on .ninja_log
             // This is best-effort because it appears that ninja does not guarantee
@@ -426,7 +443,7 @@ class CxxRegularBuilder(val configurationModel: CxxConfigurationModel) : CxxBuil
          * command that can be executed directly.
          */
         private fun substituteBuildTargetsCommand(
-                buildTargetsCommandComponents: List<String>, artifactNames: List<String>
+            buildTargetsCommandComponents: List<String>, artifactNames: List<String>
         ): List<String> {
             if (BUILD_TARGETS_PLACEHOLDER !in buildTargetsCommandComponents) {
                 return buildTargetsCommandComponents
@@ -451,9 +468,7 @@ internal fun hardLinkOrCopy(source: File, destination: File) {
         return
     }
 
-    if (destination.exists()) {
-        destination.delete()
-    }
+    Files.deleteIfExists(destination.toPath())
 
     // CMake can report runtime files that it doesn't later produce.
     // Don't try to copy these. Also, don't warn because hard-link/copy

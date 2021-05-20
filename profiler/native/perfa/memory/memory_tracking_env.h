@@ -234,7 +234,6 @@ class MemoryTrackingEnv : public GlobalRefListener {
   TimingStats timing_stats_;
 
   jvmtiEnv* jvmti_;
-  bool log_live_alloc_count_;
   bool track_global_jni_refs_;
   bool is_first_tracking_;
   bool is_live_tracking_;

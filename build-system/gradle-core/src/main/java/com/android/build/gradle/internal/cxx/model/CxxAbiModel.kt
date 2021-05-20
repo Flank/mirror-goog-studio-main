@@ -307,10 +307,28 @@ fun <T> CxxAbiModel.ifCMake(compute : () -> T?) =
     if (variant.module.buildSystem == CMAKE) compute() else null
 
 /**
- * Call [compute] if this is an nndk-build build.
+ * Call [compute] if this is an ndk-build build.
  */
 fun <T> CxxAbiModel.ifNdkBuild(compute : () -> T?) =
         if (variant.module.buildSystem == NDK_BUILD) compute() else null
+
+/**
+ * Call [compute] if logging native configure to lifecycle
+ */
+fun <T> CxxAbiModel.ifLogNativeConfigureToLifecycle(compute : () -> T?) =
+    variant.ifLogNativeConfigureToLifecycle(compute)
+
+/**
+ * Call [compute] if logging native build to lifecycle
+ */
+fun <T> CxxAbiModel.ifLogNativeBuildToLifecycle(compute : () -> T?) =
+    variant.ifLogNativeBuildToLifecycle(compute)
+
+/**
+ * Call [compute] if logging native clean to lifecycle
+ */
+fun <T> CxxAbiModel.ifLogNativeCleanToLifecycle(compute : () -> T?) =
+    variant.ifLogNativeCleanToLifecycle(compute)
 
 /**
  * Returns the Ninja build commands from CMakeSettings.json.

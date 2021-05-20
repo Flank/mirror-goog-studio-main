@@ -26,7 +26,11 @@ import com.android.build.gradle.internal.cxx.configure.getNdkBuildProperty
 import com.android.build.gradle.internal.cxx.configure.isCmakeForkVersion
 import com.android.build.gradle.internal.cxx.configure.toCmakeArguments
 import com.android.build.gradle.internal.cxx.configure.toNdkBuildArguments
-import com.android.build.gradle.internal.cxx.gradle.generator.NativeBuildOutputLevel
+import com.android.build.gradle.internal.cxx.gradle.generator.NativeBuildOutputOptions
+import com.android.build.gradle.internal.cxx.gradle.generator.NativeBuildOutputOptions.VERBOSE
+import com.android.build.gradle.internal.cxx.gradle.generator.NativeBuildOutputOptions.BUILD_STDOUT
+import com.android.build.gradle.internal.cxx.gradle.generator.NativeBuildOutputOptions.CLEAN_STDOUT
+import com.android.build.gradle.internal.cxx.gradle.generator.NativeBuildOutputOptions.CONFIGURE_STDOUT
 import com.android.build.gradle.internal.cxx.logging.warnln
 import com.android.build.gradle.internal.ndk.AbiInfo
 import com.android.build.gradle.internal.ndk.Stl
@@ -151,8 +155,8 @@ data class CxxModuleModel(
      */
     val project: CxxProjectModel,
 
-    /** Whether to forward the full native build output to stdout. */
-    val nativeBuildOutputLevel: NativeBuildOutputLevel,
+    /** Output logging levels */
+    val outputOptions: Set<NativeBuildOutputOptions>,
 )
 
 /** The user's CMakeSettings.json file next to CMakeLists.txt */
@@ -206,6 +210,27 @@ fun <T> CxxModuleModel.ifCMake(compute : () -> T?) =
  */
 fun <T> CxxModuleModel.ifNdkBuild(compute : () -> T?) =
         if (buildSystem == NDK_BUILD) compute() else null
+
+/**
+ * Call [compute] if logging native configure to lifecycle
+ */
+fun <T> CxxModuleModel.ifLogNativeConfigureToLifecycle(compute : () -> T?) =
+    if (outputOptions.contains(VERBOSE) ||
+        outputOptions.contains(CONFIGURE_STDOUT)) compute() else null
+
+/**
+ * Call [compute] if logging native build to lifecycle
+ */
+fun <T> CxxModuleModel.ifLogNativeBuildToLifecycle(compute : () -> T?) =
+    if (outputOptions.contains(VERBOSE) ||
+        outputOptions.contains(BUILD_STDOUT)) compute() else null
+
+/**
+ * Call [compute] if logging native build to lifecycle
+ */
+fun <T> CxxModuleModel.ifLogNativeCleanToLifecycle(compute : () -> T?) =
+    if (outputOptions.contains(VERBOSE) ||
+        outputOptions.contains(CLEAN_STDOUT)) compute() else null
 
 /**
  * Determine, for CMake, which STL is used based on command-line arguments from the user.

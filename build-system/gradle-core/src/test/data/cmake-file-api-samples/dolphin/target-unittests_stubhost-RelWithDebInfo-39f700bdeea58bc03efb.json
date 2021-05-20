@@ -1,0 +1,653 @@
+{
+	"artifacts" :
+	[
+		{
+			"path" : "Source/UnitTests/CMakeFiles/unittests_stubhost.dir/./StubHost.cpp.o"
+		}
+	],
+	"backtrace" : 1,
+	"backtraceGraph" :
+	{
+		"commands" :
+		[
+			"add_library",
+			"add_compile_options",
+			"check_and_add_flag",
+			"add_definitions",
+			"include_directories"
+		],
+		"files" :
+		[
+			"Source/UnitTests/CMakeLists.txt",
+			"CMake/CheckAndAddFlag.cmake",
+			"CMakeLists.txt",
+			"Source/CMakeLists.txt"
+		],
+		"nodes" :
+		[
+			{
+				"file" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 11,
+				"parent" : 0
+			},
+			{
+				"file" : 2
+			},
+			{
+				"command" : 2,
+				"file" : 2,
+				"line" : 213,
+				"parent" : 2
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 54,
+				"parent" : 3
+			},
+			{
+				"command" : 2,
+				"file" : 2,
+				"line" : 227,
+				"parent" : 2
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 54,
+				"parent" : 5
+			},
+			{
+				"command" : 2,
+				"file" : 2,
+				"line" : 260,
+				"parent" : 2
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 54,
+				"parent" : 7
+			},
+			{
+				"command" : 2,
+				"file" : 2,
+				"line" : 261,
+				"parent" : 2
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 54,
+				"parent" : 9
+			},
+			{
+				"command" : 2,
+				"file" : 2,
+				"line" : 263,
+				"parent" : 2
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 54,
+				"parent" : 11
+			},
+			{
+				"command" : 2,
+				"file" : 2,
+				"line" : 264,
+				"parent" : 2
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 54,
+				"parent" : 13
+			},
+			{
+				"command" : 2,
+				"file" : 2,
+				"line" : 266,
+				"parent" : 2
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 54,
+				"parent" : 15
+			},
+			{
+				"file" : 3
+			},
+			{
+				"command" : 2,
+				"file" : 3,
+				"line" : 76,
+				"parent" : 17
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 54,
+				"parent" : 18
+			},
+			{
+				"command" : 2,
+				"file" : 3,
+				"line" : 84,
+				"parent" : 17
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 54,
+				"parent" : 20
+			},
+			{
+				"command" : 2,
+				"file" : 3,
+				"line" : 85,
+				"parent" : 17
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 54,
+				"parent" : 22
+			},
+			{
+				"command" : 2,
+				"file" : 3,
+				"line" : 86,
+				"parent" : 17
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 54,
+				"parent" : 24
+			},
+			{
+				"command" : 2,
+				"file" : 3,
+				"line" : 87,
+				"parent" : 17
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 54,
+				"parent" : 26
+			},
+			{
+				"command" : 2,
+				"file" : 3,
+				"line" : 89,
+				"parent" : 17
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 54,
+				"parent" : 28
+			},
+			{
+				"command" : 2,
+				"file" : 3,
+				"line" : 90,
+				"parent" : 17
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 54,
+				"parent" : 30
+			},
+			{
+				"command" : 2,
+				"file" : 3,
+				"line" : 91,
+				"parent" : 17
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 54,
+				"parent" : 32
+			},
+			{
+				"command" : 2,
+				"file" : 3,
+				"line" : 92,
+				"parent" : 17
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 54,
+				"parent" : 34
+			},
+			{
+				"command" : 2,
+				"file" : 3,
+				"line" : 106,
+				"parent" : 17
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 54,
+				"parent" : 36
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 380,
+				"parent" : 2
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 102,
+				"parent" : 2
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 550,
+				"parent" : 2
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 545,
+				"parent" : 2
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 451,
+				"parent" : 2
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 721,
+				"parent" : 2
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 502,
+				"parent" : 2
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 364,
+				"parent" : 2
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 497,
+				"parent" : 2
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 495,
+				"parent" : 2
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 193,
+				"parent" : 2
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 257,
+				"parent" : 2
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 413,
+				"parent" : 2
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 414,
+				"parent" : 2
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 211,
+				"parent" : 2
+			},
+			{
+				"command" : 3,
+				"file" : 3,
+				"line" : 113,
+				"parent" : 17
+			},
+			{
+				"command" : 3,
+				"file" : 3,
+				"line" : 112,
+				"parent" : 17
+			},
+			{
+				"command" : 4,
+				"file" : 2,
+				"line" : 763,
+				"parent" : 2
+			},
+			{
+				"command" : 4,
+				"file" : 2,
+				"line" : 723,
+				"parent" : 2
+			},
+			{
+				"command" : 4,
+				"file" : 2,
+				"line" : 508,
+				"parent" : 2
+			},
+			{
+				"command" : 4,
+				"file" : 2,
+				"line" : 510,
+				"parent" : 2
+			},
+			{
+				"command" : 4,
+				"file" : 2,
+				"line" : 584,
+				"parent" : 2
+			},
+			{
+				"command" : 4,
+				"file" : 2,
+				"line" : 643,
+				"parent" : 2
+			},
+			{
+				"command" : 4,
+				"file" : 2,
+				"line" : 684,
+				"parent" : 2
+			},
+			{
+				"command" : 4,
+				"file" : 2,
+				"line" : 751,
+				"parent" : 2
+			},
+			{
+				"command" : 4,
+				"file" : 2,
+				"line" : 776,
+				"parent" : 2
+			},
+			{
+				"command" : 4,
+				"file" : 2,
+				"line" : 809,
+				"parent" : 2
+			},
+			{
+				"command" : 4,
+				"file" : 2,
+				"line" : 826,
+				"parent" : 2
+			}
+		]
+	},
+	"compileGroups" :
+	[
+		{
+			"compileCommandFragments" :
+			[
+				{
+					"fragment" : "-g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -O2 -g -DNDEBUG -fPIC"
+				},
+				{
+					"backtrace" : 4,
+					"fragment" : "-march=armv8-a+crc"
+				},
+				{
+					"backtrace" : 6,
+					"fragment" : "-fdiagnostics-color"
+				},
+				{
+					"backtrace" : 8,
+					"fragment" : "-fno-strict-aliasing"
+				},
+				{
+					"backtrace" : 10,
+					"fragment" : "-fno-exceptions"
+				},
+				{
+					"backtrace" : 12,
+					"fragment" : "-fvisibility-inlines-hidden"
+				},
+				{
+					"backtrace" : 14,
+					"fragment" : "-fvisibility=hidden"
+				},
+				{
+					"backtrace" : 16,
+					"fragment" : "-fomit-frame-pointer"
+				},
+				{
+					"backtrace" : 19,
+					"fragment" : "-Wall"
+				},
+				{
+					"backtrace" : 21,
+					"fragment" : "-Wtype-limits"
+				},
+				{
+					"backtrace" : 23,
+					"fragment" : "-Wsign-compare"
+				},
+				{
+					"backtrace" : 25,
+					"fragment" : "-Wignored-qualifiers"
+				},
+				{
+					"backtrace" : 27,
+					"fragment" : "-Wuninitialized"
+				},
+				{
+					"backtrace" : 29,
+					"fragment" : "-Wshadow"
+				},
+				{
+					"backtrace" : 31,
+					"fragment" : "-Winit-self"
+				},
+				{
+					"backtrace" : 33,
+					"fragment" : "-Wmissing-declarations"
+				},
+				{
+					"backtrace" : 35,
+					"fragment" : "-Wmissing-variable-declarations"
+				},
+				{
+					"backtrace" : 37,
+					"fragment" : "-Werror=format"
+				},
+				{
+					"fragment" : "-std=c++17"
+				}
+			],
+			"defines" :
+			[
+				{
+					"backtrace" : 38,
+					"define" : "ANDROID"
+				},
+				{
+					"backtrace" : 39,
+					"define" : "DATA_DIR=\"/usr/local/share/dolphin-emu/\""
+				},
+				{
+					"backtrace" : 40,
+					"define" : "HAS_OPENGL"
+				},
+				{
+					"backtrace" : 41,
+					"define" : "HAS_VULKAN"
+				},
+				{
+					"backtrace" : 42,
+					"define" : "HAVE_EGL=1"
+				},
+				{
+					"backtrace" : 43,
+					"define" : "SFML_STATIC"
+				},
+				{
+					"backtrace" : 44,
+					"define" : "USE_ANALYTICS=1"
+				},
+				{
+					"backtrace" : 45,
+					"define" : "USE_GDBSTUB"
+				},
+				{
+					"backtrace" : 46,
+					"define" : "USE_MEMORYWATCHER=1"
+				},
+				{
+					"backtrace" : 47,
+					"define" : "USE_PIPES=1"
+				},
+				{
+					"backtrace" : 48,
+					"define" : "_ARCH_64=1"
+				},
+				{
+					"backtrace" : 49,
+					"define" : "_DEFAULT_SOURCE"
+				},
+				{
+					"backtrace" : 50,
+					"define" : "_FILE_OFFSET_BITS=64"
+				},
+				{
+					"backtrace" : 51,
+					"define" : "_LARGEFILE_SOURCE"
+				},
+				{
+					"backtrace" : 52,
+					"define" : "_M_ARM_64=1"
+				},
+				{
+					"backtrace" : 53,
+					"define" : "__STDC_CONSTANT_MACROS"
+				},
+				{
+					"backtrace" : 54,
+					"define" : "__STDC_LIMIT_MACROS"
+				}
+			],
+			"includes" :
+			[
+				{
+					"backtrace" : 55,
+					"path" : "/{PROJECT}/Externals/curl/include"
+				},
+				{
+					"backtrace" : 56,
+					"path" : "/{PROJECT}/Externals/SFML/include"
+				},
+				{
+					"backtrace" : 57,
+					"path" : "/{PROJECT}/Source/Core"
+				},
+				{
+					"backtrace" : 58,
+					"path" : "/{PROJECT}/Source/Android"
+				},
+				{
+					"backtrace" : 59,
+					"path" : "/{PROJECT}/Externals/enet/include"
+				},
+				{
+					"backtrace" : 60,
+					"path" : "/{PROJECT}/External/minizip"
+				},
+				{
+					"backtrace" : 61,
+					"path" : "/{PROJECT}/Externals/soundtouch"
+				},
+				{
+					"backtrace" : 62,
+					"path" : "/{PROJECT}/Externals/mbedtls/include"
+				},
+				{
+					"backtrace" : 63,
+					"path" : "/{PROJECT}/Externals/libiconv-1.14/include"
+				},
+				{
+					"backtrace" : 64,
+					"path" : "/{PROJECT}/Externals/picojson"
+				},
+				{
+					"backtrace" : 65,
+					"path" : "/{PROJECT}/Source/Android/app/.cxx/RelWithDebInfo/262v3q4o/arm64-v8a/Source/Core"
+				}
+			],
+			"language" : "CXX",
+			"sourceIndexes" :
+			[
+				0
+			],
+			"sysroot" :
+			{
+				"path" : "/{SDK}/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/sysroot"
+			}
+		}
+	],
+	"id" : "unittests_stubhost::@02969707d2e8af0d2b6d",
+	"name" : "unittests_stubhost",
+	"paths" :
+	{
+		"build" : "Source/UnitTests",
+		"source" : "Source/UnitTests"
+	},
+	"sourceGroups" :
+	[
+		{
+			"name" : "Source Files",
+			"sourceIndexes" :
+			[
+				0
+			]
+		}
+	],
+	"sources" :
+	[
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "Source/UnitTests/StubHost.cpp",
+			"sourceGroupIndex" : 0
+		}
+	],
+	"type" : "OBJECT_LIBRARY"
+}

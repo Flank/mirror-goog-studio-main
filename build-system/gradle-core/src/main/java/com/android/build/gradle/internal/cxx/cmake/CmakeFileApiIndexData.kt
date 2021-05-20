@@ -34,7 +34,9 @@ data class IndexData(val objects : List<IndexObjectData>) {
                 .filter { obj -> obj.kind == name }
                 .map { obj ->
                     val json = replyFolder.resolve(obj.jsonFile)
-                    GSON.fromJson(FileReader(json), type)
+                    FileReader(json).use { reader ->
+                        GSON.fromJson(reader, type)
+                    }
                 }
                 .singleOrNull()
     }

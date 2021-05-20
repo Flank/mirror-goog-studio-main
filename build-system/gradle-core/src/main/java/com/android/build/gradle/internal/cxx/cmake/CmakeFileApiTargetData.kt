@@ -55,6 +55,12 @@ sealed class TargetDataItem {
     data class SourceGroups(val sourceGroups : List<String>) : TargetDataItem()
 
     /**
+     *  "build" : "Externals/cpp-optparse",
+     *  "source" : "Externals/cpp-optparse"
+     */
+    data class Paths(val build : String, val source : String) : TargetDataItem()
+
+    /**
      * "backtrace" : 1,
      * "compileGroupIndex" : 0,
      * "path" : "src/main/cxx/hello-jni.c",

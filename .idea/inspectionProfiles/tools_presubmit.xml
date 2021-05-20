@@ -228,6 +228,7 @@
     <inspection_tool class="AndroidLintViewHolder" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="AndroidLintViewTag" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="AndroidLintWearableBindListener" enabled="false" level="ERROR" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintWebViewClientOnReceivedSslError" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="AndroidLintWebViewLayout" enabled="false" level="ERROR" enabled_by_default="false" />
     <inspection_tool class="AndroidLintWorldReadableFiles" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="AndroidLintWorldWriteableFiles" enabled="false" level="WARNING" enabled_by_default="false" />

@@ -41,6 +41,7 @@ class ObfuscationMapTests {
                 1:1:void com.google.Foo.inlinedMethod():0:0 -> d
                 1:1:com.google.Bar someMethod():0 -> d
                 4:1:com.google.Bar arrayArg(int,com.google.Foo[]):0 -> b
+                5:1:com.google.Bar array2DArg(int,com.google.Foo[][]):0 -> c
             com.google.Bar -> c:
                 int field -> q
                 1:1:com.google.Bar someMethod2(boolean,com.google.Bar):0 -> d
@@ -52,6 +53,7 @@ class ObfuscationMapTests {
         assertMethod(obf, "Lcom/google/Foo;->someMethod()Lcom/google/Bar;", "La/b;->d()Lc;")
         assertMethod(obf, "Lcom/google/Bar;->someMethod2(ZLcom/google/Bar;)Lcom/google/Bar;", "Lc;->d(ZLc;)Lc;")
         assertMethod(obf, "Lcom/google/Foo;->arrayArg(I[Lcom/google/Foo;)Lcom/google/Bar;", "La/b;->b(I[La/b;)Lc;")
+        assertMethod(obf, "Lcom/google/Foo;->array2DArg(I[[Lcom/google/Foo;)Lcom/google/Bar;", "La/b;->c(I[[La/b;)Lc;")
     }
 
     @Test

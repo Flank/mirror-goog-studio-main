@@ -218,6 +218,7 @@ maven_repo(
     name = "gradle_plugin_repo",
     artifacts = GRADLE_PLUGIN_ARTIFACTS,
     include_sources = True,
+    use_zip = False,
     visibility = ["//visibility:public"],
 )
 

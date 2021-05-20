@@ -196,7 +196,7 @@ class StripDebugSymbolsDelegate(
                 if (input.isDirectory) {
                     continue
                 }
-                val path = FileUtils.relativePossiblyNonExistingPath(input, inputDir)
+                val path = input.toRelativeString(inputDir)
                 val output = File(outputDir, path)
 
                 when (changedInputs[input]) {
@@ -222,7 +222,7 @@ class StripDebugSymbolsDelegate(
                 if (input.isDirectory) {
                     continue
                 }
-                val path = FileUtils.relativePath(input, inputDir)
+                val path = input.toRelativeString(inputDir)
                 val output = File(outputDir, path)
                 val justCopyInput =
                     keepDebugSymbolsMatchers.any { matcher -> matcher.matches(Paths.get(path)) }

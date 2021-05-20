@@ -64,9 +64,7 @@ DEPS = [
 ]
 
 #keep sorted
-MAVEN_REPOS = [
-    "//tools/base/third_party/kotlin:kotlin-m2repository",
-]
+MAVEN_REPOS = []
 
 MAVEN_REPO_MANIFESTS = [
     "//tools/base/build-system:gradle_plugin_no_databinding_repo",
@@ -74,6 +72,7 @@ MAVEN_REPO_MANIFESTS = [
     "//tools/base/build-system/integration-test:prefab_repo",
     "//tools/base/build-system/integration-test:support_library_latest",
     "//tools/base/build-system/integration-test/native:prebuilts",
+    "//tools/base/third_party/kotlin:kotlin-m2repository",
 ]
 
 WINDOWS_DISABLED_TAG = [

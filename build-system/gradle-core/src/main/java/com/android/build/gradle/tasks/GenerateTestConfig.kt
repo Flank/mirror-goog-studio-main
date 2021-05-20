@@ -165,11 +165,9 @@ abstract class GenerateTestConfig @Inject constructor(objectFactory: ObjectFacto
             mergedManifest = testedVariant.artifacts.get(PACKAGED_MANIFESTS)
             mainVariantOutput = testedVariant.outputs.getMainSplit()
             packageNameOfFinalRClass = testedVariant.namespace
-            buildDirectoryPath = FileUtils.toSystemIndependentPath(
-                FileUtils.relativePossiblyNonExistingPath(
-                    creationConfig.services.projectInfo.getProject().buildDir,
-                        creationConfig.services.projectInfo.getProject().projectDir)
-            )
+            buildDirectoryPath =
+                    creationConfig.services.projectInfo.getProject().buildDir.toRelativeString(
+                            creationConfig.services.projectInfo.getProject().projectDir)
         }
 
         fun computeProperties(projectDir: File): TestConfigProperties {

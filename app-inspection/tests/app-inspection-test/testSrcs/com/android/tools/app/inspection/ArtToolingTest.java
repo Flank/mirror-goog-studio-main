@@ -78,8 +78,9 @@ public class ArtToolingTest {
 
         // Next, create misc groups and items
         androidDriver.triggerMethod(TODO_ACTIVITY, "newGroup"); // Group #2
-        androidDriver.triggerMethod(TODO_ACTIVITY, "newItem"); // Item #1
         androidDriver.triggerMethod(TODO_ACTIVITY, "newItem"); // Item #2
+        androidDriver.triggerMethod(TODO_ACTIVITY, "newItem"); // Item #3
+        androidDriver.triggerMethod(TODO_ACTIVITY, "newInnerItem"); // Item #4
 
         { // Item #1 enter
             AppInspection.AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
@@ -136,6 +137,18 @@ public class ArtToolingTest {
         }
 
         { // Item #3 exit
+            AppInspection.AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
+            assertThat(event.getRawEvent().getContent().toByteArray())
+                    .isEqualTo(TodoInspectorApi.Event.TODO_ITEM_CREATED.toByteArray());
+        }
+
+        { // Item #4 enter
+            AppInspection.AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
+            assertThat(event.getRawEvent().getContent().toByteArray())
+                    .isEqualTo(TodoInspectorApi.Event.TODO_ITEM_CREATING.toByteArray());
+        }
+
+        { // Item #4 exit
             AppInspection.AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
             assertThat(event.getRawEvent().getContent().toByteArray())
                     .isEqualTo(TodoInspectorApi.Event.TODO_ITEM_CREATED.toByteArray());

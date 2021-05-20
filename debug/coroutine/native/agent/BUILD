@@ -36,6 +36,7 @@ cc_binary(
     ],
     visibility = ["//visibility:public"],
     deps = [
+        "//external:slicer",
         "//tools/base/transport/native/jvmti",
     ],
 )

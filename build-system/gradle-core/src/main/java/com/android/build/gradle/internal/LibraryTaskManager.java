@@ -22,7 +22,6 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Publ
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.ALL_RUNTIME_PUBLICATION;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.API_PUBLICATION;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.RUNTIME_PUBLICATION;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC;
 
 import com.android.annotations.NonNull;
 import com.android.build.api.artifact.SingleArtifact;
@@ -84,7 +83,6 @@ import java.util.List;
 import java.util.Set;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.component.AdhocComponentWithVariants;
-import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.jetbrains.annotations.NotNull;
@@ -471,15 +469,7 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
 
     @Override
     protected void postJavacCreation(@NonNull ComponentCreationConfig creationConfig) {
-        // create an anchor collection for usage inside the same module (unit tests basically)
-        ConfigurableFileCollection files =
-                creationConfig
-                        .getServices()
-                        .fileCollection(
-                                creationConfig.getArtifacts().get(JAVAC.INSTANCE),
-                                creationConfig.getVariantData().getAllPreJavacGeneratedBytecode(),
-                                creationConfig.getVariantData().getAllPostJavacGeneratedBytecode());
-        creationConfig.getArtifacts().appendToAllClasses(files);
+        super.postJavacCreation(creationConfig);
 
         if (creationConfig
                 .getServices()

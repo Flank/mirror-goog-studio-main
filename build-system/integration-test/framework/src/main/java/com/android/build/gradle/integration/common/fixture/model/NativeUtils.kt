@@ -22,7 +22,7 @@ import com.android.build.gradle.integration.common.fixture.ModelBuilderV2.Native
 import com.android.build.gradle.integration.common.fixture.ModelContainerV2
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.logging.getCxxStructuredLogFolder
-import com.android.build.gradle.internal.cxx.logging.streamCxxStructuredLog
+import com.android.build.gradle.internal.cxx.logging.readStructuredLogs
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.createCxxAbiModelFromJson
 import com.android.build.gradle.internal.cxx.model.metadataGenerationCommandFile
@@ -328,32 +328,6 @@ fun cartesianOf(c1:Array<*>, c2:Array<*>, c3:Array<*>) : Array<Array<*>> =
 fun enableCxxStructuredLogging(project : GradleTestProject) {
     val logFolder = getCxxStructuredLogFolder(project.rootProject.projectDir)
     logFolder.mkdirs()
-}
-
-/**
- * Given a [logFolder], read combined structured log files and return, in
- * chronological order, the records of a particular type (the type returned
- * by [decode] function).
- */
-inline fun <reified Encoded, Decoded> readStructuredLogs(
-    logFolder : File,
-    crossinline decode: (Encoded, StringDecoder) -> Decoded) : List<Decoded> {
-    val logs = logFolder.walk().asIterable()
-        .filter { it.isFile }
-        .filter { it.extension == "bin" }
-        .sortedBy { it.name }
-    val events = mutableListOf<Pair<Long, Decoded>>()
-    for(log in logs) {
-        streamCxxStructuredLog(log) {
-                strings,
-                timestamp,
-                event ->
-            if (event is Encoded) {
-                events.add(timestamp to decode(event, strings))
-            }
-        }
-    }
-    return events.sortedBy { it.first }.map { it.second }
 }
 
 /**

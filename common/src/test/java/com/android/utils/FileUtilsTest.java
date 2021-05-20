@@ -17,13 +17,11 @@
 package com.android.utils;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.android.SdkConstants;
-import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import org.junit.Rule;
@@ -65,24 +63,6 @@ public class FileUtilsTest {
         } catch (RuntimeException exception) {
             assertTrue(exception.getMessage().startsWith("Cannot create directory"));
         }
-    }
-
-    @Test
-    public void computeRelativePathOfFile() throws Exception {
-        File d1 = mTemporaryFolder.newFolder("foo");
-        File f2 = new File(d1, "bar");
-        Files.touch(f2);
-
-        assertEquals("bar", FileUtils.relativePath(f2, d1));
-    }
-
-    @Test
-    public void computeRelativePathOfDirectory() throws Exception {
-        File d1 = mTemporaryFolder.newFolder("foo");
-        File f2 = new File(d1, "bar");
-        f2.mkdir();
-
-        assertEquals("bar" + File.separator, FileUtils.relativePath(f2, d1));
     }
 
     @Test
@@ -187,33 +167,5 @@ public class FileUtilsTest {
 
     private static boolean isFileSystemCaseSensitive() {
         return !new File("a").equals(new File("A"));
-    }
-
-    @Test
-    public void testRelativePossiblyNonExistingPath() throws IOException {
-        File inputDir = new File("/folders/1/5/main");
-        File folder = new File(inputDir, "com/obsidian/v4/tv/home/playback");
-        File fileToProcess = new File(folder, "CameraPlaybackGlue$1.class");
-        assertEquals(
-                FileUtils.join(
-                        "com",
-                        "obsidian",
-                        "v4",
-                        "tv",
-                        "home",
-                        "playback",
-                        "CameraPlaybackGlue$1.class"),
-                FileUtils.relativePossiblyNonExistingPath(fileToProcess, inputDir));
-        fileToProcess = new File(folder, "CameraPlaybackGlue$CameraPlaybackHost.class");
-        assertEquals(
-                FileUtils.join(
-                        "com",
-                        "obsidian",
-                        "v4",
-                        "tv",
-                        "home",
-                        "playback",
-                        "CameraPlaybackGlue$CameraPlaybackHost.class"),
-                FileUtils.relativePossiblyNonExistingPath(fileToProcess, inputDir));
     }
 }

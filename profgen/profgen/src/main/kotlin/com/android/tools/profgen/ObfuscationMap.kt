@@ -168,13 +168,13 @@ internal class ClassMapping(
 }
 
 private class TypeParser(capacity: Int): Parseable(capacity) {
-    var isArray: Boolean = false
+    var arrayDimensionsNumber: Int = 0
     var isObject: Boolean = false
     var descriptor: String = ""
 
     fun clear() {
         sb.clear()
-        isArray = false
+        arrayDimensionsNumber = 0
         isObject = false
         descriptor = ""
     }
@@ -316,7 +316,7 @@ private fun TypeParser.parseType(line: String, start: Int): Int {
         when (val c = line[i]) {
             ' ', ',', ')' -> break
             '[' -> {
-                isArray = true
+                arrayDimensionsNumber++
                 i = consume(']', line, i + 1)
                 continue
             }
@@ -329,7 +329,7 @@ private fun TypeParser.parseType(line: String, start: Int): Int {
         i++
     }
     val result = flush()
-    if (isArray) append('[')
+    if (arrayDimensionsNumber > 0) append("[".repeat(arrayDimensionsNumber))
     if (isObject) {
         append('L')
         append(result)

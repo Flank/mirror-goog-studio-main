@@ -48,9 +48,16 @@ message Event {
 message BackgroundTaskEvent {
     int64 task_id = 1;
     oneof specialized {
-        AlarmSet alarm_set = 2;
-        AlarmFired alarm_fired = 3;
-        AlarmCancelled alarm_cancelled = 4;
+        // A wake lock was acquired, forcing the device to stay awake.
+        WakeLockAcquired wake_lock_acquired = 101;
+        // A wake lock was released, indicating it's not needed anymore.
+        WakeLockReleased wake_lock_released = 102;
+        // An alarm was set.
+        AlarmSet alarm_set = 103;
+        // An alarm was cancelled.
+        AlarmCancelled alarm_cancelled = 104;
+        // An alarm goes off.
+        AlarmFired alarm_fired = 105;
     }
 }
 
@@ -104,6 +111,52 @@ message AlarmListener {
   // String describing the alarm listener, used for logging and battery-use
   // attribution.
   string tag = 1;
+}
+
+// ======= WAKE LOCK EVENT =======
+
+message WakeLockAcquired {
+  enum Level {
+    UNDEFINED_WAKE_LOCK_LEVEL = 0;
+    PARTIAL_WAKE_LOCK = 1;
+    SCREEN_DIM_WAKE_LOCK = 2;
+    SCREEN_BRIGHT_WAKE_LOCK = 3;
+    FULL_WAKE_LOCK = 4;
+    PROXIMITY_SCREEN_OFF_WAKE_LOCK = 5;
+  }
+
+  enum CreationFlag {
+    UNDEFINED_WAKE_LOCK_CREATION_FLAG = 0;
+    ACQUIRE_CAUSES_WAKEUP = 1;
+    ON_AFTER_RELEASE = 2;
+  }
+
+  // Level for the wake lock instance initialization.
+  // https://developer.android.com/reference/android/os/PowerManager.html#newWakeLock(int,
+  // java.lang.String)
+  Level level = 1;
+  // Optional flags for the wake lock instance initialization, empty if no flag
+  // is set.
+  repeated CreationFlag flags = 2;
+  // Tag of the wake lock (which users may have set for debugging purposes).
+  string tag = 3;
+  // An optional timeout in milliseconds given to the acquire call. The lock
+  // will be released after the given timeout expires.
+  int64 timeout = 4;
+}
+
+message WakeLockReleased {
+  enum ReleaseFlag {
+    UNDEFINED_WAKE_LOCK_RELEASE_FLAG = 0;
+    RELEASE_FLAG_WAIT_FOR_NO_PROXIMITY = 1;
+  }
+
+  // Optional flags that modify the release behavior, empty if no flag is set.
+  // https://developer.android.com/reference/android/os/PowerManager.WakeLock.html#release(int)
+  repeated ReleaseFlag flags = 1;
+  // True if the wake lock is still held after the release. This may happen if
+  // the wake lock is reference counted and has been acquired multiple times.
+  bool is_held = 2;
 }
 
 // ======= DEBUG EVENT =======

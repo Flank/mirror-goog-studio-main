@@ -27,6 +27,7 @@ import com.android.ddmlib.InstallException;
 import com.android.ddmlib.MultiLineReceiver;
 import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.TimeoutException;
+import com.android.ddmlib.testrunner.AndroidTestOrchestratorRemoteAndroidTestRunner;
 import com.android.ddmlib.testrunner.IRemoteAndroidTestRunner.CoverageOutput;
 import com.android.ddmlib.testrunner.RemoteAndroidTestRunner;
 import com.android.ddmlib.testrunner.TestIdentifier;
@@ -65,6 +66,12 @@ public class SimpleTestRunnable implements WorkerExecutorFacade.WorkAction {
 
     public static final String FILE_COVERAGE_EC = "coverage.ec";
     private static final String TMP = "/data/local/tmp/";
+
+    // This constant value is a copy from
+    // androidx.test.services.storage.TestStorageConstants.ON_DEVICE_PATH_INTERNAL_USE.
+    // Android Test orchestrator outputs test coverage files under this directory when
+    // useTestStorageService option is enabled.
+    private static final String TEST_STORAGE_SERVICE_OUTPUT_DIR = "/sdcard/googletest/internal_use/";
 
     @NonNull private final RemoteAndroidTestRunner runner;
     @NonNull private final String projectName;
@@ -115,6 +122,11 @@ public class SimpleTestRunnable implements WorkerExecutorFacade.WorkAction {
         boolean success = false;
 
         String coverageFile = getCoverageFile();
+        boolean useTestStorageService = Boolean.parseBoolean(
+                testData.getInstrumentationRunnerArguments()
+                        .getOrDefault("useTestStorageService", "false"));
+        String prefixedCoverageFilePath = (useTestStorageService ?
+                TEST_STORAGE_SERVICE_OUTPUT_DIR : "") + coverageFile;
 
         String additionalTestOutputDir = null;
 
@@ -159,6 +171,16 @@ public class SimpleTestRunnable implements WorkerExecutorFacade.WorkAction {
                 }
             }
 
+            if (runner instanceof AndroidTestOrchestratorRemoteAndroidTestRunner) {
+                // Grant MANAGE_EXTERNAL_STORAGE permission to androidx.test.services so that it
+                // can write test artifacts in external storage.
+                if (device.getApiLevel() >= 30) {
+                    executeShellCommand(
+                            "appops set androidx.test.services MANAGE_EXTERNAL_STORAGE allow",
+                            getOutputReceiver());
+                }
+            }
+
             logger.verbose(
                     "DeviceConnector '%s': installing %s", deviceName, testData.getTestApk());
             device.installPackage(testData.getTestApk(), installOptions, timeoutInMs, logger);
@@ -186,9 +208,11 @@ public class SimpleTestRunnable implements WorkerExecutorFacade.WorkAction {
             if (testData.isTestCoverageEnabled()) {
                 runner.addInstrumentationArg("coverage", "true");
                 if (runner.getCoverageOutputType() == CoverageOutput.DIR) {
-                    setUpDirectories(coverageFile);
+                    setUpDirectories(prefixedCoverageFilePath);
                 }
 
+                // Don't use prefixedCoverageFilePath here because the runner will
+                // take care of it.
                 runner.setCoverageReportLocation(coverageFile);
             }
 
@@ -264,7 +288,8 @@ public class SimpleTestRunnable implements WorkerExecutorFacade.WorkAction {
                 // Get the coverage if needed.
                 if (success && testData.isTestCoverageEnabled()) {
                     try {
-                        pullCoverageData(deviceName, coverageFile, runner.getCoverageOutputType());
+                        pullCoverageData(deviceName, prefixedCoverageFilePath,
+                                runner.getCoverageOutputType(), useTestStorageService);
                     } catch (Throwable e) {
                         throw new RuntimeException(e);
                     }
@@ -470,12 +495,13 @@ public class SimpleTestRunnable implements WorkerExecutorFacade.WorkAction {
     }
 
     private void pullCoverageData(
-            String deviceName, String coverageFile, CoverageOutput coverageOutput)
+            String deviceName, String coverageFile, CoverageOutput coverageOutput,
+            boolean useTestStorageService)
             throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
                     IOException {
         switch (coverageOutput) {
             case DIR:
-                pullCoverageFromDir(deviceName, coverageFile);
+                pullCoverageFromDir(deviceName, coverageFile, useTestStorageService);
                 break;
             case FILE:
                 pullSingleCoverageFile(deviceName, coverageFile);
@@ -504,7 +530,8 @@ public class SimpleTestRunnable implements WorkerExecutorFacade.WorkAction {
         executeShellCommand("rm " + temporaryCoverageCopy, outputReceiver);
     }
 
-    private void pullCoverageFromDir(String deviceName, String coverageDir)
+    private void pullCoverageFromDir(
+            String deviceName, String coverageDir, Boolean useTestStorageService)
             throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
                     IOException {
         String coverageTmp = getCoverageTmp();
@@ -516,7 +543,12 @@ public class SimpleTestRunnable implements WorkerExecutorFacade.WorkAction {
         // 1. create a script to copy all coverage reports to coverageTmp dir; execute script
         // 2. write down all file names to a coveragePaths, and copy that file to host
         // 3. for every .ec file in the paths list, copy it from device to host
-        String listFiles = asTestedApplication("ls " + coverageDir);
+        String listFiles;
+        if (useTestStorageService) {
+            listFiles = "ls " + coverageDir;
+        } else {
+            listFiles = asTestedApplication("ls " + coverageDir);
+        }
         String copyScript =
                 String.format(
                         "for i in $(%s); do run-as %s cat %s$i > %s/$i; done",

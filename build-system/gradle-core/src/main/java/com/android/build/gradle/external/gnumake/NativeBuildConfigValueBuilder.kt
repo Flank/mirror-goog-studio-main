@@ -249,14 +249,14 @@ class NativeBuildConfigValueBuilder internal constructor(
             val workingDirPath = executionRootPath.absolutePath
             for (commandInput in output.commandInputs) {
                 val command = commandInput.command
-                val output = extractFlagArgument("-o", "--output", command.escapedFlags)
-                assert(output != null)
+                val outputFile = extractFlagArgument("-o", "--output", command.escapedFlags)
                 compileCommandsEncoder.writeCompileCommand(
                     fileConventions.toFile(commandInput.onlyInput),
                     File(command.executable),
                     stripArgsForIde(commandInput.onlyInput, command.escapedFlags),
                     File(workingDirPath),
-                    File(output)
+                    File(outputFile!!),
+                    output.artifactName!!
                 )
             }
 

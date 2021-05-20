@@ -44,6 +44,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import kotlin.io.FilesKt;
 
 @SuppressWarnings("WeakerAccess") // These are utility methods, meant to be public.
 public final class FileUtils {
@@ -237,13 +238,14 @@ public final class FileUtils {
         if (children != null) {
             for (File f : children) {
                 if (f.isDirectory()) {
-                    File destination = new File(to, relativePath(f, from));
+                    File destination = new File(to, FilesKt.toRelativeString(f, from));
                     Files.createParentDirs(destination);
                     mkdirs(destination);
 
                     copyDirectoryContentToDirectory(f, destination);
                 } else if (f.isFile()) {
-                    File destination = new File(to, relativePath(f.getParentFile(), from));
+                    File destination =
+                            new File(to, FilesKt.toRelativeString(f.getParentFile(), from));
                     Files.createParentDirs(destination);
                     mkdirs(destination);
 
@@ -375,40 +377,6 @@ public final class FileUtils {
     @NonNull
     public static String loadFileWithUnixLineSeparators(@NonNull File file) throws IOException {
         return UNIX_NEW_LINE_JOINER.join(Files.readLines(file, Charsets.UTF_8));
-    }
-
-    /**
-     * Computes the relative of a file or directory with respect to a directory.
-     *
-     * @param file the file or directory, which must exist in the filesystem
-     * @param dir the directory to compute the path relative to
-     * @return the relative path from {@code dir} to {@code file}; if {@code file} is a directory
-     * the path comes appended with the file separator (see documentation on {@code relativize}
-     * on java's {@code URI} class)
-     */
-    @NonNull
-    public static String relativePath(@NonNull File file, @NonNull File dir) {
-        checkArgument(file.isFile() || file.isDirectory(), "%s is not a file nor a directory.",
-                file.getPath());
-        checkArgument(dir.isDirectory(), "%s is not a directory.", dir.getPath());
-        return relativePossiblyNonExistingPath(file, dir);
-    }
-
-    /**
-     * Computes the relative of a file or directory with respect to a directory.
-     * For example, if the file's absolute path is {@code /a/b/c} and the directory
-     * is {@code /a}, this method returns {@code b/c}.
-     *
-     * @param file the path that may not correspond to any existing path in the filesystem
-     * @param dir the directory to compute the path relative to
-     * @return the relative path from {@code dir} to {@code file}; if {@code file} is a directory
-     * the path comes appended with the file separator (see documentation on {@code relativize}
-     * on java's {@code URI} class)
-     */
-    @NonNull
-    public static String relativePossiblyNonExistingPath(@NonNull File file, @NonNull File dir) {
-        String path = dir.toURI().relativize(file.toURI()).getPath();
-        return toSystemDependentPath(path);
     }
 
     /**

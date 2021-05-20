@@ -44,6 +44,7 @@ class BackgroundTaskInspector(
 
     private lateinit var alarmHandler: AlarmHandler
     private lateinit var pendingIntentHandler: PendingIntentHandler
+    private lateinit var wakeLockHandler: WakeLockHandler
 
     override fun onReceiveCommand(data: ByteArray, callback: CommandCallback) {
         val command = Command.parseFrom(data)
@@ -68,5 +69,6 @@ class BackgroundTaskInspector(
     private fun startBackgroundTaskHandlers() {
         alarmHandler = AlarmHandler(connection, environment)
         pendingIntentHandler = PendingIntentHandler(environment, alarmHandler)
+        wakeLockHandler = WakeLockHandler(connection, environment)
     }
 }

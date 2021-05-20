@@ -34,6 +34,7 @@ import java.io.Serializable;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import kotlin.io.FilesKt;
 
 /**
  * A Source File processor for AIDL files. This compiles each aidl file found by the SourceSearcher.
@@ -124,7 +125,7 @@ public class ShaderProcessor {
 
             // compute the output file path
             String relativePath =
-                    FileUtils.relativePath(params.path.toFile(), params.start.toFile());
+                    FilesKt.toRelativeString(params.path.toFile(), params.start.toFile());
             File destFile = new File(params.mOutputDir, relativePath + ".spv");
 
             // add the args

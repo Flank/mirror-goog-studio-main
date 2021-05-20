@@ -48,9 +48,9 @@ class NdkAbiFile(abiFile: File) {
     val abiInfoList: List<AbiInfo>
 
     init {
-        abiInfoList = if (abiFile.isFile) {
+        abiInfoList = if (abiFile.isFile) FileReader(abiFile).use { reader ->
             try {
-                Gson().fromJson<Map<String, AbiInfo>>(FileReader(abiFile), mapTypeToken)
+                Gson().fromJson<Map<String, AbiInfo>>(reader, mapTypeToken)
                     .entries.mapNotNull { entry ->
                     val abi = Abi.getByName(entry.key)
                     if (abi == null) {

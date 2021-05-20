@@ -66,8 +66,6 @@ message BeginSessionRequest {
     string agent_lib_file_name = 2;
     // Path to the agent config file
     string agent_config_path = 3;
-    // True if live allocation is used, false otherwise.
-    bool live_allocation_enabled = 4;
   }
 
   int64 device_id = 1;

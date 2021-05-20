@@ -22,9 +22,10 @@ import org.gradle.api.artifacts.transform.TransformOutputs
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
-import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 
 /**
  * Transform from one artifact type to another artifact type without changing the artifact's
@@ -45,7 +46,7 @@ abstract class IdentityTransform : TransformAction<IdentityTransform.Parameters>
         val acceptNonExistentInputFile: Property<Boolean>
     }
 
-    @get:Classpath
+    @get:PathSensitive(PathSensitivity.ABSOLUTE)
     @get:InputArtifact
     abstract val inputArtifact: Provider<FileSystemLocation>
 

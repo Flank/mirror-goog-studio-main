@@ -34,7 +34,7 @@ readonly config_options="--config=local --config=rcache"
         --invocation_id=${invocation_id} \
         --build_tag_filters=-no_mac \
         --build_event_binary_file="${dist_dir}/bazel-${build_number}.bes" \
-        --test_tag_filters=-no_mac,-no_test_mac,-qa_sanity,-qa_fast,-qa_unreliable,-perfgate \
+        --test_tag_filters=-no_mac,-no_test_mac,-ui_test,-qa_smoke,-qa_fast,-qa_unreliable,-perfgate \
         --tool_tag=${script_name} \
         --worker_quit_after_build \
         --define=meta_android_build_number=${build_number} \
