@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-197c09779de33a58c7cae8fa470d888fc16978c14616e1c9948abc87fb52c1b3
+6366a214b27e607798929ea6d5ef048f5831a2635804a642f727e02efb9ebeba
 -------------------------------------------------------------------------
 com.android.build.api.AndroidPluginVersion implements java.lang.Comparable
 com.android.build.api.AndroidPluginVersion.<init>: com.android.build.api.AndroidPluginVersion (int, int)
@@ -156,6 +156,7 @@ com.android.build.api.dsl.Publishing.singleVariant: void (java.lang.String)
 com.android.build.api.dsl.Publishing.singleVariant: void (java.lang.String, kotlin.jvm.functions.Function1<? super SingleVariantT, kotlin.Unit>)
 com.android.build.api.dsl.SingleVariant
 com.android.build.api.dsl.SingleVariant.getVariantName: java.lang.String ()
+com.android.build.api.dsl.TestBaseFlavor implements com.android.build.api.dsl.BaseFlavor, com.android.build.api.dsl.TestVariantDimension
 com.android.build.api.dsl.TestCoverage
 com.android.build.api.dsl.TestCoverage.getJacocoVersion: java.lang.String ()
 com.android.build.api.dsl.TestCoverage.setJacocoVersion: void (java.lang.String)
