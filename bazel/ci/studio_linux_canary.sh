@@ -29,7 +29,7 @@ readonly build_targets="//tools/... -//tools/adt/idea/studio/..."
   --test_tag_filters=${test_tag_filters} \
   --tool_tag=studio-linux-canary \
   -- \
-  "${build_targets}"
+  ${build_targets}
 
 readonly bazel_status=$?
 
