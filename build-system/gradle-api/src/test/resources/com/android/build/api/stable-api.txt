@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-265891fcab9e624f6797a434ad6c55a1fdf307c460f3b9eb42a4ff21f3dfc2ed
+8582ff5da336be30ccfa5bd69ba4f8dfeed193a1580656c41ee7c8ff4d263a36
 -------------------------------------------------------------------------
 com.android.build.api.AndroidPluginVersion implements java.lang.Comparable
 com.android.build.api.AndroidPluginVersion.<init>: com.android.build.api.AndroidPluginVersion (int, int)
@@ -170,6 +170,7 @@ com.android.build.api.dsl.TestCoverage.getJacocoVersion: java.lang.String ()
 com.android.build.api.dsl.TestCoverage.setJacocoVersion: void (java.lang.String)
 com.android.build.api.dsl.TestDefaultConfig implements com.android.build.api.dsl.TestBaseFlavor, com.android.build.api.dsl.DefaultConfig
 com.android.build.api.dsl.TestExtension implements com.android.build.api.dsl.CommonExtension
+com.android.build.api.dsl.TestProductFlavor implements com.android.build.api.dsl.TestBaseFlavor, com.android.build.api.dsl.ProductFlavor
 com.android.build.api.dsl.VariantDimension
 com.android.build.api.extension.AndroidComponentsExtension
 com.android.build.api.extension.AndroidComponentsExtension.beforeVariants: void (com.android.build.api.extension.VariantSelector, kotlin.jvm.functions.Function1<? super VariantBuilderT, kotlin.Unit>)
