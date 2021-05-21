@@ -10,6 +10,11 @@ coverage_java_library(
     ]),
     deps = [
         "//prebuilts/studio/sdk:platforms/latest_jar",
+
+        # For prototyping LE, we will check in our own version of the
+        # eval4j dependencies.
+        "lib/asm-all-9.0.jar",
+        "lib/kotlin-eval4j.jar",
     ],
 )
 
@@ -23,7 +28,11 @@ coverage_java_test(
     ],
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
+        "lib/asm-all-9.0.jar",
+        "lib/kotlin-eval4j.jar",
+        "lib/kotlin-stdlib.jar",
         ":runtime_java",
+        "//tools/adt/idea/android-common:intellij.android.common",
         "//tools/base/testutils:tools.testutils",
         "//tools/base/third_party:junit_junit",
     ],
