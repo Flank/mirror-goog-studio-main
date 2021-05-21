@@ -25,7 +25,7 @@ app_inspection_jar(
         "//tools/base/dynamic-layout-inspector/agent/appinspection/fake-android:fake_android",
         "//prebuilts/studio/sdk:platforms/latest_jar",
         "//prebuilts/tools/common/m2/repository/androidx/annotation/annotation/1.1.0:jar",
-        "//prebuilts/tools/common/m2/repository/androidx/inspection/inspection/1.0.0-SNAPSHOT:jar",
+        "//prebuilts/tools/common/m2/repository/androidx/inspection/inspection/1.0.0:jar",
         "//tools/base/bazel:studio-proto",
         "//tools/base/dynamic-layout-inspector/common:studio.dynamic-layout-inspector.common",
         "//tools/base/dynamic-layout-inspector/agent/appinspection/proto:layout_inspector_view_java_proto",
