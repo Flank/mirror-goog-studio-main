@@ -16,17 +16,13 @@
 
 package com.android.build.api.dsl
 
-import com.android.build.api.variant.DynamicFeatureVariant
-import com.android.build.api.variant.DynamicFeatureVariantBuilder
-import org.gradle.api.Incubating
-
 /**
  * Extension for the Android Dynamic Feature Gradle Plugin.
  *
+ * This is the `android` block when the `com.android.dynamic-feature` plugin is applied.
  *
- * Only the Android Gradle Plugin should create instances of this interface.
+ * Only the Android Gradle Plugin should create instances of interfaces in com.android.build.api.dsl.
  */
-@Incubating
 interface DynamicFeatureExtension :
     CommonExtension<
             DynamicFeatureBuildFeatures,
@@ -35,5 +31,4 @@ interface DynamicFeatureExtension :
             DynamicFeatureProductFlavor>,
     ApkExtension,
     TestedExtension {
-    // TODO(b/140406102)
 }
