@@ -18,6 +18,8 @@ package com.android.tools.agent.appinspection.util
 
 import android.os.Handler
 import android.os.Looper
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Deferred
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Future
 
@@ -49,7 +51,7 @@ object ThreadUtils {
      *
      * If this method is called from the main thread, it will run immediately.
      */
-    fun <T> runOnMainThread(block: () -> T): Future<T> {
+    fun <T> runOnMainThread(block: () -> T): CompletableFuture<T> {
         return if (!Looper.getMainLooper().isCurrentThread) {
             val future = CompletableFuture<T>()
             Handler.createAsync(Looper.getMainLooper()).post {
@@ -59,6 +61,25 @@ object ThreadUtils {
         }
         else {
             CompletableFuture.completedFuture(block())
+        }
+    }
+
+    /**
+     * Run some logic on the main thread, returning a future that will contain any data computed
+     * by and returned from the block.
+     *
+     * If this method is called from the main thread, it will run immediately.
+     */
+    fun <T> runOnMainThreadAsync(block: () -> T): Deferred<T> {
+        return if (!Looper.getMainLooper().isCurrentThread) {
+            val deferred = CompletableDeferred<T>()
+            Handler.createAsync(Looper.getMainLooper()).post {
+                deferred.complete(block())
+            }
+            deferred
+        }
+        else {
+            CompletableDeferred(block())
         }
     }
 }

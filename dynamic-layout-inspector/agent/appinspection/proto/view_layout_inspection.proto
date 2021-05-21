@@ -234,6 +234,18 @@ message UpdateScreenshotTypeCommand {
 message UpdateScreenshotTypeResponse {
 }
 
+message CaptureSnapshotCommand {
+    Screenshot.Type screenshot_type = 1;
+}
+message CaptureSnapshotResponse {
+    message WindowSnapshot {
+      LayoutEvent layout = 1;
+      PropertiesEvent properties = 2;
+    }
+    repeated WindowSnapshot window_snapshots = 1;
+    WindowRootsEvent window_roots = 2;
+}
+
 // An event containing complete layout information about a single node tree
 message LayoutEvent {
     // A collection of all text referenced by other fields in this message
@@ -277,6 +289,7 @@ message Command {
         StopFetchCommand stop_fetch_command = 2;
         GetPropertiesCommand get_properties_command = 3;
         UpdateScreenshotTypeCommand update_screenshot_type_command = 4;
+        CaptureSnapshotCommand capture_snapshot_command = 5;
     }
 }
 message Response {
@@ -285,6 +298,7 @@ message Response {
         StopFetchResponse stop_fetch_response = 2;
         GetPropertiesResponse get_properties_response = 3;
         UpdateScreenshotTypeResponse update_screenshot_type_response = 4;
+        CaptureSnapshotResponse capture_snapshot_response = 5;
     }
 }
 message Event {

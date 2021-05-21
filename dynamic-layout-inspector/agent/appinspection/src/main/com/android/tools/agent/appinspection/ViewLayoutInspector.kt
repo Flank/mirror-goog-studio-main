@@ -38,6 +38,12 @@ import com.android.tools.agent.appinspection.util.ThreadUtils
 import com.android.tools.agent.appinspection.util.compress
 import com.android.tools.idea.protobuf.ByteString
 import com.android.tools.layoutinspector.BitmapType
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.launch
+import layoutinspector.view.inspection.LayoutInspectorViewProtocol
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Command
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Configuration
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.ErrorEvent
@@ -57,6 +63,7 @@ import layoutinspector.view.inspection.LayoutInspectorViewProtocol.UpdateScreens
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.WindowRootsEvent
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
@@ -241,6 +248,15 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
          * Settings that determine the format of screenshots taken when doing a layout capture.
          */
         var screenshotSettings = ScreenshotSettings(Screenshot.Type.BITMAP)
+
+        /**
+         * When a snapshot is requested an entry will be added to this map for each window. Then
+         * when content for that window is processed it will be set into the Deferred rather than
+         * sent back as a normal Event.
+         */
+        var snapshotRequests: MutableMap<Long, CompletableDeferred<LayoutInspectorViewProtocol.CaptureSnapshotResponse.WindowSnapshot>> =
+            ConcurrentHashMap()
+
     }
 
     private val stateLock = Any()
@@ -267,6 +283,10 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
                 command.updateScreenshotTypeCommand,
                 callback
             )
+            Command.SpecializedCase.CAPTURE_SNAPSHOT_COMMAND -> handleCaptureSnapshotCommand(
+                command.captureSnapshotCommand,
+                callback
+            )
             else -> error("Unexpected view inspector command case: ${command.specializedCase}")
         }
     }
@@ -275,7 +295,6 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
         forceStopAllCaptures()
         SynchronousPixelCopy.stopHandler()
     }
-
 
     private fun forceStopAllCaptures() {
         rootsDetector.stop()
@@ -298,12 +317,20 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
 
         val captureExecutor = Executor { command ->
             sequentialExecutor.execute {
+                val snapshotRequest: CompletableDeferred<LayoutInspectorViewProtocol.CaptureSnapshotResponse.WindowSnapshot>?
                 var context: CaptureContext
                 var screenshotSettings: ScreenshotSettings
                 var skipSystemViews: Boolean
                 synchronized(stateLock) {
-                    skipSystemViews = state.skipSystemViews
-                    screenshotSettings = state.screenshotSettings
+                    snapshotRequest = state.snapshotRequests.remove(root.uniqueDrawingId)
+                    if (snapshotRequest != null) {
+                        skipSystemViews = false
+                        screenshotSettings = ScreenshotSettings(Screenshot.Type.SKP)
+                    }
+                    else {
+                        skipSystemViews = state.skipSystemViews
+                        screenshotSettings = state.screenshotSettings
+                    }
                     // We might get some lingering captures even though we already finished
                     // listening earlier (this would be indicated by no context). Just abort
                     // early in that case.
@@ -311,7 +338,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
                     // but potential threading issues as other threads can modify the context, e.g.
                     // handling the stop fetch command.
                     context = state.contextMap[root.uniqueDrawingId]?.copy() ?: return@execute
-                    if (context.isLastCapture) {
+                    if (snapshotRequest == null && context.isLastCapture) {
                         state.contextMap.remove(root.uniqueDrawingId)
                     }
                 }
@@ -319,6 +346,11 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
                 // Just in case, always check roots before sending a layout event, as this may send
                 // out a roots event. We always want layout events to follow up-to-date root events.
                 rootsDetector.checkRoots()
+
+                val snapshotResponse = if (snapshotRequest != null) {
+                    LayoutInspectorViewProtocol.CaptureSnapshotResponse.WindowSnapshot.newBuilder()
+                }
+                else null
 
                 run { // Prepare and send LayoutEvent
                     // Triggers image fetch into `os`
@@ -360,28 +392,34 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
                         (rootView to rootOffset)
                     }.get()
 
-                    connection.sendEvent {
-                        layoutEvent = LayoutEvent.newBuilder().apply {
-                            addAllStrings(stringTable.toStringEntries())
-                            this.appContext = appContext
-                            if (configuration != previousConfig) {
-                                previousConfig = configuration
-                                this.configuration = configuration
-                            }
-                            this.rootView = rootView
-                            this.rootOffset = Point.newBuilder().apply {
-                                x = rootOffset[0]
-                                y = rootOffset[1]
-                            }.build()
-                            this.screenshot = Screenshot.newBuilder().apply {
-                                type = screenshotSettings.type
-                                bytes = screenshot
-                            }.build()
+                    val layout = LayoutEvent.newBuilder().apply {
+                        addAllStrings(stringTable.toStringEntries())
+                        this.appContext = appContext
+                        if (configuration != previousConfig) {
+                            previousConfig = configuration
+                            this.configuration = configuration
+                        }
+                        this.rootView = rootView
+                        this.rootOffset = Point.newBuilder().apply {
+                            x = rootOffset[0]
+                            y = rootOffset[1]
                         }.build()
+                        this.screenshot = Screenshot.newBuilder().apply {
+                            type = screenshotSettings.type
+                            bytes = screenshot
+                        }.build()
+                    }.build()
+                    if (snapshotResponse != null) {
+                        snapshotResponse.layout = layout
+                    }
+                    else {
+                        connection.sendEvent {
+                            layoutEvent = layout
+                        }
                     }
                 }
 
-                if (context.isLastCapture) { // Prepare and send PropertiesEvent
+                if (snapshotResponse != null || context.isLastCapture) { // Prepare and send PropertiesEvent
                     // We get here either if the client requested a one-time snapshot of the layout
                     // or if the client just stopped an in-progress fetch. Collect and send all
                     // properties, so that the user can continue to explore all values in the UI and
@@ -390,14 +428,21 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
                     val allViews = ThreadUtils.runOnMainThread { root.flatten().toList() }.get()
                     val stringTable = StringTable()
                     val propertyGroups = allViews.map { it.createPropertyGroup(stringTable) }
-                    connection.sendEvent {
-                        propertiesEvent = PropertiesEvent.newBuilder().apply {
-                            rootId = root.uniqueDrawingId
-                            addAllPropertyGroups(propertyGroups)
-                            addAllStrings(stringTable.toStringEntries())
-                        }.build()
+                    val properties = PropertiesEvent.newBuilder().apply {
+                        rootId = root.uniqueDrawingId
+                        addAllPropertyGroups(propertyGroups)
+                        addAllStrings(stringTable.toStringEntries())
+                    }.build()
+                    if (snapshotResponse != null) {
+                        snapshotResponse.properties = properties
+                    }
+                    else {
+                        connection.sendEvent {
+                            propertiesEvent = properties
+                        }
                     }
                 }
+                snapshotResponse?.let { snapshotRequest?.complete(it.build()) }
             }
         }
 
@@ -408,7 +453,8 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
                         root,
                         captureExecutor,
                         callback = { os },
-                        shouldSerialize = { state.screenshotSettings.type == Screenshot.Type.SKP })
+                        shouldSerialize = { state.snapshotRequests.isNotEmpty() ||
+                                state.screenshotSettings.type == Screenshot.Type.SKP })
                 if (handle != null) {
                     state.contextMap[root.uniqueDrawingId] =
                         CaptureContext(handle, isLastCapture = (!state.fetchContinuously))
@@ -482,7 +528,6 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
         }
     }
 
-
     private fun handleStopFetchCommand(callback: CommandCallback) {
         callback.reply {
             stopFetchResponse = StopFetchResponse.getDefaultInstance()
@@ -520,6 +565,35 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
                     foundView?.createGetPropertiesResponse()
                         ?: GetPropertiesResponse.getDefaultInstance()
                 callback.reply { getPropertiesResponse = response }
+            }
+        }
+    }
+
+    private fun handleCaptureSnapshotCommand(
+        // TODO: support bitmap
+        captureSnapshotCommand: LayoutInspectorViewProtocol.CaptureSnapshotCommand,
+        callback: CommandCallback
+    ) {
+        rootsDetector.checkRoots()
+        state.snapshotRequests.clear()
+
+        CoroutineScope(environment.executors().primary().asCoroutineDispatcher()).launch {
+            val roots = ThreadUtils.runOnMainThreadAsync { getRootViews() }.await()
+            val windowSnapshots = roots.map { view ->
+                CompletableDeferred<LayoutInspectorViewProtocol.CaptureSnapshotResponse.WindowSnapshot>().also {
+                    state.snapshotRequests[view.uniqueDrawingId] = it
+                }
+            }
+            ThreadUtils.runOnMainThread { roots.forEach { it.invalidate() } }
+
+            val reply = LayoutInspectorViewProtocol.CaptureSnapshotResponse.newBuilder().apply {
+                windowRoots = WindowRootsEvent.newBuilder().apply {
+                    addAllIds(roots.map { it.uniqueDrawingId })
+                }.build()
+                addAllWindowSnapshots(windowSnapshots.awaitAll())
+            }.build()
+            callback.reply {
+                captureSnapshotResponse = reply
             }
         }
     }
