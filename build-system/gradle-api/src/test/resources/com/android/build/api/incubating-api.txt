@@ -159,7 +159,6 @@ com.android.build.api.dsl.AssetPackExtension
 com.android.build.api.dsl.AssetPackExtension.dynamicDelivery: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.DynamicDelivery, kotlin.Unit>)
 com.android.build.api.dsl.AssetPackExtension.getDynamicDelivery: com.android.build.api.dsl.DynamicDelivery ()
 com.android.build.api.dsl.AssetPackExtension.getPackName: org.gradle.api.provider.Property<java.lang.String> ()
-com.android.build.api.dsl.BaseFlavor implements com.android.build.api.dsl.VariantDimension
 com.android.build.api.dsl.BaseFlavor.getMinSdk: java.lang.Integer ()
 com.android.build.api.dsl.BaseFlavor.getMinSdkPreview: java.lang.String ()
 com.android.build.api.dsl.BaseFlavor.getName: java.lang.String ()
