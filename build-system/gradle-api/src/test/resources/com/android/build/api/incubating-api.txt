@@ -356,7 +356,6 @@ com.android.build.api.dsl.DataBinding.setAddKtx: void (java.lang.Boolean)
 com.android.build.api.dsl.DataBinding.setEnabled: void (boolean)
 com.android.build.api.dsl.DataBinding.setEnabledForTests: void (boolean)
 com.android.build.api.dsl.DataBinding.setVersion: void (java.lang.String)
-com.android.build.api.dsl.DefaultConfig implements com.android.build.api.dsl.BaseFlavor
 com.android.build.api.dsl.DensitySplit implements com.android.build.api.dsl.SplitOptions
 com.android.build.api.dsl.DensitySplit.compatibleScreens: void (java.lang.String[])
 com.android.build.api.dsl.DensitySplit.getCompatibleScreens: java.util.Set<java.lang.String> ()

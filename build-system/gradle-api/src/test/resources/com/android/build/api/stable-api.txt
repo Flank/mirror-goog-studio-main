@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-cce8636ad7609b611e90748644a55142da8f4f68321390dbc87838c1d35f268e
+4c321212bec2b1679a63e4c467b1e9810ea4374c974c72e65a72800879a074ce
 -------------------------------------------------------------------------
 com.android.build.api.AndroidPluginVersion implements java.lang.Comparable
 com.android.build.api.AndroidPluginVersion.<init>: com.android.build.api.AndroidPluginVersion (int, int)
@@ -135,6 +135,7 @@ com.android.build.api.dsl.CommonExtension.setNamespace: void (java.lang.String)
 com.android.build.api.dsl.CommonExtension.testCoverage: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.TestCoverage, kotlin.Unit>)
 com.android.build.api.dsl.CompileOptions
 com.android.build.api.dsl.DataBinding
+com.android.build.api.dsl.DefaultConfig implements com.android.build.api.dsl.BaseFlavor
 com.android.build.api.dsl.DynamicFeatureExtension implements com.android.build.api.dsl.CommonExtension, com.android.build.api.dsl.ApkExtension, com.android.build.api.dsl.TestedExtension
 com.android.build.api.dsl.LibraryExtension implements com.android.build.api.dsl.CommonExtension, com.android.build.api.dsl.TestedExtension
 com.android.build.api.dsl.LibraryPublishing implements com.android.build.api.dsl.Publishing
