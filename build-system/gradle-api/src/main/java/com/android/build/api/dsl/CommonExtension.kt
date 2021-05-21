@@ -377,7 +377,6 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [DefaultConfig].
      */
-    @get:Incubating
     val defaultConfig: DefaultConfigT
 
     /**
@@ -389,7 +388,6 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [DefaultConfig].
      */
-    @Incubating
     fun defaultConfig(action: DefaultConfigT.() -> Unit)
 
 
