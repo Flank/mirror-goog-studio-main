@@ -120,7 +120,6 @@ com.android.build.api.dsl.ApplicationBuildType.setDebuggable: void (boolean)
 com.android.build.api.dsl.ApplicationBuildType.setDefault: void (boolean)
 com.android.build.api.dsl.ApplicationBuildType.setEmbedMicroApp: void (boolean)
 com.android.build.api.dsl.ApplicationDefaultConfig implements com.android.build.api.dsl.ApplicationBaseFlavor, com.android.build.api.dsl.DefaultConfig
-com.android.build.api.dsl.ApplicationExtension implements com.android.build.api.dsl.CommonExtension, com.android.build.api.dsl.ApkExtension, com.android.build.api.dsl.TestedExtension
 com.android.build.api.dsl.ApplicationExtension.bundle: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.Bundle, kotlin.Unit>)
 com.android.build.api.dsl.ApplicationExtension.dependenciesInfo: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.DependenciesInfo, kotlin.Unit>)
 com.android.build.api.dsl.ApplicationExtension.getAssetPacks: java.util.Set<java.lang.String> ()
