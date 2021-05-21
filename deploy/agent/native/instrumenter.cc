@@ -105,8 +105,8 @@ bool LoadInstrumentationJar(jvmtiEnv* jvmti, JNIEnv* jni,
   // Check for the existence of a breadcrumb class, indicating a previous agent
   // has already loaded instrumentation. If no previous agent has run on this
   // jvm, add our instrumentation classes to the bootstrap class loader.
-  jclass unused = jni->FindClass(kBreadcrumbClass);
-  if (unused == nullptr) {
+  jclass klass = jni->FindClass(kBreadcrumbClass);
+  if (klass == nullptr) {
     Log::V("No existing instrumentation found. Loading instrumentation from %s",
            kInstrumentationJarName.c_str());
     jni->ExceptionClear();
@@ -116,7 +116,22 @@ bool LoadInstrumentationJar(jvmtiEnv* jvmti, JNIEnv* jni,
       return false;
     }
   } else {
-    jni->DeleteLocalRef(unused);
+    // Ensure that the jar hasn't changed since we last instrumented. If it has,
+    // fail out for now. This is an important scenario to guard against, since
+    // it would likely cause silent failures.
+    JniClass breadcrumb(jni, klass);
+    jstring jar_hash = jni->NewStringUTF(runtime_jar_hash);
+    jboolean matches = breadcrumb.CallStaticBooleanMethod(
+        "checkHash", "(Ljava/lang/String;)Z", jar_hash);
+    jni->DeleteLocalRef(jar_hash);
+
+    if (!matches) {
+      Log::E(
+          "The instrumentation jar at %s does not match the jar previously "
+          "used to instrument. The application must be restarted.",
+          kInstrumentationJarName.c_str());
+      return false;
+    }
   }
   return true;
 }
@@ -205,27 +220,7 @@ bool ApplyTransforms(jvmtiEnv* jvmti, JNIEnv* jni,
 
 bool Instrument(jvmtiEnv* jvmti, JNIEnv* jni, const std::string& jar,
                 bool overlay_swap) {
-  // The breadcrumb class stores some checks between runs of the agent.
-  // We can't use the class from the FindClass call because it may not have
-  // actually found the class.
   JniClass breadcrumb(jni, kBreadcrumbClass);
-
-  // Ensure that the jar hasn't changed since we last instrumented. If it has,
-  // fail out for now. This is an important scenario to guard against, since it
-  // would likely cause silent failures.
-  jstring jar_hash = jni->NewStringUTF(runtime_jar_hash);
-  jboolean matches = breadcrumb.CallStaticBooleanMethod(
-      "checkHash", "(Ljava/lang/String;)Z", jar_hash);
-  jni->DeleteLocalRef(jar_hash);
-
-  if (!matches) {
-    Log::E(
-        "The instrumentation jar at %s does not match the jar previously used "
-        "to instrument. The application must be restarted.",
-        kInstrumentationJarName.c_str());
-    return false;
-  }
-
   // Check if we need to instrument, or if a previous agent successfully did.
   if (breadcrumb.CallStaticBooleanMethod("isFinishedInstrumenting", "()Z")) {
     return true;
