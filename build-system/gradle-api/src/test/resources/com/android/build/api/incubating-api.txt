@@ -88,7 +88,6 @@ com.android.build.api.dsl.ApkSigningConfig.setEnableV3Signing: void (java.lang.B
 com.android.build.api.dsl.ApkSigningConfig.setEnableV4Signing: void (java.lang.Boolean)
 com.android.build.api.dsl.ApkSigningConfig.setV1SigningEnabled: void (boolean)
 com.android.build.api.dsl.ApkSigningConfig.setV2SigningEnabled: void (boolean)
-com.android.build.api.dsl.ApplicationBaseFlavor implements com.android.build.api.dsl.BaseFlavor, com.android.build.api.dsl.ApplicationVariantDimension
 com.android.build.api.dsl.ApplicationBaseFlavor.getApplicationId: java.lang.String ()
 com.android.build.api.dsl.ApplicationBaseFlavor.getMaxSdk: java.lang.Integer ()
 com.android.build.api.dsl.ApplicationBaseFlavor.getTargetSdk: java.lang.Integer ()
