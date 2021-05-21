@@ -208,23 +208,23 @@ public class Deployer {
                     runner.create(
                             Tasks.OPTIMISTIC_INSTALL, apkInstaller::install, packageName, apks);
 
+            if (useCoroutineDebugger()) {
+                // TODO(b/185399333): instead of using apks, add task to get arch by opening
+                // apk
+                // has to happen after install
+                installCoroutineDebugger =
+                        runner.create(
+                                Tasks.INSTALL_COROUTINE_DEBUGGER,
+                                (String pkg, List<Apk> apksList, OverlayId overlay) ->
+                                        installCoroutineDebugger(pkg, apksList),
+                                packageName,
+                                apks,
+                                overlayId);
+            }
+
             TaskResult result = runner.run();
             installSuccess = result.isSuccess();
             if (installSuccess) {
-                if (useCoroutineDebugger()) {
-                    // TODO(b/185399333): instead of using apks, add  task to get arch by opening
-                    // apk
-                    // has to happen after install
-                    installCoroutineDebugger =
-                            runner.create(
-                                    Tasks.INSTALL_COROUTINE_DEBUGGER,
-                                    (String pkg, List<Apk> apksList, OverlayId overlay) ->
-                                            installCoroutineDebugger(pkg, apksList),
-                                    packageName,
-                                    apks,
-                                    overlayId);
-                }
-
                 runner.create(
                         Tasks.DEPLOY_CACHE_STORE,
                         deployCache::store,
@@ -304,8 +304,7 @@ public class Deployer {
                     installer.installCoroutineAgent(packageName, arch);
             return response.getStatus() == Deploy.InstallCoroutineAgentResponse.Status.OK;
         } catch (IOException e) {
-            logger.error(e, null);
-            return false;
+            throw DeployerException.installerIoException(e);
         }
     }
 
