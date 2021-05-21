@@ -25,9 +25,7 @@ import com.android.annotations.concurrency.GuardedBy;
 import com.android.utils.FileUtils;
 import com.android.utils.PathUtils;
 import java.io.BufferedReader;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
@@ -38,7 +36,6 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Properties;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
@@ -46,6 +43,16 @@ import java.util.jar.JarFile;
  * Utility methods to deal with loading the test data.
  */
 public class TestUtils {
+
+    /**
+     * Kotlin version that is used in AGP integration tests. Please note that this version does not
+     * have to be the same as the version of kotlinc used to build AGP (in Gradle or Bazel).
+     *
+     * <p>This version needs to be present in prebuilts for tests to pass (see
+     * tools/base/bazel/README.md).
+     */
+    public static final String KOTLIN_VERSION_FOR_TESTS = "1.5.0";
+
     /** Default timeout for the {@link #eventually(Runnable)} check. */
     private static final Duration DEFAULT_EVENTUALLY_TIMEOUT = Duration.ofSeconds(10);
 
@@ -54,30 +61,6 @@ public class TestUtils {
 
     @GuardedBy("TestUtils.class")
     private static Path workspaceRoot = null;
-
-    /**
-     * Returns the Kotlin version to be used in new project templates and integration tests.
-     *
-     * If you are looking for the version of the Kotlin IDE plugin,
-     * prefer using KotlinCompilerVersion.getVersion() instead.
-     */
-    @NonNull
-    public static String getKotlinVersionForTests() {
-        String versionFile = "tools/buildSrc/base/dependencies.properties";
-        Properties properties = new Properties();
-        try (InputStream data = new FileInputStream(resolveWorkspacePath(versionFile).toFile())) {
-            properties.load(data);
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
-        }
-        // We assume the versions for kotlin_gradle_plugin, kotlin_stdlib, etc. are all the same.
-        String mavenCoordinate = properties.getProperty("kotlin_gradle_plugin");
-        if (mavenCoordinate == null) {
-            throw new IllegalStateException("Did not find kotlin_gradle_plugin in " + versionFile);
-        }
-        int versionIndex = mavenCoordinate.lastIndexOf(':') + 1;
-        return mavenCoordinate.substring(versionIndex);
-    }
 
     /**
      * Creates a temporary directory that is deleted when the JVM exits.

@@ -138,7 +138,7 @@ public final class GradleTestProjectBuilder {
         }
 
         if (kotlinVersion == null) {
-            kotlinVersion = TestUtils.getKotlinVersionForTests();
+            kotlinVersion = TestUtils.KOTLIN_VERSION_FOR_TESTS;
         }
 
         if (withDeviceProvider == null) {

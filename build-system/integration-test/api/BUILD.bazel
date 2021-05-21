@@ -20,9 +20,9 @@ gradle_integration_test(
         "//tools/base/build-system:gradle_plugin_no_databinding_repo",
         "//tools/base/build-system/integration-test:androidx_latest",
         "//tools/base/build-system/integration-test:gradle_kotlin_dsl_prebuilts",
+        "//tools/base/build-system/integration-test:kotlin_gradle_plugin_prebuilts",
         "//tools/base/build-system/integration-test/api:prebuilts",
         "//tools/base/build-system/previous-versions:3.5.0",
-        "//tools/base/third_party/kotlin:kotlin-m2repository",
     ],
     #keep sorted
     maven_repos = [],
