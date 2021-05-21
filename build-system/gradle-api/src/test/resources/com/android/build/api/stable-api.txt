@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-931d0589bd9c2df24c4a2351f6eb1badaad867aa86a1252f81bf1ffd5a803a8d
+65ef5f1869f4665d70ea6efa773a736ddcac303071fe6eb39cda2de06c79e340
 -------------------------------------------------------------------------
 com.android.build.api.AndroidPluginVersion implements java.lang.Comparable
 com.android.build.api.AndroidPluginVersion.<init>: com.android.build.api.AndroidPluginVersion (int, int)
@@ -106,6 +106,9 @@ com.android.build.api.component.ComponentIdentity.getName: java.lang.String ()
 com.android.build.api.component.ComponentIdentity.getProductFlavors: java.util.List<kotlin.Pair<java.lang.String, java.lang.String>> ()
 com.android.build.api.component.TestComponent implements com.android.build.api.component.Component
 com.android.build.api.component.TestFixtures implements com.android.build.api.variant.GeneratesAar, com.android.build.api.variant.HasAndroidResources, com.android.build.api.component.Component
+com.android.build.api.dsl.AarMetadata
+com.android.build.api.dsl.AarMetadata.getMinCompileSdk: java.lang.Integer ()
+com.android.build.api.dsl.AarMetadata.setMinCompileSdk: void (java.lang.Integer)
 com.android.build.api.dsl.AndroidResources
 com.android.build.api.dsl.ApplicationPublishing implements com.android.build.api.dsl.Publishing
 com.android.build.api.dsl.ApplicationSingleVariant implements com.android.build.api.dsl.SingleVariant

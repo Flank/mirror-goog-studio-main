@@ -16,11 +16,19 @@
 
 package com.android.build.api.dsl
 
-import org.gradle.api.Incubating
-
-/** DSL object for configuring AAR metadata. */
-@Incubating
+/**
+ * DSL object for configuring metadata that is embedded in the AAR.
+ *
+ * This metadata is used by consumers of the AAR to control their behavior.
+ */
 interface AarMetadata {
-    /** The minimum compileSdkVersion required by any consuming module. */
+    /**
+     * The minimum compileSdkVersion required by any consuming module.
+     *
+     * For example, setting this when the AAR uses an Android resource from a new version of the
+     * Android platform will alert consuming projects that they need to update their compileSdk
+     * version to match, rather than getting an error when processing resources that the new
+     * resource could not be found.
+     */
     var minCompileSdk: Int?
 }
