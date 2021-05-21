@@ -45,41 +45,28 @@ import java.io.File
  */
 class UtpConfigFactoryTest {
     @get:Rule var mockitoJUnitRule: MockitoRule = MockitoJUnit.rule()
-    @Mock lateinit var versionedSdkLoader: VersionedSdkLoader
-    @Mock
-    lateinit var mockAppApk: File
-    @Mock
-    lateinit var mockTestApk: File
-    @Mock
-    lateinit var mockHelperApk: File
-    @Mock
-    lateinit var mockDevice: DeviceConnector
-    @Mock
-    lateinit var mockOutputDir: File
-    @Mock
-    lateinit var mockTmpDir: File
-    @Mock
-    lateinit var mockSdkDir: File
-    @Mock
-    lateinit var mockAdb: RegularFile
-    @Mock
-    lateinit var mockAdbFile: File
-    @Mock
-    lateinit var mockAdbProvider: Provider<RegularFile>
-    @Mock
-    lateinit var mockBuildToolInfo: BuildToolInfo
-    @Mock
-    lateinit var mockBuildToolInfoProvider: Provider<BuildToolInfo>
-    @Mock
-    lateinit var mockRetentionConfig: RetentionConfig
-    @Mock
-    lateinit var mockResultListenerClientCert: File
-    @Mock
-    lateinit var mockResultListenerClientPrivateKey: File
-    @Mock
-    lateinit var mockTrustCertCollection: File
-    lateinit var testResultListenerServerMetadata: UtpTestResultListenerServerMetadata
-    val testData = StaticTestData(
+
+    @Mock private lateinit var versionedSdkLoader: VersionedSdkLoader
+    @Mock private lateinit var mockAppApk: File
+    @Mock private lateinit var mockTestApk: File
+    @Mock private lateinit var mockHelperApk: File
+    @Mock private lateinit var mockDevice: DeviceConnector
+    @Mock private lateinit var mockOutputDir: File
+    @Mock private lateinit var mockTmpDir: File
+    @Mock private lateinit var mockSdkDir: File
+    @Mock private lateinit var mockAdb: RegularFile
+    @Mock private lateinit var mockAdbFile: File
+    @Mock private lateinit var mockAdbProvider: Provider<RegularFile>
+    @Mock private lateinit var mockBuildToolInfo: BuildToolInfo
+    @Mock private lateinit var mockBuildToolInfoProvider: Provider<BuildToolInfo>
+    @Mock private lateinit var mockRetentionConfig: RetentionConfig
+    @Mock private lateinit var mockResultListenerClientCert: File
+    @Mock private lateinit var mockResultListenerClientPrivateKey: File
+    @Mock private lateinit var mockTrustCertCollection: File
+
+    private lateinit var testResultListenerServerMetadata: UtpTestResultListenerServerMetadata
+
+    private val testData = StaticTestData(
         testedApplicationId = "com.example.application",
         applicationId = "com.example.application.test",
         instrumentationRunner = "androidx.test.runner.AndroidJUnitRunner",
@@ -93,33 +80,10 @@ class UtpConfigFactoryTest {
         testDirectories = emptyList(),
         testedApkFinder = { _, _ -> emptyList() }
     )
-    val testDataWithDebug = StaticTestData(
-        testedApplicationId = "com.example.application",
-        applicationId = "com.example.application.test",
-        instrumentationRunner = "androidx.test.runner.AndroidJUnitRunner",
-        instrumentationRunnerArguments = mapOf("debug" to "true"),
-        animationsDisabled = false,
-        isTestCoverageEnabled = false,
-        minSdkVersion = AndroidVersionImpl(1),
-        isLibrary = false,
-        flavorName = "",
-        testApk = mockFile("testApk.apk"),
-        testDirectories = emptyList(),
-        testedApkFinder = { _, _ -> emptyList() }
-    )
-    private val utpDependencies = object: UtpDependencies() {
-        override val launcher = FakeConfigurableFileCollection(File(""))
-        override val core = FakeConfigurableFileCollection(File(""))
-        override val deviceControllerDdmlib = FakeConfigurableFileCollection(mockFile("pathToANDROID_DEVICE_CONTROLLER_DDMLIB.jar"))
-        override val deviceProviderGradle = FakeConfigurableFileCollection(mockFile("pathToANDROID_DEVICE_PROVIDER_GRADLE.jar"))
-        override val deviceProviderVirtual = FakeConfigurableFileCollection(mockFile("pathToANDROID_DEVICE_PROVIDER_VIRTUAL.jar"))
-        override val driverInstrumentation = FakeConfigurableFileCollection(mockFile("pathToANDROID_DRIVER_INSTRUMENTATION.jar"))
-        override val testPlugin = FakeConfigurableFileCollection(mockFile("pathToANDROID_TEST_PLUGIN.jar"))
-        override val testDeviceInfoPlugin = FakeConfigurableFileCollection(mockFile("pathToANDROID_TEST_DEVICE_INFO_PLUGIN.jar"))
-        override val testCoveragePlugin = FakeConfigurableFileCollection(mockFile("pathToANDROID_TEST_PLUGIN_HOST_COVERAGE.jar"))
-        override val testLogcatPlugin = FakeConfigurableFileCollection(mockFile("pathToANDROID_TEST_PLUGIN_HOST_LOGCAT.jar"))
-        override val testPluginHostRetention = FakeConfigurableFileCollection(mockFile("pathToANDROID_TEST_PLUGIN_HOST_RETENTION.jar"))
-        override val testPluginResultListenerGradle = FakeConfigurableFileCollection(mockFile("pathToANDROID_TEST_PLUGIN_RESULT_LISTENER_GRADLE.jar"))
+
+    private val utpDependencies: UtpDependencies = mock(UtpDependencies::class.java) {
+        FakeConfigurableFileCollection(
+            mockFile("path-to-${it.method.name.removePrefix("get")}.jar"))
     }
 
     private fun mockFile(absolutePath: String): File = mock(File::class.java).also {
@@ -230,7 +194,7 @@ class UtpConfigFactoryTest {
                 }
                 class_name: "com.android.tools.utp.plugins.deviceprovider.ddmlib.DdmlibAndroidDeviceProvider"
                 jar {
-                  path: "pathToANDROID_DEVICE_CONTROLLER_DDMLIB.jar"
+                  path: "path-to-DeviceControllerDdmlib.jar"
                 }
                 config {
                   type_url: "type.googleapis.com/google.testing.platform.proto.api.config.LocalAndroidDeviceProvider"
@@ -248,7 +212,7 @@ class UtpConfigFactoryTest {
                 }
                 class_name: "com.google.testing.platform.plugin.android.AndroidDevicePlugin"
                 jar {
-                  path: "pathToANDROID_TEST_PLUGIN.jar"
+                  path: "path-to-TestPlugin.jar"
                 }
                 config {
                   type_url: "type.googleapis.com/google.testing.platform.runner.plugin.android.proto.AndroidDevicePlugin"
@@ -261,7 +225,7 @@ class UtpConfigFactoryTest {
                 }
                 class_name: "com.android.tools.utp.plugins.host.device.info.AndroidTestDeviceInfoPlugin"
                 jar {
-                  path: "pathToANDROID_TEST_DEVICE_INFO_PLUGIN.jar"
+                  path: "path-to-TestDeviceInfoPlugin.jar"
                 }
               }
               host_plugin {
@@ -270,7 +234,7 @@ class UtpConfigFactoryTest {
                 }
                 class_name: "com.android.tools.utp.plugins.host.logcat.AndroidTestLogcatPlugin"
                 jar {
-                  path: "pathToANDROID_TEST_PLUGIN_HOST_LOGCAT.jar"
+                  path: "path-to-TestLogcatPlugin.jar"
                 }
               }
               environment {
@@ -309,7 +273,7 @@ class UtpConfigFactoryTest {
                 }
                 class_name: "com.google.testing.platform.runtime.android.driver.AndroidInstrumentationDriver"
                 jar {
-                  path: "pathToANDROID_DRIVER_INSTRUMENTATION.jar"
+                  path: "path-to-DriverInstrumentation.jar"
                 }
                 config {
                   type_url: "type.googleapis.com/google.testing.platform.proto.api.config.AndroidInstrumentationDriver"
@@ -323,7 +287,7 @@ class UtpConfigFactoryTest {
               }
               class_name: "com.android.tools.utp.plugins.result.listener.gradle.GradleAndroidTestResultListener"
               jar {
-                path: "pathToANDROID_TEST_PLUGIN_RESULT_LISTENER_GRADLE.jar"
+                path: "path-to-TestPluginResultListenerGradle.jar"
               }
               config {
                 type_url: "type.googleapis.com/com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidTestResultListenerConfig"
@@ -359,7 +323,7 @@ class UtpConfigFactoryTest {
                 }
                 class_name: "com.android.tools.utp.plugins.deviceprovider.ddmlib.DdmlibAndroidDeviceProvider"
                 jar {
-                  path: "pathToANDROID_DEVICE_CONTROLLER_DDMLIB.jar"
+                  path: "path-to-DeviceControllerDdmlib.jar"
                 }
                 config {
                   type_url: "type.googleapis.com/google.testing.platform.proto.api.config.LocalAndroidDeviceProvider"
@@ -377,7 +341,7 @@ class UtpConfigFactoryTest {
                 }
                 class_name: "com.google.testing.platform.plugin.android.AndroidDevicePlugin"
                 jar {
-                  path: "pathToANDROID_TEST_PLUGIN.jar"
+                  path: "path-to-TestPlugin.jar"
                 }
                 config {
                   type_url: "type.googleapis.com/google.testing.platform.runner.plugin.android.proto.AndroidDevicePlugin"
@@ -390,7 +354,7 @@ class UtpConfigFactoryTest {
                 }
                 class_name: "com.android.tools.utp.plugins.host.device.info.AndroidTestDeviceInfoPlugin"
                 jar {
-                  path: "pathToANDROID_TEST_DEVICE_INFO_PLUGIN.jar"
+                  path: "path-to-TestDeviceInfoPlugin.jar"
                 }
               }
               host_plugin {
@@ -399,7 +363,7 @@ class UtpConfigFactoryTest {
                 }
                 class_name: "com.android.tools.utp.plugins.host.logcat.AndroidTestLogcatPlugin"
                 jar {
-                  path: "pathToANDROID_TEST_PLUGIN_HOST_LOGCAT.jar"
+                  path: "path-to-TestLogcatPlugin.jar"
                 }
               }
               environment {
@@ -438,7 +402,7 @@ class UtpConfigFactoryTest {
                 }
                 class_name: "com.google.testing.platform.runtime.android.driver.AndroidInstrumentationDriver"
                 jar {
-                  path: "pathToANDROID_DRIVER_INSTRUMENTATION.jar"
+                  path: "path-to-DriverInstrumentation.jar"
                 }
                 config {
                   type_url: "type.googleapis.com/google.testing.platform.proto.api.config.AndroidInstrumentationDriver"
@@ -452,7 +416,7 @@ class UtpConfigFactoryTest {
               }
               class_name: "com.android.tools.utp.plugins.result.listener.gradle.GradleAndroidTestResultListener"
               jar {
-                path: "pathToANDROID_TEST_PLUGIN_RESULT_LISTENER_GRADLE.jar"
+                path: "path-to-TestPluginResultListenerGradle.jar"
               }
               config {
                 type_url: "type.googleapis.com/com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidTestResultListenerConfig"
@@ -491,7 +455,7 @@ class UtpConfigFactoryTest {
                 }
                 class_name: "com.android.tools.utp.plugins.deviceprovider.ddmlib.DdmlibAndroidDeviceProvider"
                 jar {
-                  path: "pathToANDROID_DEVICE_CONTROLLER_DDMLIB.jar"
+                  path: "path-to-DeviceControllerDdmlib.jar"
                 }
                 config {
                   type_url: "type.googleapis.com/google.testing.platform.proto.api.config.LocalAndroidDeviceProvider"
@@ -509,7 +473,7 @@ class UtpConfigFactoryTest {
                 }
                 class_name: "com.android.tools.utp.plugins.host.icebox.IceboxPlugin"
                 jar {
-                  path: "pathToANDROID_TEST_PLUGIN_HOST_RETENTION.jar"
+                  path: "path-to-TestPluginHostRetention.jar"
                 }
                 config {
                   type_url: "type.googleapis.com/com.android.tools.utp.plugins.host.icebox.proto.IceboxPlugin"
@@ -522,7 +486,7 @@ class UtpConfigFactoryTest {
                 }
                 class_name: "com.google.testing.platform.plugin.android.AndroidDevicePlugin"
                 jar {
-                  path: "pathToANDROID_TEST_PLUGIN.jar"
+                  path: "path-to-TestPlugin.jar"
                 }
                 config {
                   type_url: "type.googleapis.com/google.testing.platform.runner.plugin.android.proto.AndroidDevicePlugin"
@@ -535,7 +499,7 @@ class UtpConfigFactoryTest {
                 }
                 class_name: "com.android.tools.utp.plugins.host.device.info.AndroidTestDeviceInfoPlugin"
                 jar {
-                  path: "pathToANDROID_TEST_DEVICE_INFO_PLUGIN.jar"
+                  path: "path-to-TestDeviceInfoPlugin.jar"
                 }
               }
               host_plugin {
@@ -544,7 +508,7 @@ class UtpConfigFactoryTest {
                 }
                 class_name: "com.android.tools.utp.plugins.host.logcat.AndroidTestLogcatPlugin"
                 jar {
-                  path: "pathToANDROID_TEST_PLUGIN_HOST_LOGCAT.jar"
+                  path: "path-to-TestLogcatPlugin.jar"
                 }
               }
               environment {
@@ -583,7 +547,7 @@ class UtpConfigFactoryTest {
                 }
                 class_name: "com.google.testing.platform.runtime.android.driver.AndroidInstrumentationDriver"
                 jar {
-                  path: "pathToANDROID_DRIVER_INSTRUMENTATION.jar"
+                  path: "path-to-DriverInstrumentation.jar"
                 }
                 config {
                   type_url: "type.googleapis.com/google.testing.platform.proto.api.config.AndroidInstrumentationDriver"
@@ -597,7 +561,7 @@ class UtpConfigFactoryTest {
               }
               class_name: "com.android.tools.utp.plugins.result.listener.gradle.GradleAndroidTestResultListener"
               jar {
-                path: "pathToANDROID_TEST_PLUGIN_RESULT_LISTENER_GRADLE.jar"
+                path: "path-to-TestPluginResultListenerGradle.jar"
               }
               config {
                 type_url: "type.googleapis.com/com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidTestResultListenerConfig"
@@ -623,7 +587,8 @@ class UtpConfigFactoryTest {
         `when`(mockRetentionConfig.enabled).thenReturn(true)
         `when`(mockRetentionConfig.retainAll).thenReturn(true)
 
-        val runnerConfigProto = createForLocalDevice(testData = testDataWithDebug)
+        val runnerConfigProto = createForLocalDevice(
+            testData = testData.copy(instrumentationRunnerArguments = mapOf("debug" to "true")))
 
         assertThat(runnerConfigProto.toString()).isEqualTo("""
             device {
@@ -636,7 +601,7 @@ class UtpConfigFactoryTest {
                 }
                 class_name: "com.android.tools.utp.plugins.deviceprovider.ddmlib.DdmlibAndroidDeviceProvider"
                 jar {
-                  path: "pathToANDROID_DEVICE_CONTROLLER_DDMLIB.jar"
+                  path: "path-to-DeviceControllerDdmlib.jar"
                 }
                 config {
                   type_url: "type.googleapis.com/google.testing.platform.proto.api.config.LocalAndroidDeviceProvider"
@@ -654,7 +619,7 @@ class UtpConfigFactoryTest {
                 }
                 class_name: "com.google.testing.platform.plugin.android.AndroidDevicePlugin"
                 jar {
-                  path: "pathToANDROID_TEST_PLUGIN.jar"
+                  path: "path-to-TestPlugin.jar"
                 }
                 config {
                   type_url: "type.googleapis.com/google.testing.platform.runner.plugin.android.proto.AndroidDevicePlugin"
@@ -667,7 +632,7 @@ class UtpConfigFactoryTest {
                 }
                 class_name: "com.android.tools.utp.plugins.host.device.info.AndroidTestDeviceInfoPlugin"
                 jar {
-                  path: "pathToANDROID_TEST_DEVICE_INFO_PLUGIN.jar"
+                  path: "path-to-TestDeviceInfoPlugin.jar"
                 }
               }
               host_plugin {
@@ -676,7 +641,7 @@ class UtpConfigFactoryTest {
                 }
                 class_name: "com.android.tools.utp.plugins.host.logcat.AndroidTestLogcatPlugin"
                 jar {
-                  path: "pathToANDROID_TEST_PLUGIN_HOST_LOGCAT.jar"
+                  path: "path-to-TestLogcatPlugin.jar"
                 }
               }
               environment {
@@ -715,7 +680,7 @@ class UtpConfigFactoryTest {
                 }
                 class_name: "com.google.testing.platform.runtime.android.driver.AndroidInstrumentationDriver"
                 jar {
-                  path: "pathToANDROID_DRIVER_INSTRUMENTATION.jar"
+                  path: "path-to-DriverInstrumentation.jar"
                 }
                 config {
                   type_url: "type.googleapis.com/google.testing.platform.proto.api.config.AndroidInstrumentationDriver"
@@ -729,7 +694,7 @@ class UtpConfigFactoryTest {
               }
               class_name: "com.android.tools.utp.plugins.result.listener.gradle.GradleAndroidTestResultListener"
               jar {
-                path: "pathToANDROID_TEST_PLUGIN_RESULT_LISTENER_GRADLE.jar"
+                path: "path-to-TestPluginResultListenerGradle.jar"
               }
               config {
                 type_url: "type.googleapis.com/com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidTestResultListenerConfig"
@@ -770,7 +735,7 @@ class UtpConfigFactoryTest {
                 }
                 class_name: "com.android.tools.utp.plugins.deviceprovider.ddmlib.DdmlibAndroidDeviceProvider"
                 jar {
-                  path: "pathToANDROID_DEVICE_CONTROLLER_DDMLIB.jar"
+                  path: "path-to-DeviceControllerDdmlib.jar"
                 }
                 config {
                   type_url: "type.googleapis.com/google.testing.platform.proto.api.config.LocalAndroidDeviceProvider"
@@ -788,7 +753,7 @@ class UtpConfigFactoryTest {
                 }
                 class_name: "com.android.tools.utp.plugins.host.icebox.IceboxPlugin"
                 jar {
-                  path: "pathToANDROID_TEST_PLUGIN_HOST_RETENTION.jar"
+                  path: "path-to-TestPluginHostRetention.jar"
                 }
                 config {
                   type_url: "type.googleapis.com/com.android.tools.utp.plugins.host.icebox.proto.IceboxPlugin"
@@ -801,7 +766,7 @@ class UtpConfigFactoryTest {
                 }
                 class_name: "com.google.testing.platform.plugin.android.AndroidDevicePlugin"
                 jar {
-                  path: "pathToANDROID_TEST_PLUGIN.jar"
+                  path: "path-to-TestPlugin.jar"
                 }
                 config {
                   type_url: "type.googleapis.com/google.testing.platform.runner.plugin.android.proto.AndroidDevicePlugin"
@@ -814,7 +779,7 @@ class UtpConfigFactoryTest {
                 }
                 class_name: "com.android.tools.utp.plugins.host.device.info.AndroidTestDeviceInfoPlugin"
                 jar {
-                  path: "pathToANDROID_TEST_DEVICE_INFO_PLUGIN.jar"
+                  path: "path-to-TestDeviceInfoPlugin.jar"
                 }
               }
               host_plugin {
@@ -823,7 +788,7 @@ class UtpConfigFactoryTest {
                 }
                 class_name: "com.android.tools.utp.plugins.host.logcat.AndroidTestLogcatPlugin"
                 jar {
-                  path: "pathToANDROID_TEST_PLUGIN_HOST_LOGCAT.jar"
+                  path: "path-to-TestLogcatPlugin.jar"
                 }
               }
               environment {
@@ -862,7 +827,7 @@ class UtpConfigFactoryTest {
                 }
                 class_name: "com.google.testing.platform.runtime.android.driver.AndroidInstrumentationDriver"
                 jar {
-                  path: "pathToANDROID_DRIVER_INSTRUMENTATION.jar"
+                  path: "path-to-DriverInstrumentation.jar"
                 }
                 config {
                   type_url: "type.googleapis.com/google.testing.platform.proto.api.config.AndroidInstrumentationDriver"
@@ -876,7 +841,7 @@ class UtpConfigFactoryTest {
               }
               class_name: "com.android.tools.utp.plugins.result.listener.gradle.GradleAndroidTestResultListener"
               jar {
-                path: "pathToANDROID_TEST_PLUGIN_RESULT_LISTENER_GRADLE.jar"
+                path: "path-to-TestPluginResultListenerGradle.jar"
               }
               config {
                 type_url: "type.googleapis.com/com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidTestResultListenerConfig"
@@ -915,7 +880,7 @@ class UtpConfigFactoryTest {
                 }
                 class_name: "com.android.tools.utp.plugins.deviceprovider.ddmlib.DdmlibAndroidDeviceProvider"
                 jar {
-                  path: "pathToANDROID_DEVICE_CONTROLLER_DDMLIB.jar"
+                  path: "path-to-DeviceControllerDdmlib.jar"
                 }
                 config {
                   type_url: "type.googleapis.com/google.testing.platform.proto.api.config.LocalAndroidDeviceProvider"
@@ -933,7 +898,7 @@ class UtpConfigFactoryTest {
                 }
                 class_name: "com.android.tools.utp.plugins.host.icebox.IceboxPlugin"
                 jar {
-                  path: "pathToANDROID_TEST_PLUGIN_HOST_RETENTION.jar"
+                  path: "path-to-TestPluginHostRetention.jar"
                 }
                 config {
                   type_url: "type.googleapis.com/com.android.tools.utp.plugins.host.icebox.proto.IceboxPlugin"
@@ -946,7 +911,7 @@ class UtpConfigFactoryTest {
                 }
                 class_name: "com.google.testing.platform.plugin.android.AndroidDevicePlugin"
                 jar {
-                  path: "pathToANDROID_TEST_PLUGIN.jar"
+                  path: "path-to-TestPlugin.jar"
                 }
                 config {
                   type_url: "type.googleapis.com/google.testing.platform.runner.plugin.android.proto.AndroidDevicePlugin"
@@ -959,7 +924,7 @@ class UtpConfigFactoryTest {
                 }
                 class_name: "com.android.tools.utp.plugins.host.device.info.AndroidTestDeviceInfoPlugin"
                 jar {
-                  path: "pathToANDROID_TEST_DEVICE_INFO_PLUGIN.jar"
+                  path: "path-to-TestDeviceInfoPlugin.jar"
                 }
               }
               host_plugin {
@@ -968,7 +933,7 @@ class UtpConfigFactoryTest {
                 }
                 class_name: "com.android.tools.utp.plugins.host.logcat.AndroidTestLogcatPlugin"
                 jar {
-                  path: "pathToANDROID_TEST_PLUGIN_HOST_LOGCAT.jar"
+                  path: "path-to-TestLogcatPlugin.jar"
                 }
               }
               environment {
@@ -1007,7 +972,7 @@ class UtpConfigFactoryTest {
                 }
                 class_name: "com.google.testing.platform.runtime.android.driver.AndroidInstrumentationDriver"
                 jar {
-                  path: "pathToANDROID_DRIVER_INSTRUMENTATION.jar"
+                  path: "path-to-DriverInstrumentation.jar"
                 }
                 config {
                   type_url: "type.googleapis.com/google.testing.platform.proto.api.config.AndroidInstrumentationDriver"
@@ -1021,7 +986,7 @@ class UtpConfigFactoryTest {
               }
               class_name: "com.android.tools.utp.plugins.result.listener.gradle.GradleAndroidTestResultListener"
               jar {
-                path: "pathToANDROID_TEST_PLUGIN_RESULT_LISTENER_GRADLE.jar"
+                path: "path-to-TestPluginResultListenerGradle.jar"
               }
               config {
                 type_url: "type.googleapis.com/com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidTestResultListenerConfig"
@@ -1057,7 +1022,7 @@ class UtpConfigFactoryTest {
                 }
                 class_name: "com.android.tools.utp.plugins.deviceprovider.gradle.GradleManagedAndroidDeviceProvider"
                 jar {
-                  path: "pathToANDROID_DEVICE_PROVIDER_GRADLE.jar"
+                  path: "path-to-DeviceProviderGradle.jar"
                 }
                 config {
                   type_url: "type.googleapis.com/com.android.tools.utp.plugins.deviceprovider.gradle.proto.GradleManagedAndroidDeviceProviderConfig"
@@ -1075,7 +1040,7 @@ class UtpConfigFactoryTest {
                 }
                 class_name: "com.google.testing.platform.plugin.android.AndroidDevicePlugin"
                 jar {
-                  path: "pathToANDROID_TEST_PLUGIN.jar"
+                  path: "path-to-TestPlugin.jar"
                 }
                 config {
                   type_url: "type.googleapis.com/google.testing.platform.runner.plugin.android.proto.AndroidDevicePlugin"
@@ -1088,7 +1053,7 @@ class UtpConfigFactoryTest {
                 }
                 class_name: "com.android.tools.utp.plugins.host.device.info.AndroidTestDeviceInfoPlugin"
                 jar {
-                  path: "pathToANDROID_TEST_DEVICE_INFO_PLUGIN.jar"
+                  path: "path-to-TestDeviceInfoPlugin.jar"
                 }
               }
               host_plugin {
@@ -1097,7 +1062,7 @@ class UtpConfigFactoryTest {
                 }
                 class_name: "com.android.tools.utp.plugins.host.logcat.AndroidTestLogcatPlugin"
                 jar {
-                  path: "pathToANDROID_TEST_PLUGIN_HOST_LOGCAT.jar"
+                  path: "path-to-TestLogcatPlugin.jar"
                 }
               }
               environment {
@@ -1136,7 +1101,7 @@ class UtpConfigFactoryTest {
                 }
                 class_name: "com.google.testing.platform.runtime.android.driver.AndroidInstrumentationDriver"
                 jar {
-                  path: "pathToANDROID_DRIVER_INSTRUMENTATION.jar"
+                  path: "path-to-DriverInstrumentation.jar"
                 }
                 config {
                   type_url: "type.googleapis.com/google.testing.platform.proto.api.config.AndroidInstrumentationDriver"
@@ -1150,7 +1115,7 @@ class UtpConfigFactoryTest {
               }
               class_name: "com.android.tools.utp.plugins.result.listener.gradle.GradleAndroidTestResultListener"
               jar {
-                path: "pathToANDROID_TEST_PLUGIN_RESULT_LISTENER_GRADLE.jar"
+                path: "path-to-TestPluginResultListenerGradle.jar"
               }
               config {
                 type_url: "type.googleapis.com/com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidTestResultListenerConfig"
@@ -1186,7 +1151,7 @@ class UtpConfigFactoryTest {
                 }
                 class_name: "com.android.tools.utp.plugins.deviceprovider.gradle.GradleManagedAndroidDeviceProvider"
                 jar {
-                  path: "pathToANDROID_DEVICE_PROVIDER_GRADLE.jar"
+                  path: "path-to-DeviceProviderGradle.jar"
                 }
                 config {
                   type_url: "type.googleapis.com/com.android.tools.utp.plugins.deviceprovider.gradle.proto.GradleManagedAndroidDeviceProviderConfig"
@@ -1204,7 +1169,7 @@ class UtpConfigFactoryTest {
                 }
                 class_name: "com.google.testing.platform.plugin.android.AndroidDevicePlugin"
                 jar {
-                  path: "pathToANDROID_TEST_PLUGIN.jar"
+                  path: "path-to-TestPlugin.jar"
                 }
                 config {
                   type_url: "type.googleapis.com/google.testing.platform.runner.plugin.android.proto.AndroidDevicePlugin"
@@ -1217,7 +1182,7 @@ class UtpConfigFactoryTest {
                 }
                 class_name: "com.android.tools.utp.plugins.host.device.info.AndroidTestDeviceInfoPlugin"
                 jar {
-                  path: "pathToANDROID_TEST_DEVICE_INFO_PLUGIN.jar"
+                  path: "path-to-TestDeviceInfoPlugin.jar"
                 }
               }
               host_plugin {
@@ -1226,7 +1191,7 @@ class UtpConfigFactoryTest {
                 }
                 class_name: "com.android.tools.utp.plugins.host.logcat.AndroidTestLogcatPlugin"
                 jar {
-                  path: "pathToANDROID_TEST_PLUGIN_HOST_LOGCAT.jar"
+                  path: "path-to-TestLogcatPlugin.jar"
                 }
               }
               environment {
@@ -1265,7 +1230,7 @@ class UtpConfigFactoryTest {
                 }
                 class_name: "com.google.testing.platform.runtime.android.driver.AndroidInstrumentationDriver"
                 jar {
-                  path: "pathToANDROID_DRIVER_INSTRUMENTATION.jar"
+                  path: "path-to-DriverInstrumentation.jar"
                 }
                 config {
                   type_url: "type.googleapis.com/google.testing.platform.proto.api.config.AndroidInstrumentationDriver"
@@ -1279,7 +1244,7 @@ class UtpConfigFactoryTest {
               }
               class_name: "com.android.tools.utp.plugins.result.listener.gradle.GradleAndroidTestResultListener"
               jar {
-                path: "pathToANDROID_TEST_PLUGIN_RESULT_LISTENER_GRADLE.jar"
+                path: "path-to-TestPluginResultListenerGradle.jar"
               }
               config {
                 type_url: "type.googleapis.com/com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidTestResultListenerConfig"
@@ -1318,7 +1283,7 @@ class UtpConfigFactoryTest {
                 }
                 class_name: "com.android.tools.utp.plugins.deviceprovider.gradle.GradleManagedAndroidDeviceProvider"
                 jar {
-                  path: "pathToANDROID_DEVICE_PROVIDER_GRADLE.jar"
+                  path: "path-to-DeviceProviderGradle.jar"
                 }
                 config {
                   type_url: "type.googleapis.com/com.android.tools.utp.plugins.deviceprovider.gradle.proto.GradleManagedAndroidDeviceProviderConfig"
@@ -1336,7 +1301,7 @@ class UtpConfigFactoryTest {
                 }
                 class_name: "com.android.tools.utp.plugins.host.icebox.IceboxPlugin"
                 jar {
-                  path: "pathToANDROID_TEST_PLUGIN_HOST_RETENTION.jar"
+                  path: "path-to-TestPluginHostRetention.jar"
                 }
                 config {
                   type_url: "type.googleapis.com/com.android.tools.utp.plugins.host.icebox.proto.IceboxPlugin"
@@ -1349,7 +1314,7 @@ class UtpConfigFactoryTest {
                 }
                 class_name: "com.google.testing.platform.plugin.android.AndroidDevicePlugin"
                 jar {
-                  path: "pathToANDROID_TEST_PLUGIN.jar"
+                  path: "path-to-TestPlugin.jar"
                 }
                 config {
                   type_url: "type.googleapis.com/google.testing.platform.runner.plugin.android.proto.AndroidDevicePlugin"
@@ -1362,7 +1327,7 @@ class UtpConfigFactoryTest {
                 }
                 class_name: "com.android.tools.utp.plugins.host.device.info.AndroidTestDeviceInfoPlugin"
                 jar {
-                  path: "pathToANDROID_TEST_DEVICE_INFO_PLUGIN.jar"
+                  path: "path-to-TestDeviceInfoPlugin.jar"
                 }
               }
               host_plugin {
@@ -1371,7 +1336,7 @@ class UtpConfigFactoryTest {
                 }
                 class_name: "com.android.tools.utp.plugins.host.logcat.AndroidTestLogcatPlugin"
                 jar {
-                  path: "pathToANDROID_TEST_PLUGIN_HOST_LOGCAT.jar"
+                  path: "path-to-TestLogcatPlugin.jar"
                 }
               }
               environment {
@@ -1410,7 +1375,7 @@ class UtpConfigFactoryTest {
                 }
                 class_name: "com.google.testing.platform.runtime.android.driver.AndroidInstrumentationDriver"
                 jar {
-                  path: "pathToANDROID_DRIVER_INSTRUMENTATION.jar"
+                  path: "path-to-DriverInstrumentation.jar"
                 }
                 config {
                   type_url: "type.googleapis.com/google.testing.platform.proto.api.config.AndroidInstrumentationDriver"
@@ -1424,7 +1389,7 @@ class UtpConfigFactoryTest {
               }
               class_name: "com.android.tools.utp.plugins.result.listener.gradle.GradleAndroidTestResultListener"
               jar {
-                path: "pathToANDROID_TEST_PLUGIN_RESULT_LISTENER_GRADLE.jar"
+                path: "path-to-TestPluginResultListenerGradle.jar"
               }
               config {
                 type_url: "type.googleapis.com/com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidTestResultListenerConfig"
@@ -1462,7 +1427,7 @@ class UtpConfigFactoryTest {
                 }
                 class_name: "com.android.tools.utp.plugins.deviceprovider.ddmlib.DdmlibAndroidDeviceProvider"
                 jar {
-                  path: "pathToANDROID_DEVICE_CONTROLLER_DDMLIB.jar"
+                  path: "path-to-DeviceControllerDdmlib.jar"
                 }
                 config {
                   type_url: "type.googleapis.com/google.testing.platform.proto.api.config.LocalAndroidDeviceProvider"
@@ -1480,7 +1445,7 @@ class UtpConfigFactoryTest {
                 }
                 class_name: "com.google.testing.platform.plugin.android.AndroidDevicePlugin"
                 jar {
-                  path: "pathToANDROID_TEST_PLUGIN.jar"
+                  path: "path-to-TestPlugin.jar"
                 }
                 config {
                   type_url: "type.googleapis.com/google.testing.platform.runner.plugin.android.proto.AndroidDevicePlugin"
@@ -1493,7 +1458,7 @@ class UtpConfigFactoryTest {
                 }
                 class_name: "com.android.tools.utp.plugins.host.device.info.AndroidTestDeviceInfoPlugin"
                 jar {
-                  path: "pathToANDROID_TEST_DEVICE_INFO_PLUGIN.jar"
+                  path: "path-to-TestDeviceInfoPlugin.jar"
                 }
               }
               host_plugin {
@@ -1502,7 +1467,7 @@ class UtpConfigFactoryTest {
                 }
                 class_name: "com.android.tools.utp.plugins.host.logcat.AndroidTestLogcatPlugin"
                 jar {
-                  path: "pathToANDROID_TEST_PLUGIN_HOST_LOGCAT.jar"
+                  path: "path-to-TestLogcatPlugin.jar"
                 }
               }
               host_plugin {
@@ -1511,7 +1476,7 @@ class UtpConfigFactoryTest {
                 }
                 class_name: "com.android.tools.utp.plugins.host.coverage.AndroidTestCoveragePlugin"
                 jar {
-                  path: "pathToANDROID_TEST_PLUGIN_HOST_COVERAGE.jar"
+                  path: "path-to-TestCoveragePlugin.jar"
                 }
                 config {
                   type_url: "type.googleapis.com/com.android.tools.utp.plugins.host.coverage.proto.AndroidTestCoverageConfig"
@@ -1553,7 +1518,7 @@ class UtpConfigFactoryTest {
                 }
                 class_name: "com.google.testing.platform.runtime.android.driver.AndroidInstrumentationDriver"
                 jar {
-                  path: "pathToANDROID_DRIVER_INSTRUMENTATION.jar"
+                  path: "path-to-DriverInstrumentation.jar"
                 }
                 config {
                   type_url: "type.googleapis.com/google.testing.platform.proto.api.config.AndroidInstrumentationDriver"
@@ -1567,7 +1532,7 @@ class UtpConfigFactoryTest {
               }
               class_name: "com.android.tools.utp.plugins.result.listener.gradle.GradleAndroidTestResultListener"
               jar {
-                path: "pathToANDROID_TEST_PLUGIN_RESULT_LISTENER_GRADLE.jar"
+                path: "path-to-TestPluginResultListenerGradle.jar"
               }
               config {
                 type_url: "type.googleapis.com/com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidTestResultListenerConfig"
