@@ -118,7 +118,6 @@ com.android.build.api.dsl.ApplicationBuildType.setCrunchPngs: void (java.lang.Bo
 com.android.build.api.dsl.ApplicationBuildType.setDebuggable: void (boolean)
 com.android.build.api.dsl.ApplicationBuildType.setDefault: void (boolean)
 com.android.build.api.dsl.ApplicationBuildType.setEmbedMicroApp: void (boolean)
-com.android.build.api.dsl.ApplicationDefaultConfig implements com.android.build.api.dsl.ApplicationBaseFlavor, com.android.build.api.dsl.DefaultConfig
 com.android.build.api.dsl.ApplicationExtension.bundle: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.Bundle, kotlin.Unit>)
 com.android.build.api.dsl.ApplicationExtension.dependenciesInfo: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.DependenciesInfo, kotlin.Unit>)
 com.android.build.api.dsl.ApplicationExtension.getAssetPacks: java.util.Set<java.lang.String> ()
@@ -468,7 +467,6 @@ com.android.build.api.dsl.LibraryBuildFeatures.setPrefabPublishing: void (java.l
 com.android.build.api.dsl.LibraryBuildType implements com.android.build.api.dsl.BuildType, com.android.build.api.dsl.LibraryVariantDimension
 com.android.build.api.dsl.LibraryBuildType.isDefault: boolean ()
 com.android.build.api.dsl.LibraryBuildType.setDefault: void (boolean)
-com.android.build.api.dsl.LibraryDefaultConfig implements com.android.build.api.dsl.LibraryBaseFlavor, com.android.build.api.dsl.DefaultConfig
 com.android.build.api.dsl.LibraryExtension.getAidlPackagedList: java.util.Collection<java.lang.String> ()
 com.android.build.api.dsl.LibraryExtension.getPrefab: org.gradle.api.NamedDomainObjectContainer<com.android.build.api.dsl.PrefabPackagingOptions> ()
 com.android.build.api.dsl.LibraryExtension.getPublishing: com.android.build.api.dsl.LibraryPublishing ()
