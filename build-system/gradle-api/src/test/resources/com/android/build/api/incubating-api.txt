@@ -475,7 +475,6 @@ com.android.build.api.dsl.LibraryBuildType implements com.android.build.api.dsl.
 com.android.build.api.dsl.LibraryBuildType.isDefault: boolean ()
 com.android.build.api.dsl.LibraryBuildType.setDefault: void (boolean)
 com.android.build.api.dsl.LibraryDefaultConfig implements com.android.build.api.dsl.LibraryBaseFlavor, com.android.build.api.dsl.DefaultConfig
-com.android.build.api.dsl.LibraryExtension implements com.android.build.api.dsl.CommonExtension, com.android.build.api.dsl.TestedExtension
 com.android.build.api.dsl.LibraryExtension.getAidlPackagedList: java.util.Collection<java.lang.String> ()
 com.android.build.api.dsl.LibraryExtension.getPrefab: org.gradle.api.NamedDomainObjectContainer<com.android.build.api.dsl.PrefabPackagingOptions> ()
 com.android.build.api.dsl.LibraryExtension.getPublishing: com.android.build.api.dsl.LibraryPublishing ()

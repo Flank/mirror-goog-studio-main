@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-d1f72163739b1d0ffbcd1a6a71a39e42f3451771ed1c43cf9e07abad4e8ca950
+7e3747eac13e8dcca15c845b8e4bed310981acbde4629d0bc691a94f5847d0e1
 -------------------------------------------------------------------------
 com.android.build.api.AndroidPluginVersion implements java.lang.Comparable
 com.android.build.api.AndroidPluginVersion.<init>: com.android.build.api.AndroidPluginVersion (int, int)
@@ -134,6 +134,7 @@ com.android.build.api.dsl.CommonExtension.setNamespace: void (java.lang.String)
 com.android.build.api.dsl.CommonExtension.testCoverage: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.TestCoverage, kotlin.Unit>)
 com.android.build.api.dsl.CompileOptions
 com.android.build.api.dsl.DataBinding
+com.android.build.api.dsl.LibraryExtension implements com.android.build.api.dsl.CommonExtension, com.android.build.api.dsl.TestedExtension
 com.android.build.api.dsl.LibraryPublishing implements com.android.build.api.dsl.Publishing
 com.android.build.api.dsl.LibraryPublishing.multipleVariants: void (java.lang.String, kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.MultipleVariants, kotlin.Unit>)
 com.android.build.api.dsl.LibraryPublishing.multipleVariants: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.MultipleVariants, kotlin.Unit>)
