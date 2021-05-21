@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.testing.StaticTestData
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_DEVICE_PROVIDER_DDMLIB
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_DEVICE_PROVIDER_GRADLE
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_DRIVER_INSTRUMENTATION
+import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_TEST_COVERAGE_PLUGIN
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_TEST_DEVICE_INFO_PLUGIN
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_TEST_LOGCAT_PLUGIN
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_TEST_PLUGIN
@@ -29,6 +30,7 @@ import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_TEST_
 import com.android.builder.testing.api.DeviceConnector
 import com.android.sdklib.BuildToolInfo
 import com.android.tools.utp.plugins.deviceprovider.gradle.proto.GradleManagedAndroidDeviceProviderProto
+import com.android.tools.utp.plugins.host.coverage.proto.AndroidTestCoverageConfigProto
 import com.android.tools.utp.plugins.host.icebox.proto.IceboxPluginProto
 import com.android.tools.utp.plugins.host.icebox.proto.IceboxPluginProto.IceboxPlugin
 import com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidTestResultListenerConfigProto.GradleAndroidTestResultListenerConfig
@@ -322,6 +324,9 @@ class UtpConfigFactory {
                     testData, appApks, additionalInstallOptions, helperApks, utpDependencies))
             addHostPlugin(createAndroidTestDeviceInfoPlugin(utpDependencies))
             addHostPlugin(createAndroidTestLogcatPlugin(utpDependencies))
+            if (testData.isTestCoverageEnabled) {
+                addHostPlugin(createAndroidTestCoveragePlugin(utpDependencies))
+            }
         }.build()
     }
 
@@ -473,6 +478,15 @@ class UtpConfigFactory {
 
     private fun createAndroidTestDeviceInfoPlugin(utpDependencies: UtpDependencies): ExtensionProto.Extension {
         return ANDROID_TEST_DEVICE_INFO_PLUGIN.toExtensionProto(utpDependencies)
+    }
+
+    /**
+     * Creates and configures AndroidTestCoverage UTP plugin.
+     */
+    private fun createAndroidTestCoveragePlugin(
+        utpDependencies:UtpDependencies): ExtensionProto.Extension {
+        val config = AndroidTestCoverageConfigProto.AndroidTestCoverageConfig.newBuilder().build()
+        return ANDROID_TEST_COVERAGE_PLUGIN.toExtensionProto(utpDependencies, Any.pack(config))
     }
 
     private fun createAndroidTestLogcatPlugin(utpDependencies:UtpDependencies): ExtensionProto.Extension {

@@ -116,6 +116,7 @@ class UtpConfigFactoryTest {
         override val driverInstrumentation = FakeConfigurableFileCollection(mockFile("pathToANDROID_DRIVER_INSTRUMENTATION.jar"))
         override val testPlugin = FakeConfigurableFileCollection(mockFile("pathToANDROID_TEST_PLUGIN.jar"))
         override val testDeviceInfoPlugin = FakeConfigurableFileCollection(mockFile("pathToANDROID_TEST_DEVICE_INFO_PLUGIN.jar"))
+        override val testCoveragePlugin = FakeConfigurableFileCollection(mockFile("pathToANDROID_TEST_PLUGIN_HOST_COVERAGE.jar"))
         override val testLogcatPlugin = FakeConfigurableFileCollection(mockFile("pathToANDROID_TEST_PLUGIN_HOST_LOGCAT.jar"))
         override val testPluginHostRetention = FakeConfigurableFileCollection(mockFile("pathToANDROID_TEST_PLUGIN_HOST_RETENTION.jar"))
         override val testPluginResultListenerGradle = FakeConfigurableFileCollection(mockFile("pathToANDROID_TEST_PLUGIN_RESULT_LISTENER_GRADLE.jar"))
@@ -1442,6 +1443,149 @@ class UtpConfigFactoryTest {
             }
 
         """.trimIndent())
+    }
+
+    @Test
+    fun createRunnerConfigProtoForLocalDeviceWithTestCoverage() {
+        val runnerConfigProto = createForLocalDevice(
+            testData = testData.copy(isTestCoverageEnabled = true)
+        )
+
+        assertThat(runnerConfigProto.toString()).isEqualTo("""
+            device {
+              device_id {
+                id: "mockDeviceSerialNumber"
+              }
+              provider {
+                label {
+                  label: "ANDROID_DEVICE_PROVIDER_DDMLIB"
+                }
+                class_name: "com.android.tools.utp.plugins.deviceprovider.ddmlib.DdmlibAndroidDeviceProvider"
+                jar {
+                  path: "pathToANDROID_DEVICE_CONTROLLER_DDMLIB.jar"
+                }
+                config {
+                  type_url: "type.googleapis.com/google.testing.platform.proto.api.config.LocalAndroidDeviceProvider"
+                  value: "\022\026mockDeviceSerialNumber"
+                }
+              }
+            }
+            test_fixture {
+              test_fixture_id {
+                id: "AGP_Test_Fixture"
+              }
+              host_plugin {
+                label {
+                  label: "ANDROID_TEST_PLUGIN"
+                }
+                class_name: "com.google.testing.platform.plugin.android.AndroidDevicePlugin"
+                jar {
+                  path: "pathToANDROID_TEST_PLUGIN.jar"
+                }
+                config {
+                  type_url: "type.googleapis.com/google.testing.platform.runner.plugin.android.proto.AndroidDevicePlugin"
+                  value: "\"\027\022\023\n\021mockHelperApkPath \002*\031\n\021\022\r\n\vtestApk.apk \002\022\004\n\002-g*\034\n\024\022\020\n\016mockAppApkPath \002\022\004\n\002-g*\035\n\025\022\021\n\017mockTestApkPath \002\022\004\n\002-g"
+                }
+              }
+              host_plugin {
+                label {
+                  label: "ANDROID_TEST_DEVICE_INFO_PLUGIN"
+                }
+                class_name: "com.android.tools.utp.plugins.host.device.info.AndroidTestDeviceInfoPlugin"
+                jar {
+                  path: "pathToANDROID_TEST_DEVICE_INFO_PLUGIN.jar"
+                }
+              }
+              host_plugin {
+                label {
+                  label: "ANDROID_TEST_LOGCAT_PLUGIN"
+                }
+                class_name: "com.android.tools.utp.plugins.host.logcat.AndroidTestLogcatPlugin"
+                jar {
+                  path: "pathToANDROID_TEST_PLUGIN_HOST_LOGCAT.jar"
+                }
+              }
+              host_plugin {
+                label {
+                  label: "ANDROID_TEST_COVERAGE_PLUGIN"
+                }
+                class_name: "com.android.tools.utp.plugins.host.coverage.AndroidTestCoveragePlugin"
+                jar {
+                  path: "pathToANDROID_TEST_PLUGIN_HOST_COVERAGE.jar"
+                }
+                config {
+                  type_url: "type.googleapis.com/com.android.tools.utp.plugins.host.coverage.proto.AndroidTestCoverageConfig"
+                }
+              }
+              environment {
+                output_dir {
+                  path: "mockOutputDirPath"
+                }
+                tmp_dir {
+                  path: "mockTmpDirPath"
+                }
+                android_environment {
+                  android_sdk {
+                    sdk_path {
+                      path: "mockSdkDirPath"
+                    }
+                    aapt_path {
+                      path: "mockAaptPath"
+                    }
+                    adb_path {
+                      path: "mockAdbPath"
+                    }
+                    dexdump_path {
+                      path: "mockDexdumpPath"
+                    }
+                  }
+                  test_log_dir {
+                    path: "testlog"
+                  }
+                  test_run_log {
+                    path: "test-results.log"
+                  }
+                }
+              }
+              test_driver {
+                label {
+                  label: "ANDROID_DRIVER_INSTRUMENTATION"
+                }
+                class_name: "com.google.testing.platform.runtime.android.driver.AndroidInstrumentationDriver"
+                jar {
+                  path: "pathToANDROID_DRIVER_INSTRUMENTATION.jar"
+                }
+                config {
+                  type_url: "type.googleapis.com/google.testing.platform.proto.api.config.AndroidInstrumentationDriver"
+                  value: "\nd\n`\n\027com.example.application\022\034com.example.application.test\032\'androidx.test.runner.AndroidJUnitRunner\022\000\020\200\347\204\017"
+                }
+              }
+            }
+            test_result_listener {
+              label {
+                label: "ANDROID_TEST_PLUGIN_RESULT_LISTENER_GRADLE"
+              }
+              class_name: "com.android.tools.utp.plugins.result.listener.gradle.GradleAndroidTestResultListener"
+              jar {
+                path: "pathToANDROID_TEST_PLUGIN_RESULT_LISTENER_GRADLE.jar"
+              }
+              config {
+                type_url: "type.googleapis.com/com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidTestResultListenerConfig"
+                value: "\b\322\t\022 mockResultListenerClientCertPath\032&mockResultListenerClientPrivateKeyPath\"\033mockTrustCertCollectionPath*\026mockDeviceSerialNumber"
+              }
+            }
+            single_device_executor {
+              device_execution {
+                device_id {
+                  id: "mockDeviceSerialNumber"
+                }
+                test_fixture_id {
+                  id: "AGP_Test_Fixture"
+                }
+              }
+            }
+
+            """.trimIndent())
     }
 
     @Test

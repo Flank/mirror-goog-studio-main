@@ -1420,6 +1420,20 @@ public class JarContentsTest {
                 "NOTICE");
 
         expected.putAll(
+                "com/android/tools/utp/android-test-plugin-host-coverage-proto",
+                "com/",
+                "com/android/",
+                "com/android/tools/",
+                "com/android/tools/utp/",
+                "com/android/tools/utp/plugins/",
+                "com/android/tools/utp/plugins/host/",
+                "com/android/tools/utp/plugins/host/coverage/",
+                "com/android/tools/utp/plugins/host/coverage/proto/",
+                "META-INF/",
+                "META-INF/MANIFEST.MF",
+                "NOTICE");
+
+        expected.putAll(
                 "com/android/tools/utp/android-test-plugin-host-retention-proto",
                 "com/",
                 "com/android/",
