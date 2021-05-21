@@ -126,7 +126,6 @@ com.android.build.api.dsl.ApplicationExtension.getDependenciesInfo: com.android.
 com.android.build.api.dsl.ApplicationExtension.getDynamicFeatures: java.util.Set<java.lang.String> ()
 com.android.build.api.dsl.ApplicationExtension.getPublishing: com.android.build.api.dsl.ApplicationPublishing ()
 com.android.build.api.dsl.ApplicationExtension.publishing: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.ApplicationPublishing, kotlin.Unit>)
-com.android.build.api.dsl.ApplicationProductFlavor implements com.android.build.api.dsl.ApplicationBaseFlavor, com.android.build.api.dsl.ProductFlavor
 com.android.build.api.dsl.ApplicationProductFlavor.isDefault: boolean ()
 com.android.build.api.dsl.ApplicationProductFlavor.setDefault: void (boolean)
 com.android.build.api.dsl.ApplicationVariantDimension implements com.android.build.api.dsl.VariantDimension
