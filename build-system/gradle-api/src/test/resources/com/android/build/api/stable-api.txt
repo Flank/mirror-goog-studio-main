@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-4dc1c1632822eb28f82796e441d1c679943a2793a0fc85a2af51686ebdd218df
+d2a98994b73ad03fc2ad93f086995ddd5faf9e97d68fd97fa9b6bba08c346fcf
 -------------------------------------------------------------------------
 com.android.build.api.AndroidPluginVersion implements java.lang.Comparable
 com.android.build.api.AndroidPluginVersion.<init>: com.android.build.api.AndroidPluginVersion (int, int)
@@ -138,6 +138,7 @@ com.android.build.api.dsl.CompileOptions
 com.android.build.api.dsl.DataBinding
 com.android.build.api.dsl.DefaultConfig implements com.android.build.api.dsl.BaseFlavor
 com.android.build.api.dsl.DynamicFeatureExtension implements com.android.build.api.dsl.CommonExtension, com.android.build.api.dsl.ApkExtension, com.android.build.api.dsl.TestedExtension
+com.android.build.api.dsl.LibraryBaseFlavor implements com.android.build.api.dsl.BaseFlavor, com.android.build.api.dsl.LibraryVariantDimension
 com.android.build.api.dsl.LibraryExtension implements com.android.build.api.dsl.CommonExtension, com.android.build.api.dsl.TestedExtension
 com.android.build.api.dsl.LibraryPublishing implements com.android.build.api.dsl.Publishing
 com.android.build.api.dsl.LibraryPublishing.multipleVariants: void (java.lang.String, kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.MultipleVariants, kotlin.Unit>)
