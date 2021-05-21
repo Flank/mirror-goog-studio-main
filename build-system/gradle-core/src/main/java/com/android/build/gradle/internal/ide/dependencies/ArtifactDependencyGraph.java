@@ -52,8 +52,8 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
         try {
             // get the compile artifact first.
             Set<ResolvedArtifact> compileArtifacts =
-                    ArtifactUtils.getAllArtifacts(
-                            artifactCollectionsInputs, COMPILE_CLASSPATH, dependencyFailureHandler);
+                    artifactCollectionsInputs.getAllArtifacts(
+                            COMPILE_CLASSPATH, dependencyFailureHandler);
 
             // runtimeLintJar and compileLintJar are lists of the dependencies' lint jars.
             // We'll match the component identifier of each artifact to find the lint.jar
@@ -77,10 +77,8 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
             if (withFullDependency && modelBuilder.getNeedFullRuntimeClasspath()) {
                 // in this mode, we build the full list of runtime artifact in the model
                 Set<ResolvedArtifact> runtimeArtifacts =
-                        ArtifactUtils.getAllArtifacts(
-                                artifactCollectionsInputs,
-                                RUNTIME_CLASSPATH,
-                                dependencyFailureHandler);
+                        artifactCollectionsInputs.getAllArtifacts(
+                                RUNTIME_CLASSPATH, dependencyFailureHandler);
 
                 Set<ComponentIdentifier> runtimeIds =
                         runtimeArtifacts.stream()

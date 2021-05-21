@@ -17,10 +17,10 @@
 package com.android.build.gradle.internal.ide.dependencies
 
 import com.android.build.gradle.internal.attributes.VariantAttr
+import com.android.build.gradle.internal.dependency.ResolutionResultProvider
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.ide.DependencyFailureHandler
 import com.android.build.gradle.internal.ide.v2.ArtifactDependenciesImpl
-import com.android.build.gradle.internal.ide.v2.GlobalLibraryBuildService
 import com.android.build.gradle.internal.ide.v2.GraphItemImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.builder.errors.IssueReporter
@@ -35,13 +35,12 @@ import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.artifacts.result.ResolvedVariantResult
 import org.gradle.api.artifacts.result.UnresolvedDependencyResult
 import org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifier
-import org.gradle.internal.component.local.model.OpaqueComponentIdentifier
 import java.io.File
 
 class FullDependencyGraphBuilder(
     private val inputs: ArtifactCollectionsInputs,
-    private val variantDependencies: VariantDependencies,
-    private val globalLibraryBuildService: GlobalLibraryBuildService
+    private val resolutionResultProvider: ResolutionResultProvider,
+    private val libraryService: LibraryService
 ) {
 
     private val unresolvedDependencies = mutableListOf<UnresolvedDependencyResult>()
@@ -61,7 +60,7 @@ class FullDependencyGraphBuilder(
 
         ): List<GraphItem> {
         // query for the actual graph, and get the first level children.
-        val roots: Set<DependencyResult> = variantDependencies.getResolutionResult(configType).root.dependencies
+        val roots: Set<DependencyResult> = resolutionResultProvider.getResolutionResult(configType).root.dependencies
 
         val dependencyFailureHandler = DependencyFailureHandler()
 
@@ -69,7 +68,7 @@ class FullDependencyGraphBuilder(
         // to contain information about the actual artifacts (whether they are sub-projects
         // or external dependencies, whether they are java or android, whether they are
         // wrapper local jar/aar, etc...)
-        val artifacts = getAllArtifacts(inputs, configType, dependencyFailureHandler)
+        val artifacts = inputs.getAllArtifacts(configType, dependencyFailureHandler)
 
         val artifactMap = artifacts.associateBy { it.variant }
 
@@ -92,7 +91,7 @@ class FullDependencyGraphBuilder(
         val unvisitedArtifacts = artifacts.filter { it.componentIdentifier is OpaqueComponentArtifactIdentifier }
 
         for (artifact in unvisitedArtifacts) {
-            val library = globalLibraryBuildService.getLibrary(artifact)
+            val library = libraryService.getLibrary(artifact)
             items.add(GraphItemImpl(library.key, null, listOf()))
         }
 
@@ -125,7 +124,7 @@ class FullDependencyGraphBuilder(
 
                         // create on the fly a ResolvedArtifact around this project
                         // and get the matching library item
-                        globalLibraryBuildService.getLibrary(
+                        libraryService.getLibrary(
                             ResolvedArtifact(
                                 variant.owner,
                                 variant,
@@ -144,7 +143,7 @@ class FullDependencyGraphBuilder(
                     }
                 } else {
                     // get the matching library item
-                    globalLibraryBuildService.getLibrary(artifact)
+                    libraryService.getLibrary(artifact)
                 }
 
                 if (library != null) {
@@ -170,13 +169,5 @@ class FullDependencyGraphBuilder(
         }
 
         return null
-    }
-
-    private fun VariantDependencies.getResolutionResult(
-        type: AndroidArtifacts.ConsumedConfigType
-    ): ResolutionResult = when (type) {
-        AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH -> compileClasspath.incoming.resolutionResult
-        AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH -> runtimeClasspath.incoming.resolutionResult
-        else -> throw RuntimeException("Unsupported ConsumedConfigType value: $type")
     }
 }

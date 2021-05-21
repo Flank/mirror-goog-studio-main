@@ -54,6 +54,7 @@ import com.android.build.gradle.internal.dsl.TestOptions;
 import com.android.build.gradle.internal.errors.SyncIssueReporter;
 import com.android.build.gradle.internal.errors.SyncIssueReporterImpl;
 import com.android.build.gradle.internal.ide.dependencies.ArtifactCollectionsInputs;
+import com.android.build.gradle.internal.ide.dependencies.ArtifactCollectionsInputsImpl;
 import com.android.build.gradle.internal.ide.dependencies.BuildMappingUtils;
 import com.android.build.gradle.internal.ide.dependencies.DependencyGraphBuilder;
 import com.android.build.gradle.internal.ide.dependencies.DependencyGraphBuilderKt;
@@ -875,7 +876,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                         new Level2DependencyModelBuilder(
                                 component.getServices().getBuildServiceRegistry());
                 ArtifactCollectionsInputs artifactCollectionsInputs =
-                        new ArtifactCollectionsInputs(
+                        new ArtifactCollectionsInputsImpl(
                                 component,
                                 ArtifactCollectionsInputs.RuntimeType.FULL,
                                 buildMapping);
@@ -890,7 +891,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                         new Level1DependencyModelBuilder(
                                 component.getServices().getBuildServiceRegistry());
                 ArtifactCollectionsInputs artifactCollectionsInputs =
-                        new ArtifactCollectionsInputs(
+                        new ArtifactCollectionsInputsImpl(
                                 component,
                                 ArtifactCollectionsInputs.RuntimeType.PARTIAL,
                                 buildMapping);

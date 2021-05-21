@@ -45,6 +45,7 @@ import com.android.build.gradle.internal.errors.SyncIssueReporterImpl.GlobalSync
 import com.android.build.gradle.internal.ide.DependencyFailureHandler
 import com.android.build.gradle.internal.ide.ModelBuilder
 import com.android.build.gradle.internal.ide.dependencies.ArtifactCollectionsInputs
+import com.android.build.gradle.internal.ide.dependencies.ArtifactCollectionsInputsImpl
 import com.android.build.gradle.internal.ide.dependencies.BuildMapping
 import com.android.build.gradle.internal.ide.dependencies.FullDependencyGraphBuilder
 import com.android.build.gradle.internal.ide.dependencies.MavenCoordinatesCacheBuildService
@@ -628,7 +629,7 @@ class ModelBuilder<
         mavenCoordinatesBuildService: Provider<MavenCoordinatesCacheBuildService>
     ): ArtifactDependencies {
 
-        val inputs = ArtifactCollectionsInputs(
+        val inputs = ArtifactCollectionsInputsImpl(
             variantDependencies = component.variantDependencies,
             projectPath = component.services.projectInfo.getProject().path,
             variantName = component.name,

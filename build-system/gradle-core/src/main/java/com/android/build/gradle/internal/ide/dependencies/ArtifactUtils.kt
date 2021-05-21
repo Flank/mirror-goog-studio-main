@@ -21,6 +21,7 @@ package com.android.build.gradle.internal.ide.dependencies
 import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.ide.DependencyFailureHandler
+import com.android.build.gradle.internal.ide.dependencies.ArtifactCollectionsInputs.RuntimeType
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.services.getBuildService
 import com.google.common.collect.ImmutableMap
@@ -42,18 +43,41 @@ import org.gradle.api.tasks.PathSensitivity
 
 /**
  * This holder class exists to allow lint to depend on the artifact collections.
+ */
+interface ArtifactCollectionsInputs {
+    enum class RuntimeType { FULL, PARTIAL }
+
+    val projectPath: String
+    val variantName: String
+    val buildMapping: ImmutableMap<String, String>
+    val compileClasspath: ArtifactCollections
+    val runtimeClasspath: ArtifactCollections?
+
+    val runtimeLintJars: ArtifactCollection
+    val compileLintJars: ArtifactCollection
+    val mavenCoordinatesCache: Provider<MavenCoordinatesCacheBuildService>
+
+    val level1RuntimeArtifactCollections: Level1RuntimeArtifactCollections
+
+    fun getAllArtifacts(
+        consumedConfigType: AndroidArtifacts.ConsumedConfigType,
+        dependencyFailureHandler: DependencyFailureHandler?
+    ): Set<ResolvedArtifact>
+}
+
+/**
+ * This holder class exists to allow lint to depend on the artifact collections.
  *
  * It is used as a [org.gradle.api.tasks.Nested] input to the lint model generation task.
  */
-class ArtifactCollectionsInputs constructor(
+class ArtifactCollectionsInputsImpl constructor(
     variantDependencies: VariantDependencies,
-    @get:Input val projectPath: String,
-    @get:Input val variantName: String,
+    @get:Input override val projectPath: String,
+    @get:Input override val variantName: String,
     @get:Input val runtimeType: RuntimeType,
-    @get:Internal internal val mavenCoordinatesCache: Provider<MavenCoordinatesCacheBuildService>,
-    @get:Internal val buildMapping: ImmutableMap<String, String>
-) {
-    enum class RuntimeType { FULL, PARTIAL }
+    @get:Internal override val mavenCoordinatesCache: Provider<MavenCoordinatesCacheBuildService>,
+    @get:Internal override val buildMapping: ImmutableMap<String, String>
+): ArtifactCollectionsInputs {
 
     constructor(
         componentImpl: ComponentImpl,
@@ -69,7 +93,7 @@ class ArtifactCollectionsInputs constructor(
     )
 
     @get:Nested
-    val compileClasspath: ArtifactCollections = ArtifactCollections(
+    override val compileClasspath: ArtifactCollections = ArtifactCollections(
         variantDependencies,
         AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
     )
@@ -77,7 +101,7 @@ class ArtifactCollectionsInputs constructor(
     /** The full runtime graphs for more complex dependency models */
     @get:Nested
     @get:Optional
-    val runtimeClasspath: ArtifactCollections? = if (runtimeType == RuntimeType.FULL) {
+    override val runtimeClasspath: ArtifactCollections? = if (runtimeType == RuntimeType.FULL) {
         ArtifactCollections(
             variantDependencies,
             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
@@ -86,13 +110,13 @@ class ArtifactCollectionsInputs constructor(
 
     /** The partial graphs for level 1 dependencies */
     @get:Nested
-    val level1RuntimeArtifactCollections: Level1RuntimeArtifactCollections = Level1RuntimeArtifactCollections(variantDependencies)
+    override val level1RuntimeArtifactCollections: Level1RuntimeArtifactCollections = Level1RuntimeArtifactCollections(variantDependencies)
 
     @get:Internal
     // This contains the list of all the lint jar provided by the runtime dependencies.
     // We'll match this to the component identifier of each artifact to find the lint.jar
     // that is coming via AARs.
-    val runtimeLintJars: ArtifactCollection =
+    override val runtimeLintJars: ArtifactCollection =
         variantDependencies.getArtifactCollectionForToolingModel(
             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
             AndroidArtifacts.ArtifactScope.ALL,
@@ -107,7 +131,7 @@ class ArtifactCollectionsInputs constructor(
     @get:Internal
     // Similar to runtimeLintJars, but for compile dependencies; there will be overlap between the
     // two in most cases, but we need compileLintJars to support compileOnly dependencies.
-    val compileLintJars: ArtifactCollection =
+    override val compileLintJars: ArtifactCollection =
         variantDependencies.getArtifactCollectionForToolingModel(
             AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
             AndroidArtifacts.ArtifactScope.ALL,
@@ -118,6 +142,25 @@ class ArtifactCollectionsInputs constructor(
     @get:PathSensitive(PathSensitivity.RELATIVE)
     val compileLintJarsFileCollection: FileCollection
         get() = compileLintJars.artifactFiles
+
+    override fun getAllArtifacts(
+        consumedConfigType: AndroidArtifacts.ConsumedConfigType,
+        dependencyFailureHandler: DependencyFailureHandler?
+    ): Set<ResolvedArtifact> {
+        val collections = if (consumedConfigType == AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH) {
+            compileClasspath
+        } else {
+            runtimeClasspath!!
+        }
+        return getAllArtifacts(
+            collections,
+            dependencyFailureHandler,
+            buildMapping,
+            projectPath,
+            variantName,
+            mavenCoordinatesCache.get()
+        )
+    }
 }
 
 // This is the partial set of file collections used by the Level1 model builder
@@ -288,27 +331,7 @@ fun getAllArtifacts(
     )
 }
 
-fun getAllArtifacts(
-    inputs: ArtifactCollectionsInputs,
-    consumedConfigType: AndroidArtifacts.ConsumedConfigType,
-    dependencyFailureHandler: DependencyFailureHandler?
-): Set<ResolvedArtifact> {
-    val collections = if (consumedConfigType == AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH) {
-        inputs.compileClasspath
-    } else {
-        inputs.runtimeClasspath!!
-    }
-    return getAllArtifacts(
-        collections,
-        dependencyFailureHandler,
-        inputs.buildMapping,
-        inputs.projectPath,
-        inputs.variantName,
-        inputs.mavenCoordinatesCache.get()
-    )
-}
-
-fun getAllArtifacts(
+private fun getAllArtifacts(
     collections: ArtifactCollections,
     dependencyFailureHandler: DependencyFailureHandler?,
     buildMapping: ImmutableMap<String, String>,

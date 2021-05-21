@@ -46,10 +46,15 @@ import org.gradle.api.artifacts.Dependency
 import org.gradle.api.artifacts.component.ComponentIdentifier
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
+import org.gradle.api.artifacts.result.ResolutionResult
 import org.gradle.api.attributes.AttributeContainer
 import org.gradle.api.file.FileCollection
 import org.gradle.api.specs.Spec
 
+
+interface ResolutionResultProvider {
+    fun getResolutionResult(configType: ConsumedConfigType): ResolutionResult
+}
 /**
  * Object that represents the dependencies of variant.
  *
@@ -74,7 +79,7 @@ class VariantDependencies internal constructor(
     private val project: Project,
     private val projectOptions: ProjectOptions,
     isSelfInstrumenting: Boolean,
-) {
+): ResolutionResultProvider {
 
     // Never exclude artifacts for self-instrumenting, test-only modules.
     private val avoidExcludingArtifacts = variantType.isSeparateTestProject && isSelfInstrumenting
@@ -99,6 +104,12 @@ class VariantDependencies internal constructor(
 
     override fun toString(): String {
         return MoreObjects.toStringHelper(this).add("name", variantName).toString()
+    }
+
+    override fun getResolutionResult(configType: ConsumedConfigType): ResolutionResult = when (configType) {
+        ConsumedConfigType.COMPILE_CLASSPATH -> compileClasspath.incoming.resolutionResult
+        ConsumedConfigType.RUNTIME_CLASSPATH -> runtimeClasspath.incoming.resolutionResult
+        else -> throw RuntimeException("Unsupported ConsumedConfigType value: $configType")
     }
 
     @JvmOverloads

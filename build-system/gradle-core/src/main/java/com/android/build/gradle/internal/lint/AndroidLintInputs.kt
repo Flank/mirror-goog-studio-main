@@ -29,6 +29,7 @@ import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.dsl.LintOptions
 import com.android.build.gradle.internal.ide.ModelBuilder
 import com.android.build.gradle.internal.ide.dependencies.ArtifactCollectionsInputs
+import com.android.build.gradle.internal.ide.dependencies.ArtifactCollectionsInputsImpl
 import com.android.build.gradle.internal.ide.dependencies.ArtifactHandler
 import com.android.build.gradle.internal.ide.dependencies.LibraryDependencyCacheBuildService
 import com.android.build.gradle.internal.ide.dependencies.MavenCoordinatesCacheBuildService
@@ -1242,14 +1243,16 @@ abstract class AndroidArtifactInput : ArtifactInput() {
                 )
         }
 
-        artifactCollectionsInputs.setDisallowChanges(ArtifactCollectionsInputs(
-            variantDependencies = componentImpl.variantDependencies,
-            projectPath = componentImpl.services.projectInfo.getProject().path,
-            variantName = componentImpl.name,
-            runtimeType = ArtifactCollectionsInputs.RuntimeType.FULL,
-            buildMapping = componentImpl.services.projectInfo.getProject().gradle.computeBuildMapping(),
-            mavenCoordinatesCache = getBuildService(componentImpl.services.buildServiceRegistry)
-        ))
+        artifactCollectionsInputs.setDisallowChanges(
+            ArtifactCollectionsInputsImpl(
+                variantDependencies = componentImpl.variantDependencies,
+                projectPath = componentImpl.services.projectInfo.getProject().path,
+                variantName = componentImpl.name,
+                runtimeType = ArtifactCollectionsInputs.RuntimeType.FULL,
+                buildMapping = componentImpl.services.projectInfo.getProject().gradle.computeBuildMapping(),
+                mavenCoordinatesCache = getBuildService(componentImpl.services.buildServiceRegistry)
+            )
+        )
         return this
     }
 
@@ -1278,14 +1281,16 @@ abstract class AndroidArtifactInput : ArtifactInput() {
             projectOptions = projectOptions,
             isSelfInstrumenting = false,
         )
-        artifactCollectionsInputs.setDisallowChanges(ArtifactCollectionsInputs(
-            variantDependencies = variantDependencies,
-            projectPath = project.path,
-            variantName = sourceSet.name,
-            runtimeType = ArtifactCollectionsInputs.RuntimeType.FULL,
-            buildMapping = project.gradle.computeBuildMapping(),
-            mavenCoordinatesCache = getBuildService(project.gradle.sharedServices)
-        ))
+        artifactCollectionsInputs.setDisallowChanges(
+            ArtifactCollectionsInputsImpl(
+                variantDependencies = variantDependencies,
+                projectPath = project.path,
+                variantName = sourceSet.name,
+                runtimeType = ArtifactCollectionsInputs.RuntimeType.FULL,
+                buildMapping = project.gradle.computeBuildMapping(),
+                mavenCoordinatesCache = getBuildService(project.gradle.sharedServices)
+            )
+        )
         initializeProjectDependencyLintArtifacts(checkDependencies, variantDependencies)
     }
 
@@ -1350,14 +1355,16 @@ abstract class JavaArtifactInput : ArtifactInput() {
                     AndroidArtifacts.ArtifactType.LOCAL_EXPLODED_AAR_FOR_LINT
                 )
         }
-        artifactCollectionsInputs.setDisallowChanges(ArtifactCollectionsInputs(
-            variantDependencies = unitTestImpl.variantDependencies,
-            projectPath = unitTestImpl.services.projectInfo.getProject().path,
-            variantName = unitTestImpl.name,
-            runtimeType = ArtifactCollectionsInputs.RuntimeType.FULL,
-            buildMapping = unitTestImpl.services.projectInfo.getProject().gradle.computeBuildMapping(),
-            mavenCoordinatesCache = getBuildService(unitTestImpl.services.buildServiceRegistry)
-        ))
+        artifactCollectionsInputs.setDisallowChanges(
+            ArtifactCollectionsInputsImpl(
+                variantDependencies = unitTestImpl.variantDependencies,
+                projectPath = unitTestImpl.services.projectInfo.getProject().path,
+                variantName = unitTestImpl.name,
+                runtimeType = ArtifactCollectionsInputs.RuntimeType.FULL,
+                buildMapping = unitTestImpl.services.projectInfo.getProject().gradle.computeBuildMapping(),
+                mavenCoordinatesCache = getBuildService(unitTestImpl.services.buildServiceRegistry)
+            )
+        )
         return this
     }
 
@@ -1392,7 +1399,7 @@ abstract class JavaArtifactInput : ArtifactInput() {
             isSelfInstrumenting = false,
         )
         artifactCollectionsInputs.setDisallowChanges(
-            ArtifactCollectionsInputs(
+            ArtifactCollectionsInputsImpl(
                 variantDependencies = variantDependencies,
                 projectPath = project.path,
                 variantName = sourceSet.name,
