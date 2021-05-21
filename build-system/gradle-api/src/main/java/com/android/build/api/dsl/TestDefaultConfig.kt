@@ -22,5 +22,4 @@ import org.gradle.api.Incubating
 interface TestDefaultConfig :
     TestBaseFlavor,
     DefaultConfig {
-    // TODO(b/140406102)
 }
