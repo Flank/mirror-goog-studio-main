@@ -678,7 +678,6 @@ com.android.build.api.dsl.TestBuildType.isDebuggable: boolean ()
 com.android.build.api.dsl.TestBuildType.setCrunchPngs: void (java.lang.Boolean)
 com.android.build.api.dsl.TestBuildType.setDebuggable: void (boolean)
 com.android.build.api.dsl.TestDefaultConfig implements com.android.build.api.dsl.TestBaseFlavor, com.android.build.api.dsl.DefaultConfig
-com.android.build.api.dsl.TestExtension implements com.android.build.api.dsl.CommonExtension
 com.android.build.api.dsl.TestExtension.getTargetProjectPath: java.lang.String ()
 com.android.build.api.dsl.TestExtension.setTargetProjectPath: void (java.lang.String)
 com.android.build.api.dsl.TestFixtures
