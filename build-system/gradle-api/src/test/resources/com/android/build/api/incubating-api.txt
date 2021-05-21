@@ -615,7 +615,6 @@ com.android.build.api.dsl.PrefabPackagingOptions.getName: java.lang.String ()
 com.android.build.api.dsl.PrefabPackagingOptions.setHeaders: void (java.lang.String)
 com.android.build.api.dsl.PrefabPackagingOptions.setLibraryName: void (java.lang.String)
 com.android.build.api.dsl.PrefabPackagingOptions.setName: void (java.lang.String)
-com.android.build.api.dsl.ProductFlavor implements org.gradle.api.Named, com.android.build.api.dsl.BaseFlavor, org.gradle.api.plugins.ExtensionAware
 com.android.build.api.dsl.ProductFlavor.getDimension: java.lang.String ()
 com.android.build.api.dsl.ProductFlavor.getMatchingFallbacks: java.util.List<java.lang.String> ()
 com.android.build.api.dsl.ProductFlavor.setDimension: java.lang.Void (java.lang.String)

@@ -50,7 +50,6 @@ import org.gradle.api.plugins.ExtensionAware
  * If the plugin creates certain build variants that you don't want, you can
  * [filter variants using `android.variantFilter`](https://developer.android.com/studio/build/build-variants.html#filter-variants).
  */
-@Incubating
 interface ProductFlavor : Named, BaseFlavor, ExtensionAware {
 
     /**
@@ -115,6 +114,8 @@ interface ProductFlavor : Named, BaseFlavor, ExtensionAware {
      * To learn more about configuring flavor dimensions, read
      * [Combine multiple flavors](https://developer.android.com/studio/build/build-variants.html#flavor-dimensions).
      */
+    @get:Incubating
+    @set:Incubating
     var dimension: String?
 
     @Incubating
@@ -178,6 +179,7 @@ interface ProductFlavor : Named, BaseFlavor, ExtensionAware {
      * If instead you are trying to resolve an issue in which **a library dependency includes a
      * flavor dimension that your app does not**, use [missingDimensionStrategy].
      */
+    @get:Incubating
     val matchingFallbacks: MutableList<String>
 
     @Incubating
