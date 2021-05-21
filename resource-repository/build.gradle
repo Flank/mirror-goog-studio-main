@@ -22,15 +22,3 @@ sourceSets {
     test.java.srcDir 'test/java'
     test.resources.srcDir 'test/resource'
 }
-
-publishing {
-    publications {
-        withType(MavenPublication) {
-            artifactId = 'resources'
-        }
-    }
-}
-version = rootProject.ext.buildVersion
-
-project.ext.pomName = 'AAR and Framework Resource Repositories'
-project.ext.pomDesc = 'AAR and Framework resource repositories'
