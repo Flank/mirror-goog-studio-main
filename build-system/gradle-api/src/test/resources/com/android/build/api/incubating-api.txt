@@ -721,7 +721,6 @@ com.android.build.api.dsl.UnitTestOptions.isIncludeAndroidResources: boolean ()
 com.android.build.api.dsl.UnitTestOptions.isReturnDefaultValues: boolean ()
 com.android.build.api.dsl.UnitTestOptions.setIncludeAndroidResources: void (boolean)
 com.android.build.api.dsl.UnitTestOptions.setReturnDefaultValues: void (boolean)
-com.android.build.api.dsl.VariantDimension
 com.android.build.api.dsl.VariantDimension.addManifestPlaceholders: void (java.util.Map<java.lang.String, ?>)
 com.android.build.api.dsl.VariantDimension.buildConfigField: void (java.lang.String, java.lang.String, java.lang.String)
 com.android.build.api.dsl.VariantDimension.externalNativeBuild: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.ExternalNativeBuildOptions, kotlin.Unit>)
