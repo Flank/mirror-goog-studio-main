@@ -17,6 +17,7 @@
 package com.android.utils;
 
 import static com.android.SdkConstants.DOT_9PNG;
+import static com.android.SdkConstants.DOT_AVIF;
 import static com.android.SdkConstants.DOT_BMP;
 import static com.android.SdkConstants.DOT_GIF;
 import static com.android.SdkConstants.DOT_JPEG;
@@ -366,7 +367,7 @@ public class SdkUtils {
     }
 
     public static final List<String> IMAGE_EXTENSIONS = ImmutableList.of(
-            DOT_PNG, DOT_9PNG, DOT_GIF, DOT_JPEG, DOT_JPG, DOT_BMP, DOT_WEBP);
+            DOT_PNG, DOT_9PNG, DOT_GIF, DOT_JPEG, DOT_JPG, DOT_BMP, DOT_WEBP, DOT_AVIF);
 
     /**
      * Returns true if the given file path points to an image file recognized by

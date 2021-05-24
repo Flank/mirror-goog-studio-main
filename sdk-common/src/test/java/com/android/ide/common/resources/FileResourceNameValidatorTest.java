@@ -123,6 +123,7 @@ public class FileResourceNameValidatorTest {
                         NAME_MUST_START_WITH_A_LETTER,
                         "__icon"
                     }, // Robot face emoji.
+                    {"foo.avif", ResourceFolderType.DRAWABLE, null, "foo"}
                 });
     }
 
