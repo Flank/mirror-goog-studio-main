@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-275dd79ad00629f8d0aead4b7c35a351804d0e0ded6f6859565180c582830866
+fb7f79056bfa65af19a09962aeb1a3d01654d525db4a989892b1cf0363a13e45
 -------------------------------------------------------------------------
 com.android.build.api.AndroidPluginVersion implements java.lang.Comparable
 com.android.build.api.AndroidPluginVersion.<init>: com.android.build.api.AndroidPluginVersion (int, int)
@@ -158,6 +158,7 @@ com.android.build.api.dsl.DynamicFeatureProductFlavor implements com.android.bui
 com.android.build.api.dsl.DynamicFeatureVariantDimension implements com.android.build.api.dsl.VariantDimension
 com.android.build.api.dsl.LibraryBaseFlavor implements com.android.build.api.dsl.BaseFlavor, com.android.build.api.dsl.LibraryVariantDimension
 com.android.build.api.dsl.LibraryBuildFeatures implements com.android.build.api.dsl.BuildFeatures
+com.android.build.api.dsl.LibraryBuildType implements com.android.build.api.dsl.BuildType, com.android.build.api.dsl.LibraryVariantDimension
 com.android.build.api.dsl.LibraryDefaultConfig implements com.android.build.api.dsl.LibraryBaseFlavor, com.android.build.api.dsl.DefaultConfig
 com.android.build.api.dsl.LibraryExtension implements com.android.build.api.dsl.CommonExtension, com.android.build.api.dsl.TestedExtension
 com.android.build.api.dsl.LibraryProductFlavor implements com.android.build.api.dsl.LibraryBaseFlavor, com.android.build.api.dsl.ProductFlavor
