@@ -94,7 +94,7 @@ int installDebugProbes(JNIEnv* jni) {
   Log::D(Log::Tag::COROUTINE_DEBUGGER, "DebugProbesImpl found");
 
   // check that it's the correct version
-  // only older versions of this class have the method
+  // only newer versions of this class have the method
   // `startWeakRefCleanerThread`
   jmethodID startWeakRefCleanerThread =
       jni->GetMethodID(klass, "startWeakRefCleanerThread", "()V");
