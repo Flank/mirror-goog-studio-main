@@ -19,12 +19,16 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ddmlib.log.LogReceiver;
 import com.android.sdklib.AndroidVersion;
+import com.google.common.base.Splitter;
+import com.google.common.collect.Sets;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.SocketChannel;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -977,5 +981,15 @@ public interface IDevice extends IShellEnabledDevice {
     default SocketChannel rawBinder(String service, String[] parameters)
             throws AdbCommandRejectedException, TimeoutException, IOException {
         throw new UnsupportedOperationException();
+    }
+
+    /** Returns features obtained by reading the build characteristics property. */
+    default Set<String> getHardwareCharacteristics() throws Exception {
+        String characteristics = getProperty(PROP_BUILD_CHARACTERISTICS);
+        if (characteristics == null) {
+            return Collections.emptySet();
+        }
+
+        return Sets.newHashSet(Splitter.on(',').split(characteristics));
     }
 }
