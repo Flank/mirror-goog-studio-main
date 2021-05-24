@@ -136,7 +136,6 @@ com.android.build.api.dsl.ApplicationVariantDimension.setApplicationIdSuffix: vo
 com.android.build.api.dsl.ApplicationVariantDimension.setMultiDexEnabled: void (java.lang.Boolean)
 com.android.build.api.dsl.ApplicationVariantDimension.setSigningConfig: void (com.android.build.api.dsl.ApkSigningConfig)
 com.android.build.api.dsl.ApplicationVariantDimension.setVersionNameSuffix: void (java.lang.String)
-com.android.build.api.dsl.AssetPackBundleExtension
 com.android.build.api.dsl.AssetPackBundleExtension.deviceTier: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.BundleDeviceTier, kotlin.Unit>)
 com.android.build.api.dsl.AssetPackBundleExtension.getApplicationId: java.lang.String ()
 com.android.build.api.dsl.AssetPackBundleExtension.getAssetPacks: java.util.Set<java.lang.String> ()

@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-946bc513332da196513e045bcfc3add1ef83ff469f50f3823132da588684f212
+0ecee58da6c6ceac28e0c199329e55ead715b167d3d067d0284f09d1d31f2db4
 -------------------------------------------------------------------------
 com.android.build.api.AndroidPluginVersion implements java.lang.Comparable
 com.android.build.api.AndroidPluginVersion.<init>: com.android.build.api.AndroidPluginVersion (int, int)
@@ -118,6 +118,7 @@ com.android.build.api.dsl.ApplicationPublishing implements com.android.build.api
 com.android.build.api.dsl.ApplicationSingleVariant implements com.android.build.api.dsl.SingleVariant
 com.android.build.api.dsl.ApplicationSingleVariant.publishApk: void ()
 com.android.build.api.dsl.ApplicationVariantDimension implements com.android.build.api.dsl.VariantDimension
+com.android.build.api.dsl.AssetPackBundleExtension
 com.android.build.api.dsl.BaseFlavor implements com.android.build.api.dsl.VariantDimension
 com.android.build.api.dsl.CommonExtension
 com.android.build.api.dsl.CommonExtension.androidResources: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.AndroidResources, kotlin.Unit>)
