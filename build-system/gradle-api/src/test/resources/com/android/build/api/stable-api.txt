@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-2d75cb020a82feed9b4140b8af704a1d057cdeb7f52137c2847ce314dcfaf75b
+275dd79ad00629f8d0aead4b7c35a351804d0e0ded6f6859565180c582830866
 -------------------------------------------------------------------------
 com.android.build.api.AndroidPluginVersion implements java.lang.Comparable
 com.android.build.api.AndroidPluginVersion.<init>: com.android.build.api.AndroidPluginVersion (int, int)
@@ -113,6 +113,7 @@ com.android.build.api.dsl.AbiSplit implements com.android.build.api.dsl.Split
 com.android.build.api.dsl.AndroidResources
 com.android.build.api.dsl.ApplicationBaseFlavor implements com.android.build.api.dsl.BaseFlavor, com.android.build.api.dsl.ApplicationVariantDimension
 com.android.build.api.dsl.ApplicationBuildFeatures implements com.android.build.api.dsl.BuildFeatures
+com.android.build.api.dsl.ApplicationBuildType implements com.android.build.api.dsl.BuildType, com.android.build.api.dsl.ApplicationVariantDimension
 com.android.build.api.dsl.ApplicationDefaultConfig implements com.android.build.api.dsl.ApplicationBaseFlavor, com.android.build.api.dsl.DefaultConfig
 com.android.build.api.dsl.ApplicationExtension implements com.android.build.api.dsl.CommonExtension, com.android.build.api.dsl.ApkExtension, com.android.build.api.dsl.TestedExtension
 com.android.build.api.dsl.ApplicationProductFlavor implements com.android.build.api.dsl.ApplicationBaseFlavor, com.android.build.api.dsl.ProductFlavor

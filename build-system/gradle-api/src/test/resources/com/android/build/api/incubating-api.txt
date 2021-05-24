@@ -107,7 +107,6 @@ com.android.build.api.dsl.ApplicationBuildFeatures.getDataBinding: java.lang.Boo
 com.android.build.api.dsl.ApplicationBuildFeatures.getMlModelBinding: java.lang.Boolean ()
 com.android.build.api.dsl.ApplicationBuildFeatures.setDataBinding: void (java.lang.Boolean)
 com.android.build.api.dsl.ApplicationBuildFeatures.setMlModelBinding: void (java.lang.Boolean)
-com.android.build.api.dsl.ApplicationBuildType implements com.android.build.api.dsl.BuildType, com.android.build.api.dsl.ApplicationVariantDimension
 com.android.build.api.dsl.ApplicationBuildType.isCrunchPngs: java.lang.Boolean ()
 com.android.build.api.dsl.ApplicationBuildType.isDebuggable: boolean ()
 com.android.build.api.dsl.ApplicationBuildType.isDefault: boolean ()

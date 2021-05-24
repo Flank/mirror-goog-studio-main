@@ -18,11 +18,27 @@ package com.android.build.api.dsl
 
 import org.gradle.api.Incubating
 
-@Incubating
+/**
+ * Build types define certain properties that Gradle uses when building and packaging your app, and
+ * are typically configured for different stages of your development lifecycle.
+ *
+ * There are two build types defined by default, `debug` and `release`, and you can customize them
+ * and create additional build types.
+ *
+ * The default debug build type enables debug options and signs the APK with the debug
+ * key, while the release build type is not debuggable and can be configured to shrink, obfuscate,
+ * and sign your APK with a release key for distribution.
+ *
+ * See
+ * [configuring build types](https://developer.android.com/studio/build#build-config)
+ * for more information.
+ */
 interface ApplicationBuildType :
     BuildType,
     ApplicationVariantDimension {
     /** Whether this build type should generate a debuggable apk. */
+    @get:Incubating
+    @set:Incubating
     var isDebuggable: Boolean
 
     /**
@@ -37,6 +53,8 @@ interface ApplicationBuildType :
      * }
      * ```
      */
+    @get:Incubating
+    @set:Incubating
     var isEmbedMicroApp: Boolean
 
     /**
@@ -48,8 +66,12 @@ interface ApplicationBuildType :
      * PNG crunching is enabled by default in the release build type and disabled by default in
      * the debug build type.
      */
+    @get:Incubating
+    @set:Incubating
     var isCrunchPngs: Boolean?
 
     /** Whether this product flavor should be selected in Studio by default  */
+    @get:Incubating
+    @set:Incubating
     var isDefault: Boolean
 }
