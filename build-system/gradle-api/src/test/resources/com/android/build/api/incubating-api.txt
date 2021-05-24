@@ -212,7 +212,6 @@ com.android.build.api.dsl.BuildFeatures.setRenderScript: void (java.lang.Boolean
 com.android.build.api.dsl.BuildFeatures.setResValues: void (java.lang.Boolean)
 com.android.build.api.dsl.BuildFeatures.setShaders: void (java.lang.Boolean)
 com.android.build.api.dsl.BuildFeatures.setViewBinding: void (java.lang.Boolean)
-com.android.build.api.dsl.BuildType implements org.gradle.api.Named, com.android.build.api.dsl.VariantDimension, org.gradle.api.plugins.ExtensionAware
 com.android.build.api.dsl.BuildType.getMatchingFallbacks: java.util.List<java.lang.String> ()
 com.android.build.api.dsl.BuildType.getRenderscriptOptimLevel: int ()
 com.android.build.api.dsl.BuildType.isJniDebuggable: boolean ()
