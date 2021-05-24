@@ -467,7 +467,6 @@ com.android.build.api.dsl.LibraryExtension.getPublishing: com.android.build.api.
 com.android.build.api.dsl.LibraryExtension.publishing: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.LibraryPublishing, kotlin.Unit>)
 com.android.build.api.dsl.LibraryProductFlavor.isDefault: boolean ()
 com.android.build.api.dsl.LibraryProductFlavor.setDefault: void (boolean)
-com.android.build.api.dsl.LibraryVariantDimension implements com.android.build.api.dsl.VariantDimension
 com.android.build.api.dsl.LibraryVariantDimension.aarMetadata: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.AarMetadata, kotlin.Unit>)
 com.android.build.api.dsl.LibraryVariantDimension.consumerProguardFile: java.lang.Object (java.lang.Object)
 com.android.build.api.dsl.LibraryVariantDimension.consumerProguardFiles: java.lang.Object (java.lang.Object[])

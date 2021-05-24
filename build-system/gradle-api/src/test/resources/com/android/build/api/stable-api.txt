@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-f2b806ed3d0ada3ad812f528d2a2fc69c041b3e3bcf9c88994ee77f19dd7380f
+f4b10523ec9faf17e8e5899a11b82705397ce2eb8790768b2eb293eb82c65ed6
 -------------------------------------------------------------------------
 com.android.build.api.AndroidPluginVersion implements java.lang.Comparable
 com.android.build.api.AndroidPluginVersion.<init>: com.android.build.api.AndroidPluginVersion (int, int)
@@ -154,6 +154,7 @@ com.android.build.api.dsl.LibraryPublishing implements com.android.build.api.dsl
 com.android.build.api.dsl.LibraryPublishing.multipleVariants: void (java.lang.String, kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.MultipleVariants, kotlin.Unit>)
 com.android.build.api.dsl.LibraryPublishing.multipleVariants: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.MultipleVariants, kotlin.Unit>)
 com.android.build.api.dsl.LibrarySingleVariant implements com.android.build.api.dsl.SingleVariant
+com.android.build.api.dsl.LibraryVariantDimension implements com.android.build.api.dsl.VariantDimension
 com.android.build.api.dsl.Lint
 com.android.build.api.dsl.MultipleVariants
 com.android.build.api.dsl.MultipleVariants.allVariants: void ()

@@ -19,13 +19,19 @@ package com.android.build.api.dsl
 import java.io.File
 import org.gradle.api.Incubating
 
-@Incubating
+/**
+ * Shared properties between DSL objects that contribute to a library variant.
+ *
+ * That is, [LibraryBuildType] and [LibraryProductFlavor] and [LibraryDefaultConfig].
+ */
 interface LibraryVariantDimension : VariantDimension {
     /**
      * Returns whether multi-dex is enabled.
      *
      * This can be null if the flag is not set, in which case the default value is used.
      */
+    @get:Incubating
+    @set:Incubating
     var multiDexEnabled: Boolean?
 
     /**
@@ -38,6 +44,8 @@ interface LibraryVariantDimension : VariantDimension {
      *
      * This is only valid for Library project. This is ignored in Application project.
      */
+
+    @get:Incubating
     val consumerProguardFiles: MutableList<File>
 
     /**
@@ -52,6 +60,8 @@ interface LibraryVariantDimension : VariantDimension {
      *
      * This method has a return value for legacy reasons.
      */
+
+    @Incubating
     fun consumerProguardFile(proguardFile: Any): Any
 
     /**
@@ -66,14 +76,19 @@ interface LibraryVariantDimension : VariantDimension {
      *
      * This method has a return value for legacy reasons.
      */
+    @Incubating
     fun consumerProguardFiles(vararg proguardFiles: Any): Any
 
     /** The associated signing config or null if none are set on the variant dimension. */
+    @get:Incubating
+    @set:Incubating
     var signingConfig: ApkSigningConfig?
 
     /** Options for configuring AAR metadata. */
+    @get:Incubating
     val aarMetadata: AarMetadata
 
     /** Options for configuring AAR metadata. */
+    @Incubating
     fun aarMetadata(action: AarMetadata.() -> Unit)
 }
