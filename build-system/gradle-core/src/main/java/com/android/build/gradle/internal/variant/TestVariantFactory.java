@@ -209,7 +209,7 @@ public class TestVariantFactory
 
         // TODO, we should do this after we created the variant object, not before.
         if (!ModulePropertyKeys.SELF_INSTRUMENTING.getValueAsBoolean(
-                testExtension.getProperties())) {
+                testExtension.getExperimentalProperties())) {
             handler.add(CONFIG_NAME_COMPILE_ONLY, handler.project(projectNotation));
         }
 

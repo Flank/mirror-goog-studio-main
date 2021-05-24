@@ -291,7 +291,7 @@ class VariantManager<CommonExtensionT: CommonExtension<*, *, *, *>, VariantBuild
                 configuredNativeBuilder(),
                 extension,
                 hasDynamicFeatures = globalScope.hasDynamicFeatures(),
-                (extension as CommonExtension<*, *, *, *>).properties,
+                (extension as CommonExtension<*, *, *, *>).experimentalProperties,
                 enableTestFixtures = extension is TestedExtension &&
                         (extension as TestedExtension).testFixtures.enable,
         )

@@ -666,7 +666,7 @@ class VariantDslInfoTest2 :
             dslTestNamespace = given.testNamespace,
             nativeBuildSystem = null,
             publishingInfo = null,
-            properties = mapOf(),
+            experimentalProperties = mapOf(),
             enableTestFixtures = false,
         )
 

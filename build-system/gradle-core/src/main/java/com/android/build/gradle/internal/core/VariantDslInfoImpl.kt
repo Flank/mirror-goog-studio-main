@@ -99,7 +99,7 @@ open class VariantDslInfoImpl<CommonExtensionT: CommonExtension<*, *, *, *>> int
     private val dslTestNamespace: String?,
     override val nativeBuildSystem: VariantManager.NativeBuiltType?,
     private val publishingInfo: VariantPublishingInfo?,
-    override val properties: Map<String, Any>,
+    override val experimentalProperties: Map<String, Any>,
     override val enableTestFixtures: Boolean,
 ): VariantDslInfo<CommonExtensionT>, DimensionCombination {
 

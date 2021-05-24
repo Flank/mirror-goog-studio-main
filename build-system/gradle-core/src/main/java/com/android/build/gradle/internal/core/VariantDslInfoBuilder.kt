@@ -68,7 +68,7 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
     private val nativeBuildSystem: VariantManager.NativeBuiltType?,
     private val extension: BaseExtension,
     private val hasDynamicFeatures: Boolean,
-    private val properties: Map<String, Any>,
+    private val experimentalProperties: Map<String, Any>,
     private val enableTestFixtures: Boolean,
     private val testFixtureMainVariantName: String?
 ) {
@@ -94,7 +94,7 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
             nativeBuildSystem: VariantManager.NativeBuiltType? = null,
             extension: BaseExtension,
             hasDynamicFeatures: Boolean,
-            properties: Map<String, Any> = mapOf(),
+            experimentalProperties: Map<String, Any> = mapOf(),
             enableTestFixtures: Boolean = false,
             testFixtureMainVariantName: String? = null
         ): VariantDslInfoBuilder<T> {
@@ -114,7 +114,7 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
                 nativeBuildSystem,
                 extension,
                 hasDynamicFeatures,
-                properties,
+                experimentalProperties,
                 enableTestFixtures,
                 testFixtureMainVariantName
             )
@@ -354,7 +354,7 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>> priva
             dslTestNamespace,
             nativeBuildSystem,
             publishingInfo,
-            properties,
+            experimentalProperties,
             enableTestFixtures
         )
     }
