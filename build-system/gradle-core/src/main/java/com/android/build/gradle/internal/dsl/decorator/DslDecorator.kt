@@ -38,6 +38,7 @@ import org.objectweb.asm.Type
 import org.objectweb.asm.commons.GeneratorAdapter
 import org.objectweb.asm.commons.Method
 import java.lang.invoke.MethodHandles
+import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Modifier
 import java.util.ArrayDeque
 import javax.inject.Inject
@@ -374,10 +375,21 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType>) {
                 originalClass,
                 MethodHandles.lookup()
             ) as MethodHandles.Lookup
-        @Suppress("UNCHECKED_CAST") return lookupDefineClassMethod.invoke(
-            lookup,
-            bytes
-        ) as Class<out T>
+        try {
+            @Suppress("UNCHECKED_CAST") return lookupDefineClassMethod.invoke(
+                lookup,
+                bytes
+            ) as Class<out T>
+        } catch (e: InvocationTargetException) {
+            throw RuntimeException(
+                "Error happened loading classes, this is usually caused by having different " +
+                        "classloaders for different AGP jars. If you have an api dependency " +
+                        "on `com.android.tools.build:gradle:gradle-api` in your buildSrc, try " +
+                        "changing the dependency to be compileOnly or adding a runtime " +
+                        "dependency on `com.android.tools.build:gradle:gradle` in your buildSrc.",
+                e
+            )
+        }
     }
 
     // Define the class on JDKs before 9. AGP 7.0 Doesn't support running on JDKs before 11, but
