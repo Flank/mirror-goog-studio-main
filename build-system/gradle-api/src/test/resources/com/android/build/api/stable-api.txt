@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-ee5030c66336893715177278db4642c4dc9324dfd14ee02288397c57e2d5a5f6
+8ee41e419e8cdcfd945f8eb5e5ad7f42cceeaaaac33b45784151d8a0b4d47c7e
 -------------------------------------------------------------------------
 com.android.build.api.AndroidPluginVersion implements java.lang.Comparable
 com.android.build.api.AndroidPluginVersion.<init>: com.android.build.api.AndroidPluginVersion (int, int)
@@ -109,6 +109,7 @@ com.android.build.api.component.TestFixtures implements com.android.build.api.va
 com.android.build.api.dsl.AarMetadata
 com.android.build.api.dsl.AarMetadata.getMinCompileSdk: java.lang.Integer ()
 com.android.build.api.dsl.AarMetadata.setMinCompileSdk: void (java.lang.Integer)
+com.android.build.api.dsl.AbiSplit implements com.android.build.api.dsl.Split
 com.android.build.api.dsl.AndroidResources
 com.android.build.api.dsl.ApplicationBaseFlavor implements com.android.build.api.dsl.BaseFlavor, com.android.build.api.dsl.ApplicationVariantDimension
 com.android.build.api.dsl.ApplicationDefaultConfig implements com.android.build.api.dsl.ApplicationBaseFlavor, com.android.build.api.dsl.DefaultConfig
