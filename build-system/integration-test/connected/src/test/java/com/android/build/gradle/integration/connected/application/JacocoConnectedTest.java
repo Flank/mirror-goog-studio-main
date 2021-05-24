@@ -33,7 +33,6 @@ import java.util.List;
 import java.util.regex.Pattern;
 import org.junit.Before;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExternalResource;
@@ -73,7 +72,6 @@ public class JacocoConnectedTest {
     }
 
     @Test
-    @Ignore("b/172657145")
     public void connectedCheckNamespacedRClasses() throws Exception {
         TestFileUtils.appendToFile(
                 project.getBuildFile(), "android.aaptOptions.namespaced = true\n");
