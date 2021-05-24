@@ -34,7 +34,7 @@ import com.android.build.api.dsl.JniLibsPackagingOptions
 import com.android.build.api.dsl.PackagingOptions
 import com.android.build.api.dsl.ResourcesPackagingOptions
 import com.android.build.api.dsl.SigningConfig
-import com.android.build.api.dsl.SplitOptions
+import com.android.build.api.dsl.Split
 import com.android.build.api.dsl.Splits
 import com.android.build.gradle.internal.dsl.AaptOptions
 import com.android.build.gradle.internal.dsl.AbiSplitOptions
@@ -49,6 +49,7 @@ import com.android.build.gradle.internal.dsl.DensitySplitOptions
 import com.android.build.gradle.internal.dsl.JniLibsPackagingOptionsImpl
 import com.android.build.gradle.internal.dsl.LibraryPublishingImpl
 import com.android.build.gradle.internal.dsl.ResourcesPackagingOptionsImpl
+import com.android.build.gradle.internal.dsl.SplitOptions
 import org.gradle.api.JavaVersion
 
 /** The list of all the supported property types for the production AGP */
@@ -81,7 +82,7 @@ val AGP_SUPPORTED_PROPERTY_TYPES: List<SupportedPropertyType> = listOf(
     SupportedPropertyType.Block(PackagingOptions::class.java, com.android.build.gradle.internal.dsl.PackagingOptions::class.java),
     SupportedPropertyType.Block(ResourcesPackagingOptions::class.java, ResourcesPackagingOptionsImpl::class.java),
     SupportedPropertyType.Block(SigningConfig::class.java),
-    SupportedPropertyType.Block(SplitOptions::class.java, com.android.build.gradle.internal.dsl.SplitOptions::class.java),
+    SupportedPropertyType.Block(Split::class.java, SplitOptions::class.java),
     SupportedPropertyType.Block(Splits::class.java, com.android.build.gradle.internal.dsl.Splits::class.java),
 )
 

@@ -24,7 +24,7 @@ import org.gradle.api.Incubating
  * See [APK Splits](https://developer.android.com/studio/build/configure-apk-splits.html).
  */
 @Incubating
-interface DensitySplit : SplitOptions {
+interface DensitySplit : Split {
     /** TODO: Document. */
     var isStrict: Boolean
 

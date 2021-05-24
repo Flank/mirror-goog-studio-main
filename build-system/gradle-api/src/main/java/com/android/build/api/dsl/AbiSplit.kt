@@ -24,7 +24,7 @@ import org.gradle.api.Incubating
  * See [FULL_APK Splits](https://developer.android.com/studio/build/configure-apk-splits.html).
  */
 @Incubating
-interface AbiSplit : SplitOptions {
+interface AbiSplit : Split {
     /** Whether to create an FULL_APK with all available ABIs. */
     var isUniversalApk: Boolean
 }

@@ -20,7 +20,7 @@ import org.gradle.api.Incubating
 
 /** Base data representing how an FULL_APK should be split for a given dimension (density, abi). */
 @Incubating
-interface SplitOptions {
+interface Split {
     /** Whether to split in this dimension. */
     var isEnable: Boolean
 

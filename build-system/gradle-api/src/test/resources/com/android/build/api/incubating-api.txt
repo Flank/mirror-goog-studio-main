@@ -7,7 +7,7 @@ com.android.build.api.AndroidPluginVersion.dev: com.android.build.api.AndroidPlu
 com.android.build.api.artifact.MultipleArtifact$ALL_CLASSES_DIRS extends com.android.build.api.artifact.MultipleArtifact implements com.android.build.api.artifact.Artifact$Appendable, com.android.build.api.artifact.Artifact$Transformable, com.android.build.api.artifact.Artifact$Replaceable
 com.android.build.api.artifact.MultipleArtifact$ALL_CLASSES_JARS extends com.android.build.api.artifact.MultipleArtifact implements com.android.build.api.artifact.Artifact$Appendable, com.android.build.api.artifact.Artifact$Transformable, com.android.build.api.artifact.Artifact$Replaceable
 com.android.build.api.dsl.AaptOptions implements com.android.build.api.dsl.AndroidResources
-com.android.build.api.dsl.AbiSplit implements com.android.build.api.dsl.SplitOptions
+com.android.build.api.dsl.AbiSplit implements com.android.build.api.dsl.Split
 com.android.build.api.dsl.AbiSplit.isUniversalApk: boolean ()
 com.android.build.api.dsl.AbiSplit.setUniversalApk: void (boolean)
 com.android.build.api.dsl.AdbOptions implements com.android.build.api.dsl.Installation
@@ -347,7 +347,7 @@ com.android.build.api.dsl.DataBinding.setAddKtx: void (java.lang.Boolean)
 com.android.build.api.dsl.DataBinding.setEnabled: void (boolean)
 com.android.build.api.dsl.DataBinding.setEnabledForTests: void (boolean)
 com.android.build.api.dsl.DataBinding.setVersion: void (java.lang.String)
-com.android.build.api.dsl.DensitySplit implements com.android.build.api.dsl.SplitOptions
+com.android.build.api.dsl.DensitySplit implements com.android.build.api.dsl.Split
 com.android.build.api.dsl.DensitySplit.compatibleScreens: void (java.lang.String[])
 com.android.build.api.dsl.DensitySplit.getCompatibleScreens: java.util.Set<java.lang.String> ()
 com.android.build.api.dsl.DensitySplit.isStrict: boolean ()
@@ -627,12 +627,12 @@ com.android.build.api.dsl.SigningConfig.setKeyPassword: void (java.lang.String)
 com.android.build.api.dsl.SigningConfig.setStoreFile: void (java.io.File)
 com.android.build.api.dsl.SigningConfig.setStorePassword: void (java.lang.String)
 com.android.build.api.dsl.SigningConfig.setStoreType: void (java.lang.String)
-com.android.build.api.dsl.SplitOptions
-com.android.build.api.dsl.SplitOptions.exclude: void (java.lang.String[])
-com.android.build.api.dsl.SplitOptions.include: void (java.lang.String[])
-com.android.build.api.dsl.SplitOptions.isEnable: boolean ()
-com.android.build.api.dsl.SplitOptions.reset: void ()
-com.android.build.api.dsl.SplitOptions.setEnable: void (boolean)
+com.android.build.api.dsl.Split
+com.android.build.api.dsl.Split.exclude: void (java.lang.String[])
+com.android.build.api.dsl.Split.include: void (java.lang.String[])
+com.android.build.api.dsl.Split.isEnable: boolean ()
+com.android.build.api.dsl.Split.reset: void ()
+com.android.build.api.dsl.Split.setEnable: void (boolean)
 com.android.build.api.dsl.Splits
 com.android.build.api.dsl.Splits.abi: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.AbiSplit, kotlin.Unit>)
 com.android.build.api.dsl.Splits.density: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.DensitySplit, kotlin.Unit>)
