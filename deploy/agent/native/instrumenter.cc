@@ -30,7 +30,8 @@
 #include "tools/base/deploy/agent/native/jni/jni_util.h"
 #include "tools/base/deploy/agent/native/native_callbacks.h"
 #include "tools/base/deploy/agent/native/runtime.jar.cc"
-#include "tools/base/deploy/agent/native/transforms.h"
+#include "tools/base/deploy/agent/native/transform/hook_transform.h"
+#include "tools/base/deploy/agent/native/transform/transforms.h"
 #include "tools/base/deploy/common/io.h"
 #include "tools/base/deploy/common/log.h"
 #include "tools/base/deploy/common/utils.h"
@@ -48,7 +49,6 @@ const char* kPhaseClass = "com/android/tools/deploy/instrument/Phase";
 const std::string kInstrumentationJarName =
     "instruments-"_s + runtime_jar_hash + ".jar";
 
-const std::string MethodHooks::kNoHook = "";
 const std::string kNoCache = "";
 
 namespace {
