@@ -103,7 +103,6 @@ com.android.build.api.dsl.ApplicationBaseFlavor.setVersionCode: void (java.lang.
 com.android.build.api.dsl.ApplicationBaseFlavor.setVersionName: void (java.lang.String)
 com.android.build.api.dsl.ApplicationBaseFlavor.targetSdkVersion: void (int)
 com.android.build.api.dsl.ApplicationBaseFlavor.targetSdkVersion: void (java.lang.String)
-com.android.build.api.dsl.ApplicationBuildFeatures implements com.android.build.api.dsl.BuildFeatures
 com.android.build.api.dsl.ApplicationBuildFeatures.getDataBinding: java.lang.Boolean ()
 com.android.build.api.dsl.ApplicationBuildFeatures.getMlModelBinding: java.lang.Boolean ()
 com.android.build.api.dsl.ApplicationBuildFeatures.setDataBinding: void (java.lang.Boolean)
