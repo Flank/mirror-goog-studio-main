@@ -128,7 +128,6 @@ com.android.build.api.dsl.ApplicationExtension.getPublishing: com.android.build.
 com.android.build.api.dsl.ApplicationExtension.publishing: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.ApplicationPublishing, kotlin.Unit>)
 com.android.build.api.dsl.ApplicationProductFlavor.isDefault: boolean ()
 com.android.build.api.dsl.ApplicationProductFlavor.setDefault: void (boolean)
-com.android.build.api.dsl.ApplicationVariantDimension implements com.android.build.api.dsl.VariantDimension
 com.android.build.api.dsl.ApplicationVariantDimension.getApplicationIdSuffix: java.lang.String ()
 com.android.build.api.dsl.ApplicationVariantDimension.getMultiDexEnabled: java.lang.Boolean ()
 com.android.build.api.dsl.ApplicationVariantDimension.getSigningConfig: com.android.build.api.dsl.ApkSigningConfig ()
