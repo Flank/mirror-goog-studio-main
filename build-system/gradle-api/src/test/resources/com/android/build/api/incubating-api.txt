@@ -362,7 +362,6 @@ com.android.build.api.dsl.DexPackagingOptions.setUseLegacyPackaging: void (java.
 com.android.build.api.dsl.DynamicDelivery
 com.android.build.api.dsl.DynamicDelivery.getDeliveryType: org.gradle.api.provider.Property<java.lang.String> ()
 com.android.build.api.dsl.DynamicDelivery.getInstantDeliveryType: org.gradle.api.provider.Property<java.lang.String> ()
-com.android.build.api.dsl.DynamicFeatureBuildFeatures implements com.android.build.api.dsl.BuildFeatures
 com.android.build.api.dsl.DynamicFeatureBuildFeatures.getDataBinding: java.lang.Boolean ()
 com.android.build.api.dsl.DynamicFeatureBuildFeatures.getMlModelBinding: java.lang.Boolean ()
 com.android.build.api.dsl.DynamicFeatureBuildFeatures.setDataBinding: void (java.lang.Boolean)

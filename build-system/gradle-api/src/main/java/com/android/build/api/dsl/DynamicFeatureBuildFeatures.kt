@@ -21,7 +21,6 @@ import org.gradle.api.Incubating
 /**
  * A list of build features that can be disabled or enabled in an Android Dynamic Feature project.
  */
-@Incubating
 interface DynamicFeatureBuildFeatures : BuildFeatures {
 
     /**
@@ -36,6 +35,8 @@ interface DynamicFeatureBuildFeatures : BuildFeatures {
      *
      * More information about this feature at: TBD
      */
+    @get:Incubating
+    @set:Incubating
     var dataBinding: Boolean?
 
     /**
@@ -50,5 +51,7 @@ interface DynamicFeatureBuildFeatures : BuildFeatures {
      *
      * More information about this feature at: TBD
      */
+    @get:Incubating
+    @set:Incubating
     var mlModelBinding: Boolean?
 }
