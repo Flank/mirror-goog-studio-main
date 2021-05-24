@@ -150,7 +150,6 @@ com.android.build.api.dsl.AssetPackBundleExtension.setCompileSdk: void (int)
 com.android.build.api.dsl.AssetPackBundleExtension.setVersionTag: void (java.lang.String)
 com.android.build.api.dsl.AssetPackBundleExtension.signingConfig: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.SigningConfig, kotlin.Unit>)
 com.android.build.api.dsl.AssetPackBundleExtension.texture: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.BundleTexture, kotlin.Unit>)
-com.android.build.api.dsl.AssetPackExtension
 com.android.build.api.dsl.AssetPackExtension.dynamicDelivery: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.DynamicDelivery, kotlin.Unit>)
 com.android.build.api.dsl.AssetPackExtension.getDynamicDelivery: com.android.build.api.dsl.DynamicDelivery ()
 com.android.build.api.dsl.AssetPackExtension.getPackName: org.gradle.api.provider.Property<java.lang.String> ()
