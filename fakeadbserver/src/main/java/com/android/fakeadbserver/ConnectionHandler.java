@@ -41,7 +41,8 @@ final class ConnectionHandler implements Runnable {
     private static final Set<String> NON_WILDCARD_TRANSPORT_DEVICE_COMMANDS = Collections
             .unmodifiableSet(new HashSet<>(Arrays.asList(
                     "version", "kill", "devices", "devices-l", "track-devices", "emulator",
-                    "transport", "transport-usb", "transport-local", "transport-any"
+                    "transport", "transport-usb", "transport-local", "transport-any",
+                    "host-features"
             )));
 
     @NonNull
