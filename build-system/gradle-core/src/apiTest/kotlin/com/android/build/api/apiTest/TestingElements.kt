@@ -542,6 +542,75 @@ fun getManifestProducerTask() =
             """
             }
 
+    fun getAllClassesAccessTask()=
+        when(language) {
+            ScriptingLanguage.Kotlin ->
+                // language=kotlin
+                """
+            import org.gradle.api.DefaultTask
+            import org.gradle.api.file.Directory
+            import org.gradle.api.provider.ListProperty
+            import org.gradle.api.tasks.InputFiles
+            import org.gradle.api.tasks.TaskAction
+
+            abstract class GetAllClassesTask: DefaultTask() {
+
+                @get:InputFiles
+                abstract val allClasses: ListProperty<Directory>
+
+                @get:InputFiles
+                abstract val allJarsWithClasses: ListProperty<RegularFile>
+
+                @TaskAction
+                fun taskAction() {
+
+                    allClasses.get().forEach { directory ->
+                        println("Directory : ${'$'}{directory.asFile.absolutePath}")
+                        directory.asFile.walk().filter(File::isFile).forEach { file ->
+                            println("File : ${'$'}{file.absolutePath}")
+                        }
+                        allJarsWithClasses.get().forEach { file ->
+                            println("JarFile : ${'$'}{file.asFile.absolutePath}")
+                        }
+                    }
+                }
+            }
+            """
+            ScriptingLanguage.Groovy ->
+                // language=groovy
+                """
+            import org.gradle.api.DefaultTask
+            import org.gradle.api.file.Directory
+            import org.gradle.api.file.RegularFile
+            import org.gradle.api.tasks.InputFiles
+            import org.gradle.api.tasks.TaskAction
+            import org.gradle.api.provider.ListProperty
+
+            abstract class GetAllClassesTask extends DefaultTask {
+
+                @InputFiles
+                abstract ListProperty<Directory> getAllClasses()
+
+                @InputFiles
+                abstract ListProperty<RegularFile> getAllJarsWithClasses()
+
+                @TaskAction
+                void taskAction() {
+
+                    allClasses.get().forEach { directory ->
+                        println("Directory : ${'$'}{directory.asFile.absolutePath}")
+                        directory.asFile.traverse(type: groovy.io.FileType.FILES) { file ->
+                            println("File : ${'$'}{file.absolutePath}")
+                        }
+                        allJarsWithClasses.get().forEach { file ->
+                            println("JarFile : ${'$'}{file.asFile.absolutePath}")
+                        }
+                    }
+                }
+            }
+            """
+        }
+
     fun getCopyApksTask()=
         when(language) {
             ScriptingLanguage.Groovy ->

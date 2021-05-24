@@ -62,7 +62,7 @@ public class LintKotlinTest {
 
     @Test
     public void checkFindErrors() throws Exception {
-        getExecutor().expectFailure().run(":app:lintDebug");
+        getExecutor().expectFailure().run("clean", ":app:lintDebug");
         GradleBuildResult result = getExecutor().expectFailure().run(":app:lintDebug");
 
         Throwable exception = result.getException();

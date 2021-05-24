@@ -16,6 +16,7 @@
 package com.android.build.gradle.integration.lint
 
 import com.android.Version
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.gradle_project.ProjectLocation
@@ -78,7 +79,7 @@ class LintModelIntegrationTest(private val usePartialAnalysis: Boolean) {
     @Test
     fun checkLintModels() {
         // Check lint runs correctly before asserting about the model.
-        getExecutor().expectFailure().run(":app:cleanLintDebug", ":app:lintDebug")
+        getExecutor().expectFailure().run("clean", ":app:cleanLintDebug", ":app:lintDebug")
         getExecutor().expectFailure().run(":app:cleanLintDebug", ":app:lintDebug")
         val lintResults = project.file("app/build/reports/lint-results.txt")
         assertThat(lintResults).contains("8 errors, 6 warnings")

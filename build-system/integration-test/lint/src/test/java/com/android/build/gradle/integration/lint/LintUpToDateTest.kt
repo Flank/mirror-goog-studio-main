@@ -15,6 +15,7 @@
  */
 package com.android.build.gradle.integration.lint
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
@@ -83,5 +84,8 @@ class LintUpToDateTest(private val usePartialAnalysis: Boolean) {
     }
 
     private fun getExecutor(): GradleTaskExecutor =
-        project.executor().with(BooleanOption.USE_LINT_PARTIAL_ANALYSIS, usePartialAnalysis)
+        project.executor()
+            // see https://github.com/gradle/gradle/issues/15626
+            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+            .with(BooleanOption.USE_LINT_PARTIAL_ANALYSIS, usePartialAnalysis)
 }
