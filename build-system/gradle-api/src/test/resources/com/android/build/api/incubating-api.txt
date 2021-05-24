@@ -441,7 +441,6 @@ com.android.build.api.dsl.LibraryBaseFlavor.setTargetSdkPreview: void (java.lang
 com.android.build.api.dsl.LibraryBaseFlavor.setTargetSdkVersion: void (java.lang.String)
 com.android.build.api.dsl.LibraryBaseFlavor.targetSdkVersion: void (int)
 com.android.build.api.dsl.LibraryBaseFlavor.targetSdkVersion: void (java.lang.String)
-com.android.build.api.dsl.LibraryBuildFeatures implements com.android.build.api.dsl.BuildFeatures
 com.android.build.api.dsl.LibraryBuildFeatures.getAndroidResources: java.lang.Boolean ()
 com.android.build.api.dsl.LibraryBuildFeatures.getDataBinding: java.lang.Boolean ()
 com.android.build.api.dsl.LibraryBuildFeatures.getMlModelBinding: java.lang.Boolean ()
