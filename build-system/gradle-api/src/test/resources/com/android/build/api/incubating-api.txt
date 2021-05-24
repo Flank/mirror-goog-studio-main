@@ -627,7 +627,6 @@ com.android.build.api.dsl.SigningConfig.setKeyPassword: void (java.lang.String)
 com.android.build.api.dsl.SigningConfig.setStoreFile: void (java.io.File)
 com.android.build.api.dsl.SigningConfig.setStorePassword: void (java.lang.String)
 com.android.build.api.dsl.SigningConfig.setStoreType: void (java.lang.String)
-com.android.build.api.dsl.Split
 com.android.build.api.dsl.Split.exclude: void (java.lang.String[])
 com.android.build.api.dsl.Split.include: void (java.lang.String[])
 com.android.build.api.dsl.Split.isEnable: boolean ()
