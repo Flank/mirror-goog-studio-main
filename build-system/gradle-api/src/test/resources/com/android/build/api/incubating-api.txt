@@ -365,7 +365,6 @@ com.android.build.api.dsl.DynamicFeatureBuildFeatures.getDataBinding: java.lang.
 com.android.build.api.dsl.DynamicFeatureBuildFeatures.getMlModelBinding: java.lang.Boolean ()
 com.android.build.api.dsl.DynamicFeatureBuildFeatures.setDataBinding: void (java.lang.Boolean)
 com.android.build.api.dsl.DynamicFeatureBuildFeatures.setMlModelBinding: void (java.lang.Boolean)
-com.android.build.api.dsl.DynamicFeatureBuildType implements com.android.build.api.dsl.BuildType, com.android.build.api.dsl.DynamicFeatureVariantDimension
 com.android.build.api.dsl.DynamicFeatureBuildType.isCrunchPngs: java.lang.Boolean ()
 com.android.build.api.dsl.DynamicFeatureBuildType.setCrunchPngs: void (java.lang.Boolean)
 com.android.build.api.dsl.EmulatorSnapshots

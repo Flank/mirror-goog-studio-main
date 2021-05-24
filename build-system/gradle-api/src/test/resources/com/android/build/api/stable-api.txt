@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-fb7f79056bfa65af19a09962aeb1a3d01654d525db4a989892b1cf0363a13e45
+c6900878aa32595c658909462d807b217a27a7fb05aa4250979230b02728e798
 -------------------------------------------------------------------------
 com.android.build.api.AndroidPluginVersion implements java.lang.Comparable
 com.android.build.api.AndroidPluginVersion.<init>: com.android.build.api.AndroidPluginVersion (int, int)
@@ -152,6 +152,7 @@ com.android.build.api.dsl.DefaultConfig implements com.android.build.api.dsl.Bas
 com.android.build.api.dsl.DensitySplit implements com.android.build.api.dsl.Split
 com.android.build.api.dsl.DynamicFeatureBaseFlavor implements com.android.build.api.dsl.BaseFlavor, com.android.build.api.dsl.DynamicFeatureVariantDimension
 com.android.build.api.dsl.DynamicFeatureBuildFeatures implements com.android.build.api.dsl.BuildFeatures
+com.android.build.api.dsl.DynamicFeatureBuildType implements com.android.build.api.dsl.BuildType, com.android.build.api.dsl.DynamicFeatureVariantDimension
 com.android.build.api.dsl.DynamicFeatureDefaultConfig implements com.android.build.api.dsl.DynamicFeatureBaseFlavor, com.android.build.api.dsl.DefaultConfig
 com.android.build.api.dsl.DynamicFeatureExtension implements com.android.build.api.dsl.CommonExtension, com.android.build.api.dsl.ApkExtension, com.android.build.api.dsl.TestedExtension
 com.android.build.api.dsl.DynamicFeatureProductFlavor implements com.android.build.api.dsl.DynamicFeatureBaseFlavor, com.android.build.api.dsl.ProductFlavor
