@@ -683,7 +683,6 @@ com.android.build.api.dsl.TestOptions.setExecution: void (java.lang.String)
 com.android.build.api.dsl.TestOptions.setReportDir: void (java.lang.String)
 com.android.build.api.dsl.TestOptions.setResultsDir: void (java.lang.String)
 com.android.build.api.dsl.TestOptions.unitTests: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.UnitTestOptions, kotlin.Unit>)
-com.android.build.api.dsl.TestVariantDimension implements com.android.build.api.dsl.VariantDimension
 com.android.build.api.dsl.TestVariantDimension.getMultiDexEnabled: java.lang.Boolean ()
 com.android.build.api.dsl.TestVariantDimension.getSigningConfig: com.android.build.api.dsl.ApkSigningConfig ()
 com.android.build.api.dsl.TestVariantDimension.setMultiDexEnabled: void (java.lang.Boolean)
