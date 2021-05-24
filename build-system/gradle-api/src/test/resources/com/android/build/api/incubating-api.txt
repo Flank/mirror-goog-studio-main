@@ -377,7 +377,6 @@ com.android.build.api.dsl.DynamicFeatureBuildFeatures.setMlModelBinding: void (j
 com.android.build.api.dsl.DynamicFeatureBuildType implements com.android.build.api.dsl.BuildType, com.android.build.api.dsl.DynamicFeatureVariantDimension
 com.android.build.api.dsl.DynamicFeatureBuildType.isCrunchPngs: java.lang.Boolean ()
 com.android.build.api.dsl.DynamicFeatureBuildType.setCrunchPngs: void (java.lang.Boolean)
-com.android.build.api.dsl.DynamicFeatureVariantDimension implements com.android.build.api.dsl.VariantDimension
 com.android.build.api.dsl.EmulatorSnapshots
 com.android.build.api.dsl.EmulatorSnapshots.getCompressSnapshots: boolean ()
 com.android.build.api.dsl.EmulatorSnapshots.getEnableForTestFailures: boolean ()
