@@ -643,7 +643,6 @@ com.android.build.api.dsl.TestBaseFlavor.setTargetSdkPreview: void (java.lang.St
 com.android.build.api.dsl.TestBaseFlavor.setTargetSdkVersion: void (java.lang.String)
 com.android.build.api.dsl.TestBaseFlavor.targetSdkVersion: void (int)
 com.android.build.api.dsl.TestBaseFlavor.targetSdkVersion: void (java.lang.String)
-com.android.build.api.dsl.TestBuildFeatures implements com.android.build.api.dsl.BuildFeatures
 com.android.build.api.dsl.TestBuildType implements com.android.build.api.dsl.BuildType, com.android.build.api.dsl.TestVariantDimension
 com.android.build.api.dsl.TestBuildType.isCrunchPngs: java.lang.Boolean ()
 com.android.build.api.dsl.TestBuildType.isDebuggable: boolean ()

@@ -16,11 +16,8 @@
 
 package com.android.build.api.dsl
 
-import org.gradle.api.Incubating
-
 /**
  * A list of build features that can be disabled or enabled in an Android Test project.
  */
-@Incubating
 interface TestBuildFeatures : BuildFeatures {
 }
