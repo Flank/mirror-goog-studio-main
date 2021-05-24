@@ -283,7 +283,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                 dslNamespaceProvider,
                 dslTestNamespace,
                 configuredNativeBuilder(),
-                (extension as CommonExtension<*, *, *, *>).properties
+                (extension as CommonExtension<*, *, *, *>).experimentalProperties
         )
 
         // We must first add the flavors to the variant config, in order to get the proper

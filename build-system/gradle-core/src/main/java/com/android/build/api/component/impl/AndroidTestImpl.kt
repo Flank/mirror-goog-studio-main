@@ -208,10 +208,10 @@ open class AndroidTestImpl @Inject constructor(
         )
     }
 
-    override val properties: MapProperty<String, Any> = internalServices.mapPropertyOf(
+    override val experimentalProperties: MapProperty<String, Any> = internalServices.mapPropertyOf(
             String::class.java,
             Any::class.java,
-            variantDslInfo.properties)
+            variantDslInfo.experimentalProperties)
 
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API

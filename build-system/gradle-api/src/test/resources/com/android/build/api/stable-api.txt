@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-1391de554a0fc4c998f29df13f5ec33760959ffabb4b5f3afbf206ac36e96b4b
+a164ff1e67c99a7e1016c663de9eb1ac5b8d87ed4a578e31872f3f3cbedd5b9a
 -------------------------------------------------------------------------
 com.android.build.api.artifact.Artifact implements java.io.Serializable
 com.android.build.api.artifact.Artifact$Appendable
@@ -358,7 +358,6 @@ com.android.build.api.variant.Variant.getMinSdkVersion: com.android.build.api.va
 com.android.build.api.variant.Variant.getNamespace: org.gradle.api.provider.Provider<java.lang.String> ()
 com.android.build.api.variant.Variant.getPackaging: com.android.build.api.variant.Packaging ()
 com.android.build.api.variant.Variant.getProguardFiles: org.gradle.api.provider.ListProperty<org.gradle.api.file.RegularFile> ()
-com.android.build.api.variant.Variant.getProperties: org.gradle.api.provider.MapProperty<java.lang.String, java.lang.Object> ()
 com.android.build.api.variant.Variant.getTargetSdkVersion: com.android.build.api.variant.AndroidVersion ()
 com.android.build.api.variant.Variant.getUnitTest: com.android.build.api.component.UnitTest ()
 com.android.build.api.variant.VariantBuilder implements com.android.build.api.component.ComponentBuilder

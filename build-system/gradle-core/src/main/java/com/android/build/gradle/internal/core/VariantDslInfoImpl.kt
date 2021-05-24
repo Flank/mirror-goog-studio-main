@@ -96,7 +96,7 @@ open class VariantDslInfoImpl internal constructor(
     private val dslNamespaceProvider: Provider<String>?,
     private val dslTestNamespace: String?,
     override val nativeBuildSystem: VariantManager.NativeBuiltType?,
-    override val properties: Map<String, Any>,
+    override val experimentalProperties: Map<String, Any>,
 ): VariantDslInfo, DimensionCombination {
 
     override val buildType: String?

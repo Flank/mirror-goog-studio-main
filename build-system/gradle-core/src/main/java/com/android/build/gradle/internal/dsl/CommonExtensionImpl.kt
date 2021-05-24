@@ -310,5 +310,5 @@ abstract class CommonExtensionImpl<
         return ProguardFiles.getDefaultProguardFile(name, dslServices.buildDirectory)
     }
 
-    override val properties: MutableMap<String, Any> = mutableMapOf()
+    override val experimentalProperties: MutableMap<String, Any> = mutableMapOf()
 }

@@ -106,7 +106,7 @@ class CustomTestedApksTest {
                         }
                     }
                     targetProjectPath = ":app"
-                    properties["android.experimental.self-instrumenting"] = true
+                    experimentalProperties["android.experimental.self-instrumenting"] = true
                 }
 
                 androidComponents {

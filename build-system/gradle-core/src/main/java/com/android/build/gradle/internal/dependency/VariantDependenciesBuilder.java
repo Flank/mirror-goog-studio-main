@@ -560,7 +560,7 @@ public class VariantDependenciesBuilder {
 
         boolean isSelfInstrumenting =
                 ModulePropertyKeys.SELF_INSTRUMENTING.getValueAsBoolean(
-                        variantDslInfo.getProperties());
+                        variantDslInfo.getExperimentalProperties());
         return new VariantDependencies(
                 variantName,
                 variantDslInfo.getVariantType(),
