@@ -968,7 +968,7 @@ class VersionChecks(
                     if (operand == before) {
                         break
                     } else {
-                        val constraint = getAndedWithConditional(operand, before)
+                        val constraint = getVersionCheckConditional(operand, and = true)
                         if (constraint != null) {
                             return constraint
                         }
