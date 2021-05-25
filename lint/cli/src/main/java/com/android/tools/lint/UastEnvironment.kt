@@ -343,6 +343,9 @@ private fun createKotlinCompilerEnv(
     parentDisposable: Disposable,
     config: UastEnvironment.Configuration
 ): KotlinCoreEnvironment {
+    // This is also set in UastEnvironment's companion object's init block, but we must set it here
+    // to ensure it's set properly for KotlinCoreEnvironment::createForProduction below
+    CompilerSystemProperties.KOTLIN_COMPILER_ENVIRONMENT_KEEPALIVE_PROPERTY.value = "true"
     val env = KotlinCoreEnvironment
         .createForProduction(parentDisposable, config.kotlinCompilerConfig, JVM_CONFIG_FILES)
     appLock.withLock { configureApplicationEnvironment(env.projectEnvironment.environment) }

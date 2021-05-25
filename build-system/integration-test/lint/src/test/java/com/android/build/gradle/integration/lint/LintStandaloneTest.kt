@@ -16,12 +16,17 @@
 
 package com.android.build.gradle.integration.lint
 
+import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.truth.GradleTaskSubject.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.truth.PathSubject.assertThat
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 
 /**
  * Test for the standalone lint plugin.
@@ -33,14 +38,22 @@ import org.junit.Test
  *     $ ./gradlew :base:build-system:integration-test:lint:test --tests=LintStandaloneTest
  * </pre>
  */
-class LintStandaloneTest {
+@RunWith(FilterableParameterized::class)
+class LintStandaloneTest(private val runLintInProcess: Boolean) {
+
+    companion object {
+        @Parameterized.Parameters(name = "runLintInProcess = {0}")
+        @JvmStatic
+        fun params() = listOf(true, false)
+    }
 
     @get:Rule
-    val project = GradleTestProject.builder().fromTestProject("lintStandalone").create()
+    val project =
+        GradleTestProject.builder().fromTestProject("lintStandalone").create()
 
     @Test
     fun checkStandaloneLint() {
-        project.executor().run( ":lint")
+        getExecutor().run( ":lint")
 
         val file = project.file("lint-results.txt")
         assertThat(file).exists()
@@ -56,9 +69,9 @@ class LintStandaloneTest {
             "textOutput file(\"lint-results2.txt\")"
         )
         // Run twice to catch issues with configuration caching
-        val secondRun = project.executor().run(":lint")
+        val secondRun = getExecutor().run(":lint")
         assertThat(secondRun.getTask(":lint")).wasUpToDate()
-        val thirdRun = project.executor().run(":lint")
+        val thirdRun = getExecutor().run(":lint")
         assertThat(thirdRun.getTask(":lint")).wasUpToDate()
         val secondFile = project.file("lint-results2.txt")
         assertThat(secondFile).exists()
@@ -67,4 +80,7 @@ class LintStandaloneTest {
         assertThat(secondFile).contains("0 errors, 2 warnings")
 
     }
+
+    private fun getExecutor(): GradleTaskExecutor =
+        project.executor().with(BooleanOption.RUN_LINT_IN_PROCESS, runLintInProcess)
 }

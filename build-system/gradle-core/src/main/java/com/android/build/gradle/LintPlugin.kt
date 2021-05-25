@@ -44,6 +44,7 @@ import com.android.build.gradle.internal.scope.ProjectInfo
 import com.android.build.gradle.internal.scope.publishArtifactToConfiguration
 import com.android.build.gradle.internal.services.AndroidLocationsBuildService
 import com.android.build.gradle.internal.services.DslServicesImpl
+import com.android.build.gradle.internal.services.LintClassLoaderBuildService
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.StringCachingBuildService
 import com.android.build.gradle.options.Option
@@ -338,5 +339,6 @@ abstract class LintPlugin : Plugin<Project> {
             projectServices.projectOptions
         ).execute()
         LintFixBuildService.RegistrationAction(project).execute()
+        LintClassLoaderBuildService.RegistrationAction(project).execute()
     }
 }
