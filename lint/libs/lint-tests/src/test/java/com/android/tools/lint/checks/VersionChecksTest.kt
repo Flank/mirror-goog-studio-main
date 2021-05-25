@@ -3235,8 +3235,59 @@ class VersionChecksTest : AbstractCheckTest() {
 
                 public class Build {
                     public static class VERSION_CODES {
-                        public static final int CUR_DEVELOPMENT = 1000;
+                        public static final int CUR_DEVELOPMENT = 10000;
                         public static final int S = CUR_DEVELOPMENT;
+                    }
+                }
+                """
+            ).indented(),
+            mSupportJar,
+            checkSdkIntAnnotation
+        ).run().expectClean()
+    }
+
+    fun testNextPlatformHandling2() {
+        lint().files(
+            classpath(),
+            manifest().minSdk(14),
+            kotlin(
+                """
+                import android.os.Build
+                import android.support.annotation.RequiresApi;
+                import androidx.core.os.BuildCompat
+
+                @RequiresApi(Build.VERSION_CODES.S)
+                private fun requiresSFunction() {
+                }
+
+                fun testIsAtLeastS() {
+                    if (BuildCompat.isAtLeastS()) {
+                        requiresSFunction();
+                    }
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package androidx.core.os;
+                import android.os.Build;
+                import androidx.annotation.ChecksSdkIntAtLeast;
+
+                public class BuildCompat {
+                    @ChecksSdkIntAtLeast(codename = "S")
+                    public static boolean isAtLeastS() {
+                        return VERSION.CODENAME.equals("S");
+                    }
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package android.os;
+
+                public class Build {
+                    public static class VERSION_CODES {
+                        public static final int S = 10000;
                     }
                 }
                 """

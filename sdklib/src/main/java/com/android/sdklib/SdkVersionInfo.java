@@ -87,7 +87,7 @@ public class SdkVersionInfo {
      * Build.VERSION_CODES.CUR_DEVELOPMENT; set for platforms in
      * development before preview
      */
-    public static final int CUR_DEVELOPMENT = 1000;
+    public static final int CUR_DEVELOPMENT = 10000;
 
     /**
      * Returns the Android version and code name of the given API level
