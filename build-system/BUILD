@@ -193,9 +193,7 @@ GRADLE_PLUGIN_NO_DATABINDING_ARTIFACTS = [
     "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-commons/8.0.1:jar",
     "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-tree/8.0.1:jar",
     "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-analysis/8.0.1:jar",
-    "//prebuilts/tools/common/m2/repository/com/google/errorprone/error_prone_annotations/2.0.18:jar",
-    "//prebuilts/tools/common/m2/repository/com/google/errorprone/error_prone_annotations/2.1.3:jar",
-    "//prebuilts/tools/common/m2/repository/com/google/errorprone/error_prone_annotations/2.2.0:jar",
+    "//prebuilts/tools/common/m2/repository/com/google/errorprone/error_prone_annotations/2.3.2:jar",
     "//prebuilts/tools/common/m2/repository/org/checkerframework/checker-qual/2.5.2:jar",
     "//prebuilts/tools/common/m2/repository/com/github/javaparser/javaparser-core/3.17.0:jar",
 ]
