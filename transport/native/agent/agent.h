@@ -200,8 +200,6 @@ class Agent {
   std::unique_ptr<proto::InternalEnergyService::Stub> energy_stub_;
   std::unique_ptr<proto::InternalEventService::Stub> event_stub_;
   std::unique_ptr<proto::InternalNetworkService::Stub> network_stub_;
-  std::unique_ptr<grpc::ClientReader<proto::Command>> command_stream_reader_;
-  std::unique_ptr<grpc::ClientContext> command_stream_context_;
 
   // Protects |daemon_status_changed_callbacks_|
   std::mutex callback_mutex_;
