@@ -19,7 +19,6 @@ package com.android.build.gradle.integration.common.fixture.testprojects
 import com.android.build.api.dsl.AndroidResources
 import com.android.build.api.dsl.CompileOptions
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.fixture.SUPPORT_LIB_MIN_SDK
 import com.google.common.base.Charsets
 import org.gradle.api.JavaVersion
 
@@ -30,8 +29,9 @@ internal class AndroidProjectBuilderImpl(
 
     override var applicationId: String? = null
     override var namespace: String? = null
+    override var compileSdk: Int? = null
     override var minSdk: Int? = null
-    override var minSdkCodename: String? = null
+    override var minSdkPreview: String? = null
     override var targetProjectPath: String? = null
 
     override val dynamicFeatures: MutableSet<String> = mutableSetOf()
@@ -47,6 +47,9 @@ internal class AndroidProjectBuilderImpl(
 
     private var androidResources: AndroidResourcesImpl? = null
     private var compileOptions: CompileOptionsImpl? = null
+    override fun defaultCompileSdk() {
+        compileSdk = GradleTestProject.DEFAULT_COMPILE_SDK_VERSION.toInt()
+    }
 
     override fun buildFeatures(action: BuildFeaturesBuilder.() -> Unit) {
         action(buildFeatures)
@@ -96,19 +99,24 @@ internal class AndroidProjectBuilderImpl(
     }
 
     fun writeBuildFile(sb: StringBuilder, appliedPlugins: Collection<PluginType>) {
-        val minSdkVersion = minSdk?.toString()
-            ?: minSdkCodename?.let { "\"$it\""}
-            ?: SUPPORT_LIB_MIN_SDK.toString()
 
         sb.append("android {\n")
-        sb.append("  defaultConfig.minSdkVersion $minSdkVersion\n")
-        sb.append("  compileSdkVersion ${GradleTestProject.DEFAULT_COMPILE_SDK_VERSION}\n")
+
+        compileSdk?.let {
+            sb.append("  compileSdk = $it\n")
+        }
 
         namespace?.let {
             sb.append("    namespace = \"$it\"\n")
         }
 
         sb.append("  defaultConfig {\n")
+        if (minSdk != null) {
+            sb.append("  minSdk = $minSdk\n")
+        } else if (minSdkPreview != null) {
+            sb.append("  minSdkPreview = $minSdkPreview\n")
+        }
+
         applicationId?.let {
             sb.append("    applicationId = \"$it\"\n")
         }

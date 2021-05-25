@@ -89,6 +89,11 @@ enum class PluginType(
         isAndroid = false,
         useNewDsl = true,
     ),
+    ANDROID_SETTINGS(
+        id = "com.android.settings",
+        isAndroid = true,
+        useNewDsl = true
+    ),
     JAVA_TEST_FIXTURES(
         id = "java-test-fixtures",
         useNewDsl = true

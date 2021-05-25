@@ -37,6 +37,7 @@ class FlavouredDependencyModelTest: ModelComparator() {
         subProject(":lib1") {
             plugins.add(PluginType.ANDROID_LIB)
             android {
+                defaultCompileSdk()
                 productFlavors {
                     named("basic") { dimension = "model" }
                     named("pro") { dimension = "model" }
@@ -51,6 +52,7 @@ class FlavouredDependencyModelTest: ModelComparator() {
         subProject("lib2") {
             plugins.add(PluginType.ANDROID_LIB)
             android {
+                defaultCompileSdk()
                 productFlavors {
                     named("basic") { dimension = "model" }
                     named("pro") { dimension = "model" }
@@ -65,6 +67,7 @@ class FlavouredDependencyModelTest: ModelComparator() {
         subProject("lib3") {
             plugins.add(PluginType.ANDROID_LIB)
             android {
+                defaultCompileSdk()
                 productFlavors {
                     named("play") { dimension = "market" }
                     named("other") { dimension = "market" }

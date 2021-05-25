@@ -49,7 +49,10 @@ public class JavaGradleModule extends GradleModule implements TestProject{
     }
 
     @Override
-    public void write(@NonNull File projectDir, @Nullable String buildScriptContent)
+    public void write(
+            @NonNull File projectDir,
+            @Nullable String buildScriptContent,
+            @NonNull String projectRepoScript)
             throws IOException {
         File sources = new File(projectDir, "src/main");
         sources.mkdirs();

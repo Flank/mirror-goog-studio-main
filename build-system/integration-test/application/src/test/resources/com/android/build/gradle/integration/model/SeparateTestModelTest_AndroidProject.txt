@@ -22,7 +22,7 @@
                * {PROJECT}/test/build/generated/renderscript_source_output_dir/debug/out{!}
                * {PROJECT}/test/build/generated/source/buildConfig/debug{!}
             - minSdkVersion:
-               - apiLevel = 14
+               - apiLevel = 1
                - codename = (null)
             - targetSdkVersionOverride      = (null)
             - maxSdkVersion                 = (null)

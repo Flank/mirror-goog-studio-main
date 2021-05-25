@@ -22,6 +22,7 @@ import com.android.build.gradle.integration.common.fixture.testprojects.PluginTy
 import com.android.build.gradle.integration.common.fixture.testprojects.createGradleProject
 import com.android.build.gradle.integration.common.fixture.testprojects.prebuilts.setUpHelloWorld
 import com.android.builder.model.v2.ide.SyncIssue
+import com.google.common.truth.Truth
 import org.junit.Rule
 import org.junit.Test
 
@@ -32,6 +33,7 @@ class HelloWorldLibModelTest: ModelComparator() {
         rootProject {
             plugins.add(PluginType.ANDROID_LIB)
             android {
+                minSdk = 14
                 setUpHelloWorld()
             }
         }
@@ -120,5 +122,81 @@ class EnabledTestFixturesInLibModelTest: ReferenceModelComparator(
     @Test
     fun `test AndroidProject model`() {
         compareAndroidProjectWith(goldenFileSuffix = "AndroidProject")
+    }
+}
+
+class CompileSdkViaSettingsInLibModelTest {
+    @get:Rule
+    val project = createGradleProject {
+        settings {
+            plugins.add(PluginType.ANDROID_SETTINGS)
+            android {
+                compileSdk = 32
+            }
+        }
+        rootProject {
+            plugins.add(PluginType.ANDROID_LIB)
+            android {
+                setUpHelloWorld(setupDefaultCompileSdk = false)
+            }
+        }
+    }
+
+    @Test
+    fun `test compileTarget`() {
+        val result = project.modelV2()
+            .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
+            .fetchModels(variantName = "debug")
+
+        val androidDsl = result.container.getProject().androidDsl
+            ?: throw RuntimeException("Failed to get AndroidDsl Model")
+
+        Truth
+            .assertWithMessage("compile target hash")
+            .that(androidDsl.compileTarget)
+            .isEqualTo("android-32")
+    }
+}
+
+class MinSdkViaSettingsInLibModelTest {
+    @get:Rule
+    val project = createGradleProject {
+        settings {
+            plugins.add(PluginType.ANDROID_SETTINGS)
+            android {
+                minSdk = 23
+            }
+        }
+        rootProject {
+            plugins.add(PluginType.ANDROID_LIB)
+            android {
+                setUpHelloWorld()
+            }
+        }
+    }
+
+    @Test
+    fun `test minSdkVersion`() {
+        val result = project.modelV2()
+            .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
+            .fetchModels(variantName = "debug")
+
+        val androidDsl = result.container.getProject().androidDsl
+            ?: throw RuntimeException("Failed to get AndroidDsl Model")
+
+        Truth
+            .assertWithMessage("minSdkVersion")
+            .that(androidDsl.defaultConfig.minSdkVersion)
+            .isNotNull()
+
+        Truth
+            .assertWithMessage("minSdkVersion.apiLevel")
+            .that(androidDsl.defaultConfig.minSdkVersion?.apiLevel)
+            .isEqualTo(23)
+
+        Truth
+            .assertWithMessage("minSdkVersion.codename")
+            .that(androidDsl.defaultConfig.minSdkVersion?.codename)
+            .isNull()
     }
 }

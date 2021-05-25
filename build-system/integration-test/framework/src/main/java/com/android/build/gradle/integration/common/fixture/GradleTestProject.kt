@@ -151,7 +151,7 @@ class GradleTestProject @JvmOverloads internal constructor(
          */
         private val tmpApkFiles: MutableList<Apk> = mutableListOf()
         private const val COMMON_HEADER = "commonHeader.gradle"
-        private const val COMMON_LOCAL_REPO = "commonLocalRepo.gradle"
+        internal const val COMMON_LOCAL_REPO = "commonLocalRepo.gradle"
         private const val COMMON_BUILD_SCRIPT = "commonBuildScript.gradle"
         private const val COMMON_VERSIONS = "commonVersions.gradle"
         const val DEFAULT_TEST_PROJECT_NAME = "project"
@@ -551,14 +551,16 @@ class GradleTestProject @JvmOverloads internal constructor(
 
         val projectParentDir = projectDir.parent
         File(projectParentDir, COMMON_VERSIONS).writeText(generateVersions())
-        File(projectParentDir, COMMON_LOCAL_REPO).writeText(generateProjectRepoScript())
+        val projectRepoScript = generateProjectRepoScript()
+        File(projectParentDir, COMMON_LOCAL_REPO).writeText(projectRepoScript)
         File(projectParentDir, COMMON_HEADER).writeText(generateCommonHeader())
         File(projectParentDir, COMMON_BUILD_SCRIPT).writeText(generateCommonBuildScript())
 
         if (testProject != null) {
             testProject.write(
                 projectDir,
-                if (testProject.containsFullBuildScript()) "" else computeGradleBuildscript()
+                if (testProject.containsFullBuildScript()) "" else computeGradleBuildscript(),
+                projectRepoScript
             )
         } else {
             buildFile.writeText(computeGradleBuildscript())

@@ -79,7 +79,10 @@ fun createHelloWorldLibProject(): TestProject {
     }
 }
 
-fun AndroidProjectBuilder.setUpHelloWorld() {
+fun AndroidProjectBuilder.setUpHelloWorld(setupDefaultCompileSdk: Boolean = true) {
+    if (setupDefaultCompileSdk) {
+        defaultCompileSdk()
+    }
     addFile(
         "src/main/java/${packageName.replace('.','/')}/HelloWorld.java",
         """

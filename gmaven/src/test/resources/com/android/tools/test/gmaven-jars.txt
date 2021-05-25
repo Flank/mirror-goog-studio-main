@@ -547,6 +547,39 @@ com/android/tools/build/gradle-api
   com/android/build/gradle/
   com/android/build/gradle/api/
 
+com/android/tools/build/gradle-settings
+  META-INF/
+  META-INF/MANIFEST.MF
+  META-INF/gradle-plugins/
+  META-INF/gradle-plugins/com.android.internal.settings.properties
+  META-INF/gradle-plugins/com.android.settings.properties
+  META-INF/gradle-settings.kotlin_module
+  NOTICE
+  com/
+  com/android/
+  com/android/build/
+  com/android/build/gradle/
+  com/android/build/gradle/internal/
+  com/android/build/gradle/internal/dsl/
+  com/android/build/gradle/internal/plugins/
+
+com/android/tools/build/gradle-settings-api
+  META-INF/
+  META-INF/MANIFEST.MF
+  META-INF/gradle-settings-api.kotlin_module
+  NOTICE
+  com/
+  com/android/
+  com/android/build/
+  com/android/build/api/
+  com/android/build/api/dsl/
+  com/android/build/gradle/
+
+com/android/tools/build/gradle-settings:api
+  META-INF/
+  META-INF/MANIFEST.MF
+  NOTICE
+
 com/android/tools/build/manifest-merger
   META-INF/
   META-INF/MANIFEST.MF

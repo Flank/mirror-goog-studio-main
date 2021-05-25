@@ -43,7 +43,7 @@ public class ExternalTestProjectTest {
 
         // app1 module
         File app1 = new File(rootFile, "app1");
-        HelloWorldApp.noBuildFile().write(app1, null);
+        HelloWorldApp.noBuildFile().write(app1, null, "");
         TestFileUtils.appendToFile(
                 new File(app1, "build.gradle"),
                 "apply plugin: 'com.android.application'\n"
@@ -74,7 +74,7 @@ public class ExternalTestProjectTest {
 
         // app2 module
         File app2 = new File(rootFile, "app2");
-        HelloWorldApp.noBuildFile().write(app2, null);
+        HelloWorldApp.noBuildFile().write(app2, null, "");
         app2BuildFile = new File(app2, "build.gradle");
     }
 

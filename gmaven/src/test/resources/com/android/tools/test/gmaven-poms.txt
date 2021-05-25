@@ -140,6 +140,12 @@ com.android.fused-library:com.android.fused-library.gradle.plugin
   dependencies:
     com.android.tools.build:gradle ()
 
+com.android.internal.settings:com.android.internal.settings.gradle.plugin
+  pomName=com.android.tools.build.gradle-settings
+  description=Gradle Settings plug-in to build Android applications.
+  dependencies:
+    com.android.tools.build:gradle-settings ()
+
 com.android.library:com.android.library.gradle.plugin
   pomName=com.android.tools.build.gradle
   description=Gradle plug-in to build Android applications.
@@ -151,6 +157,12 @@ com.android.lint:com.android.lint.gradle.plugin
   description=Gradle plug-in to build Android applications.
   dependencies:
     com.android.tools.build:gradle ()
+
+com.android.settings:com.android.settings.gradle.plugin
+  pomName=com.android.tools.build.gradle-settings
+  description=Gradle Settings plug-in to build Android applications.
+  dependencies:
+    com.android.tools.build:gradle-settings ()
 
 com.android.test:com.android.test.gradle.plugin
   pomName=com.android.tools.build.gradle
@@ -494,6 +506,20 @@ com.android.tools.build:gradle-api
     org.ow2.asm:asm (compile)
     com.android.tools.build:builder-test-api (runtime)
     com.google.guava:guava (runtime)
+    org.jetbrains.kotlin:kotlin-stdlib-jdk8 (runtime)
+
+com.android.tools.build:gradle-settings
+  pomName=com.android.tools.build.gradle-settings
+  description=Gradle Settings plug-in to build Android applications.
+  dependencies:
+    com.android.tools.build:gradle-settings-api (compile)
+    com.android.tools.build:gradle-api (runtime)
+    org.jetbrains.kotlin:kotlin-stdlib-jdk8 (runtime)
+
+com.android.tools.build:gradle-settings-api
+  pomName=com.android.tools.build.gradle-settings-api
+  description=Gradle Settings API to build Android applications.
+  dependencies:
     org.jetbrains.kotlin:kotlin-stdlib-jdk8 (runtime)
 
 com.android.tools.build:manifest-merger

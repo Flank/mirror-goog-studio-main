@@ -124,7 +124,7 @@ abstract class GradleProject(
         return this
     }
 
-    override fun write(projectDir: File, buildScriptContent: String?) {
+    override fun write(projectDir: File, buildScriptContent: String?, projectRepoScript: String) {
         for (sourceFile in getAllSourceFiles()) {
             sourceFile.writeToDir(projectDir)
         }

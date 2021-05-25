@@ -52,7 +52,10 @@ public class MultiModuleTestProject implements TestProject {
     }
 
     @Override
-    public void write(@NonNull final File projectDir, @Nullable final String buildScriptContent)
+    public void write(
+            @NonNull final File projectDir,
+            @Nullable final String buildScriptContent,
+            @NonNull String projectRepoScript)
             throws IOException {
         for (Map.Entry<String, ? extends TestProject> entry : subprojects.entrySet()) {
             String subprojectPath = entry.getKey();
@@ -62,7 +65,7 @@ public class MultiModuleTestProject implements TestProject {
                 subprojectDir.mkdirs();
                 assert subprojectDir.isDirectory();
             }
-            subproject.write(subprojectDir, null);
+            subproject.write(subprojectDir, null, projectRepoScript);
         }
 
         StringBuilder builder = new StringBuilder();

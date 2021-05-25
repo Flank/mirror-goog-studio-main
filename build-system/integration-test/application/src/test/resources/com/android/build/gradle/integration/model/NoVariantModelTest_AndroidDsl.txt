@@ -20,9 +20,7 @@
       - applicationId                      = (null)
       - versionCode                        = (null)
       - versionName                        = (null)
-      - minSdkVersion:
-         - apiLevel = 14
-         - codename = (null)
+      - minSdkVersion                      = (null)
       - targetSdkVersion                   = (null)
       - maxSdkVersion                      = (null)
       - renderscriptTargetApi              = (null)

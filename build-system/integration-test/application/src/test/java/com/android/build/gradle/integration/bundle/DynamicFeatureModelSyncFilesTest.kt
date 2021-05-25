@@ -37,6 +37,7 @@ class DynamicFeatureModelSyncFilesTest {
         subProject(":feature1") {
             plugins.add(PluginType.ANDROID_DYNAMIC_FEATURE)
             android {
+                defaultCompileSdk()
             }
         }
     }

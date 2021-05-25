@@ -60,14 +60,18 @@ class CompositeBuildTest {
                 plugins.add(PluginType.ANDROID_LIB)
                 group = "com.example"
                 version = "1.0"
-                android {}
+                android {
+                    defaultCompileSdk()
+                }
             }
 
             subProject(":androidLib2") {
                 plugins.add(PluginType.ANDROID_LIB)
                 group = "com.example"
                 version = "1.0"
-                android {}
+                android {
+                    defaultCompileSdk()
+                }
             }
         }
     }

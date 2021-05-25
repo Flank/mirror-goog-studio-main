@@ -84,7 +84,10 @@ public class LargeTestProject<T extends GradleModule> implements TestProject {
     }
 
     @Override
-    public void write(@NonNull File projectDir, @Nullable String buildScriptContent)
+    public void write(
+            @NonNull File projectDir,
+            @Nullable String buildScriptContent,
+            @NonNull String projectRepoScript)
             throws IOException {
 
         GradleModule gradleModule = createProject(factory, 0, ":", projectDir, "0");

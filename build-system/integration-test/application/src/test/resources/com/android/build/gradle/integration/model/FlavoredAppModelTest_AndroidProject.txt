@@ -22,7 +22,7 @@
                * {PROJECT}/build/generated/renderscript_source_output_dir/proDebug/out{!}
                * {PROJECT}/build/generated/source/buildConfig/pro/debug{!}
             - minSdkVersion:
-               - apiLevel = 14
+               - apiLevel = 1
                - codename = (null)
             - targetSdkVersionOverride      = (null)
             - maxSdkVersion                 = (null)
@@ -56,7 +56,7 @@
                * {PROJECT}/build/generated/renderscript_source_output_dir/proDebugAndroidTest/out{!}
                * {PROJECT}/build/generated/source/buildConfig/androidTest/pro/debug{!}
             - minSdkVersion:
-               - apiLevel = 14
+               - apiLevel = 1
                - codename = (null)
             - targetSdkVersionOverride      = (null)
             - maxSdkVersion                 = (null)
