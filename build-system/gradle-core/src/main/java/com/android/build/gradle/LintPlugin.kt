@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.dependency.AndroidAttributes
 import com.android.build.gradle.internal.dsl.LintOptions
+import com.android.build.gradle.internal.dsl.decorator.androidPluginDslDecorator
 import com.android.build.gradle.internal.errors.DeprecationReporterImpl
 import com.android.build.gradle.internal.errors.SyncIssueReporterImpl
 import com.android.build.gradle.internal.ide.dependencies.LibraryDependencyCacheBuildService
@@ -252,7 +253,10 @@ abstract class LintPlugin : Plugin<Project> {
     }
 
     private fun createExtension(project: Project) {
-        lintOptions = project.extensions.create("lintOptions", LintOptions::class.java, dslServices)
+        val decoratedLintOptionsClass =
+            androidPluginDslDecorator.decorate(LintOptions::class.java)
+        lintOptions =
+            project.extensions.create("lintOptions", decoratedLintOptionsClass, dslServices)
     }
 
     private fun withJavaPlugin(project: Project, action: Action<Plugin<*>>) {

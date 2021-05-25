@@ -16,70 +16,49 @@
 
 package com.android.build.gradle.internal.ide
 
-import com.android.build.gradle.internal.dsl.LintOptions
+import com.android.annotations.concurrency.Immutable
+import com.android.builder.model.LintOptions
 import java.io.File
+import java.io.Serializable
 
-class LintOptionsImpl: LintOptions {
-    constructor(
-        disable: Set<String>,
-        enable: Set<String> ,
-        checkOnly: Set<String>,
-        lintConfig: File?,
-        textReport: Boolean,
-        textOutput: File?,
-        htmlReport: Boolean,
-        htmlOutput: File?,
-        xmlReport: Boolean,
-        xmlOutput: File?,
-        sarifReport: Boolean,
-        sarifOutput: File?,
-        abortOnError: Boolean,
-        absolutePaths: Boolean,
-        noLines: Boolean,
-        quiet: Boolean,
-        checkAllWarnings: Boolean,
-        ignoreWarnings: Boolean,
-        warningsAsErrors: Boolean,
-        showAll: Boolean,
-        explainIssues: Boolean,
-        checkReleaseBuilds: Boolean,
-        checkTestSources: Boolean,
-        ignoreTestSources: Boolean,
-        checkGeneratedSources: Boolean,
-        checkDependencies: Boolean,
-        baselineFile: File?,
-        severityOverrides: Map<String, Int>?
-    ): super(null) {
-        this.disable.addAll(disable)
-        this.enable.addAll(enable)
-        this.checkOnly.addAll(checkOnly)
-        this.lintConfig = lintConfig
-        this.textReport = textReport
-        this.textOutput = textOutput
-        this.htmlReport = htmlReport
-        this.htmlOutput = htmlOutput
-        this.xmlReport = xmlReport
-        this.xmlOutput = xmlOutput
-        this.sarifReport = sarifReport
-        this.sarifOutput = sarifOutput
-        this.isAbortOnError = abortOnError
-        this.isAbsolutePaths = absolutePaths
-        this.isNoLines = noLines
-        this.isQuiet = quiet
-        this.isCheckAllWarnings = checkAllWarnings
-        this.isIgnoreWarnings = ignoreWarnings
-        this.isWarningsAsErrors = warningsAsErrors
-        this.isShowAll = showAll
-        this.isExplainIssues = explainIssues
-        this.isCheckReleaseBuilds = checkReleaseBuilds
-        this.isCheckTestSources = checkTestSources
-        this.isIgnoreTestSources = ignoreTestSources
-        this.isCheckGeneratedSources = checkGeneratedSources
-        this.isCheckDependencies = checkDependencies
-        this.baselineFile = baselineFile
-
-        severityOverrides?.let {
-            severities.putAll(it)
-        }
+/**
+ * Implementation of [LintOptions] that is Serializable.
+ *
+ * Should only be used for the model.
+ */
+@Immutable
+data class LintOptionsImpl(
+    override val disable: Set<String>,
+    override val enable: Set<String>,
+    override val check: Set<String>,
+    override val isAbortOnError: Boolean,
+    override val isAbsolutePaths: Boolean,
+    override val isNoLines: Boolean,
+    override val isQuiet: Boolean,
+    override val isCheckAllWarnings: Boolean,
+    override val isIgnoreWarnings: Boolean,
+    override val isWarningsAsErrors: Boolean,
+    override val isCheckTestSources: Boolean,
+    override val isIgnoreTestSources: Boolean,
+    override val isCheckGeneratedSources: Boolean,
+    override val isExplainIssues: Boolean,
+    override val isShowAll: Boolean,
+    override val lintConfig: File?,
+    override val textReport: Boolean,
+    override val textOutput: File?,
+    override val htmlReport: Boolean,
+    override val htmlOutput: File?,
+    override val xmlReport: Boolean,
+    override val xmlOutput: File?,
+    override val sarifReport: Boolean,
+    override val sarifOutput: File?,
+    override val isCheckReleaseBuilds: Boolean,
+    override val isCheckDependencies: Boolean,
+    override val baselineFile: File?,
+    override val severityOverrides: Map<String, Int>?
+) : LintOptions, Serializable {
+    companion object {
+        @JvmStatic
+        private val serialVersionUID = 1L
     }
 }

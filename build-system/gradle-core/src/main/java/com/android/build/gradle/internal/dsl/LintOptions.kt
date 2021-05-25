@@ -17,8 +17,9 @@
 package com.android.build.gradle.internal.dsl
 
 import com.android.build.api.dsl.Lint
+import com.android.build.gradle.internal.dsl.decorator.annotation.NonNullableSetter
+import com.android.build.gradle.internal.dsl.decorator.annotation.WithLazyInitialization
 import com.android.build.gradle.internal.errors.DeprecationReporter.DeprecationTarget
-import com.android.build.gradle.internal.ide.LintOptionsImpl
 import com.android.build.gradle.internal.services.DslServices
 import com.android.builder.model.LintOptions.Companion.SEVERITY_DEFAULT_ENABLED
 import com.android.builder.model.LintOptions.Companion.SEVERITY_ERROR
@@ -29,65 +30,36 @@ import com.android.builder.model.LintOptions.Companion.SEVERITY_WARNING
 import com.google.common.collect.Maps
 import com.google.common.collect.Sets
 import java.io.File
-import java.io.Serializable
 import javax.inject.Inject
 import org.gradle.api.GradleException
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputFile
-import org.gradle.api.tasks.Optional
-import org.gradle.api.tasks.OutputFile
 
-open class LintOptions @Inject constructor(private val dslServices: DslServices?):
+abstract class LintOptions
+    @Inject @WithLazyInitialization("lazyInit")
+        constructor(private val dslServices: DslServices?):
     com.android.builder.model.LintOptions,
     com.android.build.api.dsl.LintOptions,
-    Lint,
-    Serializable {
-    companion object {
-        private const val serialVersionUID = 1L
+    Lint {
 
-        fun create(source: LintOptions): com.android.builder.model.LintOptions {
-            return LintOptionsImpl(
-                source.disable,
-                source.enable,
-                source.checkOnly,
-                source.lintConfig,
-                source.textReport,
-                source.textOutput,
-                source.htmlReport,
-                source.htmlOutput,
-                source.xmlReport,
-                source.xmlOutput,
-                source.sarifReport,
-                source.sarifOutput,
-                source.isAbortOnError,
-                source.isAbsolutePaths,
-                source.isNoLines,
-                source.isQuiet,
-                source.isCheckAllWarnings,
-                source.isIgnoreWarnings,
-                source.isWarningsAsErrors,
-                source.isShowAll,
-                source.isExplainIssues,
-                source.isCheckReleaseBuilds,
-                source.isCheckTestSources,
-                source.isIgnoreTestSources,
-                source.isCheckGeneratedSources,
-                source.isCheckDependencies,
-                source.baselineFile,
-                source.severityOverrides
-            )
-        }
+    @Suppress("unused") // the call is injected by DslDecorator
+    protected fun lazyInit() {
+        isAbortOnError = true
+        isAbsolutePaths = true
+        isExplainIssues = true
+        isCheckReleaseBuilds = true
+        htmlReport = true
+        xmlReport = true
     }
 
     protected val severities: MutableMap<String, Int> = Maps.newHashMap()
 
-    @get:Input
+    @set:NonNullableSetter
+    abstract override var lintConfig: File?
+
     override var disable: MutableSet<String> = Sets.newHashSet()
         set(value) {
             disable.addAll(value)
         }
 
-    @get:Input
     override var enable: MutableSet<String> = Sets.newHashSet()
         set(value) {
             enable.addAll(value)
@@ -99,25 +71,6 @@ open class LintOptions @Inject constructor(private val dslServices: DslServices?
         set(value) {
             checkOnly.addAll(value)
         }
-
-    @get:Input
-    override val checkOnly: MutableSet<String> = Sets.newHashSet()
-
-    @get:Input
-    override var isAbortOnError: Boolean = true
-    @get:Input
-    override var isAbsolutePaths: Boolean = true
-    @get:Input
-    override var isNoLines: Boolean = false
-    @get:Input
-    override var isQuiet: Boolean = false
-    @get:Input
-    override var isCheckAllWarnings: Boolean = false
-    @get:Input
-    override var isIgnoreWarnings: Boolean = false
-    @get:Input
-    override var isWarningsAsErrors: Boolean = false
-    @get:Input
     override var isCheckTestSources: Boolean = false
         set(value) {
             field = value
@@ -125,7 +78,6 @@ open class LintOptions @Inject constructor(private val dslServices: DslServices?
                 isIgnoreTestSources = false
             }
         }
-    @get:Input
     override var isIgnoreTestSources: Boolean = false
         set(value) {
             field = value
@@ -133,67 +85,29 @@ open class LintOptions @Inject constructor(private val dslServices: DslServices?
                 isCheckTestSources = false
             }
         }
-    @get:Input
-    override var isCheckGeneratedSources: Boolean = false
-    @get:Input
-    override var isExplainIssues: Boolean = true
-    @get:Input
-    override var isShowAll: Boolean = false
-    @get:Input
-    override var isCheckReleaseBuilds: Boolean = true
-    @get:Input
-    override var isCheckDependencies: Boolean = false
-
-    @get:Optional
-    @get:InputFile
-    override var lintConfig: File? = null
-        set(value) {
-            checkNotNull(value)
-            field = value
-        }
-
-    @get:Input
-    override var textReport: Boolean = false
-    @get:Input
-    @get:Optional
     override var textOutput: File? = null
         set(value) {
             checkNotNull(value)
             textReport = true
             field = value
         }
-
-    @get:Input
-    override var htmlReport: Boolean = true
-    @get:OutputFile
-    @get:Optional
     override var htmlOutput: File? = null
         set(value) {
             checkNotNull(value)
             htmlReport = true
             field = value
         }
-
-    @get:Input
-    override var xmlReport: Boolean = true
-    @get:OutputFile
-    @get:Optional
     override var xmlOutput: File? = null
-         set(value) {
-             checkNotNull(value)
-             if (value.name.equals("lint.xml")) {
-                 throw GradleException(
-                         "Don't set the xmlOutput file to \"lint.xml\"; that's a "
-                                 + "reserved filename used for for lint configuration files, not reports.")
-             }
-             xmlReport = true
-             field = value
-         }
-
-    @get:Input
-    override var sarifReport: Boolean = false
-    @get:OutputFile
-    @get:Optional
+        set(value) {
+            checkNotNull(value)
+            if (value.name.equals("lint.xml")) {
+                throw GradleException(
+                    "Don't set the xmlOutput file to \"lint.xml\"; that's a "
+                            + "reserved filename used for for lint configuration files, not reports.")
+            }
+            xmlReport = true
+            field = value
+        }
     override var sarifOutput: File? = null
         set(value) {
             checkNotNull(value)
@@ -201,12 +115,12 @@ open class LintOptions @Inject constructor(private val dslServices: DslServices?
             field = value
         }
 
-    override var baselineFile: File? = null
     override val severityOverrides: MutableMap<String, Int>?
         get() {
             if (severities.isEmpty()) return null
             return severities
         }
+
     // -- DSL Methods.
     override fun baseline(baseline: String) {
         var file = File(baseline)

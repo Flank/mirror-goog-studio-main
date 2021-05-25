@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-b462fe99cf0b4a8c19597c013414c5cf390276c2901ff107529ef317a75d2ada
+1fdd4cb9bbc249d18d2a930cbdf01abed33b2e3d626d4257e7d488972d805f59
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -224,6 +224,7 @@ com.android.builder.model.Library.getResolvedCoordinates: com.android.builder.mo
 com.android.builder.model.Library.isProvided: boolean ()
 com.android.builder.model.Library.isSkipped: boolean ()
 com.android.builder.model.LintOptions
+com.android.builder.model.LintOptions$Companion
 com.android.builder.model.LintOptions.getBaselineFile: java.io.File ()
 com.android.builder.model.LintOptions.getCheck: java.util.Set<java.lang.String> ()
 com.android.builder.model.LintOptions.getDisable: java.util.Set<java.lang.String> ()

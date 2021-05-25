@@ -298,7 +298,7 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType>) {
         val gettersToGenerate: Collection<Method>,
         val settersToGenerate: Collection<Method>,
         val blockAccessorToGenerate: Method?,
-        val settersAnnotations: Collection<Annotation>
+        val settersAnnotations: Collection<Annotation>,
     )
 
     private fun findAbstractProperties(dslClass: Class<*>): List<ManagedProperty> {

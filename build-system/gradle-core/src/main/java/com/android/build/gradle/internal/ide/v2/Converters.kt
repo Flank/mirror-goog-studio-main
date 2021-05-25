@@ -202,9 +202,9 @@ internal fun AndroidResources.convert() = AaptOptionsImpl(
 )
 
 internal fun LintOptions.convert() = LintOptionsImpl(
-    disable = disable,
-    enable = enable,
-    check = checkOnly,
+    disable = disable.toSet(),
+    enable = enable.toSet(),
+    check = checkOnly.toSet(),
     lintConfig = lintConfig,
     textReport = textReport,
     textOutput = textOutput,
