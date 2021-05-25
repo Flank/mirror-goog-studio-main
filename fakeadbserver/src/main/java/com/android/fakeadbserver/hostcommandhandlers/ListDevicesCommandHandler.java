@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.fakeadbserver.DeviceState;
 import com.android.fakeadbserver.FakeAdbServer;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
@@ -35,20 +36,16 @@ public class ListDevicesCommandHandler extends HostCommandHandler {
 
     @NonNull public static final String COMMAND = "devices";
 
-    @NonNull
-    static String formatDeviceList(@NonNull List<DeviceState> deviceList) {
-        StringBuilder builder = new StringBuilder();
-        for (DeviceState deviceState : deviceList) {
-            builder.append(deviceState.getDeviceId());
-            builder.append("\t");
-            builder.append(deviceState.getDeviceStatus().getState());
-            builder.append("\n");
-        }
-        if (!deviceList.isEmpty()) {
-            builder.deleteCharAt(builder.length() - 1);
-        }
+    @NonNull public static final String LONG_COMMAND = "devices-l";
 
-        return builder.toString();
+    private final boolean longFormat;
+
+    public ListDevicesCommandHandler() {
+        this(false);
+    }
+
+    public ListDevicesCommandHandler(boolean longFormat) {
+        this.longFormat = longFormat;
     }
 
     @Override
@@ -60,26 +57,67 @@ public class ListDevicesCommandHandler extends HostCommandHandler {
         OutputStream stream;
         try {
             stream = responseSocket.getOutputStream();
-        } catch (IOException ignored) {
+        }
+        catch (IOException ignored) {
             return false;
         }
         try {
-            String deviceListString = formatDeviceList(fakeAdbServer.getDeviceListCopy().get());
+            String deviceListString = formatDeviceList(fakeAdbServer.getDeviceListCopy().get(),
+                                                       longFormat);
 
             try {
                 writeOkay(stream); // Send ok first.
                 write4ByteHexIntString(stream, deviceListString.length());
                 stream.write(deviceListString.getBytes(StandardCharsets.US_ASCII));
-            } catch (IOException ignored) {
+            }
+            catch (IOException ignored) {
                 return false;
             }
-        } catch (InterruptedException ignored) {
+        }
+        catch (InterruptedException ignored) {
             Thread.currentThread().interrupt();
-        } catch (ExecutionException e) {
+        }
+        catch (ExecutionException e) {
             writeFailResponse(stream, "Failed to retrieve the list of devices from the server.");
             return false;
         }
 
         return true;
+    }
+
+    @NonNull
+    static String formatDeviceList(@NonNull List<DeviceState> deviceList, boolean longFormat) {
+        StringBuilder builder = new StringBuilder();
+        for (DeviceState deviceState : deviceList) {
+            builder.append(deviceState.getDeviceId());
+            builder.append("\t");
+            builder.append(deviceState.getDeviceStatus().getState());
+            if (longFormat) {
+                if (deviceState.getDeviceStatus() == DeviceState.DeviceStatus.ONLINE) {
+                    builder.append(" ");
+                    builder.append("product:");
+                    builder.append(deviceState.getManufacturer());
+
+                    builder.append(" ");
+                    builder.append("model:");
+                    builder.append(deviceState.getModel());
+
+                    builder.append(" ");
+                    builder.append("device:");
+                    builder.append(deviceState.getBuildVersionRelease());
+                }
+                builder.append(" ");
+                builder.append("transport_id:");
+                builder.append("1");
+            }
+            builder.append("\n");
+        }
+
+        // Remove trailing '\n' to match adb server behavior
+        if (!deviceList.isEmpty()) {
+            builder.deleteCharAt(builder.length() - 1);
+        }
+
+        return builder.toString();
     }
 }

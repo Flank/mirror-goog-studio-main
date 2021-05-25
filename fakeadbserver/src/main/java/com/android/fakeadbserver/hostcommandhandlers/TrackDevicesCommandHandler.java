@@ -50,7 +50,7 @@ public class TrackDevicesCommandHandler extends HostCommandHandler {
             try {
                 OutputStream stream = responseSocket.getOutputStream();
                 String deviceListString = ListDevicesCommandHandler
-                        .formatDeviceList(server.getDeviceListCopy().get());
+                        .formatDeviceList(server.getDeviceListCopy().get(), false);
                 write4ByteHexIntString(stream, deviceListString.length());
                 stream.write(deviceListString.getBytes(US_ASCII));
                 stream.flush();

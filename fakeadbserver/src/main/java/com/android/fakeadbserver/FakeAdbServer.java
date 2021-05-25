@@ -55,6 +55,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
 /**
@@ -79,6 +80,8 @@ public final class FakeAdbServer implements AutoCloseable {
     private final Map<String, DeviceState> mDevices = new HashMap<>();
 
     private final DeviceStateChangeHub mDeviceChangeHub = new DeviceStateChangeHub();
+
+    private final AtomicInteger mLastTransportId = new AtomicInteger();
 
     // This is the executor for accepting incoming connections as well as handling the execution of
     // the commands over the connection. There is one task for accepting connections, and multiple
@@ -221,7 +224,8 @@ public final class FakeAdbServer implements AutoCloseable {
                         deviceModel,
                         release,
                         sdk,
-                        hostConnectionType);
+                        hostConnectionType,
+                        newTransportId());
         if (mConnectionHandlerTask == null) {
             assert !mDevices.containsKey(deviceId);
             mDevices.put(deviceId, device);
@@ -235,6 +239,10 @@ public final class FakeAdbServer implements AutoCloseable {
                         return device;
                     });
         }
+    }
+
+    private int newTransportId() {
+        return mLastTransportId.incrementAndGet();
     }
 
     /**
@@ -314,6 +322,8 @@ public final class FakeAdbServer implements AutoCloseable {
             setHostCommandHandler(KillCommandHandler.COMMAND, KillCommandHandler::new);
             setHostCommandHandler(
                     ListDevicesCommandHandler.COMMAND, ListDevicesCommandHandler::new);
+            setHostCommandHandler(
+                    ListDevicesCommandHandler.LONG_COMMAND, () -> new ListDevicesCommandHandler(true));
             setHostCommandHandler(
                     TrackDevicesCommandHandler.COMMAND, TrackDevicesCommandHandler::new);
             setHostCommandHandler(ForwardCommandHandler.COMMAND, ForwardCommandHandler::new);
