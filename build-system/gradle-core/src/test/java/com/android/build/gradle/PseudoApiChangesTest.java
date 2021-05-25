@@ -59,14 +59,17 @@ public class PseudoApiChangesTest {
         ImmutableSet<ClassPath.ClassInfo> allClasses = getPseudoApiClasses();
 
         List<ClassPath.ClassInfo> classes =
-                allClasses
-                        .stream()
+                allClasses.stream()
                         .filter(
                                 classInfo ->
                                         !classInfo.getSimpleName().endsWith("Test")
+                                                && !classInfo.getSimpleName().endsWith("TestKt")
                                                 && !classInfo
                                                         .getSimpleName()
-                                                        .equals("StableApiUpdater"))
+                                                        .equals("StableApiUpdater")
+                                                && !classInfo
+                                                        .getSimpleName()
+                                                        .contains("DecoratedApiChangesUpdater"))
                         .collect(Collectors.toList());
 
         return new ApiTester(

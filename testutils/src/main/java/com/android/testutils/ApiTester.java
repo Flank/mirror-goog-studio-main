@@ -45,6 +45,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import kotlin.jvm.functions.Function1;
 import kotlin.text.StringsKt;
 import org.junit.Assert;
 
@@ -107,8 +108,13 @@ public final class ApiTester {
     private static final String INCUBATING_ANNOTATION = "@org.gradle.api.Incubating()";
 
     public void checkApiElements() throws IOException {
+        checkApiElements(clazz -> getApiElements(clazz).collect(Collectors.toList()));
+    }
 
-        List<String> apiElements = getApiElements();
+    public void checkApiElements(@NonNull Function1<Class<?>, Collection<String>> transform)
+            throws IOException {
+
+        List<String> apiElements = getApiElements(transform);
 
         List<String> expectedApiElements =
                 Splitter.on("\n")
@@ -126,9 +132,15 @@ public final class ApiTester {
     }
 
     public void updateFile(String dirPath) throws IOException {
+        updateFile(dirPath, clazz -> getApiElements(clazz).collect(Collectors.toList()));
+    }
+
+    public void updateFile(
+            String dirPath, @NonNull Function1<Class<?>, Collection<String>> transform)
+            throws IOException {
         Path dir = TestUtils.resolveWorkspacePath(dirPath);
         Path file = dir.resolve(StringsKt.substringAfterLast(expectedFileUrl.getFile(), '/', "?"));
-        List<String> content = getApiElements();
+        List<String> content = getApiElements(transform);
         List<String> previous = Files.readAllLines(file);
         Files.write(file, content, StandardCharsets.UTF_8);
         if (!previous.equals(content)) {
@@ -143,11 +155,13 @@ public final class ApiTester {
         System.out.println();
     }
 
-    private List<String> getApiElements() {
+    private List<String> getApiElements(
+            @NonNull Function1<Class<?>, Collection<String>> transform) {
 
         List<String> stableClasses =
                 classes.stream()
-                        .flatMap(classInfo -> getApiElements(classInfo.load()))
+                        .flatMap(classInfo -> transform.invoke(classInfo.load()).stream())
+                        .distinct()
                         .sorted()
                         .collect(ImmutableList.toImmutableList());
 
@@ -268,11 +282,11 @@ public final class ApiTester {
         return false;
     }
 
-    private static Boolean isKotlinMedata(@NonNull Class<?> theClass) {
+    public static Boolean isKotlinMedata(@NonNull Class<?> theClass) {
         return theClass.getName().endsWith("$DefaultImpls");
     }
 
-    private static String getApiElement(Invokable<?, ?> invokable) {
+    public static String getApiElement(Invokable<?, ?> invokable) {
         String className = invokable.getDeclaringClass().getName();
         String parameters =
                 invokable
