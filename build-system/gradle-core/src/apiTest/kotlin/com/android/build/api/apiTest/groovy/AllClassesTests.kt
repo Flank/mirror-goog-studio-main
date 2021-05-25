@@ -257,4 +257,127 @@ expected result : a list of classes and jar files.
             Truth.assertThat(byteArrayOutputStream.toString()).contains("SomeInterface")
         }
     }
+
+    @Test
+    fun appendToAllClasses() {
+        given {
+            tasksToInvoke.addAll(listOf("clean", ":app:assembleDebug"))
+            addClasspath("org.javassist:javassist:3.22.0-GA")
+            addModule(":app") {
+                addSource("src/main/java/com/android/api/tests/SomeSource.java", """
+                    package com.android.api.tests;
+
+                    class SomeSource {
+                        public String toString() {
+                            return "Something !";
+                        }
+                    }
+                """.trimIndent())
+                @Suppress("RemoveExplicitTypeArguments")
+                buildFile =
+                        // language=java
+                    """
+            plugins {
+                id 'com.android.application'
+            }
+            import com.android.build.api.artifact.MultipleArtifact;
+
+            import org.gradle.api.DefaultTask;
+            import org.gradle.api.file.Directory;
+            import org.gradle.api.tasks.TaskAction;
+            import javassist.ClassPool;
+            import javassist.CtClass;
+            import java.io.FileInputStream;
+
+            abstract class AddClassesTask extends DefaultTask {
+
+                @OutputFiles
+                abstract DirectoryProperty getOutput();
+
+                @TaskAction
+                void taskAction() {
+
+                    ClassPool pool = new ClassPool(ClassPool.getDefault());
+                    CtClass interfaceClass = pool.makeInterface("com.android.api.tests.SomeInterface");
+                    System.out.println("Adding ${'$'}interfaceClass");
+                    interfaceClass.writeFile(output.get().asFile.absolutePath);
+                }
+            }
+
+            android {
+                ${testingElements.addCommonAndroidBuildLogic()}
+            }
+            androidComponents {
+                onVariants(selector().all(), { variant ->
+                    TaskProvider<AddClassesTask> taskProvider = project.tasks.register(variant.getName() + "AddAllClasses", AddClassesTask.class)
+                    variant.artifacts.use(taskProvider)
+                        .wiredWith( { it.getOutput() })
+                        .toAppendTo(MultipleArtifact.ALL_CLASSES_DIRS.INSTANCE)
+                })
+            }
+        """.trimIndent()
+                testingElements.addManifest(this)
+            }
+        }
+        withOptions(mapOf(BooleanOption.ENABLE_PROFILE_JSON to true))
+        withDocs {
+            index =
+                    // language=markdown
+                """
+# artifacts.transform MultipleArtifact in Kotlin
+This sample show how to transform all the classes that will be used to create the dex files.
+There are two lists that need to be used to obtain the complete set of classes because some
+classes are present as .class files in directories and others are present in jar files.
+Therefore, you must query both [ListProperty] of [Directory] and [RegularFile] to get the full list.
+
+In this example, we only query the [ListProperty] of [Directory] to invoke some bytecode
+instrumentation on classes.
+
+The Variant API provides a convenient API to transform bytecodes based on ASM but this example
+is using javassist to show how this can be done using a different bytecode enhancer.
+
+
+The [onVariants] block will wire the [ModifyClassesTask] input properties (allClasses]
+to the [output] folder
+`wiredWith(ModifyClassesTask::allClasses, ModifyClassesTask::output)`
+to transform [MultipleArtifact.ALL_CLASSES_DIRS]
+
+## To Run
+./gradlew :app:assembleDebug
+expected result : a list of classes and jar files.
+            """.trimIndent()
+        }
+        check {
+            assertNotNull(this)
+            Truth.assertThat(output).contains("interface class com.android.api.tests.SomeInterface")
+            Truth.assertThat(output).contains("BUILD SUCCESSFUL")
+            super.onVariantStats {
+                if (it.isDebug) {
+                    Truth.assertThat(it.variantApiAccess.artifactAccessList).hasSize(1)
+                    it.variantApiAccess.artifactAccessList.forEach { artifactAccess ->
+                        Truth.assertThat(artifactAccess.type).isEqualTo(
+                            ArtifactAccess.AccessType.APPEND
+                        )
+                    }
+                }
+            }
+            val outFolder = File(testProjectDir.root, "${testName.methodName}/app/build/outputs/apk/debug/")
+            Truth.assertThat(outFolder.listFiles()?.asList()?.map { it.name }).containsExactly(
+                "app-debug.apk", BuiltArtifactsImpl.METADATA_FILE_NAME
+            )
+            // check that resulting APK contains the newly added interface
+            val apk = File(outFolder, "app-debug.apk").toPath()
+            val byteArrayOutputStream = object : ByteArrayOutputStream() {
+                @Synchronized
+                override fun toString(): String =
+                    super.toString().replace(System.getProperty("line.separator"), "\n")
+            }
+            val ps = PrintStream(byteArrayOutputStream)
+            val apkAnalyzer = ApkAnalyzerImpl(ps, Mockito.mock(AaptInvoker::class.java))
+            apkAnalyzer.dexCode(apk, "com.android.api.tests.SomeSource", null, null, null)
+            apkAnalyzer.dexCode(apk, "com.android.api.tests.SomeInterface", null, null, null)
+            Truth.assertThat(byteArrayOutputStream.toString()).contains("SomeSource")
+            Truth.assertThat(byteArrayOutputStream.toString()).contains("SomeInterface")
+        }
+    }
 }
