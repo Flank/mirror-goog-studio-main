@@ -24,6 +24,7 @@ import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import javax.inject.Inject
 
 open class AnalyticsEnabledTestFixtures @Inject constructor(
@@ -40,6 +41,13 @@ open class AnalyticsEnabledTestFixtures @Inject constructor(
             stats
         )
     }
+
+    override val namespace: Provider<String>
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                    VariantPropertiesMethodType.NAMESPACE_VALUE
+            return delegate.namespace
+        }
 
     override val aarMetadata: AarMetadata
         get() {

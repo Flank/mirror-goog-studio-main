@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-1fdd4cb9bbc249d18d2a930cbdf01abed33b2e3d626d4257e7d488972d805f59
+61fc79a198be9a1b0281297650b52374303dd90d3b6e284b48442a908bb6741c
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -734,6 +734,7 @@ com.android.builder.model.v2.models.AndroidDsl.getProductFlavors: java.util.List
 com.android.builder.model.v2.models.AndroidDsl.getSigningConfigs: java.util.Collection<com.android.builder.model.v2.dsl.SigningConfig> ()
 com.android.builder.model.v2.models.AndroidProject implements com.android.builder.model.v2.AndroidModel
 com.android.builder.model.v2.models.AndroidProject$Companion
+com.android.builder.model.v2.models.AndroidProject.getAndroidTestNamespace: java.lang.String ()
 com.android.builder.model.v2.models.AndroidProject.getBootClasspath: java.util.Collection<java.io.File> ()
 com.android.builder.model.v2.models.AndroidProject.getBuildFolder: java.io.File ()
 com.android.builder.model.v2.models.AndroidProject.getBuildTypeSourceSets: java.util.Collection<com.android.builder.model.v2.ide.SourceSetContainer> ()
@@ -742,10 +743,12 @@ com.android.builder.model.v2.models.AndroidProject.getFlags: com.android.builder
 com.android.builder.model.v2.models.AndroidProject.getJavaCompileOptions: com.android.builder.model.v2.ide.JavaCompileOptions ()
 com.android.builder.model.v2.models.AndroidProject.getLintRuleJars: java.util.List<java.io.File> ()
 com.android.builder.model.v2.models.AndroidProject.getMainSourceSet: com.android.builder.model.v2.ide.SourceSetContainer ()
+com.android.builder.model.v2.models.AndroidProject.getNamespace: java.lang.String ()
 com.android.builder.model.v2.models.AndroidProject.getPath: java.lang.String ()
 com.android.builder.model.v2.models.AndroidProject.getProductFlavorSourceSets: java.util.Collection<com.android.builder.model.v2.ide.SourceSetContainer> ()
 com.android.builder.model.v2.models.AndroidProject.getProjectType: com.android.builder.model.v2.ide.ProjectType ()
 com.android.builder.model.v2.models.AndroidProject.getResourcePrefix: java.lang.String ()
+com.android.builder.model.v2.models.AndroidProject.getTestFixturesNamespace: java.lang.String ()
 com.android.builder.model.v2.models.AndroidProject.getVariants: java.util.Collection<com.android.builder.model.v2.ide.Variant> ()
 com.android.builder.model.v2.models.AndroidProject.getViewBindingOptions: com.android.builder.model.v2.ide.ViewBindingOptions ()
 com.android.builder.model.v2.models.GlobalLibraryMap implements com.android.builder.model.v2.AndroidModel

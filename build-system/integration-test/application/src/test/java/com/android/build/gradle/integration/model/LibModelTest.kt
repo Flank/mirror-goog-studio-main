@@ -97,3 +97,31 @@ class DisabledAndroidResourcesInLibModelTest: ReferenceModelComparator(
         ensureAndroidDslDeltaIsEmpty()
     }
 }
+
+class EnabledTestFixturesInLibModelTest: ReferenceModelComparator(
+    referenceConfig = {
+        rootProject {
+            plugins.add(PluginType.ANDROID_LIB)
+            android {
+                setUpHelloWorld()
+            }
+        }
+    },
+    deltaConfig = {
+        rootProject {
+            android {
+                testFixtures {
+                    enable = true
+                }
+            }
+        }
+    },
+    syncOptions = {
+        ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
+    }
+) {
+    @Test
+    fun `test AndroidProject model`() {
+        compareAndroidProjectWith(goldenFileSuffix = "AndroidProject")
+    }
+}

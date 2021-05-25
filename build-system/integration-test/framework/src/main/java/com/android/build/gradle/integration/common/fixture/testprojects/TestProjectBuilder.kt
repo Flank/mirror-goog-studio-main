@@ -117,6 +117,8 @@ interface AndroidProjectBuilder {
 
     fun buildFeatures(action: BuildFeaturesBuilder.() -> Unit)
 
+    fun testFixtures(action: TestFixturesBuilder.() -> Unit)
+
     fun buildTypes(action: ContainerBuilder<BuildTypeBuilder>.() -> Unit)
     fun productFlavors(action: ContainerBuilder<ProductFlavorBuilder>.() -> Unit)
 
@@ -136,6 +138,10 @@ interface BuildFeaturesBuilder {
     var shaders: Boolean?
     var androidResources: Boolean?
     var mlModelBinding: Boolean?
+}
+
+interface TestFixturesBuilder {
+    var enable: Boolean?
 }
 
 interface ContainerBuilder<T> {

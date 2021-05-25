@@ -1,9 +1,12 @@
 > AndroidProject:
-   - projectType     = LIBRARY
-   - path            = ":"
-   - buildFolder     = {PROJECT}/build{!}
-   - resourcePrefix  = (null)
-   - dynamicFeatures = (null)
+   - projectType           = LIBRARY
+   - path                  = ":"
+   - buildFolder           = {PROJECT}/build{!}
+   - namespace             = "pkg.name"
+   - androidTestNamespace  = "pkg.name.test"
+   - testFixturesNamespace = (null)
+   - resourcePrefix        = (null)
+   - dynamicFeatures       = (null)
    - bootClasspath:
       * {ANDROID_SDK}/platforms/android-30/android.jar{F}
    > defaultConfig:
@@ -302,7 +305,7 @@
          < testFixturesSourceProvider
       < release
    < buildTypes
-   - productFlavors  = []
+   - productFlavors        = []
    > variants:
       > debug:
          - name                   = "debug"
@@ -457,7 +460,7 @@
          - testedTargetVariant    = (null)
       < release
    < variants
-   - lintRuleJars    = []
+   - lintRuleJars          = []
    - javaCompileOptions:
       - encoding                       = "UTF-8"
       - sourceCompatibility            = "1.8"

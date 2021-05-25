@@ -1,0 +1,63 @@
+> AndroidProject:
+   - testFixturesNamespace = "pkg.name.testFixtures"
+   > variants:
+      > debug:
+         > testFixturesArtifact{ADDED}:
+            - compileTaskName               = "compileDebugTestFixturesSources"
+            - assembleTaskName              = "assembleDebugTestFixtures"
+            - classesFolders:
+               * {PROJECT}/build/intermediates/javac/debugTestFixtures/classes{!}
+            - ideSetupTaskNames             = ["generateDebugTestFixturesSources"]
+            - generatedSourceFolders:
+               * {PROJECT}/build/generated/ap_generated_sources/debugTestFixtures/out{!}
+            - variantSourceProvider         = (null)
+            - multiFlavorSourceProvider     = (null)
+            - minSdkVersion:
+               - apiLevel = 14
+               - codename = (null)
+            - targetSdkVersion:
+               - apiLevel = 1
+               - codename = (null)
+            - maxSdkVersion                 = (null)
+            - isSigned                      = false
+            - signingConfigName             = (null)
+            - sourceGenTaskName             = "generateDebugTestFixturesSources"
+            - generatedResourceFolders      = []
+            - abiFilters                    = []
+            - assembleTaskOutputListingFile = (null)
+            - testInfo                      = (null)
+            - bundleInfo                    = (null)
+            - codeShrinker                  = (null)
+         < testFixturesArtifact{ADDED}
+      < debug
+      > release:
+         > testFixturesArtifact{ADDED}:
+            - compileTaskName               = "compileReleaseTestFixturesSources"
+            - assembleTaskName              = "assembleReleaseTestFixtures"
+            - classesFolders:
+               * {PROJECT}/build/intermediates/javac/releaseTestFixtures/classes{!}
+            - ideSetupTaskNames             = ["generateReleaseTestFixturesSources"]
+            - generatedSourceFolders:
+               * {PROJECT}/build/generated/ap_generated_sources/releaseTestFixtures/out{!}
+            - variantSourceProvider         = (null)
+            - multiFlavorSourceProvider     = (null)
+            - minSdkVersion:
+               - apiLevel = 14
+               - codename = (null)
+            - targetSdkVersion:
+               - apiLevel = 1
+               - codename = (null)
+            - maxSdkVersion                 = (null)
+            - isSigned                      = false
+            - signingConfigName             = (null)
+            - sourceGenTaskName             = "generateReleaseTestFixturesSources"
+            - generatedResourceFolders      = []
+            - abiFilters                    = []
+            - assembleTaskOutputListingFile = (null)
+            - testInfo                      = (null)
+            - bundleInfo                    = (null)
+            - codeShrinker                  = (null)
+         < testFixturesArtifact{ADDED}
+      < release
+   < variants
+< AndroidProject
