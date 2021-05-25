@@ -120,7 +120,8 @@ abstract class LintTool {
         workerHeapSize.setDisallowChanges(projectOptions.getProvider(StringOption.LINT_HEAP_SIZE))
     }
 
-    fun submit(workerExecutor: WorkerExecutor, mainClass: String, arguments: List<String>) {
+    fun submit(workerExecutor: WorkerExecutor, mainClass: String, arguments: List<String>
+    ) {
         submit(
             workerExecutor,
             mainClass,
@@ -138,7 +139,6 @@ abstract class LintTool {
         android: Boolean,
         fatalOnly: Boolean,
         await: Boolean) {
-        // Respect the android.experimental.runLintInProcess flag (useful for debugging)
         val workQueue = if (runInProcess.get()) {
             workerExecutor.noIsolation()
         } else {
@@ -150,13 +150,13 @@ abstract class LintTool {
                     workerHeapSize.orNull ?: "${Runtime.getRuntime().maxMemory() / 1024 / 1024}m"
             }
         }
-        workQueue.submit(AndroidLintWorkAction::class.java) { isolatedParameters ->
-            isolatedParameters.mainClass.set(mainClass)
-            isolatedParameters.arguments.set(arguments)
-            isolatedParameters.classpath.from(classpath)
-            isolatedParameters.android.set(android)
-            isolatedParameters.fatalOnly.set(fatalOnly)
-            isolatedParameters.cacheClassLoader.set(!runInProcess.get())
+        workQueue.submit(AndroidLintWorkAction::class.java) { parameters ->
+            parameters.mainClass.set(mainClass)
+            parameters.arguments.set(arguments)
+            parameters.classpath.from(classpath)
+            parameters.android.set(android)
+            parameters.fatalOnly.set(fatalOnly)
+            parameters.runInProcess.set(runInProcess.get())
         }
         if (await) {
             workQueue.await()

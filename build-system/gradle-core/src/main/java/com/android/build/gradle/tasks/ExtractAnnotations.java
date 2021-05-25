@@ -32,6 +32,8 @@ import com.android.build.gradle.internal.component.ComponentCreationConfig;
 import com.android.build.gradle.internal.lint.LintTool;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
+import com.android.build.gradle.internal.services.BuildServicesKt;
+import com.android.build.gradle.internal.services.LintClassLoaderBuildService;
 import com.android.build.gradle.internal.tasks.NonIncrementalTask;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.utils.AndroidXDependency;
@@ -70,6 +72,7 @@ import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.CompileClasspath;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.PathSensitive;
@@ -172,8 +175,12 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
     @Input
     public abstract Property<String> getStrictTypedefRetention();
 
+    @Internal
+    public abstract Property<LintClassLoaderBuildService> getLintClassLoaderBuildService();
+
     @Override
     protected void doTaskAction() {
+        getLintClassLoaderBuildService().get().setShouldDispose(true);
         SourceFileVisitor fileVisitor = new SourceFileVisitor();
         getSource().visit(fileVisitor);
         List<File> sourceFiles = fileVisitor.sourceUnits;
@@ -389,6 +396,12 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
                     task.getProject()
                             .files((Callable<List<Object>>) () -> task.sources)
                             .getAsFileTree();
+
+            HasConfigurableValuesKt.setDisallowChanges(
+                    task.getLintClassLoaderBuildService(),
+                    BuildServicesKt.getBuildService(
+                            creationConfig.getServices().getBuildServiceRegistry(),
+                            LintClassLoaderBuildService.class));
         }
     }
 

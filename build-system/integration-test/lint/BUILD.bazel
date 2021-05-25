@@ -38,7 +38,7 @@ gradle_integration_test(
         "//tools/base/third_party/kotlin:kotlin-m2repository",
     ],
     resources = glob(["src/test/resources/**"]),
-    shard_count = 4,
+    shard_count = 6,
     deps = [
         "//tools/base/annotations",
         "//tools/base/build-system:gradle-api",

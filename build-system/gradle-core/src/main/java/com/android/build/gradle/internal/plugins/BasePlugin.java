@@ -89,6 +89,7 @@ import com.android.build.gradle.internal.services.BuildServicesKt;
 import com.android.build.gradle.internal.services.ClassesHierarchyBuildService;
 import com.android.build.gradle.internal.services.DslServices;
 import com.android.build.gradle.internal.services.DslServicesImpl;
+import com.android.build.gradle.internal.services.LintClassLoaderBuildService;
 import com.android.build.gradle.internal.services.ProjectServices;
 import com.android.build.gradle.internal.services.StringCachingBuildService;
 import com.android.build.gradle.internal.services.SymbolTableBuildService;
@@ -423,6 +424,7 @@ public abstract class BasePlugin<
         new SymbolTableBuildService.RegistrationAction(project).execute();
         new ClassesHierarchyBuildService.RegistrationAction(project).execute();
         new LintFixBuildService.RegistrationAction(project).execute();
+        new LintClassLoaderBuildService.RegistrationAction(project).execute();
 
         projectOptions
                 .getAllOptions()
