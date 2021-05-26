@@ -23,7 +23,7 @@ import com.android.build.api.dsl.LibraryBuildFeatures
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 
-class BuildFeatureValuesImpl constructor(
+open class BuildFeatureValuesImpl constructor(
     buildFeatures: BuildFeatures,
     projectOptions: ProjectOptions,
     dataBindingOverride: Boolean? = null,

@@ -1144,8 +1144,12 @@ public class ModelBuilder<Extension extends BaseExtension>
             result = Lists.newArrayListWithCapacity(2);
         }
 
-        result.add(component.getPaths().getRenderscriptResOutputDir().get().getAsFile());
-        result.add(component.getPaths().getGeneratedResOutputDir().get().getAsFile());
+        if (component.getBuildFeatures().getRenderScript()) {
+            result.add(component.getPaths().getRenderscriptResOutputDir().get().getAsFile());
+        }
+        if (component.getAndroidResourcesEnabled()) {
+            result.add(component.getPaths().getGeneratedResOutputDir().get().getAsFile());
+        }
         return result;
     }
 

@@ -32,6 +32,7 @@ import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.BuildFeatureValuesImpl
 import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.scope.TestFixturesBuildFeaturesValuesImpl
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
@@ -115,6 +116,19 @@ internal class DynamicFeatureVariantFactory(
             ?: throw RuntimeException("buildFeatures not of type DynamicFeatureBuildFeatures")
 
         return BuildFeatureValuesImpl(buildFeatures, projectOptions)
+    }
+
+    override fun createTestFixturesBuildFeatureValues(
+        buildFeatures: BuildFeatures,
+        projectOptions: ProjectOptions
+    ): BuildFeatureValues {
+        buildFeatures as? DynamicFeatureBuildFeatures
+            ?: throw RuntimeException("buildFeatures not of type DynamicFeatureBuildFeatures")
+
+        return TestFixturesBuildFeaturesValuesImpl(
+            buildFeatures,
+            projectOptions
+        )
     }
 
     override fun createTestBuildFeatureValues(

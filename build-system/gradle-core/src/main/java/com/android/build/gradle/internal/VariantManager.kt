@@ -593,7 +593,7 @@ class VariantManager<CommonExtensionT: CommonExtension<*, *, *, *>, VariantBuild
             globalScope,
             taskContainer
         )
-        val buildFeatureValues = variantFactory.createBuildFeatureValues(
+        val buildFeatureValues = variantFactory.createTestFixturesBuildFeatureValues(
             extension.buildFeatures,
             projectOptions
         )

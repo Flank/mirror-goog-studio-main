@@ -29,17 +29,22 @@
             - resDirectories = (null)
    < buildTypes
    > variants:
-      - variant(debug):
+      > variant(debug):
          - mainArtifact:
             - classesFolders:
                * {PROJECT}/build/intermediates/javac/debug/classes{!}
+            - generatedResourceFolders = [{PROJECT}/build/generated/res/rs/debug{!}]
+         - androidTestArtifact:
+            - generatedResourceFolders = [{PROJECT}/build/generated/res/rs/androidTest/debug{!}]
          - unitTestArtifact:
             - classesFolders:
                * {PROJECT}/build/intermediates/javac/debugUnitTest/classes{!}
+      < variant(debug)
       - variant(release):
          - mainArtifact:
             - classesFolders:
                * {PROJECT}/build/intermediates/javac/release/classes{!}
+            - generatedResourceFolders = [{PROJECT}/build/generated/res/rs/release{!}]
          - unitTestArtifact:
             - classesFolders:
                * {PROJECT}/build/intermediates/javac/releaseUnitTest/classes{!}

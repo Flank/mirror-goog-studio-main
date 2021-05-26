@@ -136,6 +136,10 @@ interface VariantFactory<VariantBuilderT : VariantBuilderImpl, VariantT : Varian
     fun createBuildFeatureValues(
             buildFeatures: BuildFeatures, projectOptions: ProjectOptions): BuildFeatureValues
 
+    fun createTestFixturesBuildFeatureValues(
+        buildFeatures: BuildFeatures,
+        projectOptions: ProjectOptions): BuildFeatureValues
+
     fun createTestBuildFeatureValues(
             buildFeatures: BuildFeatures,
             dataBindingOptions: DataBindingOptions,
