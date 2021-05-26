@@ -29,7 +29,10 @@ import org.jetbrains.uast.UastFacade
 import org.jetbrains.uast.util.isMethodCall
 import org.jetbrains.uast.visitor.AbstractUastVisitor
 
-/** Looks for classes that continue to proceed in WebViewClient#onReceivedSslError  */
+/**
+ * Looks for classes that continue to proceed in
+ * WebViewClient#onReceivedSslError
+ */
 class WebViewClientDetector : Detector(), SourceCodeScanner {
     override fun applicableSuperClasses(): List<String> {
         return listOf("android.webkit.WebViewClient")
@@ -47,20 +50,23 @@ class WebViewClientDetector : Detector(), SourceCodeScanner {
         }
     }
 
-    private class OnReceivedSslErrorBodyVisitor(private val context: JavaContext)
-            : AbstractUastVisitor() {
+    private class OnReceivedSslErrorBodyVisitor(private val context: JavaContext) :
+        AbstractUastVisitor() {
         override fun visitCallExpression(node: UCallExpression): Boolean {
             if (node.isMethodCall()) {
                 val receiver = node.receiver
                 val receiverType = receiver?.getExpressionType()
                 val methodName = node.methodName
-                if (receiverType != null && methodName != null
-                        && receiverType.canonicalText == "android.webkit.SslErrorHandler"
-                        && methodName == "proceed") {
-                    val message = ("Permitting connections with SSL-related errors could allow"
-                            + " eavesdroppers to intercept data sent by your app, which"
-                            + " impacts the privacy of your users. Consider canceling"
-                            + " the connections by invoking `SslErrorHandler#cancel()`.")
+                if (receiverType != null && methodName != null &&
+                    receiverType.canonicalText == "android.webkit.SslErrorHandler" &&
+                    methodName == "proceed"
+                ) {
+                    val message = (
+                        "Permitting connections with SSL-related errors could allow" +
+                            " eavesdroppers to intercept data sent by your app, which" +
+                            " impacts the privacy of your users. Consider canceling" +
+                            " the connections by invoking `SslErrorHandler#cancel()`."
+                        )
                     context.report(
                         PROCEEDS_ON_RECEIVED_SSL_ERROR,
                         node, context.getLocation(node), message
@@ -81,8 +87,8 @@ class WebViewClientDetector : Detector(), SourceCodeScanner {
         val PROCEEDS_ON_RECEIVED_SSL_ERROR = create(
             "WebViewClientOnReceivedSslError",
             "Proceeds with the HTTPS connection despite SSL errors.",
-            "This check looks for `onReceivedSslError` implementations"
-                    + " that invoke `SslErrorHandler#proceed`.",
+            "This check looks for `onReceivedSslError` implementations" +
+                " that invoke `SslErrorHandler#proceed`.",
             Category.SECURITY,
             5,
             Severity.WARNING,

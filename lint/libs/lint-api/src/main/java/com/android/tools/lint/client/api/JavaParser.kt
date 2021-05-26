@@ -17,7 +17,7 @@
 
 package com.android.tools.lint.client.api
 
-/** Temporarily here for compat purposes  */
+/** Temporarily here for compat purposes */
 @Deprecated(message = "Deprecated, use package level constants in com.android.tools.lint.client.api")
 object JavaParser {
     @Deprecated(message = "Deprecated", replaceWith = ReplaceWith("com.android.tools.lint.client.api.TYPE_OBJECT"))

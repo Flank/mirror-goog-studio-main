@@ -4548,36 +4548,36 @@ public class ApiDetectorTest extends AbstractCheckTest {
 
     public void testSdkLevelAnd() {
         lint().files(
-                manifest().minSdk(1),
-                java(""
-                        + "package com.android.server.wifi.coex;\n"
-                        + "import android.os.Build;\n"
-                        + "\n"
-                        + "import android.support.annotation.RequiresApi;\n"
-                        + "import com.android.modules.utils.build.SdkLevel;\n"
-                        + "\n"
-                        + "\n"
-                        + "final class Poc {\n"
-                        + "\n"
-                        + "    private Poc() {\n"
-                        + "    }\n"
-                        + "\n"
-                        + "    @RequiresApi(30)\n"
-                        + "    void sPlusApi() {\n"
-                        + "\n"
-                        + "    }\n"
-                        + "\n"
-                        + "    void method() {\n"
-                        + "        if (SdkLevel.isAtLeastS() && true && true) {\n"
-                        + "            sPlusApi();\n"
-                        + "        }\n"
-                        + "        if (SdkLevel.isAtLeastS() && true) {\n"
-                        + "            sPlusApi();\n"
-                        + "        }\n"
-                        + "    }\n"
-                        + "}")
-                        .indented(),
-                mSupportJar)
+                        manifest().minSdk(1),
+                        java(""
+                                        + "package com.android.server.wifi.coex;\n"
+                                        + "import android.os.Build;\n"
+                                        + "\n"
+                                        + "import android.support.annotation.RequiresApi;\n"
+                                        + "import com.android.modules.utils.build.SdkLevel;\n"
+                                        + "\n"
+                                        + "\n"
+                                        + "final class Poc {\n"
+                                        + "\n"
+                                        + "    private Poc() {\n"
+                                        + "    }\n"
+                                        + "\n"
+                                        + "    @RequiresApi(30)\n"
+                                        + "    void sPlusApi() {\n"
+                                        + "\n"
+                                        + "    }\n"
+                                        + "\n"
+                                        + "    void method() {\n"
+                                        + "        if (SdkLevel.isAtLeastS() && true && true) {\n"
+                                        + "            sPlusApi();\n"
+                                        + "        }\n"
+                                        + "        if (SdkLevel.isAtLeastS() && true) {\n"
+                                        + "            sPlusApi();\n"
+                                        + "        }\n"
+                                        + "    }\n"
+                                        + "}")
+                                .indented(),
+                        mSupportJar)
                 .run()
                 .expectClean();
     }

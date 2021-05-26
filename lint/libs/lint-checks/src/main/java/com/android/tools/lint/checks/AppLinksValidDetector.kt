@@ -101,8 +101,8 @@ class AppLinksValidDetector : Detector(), XmlScanner {
             }
 
             val hasOnlyHostAndPort = hasNonPath && attributes.all {
-                it.namespaceURI == ANDROID_URI
-                        && (it.localName == ATTR_HOST || it.localName == ATTR_PORT)
+                it.namespaceURI == ANDROID_URI &&
+                    (it.localName == ATTR_HOST || it.localName == ATTR_PORT)
             }
 
             if (!hasNonPath || hasOnlyHostAndPort) {
@@ -138,7 +138,7 @@ class AppLinksValidDetector : Detector(), XmlScanner {
                     host = attributes.removeAt(hostIndex)
                 }
                 "<$TAG_DATA $namespace:${host.localName}=\"${host.nodeValue}\" " +
-                        "$namespace:${port.localName}=\"${port.nodeValue}\"/>\n"
+                    "$namespace:${port.localName}=\"${port.nodeValue}\"/>\n"
             } else null
 
             val location = context.getLocation(dataTag)
@@ -153,7 +153,7 @@ class AppLinksValidDetector : Detector(), XmlScanner {
             incidents += Incident(
                 INTENT_FILTER_UNIQUE_DATA_ATTRIBUTES,
                 "Consider splitting $TAG_DATA tag into multiple tags with individual" +
-                        " attributes to avoid confusion",
+                    " attributes to avoid confusion",
                 location,
                 dataTag,
                 LintFix.create()
