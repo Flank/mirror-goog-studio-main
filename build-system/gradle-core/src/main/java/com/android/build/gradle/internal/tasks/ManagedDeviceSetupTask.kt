@@ -29,6 +29,7 @@ import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.repository.Revision
+import com.android.testing.utils.computeSystemImageHashFromDsl
 import com.android.utils.GrabProcessOutput
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
@@ -122,19 +123,7 @@ abstract class ManagedDeviceSetupTask: NonIncrementalGlobalTask() {
     }
 
     private fun computeImageHash(): String {
-        return SYSTEM_IMAGE_PREFIX +
-                computeVersionString() + HASH_DIVIDER +
-                computeVendorString() + HASH_DIVIDER +
-                abi.get()
-    }
-
-    private fun computeVersionString() = "android-${apiLevel.get()}"
-
-    private fun computeVendorString() = when (systemImageVendor.get()) {
-        "google" -> "google_apis_playstore"
-        "aosp" -> "default"
-        else -> throw RuntimeException("Unrecognized systemImageVendor ${systemImageVendor.get()}" +
-                ". \"google\" or \"aosp\" expected.")
+        return computeSystemImageHashFromDsl(apiLevel.get(), systemImageVendor.get(), abi.get())
     }
 
     class CreationAction(
