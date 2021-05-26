@@ -815,6 +815,23 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
+    public void testPublicLibrary() {
+        // Regression test for
+        // 187343720: UnusedResources lint check does not work correctly for libraries
+        lint().files(
+                        xml(
+                                "res/values/resources.xml",
+                                ""
+                                        + "<resources>\n"
+                                        + "    <style name='Theme.AppCompat' parent='@style/Theme.Other'/>\n"
+                                        + "    <style name='Theme.Other'/>\n"
+                                        + "    <public type='style' name='Theme.AppCompat' />"
+                                        + "</resources>"))
+                .issues(UnusedResourceDetector.ISSUE)
+                .run()
+                .expectClean();
+    }
+
     public void testDynamicResources() {
         String expected =
                 ""

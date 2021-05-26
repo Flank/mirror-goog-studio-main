@@ -474,9 +474,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector
         List<Resource> unusedResources = model.findUnused();
         Set<Resource> unused = Sets.newHashSetWithExpectedSize(unusedResources.size());
         for (Resource resource : unusedResources) {
-            if (resource.isDeclared()
-                    && !resource.isPublic()
-                    && resource.type != ResourceType.PUBLIC) {
+            if (resource.isDeclared()) {
                 unused.add(resource);
             }
         }
@@ -490,7 +488,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector
                     ids.add(resource);
                 }
             }
-            unused.removeAll(ids);
+            ids.forEach(unused::remove);
         }
         return unused;
     }
