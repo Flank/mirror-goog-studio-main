@@ -18,7 +18,7 @@ package com.android.build.gradle.integration.common.fixture
 import com.android.builder.model.v2.models.AndroidDsl
 import com.android.builder.model.v2.models.AndroidProject
 import com.android.builder.model.v2.models.GlobalLibraryMap
-import com.android.builder.model.v2.models.ModelVersions
+import com.android.builder.model.v2.models.Versions
 import com.android.builder.model.v2.models.ProjectSyncIssues
 import com.android.builder.model.v2.models.VariantDependencies
 import com.android.builder.model.v2.models.ndk.NativeModule
@@ -42,7 +42,7 @@ class ModelContainerV2(
     }
 
     data class ModelInfo(
-        val versions: ModelVersions,
+        val versions: Versions,
         val androidProject: AndroidProject?,
         val androidDsl: AndroidDsl?,
         val variantDependencies: VariantDependencies?,
@@ -56,9 +56,9 @@ class ModelContainerV2(
     }
 
     /**
-     * Returns the only [ModelVersions] when there is no composite builds and a single sub-project.
+     * Returns the only [Versions] when there is no composite builds and a single sub-project.
      */
-    val singleVersions: ModelVersions
+    val singleVersions: Versions
         get() = singleInfo.versions
 
     /**

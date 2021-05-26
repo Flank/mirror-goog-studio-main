@@ -19,11 +19,11 @@ package com.android.builder.model.v2.models
 import com.android.builder.model.v2.AndroidModel
 
 /**
- * Basic model providing version information about the actual model.
+ * Basic model providing version information about the actual models.
  *
  * This model is meant to be very stable and never change, so that Studio can safely query it.
  */
-interface ModelVersions: AndroidModel {
+interface Versions: AndroidModel {
     interface Version {
         val major: Int
         val minor: Int
@@ -33,4 +33,9 @@ interface ModelVersions: AndroidModel {
     val androidDsl: Version
     val variantDependencies: Version
     val nativeModule: Version
+
+    /**
+     * The version of AGP.
+     */
+    val agp: String
 }

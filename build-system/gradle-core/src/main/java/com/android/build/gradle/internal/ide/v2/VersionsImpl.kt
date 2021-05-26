@@ -16,17 +16,17 @@
 
 package com.android.build.gradle.internal.ide.v2
 
-import com.android.builder.model.v2.models.ModelVersions
-import com.android.builder.model.v2.models.ModelVersions.Version
+import com.android.builder.model.v2.models.Versions
+import com.android.builder.model.v2.models.Versions.Version
 import java.io.Serializable
 
-data class ModelVersionsImpl(
+data class VersionsImpl(
     override val androidProject: Version,
     override val androidDsl: Version,
     override val variantDependencies: Version,
-    override val nativeModule: Version
-
-): ModelVersions, Serializable {
+    override val nativeModule: Version,
+    override val agp: String,
+): Versions, Serializable {
     companion object {
         @JvmStatic
         private val serialVersionUID: Long = 1L

@@ -45,8 +45,8 @@ import com.android.builder.model.v2.ide.ViewBindingOptions
 import com.android.builder.model.v2.models.AndroidDsl
 import com.android.builder.model.v2.models.AndroidProject
 import com.android.builder.model.v2.models.GlobalLibraryMap
-import com.android.builder.model.v2.models.ModelVersions
-import com.android.builder.model.v2.models.ModelVersions.Version
+import com.android.builder.model.v2.models.Versions
+import com.android.builder.model.v2.models.Versions.Version
 import com.android.builder.model.v2.models.VariantDependencies
 import com.android.builder.model.v2.models.ndk.NativeAbi
 import com.android.builder.model.v2.models.ndk.NativeModule
@@ -55,26 +55,28 @@ import com.android.builder.model.v2.models.ndk.NativeVariant
 // --------------
 // snapshot fixtures specific to each model class
 
-internal fun ModelSnapshotter<ModelVersions>.snapshotVersions() {
-    dataObject("AndroidDsl", ModelVersions::androidDsl) {
+internal fun ModelSnapshotter<Versions>.snapshotVersions() {
+    dataObject("AndroidDsl", Versions::androidDsl) {
         item("major", Version::major)
         item("minor", Version::minor)
     }
 
-    dataObject("AndroidProject", ModelVersions::androidProject) {
+    dataObject("AndroidProject", Versions::androidProject) {
         item("major", Version::major)
         item("minor", Version::minor)
     }
 
-    dataObject("VariantDependencies", ModelVersions::variantDependencies) {
+    dataObject("VariantDependencies", Versions::variantDependencies) {
         item("major", Version::major)
         item("minor", Version::minor)
     }
 
-    dataObject("AndroidProject", ModelVersions::androidProject) {
+    dataObject("nativeModule", Versions::nativeModule) {
         item("major", Version::major)
         item("minor", Version::minor)
     }
+
+    item("agp", Versions::agp)
 }
 
 internal fun ModelSnapshotter<AndroidProject>.snapshotAndroidProject() {
