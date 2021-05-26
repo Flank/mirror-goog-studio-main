@@ -34,12 +34,14 @@ import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
+import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiField
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiModifierListOwner
 import com.intellij.psi.PsiParameter
 import com.intellij.psi.PsiParameterList
+import com.intellij.psi.PsiType
 import org.jetbrains.uast.UAnnotated
 import org.jetbrains.uast.UBinaryExpression
 import org.jetbrains.uast.UBlockExpression
@@ -84,6 +86,22 @@ class SdkIntDetector : Detector(), SourceCodeScanner {
     }
 
     companion object {
+        fun isLambdaType(context: JavaContext, type: PsiType?): Boolean {
+            val rawType = (type as? PsiClassType)?.rawType() ?: return false
+            val fqn = rawType.canonicalText
+            if (fqn == "java.lang.Runnable" ||
+                fqn == "java.util.function.Function" ||
+                fqn.startsWith("kotlin.jvm.functions.Function")
+            ) {
+                return true
+            }
+            val clz = rawType.resolve() ?: return false
+            val evaluator = context.evaluator
+            return evaluator.implementsInterface(clz, "kotlin.Function", false) ||
+                evaluator.implementsInterface(clz, "java.util.function.Function", false) ||
+                evaluator.findAnnotation(clz, "java.lang.FunctionalInterface") != null
+        }
+
         private val IMPLEMENTATION = Implementation(
             SdkIntDetector::class.java,
             Scope.JAVA_FILE_SCOPE
@@ -183,7 +201,7 @@ class SdkIntDetector : Detector(), SourceCodeScanner {
         ) {
             val parameter = receiver.tryResolve() as? PsiParameter ?: return
             val index = getParameterIndex(parameter)
-            if (index != -1) {
+            if (index != -1 && isLambdaType(context, parameter.type)) {
                 checkMethod(comparison, context, isGreaterOrEquals, method, index)
             }
         }
