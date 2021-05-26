@@ -283,6 +283,10 @@ internal fun parseRule(
     onError: (Int, String) -> Unit,
     fragmentParser: RuleFragmentParser
 ): ProfileRule? {
+    if (line.isBlank()) {
+        // empty lines are allowed, and should be skipped
+        return null
+    }
     var i = 0
     try {
         if (line[i] == COMMENT_START) {
@@ -294,7 +298,7 @@ internal fun parseRule(
         i = fragmentParser.parseTarget(line, i)
         val target = fragmentParser.build()
         // check if it has only target class
-        if (i == line.length) {
+        if (i == line.length || line[i].isWhitespace()) {
             if (flags.flags != 0) {
                 throw ParsingException(0, flagsForClassRuleMessage(line.substring(0, targetIndex)))
             }
@@ -317,7 +321,9 @@ internal fun parseRule(
         i = fragmentParser.parseReturnType(line, i)
         val returnType = fragmentParser.build()
         if (i != line.length) {
-            throw ParsingException(i, unexpectedTextAfterRule(line.substring(i)))
+            if (line.substring(i).isNotBlank()) {
+                throw ParsingException(i, unexpectedTextAfterRule(line.substring(i)))
+            }
         }
         if (flags.flags == 0) {
             throw ParsingException(0, emptyFlagsForMethodRuleMessage())
@@ -471,6 +477,7 @@ private fun RuleFragmentParser.parseReturnType(line: String, start: Int): Int {
             CLOSE_PAREN,
             COMMENT_START -> illegalToken(line, i)
             else -> {
+                if (c.isWhitespace()) break;
                 append(c)
                 i++
             }
