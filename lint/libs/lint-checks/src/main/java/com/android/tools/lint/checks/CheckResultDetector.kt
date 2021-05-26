@@ -164,7 +164,7 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
     companion object {
         fun isExpressionValueUnused(element: UElement): Boolean {
-            var prev = element.getParentOfType<UExpression>(
+            var prev = element.getParentOfType(
                 UExpression::class.java, false
             ) ?: return true
 
@@ -176,13 +176,6 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
             @Suppress("RedundantIf")
             if (curr is UBlockExpression) {
-                if (curr.uastParent is ULambdaExpression && isKotlin(curr.sourcePsi)) {
-                    // Lambda block: for now assume used (e.g. parameter
-                    // in call. Later consider recursing here to
-                    // detect if the lambda itself is unused.
-                    return false
-                }
-
                 // In Java, it's apparent when an expression is unused:
                 // the parent is a block expression. However, in Kotlin it's
                 // much trickier: values can flow through blocks and up through
@@ -205,13 +198,30 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                     return true
                 }
 
+                // It's the last child: see if the parent is unused
+                val parent = curr.uastParent
+                if (parent is ULambdaExpression && isKotlin(curr.sourcePsi)) {
+                    val expressionType = parent.getExpressionType()?.canonicalText
+                    if (expressionType != null &&
+                        expressionType.startsWith("kotlin.jvm.functions.Function") &&
+                        expressionType.endsWith("kotlin.Unit>")
+                    ) {
+                        // We know that this lambda does not return anything so the value is unused
+                        return true
+                    }
+                    // Lambda block: for now assume used (e.g. parameter
+                    // in call. Later consider recursing here to
+                    // detect if the lambda itself is unused.
+                    return false
+                }
+
                 if (isJava(curr.sourcePsi)) {
                     // In Java there's no implicit passing to the parent
                     return true
                 }
 
                 // It's the last child: see if the parent is unused
-                val parent = curr.uastParent ?: return true
+                parent ?: return true
                 if (parent is UMethod || parent is UClassInitializer) {
                     return true
                 }
