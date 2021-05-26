@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.common.fixture.model
 
+import com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION
 import com.android.build.gradle.internal.cxx.configure.ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION
 import com.android.builder.core.ToolsRevisionUtils
 import com.android.builder.model.v2.dsl.BaseConfig
@@ -76,7 +77,16 @@ internal fun ModelSnapshotter<Versions>.snapshotVersions() {
         item("minor", Version::minor)
     }
 
-    item("agp", Versions::agp)
+    item("agp", Versions::agp) { version ->
+        version?.let { normalizeAgpVersion(it) }
+    }
+}
+
+private fun normalizeAgpVersion(version: String): Any {
+    if (version == ANDROID_GRADLE_PLUGIN_VERSION) {
+        return PredefinedModelValues.DEFAULT_AGP_REVISION
+    }
+    return version
 }
 
 internal fun ModelSnapshotter<AndroidProject>.snapshotAndroidProject() {
@@ -565,5 +575,6 @@ private fun normalizeBuildToolsVersion(version: String): Any {
 }
 
 internal enum class PredefinedModelValues {
-    DEFAULT_BUILD_TOOLS_REVISION;
+    DEFAULT_BUILD_TOOLS_REVISION,
+    DEFAULT_AGP_REVISION,
 }

@@ -11,5 +11,5 @@
    - nativeModule:
       - major = 0
       - minor = 1
-   - agp = "7.0.0-dev"
+   - agp = DEFAULT_AGP_REVISION
 < Versions

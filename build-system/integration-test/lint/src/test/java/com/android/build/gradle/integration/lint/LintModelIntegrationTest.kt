@@ -174,9 +174,7 @@ class LintModelIntegrationTest(private val usePartialAnalysis: Boolean) {
             for (repository in localRepositories) {
                 put(repository, "${"$"}{mavenRepo}")
             }
-            put(
-                "gradle=\"${Version.ANDROID_GRADLE_PLUGIN_VERSION}\"",
-                "gradle=\"${"$"}androidGradlePluginVersion\"")
+            put(Version.ANDROID_GRADLE_PLUGIN_VERSION, "${"$"}androidGradlePluginVersion")
             put(File.separator, "/")
             put(File.pathSeparator, ":")
         })
