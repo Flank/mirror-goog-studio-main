@@ -279,19 +279,32 @@ internal fun parseRule(
     onError: (Int, String) -> Unit,
     fragmentParser: RuleFragmentParser
 ): ProfileRule? {
+    if (line.isBlank()) {
+        // empty lines are allowed, and should be skipped
+        return null
+    }
     var i = 0
     try {
+    if (line[i] == COMMENT_START) {
+        // If the line starts with a comment, the entire line gets skipped
+        return null
+    }
     val flags = Flags().apply { i = parseFlags(line, i) }
     val targetIndex = i
     i = fragmentParser.parseTarget(line, i)
     val target = fragmentParser.build()
     // check if it has only target class
-    if (i == line.length) {
+    if (i == line.length || line[i].isWhitespace()) {
         if (flags.flags != 0) {
             throw ParsingException(0, flagsForClassRuleMessage(line.substring(0, targetIndex)))
         }
-        return ProfileRule(flags.flags, target,
-            RuleFragment.Empty, RuleFragment.Empty, RuleFragment.Empty)
+        return ProfileRule(
+                MethodFlags.STARTUP,
+                target,
+                RuleFragment.Empty,
+                RuleFragment.Empty,
+                RuleFragment.Empty
+        )
     }
     i = consume(METHOD_SEPARATOR_START, line, i)
     i = consume(METHOD_SEPARATOR_END, line, i)
@@ -304,7 +317,9 @@ internal fun parseRule(
     i = fragmentParser.parseReturnType(line, i)
     val returnType = fragmentParser.build()
     if (i != line.length) {
-        throw ParsingException(i, unexpectedTextAfterRule(line.substring(i)))
+        if (line.substring(i).isNotBlank()) {
+            throw ParsingException(i, unexpectedTextAfterRule(line.substring(i)))
+        }
     }
     if (flags.flags == 0) {
         throw ParsingException(0, emptyFlagsForMethodRuleMessage())
@@ -458,6 +473,7 @@ private fun RuleFragmentParser.parseReturnType(line: String, start: Int): Int {
             CLOSE_PAREN,
             COMMENT_START -> illegalToken(line, i)
             else -> {
+                if (c.isWhitespace()) break;
                 append(c)
                 i++
             }
