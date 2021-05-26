@@ -33,6 +33,7 @@ import org.objectweb.asm.Opcodes.ACC_PUBLIC
 import org.objectweb.asm.Opcodes.ACC_STATIC
 import org.objectweb.asm.Opcodes.ACC_SUPER
 import org.objectweb.asm.Opcodes.ALOAD
+import org.objectweb.asm.Opcodes.GETSTATIC
 import org.objectweb.asm.Opcodes.INVOKESPECIAL
 import org.objectweb.asm.Opcodes.PUTSTATIC
 import org.objectweb.asm.Opcodes.RETURN
@@ -130,6 +131,16 @@ private fun generateResourceTypeClass(
             resType.getName(),
             ACC_PUBLIC + ACC_FINAL + ACC_STATIC)
 
+    if (resType == ResourceType.ATTR) {
+        // Starting S, the android attributes might not have a stable ID and a reference to the
+        // android.R.attr class should be used instead of a int value.
+        cw.visitInnerClass(
+                "android/R\$attr",
+                "android/R",
+                resType.getName(),
+                ACC_PUBLIC + ACC_FINAL + ACC_STATIC)
+    }
+
     for (s in symbols) {
         cw.visitField(
                 ACC_PUBLIC + ACC_STATIC + if (finalIds) ACC_FINAL else 0,
@@ -174,10 +185,24 @@ private fun generateResourceTypeClass(
             clinit.newArray(INT_TYPE)
 
             for ((i, value) in values.withIndex()) {
-                clinit.dup()
-                clinit.push(i)
-                clinit.push(value)
-                clinit.arrayStore(INT_TYPE)
+                if (isUnstableAndroidAttr(value, s.children[i])) {
+                    // For unstable android attributes a reference to android.R.attr should be used
+                    // instead of the value (0).
+                    val name = s.children[i].substringAfter("android").drop(1)
+                    clinit.dup()
+                    clinit.push(i)
+                    clinit.visitFieldInsn(
+                            GETSTATIC,
+                            "android/R\$attr",
+                            canonicalizeValueResourceName(name),
+                            "I")
+                    clinit.arrayStore(INT_TYPE)
+                } else {
+                    clinit.dup()
+                    clinit.push(i)
+                    clinit.push(value)
+                    clinit.arrayStore(INT_TYPE)
+                }
             }
 
             clinit.visitFieldInsn(PUTSTATIC, internalName, s.canonicalName, "[I")
@@ -189,6 +214,16 @@ private fun generateResourceTypeClass(
     cw.visitEnd()
 
     return cw.toByteArray()
+}
+
+private fun isUnstableAndroidAttr(value: Int, name: String) : Boolean {
+    // Only platform attributes should have ID value of 0, but check the prefix to
+    // be safe. Sometimes the name is already canonicalized, so either "android."
+    // or "android_" can be used.
+    return value == 0 && (
+            name.startsWith("android.")
+                    || name.startsWith("android_")
+                    || name.startsWith("android:"))
 }
 
 private fun internalName(table: SymbolTable, type: ResourceType?): String {
