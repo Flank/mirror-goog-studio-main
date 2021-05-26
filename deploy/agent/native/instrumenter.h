@@ -20,23 +20,13 @@
 
 #include <jvmti.h>
 
-#include <memory>
-#include <unordered_map>
+#include <string>
+#include <vector>
 
-#include "slicer/dex_ir.h"
-#include "slicer/instrumentation.h"
-#include "slicer/reader.h"
 #include "slicer/writer.h"
-#include "tools/base/deploy/common/log.h"
-
-using std::shared_ptr;
-using std::string;
-using std::unordered_map;
+#include "tools/base/deploy/agent/native/transform/transforms.h"
 
 namespace deploy {
-
-bool InstrumentApplication(jvmtiEnv* jvmti, JNIEnv* jni,
-                           const std::string& package_name, bool overlay_swap);
 
 // Probably should be in a utility header, but also only used here.
 class JvmtiAllocator : public dex::Writer::Allocator {
@@ -59,6 +49,33 @@ class JvmtiAllocator : public dex::Writer::Allocator {
 
  private:
   jvmtiEnv* jvmti_;
+};
+
+bool InstrumentApplication(jvmtiEnv* jvmti, JNIEnv* jni,
+                           const std::string& package_name, bool overlay_swap);
+
+class Instrumenter {
+ public:
+  Instrumenter(jvmtiEnv* jvmti, JNIEnv* jni, const TransformCache& cache)
+      : jvmti_(jvmti), jni_(jni), cache_(cache), caching_enabled_(true) {}
+
+  bool Instrument(const Transform& transform) const;
+  bool Instrument(const std::vector<const Transform*>& transforms) const;
+
+  void SetCachingEnabled(bool enabled);
+
+ private:
+  jvmtiEnv* jvmti_;
+  JNIEnv* jni_;
+
+  TransformCache cache_;
+  bool caching_enabled_;
+
+  bool ApplyCachedTransforms(
+      const std::vector<jclass> classes,
+      const std::vector<const Transform*>& transforms) const;
+
+  bool ApplyTransforms(const std::vector<const Transform*>& transforms) const;
 };
 
 }  // namespace deploy

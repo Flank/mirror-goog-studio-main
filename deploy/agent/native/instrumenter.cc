@@ -49,8 +49,6 @@ const char* kPhaseClass = "com/android/tools/deploy/instrument/Phase";
 const std::string kInstrumentationJarName =
     "instruments-"_s + runtime_jar_hash + ".jar";
 
-const std::string kNoCache = "";
-
 namespace {
 
 // Holds the transform that will be applied by Agent_ClassFileLoadHook.
@@ -60,13 +58,49 @@ const Transform* current_transform = nullptr;
 // Agent_ClassFileLoadHook.
 std::vector<dex::u4> last_class_bytes;
 
+// Event that fires when the agent loads a class file.
+extern "C" void JNICALL Agent_ClassFileLoadHook(
+    jvmtiEnv* jvmti, JNIEnv* jni, jclass class_being_redefined, jobject loader,
+    const char* name, jobject protection_domain, jint class_data_len,
+    const unsigned char* class_data, jint* new_class_data_len,
+    unsigned char** new_class_data) {
+  if (current_transform == nullptr ||
+      current_transform->GetClassName() != name) {
+    return;
+  }
+
+  // The class name needs to be in JNI-format.
+  std::string descriptor = "L" + current_transform->GetClassName() + ";";
+
+  dex::Reader reader(class_data, class_data_len);
+  auto class_index = reader.FindClassIndex(descriptor.c_str());
+  if (class_index == dex::kNoIndex) {
+    // TODO: Handle failure.
+    return;
+  }
+
+  reader.CreateClassIr(class_index);
+  auto dex_ir = reader.GetIr();
+  current_transform->Apply(dex_ir);
+
+  size_t new_image_size = 0;
+  dex::u1* new_image = nullptr;
+  dex::Writer writer(dex_ir);
+
+  JvmtiAllocator allocator(jvmti);
+  new_image = writer.CreateImage(&allocator, &new_image_size);
+
+  last_class_bytes.clear();
+  last_class_bytes.resize(new_image_size);
+  memcpy(last_class_bytes.data(), new_image, new_image_size);
+
+  *new_class_data_len = new_image_size;
+  *new_class_data = new_image;
+}
+
 }  // namespace
 
 #define FILE_MODE (S_IRUSR | S_IWUSR)
-
-std::string GetInstrumentJarPath(const std::string& package_name) {
-  return Sites::AppStudio(package_name) + kInstrumentationJarName;
-}
 
 // Check if the jar_path exists. If it doesn't, generate its content using the
 // jar embedded in the .data section of this executable.
@@ -136,13 +170,45 @@ bool LoadInstrumentationJar(jvmtiEnv* jvmti, JNIEnv* jni,
   return true;
 }
 
-bool ApplyCachedTransforms(jvmtiEnv* jvmti, const TransformCache& cache,
-                           const std::vector<jclass> classes,
-                           const std::vector<const Transform*>& transforms) {
+void Instrumenter::SetCachingEnabled(bool is_enabled) {
+  caching_enabled_ = is_enabled;
+}
+
+bool Instrumenter::Instrument(const Transform& transform) const {
+  return Instrument({&transform});
+}
+
+bool Instrumenter::Instrument(
+    const std::vector<const Transform*>& transforms) const {
+  jvmtiEventCallbacks callbacks;
+  callbacks.ClassFileLoadHook = Agent_ClassFileLoadHook;
+
+  bool success =
+      CheckJvmti(
+          jvmti_->SetEventCallbacks(&callbacks, sizeof(jvmtiEventCallbacks)),
+          "Error setting event callbacks.") &&
+      CheckJvmti(jvmti_->SetEventNotificationMode(
+                     JVMTI_ENABLE, JVMTI_EVENT_CLASS_FILE_LOAD_HOOK, NULL),
+                 "Could not enable class file load hook event") &&
+      ApplyTransforms(transforms);
+
+  // Failing either of these does not prevent us from proceeding, but we should
+  // still log the event.
+  CheckJvmti(jvmti_->SetEventNotificationMode(
+                 JVMTI_DISABLE, JVMTI_EVENT_CLASS_FILE_LOAD_HOOK, NULL),
+             "Could not disable class file load hook event");
+  CheckJvmti(jvmti_->SetEventCallbacks(nullptr, sizeof(jvmtiEventCallbacks)),
+             "Could not clear event callbacks");
+  return success;
+}
+
+bool Instrumenter::ApplyCachedTransforms(
+    const std::vector<jclass> classes,
+    const std::vector<const Transform*>& transforms) const {
   std::vector<std::vector<dex::u4>> cached_classes;
   for (const auto& transform : transforms) {
     std::vector<dex::u4> dex;
-    if (!cache.ReadClass(transform->GetClassName(), &dex)) {
+    if (!cache_.ReadClass(transform->GetClassName(), &dex)) {
       return false;
     }
     cached_classes.emplace_back(std::move(dex));
@@ -160,20 +226,19 @@ bool ApplyCachedTransforms(jvmtiEnv* jvmti, const TransformCache& cache,
     defs.push_back(def);
   }
 
-  return CheckJvmti(jvmti->RedefineClasses(defs.size(), defs.data()),
+  return CheckJvmti(jvmti_->RedefineClasses(defs.size(), defs.data()),
                     "Could not redefine with cached classes");
 }
 
-bool ApplyTransforms(jvmtiEnv* jvmti, JNIEnv* jni,
-                     const std::string& cache_path,
-                     const std::vector<const Transform*>& transforms) {
+bool Instrumenter::ApplyTransforms(
+    const std::vector<const Transform*>& transforms) const {
   std::vector<jclass> classes;
   for (const auto& transform : transforms) {
-    jclass klass = jni->FindClass(transform->GetClassName().c_str());
+    jclass klass = jni_->FindClass(transform->GetClassName().c_str());
     if (klass == nullptr) {
       ErrEvent("Could not find class for instrumentation: " +
                transform->GetClassName());
-      jni->ExceptionClear();
+      jni_->ExceptionClear();
       return false;
     }
     classes.push_back(klass);
@@ -182,9 +247,7 @@ bool ApplyTransforms(jvmtiEnv* jvmti, JNIEnv* jni,
   // Instead of using slicer to instrument the dex, which is expensive, attempt
   // to read previously instrumented classes from a cache and use
   // RedefineClasses instead of RetransformClasses.
-  TransformCache cache = TransformCache::Create(cache_path);
-  if (cache_path != kNoCache &&
-      ApplyCachedTransforms(jvmti, cache, classes, transforms)) {
+  if (caching_enabled_ && ApplyCachedTransforms(classes, transforms)) {
     return true;
   }
 
@@ -192,9 +255,9 @@ bool ApplyTransforms(jvmtiEnv* jvmti, JNIEnv* jni,
   for (int i = 0; i < classes.size(); ++i) {
     current_transform = transforms[i];
     bool success = CheckJvmti(
-        jvmti->RetransformClasses(1, &classes[i]),
+        jvmti_->RetransformClasses(1, &classes[i]),
         "Could not retransform class: " + transforms[i]->GetClassName());
-    jni->DeleteLocalRef(classes[i]);
+    jni_->DeleteLocalRef(classes[i]);
 
     // We intentionally do not stop if one transformation fails, because it's
     // useful to collect data on every failing transform - and if one is failing
@@ -204,10 +267,10 @@ bool ApplyTransforms(jvmtiEnv* jvmti, JNIEnv* jni,
       continue;
     }
 
-    if (cache_path != kNoCache) {
-      // RetransformClasses causes the Agent_ClassFileLoadHook callback to
-      // populate last_class_bytes.
-      cache.WriteClass(transforms[i]->GetClassName(), last_class_bytes);
+    // RetransformClasses causes the Agent_ClassFileLoadHook callback to
+    // populate last_class_bytes.
+    if (caching_enabled_) {
+      cache_.WriteClass(transforms[i]->GetClassName(), last_class_bytes);
     }
   }
 
@@ -218,14 +281,7 @@ bool ApplyTransforms(jvmtiEnv* jvmti, JNIEnv* jni,
   return failed_classes.empty();
 }
 
-bool Instrument(jvmtiEnv* jvmti, JNIEnv* jni, const std::string& jar,
-                bool overlay_swap) {
-  JniClass breadcrumb(jni, kBreadcrumbClass);
-  // Check if we need to instrument, or if a previous agent successfully did.
-  if (breadcrumb.CallStaticBooleanMethod("isFinishedInstrumenting", "()Z")) {
-    return true;
-  }
-
+bool Instrument(const Instrumenter& instrumenter, bool overlay_swap) {
   const HookTransform thread(
       /* target class */ "java/lang/Thread",
       /* target method */ "dispatchUncaughtException",
@@ -274,91 +330,18 @@ bool Instrument(jvmtiEnv* jvmti, JNIEnv* jni, const std::string& jar,
       "()Landroid/content/res/Resources;", MethodHooks::kNoHook,
       "addResourceOverlays");
 
-  bool success = true;
-  success &=
-      CheckJvmti(jvmti->SetEventNotificationMode(
-                     JVMTI_ENABLE, JVMTI_EVENT_CLASS_FILE_LOAD_HOOK, NULL),
-                 "Could not enable class file load hook event");
-
-  // Only bother to use transform caching with IWI, since the package manager
-  // will wipe the cache on a normal installation.
   if (overlay_swap) {
-    const std::string cache_path = jar + ".cache";
-    success &=
-        ApplyTransforms(jvmti, jni, cache_path,
-                        {&thread, &dex_path_list, &loaded_apk, &res_manager});
+    return instrumenter.Instrument(
+        {&thread, &dex_path_list, &loaded_apk, &res_manager});
   } else {
-    success &= ApplyTransforms(jvmti, jni, kNoCache,
-                               {&activity_thread, &dex_path_list_element});
+    return instrumenter.Instrument({&activity_thread, &dex_path_list_element});
   }
-
-  // Failing to disable this event does not actually have any bearing on
-  // whether or not instrumentation was a success, so we do not modify the
-  // success flag.
-  CheckJvmti(jvmti->SetEventNotificationMode(
-                 JVMTI_DISABLE, JVMTI_EVENT_CLASS_FILE_LOAD_HOOK, NULL),
-             "Could not disable class file load hook event");
-
-  if (success) {
-    breadcrumb.CallStaticVoidMethod("setFinishedInstrumenting", "()V");
-    LogEvent("Finished instrumenting");
-  }
-
-  return success;
-}
-
-// Event that fires when the agent loads a class file.
-extern "C" void JNICALL Agent_ClassFileLoadHook(
-    jvmtiEnv* jvmti, JNIEnv* jni, jclass class_being_redefined, jobject loader,
-    const char* name, jobject protection_domain, jint class_data_len,
-    const unsigned char* class_data, jint* new_class_data_len,
-    unsigned char** new_class_data) {
-  if (current_transform == nullptr ||
-      current_transform->GetClassName() != name) {
-    return;
-  }
-
-  // The class name needs to be in JNI-format.
-  string descriptor = "L" + current_transform->GetClassName() + ";";
-
-  dex::Reader reader(class_data, class_data_len);
-  auto class_index = reader.FindClassIndex(descriptor.c_str());
-  if (class_index == dex::kNoIndex) {
-    // TODO: Handle failure.
-    return;
-  }
-
-  reader.CreateClassIr(class_index);
-  auto dex_ir = reader.GetIr();
-  current_transform->Apply(dex_ir);
-
-  size_t new_image_size = 0;
-  dex::u1* new_image = nullptr;
-  dex::Writer writer(dex_ir);
-
-  JvmtiAllocator allocator(jvmti);
-  new_image = writer.CreateImage(&allocator, &new_image_size);
-
-  last_class_bytes.clear();
-  last_class_bytes.resize(new_image_size);
-  memcpy(last_class_bytes.data(), new_image, new_image_size);
-
-  *new_class_data_len = new_image_size;
-  *new_class_data = new_image;
 }
 
 bool InstrumentApplication(jvmtiEnv* jvmti, JNIEnv* jni,
                            const std::string& package_name, bool overlay_swap) {
-  jvmtiEventCallbacks callbacks;
-  callbacks.ClassFileLoadHook = Agent_ClassFileLoadHook;
-
-  if (jvmti->SetEventCallbacks(&callbacks, sizeof(jvmtiEventCallbacks)) !=
-      JVMTI_ERROR_NONE) {
-    Log::E("Error setting event callbacks.");
-    return false;
-  }
-
-  std::string instrument_jar_path = GetInstrumentJarPath(package_name);
+  std::string instrument_jar_path =
+      Sites::AppStudio(package_name) + kInstrumentationJarName;
 
   // Make sure the instrumentation jar is ready on disk.
   if (!WriteJarToDiskIfNecessary(instrument_jar_path)) {
@@ -371,10 +354,28 @@ bool InstrumentApplication(jvmtiEnv* jvmti, JNIEnv* jni,
     return false;
   }
 
-  if (!Instrument(jvmti, jni, instrument_jar_path, overlay_swap)) {
+  // Check if we need to instrument, or if a previous agent successfully did.
+  JniClass breadcrumb(jni, kBreadcrumbClass);
+  if (breadcrumb.CallStaticBooleanMethod("isFinishedInstrumenting", "()Z")) {
+    return true;
+  }
+
+  auto cache = TransformCache::Create(instrument_jar_path + ".cache");
+  Instrumenter instrumenter(jvmti, jni, cache);
+
+  // Disable caching for non-overlay swap, as the cache directory gets cleared
+  // on installation.
+  if (!overlay_swap) {
+    instrumenter.SetCachingEnabled(false);
+  }
+
+  if (!Instrument(instrumenter, overlay_swap)) {
     Log::E("Error instrumenting application.");
     return false;
   }
+
+  breadcrumb.CallStaticVoidMethod("setFinishedInstrumenting", "()V");
+  LogEvent("Finished instrumenting");
 
   // Need to register native methods every time; otherwise, the Java methods
   // could potentially call old versions if a previous agent.so was loaded.
