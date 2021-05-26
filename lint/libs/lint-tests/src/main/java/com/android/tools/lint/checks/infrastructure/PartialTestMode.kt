@@ -162,9 +162,9 @@ internal class PartialTestMode : TestMode(
         results merged to generate the report.
 
         Alternatively, if this difference is expected, you can set the
-        eventType() set to include only one of these two, or turn off
-        the equality check altogether via `.testModesIdenticalOutput(false)`.
-        You can then check each output by passing in a `testType` parameter
+        `testModes(...)` to include only one of these two, or turn off
+        the equality check altogether via `.expectIdenticalTestModeOutput(false)`.
+        You can then check each output by passing in a `testMode` parameter
         to `expect`(...).
         """.trimIndent()
 

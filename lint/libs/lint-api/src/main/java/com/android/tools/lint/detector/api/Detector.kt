@@ -657,15 +657,15 @@ abstract class Detector {
      * (via [Context.report]) to lint.
      */
     open fun checkPartialResults(context: Context, partialResults: PartialResult) {
-        // Don't call super.processPartialResults! This is here to make sure you
+        // Don't call super.checkPartialResults! This is here to make sure you
         // don't accidentally forget to override this if your detector reports
         // partial results.
         error(
             this.javaClass.simpleName +
                 ": You must override " +
-                "Detector.processPartialResults(Context, data: List<LintMap>) " +
+                "Detector.checkPartialResults(Context, data: List<LintMap>) " +
                 "when you report data via Context.reportPartialResult (and don't " +
-                "call super.processPartialResults!)"
+                "call super.checkPartialResults!)"
         )
     }
 
