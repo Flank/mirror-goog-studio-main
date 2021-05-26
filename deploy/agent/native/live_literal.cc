@@ -145,6 +145,13 @@ jstring LiveLiteral::LookUpKeyByOffSet(const std::string& helper, int offset) {
       class_finder_.GetApplicationClassLoader(),
       "androidx/compose/runtime/internal/LiveLiteralInfo");
 
+  if (info_class == nullptr) {
+    jni_->ExceptionClear();
+    response_.set_status(proto::AgentLiveLiteralUpdateResponse::ERROR);
+    response_.set_extra("Cannot find Live LiteralInfo class");
+    return nullptr;
+  }
+
   jclass method_class = jni_->FindClass("java/lang/reflect/Method");
   if (method_class == nullptr) {
     // Almost impossible.
@@ -241,6 +248,7 @@ proto::AgentLiveLiteralUpdateResponse LiveLiteral::Update(
     jclass helper = class_finder_.FindInClassLoader(
         class_finder_.GetApplicationClassLoader(), update.helper_class());
     if (helper == nullptr) {
+      jni_->ExceptionClear();
       response_.set_status(proto::AgentLiveLiteralUpdateResponse::ERROR);
       std::stringstream stream;
       stream << "Helper " << helper << " not found!";
@@ -433,6 +441,7 @@ std::string LiveLiteral::InstrumentHelper(const std::string& helper) {
       class_finder_.GetApplicationClassLoader(), helper);
 
   if (klass == nullptr) {
+    jni_->ExceptionClear();
     return "Live Literal Helper " + helper + " not found";
   }
 
