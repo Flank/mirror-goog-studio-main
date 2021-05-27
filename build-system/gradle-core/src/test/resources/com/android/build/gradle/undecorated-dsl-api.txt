@@ -694,6 +694,8 @@ com.android.build.gradle.internal.dsl.ShaderOptions.getGlslcArgs: java.util.List
 com.android.build.gradle.internal.dsl.ShaderOptions.getScopedGlslcArgs: com.google.common.collect.ListMultimap<java.lang.String, java.lang.String> ()
 com.android.build.gradle.internal.dsl.ShaderOptions.glslcArgs: void (java.lang.String[])
 com.android.build.gradle.internal.dsl.ShaderOptions.glslcScopedArgs: void (java.lang.String, java.lang.String[])
+com.android.build.gradle.internal.dsl.SigningConfigImpl.getStoreFile: java.io.File ()
+com.android.build.gradle.internal.dsl.SigningConfigImpl.setStoreFile: void (java.io.File)
 com.android.build.gradle.internal.dsl.SplitOptions.exclude: void (java.lang.String[])
 com.android.build.gradle.internal.dsl.SplitOptions.include: void (java.lang.String[])
 com.android.build.gradle.internal.dsl.SplitOptions.reset: void ()

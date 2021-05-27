@@ -107,7 +107,7 @@ sealed class SupportedPropertyType {
     ): SupportedPropertyType() {
         constructor(
             type: Class<*>,
-            implementationType: Class<*> = type,
+            implementationType: Class<*>,
         ) : this(Type.getType(type), Type.getType(implementationType))
     }
 

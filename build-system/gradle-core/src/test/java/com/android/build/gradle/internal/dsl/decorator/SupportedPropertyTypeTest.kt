@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.dsl.decorator
 
 import com.android.build.gradle.internal.dsl.Lockable
+import com.google.common.truth.Truth.assertThat
 import com.google.common.truth.Truth.assertWithMessage
 import org.junit.Test
 import org.objectweb.asm.Type
@@ -69,6 +70,18 @@ class SupportedPropertyTypeTest {
                 assertWithMessage("Implementation type must be a subtype of property type %s", propertyType)
                     .that(implementationType)
                     .isAssignableTo(type)
+                if (implementationType.name != "com.android.build.gradle.internal.CompileOptions") {
+                    assertWithMessage("Implementation type is in gradle-core package")
+                        .that(implementationType.name)
+                        .startsWith("com.android.build.gradle.internal.dsl.")
+                }
+                // Smoke test that the class decorates without error.
+                val decorated = try {
+                     androidPluginDslDecorator.decorate(implementationType)
+                } catch (e: Exception) {
+                    throw AssertionError("Could not decorated supported property type $propertyType", e)
+                }
+                assertThat(decorated.name).isNotEqualTo(implementationType.name)
             }
     }
 
