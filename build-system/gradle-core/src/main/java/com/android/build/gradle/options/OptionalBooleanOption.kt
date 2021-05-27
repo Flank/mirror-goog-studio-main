@@ -16,13 +16,16 @@
 
 package com.android.build.gradle.options
 
+import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.build.gradle.options.Version.VERSION_7_0
 import com.android.build.gradle.options.Version.VERSION_BEFORE_4_0
 import com.android.builder.model.AndroidProject
 
 enum class OptionalBooleanOption(
     override val propertyName: String,
-    val stage: Stage) : Option<Boolean> {
+    val stage: Stage,
+    val recommendedValue: Boolean? = null
+) : Option<Boolean> {
     SIGNING_V1_ENABLED(AndroidProject.PROPERTY_SIGNING_V1_ENABLED, ApiStage.Stable),
     SIGNING_V2_ENABLED(AndroidProject.PROPERTY_SIGNING_V2_ENABLED, ApiStage.Stable),
     IDE_TEST_ONLY(AndroidProject.PROPERTY_TEST_ONLY, ApiStage.Stable),
@@ -36,6 +39,11 @@ enum class OptionalBooleanOption(
 
     // Flags for Android Test Retention
     ENABLE_TEST_FAILURE_RETENTION_COMPRESS_SNAPSHOT("android.experimental.testOptions.emulatorSnapshots.compressSnapshots", ApiStage.Experimental),
+
+    /* ----------------
+    * SOFTLY ENFORCED FEATURES
+    */
+    DISABLE_AUTOMATIC_COMPONENT_CREATION("android.disableAutomaticComponentCreation",  FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.VERSION_8_0), true),
 
     /* ----------------
      * ENFORCED FEATURES
