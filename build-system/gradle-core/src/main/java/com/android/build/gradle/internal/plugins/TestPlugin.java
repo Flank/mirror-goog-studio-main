@@ -22,9 +22,12 @@ import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.component.impl.TestFixturesImpl;
 import com.android.build.api.dsl.CommonExtension;
 import com.android.build.api.dsl.SdkComponents;
-import com.android.build.api.extension.TestAndroidComponentsExtension;
+import com.android.build.api.extension.AndroidComponentsExtension;
 import com.android.build.api.extension.impl.TestAndroidComponentsExtensionImpl;
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar;
+import com.android.build.api.variant.TestAndroidComponentsExtension;
+import com.android.build.api.variant.TestVariant;
+import com.android.build.api.variant.TestVariantBuilder;
 import com.android.build.api.variant.impl.TestVariantBuilderImpl;
 import com.android.build.api.variant.impl.TestVariantImpl;
 import com.android.build.gradle.BaseExtension;
@@ -127,6 +130,39 @@ public class TestPlugin
                         testExtension);
     }
 
+    /**
+     * Create typed sub interface and implementation for the extension objects. This has several
+     * benefits : 1. do not pollute the user visible definitions with deprecated types. 2. because
+     * it's written in Java, it will still compile once the deprecated extension are moved to
+     * Level.HIDDEN.
+     */
+    @SuppressWarnings("deprecation")
+    public interface TestAndroidComponentsExtensionCompat
+            extends AndroidComponentsExtension<
+                            com.android.build.api.dsl.TestExtension,
+                            TestVariantBuilder,
+                            TestVariant>,
+                    com.android.build.api.extension.TestAndroidComponentsExtension {}
+
+    @SuppressWarnings("deprecation")
+    public abstract static class TestAndroidComponentsExtensionImplCompat
+            extends TestAndroidComponentsExtensionImpl
+            implements TestAndroidComponentsExtensionCompat {
+
+        public TestAndroidComponentsExtensionImplCompat(
+                @NonNull DslServices dslServices,
+                @NonNull SdkComponents sdkComponents,
+                @NonNull
+                        VariantApiOperationsRegistrar<
+                                        com.android.build.api.dsl.TestExtension,
+                                        TestVariantBuilder,
+                                        com.android.build.api.variant.TestVariant>
+                                variantApiOperations,
+                @NonNull TestExtension libraryExtension) {
+            super(dslServices, sdkComponents, variantApiOperations, libraryExtension);
+        }
+    }
+
     @NonNull
     @Override
     protected TestAndroidComponentsExtension createComponentExtension(
@@ -148,9 +184,9 @@ public class TestPlugin
 
         return project.getExtensions()
                 .create(
-                        TestAndroidComponentsExtension.class,
+                        TestAndroidComponentsExtensionCompat.class,
                         "androidComponents",
-                        TestAndroidComponentsExtensionImpl.class,
+                        TestAndroidComponentsExtensionImplCompat.class,
                         dslServices,
                         sdkComponents,
                         variantApiOperationsRegistrar,

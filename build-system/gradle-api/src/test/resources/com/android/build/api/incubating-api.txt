@@ -764,23 +764,6 @@ com.android.build.api.dsl.VectorDrawables.generatedDensities: void (java.lang.St
 com.android.build.api.dsl.VectorDrawables.getGeneratedDensities: java.util.Set<java.lang.String> ()
 com.android.build.api.dsl.VectorDrawables.getUseSupportLibrary: java.lang.Boolean ()
 com.android.build.api.dsl.VectorDrawables.setUseSupportLibrary: void (java.lang.Boolean)
-com.android.build.api.extension.DslExtension
-com.android.build.api.extension.DslExtension$Builder
-com.android.build.api.extension.DslExtension$Builder.<init>: com.android.build.api.extension.DslExtension$Builder (java.lang.String)
-com.android.build.api.extension.DslExtension$Builder.build: com.android.build.api.extension.DslExtension ()
-com.android.build.api.extension.DslExtension$Builder.extendBuildTypeWith: com.android.build.api.extension.DslExtension$Builder (java.lang.Class<?>)
-com.android.build.api.extension.DslExtension$Builder.extendProductFlavorWith: com.android.build.api.extension.DslExtension$Builder (java.lang.Class<?>)
-com.android.build.api.extension.DslExtension$Builder.extendProjectWith: com.android.build.api.extension.DslExtension$Builder (java.lang.Class<?>)
-com.android.build.api.extension.DslExtension.<init>: com.android.build.api.extension.DslExtension (java.lang.String, java.lang.Class, java.lang.Class, java.lang.Class, kotlin.jvm.internal.DefaultConstructorMarker)
-com.android.build.api.extension.DslExtension.getBuildTypeExtensionType: java.lang.Class<?> ()
-com.android.build.api.extension.DslExtension.getDslName: java.lang.String ()
-com.android.build.api.extension.DslExtension.getProductFlavorExtensionType: java.lang.Class<?> ()
-com.android.build.api.extension.DslExtension.getProjectExtensionType: java.lang.Class<?> ()
-com.android.build.api.extension.VariantExtensionConfig
-com.android.build.api.extension.VariantExtensionConfig.buildTypeExtension: T (java.lang.Class<T>)
-com.android.build.api.extension.VariantExtensionConfig.getVariant: VariantT ()
-com.android.build.api.extension.VariantExtensionConfig.productFlavorsExtensions: java.util.List<T> (java.lang.Class<T>)
-com.android.build.api.extension.VariantExtensionConfig.projectExtension: T (java.lang.Class<T>)
 com.android.build.api.instrumentation.AsmClassVisitorFactory implements java.io.Serializable
 com.android.build.api.instrumentation.AsmClassVisitorFactory.createClassVisitor: org.objectweb.asm.ClassVisitor (com.android.build.api.instrumentation.ClassContext, org.objectweb.asm.ClassVisitor)
 com.android.build.api.instrumentation.AsmClassVisitorFactory.getInstrumentationContext: com.android.build.api.instrumentation.InstrumentationContext ()
@@ -806,4 +789,21 @@ com.android.build.api.instrumentation.InstrumentationScope extends java.lang.Enu
 com.android.build.api.instrumentation.InstrumentationScope.valueOf: com.android.build.api.instrumentation.InstrumentationScope (java.lang.String)
 com.android.build.api.instrumentation.InstrumentationScope.values: com.android.build.api.instrumentation.InstrumentationScope[] ()
 com.android.build.api.transform.Transform.applyToVariant: boolean (com.android.build.api.variant.VariantInfo)
+com.android.build.api.variant.DslExtension
+com.android.build.api.variant.DslExtension$Builder
+com.android.build.api.variant.DslExtension$Builder.<init>: com.android.build.api.variant.DslExtension$Builder (java.lang.String)
+com.android.build.api.variant.DslExtension$Builder.build: com.android.build.api.variant.DslExtension ()
+com.android.build.api.variant.DslExtension$Builder.extendBuildTypeWith: com.android.build.api.variant.DslExtension$Builder (java.lang.Class<?>)
+com.android.build.api.variant.DslExtension$Builder.extendProductFlavorWith: com.android.build.api.variant.DslExtension$Builder (java.lang.Class<?>)
+com.android.build.api.variant.DslExtension$Builder.extendProjectWith: com.android.build.api.variant.DslExtension$Builder (java.lang.Class<?>)
+com.android.build.api.variant.DslExtension.<init>: com.android.build.api.variant.DslExtension (java.lang.String, java.lang.Class, java.lang.Class, java.lang.Class, kotlin.jvm.internal.DefaultConstructorMarker)
+com.android.build.api.variant.DslExtension.getBuildTypeExtensionType: java.lang.Class<?> ()
+com.android.build.api.variant.DslExtension.getDslName: java.lang.String ()
+com.android.build.api.variant.DslExtension.getProductFlavorExtensionType: java.lang.Class<?> ()
+com.android.build.api.variant.DslExtension.getProjectExtensionType: java.lang.Class<?> ()
 com.android.build.api.variant.Variant.getExperimentalProperties: org.gradle.api.provider.MapProperty<java.lang.String, java.lang.Object> ()
+com.android.build.api.variant.VariantExtensionConfig
+com.android.build.api.variant.VariantExtensionConfig.buildTypeExtension: T (java.lang.Class<T>)
+com.android.build.api.variant.VariantExtensionConfig.getVariant: VariantT ()
+com.android.build.api.variant.VariantExtensionConfig.productFlavorsExtensions: java.util.List<T> (java.lang.Class<T>)
+com.android.build.api.variant.VariantExtensionConfig.projectExtension: T (java.lang.Class<T>)

@@ -14,14 +14,15 @@
  * limitations under the License.
  */
 
-package com.android.build.api.extension
+package com.android.build.api.variant
 
-@Deprecated(
-    message= "Use the com.android.build.api.variant package",
-    replaceWith = ReplaceWith(
-        "DynamicFeatureAndroidComponentsExtension",
-        "com.android.build.api.variant.DynamicFeatureAndroidComponentsExtension"),
-    level = DeprecationLevel.WARNING
-)
+import com.android.build.api.dsl.DynamicFeatureExtension
+
+/**
+ * Extension for Dynamic Feature module variant.
+ *
+ * A dynamic feature module is created when a build script is applying the
+ * 'com.android.dynamic-feature' plugin.
+ */
 interface DynamicFeatureAndroidComponentsExtension:
-    com.android.build.api.variant.DynamicFeatureAndroidComponentsExtension
+    AndroidComponentsExtension<DynamicFeatureExtension, DynamicFeatureVariantBuilder, DynamicFeatureVariant>

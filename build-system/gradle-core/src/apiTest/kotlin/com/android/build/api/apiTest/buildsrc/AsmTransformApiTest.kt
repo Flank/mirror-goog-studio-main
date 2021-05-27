@@ -19,6 +19,8 @@ package com.android.build.api.apiTest.buildsrc
 import com.google.common.truth.Truth
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 import kotlin.test.assertNotNull
 
 class AsmTransformApiTest: BuildSrcScriptApiTest() {
@@ -31,7 +33,7 @@ class AsmTransformApiTest: BuildSrcScriptApiTest() {
                     "src/main/kotlin/ExamplePlugin.kt",
                     // language=kotlin
                     """
-                import com.android.build.api.extension.AndroidComponentsExtension
+                import com.android.build.api.variant.AndroidComponentsExtension
                 import com.android.build.api.instrumentation.AsmClassVisitorFactory
                 import com.android.build.api.instrumentation.ClassContext
                 import com.android.build.api.instrumentation.ClassData

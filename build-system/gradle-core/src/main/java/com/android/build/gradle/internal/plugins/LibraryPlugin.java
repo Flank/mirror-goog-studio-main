@@ -20,9 +20,12 @@ import com.android.annotations.NonNull;
 import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.component.impl.TestFixturesImpl;
 import com.android.build.api.dsl.SdkComponents;
-import com.android.build.api.extension.LibraryAndroidComponentsExtension;
+import com.android.build.api.extension.AndroidComponentsExtension;
 import com.android.build.api.extension.impl.LibraryAndroidComponentsExtensionImpl;
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar;
+import com.android.build.api.variant.LibraryAndroidComponentsExtension;
+import com.android.build.api.variant.LibraryVariant;
+import com.android.build.api.variant.LibraryVariantBuilder;
 import com.android.build.api.variant.impl.LibraryVariantBuilderImpl;
 import com.android.build.api.variant.impl.LibraryVariantImpl;
 import com.android.build.gradle.BaseExtension;
@@ -54,6 +57,7 @@ import org.gradle.api.component.SoftwareComponentFactory;
 import org.gradle.api.reflect.TypeOf;
 import org.gradle.build.event.BuildEventsListenerRegistry;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
+import org.jetbrains.annotations.NotNull;
 
 /** Gradle plugin class for 'library' projects. */
 public class LibraryPlugin
@@ -118,6 +122,39 @@ public class LibraryPlugin
                         libraryExtension);
     }
 
+    /**
+     * Create typed sub interface and implementation for the extension objects. This has several
+     * benefits : 1. do not pollute the user visible definitions with deprecated types. 2. because
+     * it's written in Java, it will still compile once the deprecated extension are moved to
+     * Level.HIDDEN.
+     */
+    @SuppressWarnings("deprecation")
+    public interface LibraryAndroidComponentsExtensionCompat
+            extends AndroidComponentsExtension<
+                            com.android.build.api.dsl.LibraryExtension,
+                            LibraryVariantBuilder,
+                            LibraryVariant>,
+                    com.android.build.api.extension.LibraryAndroidComponentsExtension {}
+
+    @SuppressWarnings("deprecation")
+    public abstract static class LibraryAndroidComponentsExtensionImplCompat
+            extends LibraryAndroidComponentsExtensionImpl
+            implements LibraryAndroidComponentsExtensionCompat {
+
+        public LibraryAndroidComponentsExtensionImplCompat(
+                @NotNull DslServices dslServices,
+                @NotNull SdkComponents sdkComponents,
+                @NotNull
+                        VariantApiOperationsRegistrar<
+                                        com.android.build.api.dsl.LibraryExtension,
+                                        LibraryVariantBuilder,
+                                        LibraryVariant>
+                                variantApiOperations,
+                @NotNull LibraryExtension libraryExtension) {
+            super(dslServices, sdkComponents, variantApiOperations, libraryExtension);
+        }
+    }
+
     @NonNull
     @Override
     protected LibraryAndroidComponentsExtension createComponentExtension(
@@ -139,9 +176,9 @@ public class LibraryPlugin
 
         return project.getExtensions()
                 .create(
-                        LibraryAndroidComponentsExtension.class,
+                        LibraryAndroidComponentsExtensionCompat.class,
                         "androidComponents",
-                        LibraryAndroidComponentsExtensionImpl.class,
+                        LibraryAndroidComponentsExtensionImplCompat.class,
                         dslServices,
                         sdkComponents,
                         variantApiOperationsRegistrar,

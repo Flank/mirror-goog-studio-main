@@ -16,6 +16,7 @@
 
 package com.android.build.api.extension
 
+import com.android.build.api.variant.DslExtension
 import com.google.common.truth.Truth
 import org.junit.Test
 

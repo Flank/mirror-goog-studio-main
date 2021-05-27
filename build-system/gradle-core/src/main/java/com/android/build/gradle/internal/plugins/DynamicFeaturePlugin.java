@@ -22,9 +22,12 @@ import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.component.impl.TestFixturesImpl;
 import com.android.build.api.dsl.CommonExtension;
 import com.android.build.api.dsl.SdkComponents;
-import com.android.build.api.extension.DynamicFeatureAndroidComponentsExtension;
+import com.android.build.api.extension.AndroidComponentsExtension;
 import com.android.build.api.extension.impl.DynamicFeatureAndroidComponentsExtensionImpl;
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar;
+import com.android.build.api.variant.DynamicFeatureAndroidComponentsExtension;
+import com.android.build.api.variant.DynamicFeatureVariant;
+import com.android.build.api.variant.DynamicFeatureVariantBuilder;
 import com.android.build.api.variant.impl.DynamicFeatureVariantBuilderImpl;
 import com.android.build.api.variant.impl.DynamicFeatureVariantImpl;
 import com.android.build.gradle.BaseExtension;
@@ -56,6 +59,7 @@ import org.gradle.api.component.SoftwareComponentFactory;
 import org.gradle.api.reflect.TypeOf;
 import org.gradle.build.event.BuildEventsListenerRegistry;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
+import org.jetbrains.annotations.NotNull;
 
 /** Gradle plugin class for 'application' projects, applied on an optional APK module */
 public class DynamicFeaturePlugin
@@ -144,6 +148,39 @@ public class DynamicFeaturePlugin
                         dynamicFeatureExtension);
     }
 
+    /**
+     * Create typed sub interface and implementation for the extension objects. This has several
+     * benefits : 1. do not pollute the user visible definitions with deprecated types. 2. because
+     * it's written in Java, it will still compile once the deprecated extension are moved to
+     * Level.HIDDEN.
+     */
+    @SuppressWarnings("deprecation")
+    public interface DynamicFeatureAndroidComponentsExtensionCompat
+            extends AndroidComponentsExtension<
+                            com.android.build.api.dsl.DynamicFeatureExtension,
+                            DynamicFeatureVariantBuilder,
+                            DynamicFeatureVariant>,
+                    com.android.build.api.extension.DynamicFeatureAndroidComponentsExtension {}
+
+    @SuppressWarnings("deprecation")
+    public abstract static class DynamicFeatureAndroidComponentsExtensionImplCompat
+            extends DynamicFeatureAndroidComponentsExtensionImpl
+            implements DynamicFeatureAndroidComponentsExtensionCompat {
+
+        public DynamicFeatureAndroidComponentsExtensionImplCompat(
+                @NotNull DslServices dslServices,
+                @NotNull SdkComponents sdkComponents,
+                @NotNull
+                        VariantApiOperationsRegistrar<
+                                        com.android.build.api.dsl.DynamicFeatureExtension,
+                                        DynamicFeatureVariantBuilder,
+                                        DynamicFeatureVariant>
+                                variantApiOperations,
+                @NotNull DynamicFeatureExtension DynamicFeatureExtension) {
+            super(dslServices, sdkComponents, variantApiOperations, DynamicFeatureExtension);
+        }
+    }
+
     @NonNull
     @Override
     protected DynamicFeatureAndroidComponentsExtension createComponentExtension(
@@ -165,9 +202,9 @@ public class DynamicFeaturePlugin
 
         return project.getExtensions()
                 .create(
-                        DynamicFeatureAndroidComponentsExtension.class,
+                        DynamicFeatureAndroidComponentsExtensionCompat.class,
                         "androidComponents",
-                        DynamicFeatureAndroidComponentsExtensionImpl.class,
+                        DynamicFeatureAndroidComponentsExtensionImplCompat.class,
                         dslServices,
                         sdkComponents,
                         variantApiOperationsRegistrar,

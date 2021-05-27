@@ -67,7 +67,7 @@ class AsmTransformApiConfigurationCachingTest {
             """
                 package com.example.buildsrc.plugin;
 
-                import com.android.build.api.extension.AndroidComponentsExtension;
+                import com.android.build.api.variant.AndroidComponentsExtension;
                 import com.android.build.api.instrumentation.AsmClassVisitorFactory;
                 import com.android.build.api.instrumentation.ClassData;
                 import com.android.build.api.instrumentation.ClassContext;
