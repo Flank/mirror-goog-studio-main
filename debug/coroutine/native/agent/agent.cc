@@ -22,13 +22,7 @@ using namespace profiler;
  *     3.1.1 If yes, instrument methods in
  *       kotlin/coroutines/jvm/internal/DebugProbesK to call methods in
  *       kotlinx/coroutines/debug/internal/DebugProbesKt.
- *     3.1.2 If not, check that DebugProbesImpl is loaded or loadable,
- *       and it's not an old version.
- *       DebugProbesKt.bin was added in kotlinx-coroutine-core 1.3.6,
- *       therefore we don't support versions prior 1.3.6.
- *       To distinguish between old and new version of DebugProbesImpl,
- *       the agent checks for the existence of
- *       DebugProbesImpl#startWeakRefCleanerThread
+ *     3.1.2 If not, check that DebugProbesImpl is loaded or loadable.
  *       3.1.2.1 Replace DebugProbesKt class data with
  *         DebugProbesKt from DebugProbesKt.h. DebugProbesKt.h is
  *         created by a genrule, using resource/DebugProbesKt.bindex.
@@ -93,16 +87,6 @@ int installDebugProbes(JNIEnv* jni) {
   }
 
   Log::D(Log::Tag::COROUTINE_DEBUGGER, "DebugProbesImpl found");
-
-  // check that it's the correct version
-  // only newer versions of this class have the method
-  // `startWeakRefCleanerThread`
-  jmethodID startWeakRefCleanerThread =
-      jni->GetMethodID(klass, "startWeakRefCleanerThread", "()V");
-  if (startWeakRefCleanerThread == nullptr) {
-    Log::D(Log::Tag::COROUTINE_DEBUGGER, "DebugProbesImpl is old");
-    return -1;
-  }
 
   // create DebugProbesImpl object by calling constructor
   jmethodID constructor = jni->GetMethodID(klass, "<init>", "()V");
