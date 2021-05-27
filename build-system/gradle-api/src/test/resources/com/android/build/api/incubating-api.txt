@@ -160,6 +160,7 @@ com.android.build.api.dsl.BaseFlavor.getTestInstrumentationRunner: java.lang.Str
 com.android.build.api.dsl.BaseFlavor.getTestInstrumentationRunnerArguments: java.util.Map<java.lang.String, java.lang.String> ()
 com.android.build.api.dsl.BaseFlavor.getVectorDrawables: com.android.build.api.dsl.VectorDrawables ()
 com.android.build.api.dsl.BaseFlavor.getWearAppUnbundled: java.lang.Boolean ()
+com.android.build.api.dsl.BaseFlavor.initWith: void (com.android.build.api.dsl.BaseFlavor)
 com.android.build.api.dsl.BaseFlavor.minSdkVersion: void (int)
 com.android.build.api.dsl.BaseFlavor.minSdkVersion: void (java.lang.String)
 com.android.build.api.dsl.BaseFlavor.missingDimensionStrategy: void (java.lang.String, java.lang.String)

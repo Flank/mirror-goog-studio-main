@@ -432,4 +432,21 @@ interface BaseFlavor : VariantDimension {
      */
     @Incubating
     fun missingDimensionStrategy(dimension: String, requestedValues: List<String>)
+
+    /**
+     * Copies all properties from the given flavor.
+     *
+     * It can be used like this:
+     *
+     * ```
+     * android.productFlavors {
+     *     paid {
+     *         initWith free
+     *         // customize...
+     *     }
+     * }
+     * ```
+     */
+    @Incubating
+    fun initWith(that: BaseFlavor)
 }
