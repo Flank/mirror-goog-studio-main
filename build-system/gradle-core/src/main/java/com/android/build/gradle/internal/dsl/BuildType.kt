@@ -49,7 +49,8 @@ abstract class BuildType @Inject constructor(
     ApplicationBuildType,
     LibraryBuildType,
     DynamicFeatureBuildType,
-    TestBuildType {
+    TestBuildType,
+    InternalBuildType {
 
     /**
      * Name of this build type.
@@ -578,6 +579,13 @@ abstract class BuildType @Inject constructor(
         }
     }
 
+    override fun initWith(that: com.android.build.api.dsl.BuildType) {
+        if (that !is BuildType) {
+            throw RuntimeException("Unexpected implementation type")
+        }
+        initWith(that as com.android.builder.model.BuildType)
+    }
+
     override fun initWith(that: com.android.builder.model.BuildType): BuildType {
         // we need to avoid doing this because of Property objects that cannot
         // be set from themselves
@@ -596,6 +604,11 @@ abstract class BuildType @Inject constructor(
                 that.dslChecksEnabled = true
             }
         }
+    }
+
+    /** Internal implementation detail, See comment on [InternalBuildType] */
+    fun initWith(that: InternalBuildType) {
+         initWith(that as com.android.builder.model.BuildType)
     }
 
     companion object {
