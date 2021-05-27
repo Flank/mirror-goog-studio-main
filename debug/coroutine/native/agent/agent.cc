@@ -28,8 +28,13 @@ using namespace profiler;
  *         created by a genrule, using resource/DebugProbesKt.bindex.
  *         resource/DebugProbesKt.bindex is a dexed version
  *         of DebugProbesKt.bin from kotlinx-coroutines-core.
- *   3.2 Call `install` on DebugProbesImpl.
- *   3.3 Unregister ClassFileLoadHook.
+ *   3.2 Set AgentPremain#isInstalledStatically to true. This tells
+ *       the coroutine lib that DebugProbesKt should not be replaced
+ *       lazily when DebugProbesImpl#install is called.
+ *       The lazy replacement uses ByteBuddy and Java instrumentation
+ *       apis, that are not supported on Android.
+ *   3.3 Call `install` on DebugProbesImpl.
+ *   3.4 Unregister ClassFileLoadHook.
  */
 
 // TODO(b/182023904): remove all calls to LOG:D
@@ -200,6 +205,62 @@ InstrumentedClass instrumentClass(jvmtiEnv* jvmti, std::string class_name,
   return instrumentedClass;
 }
 
+/**
+ * Try to set kotlinx.coroutines.debug.AgentPremain#isInstalled statically to
+ * true.
+ */
+bool setAgentPremainInstalledStatically(JNIEnv* jni) {
+  jclass klass_agentPremain =
+      jni->FindClass("kotlinx/coroutines/debug/AgentPremain");
+  if (klass_agentPremain == nullptr) {
+    Log::D(Log::Tag::COROUTINE_DEBUGGER, "AgentPremain not found.");
+    return false;
+  }
+
+  jfieldID instance_filedId =
+      jni->GetStaticFieldID(klass_agentPremain, "INSTANCE",
+                            "Lkotlinx/coroutines/debug/AgentPremain;");
+  if (instance_filedId == nullptr) {
+    Log::D(Log::Tag::COROUTINE_DEBUGGER, "AgentPremain#INSTANCE not found.");
+    return false;
+  }
+
+  jobject obj_agentPremain =
+      jni->GetStaticObjectField(klass_agentPremain, instance_filedId);
+  if (obj_agentPremain == nullptr) {
+    Log::D(Log::Tag::COROUTINE_DEBUGGER,
+           "Failed to retrieve AgentPremain#INSTANCE.");
+    return false;
+  }
+
+  jmethodID mid_setIsInstalledStatically =
+      jni->GetMethodID(klass_agentPremain, "setInstalledStatically", "(Z)V");
+  if (mid_setIsInstalledStatically == nullptr) {
+    Log::D(Log::Tag::COROUTINE_DEBUGGER,
+           "AgentPremain#setInstalledStatically(Z)V not found.");
+    return false;
+  }
+
+  jni->CallVoidMethod(obj_agentPremain, mid_setIsInstalledStatically, true);
+
+  if (jni->ExceptionOccurred()) {
+    Log::D(Log::Tag::COROUTINE_DEBUGGER,
+           "AgentPremain#setInstalledStatically(Z)V threw an exception.");
+    std::unique_ptr<jniutils::StackTrace> stackTrace =
+        jniutils::getExceptionStackTrace(jni);
+    if (stackTrace != nullptr) {
+      std::string stringStackTrace =
+          jniutils::stackTraceToString(move(stackTrace));
+      Log::D(Log::Tag::COROUTINE_DEBUGGER, "%s", stringStackTrace.c_str());
+    }
+    return false;
+  }
+
+  Log::D(Log::Tag::COROUTINE_DEBUGGER,
+         "AgentPremain#isInstalledStatically set to true.");
+  return true;
+}
+
 static void JNICALL
 ClassFileLoadHook(jvmtiEnv* jvmti, JNIEnv* jni, jclass class_being_redefined,
                   jobject loader, const char* name, jobject protection_domain,
@@ -208,6 +269,14 @@ ClassFileLoadHook(jvmtiEnv* jvmti, JNIEnv* jni, jclass class_being_redefined,
   // transform DebugProbesKt
   std::string class_name(name);
   if (class_name != "kotlin/coroutines/jvm/internal/DebugProbesKt") {
+    return;
+  }
+
+  // set AgentPremain#isInstalledStatically to true
+  bool setSuccessful = setAgentPremainInstalledStatically(jni);
+  if (setSuccessful) {
+    SetEventNotification(jvmti, JVMTI_DISABLE,
+                         JVMTI_EVENT_CLASS_FILE_LOAD_HOOK);
     return;
   }
 
