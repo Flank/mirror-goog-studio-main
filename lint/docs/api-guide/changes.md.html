@@ -101,4 +101,9 @@ Guide.
 * For quickfixes, the `independent` property had inverted logic;
   this has now been reversed to follow the meaning of the name.
 
+* The location range returned when looking up the location for a call
+  will now include arguments outside of the call range itself. This is
+  important when the code is using Kotlin's assignment syntax for
+  calling methods as if they are properties.
+
 <!-- Markdeep: --><style class="fallback">body{visibility:hidden;white-space:pre;font-family:monospace}</style><script src="markdeep.min.js" charset="utf-8"></script><script src="https://morgan3d.github.io/markdeep/latest/markdeep.min.js" charset="utf-8"></script><script>window.alreadyProcessedMarkdeep||(document.body.style.visibility="visible")</script>
