@@ -38,12 +38,22 @@ final class ConnectionHandler implements Runnable {
 
     // The ADB protocol allows certain commands to address a single existing device on a/any
     // transport. The following are commands that don't rely on wildcards on a transport level.
-    private static final Set<String> NON_WILDCARD_TRANSPORT_DEVICE_COMMANDS = Collections
-            .unmodifiableSet(new HashSet<>(Arrays.asList(
-                    "version", "kill", "devices", "devices-l", "track-devices", "emulator",
-                    "transport", "transport-usb", "transport-local", "transport-any",
-                    "host-features"
-            )));
+    private static final Set<String> NON_WILDCARD_TRANSPORT_DEVICE_COMMANDS =
+            Collections.unmodifiableSet(
+                    new HashSet<>(
+                            Arrays.asList(
+                                    "version",
+                                    "kill",
+                                    "devices",
+                                    "devices-l",
+                                    "track-devices",
+                                    "emulator",
+                                    "transport",
+                                    "transport-usb",
+                                    "transport-local",
+                                    "transport-any",
+                                    "host-features",
+                                    "mdns")));
 
     @NonNull
     private final FakeAdbServer mServer;
