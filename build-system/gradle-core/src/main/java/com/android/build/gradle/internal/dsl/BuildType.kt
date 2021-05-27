@@ -191,6 +191,10 @@ abstract class BuildType @Inject constructor(
         this.signingConfig = signingConfig
     }
 
+    fun setSigningConfig(signingConfig: InternalSigningConfig?) {
+        this.signingConfig = signingConfig
+    }
+
     fun setSigningConfig(signingConfig: Any?) {
         this.signingConfig = signingConfig as SigningConfig?
     }
