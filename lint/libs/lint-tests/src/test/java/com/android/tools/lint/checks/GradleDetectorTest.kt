@@ -450,6 +450,8 @@ class GradleDetectorTest : AbstractCheckTest() {
                     "    implementation \"androidx.work:work-rxjava3:2.5.+\" // expect 2.6.0\n" +
                     // Also update to 2.6, not 2.7, from older stable releases
                     "    implementation \"androidx.work:work-runtime:2.5.0-alpha05\" // expect 2.6.0-alpha06\n" +
+                    // Don't update from a stable version
+                    "    implementation \"androidx.work:work-runtime:2.5.0\" // No suggestion\n" +
                     "}\n"
             )
         )
@@ -470,7 +472,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                 <?xml version='1.0' encoding='UTF-8'?>
                 <androidx.work>
                   <work-runtime versions="2.7.0-alpha06,2.6.0-alpha06"/>
-                  <work-runtime-ktx versions="2.7.0-alpha05,2.6.0-alpha05"/>
+                  <work-runtime-ktx versions="2.5.0,2.7.0-alpha05,2.6.0-alpha05"/>
                   <work-rxjava2 versions="2.7.0,2.6.0-alpha06"/>
                   <work-rxjava3 versions="2.7.0-alpha06"/>
                   <work-gcm versions="2.7.0-alpha05"/>
