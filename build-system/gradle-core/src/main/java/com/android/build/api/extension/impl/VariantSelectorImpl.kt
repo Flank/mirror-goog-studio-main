@@ -16,7 +16,7 @@
 
 package com.android.build.api.extension.impl
 
-import com.android.build.api.component.ComponentIdentity
+import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.VariantSelector
 import java.util.regex.Pattern
 

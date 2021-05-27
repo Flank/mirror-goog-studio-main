@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-7eb403282cc8dd578b255e25b027ebf7dea9759f1b1a051e7b9ec36d2661b6a5
+497669fc0918a2ae9555a1919433e04998263e76d9ac7b29adbb986a1a1458da
 -------------------------------------------------------------------------
 com.android.build.api.AndroidPluginVersion implements java.lang.Comparable
 com.android.build.api.AndroidPluginVersion.<init>: com.android.build.api.AndroidPluginVersion (int, int)
@@ -90,21 +90,10 @@ com.android.build.api.artifact.TaskBasedOperation.wiredWithFiles: com.android.bu
 com.android.build.api.attributes.BuildTypeAttr implements org.gradle.api.Named
 com.android.build.api.attributes.BuildTypeAttr$Companion
 com.android.build.api.attributes.ProductFlavorAttr implements org.gradle.api.Named
-com.android.build.api.component.Component implements com.android.build.api.component.ComponentIdentity
-com.android.build.api.component.Component.getArtifacts: com.android.build.api.artifact.Artifacts ()
-com.android.build.api.component.Component.setAsmFramesComputationMode: void (com.android.build.api.instrumentation.FramesComputationMode)
-com.android.build.api.component.Component.transformClassesWith: void (java.lang.Class<? extends com.android.build.api.instrumentation.AsmClassVisitorFactory<ParamT>>, com.android.build.api.instrumentation.InstrumentationScope, kotlin.jvm.functions.Function1<? super ParamT, kotlin.Unit>)
-com.android.build.api.component.ComponentBuilder implements com.android.build.api.component.ComponentIdentity
-com.android.build.api.component.ComponentBuilder.getEnable: boolean ()
-com.android.build.api.component.ComponentBuilder.getEnabled: boolean ()
-com.android.build.api.component.ComponentBuilder.setEnable: void (boolean)
-com.android.build.api.component.ComponentBuilder.setEnabled: void (boolean)
-com.android.build.api.component.ComponentIdentity
-com.android.build.api.component.ComponentIdentity.getBuildType: java.lang.String ()
-com.android.build.api.component.ComponentIdentity.getFlavorName: java.lang.String ()
-com.android.build.api.component.ComponentIdentity.getName: java.lang.String ()
-com.android.build.api.component.ComponentIdentity.getProductFlavors: java.util.List<kotlin.Pair<java.lang.String, java.lang.String>> ()
-com.android.build.api.component.TestComponent implements com.android.build.api.component.Component
+com.android.build.api.component.Component implements com.android.build.api.variant.Component
+com.android.build.api.component.ComponentBuilder implements com.android.build.api.variant.ComponentBuilder
+com.android.build.api.component.ComponentIdentity implements com.android.build.api.variant.ComponentIdentity
+com.android.build.api.component.TestComponent implements com.android.build.api.component.Component, com.android.build.api.variant.TestComponent
 com.android.build.api.component.TestFixtures implements com.android.build.api.variant.GeneratesAar, com.android.build.api.variant.HasAndroidResources, com.android.build.api.component.Component
 com.android.build.api.dsl.AarMetadata
 com.android.build.api.dsl.AarMetadata.getMinCompileSdk: java.lang.Integer ()
@@ -336,6 +325,18 @@ com.android.build.api.variant.BuiltArtifacts.save: void (org.gradle.api.file.Dir
 com.android.build.api.variant.BuiltArtifactsLoader
 com.android.build.api.variant.BuiltArtifactsLoader.load: com.android.build.api.variant.BuiltArtifacts (org.gradle.api.file.Directory)
 com.android.build.api.variant.BuiltArtifactsLoader.load: com.android.build.api.variant.BuiltArtifacts (org.gradle.api.file.FileCollection)
+com.android.build.api.variant.Component implements com.android.build.api.variant.ComponentIdentity
+com.android.build.api.variant.Component.getArtifacts: com.android.build.api.artifact.Artifacts ()
+com.android.build.api.variant.Component.setAsmFramesComputationMode: void (com.android.build.api.instrumentation.FramesComputationMode)
+com.android.build.api.variant.Component.transformClassesWith: void (java.lang.Class<? extends com.android.build.api.instrumentation.AsmClassVisitorFactory<ParamT>>, com.android.build.api.instrumentation.InstrumentationScope, kotlin.jvm.functions.Function1<? super ParamT, kotlin.Unit>)
+com.android.build.api.variant.ComponentBuilder implements com.android.build.api.variant.ComponentIdentity
+com.android.build.api.variant.ComponentBuilder.getEnabled: boolean ()
+com.android.build.api.variant.ComponentBuilder.setEnabled: void (boolean)
+com.android.build.api.variant.ComponentIdentity
+com.android.build.api.variant.ComponentIdentity.getBuildType: java.lang.String ()
+com.android.build.api.variant.ComponentIdentity.getFlavorName: java.lang.String ()
+com.android.build.api.variant.ComponentIdentity.getName: java.lang.String ()
+com.android.build.api.variant.ComponentIdentity.getProductFlavors: java.util.List<kotlin.Pair<java.lang.String, java.lang.String>> ()
 com.android.build.api.variant.DependenciesInfo
 com.android.build.api.variant.DependenciesInfo.getIncludedInApk: boolean ()
 com.android.build.api.variant.DependenciesInfo.getIncludedInBundle: boolean ()
@@ -420,6 +421,7 @@ com.android.build.api.variant.SigningConfig.getEnableV2Signing: org.gradle.api.p
 com.android.build.api.variant.SigningConfig.getEnableV3Signing: org.gradle.api.provider.Property<java.lang.Boolean> ()
 com.android.build.api.variant.SigningConfig.getEnableV4Signing: org.gradle.api.provider.Property<java.lang.Boolean> ()
 com.android.build.api.variant.TestAndroidComponentsExtension implements com.android.build.api.variant.AndroidComponentsExtension
+com.android.build.api.variant.TestComponent implements com.android.build.api.variant.Component
 com.android.build.api.variant.TestVariant implements com.android.build.api.variant.GeneratesTestApk, com.android.build.api.variant.Variant
 com.android.build.api.variant.TestVariant.getApplicationId: org.gradle.api.provider.Property<java.lang.String> ()
 com.android.build.api.variant.TestVariant.getTestedApplicationId: org.gradle.api.provider.Provider<java.lang.String> ()

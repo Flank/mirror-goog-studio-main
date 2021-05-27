@@ -32,7 +32,7 @@ import com.android.build.api.component.ComponentIdentity
 import com.android.build.gradle.internal.profile.AnalyticsConfiguratorService
 import com.android.build.gradle.internal.dependency.VariantDependenciesBuilder
 import com.android.build.api.artifact.impl.ArtifactsImpl
-import com.android.build.api.component.AndroidTest
+import com.android.build.api.variant.AndroidTest
 import com.android.build.api.component.TestFixtures
 import com.android.build.api.component.UnitTest
 import com.android.build.api.component.impl.TestComponentImpl
@@ -796,10 +796,6 @@ class VariantManager<CommonExtensionT: CommonExtension<*, *, *, *>, VariantBuild
                     transformManager,
                     variantPropertiesApiServices,
                     taskCreationServices)
-
-            val userVisibleVariant =
-                    androidTest.createUserVisibleVariantObject<AndroidTest>(
-                            projectServices, variantApiOperationsRegistrar, apiAccessStats)
             androidTest
         } else {
             // this is UNIT_TEST
@@ -817,10 +813,6 @@ class VariantManager<CommonExtensionT: CommonExtension<*, *, *, *>, VariantBuild
                     transformManager,
                     variantPropertiesApiServices,
                     taskCreationServices)
-
-            val userVisibleVariant =
-                    unitTest.createUserVisibleVariantObject<UnitTest>(
-                            projectServices, variantApiOperationsRegistrar, apiAccessStats)
             unitTest
         }
 
