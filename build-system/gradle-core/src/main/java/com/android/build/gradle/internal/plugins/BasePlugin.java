@@ -718,11 +718,11 @@ public abstract class BasePlugin<
         }
         hasCreatedTasks = true;
 
-        extension.disableWrite();
-
         variantApiOperations.executeDslFinalizationBlocks(
                 (CommonExtension<?, ?, ?, ?>) extension
         );
+
+        extension.disableWrite();
 
         GradleBuildProject.Builder projectBuilder =
                 configuratorService.getProjectBuilder(project.getPath());
