@@ -166,6 +166,23 @@ interface BuildType : Named, VariantDimension, ExtensionAware {
     @Incubating
     fun postprocessing(action: PostProcessing.() -> Unit)
 
+    /**
+     * Copies all properties from the given build type.
+     *
+     * It can be used like this:
+     *
+     * ```
+     * android.buildTypes {
+     *     customBuildType {
+     *         initWith debug
+     *         // customize...
+     *     }
+     * }
+     * ```
+     */
+    @Incubating
+    fun initWith(that: BuildType)
+
     @Incubating
     @Deprecated("Replaced with property matchingFallbacks")
     fun setMatchingFallbacks(vararg fallbacks: String)
