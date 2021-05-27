@@ -23,6 +23,7 @@ import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.api.DefaultAndroidSourceDirectorySet
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ComponentCreationConfig
+import com.android.build.gradle.internal.component.LibraryCreationConfig
 import com.android.build.gradle.internal.profile.AnalyticsConfiguratorService
 import com.android.build.gradle.internal.services.getBuildService
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
@@ -128,7 +129,7 @@ fun addComposeArgsToKotlinCompile(
     // Add useLiveLiterals as an input
     task.inputs.property("useLiveLiterals", useLiveLiterals)
 
-    val debuggable = if (creationConfig is ApkCreationConfig) {
+    val debuggable = if (creationConfig is ApkCreationConfig || creationConfig is LibraryCreationConfig) {
         creationConfig.debuggable
     } else {
         false
