@@ -151,7 +151,7 @@ tasks.withType<KotlinCompile>().configureEach {
 }
 
 dependencies {
-    implementation("com.android.tools.build:gradle:${agpVersion}")
+    implementation("com.android.tools.build:gradle-api:${agpVersion}")
     implementation(kotlin("stdlib"))
     gradleApi()
 }
