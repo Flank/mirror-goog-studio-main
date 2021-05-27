@@ -1532,4 +1532,88 @@ class TypedefDetectorTest : AbstractCheckTest() {
             """
         )
     }
+
+    fun test73783847() {
+        lint().files(
+            java(
+                """
+                package com.example.android.linttest;
+
+                import android.support.annotation.StringDef;
+
+                import java.lang.annotation.Retention;
+                import java.lang.annotation.RetentionPolicy;
+
+                @Retention(RetentionPolicy.SOURCE)
+                @StringDef(value = {
+                    FragmentNames.HOME
+                })
+                public @interface FragmentName {}
+                """
+            ).indented(),
+            java(
+                """
+                package com.example.android.linttest;
+
+                public class FragmentNames {
+                    public static final String HOME = "HOME";
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package com.example.android.linttest;
+
+                public class FragmentUtils {
+
+                    public static String getSomeTextFromOtherClass() {
+                        return "some text";
+                    }
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package com.example.android.linttest;
+
+                import android.support.v7.app.AppCompatActivity;
+                import android.os.Bundle;
+                import android.widget.Toast;
+
+                public class MainActivity extends AppCompatActivity {
+
+                    @Override
+                    protected void onResume() {
+                        super.onResume();
+
+                        toastFragmentNameAndText(FragmentNames.HOME, getSomeTextFromThisClass()); // OK
+                        toastFragmentNameAndText(FragmentNames.HOME, FragmentUtils.getSomeTextFromOtherClass()); // OK
+                        toastFragmentNameAndText(getSomeTextFromThisClass(), FragmentNames.HOME); // ERROR
+                        toastFragmentNameAndText(FragmentUtils.getSomeTextFromOtherClass(), FragmentNames.HOME); // ERROR
+                    }
+
+                    private void toastFragmentNameAndText(@FragmentName String fragmentTag, String text) {
+                        Toast.makeText(this, fragmentTag, Toast.LENGTH_LONG).show();
+                        Toast.makeText(this, text, Toast.LENGTH_LONG).show();
+                    }
+
+                    public static String getSomeTextFromThisClass() {
+                        return "some text";
+                    }
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/com/example/android/linttest/MainActivity.java:15: Error: Must be one of: FragmentNames.HOME [WrongConstant]
+                    toastFragmentNameAndText(getSomeTextFromThisClass(), FragmentNames.HOME); // ERROR
+                                             ~~~~~~~~~~~~~~~~~~~~~~~~~~
+            src/com/example/android/linttest/MainActivity.java:16: Error: Must be one of: FragmentNames.HOME [WrongConstant]
+                    toastFragmentNameAndText(FragmentUtils.getSomeTextFromOtherClass(), FragmentNames.HOME); // ERROR
+                                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            2 errors, 0 warnings
+            """
+        )
+    }
 }
