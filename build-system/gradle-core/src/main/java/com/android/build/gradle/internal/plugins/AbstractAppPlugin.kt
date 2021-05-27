@@ -17,7 +17,7 @@ package com.android.build.gradle.internal.plugins
 
 import com.android.AndroidProjectTypes
 import com.android.build.api.dsl.CommonExtension
-import com.android.build.api.extension.AndroidComponentsExtension
+import com.android.build.api.variant.AndroidComponentsExtension
 import com.android.build.api.variant.impl.VariantBuilderImpl
 import com.android.build.api.variant.impl.VariantImpl
 import com.google.wireless.android.sdk.stats.GradleBuildProject

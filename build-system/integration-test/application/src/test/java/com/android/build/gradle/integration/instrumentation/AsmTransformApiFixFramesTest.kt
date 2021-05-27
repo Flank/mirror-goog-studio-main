@@ -18,17 +18,28 @@ package com.android.build.gradle.integration.instrumentation
 
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.google.common.truth.Truth.assertThat
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 
 /**
  * Tests frames will be fixed when setting the frames computation mode to something other than to
  * copy frames.
  */
-class AsmTransformApiFixFramesTest {
+@RunWith(FilterableParameterized::class)
+class AsmTransformApiFixFramesTest(val packageName: String) {
+
+    companion object {
+
+        @Parameterized.Parameters(name = "variant_api_package_{0}")
+        @JvmStatic
+        fun parameters() = listOf("com.android.build.api.variant", "com.android.build.api.extension")
+    }
 
     @get:Rule
     val project = GradleTestProject.builder().fromTestProject("asmTransformApi")
@@ -161,6 +172,16 @@ class AsmTransformApiFixFramesTest {
     }
 
     private fun configureVisitor(framesMode: String) {
+        if (packageName != "com.android.build.api.extension") {
+            TestFileUtils.searchAndReplace(
+                project.getSubproject(":buildSrc")
+                    .file("src/main/java/com/example/buildsrc/plugin/InstrumentationPlugin.kt"),
+
+                "import com.android.build.api.extension.AndroidComponentsExtension",
+                "import $packageName.AndroidComponentsExtension"
+            )
+        }
+
         TestFileUtils.searchAndReplace(
                 project.getSubproject(":buildSrc")
                         .file("src/main/java/com/example/buildsrc/plugin/InstrumentationPlugin.kt"),

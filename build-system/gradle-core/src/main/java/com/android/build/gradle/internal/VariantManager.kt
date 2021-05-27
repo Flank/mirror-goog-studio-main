@@ -39,7 +39,7 @@ import com.android.build.api.component.impl.TestComponentImpl
 import com.android.build.api.component.impl.TestFixturesImpl
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.TestedExtension
-import com.android.build.api.extension.VariantExtensionConfig
+import com.android.build.api.variant.VariantExtensionConfig
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.HasAndroidTestBuilder
 import com.android.build.api.variant.HasTestFixturesBuilder

@@ -17,14 +17,12 @@
 package com.android.build.api.extension.impl
 
 import com.android.build.api.AndroidPluginVersion
-import com.android.build.api.component.AndroidTest
-import com.android.build.api.component.UnitTest
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.SdkComponents
-import com.android.build.api.extension.AndroidComponentsExtension
-import com.android.build.api.extension.DslExtension
-import com.android.build.api.extension.VariantExtensionConfig
-import com.android.build.api.extension.VariantSelector
+import com.android.build.api.variant.AndroidComponentsExtension
+import com.android.build.api.variant.DslExtension
+import com.android.build.api.variant.VariantExtensionConfig
+import com.android.build.api.variant.VariantSelector
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
 import com.android.build.api.variant.VariantExtension

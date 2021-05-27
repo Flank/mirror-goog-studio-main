@@ -18,7 +18,7 @@ package com.android.build.api.extension.impl
 
 import com.android.build.api.dsl.LibraryExtension
 import com.android.build.api.dsl.SdkComponents
-import com.android.build.api.extension.LibraryAndroidComponentsExtension
+import com.android.build.api.variant.LibraryAndroidComponentsExtension
 import com.android.build.api.variant.LibraryVariant
 import com.android.build.api.variant.LibraryVariantBuilder
 import com.android.build.gradle.internal.services.DslServices
