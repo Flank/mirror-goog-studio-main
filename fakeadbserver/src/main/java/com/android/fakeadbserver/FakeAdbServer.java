@@ -54,6 +54,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
@@ -181,6 +182,8 @@ public final class FakeAdbServer implements AutoCloseable {
             stop().get();
         } catch (InterruptedException ignored) {
             // Catch InterruptedException as specified by JavaDoc.
+        } catch (RejectedExecutionException ignored) {
+            // The server has already been closed once
         }
     }
 
