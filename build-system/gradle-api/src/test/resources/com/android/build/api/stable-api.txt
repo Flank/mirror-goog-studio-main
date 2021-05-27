@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-32bbf4e05319de4e9d82f0ef096afe9e02c33ad2cf60ab534cda674d5c8708dd
+289cd86c45fe61e6bf8ae884be3bd738ee4c3ebca5026e01ac7f7ac365c53bf7
 -------------------------------------------------------------------------
 com.android.build.api.artifact.Artifact implements java.io.Serializable
 com.android.build.api.artifact.Artifact$Appendable
@@ -72,21 +72,10 @@ com.android.build.api.artifact.TaskBasedOperation.wiredWithFiles: com.android.bu
 com.android.build.api.attributes.BuildTypeAttr implements org.gradle.api.Named
 com.android.build.api.attributes.BuildTypeAttr$Companion
 com.android.build.api.attributes.ProductFlavorAttr implements org.gradle.api.Named
-com.android.build.api.component.Component implements com.android.build.api.component.ComponentIdentity
-com.android.build.api.component.Component.getArtifacts: com.android.build.api.artifact.Artifacts ()
-com.android.build.api.component.Component.setAsmFramesComputationMode: void (com.android.build.api.instrumentation.FramesComputationMode)
-com.android.build.api.component.Component.transformClassesWith: void (java.lang.Class<? extends com.android.build.api.instrumentation.AsmClassVisitorFactory<ParamT>>, com.android.build.api.instrumentation.InstrumentationScope, kotlin.jvm.functions.Function1<? super ParamT, kotlin.Unit>)
-com.android.build.api.component.ComponentBuilder implements com.android.build.api.component.ComponentIdentity
-com.android.build.api.component.ComponentBuilder.getEnable: boolean ()
-com.android.build.api.component.ComponentBuilder.getEnabled: boolean ()
-com.android.build.api.component.ComponentBuilder.setEnable: void (boolean)
-com.android.build.api.component.ComponentBuilder.setEnabled: void (boolean)
-com.android.build.api.component.ComponentIdentity
-com.android.build.api.component.ComponentIdentity.getBuildType: java.lang.String ()
-com.android.build.api.component.ComponentIdentity.getFlavorName: java.lang.String ()
-com.android.build.api.component.ComponentIdentity.getName: java.lang.String ()
-com.android.build.api.component.ComponentIdentity.getProductFlavors: java.util.List<kotlin.Pair<java.lang.String, java.lang.String>> ()
-com.android.build.api.component.TestComponent implements com.android.build.api.component.Component
+com.android.build.api.component.Component implements com.android.build.api.variant.Component
+com.android.build.api.component.ComponentBuilder implements com.android.build.api.variant.ComponentBuilder
+com.android.build.api.component.ComponentIdentity implements com.android.build.api.variant.ComponentIdentity
+com.android.build.api.component.TestComponent implements com.android.build.api.component.Component, com.android.build.api.variant.TestComponent
 com.android.build.api.component.TestFixtures implements com.android.build.api.variant.GeneratesAar, com.android.build.api.variant.HasAndroidResources, com.android.build.api.component.Component
 com.android.build.api.dsl.AndroidResources
 com.android.build.api.dsl.CommonExtension
@@ -230,7 +219,7 @@ com.android.build.api.variant.ApkPackaging.getDex: com.android.build.api.variant
 com.android.build.api.variant.ApkPackaging.getJniLibs: com.android.build.api.variant.JniLibsApkPackaging ()
 com.android.build.api.variant.ApplicationAndroidComponentsExtension implements com.android.build.api.variant.AndroidComponentsExtension
 com.android.build.api.variant.ApplicationVariant implements com.android.build.api.variant.GeneratesApk, com.android.build.api.variant.Variant
-com.android.build.api.variant.ApplicationVariant.getAndroidTest: com.android.build.api.component.AndroidTest ()
+com.android.build.api.variant.ApplicationVariant.getAndroidTest: com.android.build.api.variant.AndroidTest ()
 com.android.build.api.variant.ApplicationVariant.getApplicationId: org.gradle.api.provider.Property<java.lang.String> ()
 com.android.build.api.variant.ApplicationVariant.getDependenciesInfo: com.android.build.api.variant.DependenciesInfo ()
 com.android.build.api.variant.ApplicationVariant.getOutputs: java.util.List<com.android.build.api.variant.VariantOutput> ()
@@ -259,6 +248,18 @@ com.android.build.api.variant.BuiltArtifacts.save: void (org.gradle.api.file.Dir
 com.android.build.api.variant.BuiltArtifactsLoader
 com.android.build.api.variant.BuiltArtifactsLoader.load: com.android.build.api.variant.BuiltArtifacts (org.gradle.api.file.Directory)
 com.android.build.api.variant.BuiltArtifactsLoader.load: com.android.build.api.variant.BuiltArtifacts (org.gradle.api.file.FileCollection)
+com.android.build.api.variant.Component implements com.android.build.api.variant.ComponentIdentity
+com.android.build.api.variant.Component.getArtifacts: com.android.build.api.artifact.Artifacts ()
+com.android.build.api.variant.Component.setAsmFramesComputationMode: void (com.android.build.api.instrumentation.FramesComputationMode)
+com.android.build.api.variant.Component.transformClassesWith: void (java.lang.Class<? extends com.android.build.api.instrumentation.AsmClassVisitorFactory<ParamT>>, com.android.build.api.instrumentation.InstrumentationScope, kotlin.jvm.functions.Function1<? super ParamT, kotlin.Unit>)
+com.android.build.api.variant.ComponentBuilder implements com.android.build.api.variant.ComponentIdentity
+com.android.build.api.variant.ComponentBuilder.getEnabled: boolean ()
+com.android.build.api.variant.ComponentBuilder.setEnabled: void (boolean)
+com.android.build.api.variant.ComponentIdentity
+com.android.build.api.variant.ComponentIdentity.getBuildType: java.lang.String ()
+com.android.build.api.variant.ComponentIdentity.getFlavorName: java.lang.String ()
+com.android.build.api.variant.ComponentIdentity.getName: java.lang.String ()
+com.android.build.api.variant.ComponentIdentity.getProductFlavors: java.util.List<kotlin.Pair<java.lang.String, java.lang.String>> ()
 com.android.build.api.variant.DependenciesInfo
 com.android.build.api.variant.DependenciesInfo.getIncludedInApk: boolean ()
 com.android.build.api.variant.DependenciesInfo.getIncludedInBundle: boolean ()
@@ -271,7 +272,7 @@ com.android.build.api.variant.DexPackagingOptions
 com.android.build.api.variant.DexPackagingOptions.getUseLegacyPackaging: org.gradle.api.provider.Property<java.lang.Boolean> ()
 com.android.build.api.variant.DynamicFeatureAndroidComponentsExtension implements com.android.build.api.variant.AndroidComponentsExtension
 com.android.build.api.variant.DynamicFeatureVariant implements com.android.build.api.variant.Variant, com.android.build.api.variant.GeneratesApk
-com.android.build.api.variant.DynamicFeatureVariant.getAndroidTest: com.android.build.api.component.AndroidTest ()
+com.android.build.api.variant.DynamicFeatureVariant.getAndroidTest: com.android.build.api.variant.AndroidTest ()
 com.android.build.api.variant.DynamicFeatureVariantBuilder implements com.android.build.api.variant.VariantBuilder, com.android.build.api.variant.HasAndroidTestBuilder
 com.android.build.api.variant.ExternalNativeBuild
 com.android.build.api.variant.ExternalNativeBuild.getAbiFilters: org.gradle.api.provider.SetProperty<java.lang.String> ()
@@ -316,7 +317,7 @@ com.android.build.api.variant.JniLibsPackaging.getKeepDebugSymbols: org.gradle.a
 com.android.build.api.variant.JniLibsPackaging.getPickFirsts: org.gradle.api.provider.SetProperty<java.lang.String> ()
 com.android.build.api.variant.LibraryAndroidComponentsExtension implements com.android.build.api.variant.AndroidComponentsExtension
 com.android.build.api.variant.LibraryVariant implements com.android.build.api.variant.Variant, com.android.build.api.variant.GeneratesAar
-com.android.build.api.variant.LibraryVariant.getAndroidTest: com.android.build.api.component.AndroidTest ()
+com.android.build.api.variant.LibraryVariant.getAndroidTest: com.android.build.api.variant.AndroidTest ()
 com.android.build.api.variant.LibraryVariant.getRenderscript: com.android.build.api.variant.Renderscript ()
 com.android.build.api.variant.LibraryVariantBuilder implements com.android.build.api.variant.VariantBuilder, com.android.build.api.variant.HasAndroidTestBuilder
 com.android.build.api.variant.Packaging
@@ -345,6 +346,7 @@ com.android.build.api.variant.SigningConfig.getEnableV2Signing: org.gradle.api.p
 com.android.build.api.variant.SigningConfig.getEnableV3Signing: org.gradle.api.provider.Property<java.lang.Boolean> ()
 com.android.build.api.variant.SigningConfig.getEnableV4Signing: org.gradle.api.provider.Property<java.lang.Boolean> ()
 com.android.build.api.variant.TestAndroidComponentsExtension implements com.android.build.api.variant.AndroidComponentsExtension
+com.android.build.api.variant.TestComponent implements com.android.build.api.variant.Component
 com.android.build.api.variant.TestVariant implements com.android.build.api.variant.GeneratesTestApk, com.android.build.api.variant.Variant
 com.android.build.api.variant.TestVariant.getApplicationId: org.gradle.api.provider.Property<java.lang.String> ()
 com.android.build.api.variant.TestVariant.getTestedApplicationId: org.gradle.api.provider.Provider<java.lang.String> ()

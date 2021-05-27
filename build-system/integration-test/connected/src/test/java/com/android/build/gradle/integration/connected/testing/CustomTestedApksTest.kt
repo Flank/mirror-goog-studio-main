@@ -111,7 +111,7 @@ class CustomTestedApksTest {
 
                 androidComponents {
                    beforeVariants(selector().all()) {
-                        enable = buildType == 'benchmark'
+                        enabled = buildType == 'benchmark'
                     }
                 }
 

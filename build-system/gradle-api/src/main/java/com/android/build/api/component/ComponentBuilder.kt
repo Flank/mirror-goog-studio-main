@@ -16,20 +16,13 @@
 
 package com.android.build.api.component
 
-/**
- * Component object that contains properties that must be set during configuration time as it
- * changes the build flow for the variant.
- */
-interface ComponentBuilder: ComponentIdentity {
-
-    /**
-     * Set to `true` if the variant is active and should be configured, false otherwise.
-     */
-    var enabled: Boolean
-
-    /**
-     * Set to `true` if the variant is active and should be configured, false otherwise.
-     */
-    @Deprecated("Replaced by enable", ReplaceWith("enable"))
-    var enable: Boolean
-}
+@Deprecated(
+    message= "Use the com.android.build.api.variant package",
+    replaceWith = ReplaceWith(
+        "ComponentBuilder",
+        "com.android.build.api.variant.ComponentBuilder"
+    ),
+    level = DeprecationLevel.WARNING
+)
+interface ComponentBuilder:
+    com.android.build.api.variant.ComponentBuilder

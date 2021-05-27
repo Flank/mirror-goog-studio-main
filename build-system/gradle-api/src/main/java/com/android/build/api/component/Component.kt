@@ -16,57 +16,12 @@
 
 package com.android.build.api.component
 
-import com.android.build.api.artifact.Artifacts
-import com.android.build.api.instrumentation.AsmClassVisitorFactory
-import com.android.build.api.instrumentation.FramesComputationMode
-import com.android.build.api.instrumentation.InstrumentationParameters
-import com.android.build.api.instrumentation.InstrumentationScope
-
-interface Component: ComponentIdentity {
-
-    /**
-     * Access to the variant's buildable artifacts for build customization.
-     */
-    val artifacts: Artifacts
-
-    /**
-     * Registers an asm class visitor to instrument the classes defined by the given scope.
-     * An instance of the factory will be instantiated and used to create visitors for each class.
-     *
-     * Example:
-     *
-     * ```
-     *  androidComponentsExtension.onVariants(selector().all(), {
-     *      transformClassesWith(AsmClassVisitorFactoryImpl.class,
-     *                           InstrumentationScope.Project) { params ->
-     *          params.x = "value"
-     *      }
-     *      setAsmFramesComputationMode(COMPUTE_FRAMES_FOR_INSTRUMENTED_METHODS)
-     *  })
-     * ```
-     *
-     * This API is experimental and subject to breaking change and we strongly suggest you don't
-     * publish plugins that depend on it yet.
-     *
-     * @param classVisitorFactoryImplClass the factory class implementing [AsmClassVisitorFactory]
-     * @param scope either instrumenting the classes of the current project or the project and its
-     * dependencies
-     * @param instrumentationParamsConfig the configuration function to be applied to the
-     * instantiated [InstrumentationParameters] object before passed to
-     * [AsmClassVisitorFactory.createClassVisitor].
-     */
-    fun <ParamT : InstrumentationParameters> transformClassesWith(
-        classVisitorFactoryImplClass: Class<out AsmClassVisitorFactory<ParamT>>,
-        scope: InstrumentationScope,
-        instrumentationParamsConfig: (ParamT) -> Unit
-    )
-
-    /**
-     * Sets the frame computation mode that will be applied to the bytecode of the classes
-     * instrumented by ASM visitors registered through [transformClassesWith]. The default mode is
-     * to [copy frames][FramesComputationMode.COPY_FRAMES].
-     *
-     * When setting this multiple times, the mode with the highest enum value will be selected.
-     */
-    fun setAsmFramesComputationMode(mode: FramesComputationMode)
-}
+@Deprecated(
+    message= "Use the com.android.build.api.variant package",
+    replaceWith = ReplaceWith(
+        "Component",
+        "com.android.build.api.variant.Component"
+    ),
+    level = DeprecationLevel.WARNING
+)
+interface Component: com.android.build.api.variant.Component

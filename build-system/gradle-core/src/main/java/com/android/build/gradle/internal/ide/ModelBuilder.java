@@ -28,7 +28,7 @@ import com.android.Version;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.artifact.impl.ArtifactsImpl;
-import com.android.build.api.component.AndroidTest;
+import com.android.build.api.variant.AndroidTest;
 import com.android.build.api.component.impl.ComponentImpl;
 import com.android.build.api.dsl.ApplicationExtension;
 import com.android.build.api.variant.impl.HasAndroidTest;
