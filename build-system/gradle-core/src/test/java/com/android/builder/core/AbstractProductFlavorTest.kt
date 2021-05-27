@@ -15,9 +15,13 @@
  */
 package com.android.builder.core
 
+import com.android.build.gradle.internal.dsl.ProductFlavor
+import com.android.build.gradle.internal.dsl.SigningConfig
+import com.android.build.gradle.internal.services.createDslServices
 import com.android.builder.internal.ClassFieldImpl
 import com.google.common.collect.ImmutableMap
 import junit.framework.TestCase
+import org.gradle.api.plugins.ExtensionContainer
 
 class AbstractProductFlavorTest : TestCase() {
     private lateinit var custom: ProductFlavorImpl
@@ -48,17 +52,26 @@ class AbstractProductFlavorTest : TestCase() {
         custom.addBuildConfigField(ClassFieldImpl("foo", "two", "twoValue"))
         custom.setVersionNameSuffix("custom")
         custom.setApplicationIdSuffix("custom")
+        custom.vectorDrawables.useSupportLibrary = true
+
+        val defaultSigning = SigningConfig("defaultConfig")
+        defaultSigning.storePassword("test")
+        custom.setSigningConfig(defaultSigning)
+        custom.isDefault = true
     }
 
     fun test_initWith() {
-        val flavor: AbstractProductFlavor =
-            ProductFlavorImpl(custom.name)
-        flavor._initWith(custom!!)
+        val flavor = ProductFlavorImpl(custom.name)
+        flavor.initWith(custom)
         assertEquals(custom.toString(), flavor.toString())
     }
 
     private class ProductFlavorImpl(
-        name: String,
-        override val vectorDrawables: DefaultVectorDrawablesOptions = DefaultVectorDrawablesOptions()
-    ) : AbstractProductFlavor(name)
+        name: String
+    ) : ProductFlavor(name, createDslServices()) {
+
+        override fun getExtensions(): ExtensionContainer {
+            TODO("Not yet implemented")
+        }
+    }
 }

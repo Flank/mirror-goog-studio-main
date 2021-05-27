@@ -23,7 +23,6 @@ import com.android.build.api.dsl.TestProductFlavor
 import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.services.DslServices
 import com.android.builder.model.BaseConfig
-import com.android.builder.model.SigningConfig
 import com.google.common.collect.ImmutableList
 import javax.inject.Inject
 import org.gradle.api.provider.Property
@@ -99,6 +98,8 @@ abstract class ProductFlavor @Inject constructor(name: String, dslServices: DslS
         }
         super._initWith(that)
         if (that is ProductFlavor) {
+            isDefault = that.isDefault
+            signingConfig = that.signingConfig
             setMatchingFallbacks(that.matchingFallbacks)
         }
     }

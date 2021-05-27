@@ -291,6 +291,7 @@ com.android.build.gradle.internal.dsl.BaseFlavor.getTargetSdk: java.lang.Integer
 com.android.build.gradle.internal.dsl.BaseFlavor.getTargetSdkPreview: java.lang.String ()
 com.android.build.gradle.internal.dsl.BaseFlavor.getTestProguardFiles: java.util.List<java.io.File> ()
 com.android.build.gradle.internal.dsl.BaseFlavor.getVectorDrawables: com.android.build.api.dsl.VectorDrawables ()
+com.android.build.gradle.internal.dsl.BaseFlavor.initWith: void (com.android.build.api.dsl.BaseFlavor)
 com.android.build.gradle.internal.dsl.BaseFlavor.javaCompileOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.JavaCompileOptions, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.BaseFlavor.maxSdkVersion: void (int)
 com.android.build.gradle.internal.dsl.BaseFlavor.minSdkVersion: void (int)

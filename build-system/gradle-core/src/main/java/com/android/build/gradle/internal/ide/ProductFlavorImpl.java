@@ -22,7 +22,6 @@ import com.android.annotations.concurrency.Immutable;
 import com.android.builder.core.DefaultVectorDrawablesOptions;
 import com.android.builder.model.ApiVersion;
 import com.android.builder.model.ProductFlavor;
-import com.android.builder.model.SigningConfig;
 import com.android.builder.model.VectorDrawablesOptions;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableSet;
@@ -97,7 +96,8 @@ final class ProductFlavorImpl extends BaseConfigImpl implements ProductFlavor, S
                 productFlavor.getTestInstrumentationRunnerArguments());
 
         this.mVectorDrawablesOptions =
-                DefaultVectorDrawablesOptions.copyOf(productFlavor.getVectorDrawables());
+                com.android.build.gradle.internal.dsl.VectorDrawablesOptions.copyOf(
+                        productFlavor.getVectorDrawables());
 
         this.mWearAppUnbundled = productFlavor.getWearAppUnbundled();
     }

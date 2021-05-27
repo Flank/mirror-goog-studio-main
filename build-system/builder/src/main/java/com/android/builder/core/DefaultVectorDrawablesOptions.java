@@ -35,7 +35,11 @@ public class DefaultVectorDrawablesOptions implements VectorDrawablesOptions, Se
     @Nullable
     private Boolean mUseSupportLibrary;
 
+    /**
+     * @deprecated use {@link com.android.build.gradle.internal.dsl.VectorDrawablesOptions.copyOf}
+     */
     @NonNull
+    @Deprecated
     public static DefaultVectorDrawablesOptions copyOf(@NonNull VectorDrawablesOptions original) {
         DefaultVectorDrawablesOptions options = new DefaultVectorDrawablesOptions();
 

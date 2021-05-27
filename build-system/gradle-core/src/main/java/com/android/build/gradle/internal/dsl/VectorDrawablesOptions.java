@@ -27,4 +27,15 @@ public class VectorDrawablesOptions extends DefaultVectorDrawablesOptions
     public void generatedDensities(@NonNull String... densities) {
         setGeneratedDensities(Arrays.asList(densities));
     }
+
+    @NonNull
+    public static VectorDrawablesOptions copyOf(
+            @NonNull com.android.builder.model.VectorDrawablesOptions original) {
+        VectorDrawablesOptions options = new VectorDrawablesOptions();
+
+        options.setGeneratedDensities(original.getGeneratedDensities());
+        options.setUseSupportLibrary(original.getUseSupportLibrary());
+
+        return options;
+    }
 }
