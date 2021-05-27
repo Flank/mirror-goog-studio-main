@@ -902,6 +902,7 @@ com.android.build.gradle.internal.dsl.BaseFlavor.setMinSdkVersion: void (int)
 com.android.build.gradle.internal.dsl.BaseFlavor.setMinSdkVersion: void (java.lang.String)
 com.android.build.gradle.internal.dsl.BaseFlavor.setProguardFiles: void (java.lang.Iterable<?>)
 com.android.build.gradle.internal.dsl.BaseFlavor.setSigningConfig: void (com.android.build.api.dsl.ApkSigningConfig)
+com.android.build.gradle.internal.dsl.BaseFlavor.setSigningConfig: void (com.android.build.gradle.internal.dsl.InternalSigningConfig)
 com.android.build.gradle.internal.dsl.BaseFlavor.setSigningConfig: void (com.android.build.gradle.internal.dsl.SigningConfig)
 com.android.build.gradle.internal.dsl.BaseFlavor.setTargetSdk: void (java.lang.Integer)
 com.android.build.gradle.internal.dsl.BaseFlavor.setTargetSdkPreview: void (java.lang.String)
@@ -1023,6 +1024,7 @@ com.android.build.gradle.internal.dsl.BuildType.setRenderscriptOptimLevel: void 
 com.android.build.gradle.internal.dsl.BuildType.setShrinkResources: void (boolean)
 com.android.build.gradle.internal.dsl.BuildType.setSigningConfig: com.android.builder.model.BuildType (com.android.builder.model.SigningConfig)
 com.android.build.gradle.internal.dsl.BuildType.setSigningConfig: void (com.android.build.api.dsl.ApkSigningConfig)
+com.android.build.gradle.internal.dsl.BuildType.setSigningConfig: void (com.android.build.gradle.internal.dsl.InternalSigningConfig)
 com.android.build.gradle.internal.dsl.BuildType.setSigningConfig: void (com.android.build.gradle.internal.dsl.SigningConfig)
 com.android.build.gradle.internal.dsl.BuildType.setSigningConfig: void (java.lang.Object)
 com.android.build.gradle.internal.dsl.BuildType.setTestCoverageEnabled: void (boolean)
@@ -1388,6 +1390,7 @@ com.android.build.gradle.internal.dsl.InternalDynamicFeatureExtension implements
 com.android.build.gradle.internal.dsl.InternalLibraryExtension implements com.android.build.api.dsl.LibraryExtension, com.android.build.gradle.internal.dsl.InternalCommonExtension
 com.android.build.gradle.internal.dsl.InternalLibraryExtension.getAidlPackagedList: java.util.Collection<java.lang.String> ()
 com.android.build.gradle.internal.dsl.InternalLibraryExtension.setAidlPackagedList: void (java.util.Collection<java.lang.String>)
+com.android.build.gradle.internal.dsl.InternalSigningConfig implements com.android.build.api.dsl.SigningConfig, com.android.build.api.dsl.ApkSigningConfig, org.gradle.api.Named, com.android.builder.model.SigningConfig
 com.android.build.gradle.internal.dsl.InternalTestExtension implements com.android.build.api.dsl.TestExtension, com.android.build.gradle.internal.dsl.InternalCommonExtension
 com.android.build.gradle.internal.dsl.JavaCompileOptions implements com.android.build.gradle.api.JavaCompileOptions, com.android.build.api.dsl.JavaCompileOptions
 com.android.build.gradle.internal.dsl.JavaCompileOptions.<init>: com.android.build.gradle.internal.dsl.JavaCompileOptions (com.android.build.gradle.internal.services.DslServices)
@@ -1626,9 +1629,11 @@ com.android.build.gradle.internal.dsl.ShaderOptions.getGlslcArgs: java.util.List
 com.android.build.gradle.internal.dsl.ShaderOptions.getScopedGlslcArgs: com.google.common.collect.ListMultimap<java.lang.String, java.lang.String> ()
 com.android.build.gradle.internal.dsl.ShaderOptions.glslcArgs: void (java.lang.String[])
 com.android.build.gradle.internal.dsl.ShaderOptions.glslcScopedArgs: void (java.lang.String, java.lang.String[])
-com.android.build.gradle.internal.dsl.SigningConfig extends com.android.builder.signing.DefaultSigningConfig implements java.io.Serializable, org.gradle.api.Named, com.android.build.api.dsl.ApkSigningConfig
+com.android.build.gradle.internal.dsl.SigningConfig extends com.android.builder.signing.DefaultSigningConfig implements java.io.Serializable, org.gradle.api.Named, com.android.build.api.dsl.ApkSigningConfig, com.android.build.gradle.internal.dsl.InternalSigningConfig
 com.android.build.gradle.internal.dsl.SigningConfig.<init>: com.android.build.gradle.internal.dsl.SigningConfig (java.lang.String)
+com.android.build.gradle.internal.dsl.SigningConfig.initWith: com.android.build.gradle.internal.dsl.SigningConfig (com.android.build.gradle.internal.dsl.SigningConfig)
 com.android.build.gradle.internal.dsl.SigningConfig.initWith: com.android.build.gradle.internal.dsl.SigningConfig (com.android.builder.signing.DefaultSigningConfig)
+com.android.build.gradle.internal.dsl.SigningConfig.initWith: void (com.android.build.api.dsl.SigningConfig)
 com.android.build.gradle.internal.dsl.SigningConfig.keyAlias: void (java.lang.String)
 com.android.build.gradle.internal.dsl.SigningConfig.keyPassword: void (java.lang.String)
 com.android.build.gradle.internal.dsl.SigningConfig.storeFile: void (java.io.File)

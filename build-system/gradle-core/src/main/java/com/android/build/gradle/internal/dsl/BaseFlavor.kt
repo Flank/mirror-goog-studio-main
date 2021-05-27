@@ -194,6 +194,10 @@ abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
         this.signingConfig = signingConfig
     }
 
+    fun setSigningConfig(signingConfig: InternalSigningConfig?) {
+        this.signingConfig = signingConfig
+    }
+
     // -- DSL Methods. TODO remove once the instantiator does what I expect it to do.
     override fun buildConfigField(
         type: String,

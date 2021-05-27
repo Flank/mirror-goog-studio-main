@@ -24,7 +24,18 @@ import java.io.Serializable
 import javax.inject.Inject
 
 open class SigningConfig @Inject constructor(name: String) : DefaultSigningConfig(name),
-    Serializable, Named, com.android.build.api.dsl.ApkSigningConfig {
+    Serializable, Named, com.android.build.api.dsl.ApkSigningConfig, InternalSigningConfig {
+
+    override fun initWith(that: com.android.build.api.dsl.SigningConfig) {
+        if (that !is SigningConfig) {
+            throw RuntimeException("Unexpected implementation type")
+        }
+        initWith(that as DefaultSigningConfig)
+    }
+
+    fun initWith(that: SigningConfig): SigningConfig {
+        return initWith(that as DefaultSigningConfig)
+    }
 
     fun initWith(that: DefaultSigningConfig): SigningConfig {
         setStoreFile(that.storeFile)
