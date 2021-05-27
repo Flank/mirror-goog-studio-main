@@ -177,4 +177,21 @@ class AdbHostServicesTest {
             Assert.assertEquals(fakeDevice.transportId.toString(), device.transportId)
         }
     }
+
+    @Test
+    fun testKillServer() {
+        // Prepare
+        val fakeAdb = registerCloseable(FakeAdbServerProvider().buildDefault().start())
+        val host = registerCloseable(TestingAdbLibHost())
+        val channelProvider = fakeAdb.createChannelProvider(host)
+        val hostServices = AdbHostServicesImpl(host, channelProvider, 5_000, TimeUnit.MILLISECONDS)
+
+        // Act
+        runBlocking { hostServices.kill() }
+        exceptionRule.expect(IOException::class.java)
+        runBlocking { hostServices.version() }
+
+        // Assert (should not reach this point)
+        Assert.fail()
+    }
 }
