@@ -90,6 +90,48 @@ class ChromeOsSourceDetectorTest : AbstractCheckTest() {
             .issues(ChromeOsSourceDetector.UNSUPPORTED_LOCKED_ORIENTATION)
             .run()
             .expect(expected)
+            .expectFixDiffs(
+                """
+                Fix for src/test/pkg/MainActivity.java line 15: Set the orientation to SCREEN_ORIENTATION_UNSPECIFIED:
+                @@ -15 +15
+                -         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+                +         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
+                """
+            )
+    }
+
+    fun test188464656() {
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                import android.app.Activity
+                import android.content.pm.ActivityInfo
+
+                class ActivityRule {
+                    val activity = Activity()
+                }
+                fun test(activityRule: ActivityRule) {
+                    activityRule.activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                }
+                """
+            )
+        ).run().expect(
+            """
+            src/test/pkg/ActivityRule.kt:11: Warning: You should not lock orientation of your activities, so that you can support a good user experience for any device or orientation [SourceLockedOrientationActivity]
+                                activityRule.activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            0 errors, 1 warnings
+            """
+        ).expectFixDiffs(
+            """
+            Fix for src/test/pkg/ActivityRule.kt line 11: Set the orientation to SCREEN_ORIENTATION_UNSPECIFIED:
+            @@ -11 +11
+            -                     activityRule.activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+            +                     activityRule.activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+            """
+        )
     }
 
     fun testValidCameraSystemFeature() {

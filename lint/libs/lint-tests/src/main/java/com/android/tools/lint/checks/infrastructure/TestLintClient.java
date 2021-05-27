@@ -1055,7 +1055,9 @@ public class TestLintClient extends LintCliClient {
 
         incident = checkIncidentSerialization(incident);
 
-        checkFix(fix, incident);
+        if (fix != null) {
+            checkFix(context, fix, incident);
+        }
 
         super.report(context, incident, format);
 
@@ -1166,8 +1168,9 @@ public class TestLintClient extends LintCliClient {
     }
 
     /** Validity checks for the quickfix associated with the given incident */
-    private void checkFix(LintFix fix, Incident incident) {
-        if (fix != null && !task.allowExceptions) {
+    private void checkFix(
+            @NonNull Context context, @NonNull LintFix fix, @NonNull Incident incident) {
+        if (!task.allowExceptions) {
             Throwable throwable = LintFix.getThrowable(fix, LintDriver.KEY_THROWABLE);
             if (throwable != null && this.firstThrowable == null) {
                 this.firstThrowable = throwable;
@@ -1234,9 +1237,7 @@ public class TestLintClient extends LintCliClient {
         // Make sure any source files referenced by the quick fixes are loaded
         // for subsequent quickfix verifications (since those run after the
         // test projects have been deleted)
-        if (fix != null) {
-            readFixFiles(incident, fix);
-        }
+        readFixFiles(incident, fix);
     }
 
     private void readFixFiles(Incident incident, LintFix fix) {
