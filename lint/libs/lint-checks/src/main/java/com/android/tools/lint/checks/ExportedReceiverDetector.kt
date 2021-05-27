@@ -5,6 +5,7 @@ import com.android.SdkConstants.ATTR_EXPORTED
 import com.android.SdkConstants.TAG_ACTIVITY
 import com.android.SdkConstants.TAG_ACTIVITY_ALIAS
 import com.android.SdkConstants.TAG_INTENT_FILTER
+import com.android.SdkConstants.TAG_NAV_GRAPH
 import com.android.SdkConstants.TAG_PROVIDER
 import com.android.SdkConstants.TAG_RECEIVER
 import com.android.SdkConstants.TAG_SERVICE
@@ -30,14 +31,17 @@ class ExportedReceiverDetector : Detector(), XmlScanner {
 
     override fun visitElement(context: XmlContext, element: Element) {
         val intentFilter = element.subtag(TAG_INTENT_FILTER)
+        val navGraph = element.subtag(TAG_NAV_GRAPH)
         val exported = element.getAttributeNodeNS(ANDROID_URI, ATTR_EXPORTED)
-        if (intentFilter != null && exported == null) {
+        if ((intentFilter != null || navGraph != null) && exported == null) {
             val fix = LintFix.create().set().todo(ANDROID_URI, ATTR_EXPORTED).build()
             val incident = Incident(
                 ISSUE,
                 element,
                 context.getNameLocation(element),
-                "When using intent filters, please specify `android:exported` as well",
+                "When using ${
+                    if (intentFilter != null) "intent filters" else "navigation graphs"
+                }, please specify `android:exported` as well",
                 fix
             )
             context.report(incident, map())

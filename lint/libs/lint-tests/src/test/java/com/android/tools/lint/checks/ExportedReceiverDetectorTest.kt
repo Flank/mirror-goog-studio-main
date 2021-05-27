@@ -27,20 +27,20 @@ class ExportedReceiverDetectorTest : AbstractCheckTest() {
         lint().files(
             manifest(
                 """
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="test.pkg">
-    <uses-sdk android:minSdkVersion="30"/>
-    <application
-        android:icon="@drawable/ic_launcher"
-        android:label="@string/app_name" >
-        <receiver android:name="com.google.android.c2dm.C2DMBroadcastReceiver">
-          <intent-filter>
-            <action android:name="com.google.android.c2dm.intent.RECEIVE"/>
-            <action android:name="com.google.android.c2dm.intent.REGISTRATION"/>
-        </intent-filter>
-        </receiver>
-    </application>
-</manifest>
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="test.pkg">
+                    <uses-sdk android:minSdkVersion="30"/>
+                    <application
+                        android:icon="@drawable/ic_launcher"
+                        android:label="@string/app_name" >
+                        <receiver android:name="com.google.android.c2dm.C2DMBroadcastReceiver">
+                          <intent-filter>
+                            <action android:name="com.google.android.c2dm.intent.RECEIVE"/>
+                            <action android:name="com.google.android.c2dm.intent.REGISTRATION"/>
+                        </intent-filter>
+                        </receiver>
+                    </application>
+                </manifest>
                 """
             ).indented()
         ).run().expect(
@@ -49,7 +49,7 @@ class ExportedReceiverDetectorTest : AbstractCheckTest() {
                     <receiver android:name="com.google.android.c2dm.C2DMBroadcastReceiver">
                      ~~~~~~~~
             0 errors, 1 warnings
-            """.trimIndent()
+            """
         ).expectFixDiffs(
             """
             Fix for AndroidManifest.xml line 7: Set exported:
@@ -58,7 +58,7 @@ class ExportedReceiverDetectorTest : AbstractCheckTest() {
             +         <receiver
             +             android:name="com.google.android.c2dm.C2DMBroadcastReceiver"
             +             android:exported="[TODO]|" >
-            """.trimIndent()
+            """
         )
     }
 
@@ -67,20 +67,20 @@ class ExportedReceiverDetectorTest : AbstractCheckTest() {
             xml(
                 "AndroidManifest.xml",
                 """
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="test.pkg">
-    <uses-sdk android:minSdkVersion="30"/>
-    <application
-        android:icon="@drawable/ic_launcher"
-        android:label="@string/app_name" >
-        <activity android:name="com.example.MainActivity">
-          <intent-filter>
-            <action android:name="com.google.android.c2dm.intent.RECEIVE"/>
-            <action android:name="com.google.android.c2dm.intent.REGISTRATION"/>
-        </intent-filter>
-        </activity>
-    </application>
-</manifest>
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="test.pkg">
+                    <uses-sdk android:minSdkVersion="30"/>
+                    <application
+                        android:icon="@drawable/ic_launcher"
+                        android:label="@string/app_name" >
+                        <activity android:name="com.example.MainActivity">
+                          <intent-filter>
+                            <action android:name="com.google.android.c2dm.intent.RECEIVE"/>
+                            <action android:name="com.google.android.c2dm.intent.REGISTRATION"/>
+                        </intent-filter>
+                        </activity>
+                    </application>
+                </manifest>
                 """
             ).indented()
         ).run().expect(
@@ -89,7 +89,7 @@ class ExportedReceiverDetectorTest : AbstractCheckTest() {
                     <activity android:name="com.example.MainActivity">
                      ~~~~~~~~
             0 errors, 1 warnings
-            """.trimIndent()
+            """
         ).expectFixDiffs(
             """
             Fix for AndroidManifest.xml line 7: Set exported:
@@ -98,7 +98,7 @@ class ExportedReceiverDetectorTest : AbstractCheckTest() {
             +         <activity
             +             android:name="com.example.MainActivity"
             +             android:exported="[TODO]|" >
-            """.trimIndent()
+            """
         )
     }
 
@@ -107,21 +107,21 @@ class ExportedReceiverDetectorTest : AbstractCheckTest() {
             xml(
                 "AndroidManifest.xml",
                 """
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="test.pkg">
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="test.pkg">
 
-    <uses-sdk android:minSdkVersion="31"/>
-    <application
-        android:icon="@drawable/ic_launcher"
-        android:label="@string/app_name" >
-        <activity android:name="com.example.MainActivity">
-          <intent-filter>
-            <action android:name="com.google.android.c2dm.intent.RECEIVE"/>
-            <action android:name="com.google.android.c2dm.intent.REGISTRATION"/>
-        </intent-filter>
-        </activity>
-    </application>
-</manifest>
+                    <uses-sdk android:minSdkVersion="31"/>
+                    <application
+                        android:icon="@drawable/ic_launcher"
+                        android:label="@string/app_name" >
+                        <activity android:name="com.example.MainActivity">
+                          <intent-filter>
+                            <action android:name="com.google.android.c2dm.intent.RECEIVE"/>
+                            <action android:name="com.google.android.c2dm.intent.REGISTRATION"/>
+                        </intent-filter>
+                        </activity>
+                    </application>
+                </manifest>
                 """
             ).indented()
         ).run().expect(
@@ -130,7 +130,7 @@ class ExportedReceiverDetectorTest : AbstractCheckTest() {
                     <activity android:name="com.example.MainActivity">
                      ~~~~~~~~
             1 errors, 0 warnings
-            """.trimIndent()
+            """
         ).expectFixDiffs(
             """
             Fix for AndroidManifest.xml line 7: Set exported:
@@ -139,7 +139,7 @@ class ExportedReceiverDetectorTest : AbstractCheckTest() {
             +         <activity
             +             android:name="com.example.MainActivity"
             +             android:exported="[TODO]|" >
-            """.trimIndent()
+            """
         )
     }
 
@@ -147,21 +147,82 @@ class ExportedReceiverDetectorTest : AbstractCheckTest() {
         lint().files(
             manifest(
                 """
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="test.pkg">
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="test.pkg">
 
-    <application
-        android:icon="@drawable/ic_launcher"
-        android:label="@string/app_name" >
-        <receiver android:name="com.google.android.c2dm.C2DMBroadcastReceiver"
-                  android:exported="true">
-          <intent-filter>
-            <action android:name="com.google.android.c2dm.intent.RECEIVE"/>
-            <action android:name="com.google.android.c2dm.intent.REGISTRATION"/>
-        </intent-filter>
-        </receiver>
-    </application>
-</manifest>
+                    <application
+                        android:icon="@drawable/ic_launcher"
+                        android:label="@string/app_name" >
+                        <receiver android:name="com.google.android.c2dm.C2DMBroadcastReceiver"
+                                  android:exported="true">
+                            <intent-filter>
+                                <action android:name="com.google.android.c2dm.intent.RECEIVE"/>
+                                <action android:name="com.google.android.c2dm.intent.REGISTRATION"/>
+                            </intent-filter>
+                        </receiver>
+                    </application>
+                </manifest>
+                """
+            ).indented()
+        ).run().expectClean()
+    }
+
+    fun testNonExportedActivityPostS() {
+        lint().files(
+            xml(
+                "AndroidManifest.xml",
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="test.pkg">
+
+                    <uses-sdk android:minSdkVersion="31"/>
+                    <application
+                        android:icon="@drawable/ic_launcher"
+                        android:label="@string/app_name" >
+                        <activity
+                            android:name="MyActivity">
+                            <nav-graph android:value="@navigation/navigation_root" />
+                        </activity>
+                    </application>
+                </manifest>
+                """
+            ).indented()
+        ).run().expect(
+            """
+            AndroidManifest.xml:8: Error: When using navigation graphs, please specify android:exported as well [IntentFilterExportedReceiver]
+                    <activity
+                     ~~~~~~~~
+            1 errors, 0 warnings
+            """
+        ).expectFixDiffs(
+            """
+            Fix for AndroidManifest.xml line 8: Set exported:
+            @@ -10 +10
+            -         <activity android:name="MyActivity" >
+            +         <activity
+            +             android:name="MyActivity"
+            +             android:exported="[TODO]|" >
+            """
+        )
+    }
+
+    fun testExportedActivity() {
+        lint().files(
+            manifest(
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="test.pkg">
+
+                    <application
+                        android:icon="@drawable/ic_launcher"
+                        android:label="@string/app_name" >
+                        <activity
+                            android:name="MyActivity"
+                            android:exported="true">
+                            <nav-graph android:value="@navigation/navigation_root" />
+                        </activity>
+                    </application>
+                </manifest>
                 """
             ).indented()
         ).run().expectClean()
