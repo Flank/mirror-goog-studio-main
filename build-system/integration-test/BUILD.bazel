@@ -155,6 +155,7 @@ ANDROID_X_ARCH_JARS = [
     "androidx/arch/core/core-common",
     "androidx/lifecycle/lifecycle-common",
     "androidx/room/room-common",
+    "androidx/room/room-compiler",
 ]
 
 LATEST_ANDROID_X_CONSTRAINTLAYOUT = "1.1.3"
