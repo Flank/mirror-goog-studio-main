@@ -67,9 +67,12 @@ class NoManifestTest {
     fun noManifestSyncWithApplicationIdsTest() {
         TestFileUtils.appendToFile(
             project.getSubproject(":app").buildFile, """
-                android.defaultConfig {
-                    applicationId "com.example.app"
-                    testApplicationId "com.example.app.test"
+                android {
+                    namespace "com.example.app"
+                    defaultConfig {
+                        applicationId "com.example.app"
+                        testApplicationId "com.example.app.test"
+                    }
                 }
             """.trimIndent()
         )

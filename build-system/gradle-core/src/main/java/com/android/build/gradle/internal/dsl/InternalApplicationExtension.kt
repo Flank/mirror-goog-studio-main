@@ -27,6 +27,7 @@ import org.gradle.api.Action
 /** See [InternalCommonExtension] */
 interface InternalApplicationExtension :
     ApplicationExtension,
+    InternalTestedExtension,
         InternalCommonExtension<
                 ApplicationBuildFeatures,
                 ApplicationBuildType,

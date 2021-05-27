@@ -47,6 +47,9 @@ public class AndroidArtifacts {
     // they can be used)
     private static final String TYPE_PROCESSED_JAR = "processed-jar";
 
+    private static final String TYPE_INSTRUMENTED_CLASSES = "jacoco-instrumented-classes";
+    private static final String TYPE_JACOCO_CLASSES_JAR = "jacoco-classes-jar";
+
     private static final String TYPE_MAYBE_NOT_NAMESPACED_AAR = "non-namespaced-aar";
     private static final String TYPE_PREPROCESSED_AAR_FOR_AUTO_NAMESPACE =
             "preprocessed-aar-for-auto-namespace";
@@ -210,47 +213,26 @@ public class AndroidArtifacts {
         RUNTIME_ELEMENTS, // inter-project publishing (RUNTIME)
         REVERSE_METADATA_ELEMENTS, // inter-project publishing (REVERSE META-DATA)
 
-        // Maven/SoftwareComponent AAR publishing (API, w/o variant-specific attributes)
-        API_PUBLICATION(true, false),
-        // Maven/SoftwareComponent AAR publishing (RUNTIME, w/o variant-specific attributes)
-        RUNTIME_PUBLICATION(true, false),
-        // Maven/SoftwareComponent AAR publishing (API, with variant-specific attributes)
-        ALL_API_PUBLICATION(true, true),
-        // Maven/SoftwareComponent AAR publishing (RUNTIME, with variant-specific attributes)
-        ALL_RUNTIME_PUBLICATION(true, true),
+        // Maven/SoftwareComponent AAR publishing (API)
+        API_PUBLICATION(true),
+        // Maven/SoftwareComponent AAR publishing (RUNTIME)
+        RUNTIME_PUBLICATION(true),
 
-        APK_PUBLICATION(true, false), // Maven/SoftwareComponent APK publishing
-        AAB_PUBLICATION(true, false); // Maven/SoftwareComponent AAB publishing
+        APK_PUBLICATION(true), // Maven/SoftwareComponent APK publishing
+        AAB_PUBLICATION(true); // Maven/SoftwareComponent AAB publishing
 
         private boolean isPublicationConfig;
-        private boolean isClassifierRequired;
 
-        PublishedConfigType(boolean isPublicationConfig, boolean isClassifierRequired) {
+        PublishedConfigType(boolean isPublicationConfig) {
             this.isPublicationConfig = isPublicationConfig;
-            this.isClassifierRequired = isClassifierRequired;
         }
 
         PublishedConfigType() {
-            this(false, false);
+            this(false);
         }
 
         public boolean isPublicationConfig() {
             return isPublicationConfig;
-        }
-
-        /**
-         * Some publishing configurations require setting the classifier. This is because artifacts
-         * from those configurations are added to a single software component, and unless there is a
-         * classifier, POM cannot choose the main artifact.
-         *
-         * <p>E.g. when publishing an AAR that has debug and release variants, there will be two AAR
-         * to publish. POM publishing ignores configuration attributes, and it has to use
-         * classifiers in order to de-duplicate artifacts. In this case, to disambiguate between
-         * these two artifacts, they need to have different classifiers specified when publishing
-         * them.
-         */
-        public boolean isClassifierRequired() {
-            return isClassifierRequired;
         }
     }
 
@@ -311,6 +293,10 @@ public class AndroidArtifacts {
          * </ul>
          */
         JAR(TYPE_JAR),
+
+        /** Jacoco instrumented versions of CLASSES and CLASSES_JAR produced by JacocoTransform. */
+        JACOCO_CLASSES(TYPE_INSTRUMENTED_CLASSES),
+        JACOCO_CLASSES_JAR(TYPE_JACOCO_CLASSES_JAR),
 
         /**
          * Processed jar.

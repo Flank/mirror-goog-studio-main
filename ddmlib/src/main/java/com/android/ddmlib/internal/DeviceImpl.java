@@ -47,9 +47,7 @@ import com.android.ddmlib.log.LogReceiver;
 import com.android.sdklib.AndroidVersion;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
-import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.Atomics;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.File;
@@ -397,20 +395,11 @@ public final class DeviceImpl implements IDevice {
     // reading the build characteristics property.
     @Override
     public boolean supportsFeature(@NonNull HardwareFeature feature) {
-        if (mHardwareCharacteristics == null) {
-            try {
-                String characteristics = getProperty(PROP_BUILD_CHARACTERISTICS);
-                if (characteristics == null) {
-                    return false;
-                }
-
-                mHardwareCharacteristics = Sets.newHashSet(Splitter.on(',').split(characteristics));
-            } catch (Exception e) {
-                mHardwareCharacteristics = Collections.emptySet();
-            }
+        try {
+            return getHardwareCharacteristics().contains(feature.getCharacteristic());
+        } catch (Exception e) {
+            return false;
         }
-
-        return mHardwareCharacteristics.contains(feature.getCharacteristic());
     }
 
     @NonNull

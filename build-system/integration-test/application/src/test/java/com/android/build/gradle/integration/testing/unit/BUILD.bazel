@@ -66,7 +66,7 @@ gradle_integration_test(
         "//tools/base/build-system/integration-test/application/src/test/java/com/android/build/gradle/integration/testing/unit:prebuilts",
         "//tools/base/build-system/integration-test:support_library_latest",
         "//tools/base/build-system/integration-test:androidx_latest",
-        "//tools/base/third_party/kotlin:kotlin-m2repository",
+        "//tools/base/build-system/integration-test:kotlin_gradle_plugin_prebuilts",
     ],
     maven_repos = [],
     resources = glob(["src/test/resources/**"]),

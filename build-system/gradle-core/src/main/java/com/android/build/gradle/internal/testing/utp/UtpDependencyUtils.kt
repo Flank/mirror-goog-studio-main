@@ -73,6 +73,12 @@ enum class UtpDependency(
             UtpDependencies::testDeviceInfoPlugin,
             ANDROID_TOOLS_UTP_PLUGIN_MAVEN_GROUP_ID,
             ANDROID_TOOLS_UTP_PLUGIN_VERSION),
+    ANDROID_TEST_COVERAGE_PLUGIN(
+            "android-test-plugin-host-coverage",
+            "com.android.tools.utp.plugins.host.coverage.AndroidTestCoveragePlugin",
+            UtpDependencies::testCoveragePlugin,
+            ANDROID_TOOLS_UTP_PLUGIN_MAVEN_GROUP_ID,
+            ANDROID_TOOLS_UTP_PLUGIN_VERSION),
     ANDROID_TEST_LOGCAT_PLUGIN(
             "android-test-plugin-host-logcat",
             "com.android.tools.utp.plugins.host.logcat.AndroidTestLogcatPlugin",
@@ -134,6 +140,10 @@ abstract class UtpDependencies {
     @get:Optional
     @get:Classpath
     abstract val testDeviceInfoPlugin: ConfigurableFileCollection
+
+    @get:Optional
+    @get:Classpath
+    abstract val testCoveragePlugin: ConfigurableFileCollection
 
     @get:Optional
     @get:Classpath

@@ -29,6 +29,8 @@ android {
     lintOptions {
         checkReleaseBuilds false
     }
+
+    testFixtures.enable = true
 }
 
 repositories {

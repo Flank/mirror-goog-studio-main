@@ -22,6 +22,7 @@ import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.TestFixtures
 import com.android.build.api.component.analytics.AnalyticsEnabledTestFixtures
 import com.android.build.api.dsl.CommonExtension
+import com.android.build.api.dsl.TestedExtension
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.AarMetadata
 import com.android.build.api.variant.AndroidVersion
@@ -129,5 +130,15 @@ open class TestFixturesImpl @Inject constructor(
     override fun makeResValueKey(type: String, name: String): ResValue.Key = ResValueKeyImpl(type, name)
 
     override val pseudoLocalesEnabled: Property<Boolean> =
-        internalServices.newPropertyBackingDeprecatedApi(Boolean::class.java, variantDslInfo.isPseudoLocalesEnabled)
+        internalServices.newPropertyBackingDeprecatedApi(
+            Boolean::class.java,
+            variantDslInfo.isPseudoLocalesEnabled
+        )
+
+    // ---------------------------------------------------------------------------------------------
+    // Private stuff
+    // ---------------------------------------------------------------------------------------------
+
+    override val androidResourcesEnabled: Boolean =
+        (globalScope.extension as TestedExtension).testFixtures.androidResources
 }

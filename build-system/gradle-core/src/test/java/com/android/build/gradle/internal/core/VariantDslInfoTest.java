@@ -358,7 +358,9 @@ public class VariantDslInfoTest {
                         null, /* BuildType */
                         Mockito.mock(BaseExtension.class),
                         false,
-                        Collections.emptyMap());
+                        Collections.emptyMap(),
+                        false /* enableTestFixtures */,
+                        null /* testFixtureMainVariantName */);
 
         builder.addProductFlavor(flavorConfig, new MockSourceProvider("custom"));
 

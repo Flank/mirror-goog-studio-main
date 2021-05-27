@@ -17,20 +17,27 @@
 package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.internal.dsl.decorator.annotation.WithLazyInitialization;
 import com.android.resources.Density;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import javax.inject.Inject;
 
-public class DensitySplitOptions extends SplitOptions
+public abstract class DensitySplitOptions extends SplitOptions
         implements com.android.build.api.dsl.DensitySplit {
 
-    private boolean strict = true;
-    private final Set<String> compatibleScreens = new HashSet<>();
+    @Inject
+    @WithLazyInitialization(methodName = "lazyInit")
+    public DensitySplitOptions() {}
+
+    protected void lazyInit() {
+        setStrict(true);
+        init();
+    }
 
     @Override
     protected Set<String> getDefaultValues() {
@@ -56,33 +63,16 @@ public class DensitySplitOptions extends SplitOptions
         return builder.build();
     }
 
-    @Override
-    public boolean isStrict() {
-        return strict;
-    }
-
-    @Override
-    public void setStrict(boolean strict) {
-        this.strict = strict;
-    }
-
     public void setCompatibleScreens(@NonNull List<String> sizes) {
         ArrayList newValues = new ArrayList(sizes);
-        compatibleScreens.clear();
-        compatibleScreens.addAll(newValues);
+        getCompatibleScreens().clear();
+        getCompatibleScreens().addAll(newValues);
     }
 
     @Override
     public void compatibleScreens(@NonNull String... sizes) {
-        compatibleScreens.addAll(Arrays.asList(sizes));
+        getCompatibleScreens().addAll(Arrays.asList(sizes));
     }
-
-    @Override
-    @NonNull
-    public Set<String> getCompatibleScreens() {
-        return compatibleScreens;
-    }
-
     /**
      * Sets whether the build system should determine the splits based on the density folders
      * in the resources.

@@ -1,0 +1,15 @@
+> Versions:
+   - AndroidDsl:
+      - major = 0
+      - minor = 1
+   - AndroidProject:
+      - major = 0
+      - minor = 1
+   - VariantDependencies:
+      - major = 0
+      - minor = 1
+   - nativeModule:
+      - major = 0
+      - minor = 1
+   - agp = "7.0.0-dev"
+< Versions

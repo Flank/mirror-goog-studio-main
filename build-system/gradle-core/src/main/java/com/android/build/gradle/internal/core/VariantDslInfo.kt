@@ -324,6 +324,8 @@ interface VariantDslInfo<CommonExtensionT: CommonExtension<*, *, *, *>> {
 
     val publishInfo: VariantPublishingInfo?
 
+    val enableTestFixtures: Boolean
+
     ////////////////////////////////////////////////////////////////////////////////////////
     //  APIs below should only be used at CreationConfig/Variant instantiation time       //
     //  DO NOT USE THOSE IN TASKS                                                         //
@@ -396,5 +398,5 @@ interface VariantDslInfo<CommonExtensionT: CommonExtension<*, *, *, *>> {
     val renderscriptOptimLevel: Int
 
     // DO NOT USE, Use CreationConfig and subtypes methods.
-    val properties: Map<String, Any>
+    val experimentalProperties: Map<String, Any>
 }

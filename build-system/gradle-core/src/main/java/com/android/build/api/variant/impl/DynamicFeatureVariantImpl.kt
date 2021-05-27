@@ -20,6 +20,7 @@ import com.android.build.api.artifact.MultipleArtifact
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.AndroidTest
 import com.android.build.api.component.Component
+import com.android.build.api.component.TestFixtures
 import com.android.build.api.component.analytics.AnalyticsEnabledDynamicFeatureVariant
 import com.android.build.api.component.impl.ApkCreationConfigImpl
 import com.android.build.api.dsl.CommonExtension
@@ -85,7 +86,7 @@ open class DynamicFeatureVariantImpl @Inject constructor(
     internalServices,
     taskCreationServices,
     globalScope
-), DynamicFeatureVariant, DynamicFeatureCreationConfig, HasAndroidTest {
+), DynamicFeatureVariant, DynamicFeatureCreationConfig, HasAndroidTest, HasTestFixtures {
 
     init {
         variantDslInfo.multiDexKeepProguard?.let {
@@ -134,6 +135,8 @@ open class DynamicFeatureVariantImpl @Inject constructor(
     }
 
     override var androidTest: AndroidTest? = null
+
+    override var testFixtures: TestFixtures? = null
 
     override val renderscript: Renderscript? by lazy {
         delegate.renderscript(internalServices)

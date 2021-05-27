@@ -51,6 +51,7 @@ import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType
+import com.android.build.gradle.internal.publishing.PublishedConfigSpec
 import com.android.build.gradle.internal.scope.BuildArtifactSpec.Companion.get
 import com.android.build.gradle.internal.scope.BuildArtifactSpec.Companion.has
 import com.android.build.gradle.internal.scope.BuildFeatureValues
@@ -89,7 +90,7 @@ import java.util.concurrent.Callable
 
 abstract class ComponentImpl(
     open val componentIdentity: ComponentIdentity,
-    override val buildFeatures: BuildFeatureValues,
+    final override val buildFeatures: BuildFeatureValues,
     override val variantDslInfo: VariantDslInfo<*>,
     override val variantDependencies: VariantDependencies,
     override val variantSources: VariantSources,
@@ -280,6 +281,8 @@ abstract class ComponentImpl(
         return true
     }
 
+    override val androidResourcesEnabled = buildFeatures.androidResources
+
     // ---------------------------------------------------------------------------------------------
     // Private stuff
     // ---------------------------------------------------------------------------------------------
@@ -449,16 +452,36 @@ abstract class ComponentImpl(
             val artifactProvider = artifacts.get(buildArtifactType)
             val artifactContainer = artifacts.getArtifactContainer(buildArtifactType)
             if (!artifactContainer.needInitialProducer().get()) {
-                variantScope
-                    .publishIntermediateArtifact(
-                        artifactProvider,
-                        outputSpec.artifactType,
-                        outputSpec.publishedConfigTypes,
-                        outputSpec.libraryElements?.let {
-                            internalServices.named(LibraryElements::class.java, it)
-                        },
-                        variantType.isTestFixturesComponent
-                    )
+                val isPublicationConfigs =
+                    outputSpec.publishedConfigTypes.any { it.isPublicationConfig }
+
+                if (isPublicationConfigs) {
+                    val components = variantDslInfo.publishInfo!!.components
+                    for(component in components) {
+                        variantScope
+                            .publishIntermediateArtifact(
+                                artifactProvider,
+                                outputSpec.artifactType,
+                                outputSpec.publishedConfigTypes.map {
+                                    PublishedConfigSpec(it, component) }.toSet(),
+                                outputSpec.libraryElements?.let {
+                                    internalServices.named(LibraryElements::class.java, it)
+                                },
+                                variantType.isTestFixturesComponent
+                            )
+                    }
+                } else {
+                    variantScope
+                        .publishIntermediateArtifact(
+                            artifactProvider,
+                            outputSpec.artifactType,
+                            outputSpec.publishedConfigTypes.map { PublishedConfigSpec(it) }.toSet(),
+                            outputSpec.libraryElements?.let {
+                                internalServices.named(LibraryElements::class.java, it)
+                            },
+                            variantType.isTestFixturesComponent
+                        )
+                }
             }
         }
     }
@@ -594,7 +617,7 @@ abstract class ComponentImpl(
                     .ENABLE_APP_COMPILE_TIME_R_CLASS]
                         && !variantType.isForTesting)
                 if (variantType.isAar || useCompileRClassInApp) {
-                    if (buildFeatures.androidResources) {
+                    if (androidResourcesEnabled) {
                         internalServices.fileCollection(artifacts.get(COMPILE_R_CLASS_JAR)
                         )
                     } else {
@@ -616,7 +639,7 @@ abstract class ComponentImpl(
                         artifacts.get(COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR)
                     )
                 } else {
-                    if (buildFeatures.androidResources) {
+                    if (androidResourcesEnabled) {
                         internalServices.fileCollection(variantScope.rJarForUnitTests)
                     } else {
                         internalServices.fileCollection()
@@ -724,11 +747,18 @@ abstract class ComponentImpl(
                 )
             }
         } else {
+            val usingJacocoTransform = variantDslInfo.isTestCoverageEnabled &&
+                    services.projectOptions[BooleanOption.ENABLE_JACOCO_TRANSFORM_INSTRUMENTATION]
             variantDependencies.getArtifactFileCollection(
-                    ConsumedConfigType.RUNTIME_CLASSPATH,
-                    scope,
+                ConsumedConfigType.RUNTIME_CLASSPATH,
+                scope,
+                if (usingJacocoTransform) {
+                    AndroidArtifacts.ArtifactType.JACOCO_CLASSES_JAR
+                } else {
                     AndroidArtifacts.ArtifactType.CLASSES_JAR
-            )
+                }
+           )
+
         }
     }
 

@@ -48,7 +48,7 @@ class HelloWorldAppModelTest: ModelComparator() {
 
         with(result).compare(
             model = result.container.singleVersions,
-            goldenFile = "ModelVersions"
+            goldenFile = "Versions"
         )
 
         with(result).compare(

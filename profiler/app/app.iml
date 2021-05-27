@@ -43,7 +43,7 @@
     <orderEntry type="module-library" scope="PROVIDED">
       <library name="app-inspection">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../../../prebuilts/tools/common/m2/repository/androidx/inspection/inspection/1.0.0-SNAPSHOT/inspection-1.0.0-20191024.120903-1.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../../../bazel-bin/prebuilts/tools/common/m2/repository/androidx/inspection/inspection/1.0.0/jar_unpacked_classes.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />

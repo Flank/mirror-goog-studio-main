@@ -87,6 +87,27 @@ class HumanReadableProfileTests {
     }
 
     @Test
+    fun testWhiteSpaceAndBlankLines() {
+        with(HumanReadableProfile(
+                "",
+                "   ",
+                "\t   ",
+                "Lcom/anything/can/go/here;",
+                "Lcom/allow/whitespace/after/line;  ",
+                "Lcom/allow/tab/after/line;\t  ",
+                "HSLcom/allow/whitespace/after/line;->method()I  ",
+                "HSLcom/allow/tab/after/line;->method()I\t  ",
+        )) {
+            assertThat(match("Lcom/anything/can/go/here;")).isEqualTo(STARTUP)
+            assertThat(match("Lcom/allow/whitespace/after/line;")).isEqualTo(STARTUP)
+            assertThat(match("Lcom/allow/tab/after/line;")).isEqualTo(STARTUP)
+            assertMethodFlags("HSLcom/allow/whitespace/after/line;->method()I", HOT or STARTUP)
+            assertMethodFlags("HSLcom/allow/tab/after/line;->method()I", HOT or STARTUP)
+            assertThat(match("LFoo;")).isEqualTo(0)
+        }
+    }
+
+    @Test
     fun testExactMethodMatch() {
         with(HumanReadableProfile("HSLcom/anything/can/go/here;->method()I")) {
             assertMethodFlags("Lcom/anything/can/go/here;->method()I", HOT or STARTUP)
@@ -149,6 +170,8 @@ class HumanReadableProfileTests {
 
 internal fun HumanReadableProfile.assertMethodFlags(method: String, expectedFlags: Int) =
     assertThat(match(parseDexMethod(method))).isEqualTo(expectedFlags)
+internal fun HumanReadableProfile.assertStartupClass(type: String) =
+        assertThat(match(type)).isEqualTo(STARTUP)
 
 internal class LineTestScope(private val hrpLine: String) {
     private val line = parseRule(hrpLine)

@@ -20,13 +20,13 @@ import com.android.build.gradle.integration.common.fixture.ModelBuilderV2
 import com.android.build.gradle.integration.common.fixture.ModelContainerV2
 import com.android.builder.model.v2.models.AndroidDsl
 import com.android.builder.model.v2.models.AndroidProject
-import com.android.builder.model.v2.models.ModelVersions
+import com.android.builder.model.v2.models.Versions
 import com.android.builder.model.v2.models.VariantDependencies
 
 
 fun ModelBuilderV2.FetchResult<ModelContainerV2>.getModelVersions(
     projectPath: String?
-): ModelVersions = if (projectPath == null) {
+): Versions = if (projectPath == null) {
     container.singleVersions
 } else {
     container.rootInfoMap[projectPath]?.versions

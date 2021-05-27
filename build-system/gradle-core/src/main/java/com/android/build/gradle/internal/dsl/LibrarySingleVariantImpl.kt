@@ -23,4 +23,4 @@ import javax.inject.Inject
 abstract class LibrarySingleVariantImpl @Inject constructor(
     dslServices: DslServices,
     override val variantName: String
-    ) : LibrarySingleVariant
+) : LibrarySingleVariant

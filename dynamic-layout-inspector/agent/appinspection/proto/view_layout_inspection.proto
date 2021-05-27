@@ -247,10 +247,6 @@ message LayoutEvent {
     Screenshot screenshot = 6;
 }
 
-message ConfigurationEvent {
-    Configuration configuration = 1;
-}
-
 // An event fired whenever a new root is added or an old root is removed.
 // Host is guaranteed to receive this at least once before the first |LayoutEvent|
 message WindowRootsEvent {
@@ -297,6 +293,5 @@ message Event {
         WindowRootsEvent roots_event = 2;
         LayoutEvent layout_event = 3;
         PropertiesEvent properties_event = 4;
-        ConfigurationEvent configuration_event = 5;
     }
 }

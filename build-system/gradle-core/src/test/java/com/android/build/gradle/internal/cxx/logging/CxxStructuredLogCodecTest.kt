@@ -16,6 +16,10 @@
 
 package com.android.build.gradle.internal.cxx.logging
 
+import com.android.build.gradle.internal.cxx.caching.DependenciesKey
+import com.android.build.gradle.internal.cxx.caching.EncodedDependenciesKey
+import com.android.build.gradle.internal.cxx.caching.decode
+import com.android.build.gradle.internal.cxx.caching.encode
 import com.android.build.gradle.internal.cxx.logging.LoggingMessage.LoggingLevel.ERROR
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
@@ -28,7 +32,7 @@ class CxxStructuredLogCodecTest {
     val temporaryFolder = TemporaryFolder()
 
     @Test
-    fun `simple write and read`() {
+    fun `string write and read`() {
         val folder = temporaryFolder.newFolder()
         val file = folder.resolve("log.bin")
         val original = listOf(createLoggingMessage(
@@ -45,9 +49,9 @@ class CxxStructuredLogCodecTest {
                 diagnosticCode = 1000
             ))
 
-        CxxStructuredLogEncoder(file).use { log ->
+        CxxStructuredLogEncoder(file).use { encoder ->
             original.forEach {
-                log.write(it.encode(log))
+                encoder.write(it.encode(encoder))
             }
         }
 
@@ -61,5 +65,71 @@ class CxxStructuredLogCodecTest {
             ++count
         }
         assertThat(count).isEqualTo(2)
+    }
+
+    @Test
+    fun `list write and read`() {
+        val folder = temporaryFolder.newFolder()
+        val file = folder.resolve("log.bin")
+        val key1 = DependenciesKey.newBuilder()
+            .addAllCompilerFlags(listOf("flag1", "flag2"))
+            .build()
+        val key2 = DependenciesKey.newBuilder()
+            .addAllCompilerFlags(listOf("flag2", "flag1"))
+            .build()
+        val original = listOf(key1, key2, key1, key2)
+
+        CxxStructuredLogEncoder(file).use { encoder ->
+            original.forEach {
+                encoder.write(it.encode(encoder))
+            }
+        }
+
+        var count = 0
+        streamCxxStructuredLog(file) { decoder, timestamp, record ->
+            if (record !is EncodedDependenciesKey) {
+                error("Expected EncodedDependenciesKey")
+            }
+            val decoded = record.decode(decoder)
+            assertThat(decoded).isEqualTo(original[count])
+            ++count
+        }
+        assertThat(count).isEqualTo(original.size)
+    }
+
+    /**
+     * Try to trigger missing flush/close if they are introduced.
+     */
+    @Test
+    fun stress() {
+        val folder = temporaryFolder.newFolder()
+        val file = folder.resolve("log.bin")
+        val key1 = DependenciesKey.newBuilder()
+            .addAllCompilerFlags(listOf("flag1", "flag2"))
+            .build()
+        val key2 = DependenciesKey.newBuilder()
+            .addAllCompilerFlags(listOf("flag2", "flag1"))
+            .build()
+        val original = listOf(key1, key2, key1, key2)
+
+        val iterations = 1000
+        repeat(iterations) {
+            CxxStructuredLogEncoder(file).use { encoder ->
+                original.forEach {
+                    encoder.write(it.encode(encoder))
+                }
+            }
+        }
+
+        var count = 0
+        streamCxxStructuredLog(file) { decoder, timestamp, record ->
+            if (record !is EncodedDependenciesKey) {
+                error("Expected EncodedDependenciesKey")
+            }
+            val decoded = record.decode(decoder)
+            assertThat(decoded).isEqualTo(original[count % original.size])
+            ++count
+        }
+        assertThat(count).isEqualTo(original.size * iterations)
     }
 }

@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.testing.testFixtures
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.testutils.truth.PathSubject.assertThat
 import org.junit.Rule
 import org.junit.Test
 
@@ -183,5 +184,54 @@ class TestFixturesTest {
         )
         project.executor()
             .run(":app:testDebugUnitTest")
+    }
+
+    @Test
+    fun `app consumes android library test fixtures published using new publishing dsl`() {
+        addNewPublishingDslForAndroidLibrary()
+        setUpProject(
+            publishJavaLib = false,
+            publishAndroidLib = true
+        )
+        project.executor()
+            .run(":app:testDebugUnitTest")
+    }
+
+    @Test
+    fun `publish android library main variant without its test fixtures`() {
+        TestFileUtils.appendToFile(
+            project.getSubproject(":lib").buildFile,
+            """
+
+                afterEvaluate {
+                    components.release.withVariantsFromConfiguration(
+                        configurations.releaseTestFixturesVariantReleaseApiPublication) { skip() }
+                    components.release.withVariantsFromConfiguration(
+                        configurations.releaseTestFixturesVariantReleaseRuntimePublication) { skip() }
+                }
+
+            """.trimIndent()
+        )
+        setUpProject(
+            publishAndroidLib = true,
+            publishJavaLib = true
+        )
+        val testFixtureAar = "testrepo/com/example/lib/lib/1.0/lib-1.0-test-fixtures.aar"
+        val mainVariantAar = "testrepo/com/example/lib/lib/1.0/lib-1.0.aar"
+        assertThat(project.projectDir.resolve(testFixtureAar)).doesNotExist()
+        assertThat(project.projectDir.resolve(mainVariantAar)).exists()
+    }
+
+    private fun addNewPublishingDslForAndroidLibrary() {
+        TestFileUtils.appendToFile(
+            project.getSubproject(":lib").buildFile,
+            """
+                android{
+                    publishing{
+                        singleVariant("release")
+                    }
+                }
+            """.trimIndent()
+        )
     }
 }

@@ -16,40 +16,31 @@
 
 package com.android.build.api.variant.impl
 
+import com.android.build.api.dsl.PackagingOptions
 import com.android.build.api.variant.JniLibsPackaging
 import com.android.build.gradle.internal.packaging.defaultExcludes
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
-import java.util.concurrent.Callable
 
 open class JniLibsPackagingImpl(
-    dslPackagingOptions: com.android.build.gradle.internal.dsl.PackagingOptions,
+    dslPackagingOptions: PackagingOptions,
     variantPropertiesApiServices: VariantPropertiesApiServices
 ) : JniLibsPackaging {
 
     override val excludes =
-        variantPropertiesApiServices.setPropertyOf(
-            String::class.java,
-            Callable<Collection<String>> {
-                // subtract defaultExcludes because its patterns are specific to java resources.
-                dslPackagingOptions.excludes
-                    .minus(defaultExcludes)
-                    .union(dslPackagingOptions.jniLibs.excludes)
-            }
-        )
+        variantPropertiesApiServices.setPropertyOf(String::class.java) {
+            // subtract defaultExcludes because its patterns are specific to java resources.
+            dslPackagingOptions.excludes
+                .minus(defaultExcludes)
+                .union(dslPackagingOptions.jniLibs.excludes)
+        }
 
     override val pickFirsts =
-        variantPropertiesApiServices.setPropertyOf(
-            String::class.java,
-            Callable<Collection<String>> {
-                dslPackagingOptions.pickFirsts.union(dslPackagingOptions.jniLibs.pickFirsts)
-            }
-        )
+        variantPropertiesApiServices.setPropertyOf(String::class.java) {
+            dslPackagingOptions.pickFirsts.union(dslPackagingOptions.jniLibs.pickFirsts)
+        }
 
     override val keepDebugSymbols =
-        variantPropertiesApiServices.setPropertyOf(
-            String::class.java,
-            Callable<Collection<String>> {
-                dslPackagingOptions.doNotStrip.union(dslPackagingOptions.jniLibs.keepDebugSymbols)
-            }
-        )
+        variantPropertiesApiServices.setPropertyOf(String::class.java) {
+            dslPackagingOptions.doNotStrip.union(dslPackagingOptions.jniLibs.keepDebugSymbols)
+        }
 }

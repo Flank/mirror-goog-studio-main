@@ -109,13 +109,6 @@ abstract class CommonExtensionImpl<
         action(buildFeatures)
     }
 
-    override val compileOptions: CompileOptions =
-        dslServices.newInstance(CompileOptions::class.java)
-
-    override fun compileOptions(action: com.android.build.api.dsl.CompileOptions.() -> Unit) {
-        action.invoke(compileOptions)
-    }
-
     override abstract var compileSdkVersion: String?
 
     override var compileSdk: Int?
@@ -229,13 +222,6 @@ abstract class CommonExtensionImpl<
         action.invoke(lintOptions)
     }
 
-    override val packagingOptions: PackagingOptions =
-        dslServices.newInstance(PackagingOptions::class.java, dslServices)
-
-    override fun packagingOptions(action: com.android.build.api.dsl.PackagingOptions.() -> Unit) {
-        action.invoke(packagingOptions)
-    }
-
     override fun productFlavors(action: Action<NamedDomainObjectContainer<ProductFlavor>>) {
         action.execute(productFlavors as NamedDomainObjectContainer<ProductFlavor>)
     }
@@ -257,13 +243,6 @@ abstract class CommonExtensionImpl<
 
     override fun sourceSets(action: NamedDomainObjectContainer<out com.android.build.api.dsl.AndroidSourceSet>.() -> Unit) {
         sourceSetManager.executeAction(action)
-    }
-
-    override val splits: Splits =
-        dslServices.newInstance(Splits::class.java, dslServices)
-
-    override fun splits(action: com.android.build.api.dsl.Splits.() -> Unit) {
-        action.invoke(splits)
     }
 
     override val testOptions: TestOptions =
@@ -310,5 +289,5 @@ abstract class CommonExtensionImpl<
         return ProguardFiles.getDefaultProguardFile(name, dslServices.buildDirectory)
     }
 
-    override val properties: MutableMap<String, Any> = mutableMapOf()
+    override val experimentalProperties: MutableMap<String, Any> = mutableMapOf()
 }

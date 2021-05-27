@@ -17,10 +17,5 @@
 package com.android.build.gradle.internal.dsl
 
 import com.android.build.api.dsl.BundleDeviceTier
-import javax.inject.Inject
 
-open class BundleOptionsDeviceTier @Inject constructor() : BundleDeviceTier {
-
-    override var enableSplit: Boolean? = null
-    override var defaultTier: String? = null
-}
+abstract class BundleOptionsDeviceTier: BundleDeviceTier

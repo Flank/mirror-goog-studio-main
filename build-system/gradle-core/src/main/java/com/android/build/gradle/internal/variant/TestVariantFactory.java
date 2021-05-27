@@ -41,6 +41,7 @@ import com.android.build.gradle.internal.plugins.DslContainerProvider;
 import com.android.build.gradle.internal.scope.BuildFeatureValues;
 import com.android.build.gradle.internal.scope.BuildFeatureValuesImpl;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.scope.TestFixturesBuildFeaturesValuesImpl;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.services.ProjectServices;
 import com.android.build.gradle.internal.services.TaskCreationServices;
@@ -141,6 +142,21 @@ public class TestVariantFactory
 
     @NonNull
     @Override
+    public BuildFeatureValues createTestFixturesBuildFeatureValues(
+            @NonNull BuildFeatures buildFeatures, @NonNull ProjectOptions projectOptions) {
+        if (buildFeatures instanceof TestBuildFeatures) {
+            return new TestFixturesBuildFeaturesValuesImpl(
+                    buildFeatures,
+                    projectOptions,
+                    false /* dataBindingOverride */,
+                    false /* mlModelBindingOverride */);
+        } else {
+            throw new RuntimeException("buildFeatures not of type TestBuildFeatures");
+        }
+    }
+
+    @NonNull
+    @Override
     public BuildFeatureValues createTestBuildFeatureValues(
             @NonNull BuildFeatures buildFeatures,
             @NonNull DataBindingOptions dataBindingOptions,
@@ -209,7 +225,7 @@ public class TestVariantFactory
 
         // TODO, we should do this after we created the variant object, not before.
         if (!ModulePropertyKeys.SELF_INSTRUMENTING.getValueAsBoolean(
-                testExtension.getProperties())) {
+                testExtension.getExperimentalProperties())) {
             handler.add(CONFIG_NAME_COMPILE_ONLY, handler.project(projectNotation));
         }
 

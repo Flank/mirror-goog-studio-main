@@ -94,6 +94,116 @@ class ViewLayoutInspectorTest {
     }
 
     @Test
+    fun restartingInspectorResendsRootEvents() = createViewInspector { viewInspector ->
+        val responseQueue = ArrayBlockingQueue<ByteArray>(1)
+        inspectorRule.commandCallback.replyListeners.add { bytes ->
+            responseQueue.add(bytes)
+        }
+
+        val eventQueue = ArrayBlockingQueue<ByteArray>(3)
+        inspectorRule.connection.eventListeners.add { bytes ->
+            eventQueue.add(bytes)
+        }
+
+        val resourceNames = mutableMapOf<Int, String>()
+        val resources = Resources(resourceNames)
+        val context = Context("view.inspector.test", resources)
+        val root = View(context).apply { setAttachInfo(View.AttachInfo() )}
+        val fakePicture = Picture(byteArrayOf(1, 2, 3))
+        WindowManagerGlobal.getInstance().rootViews.addAll(listOf(root))
+
+        // First, we startup the inspector, to ensure that we've gotten to a point where a roots
+        // event is sent back to us (so we know that the inspector is keeping track of the state).
+        run {
+            val updateScreenshotTypeCommand = Command.newBuilder().apply {
+                updateScreenshotTypeCommandBuilder.apply {
+                    type = Screenshot.Type.SKP
+                }
+            }.build()
+            viewInspector.onReceiveCommand(
+                updateScreenshotTypeCommand.toByteArray(),
+                inspectorRule.commandCallback
+            )
+            responseQueue.take().let { bytes ->
+                val response = Response.parseFrom(bytes)
+                assertThat(response.specializedCase).isEqualTo(Response.SpecializedCase.UPDATE_SCREENSHOT_TYPE_RESPONSE)
+            }
+
+            val startFetchCommand = Command.newBuilder().apply {
+                startFetchCommandBuilder.apply {
+                    // Set continuous to false since we don't need it to be true to clear the root IDs
+                    // as a side effect
+                    continuous = false
+                }
+            }.build()
+            viewInspector.onReceiveCommand(
+                startFetchCommand.toByteArray(),
+                inspectorRule.commandCallback
+            )
+            responseQueue.take().let { bytes ->
+                val response = Response.parseFrom(bytes)
+                assertThat(response.specializedCase).isEqualTo(Response.SpecializedCase.START_FETCH_RESPONSE)
+            }
+            ThreadUtils.runOnMainThread { }.get() // Wait for startCommand to finish initializing
+
+            // In tests, invalidating a view does nothing. We need to trigger the capture manually.
+            root.forcePictureCapture(fakePicture)
+            eventQueue.take().let { bytes ->
+                val event = Event.parseFrom(bytes)
+                assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.ROOTS_EVENT)
+                assertThat(event.rootsEvent.idsList).containsExactly(root.uniqueDrawingId)
+            }
+            // Consume additional events that are generated so they don't block the queue
+            eventQueue.take().let { bytes ->
+                val event = Event.parseFrom(bytes)
+                assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.LAYOUT_EVENT)
+            }
+            eventQueue.take().let { bytes ->
+                val event = Event.parseFrom(bytes)
+                assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.PROPERTIES_EVENT)
+            }
+        }
+
+        // Next, Stop and restart - this should cause a new roots event to be sent out. Previously,
+        // this didn't work because state was left over from the previous run
+        run {
+            val stopFetchCommand = Command.newBuilder().apply {
+                stopFetchCommand = StopFetchCommand.getDefaultInstance()
+            }.build()
+            viewInspector.onReceiveCommand(
+                stopFetchCommand.toByteArray(),
+                inspectorRule.commandCallback
+            )
+            responseQueue.take().let { bytes ->
+                val response = Response.parseFrom(bytes)
+                assertThat(response.specializedCase).isEqualTo(Response.SpecializedCase.STOP_FETCH_RESPONSE)
+            }
+            val startFetchCommand = Command.newBuilder().apply {
+                startFetchCommandBuilder.apply {
+                    continuous = false
+                }
+            }.build()
+            viewInspector.onReceiveCommand(
+                startFetchCommand.toByteArray(),
+                inspectorRule.commandCallback
+            )
+            responseQueue.take().let { bytes ->
+                val response = Response.parseFrom(bytes)
+                assertThat(response.specializedCase).isEqualTo(Response.SpecializedCase.START_FETCH_RESPONSE)
+            }
+            ThreadUtils.runOnMainThread { }.get() // Wait for startCommand to finish initializing
+
+            root.forcePictureCapture(fakePicture)
+            eventQueue.take().let { bytes ->
+                val event = Event.parseFrom(bytes)
+                assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.ROOTS_EVENT)
+                assertThat(event.rootsEvent.idsList).containsExactly(root.uniqueDrawingId)
+            }
+        }
+
+    }
+
+    @Test
     fun canCaptureTreeInContinuousMode() = createViewInspector { viewInspector ->
         val eventQueue = ArrayBlockingQueue<ByteArray>(2)
         inspectorRule.connection.eventListeners.add { bytes ->
@@ -997,7 +1107,7 @@ class ViewLayoutInspectorTest {
 
         val startFetchCommand = Command.newBuilder().apply {
             startFetchCommandBuilder.apply {
-                continuous = true
+                continuous = false
             }
         }.build()
         viewInspector.onReceiveCommand(
@@ -1016,16 +1126,19 @@ class ViewLayoutInspectorTest {
                 this.scale = scale.toFloat()
             }
         }.build()
-        val initialInvalidateCount = root.invalidateCount
+        val initialInvalidateCount = ThreadUtils.runOnMainThread { root.invalidateCount }.get()
         viewInspector.onReceiveCommand(
             updateScreenshotTypeCommand.toByteArray(),
             inspectorRule.commandCallback
         )
         responseQueue.take()
 
-        ThreadUtils.runOnMainThread { }.get() // Ensure the kicked-off invalidation is complete
         // Validate that setting the screenshot type and scale caused an invalidation
-        assertThat(root.invalidateCount).isEqualTo(initialInvalidateCount + 1)
+        ThreadUtils.runOnMainThread {
+            // Access root on the main thread. This also ensures this logic runs after the
+            // invalidation call that occurs in ViewLayoutInspector#handleUpdateScreenshotType
+            assertThat(root.invalidateCount).isEqualTo(initialInvalidateCount + 1)
+        }.get()
 
         // Send the same values again and verify that no invalidation happened
         viewInspector.onReceiveCommand(
@@ -1034,8 +1147,9 @@ class ViewLayoutInspectorTest {
         )
         responseQueue.take()
 
-        ThreadUtils.runOnMainThread { }.get() // Ensure the kicked-off invalidation is complete
-        assertThat(root.invalidateCount).isEqualTo(initialInvalidateCount + 1)
+        ThreadUtils.runOnMainThread {
+            assertThat(root.invalidateCount).isEqualTo(initialInvalidateCount + 1)
+        }.get()
 
         // Make another change and verify that in invalidation did happen
         val updateScreenshotTypeCommand2 = Command.newBuilder().apply {
@@ -1049,9 +1163,9 @@ class ViewLayoutInspectorTest {
         )
         responseQueue.take()
 
-        ThreadUtils.runOnMainThread { }.get() // Ensure the kicked-off invalidation is complete
-        assertThat(root.invalidateCount).isEqualTo(initialInvalidateCount + 2)
-
+        ThreadUtils.runOnMainThread {
+            assertThat(root.invalidateCount).isEqualTo(initialInvalidateCount + 2)
+        }.get()
     }
 
         // TODO: Add test for filtering system views and properties

@@ -116,9 +116,26 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
          */
         var lastRootIds = emptySet<Long>()
 
-        fun start() {
+        /**
+         * Clear the state of this detector.
+         *
+         * After calling this function, it should be equivalent to this class after it was first
+         * instantiated.
+         */
+        fun reset() {
             stop()
-            quit.set(false)
+            lastRootIds = emptySet()
+        }
+
+        /**
+         * Start running a thread which will periodically call [checkRoots].
+         *
+         * If the thread is still running from a previous call to [start], it will be stopped,
+         * state cleared, and restarted. There is no need to call [reset] yourself if calling this
+         * method, in other words.
+         */
+        fun start() {
+            reset()
 
             checkRootsThread = ThreadUtils.newThread {
                 while (!quit.get()) {
@@ -134,9 +151,12 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
          * Stop the thread if started by [start]. This method blocks until the thread has finished.
          */
         fun stop() {
-            quit.set(true)
-            checkRootsThread?.join()
-            checkRootsThread = null
+            checkRootsThread?.let { thread ->
+                quit.set(true)
+                thread.join()
+                quit.set(false)
+                checkRootsThread = null
+            }
         }
 
         /**
@@ -422,6 +442,10 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
 
         if (startFetchCommand.continuous) {
             rootsDetector.start()
+        }
+        else {
+            // We may be getting here after a previous start / stop flow
+            rootsDetector.reset()
         }
         ThreadUtils.runOnMainThread {
             for (root in getRootViews()) {

@@ -76,7 +76,7 @@ class RenderscriptNdkConnectedTest {
         project
             .executor()
             .with(StringOption.DEVICE_POOL_SERIAL, testDevice.serialNumber)
-            .executeConnectedCheck()
+            .run(GradleTestProject.DEVICE_TEST_TASK)
     }
 
     @Before

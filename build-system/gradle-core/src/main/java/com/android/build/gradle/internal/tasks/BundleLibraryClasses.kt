@@ -260,7 +260,7 @@ abstract class BundleLibraryClassesJar : NonIncrementalTask(), BundleLibraryClas
             val packageRClass =
                 creationConfig.services.projectOptions[BooleanOption.COMPILE_CLASSPATH_LIBRARY_R_CLASSES] &&
                         publishedType == PublishedConfigType.API_ELEMENTS &&
-                        creationConfig.buildFeatures.androidResources
+                        creationConfig.androidResourcesEnabled
             task.configure(creationConfig, inputs, packageRClass)
         }
     }

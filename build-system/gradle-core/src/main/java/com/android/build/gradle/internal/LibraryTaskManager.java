@@ -18,8 +18,6 @@ package com.android.build.gradle.internal;
 
 import static com.android.SdkConstants.FN_PUBLIC_TXT;
 import static com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.ALL_API_PUBLICATION;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.ALL_RUNTIME_PUBLICATION;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.API_PUBLICATION;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.RUNTIME_PUBLICATION;
 
@@ -41,6 +39,8 @@ import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.pipeline.OriginalStream;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
+import com.android.build.gradle.internal.publishing.ComponentPublishingInfo;
+import com.android.build.gradle.internal.publishing.PublishedConfigSpec;
 import com.android.build.gradle.internal.res.GenerateApiPublicTxtTask;
 import com.android.build.gradle.internal.res.GenerateEmptyResourceFilesTask;
 import com.android.build.gradle.internal.scope.BuildFeatureValues;
@@ -352,41 +352,41 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
                             task.dependsOn(variant.getArtifacts().get(SingleArtifact.AAR.INSTANCE));
                         });
 
-        final VariantDependencies variantDependencies = variant.getVariantDependencies();
-
-        if (variant.getVariantDslInfo().getPublishInfo().isAarPublished()) {
-            createComponentForSingleVariantPublishing(variant);
+        if (variant.getVariantDslInfo().getPublishInfo() != null) {
+            List<ComponentPublishingInfo> components =
+                    variant.getVariantDslInfo().getPublishInfo().getComponents();
+            for (ComponentPublishingInfo component : components) {
+                createComponent(
+                        variant, component.getComponentName(), component.isClassifierRequired());
+            }
         }
-
-        AdhocComponentWithVariants allVariants =
-                (AdhocComponentWithVariants) project.getComponents().findByName("all");
-        if (allVariants == null) {
-            allVariants = globalScope.getComponentFactory().adhoc("all");
-            project.getComponents().add(allVariants);
-        }
-        final Configuration allApiPub = variantDependencies.getElements(ALL_API_PUBLICATION);
-        allVariants.addVariantsFromConfiguration(
-                allApiPub, new ConfigurationVariantMapping("compile", true));
-        final Configuration allRuntimePub =
-                variantDependencies.getElements(ALL_RUNTIME_PUBLICATION);
-        allVariants.addVariantsFromConfiguration(
-                allRuntimePub, new ConfigurationVariantMapping("runtime", true));
     }
 
-    private void createComponentForSingleVariantPublishing(@NonNull VariantImpl variant) {
+    private void createComponent(
+            @NonNull VariantImpl variant,
+            @NonNull String componentName,
+            boolean isClassifierRequired) {
         final VariantDependencies variantDependencies = variant.getVariantDependencies();
 
         AdhocComponentWithVariants component =
-                globalScope.getComponentFactory().adhoc(variant.getName());
-
-        final Configuration apiPub = variantDependencies.getElements(API_PUBLICATION);
-        final Configuration runtimePub = variantDependencies.getElements(RUNTIME_PUBLICATION);
+                (AdhocComponentWithVariants) project.getComponents().findByName(componentName);
+        if (component == null) {
+            component = globalScope.getComponentFactory().adhoc(componentName);
+            project.getComponents().add(component);
+        }
+        final Configuration apiPub =
+                variantDependencies.getElements(
+                        new PublishedConfigSpec(
+                                API_PUBLICATION, componentName, isClassifierRequired));
+        final Configuration runtimePub =
+                variantDependencies.getElements(
+                        new PublishedConfigSpec(
+                                RUNTIME_PUBLICATION, componentName, isClassifierRequired));
 
         component.addVariantsFromConfiguration(
-                apiPub, new ConfigurationVariantMapping("compile", false));
+                apiPub, new ConfigurationVariantMapping("compile", isClassifierRequired));
         component.addVariantsFromConfiguration(
-                runtimePub, new ConfigurationVariantMapping("runtime", false));
-        project.getComponents().add(component);
+                runtimePub, new ConfigurationVariantMapping("runtime", isClassifierRequired));
     }
 
     @Override

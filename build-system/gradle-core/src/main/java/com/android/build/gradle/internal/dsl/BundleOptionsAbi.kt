@@ -17,9 +17,5 @@
 package com.android.build.gradle.internal.dsl
 
 import com.android.build.api.dsl.BundleAbi
-import javax.inject.Inject
 
-open class BundleOptionsAbi @Inject constructor() : BundleAbi {
-
-    override var enableSplit: Boolean? = null
-}
+abstract class BundleOptionsAbi: BundleAbi

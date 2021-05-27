@@ -39,6 +39,7 @@ import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.BuildFeatureValuesImpl
 import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.scope.TestFixturesBuildFeaturesValuesImpl
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
@@ -132,6 +133,19 @@ class ApplicationVariantFactory(
             ?: throw RuntimeException("buildFeatures not of type ApplicationBuildFeatures")
 
         return BuildFeatureValuesImpl(buildFeatures, projectOptions)
+    }
+
+    override fun createTestFixturesBuildFeatureValues(
+        buildFeatures: BuildFeatures,
+        projectOptions: ProjectOptions
+    ): BuildFeatureValues {
+        buildFeatures as? ApplicationBuildFeatures
+            ?: throw RuntimeException("buildFeatures not of type ApplicationBuildFeatures")
+
+        return TestFixturesBuildFeaturesValuesImpl(
+            buildFeatures,
+            projectOptions
+        )
     }
 
     override fun createTestBuildFeatureValues(

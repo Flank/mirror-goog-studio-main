@@ -24,20 +24,20 @@ class CheckResultDetectorTest : AbstractCheckTest() {
     fun testCheckResult() {
         val expected =
             """
-src/test/pkg/CheckPermissions.java:22: Warning: The result of extractAlpha is not used [CheckResult]
-        bitmap.extractAlpha(); // WARNING
-        ~~~~~~~~~~~~~~~~~~~~~
-src/test/pkg/Intersect.java:7: Warning: The result of intersect is not used. If the rectangles do not intersect, no change is made and the original rectangle is not modified. These methods return false to indicate that this has happened. [CheckResult]
-    rect.intersect(aLeft, aTop, aRight, aBottom);
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-src/test/pkg/CheckPermissions.java:10: Warning: The result of checkCallingOrSelfPermission is not used; did you mean to call #enforceCallingOrSelfPermission(String,String)? [UseCheckPermission]
-        context.checkCallingOrSelfPermission(Manifest.permission.INTERNET); // WRONG
-        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is not used; did you mean to call #enforcePermission(String,int,int,String)? [UseCheckPermission]
-        context.checkPermission(Manifest.permission.INTERNET, 1, 1);
-        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-0 errors, 4 warnings
-"""
+            src/test/pkg/CheckPermissions.java:22: Warning: The result of extractAlpha is not used [CheckResult]
+                    bitmap.extractAlpha(); // WARNING
+                    ~~~~~~~~~~~~~~~~~~~~~
+            src/test/pkg/Intersect.java:7: Warning: The result of intersect is not used. If the rectangles do not intersect, no change is made and the original rectangle is not modified. These methods return false to indicate that this has happened. [CheckResult]
+                rect.intersect(aLeft, aTop, aRight, aBottom);
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            src/test/pkg/CheckPermissions.java:10: Warning: The result of checkCallingOrSelfPermission is not used; did you mean to call #enforceCallingOrSelfPermission(String,String)? [UseCheckPermission]
+                    context.checkCallingOrSelfPermission(Manifest.permission.INTERNET); // WRONG
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is not used; did you mean to call #enforcePermission(String,int,int,String)? [UseCheckPermission]
+                    context.checkPermission(Manifest.permission.INTERNET, 1, 1);
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            0 errors, 4 warnings
+            """
         lint().files(
             java(
                 """
@@ -148,10 +148,12 @@ src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is
             .issues(CheckResultDetector.CHECK_RESULT, CheckResultDetector.CHECK_PERMISSION)
             .run()
             .expect(
-                "src/test/pkg/IgnoreTest.java:21: Warning: The result of method1 is not used [CheckResult]\n" +
-                    "        method1(); // ERROR: should check\n" +
-                    "        ~~~~~~~~~\n" +
-                    "0 errors, 1 warnings"
+                """
+                src/test/pkg/IgnoreTest.java:21: Warning: The result of method1 is not used [CheckResult]
+                        method1(); // ERROR: should check
+                        ~~~~~~~~~
+                0 errors, 1 warnings
+                """
             )
     }
 
@@ -376,7 +378,7 @@ src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is
                     fun foo(): Int {
                         return 42
                     }
-"""
+                """
             ),
             SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
@@ -675,7 +677,7 @@ src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is
                                         keyValueStore.clear();
                                         ~~~~~~~~~~~~~~~~~~~~~
             0 errors, 1 warnings
-        """
+            """
         )
     }
 
@@ -721,6 +723,72 @@ src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is
             ),
             errorProneCheckReturnValueSource
         ).run().expectClean()
+    }
+
+    fun testCheckResultInLambda() {
+        // 188436943: False negative in CheckResultDetector in Kotlin lambdas
+        lint().files(
+            kotlin(
+                """
+                import android.support.annotation.CheckResult
+                import kotlin.random.Random
+
+                @CheckResult
+                fun checkReturn(): String {
+                    return Random.nextInt().toString()
+                }
+
+                val unitLambda: () -> Unit = {
+                    // Should flag: we know based on the lambda's type the return value is unused
+                    checkReturn()
+                }
+
+                val valueLambda: () -> String = {
+                    // Should flag: is not the last expression in the lambda, so value is unused
+                    checkReturn()
+                    "foo"
+                }
+
+                // 188855906: @CheckResult doesn't work inside lambda expressions
+
+                @CheckResult fun x(): String = "Hello"
+
+                fun y() {
+                    x() // Correctly flagged
+
+                    val x1 = run {
+                        x() // Not flagged
+                        ""
+                    }
+
+                    val x2 = "".also {
+                        x() // Not flagged (the `also` block returns Unit)
+                    }
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/test.kt:11: Warning: The result of checkReturn is not used [CheckResult]
+                checkReturn()
+                ~~~~~~~~~~~~~
+            src/test.kt:16: Warning: The result of checkReturn is not used [CheckResult]
+                checkReturn()
+                ~~~~~~~~~~~~~
+            src/test.kt:25: Warning: The result of x is not used [CheckResult]
+                x() // Correctly flagged
+                ~~~
+            src/test.kt:28: Warning: The result of x is not used [CheckResult]
+                    x() // Not flagged
+                    ~~~
+            src/test.kt:33: Warning: The result of x is not used [CheckResult]
+                    x() // Not flagged (the `also` block returns Unit)
+                    ~~~
+            0 errors, 5 warnings
+            """
+        )
     }
 
     private val javaxCheckReturnValueSource = java(

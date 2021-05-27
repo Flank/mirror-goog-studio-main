@@ -64,6 +64,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType
+import com.android.build.gradle.internal.publishing.PublishedConfigSpec
 import com.android.build.gradle.internal.res.GenerateApiPublicTxtTask
 import com.android.build.gradle.internal.res.GenerateEmptyResourceFilesTask
 import com.android.build.gradle.internal.res.GenerateLibraryRFileTask
@@ -425,7 +426,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         createProcessJavaResTask(testFixturesComponent)
 
         // android resources tasks
-        if (testFixturesComponent.buildFeatures.androidResources) {
+        if (testFixturesComponent.androidResourcesEnabled) {
             taskFactory.register(ExtractDeepLinksTask.CreationAction(testFixturesComponent))
 
             createGenerateResValuesTask(testFixturesComponent)
@@ -602,31 +603,19 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             return
         }
         val variantDependencies = testFixturesComponent.variantDependencies
-        // attach the testFixtures variants to the main variant component
-        val component = project.components.getByName(testFixturesComponent.mainVariant.name)
-                as AdhocComponentWithVariants
-        val apiPub = variantDependencies.getElements(PublishedConfigType.API_PUBLICATION)
-        val runtimePub = variantDependencies.getElements(PublishedConfigType.RUNTIME_PUBLICATION)
-        component.addVariantsFromConfiguration(
-            apiPub, ConfigurationVariantMapping("compile", false)
-        )
-        component.addVariantsFromConfiguration(
-            runtimePub, ConfigurationVariantMapping("runtime", false)
-        )
-        var allVariants = project.components.findByName("all") as AdhocComponentWithVariants?
-        if (allVariants == null) {
-            allVariants = globalScope.componentFactory.adhoc("all")
-            project.components.add(allVariants)
+        testFixturesComponent.variantDslInfo.publishInfo?.components?.forEach {
+            val componentName = it.componentName
+            val component = project.components.findByName(componentName) as AdhocComponentWithVariants? ?:
+            globalScope.componentFactory.adhoc(componentName).let { project.components.add(it) } as AdhocComponentWithVariants
+            val apiPub = variantDependencies.getElements(PublishedConfigSpec(PublishedConfigType.API_PUBLICATION, it))
+            val runtimePub = variantDependencies.getElements(PublishedConfigSpec(PublishedConfigType.RUNTIME_PUBLICATION, it))
+            component.addVariantsFromConfiguration(
+                apiPub, ConfigurationVariantMapping("compile", it.isClassifierRequired)
+            )
+            component.addVariantsFromConfiguration(
+                runtimePub, ConfigurationVariantMapping("runtime", it.isClassifierRequired)
+            )
         }
-        val allApiPub = variantDependencies.getElements(PublishedConfigType.ALL_API_PUBLICATION)
-        allVariants!!.addVariantsFromConfiguration(
-            allApiPub, ConfigurationVariantMapping("compile", true)
-        )
-        val allRuntimePub =
-            variantDependencies.getElements(PublishedConfigType.ALL_RUNTIME_PUBLICATION)
-        allVariants.addVariantsFromConfiguration(
-            allRuntimePub, ConfigurationVariantMapping("runtime", true)
-        )
     }
 
     protected fun createVerifyLibraryResTask(component: ComponentCreationConfig) {
@@ -643,7 +632,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
     }
 
     protected fun registerLibraryRClassTransformStream(component: ComponentCreationConfig) {
-        if (!component.buildFeatures.androidResources) {
+        if (!component.androidResourcesEnabled) {
             return
         }
         val compileRClass: FileCollection = project.files(
@@ -901,10 +890,17 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                 testedConfig.getDependenciesClassesJarsPostAsmInstrumentation(ArtifactScope.ALL)
             } else {
                 testedConfig
-                        .variantDependencies
-                        .getArtifactFileCollection(ConsumedConfigType.RUNTIME_CLASSPATH,
-                                ArtifactScope.ALL,
-                                AndroidArtifacts.ArtifactType.CLASSES_JAR)
+                    .variantDependencies
+                    .getArtifactFileCollection(
+                        ConsumedConfigType.RUNTIME_CLASSPATH,
+                        ArtifactScope.ALL,
+                        if (creationConfig.services.projectOptions[
+                                    BooleanOption.ENABLE_JACOCO_TRANSFORM_INSTRUMENTATION]) {
+                            AndroidArtifacts.ArtifactType.JACOCO_CLASSES_JAR
+                        } else {
+                            AndroidArtifacts.ArtifactType.CLASSES_JAR
+                        }
+                    )
             }
             transformManager.addStream(
                     OriginalStream.builder("tested-code-deps")
@@ -1541,7 +1537,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                         testConfigInputs.packageNameOfFinalRClass)
             }
         } else {
-            if (testedVariant.variantType.isAar && testedVariant.buildFeatures.androidResources) {
+            if (testedVariant.variantType.isAar && testedVariant.androidResourcesEnabled) {
                 // With compile classpath R classes, we need to generate a dummy R class for unit
                 // tests
                 // See https://issuetracker.google.com/143762955 for more context.
@@ -2201,30 +2197,37 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
     }
 
     fun createJacocoTask(creationConfig: ComponentCreationConfig) {
+
         creationConfig
-                .transformManager
-                .consumeStreams(
-                        ImmutableSet.of(QualifiedContent.Scope.PROJECT),
-                        ImmutableSet.of<QualifiedContent.ContentType>(DefaultContentType.CLASSES))
+            .transformManager
+            .consumeStreams(
+                ImmutableSet.of(QualifiedContent.Scope.PROJECT),
+                ImmutableSet.of<QualifiedContent.ContentType>(DefaultContentType.CLASSES)
+            )
+        val jacocoTransformEnabled =
+            projectOptions[BooleanOption.ENABLE_JACOCO_TRANSFORM_INSTRUMENTATION]
+
         taskFactory.register(JacocoTask.CreationAction(creationConfig))
-        val instrumentedClasses: FileCollection = project.files(
-                creationConfig
-                        .artifacts
-                        .get(JACOCO_INSTRUMENTED_CLASSES),
+
+        val instrumentedClasses: FileCollection =
+            if (jacocoTransformEnabled && creationConfig.variantDslInfo.isTestCoverageEnabled) {
+                // For libraries that can be published,avoid publishing classes
+                // with runtime dependencies on Jacoco.
+                creationConfig.artifacts.getAllClasses()
+            } else {
                 project.files(
-                        creationConfig
-                                .artifacts
-                                .get(
-                                        JACOCO_INSTRUMENTED_JARS))
-                        .asFileTree)
+                    creationConfig.artifacts.get(JACOCO_INSTRUMENTED_CLASSES),
+                    project.files(creationConfig.artifacts.get(JACOCO_INSTRUMENTED_JARS)).asFileTree
+                )
+            }
         creationConfig
-                .transformManager
-                .addStream(
-                        OriginalStream.builder("jacoco-instrumented-classes")
-                                .addContentTypes(DefaultContentType.CLASSES)
-                                .addScope(QualifiedContent.Scope.PROJECT)
-                                .setFileCollection(instrumentedClasses)
-                                .build())
+            .transformManager
+            .addStream(
+                OriginalStream.builder("jacoco-instrumented-classes")
+                    .addContentTypes(DefaultContentType.CLASSES)
+                    .addScope(QualifiedContent.Scope.PROJECT)
+                    .setFileCollection(instrumentedClasses)
+                    .build())
     }
 
     protected fun createDataBindingTasksIfNecessary(creationConfig: ComponentCreationConfig) {
@@ -2571,7 +2574,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         // proguard can shrink an empty library project, as the R class is always kept and
         // then removed by library jar transforms.
         val addCompileRClass = (this is LibraryTaskManager
-                && creationConfig.buildFeatures.androidResources)
+                && creationConfig.androidResourcesEnabled)
         val task: TaskProvider<out Task> =
                 createR8Task(creationConfig, isTestApplication, addCompileRClass)
         if (creationConfig.variantScope.postprocessingFeatures != null) {
@@ -2645,7 +2648,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             return
         }
         val configuration =
-                creationConfig.variantDependencies.getElements(PublishedConfigType.RUNTIME_ELEMENTS)
+                creationConfig.variantDependencies.getElements(PublishedConfigSpec(PublishedConfigType.RUNTIME_ELEMENTS))
         Preconditions.checkNotNull(
                 configuration,
                 "Publishing to Runtime Element with no Runtime Elements configuration object. "

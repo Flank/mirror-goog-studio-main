@@ -75,16 +75,6 @@ class LibraryPublishingTest {
                         repositories {
                             maven { url '../testrepo' }
                         }
-
-                        publications {
-                            release(MavenPublication) {
-                                groupId = 'com.example.android'
-                                artifactId = 'myLib'
-                                version = '1.0'
-
-                                from components.release
-                            }
-                        }
                     }
                 }
             """.trimIndent()
@@ -93,6 +83,7 @@ class LibraryPublishingTest {
 
     @Test
     fun testNoAutomaticComponentCreation() {
+        addPublication(RELEASE)
         var result = library.executor()
             .with(BooleanOption.DISABLE_AUTOMATIC_COMPONENT_CREATION, true)
             .expectFailure().run("help")
@@ -120,6 +111,7 @@ class LibraryPublishingTest {
 
     @Test
     fun testSingleVariantPublishing() {
+        addPublication(RELEASE)
         TestFileUtils.appendToFile(
             library.buildFile,
             """
@@ -131,18 +123,20 @@ class LibraryPublishingTest {
                 }
             """.trimIndent()
         )
-        library.execute("clean", "publishReleasePublicationToMavenRepository")
+        library.execute("clean", "publish")
         app.execute("clean", "assembleDebug")
     }
 
     @Test
     fun testMigrationWithoutChanges() {
-        library.execute("clean", "publishReleasePublicationToMavenRepository")
+        addPublication(RELEASE)
+        library.execute("clean", "publish")
         app.execute("clean", "assembleDebug")
     }
 
     @Test
     fun testMigrationWarningMessage() {
+        addPublication(RELEASE)
         val result = library.executor().run("help")
         result.stdout.use {
             ScannerSubject.assertThat(it).contains("""
@@ -154,6 +148,7 @@ class LibraryPublishingTest {
 
     @Test
     fun testPassingWrongVariantName() {
+        addPublication(RELEASE)
         TestFileUtils.appendToFile(
             library.buildFile,
             """
@@ -170,9 +165,296 @@ class LibraryPublishingTest {
                 "Could not get unknown property 'release' for SoftwareComponentInternal")
     }
 
+    @Test
+    fun testBasicMultipleVariantPublishing() {
+        addPublication(CUSTOM)
+        TestFileUtils.appendToFile(
+            library.buildFile,
+            """
+
+                android {
+                    publishing {
+                        multipleVariants("$CUSTOM") {
+                            includeBuildTypeValues("debug", "release")
+                        }
+                    }
+                }
+            """.trimIndent()
+        )
+        library.execute("clean", "publish")
+        app.execute("clean", "assembleDebug")
+    }
+
+    @Test
+    fun testMultipleVariantPublishingWithoutAttribute() {
+        addPublication(CUSTOM)
+        TestFileUtils.appendToFile(
+            library.buildFile,
+            """
+
+                android {
+                    publishing {
+                        multipleVariants("$CUSTOM") {
+                            includeBuildTypeValues("release")
+                        }
+                    }
+                }
+            """.trimIndent()
+        )
+        library.execute("clean", "publish")
+        app.execute("clean", "assembleDebug")
+    }
+
+    @Test
+    fun testMultipleVariantPublishingWithFlavorAttribute() {
+        addPublication(CUSTOM)
+        TestFileUtils.appendToFile(
+            app.buildFile,
+            """
+                android {
+                    flavorDimensions 'version'
+                    productFlavors {
+                        free {}
+                        paid {}
+                        internal {}
+                    }
+                }
+            """.trimIndent()
+        )
+        TestFileUtils.appendToFile(
+            library.buildFile,
+            """
+
+                android {
+                    flavorDimensions 'version'
+                    productFlavors {
+                        free {}
+                        paid {}
+                        internal {}
+                    }
+                    publishing {
+                        multipleVariants("$CUSTOM") {
+                            includeBuildTypeValues("debug", "release")
+                            includeFlavorDimensionAndValues("version", "free", "paid")
+                        }
+                    }
+                }
+            """.trimIndent()
+        )
+        library.execute("clean", "publish")
+        app.execute("clean", "assembleFreeDebug")
+
+        val failure = app.executor().expectFailure().run("clean", "assembleInternalDebug")
+        failure.stderr.use {
+            ScannerSubject.assertThat(it).contains("Could not resolve com.example.android:myLib:1.0")
+        }
+    }
+
+    @Test
+    fun testMultipleVariantPublishingShortCut() {
+        addPublication(CUSTOM)
+        TestFileUtils.appendToFile(
+            library.buildFile,
+            """
+
+                android {
+                    publishing {
+                        multipleVariants("custom") {
+                            allVariants()
+                        }
+                    }
+                }
+            """.trimIndent()
+        )
+        library.execute("clean", "publish")
+        app.execute("clean", "assembleDebug")
+    }
+
+    @Test
+    fun testMultipleVariantPublishingWithDefaultComponent() {
+        addPublication(DEFAULT)
+        TestFileUtils.appendToFile(
+            library.buildFile,
+            """
+
+                android {
+                    publishing {
+                        multipleVariants {
+                            allVariants()
+                        }
+                    }
+                }
+            """.trimIndent()
+        )
+        library.execute("clean", "publish")
+        app.execute("clean", "assembleDebug")
+    }
+
+    @Test
+    fun testMultipleVariantPublishingWithSameComponentName() {
+        addPublication(CUSTOM)
+        TestFileUtils.appendToFile(
+            library.buildFile,
+            """
+
+                android {
+                    publishing {
+                        multipleVariants("custom") {
+                            allVariants()
+                        }
+                        multipleVariants("custom") {
+                            includeBuildTypeValues("debug")
+                        }
+                    }
+                }
+            """.trimIndent()
+        )
+        val failure = library.executor().expectFailure().run("clean", "publish")
+        failure.stderr.use {
+            ScannerSubject.assertThat(it).contains(
+                "Using multipleVariants publishing DSL multiple times to publish variants " +
+                        "to the same component \"custom\" is not allowed.")
+        }
+    }
+
+    @Test
+    fun testMixVariantPublishingWithSameComponentName() {
+        addPublication(DEFAULT)
+        TestFileUtils.appendToFile(
+            library.buildFile,
+            """
+
+                android {
+                    buildTypes {
+                        create("default") {
+                            initWith debug
+                        }
+                    }
+                    publishing {
+                        multipleVariants {
+                            allVariants()
+                        }
+                        singleVariant("default")
+                    }
+                }
+            """.trimIndent()
+        )
+        val failure = library.executor().expectFailure().run("clean", "publish")
+        failure.stderr.use {
+            ScannerSubject.assertThat(it).contains(
+                "Publishing variants to the \"default\" component using both singleVariant and " +
+                        "multipleVariants publishing DSL is not allowed."
+                )
+        }
+    }
+
+    @Test
+    fun testUsingNonExistingDimension() {
+        TestFileUtils.appendToFile(
+            library.buildFile,
+            """
+
+                android {
+                    publishing {
+                        multipleVariants {
+                            includeFlavorDimensionAndValues("randomDimension", "free", "paid")
+                        }
+                    }
+                }
+            """.trimIndent()
+        )
+        val failure = library.executor().expectFailure().run("help")
+        failure.stderr.use {
+            ScannerSubject.assertThat(it).contains(
+                "Using non-existing dimension \"randomDimension\" when selecting variants to be " +
+                        "published in multipleVariants publishing DSL."
+            )
+        }
+    }
+
+    @Test
+    fun testUsingNonExistingFlavorValue() {
+        TestFileUtils.appendToFile(
+            library.buildFile,
+            """
+
+                android {
+                    flavorDimensions 'version'
+                    productFlavors {
+                        free {}
+                        paid {}
+                    }
+
+                    publishing {
+                        multipleVariants {
+                            includeFlavorDimensionAndValues("version", "free", "randomValue")
+                        }
+                    }
+                }
+            """.trimIndent()
+        )
+        val failure = library.executor().expectFailure().run("help")
+        failure.stderr.use {
+            ScannerSubject.assertThat(it).contains(
+                "Using non-existing flavor value \"randomValue\" when selecting variants to be " +
+                        "published in multipleVariants publishing DSL."
+            )
+        }
+    }
+
+    @Test
+    fun testUsingNonExistingBuildType() {
+        TestFileUtils.appendToFile(
+            library.buildFile,
+            """
+
+                android {
+                    publishing {
+                        multipleVariants {
+                            includeBuildTypeValues("debug", "random")
+                        }
+                    }
+                }
+            """.trimIndent()
+        )
+        val failure = library.executor().expectFailure().run("help")
+        failure.stderr.use {
+            ScannerSubject.assertThat(it).contains(
+                "Using non-existing build type \"random\" when selecting variants to be " +
+                        "published in multipleVariants publishing DSL."
+            )
+        }
+    }
+
+    private fun addPublication(componentName: String) {
+        TestFileUtils.appendToFile(
+            library.buildFile,
+            """
+
+                afterEvaluate {
+                    publishing {
+
+                        publications {
+                            myPublication(MavenPublication) {
+                                groupId = 'com.example.android'
+                                artifactId = 'myLib'
+                                version = '1.0'
+
+                                from components.$componentName
+                            }
+                        }
+                    }
+                }
+            """.trimIndent()
+        )
+    }
+
     companion object {
         private const val APP_MODULE = ":app"
         private const val LIBRARY_MODULE = ":library"
         private const val LIBRARY_PACKAGE = "com.example.lib"
+        private const val RELEASE: String = "release"
+        private const val CUSTOM: String = "custom"
+        private const val DEFAULT: String = "default"
     }
 }

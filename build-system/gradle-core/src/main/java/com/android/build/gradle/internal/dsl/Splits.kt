@@ -16,19 +16,14 @@
 
 package com.android.build.gradle.internal.dsl
 
-import com.android.build.api.dsl.AbiSplit
-import com.android.build.api.dsl.DensitySplit
 import com.android.build.gradle.internal.services.DslServices
 import org.gradle.api.Action
 import javax.inject.Inject
 
-open class Splits @Inject constructor(dslServices: DslServices) :
+abstract class Splits @Inject constructor(dslServices: DslServices) :
     com.android.build.api.dsl.Splits {
-
-    override val density: DensitySplitOptions =
-        dslServices.newInstance(DensitySplitOptions::class.java)
-
-    override val abi: AbiSplitOptions = dslServices.newInstance(AbiSplitOptions::class.java)
+    abstract override val density: DensitySplitOptions
+    abstract override val abi: AbiSplitOptions
 
     /**
      * Encapsulates settings for
@@ -40,36 +35,6 @@ open class Splits @Inject constructor(dslServices: DslServices) :
      */
     val language: LanguageSplitOptions =
         dslServices.newInstance(LanguageSplitOptions::class.java)
-
-    /**
-     * Encapsulates settings for
-     * [building per-density APKs](https://developer.android.com/studio/build/configure-apk-splits.html#configure-density-split).
-     *
-     * For more information about the properties you can configure in this block, see
-     * [DensitySplitOptions].
-     */
-    fun density(action: Action<DensitySplitOptions>) {
-        action.execute(density)
-    }
-
-    override fun density(action: DensitySplit.() -> Unit) {
-        action.invoke(density)
-    }
-
-    /**
-     * Encapsulates settings for <a
-     * [building per-ABI APKs](https://developer.android.com/studio/build/configure-apk-splits.html#configure-abi-split).
-     *
-     * For more information about the properties you can configure in this block, see
-     * [AbiSplitOptions].
-     */
-    fun abi(action: Action<AbiSplitOptions>) {
-        action.execute(abi)
-    }
-
-    override fun abi(action: AbiSplit.() -> Unit) {
-        action.invoke(abi)
-    }
 
     /**
      * Encapsulates settings for

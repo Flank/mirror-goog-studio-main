@@ -28,8 +28,10 @@ import com.android.Version;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.artifact.impl.ArtifactsImpl;
+import com.android.build.api.component.AndroidTest;
 import com.android.build.api.component.impl.ComponentImpl;
 import com.android.build.api.dsl.ApplicationExtension;
+import com.android.build.api.variant.impl.HasAndroidTest;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.TestAndroidConfig;
 import com.android.build.gradle.internal.BuildTypeData;
@@ -387,11 +389,28 @@ public class ModelBuilder<Extension extends BaseExtension>
         }
 
         String defaultVariant = variantModel.getDefaultVariant();
+        String namespace = null;
+        String androidTestNamespace = null;
         for (com.android.build.api.variant.impl.VariantImpl variant : variantModel.getVariants()) {
             variantNames.add(variant.getName());
             if (shouldBuildVariant) {
                 variants.add(createVariant(variant));
             }
+
+            // search for the namespace value. We can take the first variant as it's shared across
+            // them. For AndroidTest we take the first non-null variant as well.
+            namespace = variant.getNamespace().get();
+            if (variant instanceof HasAndroidTest) {
+                AndroidTest test = ((HasAndroidTest) variant).getAndroidTest();
+                if (test != null) {
+                    androidTestNamespace = test.getNamespace().get();
+                }
+            }
+        }
+
+        if (namespace == null) {
+            // this should only happen if we have no variants, which is unlikely.
+            namespace = "";
         }
 
         // get groupId/artifactId for project
@@ -408,6 +427,8 @@ public class ModelBuilder<Extension extends BaseExtension>
         return new DefaultAndroidProject(
                 project.getName(),
                 groupId,
+                namespace,
+                androidTestNamespace,
                 defaultConfig,
                 flavorDimensionList,
                 buildTypes,
@@ -1123,8 +1144,12 @@ public class ModelBuilder<Extension extends BaseExtension>
             result = Lists.newArrayListWithCapacity(2);
         }
 
-        result.add(component.getPaths().getRenderscriptResOutputDir().get().getAsFile());
-        result.add(component.getPaths().getGeneratedResOutputDir().get().getAsFile());
+        if (component.getBuildFeatures().getRenderScript()) {
+            result.add(component.getPaths().getRenderscriptResOutputDir().get().getAsFile());
+        }
+        if (component.getAndroidResourcesEnabled()) {
+            result.add(component.getPaths().getGeneratedResOutputDir().get().getAsFile());
+        }
         return result;
     }
 

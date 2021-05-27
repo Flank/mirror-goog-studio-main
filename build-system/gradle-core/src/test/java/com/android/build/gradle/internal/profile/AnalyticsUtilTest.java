@@ -22,7 +22,9 @@ import com.android.annotations.NonNull;
 import com.android.build.api.artifact.SingleArtifact;
 import com.android.build.api.transform.Transform;
 import com.android.build.gradle.internal.dsl.Splits;
+import com.android.build.gradle.internal.dsl.decorator.AndroidPluginDslDecoratorKt;
 import com.android.build.gradle.internal.fixtures.FakeProviderFactory;
+import com.android.build.gradle.internal.services.DslServices;
 import com.android.build.gradle.internal.services.FakeServices;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
@@ -40,11 +42,13 @@ import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import com.google.wireless.android.sdk.stats.GradleBuildSplits;
 import com.google.wireless.android.sdk.stats.GradleProjectOptionsSettings;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import kotlin.Unit;
 import org.gradle.api.Plugin;
 import org.gradle.api.Task;
 import org.junit.Test;
@@ -69,9 +73,30 @@ public class AnalyticsUtilTest {
                 false);
     }
 
+    private interface SplitsWrapper {
+        com.android.build.api.dsl.Splits getSplits();
+    }
+
+    private Splits getSplitsInstance() {
+        DslServices dslServices = FakeServices.createDslServices();
+        try {
+            return (Splits)
+                    AndroidPluginDslDecoratorKt.getAndroidPluginDslDecorator()
+                            .decorate(SplitsWrapper.class)
+                            .getDeclaredConstructor(DslServices.class)
+                            .newInstance(dslServices)
+                            .getSplits();
+        } catch (InstantiationException
+                | IllegalAccessException
+                | InvocationTargetException
+                | NoSuchMethodException e) {
+            return null;
+        }
+    }
+
     @Test
     public void splitConverterTest() {
-        Splits splits = new Splits(FakeServices.createDslServices());
+        Splits splits = getSplitsInstance();
         // Defaults
         {
             GradleBuildSplits proto = AnalyticsUtil.toProto(splits);
@@ -88,6 +113,7 @@ public class AnalyticsUtilTest {
                     it.setUniversalApk(true);
                     it.reset();
                     it.include("x86", "armeabi");
+                    return Unit.INSTANCE;
                 });
         {
             GradleBuildSplits proto = AnalyticsUtil.toProto(splits);
@@ -104,6 +130,7 @@ public class AnalyticsUtilTest {
                     it.setEnable(true);
                     it.reset();
                     it.include("xxxhdpi", "xxhdpi");
+                    return Unit.INSTANCE;
                 });
         {
             GradleBuildSplits proto = AnalyticsUtil.toProto(splits);

@@ -21,10 +21,10 @@ import org.gradle.api.Incubating
 /**
  * Shared properties between DSL objects [ProductFlavor] and [DefaultConfig]
  */
-@Incubating
 interface BaseFlavor : VariantDimension {
     // TODO(b/140406102)
     /** The name of the flavor. */
+    @Incubating
     fun getName(): String
 
     /**
@@ -32,6 +32,8 @@ interface BaseFlavor : VariantDimension {
      *
      * See [Set the Application ID](https://developer.android.com/studio/build/application-id.html)
      */
+    @get:Incubating
+    @set:Incubating
     var testApplicationId: String?
 
     /**
@@ -41,11 +43,15 @@ interface BaseFlavor : VariantDimension {
      *
      * See [uses-sdk element documentation](http://developer.android.com/guide/topics/manifest/uses-sdk-element.html).
      */
+    @get:Incubating
+    @set:Incubating
     var minSdk: Int?
 
     @Deprecated("Replaced by minSdk property")
+    @Incubating
     fun setMinSdkVersion(minSdkVersion: Int)
     @Deprecated("Replaced by minSdk property")
+    @Incubating
     fun minSdkVersion(minSdkVersion: Int)
 
     /**
@@ -55,17 +61,24 @@ interface BaseFlavor : VariantDimension {
      *
      * See [uses-sdk element documentation](http://developer.android.com/guide/topics/manifest/uses-sdk-element.html).
      */
+
+    @get:Incubating
+    @set:Incubating
     var minSdkPreview: String?
 
     @Deprecated("Replaced by minSdkPreview property")
+    @Incubating
     fun setMinSdkVersion(minSdkVersion: String?)
     @Deprecated("Replaced by minSdkPreview property")
+    @Incubating
     fun minSdkVersion(minSdkVersion: String?)
 
     /**
      * The renderscript target api, or null if not specified. This is only the value set on this
      * product flavor.
      */
+    @get:Incubating
+    @set:Incubating
     var renderscriptTargetApi: Int?
 
     /**
@@ -74,6 +87,8 @@ interface BaseFlavor : VariantDimension {
      *
      * True if support mode is enabled, false if not, and null if not specified.
      */
+    @get:Incubating
+    @set:Incubating
     var renderscriptSupportModeEnabled: Boolean?
 
     /**
@@ -82,12 +97,16 @@ interface BaseFlavor : VariantDimension {
      *
      * True if BLAS support lib is enabled, false if not, and null if not specified.
      */
+    @get:Incubating
+    @set:Incubating
     var renderscriptSupportModeBlasEnabled: Boolean?
 
     /**
      * Whether the renderscript code should be compiled to generate C/C++ bindings.
      * True for C/C++ generation, false for Java, null if not specified.
      */
+    @get:Incubating
+    @set:Incubating
     var renderscriptNdkModeEnabled: Boolean?
 
     /**
@@ -98,6 +117,8 @@ interface BaseFlavor : VariantDimension {
      *
      * See [instrumentation](http://developer.android.com/guide/topics/manifest/instrumentation-element.html).
      */
+    @get:Incubating
+    @set:Incubating
     var testInstrumentationRunner: String?
 
     /**
@@ -114,6 +135,7 @@ interface BaseFlavor : VariantDimension {
      * ./gradlew connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.foo=bar
      * ```
      */
+    @get:Incubating
     val testInstrumentationRunnerArguments: MutableMap<String, String>
 
     @Incubating
@@ -133,6 +155,8 @@ interface BaseFlavor : VariantDimension {
     /**
      * See [instrumentation](http://developer.android.com/guide/topics/manifest/instrumentation-element.html).
      */
+    @get:Incubating
+    @set:Incubating
     var testHandleProfiling: Boolean?
 
     @Incubating
@@ -143,6 +167,8 @@ interface BaseFlavor : VariantDimension {
     /**
      * See [instrumentation](http://developer.android.com/guide/topics/manifest/instrumentation-element.html).
      */
+    @get:Incubating
+    @set:Incubating
     var testFunctionalTest: Boolean?
 
     @Incubating
@@ -184,6 +210,7 @@ interface BaseFlavor : VariantDimension {
      * To learn more, see
      * [Remove unused alternative resources](https://d.android.com/studio/build/shrink-code.html#unused-alt-resources).
      */
+    @get:Incubating
     val resourceConfigurations: MutableSet<String>
 
     @Incubating
@@ -196,10 +223,12 @@ interface BaseFlavor : VariantDimension {
     @Deprecated("Replaced by resourceConfigurations field")
     fun resConfigs(vararg config: String)
 
-        /** Options to configure the build-time support for `vector` drawables. */
+    /** Options to configure the build-time support for `vector` drawables. */
+    @get:Incubating
     val vectorDrawables: VectorDrawables
 
     /** Configures [VectorDrawables]. */
+    @Incubating
     fun vectorDrawables(action: VectorDrawables.() -> Unit)
 
     /**
@@ -208,6 +237,9 @@ interface BaseFlavor : VariantDimension {
      * If true, this enables the app to transition from an embedded wear app to one
      * distributed by the play store directly.
      */
+
+    @get:Incubating
+    @set:Incubating
     var wearAppUnbundled: Boolean?
 
 
@@ -269,6 +301,7 @@ interface BaseFlavor : VariantDimension {
      * }
      * ```
      */
+    @Incubating
     fun missingDimensionStrategy(dimension: String, requestedValue: String)
 
     /**
@@ -333,6 +366,7 @@ interface BaseFlavor : VariantDimension {
      * }
      * ```
      */
+    @Incubating
     fun missingDimensionStrategy(dimension: String, vararg requestedValues: String)
 
     /**
@@ -396,5 +430,6 @@ interface BaseFlavor : VariantDimension {
      * }
      * ```
      */
+    @Incubating
     fun missingDimensionStrategy(dimension: String, requestedValues: List<String>)
 }

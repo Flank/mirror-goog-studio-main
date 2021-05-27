@@ -6,6 +6,8 @@
          - shadersDirectories = (null)
       - unitTestSourceProvider:
          - shadersDirectories = (null)
+      - testFixturesSourceProvider:
+         - shadersDirectories = (null)
    > buildTypes:
       - debug:
          - sourceProvider:
@@ -14,12 +16,16 @@
             - shadersDirectories = (null)
          - unitTestSourceProvider:
             - shadersDirectories = (null)
+         - testFixturesSourceProvider:
+            - shadersDirectories = (null)
       - release:
          - sourceProvider:
             - shadersDirectories = (null)
          - androidTestSourceProvider:
             - shadersDirectories = (null)
          - unitTestSourceProvider:
+            - shadersDirectories = (null)
+         - testFixturesSourceProvider:
             - shadersDirectories = (null)
    < buildTypes
 < AndroidProject

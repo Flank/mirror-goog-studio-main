@@ -379,6 +379,107 @@ class SdkIntDetectorTest : AbstractCheckTest() {
         )
     }
 
+    fun test189154435() {
+        // Regression test for
+        // 189154435: AnnotateVersionCheck considers "Context" a lambda
+        lint().files(
+            projectProperties().library(true),
+            java(
+                """
+                package test.pkg;
+
+                import android.content.Context;
+                import android.content.Intent;
+                import android.os.Build;
+
+                public class AnnotateTest {
+                    private static final String ACTION_ENABLE_WEAR_BATTERY_SAVER = "ACTION_ENABLE_WEAR_BATTERY_SAVER";
+                    private static final String ACTION_ENTER_TWM = "ACTION_ENTER_TWM";
+
+                    public void showToggleBatterySaverConfirmation(Context context) {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                            context.startActivity(
+                                    new Intent(ACTION_ENABLE_WEAR_BATTERY_SAVER).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+                        }
+                    }
+                }
+                """
+            ).indented()
+        ).run().expectClean()
+    }
+
+    fun testFunctions() {
+        lint().files(
+            projectProperties().library(true),
+            kotlin(
+                """
+                @file:Suppress("unused")
+
+                package test.pkg
+
+                import android.os.Build
+                import java.util.function.Function
+
+                open class MyJavaFunction : Function<String, Int> {
+                    override fun apply(p0: String): Int {
+                        return p0.length
+                    }
+                }
+
+                open class MyKotlinFunction : Function1<String, Int> {
+                    override fun invoke(p1: String): Int {
+                        return p1.length
+                    }
+                }
+
+                fun test1(function: MyKotlinFunction, arg: String) {
+                    if (Build.VERSION.SDK_INT > 26) {
+                        function.invoke(arg)
+                    }
+                }
+
+                // TODO: What about androidx.arch.core.util ?
+                """
+            ).indented(),
+            java(
+                """
+                package test.pkg;
+
+                import android.os.Build;
+                import java.util.function.Function;
+
+                public class FunctionTest {
+                    void test(Function<String, Integer> function, String arg) {
+                        if (Build.VERSION.SDK_INT > 26) {
+                            function.apply(arg);
+                        }
+                    }
+                    void test2(MyJavaFunction function, String arg) {
+                        if (Build.VERSION.SDK_INT > 26) {
+                            function.apply(arg);
+                        }
+                    }
+                }
+                """
+            ).indented(),
+            checkSdkIntAnnotation,
+            supportJar
+        ).run().expect(
+            """
+            src/test/pkg/FunctionTest.java:7: Warning: This method should be annotated with @ChecksSdkIntAtLeast(api=android.os.Build.VERSION_CODES.O_MR1, lambda=0) [AnnotateVersionCheck]
+                void test(Function<String, Integer> function, String arg) {
+                     ~~~~
+            src/test/pkg/FunctionTest.java:12: Warning: This method should be annotated with @ChecksSdkIntAtLeast(api=android.os.Build.VERSION_CODES.O_MR1, lambda=0) [AnnotateVersionCheck]
+                void test2(MyJavaFunction function, String arg) {
+                     ~~~~~
+            src/test/pkg/MyJavaFunction.kt:20: Warning: This method should be annotated with @ChecksSdkIntAtLeast(api=android.os.Build.VERSION_CODES.O_MR1, lambda=0) [AnnotateVersionCheck]
+            fun test1(function: MyKotlinFunction, arg: String) {
+                ~~~~~
+            0 errors, 3 warnings
+            """
+        )
+    }
+
     companion object {
         private val checkSdkIntAnnotation = VersionChecksTest.checkSdkIntAnnotation
     }

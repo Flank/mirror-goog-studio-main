@@ -20,14 +20,40 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.android.build.api.dsl.AbiSplit;
+import com.android.build.gradle.internal.dsl.decorator.AndroidPluginDslDecoratorKt;
+import com.android.build.gradle.internal.services.DslServices;
+import com.android.build.gradle.internal.services.FakeServices;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Set;
 import org.junit.Test;
 
 public class AbiSplitOptionsTest {
 
+    private interface AbiSplitOptionsWrapper {
+        AbiSplit getAbiSplit();
+    }
+
+    private AbiSplitOptions getAbiSplitOptionsInstance() {
+        DslServices dslServices = FakeServices.createDslServices();
+        try {
+            return (AbiSplitOptions)
+                    AndroidPluginDslDecoratorKt.getAndroidPluginDslDecorator()
+                            .decorate(AbiSplitOptionsWrapper.class)
+                            .getDeclaredConstructor(DslServices.class)
+                            .newInstance(dslServices)
+                            .getAbiSplit();
+        } catch (InstantiationException
+                | IllegalAccessException
+                | InvocationTargetException
+                | NoSuchMethodException e) {
+            return null;
+        }
+    }
+
     @Test
     public void testDisabled() {
-        AbiSplitOptions options = new AbiSplitOptions();
+        AbiSplitOptions options = getAbiSplitOptionsInstance();
 
         Set<String> values = options.getApplicableFilters();
 
@@ -36,7 +62,7 @@ public class AbiSplitOptionsTest {
 
     @Test
     public void testUnallowedInclude() {
-        AbiSplitOptions options = new AbiSplitOptions();
+        AbiSplitOptions options = getAbiSplitOptionsInstance();
         options.setEnable(true);
 
         String wrongValue = "x86_126bit";
@@ -53,7 +79,7 @@ public class AbiSplitOptionsTest {
 
     @Test
     public void testExclude() {
-        AbiSplitOptions options = new AbiSplitOptions();
+        AbiSplitOptions options = getAbiSplitOptionsInstance();
         options.setEnable(true);
 
         String oldValue = "armeabi";

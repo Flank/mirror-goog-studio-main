@@ -20,7 +20,7 @@ import com.android.builder.model.v2.models.AndroidDsl
 import com.android.builder.model.v2.models.AndroidProject
 import com.android.builder.model.v2.models.GlobalLibraryMap
 import com.android.builder.model.v2.models.ModelBuilderParameter
-import com.android.builder.model.v2.models.ModelVersions
+import com.android.builder.model.v2.models.Versions
 import com.android.builder.model.v2.models.ProjectSyncIssues
 import com.android.builder.model.v2.models.VariantDependencies
 import com.android.builder.model.v2.models.ndk.NativeModelBuilderParameter
@@ -89,7 +89,7 @@ class GetAndroidModelV2Action(
 
         for ((buildId, project) in projects) {
             // if we don't find ModelVersions, then it's not an AndroidProject, move on.
-            val modelVersions = buildController.findModel(project, ModelVersions::class.java) ?: continue
+            val modelVersions = buildController.findModel(project, Versions::class.java) ?: continue
             val androidProject = buildController.findModel(project, AndroidProject::class.java)
             val androidDsl = buildController.findModel(project, AndroidDsl::class.java)
 

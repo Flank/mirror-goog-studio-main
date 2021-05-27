@@ -18,6 +18,7 @@
 #include <unistd.h>
 #include <cassert>
 #include "utils/clock.h"
+#include "utils/fd_utils.h"
 #include "utils/socket_utils.h"
 
 namespace {
@@ -63,6 +64,8 @@ bool ConnectAndSendDataToPerfa(const std::string& connect_arg) {
   int sent_count = profiler::ConnectAndSendDataToSocket(
       app_socket.c_str(), daemon_socket_fd, control.c_str(), retry_count,
       kTimeoutUs);
+
+  if (daemon_socket_fd > 0) CloseFdAndLogAtError(daemon_socket_fd);
 
   // Sent |control| data is of length 1.
   return sent_count == 1;

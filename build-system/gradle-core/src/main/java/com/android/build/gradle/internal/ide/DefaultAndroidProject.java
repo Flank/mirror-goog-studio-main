@@ -53,6 +53,8 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
     @NonNull
     private final String name;
     @Nullable private final String groupId;
+    @NonNull private final String namespace;
+    @Nullable private final String androidTestNamespace;
     @NonNull
     private final String compileTarget;
     @NonNull
@@ -110,6 +112,8 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
     DefaultAndroidProject(
             @NonNull String name,
             @Nullable String groupId,
+            @NonNull String namespace,
+            @Nullable String androidTestNamespace,
             @NonNull ProductFlavorContainer defaultConfig,
             @NonNull Collection<String> flavorDimensions,
             @NonNull Collection<BuildTypeContainer> buildTypes,
@@ -142,6 +146,8 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
             @NonNull Collection<VariantBuildInformation> variantsBuildInformation) {
         this.name = name;
         this.groupId = groupId;
+        this.namespace = namespace;
+        this.androidTestNamespace = androidTestNamespace;
         this.defaultConfig = defaultConfig;
         this.flavorDimensions = flavorDimensions;
         this.buildTypes = buildTypes;
@@ -195,6 +201,18 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
     @Override
     public String getGroupId() {
         return groupId;
+    }
+
+    @Override
+    @NonNull
+    public String getNamespace() {
+        return namespace;
+    }
+
+    @Override
+    @Nullable
+    public String getAndroidTestNamespace() {
+        return androidTestNamespace;
     }
 
     @Override
@@ -398,6 +416,8 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
                 && apiVersion == that.apiVersion
                 && Objects.equals(name, that.name)
                 && Objects.equals(groupId, that.groupId)
+                && Objects.equals(namespace, that.namespace)
+                && Objects.equals(androidTestNamespace, that.androidTestNamespace)
                 && Objects.equals(compileTarget, that.compileTarget)
                 && Objects.equals(bootClasspath, that.bootClasspath)
                 && Objects.equals(frameworkSource, that.frameworkSource)
@@ -433,6 +453,8 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
         return Objects.hash(
                 name,
                 groupId,
+                namespace,
+                androidTestNamespace,
                 compileTarget,
                 bootClasspath,
                 frameworkSource,

@@ -30,21 +30,15 @@ import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
 import io.grpc.Metadata
 import io.grpc.Status
-import io.grpc.StatusRuntimeException
 import java.io.File
 import java.io.OutputStream
 import java.net.ConnectException
 import java.net.Socket
-import java.time.Duration
 import java.util.concurrent.Executor
 import java.util.concurrent.TimeUnit
 import java.util.logging.Logger
 import kotlin.system.measureTimeMillis
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.net.NoRouteToHostException
 
@@ -62,9 +56,9 @@ class IceboxCallerImpl public constructor(
         val logger = getLogger()
     }
 
-    private var iceboxCoroutine: Job? = null
     private lateinit var snapshotService: SnapshotServiceBlockingStub
     private lateinit var managedChannel: ManagedChannel
+    private val logcatParser = LogcatParser()
 
     init {
         setupGrpc()
@@ -87,31 +81,6 @@ class IceboxCallerImpl public constructor(
 
         override fun thisUsesUnstableApi() {
         }
-    }
-
-    @VisibleForTesting
-    suspend fun queryPid(
-            deviceController: DeviceController,
-            testedApplicationID: String
-    ): Long {
-        // Query PID
-        // It retries multiple times if the query fails. The number of retries and
-        // intervals are determined heuristically.
-        var retries = 0
-        var retryTime = Duration.ofSeconds(1)
-        val maxRetries = 5
-        repeat(maxRetries) {
-            val result = deviceController.deviceShell(listOf("pidof", testedApplicationID))
-            // parse pid from output
-            val pid = result.output.firstOrNull()?.trim()?.toLong() ?: 0
-            if (pid > 0) return pid
-            retries++
-            logger.fine("IceboxCaller retrying $retries")
-            delay(retryTime.toMillis())
-            // Exponential wait time
-            retryTime = retryTime.multipliedBy(2)
-        }
-        return -1
     }
 
     private fun setupGrpc() {
@@ -138,55 +107,30 @@ class IceboxCallerImpl public constructor(
             maxSnapshotNumber: Int,
             androidStudioDdmlibPort: Int
     ) {
-        iceboxCoroutine = coroutineScope.launch {
-            try {
-                runIceboxImpl(
-                        deviceController, testedApplicationID, snapshotNamePrefix, maxSnapshotNumber,
-                        androidStudioDdmlibPort
-                )
-            } catch (e: CancellationException) {
-                // No-op
-            } catch (e: StatusRuntimeException) {
-                logger.severe("icebox failed: $e. Please try to update the emulator to the latest"
-                    + " version, or append the flag \"-grpc 8554\" when booting the emulator.")
-            } catch (e: Throwable) {
-                logger.severe("icebox failed: $e")
+        logcatParser.start(deviceController) { date, time, pid, uid, verbose, tag, message ->
+            if (message.contains("Waiting for debugger to connect")) {
+                val result = deviceController.deviceShell(listOf("pidof", testedApplicationID))
+                val target_pid = result.output.firstOrNull()?.trim()
+                if (target_pid == pid) {
+                    val pid_long = pid.toLong()
+                    notifyAndroidStudio(
+                        deviceController.getDevice().serial,
+                        pid_long,
+                        androidStudioDdmlibPort,
+                        logger
+                    )
+
+                    snapshotService.trackProcess(
+                        IceboxTarget.newBuilder()
+                            .setPid(pid_long)
+                            .setSnapshotId(snapshotNamePrefix)
+                            .setMaxSnapshotNumber(maxSnapshotNumber)
+                            .build()
+                    ).let {
+                        if (it.failed) logger.warning("Icebox failed: $it.err")
+                    }
+                }
             }
-        }
-    }
-
-    suspend fun runIceboxImpl(
-            deviceController: DeviceController,
-            testedApplicationID: String,
-            snapshotNamePrefix: String,
-            maxSnapshotNumber: Int,
-            androidStudioDdmlibPort: Int
-    ) {
-        // The test should be marked with --debug=true which will force it to wait for
-        // debugger on start. It is OK (actually, preferred) to query the pid after
-        // test started.
-
-        // Add a delay before querying the PID. Otherwise it might got a stale PID from the previous
-        // run.
-        delay(500)
-        val pid = queryPid(deviceController, testedApplicationID)
-        if (pid < 0) {
-            throw IceboxException("Failed to get pid for package $testedApplicationID:$pid")
-        }
-        logger.fine(
-                "IceboxCaller get pid $testedApplicationID:$pid"
-        )
-
-        notifyAndroidStudio(deviceController.getDevice().serial, pid, androidStudioDdmlibPort, logger)
-
-        snapshotService.trackProcess(
-                IceboxTarget.newBuilder()
-                        .setPid(pid)
-                        .setSnapshotId(snapshotNamePrefix)
-                        .setMaxSnapshotNumber(maxSnapshotNumber)
-                        .build()
-        ).let {
-            if (it.failed) logger.warning("Icebox failed: $it.err")
         }
     }
 
@@ -202,8 +146,7 @@ class IceboxCallerImpl public constructor(
             snapshotCompression: Compression,
             emulatorSnapshotId: String
     ) = runBlocking {
-        iceboxCoroutine?.join()
-        iceboxCoroutine = null
+        logcatParser.stop()
         try {
             val snapshotFormat = when (snapshotCompression) {
                 Compression.NONE -> SnapshotPackage.Format.TAR
@@ -270,7 +213,7 @@ class IceboxCallerImpl public constructor(
 
     override fun shutdownGrpc() {
         try {
-            iceboxCoroutine?.cancel()
+            logcatParser.stop()
             managedChannel.shutdown().awaitTermination(5, TimeUnit.SECONDS)
         } finally {
             managedChannel.shutdownNow()

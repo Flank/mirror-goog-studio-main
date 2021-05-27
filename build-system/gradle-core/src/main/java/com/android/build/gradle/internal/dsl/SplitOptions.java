@@ -24,33 +24,19 @@ import java.util.Collections;
 import java.util.Set;
 
 /** Base data representing how an FULL_APK should be split for a given dimension (density, abi). */
-public abstract class SplitOptions implements com.android.build.api.dsl.SplitOptions {
+public abstract class SplitOptions implements com.android.build.api.dsl.Split {
 
-    @NonNull
-    private final Set<String> values;
+    @NonNull private final Set<String> values = Sets.newHashSet();
 
-    @NonNull
-    private final ImmutableSet<String> allowedValues;
+    @NonNull private final Set<String> allowedValues = Sets.newHashSet();
 
-    private boolean enable = false;
-
-    protected SplitOptions() {
-        this.values = getDefaultValues();
-        this.allowedValues = getAllowedValues();
+    protected void init() {
+        this.values.addAll(getDefaultValues());
+        this.allowedValues.addAll(getAllowedValues());
     }
 
     protected abstract Set<String> getDefaultValues();
     protected abstract ImmutableSet<String> getAllowedValues();
-
-    @Override
-    public boolean isEnable() {
-        return enable;
-    }
-
-    @Override
-    public void setEnable(boolean enable) {
-        this.enable = enable;
-    }
 
     @Override
     public void exclude(@NonNull String... excludes) {
@@ -76,7 +62,7 @@ public abstract class SplitOptions implements com.android.build.api.dsl.SplitOpt
      */
     @NonNull
     public Set<String> getApplicableFilters() {
-        if (!enable) {
+        if (!isEnable()) {
             return Collections.emptySet();
         }
 

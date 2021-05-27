@@ -43,8 +43,6 @@ import org.gradle.tooling.events.OperationType;
 /** A Gradle tooling api build builder. */
 public final class GradleTaskExecutor extends BaseGradleExecutor<GradleTaskExecutor> {
 
-    @Nullable private final String buildToolsVersion;
-
     private boolean isExpectingFailure = false;
     private boolean queryOutputModel = false;
 
@@ -59,7 +57,6 @@ public final class GradleTaskExecutor extends BaseGradleExecutor<GradleTaskExecu
                 gradleTestProject.getProfileDirectory(),
                 gradleTestProject.getHeapSize(),
                 gradleTestProject.getWithConfigurationCaching());
-        buildToolsVersion = gradleTestProject.getBuildToolsVersion();
     }
 
     /**
@@ -78,18 +75,6 @@ public final class GradleTaskExecutor extends BaseGradleExecutor<GradleTaskExecu
         return this;
     }
 
-    /**
-     * Call connected check.
-     *
-     * <p>Uses deviceCheck in the background to support the device pool.
-     *
-     * <p>@Deprecated do not use. Use {@link #run(String...)} or {@link #run(List)} instead.
-     */
-    @Deprecated
-    public GradleBuildResult executeConnectedCheck() throws IOException, InterruptedException {
-        return run("deviceCheck");
-    }
-
     /** Execute the specified tasks */
     public GradleBuildResult run(@NonNull String... tasks)
             throws IOException, InterruptedException {
@@ -105,9 +90,6 @@ public final class GradleTaskExecutor extends BaseGradleExecutor<GradleTaskExecu
         List<String> args = Lists.newArrayList();
         args.addAll(getArguments());
 
-        if (buildToolsVersion != null) {
-            args.add("-PCUSTOM_BUILDTOOLS=" + buildToolsVersion);
-        }
         if (!isExpectingFailure) {
             args.add("--stacktrace");
         }

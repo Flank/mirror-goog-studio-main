@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.dsl
 
 import com.android.build.api.dsl.SingleVariant
 import com.android.build.gradle.internal.services.DslServices
+import com.android.builder.errors.IssueReporter
 
 abstract class AbstractPublishing<T : SingleVariant>(val dslService: DslServices) {
 
@@ -45,8 +46,12 @@ abstract class AbstractPublishing<T : SingleVariant>(val dslService: DslServices
         variantName: String,
         singleVariants: List<T>
     ) {
-        check(singleVariants.none { it.variantName == variantName}) {
-            "Creating component for $variantName variant in publishing DSL multiple times is not allowed."
+        if (singleVariants.any { it.variantName == variantName}) {
+            dslService.issueReporter.reportError(
+                IssueReporter.Type.GENERIC,
+                "Using singleVariant publishing DSL multiple times to publish " +
+                        "variant \"$variantName\" to component \"$variantName\" is not allowed."
+            )
         }
     }
 

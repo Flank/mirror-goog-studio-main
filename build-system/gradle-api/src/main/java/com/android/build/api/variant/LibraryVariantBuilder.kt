@@ -18,4 +18,4 @@ package com.android.build.api.variant
 /**
  * [VariantBuilder] type for library projects
  */
-interface LibraryVariantBuilder : VariantBuilder, HasAndroidTestBuilder
+interface LibraryVariantBuilder : VariantBuilder, HasAndroidTestBuilder, HasTestFixturesBuilder

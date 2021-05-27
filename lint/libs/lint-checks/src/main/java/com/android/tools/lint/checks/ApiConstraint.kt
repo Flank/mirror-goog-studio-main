@@ -92,8 +92,8 @@ inline class ApiConstraint(val bits: Int) {
     }
 
     companion object {
-        // Large enough to hold the 1000 value used by Build.VERSION_CODES.CUR_DEVELOPMENT
-        private const val INFINITY = 0xFFF
+        // Large enough to hold the 10000 value used by Build.VERSION_CODES.CUR_DEVELOPMENT
+        private const val INFINITY = 0x7FFF
         private const val TO_SHIFTS = 16
         private const val FROM_MASK = 0xFFFF
 

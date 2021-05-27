@@ -11,11 +11,6 @@ iml_module(
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
-    exports = [
-        "//tools/base/lint:studio.android.sdktools.lint-api",
-        "//tools/base/lint:studio.android.sdktools.lint-checks",
-    ],
-    # do not sort: must match IML order
     deps = [
         "//prebuilts/studio/intellij-sdk:studio-sdk",
         "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
@@ -29,8 +24,6 @@ iml_module(
         "//tools/adt/idea/.idea/libraries:truth[test]",
         "//tools/adt/idea/.idea/libraries:jimfs[test]",
         "//tools/base/apkparser:studio.android.sdktools.binary-resources[module]",
-        "//tools/base/lint:studio.android.sdktools.lint-api[module]",
-        "//tools/base/lint:studio.android.sdktools.lint-checks[module]",
         "//tools/base/sdk-common:studio.android.sdktools.sdk-common[module]",
     ],
 )
@@ -46,8 +39,6 @@ coverage_java_library(
         "//tools/base/annotations",
         "//tools/base/apkparser:tools.binary-resources",
         "//tools/base/common:tools.common",
-        "//tools/base/lint:tools.lint-api",
-        "//tools/base/lint:tools.lint-checks",
         "//tools/base/sdk-common:tools.sdk-common",
         "//tools/base/sdklib:tools.sdklib",
         "//tools/base/third_party:com.google.guava_guava",
@@ -66,7 +57,6 @@ coverage_java_test(
         ":tools.analyzer",
         "//tools/base/annotations",
         "//tools/base/common:tools.common",
-        "//tools/base/lint:tools.lint-api",
         "//tools/base/testutils:tools.testutils",
         "//tools/base/third_party:com.google.jimfs_jimfs",
         "//tools/base/third_party:com.google.truth_truth",

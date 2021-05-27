@@ -1004,6 +1004,10 @@ public class MainTest extends AbstractCheckTest {
                     "--disable",
                     "UsesMinSdkAttributes",
                     "--exitcode",
+                    "--disable", // Test 182321297
+                    "UnknownIssueId",
+                    "--enable",
+                    "SomeUnknownId",
                     project.getPath()
                 },
                 s -> s.replace(html.getPath(), "report.html"),

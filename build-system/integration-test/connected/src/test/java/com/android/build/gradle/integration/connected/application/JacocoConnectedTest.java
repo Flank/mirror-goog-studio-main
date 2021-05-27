@@ -33,7 +33,6 @@ import java.util.List;
 import java.util.regex.Pattern;
 import org.junit.Before;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExternalResource;
@@ -73,7 +72,6 @@ public class JacocoConnectedTest {
     }
 
     @Test
-    @Ignore("b/172657145")
     public void connectedCheckNamespacedRClasses() throws Exception {
         TestFileUtils.appendToFile(
                 project.getBuildFile(), "android.aaptOptions.namespaced = true\n");
@@ -192,14 +190,14 @@ public class JacocoConnectedTest {
         String expectedReportXml =
                 "<package name=\"com/example/helloworld\">"
                         + "<class name=\"com/example/helloworld/HelloWorld\" sourcefilename=\"HelloWorld.kt\">"
-                        + "<method name=\"onCreate\" desc=\"(Landroid/os/Bundle;)V\" line=\"9\">"
-                        + "<counter type=\"INSTRUCTION\" missed=\"0\" covered=\"7\"/>"
-                        + "<counter type=\"LINE\" missed=\"0\" covered=\"3\"/>"
-                        + "<counter type=\"COMPLEXITY\" missed=\"0\" covered=\"1\"/>"
-                        + "<counter type=\"METHOD\" missed=\"0\" covered=\"1\"/>"
-                        + "</method><method name=\"&lt;init&gt;\" desc=\"()V\" line=\"6\">"
+                        + "<method name=\"&lt;init&gt;\" desc=\"()V\" line=\"6\">"
                         + "<counter type=\"INSTRUCTION\" missed=\"0\" covered=\"3\"/>"
                         + "<counter type=\"LINE\" missed=\"0\" covered=\"1\"/>"
+                        + "<counter type=\"COMPLEXITY\" missed=\"0\" covered=\"1\"/>"
+                        + "<counter type=\"METHOD\" missed=\"0\" covered=\"1\"/>"
+                        + "</method><method name=\"onCreate\" desc=\"(Landroid/os/Bundle;)V\" line=\"9\">"
+                        + "<counter type=\"INSTRUCTION\" missed=\"0\" covered=\"7\"/>"
+                        + "<counter type=\"LINE\" missed=\"0\" covered=\"3\"/>"
                         + "<counter type=\"COMPLEXITY\" missed=\"0\" covered=\"1\"/>"
                         + "<counter type=\"METHOD\" missed=\"0\" covered=\"1\"/>"
                         + "</method><counter type=\"INSTRUCTION\" missed=\"0\" covered=\"10\"/>"

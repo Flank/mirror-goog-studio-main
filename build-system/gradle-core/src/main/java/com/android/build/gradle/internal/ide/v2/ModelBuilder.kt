@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.ide.v2
 
 import com.android.SdkConstants
+import com.android.Version
 import com.android.build.api.component.impl.AndroidTestImpl
 import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.api.dsl.ApkSigningConfig
@@ -27,6 +28,7 @@ import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.DefaultConfig
 import com.android.build.api.dsl.ProductFlavor
 import com.android.build.api.dsl.TestExtension
+import com.android.build.api.extension.impl.CURRENT_AGP_VERSION
 import com.android.build.api.variant.impl.TestVariantImpl
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.LibraryExtension
@@ -82,7 +84,7 @@ import com.android.builder.model.v2.models.AndroidDsl
 import com.android.builder.model.v2.models.AndroidProject
 import com.android.builder.model.v2.models.GlobalLibraryMap
 import com.android.builder.model.v2.models.ModelBuilderParameter
-import com.android.builder.model.v2.models.ModelVersions
+import com.android.builder.model.v2.models.Versions
 import com.android.builder.model.v2.models.ProjectSyncIssues
 import com.android.builder.model.v2.models.VariantDependencies
 import com.google.common.collect.ImmutableList
@@ -123,7 +125,7 @@ class ModelBuilder<
     }
 
     override fun canBuild(className: String): Boolean {
-        return className == ModelVersions::class.java.name
+        return className == Versions::class.java.name
                 || className == AndroidProject::class.java.name
                 || className == AndroidDsl::class.java.name
                 || className == GlobalLibraryMap::class.java.name
@@ -135,7 +137,7 @@ class ModelBuilder<
      * Non-parameterized model query. Valid for all but the VariantDependencies model
      */
     override fun buildAll(className: String, project: Project): Any = when (className) {
-        ModelVersions::class.java.name -> buildModelVersions(project)
+        Versions::class.java.name -> buildModelVersions(project)
         AndroidProject::class.java.name -> buildAndroidProjectModel(project)
         AndroidDsl::class.java.name -> buildAndroidDslModel(project)
         GlobalLibraryMap::class.java.name -> buildGlobalLibraryMapModel(project)
@@ -155,7 +157,7 @@ class ModelBuilder<
         project: Project
     ): Any? = when (className) {
         VariantDependencies::class.java.name -> buildVariantDependenciesModel(project, parameter)
-        ModelVersions::class.java.name,
+        Versions::class.java.name,
         AndroidProject::class.java.name,
         GlobalLibraryMap::class.java.name,
         ProjectSyncIssues::class.java.name -> throw RuntimeException(
@@ -164,12 +166,13 @@ class ModelBuilder<
         else -> throw RuntimeException("Does not support model '$className'")
     }
 
-    private fun buildModelVersions(project: Project): ModelVersions {
-        return ModelVersionsImpl(
+    private fun buildModelVersions(project: Project): Versions {
+        return VersionsImpl(
             androidProject = VersionImpl(0, 1),
             androidDsl = VersionImpl(0, 1),
             variantDependencies = VersionImpl(0, 1),
-            nativeModule = VersionImpl(0, 1)
+            nativeModule = VersionImpl(0, 1),
+            agp = Version.ANDROID_GRADLE_PLUGIN_VERSION
         )
     }
 

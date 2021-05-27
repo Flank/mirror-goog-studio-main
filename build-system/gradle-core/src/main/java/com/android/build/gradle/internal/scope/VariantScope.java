@@ -23,13 +23,13 @@ import com.android.build.gradle.internal.PostprocessingFeatures;
 import com.android.build.gradle.internal.component.ConsumableCreationConfig;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.packaging.JarCreatorType;
-import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType;
+import com.android.build.gradle.internal.publishing.PublishedConfigSpec;
 import com.android.build.gradle.internal.publishing.PublishingSpecs;
 import com.android.builder.internal.packaging.ApkCreatorType;
 import java.io.File;
-import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Predicate;
 import org.gradle.api.attributes.LibraryElements;
 import org.gradle.api.file.FileCollection;
@@ -45,7 +45,7 @@ public interface VariantScope {
     void publishIntermediateArtifact(
             @NonNull Provider<?> artifact,
             @NonNull ArtifactType artifactType,
-            @NonNull Collection<AndroidArtifacts.PublishedConfigType> configTypes,
+            @NonNull Set<PublishedConfigSpec> configSpecs,
             @Nullable LibraryElements libraryElements,
             boolean isTestFixturesArtifact);
 

@@ -309,38 +309,27 @@ void Agent::RunHeartbeatThread() {
   Stopwatch stopwatch;
   bool was_daemon_alive = false;
   while (running_) {
+    // agent_stub() is blocking while the stub is unavailable. If we don't call
+    // it here and rely only on the one right before calling HeartBeat(),
+    // |start_ns| and gPRC's deadline may likely include the time being blocked,
+    // defecting their purposes.
+    agent_stub();
     int64_t start_ns = stopwatch.GetElapsed();
-    // TODO: handle erroneous status
     EmptyResponse response;
     grpc::ClientContext context;
-
-    // Set a deadline on the context, so we can get a proper status code if
-    // daemon is not connected.
-    std::chrono::nanoseconds offset(kHeartBeatIntervalNs * 2);
-    std::chrono::system_clock::time_point deadline =
-        std::chrono::system_clock::now();
-
     // Linux and Mac are slightly different with respect to default accuracy of
     // time_point Linux is nanoseconds, mac is milliseconds so we cater to the
     // lowest common.
-    deadline += std::chrono::duration_cast<std::chrono::milliseconds>(offset);
-    context.set_deadline(deadline);
+    SetClientContextTimeout(&context, 0,
+                            Clock::ns_to_ms(kHeartBeatIntervalNs) * 2);
     HeartBeatRequest request;
     request.set_pid(getpid());
 
-    // Status returns OK if it succeeds, else it returns a standard grpc error
-    // code.
+    // Status returns OK if it succeeds (daemon is alive), else it returns a
+    // standard grpc error code.
     const grpc::Status status =
         agent_stub().HeartBeat(&context, request, &response);
-
-    int64_t elapsed_ns = stopwatch.GetElapsed() - start_ns;
-    // Use status to determine if daemon is alive.
     bool is_daemon_alive = status.ok();
-    if (kHeartBeatIntervalNs > elapsed_ns) {
-      int64_t sleep_us = Clock::ns_to_us(kHeartBeatIntervalNs - elapsed_ns);
-      usleep(static_cast<uint64_t>(sleep_us));
-    }
-
     if (is_daemon_alive != was_daemon_alive) {
       lock_guard<std::mutex> guard(callback_mutex_);
       for (auto itor = daemon_status_changed_callbacks_.begin();
@@ -353,6 +342,12 @@ void Agent::RunHeartbeatThread() {
         }
       }
       was_daemon_alive = is_daemon_alive;
+    }
+
+    int64_t elapsed_ns = stopwatch.GetElapsed() - start_ns;
+    if (kHeartBeatIntervalNs > elapsed_ns) {
+      int64_t sleep_us = Clock::ns_to_us(kHeartBeatIntervalNs - elapsed_ns);
+      usleep(static_cast<uint64_t>(sleep_us));
     }
   }
 }
@@ -378,6 +373,9 @@ void Agent::RunSocketThread() {
         // Heartbeat - No-op. Daemon will check whether send was successful.
       } else if (strncmp(buf, kDaemonConnectRequest, 1) == 0) {
         // A connect request - reconnect using the incoming fd.
+        Log::D(Log::Tag::TRANSPORT,
+               "Receiving kDaemonConnectRequest, receive_fd=%d current_fd_=%d",
+               receive_fd, current_fd_);
         int fd = receive_fd;
         // Note: In case the same fd is being reused, when the old GRPC channel
         // is recycled (it's a shared_ptr<>), it seems the 'previous' fd would
@@ -423,8 +421,16 @@ void Agent::RunSocketThread() {
 
 void Agent::RunCommandHandlerThread() {
   SetThreadName("Studio:CmdHdler");
+
+  grpc::ClientContext context;
+  proto::RegisterAgentRequest request;
+  request.set_pid(getpid());
+  std::unique_ptr<grpc::ClientReader<proto::Command>> reader =
+      agent_stub().RegisterAgent(&context, request);
+  Log::V(Log::Tag::TRANSPORT, "Agent command stream started.");
+
   proto::Command command;
-  while (command_stream_reader_->Read(&command)) {
+  while (reader->Read(&command)) {
     auto search = command_handlers_.find(command.type());
     if (search != command_handlers_.end()) {
       Log::V(Log::Tag::TRANSPORT, "Handling agent command %d for pid: %d.",
@@ -432,6 +438,10 @@ void Agent::RunCommandHandlerThread() {
       (search->second)(&command);
     }
   }
+  // If Read() returns false, it indicates the server (daemon) is dead
+  // because this streaming gRPC is expected to last as long as the server and
+  // client are both alive.
+  Log::D(Log::Tag::TRANSPORT, "Streaming gRPC call Read() returns false");
 }
 
 void Agent::ConnectToDaemon(const std::string& target) {
@@ -478,19 +488,9 @@ void Agent::ConnectToDaemon(const std::string& target) {
 }
 
 void Agent::OpenCommandStream() {
-  if (command_stream_context_.get() != nullptr) {
-    command_stream_context_->TryCancel();
-  }
-  command_stream_context_.reset(new grpc::ClientContext());
-  proto::RegisterAgentRequest request;
-  request.set_pid(getpid());
-  command_stream_reader_ =
-      agent_stub_->RegisterAgent(command_stream_context_.get(), request);
-
   if (command_handler_thread_.joinable()) {
     command_handler_thread_.join();
   }
   command_handler_thread_ = std::thread(&Agent::RunCommandHandlerThread, this);
-  Log::V(Log::Tag::TRANSPORT, "Agent command stream started.");
 }
 }  // namespace profiler

@@ -16,34 +16,49 @@
 
 package com.android.build.gradle.internal.dsl
 
+import com.android.build.api.dsl.DensitySplit
+import com.android.build.gradle.internal.dsl.decorator.androidPluginDslDecorator
+import com.android.build.gradle.internal.services.DslServices
+import com.android.build.gradle.internal.services.createDslServices
 import com.android.resources.Density
-import com.google.common.truth.Truth
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
 class DensitySplitOptionsTest {
 
+    private interface DensitySplitWrapper {
+        val densitySplit: DensitySplit
+    }
+
+    private fun getDensitySplitOptionsInstance(): DensitySplitOptions {
+        val dslServices = createDslServices()
+        return androidPluginDslDecorator
+                .decorate(DensitySplitWrapper::class.java)
+                .getDeclaredConstructor(DslServices::class.java)
+                .newInstance(dslServices).densitySplit as DensitySplitOptions
+    }
+
     @Test
     fun testDisabled() {
-        val options = DensitySplitOptions()
+        val options = getDensitySplitOptionsInstance()
 
         val values = options.applicableFilters
-        Truth.assertThat(values).isEmpty()
+        assertThat(values).isEmpty()
     }
 
     @Test
     fun testUniversal() {
-        val options = DensitySplitOptions()
+        val options = getDensitySplitOptionsInstance()
         options.isEnable = true
 
         val values = options.applicableFilters
         // at this time we have 6 densities, maybe more later.
-        Truth.assertThat(values.size).isAtLeast(6)
+        assertThat(values.size).isAtLeast(6)
     }
 
     @Test
     fun testNonDefaultInclude() {
-        val options = DensitySplitOptions()
+        val options = getDensitySplitOptionsInstance()
         options.isEnable = true
 
         options.include(Density.TV.resourceValue)
@@ -51,14 +66,14 @@ class DensitySplitOptionsTest {
         val values = options.applicableFilters
 
         // test TV is showing up.
-        Truth.assertThat(values).contains(Density.TV.resourceValue)
+        assertThat(values).contains(Density.TV.resourceValue)
         // test another default value also shows up
-        Truth.assertThat(values).contains(Density.HIGH.resourceValue)
+        assertThat(values).contains(Density.HIGH.resourceValue)
     }
 
     @Test
     fun testUnallowedInclude() {
-        val options = DensitySplitOptions()
+        val options = getDensitySplitOptionsInstance()
         options.isEnable = true
 
         options.include(Density.ANYDPI.resourceValue)
@@ -66,26 +81,26 @@ class DensitySplitOptionsTest {
         val values = options.applicableFilters
 
         // test ANYDPI isn't there.
-        Truth.assertThat(values).doesNotContain(Density.ANYDPI.resourceValue)
+        assertThat(values).doesNotContain(Density.ANYDPI.resourceValue)
         // test another default value shows up
-        Truth.assertThat(values).contains(Density.XHIGH.resourceValue)
+        assertThat(values).contains(Density.XHIGH.resourceValue)
     }
 
     @Test
     fun testExclude() {
-        val options = DensitySplitOptions()
+        val options = getDensitySplitOptionsInstance()
         options.isEnable = true
 
         options.exclude(Density.XXHIGH.resourceValue)
 
         val values = options.applicableFilters
-        Truth.assertThat(values).doesNotContain(Density.XXHIGH.resourceValue)
+        assertThat(values).doesNotContain(Density.XXHIGH.resourceValue)
     }
 
 
     @Test
     fun testCompatibleScreens() {
-        val options = DensitySplitOptions()
+        val options = getDensitySplitOptionsInstance()
         options.compatibleScreens += listOf("a", "b")
         assertThat(options.compatibleScreens).containsExactly("a", "b")
 

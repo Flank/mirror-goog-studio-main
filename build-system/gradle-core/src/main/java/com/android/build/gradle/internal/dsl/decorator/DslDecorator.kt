@@ -18,10 +18,13 @@ package com.android.build.gradle.internal.dsl.decorator
 
 import com.android.build.gradle.internal.dsl.AgpDslLockedException
 import com.android.build.gradle.internal.dsl.Lockable
+import com.android.build.gradle.internal.dsl.decorator.annotation.NonNullableSetter
+import com.android.build.gradle.internal.dsl.decorator.annotation.WithLazyInitialization
 import com.android.build.gradle.internal.services.DslServices
 import com.android.utils.usLocaleCapitalize
 import com.android.utils.usLocaleDecapitalize
 import com.google.common.annotations.VisibleForTesting
+import com.google.common.base.Preconditions
 import com.google.common.base.Stopwatch
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
@@ -35,6 +38,7 @@ import org.objectweb.asm.Type
 import org.objectweb.asm.commons.GeneratorAdapter
 import org.objectweb.asm.commons.Method
 import java.lang.invoke.MethodHandles
+import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Modifier
 import java.util.ArrayDeque
 import javax.inject.Inject
@@ -109,6 +113,7 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType>) {
         for (constructor in constructors) {
             val method = Method.getMethod(constructor)
             val inject = constructor.getDeclaredAnnotation(Inject::class.java) != null
+            val withLazyInit = constructor.getDeclaredAnnotation(WithLazyInitialization::class.java)
             if (method.argumentTypes.isNotEmpty() && !inject) {
                 // Gradle only looks at constructors with arguments if they are marked with @Inject.
                 continue
@@ -175,6 +180,18 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType>) {
                         }
                     }
                 }
+
+                withLazyInit?.let {
+                    loadThis()
+                    invokeVirtual(
+                        generatedClass,
+                        Method(
+                            it.methodName,
+                            Type.VOID_TYPE,
+                            arrayOf()
+                        )
+                    )
+                }
                 returnValue()
                 endMethod()
             }
@@ -232,6 +249,11 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType>) {
                     if (method.parameterCount != 0) return
                     getters.recordMethod(method.name.removePrefix("get"), method)
                 }
+                method.name.startsWith("is") && method.name.length > 2 &&
+                        method.name[2].isUpperCase() -> {
+                    if (method.parameterCount != 0) return
+                    getters.recordMethod(method.name.removePrefix("is"), method)
+                }
                 method.name.startsWith("set") -> {
                     if (method.returnType != Void.TYPE) return
                     if (method.parameterCount != 1) return
@@ -275,7 +297,8 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType>) {
         val access: Int,
         val gettersToGenerate: Collection<Method>,
         val settersToGenerate: Collection<Method>,
-        val blockAccessorToGenerate: Method?
+        val blockAccessorToGenerate: Method?,
+        val settersAnnotations: Collection<Annotation>
     )
 
     private fun findAbstractProperties(dslClass: Class<*>): List<ManagedProperty> {
@@ -328,7 +351,8 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType>) {
                 modifiers,
                 getters.asSequence().map { Method.getMethod(it) }.toSet(),
                 setters.asSequence().map { Method.getMethod(it) }.toSet(),
-                blockToGenerate?.let { Method.getMethod(it) }
+                blockToGenerate?.let { Method.getMethod(it) },
+                setters.flatMap { it.annotations.toList() }.toSet()
             )
         }
     }
@@ -351,10 +375,21 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType>) {
                 originalClass,
                 MethodHandles.lookup()
             ) as MethodHandles.Lookup
-        @Suppress("UNCHECKED_CAST") return lookupDefineClassMethod.invoke(
-            lookup,
-            bytes
-        ) as Class<out T>
+        try {
+            @Suppress("UNCHECKED_CAST") return lookupDefineClassMethod.invoke(
+                lookup,
+                bytes
+            ) as Class<out T>
+        } catch (e: InvocationTargetException) {
+            throw RuntimeException(
+                "Error happened loading classes, this is usually caused by having different " +
+                        "classloaders for different AGP jars. If you have an api dependency " +
+                        "on `com.android.tools.build:gradle:gradle-api` in your buildSrc, try " +
+                        "changing the dependency to be compileOnly or adding a runtime " +
+                        "dependency on `com.android.tools.build:gradle:gradle` in your buildSrc.",
+                e
+            )
+        }
     }
 
     // Define the class on JDKs before 9. AGP 7.0 Doesn't support running on JDKs before 11, but
@@ -432,7 +467,10 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType>) {
                         classWriter,
                         generatedClass,
                         property,
-                        setter
+                        setter,
+                        disallowNullableValue = property.settersAnnotations.any {
+                            it.annotationClass == NonNullableSetter::class
+                        }
                     )
                 }
             }
@@ -443,7 +481,8 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType>) {
         classWriter: ClassWriter,
         generatedClass: Type,
         property: ManagedProperty,
-        setter: Method
+        setter: Method,
+        disallowNullableValue: Boolean
     ) {
         val type = property.supportedPropertyType
         check(type.implementationType == setter.argumentTypes[0]) {
@@ -471,6 +510,11 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType>) {
             // this.__managedField = argument;
             loadThis()
             loadArg(0)
+            // this.__managedField = Preconditions.checkNotNull(argument);
+            if (disallowNullableValue) {
+                invokeStatic(PRECONDITIONS, PRECONDITIONS_CHECK_NOT_NULL)
+                checkCast(type.implementationType)
+            }
             putField(generatedClass, property.backingFieldName, type.implementationType)
             returnValue()
             endMethod()
@@ -624,6 +668,10 @@ class DslDecorator(supportedPropertyTypes: List<SupportedPropertyType>) {
         private val KOTLIN_FUNCTION1_INVOKE = Method("invoke", OBJECT_TYPE, arrayOf(OBJECT_TYPE))
         private val GRADLE_ACTION = Type.getType(Action::class.java)
         private val GRADLE_ACTION_EXECUTE = Method("execute", Type.VOID_TYPE, arrayOf(OBJECT_TYPE))
+
+        private val PRECONDITIONS = Type.getType(Preconditions::class.java)
+        private val PRECONDITIONS_CHECK_NOT_NULL = Method("checkNotNull", OBJECT_TYPE,
+            arrayOf(OBJECT_TYPE))
 
         // Use reflection to avoid needing to compile against java11 APIs yet.
         private val privateLookupInMethod by lazy(LazyThreadSafetyMode.PUBLICATION) {

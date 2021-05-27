@@ -15,7 +15,9 @@
  */
 package com.android.ide.common.resources
 
-import junit.framework.Assert.assertEquals
+import com.android.ide.common.util.PathString
+import com.google.common.truth.Truth.assertThat
+import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class ResourcesUtilTest {
@@ -27,5 +29,11 @@ class ResourcesUtilTest {
     assertEquals("_key_test", resourceNameToFieldName(".key_test"))
     assertEquals("_key_test_", resourceNameToFieldName(".key_test:"))
     assertEquals("_key test_", resourceNameToFieldName("-key test:"))
+  }
+
+  @Test
+  fun testToFileResourcePathString() {
+    assertThat(toFileResourcePathString("apk:///foo.apk!/bar.baz"))
+        .isEqualTo(PathString("apk", "/foo.apk!/bar.baz"))
   }
 }

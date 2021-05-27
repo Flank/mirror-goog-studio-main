@@ -112,6 +112,20 @@ class LibraryVariantFactory(
         }
     }
 
+    override fun createTestFixturesBuildFeatureValues(
+        buildFeatures: BuildFeatures, projectOptions: ProjectOptions): BuildFeatureValues {
+        return if (buildFeatures is LibraryBuildFeatures) {
+            TestFixturesBuildFeaturesValuesImpl(
+                buildFeatures,
+                projectOptions,
+                dataBindingOverride = null,
+                mlModelBindingOverride = null
+            )
+        } else {
+            throw RuntimeException("buildFeatures not of type DynamicFeatureBuildFeatures")
+        }
+    }
+
     override fun createTestBuildFeatureValues(
             buildFeatures: BuildFeatures,
             dataBindingOptions: DataBindingOptions,

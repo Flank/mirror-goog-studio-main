@@ -20,6 +20,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.internal.dsl.decorator.annotation.NonNullableSetter;
+import com.android.build.gradle.internal.dsl.decorator.annotation.WithLazyInitialization;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import java.util.Locale;
@@ -27,17 +29,8 @@ import javax.inject.Inject;
 import org.gradle.api.JavaVersion;
 
 /** Java compilation options. */
-public class CompileOptions implements com.android.build.api.dsl.CompileOptions {
+public abstract class CompileOptions implements com.android.build.api.dsl.CompileOptions {
     private static final String VERSION_PREFIX = "VERSION_";
-
-    @Nullable
-    private JavaVersion sourceCompatibility;
-
-    @Nullable
-    private JavaVersion targetCompatibility;
-
-    @NonNull
-    private String encoding = Charsets.UTF_8.name();
 
     @Nullable private Boolean incremental = null;
 
@@ -46,59 +39,57 @@ public class CompileOptions implements com.android.build.api.dsl.CompileOptions 
     /** @see #setDefaultJavaVersion(JavaVersion) */
     @NonNull @VisibleForTesting JavaVersion defaultJavaVersion = JavaVersion.VERSION_1_8;
 
+    protected void lazyInit() {
+        setEncoding(Charsets.UTF_8.name());
+        setSourceCompatibility(defaultJavaVersion);
+        setTargetCompatibility(defaultJavaVersion);
+    }
+
     @Inject
+    @WithLazyInitialization(methodName = "lazyInit")
     public CompileOptions() {}
 
     public void setSourceCompatibility(@NonNull Object sourceCompatibility) {
-        this.sourceCompatibility = convert(sourceCompatibility);
+        setSourceCompatibility(convert(sourceCompatibility));
     }
 
     @Override
     public void sourceCompatibility(@NonNull Object sourceCompatibility) {
-        this.sourceCompatibility = convert(sourceCompatibility);
+        setSourceCompatibility(convert(sourceCompatibility));
     }
 
     @Override
-    public void setSourceCompatibility(@NonNull JavaVersion sourceCompatibility) {
-        this.sourceCompatibility = sourceCompatibility;
-    }
+    @NonNullableSetter
+    public abstract void setSourceCompatibility(@NonNull JavaVersion sourceCompatibility);
 
     @Override
     @NonNull
-    public JavaVersion getSourceCompatibility() {
-        return sourceCompatibility != null ? sourceCompatibility : defaultJavaVersion;
-    }
+    public abstract JavaVersion getSourceCompatibility();
 
     public void setTargetCompatibility(@NonNull Object targetCompatibility) {
-        this.targetCompatibility = convert(targetCompatibility);
+        setTargetCompatibility(convert(targetCompatibility));
     }
 
     @Override
     public void targetCompatibility(@NonNull Object targetCompatibility) {
-        this.targetCompatibility = convert(targetCompatibility);
+        setTargetCompatibility(convert(targetCompatibility));
     }
 
     @Override
-    public void setTargetCompatibility(@NonNull JavaVersion targetCompatibility) {
-        this.targetCompatibility = targetCompatibility;
-    }
-
-    @Override
-    @NonNull
-    public JavaVersion getTargetCompatibility() {
-        return targetCompatibility != null ? targetCompatibility : defaultJavaVersion;
-    }
-
-    @Override
-    public void setEncoding(@NonNull String encoding) {
-        this.encoding = checkNotNull(encoding);
-    }
+    @NonNullableSetter
+    public abstract void setTargetCompatibility(@NonNull JavaVersion targetCompatibility);
 
     @Override
     @NonNull
-    public String getEncoding() {
-        return encoding;
-    }
+    public abstract JavaVersion getTargetCompatibility();
+
+    @Override
+    @NonNullableSetter
+    public abstract void setEncoding(@NonNull String encoding);
+
+    @Override
+    @NonNull
+    public abstract String getEncoding();
 
     /**
      * Default java version, based on the target SDK. Set by the plugin, not meant to be used in

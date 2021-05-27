@@ -18,10 +18,11 @@ package com.android.build.gradle.internal.dsl
 
 import com.android.build.api.dsl.BuildFeatures
 import com.android.build.api.dsl.DefaultConfig
-import com.android.build.api.variant.Variant
-import com.android.build.api.variant.VariantBuilder
+import com.android.build.api.dsl.TestFixtures
 import com.android.build.gradle.internal.plugins.DslContainerProvider
 import com.android.build.gradle.internal.services.DslServices
+import com.android.build.gradle.options.BooleanOption
+import org.gradle.api.Action
 
 /** Internal implementation of the 'new' DSL interface */
 abstract class TestedExtensionImpl<
@@ -41,4 +42,18 @@ abstract class TestedExtensionImpl<
 ), com.android.build.api.dsl.TestedExtension {
     override var testBuildType = "debug"
     override var testNamespace: String? = null
+
+    override val testFixtures: TestFixtures =
+        dslServices.newInstance(
+            TestFixturesImpl::class.java,
+            dslServices.projectOptions[BooleanOption.ENABLE_TEST_FIXTURES]
+        )
+
+    override fun testFixtures(action: TestFixtures.() -> Unit) {
+        action.invoke(testFixtures)
+    }
+
+    fun testFixtures(action: Action<TestFixtures>) {
+        action.execute(testFixtures)
+    }
 }

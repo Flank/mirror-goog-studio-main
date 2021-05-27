@@ -21,6 +21,10 @@ plugins {
 
 android {
     compileSdkVersion rootProject.latestCompileSdk
+    testFixtures {
+        enable true
+        androidResources true
+    }
 }
 
 dependencies {

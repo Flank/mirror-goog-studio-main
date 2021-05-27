@@ -18,6 +18,10 @@ package com.android.build.gradle.internal;
 
 import static org.junit.Assert.assertEquals;
 
+import com.android.build.gradle.internal.dsl.decorator.AndroidPluginDslDecoratorKt;
+import com.android.build.gradle.internal.services.DslServices;
+import com.android.build.gradle.internal.services.FakeServices;
+import java.lang.reflect.InvocationTargetException;
 import org.gradle.api.JavaVersion;
 import org.junit.Test;
 
@@ -26,9 +30,24 @@ import org.junit.Test;
  */
 public class CompileOptionsTest {
 
+    private CompileOptions getCompileOptionsInstance() {
+        DslServices dslServices = FakeServices.createDslServices();
+        try {
+            return AndroidPluginDslDecoratorKt.getAndroidPluginDslDecorator()
+                    .decorate(CompileOptions.class)
+                    .getDeclaredConstructor(DslServices.class)
+                    .newInstance(dslServices);
+        } catch (InstantiationException
+                | IllegalAccessException
+                | InvocationTargetException
+                | NoSuchMethodException e) {
+            return null;
+        }
+    }
+
     @Test
     public void sourceCompatibilityTest() {
-        CompileOptions options = new CompileOptions();
+        CompileOptions options = getCompileOptionsInstance();
 
         assertEquals(options.defaultJavaVersion, options.getSourceCompatibility());
 
@@ -50,7 +69,7 @@ public class CompileOptionsTest {
 
     @Test
     public void targetCompatibilityTest() {
-        CompileOptions options = new CompileOptions();
+        CompileOptions options = getCompileOptionsInstance();
 
         assertEquals(options.defaultJavaVersion, options.getTargetCompatibility());
 
@@ -72,7 +91,7 @@ public class CompileOptionsTest {
 
     @Test
     public void coreLibraryDesugaringEnabledTest() {
-        CompileOptions options = new CompileOptions();
+        CompileOptions options = getCompileOptionsInstance();
 
         assertEquals(null, options.getCoreLibraryDesugaringEnabled());
 

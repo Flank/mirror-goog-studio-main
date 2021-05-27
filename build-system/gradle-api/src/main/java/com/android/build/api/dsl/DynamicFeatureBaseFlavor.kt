@@ -16,9 +16,12 @@
 
 package com.android.build.api.dsl
 
-import org.gradle.api.Incubating
-
-@Incubating
+/**
+ *
+ * Shared properties between DSL objects [ProductFlavor] and [DefaultConfig] for dynamic features.
+ *
+ * See [DynamicFeatureDefaultConfig] and [DynamicFeatureProductFlavor].
+ */
 interface DynamicFeatureBaseFlavor :
     BaseFlavor,
     DynamicFeatureVariantDimension

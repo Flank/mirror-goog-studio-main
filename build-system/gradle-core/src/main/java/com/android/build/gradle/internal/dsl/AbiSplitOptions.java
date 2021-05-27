@@ -20,13 +20,22 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.OutputFile;
 import com.android.build.gradle.internal.core.Abi;
+import com.android.build.gradle.internal.dsl.decorator.annotation.WithLazyInitialization;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.util.Set;
+import javax.inject.Inject;
 
-public class AbiSplitOptions extends SplitOptions implements com.android.build.api.dsl.AbiSplit {
+public abstract class AbiSplitOptions extends SplitOptions
+        implements com.android.build.api.dsl.AbiSplit {
 
-    private boolean universalApk = false;
+    @Inject
+    @WithLazyInitialization(methodName = "lazyInit")
+    public AbiSplitOptions() {}
+
+    void lazyInit() {
+        init();
+    }
 
     @Override
     protected Set<String> getDefaultValues() {
@@ -44,16 +53,6 @@ public class AbiSplitOptions extends SplitOptions implements com.android.build.a
             builder.add(abi.getTag());
         }
         return builder.build();
-    }
-
-    @Override
-    public boolean isUniversalApk() {
-        return universalApk;
-    }
-
-    @Override
-    public void setUniversalApk(boolean universalApk) {
-        this.universalApk = universalApk;
     }
 
     /**

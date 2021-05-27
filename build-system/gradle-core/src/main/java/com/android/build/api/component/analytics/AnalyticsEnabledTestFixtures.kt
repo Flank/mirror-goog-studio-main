@@ -26,7 +26,7 @@ import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import javax.inject.Inject
 
-abstract class AnalyticsEnabledTestFixtures @Inject constructor(
+open class AnalyticsEnabledTestFixtures @Inject constructor(
     override val delegate: TestFixtures,
     stats: GradleBuildVariant.Builder,
     objectFactory: ObjectFactory

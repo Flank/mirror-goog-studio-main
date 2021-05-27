@@ -23,5 +23,16 @@ import com.android.build.gradle.internal.dsl.AbstractPublishing
  */
 data class ComponentPublishingInfo(
     val componentName: String,
-    val type: AbstractPublishing.Type
-)
+    val type: AbstractPublishing.Type,
+    val attributesConfig: AttributesConfig? = null,
+    val isClassifierRequired: Boolean = false
+) {
+
+    /**
+     * Configs for attributes to be added to the variant.
+     */
+    data class AttributesConfig(
+        val buildType: String?,
+        val flavorDimensions: Set<String>
+    )
+}

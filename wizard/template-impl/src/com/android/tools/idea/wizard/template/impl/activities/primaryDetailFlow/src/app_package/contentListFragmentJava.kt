@@ -152,51 +152,17 @@ ${renderIf(isViewBindingSupported) {"""
         // layout configuration (layout, layout-sw600dp)
         View itemDetailFragmentContainer = view.findViewById(R.id.${detailNameLayout}_nav_container);
 
-        /* Click Listener to trigger navigation based on if you have
-         * a single pane layout or two pane layout
-         */
-        View.OnClickListener onClickListener = itemView -> {
-            PlaceholderContent.PlaceholderItem item =
-                    (PlaceholderContent.PlaceholderItem) itemView.getTag();
-            Bundle arguments = new Bundle();
-            arguments.putString(${detailName}Fragment.ARG_ITEM_ID, item.id);
-            if (itemDetailFragmentContainer != null) {
-                Navigation.findNavController(itemDetailFragmentContainer)
-                        .navigate(R.id.fragment_${detailNameLayout}, arguments);
-            } else {
-                Navigation.findNavController(itemView).navigate(R.id.show_${detailNameLayout}, arguments);
-            }
-        };
-
-        /*
-         * Context click listener to handle Right click events
-         * from mice and trackpad input to provide a more native
-         * experience on larger screen devices
-         */
-        View.OnContextClickListener onContextClickListener = itemView -> {
-            PlaceholderContent.PlaceholderItem item =
-                    (PlaceholderContent.PlaceholderItem) itemView.getTag();
-            Toast.makeText(
-                    itemView.getContext(),
-                    "Context click of item " + item.id,
-                    Toast.LENGTH_LONG
-            ).show();
-            return true;
-        };
-
-        setupRecyclerView(recyclerView, onClickListener, onContextClickListener);
+        setupRecyclerView(recyclerView, itemDetailFragmentContainer);
     }
 
     private void setupRecyclerView(
             RecyclerView recyclerView,
-            View.OnClickListener onClickListener,
-            View.OnContextClickListener onContextClickListener
+            View itemDetailFragmentContainer
     ) {
 
         recyclerView.setAdapter(new SimpleItemRecyclerViewAdapter(
                 PlaceholderContent.ITEMS,
-                onClickListener,
-                onContextClickListener
+                itemDetailFragmentContainer
         ));
     }
 
@@ -204,15 +170,12 @@ ${renderIf(isViewBindingSupported) {"""
             extends RecyclerView.Adapter<SimpleItemRecyclerViewAdapter.ViewHolder> {
 
         private final List<PlaceholderContent.PlaceholderItem> mValues;
-        private final View.OnClickListener mOnClickListener;
-        private final View.OnContextClickListener mOnContextClickListener;
+        private final View mItemDetailFragmentContainer;
 
         SimpleItemRecyclerViewAdapter(List<PlaceholderContent.PlaceholderItem> items,
-                                      View.OnClickListener onClickListener,
-                                      View.OnContextClickListener onContextClickListener) {
+                                      View itemDetailFragmentContainer) {
             mValues = items;
-            mOnClickListener = onClickListener;
-            mOnContextClickListener = onContextClickListener;
+            mItemDetailFragmentContainer = itemDetailFragmentContainer;
         }
 
         @Override
@@ -226,9 +189,34 @@ ${renderIf(isViewBindingSupported) {"""
             holder.mContentView.setText(mValues.get(position).content);
 
             holder.itemView.setTag(mValues.get(position));
-            holder.itemView.setOnClickListener(mOnClickListener);
+            holder.itemView.setOnClickListener(itemView -> {
+                PlaceholderContent.PlaceholderItem item =
+                        (PlaceholderContent.PlaceholderItem) itemView.getTag();
+                Bundle arguments = new Bundle();
+                arguments.putString(${detailName}Fragment.ARG_ITEM_ID, item.id);
+                if (mItemDetailFragmentContainer != null) {
+                    Navigation.findNavController(mItemDetailFragmentContainer)
+                        .navigate(R.id.fragment_${detailNameLayout}, arguments);
+                } else {
+                    Navigation.findNavController(itemView).navigate(R.id.show_${detailNameLayout}, arguments);
+                }
+            });
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                holder.itemView.setOnContextClickListener(mOnContextClickListener);
+                /*
+                 * Context click listener to handle Right click events
+                 * from mice and trackpad input to provide a more native
+                 * experience on larger screen devices
+                 */
+                holder.itemView.setOnContextClickListener(v -> {
+                    PlaceholderContent.PlaceholderItem item =
+                            (PlaceholderContent.PlaceholderItem) holder.itemView.getTag();
+                    Toast.makeText(
+                            holder.itemView.getContext(),
+                            "Context click of item " + item.id,
+                            Toast.LENGTH_LONG
+                    ).show();
+                    return true;
+                });
             }
             holder.itemView.setOnLongClickListener(v -> {
                 // Setting the item id as the clip data so that the drop target is able to

@@ -16,12 +16,15 @@
 
 package com.android.tools.utp.plugins.host.icebox
 
+import com.android.emulator.control.IceboxTarget
 import com.android.emulator.control.SnapshotPackage
 import com.android.emulator.control.SnapshotServiceGrpc
 import com.android.testutils.MockitoKt.any
+import com.android.testutils.MockitoKt.eq
 import com.android.tools.utp.plugins.host.icebox.proto.IceboxPluginProto
 import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.ByteString
+import com.google.testing.platform.api.device.CommandHandle
 import com.google.testing.platform.api.device.CommandResult
 import com.google.testing.platform.api.device.Device
 import com.google.testing.platform.api.device.DeviceController
@@ -58,6 +61,7 @@ import org.mockito.junit.MockitoJUnit
 import org.mockito.quality.Strictness
 import java.io.DataInputStream
 import java.net.ServerSocket
+import org.mockito.Mockito
 
 /**
  * Unit tests for [IceboxCallerImpl]
@@ -78,10 +82,15 @@ class IceboxCallerImplTest {
     private lateinit var mockManagedChannelBuilder: ManagedChannelBuilder<*>
     @Mock(answer = Answers.CALLS_REAL_METHODS)
     private lateinit var mockSnapshotServiceGrpcServer: SnapshotServiceGrpc.SnapshotServiceImplBase
+    @Mock
+    private lateinit var mockCommandHandle: CommandHandle
 
     private val appId = "foo.bar.myapp"
     private val serial = "emulator-5554"
     private val pid = "101"
+    private val tid = "102"
+    private val startTime = "05-19 22:19:09"
+    private val waitingForDebugger = "05-19 22:19:10.979  $pid  $tid I AndroidJUnitRunner: Waiting for debugger to connect..."
     private val snapshotPrefix = "snapshotPrefix"
     private lateinit var managedChannel: ManagedChannel
     private lateinit var testScope: CoroutineScope
@@ -94,18 +103,18 @@ class IceboxCallerImplTest {
         driverScope = testScope
         val serverName: String = InProcessServerBuilder.generateName()
         grpcCleanup.register(
-                InProcessServerBuilder
-                        .forName(serverName)
-                        .directExecutor()
-                        .addService(mockSnapshotServiceGrpcServer)
-                        .build()
-                        .start()
+            InProcessServerBuilder
+                .forName(serverName)
+                .directExecutor()
+                .addService(mockSnapshotServiceGrpcServer)
+                .build()
+                .start()
         )
         managedChannel = grpcCleanup.register(
-                InProcessChannelBuilder.forName(serverName).directExecutor().build()
+            InProcessChannelBuilder.forName(serverName).directExecutor().build()
         )
         `when`(
-                mockManagedChannelBuilder.build()
+            mockManagedChannelBuilder.build()
         ).thenReturn(managedChannel)
         iceboxCaller = IceboxCallerImpl(mockManagedChannelBuilder, "", driverScope)
     }
@@ -115,45 +124,38 @@ class IceboxCallerImplTest {
         testScope.cancel()
     }
 
-    @Test
-    fun queryPid() {
+    private fun prepareIceboxCalls() {
         `when`(
-                mockDeviceController.deviceShell(listOf("pidof", appId))
+            mockDeviceController.deviceShell(listOf("date", "+%m-%d\\ %H:%M:%S"))
+        ).thenReturn(CommandResult(0, listOf(startTime)))
+        doAnswer {
+            val respObserver: StreamObserver<IceboxTarget> = it.getArgument(1)
+            respObserver.onNext(IceboxTarget.getDefaultInstance())
+            respObserver.onCompleted()
+        }.`when`(mockSnapshotServiceGrpcServer).trackProcess(any(), any())
+        `when`(
+            mockDeviceController.executeAsync(
+                eq(
+                    listOf(
+                        "shell", "logcat", "-v", "threadtime", "-b", "main", "-T",
+                        "\'$startTime.000\'"
+                    )
+                ), any()
+            )
+        ).then {
+            it.getArgument<(String) -> Unit>(1).invoke(waitingForDebugger)
+            mockCommandHandle
+        }
+        `when`(
+            mockDeviceController.deviceShell(listOf("pidof", appId))
         ).thenReturn(CommandResult(0, listOf(pid)))
-        runBlocking {
-            assertThat(iceboxCaller.queryPid(mockDeviceController, appId)).isEqualTo(pid.toLong())
-            verify(mockDeviceController).deviceShell(anyList(), nullable(Long::class.java))
-        }
-    }
-
-    @Test
-    fun queryPidFail() {
-        `when`(
-                mockDeviceController.deviceShell(listOf("pidof", appId))
-        ).thenReturn(CommandResult(-1, emptyList()))
-        runBlocking {
-            assertThat(iceboxCaller.queryPid(mockDeviceController, appId)).isEqualTo(-1)
-        }
-    }
-
-    @Test
-    fun queryPidLateReply() {
-        `when`(
-                mockDeviceController.deviceShell(listOf("pidof", appId))
-        ).thenReturn(CommandResult(-1, emptyList()))
-                .thenReturn(CommandResult(0, listOf(pid)))
-        runBlocking {
-            assertThat(iceboxCaller.queryPid(mockDeviceController, appId)).isEqualTo(pid.toLong())
-            verify(mockDeviceController, times(2)).deviceShell(anyList(), nullable(Long::class.java))
-        }
+        `when`(mockDeviceController.getDevice()).thenReturn(mockDevice)
+        `when`(mockDevice.serial).thenReturn(serial)
     }
 
     @Test
     fun iceboxTestPass() {
-        `when`(mockDeviceController.deviceShell(listOf("pidof", appId)))
-                .thenReturn(CommandResult(0, listOf(pid)))
-        `when`(mockDeviceController.getDevice()).thenReturn(mockDevice)
-        `when`(mockDevice.serial).thenReturn(serial)
+        prepareIceboxCalls()
         doAnswer {
             val respObserver: StreamObserver<SnapshotPackage> = it.getArgument(1)
             respObserver.onNext(SnapshotPackage.newBuilder().apply {
@@ -170,7 +172,6 @@ class IceboxCallerImplTest {
                     "${snapshotPrefix}0"
             )
             iceboxCaller.shutdownGrpc()
-            verify(mockDeviceController).deviceShell(anyList(), nullable(Long::class.java))
             verify(mockSnapshotServiceGrpcServer).trackProcess(
                     argThat { it.pid == pid.toLong() && it.maxSnapshotNumber == -1 },
                     any())
@@ -180,11 +181,7 @@ class IceboxCallerImplTest {
 
     @Test
     fun iceboxTestFail() {
-        `when`(mockDeviceController.deviceShell(listOf("pidof", appId)))
-                .thenReturn(CommandResult(0, listOf(pid)))
-        `when`(mockDeviceController.getDevice()).thenReturn(mockDevice)
-        `when`(mockDevice.serial).thenReturn(serial)
-
+        prepareIceboxCalls()
         runBlocking {
             iceboxCaller.runIcebox(mockDeviceController, appId, snapshotPrefix, -1, 0)
             val snapshotFile = tempFolder.newFile("snapshotFile")
@@ -193,7 +190,6 @@ class IceboxCallerImplTest {
                     "${snapshotPrefix}0"
             )
             iceboxCaller.shutdownGrpc()
-            verify(mockDeviceController).deviceShell(anyList(), nullable(Long::class.java))
             verify(mockSnapshotServiceGrpcServer).trackProcess(
                     argThat { it.pid == pid.toLong() && it.maxSnapshotNumber == -1 },
                     any())

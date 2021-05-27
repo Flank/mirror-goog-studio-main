@@ -51,7 +51,7 @@ class BuildScriptDependenciesDataTest {
                 AndroidGradlePluginAttributionData.load(attributionFileLocation)!!
         Truth.assertThat(originalAttributionData.buildscriptDependenciesInfo).isNotEmpty()
         Truth.assertThat(originalAttributionData.buildscriptDependenciesInfo)
-                .doesNotContain("org.jetbrains.kotlin:kotlin-gradle-plugin:${TestUtils.getKotlinVersionForTests()}")
+                .doesNotContain("org.jetbrains.kotlin:kotlin-gradle-plugin:${TestUtils.KOTLIN_VERSION_FOR_TESTS}")
     }
 
     @Test
@@ -62,7 +62,7 @@ class BuildScriptDependenciesDataTest {
 buildscript {
     dependencies {
         // Provides the 'android-kotlin' build plugin for the app
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${TestUtils.getKotlinVersionForTests()}"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${TestUtils.KOTLIN_VERSION_FOR_TESTS}"
     }
 }
         """.trimIndent())
@@ -76,7 +76,7 @@ buildscript {
                 AndroidGradlePluginAttributionData.load(attributionFileLocation)!!
         Truth.assertThat(originalAttributionData.buildscriptDependenciesInfo).isNotEmpty()
         Truth.assertThat(originalAttributionData.buildscriptDependenciesInfo)
-                .contains("org.jetbrains.kotlin:kotlin-gradle-plugin:${TestUtils.getKotlinVersionForTests()}")
+                .contains("org.jetbrains.kotlin:kotlin-gradle-plugin:${TestUtils.KOTLIN_VERSION_FOR_TESTS}")
     }
 
     @Test
@@ -88,7 +88,7 @@ buildscript {
                 """
 eachPlugin {
             if(requested.id.namespace == "org.jetbrains.kotlin") {
-                useModule("org.jetbrains.kotlin:kotlin-gradle-plugin:${TestUtils.getKotlinVersionForTests()}")
+                useModule("org.jetbrains.kotlin:kotlin-gradle-plugin:${TestUtils.KOTLIN_VERSION_FOR_TESTS}")
             }
                 """.trimIndent())
         project.file("build.gradle").delete()
@@ -131,7 +131,7 @@ dependencies {
                 AndroidGradlePluginAttributionData.load(attributionFileLocation)!!
         Truth.assertThat(originalAttributionData.buildscriptDependenciesInfo).isNotEmpty()
         Truth.assertThat(originalAttributionData.buildscriptDependenciesInfo)
-                .contains("org.jetbrains.kotlin:kotlin-gradle-plugin:${TestUtils.getKotlinVersionForTests()}")
+                .contains("org.jetbrains.kotlin:kotlin-gradle-plugin:${TestUtils.KOTLIN_VERSION_FOR_TESTS}")
     }
 
 //TODO(b/181326671): check kotlin-gradle-plugin are detected when in buildSrc

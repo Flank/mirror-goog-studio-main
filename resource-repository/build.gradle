@@ -1,0 +1,24 @@
+apply plugin: 'com.android.tools.java-library'
+apply plugin: 'com.android.tools.kotlin'
+
+dependencies {
+    implementation project(':base:annotations')
+    implementation project(':base:common')
+    implementation project(':base:intellij-core')
+    implementation project(':base:layoutlib-api')
+    implementation project(':base:sdk-common')
+    implementation libs.aapt2_proto
+    implementation libs.fastutil
+    implementation libs.guava
+    implementation libs.kotlin_stdlib
+    implementation libs.kxml
+    implementation libs.protobuf
+
+    testImplementation project(':base:testutils')
+}
+
+sourceSets {
+    main.java.srcDir 'main/java'
+    test.java.srcDir 'test/java'
+    test.resources.srcDir 'test/resource'
+}

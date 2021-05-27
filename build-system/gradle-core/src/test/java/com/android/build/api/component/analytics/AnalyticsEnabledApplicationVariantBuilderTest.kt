@@ -47,4 +47,14 @@ internal class AnalyticsEnabledApplicationVariantBuilderTest {
                 stats.variantApiAccess.variantAccessList.first().type
         ).isEqualTo(VariantMethodType.VARIANT_BUILDER_DEPENDENCIES_INFO_VALUE)
     }
+
+    @Test
+    fun testFixtures() {
+        proxy.enableTestFixtures = true
+
+        Truth.assertThat(stats.variantApiAccess.variantAccessCount).isEqualTo(1)
+        Truth.assertThat(
+            stats.variantApiAccess.variantAccessList.first().type
+        ).isEqualTo(VariantMethodType.TEST_FIXTURES_ENABLED_VALUE)
+    }
 }

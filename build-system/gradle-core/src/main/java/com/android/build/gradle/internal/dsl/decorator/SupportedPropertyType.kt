@@ -37,6 +37,8 @@ sealed class SupportedPropertyType {
         object Boolean: Var(Type.BOOLEAN_TYPE)
         object NullableBoolean : Var(Type.getType(java.lang.Boolean::class.java))
         object Int : Var(Type.INT_TYPE)
+
+        class Enum(enumType: Class<*>): Var(Type.getType(enumType))
     }
 
     sealed class Collection(

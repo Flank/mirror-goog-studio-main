@@ -69,9 +69,9 @@ TEST_MAVEN_REPO_MANIFESTS = [
     "//tools/base/build-system:gradle_plugin_no_databinding_repo",
     "//tools/base/build-system/integration-test:androidx_latest",
     "//tools/base/build-system/integration-test:support_library_latest",
+    "//tools/base/build-system/integration-test:kotlin_gradle_plugin_prebuilts",
     "//tools/base/build-system/integration-test:utp_plugins",
     "//tools/base/build-system/integration-test/connected:prebuilts",
-    "//tools/base/third_party/kotlin:kotlin-m2repository",
 ]
 
 gradle_connected_test(
@@ -172,7 +172,9 @@ gradle_connected_test(
     srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
     data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/composeHelloWorld"],
     flaky = True,  # b/148626301 flaky emulator connectivity
-    maven_repo_manifests = TEST_MAVEN_REPO_MANIFESTS,
+    maven_repo_manifests = TEST_MAVEN_REPO_MANIFESTS + [
+        "//tools/base/build-system/integration-test:kotlin_gradle_plugin_1_4_32_prebuilts",
+    ],
     maven_repos = TEST_MAVEN_REPOS,
     deps = TEST_DEPS,
 )
@@ -223,7 +225,6 @@ gradle_connected_test(
         "//tools/base/build-system/integration-test:support_library_latest",
         "//tools/base/build-system/integration-test/connected:prebuilts",
         "//tools/base/build-system/integration-test/connected:databinding_prebuilts",
-        "//tools/base/third_party/kotlin:kotlin-m2repository",
     ],
     # TEST_MAVEN_REPOS with databinding
     maven_repos = [
@@ -244,9 +245,9 @@ gradle_connected_test(
         "//tools/base/build-system:gradle_plugin_repo",
         "//tools/base/build-system/integration-test:androidx_latest",
         "//tools/base/build-system/integration-test:support_library_latest",
+        "//tools/base/build-system/integration-test:kotlin_gradle_plugin_prebuilts",
         "//tools/base/build-system/integration-test/connected:prebuilts",
         "//tools/base/build-system/integration-test/connected:databinding_prebuilts",
-        "//tools/base/third_party/kotlin:kotlin-m2repository",
     ],
     # TEST_MAVEN_REPOS with databinding
     maven_repos = [
@@ -887,28 +888,6 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/org/jacoco/org.jacoco.core/0.8.3:jar",
         "//prebuilts/tools/common/m2/repository/org/jacoco/org.jacoco.report/0.7.4.201502262128:jar",
         "//prebuilts/tools/common/m2/repository/org/jacoco/org.jacoco.report/0.8.3:jar",
-        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-android-extensions-runtime/1.4.32:jar",
-        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-android-extensions/1.4.32:jar",
-        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-annotation-processing-gradle/1.4.32:jar",
-        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-build-common/1.4.32:jar",
-        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-compiler-embeddable/1.4.32:jar",
-        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-compiler-runner/1.4.32:jar",
-        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-daemon-client/1.4.32:jar",
-        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-daemon-embeddable/1.4.32:jar",
-        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-gradle-plugin-api/1.4.32:jar",
-        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-gradle-plugin-model/1.4.32:jar",
-        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-gradle-plugin/1.4.32:jar",
-        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-reflect/1.4.32:jar",
-        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-script-runtime/1.4.32:jar",
-        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-scripting-common/1.4.32:jar",
-        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-scripting-compiler-embeddable/1.4.32:jar",
-        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-scripting-compiler-impl-embeddable/1.4.32:jar",
-        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-scripting-jvm/1.4.32:jar",
-        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib-common/1.4.32:jar",
-        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib-jdk7/1.4.32:jar",
-        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib/1.4.32:jar",
-        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-util-io/1.4.32:jar",
-        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-util-klib/1.4.32:jar",
         "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlinx/kotlinx-collections-immutable-jvm/0.3.4:jar",
         "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlinx/kotlinx-coroutines-android/1.4.1:jar",
         "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlinx/kotlinx-coroutines-android/1.4.3:jar",

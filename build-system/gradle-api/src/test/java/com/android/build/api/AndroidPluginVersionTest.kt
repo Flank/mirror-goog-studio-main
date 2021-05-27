@@ -26,13 +26,13 @@ class AndroidPluginVersionTest {
     @Test
     fun `test to string`() {
         val stableVersion = AndroidPluginVersion(7, 0, 1)
-        assertThat(stableVersion.toString()).isEqualTo("AndroidPluginVersion 7.0.1")
+        assertThat(stableVersion.toString()).isEqualTo("Android Gradle Plugin version 7.0.1")
 
         val alphaVersion = AndroidPluginVersion(7, 1).alpha(4)
-        assertThat(alphaVersion.toString()).isEqualTo("AndroidPluginVersion 7.1.0-alpha4")
+        assertThat(alphaVersion.toString()).isEqualTo("Android Gradle Plugin version 7.1.0-alpha4")
 
         val devVersion = AndroidPluginVersion(7, 1, 0).dev()
-        assertThat(devVersion.toString()).isEqualTo("AndroidPluginVersion 7.1.0-dev")
+        assertThat(devVersion.toString()).isEqualTo("Android Gradle Plugin version 7.1.0-dev")
 
     }
 

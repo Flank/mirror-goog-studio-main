@@ -22,10 +22,10 @@ import org.gradle.api.NamedDomainObjectContainer
 /**
  * Extension for the Android Library Gradle Plugin.
  *
+ * This is the `android` block when the `com.android.library` plugin is applied.
  *
- * Only the Android Gradle Plugin should create instances of this interface.
+ * Only the Android Gradle Plugin should create instances of interfaces in com.android.build.api.dsl.
  */
-@Incubating
 interface LibraryExtension :
     CommonExtension<
         LibraryBuildFeatures,
@@ -36,11 +36,13 @@ interface LibraryExtension :
     // TODO(b/140406102)
 
     /** Aidl files to package in the aar. */
+    @get:Incubating
     val aidlPackagedList: MutableCollection<String>?
 
     /**
      * container of Prefab options
      */
+    @get:Incubating
     val prefab: NamedDomainObjectContainer<PrefabPackagingOptions>
 
     /**
@@ -48,6 +50,7 @@ interface LibraryExtension :
      *
      * For more information about the properties you can configure in this block, see [LibraryPublishing]
      */
+    @get:Incubating
     val publishing: LibraryPublishing
 
     /**
@@ -55,5 +58,6 @@ interface LibraryExtension :
      *
      * For more information about the properties you can configure in this block, see [LibraryPublishing]
      */
+    @Incubating
     fun publishing(action: LibraryPublishing.() -> Unit)
 }

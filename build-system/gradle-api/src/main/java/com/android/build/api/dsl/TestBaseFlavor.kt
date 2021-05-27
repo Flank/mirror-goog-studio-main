@@ -18,7 +18,6 @@ package com.android.build.api.dsl
 
 import org.gradle.api.Incubating
 
-@Incubating
 interface TestBaseFlavor :
     BaseFlavor,
     TestVariantDimension {
@@ -29,9 +28,12 @@ interface TestBaseFlavor :
      *
      * See [uses-sdk element documentation](http://developer.android.com/guide/topics/manifest/uses-sdk-element.html).
      */
+    @get:Incubating
+    @set:Incubating
     var targetSdk: Int?
 
     @Deprecated("Replaced by targetSdk property")
+    @Incubating
     fun targetSdkVersion(targetSdkVersion: Int)
 
     /**
@@ -41,12 +43,16 @@ interface TestBaseFlavor :
      *
      * See [uses-sdk element documentation](http://developer.android.com/guide/topics/manifest/uses-sdk-element.html).
      */
+    @get:Incubating
+    @set:Incubating
     var targetSdkPreview: String?
 
     @Deprecated("Replaced by targetSdkPreview property")
+    @Incubating
     fun setTargetSdkVersion(targetSdkVersion: String?)
 
     @Deprecated("Replaced by targetSdkPreview property")
+    @Incubating
     fun targetSdkVersion(targetSdkVersion: String?)
 
     /**
@@ -55,8 +61,11 @@ interface TestBaseFlavor :
      *
      * See [uses-sdk element documentation](http://developer.android.com/guide/topics/manifest/uses-sdk-element.html).
      */
+    @get:Incubating
+    @set:Incubating
     var maxSdk: Int?
 
     @Deprecated("Replaced by maxSdk property")
+    @Incubating
     fun maxSdkVersion(maxSdkVersion: Int)
 }

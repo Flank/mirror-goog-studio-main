@@ -111,7 +111,7 @@ abstract class AbstractVariantInputManager<
         } else null
 
         val testFixturesSourceSet =
-            if (dslServices.projectOptions[BooleanOption.ENABLE_TEST_FIXTURES]) {
+            if (variantType.hasTestComponents) {
                 sourceSetManager.setUpSourceSet(
                     computeSourceSetName(
                         buildType.name, VariantTypeImpl.TEST_FIXTURES
@@ -156,8 +156,6 @@ abstract class AbstractVariantInputManager<
                     productFlavor.name, VariantTypeImpl.UNIT_TEST
                 )
             ) as DefaultAndroidSourceSet
-        }
-        if (dslServices.projectOptions[BooleanOption.ENABLE_TEST_FIXTURES]) {
             testFixturesSourceSet = sourceSetManager.setUpSourceSet(
                 computeSourceSetName(
                     productFlavor.name, VariantTypeImpl.TEST_FIXTURES

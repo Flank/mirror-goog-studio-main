@@ -15,9 +15,9 @@
  */
 package com.android.build.gradle.tasks
 
+import com.android.build.api.variant.HasAndroidResources
 import com.android.build.api.variant.ResValue
 import com.android.build.gradle.internal.component.ComponentCreationConfig
-import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.generators.ResValueGenerator
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -74,7 +74,7 @@ abstract class GenerateResValues : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            if (creationConfig is VariantCreationConfig) {
+            if (creationConfig is HasAndroidResources) {
                 task.items.set(creationConfig.resValues)
             } else {
                 task.items.empty()

@@ -16,35 +16,9 @@
 
 package com.android.build.gradle.internal.publishing
 
-import com.android.build.gradle.internal.dsl.AbstractPublishing
-
 /**
- * A data class wraps publishing info for a variant.
+ * A data class contains all the components that this variant is published to.
  */
 data class VariantPublishingInfo(
-    val components: Set<ComponentPublishingInfo>
-) {
-    private val aarComponent = components.find { it.type == AbstractPublishing.Type.AAR }
-    private val apkComponent = components.find { it.type == AbstractPublishing.Type.APK }
-    private val aabComponent = components.find { it.type == AbstractPublishing.Type.AAB }
-
-    fun isAarPublished(): Boolean {
-        return aarComponent != null
-    }
-
-    fun isApkPublished(): Boolean {
-        return apkComponent != null
-    }
-
-    fun isAabPublished(): Boolean {
-        return aabComponent != null
-    }
-
-    fun getApkComponentName(): String {
-        return apkComponent!!.componentName
-    }
-
-    fun getAabComponentName(): String {
-        return aabComponent!!.componentName
-    }
-}
+    val components: List<ComponentPublishingInfo>
+)

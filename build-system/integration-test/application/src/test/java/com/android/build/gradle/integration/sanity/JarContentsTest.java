@@ -344,6 +344,7 @@ public class JarContentsTest {
                 "com/android/build/gradle/internal/dexing/",
                 "com/android/build/gradle/internal/dsl/",
                 "com/android/build/gradle/internal/dsl/decorator/",
+                "com/android/build/gradle/internal/dsl/decorator/annotation/",
                 "com/android/build/gradle/internal/instrumentation/",
                 "com/android/build/gradle/internal/errors/",
                 "com/android/build/gradle/internal/feature/",
@@ -1415,6 +1416,20 @@ public class JarContentsTest {
                 "com/android/tools/utp/plugins/deviceprovider/",
                 "com/android/tools/utp/plugins/deviceprovider/gradle/",
                 "com/android/tools/utp/plugins/deviceprovider/gradle/proto/",
+                "META-INF/",
+                "META-INF/MANIFEST.MF",
+                "NOTICE");
+
+        expected.putAll(
+                "com/android/tools/utp/android-test-plugin-host-coverage-proto",
+                "com/",
+                "com/android/",
+                "com/android/tools/",
+                "com/android/tools/utp/",
+                "com/android/tools/utp/plugins/",
+                "com/android/tools/utp/plugins/host/",
+                "com/android/tools/utp/plugins/host/coverage/",
+                "com/android/tools/utp/plugins/host/coverage/proto/",
                 "META-INF/",
                 "META-INF/MANIFEST.MF",
                 "NOTICE");

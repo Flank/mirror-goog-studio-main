@@ -20,13 +20,20 @@ import com.android.tools.idea.wizard.template.ThemesData
 fun themesXml(themesData: ThemesData) =
   """<resources>
     <style name="${getParentAppWidgetTheme(themesData.main.name)}" parent="@android:style/Theme.DeviceDefault">
-        <item name="appWidgetRadius">8dp</item>
-        <item name="appWidgetPadding">4dp</item>
-        <item name="appWidgetInnerRadius">4dp</item>
+        <!-- Radius of the outer bound of widgets to make the rounded corners -->
+        <item name="appWidgetRadius">16dp</item>
+        <!--
+        Radius of the inner view's bound of widgets to make the rounded corners.
+        It needs to be 8dp or less than the value of appWidgetRadius
+        -->
+        <item name="appWidgetInnerRadius">8dp</item>
     </style>
 
     <style name="${getAppWidgetTheme(themesData.main.name)}"
-        parent="${getParentAppWidgetTheme(themesData.main.name)}" />
+        parent="${getParentAppWidgetTheme(themesData.main.name)}">
+        <!-- Apply padding to avoid the content of the widget colliding with the rounded corners -->
+        <item name="appWidgetPadding">16dp</item>
+    </style>
 </resources>
 """
 
