@@ -813,6 +813,9 @@ public class LintSyntaxHighlighter {
         int caretLineOffset = findLineStartOffset(startHighlightOffset);
         int caretLineEndOffset = findLineEndOffset(startHighlightOffset);
         insertRedundantMarker(caretLineEndOffset);
+        if (endHighlightOffset == startHighlightOffset) {
+            endHighlightOffset = caretLineEndOffset;
+        }
 
         if (endHighlightOffset == -1) {
             endHighlightOffset = caretLineEndOffset;

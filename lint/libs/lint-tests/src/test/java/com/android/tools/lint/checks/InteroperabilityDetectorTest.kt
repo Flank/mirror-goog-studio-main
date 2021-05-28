@@ -490,12 +490,12 @@ class InteroperabilityDetectorTest : AbstractCheckTest() {
             src/test/pkg/GetterSetter.java:50: Warning: This getter should not be static such that error6 can be accessed as a property from Kotlin; see https://android.github.io/kotlin-guides/interop.html#property-prefixes [KotlinPropertyAccess]
                 public static String getError6() { return ""; }
                        ~~~~~~
-            src/test/pkg/GetterSetter.java:70: Warning: The getter return type (Float) is not the same as the setter return type (Number); they should have exactly the same type to allow number3 be accessed as a property from Kotlin; see https://android.github.io/kotlin-guides/interop.html#property-prefixes [KotlinPropertyAccess]
+            src/test/pkg/GetterSetter.java:70: Warning: The getter return type (Float) is not the same as the super return type (Number); they should have exactly the same type to allow number3 be accessed as a property from Kotlin; see https://android.github.io/kotlin-guides/interop.html#property-prefixes [KotlinPropertyAccess]
                     @Override public Float getNumber3() { return 0.0f; } // ERROR (even though we have corresponding setter)
                                            ~~~~~~~~~~
-                src/test/pkg/GetterSetter.java:71: Setter here
-                    public void setNumber3(Float number) { } // OK
-                                ~~~~~~~~~~
+                src/test/pkg/GetterSetter.java:63: Super method here
+                    public Number getNumber3() { return 0.0; }
+                                  ~~~~~~~~~~
             0 errors, 7 warnings
             """
         )

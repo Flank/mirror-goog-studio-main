@@ -593,10 +593,7 @@ class TestLintResult internal constructor(
                 if (s != trimmed && s.replace('\\', '/') == trimmed) {
                     // Allow Windows file separators to differ
                 } else {
-                    assertEquals(
-                        trimmed,
-                        s
-                    )
+                    assertEquals(trimmed, s)
                 }
             },
             transformer = transformer
@@ -636,10 +633,7 @@ class TestLintResult internal constructor(
                 if (s != expected && s.replace('\\', '/') == expected) {
                     // Allow Windows file separators to differ
                 } else {
-                    assertEquals(
-                        expected,
-                        s
-                    )
+                    assertEquals(expected, s)
                 }
             },
             transformer = transformer
@@ -690,10 +684,7 @@ class TestLintResult internal constructor(
                     if (s != trimmed && s.replace('\\', '/') == trimmed) {
                         // Allow Windows file separators to differ
                     } else {
-                        assertEquals(
-                            trimmed,
-                            s
-                        )
+                        assertEquals(trimmed, s)
                     }
                 }
             ),
@@ -718,10 +709,7 @@ class TestLintResult internal constructor(
                     if (s != trimmed && s.replace('\\', '/') == trimmed) {
                         // Allow Windows file separators to differ
                     } else {
-                        assertEquals(
-                            trimmed,
-                            s
-                        )
+                        assertEquals(trimmed, s)
                     }
                 }
             ),
