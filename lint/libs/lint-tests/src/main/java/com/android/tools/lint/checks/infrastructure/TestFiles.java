@@ -186,7 +186,7 @@ public class TestFiles {
             result.append(indentString);
         }
         result.append("\"");
-        String separator = "\" +\n" + indentString.toString() + "\"";
+        String separator = "\" +\n" + indentString + "\"";
         result.append(Joiner.on(separator).join(lines));
         result.append("\"");
         return result.toString();
@@ -334,6 +334,7 @@ public class TestFiles {
         return new TestFile.JarTestFile(to);
     }
 
+    @Deprecated // Use the method with the checksum instead
     public static CompiledSourceFile compiled(
             @NonNull String into, @NonNull TestFile source, @NonNull String... encoded) {
         CompiledSourceFile.Type type =
@@ -341,7 +342,20 @@ public class TestFiles {
                                 || source.targetRelativePath.endsWith(DOT_KT)
                         ? CompiledSourceFile.Type.SOURCE_AND_BYTECODE
                         : CompiledSourceFile.Type.RESOURCE;
-        return new CompiledSourceFile(into, type, source, encoded);
+        return new CompiledSourceFile(into, type, source, null, encoded);
+    }
+
+    public static CompiledSourceFile compiled(
+            @NonNull String into,
+            @NonNull TestFile source,
+            long checksum,
+            @NonNull String... encoded) {
+        CompiledSourceFile.Type type =
+                source.targetRelativePath.endsWith(DOT_JAVA)
+                                || source.targetRelativePath.endsWith(DOT_KT)
+                        ? CompiledSourceFile.Type.SOURCE_AND_BYTECODE
+                        : CompiledSourceFile.Type.RESOURCE;
+        return new CompiledSourceFile(into, type, source, checksum, encoded);
     }
 
     public static CompiledSourceFile bytecode(
@@ -351,7 +365,7 @@ public class TestFiles {
                                 || source.targetRelativePath.endsWith(DOT_KT)
                         ? CompiledSourceFile.Type.BYTECODE_ONLY
                         : CompiledSourceFile.Type.RESOURCE;
-        return new CompiledSourceFile(into, type, source, encoded);
+        return new CompiledSourceFile(into, type, source, null, encoded);
     }
 
     @NonNull

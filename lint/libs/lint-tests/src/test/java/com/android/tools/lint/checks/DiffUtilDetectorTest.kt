@@ -33,6 +33,7 @@ class DiffUtilDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
+            0x675b248b,
             """
             androidx/recyclerview/widget/DiffUtil＄ItemCallback.class:
             H4sIAAAAAAAAAI1RzU7CQBCepYXaCoL4e/FgohE82MSLiRAuNUYTggeqB2/b

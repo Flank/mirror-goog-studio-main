@@ -1795,6 +1795,7 @@ class VersionChecksTest : AbstractCheckTest() {
                         }
                     """
                 ).indented(),
+                0x64a854c9,
                 """
                     test/utils/Utils.class:
                     H4sIAAAAAAAAAHWTy27TQBSG/0nSTC7OpQmlaaEtpQXSIGGQkECiQrRuKlmk

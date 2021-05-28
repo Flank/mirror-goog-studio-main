@@ -575,6 +575,20 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
      * String...)} instead.
      */
     public static CompiledSourceFile compiled(
+            @NonNull String into,
+            @NonNull TestFile source,
+            long checksum,
+            @NonNull String... encoded) {
+        return TestFiles.compiled(into, source, checksum, encoded);
+    }
+
+    /**
+     * Like {@link #compiled(String, TestFile, long, String...)}, but does not specify a checksum
+     *
+     * @deprecated Use the version with a checksum instead
+     */
+    @Deprecated
+    public static CompiledSourceFile compiled(
             @NonNull String into, @NonNull TestFile source, @NonNull String... encoded) {
         return TestFiles.compiled(into, source, encoded);
     }

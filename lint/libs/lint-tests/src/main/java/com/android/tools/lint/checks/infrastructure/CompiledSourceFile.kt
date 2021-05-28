@@ -26,6 +26,7 @@ import com.android.SdkConstants.currentPlatform
 import com.android.tools.lint.checks.infrastructure.TestFiles.toBase64gzipJava
 import com.android.tools.lint.checks.infrastructure.TestFiles.toBase64gzipKotlin
 import com.google.common.base.Joiner
+import com.google.common.hash.Hashing
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.objectweb.asm.ClassReader
@@ -37,16 +38,14 @@ import java.io.FilenameFilter
 import java.io.IOException
 import java.io.InputStreamReader
 import java.nio.file.Files
-import java.util.ArrayList
 import java.util.Arrays
-import java.util.HashMap
-import java.util.HashSet
 
 internal class CompiledSourceFile(
     into: String,
     private val type: Type,
     /** The test source file for this compiled file. */
     val source: TestFile,
+    private val checksum: Long?,
     private val encodedFiles: Array<String>
 ) : TestFile() {
 
@@ -67,6 +66,23 @@ internal class CompiledSourceFile(
             }
             return files
         }
+
+    /**
+     * Computes a hash of the source file and the binary contents
+     * (SHA256 with source as UTF8 plus bytecode in order)
+     */
+    @Suppress("UnstableApiUsage")
+    private fun computeCheckSum(source: String, binaries: List<ByteArray>): Int {
+        val hashFunction = Hashing.sha256()
+        val hasher = hashFunction.newHasher()
+
+        hasher.putString(source, Charsets.UTF_8)
+        for (bytes in binaries) {
+            hasher.putBytes(bytes)
+        }
+        val hashCode = hasher.hash()
+        return hashCode.asInt()
+    }
 
     @Throws(IOException::class)
     override fun createFile(targetDir: File): File {
@@ -106,7 +122,7 @@ internal class CompiledSourceFile(
      *
      * Returns true if the file had to be compiled.
      */
-    fun compile(projectDir: File): Boolean {
+    fun compile(projectDir: File, externalJars: List<String>): Boolean {
         if (!isMissingClasses()) {
             // Already done
             return false
@@ -114,7 +130,7 @@ internal class CompiledSourceFile(
         val target = source.targetRelativePath ?: return false
         val (kotlinc, javac: String) = findCompilers(target)
 
-        val classpath = getClassPath(projectDir)
+        val classpath = getClassPath(projectDir, externalJars)
         val classesDir = try {
             Files.createTempDirectory("classes").toFile()
         } catch (e: IOException) {
@@ -175,9 +191,9 @@ internal class CompiledSourceFile(
         return Pair(javaFiles, kotlinFiles)
     }
 
-    private fun getClassPath(projectDir: File): String {
+    private fun getClassPath(projectDir: File, extraJars: List<String>): String {
         val jars = findJars(projectDir)
-        return Joiner.on(File.pathSeparator).join(jars)
+        return Joiner.on(File.pathSeparator).join(jars + extraJars)
     }
 
     /** Find jar files in the given project directory. */
@@ -338,6 +354,12 @@ internal class CompiledSourceFile(
             name.endsWith(DOT_CLASS) ||
                 target.endsWith(DOT_KT) && name.endsWith(".kotlin_module")
         }
+
+        val checksum = computeCheckSum(source.contents, binaryFiles.map { it.readBytes() }.toList())
+        val checksumString = "0x" + Integer.toHexString(checksum)
+        kotlin.indent(indent).append(checksumString).append(",\n")
+        java.indent(indent).append(checksumString).append(",\n")
+
         var first = true
         for (binaryFile in binaryFiles) {
             val bytes = binaryFile.readBytes()
@@ -424,6 +446,28 @@ internal class CompiledSourceFile(
                 val classFile = BinaryTestFile(target, producer)
                 classFiles.add(classFile)
             }
+
+            if (checksum != null) {
+                val actualChecksum = computeCheckSum(
+                    source.contents,
+                    classFiles.map {
+                        (it as BinaryTestFile).binaryContents
+                    }.toList()
+                )
+                // We only create integer checksums to keep the fingerprints short
+                if (checksum.toInt() != actualChecksum) {
+                    fail(
+                        "The checksum does not match for ${source.targetRelativePath};\n" +
+                            "expected " +
+                            "0x${Integer.toHexString(checksum.toInt())} but was " +
+                            "0x${Integer.toHexString(actualChecksum)}.\n" +
+                            "Has the source file been changed without updating the binaries?\n" +
+                            "Don't just update the checksum -- delete the binary file arguments and " +
+                            "re-run the test first!"
+                    )
+                }
+            }
+
             return classFiles
         }
 
