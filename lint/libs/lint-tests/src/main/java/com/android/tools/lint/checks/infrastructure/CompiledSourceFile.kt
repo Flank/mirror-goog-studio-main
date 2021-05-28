@@ -42,7 +42,7 @@ import java.util.Arrays
 
 internal class CompiledSourceFile(
     into: String,
-    private val type: Type,
+    internal val type: Type,
     /** The test source file for this compiled file. */
     val source: TestFile,
     private val checksum: Long?,

@@ -16,6 +16,7 @@
 package com.android.tools.lint.checks
 
 import com.android.tools.lint.checks.VersionChecks.Companion.getMinSdkVersionFromMethodName
+import com.android.tools.lint.checks.infrastructure.TestMode
 import com.android.tools.lint.checks.infrastructure.TestMode.Companion.PARTIAL
 import com.android.tools.lint.detector.api.Detector
 
@@ -1813,14 +1814,23 @@ class VersionChecksTest : AbstractCheckTest() {
                     """
             ),
             SUPPORT_ANNOTATIONS_JAR
-        ).issues(*issues).run().expect(
-            """
+        ).issues(*issues)
+            // If we only supply the bytecode, lint would have to analyze bytecode
+            // to recognize version checks inside a compiled method; it doesn't do that;
+            // this is what the SdkIntDetector is for (encouraging use of annotations
+            // which captures the info). However, when we analyze the source code in a
+            // library we can record the information as partial state, so this *does*
+            // work in partial analysis which we want to test here.
+            .skipTestModes(TestMode.BYTECODE_ONLY)
+            .run()
+            .expect(
+                """
             src/test/pkg/CheckInLibraryTest.java:14: Error: Call requires API level 24 (current min is 4): methodN [NewApi]
                     if (versionCheck(14)) { methodN(); } // ERROR
                                             ~~~~~~~
             1 errors, 0 warnings
             """
-        )
+            )
     }
 
     fun testVersionCheckMethodsInBinaryOperator() {
@@ -2894,7 +2904,7 @@ class VersionChecksTest : AbstractCheckTest() {
             )
     }
 
-// TODO: Test out of order parameters!
+    // TODO: Test out of order parameters!
     fun testChecksSdkIntAtLeastLambda() {
         // Regression test for https://issuetracker.google.com/120255046
         // The @ChecksSdkIntAtLeast annotation allows annotating methods and
