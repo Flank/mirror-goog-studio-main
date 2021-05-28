@@ -53,13 +53,13 @@ class AddJavascriptInterfaceDetectorTest : AbstractCheckTest() {
         var source = testFile.getContents()!!
         source = source.replace(
             "public class ",
-            "@android.support.annotation.RequiresApi(17)\npublic class "
+            "@androidx.annotation.RequiresApi(17)\npublic class "
         )
         val file = java(source)
         lint().files(
             manifest().minSdk(10),
             file,
-            base64gzip("libs/support-annotations.jar", AnnotationDetectorTest.SUPPORT_ANNOTATIONS_JAR_BASE64_GZIP)
+            SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
 

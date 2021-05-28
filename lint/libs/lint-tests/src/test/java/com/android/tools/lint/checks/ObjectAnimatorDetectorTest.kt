@@ -20,20 +20,6 @@ import com.android.tools.lint.checks.ObjectAnimatorDetector.Companion.MISSING_KE
 import com.android.tools.lint.detector.api.Detector
 
 class ObjectAnimatorDetectorTest : AbstractCheckTest() {
-    private val keepAnnotation = java(
-        """
-        package android.support.annotation;
-        import java.lang.annotation.Retention;
-        import java.lang.annotation.Target;
-        import static java.lang.annotation.ElementType.*;
-        import static java.lang.annotation.RetentionPolicy.CLASS;
-        @Retention(CLASS)
-        @Target({PACKAGE,TYPE,ANNOTATION_TYPE,CONSTRUCTOR,METHOD,FIELD})
-        public @interface Keep {
-        }
-        """
-    ).indented()
-
     override fun getDetector(): Detector {
         return ObjectAnimatorDetector()
     }
@@ -81,7 +67,7 @@ class ObjectAnimatorDetectorTest : AbstractCheckTest() {
 
                 import android.animation.ObjectAnimator;
                 import android.animation.PropertyValuesHolder;
-                import android.support.annotation.Keep;
+                import androidx.annotation.Keep;
                 import android.view.View;
                 import android.widget.Button;
                 import android.animation.FloatEvaluator;
@@ -166,7 +152,7 @@ class ObjectAnimatorDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            keepAnnotation,
+            SUPPORT_ANNOTATIONS_JAR,
             gradle(
                 """
                 android {
@@ -182,10 +168,10 @@ class ObjectAnimatorDetectorTest : AbstractCheckTest() {
             """
             Fix for src/main/java/test/pkg/AnimatorTest.java line 55: Annotate with @Keep:
             @@ -55 +55
-            +         @androidx.annotation.Keep
+            +         @Keep
             Fix for src/main/java/test/pkg/AnimatorTest.java line 58: Annotate with @Keep:
             @@ -58 +58
-            +         @androidx.annotation.Keep
+            +         @Keep
             """
         )
     }
@@ -199,7 +185,7 @@ class ObjectAnimatorDetectorTest : AbstractCheckTest() {
 
                 import android.animation.ObjectAnimator;
                 import android.animation.PropertyValuesHolder;
-                import android.support.annotation.Keep;
+                import androidx.annotation.Keep;
                 import android.view.View;
                 import android.widget.Button;
                 import android.animation.FloatEvaluator;
@@ -221,19 +207,6 @@ class ObjectAnimatorDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            java(
-                """
-                    package android.support.annotation;
-                    import java.lang.annotation.Retention;
-                    import java.lang.annotation.Target;
-                    import static java.lang.annotation.ElementType.*;
-                    import static java.lang.annotation.RetentionPolicy.CLASS;
-                    @Retention(CLASS)
-                    @Target({PACKAGE,TYPE,ANNOTATION_TYPE,CONSTRUCTOR,METHOD,FIELD})
-                    public @interface Keep {
-                    }
-                    """
-            ).indented(),
             gradle(
                 """
                 android {
@@ -244,7 +217,8 @@ class ObjectAnimatorDetectorTest : AbstractCheckTest() {
                     }
                 }
                 """
-            ).indented()
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
         ).issues(MISSING_KEEP).run().expectClean()
     }
 
@@ -544,7 +518,7 @@ class ObjectAnimatorDetectorTest : AbstractCheckTest() {
                 package test.pkg;
 
                 import android.animation.ObjectAnimator;
-                import android.support.annotation.Keep;
+                import androidx.annotation.Keep;
 
                 @SuppressWarnings("unused")
                 public class ObjAnimatorTest {
@@ -573,7 +547,7 @@ class ObjectAnimatorDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            keepAnnotation
+            SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
 
@@ -670,7 +644,7 @@ class ObjectAnimatorDetectorTest : AbstractCheckTest() {
             java(
                 """
                 package test.pkg;
-                import android.support.annotation.Keep;
+                import androidx.annotation.Keep;
                 import android.animation.Keyframe;
                 import android.animation.ObjectAnimator;
                 import android.animation.PropertyValuesHolder;
@@ -694,7 +668,7 @@ class ObjectAnimatorDetectorTest : AbstractCheckTest() {
                 package test.pkg
 
                 import android.content.Context
-                import android.support.annotation.Keep
+                import androidx.annotation.Keep
                 import android.util.AttributeSet
                 import android.widget.LinearLayout
 
@@ -721,7 +695,7 @@ class ObjectAnimatorDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            keepAnnotation
+            SUPPORT_ANNOTATIONS_JAR
         ).issues(MISSING_KEEP).run().expect(
             """
             src/main/res/xml/scene_show_details.xml:32: Warning: This attribute references a method or property in custom view test.pkg.TintingToolbarJava which is not annotated with @Keep; it should be annotated with @Keep to ensure that it is not discarded or renamed in release builds [AnimatorKeep]

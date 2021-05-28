@@ -75,10 +75,10 @@ src/test/pkg/WrongColor.java:20: Error: Expected resource of type color [Resourc
                         foo2(R.color.blue);
                     }
 
-                    private void foo1(@android.support.annotation.ColorRes int c) {
+                    private void foo1(@androidx.annotation.ColorRes int c) {
                     }
 
-                    private void foo2(@android.support.annotation.ColorInt int c) {
+                    private void foo2(@androidx.annotation.ColorInt int c) {
                     }
 
                     private static class R {
@@ -91,7 +91,6 @@ src/test/pkg/WrongColor.java:20: Error: Expected resource of type color [Resourc
                 }
                 """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(expected)
     }
@@ -118,8 +117,8 @@ src/test/pkg/ColorTest.java:17: Error: Expected a color resource id (R.color.) b
                 "src/test/pkg/ColorTest.java",
                 """
                 package test.pkg;
-                import android.support.annotation.ColorInt;
-                import android.support.annotation.ColorRes;
+                import androidx.annotation.ColorInt;
+                import androidx.annotation.ColorRes;
 
                 @SuppressWarnings("ClassNameDiffersFromFileName")
                 public abstract class ColorTest {
@@ -145,7 +144,6 @@ src/test/pkg/ColorTest.java:17: Error: Expected a color resource id (R.color.) b
                 }
                 """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(expected)
     }
@@ -166,7 +164,7 @@ src/test/pkg/ColorTest.java:11: Error: Expected a color resource id (R.color.) b
                 package test.pkg;
                 import android.content.Context;
                 import android.content.res.Resources;
-                import android.support.annotation.ColorRes;
+                import androidx.annotation.ColorRes;
                 @SuppressWarnings("ClassNameDiffersFromFileName")
                 public abstract class ColorTest {
                     public abstract void setColor(@ColorRes int color);
@@ -178,7 +176,6 @@ src/test/pkg/ColorTest.java:11: Error: Expected a color resource id (R.color.) b
                 }
                 """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(expected)
     }
@@ -205,8 +202,8 @@ src/test/pkg/PxTest.java:17: Error: Expected a dimension resource id (R.dimen.) 
                 "src/test/pkg/PxTest.java",
                 """
                 package test.pkg;
-                import android.support.annotation.Px;
-                import android.support.annotation.DimenRes;
+                import androidx.annotation.Px;
+                import androidx.annotation.DimenRes;
 
                 @SuppressWarnings("ClassNameDiffersFromFileName")
                 public abstract class PxTest {
@@ -232,7 +229,6 @@ src/test/pkg/PxTest.java:17: Error: Expected a dimension resource id (R.dimen.) 
                 }
                 """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(expected)
     }
@@ -248,8 +244,8 @@ src/test/pkg/PxTest.java:17: Error: Expected a dimension resource id (R.dimen.) 
                     "\n" +
                     "import android.app.Activity;\n" +
                     "import android.content.Context;\n" +
-                    "import android.support.annotation.Dimension;\n" +
-                    "import android.support.annotation.Px;\n" +
+                    "import androidx.annotation.Dimension;\n" +
+                    "import androidx.annotation.Px;\n" +
                     "import android.util.TypedValue;\n" +
                     "import android.widget.TextView;\n" +
                     "\n" +
@@ -275,7 +271,6 @@ src/test/pkg/PxTest.java:17: Error: Expected a dimension resource id (R.dimen.) 
                     "    }\n" +
                     "}\n"
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
@@ -323,10 +318,10 @@ src/p1/p2/Flow.java:120: Error: Expected resource of type font [ResourceType]
                 "src/p1/p2/Flow.java",
                 """
                 import android.content.res.Resources;
-                import android.support.annotation.DrawableRes;
-                import android.support.annotation.FontRes;
-                import android.support.annotation.StringRes;
-                import android.support.annotation.StyleRes;
+                import androidx.annotation.DrawableRes;
+                import androidx.annotation.FontRes;
+                import androidx.annotation.StringRes;
+                import androidx.annotation.StyleRes;
                 import java.util.Random;
 
                 @SuppressWarnings({"UnusedDeclaration", "ClassNameDiffersFromFileName", "MethodMayBeStatic", "UnnecessaryLocalVariable"})
@@ -356,7 +351,7 @@ src/p1/p2/Flow.java:120: Error: Expected resource of type font [ResourceType]
                         myAnyResMethod(50); // ERROR
                     }
 
-                    private void myAnyResMethod(@android.support.annotation.AnyRes int arg) {
+                    private void myAnyResMethod(@androidx.annotation.AnyRes int arg) {
                     }
 
                     public void testFields(String fileExt, Resources resources) {
@@ -398,17 +393,17 @@ src/p1/p2/Flow.java:120: Error: Expected resource of type font [ResourceType]
                     private static final int MY_RESOURCE = R.string.my_string;
 
                     private static class MimeTypes {
-                        @android.support.annotation.StyleRes
-                        @android.support.annotation.DrawableRes
+                        @androidx.annotation.StyleRes
+                        @androidx.annotation.DrawableRes
                         public static int styleAndDrawable;
 
-                        @android.support.annotation.StyleRes
+                        @androidx.annotation.StyleRes
                         public static int style;
 
-                        @android.support.annotation.DrawableRes
+                        @androidx.annotation.DrawableRes
                         public static int drawable;
 
-                        @android.support.annotation.DrawableRes
+                        @androidx.annotation.DrawableRes
                         public static int getIconForExt(String ext) {
                             return R.drawable.my_drawable;
                         }
@@ -423,12 +418,12 @@ src/p1/p2/Flow.java:120: Error: Expected resource of type font [ResourceType]
                             return R.drawable.my_drawable;
                         }
 
-                        @android.support.annotation.StringRes
+                        @androidx.annotation.StringRes
                         public static int getAnnotatedString() {
                             return R.string.my_string;
                         }
 
-                        @android.support.annotation.DrawableRes
+                        @androidx.annotation.DrawableRes
                         public static int getAnnotatedDrawable() {
                             return R.drawable.my_drawable;
                         }
@@ -456,7 +451,6 @@ src/p1/p2/Flow.java:120: Error: Expected resource of type font [ResourceType]
                 }
                 """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(expected)
     }
@@ -476,7 +470,7 @@ src/test/pkg/ActivityType.java:6: Error: Expected resource of type drawable [Res
             java(
                 "src/test/pkg/ActivityType.java",
                 """
-                import android.support.annotation.DrawableRes;
+                import androidx.annotation.DrawableRes;
                 @SuppressWarnings({"ClassNameDiffersFromFileName","FieldCanBeLocal"})
                 enum ActivityType {
 
@@ -490,7 +484,6 @@ src/test/pkg/ActivityType.java:6: Error: Expected resource of type drawable [Res
                     }
                 }"""
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(expected)
     }
@@ -508,10 +501,10 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
                 "src/test/pkg/ConstructorTest.java",
                 """
                 package test.pkg;
-                import android.support.annotation.DrawableRes;
-                import android.support.annotation.IntRange;
-                import android.support.annotation.UiThread;
-                import android.support.annotation.WorkerThread;
+                import androidx.annotation.DrawableRes;
+                import androidx.annotation.IntRange;
+                import androidx.annotation.UiThread;
+                import androidx.annotation.WorkerThread;
 
                 @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic", "ResultOfObjectAllocationIgnored"})
                 public class ConstructorTest {
@@ -530,7 +523,6 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
                 }
                 """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(expected)
     }
@@ -563,8 +555,8 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
                 "src/com./example/myapplication/Test1.java",
                 """
                 package com.example.myapplication;
-                import android.support.annotation.IdRes;
-                import android.support.annotation.LayoutRes;
+                import androidx.annotation.IdRes;
+                import androidx.annotation.LayoutRes;
 
                 @SuppressWarnings({"ClassNameDiffersFromFileName","FieldCanBeLocal"})
                 public class Test1 {
@@ -584,8 +576,8 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
                 "src/com/example/myapplication/Test2.java",
                 """
                 package com.example.myapplication;
-                import android.support.annotation.IdRes;
-                import android.support.annotation.StringRes;
+                import androidx.annotation.IdRes;
+                import androidx.annotation.StringRes;
 
                 @SuppressWarnings("ClassNameDiffersFromFileName")
                 public class Test2 extends Test1 {
@@ -600,7 +592,6 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
                     }
                 }"""
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
@@ -622,8 +613,8 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
                     "package test.pkg;\n" +
                     "\n" +
                     "import android.content.res.Resources;\n" +
-                    "import android.support.annotation.DrawableRes;\n" +
-                    "import android.support.annotation.StringRes;\n" +
+                    "import androidx.annotation.DrawableRes;\n" +
+                    "import androidx.annotation.StringRes;\n" +
                     "\n" +
                     "public class ResourceTypeTest {\n" +
                     "    public ResourceTypeTest(Resources res, @DrawableRes @StringRes int id) {\n" +
@@ -648,7 +639,6 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
                     "    }" +
                     "}"
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(expected)
     }
@@ -670,8 +660,8 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
                     "package test.pkg;\n" +
                     "\n" +
                     "import android.content.res.Resources;\n" +
-                    "import android.support.annotation.DrawableRes;\n" +
-                    "import android.support.annotation.StringRes;\n" +
+                    "import androidx.annotation.DrawableRes;\n" +
+                    "import androidx.annotation.StringRes;\n" +
                     "\n" +
                     "public class ResourceTypeTest {\n" +
                     "    public void test(Resources res, @DrawableRes @StringRes int id) {\n" +
@@ -686,7 +676,6 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
                     "    }\n" +
                     "}"
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).allowDuplicates().run().expect(expected)
     }
@@ -698,11 +687,11 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
                     "package test.pkg;\n" +
                     "\n" +
                     "\n" +
-                    "import android.support.annotation.ColorInt;\n" +
-                    "import android.support.annotation.DimenRes;\n" +
-                    "import android.support.annotation.HalfFloat;\n" +
-                    "import android.support.annotation.Px;\n" +
-                    "import android.support.annotation.StringRes;\n" +
+                    "import androidx.annotation.ColorInt;\n" +
+                    "import androidx.annotation.DimenRes;\n" +
+                    "import androidx.annotation.HalfFloat;\n" +
+                    "import androidx.annotation.Px;\n" +
+                    "import androidx.annotation.StringRes;\n" +
                     "\n" +
                     "@SuppressWarnings({\"UnnecessaryLocalVariable\", \"ResultOfMethodCallIgnored\", \"WeakerAccess\"})\n" +
                     "public class HalfFloatTest {\n" +
@@ -763,7 +752,6 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
                     "    // TODO: Add cast\n" +
                     "}\n"
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(
             "" +
@@ -800,7 +788,7 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
                     package test.pkg
 
                     import android.os.Build
-                    import android.support.annotation.RequiresApi
+                    import androidx.annotation.RequiresApi
                     import android.util.Half
 
                     @Suppress("unused", "UNUSED_VARIABLE")
@@ -811,7 +799,6 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
                     }
                     """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
@@ -831,7 +818,7 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
                     "package test.pkg;\n" +
                     "\n" +
                     "import android.content.res.Resources;\n" +
-                    "import android.support.annotation.AnyRes;\n" +
+                    "import androidx.annotation.AnyRes;\n" +
                     "\n" +
                     "public class AnyResTest {\n" +
                     "    public AnyResTest(Resources res, @AnyRes int id) {\n" +
@@ -857,7 +844,6 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
                     "    }" +
                     "}"
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(expected)
     }
@@ -923,7 +909,6 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
                     "    }\n" +
                     "}\n"
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
@@ -938,8 +923,8 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
                     "import android.app.Activity\n" +
                     "import android.content.Context\n" +
                     "import android.content.res.Resources\n" +
-                    "import android.support.annotation.AttrRes\n" +
-                    "import android.support.annotation.ColorInt\n" +
+                    "import androidx.annotation.AttrRes\n" +
+                    "import androidx.annotation.ColorInt\n" +
                     "\n" +
                     "class TestActivity: Activity() {\n" +
                     "\n" +
@@ -956,7 +941,6 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
                     "    }\n" +
                     "}"
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         )
             .checkMessage({ context, issue, severity, location, message, fixData ->
@@ -981,9 +965,9 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
                     "\n" +
                     "package test.pkg\n" +
                     "\n" +
-                    "import android.support.annotation.DimenRes\n" +
-                    "import android.support.annotation.DrawableRes\n" +
-                    "import android.support.annotation.StringRes\n" +
+                    "import androidx.annotation.DimenRes\n" +
+                    "import androidx.annotation.DrawableRes\n" +
+                    "import androidx.annotation.StringRes\n" +
                     "\n" +
                     "fun target(@DrawableRes icon: Int = 0,\n" +
                     "           @StringRes string: Int = 0,\n" +
@@ -1035,7 +1019,6 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
                     "    string.handleResourceTypes(myIcon, dimensions = myString) // ERROR\n" +
                     "}\n"
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(
             "src/test/pkg/test.kt:33: Error: Expected resource of type drawable [ResourceType]\n" +
@@ -1072,7 +1055,7 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
                     "import android.content.ServiceConnection;\n" +
                     "import android.content.res.Resources;\n" +
                     "import android.os.Build;\n" +
-                    "import android.support.annotation.*;\n" +
+                    "import androidx.annotation.*;\n" +
                     "import android.view.View;\n" +
                     "\n" +
                     "import static android.content.Context.CONNECTIVITY_SERVICE;\n" +
@@ -1101,7 +1084,7 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
                     "        boolean error4 = resources.getBoolean(/*Expected resource of type bool*/flow2/**/);\n" +
                     "    }\n" +
                     "\n" +
-                    "    @android.support.annotation.DrawableRes\n" +
+                    "    @androidx.annotation.DrawableRes\n" +
                     "    public int testResourceTypeReturnValues(Context context, boolean useString) {\n" +
                     "        if (useString) {\n" +
                     "            return /*Expected resource of type drawable*/R.string.app_name/**/; // error\n" +
@@ -1132,7 +1115,6 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
                     "    }\n" +
                     "}\n"
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectInlinedMessages()
     }
@@ -1144,9 +1126,9 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
                 "" +
                     "package test.pkg;\n" +
                     "import android.content.res.Resources;\n" +
-                    "import android.support.annotation.DrawableRes;\n" +
-                    "import android.support.annotation.StringRes;\n" +
-                    "import android.support.annotation.StyleRes;\n" +
+                    "import androidx.annotation.DrawableRes;\n" +
+                    "import androidx.annotation.StringRes;\n" +
+                    "import androidx.annotation.StyleRes;\n" +
                     "\n" +
                     "import java.util.Random;\n" +
                     "\n" +
@@ -1191,17 +1173,17 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
                     "    }\n" +
                     "\n" +
                     "    private static class MimeTypes {\n" +
-                    "        @android.support.annotation.StyleRes\n" +
-                    "        @android.support.annotation.DrawableRes\n" +
+                    "        @androidx.annotation.StyleRes\n" +
+                    "        @androidx.annotation.DrawableRes\n" +
                     "        public static int styleAndDrawable;\n" +
                     "\n" +
-                    "        @android.support.annotation.StyleRes\n" +
+                    "        @androidx.annotation.StyleRes\n" +
                     "        public static int style;\n" +
                     "\n" +
-                    "        @android.support.annotation.DrawableRes\n" +
+                    "        @androidx.annotation.DrawableRes\n" +
                     "        public static int drawable;\n" +
                     "\n" +
-                    "        @android.support.annotation.DrawableRes\n" +
+                    "        @androidx.annotation.DrawableRes\n" +
                     "        public static int getIconForExt(String ext) {\n" +
                     "            return R.drawable.my_drawable;\n" +
                     "        }\n" +
@@ -1216,12 +1198,12 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
                     "            return R.drawable.my_drawable;\n" +
                     "        }\n" +
                     "\n" +
-                    "        @android.support.annotation.StringRes\n" +
+                    "        @androidx.annotation.StringRes\n" +
                     "        public static int getAnnotatedString() {\n" +
                     "            return R.string.my_string;\n" +
                     "        }\n" +
                     "\n" +
-                    "        @android.support.annotation.DrawableRes\n" +
+                    "        @androidx.annotation.DrawableRes\n" +
                     "        public static int getAnnotatedDrawable() {\n" +
                     "            return R.drawable.my_drawable;\n" +
                     "        }\n" +
@@ -1241,7 +1223,6 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
                     "    }\n" +
                     "}\n"
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectInlinedMessages()
     }
@@ -1269,7 +1250,6 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
                     "  }\n" +
                     "}"
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
@@ -1284,8 +1264,8 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
                     "package test.pkg;\n" +
                     "\n" +
                     "import android.app.Activity;\n" +
-                    "import android.support.annotation.ColorRes;\n" +
-                    "import android.support.annotation.DrawableRes;\n" +
+                    "import androidx.annotation.ColorRes;\n" +
+                    "import androidx.annotation.DrawableRes;\n" +
                     "import android.widget.TextView;\n" +
                     "\n" +
                     "public class X extends Activity {\n" +
@@ -1304,7 +1284,6 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
                     "    }\n" +
                     "}\n"
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectInlinedMessages()
     }
@@ -1358,7 +1337,6 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
                     "    }\n" +
                     "}\n"
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
@@ -1369,17 +1347,17 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
                 "" +
                     "package test.pkg;\n" +
                     "\n" +
-                    "import android.support.annotation.BinderThread;\n" +
-                    "import android.support.annotation.CheckResult;\n" +
-                    "import android.support.annotation.ColorInt;\n" +
-                    "import android.support.annotation.ColorRes;\n" +
-                    "import android.support.annotation.FloatRange;\n" +
-                    "import android.support.annotation.IntDef;\n" +
-                    "import android.support.annotation.IntRange;\n" +
-                    "import android.support.annotation.RequiresPermission;\n" +
-                    "import android.support.annotation.Size;\n" +
-                    "import android.support.annotation.StringRes;\n" +
-                    "import android.support.annotation.UiThread;\n" +
+                    "import androidx.annotation.BinderThread;\n" +
+                    "import androidx.annotation.CheckResult;\n" +
+                    "import androidx.annotation.ColorInt;\n" +
+                    "import androidx.annotation.ColorRes;\n" +
+                    "import androidx.annotation.FloatRange;\n" +
+                    "import androidx.annotation.IntDef;\n" +
+                    "import androidx.annotation.IntRange;\n" +
+                    "import androidx.annotation.RequiresPermission;\n" +
+                    "import androidx.annotation.Size;\n" +
+                    "import androidx.annotation.StringRes;\n" +
+                    "import androidx.annotation.UiThread;\n" +
                     "\n" +
                     "import java.lang.annotation.Retention;\n" +
                     "import java.lang.annotation.RetentionPolicy;\n" +
@@ -1511,7 +1489,6 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
                     "    }\n" +
                     "}\n"
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         )
             .issues(
@@ -1542,9 +1519,9 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
                 "" +
                     "package test.pkg;\n" +
                     "import android.content.res.Resources;\n" +
-                    "import android.support.annotation.NavigationRes;\n" +
-                    "import android.support.annotation.StringRes;\n" +
-                    "import android.support.annotation.StyleRes;\n" +
+                    "import androidx.annotation.NavigationRes;\n" +
+                    "import androidx.annotation.StringRes;\n" +
+                    "import androidx.annotation.StyleRes;\n" +
                     "\n" +
                     "import java.util.Random;\n" +
                     "\n" +
@@ -1552,9 +1529,9 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
                     "public class Flow {\n" +
                     // Fully qualified name because @NavigationRes is not yet
                     // in the support library bundled with this test
-                    "    public void nav(@android.support.annotation.NavigationRes int id) { }\n" +
+                    "    public void nav(@androidx.annotation.NavigationRes int id) { }\n" +
                     "    public void str(@StringRes int id) { }\n" +
-                    "    public void test(@StringRes int string, @android.support.annotation.NavigationRes int navigation) {\n" +
+                    "    public void test(@StringRes int string, @androidx.annotation.NavigationRes int navigation) {\n" +
                     "        nav(navigation); // OK\n" +
                     "        str(string); // OK\n" +
                     "        nav(string); // ERROR\n" +
@@ -1575,7 +1552,6 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
                     "    }\n" +
                     "}\n"
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(expected)
     }
@@ -1586,13 +1562,12 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
                 """
                     package test.pkg
 
-                    import android.support.annotation.StringRes
+                    import androidx.annotation.StringRes
 
                     @StringRes
                     fun getResource(): Int = android.R.drawable.ic_delete
                     """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(
             "" +
@@ -1610,7 +1585,7 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
                 """
                     package test.pkg;
 
-                    import android.support.annotation.StyleableRes;
+                    import androidx.annotation.StyleableRes;
 
                     @SuppressWarnings("ClassNameDiffersFromFileName")
                     public class TestStyleable {
@@ -1656,7 +1631,6 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
 
                 """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(
             "" +
@@ -1711,13 +1685,12 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
                     package test.pkg
 
                     import android.content.Context
-                    import android.support.annotation.DrawableRes
-                    import android.support.annotation.StringRes
+                    import androidx.annotation.DrawableRes
+                    import androidx.annotation.StringRes
 
                     fun Context.foobar(@StringRes msgId: Int, @DrawableRes imgId: Int) {  }
                 """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
@@ -1749,7 +1722,6 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
                 }
                 """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
@@ -1761,7 +1733,7 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
             java(
                 """
                 package test.pkg;
-                import android.support.annotation.IdRes;
+                import androidx.annotation.IdRes;
                 public @interface MySweetAnnotation {
                     @IdRes
                     int[] ids() default {};
@@ -1832,7 +1804,6 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
                     }
                 """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(
             """
@@ -1870,7 +1841,7 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
             kotlin(
                 """
                 package test.pkg
-                import android.support.annotation.StringRes
+                import androidx.annotation.StringRes
                 enum class MYENUM(@StringRes val title: Int) {
                     FIRST(R.string.first_title)
                 }
@@ -1918,7 +1889,6 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
                     }
                 """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }

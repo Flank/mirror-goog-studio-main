@@ -15,7 +15,6 @@
  */
 package com.android.tools.lint.checks
 
-import com.android.tools.lint.checks.infrastructure.TestFile
 import com.android.tools.lint.detector.api.Detector
 
 /** Unit tests for [SdkIntDetector] */
@@ -211,8 +210,7 @@ class SdkIntDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            checkSdkIntAnnotation,
-            supportJar
+            SUPPORT_ANNOTATIONS_JAR
         ).run().expect(
             """
             src/test/pkg/JavaVersionChecks.java:13: Warning: This method should be annotated with @ChecksSdkIntAtLeast(api=N) [AnnotateVersionCheck]
@@ -462,8 +460,7 @@ class SdkIntDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            checkSdkIntAnnotation,
-            supportJar
+            SUPPORT_ANNOTATIONS_JAR
         ).run().expect(
             """
             src/test/pkg/FunctionTest.java:7: Warning: This method should be annotated with @ChecksSdkIntAtLeast(api=android.os.Build.VERSION_CODES.O_MR1, lambda=0) [AnnotateVersionCheck]
@@ -480,16 +477,7 @@ class SdkIntDetectorTest : AbstractCheckTest() {
         )
     }
 
-    companion object {
-        private val checkSdkIntAnnotation = VersionChecksTest.checkSdkIntAnnotation
-    }
-
     override fun getDetector(): Detector {
         return SdkIntDetector()
     }
-
-    private val supportJar: TestFile = base64gzip(
-        ApiDetectorTest.SUPPORT_JAR_PATH,
-        AnnotationDetectorTest.SUPPORT_ANNOTATIONS_JAR_BASE64_GZIP
-    )
 }

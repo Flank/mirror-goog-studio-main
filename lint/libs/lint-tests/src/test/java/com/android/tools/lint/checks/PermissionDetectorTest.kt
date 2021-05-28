@@ -33,7 +33,7 @@ class PermissionDetectorTest : AbstractCheckTest() {
                 import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
                 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 
-                import android.support.annotation.RequiresPermission;
+                import androidx.annotation.RequiresPermission;
 
                 @SuppressWarnings({"UnusedDeclaration", "ClassNameDiffersFromFileName"})
                 public abstract class LocationManager {
@@ -250,7 +250,6 @@ class PermissionDetectorTest : AbstractCheckTest() {
             getManifestWithPermissions(14),
             mPermissionTest,
             mLocationManagerStub,
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(expected)
     }
@@ -260,7 +259,6 @@ class PermissionDetectorTest : AbstractCheckTest() {
             getManifestWithPermissions(14, "android.permission.ACCESS_FINE_LOCATION"),
             mPermissionTest,
             mLocationManagerStub,
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
@@ -294,7 +292,6 @@ class PermissionDetectorTest : AbstractCheckTest() {
             getManifestWithPermissions(23, "android.permission.ACCESS_FINE_LOCATION"),
             mLocationManagerStub,
             mRevokeTest,
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(expected)
     }
@@ -317,7 +314,7 @@ class PermissionDetectorTest : AbstractCheckTest() {
                 "src/test/pkg/PermissionTest2.java",
                 "" +
                     "package test.pkg;\n" +
-                    "import android.support.annotation.RequiresPermission;\n" +
+                    "import androidx.annotation.RequiresPermission;\n" +
                     "\n" +
                     "public class PermissionTest2 {\n" +
                     "    @RequiresPermission(allOf = {\"my.permission.PERM1\",\"my.permission.PERM2\"})\n" +
@@ -338,7 +335,6 @@ class PermissionDetectorTest : AbstractCheckTest() {
                     "    }\n" +
                     "}\n"
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(expected)
     }
@@ -348,7 +344,6 @@ class PermissionDetectorTest : AbstractCheckTest() {
             getManifestWithPermissions(14, "android.permission.ACCESS_FINE_LOCATION"),
             mLocationManagerStub,
             mRevokeTest,
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
@@ -367,7 +362,6 @@ class PermissionDetectorTest : AbstractCheckTest() {
             manifest,
             mPermissionTest,
             mLocationManagerStub,
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
@@ -386,7 +380,6 @@ class PermissionDetectorTest : AbstractCheckTest() {
             manifest,
             mPermissionTest,
             mLocationManagerStub,
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
@@ -403,7 +396,7 @@ class PermissionDetectorTest : AbstractCheckTest() {
                 "" +
                     "package test.pkg;\n" +
                     "\n" +
-                    "import android.support.annotation.RequiresPermission;\n" +
+                    "import androidx.annotation.RequiresPermission;\n" +
                     "\n" +
                     "import java.lang.annotation.Retention;\n" +
                     "import java.lang.annotation.RetentionPolicy;\n" +
@@ -428,7 +421,6 @@ class PermissionDetectorTest : AbstractCheckTest() {
                     "    }\n" +
                     "}\n"
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(expected)
     }
@@ -444,7 +436,6 @@ class PermissionDetectorTest : AbstractCheckTest() {
             getThingsManifestWithPermissions(24, null),
             mPermissionTest,
             mLocationManagerStub,
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(expected)
     }
@@ -456,7 +447,6 @@ class PermissionDetectorTest : AbstractCheckTest() {
             ),
             mPermissionTest,
             mLocationManagerStub,
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
@@ -476,7 +466,6 @@ class PermissionDetectorTest : AbstractCheckTest() {
             ),
             mPermissionTest,
             mLocationManagerStub,
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(expected)
     }
@@ -562,7 +551,7 @@ class PermissionDetectorTest : AbstractCheckTest() {
                     "import android.content.Intent;\n" +
                     "import android.database.Cursor;\n" +
                     "import android.net.Uri;\n" +
-                    "import android.support.annotation.RequiresPermission;\n" +
+                    "import androidx.annotation.RequiresPermission;\n" +
                     "\n" +
                     "\n" +
                     "@SuppressWarnings({\"deprecation\", \"unused\"})\n" +
@@ -645,7 +634,6 @@ class PermissionDetectorTest : AbstractCheckTest() {
                     "    }\n" +
                     "}\n"
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         )
             .run().expect(expected)
@@ -661,7 +649,7 @@ class PermissionDetectorTest : AbstractCheckTest() {
                     "import android.content.Context;\n" +
                     "import android.net.wifi.WifiInfo;\n" +
                     "import android.net.wifi.WifiManager;\n" +
-                    "import android.support.annotation.RequiresPermission;\n" +
+                    "import androidx.annotation.RequiresPermission;\n" +
                     "\n" +
                     "public class WifiInfoUtil {\n" +
                     "    @RequiresPermission(Manifest.permission.ACCESS_WIFI_STATE)\n" +
@@ -671,7 +659,6 @@ class PermissionDetectorTest : AbstractCheckTest() {
                     "    }\n" +
                     "}"
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
@@ -686,7 +673,7 @@ class PermissionDetectorTest : AbstractCheckTest() {
                     "import android.content.Context;\n" +
                     "import android.content.pm.PackageManager;\n" +
                     "import android.graphics.Bitmap;\n" +
-                    "import android.support.annotation.RequiresPermission;\n" +
+                    "import androidx.annotation.RequiresPermission;\n" +
                     "\n" +
                     "import static android.Manifest.permission.ACCESS_COARSE_LOCATION;\n" +
                     "import static android.Manifest.permission.ACCESS_FINE_LOCATION;\n" +
@@ -705,7 +692,6 @@ class PermissionDetectorTest : AbstractCheckTest() {
                     "    }\n" +
                     "}"
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectInlinedMessages()
     }
@@ -718,7 +704,7 @@ class PermissionDetectorTest : AbstractCheckTest() {
             java(
                 "" +
                     "package test.pkg;\n" +
-                    "import android.support.annotation.RequiresPermission;\n" +
+                    "import androidx.annotation.RequiresPermission;\n" +
                     "\n" +
                     "public class X {\n" +
                     "    @RequiresPermission(allOf = {\"my.permission.PERM1\",\"my.permission.PERM2\"})\n" +
@@ -739,7 +725,6 @@ class PermissionDetectorTest : AbstractCheckTest() {
                     "    }\n" +
                     "}\n"
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectInlinedMessages()
     }
@@ -771,7 +756,7 @@ class PermissionDetectorTest : AbstractCheckTest() {
                 "" +
                     "package test.pkg;\n" +
                     "\n" +
-                    "import android.support.annotation.RequiresPermission;\n" +
+                    "import androidx.annotation.RequiresPermission;\n" +
                     "\n" +
                     "public class X {\n" +
                     "    public void something() {\n" +
@@ -788,7 +773,6 @@ class PermissionDetectorTest : AbstractCheckTest() {
                     "    }\n" +
                     "}\n"
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectInlinedMessages()
     }
@@ -824,7 +808,7 @@ class PermissionDetectorTest : AbstractCheckTest() {
                     "import android.content.Context;\n" +
                     "import android.content.pm.PackageManager;\n" +
                     "import android.location.LocationManager;\n" +
-                    "import android.support.annotation.RequiresPermission;\n" +
+                    "import androidx.annotation.RequiresPermission;\n" +
                     "\n" +
                     "import java.io.IOException;\n" +
                     "import java.security.AccessControlException;\n" +
@@ -919,7 +903,6 @@ class PermissionDetectorTest : AbstractCheckTest() {
                     "\n" +
                     "}\n"
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectInlinedMessages()
     }
@@ -936,7 +919,7 @@ class PermissionDetectorTest : AbstractCheckTest() {
                     "import android.content.Context;\n" +
                     "import android.content.Intent;\n" +
                     "import android.net.Uri;\n" +
-                    "import android.support.annotation.RequiresPermission;\n" +
+                    "import androidx.annotation.RequiresPermission;\n" +
                     "\n" +
                     "@SuppressWarnings({\"deprecation\", \"unused\"})\n" +
                     "public class X {\n" +
@@ -1002,7 +985,6 @@ class PermissionDetectorTest : AbstractCheckTest() {
                     "    }\n" +
                     "}\n"
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectInlinedMessages()
     }
@@ -1031,7 +1013,6 @@ class PermissionDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(
             """
@@ -1063,7 +1044,7 @@ class PermissionDetectorTest : AbstractCheckTest() {
                 "" +
                     "package test.pkg;\n" +
                     "\n" +
-                    "import android.support.annotation.RequiresPermission;\n" +
+                    "import androidx.annotation.RequiresPermission;\n" +
                     "\n" +
                     "public class X {\n" +
                     "    public void something() throws SecurityException {\n" +
@@ -1075,7 +1056,6 @@ class PermissionDetectorTest : AbstractCheckTest() {
                     "    }\n" +
                     "}\n"
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(
             """
@@ -1114,7 +1094,7 @@ class PermissionDetectorTest : AbstractCheckTest() {
                 "" +
                     "package test.pkg;\n" +
                     "\n" +
-                    "import android.support.annotation.RequiresPermission;\n" +
+                    "import androidx.annotation.RequiresPermission;\n" +
                     "\n" +
                     "public class X {\n" +
                     "    @RequiresPermission(\"my.dangerous.P2\")\n" +
@@ -1132,7 +1112,6 @@ class PermissionDetectorTest : AbstractCheckTest() {
                     "    }\n" +
                     "}\n"
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
@@ -1175,7 +1154,6 @@ class PermissionDetectorTest : AbstractCheckTest() {
                     "    }\n" +
                     "}\n"
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
@@ -1187,7 +1165,7 @@ class PermissionDetectorTest : AbstractCheckTest() {
                     "\n" +
                     "import jar.jar.AnnotationsClass;\n" +
                     "import android.Manifest;\n" +
-                    "import android.support.annotation.RequiresPermission;\n" +
+                    "import androidx.annotation.RequiresPermission;\n" +
                     "\n" +
                     "public class TestClass {\n" +
                     "\n" +
@@ -1207,7 +1185,7 @@ class PermissionDetectorTest : AbstractCheckTest() {
                 java(
                     "package jar.jar;\n" +
                         "\n" +
-                        "import android.support.annotation.RequiresPermission;\n" +
+                        "import androidx.annotation.RequiresPermission;\n" +
                         "\n" +
                         "public class AnnotationsClass {\n" +
                         "   @RequiresPermission(\"android.permission.BLUETOOTH\")\n" +
@@ -1233,7 +1211,6 @@ class PermissionDetectorTest : AbstractCheckTest() {
                     "i2mLGU5muZHB3CvnFPqobQIAAA=="
 
             ),
-            classpath(SUPPORT_JAR_PATH),
             SUPPORT_ANNOTATIONS_JAR
         )
             .run()
@@ -1373,7 +1350,7 @@ class PermissionDetectorTest : AbstractCheckTest() {
                 """
                 package com.google.android.gms.maps;
                 import android.Manifest;
-                import android.support.annotation.RequiresPermission;
+                import androidx.annotation.RequiresPermission;
                 public class GoogleMap {
                     public final boolean isMyLocationEnabled() {
                         return true;
@@ -1388,7 +1365,6 @@ class PermissionDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
@@ -1400,7 +1376,6 @@ class PermissionDetectorTest : AbstractCheckTest() {
             getManifestWithPermissions(14),
             mPermissionTest,
             mLocationManagerStub,
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR,
 
             // App skeleton
@@ -1421,7 +1396,7 @@ class PermissionDetectorTest : AbstractCheckTest() {
                 """
                 package test.pkg;
 
-                import android.support.annotation.RequiresPermission;
+                import androidx.annotation.RequiresPermission;
                 import static android.Manifest.permission.ACCEPT_HANDOVER;
                 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
                 import static android.Manifest.permission.BLUETOOTH;
@@ -1444,7 +1419,6 @@ class PermissionDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR,
 
             // App skeleton

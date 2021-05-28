@@ -16,7 +16,6 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.checks.AnnotationDetectorTest.SUPPORT_ANNOTATIONS_JAR_BASE64_GZIP;
 import static com.android.tools.lint.checks.ApiDetector.INLINED;
 import static com.android.tools.lint.checks.ApiDetector.KEY_REQUIRES_API;
 import static com.android.tools.lint.checks.ApiDetector.UNSUPPORTED;
@@ -2659,7 +2658,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "package test.pkg;\n"
                                         + "import android.content.Context;\n"
                                         + "import android.graphics.drawable.Drawable;\n"
-                                        + "import android.support.annotation.NonNull;\n"
+                                        + "import androidx.annotation.NonNull;\n"
                                         + "import android.widget.FrameLayout;\n"
                                         + "\n"
                                         + "public class CustomFrameLayout extends FrameLayout {\n"
@@ -4414,7 +4413,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "package test.pkg;\n"
                                         + "\n"
                                         + "import android.location.LocationManager;\n"
-                                        + "import android.support.annotation.RequiresApi;\n"
+                                        + "import androidx.annotation.RequiresApi;\n"
                                         + "\n"
                                         + "@SuppressWarnings({\"FieldCanBeLocal\", \"unused\"})\n"
                                         + "public class ApiDetectorTest2 {\n"
@@ -4428,8 +4427,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "    }\n"
                                         + "}\n"
                                         + "}"),
-                        mSupportClasspath,
-                        mSupportJar)
+                        SUPPORT_ANNOTATIONS_JAR)
                 .checkMessage(this::checkReportedError)
                 .run()
                 .expectClean();
@@ -4459,7 +4457,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                 ""
                                         + "package test.pkg;\n"
                                         + "\n"
-                                        + "import android.support.annotation.RequiresApi;\n"
+                                        + "import androidx.annotation.RequiresApi;\n"
                                         + "import android.os.Build;\n"
                                         + "@SuppressWarnings({\"WeakerAccess\", \"unused\"})\n"
                                         + "public class TestRequiresApi {\n"
@@ -4498,8 +4496,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "    public void requiresLollipop() {\n"
                                         + "    }\n"
                                         + "}\n"),
-                        mSupportClasspath,
-                        mSupportJar)
+                        SUPPORT_ANNOTATIONS_JAR)
                 .checkMessage(this::checkReportedError)
                 .run()
                 .expect(expected);
@@ -4512,7 +4509,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "package com.android.server.wifi.coex;\n"
                                         + "import android.os.Build;\n"
                                         + "\n"
-                                        + "import android.support.annotation.RequiresApi;\n"
+                                        + "import androidx.annotation.RequiresApi;\n"
                                         + "import com.android.modules.utils.build.SdkLevel;\n"
                                         + "\n"
                                         + "\n"
@@ -4536,7 +4533,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "    }\n"
                                         + "}")
                                 .indented(),
-                        mSupportJar)
+                        SUPPORT_ANNOTATIONS_JAR)
                 .run()
                 .expect(
                         ""
@@ -4553,7 +4550,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "package com.android.server.wifi.coex;\n"
                                         + "import android.os.Build;\n"
                                         + "\n"
-                                        + "import android.support.annotation.RequiresApi;\n"
+                                        + "import androidx.annotation.RequiresApi;\n"
                                         + "import com.android.modules.utils.build.SdkLevel;\n"
                                         + "\n"
                                         + "\n"
@@ -4577,7 +4574,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "    }\n"
                                         + "}")
                                 .indented(),
-                        mSupportJar)
+                        SUPPORT_ANNOTATIONS_JAR)
                 .run()
                 .expectClean();
     }
@@ -4588,7 +4585,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         java(
                                 "package android.support.v7.app;\n"
                                         + "\n"
-                                        + "import android.support.annotation.RequiresApi;\n"
+                                        + "import androidx.annotation.RequiresApi;\n"
                                         + "\n"
                                         + "@SuppressWarnings({\"WeakerAccess\", \"unused\"})\n"
                                         + "public class RequiresApiTest {\n"
@@ -4615,8 +4612,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "        }\n"
                                         + "    }\n"
                                         + "}\n"),
-                        mSupportClasspath,
-                        mSupportJar)
+                        SUPPORT_ANNOTATIONS_JAR)
                 .checkMessage(this::checkReportedError)
                 .run()
                 .expect(
@@ -4639,7 +4635,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                 ""
                                         + "package test.pkg;\n"
                                         + "\n"
-                                        + "import android.support.annotation.RequiresApi;\n"
+                                        + "import androidx.annotation.RequiresApi;\n"
                                         + "import android.util.Log;\n"
                                         + "\n"
                                         + "public class RequiresApiFieldTest {\n"
@@ -4659,8 +4655,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "        Log.d(\"zzzz\", \"ReferenceField24: \" + Field24);\n"
                                         + "    }\n"
                                         + "}\n"),
-                        mSupportClasspath,
-                        mSupportJar)
+                        SUPPORT_ANNOTATIONS_JAR)
                 .checkMessage(this::checkReportedError)
                 .run()
                 .expect(
@@ -4980,7 +4975,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "import android.os.Build;\n"
                                         + "\n"
                                         + "import android.annotation.TargetApi;\n"
-                                        + "import android.support.annotation.RequiresApi;"
+                                        + "import androidx.annotation.RequiresApi;"
                                         + "\n"
                                         + "@SuppressWarnings({\"unused\", \"WeakerAccess\"})\n"
                                         + "public class CatchTest {\n"
@@ -5058,8 +5053,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "        }\n"
                                         + "    }\n"
                                         + "}\n"),
-                        mSupportClasspath,
-                        mSupportJar)
+                        SUPPORT_ANNOTATIONS_JAR)
                 .checkMessage(this::checkReportedError)
                 .run()
                 .expect(
@@ -5214,8 +5208,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "\n"
                                         + "    }\n"
                                         + "}\n"),
-                        mSupportClasspath,
-                        mSupportJar)
+                        SUPPORT_ANNOTATIONS_JAR)
                 .checkMessage(this::checkReportedError)
                 // We *don't* want to use provisional computation for this:
                 // limit suggestions around SDK_INT checks to those implied
@@ -5234,7 +5227,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "\n"
                                         + "package test.pkg\n"
                                         + "\n"
-                                        + "import android.support.annotation.RequiresApi\n"
+                                        + "import androidx.annotation.RequiresApi\n"
                                         + "import android.widget.Toolbar\n"
                                         + "\n"
                                         + "fun Toolbar.hideOverflowMenu2() = hideOverflowMenu()"))
@@ -6123,13 +6116,12 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                 ""
                                         + "package test.pkg;\n"
                                         + "\n"
-                                        + "import android.support.annotation.RequiresApi;\n"
+                                        + "import androidx.annotation.RequiresApi;\n"
                                         + "\n"
                                         + "@RequiresApi(23)\n"
                                         + "public class SystemJobScheduler {\n"
                                         + "}\n"),
-                        mSupportClasspath,
-                        mSupportJar)
+                        SUPPORT_ANNOTATIONS_JAR)
                 .run()
                 .expect(
                         ""
@@ -6161,13 +6153,12 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                 ""
                                         + "package test.pkg;\n"
                                         + "\n"
-                                        + "import android.support.annotation.RequiresApi;\n"
+                                        + "import androidx.annotation.RequiresApi;\n"
                                         + "\n"
                                         + "@RequiresApi(23)\n"
                                         + "public class SystemJobScheduler {\n"
                                         + "}\n"),
-                        mSupportClasspath,
-                        mSupportJar)
+                        SUPPORT_ANNOTATIONS_JAR)
                 .run()
                 .expect(
                         ""
@@ -6237,7 +6228,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "import android.os.Parcelable\n"
                                         + "import android.system.ErrnoException\n"
                                         + "import android.widget.TextView\n"
-                                        + "import android.support.annotation.RequiresApi\n"
+                                        + "import androidx.annotation.RequiresApi\n"
                                         + "\n"
                                         + "@Suppress(\"SENSELESS_COMPARISON\", \"UNUSED_EXPRESSION\", \"UsePropertyAccessSyntax\", \"UNUSED_VARIABLE\", \"unused\", \"UNUSED_PARAMETER\", \"DEPRECATION\", \"USELESS_CAST\")\n"
                                         + "class ApiCallTest: Activity() {\n"
@@ -6688,8 +6679,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "        return\n"
                                         + "    }\n"
                                         + "}"),
-                        mSupportClasspath,
-                        mSupportJar)
+                        SUPPORT_ANNOTATIONS_JAR)
                 .run()
                 .expectInlinedMessages(false);
     }
@@ -6702,7 +6692,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                 ""
                                         + "package test.pkg\n"
                                         + "\n"
-                                        + "import android.support.annotation.RequiresApi\n"
+                                        + "import androidx.annotation.RequiresApi\n"
                                         + "\n"
                                         + "class MyClass2 {\n"
                                         + "    @RequiresApi(21)\n"
@@ -6715,8 +6705,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "        }\n"
                                         + "    }\n"
                                         + "}"),
-                        mSupportClasspath,
-                        mSupportJar)
+                        SUPPORT_ANNOTATIONS_JAR)
                 .run()
                 .expect(
                         ""
@@ -6748,8 +6737,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "        return super.getAccessibilityClassName();\n"
                                         + "    }\n"
                                         + "}\n"),
-                        mSupportClasspath,
-                        mSupportJar)
+                        SUPPORT_ANNOTATIONS_JAR)
                 .run()
                 .expect(
                         ""
@@ -6771,7 +6759,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         ""
                                                 + "package test.pkg.library;\n"
                                                 + "\n"
-                                                + "import android.support.annotation.RequiresApi;\n"
+                                                + "import androidx.annotation.RequiresApi;\n"
                                                 + "import android.os.Build;\n"
                                                 + "@SuppressWarnings({\"WeakerAccess\", \"unused\"})\n"
                                                 + "public class Library {\n"
@@ -6790,8 +6778,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "        new Library().requiresKitKat(); // ERROR - requires 19\n"
                                         + "    }\n"
                                         + "}\n"),
-                        mSupportClasspath,
-                        mSupportJar)
+                        SUPPORT_ANNOTATIONS_JAR)
                 .run()
                 .expect(
                         ""
@@ -6814,7 +6801,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         ""
                                                 + "package test.pkg\n"
                                                 + "\n"
-                                                + "import android.support.annotation.RequiresApi\n"
+                                                + "import androidx.annotation.RequiresApi\n"
                                                 + "\n"
                                                 + "class Library {\n"
                                                 + "    @RequiresApi(19)\n"
@@ -6833,8 +6820,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "        Library().requiresKitKat() // ERROR - requires 19\n"
                                         + "    }\n"
                                         + "}\n"),
-                        mSupportClasspath,
-                        mSupportJar)
+                        SUPPORT_ANNOTATIONS_JAR)
                 .run()
                 .expect(
                         ""
@@ -6866,7 +6852,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                 ""
                                         + "package test.pkg;\n"
                                         + "\n"
-                                        + "import android.support.annotation.RequiresApi;\n"
+                                        + "import androidx.annotation.RequiresApi;\n"
                                         + "import android.os.Build;\n"
                                         + "@SuppressWarnings({\"WeakerAccess\", \"unused\"})\n"
                                         + "public class TestRequiresApi {\n"
@@ -6880,8 +6866,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "    public void requiresPreview() {\n"
                                         + "    }\n"
                                         + "}\n"),
-                        mSupportClasspath,
-                        mSupportJar)
+                        SUPPORT_ANNOTATIONS_JAR)
                 .checkMessage(this::checkReportedError)
                 .run()
                 .expect(expected);
@@ -6927,8 +6912,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "public class ActivityScenario<A extends Activity> implements Closeable {\n"
                                         + ""
                                         + "}"),
-                        mSupportClasspath,
-                        mSupportJar)
+                        SUPPORT_ANNOTATIONS_JAR)
                 .checkMessage(this::checkReportedError)
                 .run()
                 .expectClean();
@@ -6941,7 +6925,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                 "package test.pkg;\n"
                                         + "\n"
                                         + "import jar.jar.Binks;\n"
-                                        + "import android.support.annotation.RequiresApi;\n"
+                                        + "import androidx.annotation.RequiresApi;\n"
                                         + "\n"
                                         + "public class CheckJarAnnotations {\n"
                                         + "    public static void test() {\n"
@@ -6959,7 +6943,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         ""
                                                 + "package jar.jar;\n"
                                                 + "\n"
-                                                + "import android.support.annotation.RequiresApi;\n"
+                                                + "import androidx.annotation.RequiresApi;\n"
                                                 + "\n"
                                                 + "public class Binks {\n"
                                                 + "   @RequiresApi(29)\n"
@@ -6978,7 +6962,6 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "a0bstVPJ09+L0bPN3Uzfc3goumWzyi6WqlAtVFAltJfKxaE3CqEbtDhRZhE/"
                                         + "Tpd65nGKEsIdCFIICdbCXZkks3r+DnqThVAXrG1J7KEhWNpYe9jWjq0hNqAp"
                                         + "eyTdHKIlRPv/XGs3R9gXqoTOD6/2mP20AQAA"),
-                        classpath(SUPPORT_JAR_PATH),
                         SUPPORT_ANNOTATIONS_JAR)
                 .run()
                 .expect(
@@ -7078,7 +7061,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                 ""
                                         + "package test.pkg\n"
                                         + "\n"
-                                        + "import android.support.annotation.RequiresApi\n"
+                                        + "import androidx.annotation.RequiresApi\n"
                                         + "\n"
                                         + "fun testArrayIndex() {\n"
                                         + "    val array = SparseArray<String>()\n"
@@ -7143,7 +7126,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                 ""
                                         + "package test.pkg;\n"
                                         + "\n"
-                                        + "import android.support.annotation.RequiresApi;\n"
+                                        + "import androidx.annotation.RequiresApi;\n"
                                         + "\n"
                                         + "public class SparseArray<E> implements Cloneable {\n"
                                         + "    public SparseArray() {\n"
@@ -7173,7 +7156,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                 ""
                                         + "package test.pkg;\n"
                                         + "\n"
-                                        + "import android.support.annotation.RequiresApi;\n"
+                                        + "import androidx.annotation.RequiresApi;\n"
                                         + "\n"
                                         + "public class SparseArray2<E> extends SparseArray<E> {\n"
                                         + "    public SparseArray2() {\n"
@@ -7184,8 +7167,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "        throw new RuntimeException(\"Stub!\");\n"
                                         + "    }\n"
                                         + "}\n"),
-                        mSupportClasspath,
-                        mSupportJar)
+                        SUPPORT_ANNOTATIONS_JAR)
                 .checkMessage(this::checkReportedError)
                 .run()
                 .expect(
@@ -7937,9 +7919,4 @@ public class ApiDetectorTest extends AbstractCheckTest {
                             + "        classpath 'com.android.tools.build:gradle:2.3.1'\n"
                             + "    }\n"
                             + "}");
-
-    public static final String SUPPORT_JAR_PATH = "libs/support-annotations.jar";
-    private final TestFile mSupportJar =
-            base64gzip(SUPPORT_JAR_PATH, SUPPORT_ANNOTATIONS_JAR_BASE64_GZIP);
-    private final TestFile mSupportClasspath = classpath(SUPPORT_JAR_PATH);
 }

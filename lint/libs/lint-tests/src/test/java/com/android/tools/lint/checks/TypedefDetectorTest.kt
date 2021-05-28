@@ -88,8 +88,8 @@ class TypedefDetectorTest : AbstractCheckTest() {
                     "package test.pkg;\n" +
                     "\n" +
                     "import android.content.Context;\n" +
-                    "import android.support.annotation.IntDef;\n" +
-                    "import android.support.annotation.StringDef;\n" +
+                    "import androidx.annotation.IntDef;\n" +
+                    "import androidx.annotation.StringDef;\n" +
                     "import android.view.View;\n" +
                     "\n" +
                     "import java.lang.annotation.Retention;\n" +
@@ -190,7 +190,6 @@ class TypedefDetectorTest : AbstractCheckTest() {
                     "    }\n" +
                     "}\n"
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(expected)
     }
@@ -209,7 +208,6 @@ class TypedefDetectorTest : AbstractCheckTest() {
                     "    }\n" +
                     "}\n"
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
@@ -233,8 +231,8 @@ class TypedefDetectorTest : AbstractCheckTest() {
                     "\n" +
                     "package test.pkg;\n" +
                     "\n" +
-                    "import android.support.annotation.IntDef;\n" +
-                    "import android.support.annotation.IntRange;\n" +
+                    "import androidx.annotation.IntDef;\n" +
+                    "import androidx.annotation.IntRange;\n" +
                     "\n" +
                     "import java.lang.annotation.Retention;\n" +
                     "import java.lang.annotation.RetentionPolicy;\n" +
@@ -266,7 +264,6 @@ class TypedefDetectorTest : AbstractCheckTest() {
                     "    }\n" +
                     "}\n"
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(expected)
     }
@@ -285,7 +282,7 @@ class TypedefDetectorTest : AbstractCheckTest() {
                 "" +
                     "package test.pkg;\n" +
                     "\n" +
-                    "import android.support.annotation.StringDef;\n" +
+                    "import androidx.annotation.StringDef;\n" +
                     "import android.util.Log;\n" +
                     "\n" +
                     "import java.lang.annotation.Documented;\n" +
@@ -332,7 +329,6 @@ class TypedefDetectorTest : AbstractCheckTest() {
                     "    }\n" +
                     "}"
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(expected)
     }
@@ -364,7 +360,7 @@ class TypedefDetectorTest : AbstractCheckTest() {
                 "src/test/pkg/IntDefMultiple.java",
                 "" +
                     "package test.pkg;\n" +
-                    "import android.support.annotation.IntDef;\n" +
+                    "import androidx.annotation.IntDef;\n" +
                     "\n" +
                     "public class IntDefMultiple {\n" +
                     "    private static final int VALUE_A = 0;\n" +
@@ -405,7 +401,6 @@ class TypedefDetectorTest : AbstractCheckTest() {
                     "    private void restrictedArray(@MyIntDef int[] test) {}\n" +
                     "}"
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(expected)
     }
@@ -419,7 +414,7 @@ class TypedefDetectorTest : AbstractCheckTest() {
                 "" +
                     "package test.pkg;\n" +
                     "\n" +
-                    "import android.support.annotation.IntDef;\n" +
+                    "import androidx.annotation.IntDef;\n" +
                     "\n" +
                     "import java.lang.annotation.Retention;\n" +
                     "import java.lang.annotation.RetentionPolicy;\n" +
@@ -474,7 +469,6 @@ class TypedefDetectorTest : AbstractCheckTest() {
                     "    }\n" +
                     "}\n"
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
@@ -486,7 +480,7 @@ class TypedefDetectorTest : AbstractCheckTest() {
                 """
                     package test.pkg;
 
-                    import android.support.annotation.NonNull;
+                    import androidx.annotation.NonNull;
 
                     @SuppressWarnings({"ClassNameDiffersFromFileName","FieldCanBeLocal"})
                     public class ViewableDayInterval {
@@ -514,7 +508,7 @@ class TypedefDetectorTest : AbstractCheckTest() {
                 """
                     package test.pkg;
 
-                    import android.support.annotation.IntDef;
+                    import androidx.annotation.IntDef;
 
                     import java.lang.annotation.Retention;
                     import java.lang.annotation.RetentionPolicy;
@@ -531,7 +525,7 @@ class TypedefDetectorTest : AbstractCheckTest() {
                 """
                     package test.pkg;
 
-                    import android.support.annotation.IntDef;
+                    import androidx.annotation.IntDef;
 
                     import java.lang.annotation.Retention;
                     import java.lang.annotation.RetentionPolicy;
@@ -544,7 +538,6 @@ class TypedefDetectorTest : AbstractCheckTest() {
                     public @interface WeekDay {
                     }"""
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
@@ -555,7 +548,7 @@ class TypedefDetectorTest : AbstractCheckTest() {
             java(
                 "package test.pkg;\n" +
                     "\n" +
-                    "import android.support.annotation.IntDef;\n" +
+                    "import androidx.annotation.IntDef;\n" +
                     "\n" +
                     "public class Lifecycle {\n" +
                     "    public static final int ON_CREATE = 1;\n" +
@@ -597,7 +590,6 @@ class TypedefDetectorTest : AbstractCheckTest() {
                     "    void addLocationListener();\n" +
                     "}\n"
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(
             "" +
@@ -650,7 +642,7 @@ class TypedefDetectorTest : AbstractCheckTest() {
                     "import android.content.ServiceConnection;\n" +
                     "import android.content.res.Resources;\n" +
                     "import android.os.Build;\n" +
-                    "import android.support.annotation.DrawableRes;\n" +
+                    "import androidx.annotation.DrawableRes;\n" +
                     "import android.view.View;\n" +
                     "\n" +
                     "import static android.content.Context.CONNECTIVITY_SERVICE;\n" +
@@ -696,7 +688,6 @@ class TypedefDetectorTest : AbstractCheckTest() {
                     "    }\n" +
                     "}\n"
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).allowCompilationErrors().run().expectInlinedMessages()
     }
@@ -709,7 +700,7 @@ class TypedefDetectorTest : AbstractCheckTest() {
                 "" +
                     "package test.pkg;\n" +
                     "\n" +
-                    "import android.support.annotation.StringDef;\n" +
+                    "import androidx.annotation.StringDef;\n" +
                     "\n" +
                     "import java.lang.annotation.Retention;\n" +
                     "\n" +
@@ -738,7 +729,6 @@ class TypedefDetectorTest : AbstractCheckTest() {
                     "    }\n" +
                     "}\n"
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectInlinedMessages()
     }
@@ -753,7 +743,7 @@ class TypedefDetectorTest : AbstractCheckTest() {
                 """
                     package test.pkg;
 
-                    import android.support.annotation.IntDef;
+                    import androidx.annotation.IntDef;
                     import android.view.Gravity;
                     import android.view.View;
 
@@ -793,7 +783,6 @@ class TypedefDetectorTest : AbstractCheckTest() {
                     }
                     """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
@@ -805,7 +794,7 @@ class TypedefDetectorTest : AbstractCheckTest() {
                 """
                 package test.pkg;
 
-                import android.support.annotation.IntDef;
+                import androidx.annotation.IntDef;
                 import java.lang.annotation.Retention;
                 import java.lang.annotation.RetentionPolicy;
 
@@ -853,7 +842,6 @@ class TypedefDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(
             "" +
@@ -895,7 +883,6 @@ class TypedefDetectorTest : AbstractCheckTest() {
                     "    }\n" +
                     "}\n"
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
@@ -907,7 +894,7 @@ class TypedefDetectorTest : AbstractCheckTest() {
                 """
                     package test.pkg;
 
-                    import android.support.annotation.IntDef;
+                    import androidx.annotation.IntDef;
 
                     @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
                     public class IntDefTest {
@@ -955,7 +942,6 @@ class TypedefDetectorTest : AbstractCheckTest() {
                     }
                     """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(
             "" +
@@ -1026,7 +1012,7 @@ class TypedefDetectorTest : AbstractCheckTest() {
                 """
                     package test.pkg;
 
-                    import android.support.annotation.IntDef;
+                    import androidx.annotation.IntDef;
 
                     @SuppressWarnings("ClassNameDiffersFromFileName")
                     @IntDef({WrongType.NO})
@@ -1039,7 +1025,7 @@ class TypedefDetectorTest : AbstractCheckTest() {
                 """
                     package test.pkg;
 
-                    import android.support.annotation.IntDef;
+                    import androidx.annotation.IntDef;
 
                     @SuppressWarnings("ClassNameDiffersFromFileName")
                     @IntDef({TestType.LOL})
@@ -1048,7 +1034,6 @@ class TypedefDetectorTest : AbstractCheckTest() {
                     }
                     """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(
             "" +
@@ -1079,7 +1064,7 @@ class TypedefDetectorTest : AbstractCheckTest() {
                 """
                     package test.pkg;
 
-                    import android.support.annotation.StringDef;
+                    import androidx.annotation.StringDef;
 
                     import java.lang.annotation.Documented;
                     import java.lang.annotation.Retention;
@@ -1099,7 +1084,6 @@ class TypedefDetectorTest : AbstractCheckTest() {
                     }
                     """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
@@ -1137,23 +1121,7 @@ class TypedefDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            java(
-                """
-                package androidx.annotation;
-                import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
-                import static java.lang.annotation.RetentionPolicy.SOURCE;
-
-                import java.lang.annotation.Retention;
-                import java.lang.annotation.Target;
-                @SuppressWarnings("ALL")
-                @Retention(SOURCE)
-                @Target({ANNOTATION_TYPE})
-                public @interface StringDef {
-                    String[] value() default {};
-                    boolean open() default false;
-                }
-                """
-            ).indented()
+            SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
 
@@ -1202,23 +1170,6 @@ class TypedefDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            java(
-                """
-                package androidx.annotation;
-                import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
-                import static java.lang.annotation.RetentionPolicy.SOURCE;
-                import java.lang.annotation.Retention;
-                import java.lang.annotation.Target;
-                @SuppressWarnings("ALL")
-                @Retention(SOURCE)
-                @Target({ANNOTATION_TYPE})
-                public @interface StringDef {
-                    String[] value() default {};
-                    boolean open() default false;
-                }
-                """
-            ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
@@ -1231,7 +1182,7 @@ class TypedefDetectorTest : AbstractCheckTest() {
                 """
                 package test.pkg
 
-                import android.support.annotation.IntDef
+                import androidx.annotation.IntDef
 
                 interface Foo {
                     fun bar(@DetailInfoTab tab: Int = CONST_1)
@@ -1253,7 +1204,6 @@ class TypedefDetectorTest : AbstractCheckTest() {
                 """
             ).indented(),
 
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
@@ -1338,10 +1288,10 @@ class TypedefDetectorTest : AbstractCheckTest() {
                 import java.lang.annotation.Retention;
                 import java.lang.annotation.RetentionPolicy;
 
-                import android.support.annotation.IntDef;
-                import android.support.annotation.RestrictTo;
+                import androidx.annotation.IntDef;
+                import androidx.annotation.RestrictTo;
 
-                import static android.support.annotation.RestrictTo.Scope.LIBRARY_GROUP;
+                import static androidx.annotation.RestrictTo.Scope.LIBRARY_GROUP;
 
                 public class RecyclerView {
                     /** @hide */
@@ -1403,7 +1353,6 @@ class TypedefDetectorTest : AbstractCheckTest() {
                         "</root>\n"
                 )
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
@@ -1448,7 +1397,6 @@ class TypedefDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         )
             .checkUInjectionHost(false)
@@ -1462,7 +1410,7 @@ class TypedefDetectorTest : AbstractCheckTest() {
                 """
                 package com.example.tnorbye.myapplication;
 
-                import android.support.annotation.IntDef;
+                import androidx.annotation.IntDef;
                 import java.lang.annotation.Retention;
                 import java.lang.annotation.RetentionPolicy;
 
@@ -1486,7 +1434,6 @@ class TypedefDetectorTest : AbstractCheckTest() {
                 """
             ).indented(),
 
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(
             """
@@ -1539,7 +1486,7 @@ class TypedefDetectorTest : AbstractCheckTest() {
                 """
                 package com.example.android.linttest;
 
-                import android.support.annotation.StringDef;
+                import androidx.annotation.StringDef;
 
                 import java.lang.annotation.Retention;
                 import java.lang.annotation.RetentionPolicy;

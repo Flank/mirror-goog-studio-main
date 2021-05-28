@@ -2073,7 +2073,7 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                 ""
                                         + "package test.pkg\n"
                                         + "\n"
-                                        + "import android.support.annotation.StringRes\n"
+                                        + "import androidx.annotation.StringRes\n"
                                         + "import android.app.Activity\n"
                                         + "import android.app.AlertDialog\n"
                                         + "\n"

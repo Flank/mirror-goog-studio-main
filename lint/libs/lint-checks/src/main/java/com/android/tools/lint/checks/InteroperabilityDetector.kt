@@ -744,15 +744,13 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
 
         private fun initializeAnnotationNames(context: JavaContext) {
             if (nonNullAnnotation == null) {
-                val library = context.project.buildVariant?.mainArtifact
-                    ?.findCompileDependency("androidx.annotation:annotation")
-                if (library != null) {
+                if (context.evaluator.findClass("android.support.annotation.NonNull") != null) {
+                    nonNullAnnotation = "@android.support.annotation.NonNull"
+                    nullableAnnotation = "@android.support.annotation.Nullable"
+                } else {
                     nonNullAnnotation = "@androidx.annotation.NonNull"
                     nullableAnnotation = "@androidx.annotation.Nullable"
-                    return
                 }
-                nonNullAnnotation = "@android.support.annotation.NonNull"
-                nullableAnnotation = "@android.support.annotation.Nullable"
             }
         }
 

@@ -30,7 +30,7 @@ class IteratorDetectorTest : AbstractCheckTest() {
                 package test.pkg;
 
                 import android.os.Build;
-                import android.support.annotation.RequiresApi;
+                import androidx.annotation.RequiresApi;
 
                 import java.util.Collection;
                 import java.util.HashMap;
@@ -79,7 +79,7 @@ class IteratorDetectorTest : AbstractCheckTest() {
                 package test.pkg
 
                 import android.os.Build
-                import android.support.annotation.RequiresApi
+                import androidx.annotation.RequiresApi
                 import java.util.*
                 import java.util.stream.StreamSupport
 
