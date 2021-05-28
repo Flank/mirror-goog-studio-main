@@ -329,11 +329,12 @@ MavenRepoInfo = provider(fields = {
     "artifacts": "A list of tuples (artifact: File, classifier: string) for each artifact in the Maven repo",
 })
 
-def _collect_pom_provider(pom, jars, clsjars):
+def _collect_pom_provider(pom, jars, clsjars, include_sources):
     collected = [(pom, None)]
     collected += [(jar, None) for jar in jars.to_list()]
     for classifier, jars in clsjars.items():
-        collected += [(jar, classifier) for jar in jars.to_list()]
+        if include_sources or classifier != "sources":
+            collected += [(jar, classifier) for jar in jars.to_list()]
     return collected
 
 # Collects all parent and dependency artifacts for a given list of artifacts.
@@ -349,18 +350,18 @@ def _collect_artifacts(artifacts, include_sources):
                     continue
                 jars = artifact.maven.parent.jars[pom]
                 clsjars = artifact.maven.parent.clsjars[pom]
-                collected += _collect_pom_provider(pom, jars, clsjars)
+                collected += _collect_pom_provider(pom, jars, clsjars, include_sources)
                 seen[pom] = True
 
-            collected += _collect_pom_provider(artifact.maven.pom, artifact.maven.jars, artifact.maven.clsjars)
+            collected += _collect_pom_provider(artifact.maven.pom, artifact.maven.jars, artifact.maven.clsjars, include_sources)
             seen[artifact.maven.pom] = True
 
             for pom in artifact.maven.deps.poms.to_list():
                 if seen.get(pom):
                     continue
                 jars = artifact.maven.deps.jars[pom]
-                clsjars = artifact.maven.deps.clsjars[pom] if include_sources else {}
-                collected += _collect_pom_provider(pom, jars, clsjars)
+                clsjars = artifact.maven.deps.clsjars[pom]
+                collected += _collect_pom_provider(pom, jars, clsjars, include_sources)
                 seen[pom] = True
 
     return collected
