@@ -295,14 +295,12 @@ class HtmlReporter(
 
                             // Only display up to 3 inlined views to keep big reports from
                             // getting massive in rendering cost
-                            if (shownSnippetsCount < 3 && !SdkUtils.isBitmapFile(
-                                    l.file
-                                )
-                            ) {
+                            if (shownSnippetsCount < 3 && !SdkUtils.isBitmapFile(l.file)) {
                                 val s = client.readFile(l.file)
                                 if (s.isNotEmpty()) {
                                     val offset = start?.offset ?: -1
-                                    appendCodeBlock(l.file, s, offset, -1, incident.severity)
+                                    val endOffset = l.end?.offset ?: -1
+                                    appendCodeBlock(l.file, s, offset, endOffset, incident.severity)
                                 }
                                 shownSnippetsCount++
                             }
@@ -1043,7 +1041,7 @@ ${action.title}</button>"""
          * https://bugs.chromium.org/p/chromium/issues/detail?id=165462
          * for when to re-enable. If false we're using a CSS
          * trick with repeated images instead. (Only applies
-         * if [.USE_WAVY_UNDERLINES_FOR_ERRORS] is true.)
+         * if [USE_WAVY_UNDERLINES_FOR_ERRORS] is true.)
          */
         private const val USE_CSS_DECORATION_FOR_WAVY_UNDERLINES = false
         private var preferredThemeName = "light"

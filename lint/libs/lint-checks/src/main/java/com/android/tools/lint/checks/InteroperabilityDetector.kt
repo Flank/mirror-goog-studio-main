@@ -403,18 +403,20 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
 
             if (getter == null) {
                 // Look for inherited methods
-                cls.superClass?.let { superClass ->
-                    for (inherited in superClass.findMethodsByName(getterName1, true)) {
-                        if (inherited.parameterList.parametersCount == 0) {
-                            getter = inherited
-                            break
-                        }
-                    }
-                    if (getter == null) {
-                        for (inherited in superClass.findMethodsByName(getterName2, true)) {
+                cls.uastSuperTypes.forEach {
+                    (it.type as? PsiClassType)?.resolve()?.let { superClass ->
+                        for (inherited in superClass.findMethodsByName(getterName1, true)) {
                             if (inherited.parameterList.parametersCount == 0) {
                                 getter = inherited
                                 break
+                            }
+                        }
+                        if (getter == null) {
+                            for (inherited in superClass.findMethodsByName(getterName2, true)) {
+                                if (inherited.parameterList.parametersCount == 0) {
+                                    getter = inherited
+                                    break
+                                }
                             }
                         }
                     }
@@ -487,13 +489,14 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
                         if (superReturnType != getterType) {
                             val message =
                                 "The getter return type (`${getterType?.presentableText}`)" +
-                                    " is not the same as the setter return type " +
+                                    " is not the same as the super return type " +
                                     "(`${superReturnType.presentableText}`); they should have " +
                                     "exactly the same type to allow " +
                                     "`${propertySuffix.usLocaleDecapitalize()}` " +
                                     "be accessed as a property from Kotlin; see " +
                                     "https://android.github.io/kotlin-guides/interop.html#property-prefixes"
-                            val location = getPropertyLocation(getter, setter)
+                            val location = getPropertyLocation(getter, superMethod)
+                            location.secondary?.message = "Super method here"
                             context.report(
                                 KOTLIN_PROPERTY,
                                 location.source as? PsiElement ?: setter, location, message
