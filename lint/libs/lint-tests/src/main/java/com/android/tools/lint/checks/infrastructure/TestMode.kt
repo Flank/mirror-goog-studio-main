@@ -15,13 +15,17 @@
  */
 package com.android.tools.lint.checks.infrastructure
 
+import com.android.SdkConstants.DOT_JAR
 import com.android.SdkConstants.DOT_KT
 import com.android.SdkConstants.DOT_KTS
 import com.android.tools.lint.checks.infrastructure.TestMode.Companion.UI_INJECTION_HOST
 import com.android.tools.lint.client.api.LintDriver
 import com.android.tools.lint.client.api.LintListener
 import com.android.tools.lint.detector.api.Context
+import com.android.tools.lint.detector.api.Implementation
+import com.android.tools.lint.detector.api.Scope
 import java.io.File
+import java.util.EnumSet
 
 /**
  * Different types of test execution for lint. See
@@ -95,6 +99,61 @@ open class TestMode(
     override fun toString(): String = description
 
     companion object {
+        fun classOnly(set: EnumSet<Scope>): Boolean {
+            return set.all { it == Scope.CLASS_FILE || it == Scope.JAVA_LIBRARIES || it == Scope.ALL_CLASS_FILES }
+        }
+
+        fun Implementation.classOnly(): Boolean {
+            return classOnly(scope) && analysisScopes.all { classOnly(it) }
+        }
+
+        fun deleteCompiledSources(
+            projects: Collection<ProjectDescription>,
+            context: TestModeContext,
+            deleteSourceFiles: Boolean = false,
+            deleteBinaryFiles: Boolean = false
+        ) {
+            // Delete sources for any compiled files since when analyzing a project
+            // you can only see the local sources.
+            for (project in projects) {
+                for (file in project.files) {
+                    // TODO: Consider whether I need to remove sources from within jars too?
+                    // Check whether resolve finds them first.
+
+                    if (file !is CompiledSourceFile) {
+                        continue
+                    }
+
+                    // If we're testing a check that only analyzes bytecode, don't delete sources
+                    // or bytecode
+                    if (context.task.issues.all { it.implementation.classOnly() }) {
+                        return
+                    }
+
+                    if (deleteSourceFiles && !file.targetRelativePath.endsWith(DOT_JAR)) {
+                        for (dir in context.projectFolders) {
+                            val source = File(dir, file.source.targetPath)
+                            if (source.exists()) {
+                                source.delete()
+                                break
+                            }
+                        }
+                    }
+                    if (deleteBinaryFiles) {
+                        for (classTestFile in file.classFiles) {
+                            for (dir in context.projectFolders) {
+                                val classFile = File(dir, classTestFile.targetPath)
+                                if (classFile.exists()) {
+                                    classFile.delete()
+                                    break
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         /** The default type of lint execution. */
         @JvmField
         val DEFAULT = TestMode(description = "Default", "TestMode.DEFAULT")
@@ -134,6 +193,67 @@ open class TestMode(
                 Alternatively, if this difference is expected, you can set the
                 `testModes(...)` to include only one of these two, or turn off
                 the equality check altogether via `.expectIdenticalTestModeOutput(false)`.
+                You can then check each output by passing in a `testMode` parameter
+                to `expect`(...).
+                """.trimIndent()
+        }
+
+        @JvmField
+        val BYTECODE_ONLY = object : TestMode(
+            "Bytecode Only",
+            "TestMode.BYTECODE_ONLY"
+        ) {
+            override val folderName: String = "bytecode"
+
+            override fun applies(context: TestModeContext): Boolean {
+                return context.projects.any {
+                    it.files.any { file ->
+                        file is CompiledSourceFile && file.type == CompiledSourceFile.Type.SOURCE_AND_BYTECODE
+                    }
+                }
+            }
+
+            override fun before(context: TestModeContext): Any? {
+                deleteCompiledSources(context.projects, context, deleteSourceFiles = true)
+                return null
+            }
+
+            override val diffExplanation: String =
+                """
+                The unit test was re-run with only the bytecode from the `compiled()` test files,
+                not the sources, and the output did not match. This is sometimes expected (since
+                it's common to include source details in error messages), and in those cases, you
+                can set the `testModes(...)` to include only one of these two, or turn off
+                the equality check altogether via `.expectIdenticalTestModeOutput(false)`.
+                You can then check each output by passing in a `testMode` parameter
+                to `expect`(...).
+                """.trimIndent()
+        }
+
+        @JvmField
+        val SOURCE_ONLY = object : TestMode(
+            "Source Only",
+            "TestMode.SOURCE_ONLY"
+        ) {
+            override val folderName: String = "source"
+
+            override fun applies(context: TestModeContext): Boolean {
+                // Same check as for BYTECODE_ONLY: Do we have at least one compiled file with
+                // both source and bytecode?
+                return BYTECODE_ONLY.applies(context)
+            }
+
+            override fun before(context: TestModeContext): Any? {
+                deleteCompiledSources(context.projects, context, deleteBinaryFiles = true)
+                return null
+            }
+
+            override val diffExplanation: String =
+                """
+                The unit test was re-run with only the source files from the `compiled()` test files,
+                not the bytecode, and the output did not match. This is sometimes expected,
+                and in those cases, you can set the `testModes(...)` to include only one of these two,
+                or turn off the equality check altogether via `.expectIdenticalTestModeOutput(false)`.
                 You can then check each output by passing in a `testMode` parameter
                 to `expect`(...).
                 """.trimIndent()
@@ -194,7 +314,9 @@ open class TestMode(
             DEFAULT,
             UI_INJECTION_HOST,
             RESOURCE_REPOSITORIES,
-            PARTIAL
+            PARTIAL,
+            BYTECODE_ONLY,
+            SOURCE_ONLY
         )
     }
 

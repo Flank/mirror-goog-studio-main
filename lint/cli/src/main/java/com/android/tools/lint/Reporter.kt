@@ -411,7 +411,6 @@ abstract class Reporter protected constructor(
                     AppCompatCallDetector.ISSUE,
                     AppCompatCustomViewDetector.ISSUE,
                     AppCompatResourceDetector.ISSUE,
-                    AppLinksValidDetector.INTENT_FILTER_UNIQUE_DATA_ATTRIBUTES,
                     AppLinksValidDetector.VALIDATION,
                     AssertDetector.EXPENSIVE,
                     AutofillDetector.ISSUE,
