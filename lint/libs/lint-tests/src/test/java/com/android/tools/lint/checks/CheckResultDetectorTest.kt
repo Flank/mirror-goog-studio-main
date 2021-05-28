@@ -215,6 +215,7 @@ class CheckResultDetectorTest : AbstractCheckTest() {
                         "package test.pkg;\n" +
                         "import javax.annotation.CheckReturnValue;\n"
                 ),
+                0xad536a8e,
                 "test/pkg/package-info.class:" +
                     "H4sIAAAAAAAAAE1NvQrCMBi81J+qkw66ODprRgcnEQRBECq4p+Gzpo1JaZPi" +
                     "szn4AD6U2CqIN9zB/XDP1/0BYIl+iDBEj2FwtL6QtFWaGEa5kJlIaK7M2S5S" +

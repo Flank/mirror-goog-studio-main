@@ -359,7 +359,7 @@ class ProjectDescription : Comparable<ProjectDescription> {
                 }
                 for (fp in compiled) {
                     if (fp.isMissingClasses()) {
-                        if (fp.compile(projectDir)) {
+                        if (fp.compile(projectDir, jars)) {
                             break
                         }
                     }
