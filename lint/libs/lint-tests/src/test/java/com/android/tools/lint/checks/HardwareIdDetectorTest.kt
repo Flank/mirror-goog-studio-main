@@ -394,7 +394,7 @@ class HardwareIdDetectorTest : AbstractCheckTest() {
                 import android.view.View
                 import android.widget.AutoCompleteTextView
 
-                class BillingAddressRib(val view: View, val activity: MainActivity) {
+                class BillingAddressRib(val view: View, val activity: android.app.Activity) {
 
                     internal lateinit var addressField: AutoCompleteTextView
 
@@ -431,7 +431,8 @@ class HardwareIdDetectorTest : AbstractCheckTest() {
 
                 }
                 """
-            ).indented()
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
 }

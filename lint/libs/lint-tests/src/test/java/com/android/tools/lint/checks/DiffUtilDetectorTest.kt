@@ -402,7 +402,8 @@ class DiffUtilDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            *diffUtilStubs
+            *diffUtilStubs,
+            SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
 

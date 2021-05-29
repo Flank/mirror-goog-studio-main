@@ -495,7 +495,8 @@ public class ParcelDetectorTest extends AbstractCheckTest {
                                         + "    public void writeToParcel(@NonNull Parcel dest, int flags) {\n"
                                         + "        dest.writeString(mValue);\n"
                                         + "    }\n"
-                                        + "}\n"))
+                                        + "}\n"),
+                        SUPPORT_ANNOTATIONS_JAR)
                 .run()
                 .expectClean();
     }

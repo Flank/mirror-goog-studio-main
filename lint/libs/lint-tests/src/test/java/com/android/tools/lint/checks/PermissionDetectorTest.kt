@@ -1141,7 +1141,7 @@ class PermissionDetectorTest : AbstractCheckTest() {
                     "import android.app.Activity;\n" +
                     "import android.content.pm.PackageManager;\n" +
                     "import android.os.Build;\n" +
-                    "import android.support.v4.app.ActivityCompat;\n" +
+                    "import androidx.core.app.ActivityCompat;\n" +
                     "import android.telephony.TelephonyManager;\n" +
                     "\n" +
                     "public class CellInfoTest extends Activity {\n" +
@@ -1153,6 +1153,15 @@ class PermissionDetectorTest : AbstractCheckTest() {
                     "        manager.getAllCellInfo();\n" +
                     "    }\n" +
                     "}\n"
+            ),
+            java(
+                "" +
+                    "package androidx.core.app;\n" +
+                    "public class ActivityCompat {\n" +
+                    "    public static int checkSelfPermission(Context context, String permission) {\n" +
+                    "        return 0;\n" +
+                    "    }\n" +
+                    "}"
             ),
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()

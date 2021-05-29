@@ -169,7 +169,24 @@ class MemoryLeakTest {
                     public ConstraintLayout() { super(null); }
                 }
                 """
-            ).indented()
+            ).indented(),
+            java(
+                """
+                package androidx.appcompat.app;
+                public class AppCompatActivity extends android.app.Activity {
+                }
+                """
+            ),
+            java(
+                """
+                package com.gharrma.sampleapp;
+                public class R {
+                    public static class layout {
+                        public static final int activity_main=0x7f050000;
+                    }
+                }
+                """
+            )
         )
             // Needed to allow PrivateResourceDetector to run.
 

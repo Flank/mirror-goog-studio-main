@@ -42,7 +42,8 @@ class SharedPrefsDetectorTest : AbstractCheckTest() {
                     t.add("ok")
                 }
                 """
-            ).indented()
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
         ).run().expect(
             """
             src/test/pkg/test.kt:11: Warning: Do not modify the set returned by SharedPreferences.getStringSet()` [MutatingSharedPrefs]
@@ -74,7 +75,8 @@ class SharedPrefsDetectorTest : AbstractCheckTest() {
                     s.add("error")
                 }
                 """
-            ).indented()
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
         ).run().expect(
             """
             src/test/pkg/test.kt:10: Warning: Do not modify the set returned by SharedPreferences.getStringSet()` [MutatingSharedPrefs]

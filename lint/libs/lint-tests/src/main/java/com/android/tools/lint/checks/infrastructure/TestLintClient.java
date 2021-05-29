@@ -111,8 +111,6 @@ import com.google.common.collect.Sets;
 import com.intellij.openapi.util.Computable;
 import com.intellij.pom.java.LanguageLevel;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiErrorElement;
-import com.intellij.psi.util.PsiTreeUtil;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileWriter;
@@ -875,27 +873,7 @@ public class TestLintClient extends LintCliClient {
                 UFile file = super.parse(context);
 
                 if (!task.allowCompilationErrors) {
-                    if (file != null) {
-                        PsiErrorElement error =
-                                PsiTreeUtil.findChildOfType(file.getPsi(), PsiErrorElement.class);
-                        if (error != null) {
-                            fail(
-                                    "Found error element "
-                                            + error
-                                            + " in "
-                                            + context.file.getName()
-                                            + " with text \""
-                                            + error.getText()
-                                            + "\" inside \""
-                                            + error.getParent().getText()
-                                            + "\"");
-                        }
-                    } else {
-                        fail(
-                                "Failure processing source "
-                                        + context.getProject().getRelativePath(context.file)
-                                        + ": No UAST AST created");
-                    }
+                    ResolveCheckerKt.checkFile(context, file, task);
                 }
 
                 return file;

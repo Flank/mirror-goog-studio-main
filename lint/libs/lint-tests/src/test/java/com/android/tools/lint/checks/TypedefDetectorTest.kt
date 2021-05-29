@@ -329,6 +329,14 @@ class TypedefDetectorTest : AbstractCheckTest() {
                     "    }\n" +
                     "}"
             ),
+            // junit stub:
+            java(
+                """
+                package junit.framework;
+                public class TestCase {
+                }
+                """
+            ).indented(),
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(expected)
     }
@@ -1523,11 +1531,11 @@ class TypedefDetectorTest : AbstractCheckTest() {
                 """
                 package com.example.android.linttest;
 
-                import android.support.v7.app.AppCompatActivity;
+                import android.app.Activity;
                 import android.os.Bundle;
                 import android.widget.Toast;
 
-                public class MainActivity extends AppCompatActivity {
+                public class MainActivity extends Activity {
 
                     @Override
                     protected void onResume() {

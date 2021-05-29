@@ -211,8 +211,11 @@ class SdkIntDetectorTest : AbstractCheckTest() {
                 """
             ).indented(),
             SUPPORT_ANNOTATIONS_JAR
-        ).run().expect(
-            """
+        )
+            // Allow BuildCompat to not resolve since we recognize it by name
+            .allowCompilationErrors()
+            .run().expect(
+                """
             src/test/pkg/JavaVersionChecks.java:13: Warning: This method should be annotated with @ChecksSdkIntAtLeast(api=N) [AnnotateVersionCheck]
                 public static boolean isNougat1() { // 1: Should annotate
                                       ~~~~~~~~~
@@ -293,8 +296,8 @@ class SdkIntDetectorTest : AbstractCheckTest() {
                 ~~~~~~~~~~~~~
             0 errors, 26 warnings
             """
-        ).expectFixDiffs(
-            """
+            ).expectFixDiffs(
+                """
             Fix for src/test/pkg/JavaVersionChecks.java line 13: Annotate with @ChecksSdkIntAtLeast:
             @@ -13 +13
             +     @ChecksSdkIntAtLeast(api=N)
@@ -374,7 +377,7 @@ class SdkIntDetectorTest : AbstractCheckTest() {
             @@ -79 +79
             + @ChecksSdkIntAtLeast(api=VERSION_CODES.N_MR1)
             """
-        )
+            )
     }
 
     fun test189154435() {
