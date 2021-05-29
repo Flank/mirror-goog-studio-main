@@ -36,7 +36,15 @@ class ImplicitExecutorDetectorTest {
                         public static <V> void addCallback(ListenableFuture<V> future, Runnable runnable) {}
                         public static <V> void addCallback(ListenableFuture<V> future, Runnable runnable, Executor executor) {}
                     }
-                """
+                    """
+                ).indented(),
+                java(
+                    """
+                    package com.google.common.util.concurrent;
+                    import java.util.concurrent.Future;
+                    public interface ListenableFuture<V> extends Future<V> {
+                    }
+                    """
                 ).indented(),
                 java(
                     """

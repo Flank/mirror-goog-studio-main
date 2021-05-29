@@ -547,7 +547,14 @@ public class ClickableViewAccessibilityDetectorTest extends AbstractCheckTest {
                                         + "            });\n"
                                         + "        }\n"
                                         + "    }\n"
-                                        + "\n"
+                                        + "    private static class HasPerformClick extends View {\n"
+                                        + "       public HasPerformClick(Context context) {\n"
+                                        + "            super(context);\n"
+                                        + "        }\n"
+                                        + "        public boolean performClick() {\n"
+                                        + "            return super.performClick();\n"
+                                        + "        }\n"
+                                        + "    }\n"
                                         + "}\n"))
                 .run()
                 .expectClean();
@@ -583,6 +590,15 @@ public class ClickableViewAccessibilityDetectorTest extends AbstractCheckTest {
                                         + "            });\n"
                                         + "        }\n"
                                         + "    }\n"
+                                        + "    private static class HasPerformClick extends View {\n"
+                                        + "       public HasPerformClick(Context context) {\n"
+                                        + "            super(context);\n"
+                                        + "        }\n"
+                                        + "        public boolean performClick() {\n"
+                                        + "            return super.performClick();\n"
+                                        + "        }\n"
+                                        + "    }\n"
+                                        + "\n"
                                         + "}\n"))
                 .run()
                 .expect(expected);

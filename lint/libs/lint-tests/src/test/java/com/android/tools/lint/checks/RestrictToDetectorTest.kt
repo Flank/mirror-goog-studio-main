@@ -824,6 +824,7 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
+            SUPPORT_ANNOTATIONS_JAR,
             // From Guava; also Apache licensed
             guavaVisibleForTestingAnnotation
         ).run().expect(expected)
@@ -908,7 +909,7 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                 "" +
                     "package test.pkg;\n" +
                     "\n" +
-                    "import com.google.android.gms.foo.bar.HiddenClass;\n" +
+                    "\n" +
                     "import com.google.android.gms.foo.bar.SubclassHiddenClass;\n" +
                     "import com.google.android.gms.foo.bar.SubclassHiddenInPackage;\n" +
                     "\n" +
@@ -1060,7 +1061,7 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                     "\n" +
                     "import com.google.android.gms.common.internal.Hide;\n" +
                     "import com.google.android.gms.common.internal.ShowFirstParty;\n" +
-                    "import com.google.android.gms.foo.bar.HiddenClass;\n" +
+                    "\n" +
                     "\n" +
                     "public class HideTest {\n" +
                     "    public void test() {\n" +
@@ -1239,7 +1240,7 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                 package test.pkg
 
                 import android.os.Bundle
-                import android.app.Acativity
+                import android.app.Activity
                 import androidx.annotation.VisibleForTesting
                 import android.util.Log
 

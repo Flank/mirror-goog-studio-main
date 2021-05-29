@@ -1711,7 +1711,7 @@ class CleanupDetectorTest : AbstractCheckTest() {
                 package test.pkg
 
                 import android.content.SharedPreferences
-                import androidx.content.edit
+                import androidx.core.content.edit
 
                 fun test(sharedPreferences: SharedPreferences, key: String, value: Boolean) {
                     sharedPreferences.edit {

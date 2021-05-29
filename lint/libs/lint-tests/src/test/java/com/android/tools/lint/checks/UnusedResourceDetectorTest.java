@@ -2101,7 +2101,8 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                         + "<resources xmlns:tools=\"http://schemas.android.com/tools\">\n"
                                         + "       <string name=\"abc_abc.abc.abc_abc\">ABC</string>\n"
-                                        + "</resources>\n"))
+                                        + "</resources>\n"),
+                        SUPPORT_ANNOTATIONS_JAR)
                 .issues(UnusedResourceDetector.ISSUE)
                 .run()
                 .expectClean();

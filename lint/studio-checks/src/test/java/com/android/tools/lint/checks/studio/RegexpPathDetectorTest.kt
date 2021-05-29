@@ -29,7 +29,7 @@ class RegexpPathDetectorTest {
                     """
                     package test.pkg;
                     import java.io.File;
-
+                    import java.util.regex.Pattern;
                     public class Test {
                         public void test(String s, File file, String myPath) {
                             s.split(myPath); // WARN: path likely based on name
@@ -67,13 +67,16 @@ class RegexpPathDetectorTest {
                 src/test/pkg/Test.java:13: Error: Passing a path to a parameter which expects a regular expression is dangerous; on Windows path separators will look like escapes. Wrap path with Pattern.quote. [RegexPath]
                         s.split(p2); // WARN: path from variable
                         ~~~~~~~~~~~
+                src/test/pkg/Test.java:17: Error: Passing a path to a parameter which expects a regular expression is dangerous; on Windows path separators will look like escapes. Wrap path with Pattern.quote. [RegexPath]
+                        Pattern.compile(myPath); // WARN: path likely based on name
+                        ~~~~~~~~~~~~~~~~~~~~~~~
                 src/test/pkg/Test.java:18: Error: Passing a path to a parameter which expects a regular expression is dangerous; on Windows path separators will look like escapes. Wrap path with Pattern.quote. [RegexPath]
                         s.replaceFirst(myPath, "foo"); // WARN: path likely based on name
                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 src/test/pkg/Test.java:19: Error: Passing a path to a parameter which expects a regular expression is dangerous; on Windows path separators will look like escapes. Wrap path with Pattern.quote. [RegexPath]
                         s.replaceAll(myPath, "foo"); // WARN: path likely based on name
                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                6 errors, 0 warnings
+                7 errors, 0 warnings
                 """
             )
     }

@@ -512,7 +512,7 @@ class CheckResultDetectorTest : AbstractCheckTest() {
                     package io.reactivex;
 
                     import androidx.annotation.CheckResult;
-                    import java.util.Consumer;
+                    import java.util.function.Consumer;
 
                     @SuppressWarnings("ClassNameDiffersFromFileName")
                     public abstract class Observable<T> {

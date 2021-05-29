@@ -518,6 +518,7 @@ class LintDetectorDetectorTest {
             )
             .checkUInjectionHost(false)
             .allowMissingSdk()
+            .allowCompilationErrors()
             .run()
             .expectClean()
     }

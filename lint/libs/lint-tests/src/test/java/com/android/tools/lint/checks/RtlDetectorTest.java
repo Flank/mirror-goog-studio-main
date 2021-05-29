@@ -611,7 +611,13 @@ public class RtlDetectorTest extends AbstractCheckTest {
                                         + "        int notAnError = Other.LEFT;\n"
                                         + "        t1.setGravity(LEFT | RIGHT); // static imports\n"
                                         + "    }\n"
-                                        + "}\n"))
+                                        + "}\n"),
+                        java(
+                                ""
+                                        + "package foo;\n"
+                                        + "class bar {\n"
+                                        + "    public static final int RIGHT = 0;\n"
+                                        + "}"))
                 .run()
                 .expect(expected);
     }

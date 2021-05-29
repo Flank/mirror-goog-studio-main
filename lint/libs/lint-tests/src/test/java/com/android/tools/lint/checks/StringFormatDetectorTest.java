@@ -1623,7 +1623,7 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
                                         + "\n"
                                         + "import android.content.res.Resources;\n"
                                         + "\n"
-                                        + "public class FormatSuggestions {\n"
+                                        + "public class FormatSuggestions extends android.app.Activity {\n"
                                         + "    private void format() {\n"
                                         + "        String format = getString(R.string.invalid_format, \"format\"); // inspection error is not reported\n"
                                         + "    }\n"

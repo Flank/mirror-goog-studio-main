@@ -2669,7 +2669,8 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "    private static void test(CustomFrameLayout layout, Drawable drawable) {\n"
                                         + "        layout.setForeground(drawable);\n"
                                         + "    }\n"
-                                        + "}"))
+                                        + "}"),
+                        SUPPORT_ANNOTATIONS_JAR)
                 .run()
                 .expectClean();
     }
@@ -4534,6 +4535,9 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "}")
                                 .indented(),
                         SUPPORT_ANNOTATIONS_JAR)
+                // We don't have SdkLevel on the classpath but lint will recognize it just
+                // by the name pattern (isAtLeastX)
+                .allowCompilationErrors()
                 .run()
                 .expect(
                         ""
@@ -4575,6 +4579,9 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "}")
                                 .indented(),
                         SUPPORT_ANNOTATIONS_JAR)
+                // We don't have SdkLevel on the classpath but lint will recognize it just
+                // by the name pattern (isAtLeastX)
+                .allowCompilationErrors()
                 .run()
                 .expectClean();
     }
@@ -5230,7 +5237,8 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "import androidx.annotation.RequiresApi\n"
                                         + "import android.widget.Toolbar\n"
                                         + "\n"
-                                        + "fun Toolbar.hideOverflowMenu2() = hideOverflowMenu()"))
+                                        + "fun Toolbar.hideOverflowMenu2() = hideOverflowMenu()"),
+                        SUPPORT_ANNOTATIONS_JAR)
                 .run()
                 .expectClean();
     }
@@ -5525,6 +5533,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "                }\n"
                                         + "    }\n"
                                         + "}"))
+                .allowCompilationErrors() // missing symbols for the realm example
                 .run()
                 .expectClean();
     }
@@ -6799,7 +6808,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                 "libs/library.srcjar",
                                 kotlin(
                                         ""
-                                                + "package test.pkg\n"
+                                                + "package test.pkg.library\n"
                                                 + "\n"
                                                 + "import androidx.annotation.RequiresApi\n"
                                                 + "\n"

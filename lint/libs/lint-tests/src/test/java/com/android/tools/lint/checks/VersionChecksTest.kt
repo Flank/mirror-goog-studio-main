@@ -2778,7 +2778,9 @@ class VersionChecksTest : AbstractCheckTest() {
                 """
             ).indented(),
             SUPPORT_ANNOTATIONS_JAR
-        ).run().expectClean()
+        )
+            .allowCompilationErrors() // Deliberate resolve errors
+            .run().expectClean()
     }
 
     fun testChecksSdkIntAtLeast() {
@@ -3090,18 +3092,18 @@ class VersionChecksTest : AbstractCheckTest() {
                     }
                     """
                 ),
-                "test/pkg/Constants.class:" +
-                    "H4sIAAAAAAAAAG2Rz08aQRTHv8MisICKVGr9LepBPHQTPfSgMaHENptslLDI" +
-                    "gYsZYMQRmCG7g/GP8tL0UOOhf0D/qMa3G4Otetj3Zt687/t8Z/bP38ffAL5g" +
-                    "N4sUVjJYzWIN6zZmsJHGZhpbDEv+Rb1+3mj6l95ps3nauPTr1Zp79p2BtRlW" +
-                    "GxNl5Ei46laGsjMUVaW04UZqFTJUPK56gZa9O4dP607tWnQHod8buMpUjSd4" +
-                    "aI4YLD6WFpkpMaSOpZLmhGp7lRZDsqZ7gmHek0qcTUYdETQ5kRgKfWFaIghp" +
-                    "aDzzIFa03x4c0jX2vBt+y50hV33HN4FU/aO2GzXbYx7wkTAiiPAJhsxxd/hs" +
-                    "IOvrSdAV32SEm6vRpQxXJvwcjcpjFnNEvNI6jXIe29jJI40MQ9GI0DjjQd+Z" +
-                    "KsjTC/68cyO6hmHhpfRV66HgiohkfbopvWO60kaZ/k+KvDIsR0DKNu1ylLP0" +
-                    "5VzkkaQF2aM4T0frlBnlmf1fYD9iZYFiKi5mSL2AIhJx60pco3ew7l/15d5S" +
-                    "bHzA4j9C611h4T9hycVHYi5NzZWfiXYx8QDrJ5KvDS5S/BRNxvITd5pGLLEC" +
-                    "AAA="
+                "test/pkg/constants/Constants.class:" +
+                    "H4sIAAAAAAAAAG1RTU8bMRB9zoYkm6QQKCnlm5QeSA9dqT30AEIKEa1WWkGU" +
+                    "DTnkgpyNG0wSO9p1UH9UL4hDEYf+AH4UYnYFoQUOnrGf5817Y9/e3fwF8A0f" +
+                    "88hgJYfVPNawbmMGG1lsZrHFsOSfNBrHzZZ/6h22WofNU79Rq7tHPxhYh2G1" +
+                    "OVFGjoSrLmQku0NRU0obbqRWEUPV46oXatn75fAp7tTPRDCI/N7AVaZmPMEj" +
+                    "s8tg8bG0yEyZIbMnlTT7hO1U2wzpuu4JhjlPKnE0GXVF2OKkxFDqC9MWYURN" +
+                    "k55fEkbn5cVXGmPHO+cX3Bly1Xd8E0rV3+24cbE95iEfCSPCWD7FkNsLhg8G" +
+                    "8r6ehIH4LmO52ToNZbgy0ee4VRFvMEuKP7XOolLEB2wXkUWOYc2IyDjjQd8J" +
+                    "HhnOlEvunowcd89FYBjmn6ADrYeCK9KmIaaH8iv2qx1U6Kcy5JphOZambNOp" +
+                    "QDlPq+CiiDRtyCjFObpap8woz3z6A3aZMEsUMwmYI/Y8FpBKSlcSjF7E+v2s" +
+                    "rvBSxcZbLP5DtF4llv4jll28I82lqbnKg6K9kLqGdYX0c4OLFN/HnbF8D6c8" +
+                    "O3S7AgAA"
             ),
             SUPPORT_ANNOTATIONS_JAR
         )

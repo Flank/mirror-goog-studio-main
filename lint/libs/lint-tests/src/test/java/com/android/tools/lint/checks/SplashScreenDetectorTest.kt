@@ -18,6 +18,7 @@ package com.android.tools.lint.checks
 
 import com.android.sdklib.AndroidVersion.VersionCodes.R
 import com.android.sdklib.AndroidVersion.VersionCodes.S
+import com.android.tools.lint.checks.infrastructure.TestFile
 
 class SplashScreenDetectorTest : AbstractCheckTest() {
     override fun getDetector() = SplashScreenDetector()
@@ -36,6 +37,14 @@ class SplashScreenDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
+            // v7 AppCompatActivity stub
+            java(
+                """
+                package android.support.v7.app;
+                public class AppCompatActivity extends android.app.Activity {
+                }
+                """
+            ),
             manifest().minSdk(S)
         ).run()
             .expect(
@@ -62,6 +71,7 @@ class SplashScreenDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
+            fragmentActivityStub,
             manifest().minSdk(S)
         ).run()
             .expect(
@@ -87,6 +97,7 @@ class SplashScreenDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
+            fragmentStub,
             manifest().minSdk(S)
         ).run()
             .expect(
@@ -112,6 +123,7 @@ class SplashScreenDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
+            fragmentStub,
             manifest().minSdk(S)
         ).run()
             .expect(
@@ -137,6 +149,7 @@ class SplashScreenDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
+            fragmentStub,
             manifest().minSdk(R)
         ).run().expectClean()
     }
@@ -155,7 +168,24 @@ class SplashScreenDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            manifest().minSdk(S)
+            manifest().minSdk(S),
+            fragmentActivityStub,
         ).run().expectClean()
     }
+
+    private val fragmentActivityStub: TestFile = java(
+        """
+        package androidx.fragment.app;
+        public class FragmentActivity extends android.app.Activity {
+        }
+        """
+    )
+
+    private val fragmentStub: TestFile = java(
+        """
+        package androidx.fragment.app;
+        public class Fragment implements android.content.ComponentCallbacks {
+        }
+        """
+    )
 }
