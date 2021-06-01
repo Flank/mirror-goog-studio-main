@@ -160,9 +160,6 @@ public class TestLintClient extends LintCliClient {
 
     private TextReporter reporter;
 
-    /** Records the first throwable reported as an error during this test */
-    @Nullable Throwable firstThrowable;
-
     public TestLintClient() {
         this(CLIENT_UNIT_TESTS);
     }
@@ -352,6 +349,7 @@ public class TestLintClient extends LintCliClient {
                         ? analyzeAndReportProvisionally(rootDir, files, issues)
                         : analyze(rootDir, files, issues);
 
+        Throwable firstThrowable = task.runner.getFirstThrowable();
         return new TestResultState(this, rootDir, result, getDefiniteIncidents(), firstThrowable);
     }
 
@@ -539,16 +537,23 @@ public class TestLintClient extends LintCliClient {
             File serializationFile = getSerializationFile(project, type);
             if (serializationFile.exists()) {
                 String xml = FilesKt.readText(serializationFile, Charsets.UTF_8);
-                assertNotNull("Not valid XML", XmlUtils.parseDocumentSilently(xml, false));
+                if (type != XmlFileType.RESOURCE_REPOSITORY) {
+                    // Skipping RESOURCE_REPOSITORY because these are not real
+                    // XML files, but we're going to replace these soon so not
+                    // worth going to the trouble of changing the file format
+                    Document document = XmlUtils.parseDocumentSilently(xml, false);
+                    assertNotNull("Not valid XML", document);
+                }
 
                 // Make sure we don't have any absolute paths to the test root or project
-                // directories
-                // or home directories in the XML
-                assertFalse(xml.contains(absProjectPath));
-                assertFalse(xml.contains(absProjectCanonicalPath));
-                assertFalse(xml.contains(absTestRootPath));
-                assertFalse(xml.contains(absTestRootCanonicalPath));
-                assertFalse(xml.contains(absHomePrefix));
+                // directories or home directories in the XML
+                if (type.isPersistenceFile() || !getFlags().isFullPath()) {
+                    assertFalse(xml, xml.contains(absProjectPath));
+                    assertFalse(xml, xml.contains(absProjectCanonicalPath));
+                    assertFalse(xml, xml.contains(absTestRootPath));
+                    assertFalse(xml, xml.contains(absTestRootCanonicalPath));
+                    assertFalse(xml, xml.contains(absHomePrefix));
+                }
             }
         }
     }
@@ -1031,10 +1036,17 @@ public class TestLintClient extends LintCliClient {
             }
         }
 
+        if (!task.allowExceptions) {
+            Throwable throwable = LintFix.getThrowable(fix, LintDriver.KEY_THROWABLE);
+            if (throwable != null && task.runner.getFirstThrowable() == null) {
+                task.runner.setFirstThrowable(throwable);
+            }
+        }
+
         incident = checkIncidentSerialization(incident);
 
         if (fix != null) {
-            checkFix(context, fix, incident);
+            checkFix(fix, incident);
         }
 
         super.report(context, incident, format);
@@ -1146,15 +1158,7 @@ public class TestLintClient extends LintCliClient {
     }
 
     /** Validity checks for the quickfix associated with the given incident */
-    private void checkFix(
-            @NonNull Context context, @NonNull LintFix fix, @NonNull Incident incident) {
-        if (!task.allowExceptions) {
-            Throwable throwable = LintFix.getThrowable(fix, LintDriver.KEY_THROWABLE);
-            if (throwable != null && this.firstThrowable == null) {
-                this.firstThrowable = throwable;
-            }
-        }
-
+    private void checkFix(@NonNull LintFix fix, @NonNull Incident incident) {
         if (fix instanceof LintFix.ReplaceString) {
             LintFix.ReplaceString replaceFix = (LintFix.ReplaceString) fix;
             String oldPattern = replaceFix.getOldPattern();
@@ -1343,8 +1347,8 @@ public class TestLintClient extends LintCliClient {
     @Override
     public void log(Throwable exception, String format, @NonNull Object... args) {
         if (exception != null) {
-            if (firstThrowable == null) {
-                firstThrowable = exception;
+            if (task.runner.getFirstThrowable() == null) {
+                task.runner.setFirstThrowable(exception);
             }
             exception.printStackTrace();
         }

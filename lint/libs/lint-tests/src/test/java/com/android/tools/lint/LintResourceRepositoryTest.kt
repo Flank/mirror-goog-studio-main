@@ -39,6 +39,7 @@ import com.android.tools.lint.checks.infrastructure.TestLintClient
 import com.android.tools.lint.checks.infrastructure.TestLintTask
 import com.android.tools.lint.checks.infrastructure.TestLintTask.lint
 import com.android.tools.lint.client.api.LintClient
+import com.android.tools.lint.model.PathVariables
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull
@@ -168,6 +169,7 @@ class LintResourceRepositoryTest {
             )
 
             assertEquals(
+
                 "namespace:apk/res-auto\n" +
                     "  @array/typography (value) config=default source=/app/res/values/duplicates.xml;  [\"Ages 1, 3-5\",Age: 5 1/2+]\n" +
                     "  @attr/content (value) config=default source=/app/res/values/duplicates.xml;  []\n" +
@@ -231,15 +233,13 @@ class LintResourceRepositoryTest {
                 // See [LintResourcePersistenceTest]; including it here since it's a more
                 // complex set of resources.
                 val expected =
-                    "" +
-                        "http://schemas.android.com/apk/res-auto;;" +
-                        "app/res/values/duplicates.xml\n" +
-                        "app/res/values-v11/values.xml\n" +
-                        "app/res/drawable-xhdpi-v4/ic_launcher2.png\n" +
-                        "app/res/drawable/ic_launcher.png\n" +
-                        "app/res/layout/activity_main.xml\n" +
-                        "app/res/values/test.xml\n" +
-                        "app/res/values/styles.xml\n" +
+                    "http://schemas.android.com/apk/res-auto;;${"$"}ROOT/app/res/values/duplicates.xml\n" +
+                        "${"$"}ROOT/app/res/values-v11/values.xml\n" +
+                        "${"$"}ROOT/app/res/drawable-xhdpi-v4/ic_launcher2.png\n" +
+                        "${"$"}ROOT/app/res/drawable/ic_launcher.png\n" +
+                        "${"$"}ROOT/app/res/layout/activity_main.xml\n" +
+                        "${"$"}ROOT/app/res/values/test.xml\n" +
+                        "${"$"}ROOT/app/res/values/styles.xml\n" +
                         "+array:typography,0,V\\\"Ages 1\\, 3-5\\\",Age\\: 5 1/2\\+,;\n" +
                         "+attr:content,0,Vreference:;contentId,0,Vreference:;fastScrollOverlayPosition,0,Venum:floating:0,atThumb:1,aboveThumb:2,;windowSoftInputMode,0,Vflags:stateUnspecified:0,stateUnchanged:1,;\n" +
                         "+dimen:activity_horizontal_margin,0,V\"16dp\";activity_horizontal_margin,1,V\"16dp\";negative,0,V\"-16dp\";positive,0,V\"16dp\";\n" +
@@ -542,11 +542,18 @@ class LintResourceRepositoryTest {
     }
 
     private fun serialize(repository: LintResourceRepository): String {
-        return repository.serialize(temporaryFolder.root, sort = true)
+        val pathVariables = getPathVariables()
+        return repository.serialize(pathVariables, temporaryFolder.root, sort = true)
     }
 
     private fun deserialize(s: String): ResourceRepository {
-        return LintResourcePersistence.deserialize(s, temporaryFolder.root, null)
+        return LintResourcePersistence.deserialize(s, getPathVariables(), temporaryFolder.root, null)
+    }
+
+    private fun getPathVariables(): PathVariables {
+        val pathVariables = PathVariables()
+        pathVariables.add("ROOT", temporaryFolder.root)
+        return pathVariables
     }
 }
 

@@ -110,11 +110,15 @@ class TestLintResult internal constructor(
         transformer: TestResultTransformer = TestResultTransformer { it },
         testMode: TestMode = defaultMode
     ): TestLintResult {
-        val state = states[testMode]
-            ?: error("Used expect(testMode=$testMode) with a TestMode not included in lint().testModes()")
-        val throwable = state.firstThrowable
-        if (expectedException == null && !task.allowExceptions && throwable != null) {
-            throw throwable
+        // If not expecting an exception, and not allowing any, make sure we
+        // didn't have any exceptions across all states, not just one.
+        // We don't want to require people to check each test mode individually
+        // and we don't need the power to individually expect exceptions separately
+        // for each mode.
+        if (expectedException == null && !task.allowExceptions) {
+            states.asSequence().mapNotNull { it.value.firstThrowable }.firstOrNull()?.let {
+                throw it
+            }
         }
 
         val actual = transformer.transform(describeOutput(expectedException, testMode))

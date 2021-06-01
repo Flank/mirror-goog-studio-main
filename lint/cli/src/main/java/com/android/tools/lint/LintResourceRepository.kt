@@ -39,6 +39,7 @@ import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.getBaseName
 import com.android.tools.lint.detector.api.isXmlFile
 import com.android.tools.lint.model.LintModelAndroidLibrary
+import com.android.tools.lint.model.PathVariables
 import com.android.utils.iterator
 import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.ImmutableListMultimap
@@ -92,8 +93,8 @@ open class LintResourceRepository constructor(
         return listOf(this)
     }
 
-    fun serialize(root: File? = null, sort: Boolean = false): String {
-        return LintResourcePersistence.serialize(this, root, sort)
+    fun serialize(pathVariables: PathVariables, root: File? = null, sort: Boolean = false): String {
+        return LintResourcePersistence.serialize(this, pathVariables, root, sort)
     }
 
     override fun accept(visitor: ResourceVisitor): ResourceVisitor.VisitResult {
@@ -449,17 +450,14 @@ open class LintResourceRepository constructor(
                     val file = client.getSerializationFile(project, XmlFileType.RESOURCE_REPOSITORY)
                     return if (file.isFile) {
                         val serialized = file.readText()
-                        LintResourcePersistence.deserialize(serialized, project.dir, project)
+                        LintResourcePersistence.deserialize(serialized, client.pathVariables, project.dir, project)
                     } else {
                         // Must construct from files now
                         val repository = createFromFolder(client, project, ResourceNamespace.TODO())
 
                         // Write for future usage
                         file.parentFile?.mkdirs()
-                        val serialized = LintResourcePersistence.serialize(repository)
-                        if (serialized.isBlank()) {
-                            LintResourcePersistence.serialize(repository)
-                        }
+                        val serialized = LintResourcePersistence.serialize(repository, client.pathVariables)
                         file.writeText(serialized)
                         repository
                     }.also { project.putClientProperty(ResourceRepositoryScope.PROJECT_ONLY, it) }
@@ -550,13 +548,13 @@ open class LintResourceRepository constructor(
                     val file = getFrameworkResourceCacheFile(client, hash)
                     return if (file.isFile) {
                         val serialized = file.readText()
-                        LintResourcePersistence.deserialize(serialized, null, null)
+                        LintResourcePersistence.deserialize(serialized, client.pathVariables, null, null)
                     } else {
                         // Must construct from files now
                         val repository = createFromFolder(client, sequenceOf(res), null, null, ResourceNamespace.ANDROID)
                         // Write for future usage
                         file.parentFile?.mkdirs()
-                        val serialized = LintResourcePersistence.serialize(repository)
+                        val serialized = LintResourcePersistence.serialize(repository, client.pathVariables)
                         file.writeText(serialized)
                         repository
                     }.also { cache[hash] = it }
@@ -576,13 +574,13 @@ open class LintResourceRepository constructor(
                     return if (file.isFile) {
                         val serialized = file.readText()
                         // TODO: Handle relative paths over in AAR folders under ~/.gradle/
-                        LintResourcePersistence.deserialize(serialized, null, null)
+                        LintResourcePersistence.deserialize(serialized, client.pathVariables, null, null)
                     } else {
                         // Must construct from files now
                         val repository = LintLibraryRepository(client, library, ResourceNamespace.TODO())
                         // Write for future usage
                         file.parentFile?.mkdirs()
-                        val serialized = LintResourcePersistence.serialize(repository)
+                        val serialized = LintResourcePersistence.serialize(repository, client.pathVariables)
                         file.writeText(serialized)
                         repository
                     }.also { cache[library] = it }
