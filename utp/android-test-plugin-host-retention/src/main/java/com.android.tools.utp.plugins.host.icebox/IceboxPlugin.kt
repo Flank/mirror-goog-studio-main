@@ -141,15 +141,8 @@ class IceboxPlugin @VisibleForTesting constructor(
         val res = updateIceboxResult(testResult)
         if (iceboxPluginConfig.setupStrategy
             == IceboxPluginProto.IceboxSetupStrategy.RECONNECT_BETWEEN_TEST_CASES) {
-            // failureSnapshotId tracks the emulator internal snapshot ID for each Icebox command.
-            // Whenever the emulator receives a new Icebox command, it will produce 0 or 1 or more
-            // snapshots with the name "failure0", "failure1" etc. Each time a new Icebox command is
-            // issued, the emulator snapshot name will restart from "failure0".
-            //
-            // RECONNECT_BETWEEN_TEST_CASES will resend an Icebox command to the emulator for each
-            // test case. Thus we need to reset the failureSnapshotId so that it matches the
-            // internal snapshot ID used by the emulator.
-            failureSnapshotId = 0
+            iceboxCaller.shutdownGrpc()
+            setupIcebox(deviceController)
         }
         return res
     }

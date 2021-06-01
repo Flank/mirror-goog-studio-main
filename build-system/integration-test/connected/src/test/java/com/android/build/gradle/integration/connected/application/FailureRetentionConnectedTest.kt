@@ -21,7 +21,6 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject.Com
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.integration.connected.utils.getEmulator
 import com.android.testutils.truth.PathSubject.assertThat
-import com.google.common.truth.Truth.assertThat
 import com.google.testing.platform.proto.api.core.TestArtifactProto
 import com.google.testing.platform.proto.api.core.TestResultProto
 import com.google.testing.platform.proto.api.core.TestSuiteResultProto
@@ -171,15 +170,6 @@ class FailureRetentionConnectedTest {
             it.testCase.testMethod == "failingTest1"
         }.also {
             validateIceboxArtifacts(it)
-        }
-        // The gradle file defines 2 snapshot artifact, so the third failure should not have
-        // snapshots.
-        testSuiteResultProto.testResultList.first {
-            it.testCase.testMethod == "failingTest2"
-        }.outputArtifactList.find() {
-            it.label.label == "icebox.info" && it.label.namespace == "android"
-        }.also {
-            assertThat(it).isNull()
         }
     }
 

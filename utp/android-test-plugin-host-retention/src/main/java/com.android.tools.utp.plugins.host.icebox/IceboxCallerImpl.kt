@@ -59,7 +59,6 @@ class IceboxCallerImpl public constructor(
     private lateinit var snapshotService: SnapshotServiceBlockingStub
     private lateinit var managedChannel: ManagedChannel
     private val logcatParser = LogcatParser()
-    private var remainingSnapshotNumber = 0
 
     init {
         setupGrpc()
@@ -108,7 +107,6 @@ class IceboxCallerImpl public constructor(
             maxSnapshotNumber: Int,
             androidStudioDdmlibPort: Int
     ) {
-        remainingSnapshotNumber = maxSnapshotNumber
         logcatParser.start(deviceController) { date, time, pid, uid, verbose, tag, message ->
             if (message.contains("Waiting for debugger to connect")) {
                 val result = deviceController.deviceShell(listOf("pidof", testedApplicationID))
@@ -122,21 +120,11 @@ class IceboxCallerImpl public constructor(
                         logger
                     )
 
-                    // remainingSnapshotNumber will be updated by fetchSnapshot in a different
-                    // thread. But we don't need an explicit lock here because those 2 threads
-                    // block each other.
-                    // More specifically, when the first test kicks off, current thread will be
-                    // "blocked" (waiting for "Waiting for debugger" message), fetchSnapshot
-                    // thread executes and star the test, then becomes blocked because
-                    // waiting for debugger. Then current thread is unblocked, sends "trackProcess"
-                    // (which attaches debugger). Then fetchSnapshot is unblocked and current
-                    // thread is blocked again (waiting for the next "Waiting for debugger"
-                    // message).
                     snapshotService.trackProcess(
                         IceboxTarget.newBuilder()
                             .setPid(pid_long)
                             .setSnapshotId(snapshotNamePrefix)
-                            .setMaxSnapshotNumber(remainingSnapshotNumber)
+                            .setMaxSnapshotNumber(maxSnapshotNumber)
                             .build()
                     ).let {
                         if (it.failed) logger.warning("Icebox failed: $it.err")
@@ -158,6 +146,7 @@ class IceboxCallerImpl public constructor(
             snapshotCompression: Compression,
             emulatorSnapshotId: String
     ) = runBlocking {
+        logcatParser.stop()
         try {
             val snapshotFormat = when (snapshotCompression) {
                 Compression.NONE -> SnapshotPackage.Format.TAR
@@ -204,9 +193,6 @@ class IceboxCallerImpl public constructor(
                 }
             }
             outputStream?.close()
-            if (success) {
-                remainingSnapshotNumber --
-            }
             if (!success && snapshotFile.exists()) {
                 snapshotFile.delete()
             }

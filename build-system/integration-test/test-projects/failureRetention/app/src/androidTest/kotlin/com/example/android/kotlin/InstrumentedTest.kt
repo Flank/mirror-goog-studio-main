@@ -42,9 +42,4 @@ class ExampleInstrumentedTest {
         assert(false)
     }
 
-    @Test
-    fun failingTest2() {
-        assert(false)
-    }
-
 }
