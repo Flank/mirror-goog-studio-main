@@ -37,10 +37,7 @@ import org.junit.Assert
 import org.junit.Assert.assertEquals
 import java.io.File
 import java.io.IOException
-import java.util.ArrayList
 import java.util.EnumSet
-import java.util.HashMap
-import java.util.HashSet
 import javax.annotation.CheckReturnValue
 
 /**
@@ -54,6 +51,9 @@ class TestLintRunner(private val task: TestLintTask) {
     /** Whether the [.run] method has already been invoked. */
     var alreadyRun = false
         private set
+
+    /** First exception encountered during the lint run, if any */
+    var firstThrowable: Throwable? = null
 
     /** Returns all the platforms encountered by the given issues. */
     private fun computePlatforms(issues: List<Issue>): EnumSet<Platform> {
@@ -120,6 +120,7 @@ class TestLintRunner(private val task: TestLintTask) {
                 // mode that the test actually consults the resource repository.)
                 for (mode in task.testModes) {
                     currentTestMode = mode
+                    firstThrowable = null
 
                     // Run lint with a specific test type?
                     // For example, the UInjectionHost tests are only relevant

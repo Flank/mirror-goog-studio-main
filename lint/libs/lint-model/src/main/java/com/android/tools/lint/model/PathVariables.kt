@@ -65,9 +65,14 @@ class PathVariables {
      * are relative to the library root.). If [unix] is true, it will
      * always use / as the path separator.
      */
-    fun toPathString(file: File, relativeTo: File? = null, unix: Boolean = false): String {
-        val fullPath = file.path
+    fun toPathString(file: File, relativeTo: File? = null, unix: Boolean = false): String =
+        toPathString(file.path, relativeTo?.path, unix)
 
+    /**
+     * For a given file's full path, produces a path with variables
+     * which applies to path variable mapping.
+     */
+    fun toPathString(fullPath: String, relativeTo: String? = null, unix: Boolean = false): String {
         for ((prefix, root) in pathVariables) {
             if (fullPath.startsWith(root.path)) {
                 if (fullPath == root.path) {
@@ -83,11 +88,11 @@ class PathVariables {
         }
 
         if (relativeTo != null &&
-            fullPath.startsWith(relativeTo.path) &&
-            fullPath.length > relativeTo.path.length &&
-            fullPath[relativeTo.path.length] == File.separatorChar
+            fullPath.startsWith(relativeTo) &&
+            fullPath.length > relativeTo.length &&
+            fullPath[relativeTo.length] == File.separatorChar
         ) {
-            return fullPath.substring(relativeTo.path.length + 1)
+            return fullPath.substring(relativeTo.length + 1)
                 .let { if (unix) it.replace('\\', '/') else it }
         }
 

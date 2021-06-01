@@ -25,6 +25,7 @@ import com.android.tools.lint.checks.infrastructure.TestLintClient
 import com.android.tools.lint.checks.infrastructure.TestLintTask.lint
 import com.android.tools.lint.client.api.ResourceRepositoryScope
 import com.android.tools.lint.detector.api.Project
+import com.android.tools.lint.model.PathVariables
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -40,6 +41,12 @@ class LintResourcePersistenceTest {
     @get:Rule
     var temporaryFolder = TemporaryFolder()
 
+    private fun getPathVariables(): PathVariables {
+        val pathVariables = PathVariables()
+        pathVariables.add("ROOT", temporaryFolder.root)
+        return pathVariables
+    }
+
     @Test
     fun testDeserialization() {
         val expected =
@@ -49,10 +56,11 @@ class LintResourcePersistenceTest {
                 "-windowSoftInputMode:flags:stateUnspecified:0,stateUnchanged:1," +
                 "-fastScrollOverlayPosition:enum:floating:0,atThumb:1,aboveThumb:2,;"
 
+        val pathVariables = getPathVariables()
         val deserialized = LintResourcePersistence.deserialize(
-            expected.trim(), null, null,
+            expected.trim(), pathVariables, null, null,
         )
-        val serialized = deserialized.serialize(null, sort = true)
+        val serialized = deserialized.serialize(pathVariables, null, sort = true)
         assertEquals(expected, serialized.trim())
     }
 
@@ -85,8 +93,8 @@ class LintResourcePersistenceTest {
         // Test serialization too -- serialize and deserialize the repositories and
         // make sure they work the same
         val serialized =
-            LintResourcePersistence.serialize(folderRepository as LintResourceRepository)
-        val deserialized = LintResourcePersistence.deserialize(serialized)
+            LintResourcePersistence.serialize(folderRepository as LintResourceRepository, client.pathVariables)
+        val deserialized = LintResourcePersistence.deserialize(serialized, getPathVariables())
 
         // If both methods returned empty string the above would equal, so also perform
         // some spot checks on the resource repositories.
