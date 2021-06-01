@@ -1,80 +1,104 @@
 > AndroidProject:
    > defaultConfig:
       - sourceProvider:
-         - renderscriptDirectories = (null)
-         - resDirectories          = (null)
+         - renderscriptDirectories:
+            * {PROJECT}/src/main/rs{!}{REMOVED}
+         - resDirectories:
+            * {PROJECT}/src/main/res{D}{REMOVED}
       - androidTestSourceProvider:
-         - renderscriptDirectories = (null)
-         - resDirectories          = (null)
+         - renderscriptDirectories:
+            * {PROJECT}/src/androidTest/rs{!}{REMOVED}
+         - resDirectories:
+            * {PROJECT}/src/androidTest/res{!}{REMOVED}
       - unitTestSourceProvider:
-         - renderscriptDirectories = (null)
-         - resDirectories          = (null)
+         - renderscriptDirectories:
+            * {PROJECT}/src/test/rs{!}{REMOVED}
+         - resDirectories:
+            * {PROJECT}/src/test/res{!}{REMOVED}
       - testFixturesSourceProvider:
-         - renderscriptDirectories = (null)
-         - resDirectories          = (null)
+         - renderscriptDirectories:
+            * {PROJECT}/src/testFixtures/rs{!}{REMOVED}
+         - resDirectories:
+            * {PROJECT}/src/testFixtures/res{!}{REMOVED}
    < defaultConfig
    > buildTypes:
       > debug:
          - sourceProvider:
-            - renderscriptDirectories = (null)
-            - resDirectories          = (null)
+            - renderscriptDirectories:
+               * {PROJECT}/src/debug/rs{!}{REMOVED}
+            - resDirectories:
+               * {PROJECT}/src/debug/res{!}{REMOVED}
          - androidTestSourceProvider:
-            - renderscriptDirectories = (null)
-            - resDirectories          = (null)
+            - renderscriptDirectories:
+               * {PROJECT}/src/androidTestDebug/rs{!}{REMOVED}
+            - resDirectories:
+               * {PROJECT}/src/androidTestDebug/res{!}{REMOVED}
          - unitTestSourceProvider:
-            - renderscriptDirectories = (null)
-            - resDirectories          = (null)
+            - renderscriptDirectories:
+               * {PROJECT}/src/testDebug/rs{!}{REMOVED}
+            - resDirectories:
+               * {PROJECT}/src/testDebug/res{!}{REMOVED}
          - testFixturesSourceProvider:
-            - renderscriptDirectories = (null)
-            - resDirectories          = (null)
+            - renderscriptDirectories:
+               * {PROJECT}/src/testFixturesDebug/rs{!}{REMOVED}
+            - resDirectories:
+               * {PROJECT}/src/testFixturesDebug/res{!}{REMOVED}
       < debug
       > release:
          - sourceProvider:
-            - renderscriptDirectories = (null)
-            - resDirectories          = (null)
+            - renderscriptDirectories:
+               * {PROJECT}/src/release/rs{!}{REMOVED}
+            - resDirectories:
+               * {PROJECT}/src/release/res{!}{REMOVED}
          - androidTestSourceProvider:
-            - renderscriptDirectories = (null)
-            - resDirectories          = (null)
+            - renderscriptDirectories:
+               * {PROJECT}/src/androidTestRelease/rs{!}{REMOVED}
+            - resDirectories:
+               * {PROJECT}/src/androidTestRelease/res{!}{REMOVED}
          - unitTestSourceProvider:
-            - renderscriptDirectories = (null)
-            - resDirectories          = (null)
+            - renderscriptDirectories:
+               * {PROJECT}/src/testRelease/rs{!}{REMOVED}
+            - resDirectories:
+               * {PROJECT}/src/testRelease/res{!}{REMOVED}
          - testFixturesSourceProvider:
-            - renderscriptDirectories = (null)
-            - resDirectories          = (null)
+            - renderscriptDirectories:
+               * {PROJECT}/src/testFixturesRelease/rs{!}{REMOVED}
+            - resDirectories:
+               * {PROJECT}/src/testFixturesRelease/res{!}{REMOVED}
       < release
    < buildTypes
    > variants:
-      > variant(debug):
+      > debug:
          - mainArtifact:
             - classesFolders:
-               * {PROJECT}/build/intermediates/javac/debug/classes{!}
+               * {PROJECT}/build/intermediates/compile_r_class_jar/debug/R.jar{!}{REMOVED}
             - generatedSourceFolders:
-               * {PROJECT}/build/generated/aidl_source_output_dir/debug/out{!}
-               * {PROJECT}/build/generated/ap_generated_sources/debug/out{!}
-               * {PROJECT}/build/generated/source/buildConfig/debug{!}
-            - generatedResourceFolders = []
+               * {PROJECT}/build/generated/renderscript_source_output_dir/debug/out{!}{REMOVED}
+            - generatedResourceFolders:
+               * {PROJECT}/build/generated/res/resValues/debug{!}{REMOVED}
+               * {PROJECT}/build/generated/res/rs/debug{!}{REMOVED}
          - androidTestArtifact:
             - generatedSourceFolders:
-               * {PROJECT}/build/generated/aidl_source_output_dir/debugAndroidTest/out{!}
-               * {PROJECT}/build/generated/ap_generated_sources/debugAndroidTest/out{!}
-               * {PROJECT}/build/generated/source/buildConfig/androidTest/debug{!}
-            - generatedResourceFolders = []
+               * {PROJECT}/build/generated/renderscript_source_output_dir/debugAndroidTest/out{!}{REMOVED}
+            - generatedResourceFolders:
+               * {PROJECT}/build/generated/res/resValues/androidTest/debug{!}{REMOVED}
+               * {PROJECT}/build/generated/res/rs/androidTest/debug{!}{REMOVED}
          - unitTestArtifact:
             - classesFolders:
-               * {PROJECT}/build/intermediates/javac/debugUnitTest/classes{!}
-      < variant(debug)
-      > variant(release):
+               * {PROJECT}/build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/debugUnitTest/R.jar{!}{REMOVED}
+      < debug
+      > release:
          - mainArtifact:
             - classesFolders:
-               * {PROJECT}/build/intermediates/javac/release/classes{!}
+               * {PROJECT}/build/intermediates/compile_r_class_jar/release/R.jar{!}{REMOVED}
             - generatedSourceFolders:
-               * {PROJECT}/build/generated/aidl_source_output_dir/release/out{!}
-               * {PROJECT}/build/generated/ap_generated_sources/release/out{!}
-               * {PROJECT}/build/generated/source/buildConfig/release{!}
-            - generatedResourceFolders = []
+               * {PROJECT}/build/generated/renderscript_source_output_dir/release/out{!}{REMOVED}
+            - generatedResourceFolders:
+               * {PROJECT}/build/generated/res/resValues/release{!}{REMOVED}
+               * {PROJECT}/build/generated/res/rs/release{!}{REMOVED}
          - unitTestArtifact:
             - classesFolders:
-               * {PROJECT}/build/intermediates/javac/releaseUnitTest/classes{!}
-      < variant(release)
+               * {PROJECT}/build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/releaseUnitTest/R.jar{!}{REMOVED}
+      < release
    < variants
 < AndroidProject

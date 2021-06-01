@@ -35,7 +35,6 @@ import java.io.File
 import java.nio.charset.StandardCharsets
 import java.util.*
 import com.android.build.gradle.internal.cxx.string.StringDecoder
-import kotlin.math.max
 
 data class CompileCommandsJsonBinEntry(
         val sourceFile: String,
@@ -276,7 +275,12 @@ fun ModelBuilderV2.FetchResult<ModelContainerV2>.dump(map:(NativeModule)->Native
                 sb.appendln("[$moduleName]")
                 modelInfo.nativeModule?.let {
                     sb.appendln(
-                        snapshotModel("NativeModule", normalizer, map(it.sorted())) {
+                        snapshotModel(
+                            modelName = "NativeModule",
+                            modelAction = { it },
+                            project = this,
+                            referenceProject = null
+                        ) {
                             snapshotNativeModule()
                         }
                     )

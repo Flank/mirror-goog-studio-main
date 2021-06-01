@@ -94,7 +94,7 @@ internal fun ModelSnapshotter<AndroidProject>.snapshotAndroidProject() {
     item("path", AndroidProject::path)
     item("buildFolder", AndroidProject::buildFolder)
     item("resourcePrefix", AndroidProject::resourcePrefix)
-    item("dynamicFeatures", AndroidProject::dynamicFeatures)
+    list("dynamicFeatures", AndroidProject::dynamicFeatures)
     valueList("bootClasspath", AndroidProject::bootClasspath)
     dataObject("defaultConfig", AndroidProject::mainSourceSet) {
         snapshotSourceSetContainer()
@@ -103,7 +103,6 @@ internal fun ModelSnapshotter<AndroidProject>.snapshotAndroidProject() {
         name = "buildTypes",
         propertyAction = AndroidProject::buildTypeSourceSets,
         nameAction = { sourceProvider.name },
-        idAction = { sourceProvider.name },
         sortAction = { collection -> collection?.sortedBy { it.sourceProvider.name } }
     ) {
         snapshotSourceSetContainer()
@@ -112,7 +111,6 @@ internal fun ModelSnapshotter<AndroidProject>.snapshotAndroidProject() {
         name = "productFlavors",
         propertyAction = AndroidProject::productFlavorSourceSets,
         nameAction = { sourceProvider.name },
-        idAction = { sourceProvider.name },
         sortAction = { collection -> collection?.sortedBy { it.sourceProvider.name } }
     ) {
         snapshotSourceSetContainer()
@@ -120,8 +118,7 @@ internal fun ModelSnapshotter<AndroidProject>.snapshotAndroidProject() {
     objectList(
         name = "variants",
         propertyAction = AndroidProject::variants,
-        nameAction = { "variant(${name})" },
-        idAction = { name },
+        nameAction = { name },
         sortAction = { collection -> collection?.sortedBy { it.name } }
     ) {
         snapshotVariant()
@@ -161,17 +158,15 @@ internal fun ModelSnapshotter<AndroidDsl>.snapshotAndroidDsl() {
         name = "buildTypes",
         propertyAction = AndroidDsl::buildTypes,
         nameAction = { name },
-        idAction = { name },
         sortAction = { collection -> collection?.sortedBy { it.name } }
     ) {
         snapshotBuildType()
     }
-    item("flavorDimensions", AndroidDsl::flavorDimensions)
+    list("flavorDimensions", AndroidDsl::flavorDimensions)
     objectList(
         name = "productFlavors",
         propertyAction = AndroidDsl::productFlavors,
         nameAction = { name },
-        idAction = { name },
         sortAction = { collection -> collection?.sortedBy { it.name } }
     ) {
         snapshotProductFlavor()
@@ -179,8 +174,7 @@ internal fun ModelSnapshotter<AndroidDsl>.snapshotAndroidDsl() {
     objectList(
         name = "signingConfigs",
         propertyAction = AndroidDsl::signingConfigs,
-        nameAction = { "signingConfig($name)" },
-        idAction = { name },
+        nameAction = { name },
         sortAction = { collection -> collection?.sortedBy { it.name } }
     ) {
         item("name", SigningConfig::name)
@@ -212,7 +206,6 @@ internal fun ModelSnapshotter<NativeModule>.snapshotNativeModule() {
         "variants",
         NativeModule::variants,
         nameAction =  { name },
-        idAction = { name },
         sortAction =  { collection -> collection?.sortedBy { it.name } }
     ) {
         snapshotNativeVariant()
@@ -232,7 +225,6 @@ private fun ModelSnapshotter<NativeVariant>.snapshotNativeVariant() {
         name = "abis",
         propertyAction = NativeVariant::abis,
         nameAction = { name },
-        idAction = { name },
         sortAction =  { collection -> collection?.sortedBy { it.name } }
     ) {
         snapshotNativeAbi()
@@ -295,11 +287,11 @@ private fun ModelSnapshotter<ProductFlavor>.snapshotProductFlavor() {
     }
     item("testHandleProfiling", ProductFlavor::testHandleProfiling)
     item("testFunctionalTest", ProductFlavor::testFunctionalTest)
-    item("resourceConfigurations", ProductFlavor::resourceConfigurations) { it?.sorted() }
+    list("resourceConfigurations", ProductFlavor::resourceConfigurations)
     item("signingConfig", ProductFlavor::signingConfig)
     item("wearAppUnbundled", ProductFlavor::wearAppUnbundled)
     dataObject("vectorDrawables", ProductFlavor::vectorDrawables) {
-        item("generatedDensities", VectorDrawablesOptions::generatedDensities) { it?.sorted() }
+        list("generatedDensities", VectorDrawablesOptions::generatedDensities)
         item("useSupportLibrary", VectorDrawablesOptions::useSupportLibrary)
     }
 }
@@ -326,30 +318,28 @@ private fun ModelSnapshotter<out BaseConfig>.snapshotBaseConfig() {
     convertedObjectList(
         name = "buildConfigFields",
         propertyAction = { buildConfigFields?.entries },
-        nameAction = { "field(${value.name})" },
+        nameAction = { key },
         objectAction = { value },
-        idAction = { key },
         sortAction = { collection -> collection?.sortedBy { it.key } }
     ) {
         item("name", ClassField::name)
         item("type", ClassField::type)
         item("value", ClassField::value)
         item("documentation", ClassField::documentation)
-        item("annotations", ClassField::annotations) { it?.sorted() }
+        list("annotations", ClassField::annotations)
     }
     convertedObjectList(
         name = "resValues",
         propertyAction = { resValues?.entries },
-        nameAction = { "value(${value.name})" },
+        nameAction = { "${value.type}/${value.name}" },
         objectAction = { value },
-        idAction = { key },
         sortAction = { collection -> collection?.sortedBy { it.key } }
     ) {
         item("name", ClassField::name)
         item("type", ClassField::type)
         item("value", ClassField::value)
         item("documentation", ClassField::documentation)
-        item("annotations", ClassField::annotations) { it?.sorted() }
+        list("annotations", ClassField::annotations)
     }
     valueList("proguardFiles", BaseConfig::proguardFiles) { it?.sorted() }
     valueList("consumerProguardFiles", BaseConfig::consumerProguardFiles) { it?.sorted() }
@@ -386,9 +376,9 @@ private fun ModelSnapshotter<Variant>.snapshotVariant() {
     item("name", Variant::name)
     item("displayName", Variant::name)
     item("buildType", Variant::buildType)
-    item("productFlavors", Variant::productFlavors)
+    list("productFlavors", Variant::productFlavors)
     item("isInstantAppCompatible", Variant::isInstantAppCompatible)
-    item("desugaredMethods", Variant::desugaredMethods)
+    list("desugaredMethods", Variant::desugaredMethods)
     dataObject("mainArtifact", Variant::mainArtifact) {
         snapshotAndroidArtifact()
     }
@@ -421,13 +411,13 @@ private fun ModelSnapshotter<AndroidArtifact>.snapshotAndroidArtifact() {
     item("isSigned", AndroidArtifact::isSigned)
     item("signingConfigName", AndroidArtifact::signingConfigName)
     item("sourceGenTaskName", AndroidArtifact::sourceGenTaskName)
-    item("generatedResourceFolders", AndroidArtifact::generatedResourceFolders) { it?.sorted() }
-    item("abiFilters", AndroidArtifact::abiFilters) { it?.sorted() }
+    valueList("generatedResourceFolders", AndroidArtifact::generatedResourceFolders) { it?.sorted() }
+    list("abiFilters", AndroidArtifact::abiFilters)
     item("assembleTaskOutputListingFile", AndroidArtifact::assembleTaskOutputListingFile)
     dataObject("testInfo", AndroidArtifact::testInfo) {
         item("animationsDisabled", TestInfo::animationsDisabled)
         item("execution", TestInfo::execution)
-        item("additionalRuntimeApks", TestInfo::additionalRuntimeApks)
+        valueList("additionalRuntimeApks", TestInfo::additionalRuntimeApks) { it?.sorted() }
         item("instrumentedTestTaskName", TestInfo::instrumentedTestTaskName)
     }
     dataObject("bundleInfo", AndroidArtifact::bundleInfo) {
@@ -449,7 +439,7 @@ private fun ModelSnapshotter<out BaseArtifact>.snapshotBaseArtifact() {
     item("compileTaskName", BaseArtifact::compileTaskName)
     item("assembleTaskName", BaseArtifact::assembleTaskName)
     valueList("classesFolders", BaseArtifact::classesFolders) { it?.sorted() }
-    item("ideSetupTaskNames", BaseArtifact::ideSetupTaskNames) { it?.sorted() }
+    list("ideSetupTaskNames", BaseArtifact::ideSetupTaskNames)
     valueList("generatedSourceFolders", BaseArtifact::generatedSourceFolders) { it?.sorted() }
     dataObject("variantSourceProvider", BaseArtifact::variantSourceProvider) {
         snapshotSourceProvider()
@@ -460,9 +450,9 @@ private fun ModelSnapshotter<out BaseArtifact>.snapshotBaseArtifact() {
 }
 
 private fun ModelSnapshotter<LintOptions>.snapshotLintOptions() {
-    item("disable", LintOptions::disable) { it?.sorted() }
-    item("enable", LintOptions::enable) { it?.sorted() }
-    item("check", LintOptions::check) { it?.sorted() }
+    list("disable", LintOptions::disable)
+    list("enable", LintOptions::enable)
+    list("check", LintOptions::check)
     item("isAbortOnError", LintOptions::isAbortOnError)
     item("isAbsolutePaths", LintOptions::isAbsolutePaths)
     item("isNoLines", LintOptions::isNoLines)
@@ -493,7 +483,7 @@ private fun ModelSnapshotter<LintOptions>.snapshotLintOptions() {
         formatAction = { "$key -> $value" }
     ) { collection ->
             collection?.sortedBy { it.key }
-        }
+    }
 }
 
 internal fun ModelSnapshotter<VariantDependencies>.snapshotVariantDependencies() {
@@ -516,22 +506,20 @@ private fun ModelSnapshotter<ArtifactDependencies>.snapshotArtifactDependencies(
     val graphItemAction: ModelSnapshotter<GraphItem>.() -> Unit = {
         artifactAddress("artifactAddress", GraphItem::artifactAddress)
         item("requestedCoordinates", GraphItem::requestedCoordinates)
-        item("dependencies", GraphItem::dependencies)
+        list("dependencies", GraphItem::dependencies)
     }
 
     objectList(
         name = "compileDependencies",
         propertyAction = ArtifactDependencies::compileDependencies,
-        nameAction =  { "GraphItem" },
-        idAction = { this.artifactAddress },
+        nameAction =  { it.normalizeArtifactAddress(this.artifactAddress) },
         action = graphItemAction
     )
 
     objectList(
         name = "runtimeDependencies",
         propertyAction = ArtifactDependencies::runtimeDependencies,
-        nameAction =  { "GraphItem" },
-        idAction = { this.artifactAddress },
+        nameAction =  { it.normalizeArtifactAddress(this.artifactAddress) },
         action = graphItemAction
     )
 }
@@ -540,8 +528,7 @@ internal fun ModelSnapshotter<GlobalLibraryMap>.snapshotGlobalLibraryMap() {
     objectList(
         name = "libraries",
         propertyAction = { libraries.values },
-        nameAction = { "library" },
-        idAction = { this.artifactAddress },
+        nameAction =  { it.normalizeArtifactAddress(this.artifactAddress) },
         sortAction = { collection -> collection?.sortedBy {it.artifactAddress} }
     ) {
         item("type", Library::type)
@@ -550,8 +537,8 @@ internal fun ModelSnapshotter<GlobalLibraryMap>.snapshotGlobalLibraryMap() {
         buildId("buildId", Library::buildId)
         item("projectPath", Library::projectPath)
         item("variant", Library::variant)
-        item("compileJarFiles", Library::compileJarFiles)
-        item("runtimeJarFiles", Library::runtimeJarFiles)
+        list("compileJarFiles", Library::compileJarFiles, sorted = false)
+        list("runtimeJarFiles", Library::runtimeJarFiles, sorted = false)
         item("manifest", Library::manifest)
         item("resFolder", Library::resFolder)
         item("resStaticLibrary", Library::resStaticLibrary)

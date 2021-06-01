@@ -18,20 +18,48 @@ package com.android.build.gradle.integration.common.fixture.model
 
 interface SnapshotItem
 
-interface NamedItem {
+interface NamedSnapshotItem: SnapshotItem {
     val name: String
+
+    val keyLen: Int
+        get() = name.length
+}
+
+interface SnapshotContainer: NamedSnapshotItem {
+    enum class ContentType(val isList: Boolean) {
+        OBJECT_PROPERTIES(isList = false),
+        VALUE_LIST(isList = true),
+        OBJECT_LIST(isList = true)
+    }
+
+    val items: List<SnapshotItem>?
+    val contentType: ContentType
+
+    // key spacing is useful to 2 categories of items. Both will output something like
+    //     name = value
+    // They are:
+    // - KeyValueItem
+    // - SnapshotContainer where the content is a list and the list is null or empty.
+    // The latter is because instead of displaying
+    //     <container-name>:
+    //       - item1 ...
+    // they display
+    //     <container-name> = [] (or (null))
+    fun computeKeySpacing(): Int =
+            items
+                ?.filterIsInstance(NamedSnapshotItem::class.java)
+                ?.filter { it !is SnapshotContainer || it.items.isNullOrEmpty() }
+                ?.map { it.keyLen }
+                ?.max()
+                ?.let { it + 1 }
+                    ?: 0
 }
 
 data class KeyValueItem(
     override val name: String,
     val value: String?,
     val separator: String = "="
-): SnapshotItem, NamedItem {
-
-    val keyLen: Int
-        get() = name.length
-
-}
+): NamedSnapshotItem
 
 data class ValueOnlyItem(
     val value: String?
@@ -40,7 +68,7 @@ data class ValueOnlyItem(
 /**
  * Object to receive and hold the items representing a dumped model.
  */
-interface SnapshotItemRegistrar: SnapshotItem, NamedItem {
+interface SnapshotItemRegistrar: SnapshotContainer {
 
     /**
      * Adds a property and its value
@@ -51,26 +79,6 @@ interface SnapshotItemRegistrar: SnapshotItem, NamedItem {
      * Represents a list value
      */
     fun value(value: String?)
-
-    /**
-     * Adds a map entry (key + value)
-     */
-    fun entry(key: String, value: String?)
-
-    /**
-     * Handles an Artifact address.
-     *
-     * Addresses for subprojects are made up of <build-ID>@@<projectpath>::<variant> and build IDs
-     * are the location of the root project of the build.
-     */
-    fun artifactAddress(key: String, value: String)
-
-    /**
-     * Handles an Build ID
-     *
-     * build IDs are the location of the root project of the build.
-     */
-    fun buildId(key: String, value: String?)
 
     /**
      * Adds a list of simple items, each displayed on a new line

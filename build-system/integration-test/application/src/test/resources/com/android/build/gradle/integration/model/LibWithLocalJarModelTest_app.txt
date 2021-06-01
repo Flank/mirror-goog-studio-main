@@ -2,27 +2,27 @@
    - name                 = "debug"
    > mainArtifact:
       - compileDependencies:
-         - GraphItem:
+         - {BUILD_0}@@:lib::debug:
             - artifactAddress      = {BUILD_0}@@:lib::debug
             - requestedCoordinates = (null)
             - dependencies         = []
       - runtimeDependencies:
-         - GraphItem:
+         - {BUILD_0}@@:lib::debug:
             - artifactAddress      = {BUILD_0}@@:lib::debug
             - requestedCoordinates = (null)
             - dependencies         = []
-         - GraphItem:
+         - __local_aars__:{PROJECT}/lib/libs/foo.jar{F}:unspecified@jar:
             - artifactAddress      = __local_aars__:{PROJECT}/lib/libs/foo.jar{F}:unspecified@jar
             - requestedCoordinates = (null)
             - dependencies         = []
    < mainArtifact
    > androidTestArtifact:
       - compileDependencies:
-         - GraphItem:
+         - {BUILD_0}@@:app::debug:
             - artifactAddress      = {BUILD_0}@@:app::debug
             - requestedCoordinates = (null)
             - dependencies         = []
-         - GraphItem:
+         - {BUILD_0}@@:lib::debug:
             - artifactAddress      = {BUILD_0}@@:lib::debug
             - requestedCoordinates = (null)
             - dependencies         = []
@@ -30,20 +30,20 @@
    < androidTestArtifact
    > unitTestArtifact:
       - compileDependencies:
-         - GraphItem:
+         - {BUILD_0}@@:app::debug:
             - artifactAddress      = {BUILD_0}@@:app::debug
             - requestedCoordinates = (null)
             - dependencies         = []
-         - GraphItem:
+         - {BUILD_0}@@:lib::debug:
             - artifactAddress      = {BUILD_0}@@:lib::debug
             - requestedCoordinates = (null)
             - dependencies         = []
       - runtimeDependencies:
-         - GraphItem:
+         - {BUILD_0}@@:lib::debug:
             - artifactAddress      = {BUILD_0}@@:lib::debug
             - requestedCoordinates = (null)
             - dependencies         = []
-         - GraphItem:
+         - __local_aars__:{PROJECT}/lib/libs/foo.jar{F}:unspecified@jar:
             - artifactAddress      = __local_aars__:{PROJECT}/lib/libs/foo.jar{F}:unspecified@jar
             - requestedCoordinates = (null)
             - dependencies         = []
@@ -52,7 +52,7 @@
 < VariantDependencies
 > GlobalLibraryMap:
    > libraries:
-      > library:
+      > {BUILD_0}@@:app::debug:
          - type                = PROJECT
          - artifactAddress     = {BUILD_0}@@:app::debug
          - artifact            = (null)
@@ -73,8 +73,8 @@
          - externalAnnotations = (null)
          - publicResources     = (null)
          - symbolFile          = (null)
-      < library
-      > library:
+      < {BUILD_0}@@:app::debug
+      > {BUILD_0}@@:lib::debug:
          - type                = PROJECT
          - artifactAddress     = {BUILD_0}@@:lib::debug
          - artifact            = (null)
@@ -95,8 +95,8 @@
          - externalAnnotations = (null)
          - publicResources     = (null)
          - symbolFile          = (null)
-      < library
-      > library:
+      < {BUILD_0}@@:lib::debug
+      > __local_aars__:{PROJECT}/lib/libs/foo.jar{F}:unspecified@jar:
          - type                = JAVA_LIBRARY
          - artifactAddress     = __local_aars__:{PROJECT}/lib/libs/foo.jar{F}:unspecified@jar
          - artifact            = {PROJECT}/lib/libs/foo.jar{F}
@@ -117,6 +117,6 @@
          - externalAnnotations = (null)
          - publicResources     = (null)
          - symbolFile          = (null)
-      < library
+      < __local_aars__:{PROJECT}/lib/libs/foo.jar{F}:unspecified@jar
    < libraries
 < GlobalLibraryMap

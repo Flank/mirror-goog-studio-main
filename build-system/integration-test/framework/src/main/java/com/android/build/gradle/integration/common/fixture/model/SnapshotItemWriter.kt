@@ -29,7 +29,7 @@ class SnapshotItemWriter {
     /**
      * Writes the registrar into a string and returns it
      */
-    fun write(registrar: SnapshotItemRegistrarImpl): String {
+    fun write(registrar: SnapshotContainer): String {
         precomputeSizeOfRegistrars(registrar)
         val sb = StringBuilder()
         registrar.write(sb)
@@ -45,37 +45,52 @@ class SnapshotItemWriter {
         when (item) {
             is KeyValueItem -> item.write(sb, indent, keySpacing)
             is ValueOnlyItem -> item.write(sb, indent)
-            is SnapshotItemRegistrarImpl -> item.write(sb, indent)
+            is SnapshotContainer -> item.write(sb, indent, keySpacing)
             else -> error("Unsupported type of DumpedItem")
         }
     }
 
     private fun KeyValueItem.write(sb: StringBuilder, indent: String, keySpacing: Int) {
-        sb.append(indent).append("- ").append(name)
+        sb
+            .append(indent)
+            .append("- ")
+            .appendNameAndSpacing(name, keySpacing)
+            .append(separator)
+            .append(' ')
+            .append(value)
+            .append("\n")
+    }
+
+    private fun StringBuilder.appendNameAndSpacing(name: String, keySpacing: Int): StringBuilder {
+        append(name)
 
         if (keySpacing > 0) {
             val spaceLen = keySpacing - name.length
-            sb.append(" ".repeat(spaceLen))
+            append(" ".repeat(spaceLen))
         } else {
-            sb.append(' ')
+            append(' ')
         }
 
-        sb.append(separator).append(' ').append(value).append("\n")
+        return this
     }
 
     private fun ValueOnlyItem.write(sb: StringBuilder, indent: String) {
         sb.append(indent).append("* ").append(value).append("\n")
     }
 
-    private fun SnapshotItemRegistrarImpl.write(sb: StringBuilder, indent: String = "") {
+    private fun SnapshotContainer.write(
+        sb: StringBuilder,
+        indent: String = "",
+        parentKeySpacing: Int = 0
+    ) {
         val keySpacing = computeKeySpacing()
 
         val withFooter = sizeOf(this) >= MAX_STRUCT_SIZE
 
-        writeHeader(name, sb, indent, withFooter)
+        writeHeader(sb, indent, parentKeySpacing, withFooter)
 
         val newIndent = indent + " ".repeat(INDENT_STEP2)
-        for (item in items) {
+        items?.forEach { item ->
             this@SnapshotItemWriter.write(item, sb, newIndent, keySpacing)
         }
 
@@ -84,15 +99,34 @@ class SnapshotItemWriter {
         }
     }
 
-    private fun writeHeader(name: String, sb: StringBuilder, indent: String, withFooter: Boolean) {
-        sb.append(indent).append(if (withFooter) "> " else "- ").append(name).append(":\n")
+    private fun SnapshotContainer.writeHeader(
+        sb: StringBuilder,
+        indent: String,
+        keySpacing: Int,
+        withFooter: Boolean
+    ) {
+        sb.append(indent).append(if (withFooter) "> " else "- ")
+        if (contentType.isList) {
+            val items = this.items
+            when {
+                items == null -> sb.appendNameAndSpacing(name, keySpacing).append("= (null)\n")
+                items.isEmpty() -> sb.appendNameAndSpacing(name, keySpacing).append("= []\n")
+                else -> sb.append(name).append(":\n")
+            }
+        } else {
+            if (items == null) {
+                sb.appendNameAndSpacing(name, keySpacing).append("= (null)\n")
+            } else {
+                sb.append(name).append(":\n")
+            }
+        }
     }
 
     private fun writeFooter(name: String, sb: StringBuilder, indent: String) {
         sb.append(indent).append("< ").append(name).append("\n")
     }
 
-    private fun precomputeSizeOfRegistrars(rootRegistrar: SnapshotItemRegistrarImpl) {
+    private fun precomputeSizeOfRegistrars(rootRegistrar: SnapshotContainer) {
         rootRegistrar.computeSize()
     }
 
@@ -100,11 +134,11 @@ class SnapshotItemWriter {
         return when (this) {
             is KeyValueItem -> 1
             is ValueOnlyItem -> 1
-            is SnapshotItemRegistrarImpl -> {
+            is SnapshotContainer -> {
                 var cachedSize = sizeOfHolderMap[this]
 
                 if (cachedSize == null) {
-                    val itemSize = items.sumBy { it.computeSize() }
+                    val itemSize = items?.sumBy { it.computeSize() } ?: 0
 
                     // include header/footer as needed
                     cachedSize = if (itemSize >= MAX_STRUCT_SIZE) {
@@ -124,10 +158,10 @@ class SnapshotItemWriter {
         }
     }
 
-    private val sizeOfHolderMap = IdentityHashMap<SnapshotItemRegistrarImpl, Int>()
+    private val sizeOfHolderMap = IdentityHashMap<SnapshotContainer, Int>()
 
-    private fun sizeOf(holder: SnapshotItemRegistrarImpl): Int = sizeOfHolderMap[holder]
-            ?: throw RuntimeException("Failed to find size for holder ${holder.name}")
+    private fun sizeOf(container: SnapshotContainer): Int = sizeOfHolderMap[container]
+            ?: throw RuntimeException("Failed to find size for holder ${container.name}")
 }
 
 const val INDENT_STEP2 = 3

@@ -5,24 +5,24 @@
       - runtimeDependencies = []
    > androidTestArtifact:
       - compileDependencies:
-         - GraphItem:
+         - {BUILD_0}@@:::debug:
             - artifactAddress      = {BUILD_0}@@:::debug
             - requestedCoordinates = (null)
             - dependencies         = []
       - runtimeDependencies:
-         - GraphItem:
+         - {BUILD_0}@@:::debug:
             - artifactAddress      = {BUILD_0}@@:::debug
             - requestedCoordinates = (null)
             - dependencies         = []
    < androidTestArtifact
    > unitTestArtifact:
       - compileDependencies:
-         - GraphItem:
+         - {BUILD_0}@@:::debug:
             - artifactAddress      = {BUILD_0}@@:::debug
             - requestedCoordinates = (null)
             - dependencies         = []
       - runtimeDependencies:
-         - GraphItem:
+         - {BUILD_0}@@:::debug:
             - artifactAddress      = {BUILD_0}@@:::debug
             - requestedCoordinates = (null)
             - dependencies         = []
@@ -31,7 +31,7 @@
 < VariantDependencies
 > GlobalLibraryMap:
    > libraries:
-      > library:
+      > {BUILD_0}@@:::debug:
          - type                = PROJECT
          - artifactAddress     = {BUILD_0}@@:::debug
          - artifact            = (null)
@@ -52,6 +52,6 @@
          - externalAnnotations = (null)
          - publicResources     = (null)
          - symbolFile          = (null)
-      < library
+      < {BUILD_0}@@:::debug
    < libraries
 < GlobalLibraryMap

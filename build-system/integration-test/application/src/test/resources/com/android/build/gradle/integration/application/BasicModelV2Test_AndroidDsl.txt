@@ -7,13 +7,13 @@
       - applicationIdSuffix                = (null)
       - versionNameSuffix                  = (null)
       > buildConfigFields:
-         - field(DEFAULT):
+         - DEFAULT:
             - name          = "DEFAULT"
             - type          = "boolean"
             - value         = "true"
             - documentation = ""
             - annotations   = []
-         - field(FOO):
+         - FOO:
             - name          = "FOO"
             - type          = "String"
             - value         = ""foo2""
@@ -21,7 +21,7 @@
             - annotations   = []
       < buildConfigFields
       - resValues:
-         - value(foo):
+         - string/foo:
             - name          = "foo"
             - type          = "string"
             - value         = "foo"
@@ -70,14 +70,14 @@
          - applicationIdSuffix      = ".debug"
          - versionNameSuffix        = (null)
          - buildConfigFields:
-            - field(FOO):
+            - FOO:
                - name          = "FOO"
                - type          = "String"
                - value         = ""bar""
                - documentation = ""
                - annotations   = []
          - resValues:
-            - value(foo):
+            - string/foo:
                - name          = "foo"
                - type          = "string"
                - value         = "foo2"
@@ -131,7 +131,7 @@
    - flavorDimensions  = []
    - productFlavors    = []
    > signingConfigs:
-      > signingConfig(debug):
+      > debug:
          - name            = "debug"
          - storeFile       = {ANDROID_PREFS}/.android/debug.keystore{!}
          - storePassword   = "android"
@@ -142,7 +142,7 @@
          - enableV3Signing = (null)
          - enableV4Signing = (null)
          - isSigningReady  = true
-      < signingConfig(debug)
+      < debug
    < signingConfigs
    - aaptOptions:
       - namespacing = DISABLED

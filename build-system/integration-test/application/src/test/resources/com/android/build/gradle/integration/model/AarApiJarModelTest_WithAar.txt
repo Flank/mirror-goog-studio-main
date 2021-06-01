@@ -1,39 +1,30 @@
 > VariantDependencies:
    > mainArtifact:
       - compileDependencies:
-         - GraphItem:
+         - com.example:myaar:1@aar{ADDED}:
             - artifactAddress      = com.example:myaar:1@aar
             - requestedCoordinates = (null)
             - dependencies         = []
       - runtimeDependencies:
-         - GraphItem:
+         - com.example:myaar:1@aar{ADDED}:
             - artifactAddress      = com.example:myaar:1@aar
             - requestedCoordinates = (null)
             - dependencies         = []
    < mainArtifact
-   > androidTestArtifact:
+   - androidTestArtifact:
       - compileDependencies:
-         - GraphItem:
-            - artifactAddress      = {BUILD_0}@@:::debug
-            - requestedCoordinates = (null)
-            - dependencies         = []
-         - GraphItem:
+         - com.example:myaar:1@aar{ADDED}:
             - artifactAddress      = com.example:myaar:1@aar
             - requestedCoordinates = (null)
             - dependencies         = []
-   < androidTestArtifact
    > unitTestArtifact:
       - compileDependencies:
-         - GraphItem:
-            - artifactAddress      = {BUILD_0}@@:::debug
-            - requestedCoordinates = (null)
-            - dependencies         = []
-         - GraphItem:
+         - com.example:myaar:1@aar{ADDED}:
             - artifactAddress      = com.example:myaar:1@aar
             - requestedCoordinates = (null)
             - dependencies         = []
       - runtimeDependencies:
-         - GraphItem:
+         - com.example:myaar:1@aar{ADDED}:
             - artifactAddress      = com.example:myaar:1@aar
             - requestedCoordinates = (null)
             - dependencies         = []
@@ -41,29 +32,7 @@
 < VariantDependencies
 > GlobalLibraryMap:
    > libraries:
-      > library:
-         - type                = PROJECT
-         - artifactAddress     = {BUILD_0}@@:::debug
-         - artifact            = (null)
-         - buildId             = {BUILD_0}
-         - projectPath         = ":"
-         - variant             = "debug"
-         - compileJarFiles     = (null)
-         - runtimeJarFiles     = (null)
-         - manifest            = (null)
-         - resFolder           = (null)
-         - resStaticLibrary    = (null)
-         - assetsFolder        = (null)
-         - jniFolder           = (null)
-         - aidlFolder          = (null)
-         - renderscriptFolder  = (null)
-         - proguardRules       = (null)
-         - lintJar             = (null)
-         - externalAnnotations = (null)
-         - publicResources     = (null)
-         - symbolFile          = (null)
-      < library
-      > library:
+      > com.example:myaar:1@aar{ADDED}:
          - type                = ANDROID_LIBRARY
          - artifactAddress     = com.example:myaar:1@aar
          - artifact            = (null)
@@ -84,6 +53,6 @@
          - externalAnnotations = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/annotations.zip{!}
          - publicResources     = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/public.txt{!}
          - symbolFile          = {GRADLE_CACHE}/{CHECKSUM}/transformed/myaar-1/R.txt{!}
-      < library
+      < com.example:myaar:1@aar{ADDED}
    < libraries
 < GlobalLibraryMap

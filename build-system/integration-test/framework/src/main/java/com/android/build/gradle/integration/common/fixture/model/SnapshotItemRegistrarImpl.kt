@@ -20,66 +20,28 @@ import com.android.build.gradle.integration.common.fixture.model.SnapshotItemWri
 
 class SnapshotItemRegistrarImpl(
     override val name: String,
-    private val buildIdMap: Map<String, String>
+    override val contentType: SnapshotContainer.ContentType,
 ): SnapshotItemRegistrar {
 
-    private val _items = mutableListOf<SnapshotItem>()
+    private var _items: MutableList<SnapshotItem>? = null
 
-    val items: List<SnapshotItem>
+    override val items: List<SnapshotItem>?
         get() = _items
-
-    fun isNotEmpty(): Boolean = _items.isNotEmpty()
-
-    fun computeKeySpacing(): Int =
-            _items.filterIsInstance<KeyValueItem>().map { it.keyLen }.max()?.let { it + 1 } ?: 0
 
     /**
      * Adds a property and its value
      */
     override fun item(key: String, value: String?) {
-        _items.add(KeyValueItem(key, value))
+        check(contentType == SnapshotContainer.ContentType.OBJECT_PROPERTIES)
+        addItem(KeyValueItem(key, value))
     }
 
     /**
      * Represents a list value
      */
     override fun value(value: String?) {
-        _items.add(ValueOnlyItem(value))
-    }
-
-    /**
-     * Adds a map entry (key + value)
-     */
-    override fun entry(key: String, value: String?) {
-        _items.add(KeyValueItem(key, value, separator = "->"))
-    }
-
-    /**
-     * Handles an Artifact address.
-     *
-     * Addresses for subprojects are made up of <build-ID>@@<projectpath>::<variant> and build IDs
-     * are the location of the root project of the build.
-     */
-    override fun artifactAddress(key: String, value: String) {
-        if (value.contains("@@")) {
-            val buildId =  value.substringBefore("@@")
-            val projectPathAndVariant = value.substringAfter("@@")
-
-            val newID = buildIdMap[buildId] ?: buildId
-
-            item(key, "{${newID}}@@${projectPathAndVariant}")
-        } else {
-            item(key, value)
-        }
-    }
-
-    /**
-     * Handles an Build ID
-     *
-     * build IDs are the location of the root project of the build.
-     */
-    override fun buildId(key: String, value: String?) {
-        item(key, value?.let { buildIdMap[it]?.let { "{$it}" } } ?: value)
+        check(contentType == SnapshotContainer.ContentType.VALUE_LIST)
+        addItem(ValueOnlyItem(value))
     }
 
     /**
@@ -94,21 +56,20 @@ class SnapshotItemRegistrarImpl(
         list: Collection<T>?,
         formatAction: (T.() -> String)?
     ) {
-        if (list.isNullOrEmpty()) {
-            _items.add(KeyValueItem(name, list?.toString() ?: NULL_STRING))
-        } else {
-            val subHolder = SnapshotItemRegistrarImpl(
-                buildIdMap = buildIdMap,
-                name = name
-            )
+        check(contentType == SnapshotContainer.ContentType.OBJECT_PROPERTIES || contentType == SnapshotContainer.ContentType.OBJECT_LIST)
 
-            for (item in list) {
-                subHolder.value(formatAction?.invoke(item) ?: item?.toString() ?: NULL_STRING)
-            }
+        // create the holder always, and add it.
+        val subHolder = SnapshotItemRegistrarImpl(name, SnapshotContainer.ContentType.VALUE_LIST)
+        addItem(subHolder)
 
-            // validate that items were added to the new builder.
-            if (subHolder.isNotEmpty()) {
-                _items.add(subHolder)
+        if (list != null) {
+            if (list.isEmpty()) {
+                // ensure the list is initialized
+                subHolder.initItems()
+            } else {
+                for (item in list) {
+                    subHolder.value(formatAction?.invoke(item) ?: item?.toString() ?: NULL_STRING)
+                }
             }
         }
     }
@@ -125,19 +86,18 @@ class SnapshotItemRegistrarImpl(
         list: Collection<T>?,
         action: SnapshotItemRegistrar.(Collection<T>) -> Unit
     ) {
-        if (list.isNullOrEmpty()) {
-            _items.add(KeyValueItem(name, list?.toString() ?: NULL_STRING))
-        } else {
-            SnapshotItemRegistrarImpl(
-                buildIdMap = buildIdMap,
-                name = name
-            ).also {
-                it.action(list)
+        check(contentType == SnapshotContainer.ContentType.OBJECT_PROPERTIES || contentType == SnapshotContainer.ContentType.OBJECT_LIST)
 
-                // validate that items were added to the new builder.
-                if (it.isNotEmpty()) {
-                    _items.add(it)
-                }
+        // create the holder always, and add it.
+        val subHolder = SnapshotItemRegistrarImpl(name, SnapshotContainer.ContentType.OBJECT_LIST)
+        addItem(subHolder)
+
+        if (list != null) {
+            if (list.isEmpty()) {
+                // ensure the list is initialized
+                subHolder.initItems()
+            } else {
+                subHolder.action(list)
             }
         }
     }
@@ -156,20 +116,25 @@ class SnapshotItemRegistrarImpl(
     override fun <T> dataObject(
         name: String,
         obj: T?,
-        action: T.(SnapshotItemRegistrar) -> Unit) {
-        if (obj == null) {
-            _items.add(KeyValueItem(name, NULL_STRING))
-        } else {
-            SnapshotItemRegistrarImpl(
-                buildIdMap = buildIdMap,
-                name = name
-            ).also {
-                obj.action(it)
+        action: T.(SnapshotItemRegistrar) -> Unit
+    ) {
+        check(contentType == SnapshotContainer.ContentType.OBJECT_PROPERTIES || contentType == SnapshotContainer.ContentType.OBJECT_LIST)
 
-                if (it.isNotEmpty()) {
-                    _items.add(it)
-                }
-            }
+        // create the holder always, and add it.
+        val subHolder = SnapshotItemRegistrarImpl(name, SnapshotContainer.ContentType.OBJECT_PROPERTIES)
+        addItem(subHolder)
+
+        obj?.action(subHolder)
+    }
+
+    private fun addItem(item: SnapshotItem) {
+        val itemList = _items ?: mutableListOf<SnapshotItem>().also { _items = it }
+        itemList.add(item)
+    }
+
+    private fun initItems() {
+        if (_items == null) {
+            _items = mutableListOf()
         }
     }
 }

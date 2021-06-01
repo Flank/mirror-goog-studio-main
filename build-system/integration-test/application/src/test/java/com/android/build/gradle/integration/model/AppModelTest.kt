@@ -46,23 +46,23 @@ class HelloWorldAppModelTest: ModelComparator() {
             .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
             .fetchModels(variantName = "debug")
 
-        with(result).compare(
-            model = result.container.singleVersions,
+        with(result).compareVersions(
+            modelAction = { container.singleVersions },
             goldenFile = "Versions"
         )
 
-        with(result).compare(
-            model = result.container.singleAndroidProject,
+        with(result).compareAndroidProject(
+            modelAction = { container.singleAndroidProject },
             goldenFile = "AndroidProject"
         )
 
-        with(result).compare(
-            model = result.container.singleAndroidDsl,
+        with(result).compareAndroidDsl(
+            modelAction = { container.singleAndroidDsl },
             goldenFile = "AndroidDsl"
         )
 
-        with(result).compare(
-            model = result.container.singleVariantDependencies,
+        with(result).compareVariantDependencies(
+            modelAction = { container.singleVariantDependencies },
             goldenFile = "VariantDependencies"
         )
     }

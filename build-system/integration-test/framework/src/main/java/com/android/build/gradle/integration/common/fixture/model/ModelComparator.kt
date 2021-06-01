@@ -57,17 +57,15 @@ class Comparator(
     private val referenceResult: ModelBuilderV2.FetchResult<ModelContainerV2>?
 ) {
 
-    fun compare(
-        model: Versions,
-        referenceModel: Versions? = null,
+    fun compareVersions(
+        modelAction: ModelBuilderV2.FetchResult<ModelContainerV2>.() -> Versions,
         goldenFile: String
     ) {
         val content = snapshotModel(
             modelName = "Versions",
-            normalizer = result.normalizer,
-            model = model,
-            referenceModel = referenceModel,
-            referenceNormalizer = referenceResult?.normalizer,
+            modelAction = modelAction,
+            project = result,
+            referenceProject = referenceResult
         ) {
             snapshotVersions()
         }.also {
@@ -78,17 +76,15 @@ class Comparator(
         runComparison("ModelVersions", content, goldenFile)
     }
 
-    fun compare(
-        model: AndroidProject,
-        referenceModel: AndroidProject? = null,
+    fun compareAndroidProject(
+        modelAction: ModelBuilderV2.FetchResult<ModelContainerV2>.() -> AndroidProject,
         goldenFile: String
     ) {
         val content = snapshotModel(
             modelName = "AndroidProject",
-            normalizer = result.normalizer,
-            model = model,
-            referenceModel = referenceModel,
-            referenceNormalizer = referenceResult?.normalizer,
+            modelAction = modelAction,
+            project = result,
+            referenceProject = referenceResult
         ) {
             snapshotAndroidProject()
         }.also {
@@ -99,16 +95,14 @@ class Comparator(
         runComparison("AndroidProject", content, goldenFile)
     }
 
-    fun ensureIsEmpty(
-        model: AndroidProject,
-        referenceModel: AndroidProject? = null,
+    fun ensureAndroidProjectIsEmpty(
+        modelAction: ModelBuilderV2.FetchResult<ModelContainerV2>.() -> AndroidProject,
     ) {
         checkEmptyDelta(
             modelName = "AndroidProject",
-            normalizer = result.normalizer,
-            model = model,
-            referenceModel = referenceModel,
-            referenceNormalizer = referenceResult?.normalizer,
+            modelAction = modelAction,
+            project = result,
+            referenceProject = referenceResult!!,
             action = { snapshotAndroidProject() },
             failureAction =  {
                 generateStdoutHeader()
@@ -119,17 +113,15 @@ class Comparator(
         )
     }
 
-    fun compare(
-        model: AndroidDsl,
-        referenceModel: AndroidDsl? = null,
+    fun compareAndroidDsl(
+        modelAction: ModelBuilderV2.FetchResult<ModelContainerV2>.() -> AndroidDsl,
         goldenFile: String
     ) {
         val content = snapshotModel(
             modelName = "AndroidDsl",
-            normalizer = result.normalizer,
-            model = model,
-            referenceModel = referenceModel,
-            referenceNormalizer = referenceResult?.normalizer,
+            modelAction = modelAction,
+            project = result,
+            referenceProject = referenceResult
         ) {
             snapshotAndroidDsl()
         }.also {
@@ -140,16 +132,14 @@ class Comparator(
         runComparison("AndroidDsl", content, goldenFile)
     }
 
-    fun ensureIsEmpty(
-        model: AndroidDsl,
-        referenceModel: AndroidDsl? = null,
+    fun ensureAndroidDslIsEmpty(
+        modelAction: ModelBuilderV2.FetchResult<ModelContainerV2>.() -> AndroidDsl,
     ) {
         checkEmptyDelta(
             modelName = "AndroidDsl",
-            normalizer = result.normalizer,
-            model = model,
-            referenceModel = referenceModel,
-            referenceNormalizer = referenceResult?.normalizer,
+            modelAction = modelAction,
+            project = result,
+            referenceProject = referenceResult!!,
             action = { snapshotAndroidDsl() },
             failureAction =  {
                 generateStdoutHeader()
@@ -160,19 +150,16 @@ class Comparator(
         )
     }
 
-    fun compare(
-        model: VariantDependencies,
-        referenceModel: VariantDependencies? = null,
+    fun compareVariantDependencies(
+        modelAction: ModelBuilderV2.FetchResult<ModelContainerV2>.() -> VariantDependencies,
         goldenFile: String,
         dumpGlobalLibrary: Boolean = true
     ) {
         val content = snapshotModel(
             modelName = "VariantDependencies",
-            normalizer = result.normalizer,
-            model = model,
-            referenceModel = referenceModel,
-            referenceNormalizer = referenceResult?.normalizer,
-            includedBuilds = result.container.infoMaps.keys.map { it.rootDir.absolutePath }.sorted()
+            modelAction = modelAction,
+            project = result,
+            referenceProject = referenceResult
         ) {
             snapshotVariantDependencies()
         }
@@ -181,11 +168,9 @@ class Comparator(
             result.container.globalLibraryMap?.let { libraryMap ->
                 content + snapshotModel(
                     modelName = "GlobalLibraryMap",
-                    normalizer = result.normalizer,
-                    model = libraryMap,
-                    referenceModel = referenceResult?.container?.globalLibraryMap,
-                    referenceNormalizer = referenceResult?.normalizer,
-                    includedBuilds = result.container.infoMaps.keys.map { it.rootDir.absolutePath }.sorted()
+                    modelAction = {  container.globalLibraryMap!! },
+                    project = result,
+                    referenceProject = referenceResult
                 ) {
                     snapshotGlobalLibraryMap()
                 }
@@ -200,16 +185,14 @@ class Comparator(
         runComparison("VariantDependencies", finalString, goldenFile)
     }
 
-    fun ensureIsEmpty(
-        model: VariantDependencies,
-        referenceModel: VariantDependencies? = null,
+    fun ensureVariantDependenciesIsEmpty(
+        modelAction: ModelBuilderV2.FetchResult<ModelContainerV2>.() -> VariantDependencies,
     ) {
         checkEmptyDelta(
             modelName = "VariantDependencies",
-            normalizer = result.normalizer,
-            model = model,
-            referenceModel = referenceModel,
-            referenceNormalizer = referenceResult?.normalizer,
+            modelAction = modelAction,
+            project = result,
+            referenceProject = referenceResult!!,
             action = { snapshotVariantDependencies() },
             failureAction =  {
                 generateStdoutHeader()
@@ -223,17 +206,15 @@ class Comparator(
     /**
      * Entry point to dump a [GlobalLibraryMap]
      */
-    fun compare(
-        model: GlobalLibraryMap,
+    fun compareGlobalLibraryMap(
+        modelAction: ModelBuilderV2.FetchResult<ModelContainerV2>.() -> GlobalLibraryMap,
         goldenFile: String
     ) {
         val content = snapshotModel(
             modelName = "GlobalLibraryMap",
-            normalizer = result.normalizer,
-            model = model,
-            referenceModel = referenceResult?.container?.globalLibraryMap,
-            referenceNormalizer = referenceResult?.normalizer,
-            includedBuilds = result.container.infoMaps.keys.map { it.rootDir.absolutePath }.sorted()
+            modelAction = modelAction,
+            project = result,
+            referenceProject = referenceResult
         ) {
             snapshotGlobalLibraryMap()
         }.also {
@@ -244,18 +225,15 @@ class Comparator(
         runComparison("GlobalLibraryMap", content, goldenFile)
     }
 
-    fun compare(
-        model: NativeModule,
-        referenceModel: NativeModule? = null,
+    fun compareNativeModule(
+        modelAction: ModelBuilderV2.FetchResult<ModelContainerV2>.() -> NativeModule,
         goldenFile: String
     ) {
         val content = snapshotModel(
             modelName = "NativeModule",
-            normalizer = result.normalizer,
-            model = model,
-            referenceModel = referenceModel,
-            referenceNormalizer = referenceResult?.normalizer,
-            includedBuilds = result.container.infoMaps.keys.map { it.rootDir.absolutePath }.sorted()
+            modelAction = modelAction,
+            project = result,
+            referenceProject = referenceResult
         ) {
             snapshotNativeModule()
         }.also {

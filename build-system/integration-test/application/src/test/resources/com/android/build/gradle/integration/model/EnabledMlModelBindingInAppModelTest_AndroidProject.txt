@@ -2,51 +2,48 @@
    > defaultConfig:
       - sourceProvider:
          - mlModelsDirectories:
-            * {PROJECT}/src/main/ml{!}
+            * {PROJECT}/src/main/ml{!}{ADDED}
       - androidTestSourceProvider:
          - mlModelsDirectories:
-            * {PROJECT}/src/androidTest/ml{!}
+            * {PROJECT}/src/androidTest/ml{!}{ADDED}
       - unitTestSourceProvider:
          - mlModelsDirectories:
-            * {PROJECT}/src/test/ml{!}
+            * {PROJECT}/src/test/ml{!}{ADDED}
       - testFixturesSourceProvider:
          - mlModelsDirectories:
-            * {PROJECT}/src/testFixtures/ml{!}
+            * {PROJECT}/src/testFixtures/ml{!}{ADDED}
    < defaultConfig
    > buildTypes:
       > debug:
          - sourceProvider:
             - mlModelsDirectories:
-               * {PROJECT}/src/debug/ml{!}
+               * {PROJECT}/src/debug/ml{!}{ADDED}
          - androidTestSourceProvider:
             - mlModelsDirectories:
-               * {PROJECT}/src/androidTestDebug/ml{!}
+               * {PROJECT}/src/androidTestDebug/ml{!}{ADDED}
          - unitTestSourceProvider:
             - mlModelsDirectories:
-               * {PROJECT}/src/testDebug/ml{!}
+               * {PROJECT}/src/testDebug/ml{!}{ADDED}
          - testFixturesSourceProvider:
             - mlModelsDirectories:
-               * {PROJECT}/src/testFixturesDebug/ml{!}
+               * {PROJECT}/src/testFixturesDebug/ml{!}{ADDED}
       < debug
       > release:
          - sourceProvider:
             - mlModelsDirectories:
-               * {PROJECT}/src/release/ml{!}
+               * {PROJECT}/src/release/ml{!}{ADDED}
          - androidTestSourceProvider:
             - mlModelsDirectories:
-               * {PROJECT}/src/androidTestRelease/ml{!}
+               * {PROJECT}/src/androidTestRelease/ml{!}{ADDED}
          - unitTestSourceProvider:
             - mlModelsDirectories:
-               * {PROJECT}/src/testRelease/ml{!}
+               * {PROJECT}/src/testRelease/ml{!}{ADDED}
          - testFixturesSourceProvider:
             - mlModelsDirectories:
-               * {PROJECT}/src/testFixturesRelease/ml{!}
+               * {PROJECT}/src/testFixturesRelease/ml{!}{ADDED}
       < release
    < buildTypes
    - flags:
-      * "APPLICATION_R_CLASS_CONSTANT_IDS -> true"
-      * "JETPACK_COMPOSE -> false"
-      * "ML_MODEL_BINDING -> true"
-      * "TEST_R_CLASS_CONSTANT_IDS -> true"
-      * "TRANSITIVE_R_CLASS -> true"
+      * "ML_MODEL_BINDING -> true"{ADDED}
+      * "ML_MODEL_BINDING -> false"{REMOVED}
 < AndroidProject
