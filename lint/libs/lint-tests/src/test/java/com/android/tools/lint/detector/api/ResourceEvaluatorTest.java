@@ -61,7 +61,7 @@ public class ResourceEvaluatorTest extends TestCase {
                         + statementsSource.replace("\n", "\n        ")
                         + "\n"
                         + "    }\n"
-                        + "    fun someMethod(@android.support.annotation.DrawableRes @android.support.annotation.StringRes param: Int) {c}\n"
+                        + "    fun someMethod(@androidx.annotation.DrawableRes @androidx.annotation.StringRes param: Int) {c}\n"
                         + "}";
         return s;
     }
@@ -80,7 +80,7 @@ public class ResourceEvaluatorTest extends TestCase {
                         + "    }\n"
                         + "    public static final int RED = R.color.red;\n"
                         + "    public static final int MY_COLOR = RED;\n"
-                        + "    public void someMethod(@android.support.annotation.DrawableRes @android.support.annotation.StringRes int param) { }\n"
+                        + "    public void someMethod(@androidx.annotation.DrawableRes @androidx.annotation.StringRes int param) { }\n"
                         + "}\n";
         return s;
     }

@@ -15,7 +15,7 @@
  */
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.checks.AnnotationDetectorTest.SUPPORT_ANNOTATIONS_JAR_BASE64_GZIP;
+import static com.android.tools.lint.checks.AbstractCheckTest.SUPPORT_ANNOTATIONS_JAR;
 
 import com.android.annotations.NonNull;
 import com.android.tools.lint.checks.infrastructure.TestFile;
@@ -190,7 +190,7 @@ public class LayoutInflationDetectorTest extends AbstractCheckTest {
                                         + "import android.os.Bundle;\n"
                                         + "import android.view.LayoutInflater;\n"
                                         + "import android.view.View;\n"
-                                        + "import android.support.annotation.NonNull;\n"
+                                        + "import androidx.annotation.NonNull;\n"
                                         + "\n"
                                         + "public class AlertDialogTestJava {\n"
                                         + "    public static class MyFragment extends DialogFragment {\n"
@@ -263,7 +263,7 @@ public class LayoutInflationDetectorTest extends AbstractCheckTest {
                                         + "import android.os.Bundle;\n"
                                         + "import android.view.LayoutInflater;\n"
                                         + "import android.view.View;\n"
-                                        + "import android.support.annotation.NonNull;\n"
+                                        + "import androidx.annotation.NonNull;\n"
                                         + "import androidx.appcompat.app.AlertDialog;\n"
                                         + "import androidx.fragment.app.DialogFragment;\n"
                                         + "\n"
@@ -389,7 +389,7 @@ public class LayoutInflationDetectorTest extends AbstractCheckTest {
                                         + "        public static final int title=0x7f050001;\n"
                                         + "    }\n"
                                         + "}"),
-                        base64gzip(SUPPORT_JAR_PATH, SUPPORT_ANNOTATIONS_JAR_BASE64_GZIP))
+                        SUPPORT_ANNOTATIONS_JAR)
                 .run()
                 .expectClean();
     }

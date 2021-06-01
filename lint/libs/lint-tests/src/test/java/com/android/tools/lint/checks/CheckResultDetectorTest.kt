@@ -91,7 +91,6 @@ class CheckResultDetectorTest : AbstractCheckTest() {
                   }
                 }"""
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         )
             .issues(CheckResultDetector.CHECK_RESULT, CheckResultDetector.CHECK_PERMISSION)
@@ -142,7 +141,6 @@ class CheckResultDetectorTest : AbstractCheckTest() {
                     public @interface CanIgnoreReturnValue {}"""
             ).indented(),
             javaxCheckReturnValueSource,
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         )
             .issues(CheckResultDetector.CHECK_RESULT, CheckResultDetector.CHECK_PERMISSION)
@@ -195,7 +193,6 @@ class CheckResultDetectorTest : AbstractCheckTest() {
                     "SsfzLOH/BwzDZsy1MAk/xClJNwEYAnwRoPXhNjq1duukC7wBEsYF4sIAAAA="
             ),
             javaxCheckReturnValueSource,
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         )
             .issues(CheckResultDetector.CHECK_RESULT, CheckResultDetector.CHECK_PERMISSION)
@@ -211,7 +208,7 @@ class CheckResultDetectorTest : AbstractCheckTest() {
                 "src/test/java/test/pkg/UnitTest.kt",
                 """
                     package test.pkg
-                    import android.support.annotation.CheckResult
+                    import androidx.annotation.CheckResult
                     fun something(list: List<String>) {
                         fromNullable(list)
                     }
@@ -219,7 +216,6 @@ class CheckResultDetectorTest : AbstractCheckTest() {
                     fun fromNullable(a: Any?): Any? = a
                     """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR,
             gradle(
                 """
@@ -250,7 +246,7 @@ class CheckResultDetectorTest : AbstractCheckTest() {
                 """
                     package test.pkg
 
-                    import android.support.annotation.CheckResult
+                    import androidx.annotation.CheckResult
 
                     fun something(list: List<String>) {
                         list.map { fromNullable(it) }
@@ -259,7 +255,6 @@ class CheckResultDetectorTest : AbstractCheckTest() {
                     @CheckResult
                     fun fromNullable(a: Any?): Any? = a"""
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         )
             .issues(CheckResultDetector.CHECK_RESULT, CheckResultDetector.CHECK_PERMISSION)
@@ -275,7 +270,7 @@ class CheckResultDetectorTest : AbstractCheckTest() {
                 """
                     package test.pkg
 
-                    import android.support.annotation.CheckResult
+                    import androidx.annotation.CheckResult
                     fun test() {
                         val list = listOf(1, 2, 3)
 
@@ -311,7 +306,6 @@ class CheckResultDetectorTest : AbstractCheckTest() {
                     @CheckResult
                     fun label(a: Any?): Any? = a"""
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         )
             .issues(CheckResultDetector.CHECK_RESULT, CheckResultDetector.CHECK_PERMISSION)
@@ -327,7 +321,7 @@ class CheckResultDetectorTest : AbstractCheckTest() {
                 """
                     package test.pkg
 
-                    import android.support.annotation.CheckResult
+                    import androidx.annotation.CheckResult
 
                     fun testIsUnused(): Int {
                         if (3 > 2) {
@@ -380,7 +374,6 @@ class CheckResultDetectorTest : AbstractCheckTest() {
                     }
                 """
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         )
             .issues(CheckResultDetector.CHECK_RESULT, CheckResultDetector.CHECK_PERMISSION)
@@ -406,7 +399,7 @@ class CheckResultDetectorTest : AbstractCheckTest() {
 
                 package test.pkg
 
-                import android.support.annotation.CheckResult
+                import androidx.annotation.CheckResult
 
                 fun lambda1(): () -> Single<Int> = {
                     if (true) {
@@ -433,7 +426,6 @@ class CheckResultDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         )
             .issues(CheckResultDetector.CHECK_RESULT, CheckResultDetector.CHECK_PERMISSION)
@@ -447,7 +439,7 @@ class CheckResultDetectorTest : AbstractCheckTest() {
                 """
                 package test.pkg;
 
-                import android.support.annotation.CheckResult;
+                import androidx.annotation.CheckResult;
 
                 @SuppressWarnings({"WeakerAccess", "ClassNameDiffersFromFileName"})
                 public class CheckResultTest {
@@ -470,7 +462,6 @@ class CheckResultDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         )
             .issues(CheckResultDetector.CHECK_RESULT, CheckResultDetector.CHECK_PERMISSION)
@@ -520,7 +511,7 @@ class CheckResultDetectorTest : AbstractCheckTest() {
                     // Stub
                     package io.reactivex;
 
-                    import android.support.annotation.CheckResult;
+                    import androidx.annotation.CheckResult;
                     import java.util.Consumer;
 
                     @SuppressWarnings("ClassNameDiffersFromFileName")
@@ -538,7 +529,6 @@ class CheckResultDetectorTest : AbstractCheckTest() {
 
                 """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         )
             .issues(CheckResultDetector.CHECK_RESULT, CheckResultDetector.CHECK_PERMISSION)
@@ -657,7 +647,7 @@ class CheckResultDetectorTest : AbstractCheckTest() {
                 """
                 package test.pkg
 
-                import android.support.annotation.CheckResult
+                import androidx.annotation.CheckResult
 
                 interface Clearable {
                     @CheckResult
@@ -669,7 +659,6 @@ class CheckResultDetectorTest : AbstractCheckTest() {
                 }
                 """
             ),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(
             """
@@ -730,7 +719,7 @@ class CheckResultDetectorTest : AbstractCheckTest() {
         lint().files(
             kotlin(
                 """
-                import android.support.annotation.CheckResult
+                import androidx.annotation.CheckResult
                 import kotlin.random.Random
 
                 @CheckResult
@@ -767,7 +756,6 @@ class CheckResultDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(
             """

@@ -58,8 +58,8 @@ class WrongThreadInterproceduralDetectorTest : AbstractCheckTest() {
                 """
                     package test.pkg;
 
-                    import android.support.annotation.UiThread;
-                    import android.support.annotation.WorkerThread;
+                    import androidx.annotation.UiThread;
+                    import androidx.annotation.WorkerThread;
 
                     @SuppressWarnings({"UnnecessaryInterfaceModifier", "ClassNameDiffersFromFileName"})
                     @FunctionalInterface
@@ -137,7 +137,6 @@ class WrongThreadInterproceduralDetectorTest : AbstractCheckTest() {
                     }
                     """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         )
             .allowSystemErrors(true)
@@ -188,8 +187,8 @@ class WrongThreadInterproceduralDetectorTest : AbstractCheckTest() {
                 """
                     package test.pkg
 
-                    import android.support.annotation.UiThread
-                    import android.support.annotation.WorkerThread
+                    import androidx.annotation.UiThread
+                    import androidx.annotation.WorkerThread
 
                     @Suppress("MemberVisibilityCanBePrivate")
                     class Test {
@@ -263,7 +262,6 @@ class WrongThreadInterproceduralDetectorTest : AbstractCheckTest() {
                     }
                     """
             ).indented(),
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         )
             .allowSystemErrors(true)

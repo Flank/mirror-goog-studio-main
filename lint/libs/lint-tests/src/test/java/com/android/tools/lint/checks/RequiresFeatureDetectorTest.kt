@@ -16,7 +16,6 @@
 
 package com.android.tools.lint.checks
 
-import com.android.tools.lint.checks.infrastructure.TestFile
 import com.android.tools.lint.detector.api.Detector
 
 class RequiresFeatureDetectorTest : AbstractCheckTest() {
@@ -221,7 +220,7 @@ class RequiresFeatureDetectorTest : AbstractCheckTest() {
                 """
                 package test.pkg;
 
-                import android.support.annotation.RequiresFeature;
+                import androidx.annotation.RequiresFeature;
 
                 @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
                 public class SomeApi {
@@ -229,31 +228,7 @@ class RequiresFeatureDetectorTest : AbstractCheckTest() {
                     public boolean someMethod() { return true; }
                 }"""
             ).indented(),
-            requiresFeatureAnnotationSource, // until part of support library prebuilt
-            SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(expected)
-    }
-
-    companion object {
-        // Until this is part of the support library prebuilt
-        val requiresFeatureAnnotationSource: TestFile = java(
-            """
-                package android.support.annotation;
-
-                import static java.lang.annotation.ElementType.*;
-                import static java.lang.annotation.RetentionPolicy.SOURCE;
-                import java.lang.annotation.Retention;
-                import java.lang.annotation.Target;
-
-                @SuppressWarnings("ClassNameDiffersFromFileName")
-                @Retention(SOURCE)
-                @Target({TYPE, FIELD, METHOD, CONSTRUCTOR})
-                public @interface RequiresFeature {
-                    String name();
-                    String enforcement();
-                }
-                """
-        ).indented()
     }
 }
