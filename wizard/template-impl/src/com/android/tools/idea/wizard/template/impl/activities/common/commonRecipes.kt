@@ -243,3 +243,8 @@ fun RecipeExecutor.addViewBindingSupport(viewBindingSupport: ViewBindingSupport,
     else -> {}
   }
 }
+
+fun RecipeExecutor.addSecretsGradlePlugin() {
+    addClasspathDependency("com.google.android.libraries.mapsplatform.secrets-gradle-plugin:secrets-gradle-plugin:+", minRev = "1.2.0")
+    applyPlugin("com.google.android.libraries.mapsplatform.secrets-gradle-plugin", "+", minRev = "1.2.0")
+}

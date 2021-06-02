@@ -21,9 +21,8 @@ import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.RecipeExecutor
 import com.android.tools.idea.wizard.template.activityToLayout
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
+import com.android.tools.idea.wizard.template.impl.activities.common.addSecretsGradlePlugin
 import com.android.tools.idea.wizard.template.impl.activities.common.addViewBindingSupport
-import com.android.tools.idea.wizard.template.impl.activities.googleMapsActivity.debugRes.values.googleMapsApiXml as debugGoogleMapsApiXml
-import com.android.tools.idea.wizard.template.impl.activities.googleMapsActivity.releaseRes.values.googleMapsApiXml as releaseGoogleMapsApiXml
 import com.android.tools.idea.wizard.template.impl.activities.googleMapsActivity.res.layout.activityMapXml
 import com.android.tools.idea.wizard.template.impl.activities.googleMapsActivity.res.values.stringsXml
 import com.android.tools.idea.wizard.template.impl.activities.googleMapsActivity.src.app_package.mapActivityJava
@@ -44,6 +43,7 @@ fun RecipeExecutor.googleMapsActivityRecipe(
   val simpleName = activityToLayout(activityClass)
   addAllKotlinDependencies(moduleData)
   addViewBindingSupport(moduleData.viewBindingSupport, true)
+  addSecretsGradlePlugin()
 
   addDependency("com.google.android.gms:play-services-maps:+", toBase = moduleData.isDynamic)
   addDependency("com.android.support:appcompat-v7:${appCompatVersion}.+")
@@ -55,17 +55,11 @@ fun RecipeExecutor.googleMapsActivityRecipe(
   save(activityMapXml(activityClass, packageName), resOut.resolve("layout/${layoutName}.xml"))
 
   lateinit var finalResOut: File
-  lateinit var finalDebugResOut: File
-  lateinit var finalReleaseResOut: File
   if (moduleData.isDynamic) {
     finalResOut = moduleData.baseFeature!!.resDir
-    finalDebugResOut = moduleData.baseFeature!!.dir.resolve("src/debug/res")
-    finalReleaseResOut = moduleData.baseFeature!!.dir.resolve("src/release/res")
   }
   else {
     finalResOut = resOut
-    finalDebugResOut = moduleData.rootDir.resolve("src/debug/res")
-    finalReleaseResOut = moduleData.rootDir.resolve("src/release/res")
   }
 
   mergeXml(stringsXml(activityClass, simpleName), finalResOut.resolve("values/strings.xml"))
@@ -86,11 +80,8 @@ fun RecipeExecutor.googleMapsActivityRecipe(
   }
   save(mapActivity, srcOut.resolve("${activityClass}.${ktOrJavaExt}"))
 
-  mergeXml(debugGoogleMapsApiXml(projectData.debugKeystoreSha1!!, packageName),
-           finalDebugResOut.resolve("values/google_maps_api.xml"))
-  mergeXml(releaseGoogleMapsApiXml(), finalReleaseResOut.resolve("values/google_maps_api.xml"))
   open(srcOut.resolve("${activityClass}.${ktOrJavaExt}"))
 
   /* Display the API key instructions. */
-  open(finalDebugResOut.resolve("values/google_maps_api.xml"))
+  open(manifestOut.resolve("AndroidManifest.xml"))
 }

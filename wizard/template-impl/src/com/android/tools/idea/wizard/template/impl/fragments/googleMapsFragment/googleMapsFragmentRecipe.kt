@@ -20,9 +20,8 @@ import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.RecipeExecutor
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
-import com.android.tools.idea.wizard.template.impl.activities.googleMapsActivity.debugRes.values.googleMapsApiXml as debugGoogleMapsApiXml
+import com.android.tools.idea.wizard.template.impl.activities.common.addSecretsGradlePlugin
 import com.android.tools.idea.wizard.template.impl.fragments.googleMapsFragment.res.layout.fragmentMapXml
-import com.android.tools.idea.wizard.template.impl.activities.googleMapsActivity.releaseRes.values.googleMapsApiXml as releaseGoogleMapsApiXml
 import com.android.tools.idea.wizard.template.impl.fragments.googleMapsFragment.src.app_package.mapFragmentJava
 import com.android.tools.idea.wizard.template.impl.fragments.googleMapsFragment.src.app_package.mapFragmentKt
 
@@ -37,14 +36,12 @@ fun RecipeExecutor.googleMapsFragmentRecipe(
   val useAndroidX = moduleData.projectTemplateData.androidXSupport
   val ktOrJavaExt = projectData.language.extension
   addAllKotlinDependencies(moduleData)
+  addSecretsGradlePlugin()
 
   addDependency("com.google.android.gms:play-services-maps:+", toBase = moduleData.isDynamic)
   addDependency("com.android.support:appcompat-v7:${appCompatVersion}.+")
 
   mergeXml(androidManifestXml(), manifestOut.resolve("AndroidManifest.xml"))
-
-  val debugResOut = moduleData.rootDir.resolve("src/debug/res")
-  val releaseResOut = moduleData.rootDir.resolve("src/release/res")
 
   save(fragmentMapXml(fragmentClass, packageName), resOut.resolve("layout/${layoutName}.xml"))
   val mapFragment = when (projectData.language) {
@@ -53,12 +50,9 @@ fun RecipeExecutor.googleMapsFragmentRecipe(
   }
   save(mapFragment, srcOut.resolve("${fragmentClass}.${ktOrJavaExt}"))
 
-  mergeXml(debugGoogleMapsApiXml(projectData.debugKeystoreSha1!!, packageName), debugResOut.resolve("values/google_maps_api.xml"))
-  mergeXml(releaseGoogleMapsApiXml(), releaseResOut.resolve("values/google_maps_api.xml"))
-
   open(srcOut.resolve("${fragmentClass}.${ktOrJavaExt}"))
   open(resOut.resolve("layout/${layoutName}.xml"))
 
   /* Display the API key instructions. */
-  open(debugResOut.resolve("values/google_maps_api.xml"))
+  open(manifestOut.resolve("AndroidManifest.xml"))
 }

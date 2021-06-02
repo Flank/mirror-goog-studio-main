@@ -20,9 +20,8 @@ import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.RecipeExecutor
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
+import com.android.tools.idea.wizard.template.impl.activities.common.addSecretsGradlePlugin
 import com.android.tools.idea.wizard.template.impl.activities.common.addViewBindingSupport
-import com.android.tools.idea.wizard.template.impl.activities.googleMapsActivity.debugRes.values.googleMapsApiXml as debugGoogleMapsApiXml
-import com.android.tools.idea.wizard.template.impl.activities.googleMapsActivity.releaseRes.values.googleMapsApiXml as releaseGoogleMapsApiXml
 import com.android.tools.idea.wizard.template.impl.activities.googleMapsWearActivity.res.layout.activityMapXml
 import com.android.tools.idea.wizard.template.impl.activities.googleMapsWearActivity.res.values.stringsXml
 import com.android.tools.idea.wizard.template.impl.activities.googleMapsWearActivity.src.app_package.mapActivityJava
@@ -39,6 +38,7 @@ fun RecipeExecutor.googleMapsWearActivityRecipe(
   val ktOrJavaExt = projectData.language.extension
   addAllKotlinDependencies(moduleData)
   addViewBindingSupport(moduleData.viewBindingSupport, true)
+  addSecretsGradlePlugin()
 
   addDependency("com.google.android.gms:play-services-wearable:+")
   addDependency("com.google.android.gms:play-services-maps:+", toBase = moduleData.isDynamic)
@@ -71,11 +71,8 @@ fun RecipeExecutor.googleMapsWearActivityRecipe(
   }
   save(mapActivity, srcOut.resolve("${activityClass}.${ktOrJavaExt}"))
 
-  val debugResOut = moduleData.rootDir.resolve("src/debug/res")
-  val releaseResOut = moduleData.rootDir.resolve("src/release/res")
   open(srcOut.resolve("${activityClass}.${ktOrJavaExt}"))
-  mergeXml(debugGoogleMapsApiXml(projectData.debugKeystoreSha1!!, packageName), debugResOut.resolve("values/google_maps_api.xml"))
-  mergeXml(releaseGoogleMapsApiXml(), releaseResOut.resolve("values/google_maps_api.xml"))
+
   /* Display the API key instructions. */
-  open(debugResOut.resolve("values/google_maps_api.xml"))
+  open(manifestOut.resolve("AndroidManifest.xml"))
 }
