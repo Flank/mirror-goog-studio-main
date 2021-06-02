@@ -72,6 +72,19 @@ maven_pom(
     source = "//tools/buildSrc/base:build_version",
 )
 
+kotlin_library(
+    name = "fixtures",
+    srcs = glob([
+        "src/testFixtures/java/**/*.kt",
+        "src/testFixtures/java/**/*.java",
+    ]),
+    resources = glob(["src/testFixtures/resources/**"]),
+    visibility = ["//visibility:public"],  # contains com.android.repository.testframework
+    deps = [
+        ":builder",
+    ],
+)
+
 kotlin_test(
     name = "tests",
     srcs = glob([
@@ -92,6 +105,7 @@ kotlin_test(
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
         ":builder",
+        ":fixtures",
         "//prebuilts/tools/common/m2/repository/com/android/tools/desugar_jdk_libs/1.1.5:jar",
         "//prebuilts/tools/common/m2/repository/com/android/tools/desugar_jdk_libs_configuration/1.1.5:jar",
         "//tools/apkzlib",
