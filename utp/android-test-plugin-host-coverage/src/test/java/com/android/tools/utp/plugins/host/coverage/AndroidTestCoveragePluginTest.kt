@@ -139,9 +139,7 @@ class AndroidTestCoveragePluginTest {
         inOrder(mockDeviceController).apply {
             verify(mockDeviceController).execute(listOf(
                 "shell",
-                "run-as", TESTED_APP, "[ -e \"${coverageFile}\" ] && ",
-                "run-as", TESTED_APP, "rm -f \"${coverageFile}\" ; ",
-                "run-as", TESTED_APP, "[ ! -e \"${coverageFile}\" ]"))
+                "run-as", TESTED_APP, "rm -f \"${coverageFile}\""))
             verify(mockDeviceController).execute(listOf(
                 "shell",
                 "mkdir -p \"${tmpDir}\"",
@@ -180,9 +178,7 @@ class AndroidTestCoveragePluginTest {
         inOrder(mockDeviceController).apply {
             verify(mockDeviceController).execute(listOf(
                 "shell",
-                "run-as", TESTED_APP, "[ -e \"${coverageFile}\" ] && ",
-                "run-as", TESTED_APP, "rm -f \"${coverageFile}\" ; ",
-                "run-as", TESTED_APP, "[ ! -e \"${coverageFile}\" ]"))
+                "run-as", TESTED_APP, "rm -f \"${coverageFile}\""))
             verify(mockDeviceController).execute(listOf(
                 "shell",
                 "appops set androidx.test.services MANAGE_EXTERNAL_STORAGE allow"
@@ -230,9 +226,7 @@ class AndroidTestCoveragePluginTest {
         inOrder(mockDeviceController).apply {
             verify(mockDeviceController).execute(listOf(
                 "shell",
-                "run-as", TESTED_APP, "[ -e \"${coverageDir}\" ] && ",
-                "run-as", TESTED_APP, "rm -rf \"${coverageDir}\" ; ",
-                "run-as", TESTED_APP, "[ ! -e \"${coverageDir}\" ]"))
+                "run-as", TESTED_APP, "rm -rf \"${coverageDir}\""))
             verify(mockDeviceController).execute(listOf(
                 "shell",
                 "run-as", TESTED_APP, "mkdir -p \"${coverageDir}\""))
@@ -292,9 +286,7 @@ class AndroidTestCoveragePluginTest {
         inOrder(mockDeviceController).apply {
             verify(mockDeviceController).execute(listOf(
                 "shell",
-                "run-as", TESTED_APP, "[ -e \"${coverageDir}\" ] && ",
-                "run-as", TESTED_APP, "rm -rf \"${coverageDir}\" ; ",
-                "run-as", TESTED_APP, "[ ! -e \"${coverageDir}\" ]"))
+                "run-as", TESTED_APP, "rm -rf \"${coverageDir}\""))
             verify(mockDeviceController).execute(listOf(
                 "shell",
                 "run-as", TESTED_APP, "mkdir -p \"${coverageDir}\""))

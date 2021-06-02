@@ -100,19 +100,12 @@ class AndroidTestCoveragePlugin(
         when(testCoverageConfig.testCoveragePathOnDeviceCase) {
             TestCoveragePathOnDeviceCase.SINGLE_COVERAGE_FILE -> {
                 val file = testCoverageConfig.singleCoverageFile
-                deviceController.deviceShellWithRunAs(
-                    "[ -e \"${file}\" ] && ",
-                    "rm -f \"${file}\" ; ",
-                    "[ ! -e \"${file}\" ]")
+                deviceController.deviceShellWithRunAs("rm -f \"${file}\"")
             }
             TestCoveragePathOnDeviceCase.MULTIPLE_COVERAGE_FILES_IN_DIRECTORY -> {
                 val dir = testCoverageConfig.multipleCoverageFilesInDirectory
-                deviceController.deviceShellWithRunAs(
-                    "[ -e \"${dir}\" ] && ",
-                    "rm -rf \"${dir}\" ; ",
-                    "[ ! -e \"${dir}\" ]")
-                deviceController.deviceShellWithRunAs(
-                    "mkdir -p \"${dir}\"")
+                deviceController.deviceShellWithRunAs("rm -rf \"${dir}\"")
+                deviceController.deviceShellWithRunAs("mkdir -p \"${dir}\"")
             }
             else -> throw UnsupportedOperationException(
                 "test_coverage_path_on_device must be specified.")
