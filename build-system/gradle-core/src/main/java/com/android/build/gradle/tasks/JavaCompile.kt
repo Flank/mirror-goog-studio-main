@@ -132,22 +132,15 @@ class JavaCompileCreationAction(
         task.options.isIncremental = globalScope.extension.compileOptions.incremental
             ?: DEFAULT_INCREMENTAL_COMPILATION
 
-        // When Kapt is used, it runs annotation processors declared in the `kapt` configurations.
-        // However, we currently collect annotation processors for analytics purposes only from the
-        // `annotationProcessor` configurations, not `kapt` configurations, so the data is only
-        // correct if Kapt is not used.
-        if (!usingKapt) {
-            // Record apList as input. It impacts recordAnnotationProcessors() below.
-            val apList = creationConfig.artifacts.get(ANNOTATION_PROCESSOR_LIST)
-            task.inputs.files(apList).withPathSensitivity(PathSensitivity.NONE)
-                .withPropertyName("annotationProcessorList")
-
-            task.recordAnnotationProcessors(
-                apList,
-                creationConfig.name,
-                getBuildService(creationConfig.services.buildServiceRegistry)
-            )
-        }
+        // Record apList as input. It impacts recordAnnotationProcessors() below.
+        val apList = creationConfig.artifacts.get(ANNOTATION_PROCESSOR_LIST)
+        task.inputs.files(apList).withPathSensitivity(PathSensitivity.NONE)
+            .withPropertyName("annotationProcessorList")
+        task.recordAnnotationProcessors(
+            apList,
+            creationConfig.name,
+            getBuildService(creationConfig.services.buildServiceRegistry)
+        )
 
         // Also do that for data binding artifacts
         if (creationConfig.buildFeatures.dataBinding) {
