@@ -809,6 +809,93 @@ class CheckResultDetectorTest : AbstractCheckTest() {
         )
     }
 
+    fun testBrackets() {
+        // Regression test for b/189970773
+        lint().files(
+            kotlin(
+                """
+                @file:Suppress(
+                    "ConstantConditionIf", "ControlFlowWithEmptyBody",
+                    "IMPLICIT_CAST_TO_ANY", "IntroduceWhenSubject"
+                )
+
+                package test.pkg
+
+                fun test() {
+                    if (true) checkResult()     // ERROR 1
+                    if (true) { checkResult() } // ERROR 2
+                    if (true) { } else { checkResult() } // ERROR 3
+                    if (checkResult() != null) { } // OK
+
+                    try { checkResult() } catch (e: Exception) { } // ERROR 4
+                    val ok = try { checkResult() } catch (e: Exception) { } // OK
+
+                    when (checkResult()) { } // OK
+                    when (ok) { true -> checkResult() } // ERROR 5
+                    when (ok) { true -> { checkResult() } } // ERROR 6
+                    val ok2 = when (ok) { true -> checkResult(); else -> { }} // OK
+                    val ok3 = when (ok) { true -> { checkResult() }; else -> { }} // OK
+
+                    when { ok == true -> checkResult(); else -> { }} // ERROR 7
+                    val ok4 = when { ok == true -> checkResult(); else -> { }} // OK
+
+                    // b/189978180
+                    when {
+                        condition1 -> checkReturn()     // ERROR 8
+                        condition2 -> { checkReturn() } // ERROR 9
+                    }
+                }
+                """
+            ),
+            kotlin(
+                """
+                @file:Suppress("RedundantNullableReturnType")
+                package test.pkg
+
+                import androidx.annotation.CheckResult
+
+                @CheckResult
+                fun checkResult(): Number? = 42
+
+                @CheckResult
+                fun checkReturn(): Any = "test"
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/test/pkg/test.kt:10: Warning: The result of checkResult is not used [CheckResult]
+                                if (true) checkResult()     // ERROR 1
+                                          ~~~~~~~~~~~~~
+            src/test/pkg/test.kt:11: Warning: The result of checkResult is not used [CheckResult]
+                                if (true) { checkResult() } // ERROR 2
+                                            ~~~~~~~~~~~~~
+            src/test/pkg/test.kt:12: Warning: The result of checkResult is not used [CheckResult]
+                                if (true) { } else { checkResult() } // ERROR 3
+                                                     ~~~~~~~~~~~~~
+            src/test/pkg/test.kt:15: Warning: The result of checkResult is not used [CheckResult]
+                                try { checkResult() } catch (e: Exception) { } // ERROR 4
+                                      ~~~~~~~~~~~~~
+            src/test/pkg/test.kt:19: Warning: The result of checkResult is not used [CheckResult]
+                                when (ok) { true -> checkResult() } // ERROR 5
+                                                    ~~~~~~~~~~~~~
+            src/test/pkg/test.kt:20: Warning: The result of checkResult is not used [CheckResult]
+                                when (ok) { true -> { checkResult() } } // ERROR 6
+                                                      ~~~~~~~~~~~~~
+            src/test/pkg/test.kt:24: Warning: The result of checkResult is not used [CheckResult]
+                                when { ok == true -> checkResult(); else -> { }} // ERROR 7
+                                                     ~~~~~~~~~~~~~
+            src/test/pkg/test.kt:29: Warning: The result of checkReturn is not used [CheckResult]
+                                    condition1 -> checkReturn()     // ERROR 8
+                                                  ~~~~~~~~~~~~~
+            src/test/pkg/test.kt:30: Warning: The result of checkReturn is not used [CheckResult]
+                                    condition2 -> { checkReturn() } // ERROR 9
+                                                    ~~~~~~~~~~~~~
+            0 errors, 9 warnings
+            """
+        )
+    }
+
     private val javaxCheckReturnValueSource = java(
         """
         package javax.annotation;
