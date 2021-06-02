@@ -11,7 +11,7 @@ iml_module(
     deps = [
         "//prebuilts/studio/intellij-sdk:studio-sdk",
         "//tools/adt/idea/.idea/libraries:studio-proto",
-        "//tools/adt/idea/.idea/libraries:layoutinspector-skia-proto",
+        "//tools/adt/idea/.idea/libraries:layoutinspector-proto",
         "//prebuilts/tools/common/m2/repository/junit/junit/4.12:junit-4.12[test]",
         "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
         "//tools/base/common:studio.android.sdktools.common[module]",
