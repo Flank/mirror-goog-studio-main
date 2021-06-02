@@ -265,6 +265,29 @@ class ToastDetectorTest : AbstractCheckTest() {
         )
     }
 
+    fun testSnackbarExtensionMethods() {
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                import android.view.View
+                import com.google.android.material.snackbar.Snackbar
+
+                class Test {
+                    fun test(parent: View) {
+                        Snackbar.make(parent, "Message", Snackbar.LENGTH_INDEFINITE)
+                            .extension().show()
+                    }
+                }
+
+                private fun Snackbar.extension(): Snackbar = this
+                """
+            ).indented(),
+            *snackbarStubs
+        ).run().expectClean()
+    }
+
     fun testSnackbarAnchor() {
         // Regression test for b/182452136
         lint().files(
