@@ -630,6 +630,9 @@ open class LintFixPerformer constructor(
                     lineEnd++
                     if (c == '\n') {
                         break
+                    } else if (!Character.isWhitespace(c)) {
+                        allSpace = false
+                        break
                     }
                 }
                 if (allSpace) {

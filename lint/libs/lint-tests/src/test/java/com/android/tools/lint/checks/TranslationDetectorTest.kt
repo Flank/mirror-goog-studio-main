@@ -1323,13 +1323,15 @@ class TranslationDetectorTest : AbstractCheckTest() {
             """
         ).expectFixDiffs(
             """
-                Fix for res/values-land-v21/dimen.xml line 2: Remove resource override:
-                @@ -3 +3
-                -     <dimen name="extra_dimen2">1pt</dimen> <!-- error -->
-                Fix for res/values-land/dimen.xml line 3: Remove resource override:
-                @@ -4 +4
-                -     <dimen name="extra_dimen1">1pt</dimen> <!-- error -->
-                """
+            Fix for res/values-land-v21/dimen.xml line 3: Remove resource override:
+            @@ -3 +3
+            -     <dimen name="extra_dimen2">1pt</dimen> <!-- error -->
+            +      <!-- error -->
+            Fix for res/values-land/dimen.xml line 4: Remove resource override:
+            @@ -4 +4
+            -     <dimen name="extra_dimen1">1pt</dimen> <!-- error -->
+            +      <!-- error -->
+            """
         )
     }
 
