@@ -40,7 +40,7 @@ class FineLocationDetectorTest : AbstractCheckTest() {
                 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             1 errors, 0 warnings
-            """.trimIndent()
+            """
         )
     }
 

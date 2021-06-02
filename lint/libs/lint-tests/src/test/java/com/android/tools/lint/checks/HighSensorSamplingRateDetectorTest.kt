@@ -45,7 +45,7 @@ class HighSensorSamplingRateDetectorTest : AbstractCheckTest() {
                 <uses-permission android:name="android.permission.HIGH_SAMPLING_RATE_SENSORS"/>
                                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             0 errors, 1 warnings
-            """.trimIndent()
+            """
         )
     }
 

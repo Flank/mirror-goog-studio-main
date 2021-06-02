@@ -756,8 +756,8 @@ class ManifestDetectorTest : AbstractCheckTest() {
                         android:label="Shared Access"
                         android:protectionLevel="signature"/>
                     <permission android:name="pkg1.PERMISSION_NAME_1"/>
-                    <permission android:name="${"$"}{applicationId}.permission.PERMISSION_NAME_2"/>
-                    <permission android:name="${"$"}{unknownPlaceHolder1}.permission.PERMISSION_NAME_3"/>
+                    <permission android:name="＄{applicationId}.permission.PERMISSION_NAME_2"/>
+                    <permission android:name="＄{unknownPlaceHolder1}.permission.PERMISSION_NAME_3"/>
                 </manifest>
                 """
             ).indented()
@@ -773,7 +773,7 @@ class ManifestDetectorTest : AbstractCheckTest() {
                         tools:node="remove"/>
                     <permission android:name="pkg2.PERMISSION_NAME_1"/>
                     <permission android:name="test.pkg.app.permission.PERMISSION_NAME_2"/>
-                    <permission android:name="${"$"}{unknownPlaceHolder2}.permission.PERMISSION_NAME_3"/>
+                    <permission android:name="＄{unknownPlaceHolder2}.permission.PERMISSION_NAME_3"/>
                 </manifest>
                 """
             ).indented()
@@ -1261,7 +1261,7 @@ class ManifestDetectorTest : AbstractCheckTest() {
         val expected =
             """
             src/main/AndroidManifest.xml:2: Warning: Cannot use placeholder for the package in the manifest; set applicationId in build.gradle instead [GradleOverrides]
-                package="${"$"}{packageName}" >
+                package="＄{packageName}" >
                 ~~~~~~~~~~~~~~~~~~~~~~~~
             0 errors, 1 warnings
             """
@@ -1269,7 +1269,7 @@ class ManifestDetectorTest : AbstractCheckTest() {
             manifest(
                 """
                 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                    package="${"$"}{packageName}" >
+                    package="＄{packageName}" >
                     <uses-sdk android:minSdkVersion="14" android:targetSdkVersion="17" />
                     <application
                         android:icon="@drawable/ic_launcher"

@@ -125,8 +125,8 @@ class NamespaceDetectorTest : AbstractCheckTest() {
                           android:layout_width="match_parent"
                           android:text="@library:string/hello"/>
                     </LinearLayout>
-                """.trimIndent()
-            )
+                """
+            ).indented()
         ).run().expectClean()
     }
 

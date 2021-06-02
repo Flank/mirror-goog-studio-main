@@ -111,7 +111,7 @@ class MediaCapabilitiesDetectorTest : AbstractCheckTest() {
                         <property android:name="android.content.MEDIA_CAPABILITIES"/>
                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 0 errors, 1 warnings
-                """.trimIndent()
+                """
             )
     }
 
