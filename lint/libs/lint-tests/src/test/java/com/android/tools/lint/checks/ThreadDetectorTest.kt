@@ -445,8 +445,8 @@ class ThreadDetectorTest : AbstractCheckTest() {
                         doInUiThread(LambdaThreadTest::compute);
                     }
                 }
-                """.trimIndent()
-            ),
+                """
+            ).indented(),
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(
             """
@@ -460,7 +460,7 @@ class ThreadDetectorTest : AbstractCheckTest() {
                                     doInUiThread(LambdaThreadTest::compute);
                                                  ~~~~~~~~~~~~~~~~~~~~~~~~~
             3 errors, 0 warnings
-            """.trimIndent()
+            """
         )
     }
 

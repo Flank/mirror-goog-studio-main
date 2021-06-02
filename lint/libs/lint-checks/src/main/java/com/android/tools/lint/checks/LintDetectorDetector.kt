@@ -42,6 +42,7 @@ import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiParameter
 import com.intellij.psi.PsiRecursiveElementVisitor
 import com.intellij.psi.PsiType
+import com.intellij.psi.PsiVariable
 import org.jetbrains.uast.UBinaryExpression
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UClass
@@ -50,14 +51,18 @@ import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.UField
 import org.jetbrains.uast.ULiteralExpression
 import org.jetbrains.uast.UMethod
+import org.jetbrains.uast.UParenthesizedExpression
 import org.jetbrains.uast.UPolyadicExpression
 import org.jetbrains.uast.UQualifiedReferenceExpression
+import org.jetbrains.uast.UReferenceExpression
 import org.jetbrains.uast.USimpleNameReferenceExpression
+import org.jetbrains.uast.UVariable
 import org.jetbrains.uast.UastBinaryOperator
 import org.jetbrains.uast.getContainingUClass
 import org.jetbrains.uast.isNullLiteral
 import org.jetbrains.uast.java.JavaUField
 import org.jetbrains.uast.kotlin.KotlinStringTemplateUPolyadicExpression
+import org.jetbrains.uast.toUElement
 import org.jetbrains.uast.toUElementOfType
 import org.jetbrains.uast.tryResolve
 import org.jetbrains.uast.visitor.AbstractUastVisitor
@@ -108,33 +113,67 @@ class LintDetectorDetector : Detector(), UastScanner {
         )
     }
 
-    override fun getApplicableMethodNames(): List<String> = listOf("lint")
+    override fun getApplicableMethodNames(): List<String> =
+        listOf("expect", "expectFixDiffs", "files", "projects")
 
     override fun visitMethodCall(
         context: JavaContext,
         node: UCallExpression,
         method: PsiMethod
     ) {
-        if (method.returnType?.canonicalText != CLASS_TEST_LINT_TASK) {
-            return
-        }
+        val methodName = node.methodName ?: node.methodIdentifier?.name ?: return
 
-        val parent = node.uastParent
-
-        if (parent is UQualifiedReferenceExpression && parent.receiver == node) {
-            val selector = parent.selector
-            val visitor = LintDetectorVisitor(context)
-            if (selector is UCallExpression) {
-                for (testFile in selector.valueArguments) {
-                    if (testFile is UCallExpression) {
-                        visitor.checkTestFile(testFile)
-                    } // else -- usually field reference to shared test file
-                    // TODO - check those as well
+        when (methodName) {
+            "expect", "expectFixDiffs" -> {
+                if (method.returnType?.canonicalText != CLASS_TEST_LINT_RESULT) {
+                    return
+                }
+                node.valueArguments.firstOrNull()?.let {
+                    LintDetectorVisitor(context).checkTrimIndent(it, false)
+                }
+            }
+            "files", "projects" -> {
+                if (method.returnType?.canonicalText != CLASS_TEST_LINT_TASK) {
+                    return
+                }
+                val visitor = LintDetectorVisitor(context)
+                for (testFile in node.valueArguments) {
+                    checkTestFile(testFile, visitor)
                 }
             }
         }
-        // Check test file strings
-        // Look for substitution strings
+    }
+
+    private fun checkTestFile(
+        testFile: UExpression,
+        visitor: LintDetectorVisitor
+    ) {
+        if (testFile is UCallExpression) {
+            visitor.checkTestFile(testFile)
+        } else if (testFile is UReferenceExpression) {
+            val resolved = testFile.resolve()
+            if (resolved != null) {
+                if (resolved is UVariable) {
+                    val initializer = resolved.uastInitializer
+                    if (initializer is UCallExpression) {
+                        visitor.checkTestFile(initializer)
+                    }
+                } else if (resolved is PsiVariable) {
+                    //noinspection LintImplUseUast
+                    val initializer = resolved.initializer.toUElement()
+                    if (initializer is UCallExpression) {
+                        visitor.checkTestFile(initializer)
+                    }
+                } else if (resolved is PsiMethod) {
+                    val method = resolved.name
+                    if (method == "indented" && testFile is UQualifiedReferenceExpression) {
+                        checkTestFile(testFile.receiver, visitor)
+                    }
+                }
+            }
+        } else if (testFile is UParenthesizedExpression) {
+            checkTestFile(testFile.expression, visitor)
+        }
     }
 
     override fun visitClass(context: JavaContext, declaration: UClass) {
@@ -162,19 +201,23 @@ class LintDetectorDetector : Detector(), UastScanner {
         }
     }
 
+    private fun getCopyrightYear(context: JavaContext): Int {
+        val source = context.getContents().toString()
+        val yearIndex = source.indexOf(" 20")
+        if (yearIndex != -1) {
+            val yearString = source.substring(yearIndex + 1, yearIndex + 5)
+            if (!yearString[2].isDigit() || !yearString[3].isDigit()) {
+                return -1
+            }
+            return yearString.toInt()
+        }
+
+        return -1
+    }
+
     private fun checkKotlin(context: JavaContext, declaration: UClass) {
         if (!isKotlin(declaration.sourcePsi)) {
-            val source = context.getContents().toString()
-            val yearIndex = source.indexOf(" 20")
-            if (yearIndex != -1) {
-                val yearString = source.substring(yearIndex + 1, yearIndex + 5)
-                if (!yearString[2].isDigit() || !yearString[3].isDigit()) {
-                    return
-                }
-                val year = yearString.toInt()
-                if (year < 2020) {
-                    return
-                }
+            if (getCopyrightYear(context) >= 2020) {
                 context.report(
                     USE_KOTLIN, declaration, context.getNameLocation(declaration),
                     "New lint checks should be implemented in Kotlin to take advantage of a lot of Kotlin-specific mechanisms in the Lint API"
@@ -264,15 +307,20 @@ class LintDetectorDetector : Detector(), UastScanner {
         fun checkTestFile(testFile: UCallExpression) {
             val name = testFile.methodName
             if (name == "java" || name == "kotlin" || name == "kt" || name == "kts" ||
-                name == "manifest" || name == "gradle"
+                name == "manifest" || name == "gradle" || name == "xml"
             ) {
                 val args = testFile.valueArguments
                 val source = if (args.size > 1)
                     args[1]
-                else
+                else if (args.size == 1)
                     args[0]
+                else {
+                    // Something like the manifest() DSL where you don't specify source;
+                    // ignore these
+                    return
+                }
                 val string = getString(source)
-                checkTrimIndent(source, isUnitTest = true)
+                checkTrimIndent(source, isUnitTestFile = true)
                 if (string.contains("$") && isKotlin(testFile.sourcePsi)) {
                     checkDollarSubstitutions(source)
                 }
@@ -743,7 +791,7 @@ class LintDetectorDetector : Detector(), UastScanner {
             }
         }
 
-        private fun checkTrimIndent(argument: UExpression, isUnitTest: Boolean = false) {
+        fun checkTrimIndent(argument: UExpression, isUnitTestFile: Boolean = false) {
             if (argument is UQualifiedReferenceExpression) {
                 val selector = argument.selector
                 if (selector is UCallExpression) {
@@ -756,7 +804,7 @@ class LintDetectorDetector : Detector(), UastScanner {
                         )
 
                         val fix =
-                            if (!isUnitTest) {
+                            if (!isUnitTestFile) {
                                 LintFix.create().replace().all().with("").build()
                             } else {
                                 // Tests: Need to adjust fix to also insert .indented() on parent
@@ -766,7 +814,7 @@ class LintDetectorDetector : Detector(), UastScanner {
                             TRIM_INDENT, selector, location,
                             "No need to call `.$methodName()` in issue registration strings; they " +
                                 "are already trimmed by indent by lint when displaying to users${
-                                if (isUnitTest) ". Instead, call `.indented()` on the surrounding `${(argument.uastParent as? UCallExpression)?.methodName}()` test file construction" else ""
+                                if (isUnitTestFile) ". Instead, call `.indented()` on the surrounding `${(argument.uastParent as? UCallExpression)?.methodName}()` test file construction" else ""
                                 }",
                             fix
                         )
@@ -1040,6 +1088,8 @@ class LintDetectorDetector : Detector(), UastScanner {
             "com.android.tools.lint.detector.api.Issue.Companion"
         private const val CLASS_TEST_LINT_TASK =
             "com.android.tools.lint.checks.infrastructure.TestLintTask"
+        private const val CLASS_TEST_LINT_RESULT =
+            "com.android.tools.lint.checks.infrastructure..TestLintResult"
         private const val CLASS_PSI_METHOD = "com.intellij.psi.PsiMethod"
         private const val CLASS_PSI_ELEMENT = "com.intellij.psi.PsiElement"
         private const val CLASS_PSI_VARIABLE = "com.intellij.psi.PsiVariable"

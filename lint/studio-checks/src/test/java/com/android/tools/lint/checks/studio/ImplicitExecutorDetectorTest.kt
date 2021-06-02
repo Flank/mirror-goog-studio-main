@@ -81,7 +81,7 @@ class ImplicitExecutorDetectorTest {
                         Futures.addCallback(future, () -> {}); // WARN
                         ~~~~~~~~~~~~~~~~~~~
                 2 errors, 0 warnings
-                """.trimIndent()
+                """
             )
     }
 }

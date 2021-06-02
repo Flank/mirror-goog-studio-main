@@ -36,6 +36,7 @@ import com.android.tools.lint.checks.infrastructure.TestFiles.java
 import com.android.tools.lint.checks.infrastructure.TestFiles.kotlin
 import com.android.tools.lint.checks.infrastructure.TestFiles.source
 import com.android.tools.lint.checks.infrastructure.TestLintTask.lint
+import com.android.tools.lint.checks.infrastructure.TestMode
 import org.junit.Test
 import java.io.File
 
@@ -55,6 +56,7 @@ class LintDetectorDetectorTest {
     )
 
     @Test
+    @Suppress("LintImplDollarEscapes")
     fun testProblems() {
         lint()
             .files(
@@ -265,10 +267,10 @@ class LintDetectorDetectorTest {
                 ).indented(),
                 kotlin(
                     """
+                        // Copyright (C) 2021 The Android Open Source Project
                         package test.pkg
                         import com.android.tools.lint.checks.infrastructure.LintDetectorTest
                         import com.android.tools.lint.detector.api.Detector
-
                         class MyKotlinLintDetectorTest : LintDetectorTest() {
                             override fun getDetector(): Detector {
                                 return MyKotlinLintDetector()
@@ -483,7 +485,10 @@ class LintDetectorDetectorTest {
         val root = TestUtils.getWorkspaceRoot().toFile()
         val srcFiles =
             getTestSources(root, "tools/base/lint/libs/lint-checks/src/main/java") +
-                getTestSources(root, "tools/base/lint/studio-checks/src/main/java")
+                getTestSources(root, "tools/base/lint/libs/lint-tests/src/main/java") +
+                getTestSources(root, "tools/base/lint/libs/lint-tests/src/test/java") +
+                getTestSources(root, "tools/base/lint/studio-checks/src/main/java") +
+                getTestSources(root, "tools/base/lint/studio-checks/src/test/java")
         if (srcFiles.isEmpty()) {
             // This test doesn't work in Bazel; we don't ship all the source files of lint
             // as a dependency. Note however than in Bazel we actually run the lint checks
@@ -498,10 +503,14 @@ class LintDetectorDetectorTest {
             val name = file.name
             if (name.endsWith(DOT_JAR)) {
                 libs.add(file)
-            } else if (!file.path.endsWith("android.sdktools.base.lint.checks-base") &&
-                !file.path.endsWith("android.sdktools.base.lint.studio-checks")
-            ) {
-                libs.add(file)
+            } else {
+                val path = file.path
+                if (!path.endsWith("android.sdktools.base.lint.checks-base") &&
+                    !path.endsWith("android.sdktools.base.lint.studio-checks") &&
+                    !path.contains("lint-tests")
+                ) {
+                    libs.add(file)
+                }
             }
         }
 
@@ -517,8 +526,10 @@ class LintDetectorDetectorTest {
                 }.toTypedArray()
             )
             .checkUInjectionHost(false)
+            .testModes(TestMode.DEFAULT)
             .allowMissingSdk()
             .allowCompilationErrors()
+            .allowDuplicates()
             .run()
             .expectClean()
     }
