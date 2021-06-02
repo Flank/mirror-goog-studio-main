@@ -14,15 +14,6 @@
  * limitations under the License.
  */
 
-package com.android.build.api.component
+package com.android.build.api.variant
 
-@Deprecated(
-    message= "Use the com.android.build.api.variant package",
-    replaceWith = ReplaceWith(
-        "TestFixtures",
-        "com.android.build.api.variant.TestFixtures"
-    ),
-    level = DeprecationLevel.WARNING
-)
-interface TestFixtures: com.android.build.api.variant.TestFixtures,
-        Component
+interface TestFixtures: GeneratesAar, HasAndroidResources, Component
