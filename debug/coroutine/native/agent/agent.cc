@@ -81,7 +81,20 @@ struct InstrumentedClass {
   bool success;
 };
 
-// check if DebugProbesImpl exists and that it's new version, then call
+/**
+ * Get the exceptions stacktrace and log it.
+ */
+void printStackTrace(JNIEnv* jni) {
+  std::unique_ptr<jniutils::StackTrace> stackTrace =
+      jniutils::getExceptionStackTrace(jni);
+  if (stackTrace == nullptr) {
+    return;
+  }
+  std::string stringStackTrace = jniutils::stackTraceToString(move(stackTrace));
+  Log::D(Log::Tag::COROUTINE_DEBUGGER, "%s", stringStackTrace.c_str());
+}
+
+// check if DebugProbesImpl exists, then call
 // DebugProbesImpl#install
 int installDebugProbes(JNIEnv* jni) {
   jclass klass =
@@ -96,24 +109,37 @@ int installDebugProbes(JNIEnv* jni) {
 
   Log::D(Log::Tag::COROUTINE_DEBUGGER, "DebugProbesImpl found");
 
-  // create DebugProbesImpl object by calling constructor
+  // get DebugProbesImpl constructor
   jmethodID constructor = jni->GetMethodID(klass, "<init>", "()V");
+  if (constructor == nullptr) {
+    Log::D(Log::Tag::COROUTINE_DEBUGGER,
+           "DebugProbesImpl constructor not found");
+    return -1;
+  }
+
+  // create DebugProbesImpl by calling constructor
   jobject debug_probes_impl_obj = jni->NewObject(klass, constructor);
+  if (jni->ExceptionOccurred()) {
+    Log::D(Log::Tag::COROUTINE_DEBUGGER,
+           "DebugProbesImpl constructor threw an exception.");
+    printStackTrace(jni);
+    return -1;
+  }
+
+  // get install method id
+  jmethodID install = jni->GetMethodID(klass, "install", "()V");
+  if (install == nullptr) {
+    Log::D(Log::Tag::COROUTINE_DEBUGGER, "DebugProbesImpl#install not found");
+    return -1;
+  }
 
   // invoke install method
-  jmethodID install = jni->GetMethodID(klass, "install", "()V");
   jni->CallVoidMethod(debug_probes_impl_obj, install);
 
   if (jni->ExceptionOccurred()) {
     Log::D(Log::Tag::COROUTINE_DEBUGGER,
            "DebugProbesImpl#install threw an exception.");
-    std::unique_ptr<jniutils::StackTrace> stackTrace =
-        jniutils::getExceptionStackTrace(jni);
-    if (stackTrace != nullptr) {
-      std::string stringStackTrace =
-          jniutils::stackTraceToString(move(stackTrace));
-      Log::D(Log::Tag::COROUTINE_DEBUGGER, "%s", stringStackTrace.c_str());
-    }
+    printStackTrace(jni);
     return -1;
   }
 
@@ -121,6 +147,10 @@ int installDebugProbes(JNIEnv* jni) {
   return 0;
 }
 
+/**
+ * Instrument DebugProbesKt from kotlin stdlib, to call respective methods in
+ * DebugProbesKt from kotlinx-coroutines-core
+ */
 InstrumentedClass instrumentClass(jvmtiEnv* jvmti, std::string class_name,
                                   const unsigned char* class_data,
                                   int class_data_len) {
@@ -252,13 +282,7 @@ bool setAgentPremainInstalledStatically(JNIEnv* jni) {
   if (jni->ExceptionOccurred()) {
     Log::D(Log::Tag::COROUTINE_DEBUGGER,
            "AgentPremain#setInstalledStatically(Z)V threw an exception.");
-    std::unique_ptr<jniutils::StackTrace> stackTrace =
-        jniutils::getExceptionStackTrace(jni);
-    if (stackTrace != nullptr) {
-      std::string stringStackTrace =
-          jniutils::stackTraceToString(move(stackTrace));
-      Log::D(Log::Tag::COROUTINE_DEBUGGER, "%s", stringStackTrace.c_str());
-    }
+    printStackTrace(jni);
     return false;
   }
 
