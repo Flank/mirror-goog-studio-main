@@ -443,7 +443,7 @@ The Lint API version currently running is $CURRENT_API (${describeApi(CURRENT_AP
                     ) {
                         Vendor(
                             vendorName = "Android Open Source Project ($identifier)",
-                            feedbackUrl = "https://developer.android.com/jetpack/androidx/releases/appcompat#feedback",
+                            feedbackUrl = "https://issuetracker.google.com/issues/new?component=192731",
                             identifier = identifier
                         )
                     } else if (registryClass.startsWith("com.google.")) {

@@ -362,7 +362,7 @@ class ManifestDetectorTest : AbstractCheckTest() {
                 """
                 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
                     xmlns:dist="http://schemas.android.com/apk/distribution"
-                    package="com.example.tnorbye.nullnessmigrationtest">
+                    package="test.pkg.nullnessmigrationtest">
 
                     <uses-permission android:name="android.permission.INTERNET"/>
 

@@ -133,7 +133,7 @@ public class AndroidAutoDetector extends Detector implements XmlScanner, SourceC
     public static final Issue MISSING_ON_PLAY_FROM_SEARCH =
             Issue.create(
                             "MissingOnPlayFromSearch",
-                            "Missing `onPlayFromSearch`.",
+                            "Missing `onPlayFromSearch`",
                             "To support voice searches on Android Auto, in addition to adding an "
                                     + "`intent-filter` for the action `onPlayFromSearch`,"
                                     + " you also need to override and implement "

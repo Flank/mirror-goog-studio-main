@@ -77,7 +77,7 @@ public class ArraySizeDetector extends ResourceXmlDetector {
                             + "Note however that there may be cases where you really want to declare a "
                             + "different number of array items in each configuration (for example where "
                             + "the array represents available options, and those options differ for "
-                            + "different layout orientations and so on), so use your own judgement to "
+                            + "different layout orientations and so on), so use your own judgment to "
                             + "decide if this is really an error.\n"
                             + "\n"
                             + "You can suppress this error type if it finds false errors in your project.",

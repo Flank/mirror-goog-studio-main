@@ -59,6 +59,7 @@ import org.jetbrains.uast.USimpleNameReferenceExpression
 import org.jetbrains.uast.UVariable
 import org.jetbrains.uast.UastBinaryOperator
 import org.jetbrains.uast.getContainingUClass
+import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.isNullLiteral
 import org.jetbrains.uast.java.JavaUField
 import org.jetbrains.uast.kotlin.KotlinStringTemplateUPolyadicExpression
@@ -114,7 +115,9 @@ class LintDetectorDetector : Detector(), UastScanner {
     }
 
     override fun getApplicableMethodNames(): List<String> =
-        listOf("expect", "expectFixDiffs", "files", "projects")
+        listOf("expect", "expectFixDiffs", "files", "projects", "lint")
+
+    private val visitedTestClasses = mutableSetOf<String>()
 
     override fun visitMethodCall(
         context: JavaContext,
@@ -139,6 +142,16 @@ class LintDetectorDetector : Detector(), UastScanner {
                 val visitor = LintDetectorVisitor(context)
                 for (testFile in node.valueArguments) {
                     checkTestFile(testFile, visitor)
+                }
+            }
+            "lint" -> {
+                if (method.returnType?.canonicalText != CLASS_TEST_LINT_TASK) {
+                    return
+                }
+                val testClass = node.getParentOfType(UClass::class.java)
+                val qualifiedName = testClass?.qualifiedName
+                if (testClass != null && qualifiedName != null && visitedTestClasses.add(qualifiedName)) {
+                    checkDocumentationExamples(context, testClass)
                 }
             }
         }
@@ -174,6 +187,37 @@ class LintDetectorDetector : Detector(), UastScanner {
         } else if (testFile is UParenthesizedExpression) {
             checkTestFile(testFile.expression, visitor)
         }
+    }
+
+    private fun checkDocumentationExamples(context: JavaContext, testClass: UClass) {
+        // Only enforce for newly added checks
+        if (getCopyrightYear(context) < 2021) {
+            return
+        }
+
+        val tests = testClass.uastDeclarations
+            .filterIsInstance<UMethod>()
+            .filter { it.name.startsWith("test") }
+        if (tests.isEmpty()) {
+            return
+        }
+
+        for (name in tests) {
+            if (name.name.startsWith("testDocumentationExample")) {
+                return
+            }
+        }
+
+        // TODO: Try to line up the issues analyzed by the corresponding detector
+        // and make sure we have a documentation example for each
+
+        val element = tests.first()
+        context.report(
+            MISSING_DOC_EXAMPLE, element, context.getLocation(element),
+            "Expected to also find a documentation example test (`testDocumentationExample`) which shows a " +
+                "simple, typical scenario which triggers the test, and which will be extracted into lint's " +
+                "per-issue documentation pages"
+        )
     }
 
     override fun visitClass(context: JavaContext, declaration: UClass) {
@@ -577,11 +621,19 @@ class LintDetectorDetector : Detector(), UastScanner {
                     TEXT_FORMAT, argument, getStringLocation(argument, title),
                     "The issue summary should be shorter; typically just a 3-6 words; it's used as a topic header in HTML reports and in the IDE inspections window"
                 )
-            } else if (title[0].isLowerCase()) {
-                context.report(
-                    TEXT_FORMAT, argument, getStringLocation(argument, title),
-                    "The issue summary should be capitalized"
-                )
+            } else {
+                if (title[0].isLowerCase()) {
+                    context.report(
+                        TEXT_FORMAT, argument, getStringLocation(argument, title),
+                        "The issue summary should be capitalized"
+                    )
+                }
+                if (title.endsWith(".")) {
+                    context.report(
+                        TEXT_FORMAT, argument, getStringLocation(argument, title),
+                        "The issue summary should *not* end with a period (think of it as a headline)"
+                    )
+                }
             }
         }
 
@@ -1129,13 +1181,13 @@ class LintDetectorDetector : Detector(), UastScanner {
                     warning instead using something like
 
                     ```kotlin
-                        @JvmField
-                        val ISSUE = Issue.create(
-                            // ID string is too long, but we can't change this now since this
-                            // id is already used in user suppress configurations
-                            //noinspection LintImplIdFormat
-                            id = "IncompatibleMediaBrowserServiceCompatVersion",
-                            ...
+                    @JvmField
+                    val ISSUE = Issue.create(
+                        // ID string is too long, but we can't change this now since
+                        // this id is already used in user suppress configurations
+                        //noinspection LintImplIdFormat
+                        id = "IncompatibleMediaBrowserServiceCompatVersion",
+                        ...
                     ```
                 """,
                 category = CUSTOM_LINT_CHECKS,
@@ -1374,7 +1426,7 @@ class LintDetectorDetector : Detector(), UastScanner {
                 briefDescription = "Using Dollar Escapes",
                 //noinspection LintImplDollarEscapes
                 explanation = """
-                    Instead of putting ${"$"}{"$"} in your Kotlin raw string literals \
+                    Instead of putting `${"$"}{"$"}` in your Kotlin raw string literals \
                     you can simply use ＄. This looks like the dollar sign but is instead \
                     the full width dollar sign, U+FF04. And this character does not need \
                     to be escaped in Kotlin raw strings, since it does not start a \
@@ -1384,8 +1436,8 @@ class LintDetectorDetector : Detector(), UastScanner {
                     a real dollar sign, and when pulling results and error messages out of \
                     lint, the dollar sign back into the full width dollar sign.
 
-                    That means you can use ＄ everywhere instead of ${"$"}{"$"}, which makes \
-                    the test strings more readable -- especially ${"$"}-heavy code such as \
+                    That means you can use ＄ everywhere instead of `${"$"}{"$"}`, which makes \
+                    the test strings more readable -- especially `${"$"}`-heavy code such as \
                     references to inner classes.
                     """,
                 category = CUSTOM_LINT_CHECKS,
@@ -1393,6 +1445,33 @@ class LintDetectorDetector : Detector(), UastScanner {
                 severity = Severity.ERROR,
                 implementation = IMPLEMENTATION,
                 platforms = JDK_SET
+            )
+
+        /** No documentation example in unit tests */
+        @JvmField
+        val MISSING_DOC_EXAMPLE =
+            Issue.create(
+                id = "LintDocExample",
+                briefDescription = "Missing Documentation Example",
+                explanation = """
+                    Lint's tool for generating documentation for each issue has special \
+                    support for including a code example which shows how to trigger \
+                    the report. It will pick the first unit test it can find and pick out \
+                    the source file referenced from the error message, but you can instead \
+                    designate a unit test to be the documentation example, and in that case, \
+                    all the files are included.
+
+                    To designate a unit test as the documentation example for an issue, \
+                    name the test `testDocumentationExample`, or if your detector reports \
+                    multiple issues, `testDocumentationExample`<Id>, such as
+                    `testDocumentationExampleMyId`.
+                    """,
+                category = CUSTOM_LINT_CHECKS,
+                priority = 6,
+                severity = Severity.WARNING,
+                implementation = IMPLEMENTATION,
+                platforms = JDK_SET,
+                enabledByDefault = false
             )
     }
 }

@@ -21,6 +21,7 @@ import com.android.tools.lint.checks.LintDetectorDetector.Companion.CHECK_URL
 import com.android.tools.lint.checks.LintDetectorDetector.Companion.DOLLAR_STRINGS
 import com.android.tools.lint.checks.LintDetectorDetector.Companion.EXISTING_LINT_CONSTANTS
 import com.android.tools.lint.checks.LintDetectorDetector.Companion.ID
+import com.android.tools.lint.checks.LintDetectorDetector.Companion.MISSING_DOC_EXAMPLE
 import com.android.tools.lint.checks.LintDetectorDetector.Companion.MISSING_VENDOR
 import com.android.tools.lint.checks.LintDetectorDetector.Companion.PSI_COMPARE
 import com.android.tools.lint.checks.LintDetectorDetector.Companion.TEXT_FORMAT
@@ -52,7 +53,8 @@ class LintDetectorDetectorTest {
         EXISTING_LINT_CONSTANTS,
         UNEXPECTED_DOMAIN,
         DOLLAR_STRINGS,
-        MISSING_VENDOR
+        MISSING_VENDOR,
+        MISSING_DOC_EXAMPLE
     )
 
     @Test
@@ -204,7 +206,7 @@ class LintDetectorDetectorTest {
                             val ISSUE =
                                 Issue.create(
                                     id = "badlyCapitalized id",
-                                    briefDescription = "checks MyLintDetector",
+                                    briefDescription = "checks MyLintDetector.",
                                     explanation = ""${'"'}
                                         Some description here.
                                         Here's a call: foo.bar.baz(args).
@@ -328,6 +330,9 @@ class LintDetectorDetectorTest {
             .run()
             .expect(
                 """
+                src/test/pkg/MyKotlinLintDetectorTest.kt:10: Warning: Expected to also find a documentation example test (testDocumentationExample) which shows a simple, typical scenario which triggers the test, and which will be extracted into lint's per-issue documentation pages [LintDocExample]
+                    fun testBasic() {
+                    ^
                 src/test/pkg/MyJavaLintDetector.java:30: Error: Don't point to old http://b.android.com links; should be using https://issuetracker.google.com instead [LintImplBadUrl]
                                         + "https://code.google.com/p/android/issues/detail?id=65351 blah blah blah.",
                                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -358,9 +363,12 @@ class LintDetectorDetectorTest {
                 src/test/pkg/MyKotlinLintDetector.kt:47: Warning: "foo().bar().baz()" looks like a call; surround with backtics in string to display as symbol, e.g. `foo().bar().baz()` [LintImplTextFormat]
                                     |Instead you should call foo().bar().baz() here.
                                                              ~~~~~~~~~~~~~~~~~
+                src/test/pkg/MyKotlinLintDetector.kt:61: Warning: The issue summary should not end with a period (think of it as a headline) [LintImplTextFormat]
+                                briefDescription = "checks MyLintDetector.",
+                                                    ~~~~~~~~~~~~~~~~~~~~~~
                 src/test/pkg/MyKotlinLintDetector.kt:61: Warning: The issue summary should be capitalized [LintImplTextFormat]
-                                briefDescription = "checks MyLintDetector",
-                                                    ~~~~~~~~~~~~~~~~~~~~~
+                                briefDescription = "checks MyLintDetector.",
+                                                    ~~~~~~~~~~~~~~~~~~~~~~
                 src/test/pkg/MyKotlinLintDetector.kt:64: Warning: "foo.bar.baz(args)" looks like a call; surround with backtics in string to display as symbol, e.g. `foo.bar.baz(args)` [LintImplTextFormat]
                                     Here's a call: foo.bar.baz(args).
                                                    ~~~~~~~~~~~~~~~~~
@@ -436,7 +444,7 @@ class LintDetectorDetectorTest {
                 src/test/pkg/MyIssueRegistry.kt:3: Warning: An IssueRegistry should override the vendor property [MissingVendor]
                 class MyIssueRegistry : IssueRegistry() {
                       ~~~~~~~~~~~~~~~
-                26 errors, 10 warnings
+                26 errors, 12 warnings
                 """
             )
             .expectFixDiffs(

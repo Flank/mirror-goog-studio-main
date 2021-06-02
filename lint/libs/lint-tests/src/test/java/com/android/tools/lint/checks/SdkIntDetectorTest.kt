@@ -19,6 +19,51 @@ import com.android.tools.lint.detector.api.Detector
 
 /** Unit tests for [SdkIntDetector] */
 class SdkIntDetectorTest : AbstractCheckTest() {
+    fun testDocumentationExample() {
+        lint().files(
+            manifest().minSdk(4),
+            projectProperties().library(true),
+            kotlin(
+                """
+                package test.pkg
+
+                import android.os.Build
+                import android.os.Build.VERSION
+                import android.os.Build.VERSION.SDK_INT
+                import android.os.Build.VERSION_CODES
+
+                fun isNougat(): Boolean {
+                    return VERSION.SDK_INT >= VERSION_CODES.N
+                }
+
+                fun isAtLeast(api: Int): Boolean {
+                    return VERSION.SDK_INT >= api
+                }
+
+                inline fun <T> T.applyForOreoOrAbove(block: T.() -> Unit): T {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        block()
+                    }
+                    return this
+                }
+                """
+            ).indented()
+        ).run().expect(
+            """
+            src/test/pkg/test.kt:8: Warning: This method should be annotated with @ChecksSdkIntAtLeast(api=VERSION_CODES.N) [AnnotateVersionCheck]
+            fun isNougat(): Boolean {
+                ~~~~~~~~
+            src/test/pkg/test.kt:12: Warning: This method should be annotated with @ChecksSdkIntAtLeast(parameter=0) [AnnotateVersionCheck]
+            fun isAtLeast(api: Int): Boolean {
+                ~~~~~~~~~
+            src/test/pkg/test.kt:16: Warning: This method should be annotated with @ChecksSdkIntAtLeast(api=Build.VERSION_CODES.O, lambda=1) [AnnotateVersionCheck]
+            inline fun <T> T.applyForOreoOrAbove(block: T.() -> Unit): T {
+                             ~~~~~~~~~~~~~~~~~~~
+            0 errors, 3 warnings
+            """
+        )
+    }
+
     fun testChecksSdkIntAtLeast() {
         lint().files(
             manifest().minSdk(4),
@@ -108,7 +153,7 @@ class SdkIntDetectorTest : AbstractCheckTest() {
                 }
 
                 @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.N)
-                fun isNougat3(): Boolean {  // Should NOT annotate (already annotateD)
+                fun isNougat3(): Boolean {  // Should NOT annotate (already annotated)
                     return VERSION.SDK_INT >= VERSION_CODES.N
                 }
 
@@ -184,7 +229,7 @@ class SdkIntDetectorTest : AbstractCheckTest() {
                     }
 
                     @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.N)
-                    public static boolean isNougat2() {  // Should NOT annotate (already annotateD)
+                    public static boolean isNougat2() {  // Should NOT annotate (already annotated)
                         return SDK_INT >= N;
                     }
 

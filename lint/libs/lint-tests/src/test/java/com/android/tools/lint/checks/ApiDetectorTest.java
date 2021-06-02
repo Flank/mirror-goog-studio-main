@@ -42,6 +42,66 @@ public class ApiDetectorTest extends AbstractCheckTest {
         return new ApiDetector();
     }
 
+    public void testDocumentationExampleNewApi() {
+        lint().files(
+                        manifest(
+                                ""
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
+                                        + "    <uses-sdk\n"
+                                        + "        android:minSdkVersion=\"21\"\n"
+                                        + "        android:targetSdkVersion=\"30\" />\n"
+                                        + "</manifest>"),
+                        kotlin(
+                                ""
+                                        + "import android.content.Context\n"
+                                        + "import android.net.ConnectivityManager\n"
+                                        + "import android.os.Build\n"
+                                        + "fun test(context: Context) {\n"
+                                        + "    val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager\n"
+                                        + "    val network = cm.activeNetwork // Error: Requires API 23\n"
+                                        + "    if (Build.VERSION.SDK_INT >= 23) {\n"
+                                        + "        val network2 = cm.activeNetwork // OK\n"
+                                        + "    }\n"
+                                        + "}"))
+                .run()
+                .expect(
+                        ""
+                                + "src/test.kt:6: Error: Call requires API level 23 (current min is 21): android.net.ConnectivityManager#getActiveNetwork [NewApi]\n"
+                                + "    val network = cm.activeNetwork // Error: Requires API 23\n"
+                                + "                     ~~~~~~~~~~~~~\n"
+                                + "1 errors, 0 warnings");
+    }
+
+    public void testDocumentationExampleInlinedApi() {
+        lint().files(
+                        manifest(
+                                ""
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
+                                        + "    <uses-sdk\n"
+                                        + "        android:minSdkVersion=\"21\"\n"
+                                        + "        android:targetSdkVersion=\"30\" />\n"
+                                        + "</manifest>"),
+                        kotlin(
+                                ""
+                                        + "import android.media.MediaFormat\n"
+                                        + "\n"
+                                        + "fun test() {\n"
+                                        + "    // This constant will be copied in by value, which means\n"
+                                        + "    // it will run without crashing on older devices. However,\n"
+                                        + "    // depending on what we *do* with the value, the code may\n"
+                                        + "    // may not work correctly.\n"
+                                        + "    val format: String = MediaFormat.MIMETYPE_AUDIO_AC4\n"
+                                        + "    encode(format) // might crash!\n"
+                                        + "}"))
+                .run()
+                .expect(
+                        ""
+                                + "src/test.kt:8: Warning: Field requires API level 29 (current min is 21): android.media.MediaFormat#MIMETYPE_AUDIO_AC4 [InlinedApi]\n"
+                                + "    val format: String = MediaFormat.MIMETYPE_AUDIO_AC4\n"
+                                + "                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "0 errors, 1 warnings");
+    }
+
     public void testXmlApi1() {
         String expected =
                 ""
@@ -600,7 +660,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testUnusedThemeOnIncludeTag() {
+    public void testDocumentationExampleUnusedAttribute() {
         // Regression test for b/32879096: Add lint TargetApi warning for android:theme
         // attribute in <include> tag
         String expected =
@@ -609,9 +669,14 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         + "        android:theme=\"@android:style/Theme.Holo\" />\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "0 errors, 1 warnings\n";
-
         lint().files(
-                        manifest().minSdk(21),
+                        manifest(
+                                ""
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
+                                        + "    <uses-sdk\n"
+                                        + "        android:minSdkVersion=\"21\"\n"
+                                        + "        android:targetSdkVersion=\"30\" />\n"
+                                        + "</manifest>"),
                         xml(
                                 "res/layout/linear.xml",
                                 ""
@@ -5137,6 +5202,24 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
+    public void testKotlinFileSuppress() {
+        // Regression test for https://issuetracker.google.com/72509076
+        lint().files(
+                        kotlin(
+                                ""
+                                        + "@file:RequiresApi(21)\n"
+                                        + "\n"
+                                        + "package test.pkg\n"
+                                        + "\n"
+                                        + "import androidx.annotation.RequiresApi\n"
+                                        + "import android.widget.Toolbar\n"
+                                        + "\n"
+                                        + "fun Toolbar.hideOverflowMenu2() = hideOverflowMenu()"),
+                        SUPPORT_ANNOTATIONS_JAR)
+                .run()
+                .expectClean();
+    }
+
     @SuppressWarnings("all") // sample code
     public void testObsoleteVersionCheck() {
         String expected =
@@ -5225,22 +5308,42 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testKotlinFileSuppress() {
-        // Regression test for https://issuetracker.google.com/72509076
+    public void testDocumentationExampleObsoleteSdkInt() {
         lint().files(
+                        manifest(
+                                ""
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    package=\"test.pkg\">\n"
+                                        + "    <uses-sdk android:minSdkVersion=\"23\"/>\n"
+                                        + "</manifest>\n"),
                         kotlin(
                                 ""
-                                        + "@file:RequiresApi(21)\n"
-                                        + "\n"
-                                        + "package test.pkg\n"
-                                        + "\n"
-                                        + "import androidx.annotation.RequiresApi\n"
-                                        + "import android.widget.Toolbar\n"
-                                        + "\n"
-                                        + "fun Toolbar.hideOverflowMenu2() = hideOverflowMenu()"),
-                        SUPPORT_ANNOTATIONS_JAR)
+                                        + "import android.os.Build;\n"
+                                        + "class ObsoleteSdkInt {\n"
+                                        + "    fun something() {\n"
+                                        + "        if (Build.VERSION.SDK_INT >= 21) { // UNNECESSARY, always true\n"
+                                        + "            // always run\n"
+                                        + "        }\n"
+                                        + "        if (Build.VERSION.SDK_INT < 21) { // UNNECESSARY, never true\n"
+                                        + "            // never run\n"
+                                        + "        }\n"
+                                        + "    }\n"
+                                        + "}\n"))
+                .checkMessage(this::checkReportedError)
+                // We *don't* want to use provisional computation for this:
+                // limit suggestions around SDK_INT checks to those implied
+                // by the minSdkVersion of the library.
+                .skipTestModes(PARTIAL)
                 .run()
-                .expectClean();
+                .expect(
+                        ""
+                                + "src/ObsoleteSdkInt.kt:4: Warning: Unnecessary; SDK_INT is always >= 23 [ObsoleteSdkInt]\n"
+                                + "        if (Build.VERSION.SDK_INT >= 21) { // UNNECESSARY, always true\n"
+                                + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "src/ObsoleteSdkInt.kt:7: Warning: Unnecessary; SDK_INT is never < 23 [ObsoleteSdkInt]\n"
+                                + "        if (Build.VERSION.SDK_INT < 21) { // UNNECESSARY, never true\n"
+                                + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "0 errors, 2 warnings");
     }
 
     public void testMapGetOrDefault() {

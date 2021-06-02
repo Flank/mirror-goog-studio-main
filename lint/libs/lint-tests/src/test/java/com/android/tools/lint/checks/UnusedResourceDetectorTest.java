@@ -40,6 +40,51 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
         return true;
     }
 
+    public void testDocumentationExample() {
+        lint().files(
+                        xml(
+                                "res/layout/main.xml",
+                                ""
+                                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "        android:id=\"@+id/layout\">\n"
+                                        + "    <Button\n"
+                                        + "        android:id=\"@+id/button1\"\n"
+                                        + "        android:text=\"Button\" />\n"
+                                        + "</LinearLayout>\n"),
+                        xml(
+                                "res/values/strings.xml",
+                                "<resources>\n"
+                                        + "    <string name=\"app_name\">Test</string>\n"
+                                        + "    <string name=\"some_string\">Some String</string>\n"
+                                        + "</resources>"),
+                        java(
+                                ""
+                                        + "import android.app.Activity;\n"
+                                        + "import android.os.Bundle;\n"
+                                        + "\n"
+                                        + "public class MyActivity extends Activity {\n"
+                                        + "    @Override\n"
+                                        + "    public void onCreate(Bundle savedInstanceState) {\n"
+                                        + "        super.onCreate(savedInstanceState);\n"
+                                        + "        setContentView(R.layout.main);\n"
+                                        + "        String name = getString(R.string.app_name);\n"
+                                        + "    }\n"
+                                        + "}\n"))
+                .issues(UnusedResourceDetector.ISSUE, UnusedResourceDetector.ISSUE_IDS)
+                .run()
+                .expect(
+                        "res/values/strings.xml:3: Warning: The resource R.string.some_string appears to be unused [UnusedResources]\n"
+                                + "    <string name=\"some_string\">Some String</string>\n"
+                                + "            ~~~~~~~~~~~~~~~~~~\n"
+                                + "res/layout/main.xml:2: Warning: The resource R.id.layout appears to be unused [UnusedIds]\n"
+                                + "        android:id=\"@+id/layout\">\n"
+                                + "        ~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "res/layout/main.xml:4: Warning: The resource R.id.button1 appears to be unused [UnusedIds]\n"
+                                + "        android:id=\"@+id/button1\"\n"
+                                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "0 errors, 3 warnings");
+    }
+
     public void testUnused() {
         String expected =
                 ""
@@ -1245,7 +1290,7 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "    android:id=\"@+id/activity_main\"\n"
                                         + "    android:layout_width=\"match_parent\"\n"
                                         + "    android:layout_height=\"match_parent\"\n"
-                                        + "    tools:context=\"com.example.tnorbye.myapplication.MainActivity\">\n"
+                                        + "    tools:context=\"test.pkg.myapplication.MainActivity\">\n"
                                         + "\n"
                                         + "    <TextView\n"
                                         + "        android:layout_width=\"wrap_content\"\n"

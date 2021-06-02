@@ -22,6 +22,7 @@ class MediaCapabilitiesDetectorTest : AbstractCheckTest() {
         return MediaCapabilitiesDetector()
     }
 
+    @Suppress("LintDocExample")
     fun testCorrect() {
         lint().files(
             GRADLE_VERSION_7_0_0_ALPHA_08,

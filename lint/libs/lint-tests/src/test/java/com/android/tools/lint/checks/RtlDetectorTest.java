@@ -78,7 +78,15 @@ public class RtlDetectorTest extends AbstractCheckTest {
                         + "                         ~~~~~\n"
                         + "AndroidManifest.xml: Warning: The project references RTL attributes, but does not explicitly enable or disable RTL support with android:supportsRtl in the manifest [RtlEnabled]\n"
                         + "0 errors, 4 warnings\n";
-        lint().files(projectProperties().compileSdk(17), manifest().minSdk(5).targetSdk(17), mRtl)
+        lint().files(
+                        projectProperties().compileSdk(17),
+                        manifest(
+                                ""
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    package=\"test.rtl\">\n"
+                                        + "    <uses-sdk android:minSdkVersion=\"5\" android:targetSdkVersion=\"17\" />\n"
+                                        + "</manifest>\n"),
+                        mRtl)
                 .run()
                 .expect(expected);
     }

@@ -26,6 +26,43 @@ import java.io.File
 class RestrictToDetectorTest : AbstractCheckTest() {
     override fun getDetector(): Detector = RestrictToDetector()
 
+    fun testDocumentationExampleVisibleForTesting() {
+        lint().files(
+            kotlin(
+                """
+                import androidx.annotation.VisibleForTesting
+
+                class ProductionCode {
+                    fun compute() {
+                        initialize() // OK
+                    }
+
+                    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+                    fun initialize() {
+                    }
+                }
+                """
+            ).indented(),
+            kotlin(
+                """
+                class Code {
+                    fun test() {
+                        ProductionCode().initialize() // Not allowed; this method is intended to be private
+                    }
+                }
+                """
+            ),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/Code.kt:4: Warning: This method should only be accessed from tests or within private scope [VisibleForTests]
+                                    ProductionCode().initialize() // Not allowed; this method is intended to be private
+                                                     ~~~~~~~~~~
+            0 errors, 1 warnings
+            """
+        )
+    }
+
     fun testRestrictToSubClass() {
         val expected =
             """

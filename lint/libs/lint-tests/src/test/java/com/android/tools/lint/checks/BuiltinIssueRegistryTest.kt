@@ -22,9 +22,9 @@ import com.android.tools.lint.client.api.LintClient
 import com.android.tools.lint.client.api.LintClient.Companion.clientName
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Scope
+import com.android.tools.lint.detector.api.Scope.values
 import junit.framework.TestCase
 import java.util.EnumSet
-import java.util.HashSet
 
 class BuiltinIssueRegistryTest : TestCase() {
     override fun setUp() {
@@ -35,7 +35,7 @@ class BuiltinIssueRegistryTest : TestCase() {
     @Throws(IllegalAccessException::class)
     fun testCapacities() {
         val registry = TestIssueRegistry()
-        for (scope in Scope.values()) {
+        for (scope in values()) {
             val scopeSet = EnumSet.of(scope)
             checkCapacity(registry, scopeSet)
         }
@@ -47,6 +47,36 @@ class BuiltinIssueRegistryTest : TestCase() {
                 checkCapacity(registry, field.get(null) as EnumSet<Scope>)
             }
         }
+    }
+
+    fun testSomething() {
+        for (issue in BuiltinIssueRegistry().issues) {
+            val implementation = issue.implementation
+            if (!Scope.checkSingleFile(implementation.scope) && !implementation.analysisScopes.any { Scope.checkSingleFile(it) }) {
+                println("${implementation.detectorClass.simpleName}: ${issue.id}")
+            }
+        }
+        /*
+CordovaVersionDetector: VulnerableCordovaVersion
+InvalidPackageDetector: InvalidPackage
+LayoutConsistencyDetector: InconsistentLayout
+LocaleFolderDetector: LocaleFolder
+LocaleFolderDetector: GetLocales
+LocaleFolderDetector: InvalidResourceFolder
+LocaleFolderDetector: UseAlpha2
+LocaleFolderDetector: WrongRegion
+MediaCapabilitiesDetector: MediaCapabilities
+MergeRootFrameLayoutDetector: MergeRootFrame
+OverdrawDetector: Overdraw
+OverrideDetector: DalvikOverride
+RequiredAttributeDetector: RequiredSize
+StringCasingDetector: DuplicateStrings
+TranslucentViewDetector: TranslucentOrientation
+UnpackedNativeCodeDetector: UnpackedNativeCode
+UnusedResourceDetector: UnusedResources
+UnusedResourceDetector: UnusedIds
+WrongThreadInterproceduralDetector: WrongThreadInterprocedural
+         */
     }
 
     fun testUnique() {
@@ -82,9 +112,9 @@ class BuiltinIssueRegistryTest : TestCase() {
         val registry = object : BuiltinIssueRegistry() {
             fun isCacheable() = cacheable()
         }
-        val old = LintClient.clientName
+        val old = clientName
         try {
-            TestLintClient(LintClient.CLIENT_STUDIO); // side effect: sets client name
+            TestLintClient(LintClient.CLIENT_STUDIO) // side effect: sets client name
             assertTrue(registry.isCacheable())
             TestLintClient(LintClient.CLIENT_GRADLE)
             assertFalse(registry.isCacheable())

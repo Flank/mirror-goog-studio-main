@@ -21,6 +21,54 @@ import com.android.tools.lint.detector.api.Detector
 class TypedefDetectorTest : AbstractCheckTest() {
     override fun getDetector(): Detector = TypedefDetector()
 
+    fun testDocumentationExample() {
+        lint().files(
+            kotlin(
+                """
+                import android.view.View
+                import androidx.annotation.IntDef
+
+                // Example of using Android API already annotated with @IntDef:
+
+                fun setAlignment(view: View) {
+                    view.layoutDirection = View.LAYOUT_DIRECTION_RTL // OK
+                    view.layoutDirection = View.TEXT_ALIGNMENT_TEXT_START // ERROR - not one of the allowed values
+                }
+
+                // Custom example creating your own typedef:
+
+                const val CONST_1 = -1
+                const val CONST_2 = 2
+                const val CONST_3 = 0
+                const val UNRELATED = 1
+
+                @IntDef(CONST_1, CONST_2, CONST_3)
+                @Retention(AnnotationRetention.SOURCE)
+                annotation class DetailInfoTab
+
+                fun test(@DetailInfoTab tab: Int) {
+                }
+
+                fun test() {
+                    test(CONST_1) // OK
+                    test(UNRELATED) // ERROR - not part of the @DetailsInfoTab list
+                }
+                """
+            ),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/DetailInfoTab.kt:9: Error: Must be one of: View.LAYOUT_DIRECTION_LTR, View.LAYOUT_DIRECTION_RTL, View.LAYOUT_DIRECTION_INHERIT, View.LAYOUT_DIRECTION_LOCALE [WrongConstant]
+                                view.layoutDirection = View.TEXT_ALIGNMENT_TEXT_START // ERROR - not one of the allowed values
+                                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            src/DetailInfoTab.kt:28: Error: Must be one of: DetailInfoTabKt.CONST_1, DetailInfoTabKt.CONST_2, DetailInfoTabKt.CONST_3 [WrongConstant]
+                                test(UNRELATED) // ERROR - not part of the @DetailsInfoTab list
+                                     ~~~~~~~~~
+            2 errors, 0 warnings
+            """.trimIndent()
+        )
+    }
+
     fun testTypeDef() {
 
         val expected = "" +
@@ -1416,7 +1464,7 @@ class TypedefDetectorTest : AbstractCheckTest() {
         lint().files(
             java(
                 """
-                package com.example.tnorbye.myapplication;
+                package test.pkg.myapplication;
 
                 import androidx.annotation.IntDef;
                 import java.lang.annotation.Retention;
@@ -1445,10 +1493,10 @@ class TypedefDetectorTest : AbstractCheckTest() {
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(
             """
-            src/com/example/tnorbye/myapplication/IntDefTest.java:20: Error: Must be one of: IntDefTest.LINE, IntDefTest.CORNER [WrongConstant]
+            src/test/pkg/myapplication/IntDefTest.java:20: Error: Must be one of: IntDefTest.LINE, IntDefTest.CORNER [WrongConstant]
                     shapeType = 99;
                                 ~~
-            src/com/example/tnorbye/myapplication/IntDefTest.java:21: Error: Must be one of: IntDefTest.LINE, IntDefTest.CORNER [WrongConstant]
+            src/test/pkg/myapplication/IntDefTest.java:21: Error: Must be one of: IntDefTest.LINE, IntDefTest.CORNER [WrongConstant]
                     myClassObj.shapeType = 99;
                                            ~~
             2 errors, 0 warnings

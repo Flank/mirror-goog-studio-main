@@ -19,7 +19,7 @@ package com.android.tools.lint.checks
 class FineLocationDetectorTest : AbstractCheckTest() {
     override fun getDetector() = FineLocationDetector()
 
-    fun testFineNoCoarsePermissionPostS() {
+    fun testDocumentationExample() {
         lint().files(
             manifest(
                 """

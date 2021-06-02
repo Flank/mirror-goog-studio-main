@@ -21,6 +21,35 @@ import com.android.tools.lint.detector.api.Detector
 class CheckResultDetectorTest : AbstractCheckTest() {
     override fun getDetector(): Detector = CheckResultDetector()
 
+    fun testDocumentationExample() {
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                import androidx.annotation.CheckResult
+                import java.math.BigDecimal
+
+                @CheckResult
+                fun BigDecimal.double() = this + this
+
+                fun test(score: BigDecimal): BigDecimal {
+                    score.double()
+                    return score
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/test/pkg/test.kt:10: Warning: The result of double is not used [CheckResult]
+                score.double()
+                ~~~~~~~~~~~~~~
+            0 errors, 1 warnings
+            """
+        )
+    }
+
     fun testCheckResult() {
         val expected =
             """

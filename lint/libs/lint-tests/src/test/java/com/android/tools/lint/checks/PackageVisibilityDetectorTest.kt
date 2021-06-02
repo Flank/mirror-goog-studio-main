@@ -123,39 +123,41 @@ class PackageVisibilityDetectorTest : AbstractCheckTest() {
             .expectClean()
     }
 
-    @Language("kotlin")
-    private val ACTIVITY_WITH_APP_QUERIES =
-        """
-        package test.pkg
+    companion object {
+        @Language("kotlin")
+        private const val ACTIVITY_WITH_APP_QUERIES =
+            """
+            package test.pkg
 
-        import android.app.Activity
-        import android.content.Intent
-        import android.os.Bundle
+            import android.app.Activity
+            import android.content.Intent
+            import android.os.Bundle
 
-        class MainActivity : Activity() {
+            class MainActivity : Activity() {
 
-            override fun onCreate(savedInstanceState: Bundle?) {
-                super.onCreate(savedInstanceState)
-                val context = applicationContext
-                val pm = context.packageManager
+                override fun onCreate(savedInstanceState: Bundle?) {
+                    super.onCreate(savedInstanceState)
+                    val context = applicationContext
+                    val pm = context.packageManager
 
-                pm.getInstalledPackages(0) // ERROR
-                pm.getInstalledApplications(0) // ERROR
+                    pm.getInstalledPackages(0) // ERROR
+                    pm.getInstalledApplications(0) // ERROR
 
-                pm.queryBroadcastReceivers(Intent(), 0) // ERROR
-                pm.queryContentProviders("", 0, 0) // ERROR
-                pm.queryIntentServices(Intent(), 0) // ERROR
-                pm.queryIntentActivities(Intent(), 0) // ERROR
+                    pm.queryBroadcastReceivers(Intent(), 0) // ERROR
+                    pm.queryContentProviders("", 0, 0) // ERROR
+                    pm.queryIntentServices(Intent(), 0) // ERROR
+                    pm.queryIntentActivities(Intent(), 0) // ERROR
 
-                Intent().resolveActivity(pm) // ERROR
-                Intent().resolveActivityInfo(pm, 0) // ERROR
+                    Intent().resolveActivity(pm) // ERROR
+                    Intent().resolveActivityInfo(pm, 0) // ERROR
 
-                this.getInstalledPackages() // OK
-                this.resolveActivity() // OK
+                    this.getInstalledPackages() // OK
+                    this.resolveActivity() // OK
+                }
+
+                private fun getInstalledPackages() = Unit
+                private fun resolveActivity() = Unit
             }
-
-            private fun getInstalledPackages() = Unit
-            private fun resolveActivity() = Unit
-        }
-    """
+            """
+    }
 }

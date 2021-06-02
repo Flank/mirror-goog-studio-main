@@ -31,7 +31,7 @@ class ConstraintLayoutDetectorTest : AbstractCheckTest() {
                         android:layout_height="match_parent"
                         tools:layout_editor_absoluteX="0dp"
                         tools:layout_editor_absoluteY="81dp"
-                        tools:context="com.example.tnorbye.myapplication.MainActivity"
+                        tools:context="test.pkg.myapplication.MainActivity"
                         tools:ignore="HardcodedText">
                         <TextView
                             android:id="@+id/textView"

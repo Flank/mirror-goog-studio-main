@@ -22,6 +22,37 @@ class CallSuperDetectorTest : AbstractCheckTest() {
         return CallSuperDetector()
     }
 
+    fun testDocumentationExample() {
+        lint().files(
+            kotlin(
+                """
+                import androidx.annotation.CallSuper
+
+                open class ParentClass {
+                    @CallSuper
+                    open fun someMethod(arg: Int) {
+                        // ...
+                    }
+                }
+
+                class MyClass : ParentClass() {
+                    override fun someMethod(arg: Int) {
+                        // Bug: required to call super.someMethod(arg)
+                    }
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/ParentClass.kt:11: Error: Overriding method should call super.someMethod [MissingSuperCall]
+                override fun someMethod(arg: Int) {
+                             ~~~~~~~~~~
+            1 errors, 0 warnings
+            """
+        )
+    }
+
     fun testCallSuper() {
         val expected =
             """

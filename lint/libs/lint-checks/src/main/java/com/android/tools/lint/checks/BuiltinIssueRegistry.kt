@@ -225,6 +225,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 LintDetectorDetector.CHECK_URL,
                 LintDetectorDetector.DOLLAR_STRINGS,
                 LintDetectorDetector.ID,
+                LintDetectorDetector.MISSING_DOC_EXAMPLE,
                 LintDetectorDetector.PSI_COMPARE,
                 LintDetectorDetector.TEXT_FORMAT,
                 LintDetectorDetector.TRIM_INDENT,

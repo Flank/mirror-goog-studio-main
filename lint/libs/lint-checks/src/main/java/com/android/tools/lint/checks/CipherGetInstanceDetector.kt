@@ -121,7 +121,7 @@ class CipherGetInstanceDetector : Detector(), SourceCodeScanner {
         provider: String
     ) {
         if (provider == "BC") {
-            val incident = Incident(ISSUE, call, context.getLocation(node), "")
+            val incident = Incident(DEPRECATED_PROVIDER, call, context.getLocation(node), "")
             context.report(incident, map())
         }
     }

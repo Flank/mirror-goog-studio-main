@@ -24,6 +24,7 @@ import com.android.tools.lint.checks.infrastructure.TestFiles.kotlin
 import org.junit.Test
 import org.junit.Assert.assertEquals
 
+@Suppress("LintDocExample")
 class ResolveCheckerTest {
     private fun lint(): TestLintTask {
         return TestLintTask.lint().sdkHome(TestUtils.getSdk().toFile())
