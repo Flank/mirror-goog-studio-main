@@ -340,24 +340,32 @@ def _collect_pom_provider(pom, jars, clsjars, include_sources):
     return collected
 
 # Collects all parent and dependency artifacts for a given list of artifacts.
-# Each artifact is represented as a tuple (artifact, classifier), with classifier = None is there is no classifier.
-def _collect_artifacts(artifacts, include_sources):
+# Each artifact is represented as a tuple (artifact, classifier), with classifier = None if there is no classifier.
+#
+# If include_deps = False, the collected artifacts do not include dependency artifacts.
+def _collect_artifacts(artifacts, include_sources, include_deps):
     seen = {}
     collected = []
 
     for artifact in artifacts:
-        if not seen.get(artifact.maven.pom):
-            for pom in artifact.maven.parent.poms.to_list():
-                if seen.get(pom):
-                    continue
-                jars = artifact.maven.parent.jars[pom]
-                clsjars = artifact.maven.parent.clsjars[pom]
-                collected += _collect_pom_provider(pom, jars, clsjars, include_sources)
-                seen[pom] = True
+        if seen.get(artifact.maven.pom):
+            continue
 
-            collected += _collect_pom_provider(artifact.maven.pom, artifact.maven.jars, artifact.maven.clsjars, include_sources)
-            seen[artifact.maven.pom] = True
+        # Always include parent artifacts even when include_deps=False. Otherwise, Maven
+        # model builders won't accept the set of collected artifacts as a valid Maven repo.
+        # Note that this also includes the dependencies of parent.
+        for pom in artifact.maven.parent.poms.to_list():
+            if seen.get(pom):
+                continue
+            jars = artifact.maven.parent.jars[pom]
+            clsjars = artifact.maven.parent.clsjars[pom]
+            collected += _collect_pom_provider(pom, jars, clsjars, include_sources)
+            seen[pom] = True
 
+        collected += _collect_pom_provider(artifact.maven.pom, artifact.maven.jars, artifact.maven.clsjars, include_sources)
+        seen[artifact.maven.pom] = True
+
+        if include_deps:
             for pom in artifact.maven.deps.poms.to_list():
                 if seen.get(pom):
                     continue
@@ -369,7 +377,7 @@ def _collect_artifacts(artifacts, include_sources):
     return collected
 
 def _maven_repo_impl(ctx):
-    artifacts = _collect_artifacts(ctx.attr.artifacts, ctx.attr.include_sources)
+    artifacts = _collect_artifacts(ctx.attr.artifacts, ctx.attr.include_sources, ctx.attr.include_transitive_deps)
     args = [artifact.short_path + ("," + classifier if classifier else "") for artifact, classifier in artifacts]
     inputs = [artifact for artifact, _ in artifacts]
 
@@ -393,6 +401,7 @@ _maven_repo = rule(
     attrs = {
         "artifacts": attr.label_list(),
         "include_sources": attr.bool(),
+        "include_transitive_deps": attr.bool(),
     },
     outputs = {
         "manifest": "%{name}.manifest",
@@ -412,12 +421,14 @@ _maven_repo = rule(
 # maven_repo(
 #     name = The name of the rule. The output of the rule will be ${name}.manifest.
 #     artifacts = A list of all maven_java_libraries to add to the repo.
+#     include_transitive_deps = Also include the transitive dependencies of artifacts in the repo.
 #     include_sources = Add source jars to the repo as well (useful for tests).
 # )
-def maven_repo(artifacts = [], include_sources = False, **kwargs):
+def maven_repo(artifacts = [], include_sources = False, include_transitive_deps = True, **kwargs):
     _maven_repo(
         artifacts = [explicit_target(artifact) + "_maven" for artifact in artifacts],
         include_sources = include_sources,
+        include_transitive_deps = include_transitive_deps,
         **kwargs
     )
 
