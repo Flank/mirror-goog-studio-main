@@ -190,6 +190,20 @@ class ProjectDescription : Comparable<ProjectDescription> {
             }
             val added = targets.add(file.targetRelativePath)
             if (!added) {
+                if (file.targetRelativePath.endsWith("/test.kt") && ClassName(file.contents).className == null) {
+                    // Just a default name assigned to a Kotlin compilation unit with no class: pick a new unique name
+                    var next = 2
+                    val base = file.targetRelativePath.substring(0, file.targetRelativePath.length - 7)
+                    while (true) {
+                        val name = "${base}test${next++}.kt"
+                        if (targets.add(name)) {
+                            file.targetRelativePath = name
+                            break
+                        }
+                    }
+                    continue
+                }
+
                 fail("${file.targetRelativePath} is specified multiple times; files must be unique (in older versions, lint tests would just clobber the earlier files of the same name)")
             }
         }

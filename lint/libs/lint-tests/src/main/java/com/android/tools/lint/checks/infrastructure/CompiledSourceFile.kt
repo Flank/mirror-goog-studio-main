@@ -488,15 +488,11 @@ internal class CompiledSourceFile(
                     if (end != -1) {
                         val name = encodedFile.substring(0, end)
                         if (!paths.add(name)) {
-                            var message = "Path $name is defined from more than one compiled " +
-                                "test file"
                             if (name.endsWith(".kotlin_module")) {
-                                message += ". This can easily happen with .kotlin_module files " +
-                                    "because the test infrastructure cannot associate a " +
-                                    "shared package module data file with any one specific " +
-                                    "test file."
+                                // Ok redundancy
+                                continue
                             }
-                            fail(message)
+                            fail("Path $name is defined from more than one compiled test file")
                         }
                     }
                 }

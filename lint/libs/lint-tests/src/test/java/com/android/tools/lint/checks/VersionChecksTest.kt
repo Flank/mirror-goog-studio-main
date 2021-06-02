@@ -3078,6 +3078,41 @@ class VersionChecksTest : AbstractCheckTest() {
                     "8cHE9EpLMnOKhdhDQZR3iRKDFgMA7UDMuUcAAAA="
             ),
             bytecode(
+                "libs/lib1.jar",
+                kotlin(
+                    "src/test/pkg/utils/utils2.kt",
+                    """
+                    @file:Suppress("RemoveRedundantQualifierName", "unused")
+
+                    package test.pkg.utils
+                    import android.os.Build
+                    import androidx.annotation.ChecksSdkIntAtLeast
+
+                    fun mytest() {
+                        println("mytest")
+                    }
+
+                    """
+                ),
+                """
+                test/pkg/utils/Utils2Kt.class:
+                H4sIAAAAAAAAAG1QyU4CQRB9PQMMjCi44IL7loAHR4g3vBgTEyIuEeXCqZGO
+                aZnpMUyP0Ru/pAcPHgxnP8pYPTeNfajlvVfVVfX1/fEJ4BC7DAtaRNp7HNx7
+                sZZ+5N0aWz/TDhhD8YE/cc/n6t677D2IO0JthkzwYooY7Eq1k0X6l679EmkR
+                OMgSHcYkKrUSUobe1VAq3dZDwYNGHi4mcsghzzD7j8DBFIPzaABfUZNK6+8o
+                jWonjyKmXRQwwzDdGoTal8o7F5r3ueYNBit4smlPZgxNyQYmsAh/liY6oKhf
+                o//Ho4w7HrlW0SpniuNR2TpghqozqkUuuUt9f0C7pE7CvmAotKQSF3HQE8Mb
+                3vMJcdthPLwTp9IkS9ex0jIQHRlJYo+VCjXXMlQRarCQgnkkQxoZ8puUVQm3
+                yE/OOGf20Rsm994x+5rItsi6CUnHSqJtswU2sEO+Roo5alTqwm5ivokFslhs
+                UvdyE8tY6YJFWMVaF1aEdIT1HzzAfZH9AQAA
+                """,
+                """
+                META-INF/main.kotlin_module:
+                H4sIAAAAAAAAAGNgYGBmYGBgBGJWKM3AJcTFUZJaXKJXkJ0uxBYCZHmXcClz
+                8cHE9EpLMnOKhThCQZSRd4kQO5jlXaLEoMUAAMCpI5xRAAAA
+                """
+            ),
+            bytecode(
                 "libs/lib2.jar",
                 java(
                     """
