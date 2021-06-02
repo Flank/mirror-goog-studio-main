@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.connected.application
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.builder
 import com.android.build.gradle.integration.common.truth.ScannerSubject.Companion.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
@@ -99,7 +100,10 @@ class UtpConnectedTest {
         val testReportPath = "app/$TEST_REPORT"
         val testResultPbPath = "app/$TEST_RESULT_PB"
 
-        project.executor().run(testTaskName)
+        project.executor()
+            // see https://github.com/gradle/gradle/issues/15626
+            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+            .run(testTaskName)
 
         assertThat(project.file(testReportPath)).exists()
         assertThat(project.file(testResultPbPath)).exists()
@@ -222,6 +226,8 @@ class UtpConnectedTest {
                 .withArgument("--init-script")
                 .withArgument(initScriptPath.toString())
                 .withArgument("-P${ENABLE_UTP_TEST_REPORT_PROPERTY}=true")
+                // see https://github.com/gradle/gradle/issues/15626
+                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                 .run(testTaskName)
 
         resultWithConfigCache.stdout.use {
