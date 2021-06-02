@@ -64,7 +64,7 @@ fun Artifact<*>.getOutputPath(
  */
 fun FileCollection.getRegularFiles(projectDirectory: Directory): Provider<List<RegularFile>> =
     elements.map {
-        it.filter { file -> !file.asFile.isDirectory }
+        it.filter { file -> file.asFile.isFile }
             .map {
                 fileSystemLocation -> projectDirectory.file(fileSystemLocation.asFile.absolutePath)
         }
