@@ -141,11 +141,6 @@ class Level1RuntimeArtifactCollections(variantDependencies: VariantDependencies)
         AndroidArtifacts.ArtifactScope.PROJECT, AndroidArtifacts.ArtifactType.JAR
     )
 
-    @get:InputFiles
-    @get:PathSensitive(PathSensitivity.RELATIVE)
-    val runtimeProjectJarsFileCollection: FileCollection
-        get() = runtimeProjectJars.artifactFiles
-
     @get:Internal
     val runtimeExternalJars = variantDependencies.getArtifactCollectionForToolingModel(
         AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
