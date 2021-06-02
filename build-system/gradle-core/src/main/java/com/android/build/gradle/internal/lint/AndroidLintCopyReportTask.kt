@@ -21,22 +21,22 @@ import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.dsl.LintOptions
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.getBuildService
-import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.UnsafeOutputsTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.utils.FileUtils
-import com.android.utils.PathUtils
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logging
 import org.gradle.api.tasks.Internal
 import java.nio.file.Files
-import java.nio.file.StandardCopyOption
 
 /**
  *  Task to copy lint outputs to the desired user directory
  *
  * Does not declare its outputs, as multiple lint tasks may overwrite the same files.
+ *
+ * Does not declare its inputs because doing so would cause this task to not run when the
+ * [AndroidLintTask] fails
  */
 abstract class AndroidLintCopyReportTask : UnsafeOutputsTask("The lintOptions DSL has configured potentially multiple lint tasks to write to the same location, but task should not have overlapping outputs.") {
 
@@ -49,6 +49,7 @@ abstract class AndroidLintCopyReportTask : UnsafeOutputsTask("The lintOptions DS
     @get:Internal
     abstract val xmlReportInput: RegularFileProperty
 
+    @Suppress("SpellCheckingInspection")
     @get:Internal
     abstract val sarifReportInput: RegularFileProperty
 
@@ -76,8 +77,19 @@ abstract class AndroidLintCopyReportTask : UnsafeOutputsTask("The lintOptions DS
     private fun doCopy(from: RegularFileProperty, to: RegularFileProperty, displayName: String) {
         val toPath = to.orNull?.asFile?.toPath() ?: return
         val inputPath = from.orNull?.asFile?.toPath() ?: return
-        Logging.getLogger(AndroidLintCopyReportTask::class.java)
-            .lifecycle("Copying lint $displayName report to $toPath")
+        val logger = Logging.getLogger(AndroidLintCopyReportTask::class.java)
+        if (!inputPath.toFile().isFile) {
+            // Workaround for b/189877657. It would be better to annotate textReportInput and the
+            // other inputs with @InputFile, but doing that causes this task to not run when the
+            // AndroidLintTask fails.
+            logger.warn(
+                "Unable to copy the lint $displayName report because it does not exist. The lint "
+                        + "$displayName report file was expected to be located at "
+                        + "${inputPath.toAbsolutePath()}."
+            )
+            return
+        }
+        logger.lifecycle("Copying lint $displayName report to $toPath")
         Files.createDirectories(toPath.parent)
         FileUtils.copyFile(inputPath, toPath)
     }
