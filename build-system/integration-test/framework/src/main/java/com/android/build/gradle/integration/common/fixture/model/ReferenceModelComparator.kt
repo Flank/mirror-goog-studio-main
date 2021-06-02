@@ -21,7 +21,6 @@ import com.android.build.gradle.integration.common.fixture.ModelBuilderV2
 import com.android.build.gradle.integration.common.fixture.ModelContainerV2
 import com.android.build.gradle.integration.common.fixture.testprojects.TestProjectBuilder
 import com.android.build.gradle.integration.common.fixture.testprojects.TestProjectBuilderImpl
-import com.android.builder.model.v2.models.VariantDependencies
 import org.junit.Rule
 
 /**

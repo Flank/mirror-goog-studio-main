@@ -909,7 +909,7 @@ abstract class VariantInputs {
     fun toLintModel(module: LintModelModule, partialResultsDir: File? = null): LintModelVariant {
         val dependencyCaches = DependencyCaches(
             libraryDependencyCacheBuildService.get().localJarCache,
-            mavenCoordinatesCache.get().cache)
+            mavenCoordinatesCache.get())
 
         val dynamicFeatureSourceProviders: List<LintModelSourceProvider> =
             dynamicFeatureLintModels.files.map {
@@ -1250,7 +1250,6 @@ abstract class AndroidArtifactInput : ArtifactInput() {
                 variantName = componentImpl.name,
                 runtimeType = ArtifactCollectionsInputs.RuntimeType.FULL,
                 buildMapping = componentImpl.services.projectInfo.getProject().gradle.computeBuildMapping(),
-                mavenCoordinatesCache = getBuildService(componentImpl.services.buildServiceRegistry)
             )
         )
         return this
@@ -1288,7 +1287,6 @@ abstract class AndroidArtifactInput : ArtifactInput() {
                 variantName = sourceSet.name,
                 runtimeType = ArtifactCollectionsInputs.RuntimeType.FULL,
                 buildMapping = project.gradle.computeBuildMapping(),
-                mavenCoordinatesCache = getBuildService(project.gradle.sharedServices)
             )
         )
         initializeProjectDependencyLintArtifacts(checkDependencies, variantDependencies)
@@ -1362,7 +1360,6 @@ abstract class JavaArtifactInput : ArtifactInput() {
                 variantName = unitTestImpl.name,
                 runtimeType = ArtifactCollectionsInputs.RuntimeType.FULL,
                 buildMapping = unitTestImpl.services.projectInfo.getProject().gradle.computeBuildMapping(),
-                mavenCoordinatesCache = getBuildService(unitTestImpl.services.buildServiceRegistry)
             )
         )
         return this
@@ -1405,7 +1402,6 @@ abstract class JavaArtifactInput : ArtifactInput() {
                 variantName = sourceSet.name,
                 runtimeType = ArtifactCollectionsInputs.RuntimeType.FULL,
                 buildMapping = project.gradle.computeBuildMapping(),
-                mavenCoordinatesCache = getBuildService(project.gradle.sharedServices)
             )
         )
         initializeProjectDependencyLintArtifacts(checkDependencies, variantDependencies)
@@ -1580,7 +1576,9 @@ abstract class ArtifactInput {
                 )
             }
         val modelBuilder = LintDependencyModelBuilder(
-            artifactHandler = artifactHandler, libraryMap = dependencyCaches.libraryMap
+            artifactHandler = artifactHandler,
+            libraryMap = dependencyCaches.libraryMap,
+            mavenCoordinatesCache = dependencyCaches.mavenCoordinatesCache
         )
 
         val graph = getDependencyGraphBuilder()

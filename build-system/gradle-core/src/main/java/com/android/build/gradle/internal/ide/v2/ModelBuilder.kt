@@ -282,8 +282,24 @@ class ModelBuilder<
             createVariant(it, buildFeatures, instantAppResultMap)
         }
 
+        val currentGradle = project.gradle
+        val parentGradle = currentGradle.parent
+        val gradleName = if (parentGradle != null) {
+            // search for the parent included builds for the current gradle, matching by the
+            // root dir
+            parentGradle.includedBuilds.singleOrNull {
+                // these values already canonicalized
+                //noinspection FileComparisons
+                it.projectDir == currentGradle.rootProject.projectDir
+            }?.name
+        } else {
+            // this is top gradle so name is ":"
+            ":"
+        }
+
         return AndroidProjectImpl(
             path = project.path,
+            buildName = gradleName ?: throw RuntimeException("Failed to get Gradle name for ${project.path}"),
             buildFolder = project.layout.buildDirectory.get().asFile,
 
             projectType = projectType,
@@ -422,12 +438,6 @@ class ModelBuilder<
                 GlobalLibraryBuildService::class.java
             ).get()
 
-        val mavenCoordinatesBuildService =
-            getBuildService(
-                project.gradle.sharedServices,
-                MavenCoordinatesCacheBuildService::class.java
-            )
-
         val buildMapping = project.gradle.computeBuildMapping()
 
         return VariantDependenciesImpl(
@@ -436,14 +446,12 @@ class ModelBuilder<
                 variant,
                 buildMapping,
                 globalLibraryBuildService,
-                mavenCoordinatesBuildService
             ),
             androidTestArtifact = variant.testComponents[VariantTypeImpl.ANDROID_TEST]?.let {
                 createDependencies(
                     it,
                     buildMapping,
                     globalLibraryBuildService,
-                    mavenCoordinatesBuildService
                 )
             },
             unitTestArtifact = variant.testComponents[VariantTypeImpl.UNIT_TEST]?.let {
@@ -451,7 +459,6 @@ class ModelBuilder<
                     it,
                     buildMapping,
                     globalLibraryBuildService,
-                    mavenCoordinatesBuildService
                 )
             },
             testFixturesArtifact = variant.testFixturesComponent?.let {
@@ -459,7 +466,6 @@ class ModelBuilder<
                     it,
                     buildMapping,
                     globalLibraryBuildService,
-                    mavenCoordinatesBuildService
                 )
             }
         )
@@ -626,7 +632,6 @@ class ModelBuilder<
         component: ComponentImpl,
         buildMapping: BuildMapping,
         globalLibraryBuildService: GlobalLibraryBuildService,
-        mavenCoordinatesBuildService: Provider<MavenCoordinatesCacheBuildService>
     ): ArtifactDependencies {
 
         val inputs = ArtifactCollectionsInputsImpl(
@@ -634,7 +639,6 @@ class ModelBuilder<
             projectPath = component.services.projectInfo.getProject().path,
             variantName = component.name,
             runtimeType = ArtifactCollectionsInputs.RuntimeType.FULL,
-            mavenCoordinatesCache = mavenCoordinatesBuildService,
             buildMapping = buildMapping
         )
 

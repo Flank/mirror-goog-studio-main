@@ -22,32 +22,32 @@ import org.gradle.api.artifacts.result.ResolvedComponentResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.artifacts.result.ResolvedVariantResult
 
-class FakeResolvedDependencyResult(
+data class FakeResolvedDependencyResult(
     private val from: ResolvedComponentResult? = null,
     private val constraint: Boolean? = null,
     private val selected: ResolvedComponentResult? = null,
-    private val requested: ComponentSelector? = null
+    private val requested: ComponentSelector? = null,
+    private val resolvedVariant: ResolvedVariantResult? = null
 ) : ResolvedDependencyResult {
 
     override fun getFrom() = from ?: error("value not set")
     override fun isConstraint() = constraint ?: error("value not set")
     override fun getSelected() = selected ?: error("value not set")
     override fun getRequested() = requested ?: error("value not set")
-    override fun getResolvedVariant(): ResolvedVariantResult? = null
+    override fun getResolvedVariant(): ResolvedVariantResult? = resolvedVariant ?: error("value not set")
 }
 
-internal fun createProjectComponent(displayName: String) =
+internal fun createProjectComponent(projectPath: String) =
     FakeResolvedComponentResult(
-        id = FakeProjectComponentIdentifier(displayName = displayName),
-        dependents = mutableSetOf(),
-        dependencies = mutableSetOf()
+        id = FakeProjectComponentIdentifier(
+            projectPath = projectPath,
+            buildIdentifier = FakeBuildIdentifier("defaultBuildName")
+        ),
     )
 
 internal fun createModuleComponent(group: String, name: String, version: String) =
     FakeResolvedComponentResult(
         id = FakeModuleComponentIdentifier(group = group, module = name, version = version),
-        dependents = mutableSetOf(),
-        dependencies = mutableSetOf()
     )
 
 @Suppress("UNCHECKED_CAST")

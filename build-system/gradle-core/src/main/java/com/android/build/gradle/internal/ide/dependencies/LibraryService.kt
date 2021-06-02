@@ -182,8 +182,24 @@ class LibraryServiceImpl(
                         }
                     }
                 }
+                is ProjectComponentIdentifier -> {
+                    if (!artifact.isWrappedModule) {
+                        throw IllegalArgumentException("${artifact.variant} is not wrapped")
+                    }
+                    synchronized(libraryInfoCache) {
+                        libraryInfoCache.computeIfAbsent(artifact.variant) {
+                            LibraryInfoImpl(
+                                attributes = getAttributeMap(it),
+                                capabilities = getCapabilityList(it),
+                                group = WRAPPED_AAR_GROUPID,
+                                name = stringCache.cacheString(component.projectPath),
+                                version = stringCache.cacheString("unspecified")
+                            )
+                        }
+                    }
+                }
                 else -> {
-                    throw IllegalArgumentException("${artifact.variant.owner} is not supported for LibraryInfo")
+                    throw IllegalArgumentException("${artifact.variant.owner.javaClass} is not supported for LibraryInfo")
                 }
             }
 
@@ -264,7 +280,14 @@ class LibraryServiceImpl(
             variant.attributes.keySet().mapNotNull { key ->
                 val attr = variant.attributes.getAttribute(key)
                 attr?.let { stringCache.cacheString(key.name) to stringCache.cacheString(it.toString()) }
-            }.toMap()
+            }
+                // this is a residual information from the way we combine the dependency graph and
+                // the artifacts queried via ArtifactCollection, and the later always include the
+                // type of the artifact that are queried. But we really don't want/need these, as
+                // we are just looking at representing the dependency node itself, not one of its
+                // artifacts.
+                .filter { it.first != "artifactType" }
+                .toMap()
 
     private fun getCapabilityList(variant: ResolvedVariantResult): List<String> =
             variant.capabilities.map { stringCache.cacheString("${it.group}:${it.name}:${it.version}") }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 The Android Open Source Project
+ * Copyright (C) 2021 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,16 +14,14 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.lint
+package com.android.build.gradle.internal.fixtures
 
-import com.android.build.gradle.internal.ide.dependencies.MavenCoordinatesCacheBuildService
-import com.android.ide.common.caching.CreatingCache
-import com.android.tools.lint.model.LintModelLibrary
-import java.io.File
+import org.gradle.api.artifacts.component.BuildIdentifier
 
-internal class DependencyCaches(
-    val localJarCache: CreatingCache<File, List<File>>,
-    val mavenCoordinatesCache: MavenCoordinatesCacheBuildService,
-) {
-    val libraryMap: MutableMap<String, LintModelLibrary> = mutableMapOf()
+data class FakeBuildIdentifier(
+    private val _name: String,
+    private val _isCurrentBuild: Boolean = true
+): BuildIdentifier {
+    override fun getName(): String = _name
+    override fun isCurrentBuild(): Boolean = _isCurrentBuild
 }

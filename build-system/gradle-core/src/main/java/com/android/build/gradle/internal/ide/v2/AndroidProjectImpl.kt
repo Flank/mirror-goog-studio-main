@@ -31,6 +31,7 @@ import java.io.Serializable
  */
 data class AndroidProjectImpl(
     override val path: String,
+    override val buildName: String,
     override val projectType: ProjectType,
     override val namespace: String,
     override val androidTestNamespace: String?,

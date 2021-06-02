@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.ide.dependencies
 
 import com.android.build.gradle.internal.attributes.VariantAttr
 import com.android.build.gradle.internal.dependency.ResolutionResultProvider
-import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.ide.DependencyFailureHandler
 import com.android.build.gradle.internal.ide.v2.ArtifactDependenciesImpl
 import com.android.build.gradle.internal.ide.v2.GraphItemImpl
@@ -26,11 +25,8 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.builder.errors.IssueReporter
 import com.android.builder.model.v2.ide.ArtifactDependencies
 import com.android.builder.model.v2.ide.GraphItem
-import org.gradle.api.artifacts.component.LibraryBinaryIdentifier
-import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.artifacts.result.DependencyResult
-import org.gradle.api.artifacts.result.ResolutionResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.artifacts.result.ResolvedVariantResult
 import org.gradle.api.artifacts.result.UnresolvedDependencyResult
@@ -70,7 +66,7 @@ class FullDependencyGraphBuilder(
         // wrapper local jar/aar, etc...)
         val artifacts = inputs.getAllArtifacts(configType, dependencyFailureHandler)
 
-        val artifactMap = artifacts.associateBy { it.variant }
+        val artifactMap = artifacts.associateBy { it.variant.toKey() }
 
         // Keep a list of the visited nodes so that we don't revisit them in different branches.
         // This is a map so that we can easy get the matching GraphItem for it,
@@ -101,70 +97,68 @@ class FullDependencyGraphBuilder(
     private fun handleDependency(
         dependency: DependencyResult,
         visited: MutableMap<ResolvedVariantResult, GraphItem>,
-        artifactMap: Map<ResolvedVariantResult, ResolvedArtifact>
+        artifactMap: Map<VariantKey, ResolvedArtifact>
     ): GraphItem? {
-        when (dependency) {
-            is ResolvedDependencyResult -> {
-                val variant = dependency.resolvedVariant
 
-                // check if we already visited this.
-                val graphItem = visited[variant]
-                if (graphItem != null) {
-                    return graphItem
-                }
+        if (dependency !is ResolvedDependencyResult) {
+            (dependency as? UnresolvedDependencyResult)?.let { unresolvedDependencies.add(it) }
+            return null
+        }
 
-                val artifact = artifactMap[variant]
+        val variant = dependency.resolvedVariant
 
-                val library = if (artifact == null) {
-                    // this can happen when resolving a test graph, as one of the roots will be
-                    // the same module and this is not included in the other artifact-based API.
-                    val owner = variant.owner
-                    if (owner is ProjectComponentIdentifier &&
-                        inputs.projectPath == owner.projectPath) {
+        // check if we already visited this.
+        val graphItem = visited[variant]
+        if (graphItem != null) {
+            return graphItem
+        }
 
-                        // create on the fly a ResolvedArtifact around this project
-                        // and get the matching library item
-                        libraryService.getLibrary(
-                            ResolvedArtifact(
-                                variant.owner,
-                                variant,
-                                variant.attributes.getAttribute(VariantAttr.ATTRIBUTE)?.toString()
-                                        ?: "unknown",
-                                File("wont/matter"),
-                                null,
-                                ResolvedArtifact.DependencyType.ANDROID,
-                                false,
-                                inputs.buildMapping,
-                                inputs.mavenCoordinatesCache.get()
-                            )
-                        )
-                    } else {
-                        null
-                    }
-                } else {
-                    // get the matching library item
-                    libraryService.getLibrary(artifact)
-                }
+        val variantKey = variant.toKey()
+        val artifact = artifactMap[variantKey]
 
-                if (library != null) {
-                    // get the graph item for the children
-                    val children =
-                            dependency.selected.getDependenciesForVariant(variant).mapNotNull {
-                                handleDependency(
-                                    it, visited, artifactMap
-                                )
-                            }
+        val library = if (artifact == null) {
+            // this can happen when resolving a test graph, as one of the roots will be
+            // the same module and this is not included in the other artifact-based API.
+            val owner = variant.owner
+            if (owner is ProjectComponentIdentifier &&
+                inputs.projectPath == owner.projectPath) {
 
-                    // from there create a GraphItem if it does not exist yet.
-                    return GraphItemImpl(
-                        library.key,
+                // create on the fly a ResolvedArtifact around this project
+                // and get the matching library item
+                libraryService.getLibrary(
+                    ResolvedArtifact(
+                        variant.owner,
+                        variant,
+                        variant.attributes.getAttribute(VariantAttr.ATTRIBUTE)?.toString()
+                                ?: "unknown",
+                        File("wont/matter"),
                         null,
-                        children
+                        ResolvedArtifact.DependencyType.ANDROID,
+                        false,
+                        inputs.buildMapping
                     )
-                }
+                )
+            } else {
+                null
             }
-            is UnresolvedDependencyResult -> {
-                unresolvedDependencies.add(dependency)
+        } else {
+            // get the matching library item
+            libraryService.getLibrary(artifact)
+        }
+
+        if (library != null) {
+            // create the GraphItem for the library, starting by recursively computing the children
+            val children =
+                    dependency.selected.getDependenciesForVariant(variant).mapNotNull {
+                        handleDependency(it, visited, artifactMap)
+                    }
+
+            return GraphItemImpl(
+                library.key,
+                null,
+                children
+            ).also {
+                visited[variant] = it
             }
         }
 

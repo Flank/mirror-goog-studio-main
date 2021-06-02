@@ -38,5 +38,4 @@ data class LibraryInfoImpl(
         val caps = capabilities.sorted().joinToString()
         return "$group|$name|$version|$attrs|$caps"
     }
-
 }

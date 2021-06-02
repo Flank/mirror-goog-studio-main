@@ -382,7 +382,6 @@ class AarApiJarModelTest : ReferenceModelComparator(
             android {
                 setUpHelloWorld()
             }
-
         }
     },
     deltaConfig = {

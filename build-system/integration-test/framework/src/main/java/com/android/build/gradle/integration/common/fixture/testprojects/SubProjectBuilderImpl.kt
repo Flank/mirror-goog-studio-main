@@ -31,6 +31,8 @@ internal class SubProjectBuilderImpl(override val path: String) : SubProjectBuil
     override var plugins: MutableList<PluginType> = mutableListOf()
     internal val dependencies: DependenciesBuilderImpl = DependenciesBuilderImpl()
 
+    private val wrappedLibraries = mutableListOf<Pair<String, ByteArray>>()
+
     override fun android(action: AndroidProjectBuilder.() -> Unit) {
         if (!plugins.containsAndroid()) {
             error("Cannot configure android for project '$path', so Android plugin applied")
@@ -66,6 +68,10 @@ internal class SubProjectBuilderImpl(override val path: String) : SubProjectBuil
         action(dependencies)
     }
 
+    override fun wrap(library: ByteArray, fileName: String) {
+        wrappedLibraries.add(fileName to library)
+    }
+
     internal fun write(
         projectDir: File,
         buildFileType: BuildFileType,
@@ -87,6 +93,12 @@ internal class SubProjectBuilderImpl(override val path: String) : SubProjectBuil
 
         for (plugin in plugins) {
             sb.append("apply plugin: '${plugin.oldId}'\n")
+        }
+
+        for ((fileName, libraryBinary) in wrappedLibraries) {
+            File(projectDir, fileName).writeBytes(libraryBinary)
+            sb.append("configurations.create(\"default\")\n")
+            sb.append("artifacts.add(\"default\", file('$fileName'))\n")
         }
 
         android?.writeBuildFile(sb)

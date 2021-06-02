@@ -78,7 +78,7 @@ abstract class LibraryDependencyCacheBuildService
     })
 
     private val artifactHandler =
-        Level2ArtifactHandler(localJarCache, parameters.mavenCoordinatesCache.get().cache)
+        Level2ArtifactHandler(localJarCache, parameters.mavenCoordinatesCache.get())
 
     fun getGlobalLibMap(): Map<String, Library> {
         return ImmutableMap.copyOf(globalLibrary)

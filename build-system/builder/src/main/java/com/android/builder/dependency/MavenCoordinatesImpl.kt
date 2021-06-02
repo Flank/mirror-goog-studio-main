@@ -18,6 +18,7 @@ package com.android.builder.dependency
 import com.android.SdkConstants
 import com.android.annotations.concurrency.Immutable
 import com.android.builder.internal.StringCachingService
+import com.android.builder.internal.cacheString
 import com.android.builder.model.MavenCoordinates
 import com.google.common.base.Objects
 import java.io.Serializable
@@ -42,7 +43,7 @@ class MavenCoordinatesImpl private constructor(
         @JvmStatic
         @JvmOverloads
         fun create(
-            stringCachingService: StringCachingService,
+            stringCachingService: StringCachingService?,
             groupId: String,
             artifactId: String,
             version: String,

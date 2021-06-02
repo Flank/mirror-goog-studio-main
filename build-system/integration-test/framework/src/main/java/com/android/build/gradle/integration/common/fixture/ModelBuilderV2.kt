@@ -128,7 +128,7 @@ class ModelBuilderV2 internal constructor(
 
         return FetchResult(
             container,
-            normalizer = getFileNormalizer(container.rootBuildId)
+            normalizer = getFileNormalizer(container)
         )
     }
 
@@ -151,9 +151,9 @@ class ModelBuilderV2 internal constructor(
     fun fetchNativeModules(nativeParams: NativeModuleParams): FetchResult<ModelContainerV2> =
             fetchModels(variantName = null, nativeParams = nativeParams)
 
-    private fun getFileNormalizer(buildIdentifier: BuildIdentifier): FileNormalizerImpl {
+    private fun getFileNormalizer(container: ModelContainerV2): FileNormalizerImpl {
         return FileNormalizerImpl(
-            buildId = buildIdentifier,
+            buildId = container.rootBuildId,
             gradleUserHome = projectLocation.testLocation.gradleUserHome.toFile(),
             gradleCacheDir = projectLocation.testLocation.gradleCacheDir,
             androidSdkDir = project?.androidSdkDir,
@@ -161,7 +161,8 @@ class ModelBuilderV2 internal constructor(
             androidNdkSxSRoot = project?.androidNdkSxSRootSymlink,
             localRepos = GradleTestProject.localRepositories,
             additionalMavenRepo = project?.additionalMavenRepoDir,
-            defaultNdkSideBySideVersion = DEFAULT_NDK_SIDE_BY_SIDE_VERSION
+            defaultNdkSideBySideVersion = DEFAULT_NDK_SIDE_BY_SIDE_VERSION,
+            projectBuildFolders = container.projectMaps
         )
     }
 
@@ -287,7 +288,9 @@ class FileNormalizerImpl(
     androidNdkSxSRoot: File?,
     localRepos: List<Path>,
     additionalMavenRepo: Path?,
-    defaultNdkSideBySideVersion: String
+    defaultNdkSideBySideVersion: String,
+    /** mapOf(buildId, listOf(pairOf(project path, build folder))) */
+    projectBuildFolders: Map<BuildIdentifier, List<Pair<String, File>>>
 ) : FileNormalizer {
 
     private data class RootData(
@@ -300,6 +303,21 @@ class FileNormalizerImpl(
 
     init {
         val mutableList = mutableListOf<RootData>()
+
+        for ((buildId, pairs) in projectBuildFolders) {
+            for ((projectPath, projectDir) in pairs) {
+                mutableList.add(
+                    RootData(
+                        File(File(projectDir, "build"), ".transforms"),
+                        "BUILD_FOLDER(${projectPath})"
+                    ) {
+                        // Remove the actual checksum (size 32)
+                        // incoming string is "XXXX/..." so removing XXX leaves a leading /
+                        "{CHECKSUM}${it.substring(32)}"
+                    }
+                )
+            }
+        }
 
         mutableList.add(RootData(buildId.rootDir, "PROJECT"))
 

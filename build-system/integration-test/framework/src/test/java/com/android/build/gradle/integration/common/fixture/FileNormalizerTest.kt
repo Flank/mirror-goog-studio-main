@@ -38,7 +38,8 @@ class FileNormalizerTest {
         androidNdkSxSRoot = File("/path/to/ndkSxSRoot"),
         localRepos = listOf(Paths.get("/path/to/localRepo1"), Paths.get("/path/to/localRepo2")),
         additionalMavenRepo = Paths.get("/path/to/additional/maven/repo"),
-        defaultNdkSideBySideVersion = DEFAULT_NDK_SIDE_BY_SIDE_VERSION
+        defaultNdkSideBySideVersion = DEFAULT_NDK_SIDE_BY_SIDE_VERSION,
+        projectBuildFolders = mapOf()
     )
 
     private val gson = Gson()
@@ -150,7 +151,8 @@ class FileNormalizerTest {
                 Paths.get("C:\\path\\to\\localRepo2")
             ),
             additionalMavenRepo = Paths.get("C:\\additional\\maven\\repo"),
-            defaultNdkSideBySideVersion = DEFAULT_NDK_SIDE_BY_SIDE_VERSION
+            defaultNdkSideBySideVersion = DEFAULT_NDK_SIDE_BY_SIDE_VERSION,
+            projectBuildFolders = mapOf()
         )
 
         Truth.assertThat(

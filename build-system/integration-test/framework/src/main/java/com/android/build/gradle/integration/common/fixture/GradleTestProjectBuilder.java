@@ -51,7 +51,8 @@ public final class GradleTestProjectBuilder {
     @Nullable private String name;
     @Nullable private String rootProjectName = null;
     @Nullable private TestProject testProject = null;
-    @Nullable private String targetGradleVersion;
+    @Nullable private String targetGradleVersion = null;
+    @Nullable private File targetGradleInstallation = null;
     @Nullable private String compileSdkVersion;
     @NonNull private List<String> gradleProperties = Lists.newArrayList();
     @Nullable private String heapSize;
@@ -90,9 +91,6 @@ public final class GradleTestProjectBuilder {
     /** Create a GradleTestProject. */
     @NonNull
     public GradleTestProject create() {
-        if (targetGradleVersion == null) {
-            targetGradleVersion = GradleTestProject.GRADLE_TEST_VERSION;
-        }
 
         if (androidSdkDir == null && withSdk) {
             androidSdkDir = SdkHelper.findSdkDir();
@@ -145,7 +143,8 @@ public final class GradleTestProjectBuilder {
                 (name != null ? name : DEFAULT_TEST_PROJECT_NAME),
                 rootProjectName,
                 testProject,
-                (targetGradleVersion != null ? targetGradleVersion : GRADLE_TEST_VERSION),
+                targetGradleVersion,
+                targetGradleInstallation,
                 withDependencyChecker,
                 withConfigurationCaching,
                 gradleProperties,
@@ -261,6 +260,11 @@ public final class GradleTestProjectBuilder {
 
     public GradleTestProjectBuilder setTargetGradleVersion(@Nullable String targetGradleVersion) {
         this.targetGradleVersion = targetGradleVersion;
+        return this;
+    }
+
+    public GradleTestProjectBuilder setTargetGradleInstallation(@Nullable File targetGradleInstallation) {
+        this.targetGradleInstallation = targetGradleInstallation;
         return this;
     }
 

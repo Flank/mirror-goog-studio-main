@@ -25,6 +25,7 @@ import com.android.annotations.NonNull;
 import com.android.build.api.component.impl.ComponentImpl;
 import com.android.build.gradle.internal.ide.dependencies.ArtifactUtils;
 import com.android.build.gradle.internal.ide.dependencies.BuildMappingUtils;
+import com.android.build.gradle.internal.ide.dependencies.MavenCoordinatesCacheBuildService;
 import com.android.build.gradle.internal.ide.dependencies.ResolvedArtifact;
 import com.android.build.gradle.internal.ide.dependencies.ResolvedArtifact.DependencyType;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
@@ -41,9 +42,17 @@ import org.gradle.internal.graph.GraphRenderer;
 
 /** android version of the TextReportRenderer that outputs Android Library dependencies. */
 public class AndroidDependenciesRenderer extends TextReportRenderer {
+
+    private final MavenCoordinatesCacheBuildService mavenCoordinatesCacheBuildService;
+
     private boolean hasConfigs;
     private boolean hasCyclicDependencies;
     private GraphRenderer renderer;
+
+    public AndroidDependenciesRenderer(
+            MavenCoordinatesCacheBuildService mavenCoordinatesCacheBuildService) {
+        this.mavenCoordinatesCacheBuildService = mavenCoordinatesCacheBuildService;
+    }
 
     @Override
     public void startProject(ProjectDetails project) {
@@ -147,7 +156,7 @@ public class AndroidDependenciesRenderer extends TextReportRenderer {
                             }
 
                         } else if (id instanceof ModuleComponentIdentifier) {
-                            text = artifact.computeModelAddress();
+                            text = artifact.computeModelAddress(mavenCoordinatesCacheBuildService);
 
                         } else {
                             // local files?

@@ -51,6 +51,7 @@ import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.dsl.DataBindingOptions
 import com.android.build.gradle.internal.dsl.ManagedVirtualDevice
+import com.android.build.gradle.internal.ide.dependencies.MavenCoordinatesCacheBuildService
 import com.android.build.gradle.internal.lint.LintTaskManager
 import com.android.build.gradle.internal.packaging.getDefaultDebugKeystoreLocation
 import com.android.build.gradle.internal.pipeline.OriginalStream
@@ -172,6 +173,7 @@ import com.android.build.gradle.internal.utils.getKotlinCompile
 import com.android.build.gradle.internal.utils.isKotlinKaptPluginApplied
 import com.android.build.gradle.internal.utils.isKotlinPluginApplied
 import com.android.build.gradle.internal.utils.recordIrBackendForAnalytics
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.internal.variant.ApkVariantData
 import com.android.build.gradle.internal.variant.ComponentInfo
 import com.android.build.gradle.internal.variant.VariantModel
@@ -2721,9 +2723,12 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                 DependencyReportTask::class.java
         ) { task: DependencyReportTask ->
             task.description = "Displays the Android dependencies of the project."
-            task.variants = variantPropertiesList
-            task.nestedComponents = nestedComponents
+            task.variants.setDisallowChanges(variantPropertiesList)
+            task.nestedComponents.setDisallowChanges(nestedComponents)
             task.group = ANDROID_GROUP
+            task.mavenCoordinateCache.setDisallowChanges(
+                getBuildService<MavenCoordinatesCacheBuildService>(project.gradle.sharedServices).get()
+            )
         }
         val signingReportComponents = allPropertiesList.stream()
                 .filter { component: ComponentCreationConfig ->

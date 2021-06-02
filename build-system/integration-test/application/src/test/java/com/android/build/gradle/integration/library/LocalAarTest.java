@@ -16,24 +16,21 @@
 
 package com.android.build.gradle.integration.library;
 
-import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.ANDROID;
-import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.MODULE;
-import static com.google.common.truth.Truth.assertThat;
-
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelContainer;
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
-import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.Variant;
-import com.android.builder.model.level2.DependencyGraphs;
 import com.google.common.collect.Iterables;
-import java.io.IOException;
 import org.junit.AfterClass;
 import org.junit.ClassRule;
 import org.junit.Test;
+
+import java.io.IOException;
+
+import static com.google.common.truth.Truth.assertThat;
 
 /** Assemble tests for localAarTest. */
 public class LocalAarTest {
@@ -49,23 +46,6 @@ public class LocalAarTest {
     @Test
     public void build() throws IOException, InterruptedException {
         project.execute("clean", "assembleDebug");
-    }
-
-    @Test
-    public void checkLevel4Model() throws IOException {
-        ModelContainer<AndroidProject> models = project.model().fetchAndroidProjects();
-
-        AndroidProject appModel = models.getOnlyModelMap().get(":app");
-
-        Variant debugVariant = AndroidProjectUtils.getVariantByName(appModel, "debug");
-
-        DependencyGraphs dependencyGraphs = debugVariant.getMainArtifact().getDependencyGraphs();
-
-        LibraryGraphHelper helper = new LibraryGraphHelper(models);
-
-        final LibraryGraphHelper.Items compileDependencyItems = helper.on(dependencyGraphs);
-        assertThat(compileDependencyItems.withType(ANDROID).asLibraries()).hasSize(1);
-        assertThat(compileDependencyItems.withType(MODULE).asLibraries()).isEmpty();
     }
 
     @Test

@@ -34,7 +34,7 @@ import java.io.File
  */
 abstract class ArtifactHandler<DependencyItemT> protected constructor(
     private val localJarCache: CreatingCache<File, List<File>>,
-    private val mavenCoordinatesCache: CreatingCache<ResolvedArtifact, MavenCoordinates>
+    private val mavenCoordinatesCache: MavenCoordinatesCacheBuildService
 ) {
 
     /**
@@ -51,12 +51,16 @@ abstract class ArtifactHandler<DependencyItemT> protected constructor(
         val id = artifact.componentIdentifier
 
         val coordinatesSupplier = {
-            mavenCoordinatesCache.get(artifact)
+            mavenCoordinatesCache.cache.get(artifact)
                 ?: throw RuntimeException("unable to compute coordinates for $artifact")
         }
+        val modelAddressSupplier = { artifact.computeModelAddress(mavenCoordinatesCache) }
 
         return if (id !is ProjectComponentIdentifier || artifact.isWrappedModule) {
             if (artifact.dependencyType === ResolvedArtifact.DependencyType.ANDROID) {
+                if (artifact.extractedFolder == null) {
+                    throw RuntimeException("Null extracted folder for artifact: $artifact")
+                }
                 val extractedFolder = artifact.extractedFolder
                     ?: throw RuntimeException("Null extracted folder for artifact: $artifact")
 
@@ -67,14 +71,14 @@ abstract class ArtifactHandler<DependencyItemT> protected constructor(
                     isProvided,
                     artifact.variantName,
                     coordinatesSupplier,
-                    artifact::computeModelAddress
+                    modelAddressSupplier
                 )
             } else {
                 handleJavaLibrary(
                     artifact.artifactFile,
                     isProvided,
                     coordinatesSupplier,
-                    artifact::computeModelAddress
+                    modelAddressSupplier
                 )
             }
         } else {
@@ -95,14 +99,14 @@ abstract class ArtifactHandler<DependencyItemT> protected constructor(
                     lintJar,
                     isProvided,
                     coordinatesSupplier,
-                    artifact::computeModelAddress
+                    modelAddressSupplier
                 )
             } else {
                 handleJavaModule(
                     id.projectPath,
                     buildId,
                     artifact.variantName,
-                    artifact::computeModelAddress
+                    modelAddressSupplier
                 )
             }
         }

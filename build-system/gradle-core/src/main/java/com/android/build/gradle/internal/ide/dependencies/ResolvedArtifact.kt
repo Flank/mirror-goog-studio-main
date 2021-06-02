@@ -50,7 +50,6 @@ data class ResolvedArtifact internal constructor(
     val dependencyType: DependencyType,
     val isWrappedModule: Boolean,
     val buildMapping: ImmutableMap<String, String>,
-    val mavenCoordinatesCache: MavenCoordinatesCacheBuildService
 )  {
 
     constructor(
@@ -59,7 +58,6 @@ data class ResolvedArtifact internal constructor(
         dependencyType: DependencyType,
         isWrappedModule: Boolean,
         buildMapping: ImmutableMap<String, String>,
-        mavenCoordinatesCache: MavenCoordinatesCacheBuildService
     ) :
             this(
                 mainArtifactResult.id.componentIdentifier,
@@ -70,7 +68,6 @@ data class ResolvedArtifact internal constructor(
                 dependencyType,
                 isWrappedModule,
                 buildMapping,
-                mavenCoordinatesCache
             )
 
     enum class DependencyType constructor(val extension: String) {
@@ -88,7 +85,6 @@ data class ResolvedArtifact internal constructor(
             dependencyType,
             isWrappedModule,
             buildMapping,
-            mavenCoordinatesCache
         )
     }
 
@@ -138,14 +134,16 @@ data class ResolvedArtifact internal constructor(
             is OpaqueComponentArtifactIdentifier -> {
                 // We have a file based dependency
                 if (dependencyType == DependencyType.JAVA) {
-                    mavenCoordinatesCache.getMavenCoordForLocalFile(
-                        artifactFile
+                    MavenCoordinatesCacheBuildService.getMavenCoordForLocalFile(
+                        artifactFile,
+                        stringCachingService
                     )
                 } else {
                     // local aar?
                     assert(artifactFile.isDirectory)
-                    mavenCoordinatesCache.getMavenCoordForLocalFile(
-                        artifactFile
+                    MavenCoordinatesCacheBuildService.getMavenCoordForLocalFile(
+                        artifactFile,
+                        stringCachingService
                     )
                 }
             }
@@ -165,7 +163,9 @@ data class ResolvedArtifact internal constructor(
     /**
      * Computes a unique address to use in the level 4 model
      */
-    fun computeModelAddress(): String = when (componentIdentifier) {
+    fun computeModelAddress(
+        mavenCoordinatesCache: MavenCoordinatesCacheBuildService
+    ): String = when (componentIdentifier) {
         is ProjectComponentIdentifier -> {
 
             StringBuilder(100)

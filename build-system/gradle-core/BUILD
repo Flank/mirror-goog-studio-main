@@ -183,6 +183,7 @@ kotlin_test(
         "//tools/apkzlib",
         "//tools/base/annotations",
         "//tools/base/build-system/builder",
+        "//tools/base/build-system/builder:fixtures",
         "//tools/base/build-system/builder-model",
         "//tools/base/build-system/builder-test-api:tools.builder-test-api",
         "//tools/base/build-system/gradle-api",

@@ -382,7 +382,7 @@ public abstract class BasePlugin<
                 project, mavenCoordinatesCacheBuildService
         ).execute();
 
-        extraModelInfo = new ExtraModelInfo(mavenCoordinatesCacheBuildService);
+        extraModelInfo = new ExtraModelInfo();
 
         ProjectOptions projectOptions = projectServices.getProjectOptions();
         IssueReporter issueReporter = projectServices.getIssueReporter();

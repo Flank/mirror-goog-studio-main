@@ -9,15 +9,32 @@
          - :|:lib|com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|project:lib:unspecified:
             - requestedCoordinates = (null)
             - dependencies         = []
-   - androidTestArtifact:
-      - compileDependencies:
+   > androidTestArtifact:
+      > compileDependencies:
+         - :|:lib|com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-api|project:lib-test-fixtures:unspecified:
+            - requestedCoordinates = (null)
+            - dependencies:
+               - :|:lib|com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-api|project:lib:unspecified:
+                  - requestedCoordinates = (null)
+                  - dependencies         = []
+               - :|:lib|com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-api|project:lib:unspecified:
+                  - dependencies = "*visited*"
          - :|:app|com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:app:unspecified:
             - requestedCoordinates = (null)
             - dependencies         = []
          - :|:lib|com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-api|project:lib:unspecified:
+            - dependencies = "*visited*"
+      < compileDependencies
+      - runtimeDependencies:
+         - :|:lib|com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|project:lib-test-fixtures:unspecified:
             - requestedCoordinates = (null)
-            - dependencies         = []
-      - runtimeDependencies = []
+            - dependencies:
+               - :|:lib|com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|project:lib:unspecified:
+                  - requestedCoordinates = (null)
+                  - dependencies         = []
+               - :|:lib|com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|project:lib:unspecified:
+                  - dependencies = "*visited*"
+   < androidTestArtifact
    > unitTestArtifact:
       - compileDependencies:
          - :|:app|com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:app:unspecified:
@@ -98,6 +115,34 @@
          - publicResources     = (null)
          - symbolFile          = (null)
       < :|:app|com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|project:app:unspecified
+      > :|:lib|com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-api|project:lib-test-fixtures:unspecified:
+         - type                = PROJECT
+         - artifact            = (null)
+         - projectInfo:
+            - buildId     = ":"
+            - projectPath = ":lib"
+            - attributes:
+               * "com.android.build.api.attributes.BuildTypeAttr -> debug"
+               * "com.android.build.gradle.internal.attributes.VariantAttr -> debug"
+               * "org.gradle.usage -> java-api"
+            - capabilities:
+               * "project:lib-test-fixtures:unspecified"
+         - libraryInfo         = (null)
+         - compileJarFiles     = (null)
+         - runtimeJarFiles     = (null)
+         - manifest            = (null)
+         - resFolder           = (null)
+         - resStaticLibrary    = (null)
+         - assetsFolder        = (null)
+         - jniFolder           = (null)
+         - aidlFolder          = (null)
+         - renderscriptFolder  = (null)
+         - proguardRules       = (null)
+         - lintJar             = (null)
+         - externalAnnotations = (null)
+         - publicResources     = (null)
+         - symbolFile          = (null)
+      < :|:lib|com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-api|project:lib-test-fixtures:unspecified
       > :|:lib|com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-api|project:lib:unspecified:
          - type                = PROJECT
          - artifact            = (null)
@@ -126,6 +171,34 @@
          - publicResources     = (null)
          - symbolFile          = (null)
       < :|:lib|com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-api|project:lib:unspecified
+      > :|:lib|com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|project:lib-test-fixtures:unspecified:
+         - type                = PROJECT
+         - artifact            = (null)
+         - projectInfo:
+            - buildId     = ":"
+            - projectPath = ":lib"
+            - attributes:
+               * "com.android.build.api.attributes.BuildTypeAttr -> debug"
+               * "com.android.build.gradle.internal.attributes.VariantAttr -> debug"
+               * "org.gradle.usage -> java-runtime"
+            - capabilities:
+               * "project:lib-test-fixtures:unspecified"
+         - libraryInfo         = (null)
+         - compileJarFiles     = (null)
+         - runtimeJarFiles     = (null)
+         - manifest            = (null)
+         - resFolder           = (null)
+         - resStaticLibrary    = (null)
+         - assetsFolder        = (null)
+         - jniFolder           = (null)
+         - aidlFolder          = (null)
+         - renderscriptFolder  = (null)
+         - proguardRules       = (null)
+         - lintJar             = (null)
+         - externalAnnotations = (null)
+         - publicResources     = (null)
+         - symbolFile          = (null)
+      < :|:lib|com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|project:lib-test-fixtures:unspecified
       > :|:lib|com.android.build.api.attributes.BuildTypeAttr>debug, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|project:lib:unspecified:
          - type                = PROJECT
          - artifact            = (null)

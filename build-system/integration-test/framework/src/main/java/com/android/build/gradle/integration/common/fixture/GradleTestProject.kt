@@ -90,7 +90,8 @@ class GradleTestProject @JvmOverloads internal constructor(
     val name: String = DEFAULT_TEST_PROJECT_NAME,
     val rootProjectName: String? = null,
     private val testProject: TestProject? = null,
-    private val targetGradleVersion: String,
+    private val targetGradleVersion: String?,
+    private val targetGradleInstallation: File?,
     private val withDependencyChecker: Boolean,
     val withConfigurationCaching: BaseGradleExecutor.ConfigurationCaching,
     private val gradleProperties: Collection<String>,
@@ -380,18 +381,27 @@ class GradleTestProject @JvmOverloads internal constructor(
                 GRADLE_DEAMON_IDLE_TIME_IN_SECONDS,
                 TimeUnit.SECONDS
             )
-        val distributionName = String.format("gradle-%s-bin.zip", targetGradleVersion)
-        val distributionZip =
-            File(gradleDistributionDirectory, distributionName)
-        assertThat(distributionZip).isFile()
-        val connection = connector
-            .useDistribution(distributionZip.toURI())
+
+        connector
             .useGradleUserHomeDir(location.testLocation.gradleUserHome.toFile())
             .forProjectDirectory(location.projectDir)
-            .connect()
-        rootProject.openConnections?.add(connection)
 
-        connection
+        if (targetGradleInstallation != null) {
+            connector.useInstallation(targetGradleInstallation)
+        } else {
+            val distributionName = String.format(
+                "gradle-%s-bin.zip",
+                targetGradleVersion ?: GRADLE_TEST_VERSION
+            )
+            val distributionZip = File(gradleDistributionDirectory, distributionName)
+            assertThat(distributionZip).isFile()
+
+            connector.useDistribution(distributionZip.toURI())
+        }
+
+        connector.connect().also { connection ->
+            rootProject.openConnections?.add(connection)
+        }
     }
 
     /**
@@ -409,6 +419,7 @@ class GradleTestProject @JvmOverloads internal constructor(
             rootProjectName = null,
             testProject = null,
             targetGradleVersion = rootProject.targetGradleVersion,
+            targetGradleInstallation = rootProject.targetGradleInstallation,
             withDependencyChecker = rootProject.withDependencyChecker,
             withConfigurationCaching = rootProject.withConfigurationCaching,
             gradleProperties = ImmutableList.of(),

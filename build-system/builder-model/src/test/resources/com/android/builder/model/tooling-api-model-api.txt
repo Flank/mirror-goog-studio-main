@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-1966e9d2d8c93103b51ae348efcd49fd85883544a03c0309fbe8f8b24b60e036
+0440a471b1dc89ece8087ec04576da5794f452aa5759231265b65762af9987f5
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -748,6 +748,7 @@ com.android.builder.model.v2.models.AndroidProject$Companion
 com.android.builder.model.v2.models.AndroidProject.getAndroidTestNamespace: java.lang.String ()
 com.android.builder.model.v2.models.AndroidProject.getBootClasspath: java.util.Collection<java.io.File> ()
 com.android.builder.model.v2.models.AndroidProject.getBuildFolder: java.io.File ()
+com.android.builder.model.v2.models.AndroidProject.getBuildName: java.lang.String ()
 com.android.builder.model.v2.models.AndroidProject.getBuildTypeSourceSets: java.util.Collection<com.android.builder.model.v2.ide.SourceSetContainer> ()
 com.android.builder.model.v2.models.AndroidProject.getDynamicFeatures: java.util.Collection<java.lang.String> ()
 com.android.builder.model.v2.models.AndroidProject.getFlags: com.android.builder.model.v2.ide.AndroidGradlePluginProjectFlags ()

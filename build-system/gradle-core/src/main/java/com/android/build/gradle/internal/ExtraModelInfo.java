@@ -24,7 +24,6 @@ import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.ide.ArtifactMetaDataImpl;
 import com.android.build.gradle.internal.ide.JavaArtifactImpl;
-import com.android.build.gradle.internal.ide.dependencies.MavenCoordinatesCacheBuildService;
 import com.android.build.gradle.internal.variant.DefaultSourceProviderContainer;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.ArtifactMetaData;
@@ -39,7 +38,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.provider.Provider;
 
 /** For storing additional model information. */
 public class ExtraModelInfo {
@@ -51,12 +49,8 @@ public class ExtraModelInfo {
     private final ListMultimap<String, SourceProviderContainer> extraBuildTypeSourceProviders = ArrayListMultimap.create();
     private final ListMultimap<String, SourceProviderContainer> extraProductFlavorSourceProviders = ArrayListMultimap.create();
     private final ListMultimap<String, SourceProviderContainer> extraMultiFlavorSourceProviders = ArrayListMultimap.create();
-    private final Provider<MavenCoordinatesCacheBuildService> mavenCoordinatesCache;
 
-    public ExtraModelInfo(
-            @NonNull Provider<MavenCoordinatesCacheBuildService> mavenCoordinatesCache) {
-        this.mavenCoordinatesCache = mavenCoordinatesCache;
-    }
+    public ExtraModelInfo() {}
 
     public Collection<ArtifactMetaData> getExtraArtifacts() {
         return extraArtifactMap.values();
@@ -169,7 +163,7 @@ public class ExtraModelInfo {
                         javaResourcesFolder,
                         null,
                         new ConfigurationDependencies(configuration),
-                        new ConfigurationDependencyGraphs(configuration, mavenCoordinatesCache),
+                        new ConfigurationDependencyGraphs(configuration),
                         sourceProvider,
                         null);
 
